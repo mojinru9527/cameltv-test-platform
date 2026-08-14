@@ -1,23 +1,23 @@
-"""测试用例 API 路由 — /api/v1/test-cases/*"""
+"""测试用例 API 路由（CRUD/批量/API 执行/评审/版本历史） — /api/v1/test-cases/*
+
+Batch 181（FIX-173-P2-10）路由拆分：原 test_case.py 按域拆分为
+test_case_crud.py（本文件）/ test_case_taxonomy.py / test_case_files.py。
+端点函数体逐字移动，仅调整 import；ORM 查询收敛至 services。
+"""
 from __future__ import annotations
 
-import json
 import logging
-from io import BytesIO
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.deps import CurrentUser, get_current_user, require_permission
+from app.core.deps import CurrentUser, require_permission
 from app.core.exceptions import APIException
 from app.schemas.common import Page, R
 from app.schemas.api_asset import ApiExecutionRequest
 from app.schemas.test_case import (
-    DomainCreate,
-    DomainNode,
-    ModuleCreate,
-    TaxonomySurfaceNode,
     TestCaseCreate,
     TestCaseOut,
     TestCaseUpdate,
@@ -42,104 +42,6 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
         detail=detail,
         ip=req.client.host if req.client else "",
     )
-
-
-# ── 域树 ──────────────────────────────────────────────
-
-@router.get("/domains", response_model=R[list[DomainNode]])
-def list_domains(
-    current: CurrentUser = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    tree = test_case_service.get_category_tree(db, project_id=current.project_id or 0)
-    return R.ok(tree)
-
-
-@router.get("/stats", response_model=R[dict], summary="用例类型统计")
-def get_test_case_stats(
-    current: CurrentUser = Depends(require_permission("testcase:list")),
-    db: Session = Depends(get_db),
-):
-    """Return authoritative project totals before the dynamic ``/{case_id}`` route."""
-    return R.ok(test_case_service.get_stats(db, project_id=current.project_id or 0))
-
-
-@router.get("/taxonomy", response_model=R[list[TaxonomySurfaceNode]], summary="用例多级分类")
-def get_test_case_taxonomy(
-    case_type: str = "manual",
-    surface: str = "",
-    current: CurrentUser = Depends(require_permission("testcase:list")),
-    db: Session = Depends(get_db),
-):
-    """默认返回功能用例，并按用户端/运营后台/接口测试组织多级模块。"""
-    return R.ok(test_case_service.get_taxonomy(
-        db,
-        project_id=current.project_id or 0,
-        case_type=case_type,
-        surface=surface,
-    ))
-
-
-@router.post("/domains", response_model=R[dict], summary="新增域")
-def add_domain(
-    body: DomainCreate,
-    req: Request,
-    current: CurrentUser = Depends(require_permission("testcase:create")),
-    db: Session = Depends(get_db),
-):
-    try:
-        result = test_case_service.create_domain(db, project_id=current.project_id or 0, name=body.name)
-        _audit(req, current, db, "create", f"domain/{body.name}", f"新增域: {body.name}")
-        return R.ok(result)
-    except ValueError as e:
-        return R.err(code=400, msg=str(e))
-
-
-@router.delete("/domains/{domain_id}", response_model=R[dict], summary="删除域")
-def remove_domain(
-    domain_id: int,
-    req: Request,
-    current: CurrentUser = Depends(require_permission("testcase:delete")),
-    db: Session = Depends(get_db),
-):
-    ok = test_case_service.delete_domain(db, domain_id=domain_id, project_id=current.project_id or 0)
-    if not ok:
-        return R.err(code=404, msg="域不存在")
-    _audit(req, current, db, "delete", f"domain/{domain_id}")
-    return R.ok({"deleted": True})
-
-
-@router.post("/domains/{domain_id}/modules", response_model=R[dict], summary="新增模块")
-def add_module(
-    domain_id: int,
-    body: ModuleCreate,
-    req: Request,
-    current: CurrentUser = Depends(require_permission("testcase:create")),
-    db: Session = Depends(get_db),
-):
-    try:
-        result = test_case_service.create_module(
-            db, domain_id=domain_id, project_id=current.project_id or 0, name=body.name
-        )
-        _audit(req, current, db, "create", f"module/{body.name}")
-        return R.ok(result)
-    except ValueError as e:
-        return R.err(code=400, msg=str(e))
-
-
-@router.delete("/domains/{domain_id}/modules/{module_id}", response_model=R[dict], summary="删除模块")
-def remove_module(
-    domain_id: int,
-    module_id: int,
-    req: Request,
-    current: CurrentUser = Depends(require_permission("testcase:delete")),
-    db: Session = Depends(get_db),
-):
-    ok = test_case_service.delete_module(db, domain_id=domain_id, module_id=module_id)
-    if not ok:
-        return R.err(code=404, msg="模块不存在")
-    _audit(req, current, db, "delete", f"module/{module_id}")
-    return R.ok({"deleted": True})
 
 
 # ── 用例 CRUD ─────────────────────────────────────────
@@ -222,9 +124,6 @@ def create_test_case(
 # 契约铁律：静态路径段 /batch 必须注册在动态 /{case_id} 之前。
 # FastAPI 按注册顺序匹配，若 /{case_id} 在先，PUT/DELETE /test-cases/batch
 # 会被它抢匹配 → "batch" 解析为 int 失败 → 422。见 [[common-pitfalls]]。
-
-from pydantic import BaseModel, Field
-
 
 class BatchUpdateBody(BaseModel):
     ids: list[int] = Field(..., min_length=1, max_length=200)
@@ -342,15 +241,10 @@ def execute_test_case(
         return R(code=400, msg="请求 case_ids 与路径用例不一致")
 
     if env_id is not None:
-        from app.models.test_case import TestCase
-
-        case = db.query(TestCase).filter_by(
-            id=case_id,
-            project_id=current.project_id or 0,
-        ).first()
+        case = test_case_service.get_case(db, case_id, current.project_id or 0)
         if not case:
             return R(code=404, msg="用例不存在或不属于当前项目")
-        method = (case.api_method or "GET").upper()
+        method = (case.get("api_method") or "GET").upper()
         try:
             require_allowed_operation(
                 db,
@@ -385,30 +279,9 @@ def execute_test_case(
 
     # Batch 103：执行结果回填到用例（请求结果可视）
     try:
-        from app.models.test_case import TestCase as TestCaseModel
-
-        case_row = db.query(TestCaseModel).filter_by(
-            id=case_id,
-            project_id=current.project_id or 0,
-        ).first()
-        if case_row:
-            from datetime import datetime as _dt
-
-            case_row.last_response_json = json.dumps(
-                {
-                    "status_code": result.get("status_code"),
-                    "response_body": result.get("response_body"),
-                    "assertions": result.get("assertions", []),
-                    "assertion_summary": result.get("assertion_summary", {}),
-                    "all_pass": result.get("all_pass"),
-                    "executed_at": result.get("executed_at"),
-                },
-                ensure_ascii=False,
-            )
-            case_row.last_run_status = (
-                "success" if result.get("all_pass")
-                else ("error" if result.get("status") == "error" else "fail")
-            )
+        if test_case_service.save_execution_backfill(
+            db, case_id, current.project_id or 0, result
+        ):
             db.commit()
     except Exception:
         db.rollback()
@@ -505,170 +378,6 @@ def review_history(
 
     history = review_service.get_review_history(db, case_id, project_id=current.project_id or 0)
     return R.ok(history)
-
-
-# ── Xmind 导入导出 ──────────────────────────────────
-
-from fastapi import UploadFile, File
-from fastapi.responses import StreamingResponse
-
-
-@router.get("/export/xmind", summary="导出用例为 Xmind")
-def export_xmind(
-    domain: str = "",
-    module: str = "",
-    surface: str = "",
-    taxonomy_domain: str = "",
-    taxonomy_module: str = "",
-    taxonomy_direct: bool = False,
-    positive_negative: str = "",
-    current: CurrentUser = Depends(require_permission("testcase:list")),
-    db: Session = Depends(get_db),
-):
-    """导出当前项目用例为 Xmind 文件（域→模块→用例树形结构）。"""
-    from app.services.xmind_service import cases_to_xmind_bytes
-
-    items, _ = test_case_service.list_cases(
-        db, project_id=current.project_id or 0,
-        domain=domain, module=module, surface=surface,
-        taxonomy_domain=taxonomy_domain, taxonomy_module=taxonomy_module,
-        taxonomy_direct=taxonomy_direct,
-        positive_negative=positive_negative, page=1, page_size=10000,
-    )
-    buf = cases_to_xmind_bytes(items, root_title=f"测试用例-项目{current.project_id}")
-    return StreamingResponse(
-        BytesIO(buf.getvalue()),  # type: ignore[arg-type]
-        media_type="application/vnd.xmind.workbook",
-        headers={"Content-Disposition": "attachment; filename=test-cases.xmind"},
-    )
-
-
-@router.post("/import/xmind", response_model=R[dict], summary="从 Xmind 导入用例")
-def import_xmind(
-    req: Request,
-    file: UploadFile = File(...),
-    current: CurrentUser = Depends(require_permission("testcase:create")),
-    db: Session = Depends(get_db),
-):
-    """解析 Xmind 文件，批量创建用例。"""
-    from app.core.base_service import transaction
-    from app.services.xmind_service import xmind_bytes_to_cases
-
-    if not file.filename or not file.filename.endswith(".xmind"):
-        return R(code=1, msg="请上传 .xmind 文件")
-
-    # P1-S6a: Content-Length 前置检查，避免读取超大文件 (max 10 MB)
-    content_length = req.headers.get("content-length")
-    if content_length:
-        cl = int(content_length)
-        max_bytes = 10 * 1024 * 1024
-        if cl > max_bytes:
-            from app.core.exceptions import APIException
-            raise APIException(
-                f"上传文件超过限制 (max: 10 MB, got: {cl / (1024*1024):.1f} MB)",
-                code=413,
-            )
-
-    # P1-S6d: 流式写入临时文件，zipfile 直接从磁盘读取，避免全量加载到内存
-    import os
-    import shutil
-    import tempfile
-    tmp_path = ""
-    try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".xmind") as tmp:
-            shutil.copyfileobj(file.file, tmp, length=64 * 1024)
-            tmp_path = tmp.name
-        cases = xmind_bytes_to_cases(tmp_path)
-    finally:
-        if tmp_path:
-            os.unlink(tmp_path)
-    if not cases:
-        return R(code=1, msg="未能从 Xmind 文件中解析出用例")
-
-    imported = 0
-    with transaction(db):
-        for c in cases:
-            c["project_id"] = current.project_id or 0
-            c["source"] = "xmind_import"
-            row = test_case_service.create_case(db, c)
-            if row:
-                imported += 1
-
-    return R.ok({"imported": imported, "total": len(cases)})
-
-
-# ── Excel 导入导出 ──
-
-@router.get("/export/excel", summary="导出用例为 Excel")
-def export_excel(
-    domain: str = "",
-    module: str = "",
-    surface: str = "",
-    taxonomy_domain: str = "",
-    taxonomy_module: str = "",
-    taxonomy_direct: bool = False,
-    positive_negative: str = "",
-    current: CurrentUser = Depends(require_permission("testcase:list")),
-    db: Session = Depends(get_db),
-):
-    """导出当前项目用例为 Excel 文件（.xlsx）。"""
-    from app.services.excel_service import cases_to_excel_bytes
-
-    items, _ = test_case_service.list_cases(
-        db, project_id=current.project_id or 0,
-        domain=domain, module=module, surface=surface,
-        taxonomy_domain=taxonomy_domain, taxonomy_module=taxonomy_module,
-        taxonomy_direct=taxonomy_direct,
-        positive_negative=positive_negative, page=1, page_size=10000,
-    )
-    buf = cases_to_excel_bytes(items)
-    return StreamingResponse(
-        BytesIO(buf),  # type: ignore[arg-type]
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=test-cases.xlsx"},
-    )
-
-
-@router.post("/import/excel", response_model=R[dict], summary="从 Excel 导入用例")
-def import_excel(
-    req: Request,
-    file: UploadFile = File(...),
-    current: CurrentUser = Depends(require_permission("testcase:create")),
-    db: Session = Depends(get_db),
-):
-    """解析 Excel 文件，批量创建用例。"""
-    from app.core.base_service import transaction
-    from app.services.excel_service import excel_bytes_to_cases
-
-    if not file.filename or not file.filename.endswith((".xlsx", ".xls")):
-        return R(code=1, msg="请上传 .xlsx 或 .xls 文件")
-
-    # Content-Length check (max 10 MB)
-    content_length = req.headers.get("content-length")
-    if content_length:
-        cl = int(content_length)
-        max_bytes = 10 * 1024 * 1024
-        if cl > max_bytes:
-            from app.core.exceptions import APIException
-            raise APIException(
-                f"上传文件超过限制 (max: 10 MB, got: {cl / (1024*1024):.1f} MB)",
-                code=413,
-            )
-
-    contents = file.file.read()
-    cases = excel_bytes_to_cases(contents)
-    if not cases:
-        return R(code=1, msg="未能从 Excel 文件中解析出用例（请确保包含「用例标题」列）")
-
-    imported = 0
-    with transaction(db):
-        for c in cases:
-            c["project_id"] = current.project_id or 0
-            row = test_case_service.create_case(db, c)
-            if row:
-                imported += 1
-
-    return R.ok({"imported": imported, "total": len(cases)})
 
 
 # ── 版本历史 ──

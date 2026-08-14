@@ -17,7 +17,7 @@ def test_execute_all_async_returns_immediately(db_session, client, auth_headers,
     db_session.commit()
     calls = {}
 
-    import app.api.v1.test_plan as tp_module
+    import app.api.v1.test_plan_execution as tp_module
 
     def fake_bg(**kwargs):
         calls.update(kwargs)

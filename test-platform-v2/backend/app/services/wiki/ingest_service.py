@@ -13,6 +13,8 @@ import json
 import logging
 from datetime import datetime
 
+from sqlalchemy.orm import Session
+
 from app.core.db import SessionLocal
 from app.models.wiki import WikiIngestJob, WikiRawSource
 from app.services.knowledge.agent_orchestrator import _call_llm_sync
@@ -201,3 +203,30 @@ def run_wiki_ingest_in_new_session(project_id: int, job_id: int) -> None:
             db.rollback()
     finally:
         db.close()
+
+
+# ── 路由层 ORM 收敛薄函数（Batch 181 路由拆分）──
+
+def get_ingest_job(db: Session, job_id: int, project_id: int) -> WikiIngestJob | None:
+    """项目作用域内获取 Wiki 编译任务。"""
+    job = db.get(WikiIngestJob, job_id)
+    if not job or job.project_id != project_id:
+        return None
+    return job
+
+
+def create_ingest_job(
+    db: Session,
+    *,
+    project_id: int,
+    raw_source_id: int,
+    operator_id: int = 0,
+) -> WikiIngestJob:
+    """创建 pending Wiki 编译任务并 flush（沿用调用方会话，提交由路由层负责）。"""
+    job = WikiIngestJob(
+        project_id=project_id, raw_source_id=raw_source_id, status="pending",
+        stage="analysis", operator_id=operator_id,
+    )
+    db.add(job)
+    db.flush()
+    return job

@@ -119,7 +119,7 @@ def test_create_job_import_flags_require_import_permission(db_session, monkeypat
     import pytest
     from types import SimpleNamespace
 
-    from app.api.v1.lanhu_evidence import create_job
+    from app.api.v1.lanhu_evidence_jobs import create_job
     from app.core.deps import CurrentUser
     from app.core.exceptions import APIException
     from app.schemas.lanhu_evidence import LanhuEvidenceCreateRequest

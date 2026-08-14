@@ -146,7 +146,7 @@ class TestSanitizeFilename:
     """P1-2: Verify filename sanitization."""
 
     def test_path_traversal_blocked(self):
-        from app.api.v1.requirement import _sanitize_filename
+        from app.api.v1.requirement_docs import _sanitize_filename
         # Path separators are stripped, leaving only the basename
         result = _sanitize_filename("../../../etc/passwd")
         # Should NOT contain path components
@@ -155,17 +155,17 @@ class TestSanitizeFilename:
         assert ".." not in result
 
     def test_xss_script_tag_blocked(self):
-        from app.api.v1.requirement import _sanitize_filename
+        from app.api.v1.requirement_docs import _sanitize_filename
         result = _sanitize_filename("<script>alert('xss')</script>.md")
         assert "<script>" not in result
         assert ".md" in result or result == "untitled"
 
     def test_normal_filename_unchanged(self):
-        from app.api.v1.requirement import _sanitize_filename
+        from app.api.v1.requirement_docs import _sanitize_filename
         assert _sanitize_filename("测试需求v14.2.0.md") == "测试需求v14.2.0.md"
 
     def test_empty_returns_untitled(self):
-        from app.api.v1.requirement import _sanitize_filename
+        from app.api.v1.requirement_docs import _sanitize_filename
         result = _sanitize_filename("")
         assert result == "untitled"
 
@@ -174,7 +174,7 @@ class TestUploadSizeLimit:
     """P1-1: Verify max upload size constant is reasonable."""
 
     def test_max_upload_size(self):
-        from app.api.v1.requirement import _MAX_UPLOAD_BYTES
+        from app.api.v1.requirement_docs import _MAX_UPLOAD_BYTES
         assert _MAX_UPLOAD_BYTES == 20 * 1024 * 1024  # 20 MB
 
 

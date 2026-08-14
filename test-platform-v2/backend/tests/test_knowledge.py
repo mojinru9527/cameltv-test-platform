@@ -859,7 +859,7 @@ class TestGraphApi:
         self, kdb, kclient, monkeypatch,
     ):
         from unittest.mock import Mock
-        from app.api.v1 import knowledge as knowledge_api
+        from app.api.v1 import knowledge_graph as knowledge_api
         from app.core.config import settings
         from app.models.audit import AuditLog
         from app.models.knowledge import KnowledgeEntity
@@ -886,7 +886,7 @@ class TestGraphApi:
         self, kdb, kclient, monkeypatch,
     ):
         from unittest.mock import Mock
-        from app.api.v1 import knowledge as knowledge_api
+        from app.api.v1 import knowledge_graph as knowledge_api
         from app.core.config import settings
         from app.models.audit import AuditLog
         from app.models.knowledge import KnowledgeChunk, KnowledgeEntity, KnowledgeSource

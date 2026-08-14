@@ -77,7 +77,7 @@ def test_artifact_mount_covers_current_runtime_paths() -> None:
         BACKEND_ROOT / "app" / "services" / "playwright_executor.py"
     ).read_text(encoding="utf-8")
     lanhu_evidence = (
-        BACKEND_ROOT / "app" / "api" / "v1" / "lanhu_evidence.py"
+        BACKEND_ROOT / "app" / "api" / "v1" / "lanhu_evidence_jobs.py"
     ).read_text(encoding="utf-8")
 
     assert '/ "storage" / "ui-runs"' in ui_runner

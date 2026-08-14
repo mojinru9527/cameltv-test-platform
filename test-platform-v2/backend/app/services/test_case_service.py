@@ -294,6 +294,43 @@ def batch_delete(db: Session, ids: list[int], project_id: int = 0) -> int:
     return len(rows)
 
 
+def save_execution_backfill(
+    db: Session, case_id: int, project_id: int, result: dict
+) -> bool:
+    """API 执行结果回填到用例（last_response_json / last_run_status）。
+
+    Batch 181（FIX-173-P2-10）：路由层禁 ORM，原 execute 端点内的 TestCase 查询
+    收敛至此；不负责 commit（路由层保留 db.commit()/db.rollback() 的 try/except）。
+    """
+    import json as _json
+
+    row = db.scalar(
+        select(TestCase).where(
+            TestCase.id == case_id,
+            TestCase.project_id == project_id,
+            TestCase.is_deleted.is_(False),
+        )
+    )
+    if not row:
+        return False
+    row.last_response_json = _json.dumps(
+        {
+            "status_code": result.get("status_code"),
+            "response_body": result.get("response_body"),
+            "assertions": result.get("assertions", []),
+            "assertion_summary": result.get("assertion_summary", {}),
+            "all_pass": result.get("all_pass"),
+            "executed_at": result.get("executed_at"),
+        },
+        ensure_ascii=False,
+    )
+    row.last_run_status = (
+        "success" if result.get("all_pass")
+        else ("error" if result.get("status") == "error" else "fail")
+    )
+    return True
+
+
 # ── 域树 ──────────────────────────────────────────────
 
 def get_domain_tree(db: Session, project_id: int = 0) -> list[dict]:

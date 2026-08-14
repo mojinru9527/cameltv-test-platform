@@ -5,9 +5,11 @@
 """
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 from datetime import datetime
+from pathlib import Path
 
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
@@ -263,3 +265,171 @@ def deprecate_source(db: Session, source_pk: int, project_id: int) -> bool:
         chunk.status = "deprecated"
     db.flush()
     return True
+
+
+def get_knowledge_overview(db: Session, project_id: int) -> dict:
+    """知识中心概览聚合（Batch 181 P2-10：路由层 ORM 收敛）。
+
+    返回 overview 所需的全部 DB 派生字段；RAG 开关/嵌入模型等 settings
+    派生值由路由层组装（不在本函数内读 settings）。
+    """
+    from app.models.knowledge import (
+        AgentRun, AiArtifact, KnowledgeChunk, KnowledgeEntity, KnowledgeRelation,
+    )
+
+    pid = project_id
+
+    def _count(model, *conds) -> int:
+        stmt = select(func.count(model.id)).where(model.project_id == pid, *conds)
+        return db.scalar(stmt) or 0
+
+    source_count = _count(KnowledgeSource, KnowledgeSource.is_deleted.is_(False))
+    chunk_count = _count(KnowledgeChunk, KnowledgeChunk.is_deleted.is_(False))
+    entity_count = _count(KnowledgeEntity)
+    pending_artifacts = _count(AiArtifact, AiArtifact.review_status == "pending")
+    deprecated_sources = _count(KnowledgeSource, KnowledgeSource.is_deleted.is_(True))
+
+    # 孤儿切片：引用了不存在知识源的切片
+    sourceless = db.scalar(
+        select(func.count(KnowledgeChunk.id)).where(
+            KnowledgeChunk.project_id == pid,
+            KnowledgeChunk.source_id.notin_(select(KnowledgeSource.id)),
+        )
+    ) or 0
+
+    recent = db.scalars(
+        select(KnowledgeSource)
+        .where(KnowledgeSource.project_id == pid)
+        .order_by(KnowledgeSource.id.desc())
+        .limit(5)
+    ).all()
+
+    # M3: 关系健康指标
+    low_confidence_relations = _count(KnowledgeRelation, KnowledgeRelation.confidence < 0.5)
+    unreviewed_relations = _count(KnowledgeRelation, KnowledgeRelation.review_status == "pending")
+
+    # M4: Agent 执行指标
+    agent_total_runs = _count(AgentRun)
+    agent_avg_duration = db.scalar(
+        select(func.avg(AgentRun.duration_ms)).where(
+            AgentRun.project_id == pid,
+            AgentRun.status == "success",
+            AgentRun.duration_ms > 0,
+        )
+    ) or 0
+    # 采纳率 = approved / (approved + rejected)
+    approved_count = _count(AiArtifact, AiArtifact.review_status == "approved")
+    rejected_count = _count(AiArtifact, AiArtifact.review_status == "rejected")
+    total_reviewed = approved_count + rejected_count
+    agent_approval_rate = approved_count / total_reviewed if total_reviewed > 0 else 0.0
+
+    # M2 RAG: embedding 覆盖率（已嵌入切片数）
+    embedded_chunks = _count(
+        KnowledgeChunk, KnowledgeChunk.is_deleted.is_(False), KnowledgeChunk.embedding_id != ""
+    )
+
+    return {
+        "source_count": source_count,
+        "chunk_count": chunk_count,
+        "entity_count": entity_count,
+        "pending_artifacts": pending_artifacts,
+        "deprecated_sources": deprecated_sources,
+        "sourceless": sourceless,
+        "recent_sources": list(recent),
+        "low_confidence_relations": low_confidence_relations,
+        "unreviewed_relations": unreviewed_relations,
+        "agent_total_runs": agent_total_runs,
+        "agent_avg_duration": agent_avg_duration,
+        "agent_approval_rate": agent_approval_rate,
+        "embedded_chunks": embedded_chunks,
+    }
+
+
+def _design_storage_base() -> Path:
+    """需求设计稿图片存储根目录（与路由层 _design_storage_base 公式一致）。"""
+    from app.core.config import settings
+
+    base = Path(settings.lanhu_evidence_storage_dir) if settings.lanhu_evidence_storage_dir else Path(__file__).resolve().parent.parent.parent.parent / "storage"
+    return base / "requirement-design"
+
+
+def import_design_assets(db: Session, project_id: int, sources: list) -> dict:
+    """需求/设计稿入库为知识源 + 切片，幂等（按 content_hash 去重）。
+
+    Batch 181 P2-10：原路由层直连 ORM 的逻辑整体收敛至此；图片落盘、
+    KnowledgeSource/KnowledgeChunk 写入均在本函数内完成，commit 由路由层保留。
+    """
+    import hashlib
+
+    from app.models.knowledge import KnowledgeChunk
+
+    pid = project_id
+    created_s = skipped_s = created_c = saved_i = 0
+    for src in sources:
+        text = src.text or ""
+        chash = hashlib.sha1(f"{src.source_ref}|{src.title}|{text}".encode("utf-8")).hexdigest()[:32]
+        exists = db.scalar(
+            select(KnowledgeSource.id).where(
+                KnowledgeSource.project_id == pid,
+                KnowledgeSource.content_hash == chash,
+            )
+        )
+        if exists:
+            skipped_s += 1
+            continue
+        row = KnowledgeSource(
+            project_id=pid,
+            source_type="requirement",
+            title=src.title,
+            source_ref=src.source_ref,
+            content_hash=chash,
+            raw_content=text,
+            para_category="project",
+            knowledge_domain="project",
+            freshness_score=1.0,
+            metadata_json=json.dumps({"page": src.title, "source_ref": src.source_ref, "image_count": len(src.images)}, ensure_ascii=False),
+        )
+        db.add(row)
+        db.flush()
+        created_s += 1
+
+        img_urls: list[str] = []
+        if src.images:
+            img_dir = _design_storage_base() / str(row.id)
+            img_dir.mkdir(parents=True, exist_ok=True)
+            for img in src.images:
+                if not img.filename or not img.base64:
+                    continue
+                name = Path(img.filename).name
+                try:
+                    data = base64.b64decode(img.base64)
+                except Exception:
+                    continue
+                if len(data) > 6 * 1024 * 1024:
+                    continue
+                (img_dir / name).write_bytes(data)
+                img_urls.append(f"/api/v1/knowledge/design-assets/{row.id}/{name}")
+                saved_i += 1
+        if img_urls:
+            row.metadata_json = json.dumps({"page": src.title, "source_ref": src.source_ref, "image_count": len(src.images), "images": img_urls}, ensure_ascii=False)
+
+        if text:
+            db.add(KnowledgeChunk(
+                project_id=pid,
+                source_id=row.id,
+                chunk_type="requirement_rule",
+                title=src.title,
+                content=text,
+                content_hash=hashlib.sha1(text.encode("utf-8")).hexdigest()[:32],
+                token_count=max(1, len(text) // 4),
+                status="active",
+            ))
+            created_c += 1
+
+    db.flush()
+    return {
+        "created_sources": created_s,
+        "skipped_sources": skipped_s,
+        "created_chunks": created_c,
+        "saved_images": saved_i,
+    }

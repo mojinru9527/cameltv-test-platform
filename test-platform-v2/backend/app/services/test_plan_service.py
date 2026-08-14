@@ -1391,3 +1391,42 @@ def run_async_execute_all(
     finally:
         db.close()
 
+
+# ═══════════════════════════════════════════════════════
+# 路由层 ORM 收敛薄函数（Batch 181 路由拆分）
+# ═══════════════════════════════════════════════════════
+
+def create_plan_with_cases(
+    db: Session,
+    *,
+    project_id: int,
+    name: str,
+    description: str,
+    creator_id: int,
+    case_ids: list[int],
+) -> dict:
+    """OpenAPI 导入后自动创建测试计划并关联用例（沿用调用方会话，提交由路由层负责）。
+
+    返回 {"id", "plan_id", "name", "case_count"}，与路由原逻辑一致。
+    """
+    plan_id_str = f"PLAN-{uuid.uuid4().hex[:8].upper()}"
+    plan = TestPlan(
+        project_id=project_id,
+        plan_id=plan_id_str,
+        name=name,
+        description=description,
+        status="draft",
+        creator_id=creator_id,
+    )
+    db.add(plan)
+    db.flush()
+
+    for sort_idx, cid in enumerate(case_ids):
+        db.add(TestPlanCase(
+            plan_id=plan.id,
+            case_id=cid,
+            sort_order=sort_idx + 1,
+        ))
+
+    return {"id": plan.id, "plan_id": plan_id_str, "name": name, "case_count": len(case_ids)}
+

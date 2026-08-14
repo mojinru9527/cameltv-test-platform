@@ -12,7 +12,7 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
@@ -680,3 +680,484 @@ def evolve_graph_in_new_session(project_id: int, db: Session | None = None) -> d
     finally:
         if own_session:
             db.close()
+
+
+# ── 图谱查询/写入（Batch 181 P2-10：路由层 ORM 收敛） ──
+
+def knowledge_domain_filter(pid: int, knowledge_domain: str | None):
+    """知识域过滤（Batch 132 分域隔离）。
+
+    platform 仅展示来源=platform 的实体；project 展示来源=project 与无来源孤儿实体
+    （孤儿默认归属项目域）；None 不限制。两域不再共用同一批孤儿数据。
+    """
+    if not knowledge_domain:
+        return None
+    source_ids = select(KnowledgeSource.id).where(
+        KnowledgeSource.project_id == pid,
+        KnowledgeSource.knowledge_domain == knowledge_domain,
+    )
+    if knowledge_domain == "platform":
+        return KnowledgeEntity.source_id.in_(source_ids)
+    return KnowledgeEntity.source_id.in_(source_ids) | KnowledgeEntity.source_id.is_(None)
+
+
+def get_entity_stats(
+    db: Session,
+    project_id: int,
+    *,
+    entity_type: str | None = None,
+    keyword: str | None = None,
+    knowledge_domain: str | None = None,
+) -> dict:
+    """实体统计（project-wide 全量，与列表 limit 无关）。"""
+    from app.models.test_case import TestCase
+
+    pid = project_id
+    filters = [KnowledgeEntity.project_id == pid]
+    domain_cond = knowledge_domain_filter(pid, knowledge_domain)
+    if domain_cond is not None:
+        filters.append(domain_cond)
+    if entity_type:
+        filters.append(KnowledgeEntity.entity_type == entity_type)
+    if keyword:
+        filters.append(
+            KnowledgeEntity.name.contains(keyword)
+            | KnowledgeEntity.description.contains(keyword)
+        )
+
+    rows = db.execute(
+        select(KnowledgeEntity.entity_type, func.count(KnowledgeEntity.id))
+        .where(*filters)
+        .group_by(KnowledgeEntity.entity_type)
+    ).all()
+    by_type = {kind: count for kind, count in rows}
+    missing_source = db.scalar(
+        select(func.count(KnowledgeEntity.id)).where(
+            *filters,
+            KnowledgeEntity.source_id.is_(None),
+        )
+    ) or 0
+    # Batch 132: 用例库全量（权威口径），用于"已入库/全量"展示
+    test_case_total = db.scalar(
+        select(func.count(TestCase.id)).where(
+            TestCase.project_id == pid,
+            TestCase.is_deleted.is_(False),
+        )
+    ) or 0
+    return {
+        "total": sum(by_type.values()),
+        "by_type": by_type,
+        "missing_source": missing_source,
+        "test_case_total": test_case_total,
+    }
+
+
+def get_entities(
+    db: Session,
+    project_id: int,
+    *,
+    entity_type: str | None = None,
+    keyword: str | None = None,
+    knowledge_domain: str | None = None,
+    limit: int = 200,
+) -> tuple[list[KnowledgeEntity], dict[int, tuple[str, str]]]:
+    """实体列表 + 来源映射（source_id → (title, source_type)），供路由组装精简视图。"""
+    pid = project_id
+    stmt = select(KnowledgeEntity).where(KnowledgeEntity.project_id == pid)
+    domain_cond = knowledge_domain_filter(pid, knowledge_domain)
+    if domain_cond is not None:
+        stmt = stmt.where(domain_cond)
+    if entity_type:
+        stmt = stmt.where(KnowledgeEntity.entity_type == entity_type)
+    if keyword:
+        stmt = stmt.where(KnowledgeEntity.name.contains(keyword) | KnowledgeEntity.description.contains(keyword))
+    rows = db.scalars(stmt.order_by(KnowledgeEntity.id.desc()).limit(limit)).all()
+    source_ids = {r.source_id for r in rows if r.source_id}
+    source_map: dict[int, tuple[str, str]] = {}
+    if source_ids:
+        src_rows = db.execute(
+            select(KnowledgeSource.id, KnowledgeSource.title, KnowledgeSource.source_type).where(
+                KnowledgeSource.id.in_(source_ids)
+            )
+        ).all()
+        source_map = {sid: (title or "", stype or "") for sid, title, stype in src_rows}
+    return list(rows), source_map
+
+
+def get_entity_with_source(
+    db: Session, entity_pk: int, project_id: int,
+) -> tuple[KnowledgeEntity | None, KnowledgeSource | None]:
+    """实体详情 + 关联知识源对象（路由不再直连 ORM）。"""
+    entity = db.get(KnowledgeEntity, entity_pk)
+    if not entity or entity.project_id != project_id:
+        return None, None
+    src = db.get(KnowledgeSource, entity.source_id) if entity.source_id else None
+    return entity, src
+
+
+def get_relations(
+    db: Session,
+    project_id: int,
+    *,
+    entity_id: int | None = None,
+    relation_type: str | None = None,
+    limit: int = 200,
+) -> list[KnowledgeRelation]:
+    """项目内知识图谱关系列表。"""
+    pid = project_id
+    stmt = select(KnowledgeRelation).where(KnowledgeRelation.project_id == pid)
+    if entity_id:
+        stmt = stmt.where(KnowledgeRelation.from_entity_id == entity_id)
+    if relation_type:
+        stmt = stmt.where(KnowledgeRelation.relation_type == relation_type)
+    return list(db.scalars(stmt.order_by(KnowledgeRelation.id.desc()).limit(limit)).all())
+
+
+def get_graph_view_data(
+    db: Session,
+    project_id: int,
+    *,
+    knowledge_domain: str | None = None,
+    limit: int = 200,
+) -> tuple[list[KnowledgeEntity], list[KnowledgeRelation]]:
+    """图谱可视化数据源（entities + relations，支持知识域过滤）。"""
+    pid = project_id
+    stmt = select(KnowledgeEntity).where(KnowledgeEntity.project_id == pid)
+    if knowledge_domain:
+        # Batch 132 分域隔离：platform 仅来源=platform；project 含来源=project 与
+        # 无来源孤儿实体（孤儿默认归属项目域）。两域不再共用同一批数据。
+        domain_cond = knowledge_domain_filter(pid, knowledge_domain)
+        if domain_cond is not None:
+            stmt = stmt.where(domain_cond)
+    entities = list(db.scalars(stmt.limit(limit)).all())
+    relations = list(
+        db.scalars(
+            select(KnowledgeRelation).where(KnowledgeRelation.project_id == pid).limit(limit)
+        ).all()
+    )
+    return entities, relations
+
+
+def review_relation(
+    db: Session,
+    relation_pk: int,
+    project_id: int,
+    review_status: str,
+    comment: str,
+) -> KnowledgeRelation | None:
+    """采纳/驳回关系：写 review_status 并把 comment 并入 metadata_json。"""
+    rel = db.get(KnowledgeRelation, relation_pk)
+    if not rel or rel.project_id != project_id:
+        return None
+    rel.review_status = review_status
+    rel.metadata_json = json.dumps({**json.loads(rel.metadata_json or "{}"), "comment": comment})
+    db.flush()
+    return rel
+
+
+def import_module_associations(
+    db: Session,
+    project_id: int,
+    entities: list,
+    relations: list,
+) -> dict:
+    """体育模块关联入库（Batch 122 用例结构），幂等。返回入库计数。"""
+    pid = project_id
+    created_e = created_r = skipped_e = skipped_r = 0
+    key_to_id: dict[str, int] = {}
+
+    def _ensure_entity(ent) -> int:
+        nonlocal created_e, skipped_e
+        eid = key_to_id.get(ent.entity_key)
+        if eid:
+            return eid
+        row = db.scalar(select(KnowledgeEntity.id).where(
+            KnowledgeEntity.project_id == pid,
+            KnowledgeEntity.entity_key == ent.entity_key,
+        ))
+        if row:
+            skipped_e += 1
+            key_to_id[ent.entity_key] = row
+            return row
+        row = KnowledgeEntity(
+            project_id=pid,
+            entity_type=ent.entity_type,
+            entity_key=ent.entity_key,
+            name=ent.name,
+            description=ent.description,
+            confidence=ent.confidence,
+            review_status="approved",
+            metadata_json=json.dumps(ent.metadata or {}, ensure_ascii=False),
+        )
+        db.add(row)
+        db.flush()
+        created_e += 1
+        key_to_id[ent.entity_key] = row.id
+        return row.id
+
+    for ent in entities:
+        _ensure_entity(ent)
+
+    for rel in relations:
+        from_id = key_to_id.get(rel.from_key)
+        to_id = key_to_id.get(rel.to_key)
+        if not from_id or not to_id:
+            continue
+        exists = db.scalar(select(KnowledgeRelation.id).where(
+            KnowledgeRelation.project_id == pid,
+            KnowledgeRelation.from_entity_id == from_id,
+            KnowledgeRelation.to_entity_id == to_id,
+            KnowledgeRelation.relation_type == rel.relation_type,
+        ))
+        if exists:
+            skipped_r += 1
+            continue
+        db.add(KnowledgeRelation(
+            project_id=pid,
+            from_entity_id=from_id,
+            relation_type=rel.relation_type,
+            to_entity_id=to_id,
+            confidence=rel.confidence,
+            review_status="approved",
+            metadata_json=json.dumps({"evidence": rel.evidence}, ensure_ascii=False),
+        ))
+        created_r += 1
+
+    db.flush()
+    total_e = db.scalar(select(func.count()).select_from(KnowledgeEntity).where(KnowledgeEntity.project_id == pid)) or 0
+    total_r = db.scalar(select(func.count()).select_from(KnowledgeRelation).where(KnowledgeRelation.project_id == pid)) or 0
+    return {
+        "created_entities": created_e,
+        "created_relations": created_r,
+        "skipped_entities": skipped_e,
+        "skipped_relations": skipped_r,
+        "total_entities": total_e,
+        "total_relations": total_r,
+    }
+
+
+def get_hierarchy_view(
+    db: Session,
+    project_id: int,
+    release_bundle_id: int | None = None,
+    max_depth: int = 4,
+):
+    """项目球层级图谱（Batch 181 P2-10：路由层 ORM 收敛，逻辑整体下移）。
+
+    返回 None 表示指定 release_bundle 不存在或不属于该项目（路由据此返回 404）；
+    项目无任何发布包时返回空视图（project_name="无发布包"）。
+    """
+    from app.models.project import Project
+    from app.models.release_bundle import ReleaseBundle
+    from app.models.requirement_module import ModuleAdminLink, RequirementModule
+    from app.schemas.release_bundle import ProjectSphereEdge, ProjectSphereNode, ProjectSphereView
+
+    pid = project_id
+
+    # Determine which bundle to use
+    bundle = None
+    if release_bundle_id:
+        bundle = db.get(ReleaseBundle, release_bundle_id)
+        if not bundle or bundle.project_id != pid:
+            return None
+    else:
+        # Use latest active bundle
+        bundle = db.scalar(
+            select(ReleaseBundle)
+            .where(ReleaseBundle.project_id == pid, ReleaseBundle.status == "active")
+            .order_by(ReleaseBundle.id.desc())
+        )
+        if not bundle:
+            # Fall back to latest draft
+            bundle = db.scalar(
+                select(ReleaseBundle)
+                .where(ReleaseBundle.project_id == pid)
+                .order_by(ReleaseBundle.id.desc())
+            )
+
+    if not bundle:
+        return ProjectSphereView(project_id=pid, project_name="无发布包")
+
+    project = db.get(Project, pid)
+    project_name = project.name if project else f"Project #{pid}"
+
+    # Load all modules for this bundle
+    all_modules = list(db.scalars(
+        select(RequirementModule).where(
+            RequirementModule.release_bundle_id == bundle.id,
+        ).order_by(RequirementModule.sort_order, RequirementModule.id)
+    ).all())
+
+    nodes: list[ProjectSphereNode] = []
+    edges: list[ProjectSphereEdge] = []
+
+    # ── Node: Project ──
+    project_node_id = f"project:{pid}"
+    nodes.append(ProjectSphereNode(
+        id=project_node_id, name=project_name, node_type="project",
+    ))
+
+    # ── Node: Version (bundle) ──
+    if max_depth >= 2:
+        bundle_node_id = f"bundle:{bundle.id}"
+        nodes.append(ProjectSphereNode(
+            id=bundle_node_id, name=bundle.name, node_type="version",
+            parent_id=project_node_id,
+            version=f"{bundle.client_version} / {bundle.admin_version}",
+            metadata={"client_version": bundle.client_version, "admin_version": bundle.admin_version,
+                       "status": bundle.status, "release_date": str(bundle.release_date) if bundle.release_date else ""},
+        ))
+        edges.append(ProjectSphereEdge(
+            source=project_node_id, target=bundle_node_id,
+            relation_type="contains", label="发布版本",
+        ))
+
+        # ── Nodes: Platforms ──
+        platforms_seen: set[str] = set()
+        top_modules = [m for m in all_modules if m.parent_module_id is None and m.node_type == "module"]
+
+        if max_depth >= 3:
+            for mod in top_modules:
+                plat = mod.platform or "通用"
+                plat_node_id = f"platform:{bundle.id}:{plat}"
+                if plat not in platforms_seen:
+                    platforms_seen.add(plat)
+                    nodes.append(ProjectSphereNode(
+                        id=plat_node_id, name=f"{plat}端", node_type="platform",
+                        parent_id=bundle_node_id, platform=plat,
+                    ))
+                    edges.append(ProjectSphereEdge(
+                        source=bundle_node_id, target=plat_node_id,
+                        relation_type="contains", label="平台",
+                    ))
+
+            # ── Nodes: Modules + Pages ──
+            if max_depth >= 4:
+                # Build parent index
+                children_by_parent: dict[int, list[RequirementModule]] = {}
+                for m in all_modules:
+                    if m.parent_module_id:
+                        children_by_parent.setdefault(m.parent_module_id, []).append(m)
+
+                for mod in top_modules:
+                    plat = mod.platform or "通用"
+                    plat_node_id = f"platform:{bundle.id}:{plat}"
+                    mod_node_id = f"module:{mod.id}"
+
+                    nodes.append(ProjectSphereNode(
+                        id=mod_node_id, name=mod.name, node_type="module",
+                        parent_id=plat_node_id, platform=plat,
+                        version=bundle.client_version,
+                        change_type=mod.change_type,
+                        metadata={"description": (mod.description or "")[:200]},
+                    ))
+                    edges.append(ProjectSphereEdge(
+                        source=plat_node_id, target=mod_node_id,
+                        relation_type="contains", label="模块",
+                    ))
+
+                    # Add pages (depth >= 5)
+                    if max_depth >= 5:
+                        for page in children_by_parent.get(mod.id, []):
+                            if page.node_type == "page":
+                                page_node_id = f"page:{page.id}"
+                                nodes.append(ProjectSphereNode(
+                                    id=page_node_id, name=page.name, node_type="page",
+                                    parent_id=mod_node_id, platform=plat,
+                                    version=bundle.client_version,
+                                    change_type=page.change_type,
+                                ))
+                                edges.append(ProjectSphereEdge(
+                                    source=mod_node_id, target=page_node_id,
+                                    relation_type="contains", label="页面",
+                                ))
+
+        # Also add standalone pages and attachments
+        standalone = [m for m in all_modules if m.parent_module_id is None
+                      and m.node_type in ("page", "attachment")]
+        for m in standalone:
+            plat = m.platform or "通用"
+            plat_node_id = f"platform:{bundle.id}:{plat}"
+            node_id = f"{m.node_type}:{m.id}"
+            nodes.append(ProjectSphereNode(
+                id=node_id, name=m.name, node_type=m.node_type,
+                parent_id=plat_node_id, platform=plat,
+                version=bundle.client_version,
+            ))
+            edges.append(ProjectSphereEdge(
+                source=plat_node_id, target=node_id,
+                relation_type="contains", label=m.node_type,
+            ))
+
+    # ── Edges: Configures (cross-system) ──
+    module_ids = [m.id for m in all_modules]
+    if module_ids:
+        admin_links = list(db.scalars(
+            select(ModuleAdminLink).where(
+                ModuleAdminLink.project_id == pid,
+                ModuleAdminLink.client_module_id.in_(module_ids),
+            )
+        ).all())
+        for link in admin_links:
+            admin_mod = db.get(RequirementModule, link.admin_module_id)
+            edges.append(ProjectSphereEdge(
+                source=f"admin_module:{link.admin_module_id}",
+                target=f"module:{link.client_module_id}",
+                relation_type="configures",
+                confidence=link.confidence,
+                label=f"配置 → {admin_mod.name if admin_mod else '#' + str(link.admin_module_id)}",
+            ))
+
+    # ── Edges: tested_by ──
+    # Get tested_by relations where the target entity corresponds to our modules
+    module_entity_map: dict[int, int] = {}
+    for m in all_modules:
+        entity = db.scalar(
+            select(KnowledgeEntity).where(
+                KnowledgeEntity.project_id == pid,
+                KnowledgeEntity.entity_type == "client_module",
+                KnowledgeEntity.name == m.name,
+            )
+        )
+        if entity:
+            module_entity_map[entity.id] = m.id
+
+    if module_entity_map:
+        test_rels = list(db.scalars(
+            select(KnowledgeRelation).where(
+                KnowledgeRelation.project_id == pid,
+                KnowledgeRelation.relation_type == "tested_by",
+                KnowledgeRelation.to_entity_id.in_(list(module_entity_map.keys())),
+            ).limit(200)
+        ).all())
+        for rel in test_rels:
+            mod_id = module_entity_map.get(rel.to_entity_id)
+            if mod_id:
+                edges.append(ProjectSphereEdge(
+                    source=f"test_case_entity:{rel.from_entity_id}",
+                    target=f"module:{mod_id}",
+                    relation_type="tested_by",
+                    confidence=rel.confidence,
+                    label="测试覆盖",
+                ))
+
+    # ── Stats ──
+    stats = {
+        "versions": 1,
+        "platforms": len(platforms_seen),
+        "modules": sum(1 for m in all_modules if m.node_type == "module"),
+        "pages": sum(1 for m in all_modules if m.node_type == "page"),
+        "attachments": sum(1 for m in all_modules if m.node_type == "attachment"),
+        "configures_links": sum(1 for e in edges if e.relation_type == "configures"),
+        "test_relations": sum(1 for e in edges if e.relation_type == "tested_by"),
+        "total_nodes": len(nodes),
+        "total_edges": len(edges),
+    }
+
+    return ProjectSphereView(
+        project_id=pid,
+        project_name=project_name,
+        nodes=nodes,
+        edges=edges,
+        stats=stats,
+    )

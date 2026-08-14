@@ -1,7 +1,8 @@
-"""发布包路由 —— /api/v1/release-bundles
+"""发布包路由（CRUD/覆盖/需求导入/版本链/回归范围/UI 回归触发） —— /api/v1/release-bundles
 
-提供 ReleaseBundle CRUD + 版本链导航 + 版本差异触发。
-M3 API 层：对接 M2 VersionDiffer 服务。
+Batch 181（FIX-173-P2-10）路由拆分：原 release_bundles.py 拆分为
+release_bundles_core.py（本文件）/ release_bundles_diff.py。
+端点函数体逐字移动，仅调整 import；ORM 查询收敛至 app.services.release_bundle_service。
 """
 from __future__ import annotations
 
@@ -11,16 +12,10 @@ import logging
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
-from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
-
-logger = logging.getLogger("release_bundles")
-from app.models.release_bundle import ReleaseBundle
-from app.models.requirement import RequirementDocument
-from app.models.requirement_module import RequirementModule
 from app.schemas.common import Page, R
 from app.schemas.release_bundle import (
     ReleaseBundleCreate,
@@ -29,11 +24,11 @@ from app.schemas.release_bundle import (
     ReleaseBundleUpdate,
     ReleaseBundleVersionChain,
     VersionCoverageOut,
-    VersionDiffConfirmRequest,
-    VersionDiffRequest,
 )
-from app.services import audit_service
+from app.services import audit_service, release_bundle_service
 from app.services.production_operation_guard import ProductionOperation, require_allowed_operation
+
+logger = logging.getLogger("release_bundles")
 
 router = APIRouter(prefix="/release-bundles", tags=["发布包"])
 
@@ -64,40 +59,13 @@ def list_bundles(
 ):
     """列出项目内所有发布包，按创建时间倒序。含模块数统计。"""
     pid = current.project_id or 0
-    stmt = select(ReleaseBundle).where(ReleaseBundle.project_id == pid)
-    if status:
-        stmt = stmt.where(ReleaseBundle.status == status)
-    if keyword:
-        stmt = stmt.where(
-            ReleaseBundle.name.contains(keyword)
-            | ReleaseBundle.client_version.contains(keyword)
-            | ReleaseBundle.admin_version.contains(keyword)
-        )
-
-    count_stmt = select(func.count()).select_from(stmt.subquery())
-    total = db.scalar(count_stmt) or 0
-    rows = list(db.scalars(
-        stmt.order_by(ReleaseBundle.id.desc()).offset((page - 1) * page_size).limit(page_size)
-    ).all())
+    rows, total = release_bundle_service.list_bundles(
+        db, project_id=pid, status=status, keyword=keyword, page=page, page_size=page_size
+    )
 
     # Enrich with module counts
     bundle_ids = [r.id for r in rows]
-    module_counts: dict[int, dict[str, int]] = {}
-    if bundle_ids:
-        for bid in bundle_ids:
-            mod_count = db.scalar(
-                select(func.count(RequirementModule.id)).where(
-                    RequirementModule.release_bundle_id == bid,
-                    RequirementModule.node_type == "module",
-                )
-            ) or 0
-            page_count = db.scalar(
-                select(func.count(RequirementModule.id)).where(
-                    RequirementModule.release_bundle_id == bid,
-                    RequirementModule.node_type == "page",
-                )
-            ) or 0
-            module_counts[bid] = {"module": mod_count, "page": page_count}
+    module_counts = release_bundle_service.get_module_counts(db, bundle_ids)
 
     items = []
     for r in rows:
@@ -121,27 +89,24 @@ def create_bundle(
 
     # Validate parent_bundle_id if provided
     if body.parent_bundle_id:
-        parent = db.get(ReleaseBundle, body.parent_bundle_id)
-        if not parent or parent.project_id != pid:
+        parent = release_bundle_service.get_bundle(db, body.parent_bundle_id, pid)
+        if not parent:
             return R(code=400, msg="父发布包不存在或不属于当前项目")
 
-    bundle = ReleaseBundle(
-        project_id=pid,
-        name=body.name,
-        description=body.description,
-        client_version=body.client_version,
-        admin_version=body.admin_version,
-        release_date=body.release_date,
-        parent_bundle_id=body.parent_bundle_id,
-        requirement_url=body.requirement_url,
-        user_env_url=body.user_env_url,
-        api_spec_url=body.api_spec_url,
-        admin_env_url=body.admin_env_url,
-        environment_id=body.environment_id,
-        status="draft",
-    )
-    db.add(bundle)
-    db.flush()
+    bundle = release_bundle_service.create_bundle(db, {
+        "project_id": pid,
+        "name": body.name,
+        "description": body.description,
+        "client_version": body.client_version,
+        "admin_version": body.admin_version,
+        "release_date": body.release_date,
+        "parent_bundle_id": body.parent_bundle_id,
+        "requirement_url": body.requirement_url,
+        "user_env_url": body.user_env_url,
+        "api_spec_url": body.api_spec_url,
+        "admin_env_url": body.admin_env_url,
+        "environment_id": body.environment_id,
+    })
     _audit(req, current, db, "bundle:create", f"#{bundle.id} {bundle.name}")
     db.commit()
     db.refresh(bundle)
@@ -155,8 +120,8 @@ def get_bundle(
     db: Session = Depends(get_db),
 ):
     """获取单个发布包的完整信息。"""
-    bundle = db.get(ReleaseBundle, bundle_id)
-    if not bundle or bundle.project_id != (current.project_id or 0):
+    bundle = release_bundle_service.get_bundle(db, bundle_id, current.project_id or 0)
+    if not bundle:
         from app.core.exceptions import not_found
         raise not_found("发布包")
     return R.ok(ReleaseBundleOut.model_validate(bundle))
@@ -172,8 +137,8 @@ def update_bundle(
 ):
     """更新发布包字段。仅更新非 None 字段。"""
     pid = current.project_id or 0
-    bundle = db.get(ReleaseBundle, bundle_id)
-    if not bundle or bundle.project_id != pid:
+    bundle = release_bundle_service.get_bundle(db, bundle_id, pid)
+    if not bundle:
         from app.core.exceptions import not_found
         raise not_found("发布包")
 
@@ -188,7 +153,6 @@ def update_bundle(
     return R.ok(ReleaseBundleOut.model_validate(bundle))
 
 
-
 @router.get("/{bundle_id}/coverage", response_model=R[VersionCoverageOut], summary="版本三类型模块覆盖矩阵（Phase 0）")
 def get_bundle_coverage(
     bundle_id: int,
@@ -198,6 +162,7 @@ def get_bundle_coverage(
     """返回发布包模块 × 功能/接口/UI × 执行状态的覆盖矩阵与 60% 门禁。"""
     from app.services.version_coverage_service import compute_bundle_coverage
     return R.ok(VersionCoverageOut(**compute_bundle_coverage(db, bundle_id, current.project_id or 0)))
+
 
 @router.post("/{bundle_id}/import-requirement", response_model=R[dict], summary="从需求地址创建需求文档并关联发布包（Phase 1）")
 def import_bundle_requirement(
@@ -211,20 +176,15 @@ def import_bundle_requirement(
     from app.services import requirement_service
 
     pid = current.project_id or 0
-    bundle = db.get(ReleaseBundle, bundle_id)
-    if not bundle or bundle.project_id != pid:
+    bundle = release_bundle_service.get_bundle(db, bundle_id, pid)
+    if not bundle:
         from app.core.exceptions import not_found
         raise not_found("发布包")
     url = (bundle.requirement_url or "").strip()
     if not url:
         return R(code=400, msg="发布包尚未配置需求地址")
 
-    existing = db.scalar(
-        select(RequirementDocument).where(
-            RequirementDocument.project_id == pid,
-            RequirementDocument.source_ref == url,
-        ).order_by(RequirementDocument.id.desc())
-    )
+    existing = release_bundle_service.find_requirement_by_source_ref(db, pid, url)
     if existing:
         existing.release_bundle_id = bundle_id
         db.commit()
@@ -249,6 +209,8 @@ def import_bundle_requirement(
     _audit(req, current, db, "bundle:import_requirement", f"#{bundle_id}", f"doc#{doc['id']}")
     db.commit()
     return R.ok({"document_id": doc["id"], "reused": False, "title": doc["title"]})
+
+
 @router.delete("/{bundle_id}", response_model=R[dict], summary="删除发布包")
 def delete_bundle(
     bundle_id: int,
@@ -258,8 +220,8 @@ def delete_bundle(
 ):
     """删除发布包及其关联的所有模块节点（CASCADE）。"""
     pid = current.project_id or 0
-    bundle = db.get(ReleaseBundle, bundle_id)
-    if not bundle or bundle.project_id != pid:
+    bundle = release_bundle_service.get_bundle(db, bundle_id, pid)
+    if not bundle:
         from app.core.exceptions import not_found
         raise not_found("发布包")
     _audit(req, current, db, "bundle:delete", f"#{bundle_id} {bundle.name}")
@@ -280,8 +242,8 @@ def get_version_chain(
 ):
     """追溯发布包的完整版本链：从当前版本一直追溯到最初的父版本。"""
     pid = current.project_id or 0
-    bundle = db.get(ReleaseBundle, bundle_id)
-    if not bundle or bundle.project_id != pid:
+    bundle = release_bundle_service.get_bundle(db, bundle_id, pid)
+    if not bundle:
         from app.core.exceptions import not_found
         raise not_found("发布包")
 
@@ -293,143 +255,11 @@ def get_version_chain(
         chain.append(ReleaseBundleVersionChain.model_validate(current_bundle))
         visited.add(current_bundle.id)
         if current_bundle.parent_bundle_id:
-            current_bundle = db.get(ReleaseBundle, current_bundle.parent_bundle_id)
+            current_bundle = release_bundle_service.get_bundle(db, current_bundle.parent_bundle_id)
         else:
             break
 
     return R.ok(chain)
-
-
-# ═══════════════════════════════════════════════════════
-# 版本差异（对接 M2 VersionDiffer）
-# ═══════════════════════════════════════════════════════
-
-@router.post("/{bundle_id}/diff", response_model=R[dict], summary="触发版本差异对比")
-async def diff_bundle(
-    bundle_id: int,
-    body: VersionDiffRequest,
-    current: CurrentUser = Depends(require_permission("knowledge:manage")),
-    db: Session = Depends(get_db),
-):
-    """对比当前发布包与父发布包的模块/页面变化（Phase A 规则引擎 + Phase B AI 辅助）。
-
-    返回 VersionDiffResult 供人工审核后通过 confirm 入库。
-    """
-    pid = current.project_id or 0
-    bundle = db.get(ReleaseBundle, bundle_id)
-    if not bundle or bundle.project_id != pid:
-        from app.core.exceptions import not_found
-        raise not_found("发布包")
-
-    # Validate parent
-    parent = db.get(ReleaseBundle, body.parent_bundle_id)
-    if not parent or parent.project_id != pid:
-        return R(code=400, msg="父发布包不存在或不属于当前项目")
-
-    from app.services.knowledge.version_differ import diff_bundle as do_diff
-
-    diff_result = await do_diff(
-        db,
-        release_bundle_id=bundle_id,
-        parent_bundle_id=body.parent_bundle_id,
-        project_id=pid,
-        source_version=body.source_version or bundle.client_version,
-    )
-
-    # Serialize VersionDiffResult to dict
-    result_dict = {
-        "new_modules": diff_result.new_modules,
-        "modified_modules": [
-            {
-                "module_name": m.module_name,
-                "parent_module_id": m.parent_module_id,
-                "change": m.change,
-                "new_pages": m.new_pages,
-                "modified_pages": m.modified_pages,
-                "deleted_pages": m.deleted_pages,
-                "unchanged_pages": m.unchanged_pages,
-            }
-            for m in diff_result.modified_modules
-        ],
-        "deleted_modules": diff_result.deleted_modules,
-        "unchanged_modules": diff_result.unchanged_modules,
-        "diff_confidence": diff_result.diff_confidence,
-        "total_pages_diff": diff_result.total_pages_diff,
-        "warnings": diff_result.warnings,
-    }
-
-    # Store diff summary on the bundle
-    bundle.diff_summary = json.dumps(result_dict, ensure_ascii=False)
-    db.flush()
-    db.commit()
-
-    return R.ok(result_dict)
-
-
-@router.post("/{bundle_id}/diff/confirm", response_model=R[dict], summary="确认差异并构建模块树")
-async def confirm_diff(
-    bundle_id: int,
-    body: VersionDiffConfirmRequest,
-    current: CurrentUser = Depends(require_permission("knowledge:manage")),
-    db: Session = Depends(get_db),
-):
-    """确认版本差异对比结果，将差异应用到模块树（创建 RequirementModule 节点）。
-
-    支持 overrides 人工修正：reclassify（重分类模块类型）和 skip_modules（跳过指定模块）。
-    """
-    pid = current.project_id or 0
-    bundle = db.get(ReleaseBundle, bundle_id)
-    if not bundle or bundle.project_id != pid:
-        from app.core.exceptions import not_found
-        raise not_found("发布包")
-
-    if not bundle.parent_bundle_id:
-        return R(code=400, msg="当前发布包无父版本，无法确认差异。请先设置 parent_bundle_id 或直接提取模块树。")
-
-    # Parse diff_summary back into VersionDiffResult
-    from app.services.knowledge.version_differ import ModuleChange, VersionDiffResult, confirm_diff as do_confirm
-
-    diff_json = json.loads(bundle.diff_summary or "{}")
-    if not diff_json:
-        return R(code=400, msg="请先执行版本差异对比（POST /diff），再确认差异。")
-
-    diff_result = VersionDiffResult(
-        new_modules=diff_json.get("new_modules", []),
-        modified_modules=[
-            ModuleChange(
-                module_name=m["module_name"],
-                parent_module_id=m.get("parent_module_id"),
-                change=m.get("change", "modified"),
-                new_pages=m.get("new_pages", []),
-                modified_pages=m.get("modified_pages", []),
-                deleted_pages=m.get("deleted_pages", []),
-                unchanged_pages=m.get("unchanged_pages", []),
-            )
-            for m in diff_json.get("modified_modules", [])
-        ],
-        deleted_modules=diff_json.get("deleted_modules", []),
-        unchanged_modules=diff_json.get("unchanged_modules", []),
-        diff_confidence=diff_json.get("diff_confidence", 1.0),
-        total_pages_diff=diff_json.get("total_pages_diff", 0),
-        warnings=diff_json.get("warnings", []),
-    )
-
-    created_modules = await do_confirm(
-        db,
-        release_bundle_id=bundle_id,
-        parent_bundle_id=bundle.parent_bundle_id,
-        diff_result=diff_result,
-        project_id=pid,
-        source_version=bundle.client_version,
-        overrides=body.overrides,
-    )
-
-    db.commit()
-    return R.ok({
-        "created_modules": len(created_modules),
-        "module_ids": [m.id for m in created_modules],
-        "module_names": [m.name for m in created_modules],
-    })
 
 
 # ═══════════════════════════════════════════════════════
@@ -452,9 +282,7 @@ def get_regression_scope(
     from app.services.knowledge.test_case_linker import get_module_test_summary
 
     pid = current.project_id or 0
-    bundle = db.query(ReleaseBundle).filter(
-        ReleaseBundle.id == bundle_id, ReleaseBundle.project_id == pid
-    ).first()
+    bundle = release_bundle_service.get_bundle(db, bundle_id, pid)
     if not bundle:
         return R(code=404, msg="发布包不存在")
 
@@ -472,9 +300,7 @@ def get_regression_scope(
 
     # 从模块树中提取 module 名称（RequirementModule 表）
     if not changed_modules:
-        modules_rows = db.query(RequirementModule).filter(
-            RequirementModule.release_bundle_id == bundle_id
-        ).all()
+        modules_rows = release_bundle_service.list_requirement_modules(db, bundle_id)
         changed_modules = {m.name for m in modules_rows if m.name}
 
     if not changed_modules:
@@ -523,13 +349,10 @@ def trigger_regression_for_bundle(
 
     根据模块名称匹配 UiTestScript，触发对应的 UiTestJob 执行。
     """
-    from app.models.ui_test import UiTestScript
     from app.services import ui_test_service
 
     pid = current.project_id or 0
-    bundle = db.query(ReleaseBundle).filter(
-        ReleaseBundle.id == bundle_id, ReleaseBundle.project_id == pid
-    ).first()
+    bundle = release_bundle_service.get_bundle(db, bundle_id, pid)
     if not bundle:
         return R(code=404, msg="发布包不存在")
 
@@ -546,20 +369,14 @@ def trigger_regression_for_bundle(
     )
 
     # 获取模块名称
-    modules_rows = db.query(RequirementModule).filter(
-        RequirementModule.release_bundle_id == bundle_id
-    ).all()
+    modules_rows = release_bundle_service.list_requirement_modules(db, bundle_id)
     module_names = {m.name for m in modules_rows if m.name}
 
     if not module_names:
         return R.ok({"triggered": 0, "message": "没有找到模块数据，请先确认版本差异"})
 
     # 查找匹配的 UI 脚本
-    scripts = db.query(UiTestScript).filter(
-        UiTestScript.project_id == pid,
-        UiTestScript.module.in_(module_names),
-        UiTestScript.status == "active",
-    ).all()
+    scripts = release_bundle_service.list_active_ui_scripts(db, pid, module_names)
 
     triggered_jobs: list[dict] = []
     for script in scripts:
@@ -587,6 +404,3 @@ def trigger_regression_for_bundle(
         "triggered": len(triggered_jobs),
         "jobs": triggered_jobs,
     })
-
-
-
