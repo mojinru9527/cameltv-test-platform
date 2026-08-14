@@ -14,8 +14,31 @@ from pathlib import Path
 
 API_DIR = Path(__file__).resolve().parents[1] / "app" / "api" / "v1"
 
-_MODEL_IMPORT = re.compile(r"^\s*from\s+app\.models\s+import", re.M)
+_MODEL_IMPORT = re.compile(r"^\s*from\s+app\.models", re.M)
 _ORM_CALL = re.compile(r"\b(select|db\.query)\s*\(")
+
+
+def _scan_content(path: Path) -> str:
+    """读取文件内容并剔除 `if TYPE_CHECKING:` 块（类型标注专用，非运行时 ORM 访问）。"""
+    content = path.read_text(encoding="utf-8")
+    # 简单块剔除：缩进 + `if TYPE_CHECKING:` 行，直到缩进回退
+    out_lines = []
+    in_type_checking = False
+    checking_indent: int | None = None
+    for line in content.splitlines():
+        stripped = line.strip()
+        if not in_type_checking and stripped.startswith("if TYPE_CHECKING:"):
+            in_type_checking = True
+            checking_indent = len(line) - len(line.lstrip())
+            continue
+        if in_type_checking:
+            indent = len(line) - len(line.lstrip())
+            if stripped and indent <= checking_indent:
+                in_type_checking = False
+            else:
+                continue
+        out_lines.append(line)
+    return "\n".join(out_lines)
 
 
 def _route_files() -> list[Path]:
@@ -25,7 +48,7 @@ def _route_files() -> list[Path]:
 def test_no_model_imports_in_routes():
     violations = []
     for f in _route_files():
-        content = f.read_text(encoding="utf-8")
+        content = _scan_content(f)
         if _MODEL_IMPORT.search(content):
             violations.append(f.name)
     assert violations == [], f"路由层禁止模型 import: {violations}"
@@ -34,7 +57,7 @@ def test_no_model_imports_in_routes():
 def test_no_orm_calls_in_routes():
     violations = []
     for f in _route_files():
-        content = f.read_text(encoding="utf-8")
+        content = _scan_content(f)
         for m in _ORM_CALL.finditer(content):
             violations.append(f"{f.name}:{content[:m.start()].count(chr(10)) + 1} {m.group(0)}")
     assert violations == [], f"路由层禁止 ORM 直连: {violations}"

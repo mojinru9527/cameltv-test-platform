@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.deps import CurrentUser, get_db, require_permission
@@ -40,13 +39,7 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
 
 def _get_project_run(db: Session, run_id: int, project_id: int):
     """Load a run only through its owning job and current project."""
-    from app.models.ui_test import UiTestJob, UiTestRun
-
-    return db.scalar(
-        select(UiTestRun)
-        .join(UiTestJob, UiTestJob.id == UiTestRun.job_id)
-        .where(UiTestRun.id == run_id, UiTestJob.project_id == project_id)
-    )
+    return ui_test_service.get_project_run(db, run_id, project_id)
 
 
 def _resolve_artifact_path(artifact_dir: _Path, filename: str) -> _Path:
@@ -202,12 +195,11 @@ def cancel_run(
     db: Session = Depends(get_db),
 ):
     """取消正在运行的 UI 测试。设置 cancel_requested 标志，运行中 worker 会检测并终止进程。"""
-    from app.models.ui_test import UiTestRun, UiTestJob
-    run = db.get(UiTestRun, run_id)
+    run = ui_test_service.get_run_orm(db, run_id)
     if not run:
         raise HTTPException(404, "运行记录不存在")
     # Verify project isolation
-    job = db.get(UiTestJob, run.job_id)
+    job = ui_test_service.get_job_orm(db, run.job_id)
     if not job or job.project_id != (current.project_id or 0):
         raise HTTPException(404, "运行记录不存在")
     if run.status not in ("pending", "running"):
