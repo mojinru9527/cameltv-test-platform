@@ -8,7 +8,7 @@ import { Badge, Button, Input, PageShell, type BadgeTone } from '@/ui'
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
 import {
-  Server, Plus, Edit, Trash2, Eye, EyeOff, Globe,
+  Server, Plus, Edit, Trash2, Eye, EyeOff, Globe, Copy,
 } from '@/lib/icons'
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
@@ -330,8 +330,7 @@ export default function EnvironmentPage() {
                             <TableCell className="font-mono text-sm">{v.key}</TableCell>
                             <TableCell className="font-mono text-sm text-muted-foreground max-w-[200px] truncate" title={v.encrypted ? undefined : v.value}>
                               {v.encrypted ? '••••••••' : v.value}
-                            </TableCell>
-                            <TableCell>
+                            </TableCell>                            <TableCell>
                               {v.encrypted ? (
                                 <Badge tone="warning" className="text-xs">加密</Badge>
                               ) : (
@@ -341,6 +340,22 @@ export default function EnvironmentPage() {
                             <TableCell className="text-sm text-muted-foreground">{v.description}</TableCell>
                             <TableCell>
                               <div className="flex gap-1">
+                                {!v.encrypted && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={`复制变量 ${v.key}`}
+                                    title="复制值"
+                                    onClick={() => {
+                                      navigator.clipboard?.writeText(v.value || '').then(
+                                        () => toast.success(`已复制 ${v.key}`),
+                                        () => toast.error('复制失败'),
+                                      ).catch(() => toast.error('复制失败'))
+                                    }}
+                                  >
+                                    <Copy className="size-3.5" />
+                                  </Button>
+                                )}
                                 {canManage && (
                                   <Button variant="ghost" size="icon" onClick={() => openVarEdit(v)} aria-label={`编辑变量 ${v.key}`} title="编辑">
                                     <Edit className="size-3.5" />

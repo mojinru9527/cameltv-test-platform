@@ -80,8 +80,19 @@ export default function DshTasksPage() {
   const hasRunning = tasks.some((t) => t.status === 'running')
   useEffect(() => {
     if (!hasRunning) return
-    const timer = setInterval(() => load(), 3000)
-    return () => clearInterval(timer)
+    // Batch 178（FIX-173-P2-12）：指数退避轮询（1s→2s→4s→8s→10s 封顶），
+    // 避免长任务期间固定 3s 空转请求。
+    let delay = 1000
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const schedule = () => {
+      timer = setTimeout(async () => {
+        await load()
+        delay = Math.min(delay * 2, 10_000)
+        schedule()
+      }, delay)
+    }
+    schedule()
+    return () => { if (timer) clearTimeout(timer) }
   }, [hasRunning, load])
 
   const handleCreate = async () => {

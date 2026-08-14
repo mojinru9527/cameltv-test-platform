@@ -19,7 +19,7 @@ import {
   Clock,
   Ban,
 } from '@/lib/icons'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createUiJob, deleteUiJob, fetchUiJob, fetchUiJobs, fetchUiRuns, triggerUiJob, updateUiJob, fetchScripts, fetchRunDetail, cancelRun, fetchRunArtifacts, fetchRunArtifactBlob } from '@/api/uitest'
 import { fetchEnvironments } from '@/api/environment'
 import { fetchTestCases } from '@/api/testcase'
@@ -289,7 +289,6 @@ export default function UiTestPage() {
   const [runDetailOpen, setRunDetailOpen] = useState(false)
   const [runArtifacts, setRunArtifacts] = useState<UiRunArtifact[]>([])
   const [runDetailLoading, setRunDetailLoading] = useState(false)
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const selectedRunId = selectedRun?.id
   const selectedRunStatus = selectedRun?.status
 
@@ -298,29 +297,33 @@ export default function UiTestPage() {
     if (!selectedRunId || !runDetailOpen) return
     if (selectedRunStatus !== 'pending' && selectedRunStatus !== 'running') return
 
-    pollRef.current = setInterval(async () => {
-      try {
-        const fresh = await fetchRunDetail(selectedRunId)
-        setSelectedRun(fresh)
-        if (fresh.status !== 'pending' && fresh.status !== 'running') {
-          // Load artifacts when done
-          try {
-            const arts = await fetchRunArtifacts(selectedRunId)
-            setRunArtifacts(arts)
-          } catch { /* ignore */ }
-        }
-      } catch { /* ignore */ }
-    }, 3000)
+    // Batch 178（FIX-173-P2-12）：指数退避轮询（1s→2s→4s→8s→10s 封顶），
+    // 运行状态变化会重置退避（deps 含 selectedRunStatus）。
+    let delay = 1000
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const schedule = () => {
+      timer = setTimeout(async () => {
+        try {
+          const fresh = await fetchRunDetail(selectedRunId)
+          setSelectedRun(fresh)
+          if (fresh.status !== 'pending' && fresh.status !== 'running') {
+            // Load artifacts when done
+            try {
+              const arts = await fetchRunArtifacts(selectedRunId)
+              setRunArtifacts(arts)
+            } catch { /* ignore */ }
+          }
+        } catch { /* ignore */ }
+        delay = Math.min(delay * 2, 10_000)
+        schedule()
+      }, delay)
+    }
+    schedule()
 
     return () => {
-      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
+      if (timer) clearTimeout(timer)
     }
   }, [selectedRunId, selectedRunStatus, runDetailOpen])
-
-  // Cleanup polling on unmount
-  useEffect(() => {
-    return () => { if (pollRef.current) clearInterval(pollRef.current) }
-  }, [])
 
   const form = useForm<UiJobFormValues>({
     resolver: zodResolver(uiJobFormSchema),
