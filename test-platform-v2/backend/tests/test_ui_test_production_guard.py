@@ -79,7 +79,7 @@ def test_production_ui_run_queues_only_after_both_guards(
         has_trigger_prod=True,
     )
 
-    assert result["status"] == "fail"
+    assert result["status"] == "failed"
     assert result["base_url"] == "https://production.example.invalid"
     assert db_session.query(UiTestRun).count() == 1
 
@@ -124,5 +124,5 @@ def test_trigger_endpoint_requires_and_forwards_production_confirmation(
     )
 
     assert accepted.status_code == 200
-    assert accepted.json()["data"]["status"] == "fail"
+    assert accepted.json()["data"]["status"] == "failed"
     assert db_session.query(UiTestRun).count() == 1
