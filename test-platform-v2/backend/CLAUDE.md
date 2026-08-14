@@ -63,6 +63,13 @@ Router (api/v1/)  →  Service (services/)  →  Model (models/)
 - 认领/回收/收尾原语统一走 `app/core/task_queue.py`（`QueueSpec` + `atomic_claim`/`atomic_claim_by_id`/`reap_stale`/`finish_task` + `QueueWorkerLoop`）。
 - 新队列禁止自研 SELECT→改→commit 认领（TOCTOU）；锁列统一 `locked_by`/`locked_at`（或按 QueueSpec 配置），失联回收必须有（默认 30 分钟阈值）。
 
+### 执行状态统一词表（Batch 182 / FIX-173-P1-06，强制）
+
+- **DB 规范值唯一词表**：`pending | running | passed | failed | skipped | cancelled | blocked`（test_execution / test_plan_case.last_status / api_execution_task / api_execution_task_item / ui_test_run / ui_test_job / test_schedule_run）。
+- 新代码**只写规范值**；历史/外部值经 `app/core/execution_status.canonical_exec_status(v)` 规范化后落库（open_api 回写等外部入口必须过该函数）。
+- 统计/报告/趋势**响应键**（pass_/fail/skip/block/pending）是外部契约，读取侧用映射表（`_STATS_RESPONSE_KEY`/`_REPORT_STATS_KEY`）把 DB 规范值映射为响应键；禁止直接在响应层用 DB 值当键。
+- 前端展示统一走 `frontend/src/utils/executionStatus.ts`（新旧双值中文标签）。
+
 ## API 设计约定
 
 - **URL 风格**：`/api/v1/{resource}`，RESTful
