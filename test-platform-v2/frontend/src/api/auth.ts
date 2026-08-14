@@ -35,9 +35,9 @@ export function fetchMe() {
 }
 
 export function fetchMenus(signal?: AbortSignal) {
-  // Batch 150: 会话级缓存（TTL 60s）；传 signal 时保留 abort 语义走原路径
-  if (signal) return client.get<unknown, MenuItem[]>('/system/menus', { signal })
-  return cachedGet<MenuItem[]>('/system/menus', undefined, { ttl: 60_000 })
+  // Batch 150: 会话级缓存（TTL 60s）；Batch 176（FIX-173-P1-02）：传 signal 也命中缓存，
+  // 整页刷新/路由重挂载不再重复请求静态菜单。
+  return cachedGet<MenuItem[]>('/system/menus', undefined, { ttl: 60_000, signal })
 }
 
 export function fetchProjects() {

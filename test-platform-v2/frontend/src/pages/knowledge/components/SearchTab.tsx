@@ -61,9 +61,11 @@ export default function SearchTab() {
   const autoSearched = useRef(false)
 
   useEffect(() => {
+    let cancelled = false
     fetchSearchHealth()
-      .then(setHealth)
+      .then((h) => { if (!cancelled) setHealth(h) })
       .catch(() => { /* 静默——健康检查失败不影响主功能 */ })
+    return () => { cancelled = true }
   }, [])
 
   // 顶部常驻搜索栏触发 → 自动执行检索

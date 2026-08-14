@@ -6,8 +6,9 @@ const BASE = '/environments'
 // ── Environment CRUD ──
 
 export async function fetchEnvironments(signal?: AbortSignal): Promise<Environment[]> {
-  if (signal) return api.get(BASE, { signal })
-  return cachedGet<Environment[]>(BASE, undefined, { ttl: 60_000 })
+  // Batch 176（FIX-173-P1-02）：传 signal 也命中会话缓存（静态数据跨页共享），
+  // 未命中时发起可取消请求并回写缓存。
+  return cachedGet<Environment[]>(BASE, undefined, { ttl: 60_000, signal })
 }
 
 export async function createEnvironment(body: {

@@ -10,7 +10,12 @@ vi.mock('@/api/client', () => ({
     post: (...args: any[]) => mockPost(...args),
     get: (...args: any[]) => mockGet(...args),
   },
-  cachedGet: (...args: any[]) => mockGet(...args),
+  // Batch 176：cachedGet 模拟真实实现 —— 缓存命中直接返回；未命中时以
+  // client.get(url, { params, signal }) 形态发出（与生产实现一致）。
+  cachedGet: (url: string, params: any, options?: any) => {
+    const { signal } = options || {}
+    return mockGet(url, { params, signal })
+  },
   clearApiCache: vi.fn(),
 }))
 
