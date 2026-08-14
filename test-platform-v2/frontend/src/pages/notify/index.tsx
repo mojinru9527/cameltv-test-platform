@@ -299,14 +299,14 @@ export default function NotifyPage() {
                       <TableCell>
                         <div className="flex items-center gap-1">
                           {canManage && (
-                            <Button size="sm" variant="ghost" onClick={() => openEdit(ch)}>
+                            <Button size="sm" variant="ghost" onClick={() => openEdit(ch)} aria-label={`编辑渠道 ${ch.name}`} title="编辑">
                               <Edit className="size-4" />
                             </Button>
                           )}
                           <AlertDialog>
                             {canManage && (
                               <AlertDialogTrigger asChild>
-                                <Button size="sm" variant="ghost">
+                                <Button size="sm" variant="ghost" aria-label={`删除渠道 ${ch.name}`} title="删除">
                                   <Trash2 className="size-4 text-destructive" />
                                 </Button>
                               </AlertDialogTrigger>
