@@ -59,25 +59,26 @@ export default function DefectFormDialog({ open, editing, onClose, onSaved }: De
 
   // Fetch options and reset form when dialog opens
   useEffect(() => {
-    if (open) {
-      setSaveError('')
-      fetchUsers().then((r: any) => setUsers(r || [])).catch(() => setUsers([]))
-      fetchTestCases({ page_size: 200 }).then((r: any) => setCases(r?.items || [])).catch(() => setCases([]))
+    if (!open) return
+    let cancelled = false
+    setSaveError('')
+    fetchUsers().then((r: any) => { if (!cancelled) setUsers(r || []) }).catch(() => { if (!cancelled) setUsers([]) })
+    fetchTestCases({ page_size: 200 }).then((r: any) => { if (!cancelled) setCases(r?.items || []) }).catch(() => { if (!cancelled) setCases([]) })
 
-      if (editing) {
-        form.reset({
-          title: editing.title ?? '',
-          description: editing.description ?? '',
-          severity: editing.severity ?? 'P2',
-          assignee_id: editing.assignee_id ?? null,
-          case_id: editing.case_id ?? null,
-          external_id: editing.external_id ?? '',
-          external_url: editing.external_url ?? '',
-        })
-      } else {
-        form.reset({ title: '', description: '', severity: 'P2', assignee_id: null, case_id: null, external_id: '', external_url: '' })
-      }
+    if (editing) {
+      form.reset({
+        title: editing.title ?? '',
+        description: editing.description ?? '',
+        severity: editing.severity ?? 'P2',
+        assignee_id: editing.assignee_id ?? null,
+        case_id: editing.case_id ?? null,
+        external_id: editing.external_id ?? '',
+        external_url: editing.external_url ?? '',
+      })
+    } else {
+      form.reset({ title: '', description: '', severity: 'P2', assignee_id: null, case_id: null, external_id: '', external_url: '' })
     }
+    return () => { cancelled = true }
   }, [open, editing, form])
 
   const doSave = async (vals: DefectFormValues) => {

@@ -18,6 +18,12 @@ vi.mock('@/api/client', () => ({
     get: (...args: any[]) => mockGet(...args),
     post: (...args: any[]) => mockPost(...args),
   },
+  // Batch 176（FIX-173-P1-02）：fetchEnvironments 走 cachedGet，测试转发到 mockGet
+  cachedGet: (url: string, params?: any, options?: any) => {
+    const { signal } = options || {}
+    return mockGet(url, { params, signal })
+  },
+  clearApiCache: vi.fn(),
 }))
 
 // ── Import functions under test (after mock) ──

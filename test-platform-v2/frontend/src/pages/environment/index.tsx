@@ -94,17 +94,21 @@ export default function EnvironmentPage() {
   }, [envs, selectedEnv])
 
   // ── Variables loading (on-demand per selected env) ──
-  const loadVars = useCallback(async (envId: number) => {
+  const loadVars = useCallback(async (envId: number, isCancelled?: () => boolean) => {
     setVarsLoading(true)
     try {
       const data = await fetchVariables(envId)
-      setVariables(data)
+      // Batch 176（FIX-173-P1-02）：快速切换环境时旧响应不得覆盖新环境变量（竞态守卫）
+      if (!isCancelled?.()) setVariables(data)
     } catch { /* handled by interceptor */ }
-    finally { setVarsLoading(false) }
+    finally { if (!isCancelled?.()) setVarsLoading(false) }
   }, [])
 
   useEffect(() => {
-    if (selectedEnv) loadVars(selectedEnv.id)
+    if (!selectedEnv) return
+    let cancelled = false
+    void loadVars(selectedEnv.id, () => cancelled)
+    return () => { cancelled = true }
   }, [selectedEnv, loadVars])
 
   // ── Environment handlers ──
