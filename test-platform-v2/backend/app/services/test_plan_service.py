@@ -505,7 +505,7 @@ def auto_execute_api_cases(
     failed = 0
     api_task = None  # Batch 157：计划 API 执行登记为 trigger_type=plan 任务
 
-    for pc, tc in api_cases:
+    for idx, (pc, tc) in enumerate(api_cases, start=1):
         try:
             exec_result = execute_api_case(
                 db, tc.id,
@@ -591,6 +591,14 @@ def auto_execute_api_cases(
             "case_title": tc.title,
             "status": status,
         })
+
+        # Batch 174（FIX-173-P0-03）：分批短事务提交，避免单长事务锁行
+        if idx % 10 == 0:
+            api_task_id = api_task.id if api_task is not None else None
+            db.commit()
+            if api_task_id is not None:
+                from app.models.api_asset import ApiExecutionTask as _ApiTask
+                api_task = db.get(_ApiTask, api_task_id)
 
     # Batch 157：同步任务汇总
     if api_task is not None:
@@ -974,8 +982,13 @@ def execute_all_cases(
     api_task = None  # Batch 157：计划 API 执行登记为 trigger_type=plan 任务
     api_passed = 0
     api_failed = 0
+    # Batch 174（FIX-173-P0-03）：分批短事务提交，避免整计划单长事务
+    # 锁行数分钟（生产 PG statement timeout / 调度线程阻塞）。每 BATCH_COMMIT_SIZE 条
+    # 提交一次；commit 会 expire ORM 对象，后续访问的 api_task 由 _ensure_plan_api_task
+    # 重新查询，pc/tc 仅取已缓存的 id/status 字段（不触发重查的字段直接使用）。
+    BATCH_COMMIT_SIZE = 10
 
-    for pc in pcs:
+    for idx, pc in enumerate(pcs, start=1):
         tc = _case_map.get(pc.case_id)
         if not tc:
             skipped += 1
@@ -1100,6 +1113,21 @@ def execute_all_cases(
             "status": status,
             "error": notes if status == "skip" else ("" if status == "pass" else notes),
         })
+
+        # Batch 174（FIX-173-P0-03）：分批短事务提交，避免整计划单长事务
+        # 锁行数分钟（生产 PG statement timeout / APScheduler 线程阻塞 cron）。
+        # 每 BATCH_COMMIT_SIZE 条用例提交一次；commit 会 expire ORM 对象，
+        # 后续访问的 api_task 用已缓存 id 重新获取，pc/tc 由 SQLAlchemy 自动重查
+        # （SQLite/PG 均廉价；比整计划一条长事务锁数分钟安全得多）。
+        if idx % BATCH_COMMIT_SIZE == 0:
+            if pending_exec_rows:
+                db.add_all(pending_exec_rows)
+                pending_exec_rows = []
+            api_task_id = api_task.id if api_task is not None else None
+            db.commit()
+            if api_task_id is not None:
+                from app.models.api_asset import ApiExecutionTask as _ApiTask
+                api_task = db.get(_ApiTask, api_task_id)
 
     # Batch 161（G4）：非 API 执行记录一次性批量入库（避免数千条逐条 ORM add）
     if pending_exec_rows:

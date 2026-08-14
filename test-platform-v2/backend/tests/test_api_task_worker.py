@@ -125,6 +125,111 @@ class TestApiTaskWorkerClaim:
         claimed = claim_next_task(db_session, worker_id="w")
         assert claimed.started_at is not None
 
+    def test_claim_does_not_touch_other_workers_running_task(self, db_session):
+        """Batch 174（FIX-173-P0-01/02）：running 任务（其他 worker 持有）不得被再次认领，
+        双 Worker/多副本重复执行回归防护。"""
+        from datetime import datetime, timedelta, timezone
+
+        from app.models.api_asset import ApiExecutionTask
+        from app.services.api_task_worker import claim_next_task
+
+        running = ApiExecutionTask(
+            project_id=1, task_id="T-HELD", name="Held By Another",
+            total=1, status="running", locked_by="worker-A",
+            locked_at=datetime.now(timezone.utc) - timedelta(seconds=10),
+        )
+        db_session.add(running)
+        db_session.commit()
+
+        claimed = claim_next_task(db_session, worker_id="worker-B")
+        assert claimed is None
+
+    def test_reap_stale_api_tasks_recovers_zombie(self, db_session):
+        """Batch 174（FIX-173-P0-01）：锁定超时的 running 任务被回收为 failed，
+        僵尸任务（永久卡 running 无结果）不再存在。"""
+        from datetime import datetime, timedelta, timezone
+
+        from app.models.api_asset import ApiExecutionTask
+        from app.services.api_task_worker import reap_stale_api_tasks
+
+        stale = ApiExecutionTask(
+            project_id=1, task_id="T-ZOMBIE", name="Zombie",
+            total=1, status="running", locked_by="dead-worker",
+            locked_at=datetime.now(timezone.utc) - timedelta(hours=2),
+            started_at=datetime.now(timezone.utc) - timedelta(hours=2),
+        )
+        fresh = ApiExecutionTask(
+            project_id=1, task_id="T-FRESH", name="Fresh",
+            total=1, status="running", locked_by="live-worker",
+            locked_at=datetime.now(timezone.utc),
+        )
+        db_session.add_all([stale, fresh])
+        db_session.commit()
+
+        reaped = reap_stale_api_tasks(db_session)
+        assert reaped == 1
+
+        db_session.refresh(stale)
+        db_session.refresh(fresh)
+        assert stale.status == "failed"
+        assert "stale" in (stale.error_message or "")
+        assert stale.locked_by == ""
+        assert fresh.status == "running"  # 非失联任务不受影响
+
+    def test_claim_recovers_stale_before_claiming(self, db_session):
+        """Batch 174：认领前先回收僵尸任务，后续 pending 任务可正常认领。"""
+        from datetime import datetime, timedelta, timezone
+
+        from app.models.api_asset import ApiExecutionTask
+        from app.services.api_task_worker import claim_next_task
+
+        zombie = ApiExecutionTask(
+            project_id=1, task_id="T-ZB2", name="Zombie2",
+            total=1, status="running", locked_by="dead",
+            locked_at=datetime.now(timezone.utc) - timedelta(hours=3),
+        )
+        pending = ApiExecutionTask(
+            project_id=1, task_id="T-NEXT", name="Next",
+            total=1, status="pending",
+        )
+        db_session.add_all([zombie, pending])
+        db_session.commit()
+
+        claimed = claim_next_task(db_session, worker_id="w")
+        assert claimed is not None
+        assert claimed.task_id == "T-NEXT"
+
+        db_session.refresh(zombie)
+        assert zombie.status == "failed"
+
+
+class TestTaskWorkerNoApiBranch:
+    """Batch 174（FIX-173-P0-01）：task_worker（APScheduler 轮询）不再处理 API 批量任务，
+    消除与 api_task_worker 守护线程的双 Worker 竞态。"""
+
+    def test_poll_and_execute_does_not_process_api_tasks(self):
+        """poll_and_execute 不应再调用任何 API 任务认领逻辑。"""
+        from unittest.mock import MagicMock, patch
+
+        from app.services import task_worker
+
+        with patch("app.services.task_worker._process_ui_runs") as mock_ui, \
+             patch("app.services.lanhu_evidence.worker.poll_and_execute_evidence_jobs") as mock_evidence, \
+             patch("app.services.api_task_worker.claim_next_task") as mock_claim:
+            task_worker.poll_and_execute()
+
+        mock_ui.assert_called_once()
+        mock_evidence.assert_called_once()
+        mock_claim.assert_not_called()  # API 认领必须不再被 APScheduler 轮询触发
+
+    def test_task_worker_has_no_api_semaphore(self):
+        """_semaphore_api 与 API 处理函数必须已移除。"""
+        from app.services import task_worker
+
+        assert not hasattr(task_worker, "_semaphore_api")
+        assert not hasattr(task_worker, "_process_api_tasks")
+        assert not hasattr(task_worker, "_run_api_task")
+
 
 class TestApiTaskWorkerExecute:
     """Worker execute_task 测试。"""
