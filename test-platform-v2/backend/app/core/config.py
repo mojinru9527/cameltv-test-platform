@@ -133,7 +133,10 @@ class Settings(BaseSettings):
     dsh_cordis_config: str = ""                  # python-sdk runtime 的 cordis 组合配置；空 = 内置 minimal 配置
     dsh_timeout_seconds: float = 600.0           # 单任务超时（秒）
     dsh_max_output_chars: int = 20000            # 输出截断上限
-    dsh_workspace: str = ""                      # agent workspace；空 = 每次任务在 session_root 下建隔离工作区
+    dsh_workspace: str = ""                      # agent workspace 根；空 = 每次任务在 session_root 下建隔离工作区
+    # ── Batch 184（C172-1）沙箱加固配置 ──
+    dsh_max_concurrent: int = 1                  # 全局并发 DSH 任务上限（安全优先默认串行；node/python-sdk 均受控）
+    dsh_max_task_chars: int = 20000              # 单任务文本长度上限（超限直接拒绝）
 
     # ── AI 降级 / 超时（DeepSeek 分类器不可用时的本地降级提取）──
     ai_timeout_seconds: float = 180.0          # 单次 AI 调用超时（秒）
