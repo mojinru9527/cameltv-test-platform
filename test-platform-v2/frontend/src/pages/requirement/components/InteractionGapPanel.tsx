@@ -29,7 +29,15 @@ interface GapResult {
 }
 
 function toLabel(url: string): string {
-  const clean = url.replace(/^https?:\/\//, '').split('?')[0]
+  // Batch 178（FIX-173-P2-02）：URL 百分比解码（%20→空格、%E4%B8%AD→中文），
+  // 失败时回退原串；截断保留省略号。
+  let decoded = url
+  try {
+    decoded = decodeURIComponent(url)
+  } catch {
+    /* 非法编码回退原串 */
+  }
+  const clean = decoded.replace(/^https?:\/\//, '').split('?')[0]
   return clean.length > 60 ? `${clean.slice(0, 57)}...` : clean
 }
 
@@ -39,6 +47,7 @@ export default function InteractionGapPanel() {
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
+  const [jumpInput, setJumpInput] = useState('')
   const [domainFilter, setDomainFilter] = useState('')
 
   const load = useCallback(async (signal?: AbortSignal) => {
@@ -174,7 +183,7 @@ export default function InteractionGapPanel() {
                   </div>
                 )}
                 {filteredGaps.length > GAP_PAGE_SIZE && (
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <Button
                       size="sm"
                       variant="ghost"
@@ -184,7 +193,40 @@ export default function InteractionGapPanel() {
                     >
                       上一页
                     </Button>
-                    <span className="text-xs tabular-nums text-muted-foreground">第 {page} / {pageCount} 页</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs tabular-nums text-muted-foreground">第 {page} / {pageCount} 页</span>
+                      {/* Batch 178（FIX-173-P2-02）：跳页输入，45 页列表不必逐页翻 */}
+                      <div className="flex items-center gap-1">
+                        <Input
+                          type="number"
+                          min={1}
+                          max={pageCount}
+                          value={jumpInput}
+                          onChange={(e) => setJumpInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const n = Number(jumpInput)
+                              if (Number.isFinite(n) && n >= 1 && n <= pageCount) setPage(n)
+                              setJumpInput('')
+                            }
+                          }}
+                          className="h-7 w-14 text-xs"
+                          aria-label="跳转到缺口页"
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => {
+                            const n = Number(jumpInput)
+                            if (Number.isFinite(n) && n >= 1 && n <= pageCount) setPage(n)
+                            setJumpInput('')
+                          }}
+                        >
+                          跳转
+                        </Button>
+                      </div>
+                    </div>
                     <Button
                       size="sm"
                       variant="ghost"
