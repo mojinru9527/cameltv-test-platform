@@ -22,5 +22,6 @@ class AiTask(Base, TimestampMixin):
     result_json: Mapped[str] = mapped_column(Text, default="null")
     error: Mapped[str] = mapped_column(Text, default="")
     locked_at: Mapped[datetime | None] = mapped_column(default=None)
+    locked_by: Mapped[str] = mapped_column(String(64), default="")  # Batch 181：统一认领锁（P2-06）
     started_at: Mapped[datetime | None] = mapped_column(default=None)
     finished_at: Mapped[datetime | None] = mapped_column(default=None)

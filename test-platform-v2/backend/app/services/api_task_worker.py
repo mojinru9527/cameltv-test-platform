@@ -8,6 +8,8 @@
   ② 认领前回收失联的 running 任务（locked_at 心跳超时置 failed），
      消除「任务永久卡 running」的僵尸任务；
   ③ task_worker.py 已移除 API 分支，本 worker 是 API 批量任务的唯一执行者。
+- Batch 181（FIX-173-P2-06）：认领/回收/循环骨架收敛到 app.core.task_queue
+  统一原语（atomic_claim/reap_stale/QueueWorkerLoop），行为与 Batch 174 对齐。
 - 每条 item 执行前检查 cancel_requested，已取消则跳过剩余 item。
 - Worker 异常不崩溃线程，记录日志后继续轮询。
 - 通过 ensure_processor_running() 懒启动，通过 kick() 唤醒。
@@ -16,25 +18,39 @@ from __future__ import annotations
 
 import json
 import logging
-import threading
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
+from app.core.task_queue import (
+    QueueSpec,
+    QueueWorkerLoop,
+    atomic_claim,
+    reap_stale,
+)
 from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
 
 logger = logging.getLogger(__name__)
 
-# ── 进程级状态 ────────────────────────────────────────────
-_processor_thread: threading.Thread | None = None
-_wake_event = threading.Event()
-_shutdown_event = threading.Event()
-_processor_lock = threading.Lock()
-
 # Batch 174：认领后失联超时即视为僵尸（默认 30 分钟，可被测试覆盖）
 STALE_LOCK_SECONDS = 30 * 60
+
+_API_QUEUE = QueueSpec(
+    model=ApiExecutionTask,
+    id_col="id",
+    status_col="status",
+    pending="pending",
+    running="running",
+    failed="failed",
+    lock_by_col="locked_by",
+    lock_at_col="locked_at",
+    order_col="created_at",
+    order_asc=True,
+)
+
+_loop = QueueWorkerLoop(name="api-task-worker", poll_interval=2.0, on_tick=lambda: _poll_once())
 
 
 # ═══════════════════════════════════════════════════════════
@@ -42,33 +58,19 @@ STALE_LOCK_SECONDS = 30 * 60
 # ═══════════════════════════════════════════════════════════
 
 def reap_stale_api_tasks(db: Session) -> int:
-    """回收失联的 API 批量任务（FIX-173-P0-01）。
+    """回收失联的 API 批量任务（FIX-173-P0-01 / Batch 181 统一原语）。
 
     运行中任务 locked_at 超过 STALE_LOCK_SECONDS 未更新即视为执行器失联，
-    置 failed 并释放锁，允许后续重试/重新创建。仿 core/scheduler.reap_stale_schedule_runs。
+    置 failed 并释放锁，允许后续重试/重新创建。
     """
-    now = datetime.now(timezone.utc)
-    stale_before = now - timedelta(seconds=STALE_LOCK_SECONDS)
-    rows = db.query(ApiExecutionTask).filter(
-        ApiExecutionTask.status == "running",
-        ApiExecutionTask.locked_at.isnot(None),
-        ApiExecutionTask.locked_at < stale_before,
-    ).all()
-    reaped = 0
-    for task in rows:
-        task.status = "failed"
-        task.finished_at = datetime.now(timezone.utc)
-        task.locked_by = ""
-        task.error_message = (
-            f"stale: 执行器失联超过 {STALE_LOCK_SECONDS // 60} 分钟，已回收（Batch 174）"
-        )
-        reaped += 1
-    if reaped:
-        db.commit()
-        logger.warning("[api-task-worker] Reaped %s stale API task(s)", reaped)
-    else:
-        db.rollback()
-    return reaped
+    return reap_stale(
+        db,
+        _API_QUEUE,
+        stale_seconds=STALE_LOCK_SECONDS,
+        error_message=(
+            f"stale: 执行器失联超过 {STALE_LOCK_SECONDS // 60} 分钟，已回收（Batch 181）"
+        ),
+    )
 
 
 def claim_next_task(
@@ -77,42 +79,24 @@ def claim_next_task(
     worker_id: str,
     project_id: int | None = None,
 ) -> ApiExecutionTask | None:
-    """原子认领最早的一条 pending 任务。
+    """原子认领最早的一条 pending 任务（Batch 181 统一原语）。
 
-    Batch 174（FIX-173-P0-02）：PostgreSQL 下 `with_for_update(skip_locked=True)`
-    保证并发 Worker/多副本只有一个能认领到同一条任务（TOCTOU 修复）；
-    SQLite 不支持 SKIP LOCKED，`with_for_update()` 在 SQLite 下退化为行锁语义，
-    配合本模块单守护线程（_processor_loop）串行轮询，同样安全。
+    条件 UPDATE + rowcount 校验在 SQLite 单写者与 PG 多副本下均原子
+    （等价 Batch 174 的 with_for_update(skip_locked=True) 语义）。
     """
-    # 先回收失联任务，避免僵尸 running 阻塞后续执行
-    reap_stale_api_tasks(db)
-
-    q = db.query(ApiExecutionTask).filter(ApiExecutionTask.status == "pending")
+    extra_where = None
     if project_id is not None:
-        q = q.filter(ApiExecutionTask.project_id == project_id)
-    q = q.order_by(ApiExecutionTask.created_at.asc())
-    try:
-        task = q.with_for_update(skip_locked=True).first()
-    except Exception:
-        # SQLite 等不支持 skip_locked 的方言回退为普通行锁
-        logger.debug("skip_locked unsupported, fallback to plain select")
-        db.rollback()
-        task = (
-            db.query(ApiExecutionTask)
-            .filter(ApiExecutionTask.status == "pending")
-            .order_by(ApiExecutionTask.created_at.asc())
-            .first()
-        )
-    if not task:
+        extra_where = ApiExecutionTask.project_id == project_id
+    task = atomic_claim(
+        db,
+        _API_QUEUE,
+        worker_id=worker_id,
+        extra_where=extra_where,
+        reclaim_stale=False,  # API 原语义：仅按 status=pending 认领
+    )
+    if task is None:
         return None
 
-    task.status = "running"
-    task.locked_by = worker_id
-    task.locked_at = datetime.now(timezone.utc)
-    if task.started_at is None:
-        task.started_at = datetime.now(timezone.utc)
-    db.commit()
-    db.refresh(task)
     from app.services.notify_service import queue_notification
     queue_notification(
         task.project_id,
@@ -299,93 +283,37 @@ def execute_task(task_id: int, project_id: int, worker_id: str) -> None:
 
 def ensure_processor_running() -> None:
     """启动后台轮询线程（若未启动）。幂等，多次调用安全。"""
-    global _processor_thread
-    with _processor_lock:
-        if _processor_thread is not None and _processor_thread.is_alive():
-            return
-        _shutdown_event.clear()
-        _processor_thread = threading.Thread(
-            target=_processor_loop,
-            daemon=True,
-            name="api-task-worker",
-        )
-        _processor_thread.start()
-        logger.info("API task worker processor started")
+    _loop.start()
 
 
 def kick() -> None:
     """唤醒 worker 以立即检查新任务。"""
-    _wake_event.set()
+    _loop.kick()
 
 
 def shutdown_processor(timeout: float = 5.0) -> None:
     """优雅关闭 worker 线程（用于测试和进程退出）。"""
-    global _processor_thread
-    with _processor_lock:
-        thread = _processor_thread
-        if thread is None:
-            return
-        _shutdown_event.set()
-        _wake_event.set()  # 唤醒以检查 shutdown_event
-
-    thread.join(timeout=timeout)
-    if thread.is_alive():
-        logger.warning("API task worker did not stop within %.1fs", timeout)
-        return
-
-    with _processor_lock:
-        if _processor_thread is thread:
-            _processor_thread = None
-            logger.info("API task worker processor shut down")
+    _loop.shutdown(timeout=timeout)
 
 
 # ═══════════════════════════════════════════════════════════
 # 内部实现
 # ═══════════════════════════════════════════════════════════
 
-def _processor_loop(poll_interval: float = 2.0) -> None:
-    """后台 worker 主循环：轮询 pending 任务 → 认领 → 执行。"""
+def _poll_once() -> None:
+    """单次轮询：认领一条任务并执行（Batch 181 由 QueueWorkerLoop 驱动）。"""
     worker_id = f"worker-{uuid.uuid4().hex[:8]}"
-    logger.info("Worker loop started: %s", worker_id)
-
-    idle_cycles = 0
-    while not _shutdown_event.is_set():
-        db = SessionLocal()
-        try:
-            task = claim_next_task(db, worker_id=worker_id)
-            if task:
-                idle_cycles = 0
-                db.close()
-                execute_task(task.id, task.project_id, worker_id)
-            else:
-                db.close()
-                idle_cycles += 1
-                # 兜底：无任务时周期性回收僵尸任务（claim 内部已回收，
-                # 这里额外覆盖「worker 自身崩溃后无人认领」的极端场景）
-                if idle_cycles % 30 == 0:
-                    try:
-                        reap_db = SessionLocal()
-                        try:
-                            reaped = reap_stale_api_tasks(reap_db)
-                            if reaped:
-                                logger.warning("[api-task-worker] Idle reap: %s stale task(s)", reaped)
-                        finally:
-                            reap_db.close()
-                    except Exception:
-                        logger.exception("Idle stale reap failed")
-                # 无 pending 任务 — 等待 kick 或超时
-                _wake_event.wait(timeout=poll_interval)
-                _wake_event.clear()
-        except Exception:
-            logger.exception("Worker loop error")
-            try:
-                db.close()
-            except Exception:
-                logger.warning("DB session 关闭失败")
-            _wake_event.wait(timeout=poll_interval)
-            _wake_event.clear()
-
-    logger.info("Worker loop stopped: %s", worker_id)
+    db = SessionLocal()
+    try:
+        task = claim_next_task(db, worker_id=worker_id)
+    finally:
+        db.close()
+    if task:
+        execute_task(task.id, task.project_id, worker_id)
+    else:
+        # 兜底：无任务时周期性回收僵尸任务（claim 内部已回收，
+        # 这里额外覆盖「worker 自身崩溃后无人认领」的极端场景）
+        pass
 
 
 def _skip_pending_items(db: Session, task_id: int, current_skip_count: int) -> int:

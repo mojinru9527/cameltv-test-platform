@@ -72,6 +72,8 @@ class LanhuEvidenceJob(Base, TimestampMixin):
     requested_options_json: Mapped[str] = mapped_column(Text, default="{}")
     import_result_json: Mapped[str] = mapped_column(Text, default="{}")
     heartbeat_at: Mapped[datetime | None] = mapped_column(default=None, index=True)
+    # Batch 181：统一认领锁（P2-06）；活性判定仍以 heartbeat_at 为准
+    locked_by: Mapped[str] = mapped_column(default="")
 
 
 class LanhuEvidencePage(Base, TimestampMixin):

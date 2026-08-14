@@ -26,4 +26,7 @@ class DshTask(Base):
     operator_id: Mapped[int] = mapped_column(default=0)
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
     started_at: Mapped[datetime | None] = mapped_column(default=None)
+    # Batch 181：统一认领锁（P2-06）；此前 started_at 兼作锁字段，现语义分离
+    locked_at: Mapped[datetime | None] = mapped_column(default=None)
+    locked_by: Mapped[str] = mapped_column(default="")
     finished_at: Mapped[datetime | None] = mapped_column(default=None)
