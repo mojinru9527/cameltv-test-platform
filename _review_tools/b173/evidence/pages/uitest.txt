@@ -1,0 +1,133 @@
+跳到主内容
+CamelTv
+测试平台
+知识
+知识中心
+项目知识
+平台研发
+知识图谱
+AI审核台
+导航菜单
+工作台
+质量追溯
+需求文档
+版本测试任务
+用例脑图
+用例服务
+测试计划
+接口测试
+UI 自动化
+Playground
+定时任务
+报告中心
+系统管理
+我的项目
+缺陷管理
+测试数据集
+集成配置
+通知配置
+目标环境
+Agent 工作台
+DSH 任务
+蓝湖证据包
+体
+体育平台管理员
+sportsadmin@cameltv.local
+Toggle Sidebar
+当前项目
+CamelTv 体育平台
+黑曜
+体
+体育平台管理员
+UI 测试
+任务 (10)
+用例 / 脚本
+全部
+刷新
+新建任务
+名称	关联用例	测试文件	浏览器	目标环境	状态	上次执行	操作
+[Playground] 横幅广告-多广告按权重顺序轮播	横幅广告-多广告按权重顺序轮播	generated/playground-case-10193.spec.ts	
+chromium	未绑定	待执行	-	
+详情
+编辑
+执行
+
+[Playground] 开屏广告-展示进行中的开屏广告	开屏广告-展示进行中的开屏广告	generated/playground-case-10191.spec.ts	
+chromium	未绑定	待执行	-	
+详情
+编辑
+执行
+
+[Playground] 中场广告-中场休息8分钟内独占展示	中场广告-中场休息8分钟内独占展示	generated/playground-case-10200.spec.ts	
+chromium	未绑定	待执行	-	
+详情
+编辑
+执行
+
+[Playground] 横幅广告-多广告按权重顺序轮播	横幅广告-多广告按权重顺序轮播	generated/playground-case-10193.spec.ts	
+chromium	未绑定	待执行	-	
+详情
+编辑
+执行
+
+[Playground] 开屏广告-展示进行中的开屏广告	开屏广告-展示进行中的开屏广告	generated/playground-case-10191.spec.ts	
+chromium	未绑定	待执行	-	
+详情
+编辑
+执行
+
+16.0.0-开发页面验收-UI	-	specs/production-p0-modules.spec.ts	
+chromium	
+PROD
+体育平台-生产-站点UI
+	运行中	2026/8/12 13:25:43	
+详情
+编辑
+执行
+
+15.0.0-上线核心路径回归-UI	-	specs/production-interaction.spec.ts	
+chromium	
+PROD
+体育平台-生产-站点UI
+	运行中	2026/8/12 13:25:45	
+详情
+编辑
+执行
+
+体育平台-P0-交互路径回归	-	specs/production-interaction.spec.ts	
+chromium	
+PROD
+体育平台-生产-站点UI
+	已完成	2026/8/14 02:02:53	
+详情
+编辑
+执行
+
+体育平台-P0-每日生产只读回归	-	specs/production-p0-modules.spec.ts	
+chromium	
+PROD
+体育平台-生产-站点UI
+	已完成	2026/8/7 03:09:06	
+详情
+编辑
+执行
+
+体育平台-生产只读冒烟	-	specs/production-smoke.spec.ts	
+chromium	
+PROD
+体育平台-生产
+	失败	2026/8/6 02:08:54	
+详情
+编辑
+执行
+共 10 条
+上一页
+1
+/ 1
+下一页
+跳转到
+页
+GO
+Command Palette
+
+Search for a command to run...

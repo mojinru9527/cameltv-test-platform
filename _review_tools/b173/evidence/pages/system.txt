@@ -1,0 +1,117 @@
+跳到主内容
+CamelTv
+测试平台
+知识
+知识中心
+项目知识
+平台研发
+知识图谱
+AI审核台
+导航菜单
+工作台
+质量追溯
+需求文档
+版本测试任务
+用例脑图
+用例服务
+测试计划
+接口测试
+UI 自动化
+Playground
+定时任务
+报告中心
+系统管理
+我的项目
+缺陷管理
+测试数据集
+集成配置
+通知配置
+目标环境
+Agent 工作台
+DSH 任务
+蓝湖证据包
+体
+体育平台管理员
+sportsadmin@cameltv.local
+Toggle Sidebar
+当前项目
+CamelTv 体育平台
+黑曜
+体
+体育平台管理员
+系统管理
+用户管理
+角色管理
+审计日志
+API Token
+邀请码
+新建用户
+ID	用户名	昵称	邮箱	状态	角色	操作
+1	admin	超级管理员	admin@cameltv.local	启用	
+admin
+	
+编辑
+删除
+
+4	sportsadmin	体育平台管理员	sportsadmin@cameltv.local	启用	
+admin
+	
+编辑
+删除
+
+5	admin1	验收管理员	admin1@cameltv.local	启用	
+admin
+	
+编辑
+删除
+
+10	c1091_check_215243	-	c1091_check_215243@example.com	启用	
+tester
+	
+编辑
+删除
+
+11	test	-	-	启用	
+tester
+	
+编辑
+删除
+
+12	qa1500	15.0.0回归QA	qa1500@cameltv.local	启用	
+tester
+	
+编辑
+删除
+
+13	qa1600	16.0.0验收QA	qa1600@cameltv.local	启用	
+tester
+	
+编辑
+删除
+
+14	c165walk20260813	C165 Walkthrough	c165walk@example.com	启用	
+tester
+	
+编辑
+删除
+
+15	tester	测试同学	tester@cameltv.local	启用	
+tester
+	
+编辑
+删除
+
+16	viewer	运营只读	viewer@cameltv.local	启用	
+viewer
+	
+编辑
+删除
+
+17	sportqa559	体育直播评测员	sportqa559@cameltv.local	启用	
+tester
+	
+编辑
+删除
+Command Palette
+
+Search for a command to run...

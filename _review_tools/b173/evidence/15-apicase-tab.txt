@@ -1,0 +1,124 @@
+跳到主内容
+CamelTv
+测试平台
+知识
+知识中心
+项目知识
+平台研发
+知识图谱
+AI审核台
+导航菜单
+工作台
+质量追溯
+需求文档
+版本测试任务
+用例脑图
+用例服务
+测试计划
+接口测试
+UI 自动化
+Playground
+定时任务
+报告中心
+系统管理
+我的项目
+缺陷管理
+测试数据集
+集成配置
+通知配置
+目标环境
+Agent 工作台
+DSH 任务
+蓝湖证据包
+体
+体育平台管理员
+sportsadmin@cameltv.local
+Toggle Sidebar
+当前项目
+CamelTv 体育平台
+黑曜
+体
+体育平台管理员
+接口测试
+
+接口资产导入、用例生成、调试执行、批量任务。
+
+接口资产
+快速调试
+接口用例
+执行任务
+全选
+批量执行 (0)
+不使用环境
+不使用数据集（用例默认）
+71 条
+GET
+/config_refresh/list_config
+3 条用例
+执行全部
+POST
+/ee/news/aggregate_news_kind
+1 条用例
+执行全部
+POST
+/admin/recharge/activity/delete
+2 条用例
+执行全部
+POST
+/admin/ads/activity/save
+14 条用例
+执行全部
+GET
+/ee/sports_live/football/match/trend/detail
+2 条用例
+执行全部
+GET
+/ee/sports_live/football/match/team_stats/list
+2 条用例
+执行全部
+POST
+/search/hotword/getHotwordList
+2 条用例
+执行全部
+GET
+/ee/news_kind/list
+1 条用例
+执行全部
+GET
+/ee/diamond/withdraw/autoApplyForUser
+2 条用例
+执行全部
+GET
+/ee/forecast/realtime/odds
+7 条用例
+执行全部
+POST
+/ee/diamond/withdraw/account/get
+1 条用例
+执行全部
+POST
+/konfi-service/web/getDataById
+2 条用例
+执行全部
+GET
+/camel-service/ee/fifa/football/season/match
+1 条用例
+执行全部
+GET
+/camel-service/ee/replay/list
+1 条用例
+执行全部
+POST
+/account-service/login/anonymous/web
+1 条用例
+执行全部
+POST
+/account-service/ee/ads/activity/get
+2 条用例
+执行全部
+POST
+/camel-service/ee/search/recommend
+1 条用例
+执行全部
+POST
+/camel-servic

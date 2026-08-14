@@ -1,0 +1,122 @@
+{
+  "/workbench": {
+    "mobile": {
+      "overflowX": false,
+      "sw": 375,
+      "iw": 375,
+      "sidebar": false
+    },
+    "tablet": {
+      "overflowX": false,
+      "sw": 768,
+      "iw": 768,
+      "sidebar": true
+    },
+    "desktop": {
+      "overflowX": false,
+      "sw": 1280,
+      "iw": 1280,
+      "sidebar": true
+    }
+  },
+  "/testcase": {
+    "mobile": {
+      "overflowX": false,
+      "sw": 375,
+      "iw": 375,
+      "sidebar": false
+    },
+    "tablet": {
+      "overflowX": false,
+      "sw": 768,
+      "iw": 768,
+      "sidebar": true
+    },
+    "desktop": {
+      "overflowX": false,
+      "sw": 1280,
+      "iw": 1280,
+      "sidebar": true
+    }
+  },
+  "/testplan": {
+    "mobile": {
+      "overflowX": false,
+      "sw": 375,
+      "iw": 375,
+      "sidebar": false
+    },
+    "tablet": {
+      "overflowX": false,
+      "sw": 768,
+      "iw": 768,
+      "sidebar": true
+    },
+    "desktop": {
+      "overflowX": false,
+      "sw": 1280,
+      "iw": 1280,
+      "sidebar": true
+    }
+  },
+  "/defect": {
+    "mobile": {
+      "overflowX": false,
+      "sw": 375,
+      "iw": 375,
+      "sidebar": false
+    },
+    "tablet": {
+      "overflowX": false,
+      "sw": 768,
+      "iw": 768,
+      "sidebar": true
+    },
+    "desktop": {
+      "overflowX": false,
+      "sw": 1280,
+      "iw": 1280,
+      "sidebar": true
+    }
+  },
+  "/requirement": {
+    "mobile": {
+      "overflowX": false,
+      "sw": 375,
+      "iw": 375,
+      "sidebar": false
+    },
+    "tablet": {
+      "overflowX": false,
+      "sw": 768,
+      "iw": 768,
+      "sidebar": true
+    },
+    "desktop": {
+      "overflowX": false,
+      "sw": 1280,
+      "iw": 1280,
+      "sidebar": true
+    }
+  },
+  "/knowledge": {
+    "mobile": {
+      "overflowX": false,
+      "sw": 375,
+      "iw": 375,
+      "sidebar": false
+    },
+    "tablet": {
+      "overflowX": false,
+      "sw": 768,
+      "iw": 768,
+      "sidebar": true
+    },
+    "desktop": {
+      "overflowX": false,
+      "sw": 1280,
+      "iw": 1280,
+      "sidebar": true
+    }
+  }
+}

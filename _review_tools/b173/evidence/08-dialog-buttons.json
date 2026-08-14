@@ -1,0 +1,52 @@
+[
+  {
+    "text": "功能用例",
+    "aria": null,
+    "disabled": false
+  },
+  {
+    "text": "P2",
+    "aria": null,
+    "disabled": false
+  },
+  {
+    "text": "启用",
+    "aria": null,
+    "disabled": false
+  },
+  {
+    "text": "选择域",
+    "aria": null,
+    "disabled": false
+  },
+  {
+    "text": "选择模块",
+    "aria": null,
+    "disabled": false
+  },
+  {
+    "text": "格式化",
+    "aria": null,
+    "disabled": false
+  },
+  {
+    "text": "JSON",
+    "aria": null,
+    "disabled": false
+  },
+  {
+    "text": "取消",
+    "aria": null,
+    "disabled": false
+  },
+  {
+    "text": "保存",
+    "aria": null,
+    "disabled": false
+  },
+  {
+    "text": "",
+    "aria": "关闭对话框",
+    "disabled": false
+  }
+]

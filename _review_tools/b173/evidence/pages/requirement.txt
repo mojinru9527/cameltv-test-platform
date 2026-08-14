@@ -1,0 +1,269 @@
+跳到主内容
+CamelTv
+测试平台
+知识
+知识中心
+项目知识
+平台研发
+知识图谱
+AI审核台
+导航菜单
+工作台
+质量追溯
+需求文档
+版本测试任务
+用例脑图
+用例服务
+测试计划
+接口测试
+UI 自动化
+Playground
+定时任务
+报告中心
+系统管理
+我的项目
+缺陷管理
+测试数据集
+集成配置
+通知配置
+目标环境
+Agent 工作台
+DSH 任务
+蓝湖证据包
+体
+体育平台管理员
+sportsadmin@cameltv.local
+Toggle Sidebar
+当前项目
+CamelTv 体育平台
+黑曜
+体
+体育平台管理员
+需求文档
+
+上传 PRD、Excel 或蓝湖链接，使用 AI 提取需求并生成测试用例。
+
+蓝湖设置
+刷新
+证据任务
+#32
+已完成
+
+1 天前 · 第 2 次
+
+查看截图
+#30
+失败
+
+蓝湖会话失效且自动登录失败：未配置 LANHU_USERNAME/LANHU_PASSWORD，无法自动登录。请重新登录或更新 LANHU_COOKIE
+
+1 天前
+
+重试
+#29
+失败
+
+蓝湖会话失效且自动登录未获取到 Cookie，请重新登录或更新 LANHU_COOKIE
+
+2 天前
+
+重试
+#28
+已完成
+
+2 天前
+
+查看截图
+#26
+失败
+
+蓝湖页面发现失败
+
+2 天前 · 第 2 次
+
+重试
+#24
+已完成
+
+3 天前 · 第 2 次
+
+查看截图
+新建采集
+蓝湖登录/更新Cookie
+需求文档
+6
+覆盖业务域
+107
+/ 926 模块
+需求覆盖率（选择文档查看）
+0%
+AI 导入用例
+1157
+上传需求
+文件上传
+蓝湖链接
+
+点击或拖拽文件到此区域上传
+
+支持 .md（Markdown）、.docx（Word）、.xlsx（Excel）格式
+
+生产差异标注（C102-4）
+发布包
+体育平台-16.0.0-开发验收（16.0.0）
+生产页面清单（每行一个）
+加载采集
+生成差异
+交互覆盖缺口（C119-2）
+覆盖率 0.0%
+已覆盖 0/2217 边 · 缺口 2217
+全部业务域
+缺口
+首页
+2026-07-01 2026 FIFA World Cup Round of → /match-replay/107123464706493801
+缺口
+首页
+2026-07-01 2026 FIFA World Cup Round of → /match-replay/107123464706493802
+缺口
+首页
+2026-07-15 2026 FIFA World Cup Semifinal → /match-replay/107123464706493800
+缺口
+首页
+2026-07-16 2026 FIFA World Cup Semifinal → /match-replay/107123464706493799
+缺口
+首页
+2026-07-19 2026 FIFA World Cup Final: En → /match-replay/107123464706493798
+缺口
+首页
+AC Leon Monza Brianza → /team/AC%20Leon%20Monza%20Brianza/zp5rzghpnz5q82w
+缺口
+首页
+AEL Larisa → /team/AEL%20Larisa/k82rekhvg05repz
+缺口
+首页
+AEL Limassol → /team/AEL%20Limassol/8y39mp1h78omojx
+缺口
+首页
+Al Markhiya → /team/Al%20Markhiya/k82rekhv7gwrepz
+缺口
+首页
+Al Raed → /team/Al-Raed%20SFC/vjxm8gh47epr6od
+缺口
+首页
+Al-Sadd → /team/Al-Sadd/gpxwrxlhdn6ryk0
+缺口
+首页
+Al-Salmiya → /team/Al-Salmiya/dn1m1gh484vmoep
+缺口
+首页
+Anderlecht → /team/Anderlecht/kdj2ryoh3ozq1zp
+缺口
+首页
+Andorra CF → /team/Andorra%20CF/l7oqdeh6463r510
+缺口
+首页
+Arema FC → /team/Arema%20FC/jw2r09hlp2lrz84
+缺口
+首页
+Aris Limassol → /team/Aris%20Limassol/jednm9wh1lwryox
+缺口
+首页
+AS Roma Women → /team/AS%20Roma%20Women/1l4rjnh1e14m7vx
+缺口
+首页
+ASD Calcio Pavonese → /team/ASD%20Calcio%20Pavonese/318q66hkpn7qo9j
+缺口
+首页
+Atromitos Athens → /team/Atromitos%20Athens/gx7lm7phy23m2wd
+缺口
+首页
+Badalona Women → /team/Badalona%20Women/x7lm7pho0w4m2wd
+缺口
+首页
+Benfica → /team/Benfica/z8yomo4hjyoq0j6
+缺口
+首页
+Besiktas JK → /team/Besiktas%20JK/gy0or5jhdpgqwzv
+缺口
+首页
+Bettembourg → /team/Bettembourg/2y8m4zhg2kvql07
+缺口
+首页
+Bidhannagar MSA → /team/Bidhannagar%20MSA/8yomo4hz3goq0j6
+缺口
+首页
+Brazilian Cup → /league/Brazilian%20Cup
+缺口
+首页
+Bristol City Women → /team/Bristol%20City%20Women/vjxm8gh42okr6od
+缺口
+首页
+BSS Sporting Club → /team/BSS%20Sporting%20Club/x7lm7ph0zolm2wd
+缺口
+首页
+Butrinti Sarande → /team/Butrinti%20Sarande/2y8m4zhj4g4ql07
+缺口
+首页
+Chabab Atlas Khenifra → /team/Chabab%20Atlas%20Khenifra/zp5rzghjn42q82w
+缺口
+首页
+Club Milano → /team/Club%20Milano/2y8m4zhz5yoql07
+缺口
+首页
+Como 1907 (W) → /team/Como%201907%20(W)/x7lm7phpzz4m2wd
+缺口
+首页
+Cremonese → /team/Cremonese/56ypq3nhx17md7o
+缺口
+首页
+CS Sanem → /team/CS%20Sanem/pxwrxlhjvgvryk0
+缺口
+首页
+CS Universitatea Craiova → /team/CS%20Universitatea%20Craiova/zp5rzghjeodq82w
+缺口
+首页
+CSKA Sofia → /team/CSKA%20Sofia/j1l4rjnhp05m7vx
+缺口
+首页
+Desenzano Calvina → /team/Desenzano%20Calvina/pxwrxlhjvggryk0
+缺口
+首页
+Esperance Sportive de Tunis → /team/Esperance%20Sportive%20de%20Tunis/965mkyh7786r1ge
+缺口
+首页
+FC Hradec Králové → /team/FC%20Hradec%20Kr%C3%A1lov%C3%A9/3glrw7hwjyjqdyj
+缺口
+首页
+FC Kehlen → /team/FC%20Kehlen/4wyrn4hepz9q86p
+缺口
+首页
+FC Munsbach → /team/FC%20Munsbach/6ypq3nhlgppmd7o
+缺口
+首页
+FIFA World Cup 2026 Free Streaming, Live → /worldcup-2026
+缺口
+首页
+Heart of Midlothian F.C. → /team/Heart%20of%20Midlothian%20F.C./yl5ergphj82r8k0
+缺口
+首页
+Home → /
+缺口
+首页
+Indian Calcutta Football League → /league/Indian%20Calcutta%20Football%20League
+缺口
+首页
+Indonesian President Cup → /league/Indonesian%20President%20Cup
+缺口
+首页
+International Club Friendly → /league/International%20Club%20Friendly
+缺口
+首页
+Iraklis → /team/Iraklis/z8yomo4hlv8q0j6
+缺口
+首页
+Jagiellonia Bialystok → /team/Jagiellonia%20Bialystok/8y39mp1h8l6mojx
+缺口
+首页
+Kalighat FC → /team/Kalighat%20FC/x7lm7pho9gkm2wd
+缺口
+首页
+Kazma → /team/Ka

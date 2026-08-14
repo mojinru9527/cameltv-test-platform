@@ -1,0 +1,73 @@
+跳到主内容
+CamelTv
+测试平台
+知识
+知识中心
+项目知识
+平台研发
+知识图谱
+AI审核台
+导航菜单
+工作台
+质量追溯
+需求文档
+版本测试任务
+用例脑图
+用例服务
+测试计划
+接口测试
+UI 自动化
+Playground
+定时任务
+报告中心
+系统管理
+我的项目
+缺陷管理
+测试数据集
+集成配置
+通知配置
+目标环境
+Agent 工作台
+DSH 任务
+蓝湖证据包
+体
+体育平台管理员
+sportsadmin@cameltv.local
+Toggle Sidebar
+当前项目
+CamelTv 体育平台
+黑曜
+体
+体育平台管理员
+我的项目
+刷新
+新建项目
+项目	描述	所属组织	角色	状态	操作
+
+CamelTv 体育平台
+cameltv
+	默认样板项目	我的组织	成员	启用	
+进入
+
+
+CamelTv-体育平台-15.0.0-16.0.0-验收
+CAMELTV-VER
+	15.0.0 已上线 / 16.0.0 开发中需求全模块使用验收记录项目（2026-08-12 留痕）	我的组织	负责人	启用	
+进入
+成员
+编辑
+
+
+C165 Walkthrough
+C165WALK
+	C165-1 test walkthrough project	我的组织	成员	启用	
+进入
+
+
+体育直播业务评估
+sports-live
+	-	我的组织	成员	启用	
+进入
+Command Palette
+
+Search for a command to run...

@@ -1,0 +1,67 @@
+[
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/defects/stats",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/defects",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/users",
+    "s": 200
+  },
+  {
+    "m": "POST",
+    "u": "/api/v1/defects",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/defects/stats",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/defects",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/defects",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/defects",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/defects/14/transitions",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/defects/14/comments",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/defects/14/attachments",
+    "s": 200
+  }
+]

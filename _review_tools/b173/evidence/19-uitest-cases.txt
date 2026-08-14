@@ -1,0 +1,33 @@
+以此用例新建任务
+[UI] 创作者成功登录后台并发布文章	UGC创作者管理	P0	draft	以此用例新建任务
+[UI] 非创作者用户访问创作者后台	UGC创作者管理	P1	draft	以此用例新建任务
+[UI] 创作者设置订阅金额为有效值	UGC创作者管理	P0	draft	以此用例新建任务
+[UI] 设置订阅金额为0或负数	UGC创作者管理	P1	draft	以此用例新建任务
+[UI] 用户订阅后恰好在30天有效期内访问订阅内容	UGC创作者管理	P0	draft	以此用例新建任务
+[UI] 订阅过期后用户尝试访问订阅内容	UGC创作者管理	P1	draft	以此用例新建任务
+[UI] 运营后台配置有效的单篇付费价格区间	UGC创作者管理	P0	draft	以此用例新建任务
+[UI] 配置价格区间最小值大于最大值	UGC创作者管理	P1	draft	以此用例新建任务
+[UI] 用户有足够骆驼币订阅创作者成功	UGC创作者管理	P0	draft	以此用例新建任务
+[UI] 用户骆驼币不足时尝试订阅	UGC创作者管理	P1	draft	以此用例新建任务
+[UI] 用户成功购买单篇付费文章（订阅者仍可额外购买）	UGC创作者管理	P0	draft	以此用例新建任务
+[UI] 用户骆驼币不足购买单篇付费文章	UGC创作者管理	P1	draft	以此用例新建任务
+[UI] YeiId计算-正向：多篇Win文章（无Push）	UGC统计指标	P0	draft	以此用例新建任务
+[UI] YeiId计算-负向：无有结果的文章	UGC统计指标	P1	draft	以此用例新建任务
+[UI] Hit Rate计算-正向：混合结果	UGC统计指标	P0	draft	以此用例新建任务
+[UI] Hit Rate计算-边界：全部为Push	UGC统计指标	P1	draft	以此用例新建任务
+[UI] Avg Odds计算-正向：有Pan文章排除Push	UGC统计指标	P0	draft	以此用例新建任务
+[UI] Avg Odds计算-负向：全部为Push	UGC统计指标	P1	draft	以此用例新建任务
+[UI] Form统计-正向：近期30场数据	UGC统计指标	P0	draft	以此用例新建任务
+[UI] Form统计-边界：无任何有结果文章	UGC统计指标	P1	draft	以此用例新建任务
+[UI] Streak连胜计数-正向：连续Win和Push穿插	UGC统计指标	P0	draft	以此用例新建任务
+[UI] Streak连胜计数-边界：全部Push，Streak初始0	UGC统计指标	P1	draft	以此用例新建任务
+[UI] PV统计-正向：同一用户多次查看累加	UGC统计指标	P0	draft	以此用例新建任务
+[UI] PV统计-负向：无任何浏览	UGC统计指标	P1	draft	以此用例新建任务
+[UI] UV统计-正向：同一用户多次仅计1次	UGC统计指标	P0	draft	以此用例新建任务
+[UI] UV统计-边界：无任何用户浏览	UGC统计指标	P1	draft	以此用例新建任务
+[UI] 预测项与正确项一致时判定为Win	UGC文章管理	P0	draft	以此用例新建任务
+[UI] 预测项与正确项不一致时判定为Loss	UGC文章管理	P0	draft	以此用例新建任务
+[UI] 亚盘走水场景判定为Push	UGC文章管理	P1	draft	以此用例新建任务
+[UI] 关联比赛被取消时预测结果判定为Push	UGC文章管理	P1	draft	以此用例新建任务
+[UI] 比赛未结束且第三方封盘时预测结果标记Pending	UGC文章管理	P0	draft	以此用例新建任务
+[UI] 比赛未结束且第三方未封盘时预测结果不为Pendi

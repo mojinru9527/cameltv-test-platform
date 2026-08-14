@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory)]
     [Alias("Owner")]
-    [ValidateSet("claude", "codex", "human")]
+    [ValidateSet("claude", "codex", "DeepSeek_Harness", "human")]
     [string]$Executor,
 
     [ValidateSet("direct", "agent-team")]

@@ -7,9 +7,9 @@ param(
     [switch]$RequireCompletionConfirmation,
     [ValidateSet("direct", "agent-team")]
     [string]$ExpectedWorkflow,
-    [ValidateSet("claude", "codex", "human")]
+    [ValidateSet("claude", "codex", "DeepSeek_Harness", "human")]
     [string]$ExpectedExecutor,
-    [ValidateSet("claude", "codex", "human", "agent-team")]
+    [ValidateSet("claude", "codex", "DeepSeek_Harness", "human", "agent-team")]
     [string]$ExpectedOwner
 )
 
@@ -66,7 +66,8 @@ elseif ($RequireMetadata -or $RequireCompletionConfirmation -or $ExpectedWorkflo
 
 if ($metadata) {
     $allowedWorkflows = @("direct", "agent-team")
-    $allowedExecutors = @("claude", "codex", "human")
+    # (batch-173) DeepSeek_Harness 作为独立执行器标识加入枚举；目录命名 {executor}-{task} 随之生效
+    $allowedExecutors = @("claude", "codex", "DeepSeek_Harness", "human")
     $schemaVersion = 1
     $legacyOwner = $null
     $startConfirmation = $null

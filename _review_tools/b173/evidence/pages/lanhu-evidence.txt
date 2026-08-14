@@ -1,0 +1,79 @@
+跳到主内容
+CamelTv
+测试平台
+知识
+知识中心
+项目知识
+平台研发
+知识图谱
+AI审核台
+导航菜单
+工作台
+质量追溯
+需求文档
+版本测试任务
+用例脑图
+用例服务
+测试计划
+接口测试
+UI 自动化
+Playground
+定时任务
+报告中心
+系统管理
+我的项目
+缺陷管理
+测试数据集
+集成配置
+通知配置
+目标环境
+Agent 工作台
+DSH 任务
+蓝湖证据包
+体
+体育平台管理员
+sportsadmin@cameltv.local
+Toggle Sidebar
+当前项目
+CamelTv 体育平台
+黑曜
+体
+体育平台管理员
+蓝湖证据包
+
+采集蓝湖设计稿（截图 + OCR）→ 人工审核 → 导入需求 / RAG / Wiki
+
+新建采集任务
+ID	文档 / 来源	状态	阶段	页面（捕获/OCR）	创建时间	操作
+#32	
+（未命名）
+https://lanhuapp.com/web/#/item/project/product?tid=6324825d-1614-4d73-bc4c-f05cdf0734c1&pid=cc8cfbd5-16d2-481f-828e-7eb424a91694&versionId=7fd9001b-fcf7-48c3-8e13-1c25fa11c8b8&docId=e6b5ce1e-0d25-4e22-a9e9-450283918b3b&docType=axure&pageId=2b4c4235b036420787d3e856b5d133d7&image_id=e6b5ce1e-0d25-4e22-a9e9-450283918b3b
+	成功	已完成	109/109 页 · OCR 109	2026/8/12 15:10:41	
+
+#30	
+（未命名）
+https://lanhuapp.com/web/#/item/project/product?tid=6324825d-1614-4d73-bc4c-f05cdf0734c1&pid=cc8cfbd5-16d2-481f-828e-7eb424a91694&versionId=7fd9001b-fcf7-48c3-8e13-1c25fa11c8b8&docId=e6b5ce1e-0d25-4e22-a9e9-450283918b3b&docType=axure&pageId=2b4c4235b036420787d3e856b5d133d7&image_id=e6b5ce1e-0d25-4e22-a9e9-450283918b3b
+	失败	已完成	0/0 页 · OCR 0	2026/8/12 13:26:35	
+
+#29	
+（未命名）
+https://lanhuapp.com/web/#/item/project/product?tid=6324825d-1614-4d73-bc4c-f05cdf0734c1&pid=cc8cfbd5-16d2-481f-828e-7eb424a91694&versionId=7fd9001b-fcf7-48c3-8e13-1c25fa11c8b8&docId=e6b5ce1e-0d25-4e22-a9e9-450283918b3b&docType=axure&pageId=2b4c4235b036420787d3e856b5d133d7&image_id=e6b5ce1e-0d25-4e22-a9e9-450283918b3b
+	失败	已完成	0/0 页 · OCR 0	2026/8/12 08:10:02	
+
+#28	
+（未命名）
+https://lanhuapp.com/web/#/item/project/product?tid=6324825d-1614-4d73-bc4c-f05cdf0734c1&pid=cc8cfbd5-16d2-481f-828e-7eb424a91694&versionId=8527f9f7-87e2-4e37-97b3-c672e22e3ccf&docId=e6b5ce1e-0d25-4e22-a9e9-450283918b3b&docType=axure&pageId=9c1351a0231e452081ea608e3851a07f&image_id=e6b5ce1e-0d25-4e22-a9e9-450283918b3b&parentId=76517d9c-08c2-4824-8e6b-96e754acb5c9
+	成功	已完成	7/7 页 · OCR 7	2026/8/12 06:48:25	
+
+#26	
+（未命名）
+https://lanhuapp.com/web/#/item/project/product?tid=6324825d-1614-4d73-bc4c-f05cdf0734c1&pid=cc8cfbd5-16d2-481f-828e-7eb424a91694&versionId=8527f9f7-87e2-4e37-97b3-c672e22e3ccf&docId=e6b5ce1e-0d25-4e22-a9e9-450283918b3b&docType=axure&pageId=9c1351a0231e452081ea608e3851a07f&image_id=e6b5ce1e-0d25-4e22-a9e9-450283918b3b&parentId=76517d9c-08c2-4824-8e6b-96e754acb5c9
+	失败	已完成	0/0 页 · OCR 0	2026/8/12 06:03:57	
+
+#24	
+（未命名）
+https://lanhuapp.com/web/#/item/project/product?tid=6324825d-1614-4d73-bc4c-f05cdf0734c1&pid=cc8cfbd5-16d2-481f-828e-7eb424a91694&versionId=7fd9001b-fcf7-48c3-8e13-1c25fa11c8b8&docId=e6b5ce1e-0d25-4e22-a9e9-450283918b3b&docType=axure&pageId=2b4c4235b036420787d3e856b5d133d7&image_id=e6b5ce1e-0d25-4e22-a9e9-450283918b3b
+	成功	已完成	1/1 页 · OCR 1	2026/8/11 02:59:44	
+Command Palette
+
+Search for a command to run...

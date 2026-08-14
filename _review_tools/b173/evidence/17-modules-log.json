@@ -1,0 +1,107 @@
+[
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/environments",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/environments/1/variables",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/datasets",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/environments",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/schedules",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-plans",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/notify/channels",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases/stats",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/integrations",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/requirements",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/environments",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/defects/stats",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/defects",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/defects",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/defects",
+    "s": 200
+  }
+]

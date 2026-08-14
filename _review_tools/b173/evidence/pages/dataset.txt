@@ -1,0 +1,57 @@
+跳到主内容
+CamelTv
+测试平台
+知识
+知识中心
+项目知识
+平台研发
+知识图谱
+AI审核台
+导航菜单
+工作台
+质量追溯
+需求文档
+版本测试任务
+用例脑图
+用例服务
+测试计划
+接口测试
+UI 自动化
+Playground
+定时任务
+报告中心
+系统管理
+我的项目
+缺陷管理
+测试数据集
+集成配置
+通知配置
+目标环境
+Agent 工作台
+DSH 任务
+蓝湖证据包
+体
+体育平台管理员
+sportsadmin@cameltv.local
+Toggle Sidebar
+当前项目
+CamelTv 体育平台
+黑曜
+体
+体育平台管理员
+测试数据集
+
+管理 CSV/JSON 测试数据，支持参数化注入到 API 用例执行中
+
+新建数据集
+名称	类型	行数	列名	更新时间	操作
+重跑-16.0.0-验收数据集	JSON	2	version, module, check	2026-08-12	
+
+重跑-15.0.0-回归数据集	CSV	2	version, module, keyword	2026-08-12	
+
+体育平台-16.0.0 参数数据集	JSON	2	version, module, check	2026-08-12	
+
+体育平台-15.0.0 参数数据集	CSV	3	version, module, keyword	2026-08-12	
+Command Palette
+
+Search for a command to run...

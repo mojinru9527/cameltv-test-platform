@@ -1,0 +1,227 @@
+[
+  {
+    "page": "/workbench",
+    "status": "ok",
+    "totalApi": 2,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 3555
+  },
+  {
+    "page": "/trace",
+    "status": "ok",
+    "totalApi": 3,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 3561
+  },
+  {
+    "page": "/requirement",
+    "status": "ok",
+    "totalApi": 6,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 3180
+  },
+  {
+    "page": "/testcase",
+    "status": "ok",
+    "totalApi": 5,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 3773
+  },
+  {
+    "page": "/testplan",
+    "status": "ok",
+    "totalApi": 2,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 2841
+  },
+  {
+    "page": "/mindmap",
+    "status": "ok",
+    "totalApi": 2,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 4134
+  },
+  {
+    "page": "/apitest",
+    "status": "ok",
+    "totalApi": 3,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 2960
+  },
+  {
+    "page": "/uitest",
+    "status": "ok",
+    "totalApi": 5,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 2872
+  },
+  {
+    "page": "/playground",
+    "status": "ok",
+    "totalApi": 3,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 3212
+  },
+  {
+    "page": "/schedule",
+    "status": "ok",
+    "totalApi": 3,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 2770
+  },
+  {
+    "page": "/report",
+    "status": "ok",
+    "totalApi": 3,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 2891
+  },
+  {
+    "page": "/system",
+    "status": "ok",
+    "totalApi": 3,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 2812
+  },
+  {
+    "page": "/my-projects",
+    "status": "ok",
+    "totalApi": 2,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 2778
+  },
+  {
+    "page": "/defect",
+    "status": "ok",
+    "totalApi": 3,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 2804
+  },
+  {
+    "page": "/dataset",
+    "status": "ok",
+    "totalApi": 2,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 2860
+  },
+  {
+    "page": "/integration",
+    "status": "ok",
+    "totalApi": 5,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 2794
+  },
+  {
+    "page": "/notify",
+    "status": "ok",
+    "totalApi": 2,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 2757
+  },
+  {
+    "page": "/environment",
+    "status": "ok",
+    "totalApi": 3,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 3059
+  },
+  {
+    "page": "/agent-workbench",
+    "status": "ok",
+    "totalApi": 5,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 2809
+  },
+  {
+    "page": "/dsh-tasks",
+    "status": "ok",
+    "totalApi": 3,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 2766
+  },
+  {
+    "page": "/lanhu-evidence",
+    "status": "ok",
+    "totalApi": 2,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 2801
+  },
+  {
+    "page": "/release-bundles",
+    "status": "ok",
+    "totalApi": 2,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 2814
+  },
+  {
+    "page": "/knowledge",
+    "status": "ok",
+    "totalApi": 2,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 3156
+  },
+  {
+    "page": "/operations-release",
+    "status": "ok",
+    "totalApi": 2,
+    "dup": 0,
+    "consoleErrors": 1,
+    "pageErrors": 0,
+    "loadMs": 2874
+  },
+  {
+    "page": "/theme-lab",
+    "status": "ok",
+    "totalApi": 1,
+    "dup": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "loadMs": 2438
+  }
+]

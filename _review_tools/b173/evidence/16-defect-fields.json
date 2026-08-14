@@ -1,0 +1,72 @@
+[
+  {
+    "tag": "INPUT",
+    "name": "title",
+    "id": "defect-title",
+    "ph": "缺陷标题",
+    "text": ""
+  },
+  {
+    "tag": "TEXTAREA",
+    "name": "description",
+    "id": "defect-description",
+    "ph": "缺陷描述",
+    "text": ""
+  },
+  {
+    "tag": "BUTTON",
+    "name": null,
+    "id": "defect-severity",
+    "ph": null,
+    "text": "P2-一般"
+  },
+  {
+    "tag": "SELECT",
+    "name": null,
+    "id": "",
+    "ph": null,
+    "text": "P0-致命\nP1-严重\nP2-一般\nP3-建议"
+  },
+  {
+    "tag": "BUTTON",
+    "name": null,
+    "id": "defect-assignee",
+    "ph": null,
+    "text": "未指定"
+  },
+  {
+    "tag": "SELECT",
+    "name": null,
+    "id": "",
+    "ph": null,
+    "text": "未指定\n超级管理员\n体育平台管理员\n验收管理员\nc1091_"
+  },
+  {
+    "tag": "BUTTON",
+    "name": null,
+    "id": "defect-case",
+    "ph": null,
+    "text": "未关联"
+  },
+  {
+    "tag": "SELECT",
+    "name": null,
+    "id": "",
+    "ph": null,
+    "text": "未关联\n[] APP启动检测到新版本时弹出更新提示并可跳转更"
+  },
+  {
+    "tag": "INPUT",
+    "name": "external_id",
+    "id": "defect-external-id",
+    "ph": "禅道/Jira 编号",
+    "text": ""
+  },
+  {
+    "tag": "INPUT",
+    "name": "external_url",
+    "id": "defect-external-url",
+    "ph": "https://...",
+    "text": ""
+  }
+]

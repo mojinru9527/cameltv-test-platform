@@ -1,0 +1,94 @@
+{
+  "apiLog": [
+    {
+      "m": "GET",
+      "u": "/api/v1/system/menus",
+      "s": 200,
+      "t": 1786679948610
+    },
+    {
+      "m": "GET",
+      "u": "/api/v1/test-cases",
+      "s": 200,
+      "t": 1786679948842
+    },
+    {
+      "m": "GET",
+      "u": "/api/v1/test-cases/stats",
+      "s": 200,
+      "t": 1786679948851
+    },
+    {
+      "m": "GET",
+      "u": "/api/v1/test-cases/domains",
+      "s": 200,
+      "t": 1786679949499
+    },
+    {
+      "m": "GET",
+      "u": "/api/v1/test-cases/taxonomy",
+      "s": 200,
+      "t": 1786679949524
+    },
+    {
+      "m": "GET",
+      "u": "/api/v1/datasets",
+      "s": 200,
+      "t": 1786679951991
+    },
+    {
+      "m": "POST",
+      "u": "/api/v1/test-cases",
+      "s": 200,
+      "t": 1786679955618
+    },
+    {
+      "m": "GET",
+      "u": "/api/v1/test-cases/stats",
+      "s": 200,
+      "t": 1786679955879
+    },
+    {
+      "m": "GET",
+      "u": "/api/v1/test-cases/domains",
+      "s": 200,
+      "t": 1786679956098
+    },
+    {
+      "m": "GET",
+      "u": "/api/v1/test-cases",
+      "s": 200,
+      "t": 1786679956099
+    },
+    {
+      "m": "GET",
+      "u": "/api/v1/test-cases/taxonomy",
+      "s": 200,
+      "t": 1786679956437
+    },
+    {
+      "m": "GET",
+      "u": "/api/v1/test-cases",
+      "s": 200,
+      "t": 1786679959551
+    },
+    {
+      "m": "GET",
+      "u": "/api/v1/system/menus",
+      "s": 200,
+      "t": 1786679994546
+    },
+    {
+      "m": "GET",
+      "u": "/api/v1/test-plans",
+      "s": 200,
+      "t": 1786679994842
+    },
+    {
+      "m": "GET",
+      "u": "/api/v1/system/users",
+      "s": 200,
+      "t": 1786679997232
+    }
+  ]
+}

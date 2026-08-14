@@ -1,0 +1,22 @@
+新建集成
+
+配置 Jira 或 TAPD 连接信息。凭据将加密存储。
+
+名称 *
+类型 *
+Jira Cloud
+Jira Cloud
+TAPD
+Base URL *
+Email
+API Token
+Project Key
+同步方向
+双向同步
+双向同步
+仅推送
+仅拉取
+自动同步 (分钟)
+启用
+创建
+测试连接

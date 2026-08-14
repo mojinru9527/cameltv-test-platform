@@ -1,0 +1,52 @@
+[
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/apitest/services",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/apitest/endpoints",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/environments",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/datasets",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/environments",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/datasets",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases/domains",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/apitest/tasks",
+    "s": 200
+  }
+]

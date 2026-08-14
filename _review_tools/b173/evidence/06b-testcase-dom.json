@@ -1,0 +1,70 @@
+{
+  "inputs": [
+    {
+      "tag": "INPUT",
+      "name": null,
+      "id": "",
+      "ph": "搜索标题/关键字",
+      "type": "text",
+      "cls": "h-8 w-full min-w-0 border-input px-2.5 py-1 text-base transi"
+    },
+    {
+      "tag": "INPUT",
+      "name": null,
+      "id": "",
+      "ph": null,
+      "type": "file",
+      "cls": "hidden"
+    },
+    {
+      "tag": "INPUT",
+      "name": null,
+      "id": "",
+      "ph": "...",
+      "type": "text",
+      "cls": "min-h-9 w-[50px] rounded-md border bg-background px-2 py-1 t"
+    }
+  ],
+  "buttons": [
+    "知识中心",
+    "工作台",
+    "质量追溯",
+    "需求文档",
+    "版本测试任务",
+    "用例脑图",
+    "用例服务",
+    "测试计划",
+    "接口测试",
+    "UI 自动化",
+    "Playground",
+    "定时任务",
+    "报告中心",
+    "系统管理",
+    "我的项目",
+    "缺陷管理",
+    "测试数据集",
+    "集成配置",
+    "通知配置",
+    "目标环境",
+    "Agent 工作台",
+    "DSH 任务",
+    "蓝湖证据包",
+    "Toggle Sidebar",
+    "CamelTv 体育平台",
+    "黑曜",
+    "体\n体育平台管理员",
+    "功能用例 (8528)",
+    "接口用例 (71)",
+    "UI 自动化 (385)",
+    "全部 (8984)",
+    "用户端 (5067)",
+    "运营后台 (3461)",
+    "全部界面",
+    "全部业务模块",
+    "全部子模块",
+    "全部场景",
+    "全部优先级",
+    "搜索",
+    "重置"
+  ]
+}

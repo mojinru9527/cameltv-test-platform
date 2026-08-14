@@ -4,9 +4,9 @@ param(
     [int]$PrNumber,
     [ValidateSet("direct", "agent-team")]
     [string]$ExpectedWorkflow,
-    [ValidateSet("claude", "codex", "human")]
+    [ValidateSet("claude", "codex", "DeepSeek_Harness", "human")]
     [string]$ExpectedExecutor,
-    [ValidateSet("claude", "codex", "human", "agent-team")]
+    [ValidateSet("claude", "codex", "DeepSeek_Harness", "human", "agent-team")]
     [string]$ExpectedOwner,
     [switch]$RequireSuccessfulChecks
 )

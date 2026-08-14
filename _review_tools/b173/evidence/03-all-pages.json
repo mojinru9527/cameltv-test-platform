@@ -1,0 +1,896 @@
+{
+  "/workbench": {
+    "url": "/workbench",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/dashboard/stats?start_date=2026-08-07&end_date=2026-08-14",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 3555,
+    "redirect": "https://cameltv-test-platform1.vercel.app/workbench",
+    "duplicated": 0,
+    "totalApi": 2
+  },
+  "/trace": {
+    "url": "/trace",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/trace/coverage",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/requirements?page=1&page_size=50",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 3561,
+    "redirect": "https://cameltv-test-platform1.vercel.app/trace",
+    "duplicated": 0,
+    "totalApi": 3
+  },
+  "/requirement": {
+    "url": "/requirement",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "POST",
+        "url": "/api/v1/interaction-coverage/gaps",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/lanhu-evidence/jobs?page=1&page_size=50",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/requirements?page=1&page_size=20",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/test-cases/domains",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/release-bundles?page=1&page_size=100",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 3180,
+    "redirect": "https://cameltv-test-platform1.vercel.app/requirement",
+    "duplicated": 0,
+    "totalApi": 6
+  },
+  "/testcase": {
+    "url": "/testcase",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/test-cases/stats",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/test-cases?page=1&page_size=20&case_type=manual",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/test-cases/domains",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/test-cases/taxonomy?case_type=manual",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 3773,
+    "redirect": "https://cameltv-test-platform1.vercel.app/testcase",
+    "duplicated": 0,
+    "totalApi": 5
+  },
+  "/testplan": {
+    "url": "/testplan",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/test-plans?page=1&page_size=20",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 2841,
+    "redirect": "https://cameltv-test-platform1.vercel.app/testplan",
+    "duplicated": 0,
+    "totalApi": 2
+  },
+  "/mindmap": {
+    "url": "/mindmap",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/test-cases/taxonomy?case_type=manual",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 4134,
+    "redirect": "https://cameltv-test-platform1.vercel.app/mindmap",
+    "duplicated": 0,
+    "totalApi": 2
+  },
+  "/apitest": {
+    "url": "/apitest",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/apitest/endpoints?page=1&page_size=20",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/apitest/services",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 2960,
+    "redirect": "https://cameltv-test-platform1.vercel.app/apitest",
+    "duplicated": 0,
+    "totalApi": 3
+  },
+  "/uitest": {
+    "url": "/uitest",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/ui-tests?page=1&page_size=20",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/environments",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/test-cases?case_type=ui&page_size=200",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/ui-tests/scripts",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 2872,
+    "redirect": "https://cameltv-test-platform1.vercel.app/uitest",
+    "duplicated": 0,
+    "totalApi": 5
+  },
+  "/playground": {
+    "url": "/playground",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/test-cases?case_type=manual&page=1&page_size=100",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/test-cases/domains",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 3212,
+    "redirect": "https://cameltv-test-platform1.vercel.app/playground",
+    "duplicated": 0,
+    "totalApi": 3
+  },
+  "/schedule": {
+    "url": "/schedule",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/environments",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/schedules?page=1&page_size=20",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 2770,
+    "redirect": "https://cameltv-test-platform1.vercel.app/schedule",
+    "duplicated": 0,
+    "totalApi": 3
+  },
+  "/report": {
+    "url": "/report",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/reports?page=1&page_size=20",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/reports/trends",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 2891,
+    "redirect": "https://cameltv-test-platform1.vercel.app/report",
+    "duplicated": 0,
+    "totalApi": 3
+  },
+  "/system": {
+    "url": "/system",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/system/roles",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/system/users",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 2812,
+    "redirect": "https://cameltv-test-platform1.vercel.app/system",
+    "duplicated": 0,
+    "totalApi": 3
+  },
+  "/my-projects": {
+    "url": "/my-projects",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/projects",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 2778,
+    "redirect": "https://cameltv-test-platform1.vercel.app/my-projects",
+    "duplicated": 0,
+    "totalApi": 2
+  },
+  "/defect": {
+    "url": "/defect",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/defects/stats",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/defects?page=1&page_size=20",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 2804,
+    "redirect": "https://cameltv-test-platform1.vercel.app/defect",
+    "duplicated": 0,
+    "totalApi": 3
+  },
+  "/dataset": {
+    "url": "/dataset",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/datasets?page=1&page_size=20",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 2860,
+    "redirect": "https://cameltv-test-platform1.vercel.app/dataset",
+    "duplicated": 0,
+    "totalApi": 2
+  },
+  "/integration": {
+    "url": "/integration",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/test-cases/stats",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/integrations",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/environments",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/requirements",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 2794,
+    "redirect": "https://cameltv-test-platform1.vercel.app/integration",
+    "duplicated": 0,
+    "totalApi": 5
+  },
+  "/notify": {
+    "url": "/notify",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/notify/channels",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 2757,
+    "redirect": "https://cameltv-test-platform1.vercel.app/notify",
+    "duplicated": 0,
+    "totalApi": 2
+  },
+  "/environment": {
+    "url": "/environment",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/environments",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/environments/1/variables",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 3059,
+    "redirect": "https://cameltv-test-platform1.vercel.app/environment",
+    "duplicated": 0,
+    "totalApi": 3
+  },
+  "/agent-workbench": {
+    "url": "/agent-workbench",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/agents/types",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/agents/runs?page_size=50",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/agents/queue?page_size=100",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/agents/queue/stats",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 2809,
+    "redirect": "https://cameltv-test-platform1.vercel.app/agent-workbench",
+    "duplicated": 0,
+    "totalApi": 5
+  },
+  "/dsh-tasks": {
+    "url": "/dsh-tasks",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/dsh-tasks?page_size=50",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/dsh-tasks/health",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 2766,
+    "redirect": "https://cameltv-test-platform1.vercel.app/dsh-tasks",
+    "duplicated": 0,
+    "totalApi": 3
+  },
+  "/lanhu-evidence": {
+    "url": "/lanhu-evidence",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/lanhu-evidence/jobs",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 2801,
+    "redirect": "https://cameltv-test-platform1.vercel.app/lanhu-evidence",
+    "duplicated": 0,
+    "totalApi": 2
+  },
+  "/release-bundles": {
+    "url": "/release-bundles",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/release-bundles?page=1&page_size=20",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 2814,
+    "redirect": "https://cameltv-test-platform1.vercel.app/release-bundles",
+    "duplicated": 0,
+    "totalApi": 2
+  },
+  "/knowledge": {
+    "url": "/knowledge",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/knowledge/overview",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 3156,
+    "redirect": "https://cameltv-test-platform1.vercel.app/knowledge",
+    "duplicated": 0,
+    "totalApi": 2
+  },
+  "/operations-release": {
+    "url": "/operations-release",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      },
+      {
+        "method": "GET",
+        "url": "/api/v1/ops/deployments",
+        "count": 1,
+        "statuses": [
+          503
+        ]
+      }
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 503 ()"
+    ],
+    "pageErrors": [],
+    "loadMs": 2874,
+    "redirect": "https://cameltv-test-platform1.vercel.app/operations-release",
+    "duplicated": 0,
+    "totalApi": 2
+  },
+  "/theme-lab": {
+    "url": "/theme-lab",
+    "status": "ok",
+    "apiCalls": [
+      {
+        "method": "GET",
+        "url": "/api/v1/system/menus",
+        "count": 1,
+        "statuses": [
+          200
+        ]
+      }
+    ],
+    "consoleErrors": [],
+    "pageErrors": [],
+    "loadMs": 2438,
+    "redirect": "https://cameltv-test-platform1.vercel.app/theme-lab",
+    "duplicated": 0,
+    "totalApi": 1
+  }
+}

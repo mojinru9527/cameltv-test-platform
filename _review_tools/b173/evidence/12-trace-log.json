@@ -1,0 +1,86 @@
+[
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200,
+    "t": 1786680020825
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases/stats",
+    "s": 200,
+    "t": 1786680020956
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases",
+    "s": 200,
+    "t": 1786680021075
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases/domains",
+    "s": 200,
+    "t": 1786680021655
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases/taxonomy",
+    "s": 200,
+    "t": 1786680021706
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases",
+    "s": 200,
+    "t": 1786680024455
+  },
+  {
+    "m": "DELETE",
+    "u": "/api/v1/test-cases/11510",
+    "s": 200,
+    "t": 1786680027592
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases/stats",
+    "s": 200,
+    "t": 1786680027850
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases/domains",
+    "s": 200,
+    "t": 1786680028513
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases/taxonomy",
+    "s": 200,
+    "t": 1786680028592
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases",
+    "s": 200,
+    "t": 1786680028599
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200,
+    "t": 1786680030187
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-plans",
+    "s": 200,
+    "t": 1786680030515
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/users",
+    "s": 200,
+    "t": 1786680032938
+  }
+]
