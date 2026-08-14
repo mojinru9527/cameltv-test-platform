@@ -44,6 +44,7 @@ def reap_stale_ui_runs() -> int:
 
     此前 UI run 无任何 stale 回收：worker 崩溃后 run 永久卡 running。
     阈值 30 分钟，远大于 Playwright 单任务 300s 超时，不会误杀长任务。
+    best-effort：表缺失/DB 未迁移等环境问题不阻断轮询（CI 干净库无表场景）。
     """
     from app.core.db import SessionLocal
     from app.core.task_queue import QueueSpec, reap_stale
@@ -61,6 +62,9 @@ def reap_stale_ui_runs() -> int:
             lock_at_col="locked_at",
         )
         return reap_stale(db, spec, stale_seconds=30 * 60)
+    except Exception:  # noqa: BLE001 - 维护性回收不允许拖垮轮询
+        logger.warning("[task-worker] UI run stale reap failed (best-effort)", exc_info=True)
+        return 0
     finally:
         db.close()
 
