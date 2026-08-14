@@ -561,7 +561,7 @@ def auto_execute_api_cases(
                 failed += 1
 
         except Exception as e:
-            status = "fail"
+            status = "failed"
             exec_result = {"error": str(e), "status_code": 0}
             actual_result = json.dumps(exec_result, ensure_ascii=False)
             exec_status_code, exec_error_type, exec_error_message = _execution_error_fields(actual_result)
@@ -1004,7 +1004,7 @@ def execute_all_cases(
         tc = _case_map.get(pc.case_id)
         if not tc:
             skipped += 1
-            details.append({"plan_case_id": pc.id, "case_id": pc.case_id, "case_title": "(已删除)", "case_type": "unknown", "status": "skip", "error": "用例不存在"})
+            details.append({"plan_case_id": pc.id, "case_id": pc.case_id, "case_title": "(已删除)", "case_type": "unknown", "status": "skipped", "error": "用例不存在"})
             continue
 
         if tc.case_type == "api":
@@ -1019,7 +1019,7 @@ def execute_all_cases(
                 actual_result = json.dumps(exec_result, ensure_ascii=False, default=str)
                 notes = f"批量自动执行: {tc.api_method or 'GET'} {tc.api_endpoint}"
             except Exception as e:
-                status = "fail"
+                status = "failed"
                 exec_result = {"error": str(e), "status_code": 0}
                 actual_result = json.dumps(exec_result, ensure_ascii=False)
                 notes = f"批量执行异常: {e}"
@@ -1037,7 +1037,7 @@ def execute_all_cases(
                 else:
                     notes = f"UI 执行失败: {_ui_error_summary(ui_result)}"
             except Exception as e:
-                status = "fail"
+                status = "failed"
                 actual_result = json.dumps({"error": str(e)}, ensure_ascii=False)
                 notes = f"UI 执行异常: {e}"
         else:
@@ -1058,11 +1058,11 @@ def execute_all_cases(
                     if ui_result.get("ok") or ui_result.get("spec_code"):
                         _write_plan_ui_job(db, tc, ui_result.get("spec_code", ""), executor_id, project_id)
                 except Exception as e:
-                    status = "fail"
+                    status = "failed"
                     actual_result = json.dumps({"error": str(e)}, ensure_ascii=False)
                     notes = f"手动用例转 UI 执行异常: {e}"
             else:
-                status = "skip"
+                status = "skipped"
                 actual_result = ""
                 notes = "需人工执行（无步骤/优先级低于 P1/auto_ui 关闭）"
 
@@ -1441,4 +1441,67 @@ def create_plan_with_cases(
         ))
 
     return {"id": plan.id, "plan_id": plan_id_str, "name": name, "case_count": len(case_ids)}
+
+
+# ── Batch 182（C181-1）open_api 路由层 ORM 收敛薄函数 ──
+
+def get_plan_row(db: Session, plan_id: int, project_id: int) -> TestPlan | None:
+    """项目内按 id 查询计划行（open_api CI 触发复用）。"""
+    return db.scalar(
+        select(TestPlan).where(TestPlan.id == plan_id, TestPlan.project_id == project_id)
+    )
+
+
+def list_plan_cases(db: Session, plan_id: int) -> list[TestPlanCase]:
+    """计划下全部用例关联行（open_api CI 触发复用）。"""
+    return list(
+        db.scalars(select(TestPlanCase).where(TestPlanCase.plan_id == plan_id)).all()
+    )
+
+
+def get_execution(db: Session, run_id: int) -> TestExecution | None:
+    """按 id 查询执行记录（open_api CI 查询/回写复用）。"""
+    return db.scalar(select(TestExecution).where(TestExecution.id == run_id))
+
+
+def get_plan_case(db: Session, plan_case_id: int) -> TestPlanCase | None:
+    """按 id 查询计划用例行（连带 plan，避免路由层惰性加载）。"""
+    return db.scalar(
+        select(TestPlanCase)
+        .where(TestPlanCase.id == plan_case_id)
+        .options(joinedload(TestPlanCase.plan))
+    )
+
+
+def trigger_plan_from_ci(
+    db: Session,
+    plan_id: int,
+    project_id: int,
+    *,
+    token_name: str,
+) -> tuple[TestPlan | None, int]:
+    """外部 CI 触发计划：为全部用例创建 pending 执行并回写 last_status。
+
+    返回 (plan_row, executed)；plan 不存在返回 (None, 0)。
+    沿用调用方会话、不 commit（提交由路由层负责）。
+    """
+    plan = get_plan_row(db, plan_id, project_id)
+    if not plan:
+        return None, 0
+    pcases = list_plan_cases(db, plan_id)
+
+    now = datetime.now()
+    executed = 0
+    for pc in pcases:
+        exec_row = TestExecution(
+            plan_case_id=pc.id, executor_id=0, status="pending",
+            actual_result="", notes=f"[CI 自动触发] token={token_name}",
+            executed_at=now,
+        )
+        db.add(exec_row)
+        pc.last_status = "pending"
+        pc.last_executed_at = now
+        executed += 1
+    db.flush()
+    return plan, executed
 
