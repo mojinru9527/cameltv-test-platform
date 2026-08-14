@@ -4,11 +4,13 @@ Batch 181（FIX-173-P2-10）路由拆分：cases/generate、cases/batch-generate
 端点函数体与原 apitest.py 逐字一致；ApiEndpoint/TestCase ORM 查询收敛到
 app.services.openapi_import_service / api_case_generation_service。
 """
+
 from __future__ import annotations
 
 import json
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
@@ -44,6 +46,7 @@ def _safe_json(raw: str, default=None):
 # ═══════════════════════════════════════════════════════
 # 用例生成
 # ═══════════════════════════════════════════════════════
+
 
 @router.post("/cases/generate", response_model=R[dict], summary="单接口生成用例")
 def generate_cases(
@@ -84,14 +87,18 @@ def generate_cases(
         # M1 入库 hook：生成用例 → 沉淀为知识切片
         if imported_ids:
             background_tasks.add_task(
-                ingest_service.ingest_test_cases_in_new_session, pid, imported_ids.copy(),
+                ingest_service.ingest_test_cases_in_new_session,
+                pid,
+                imported_ids.copy(),
             )
 
-    return R.ok({
-        "cases": cases,
-        "total": len(cases),
-        "imported_case_ids": imported_ids,
-    })
+    return R.ok(
+        {
+            "cases": cases,
+            "total": len(cases),
+            "imported_case_ids": imported_ids,
+        }
+    )
 
 
 @router.post("/cases/batch-generate", response_model=R[dict], summary="批量生成用例")
@@ -132,11 +139,60 @@ def batch_generate_cases(
     # M1 入库 hook：批量生成用例 → 沉淀为知识切片
     if all_imported_ids:
         background_tasks.add_task(
-            ingest_service.ingest_test_cases_in_new_session, pid, all_imported_ids.copy(),
+            ingest_service.ingest_test_cases_in_new_session,
+            pid,
+            all_imported_ids.copy(),
         )
 
-    return R.ok({
-        "total_generated": total_generated,
-        "imported_case_ids": all_imported_ids,
-        "errors": errors,
-    })
+    return R.ok(
+        {
+            "total_generated": total_generated,
+            "imported_case_ids": all_imported_ids,
+            "errors": errors,
+        }
+    )
+
+
+# ═══════════════════════════════════════════════════════
+# 接口变更影响分析（C-API-AUTO-002）
+# ═══════════════════════════════════════════════════════
+
+
+class OpenApiChangeAnalyzeRequest(BaseModel):
+    """新旧 OpenAPI spec 对比请求。"""
+
+    old_spec: dict = Field(..., description="旧版本 OpenAPI/Swagger 文档（dict）")
+    new_spec: dict = Field(..., description="新版本 OpenAPI/Swagger 文档（dict）")
+    case_module: str | None = Field(None, description="仅分析指定模块的用例（可选）")
+    as_markdown: bool = Field(
+        False, description="返回 Markdown 报告（默认返回结构化 JSON）"
+    )
+
+
+@router.post("/cases/change-impact", response_model=R[dict], summary="接口变更影响分析")
+def analyze_change_impact(
+    body: OpenApiChangeAnalyzeRequest,
+    current: CurrentUser = Depends(require_permission("apitest:generate")),
+    db: Session = Depends(get_db),
+):
+    """对比新旧 OpenAPI 文档，输出变更接口清单与受影响用例。
+
+    用途：版本迭代后接口变更的增量维护 —— 找出新增/删除/修改的接口，
+    定位用例库中受影响的 API 用例，输出定向修改建议（无需全量重生成）。
+    """
+    pid = _current_project_id(current)
+    from app.services.api_change_impact_service import (
+        analyze_openapi_change,
+        changes_to_markdown,
+    )
+
+    result = analyze_openapi_change(
+        db,
+        pid,
+        body.old_spec,
+        body.new_spec,
+        case_module=body.case_module,
+    )
+    if body.as_markdown:
+        return R.ok({"markdown": changes_to_markdown(result)})
+    return R.ok(result)

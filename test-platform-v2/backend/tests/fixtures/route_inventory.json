@@ -1,6 +1,6 @@
 {
  "version": "batch-181-baseline",
- "count": 420,
+ "count": 421,
  "routes": [
   {
    "path": "/api/v1/agents/queue",
@@ -44,6 +44,10 @@
   },
   {
    "path": "/api/v1/apitest/cases/batch-generate",
+   "method": "POST"
+  },
+  {
+   "path": "/api/v1/apitest/cases/change-impact",
    "method": "POST"
   },
   {
