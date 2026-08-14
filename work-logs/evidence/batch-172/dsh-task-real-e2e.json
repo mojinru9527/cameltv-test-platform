@@ -1,0 +1,9 @@
+{
+  "task_id": 1,
+  "status": "success",
+  "output_text": "The workspace directory (`ws-83717fdc30`) is **empty** — it contains no files and no subdirectories, not even hidden ones (verified via recursive glob and `Get-ChildItem -Force`, which both returned no results). This is a freshly provisioned DSH session workspace with no content yet, so there is nothing to summarize beyond that state.",
+  "error": "",
+  "session_dir": "F:\\CamelTv-worktrees\\codex-batch-172-dsh-harness-integration\\test-platform-v2\\backend\\storage\\dsh-sessions",
+  "started_at": "2026-08-13 16:30:41.336722",
+  "finished_at": "2026-08-13 16:30:52.671387"
+}

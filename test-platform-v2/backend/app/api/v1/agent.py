@@ -39,6 +39,14 @@ def _agent_unavailable_reason() -> str:
     return ""
 
 
+def _dsh_unavailable_reason() -> str:
+    """dsh_execution 类型的可用性：跟随 DSH 运行时（开关/凭据/CLI 入口）。"""
+    from app.services.dsh.dsh_runner import runtime_available
+
+    ok, reason = runtime_available()
+    return reason if not ok else ""
+
+
 # ── 触发请求体 ──
 
 class AgentRunRequest(BaseModel):
@@ -108,6 +116,10 @@ def trigger_agent(
     unavailable_reason = _agent_unavailable_reason()
     if unavailable_reason:
         raise APIException(code=503, http_status=503, msg=unavailable_reason)
+    if agent_type == "dsh_execution":
+        dsh_reason = _dsh_unavailable_reason()
+        if dsh_reason:
+            raise APIException(code=503, http_status=503, msg=dsh_reason)
 
     pid = current.project_id or 0
 
@@ -146,15 +158,14 @@ def list_agent_types(
     current: CurrentUser = Depends(require_permission("agent:view")),
 ):
     """返回所有可用的 Agent 类型及其元数据（label / description / artifact_type）。"""
-    unavailable_reason = _agent_unavailable_reason()
     return R.ok([
         {
             "type": k,
             "label": v["label"],
             "description": v["description"],
             "artifact_type": v["artifact_type"],
-            "available": not unavailable_reason,
-            "unavailable_reason": unavailable_reason,
+            "available": not _agent_unavailable_reason() if k != "dsh_execution" else not _dsh_unavailable_reason(),
+            "unavailable_reason": _agent_unavailable_reason() if k != "dsh_execution" else _dsh_unavailable_reason(),
         }
         for k, v in AGENT_META.items()
     ])
