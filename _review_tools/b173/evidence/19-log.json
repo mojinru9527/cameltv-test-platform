@@ -1,0 +1,97 @@
+[
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/environments",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/environments/1/variables",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/lanhu-evidence/jobs",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/requirements",
+    "s": 200
+  },
+  {
+    "m": "POST",
+    "u": "/api/v1/interaction-coverage/gaps",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases/domains",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/release-bundles",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/environments",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/ui-tests",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/ui-tests/scripts",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/reports/trends",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/reports",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-plans",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/report-templates",
+    "s": 200
+  }
+]

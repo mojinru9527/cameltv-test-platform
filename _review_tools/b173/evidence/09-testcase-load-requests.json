@@ -1,0 +1,37 @@
+[
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200,
+    "t": 1786679892776,
+    "dt": 1110
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases?page=1&page_size=20&case_type=manual",
+    "s": 200,
+    "t": 1786679893046,
+    "dt": 1380
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases/stats",
+    "s": 200,
+    "t": 1786679893054,
+    "dt": 1388
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases/domains",
+    "s": 200,
+    "t": 1786679893671,
+    "dt": 2005
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/test-cases/taxonomy?case_type=manual",
+    "s": 200,
+    "t": 1786679893760,
+    "dt": 2094
+  }
+]

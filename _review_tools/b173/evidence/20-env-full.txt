@@ -1,0 +1,13 @@
+量列表
+添加变量
+变量名	值	加密	描述	操作
+PROD_ALLOWED_HOSTS	www.camel1.tv,api.cameltv.live,www.cameltv.live,livecdn.cameltv.live,img.cameltv.live,d3q5i0g1zfzd69.cloudfront.net,www.googletagmanager.com,www.google-analytics.com,stats.g.doubleclick.net,fonts.googleapis.com,fonts.gstatic.com,accounts.google.com,analytics.google.com,www.facebook.com,www.google.com.sg,sensors.cameltv.live	明文		
+
+PROD_EXPECTED_BUSINESS_TEXT	Football Today - Watch Live Streaming	明文		
+
+PROD_LOGIN_AUTHORIZED	false	明文		
+
+PROD_SMOKE_OWNER	sports-integration	明文		
+Command Palette
+
+Search for a command to run...

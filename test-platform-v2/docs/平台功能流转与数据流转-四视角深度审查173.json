@@ -1,0 +1,892 @@
+[
+ {
+  "id": "858113eb-2cd9-4fb8-960a-c4924c5aaebb",
+  "class": "sheet",
+  "title": "平台功能流转与数据流转-四视角深度审查173",
+  "rootTopic": {
+   "id": "e1ed4258-3c4f-4bf7-8511-194e6cdf2e04",
+   "class": "topic",
+   "title": "平台功能流转与数据流转-四视角深度审查173",
+   "children": {
+    "attached": [
+     {
+      "id": "0c9b9ca5-2e74-4432-8de0-48932eb4db90",
+      "class": "topic",
+      "title": "0 审查总览与问题热力图（batch-173）",
+      "children": {
+       "attached": [
+        {
+         "id": "9421242f-2f5e-4c3d-a66a-92c37e2fdc91",
+         "class": "topic",
+         "title": "审查方法：四视角对抗（UI设计/测试工程师/架构师/甲方验收）× 生产浏览器深度使用 × CRUD实测 × 网络请求捕获 × 前后端源码审查",
+         "notes": {
+          "plain": {
+           "content": "batch-173，生产 cameltv-test-platform1.vercel.app，CamelTv 体育平台项目（sportsadmin），25 页全遍历 + 用例/计划/缺陷/环境 CRUD 实测"
+          }
+         }
+        },
+        {
+         "id": "213b3299-2154-41ed-93d0-a905dc41a641",
+         "class": "topic",
+         "title": "平台全景：25 页可达 / 0 初始控制台错误 / 用例8984（功能8528/接口71/UI385）/ 计划11 / 缺陷8 / 报告5 / 环境3 / 接口资产899（7服务）/ 知识源91 / 图谱实体989",
+         "notes": {
+          "plain": {
+           "content": "evidence/03-summary.json + pages/*.txt"
+          }
+         }
+        },
+        {
+         "id": "cc0a255a-1440-4f0c-9a56-4d6b87a3a3af",
+         "class": "topic",
+         "title": "统计口径矛盾（实测）：通过率 工作台9.1%(731/8024) vs 追溯22.1%(729/3303)；需求覆盖率 0% vs 33.3% vs 67% 三处三个数",
+         "notes": {
+          "plain": {
+           "content": "执行记录双轨（test_execution vs api_execution_task_item）根因，evidence/26-stats-compare.json"
+          }
+         }
+        },
+        {
+         "id": "449e811c-7755-4f8c-ae75-5196cf953338",
+         "class": "topic",
+         "title": "P0 级新发现：①API批量任务双Worker竞态+认领后僵尸任务（task_worker.py:82）；②认领TOCTOU无锁（api_task_worker.py:46-58）；③计划执行单长事务阻塞cron（execute_all_cases:924-1119）；④用例内容渲染bug（数字被拆行，caseListFormatters.ts:59）"
+        },
+        {
+         "id": "c9a28863-db96-45b8-a459-f33c4d1840de",
+         "class": "topic",
+         "title": "P1 级：执行记录双轨/环依赖lazy压制/UI执行三入口/6套认领队列/cachedGet被signal绕过/4处useEffect无cleanup/文档3处硬伤（local-setup.md引用路径歧义等）/统计口径分裂"
+        },
+        {
+         "id": "5add4d4d-2af9-4ebb-9c8f-53d5ada55143",
+         "class": "topic",
+         "title": "主链路状态：需求✅→用例✅→计划✅(编排36.8%)→执行⚠️(通过率22.1%)→缺陷✅(删除为裸图标按钮a11y差)→报告⚠️(27.1%均8/12生成)→统计❌(口径矛盾)→通知⚠️(渠道2条但外部集成0)"
+        },
+        {
+         "id": "e8ef35fb-3f99-4f2e-be0c-efe74454a854",
+         "class": "topic",
+         "title": "交付结论：有条件通过（CONDITIONAL）——P0 四项 + P1 统计/请求层修复后复验；测试数据已清理（B173TMP 已删，缺陷知识切片残留1条）"
+        }
+       ]
+      }
+     },
+     {
+      "id": "7a4aefd4-307f-458e-9181-bf506f1fa85f",
+      "class": "topic",
+      "title": "1 需求域（需求文档/证据包/模块树/生产差异/交互缺口）",
+      "children": {
+       "attached": [
+        {
+         "id": "abdaad77-3bfc-4a66-82a9-8b8a30f65aa2",
+         "class": "topic",
+         "title": "功能流转：蓝湖链接/文件上传(.md/.docx/.xlsx) → 证据任务(采集/OCR/审核) → 需求文档(6) → AI提取(功能点/模块树) → AI生成用例(1157导入) → 生产差异标注(16.0.0) → 交互覆盖缺口(2217) → 评审/导入用例库",
+         "notes": {
+          "plain": {
+           "content": "实测：蓝湖任务6个(2成功4失败)；需求覆盖率显示0%；交互缺口2217条全量平铺无分页"
+          }
+         }
+        },
+        {
+         "id": "a4ae6a6f-d13f-43f2-9405-abf97e8438f3",
+         "class": "topic",
+         "title": "数据流转：LanhuEvidenceJob → LanhuEvidencePage/Asset(OCR) → RequirementDocument → RequirementModule → InteractionEdge(2217) → TestCase(source_doc_id) → 知识中心切片",
+         "notes": {
+          "plain": {
+           "content": "evidence/25-guest-home / pages/requirement.txt"
+          }
+         }
+        },
+        {
+         "id": "a1658a13-b20a-4749-801c-2d4205d2d607",
+         "class": "topic",
+         "title": "API：/lanhu-evidence/jobs /requirements /requirement-modules /interaction-coverage/gaps /test-cases/domains /ai-task/{id}",
+         "notes": {
+          "plain": {
+           "content": "证据任务失败无删除入口仅重试；蓝湖会话失效需手动更新Cookie"
+          }
+         }
+        },
+        {
+         "id": "e69cf3e3-9fdf-443e-b122-dca191019556",
+         "class": "topic",
+         "title": "问题（173）：①需求覆盖率 0%（页面）vs 33.3%（追溯）vs 67%（集成页）三口径；②交互缺口2217弱分页（50/页×45页，无跳页、URL未解码、首页被'首页'入口占满，无P0优先——UI报告修正：非无分页）；③蓝湖失败任务#30/#29/#26无清理入口；④用例内容渲染bug影响AI生成用例可读性（数字拆分）",
+         "notes": {
+          "plain": {
+           "content": "UI-05修正/UI-08/统计矛盾"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "id": "5b7e8e82-f671-43cf-8697-e9f5ba63b448",
+      "class": "topic",
+      "title": "2 用例域（用例库/分类树/评审/版本/导入导出）",
+      "children": {
+       "attached": [
+        {
+         "id": "7efdfe14-9751-42a5-a122-92ea51c59f37",
+         "class": "topic",
+         "title": "功能流转：用例库(8984: 功能8528/接口71/UI385) → 域/界面/模块/场景/优先级筛选 → 搜索(回车触发) → 新建/编辑(必填5项校验✅) → 评审/版本历史 → 导入(Excel/XMind) → 导出 → Playground批量编译→UI任务回写",
+         "notes": {
+          "plain": {
+           "content": "实测CRUD全通过：创建POST200/搜索✅/删除DELETE200；表单校验清晰（标题/域/模块/步骤/预期）"
+          }
+         }
+        },
+        {
+         "id": "58334894-bfd1-40e6-982f-e9d48d6514b0",
+         "class": "topic",
+         "title": "数据流转：TestCase(domain/module/P0-3/type) ↔ TestCaseVersion ↔ TestCaseReview ↔ TestCaseTaxonomy(树) ↔ 计划(TestPlanCase 3303条) ↔ 知识图谱",
+         "notes": {
+          "plain": {
+           "content": "evidence/07-case-crud-log / 08-dialog-probe"
+          }
+         }
+        },
+        {
+         "id": "d14a7843-b722-42a8-a7d2-1c9592462c08",
+         "class": "topic",
+         "title": "API：/test-cases /test-cases/stats /test-cases/taxonomy /test-cases/domains /test-cases/batch(batch-delete重复)",
+         "notes": {
+          "plain": {
+           "content": "批量删除双端点 DELETE /batch 与 POST /batch-delete 函数体相同（ARCH-13）"
+          }
+         }
+        },
+        {
+         "id": "5e2a86a3-90c2-4189-aa54-c29284d27c0d",
+         "class": "topic",
+         "title": "问题（173）：①渲染bug——正文数字被拆行（'假设上限 2、1 3、0'实为10000），caseListFormatters.ts:59启发式分割误判；②所属域下拉100+项无搜索；③用例8984仅71接口+385UI（接口资产899仅3.8%用例化）；④统计口径（用例总数一致8984✅但执行统计分裂）",
+         "notes": {
+          "plain": {
+           "content": "UI-02/UI-06/ARCH-13"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "id": "c20c2ca3-21f0-4257-9202-0cdc084e2164",
+      "class": "topic",
+      "title": "3 计划与执行域（计划/编排/执行/分诊/失败自动链路）",
+      "children": {
+       "attached": [
+        {
+         "id": "3f5d3213-e8b1-4bbc-9c87-9120fc66917c",
+         "class": "topic",
+         "title": "功能流转：测试计划(11) → 编排用例(3303/8984=36.8%) → 环境选择 → 一键/批量/单条执行 → 失败分诊(triage) → 失败自动转缺陷/报告/通知(计划级开关) → 执行历史",
+         "notes": {
+          "plain": {
+           "content": "实测：计划新建POST200/删除DELETE200；11个计划进度多为0/N（0/405、0/2891、0/325未执行）；接口用例执行通过率1.1%"
+          }
+         }
+        },
+        {
+         "id": "74653194-ad37-4cab-a700-2393860a148e",
+         "class": "topic",
+         "title": "数据流转：TestPlan → TestPlanCase(3303) → TestExecution(pass/fail/skip) ↔ ApiExecutionTaskItem(passed/failed) 双轨互指 → TestCase.last_run_status(3处写入口径不一)",
+         "notes": {
+          "plain": {
+           "content": "report-arch-backend.md §3.1/§3.5"
+          }
+         }
+        },
+        {
+         "id": "9e43b111-bd9d-46a4-b257-955a66ec8013",
+         "class": "topic",
+         "title": "API：/test-plans /test-plans/:id/execute /execute-all /auto-execute /batch-execute（三端点语义重叠）/executions /triage",
+         "notes": {
+          "plain": {
+           "content": "ARCH-13 三执行端点收敛建议"
+          }
+         }
+        },
+        {
+         "id": "54ca688c-3e9b-4911-a0ed-0c125cdd0a50",
+         "class": "topic",
+         "title": "问题（173）：①P0 单长事务——execute_all_cases 整个计划一个事务末尾commit（:1119），数百用例挂数分钟锁行，且被APScheduler线程调用阻塞cron；②P0 双Worker竞态——APScheduler轮询+api_task_worker守护线程并行认领，task_worker.py:82认领后return致僵尸任务；③P0 TOCTOU——claim_next_task无FOR UPDATE，PG下重复执行；④统计分裂——dashboard(8024执行记录) vs trace(3303用例) 通过率9.1% vs 22.1%",
+         "notes": {
+          "plain": {
+           "content": "report-arch-backend.md §3.3/§6.2"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "id": "b128fe28-4e22-44f3-9135-3a0c8ceaf0a6",
+      "class": "topic",
+      "title": "4 质量域（缺陷/报告/追溯/定时/通知）",
+      "children": {
+       "attached": [
+        {
+         "id": "58f8ba2b-fd55-4df5-87c0-877625ef828e",
+         "class": "topic",
+         "title": "功能流转：执行结果 → 缺陷(8: 3致命/1严重P1/4) → 状态机(open→confirmed→fixing→pending_review→closed/rejected) → 报告(5份) → 追溯(链路口径) → 定时任务(4) → 通知(邮件+飞书webhook)",
+         "notes": {
+          "plain": {
+           "content": "实测：缺陷新建POST200✅/详情✅/编辑✅；删除为裸图标按钮（a11y不可见，能力存在）；缺陷删除后知识切片残留(deprecated)"
+          }
+         }
+        },
+        {
+         "id": "1e3efa68-fadb-4077-96ed-b87ada46d2f3",
+         "class": "topic",
+         "title": "数据流转：TestExecution → Defect(severity/assignee/case_id) → DefectTransition/DefectComment → TestReport(通过率/门禁) → TraceStats → TestSchedule/ScheduleRun → NotificationChannel/Log",
+         "notes": {
+          "plain": {
+           "content": "evidence/16-defect-module / 18-trace2 / 25-env-knowledge"
+          }
+         }
+        },
+        {
+         "id": "46759639-f284-4be8-ad12-6b97465dc66e",
+         "class": "topic",
+         "title": "API：/defects /defects/:id/transitions /reports /reports/:id/gate(gate/check双端点) /trace/coverage /trace/trend /schedules /notify/channels",
+         "notes": {
+          "plain": {
+           "content": "ARCH-13 报告gate双端点"
+          }
+         }
+        },
+        {
+         "id": "777fef4b-9e44-4bc7-a425-539676ba1876",
+         "class": "topic",
+         "title": "问题（173）：①统计口径5套并存（工作台9.1% vs 追溯22.1% vs 报告27.1% vs 集成页67%）；②缺陷删除按钮为无文本裸图标（a11y不可见，能力存在——UI报告修正：非无入口）；③缺陷删除级联不彻底（知识切片残留status=deprecated）；④报告5份全在8/12生成——无日常自动生成；⑤报告模板列全为'—'；⑥定时任务4个（2个执行中1个停用1个API回归）",
+         "notes": {
+          "plain": {
+           "content": "UI-04/UI-09/统计矛盾"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "id": "f9f1d86b-f4dd-45dc-98db-08f0b602ad54",
+      "class": "topic",
+      "title": "5 测试执行域（接口测试/UI自动化/Playground/专项）",
+      "children": {
+       "attached": [
+        {
+         "id": "c7299a2b-cdd7-420c-b3a2-69469e5143d0",
+         "class": "topic",
+         "title": "功能流转：接口资产(899/7服务/45页) → 快速调试(选环境/URL/断言) → 接口用例(71) → 执行任务(批量/取消/重试/curl/失败分析) → UI自动化(任务10/用例脚本) → Playground(编译/批量编译/回写UI任务) → 音视频专项(已隐藏) → 性能监控(已隐藏)",
+         "notes": {
+          "plain": {
+           "content": "实测：apitest 4 tab正常；environments/datasets每次切tab重复请求×2；UI任务10个中2个完全重复；DSH任务页'服务未启用'但菜单可见"
+          }
+         }
+        },
+        {
+         "id": "61b18905-3821-4296-9144-b82a8647dee2",
+         "class": "topic",
+         "title": "数据流转：ApiAsset(OpenAPI导入) → ApiTestCase(71) → ApiExecutionTask/Item ↔ TestExecution(双轨) → UiTestJob/UiRun(Playwright子进程) → PlaygroundSpec(generated/*.spec.ts) → XHR捕获",
+         "notes": {
+          "plain": {
+           "content": "evidence/15-apitest-module / 19-uitest-cases / pages/uitest.txt"
+          }
+         }
+        },
+        {
+         "id": "180fa6a4-a5c3-4cdb-80f6-af5c85ff0a6a",
+         "class": "topic",
+         "title": "API：/apitest/api-assets /apitest/api-execute /test-cases/:id/execute /apitest/tasks /ui-automation/jobs /playground/compile /open_api(CI Token)",
+         "notes": {
+          "plain": {
+           "content": "apitest.py 37KB/977行超大路由文件；open_api.py:300-304裸线程执行UI"
+          }
+         }
+        },
+        {
+         "id": "a1ff31cc-afde-4bd5-a8d3-21c36016a17d",
+         "class": "topic",
+         "title": "问题（173）：①UI执行三入口并存（ui_runner_queue+task_worker轮询+open_api裸线程）；②接口用例71 vs 资产899（3.8%用例化，批量生成效率低）；③UI任务重复数据2条无幂等；④Playground用例与UI任务关联字段存在但映射不完整；⑤特殊/性能路由隐藏但手册仍声称可用（DOC-02）",
+         "notes": {
+          "plain": {
+           "content": "ARCH-06/UI-03/ARCH-10"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "id": "02416240-73fa-4f7b-afc0-005ba7231617",
+      "class": "topic",
+      "title": "6 资产域（蓝湖证据/知识中心/图谱/AI审核台/Agent工作台）",
+      "children": {
+       "attached": [
+        {
+         "id": "486c45c4-4a11-49e4-928b-337edde5ed70",
+         "class": "topic",
+         "title": "功能流转：蓝湖证据包(采集109页/OCR) → 知识中心(12 tab: 概览/项目知识/平台研发/检索/知识源/AI审核台/图谱/实体/迭代/Wiki/差异/Skills) → 图谱(989实体) → AI审核台(11待审) → Agent工作台(7种: 需求分析/影响分析/用例生成/失败分析/Wiki编译/知识差异/平台知识 + DSH执行) → 知识差异对比",
+         "notes": {
+          "plain": {
+           "content": "实测：Agent执行历史10条全成功（最快5.9s最慢40.4s）；DSH执行'暂不可用'；知识中心91源/311切片/989实体/12次Agent执行/99%采纳率"
+          }
+         }
+        },
+        {
+         "id": "27a6c854-9df6-49f0-b41f-d2bc32bbde43",
+         "class": "topic",
+         "title": "数据流转：LanhuEvidenceJob → KnowledgeSource(91) → Chunk(311) → Vector(嵌入) → Entity/Relation(989) → AiArtifact(审核) → AgentRun/QueueItem → WikiRawSource/Page/Link → 差异DiffTask",
+         "notes": {
+          "plain": {
+           "content": "evidence/20-probe-more / 21-probe-extra / pages/knowledge.txt"
+          }
+         }
+        },
+        {
+         "id": "6cf1e7ff-4788-4d8c-883b-ff542cc6b822",
+         "class": "topic",
+         "title": "API：/knowledge/overview /knowledge/sources /knowledge/graph/entities /knowledge/ai-artifacts /agents /agents/trigger /wiki/* /lanhu-evidence/*",
+         "notes": {
+          "plain": {
+           "content": "knowledge.py 68KB/1668行路由内直连ORM（ARCH-14）"
+          }
+         }
+        },
+        {
+         "id": "064fc5b7-c1db-4215-a189-a6f196963725",
+         "class": "topic",
+         "title": "问题（173）：①已删缺陷的知识切片残留（source id=113 status=deprecated）；②12 tab切页部分全量重拉（visitedTabs模式✅但SearchTab useEffect无cleanup×2）；③知识图谱实体989 vs 用例8984映射有限；④knowledge.py超大路由+直连ORM；⑤AI产物置信度/审核链路待验证",
+         "notes": {
+          "plain": {
+           "content": "P1-2(前端)/ARCH-14/ARCH-12"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "id": "9be7e155-4a44-415b-9f5d-e37961a79905",
+      "class": "topic",
+      "title": "7 交付域（发布包/版本全景/模块树/运维控制）",
+      "children": {
+       "attached": [
+        {
+         "id": "ad751639-8468-4ca8-b9b9-ef220dc6d573",
+         "class": "topic",
+         "title": "功能流转：发布包(4: 16.0.0开发验收草稿18模块/15.0.0上线回归活跃0模块/需求基线45模块43页/功能地图草稿0) → 版本全景(panorama) → 模块树构建 → 生产差异 → 回归范围/触发 → 运维发布控制(只读未配置)",
+         "notes": {
+          "plain": {
+           "content": "实测：发布包详情✅（16.0.0含广告模块树）；运维发布控制页显示'当前环境未启用发布控制数据源'占位"
+          }
+         }
+        },
+        {
+         "id": "13bc4d1e-ce2d-4a8c-8bbe-06ae4468a0df",
+         "class": "topic",
+         "title": "数据流转：ReleaseBundle(版本号/状态) → RequirementModule(45/43) → VersionPanorama → 差异DiffBundle → 知识图谱ingestion写入 → ops发布事件(未配置)",
+         "notes": {
+          "plain": {
+           "content": "evidence/20-bundle-detail / pages/release-bundles.txt"
+          }
+         }
+        },
+        {
+         "id": "a290ebf4-26ef-454c-bd68-8bbd7d01c54b",
+         "class": "topic",
+         "title": "API：/release-bundles /release-bundles/:id/panorama /requirement-modules /ops/deployments",
+         "notes": {
+          "plain": {
+           "content": "release_bundles.py 23KB；version-mission 重定向到 release-bundles"
+          }
+         }
+        },
+        {
+         "id": "50fe0379-98b4-440f-95a8-41df4fd5d611",
+         "class": "topic",
+         "title": "问题（173）：①15.0.0活跃包0模块0页面空壳；②'版本测试任务'菜单重定向冗余入口；③运维控制未启用但整页占位无隐藏/引导；④发布包与测试计划双向关联（batch-157）已有但UI展示分散",
+         "notes": {
+          "plain": {
+           "content": "UI-15/UI-12/DOC-05"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "id": "a4610f62-8dac-4bdc-b1cb-cc8c12db856c",
+      "class": "topic",
+      "title": "8 平台域（项目/组织/环境/系统管理/通知/集成/数据集）",
+      "children": {
+       "attached": [
+        {
+         "id": "6a6f0650-3506-4fdc-b39f-400c0c1384b0",
+         "class": "topic",
+         "title": "功能流转：我的项目(4: cameltv/CAMELTV-VER/C165WALK/sports-live) → 项目切换(顶部) → 环境(3: 生产/站点UI/Test5) → 变量(加密) → 系统管理(5 tab: 用户13/角色3/审计/API Token/邀请码1) → 通知渠道(2) → 集成配置(0外部) → 数据集(4) → DSH任务(未启用)",
+         "notes": {
+          "plain": {
+           "content": "实测：系统5 tab全部正常；角色3个(admin/tester/viewer)；审计日志记录了我本次操作的plan:create/delete与case:delete；邀请码1个掩码显示****F4PY"
+          }
+         }
+        },
+        {
+         "id": "b8303499-8ff0-4658-a117-c285966c4101",
+         "class": "topic",
+         "title": "数据流转：sys_organization(_member) → sys_project(_member) → Environment/EnvironmentVariable(加密) → SysUser/Role/Permission/AuditLog/ApiToken/InviteCode → NotificationChannel → IntegrationConfig → Dataset",
+         "notes": {
+          "plain": {
+           "content": "evidence/20-probe-more / 22-cleanup-defect / pages/system.txt"
+          }
+         }
+        },
+        {
+         "id": "5e305f37-8763-4998-9573-97f436216b6c",
+         "class": "topic",
+         "title": "API：/projects /my-projects /organizations /environments /system/users /system/roles /system/audit /system/tokens /notify/channels /integrations /datasets",
+         "notes": {
+          "plain": {
+           "content": "project/、organization/ 路由重定向到 my-projects（前端死代码仍维护）"
+          }
+         }
+        },
+        {
+         "id": "18688aa7-476f-40b4-9d72-12e56fd0c13c",
+         "class": "topic",
+         "title": "问题（173）：①前端删除入口问题：缺陷为裸图标按钮（a11y不可见）、蓝湖任务无删除（仅重试）；②环境页长变量值溢出无换行；③角色/邀请码 tab 初始空白无骨架屏；④DSH任务页'服务未启用'仍展示新建入口；⑤API Token掩码显示'****F4PY'（仅尾部4位可见，设计合理✅）；⑥权限码双份维护无CI校验",
+         "notes": {
+          "plain": {
+           "content": "UI-07/UI-10/UI-11/ARCH-11"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "id": "68932f77-99fb-4ec2-b3fa-d6ad1f2f182d",
+      "class": "topic",
+      "title": "9 四者关联优化（用例/功能/接口/UI自动化高效联动）",
+      "children": {
+       "attached": [
+        {
+         "id": "e67cd020-d737-41a1-bdb7-84878b88029e",
+         "class": "topic",
+         "title": "目标模型：功能用例(P0锚点) ↔ 接口用例(绑定ApiEndpoint) ↔ UI用例(绑定spec) ↔ 测试计划(混合编排) → 执行回填 → 失败自动转缺陷/报告/通知 → 单一口径追溯",
+         "notes": {
+          "plain": {
+           "content": "用户核心诉求：用例/功能/接口/UI自动化四者高效关联"
+          }
+         }
+        },
+        {
+         "id": "67265317-ff22-47c3-a446-3084281e5fe0",
+         "class": "topic",
+         "title": "现状断裂：①接口资产899仅71用例化(3.8%)；②UI任务与用例关联仅Playground批量回写(385 UI用例vs 10任务)；③计划仅编排3303/8984(36.8%)，11计划大多0执行；④执行结果3处写TestCase.last_run_status口径不一；⑤统计5套口径",
+         "notes": {
+          "plain": {
+           "content": "report-arch-backend.md §3.5/§4.2"
+          }
+         }
+        },
+        {
+         "id": "ac9027be-1e3d-4980-afb6-3c6ca59c9fc1",
+         "class": "topic",
+         "title": "关联方案①：用例模型加双向引用——TestCase.api_endpoint_ids[] / TestCase.ui_spec_id / TestPlanCase 统一；接口用例由资产生成时自动挂功能用例映射；UI任务按用例生成spec并回写结果到用例",
+         "notes": {
+          "plain": {
+           "content": "batch-151 已有失败自动链路基础"
+          }
+         }
+        },
+        {
+         "id": "32811159-58a4-42a8-8f75-094a3a318b09",
+         "class": "topic",
+         "title": "关联方案②：计划维度四类型混合编排+强制环境绑定+批次执行（短事务）；执行结果单一事实源（api_execution_task_item/ui_test_run）收敛test_execution；统计统一statistics_service唯一入口",
+         "notes": {
+          "plain": {
+           "content": "报告/追溯/工作台/集成页共用同一聚合视图"
+          }
+         }
+        },
+        {
+         "id": "cb2f085c-fc06-4dea-a274-d6cddd927cdf",
+         "class": "topic",
+         "title": "关联方案③：一键生成扩量——按服务/模块批量生成接口用例(71→覆盖P0资产)；UI任务按P0功能用例批量创建；Playground成为批量编译通道",
+         "notes": {
+          "plain": {
+           "content": "接口资产899中GET只读资产优先自动化"
+          }
+         }
+        },
+        {
+         "id": "a9f9befe-7518-499f-be37-97f7af5e5757",
+         "class": "topic",
+         "title": "效率度量：批量执行成功率≥95%、单条P95<5s、AI提取fallback=0、接口用例化率≥50%、计划执行率≥80%、统计口径100%一致",
+         "notes": {
+          "plain": {
+           "content": "建议下版本验收指标"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "id": "b8bc1a5e-7ad0-423f-8d02-2fc3999cf020",
+      "class": "topic",
+      "title": "10 前后端请求冗余分析与优化方案",
+      "children": {
+       "attached": [
+        {
+         "id": "db1eba04-1f63-43ad-8c77-cd0c2953f694",
+         "class": "topic",
+         "title": "现状（实测+源码）：25页初始加载无重复GET✅（cachedGet会话缓存生效）；apitest切tab environments/datasets各×2（signal绕过缓存）；menus会话级1次✅；搜索回车触发无逐键请求✅",
+         "notes": {
+          "plain": {
+           "content": "evidence/09-load-requests.json / 15-apitest-log.json"
+          }
+         }
+        },
+        {
+         "id": "48cfb38c-045e-47b7-bf99-fc888dae887f",
+         "class": "topic",
+         "title": "P1-1 cachedGet被AbortSignal绕过：全仓cachedGet仅3调用点，fetchEnvironments/fetchDomains/fetchMenus等10+处传signal走裸client.get → 60s缓存失效跨页重复请求（apitest 3 tab各拉environments）",
+         "notes": {
+          "plain": {
+           "content": "report-arch-frontend.md A.2 P1-1"
+          }
+         }
+        },
+        {
+         "id": "831f81bd-e81b-4045-9230-7aca71211d26",
+         "class": "topic",
+         "title": "修复方案①：cachedGet支持signal——传signal也命中缓存，仅缓存未命中时发起可取消请求（in-flight promise的AbortController集合，abort只移除订阅不取消共享请求）",
+         "notes": {
+          "plain": {
+           "content": "client.ts:101 约定修改"
+          }
+         }
+        },
+        {
+         "id": "25d8502b-2876-4124-ac88-1eba6178f580",
+         "class": "topic",
+         "title": "修复方案②：静态数据(menus/environments/domains/taxonomy/stats)统一接入缓存+失效策略；引入SWR/React Query评估（缓存/去重/轮询/失效一体化）",
+         "notes": {
+          "plain": {
+           "content": "预计请求量降40-50%"
+          }
+         }
+        },
+        {
+         "id": "9bddfd08-b09c-4f45-bf67-fb9cc25c9782",
+         "class": "topic",
+         "title": "修复方案③：轮询指数退避（dsh-tasks/uitest 3s固定→1s/2s/4s/8s退避）；page_size=200重型调用按需分页；useEffect无cleanup 4处补齐（DefectFormDialog/SearchTab×2/CaseDrawer）",
+         "notes": {
+          "plain": {
+           "content": "P1-2/P2-1/P2-2"
+          }
+         }
+        },
+        {
+         "id": "ceb67551-ed1d-4635-9d32-afb07c747727",
+         "class": "topic",
+         "title": "修复方案④：删除死代码（fetchProjects/fetchMe 0调用）；project/organization页面路由清理；超大页面拆分（AiResultModal 1424行/uitest 1072行/requirement 1147行）",
+         "notes": {
+          "plain": {
+           "content": "P3-1"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "id": "71d82518-0d47-48be-86d4-27816c6e82e9",
+      "class": "topic",
+      "title": "11 架构收敛与本地搭建优化",
+      "children": {
+       "attached": [
+        {
+         "id": "18e2fa1c-28ab-4796-bd5f-c92d55099a90",
+         "class": "topic",
+         "title": "P0-1 统一任务队列：9套调度/执行机制收敛为单一TaskQueue基类（status+locked_by+heartbeat+retry），APScheduler只留一个2s轮询分发；删除task_worker._process_api_tasks与api_task_worker._processor_loop之一",
+         "notes": {
+          "plain": {
+           "content": "report-arch-backend.md §7-1"
+          }
+         }
+        },
+        {
+         "id": "b46a56c8-e015-4465-92a1-87be1bda4e18",
+         "class": "topic",
+         "title": "P0-2 认领原子化：UPDATE...WHERE status='pending' FOR UPDATE SKIP LOCKED（PG）/BEGIN IMMEDIATE（SQLite）；修复task_worker.py:82僵尸守卫；api_execution_task加stale回收",
+         "notes": {
+          "plain": {
+           "content": "report-arch-backend.md §7-2"
+          }
+         }
+        },
+        {
+         "id": "95f96068-a0de-4320-bccb-91bba9332fad",
+         "class": "topic",
+         "title": "P0-3 计划执行短事务：execute_all_cases逐用例独立Session短事务或整体任务化（trigger_type=plan）；从APScheduler线程挪出",
+         "notes": {
+          "plain": {
+           "content": "report-arch-backend.md §7-3"
+          }
+         }
+        },
+        {
+         "id": "d318b9df-f831-48af-ba19-fa69d759fa9a",
+         "class": "topic",
+         "title": "P1-4 执行事实源唯一：api_execution_task_item/ui_test_run为机器可读事实源，test_execution收敛为计划维度轻量索引；四表状态值统一pending/running/passed/failed/skipped/cancelled；report_aggregator/trace/dashboard同源",
+         "notes": {
+          "plain": {
+           "content": "report-arch-backend.md §7-4"
+          }
+         }
+        },
+        {
+         "id": "0137d9eb-6329-4f49-a670-6923e8480b33",
+         "class": "topic",
+         "title": "P1-5 服务层边界：8处私有符号引用提升公共API；requirement_service↔test_case_service断环（validate_source_doc下沉）；权限码单点常量+CI校验；路由层禁ORM（knowledge.py:675-693）",
+         "notes": {
+          "plain": {
+           "content": "report-arch-backend.md §7-5/7/6"
+          }
+         }
+        },
+        {
+         "id": "b1798673-6e48-4bf1-8471-4c7d884b885c",
+         "class": "topic",
+         "title": "P1-6 同步长任务异步化：知识图谱extract/evolve、execute-all默认async_mode、接口批量生成BackgroundTasks；statement_timeout=30000配置；_in_new_session改名",
+         "notes": {
+          "plain": {
+           "content": "report-arch-backend.md §7-9"
+          }
+         }
+        },
+        {
+         "id": "207c42af-f979-4b01-8142-780b32a7331d",
+         "class": "topic",
+         "title": "P2-7 模型规范化：软删除统一is_deleted；跨域引用补FK（TestCase.source_doc_id/ApiExecutionTaskItem.case_id/TestSchedule.job_id）；删除重复端点（batch/batch-delete、execute-all三端点、gate双端点）；soft_delete_status死代码移除",
+         "notes": {
+          "plain": {
+           "content": "report-arch-backend.md §7-8/10"
+          }
+         }
+        },
+        {
+         "id": "ef1821d1-4a46-459d-9d1d-316c7fe1bbc4",
+         "class": "topic",
+         "title": "本地搭建（用户点名）：docs/local-setup.md 已存在（仓库根 docs/，Batch 152）但手册引用路径有歧义（test-platform-v2/docs 相对解析不到）；start-platform-environment.ps1 已支持-InstallDeps/-InitializeLocal✅；建议：Docker一键(compose已存在)、种子数据脚本、前端gen:api自动化、环境变量7份收敛统一入口",
+         "notes": {
+          "plain": {
+           "content": "report-arch-frontend.md B.1#1 / start-platform-environment.ps1 / docs/local-setup.md"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "a8195685-7f96-4c07-b4c2-78d69cee3b81",
+  "class": "sheet",
+  "title": "问题清单173（P0-P4，含证据定位）",
+  "rootTopic": {
+   "id": "29ed638d-7c1b-4aa1-8432-6875ab5a0d86",
+   "class": "topic",
+   "title": "问题清单173（P0-P4，含证据定位）",
+   "children": {
+    "attached": [
+     {
+      "id": "15f13499-8925-48f0-ac63-1353adb96704",
+      "class": "topic",
+      "title": "P0-1 API批量任务双Worker竞态+僵尸任务",
+      "notes": {
+       "plain": {
+        "content": "task_worker.py:53-62,81-82 + api_task_worker.py:290-316 并行认领；:82认领后return致任务永久running无stale回收"
+       }
+      }
+     },
+     {
+      "id": "8e201618-b5cc-4eb8-9d92-92084ae62f0f",
+      "class": "topic",
+      "title": "P0-2 认领TOCTOU无锁",
+      "notes": {
+       "plain": {
+        "content": "api_task_worker.py:46-58 SELECT→UPDATE→commit无FOR UPDATE；PG双worker重复执行"
+       }
+      }
+     },
+     {
+      "id": "453a8ce0-1a33-4270-b2f6-a3d0fbdcd64b",
+      "class": "topic",
+      "title": "P0-3 计划执行单长事务",
+      "notes": {
+       "plain": {
+        "content": "execute_all_cases:924-1119/auto_execute_api_cases:465-610单事务末尾commit；数百用例挂数分钟锁行；APScheduler线程调用阻塞cron"
+       }
+      }
+     },
+     {
+      "id": "2a0f9ecb-49a3-4d8d-8501-9f878864dcf4",
+      "class": "topic",
+      "title": "P0-4 用例内容渲染bug（数字拆行）",
+      "notes": {
+       "plain": {
+        "content": "caseListFormatters.ts:59 正则/(?=\\d+\\s*[、.．)）])/g 把'10000）'拆分→'2、1 3、0'；数据层正常（API返回10000）渲染层失真；影响AI生成用例可读性"
+       }
+      }
+     },
+     {
+      "id": "5c4ae84d-0256-485c-9c3b-2fc8d6723179",
+      "class": "topic",
+      "title": "P1-1 统计口径5套分裂（通过率9.1% vs 22.1%；需求覆盖率0/33.3/67%）",
+      "notes": {
+       "plain": {
+        "content": "执行双轨：test_plan_service.py:521-544,1046-1079双写；report_aggregator只读task/run表 vs trace/dashboard读test_execution；口径收敛为唯一统计服务"
+       }
+      }
+     },
+     {
+      "id": "d0d901c7-6659-44cf-89de-6419ad8d1599",
+      "class": "topic",
+      "title": "P1-2 执行记录双轨",
+      "notes": {
+       "plain": {
+        "content": "TestExecution.api_task_id ↔ ApiExecutionTaskItem.test_execution_id 双向互指；四表状态值4套取值"
+       }
+      }
+     },
+     {
+      "id": "00fb0c43-1f81-4e78-8078-0519c974830c",
+      "class": "topic",
+      "title": "P1-3 环依赖lazy压制+8处私有符号跨模块引用",
+      "notes": {
+       "plain": {
+        "content": "requirement_service.py:789 ⇄ test_case_service.py:106；_row_to_dict/_call_llm_sync/_extract_lanhu_content等"
+       }
+      }
+     },
+     {
+      "id": "a699eef2-5a99-4f61-9472-3f8bc74e6ed1",
+      "class": "topic",
+      "title": "P1-4 cachedGet被AbortSignal绕过（请求冗余）",
+      "notes": {
+       "plain": {
+        "content": "client.ts:101约定；10+处传signal走裸client.get；apitest切tab environments×2实测"
+       }
+      }
+     },
+     {
+      "id": "27abe50d-5158-487e-8863-02fdfb878452",
+      "class": "topic",
+      "title": "P1-5 4处异步useEffect无cleanup",
+      "notes": {
+       "plain": {
+        "content": "DefectFormDialog.tsx:61-81/SearchTab.tsx:63-67,70-86/CaseDrawer.tsx:125-154 + environment页切换竞态"
+       }
+      }
+     },
+     {
+      "id": "4158a672-0f34-48f7-a385-9a195c6ce0e6",
+      "class": "topic",
+      "title": "P1-6 文档硬伤：docs/local-setup.md引用路径歧义（文件实存仓库根docs/，从test-platform-v2/docs/解析失效）+手册声称special/perftest可用但路由已隐藏+完整PRD技术栈过时(React18.3 vs 19.2.8)",
+      "notes": {
+       "plain": {
+        "content": "手册:11,51/路由index.tsx:214-215,234-235/完整PRD:71,100"
+       }
+      }
+     },
+     {
+      "id": "c2084613-e75b-4483-bf88-39d6f561e6b5",
+      "class": "topic",
+      "title": "P1-7 缺陷删除按钮为无文本裸图标（a11y不可见）+删除后知识切片残留",
+      "notes": {
+       "plain": {
+        "content": "DefectTable.tsx:151-176裸图标；删除后knowledge source id=113 status=deprecated残留"
+       }
+      }
+     },
+     {
+      "id": "2a80e117-956f-40ac-899d-2d3366d6abc0",
+      "class": "topic",
+      "title": "P2 组：6套认领队列/UI执行三入口/权限码双份/软删除三套/重复端点4组/超大路由文件9个/无statement_timeout/UI任务重复数据2条/蓝湖失败任务无清理/所属域下拉无搜索/环境长变量溢出/角色tab无骨架屏/DSH未启用仍可点/发布包空壳2个/运维控制占位/轮询无退避/page_size=200重型调用/5个>800行页面/死代码fetchProjects等",
+      "notes": {
+       "plain": {
+        "content": "详见四份视角报告"
+       }
+      }
+     },
+     {
+      "id": "f1384dd4-5c34-4ae8-be93-228544e266b6",
+      "class": "topic",
+      "title": "P3 组：严重度标签风格混用/追溯轴标签中英混排/域命名体系不统一/报告模板列空/缺陷严重程度双风格等打磨项",
+      "notes": {
+       "plain": {
+        "content": "详见四份视角报告"
+       }
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "f800a582-f6fb-4c1a-a216-d078e0b1d008",
+  "class": "sheet",
+  "title": "四者关联设计（用例↔功能↔接口↔UI自动化）",
+  "rootTopic": {
+   "id": "8f61e32a-26d3-4070-a507-690047b3e51b",
+   "class": "topic",
+   "title": "四者关联设计（用例↔功能↔接口↔UI自动化）",
+   "children": {
+    "attached": [
+     {
+      "id": "0b734a9c-8dbc-4e9d-a08c-e14140bd0b43",
+      "class": "topic",
+      "title": "总目标：用例/功能/接口/UI自动化四者形成可追溯闭环，避免各自为政",
+      "notes": {
+       "plain": {
+        "content": "甲方核心诉求"
+       }
+      }
+     },
+     {
+      "id": "149a17b1-739c-4cae-8f32-c37ea2d9781e",
+      "class": "topic",
+      "title": "现状：功能8528/接口71/UI385/计划3303编排/执行通过率22.1%——接口与UI自动化严重偏少，计划编排率低",
+      "notes": {
+       "plain": {
+        "content": "evidence/03-summary + 26-stats-compare"
+       }
+      }
+     },
+     {
+      "id": "5dc05a00-e674-4778-8562-a11948366d9b",
+      "class": "topic",
+      "title": "方案：TestCase双向引用（api_endpoint_ids/ui_spec_id）→ 计划混合编排 → 执行单一事实源 → 结果回填用例 → 失败自动转缺陷/报告/通知",
+      "notes": {
+       "plain": {
+        "content": "batch-151基础+batch-157执行模型双向关联"
+       }
+      }
+     },
+     {
+      "id": "932f2f43-69c0-4b7f-83b1-ec04eb11d9ea",
+      "class": "topic",
+      "title": "扩量路径：接口资产899按GET只读优先批量生成用例；P0功能用例批量创建UI任务（Playground编译）；数据集参数化注入（Batch154已打通）",
+      "notes": {
+       "plain": {
+        "content": "platform-feature-value-and-redundancy-audit.md §2.1"
+       }
+      }
+     }
+    ]
+   }
+  }
+ }
+]

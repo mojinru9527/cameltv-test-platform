@@ -1,0 +1,449 @@
+{
+  "/workbench": {
+    "path": "/workbench",
+    "overflowX": false,
+    "overflowY": true,
+    "issues": [],
+    "tables": [
+      {
+        "rows": 3,
+        "cols": 5,
+        "hasEmpty": false
+      },
+      {
+        "rows": 3,
+        "cols": 6,
+        "hasEmpty": false
+      }
+    ]
+  },
+  "/trace": {
+    "path": "/trace",
+    "overflowX": false,
+    "overflowY": true,
+    "issues": [],
+    "tables": [
+      {
+        "rows": 3,
+        "cols": 2,
+        "hasEmpty": false
+      }
+    ]
+  },
+  "/requirement": {
+    "path": "/requirement",
+    "overflowX": false,
+    "overflowY": true,
+    "issues": [],
+    "tables": [
+      {
+        "rows": 6,
+        "cols": 7,
+        "hasEmpty": false
+      },
+      {
+        "rows": 20,
+        "cols": 3,
+        "hasEmpty": false
+      }
+    ]
+  },
+  "/testcase": {
+    "path": "/testcase",
+    "overflowX": false,
+    "overflowY": true,
+    "issues": [],
+    "tables": [
+      {
+        "rows": 20,
+        "cols": 10,
+        "hasEmpty": true
+      }
+    ]
+  },
+  "/testplan": {
+    "path": "/testplan",
+    "overflowX": false,
+    "overflowY": false,
+    "issues": [],
+    "tables": [
+      {
+        "rows": 11,
+        "cols": 5,
+        "hasEmpty": false
+      }
+    ]
+  },
+  "/mindmap": {
+    "path": "/mindmap",
+    "overflowX": false,
+    "overflowY": false,
+    "issues": []
+  },
+  "/apitest": {
+    "path": "/apitest",
+    "overflowX": false,
+    "overflowY": true,
+    "issues": []
+  },
+  "/uitest": {
+    "path": "/uitest",
+    "overflowX": false,
+    "overflowY": false,
+    "issues": [],
+    "tables": [
+      {
+        "rows": 10,
+        "cols": 8,
+        "hasEmpty": false
+      }
+    ]
+  },
+  "/playground": {
+    "path": "/playground",
+    "overflowX": false,
+    "overflowY": true,
+    "issues": [],
+    "tables": [
+      {
+        "rows": 100,
+        "cols": 4,
+        "hasEmpty": true
+      }
+    ]
+  },
+  "/schedule": {
+    "path": "/schedule",
+    "overflowX": false,
+    "overflowY": false,
+    "issues": [],
+    "tables": [
+      {
+        "rows": 4,
+        "cols": 7,
+        "hasEmpty": false
+      }
+    ]
+  },
+  "/report": {
+    "path": "/report",
+    "overflowX": false,
+    "overflowY": true,
+    "issues": [
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"danger\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center j"
+      },
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"danger\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center j"
+      },
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"danger\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center j"
+      },
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"danger\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center j"
+      },
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"danger\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center j"
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"danger\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border border-transparent "
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"danger\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border border-transparent "
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"danger\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border border-transparent "
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"danger\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border border-transparent "
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"danger\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border border-transparent "
+      }
+    ],
+    "tables": [
+      {
+        "rows": 5,
+        "cols": 2,
+        "hasEmpty": false
+      },
+      {
+        "rows": 5,
+        "cols": 4,
+        "hasEmpty": false
+      },
+      {
+        "rows": 5,
+        "cols": 6,
+        "hasEmpty": false
+      }
+    ]
+  },
+  "/system": {
+    "path": "/system",
+    "overflowX": false,
+    "overflowY": false,
+    "issues": [],
+    "tables": [
+      {
+        "rows": 11,
+        "cols": 7,
+        "hasEmpty": false
+      }
+    ]
+  },
+  "/my-projects": {
+    "path": "/my-projects",
+    "overflowX": false,
+    "overflowY": false,
+    "issues": [],
+    "tables": [
+      {
+        "rows": 4,
+        "cols": 6,
+        "hasEmpty": false
+      }
+    ]
+  },
+  "/defect": {
+    "path": "/defect",
+    "overflowX": false,
+    "overflowY": false,
+    "issues": [
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"secondary\" data-size=\"xs\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-cente"
+      },
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"secondary\" data-size=\"xs\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-cente"
+      },
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"secondary\" data-size=\"xs\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-cente"
+      },
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"secondary\" data-size=\"xs\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-cente"
+      },
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"secondary\" data-size=\"xs\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-cente"
+      },
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"secondary\" data-size=\"xs\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-cente"
+      },
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"secondary\" data-size=\"xs\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-cente"
+      },
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"secondary\" data-size=\"xs\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-cente"
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"secondary\" data-size=\"xs\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border bg-clip-padding "
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"secondary\" data-size=\"xs\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border bg-clip-padding "
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"secondary\" data-size=\"xs\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border bg-clip-padding "
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"secondary\" data-size=\"xs\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border bg-clip-padding "
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"secondary\" data-size=\"xs\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border bg-clip-padding "
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"secondary\" data-size=\"xs\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border bg-clip-padding "
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"secondary\" data-size=\"xs\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border bg-clip-padding "
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"secondary\" data-size=\"xs\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border bg-clip-padding "
+      }
+    ],
+    "tables": [
+      {
+        "rows": 8,
+        "cols": 7,
+        "hasEmpty": true
+      }
+    ]
+  },
+  "/dataset": {
+    "path": "/dataset",
+    "overflowX": false,
+    "overflowY": false,
+    "issues": [],
+    "tables": [
+      {
+        "rows": 4,
+        "cols": 6,
+        "hasEmpty": false
+      }
+    ]
+  },
+  "/integration": {
+    "path": "/integration",
+    "overflowX": false,
+    "overflowY": false,
+    "issues": []
+  },
+  "/notify": {
+    "path": "/notify",
+    "overflowX": false,
+    "overflowY": false,
+    "issues": [
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"button\" data-variant=\"ghost\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center b"
+      },
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"ghost\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center ju"
+      },
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"button\" data-variant=\"ghost\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center b"
+      },
+      {
+        "t": "button-no-text",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"ghost\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center ju"
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"button\" data-variant=\"ghost\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border border-transparent bg-clip-padding"
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"ghost\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border border-transparent b"
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"button\" data-variant=\"ghost\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border border-transparent bg-clip-padding"
+      },
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"alert-dialog-trigger\" data-variant=\"ghost\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border border-transparent b"
+      }
+    ],
+    "tables": [
+      {
+        "rows": 2,
+        "cols": 6,
+        "hasEmpty": false
+      }
+    ]
+  },
+  "/environment": {
+    "path": "/environment",
+    "overflowX": false,
+    "overflowY": false,
+    "issues": [],
+    "tables": [
+      {
+        "rows": 4,
+        "cols": 5,
+        "hasEmpty": false
+      }
+    ]
+  },
+  "/agent-workbench": {
+    "path": "/agent-workbench",
+    "overflowX": false,
+    "overflowY": true,
+    "issues": [],
+    "tables": [
+      {
+        "rows": 12,
+        "cols": 5,
+        "hasEmpty": false
+      }
+    ]
+  },
+  "/dsh-tasks": {
+    "path": "/dsh-tasks",
+    "overflowX": false,
+    "overflowY": false,
+    "issues": [],
+    "tables": [
+      {
+        "rows": 1,
+        "cols": 5,
+        "hasEmpty": true
+      }
+    ]
+  },
+  "/lanhu-evidence": {
+    "path": "/lanhu-evidence",
+    "overflowX": false,
+    "overflowY": false,
+    "issues": [],
+    "tables": [
+      {
+        "rows": 6,
+        "cols": 7,
+        "hasEmpty": false
+      }
+    ]
+  },
+  "/release-bundles": {
+    "path": "/release-bundles",
+    "overflowX": false,
+    "overflowY": false,
+    "issues": [],
+    "tables": [
+      {
+        "rows": 4,
+        "cols": 8,
+        "hasEmpty": false
+      }
+    ]
+  },
+  "/knowledge": {
+    "path": "/knowledge",
+    "overflowX": false,
+    "overflowY": true,
+    "issues": [
+      {
+        "t": "icon-btn-no-aria",
+        "tag": "<button data-slot=\"dialog-trigger\" data-variant=\"secondary\" data-size=\"sm\" type=\"button\" class=\"ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center border bg-clip-padding font-m"
+      }
+    ]
+  },
+  "/operations-release": {
+    "path": "/operations-release",
+    "overflowX": false,
+    "overflowY": false,
+    "issues": []
+  },
+  "/theme-lab": {
+    "path": "/theme-lab",
+    "overflowX": false,
+    "overflowY": false,
+    "issues": []
+  }
+}

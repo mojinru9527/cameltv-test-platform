@@ -1,0 +1,127 @@
+[
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/environments",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/environments/1/variables",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/roles",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/users",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/permissions",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/roles",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/audit-logs",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/tokens",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/invite-codes",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/knowledge/overview",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/release-bundles",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/requirement-modules/bundle/8/tree",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/release-bundles/8/coverage",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/environments",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/release-bundles/8/version-chain",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/release-bundles/8",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/system/menus",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/agents/queue/stats",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/agents/types",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/agents/runs",
+    "s": 200
+  },
+  {
+    "m": "GET",
+    "u": "/api/v1/agents/queue",
+    "s": 200
+  }
+]

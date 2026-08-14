@@ -1,0 +1,99 @@
+跳到主内容
+CamelTv
+测试平台
+知识
+知识中心
+项目知识
+平台研发
+知识图谱
+AI审核台
+导航菜单
+工作台
+质量追溯
+需求文档
+版本测试任务
+用例脑图
+用例服务
+测试计划
+接口测试
+UI 自动化
+Playground
+定时任务
+报告中心
+系统管理
+我的项目
+缺陷管理
+测试数据集
+集成配置
+通知配置
+目标环境
+Agent 工作台
+DSH 任务
+蓝湖证据包
+体
+体育平台管理员
+sportsadmin@cameltv.local
+Toggle Sidebar
+当前项目
+CamelTv 体育平台
+黑曜
+体
+体育平台管理员
+知识中心
+
+项目知识（需求/接口/用例）+ 平台研发知识（踩坑记录/设计决策/最佳实践）统一沉淀、可检索、可复用。
+
+混合（关键词+向量）
+搜索
+概览
+项目知识
+平台研发
+检索
+知识源
+AI 审核台
+图谱
+实体
+迭代
+Wiki 知识库
+知识差异对比
+Skills
+91
+知识源
+311
+知识切片
+989
+图谱实体
+11
+待审 AI 产物
+知识健康度
+11
+未审核 AI 产物
+0
+已废弃知识源
+0
+孤儿切片
+0
+低置信度关系
+0
+待审核关系
+Agent 执行指标
+12
+Agent 执行总量
+99%
+AI 产物采纳率
+17.5s
+Agent 平均耗时
+最近知识源
+graph_evolution · 图谱自演化 2026-08-13 04:13
+2026-08-13
+agent_knowledge_diff · Agent产出: 知识差异对比 #12
+2026-08-12
+agent_wiki_ingest · Agent产出: Wiki 编译 #11
+2026-08-12
+agent_wiki_ingest · Agent产出: Wiki 编译 #10
+2026-08-12
+agent_requirement_analysis · Agent产出: 需求分析 #9
+2026-08-12
+Command Palette
+
+Search for a command to run...
