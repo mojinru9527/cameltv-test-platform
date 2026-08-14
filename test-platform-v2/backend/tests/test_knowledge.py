@@ -902,7 +902,8 @@ class TestGraphApi:
         kdb.flush()
         kdb.add_all([
             KnowledgeChunk(
-                project_id=1, source_id=unavailable_source.id, content="stale", status="deprecated",
+                project_id=1, source_id=unavailable_source.id, content="stale",
+                status="deprecated", is_deleted=True,  # Batch 181：删除语义统一 is_deleted
             ),
             KnowledgeChunk(
                 project_id=1, source_id=available_source.id, content="active", status="active",
@@ -1376,7 +1377,7 @@ class TestBatch177KnowledgeCleanup:
         assert kdb.scalar(select(KnowledgeVector).where(KnowledgeVector.id == vec_id)) is None
 
     def test_list_sources_hides_deprecated_by_default(self, kdb):
-        """list_sources 默认隐藏 deprecated/superseded 源（修复已删缺陷切片仍可见）。"""
+        """list_sources 默认隐藏已删源（Batch 181：删除语义统一 is_deleted）。"""
         from app.services.knowledge.source_service import list_sources
         from app.models.knowledge import KnowledgeSource
 
@@ -1386,7 +1387,8 @@ class TestBatch177KnowledgeCleanup:
         )
         gone = KnowledgeSource(
             project_id=1, source_type="defect", source_id=99,
-            title="已删除缺陷残留", para_category="project", knowledge_domain="project", status="deprecated",
+            title="已删除缺陷残留", para_category="project", knowledge_domain="project",
+            status="deprecated", is_deleted=True,
         )
         kdb.add_all([active, gone])
         kdb.commit()
@@ -1395,7 +1397,7 @@ class TestBatch177KnowledgeCleanup:
         assert total == 1
         assert all(r.id == active.id for r in rows)
 
-        # 显式传 status=deprecated 可查（管理视图）
+        # 显式传 status 筛选可查（管理视图，历史 deprecated 值仍可检索）
         rows2, total2 = list_sources(kdb, 1, status="deprecated")
         assert total2 == 1
         assert rows2[0].id == gone.id

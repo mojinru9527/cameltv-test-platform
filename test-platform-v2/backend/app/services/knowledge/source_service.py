@@ -68,7 +68,7 @@ def record_source(
         if old_ids:
             db.execute(
                 update(KnowledgeChunk)
-                .where(KnowledgeChunk.source_id.in_(old_ids), KnowledgeChunk.status == "active")
+                .where(KnowledgeChunk.source_id.in_(old_ids), KnowledgeChunk.is_deleted.is_(False))
                 .values(status="superseded")
             )
             db.execute(
@@ -109,11 +109,11 @@ def list_sources(
 ) -> tuple[list[KnowledgeSource], int]:
     stmt = select(KnowledgeSource).where(KnowledgeSource.project_id == project_id)
     cnt = select(func.count(KnowledgeSource.id)).where(KnowledgeSource.project_id == project_id)
-    # Batch 177（FIX-173-P1-04）：默认隐藏已废弃/被替代的知识源（业务删除级联产生），
-    # 显式传 status 筛选时尊重调用方意图（如管理视图查看 deprecated 源）。
+    # Batch 181（FIX-173-P2-08）：删除语义统一 is_deleted；默认列表隐藏已删源。
+    # 显式传 status 筛选时尊重调用方意图（如管理视图查看历史 deprecated 源）。
     if not status:
-        stmt = stmt.where(KnowledgeSource.status.notin_(("deprecated", "superseded")))
-        cnt = cnt.where(KnowledgeSource.status.notin_(("deprecated", "superseded")))
+        stmt = stmt.where(KnowledgeSource.is_deleted.is_(False))
+        cnt = cnt.where(KnowledgeSource.is_deleted.is_(False))
     if source_type:
         stmt = stmt.where(KnowledgeSource.source_type == source_type)
         cnt = cnt.where(KnowledgeSource.source_type == source_type)
@@ -183,8 +183,8 @@ def decay_freshness_in_new_session() -> dict:
 
     规则：
     - 所有 status='parsed' 且 freshness_score > 0.1 的源，每天递减 0.01
-    - freshness_score < 0.2 且 last_verified_at 距今 > 90 天的源 → status='deprecated'
-    - freshness_score < 0.2 且 last_verified_at 为空的源 → status='deprecated'（从未验证过）
+    - freshness_score < 0.2 且 last_verified_at 距今 > 90 天的源 → is_deleted=True（Batch 181 统一语义）
+    - freshness_score < 0.2 且 last_verified_at 为空的源 → is_deleted=True（从未验证过）
     """
     from datetime import timedelta
     from app.core.db import SessionLocal
@@ -206,6 +206,7 @@ def decay_freshness_in_new_session() -> dict:
         )
 
         # 2) 自动归档：freshness < 0.2 且长期未验证
+        #    Batch 181：过滤语义写 is_deleted=True；status 保留 deprecated 作 UI 展示值
         result_archive_old = db.execute(
             update(KnowledgeSource)
             .where(
@@ -214,7 +215,7 @@ def decay_freshness_in_new_session() -> dict:
                 KnowledgeSource.last_verified_at.isnot(None),
                 KnowledgeSource.last_verified_at < threshold,
             )
-            .values(status="deprecated")
+            .values(is_deleted=True, status="deprecated")
         )
 
         # 3) 从未验证且保鲜过低
@@ -225,7 +226,7 @@ def decay_freshness_in_new_session() -> dict:
                 KnowledgeSource.freshness_score < 0.2,
                 KnowledgeSource.last_verified_at.is_(None),
             )
-            .values(status="deprecated")
+            .values(is_deleted=True, status="deprecated")
         )
 
         db.commit()
@@ -243,16 +244,22 @@ def decay_freshness_in_new_session() -> dict:
 
 
 def deprecate_source(db: Session, source_pk: int, project_id: int) -> bool:
-    """废弃知识源；其切片一并置为 deprecated（不参与默认检索）。"""
+    """废弃知识源；其切片一并标记删除。
+
+    Batch 181：过滤语义统一 is_deleted=True；status 保留 deprecated 作 UI 展示值
+    （前端按 status 渲染「已废弃」徽标，历史值与新值行为一致）。
+    """
     from app.models.knowledge import KnowledgeChunk
 
     row = get_source(db, source_pk, project_id)
     if not row:
         return False
+    row.is_deleted = True
     row.status = "deprecated"
     for chunk in db.scalars(
         select(KnowledgeChunk).where(KnowledgeChunk.source_id == row.id)
     ).all():
+        chunk.is_deleted = True
         chunk.status = "deprecated"
     db.flush()
     return True

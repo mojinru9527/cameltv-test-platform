@@ -62,7 +62,7 @@ def detect_changes(project_id: int) -> list[ChangeEvent]:
             db.scalars(
                 select(KnowledgeSource).where(
                     KnowledgeSource.project_id == project_id,
-                    KnowledgeSource.status.notin_(("deprecated", "superseded")),
+                    KnowledgeSource.is_deleted.is_(False),
                 )
             ).all()
         )

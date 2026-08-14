@@ -378,7 +378,7 @@ def extract_and_build_graph_in_new_session(
         # 查询待处理切片
         stmt = select(KnowledgeChunk).where(
             KnowledgeChunk.project_id == project_id,
-            KnowledgeChunk.status == "active",
+            KnowledgeChunk.is_deleted.is_(False),
         )
         if source_id:
             stmt = stmt.where(KnowledgeChunk.source_id == source_id)

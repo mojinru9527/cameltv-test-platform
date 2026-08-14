@@ -91,7 +91,7 @@ def _graph_extract_availability(
 ) -> tuple[bool, str]:
     stmt = select(KnowledgeChunk.id).where(
         KnowledgeChunk.project_id == project_id,
-        KnowledgeChunk.status == "active",
+        KnowledgeChunk.is_deleted.is_(False),
     )
     if source_id is not None:
         stmt = stmt.where(KnowledgeChunk.source_id == source_id)
@@ -132,11 +132,11 @@ def overview(
         stmt = select(func.count(model.id)).where(model.project_id == pid, *conds)
         return db.scalar(stmt) or 0
 
-    source_count = _count(KnowledgeSource, KnowledgeSource.status.notin_(("deprecated", "superseded")))
-    chunk_count = _count(KnowledgeChunk, KnowledgeChunk.status == "active")
+    source_count = _count(KnowledgeSource, KnowledgeSource.is_deleted.is_(False))
+    chunk_count = _count(KnowledgeChunk, KnowledgeChunk.is_deleted.is_(False))
     entity_count = _count(KnowledgeEntity)
     pending_artifacts = _count(AiArtifact, AiArtifact.review_status == "pending")
-    deprecated_sources = _count(KnowledgeSource, KnowledgeSource.status == "deprecated")
+    deprecated_sources = _count(KnowledgeSource, KnowledgeSource.is_deleted.is_(True))
 
     # 孤儿切片：引用了不存在知识源的切片
     sourceless = db.scalar(
@@ -175,7 +175,7 @@ def overview(
     # M2 RAG: embedding 覆盖率
     rag_enabled = settings.rag_enabled
     active_chunks = chunk_count
-    embedded_chunks = _count(KnowledgeChunk, KnowledgeChunk.status == "active", KnowledgeChunk.embedding_id != "")
+    embedded_chunks = _count(KnowledgeChunk, KnowledgeChunk.is_deleted.is_(False), KnowledgeChunk.embedding_id != "")
     embedding_coverage = embedded_chunks / active_chunks if active_chunks > 0 and rag_enabled else None
     embedding_model = settings.embedding_model if rag_enabled else ""
 
@@ -254,13 +254,13 @@ def search_health(
         active_total = db.scalar(
             select(func.count(KnowledgeChunk.id)).where(
                 KnowledgeChunk.project_id == pid,
-                KnowledgeChunk.status == "active",
+                KnowledgeChunk.is_deleted.is_(False),
             )
         ) or 0
         embedded_total = db.scalar(
             select(func.count(KnowledgeChunk.id)).where(
                 KnowledgeChunk.project_id == pid,
-                KnowledgeChunk.status == "active",
+                KnowledgeChunk.is_deleted.is_(False),
                 KnowledgeChunk.embedding_id != "",
             )
         ) or 0
@@ -297,7 +297,7 @@ def reembed(
     pending = db.scalar(
         select(func.count(KnowledgeChunk.id)).where(
             KnowledgeChunk.project_id == pid,
-            KnowledgeChunk.status == "active",
+            KnowledgeChunk.is_deleted.is_(False),
             KnowledgeChunk.embedding_id == "",
         )
     ) or 0
@@ -688,7 +688,7 @@ def entity_stats(
     test_case_total = db.scalar(
         select(func.count(TestCase.id)).where(
             TestCase.project_id == pid,
-            TestCase.is_deleted == False,  # noqa: E712
+            TestCase.is_deleted.is_(False),
         )
     ) or 0
     return R.ok(KnowledgeEntityStats(

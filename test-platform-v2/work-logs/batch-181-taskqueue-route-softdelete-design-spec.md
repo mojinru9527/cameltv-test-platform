@@ -120,8 +120,8 @@ WHERE status=running AND liveness_col < now - stale_seconds
 | `knowledge.py:139` deprecated_sources 计数 | `status == "deprecated"` | `is_deleted.is_(True)`（语义名保留） |
 | `knowledge.py:94` `_graph_extract_availability` | chunk `status=="active"` | `is_deleted.is_(False)` |
 | `source_service.py:113-116` list_sources 默认过滤 | `status.notin_(...)` | `is_deleted.is_(False)`；显式 status 筛选语义保留（管理视图） |
-| `source_service.py:217,228` 保鲜衰减 | `.values(status="deprecated")` | `.values(is_deleted=True)` |
-| `source_service.py:252,256` deprecate_source | `status="deprecated"`（源+切片） | `is_deleted=True`（源+切片） |
+| `source_service.py:217,228` 保鲜衰减 | `.values(status="deprecated")` | `.values(is_deleted=True, status="deprecated")`（status 保留作 UI 展示值，过滤语义走 is_deleted） |
+| `source_service.py:252,256` deprecate_source | `status="deprecated"`（源+切片） | `is_deleted=True`（源+切片）+ status 保留展示值 |
 | `change_detector.py:65` | `status.notin_(...)` | `is_deleted.is_(False)` |
 | `snapshot_service.py:233` | `status.notin_(...)` | `is_deleted.is_(False)` |
 | `search_service.py` | 不按 status 过滤（含 deprecated 全状态检索） | **不按 is_deleted 过滤（行为保持）** |
