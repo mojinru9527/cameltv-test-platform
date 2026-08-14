@@ -56,19 +56,19 @@ export interface TaxonomySurfaceNode {
 }
 
 export async function fetchDomains(signal?: AbortSignal): Promise<TestCaseDomainCategory[]> {
-  if (signal) return api.get('/test-cases/domains', { signal })
-  return cachedGet<TestCaseDomainCategory[]>('/test-cases/domains', undefined, { ttl: 60_000 })
+  // Batch 176（FIX-173-P1-02）：传 signal 也命中会话缓存（域树静态数据跨页共享）
+  return cachedGet<TestCaseDomainCategory[]>('/test-cases/domains', undefined, { ttl: 60_000, signal })
 }
 
 export async function fetchTestCaseStats(signal?: AbortSignal): Promise<TestCaseStats> {
-  return api.get('/test-cases/stats', { signal })
+  return cachedGet<TestCaseStats>('/test-cases/stats', undefined, { ttl: 60_000, signal })
 }
 
 export async function fetchTaxonomy(
   params: { case_type?: string; surface?: string } = {},
   signal?: AbortSignal,
 ): Promise<TaxonomySurfaceNode[]> {
-  return api.get('/test-cases/taxonomy', { params, signal })
+  return cachedGet<TaxonomySurfaceNode[]>('/test-cases/taxonomy', params, { ttl: 60_000, signal })
 }
 
 // ── Category CRUD ──

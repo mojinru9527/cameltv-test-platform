@@ -123,41 +123,42 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
   const [datasets, setDatasets] = useState<any[]>([])
 
   useEffect(() => {
-    if (open) {
-      fetchDatasets({ page_size: 100 }).then((d: any) => setDatasets(d?.items || [])).catch(() => {})
-      if (editing) {
-        const vals: Record<string, any> = {}
-        for (const key of Object.keys(formSchema.shape)) {
-          if (editing[key] !== undefined && editing[key] !== null) {
-            vals[key] = key === 'dataset_id' ? editing[key] : String(editing[key])
-          }
+    if (!open) return
+    let cancelled = false
+    fetchDatasets({ page_size: 100 }).then((d: any) => { if (!cancelled) setDatasets(d?.items || []) }).catch(() => {})
+    if (editing) {
+      const vals: Record<string, any> = {}
+      for (const key of Object.keys(formSchema.shape)) {
+        if (editing[key] !== undefined && editing[key] !== null) {
+          vals[key] = key === 'dataset_id' ? editing[key] : String(editing[key])
         }
-        reset(vals)
-        setActiveTab('form')
-        // Load review history
-        loadReviewHistory(editing.id)
-      } else {
-        reset({
-          title: '',
-          case_type: 'manual',
-          priority: 'P2',
-          status: 'active',
-          domain: '',
-          module: '',
-          steps: '',
-          expected_result: '',
-        })
-        setReviewHistory([])
-        setActiveTab('form')
       }
+      reset(vals)
+      setActiveTab('form')
+      // Load review history
+      loadReviewHistory(editing.id, () => cancelled)
+    } else {
+      reset({
+        title: '',
+        case_type: 'manual',
+        priority: 'P2',
+        status: 'active',
+        domain: '',
+        module: '',
+        steps: '',
+        expected_result: '',
+      })
+      setReviewHistory([])
+      setActiveTab('form')
     }
+    return () => { cancelled = true }
   }, [open, editing, reset])
 
-  const loadReviewHistory = async (caseId: number) => {
+  const loadReviewHistory = async (caseId: number, isCancelled?: () => boolean) => {
     try {
       const h = await fetchReviewHistory(caseId)
-      setReviewHistory(h || [])
-    } catch { setReviewHistory([]) }
+      if (!isCancelled?.()) setReviewHistory(h || [])
+    } catch { if (!isCancelled?.()) setReviewHistory([]) }
   }
 
   const selectedDomain = useMemo(

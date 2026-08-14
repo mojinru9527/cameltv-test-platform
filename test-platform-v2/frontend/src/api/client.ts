@@ -97,21 +97,38 @@ function cacheKey(url: string, params?: Record<string, unknown>): string {
 
 /**
  * 带会话级缓存与去重的 GET。
- * - 命中未过期缓存直接返回；相同 key 的进行中请求共享同一 Promise。
- * - 传 signal 时请直接使用 client.get，保持 abort 语义（本函数不接收 signal）。
+ * - 命中未过期缓存直接返回（无论是否传 signal——静态数据跨页共享，Batch 175 需求）。
+ * - 相同 key 的进行中请求共享同一 Promise（无 signal 时）。
+ * - 传 signal 时：缓存命中直接返回；未命中则发起「独立可取消请求」（不共享
+ *   inflight，保持 abort 语义），响应成功仍写入共享缓存供后续页面复用。
+ *   Batch 176（FIX-173-P1-02）：修复此前「传 signal 一律绕过缓存」导致
+ *   environments/domains/menus 等静态数据每次页面挂载重复请求的问题。
  */
 export function cachedGet<T>(
   url: string,
   params?: Record<string, unknown>,
-  options?: { ttl?: number; force?: boolean },
+  options?: { ttl?: number; force?: boolean; signal?: AbortSignal },
 ): Promise<T> {
   const key = cacheKey(url, params)
   const now = Date.now()
   const ttl = options?.ttl ?? 60_000
+  const signal = options?.signal
 
   const hit = getCache.get(key)
   if (!options?.force && hit && hit.expires > now) {
     return Promise.resolve(hit.value as T)
+  }
+
+  if (signal) {
+    // 带 abort 语义的独立请求：不共享 inflight，取消不影响其他页面；
+    // 成功后写入共享缓存，供后续无 signal 页面复用。
+    const promise = client
+      .get(url, { params, signal })
+      .then((data) => {
+        getCache.set(key, { expires: Date.now() + ttl, value: data })
+        return data
+      })
+    return promise as Promise<T>
   }
 
   const inflight = inflightGets.get(key)
