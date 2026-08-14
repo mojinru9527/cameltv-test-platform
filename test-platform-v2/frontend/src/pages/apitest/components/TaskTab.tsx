@@ -10,14 +10,6 @@ import { fetchApiExecutionTasks, fetchApiExecutionTask, cancelApiExecutionTask, 
 import type { ApiExecutionTask, ApiTaskDetail } from '@/types'
 import { execStatusLabel, normalizeExecStatus } from '@/utils/executionStatus'
 
-const STATUS_CLASS: Record<string, string> = {
-  pending: 'bg-muted text-muted-foreground',
-  running: 'bg-status-info-muted text-status-info',
-  passed: 'bg-status-success-muted text-status-success',
-  failed: 'bg-status-danger-muted text-status-danger',
-  cancelled: 'bg-status-warning-muted text-status-warning',
-}
-
 /** 旧值 → 规范值兼容映射（后端已迁移，兼容历史数据） */
 const STATUS_TONE_BY_NORMALIZED: Record<string, string> = {
   pending: 'bg-muted text-muted-foreground',
@@ -209,7 +201,7 @@ export default function TaskTab() {
               <div className="bg-muted rounded p-2"><div className="text-lg font-bold">{detail.skipped}</div><div className="text-xs text-muted-foreground">跳过</div></div>
             </div>
             <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-              {detail.items.map((item, i) => (
+              {detail.items.map((item) => (
                 <SnapshotCard key={item.id} item={item} />
               ))}
             </div>

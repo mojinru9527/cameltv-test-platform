@@ -74,11 +74,6 @@
       "count": 1
     }
   },
-  "src/pages/apitest/components/TaskTab.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
   "src/pages/dataset/index.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 9
@@ -191,7 +186,7 @@
   },
   "src/pages/requirement/AiResultModal.tsx": {
     "@typescript-eslint/no-unused-vars": {
-      "count": 4
+      "count": 2
     }
   },
   "src/pages/requirement/ExtractionModal.tsx": {
@@ -224,19 +219,9 @@
       "count": 1
     }
   },
-  "src/pages/testcase/index.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
   "src/pages/uitest/__tests__/UiRunDetail.test.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 3
-    }
-  },
-  "src/pages/uitest/index.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 2
     }
   },
   "src/pages/workbench/index.tsx": {

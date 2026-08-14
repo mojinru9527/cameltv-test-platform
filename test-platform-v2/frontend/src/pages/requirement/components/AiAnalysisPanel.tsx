@@ -7,10 +7,6 @@ import { SEVERITY_BADGE_CLASSES, SEVERITY_CONFIG } from './AiDisplayParts'
 
 export default function AiAnalysisPanel({ analysis }: { analysis: RequirementAnalysis }) {
   const { extracted_requirements, overall_assessment } = analysis
-  const totalIssues = extracted_requirements.reduce((sum, er) => sum + (er.issues?.length || 0), 0)
-  const highIssues = extracted_requirements.reduce(
-    (sum, er) => sum + (er.issues || []).filter((i) => i.severity === 'high').length, 0,
-  )
   const typeLabels: Record<string, string> = { functional: '功能', ui: '界面', data: '数据', integration: '集成' }
 
   return (
