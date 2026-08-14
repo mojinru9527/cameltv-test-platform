@@ -284,26 +284,6 @@ def batch_delete_test_cases(
     return R.ok({"deleted": deleted, "total": len(body.ids)})
 
 
-@router.post("/batch-delete", response_model=R[dict], summary="批量删除用例")
-def batch_delete_test_cases_post(
-    body: BatchDeleteBody,
-    req: Request,
-    current: CurrentUser = Depends(require_permission("testcase:delete")),
-    db: Session = Depends(get_db),
-):
-    """批量删除指定用例。POST 入口避免 DELETE body 和动态路由匹配兼容性问题。"""
-    from app.core.base_service import transaction
-
-    deleted = 0
-    with transaction(db):
-        for case_id in body.ids:
-            if test_case_service.delete_case(db, case_id, project_id=current.project_id or 0):
-                deleted += 1
-
-    _audit(req, current, db, "case:batch_delete", f"{deleted}/{len(body.ids)} 条用例")
-    return R.ok({"deleted": deleted, "total": len(body.ids)})
-
-
 @router.put("/{case_id}", response_model=R[TestCaseOut])
 def update_test_case(
     case_id: int,

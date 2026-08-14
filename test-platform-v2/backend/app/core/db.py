@@ -28,6 +28,13 @@ else:
     _engine_kwargs["pool_size"] = settings.db_pool_size
     _engine_kwargs["max_overflow"] = settings.db_max_overflow
     _engine_kwargs["pool_recycle"] = 3600
+    # Batch 179（FIX-173-P2-11）：statement_timeout / connect_timeout 兜底——
+    # 长事务失控时由数据库强制中断（配合 Batch 174 计划执行拆短事务），
+    # 不再依赖网关 300s 单点兜底。
+    _engine_kwargs["connect_args"] = {
+        "connect_timeout": 10,
+        "options": "-c statement_timeout=30000",
+    }
 
 engine = create_engine(settings.database_url, **_engine_kwargs)
 

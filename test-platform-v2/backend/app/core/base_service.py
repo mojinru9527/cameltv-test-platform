@@ -102,21 +102,6 @@ def batch_field_map(
     return {row[0]: row[1] for row in rows}
 
 
-# ── Soft delete (status-based) ─────────────────────────
-
-def soft_delete_status(db: Session, model, obj_id: int, *, project_id: int | None = None) -> bool:
-    """Set status=0 on a model row (must have .status and .id attrs)."""
-    filters = {model.id == obj_id}
-    if project_id is not None:
-        filters[model.project_id == project_id]  # type: ignore[index]
-    obj = db.scalar(select(model).filter_by(**filters))
-    if not obj:
-        return False
-    obj.status = 0
-    db.flush()
-    return True
-
-
 # ── Transaction helpers ────────────────────────────────
 
 from contextlib import contextmanager
