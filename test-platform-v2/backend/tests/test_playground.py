@@ -204,3 +204,87 @@ class TestBatch166CompileCaseBatch:
         assert "page.goto('/login')" in result.items[0].spec_code
         assert "page.click('#submit')" in result.items[0].spec_code
         assert result.items[0].has_todo is False
+
+
+class TestBatch177PlaygroundUiJobWriteback:
+    """Batch 177（FIX-173-P1-08）：Playground 回写 UI 任务 —— 幂等 + 环境绑定。"""
+
+    def test_writeback_is_idempotent_and_binds_default_env(self, db_session, monkeypatch):
+        from app.models.environment import Environment
+        from app.models.test_case import TestCase
+        from app.models.ui_test import UiTestJob
+        from app.services.playground_service import _write_spec_as_ui_job
+
+        # 项目默认环境
+        env = Environment(project_id=1, name="B177-ENV", env_type="test", base_url="https://example.com")
+        db_session.add(env)
+        db_session.flush()
+        case = TestCase(project_id=1, title="B177-回写用例", case_type="manual")
+        db_session.add(case)
+        db_session.commit()
+
+        # 避免真实写文件（patch playwright_executor 模块的 PLAYWRIGHT_DIR 为假 Path）
+        fake_file = type(
+            "FakeFile", (),
+            {"write_text": lambda *a, **k: None},
+        )
+        fake_generated = type(
+            "FakeGenerated", (),
+            {
+                "mkdir": lambda *a, **k: None,
+                "__truediv__": lambda self, other: fake_file(),
+            },
+        )
+        fake_dir = type(
+            "FakeDir", (),
+            {"__truediv__": lambda self, other: fake_generated()},
+        )()
+        monkeypatch.setattr(
+            "app.services.playwright_executor.PLAYWRIGHT_DIR",
+            fake_dir,
+        )
+
+        job1 = _write_spec_as_ui_job(db_session, case, "// spec", 1, 1)
+        job2 = _write_spec_as_ui_job(db_session, case, "// spec", 1, 1)
+
+        # 幂等：同一用例两次回写只产生一个任务
+        assert job1 == job2
+        jobs = db_session.query(UiTestJob).filter_by(case_id=case.id).all()
+        assert len(jobs) == 1
+        assert jobs[0].environment_id == env.id  # 已绑定默认环境
+        assert jobs[0].test_spec == f"generated/playground-case-{case.id}.spec.ts"
+
+    def test_writeback_keeps_existing_job_when_no_env(self, db_session, monkeypatch):
+        """无环境时不崩溃，environment_id 为 None（保持兼容）。"""
+        from app.models.test_case import TestCase
+        from app.models.ui_test import UiTestJob
+        from app.services.playground_service import _write_spec_as_ui_job
+
+        case = TestCase(project_id=1, title="B177-无环境用例", case_type="manual")
+        db_session.add(case)
+        db_session.commit()
+
+        fake_file = type(
+            "FakeFile", (),
+            {"write_text": lambda *a, **k: None},
+        )
+        fake_generated = type(
+            "FakeGenerated", (),
+            {
+                "mkdir": lambda *a, **k: None,
+                "__truediv__": lambda self, other: fake_file(),
+            },
+        )
+        fake_dir = type(
+            "FakeDir", (),
+            {"__truediv__": lambda self, other: fake_generated()},
+        )()
+        monkeypatch.setattr(
+            "app.services.playwright_executor.PLAYWRIGHT_DIR",
+            fake_dir,
+        )
+
+        job_id = _write_spec_as_ui_job(db_session, case, "// spec", 1, 1)
+        assert job_id is not None
+        job = db_session.get(UiTestJob, job_id)
+        assert job.environment_id is None

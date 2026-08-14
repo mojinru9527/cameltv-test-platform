@@ -100,8 +100,10 @@ class TestKnowledgeGovernance:
 
         client.delete(f"/api/v1/defects/{defect['id']}", headers=auth_headers)
         db_session.expire_all()
+        # Batch 177（FIX-173-P1-04）：业务删除级联由「标记 deprecated」升级为硬删，
+        # 知识源不再残留（此前删除缺陷后切片仍在知识中心可见）。
         refreshed = db_session.get(KnowledgeSource, src.id)
-        assert refreshed.status == "deprecated"
+        assert refreshed is None
 
 
 class TestUiJobCaseMapping:

@@ -1337,3 +1337,65 @@ class TestArtifactWriteApi:
         resp = kclient.post("/api/v1/knowledge/ai-artifacts/99999/approve", json={"comment": ""})
         assert resp.status_code == 200
         assert resp.json()["code"] == 404
+
+
+class TestBatch177KnowledgeCleanup:
+    """Batch 177（FIX-173-P1-04）：业务删除级联硬删知识切片 + 列表默认隐藏已废弃源。"""
+
+    def test_mark_business_deleted_hard_deletes_source_chunk_vector(self, kdb):
+        """缺陷删除级联：知识源、切片、向量全部硬删，不再遗留 deprecated 残留。"""
+        from app.services.knowledge.knowledge_cleanup import mark_business_deleted
+        from app.models.knowledge import KnowledgeChunk, KnowledgeSource, KnowledgeVector
+
+        src = KnowledgeSource(
+            project_id=1, source_type="defect", source_id=42,
+            title="B177TMP-已删缺陷", para_category="project",
+            knowledge_domain="project", status="parsed",
+        )
+        kdb.add(src)
+        kdb.flush()
+        chunk = KnowledgeChunk(
+            project_id=1, source_id=src.id, chunk_type="defect_case",
+            title="B177TMP-切片", content="缺陷描述", status="active",
+        )
+        kdb.add(chunk)
+        kdb.flush()
+        vec = KnowledgeVector(chunk_id=chunk.id, project_id=1, model="bge", dim=2, vec=b"\x00\x00\x00\x00")
+        kdb.add(vec)
+        kdb.commit()
+        # 删除前缓存 id（删除后访问 ORM 属性会抛 ObjectDeletedError）
+        src_id, chunk_id, vec_id = src.id, chunk.id, vec.id
+
+        removed = mark_business_deleted(kdb, project_id=1, source_type="defect", source_id=42)
+        assert removed == 1
+        kdb.flush()
+
+        from sqlalchemy import select
+        assert kdb.scalar(select(KnowledgeSource).where(KnowledgeSource.id == src_id)) is None
+        assert kdb.scalar(select(KnowledgeChunk).where(KnowledgeChunk.id == chunk_id)) is None
+        assert kdb.scalar(select(KnowledgeVector).where(KnowledgeVector.id == vec_id)) is None
+
+    def test_list_sources_hides_deprecated_by_default(self, kdb):
+        """list_sources 默认隐藏 deprecated/superseded 源（修复已删缺陷切片仍可见）。"""
+        from app.services.knowledge.source_service import list_sources
+        from app.models.knowledge import KnowledgeSource
+
+        active = KnowledgeSource(
+            project_id=1, source_type="requirement", source_id=1,
+            title="活跃需求", para_category="project", knowledge_domain="project", status="parsed",
+        )
+        gone = KnowledgeSource(
+            project_id=1, source_type="defect", source_id=99,
+            title="已删除缺陷残留", para_category="project", knowledge_domain="project", status="deprecated",
+        )
+        kdb.add_all([active, gone])
+        kdb.commit()
+
+        rows, total = list_sources(kdb, 1)
+        assert total == 1
+        assert all(r.id == active.id for r in rows)
+
+        # 显式传 status=deprecated 可查（管理视图）
+        rows2, total2 = list_sources(kdb, 1, status="deprecated")
+        assert total2 == 1
+        assert rows2[0].id == gone.id
