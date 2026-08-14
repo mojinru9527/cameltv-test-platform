@@ -20,7 +20,7 @@
 | 执行引擎一致性 | 🔴 失控 | 9 套调度机制、6 套认领队列、4 张执行表 4 套状态取值 → 统计分裂、僵尸任务、重复执行 |
 | 事务与并发 | 🔴 高危 | 计划执行单长事务、认领 TOCTOU、无 statement_timeout，生产 PG 下已构成故障源 |
 | 请求层冗余 | 🟠 可快速修复 | 根因是单一设计约定（signal 绕过缓存），修复后全站重复 GET 可降 30~40% |
-| 本地搭建 | 🟡 功能强、文档缺 | 831 行 PowerShell 极健壮但 Windows 专属；`docs/local-setup.md` 被手册引用两次却不存在 |
+| 本地搭建 | 🟡 功能强、文档路径歧义 | 831 行 PowerShell 极健壮但 Windows 专属；`docs/local-setup.md` 存在于仓库根但被手册以相对路径引用（从 test-platform-v2/docs/ 解析失效） |
 | 文档保鲜 | 🔴 多份漂移 | 完整PRD 技术栈过时、手册引用了不存在的文件、隐藏路由未同步 |
 
 ---
@@ -300,7 +300,7 @@ cachedGet(url, params, { ttl, signal, force })
 
 | # | 问题 | 证据 | 类型 | 建议 |
 |---|------|------|------|------|
-| 1 | **docs/local-setup.md 不存在**，手册:11/:51 两次引用 | `Test-Path docs/local-setup.md` = False；手册:11"Windows/macOS 完整步骤见 docs/local-setup.md"、:51"详见" | 🔴 文档缺口 | 补写（内容即 §4.2 步骤表 + 常见问题：端口占用/子模块/密码找回），预计 0.5 人日 |
+| 1 | **docs/local-setup.md 引用路径歧义**（文件存在于仓库根 `docs/local-setup.md`，Batch 152 创建，74 行含一键/手动启动/FAQ） | 手册:11/:51 写 `docs/local-setup.md`，从 `test-platform-v2/docs/` 相对上下文解析会指向不存在的 `test-platform-v2/docs/local-setup.md`（子报告 Test-Path=False 是只查了 test-platform-v2/docs/）；文件在仓库根 docs/ 实测存在 | 🟡 文档缺口（路径歧义，非缺失） | 手册引用改为显式路径 `../../docs/local-setup.md` 或仓库根链接；同步 FAQ 章节（端口占用/子模块/密码找回） |
 | 2 | **macOS 兼容性名不副实** | 手册声称 Windows/macOS；脚本用 `Get-NetTCPConnection`（:349）与 `Get-CimInstance Win32_Process`（:353）——`icacls` 有 `$IsWindows` 守卫（:79-80）但 `Get-NetTCPConnection` 无，macOS 上该函数在部分 PS7 版本不可用；`.env.example` 注释（:9-11）也仅示例 Windows worktree | 🟡 冗余/风险 | 脚本平台差异抽一层（`Test-NetConnection`/`Get-Process` 兜底），或文档明确"macOS 请用手工路径" |
 | 3 | 依赖安装路径双份 | 脚本 `Install-Dependencies` 用 `requirements.txt`（:779）与 `npm ci`（:787）；README 手工路径用 `requirements.lock`（:88）；`npm ci` 又要求 package-lock 存在 | 🟡 冗余 | 统一为 `requirements.lock`（有锁文件就该用它），脚本与 README 对齐 |
 | 4 | 无 Docker 一键本地 | docker compose 只有 `production` Target（`Invoke-SharedCompose`，:743-775）；`deploy/docker-compose.yml` 是整栈（含 postgres/nginx） | 🟡 可优化 | 增加 `local` 的 compose profile（backend+frontend，DB 仍用 SQLite）或独立 `compose.dev.yml`，让"不装 Python/Node 也能跑"成为可能（配合 `-Target docker-local`） |
@@ -313,7 +313,7 @@ cachedGet(url, params, { ttl, signal, force })
 
 | 缺口 | 引用处 | 严重度 |
 |------|--------|--------|
-| `docs/local-setup.md` 不存在 | 手册:11、:51 | 🔴 |
+| `docs/local-setup.md` 引用路径歧义（文件在仓库根 docs/ 存在，从 test-platform-v2/docs/ 解析失效） | 手册:11、:51 | 🟡（子报告误判"缺失"已修正） |
 | 手册称支持 macOS 但脚本/示例 Windows 专属 | 手册:11 | 🟡 |
 | README 手工路径（requirements.lock）与脚本路径（requirements.txt）口径不一 | README:88 vs ps1:779 | 🟡 |
 | Node 版本下限口径不一（22+ vs ≥22.22.0） | 手册:44 vs package.json:7 | 🟡 |
@@ -418,7 +418,7 @@ cachedGet(url, params, { ttl, signal, force })
 | 3 | PG 连接串加 statement_timeout/connect_timeout | `config.py` + `db.py:21-30` | 0.5 人日 |
 | 4 | 统一执行记录事实源（先统一状态取值与聚合口径，双轨表合并放 Phase 2） | `report_aggregator.py`/`trace_service.py`/`dashboard_service.py` 收敛到同一聚合函数；`statistics_service` 为唯一入口 | 3-5 人日 |
 | 5 | 前端请求层：修正 cachedGet signal 语义 + 4 处 useEffect cleanup + environment 竞态 | `frontend/src/api/client.ts`、DefectFormDialog/SearchTab/CaseDrawer/environment 页 | 3-5 人日 |
-| 6 | 补 `docs/local-setup.md`（§4.2 步骤表 + FAQ），修正 README/手册依赖口径 | `docs/local-setup.md`、`README.md:84-97`、`测试平台使用手册.md:11,51` | 0.5-1 人日 |
+| 6 | 修正 local-setup.md 引用路径（手册改显式 `../../docs/local-setup.md`）+ 补 FAQ 章节 + 修正 README/手册依赖口径 | `测试平台使用手册.md:11,51`、`docs/local-setup.md`、`README.md:84-97` | 0.5-1 人日 |
 | 7 | 轮询退避（dsh-tasks/uitest） | `frontend/src/pages/dsh-tasks/index.tsx:81-85`、`uitest/index.tsx:297-323` | 1-2 人日 |
 
 **Phase 1 完成标志**：API 批量任务不再卡 running；计划批量执行不再长时间锁库；工作台/追溯/报告三处通过率一致；apitest 切 tab 无重复请求；新装机照 local-setup.md 15 分钟内跑通。
@@ -457,7 +457,7 @@ cachedGet(url, params, { ttl, signal, force })
 
 3. **对"如果重新设计"的回答是：架构决策不重做，但四个决策必须用低成本方式补回来**——单任务表队列、单一执行事实源、缓存/轮询交给成熟库、跨域引用显式化。这些不是新系统才有资格做的事，Phase 1/2 的每个条目都是对存量代码做同样的收敛，且每条都给出了文件级落点。
 
-4. **最大的隐性风险不是技术债本身，而是文档与实现的持续漂移**：手册引用了不存在的文档（DOC-01）、声称可用已隐藏的路由（DOC-02）、完整PRD 停留在 React 18.3（DOC-03）。架构演进的前提是"文档与代码同源"——建议把"文档保鲜"纳入每个批次的 Definition of Done（AGENTS.md §3.3 已有此要求，缺的是执行）。
+4. **最大的隐性风险不是技术债本身，而是文档与实现的持续漂移**：手册引用了路径歧义的文档（DOC-01，local-setup.md 实存于仓库根但引用失效）、声称可用已隐藏的路由（DOC-02）、完整PRD 停留在 React 18.3（DOC-03）。架构演进的前提是"文档与代码同源"——建议把"文档保鲜"纳入每个批次的 Definition of Done（AGENTS.md §3.3 已有此要求，缺的是执行）。
 
 5. **总体评价**：从"演示态 → 真实引擎"的蜕变过程中，平台的**能力密度**已经很高（26 模块、87 张表、真实 httpx/Playwright/ffprobe 引擎、双通道 CI/CD），当前处于"能力过剩、治理不足"的阶段；按本报告 Phase 1（2 个月）执行后，可以进入可信任、可验收、可交接的状态。
 
@@ -474,4 +474,4 @@ cachedGet(url, params, { ttl, signal, force })
 | 长事务 | execute_all_cases 单事务 :1119 commit | **独立确认**（读 :1050-1119，循环内 flush + 末尾 commit，含 API 双写快照） |
 | cachedGet 绕过 | 3 个调用点 | **独立确认**（auth.ts:40 / environment.ts:10 / testcase.ts:60） |
 | 超大型路由文件 | 9 个 >20KB | **独立确认**（实测 knowledge.py 66.8KB / requirement.py 44.1KB / requirement_modules.py 42.6KB / wiki.py 38.6KB / apitest.py 36.4KB 等 9 个） |
-| 文档缺口 | local-setup.md 不存在 | **独立确认**（Test-Path=False；手册:11/:51 引用） |
+| 文档缺口 | local-setup.md 不存在 | **修正**：文件实际存在于仓库根 `docs/local-setup.md`（Batch 152，74 行）；真实问题是手册引用路径歧义（从 test-platform-v2/docs/ 相对解析失效）。子报告 Test-Path 只查了 test-platform-v2/docs/ 导致误判 |

@@ -156,7 +156,7 @@ export async function fetchEnvironments(signal?: AbortSignal) {
 
 | # | 文档承诺 | 文档位置 | 代码实际 | 代码位置 | 差异类型 |
 |---|---------|---------|---------|---------|---------|
-| 1 | 「Windows/macOS 完整步骤见 `docs/local-setup.md`」 | 手册:11、:51 | **`docs/local-setup.md` 不存在**（`test-platform-v2/docs/` 下无此文件；`Test-Path` = False）；实际本地搭建脚本 `scripts/start-platform-environment.ps1` 存在 | 手册引用 vs 实际文件 | 🔴 文档引用了不存在的文件 |
+| 1 | 「Windows/macOS 完整步骤见 `docs/local-setup.md`」 | 手册:11、:51 | **引用路径歧义**：`test-platform-v2/docs/local-setup.md` 不存在（Test-Path=False），但**仓库根 `docs/local-setup.md` 存在**（Batch 152 创建，74 行）；手册相对路径从 test-platform-v2/docs/ 上下文解析失效；实际本地搭建脚本 `scripts/start-platform-environment.ps1` 存在 | 手册引用 vs 实际文件位置 | 🔴 手册引用的相对路径指向不存在的文件（文件实存于仓库根） |
 | 2 | 前端技术栈「React 18.3 · TS 5.6 · React Router 6」 | 完整PRD:71、:100 | 实际 `react ^19.2.8`、`react-router ^8.3.0`（package.json:56,61）；现状PRD:41 与 README.md:51 已正确写 React 19.2.8 + Router 8.3.0 | package.json:56,61 | 🟡 完整PRD 技术栈过时（README 反而是新的） |
 | 3 | 手册模块总览与验收清单声称「音视频专项」「性能监控」可用 | 手册:9、:35、:39、:269 | 路由已注释隐藏：`router/index.tsx:214-215`（special）、:234-235（perftest）；懒加载注释 :27-28、:43-44；访客目录也注释 :guestModuleCatalog.ts:83-86、:151-155。**页面不可达** | router/index.tsx:214-215、234-235 | 🔴 手册声称可用，实际入口已下线 |
 | 4 | 手册 §6 音视频专项操作步骤（记录延迟/音画同步等） | 手册:150-161 | 页面存在（`pages/special/index.tsx` 740 行）但路由隐藏，用户无法进入 | router/index.tsx:214-215 | 🔴 操作手册与可达性矛盾 |
@@ -185,7 +185,7 @@ export async function fetchEnvironments(signal?: AbortSignal) {
 
 ## B.3 文档与实现不一致清单（最小证据集）
 
-1. 🔴 **`docs/local-setup.md` 不存在** —— 手册:11「Windows/macOS 完整步骤见 `docs/local-setup.md`」、手册:51「详见 `docs/local-setup.md`」；`test-platform-v2/docs/` 下无该文件（有 `perf-setup.md`、`onboarding.md`，无 local-setup）。
+1. 🔴 **`docs/local-setup.md` 引用路径歧义** —— 手册:11「Windows/macOS 完整步骤见 `docs/local-setup.md`」、手册:51「详见 `docs/local-setup.md`」；`test-platform-v2/docs/` 下无该文件（有 `perf-setup.md`、`onboarding.md`，无 local-setup），但**仓库根 `docs/local-setup.md` 存在**（Batch 152）——手册相对路径解析失效，读者按文档找不到文件。
 2. 🔴 **音视频专项 / 性能监控「手册可用 vs 路由下线」** —— 手册:9,35,39,150-161,269 声称存在；`router/index.tsx:214-215`（special）、`234-235`（perftest）为注释路由；`guestModuleCatalog.ts:83-86,151-155` 同步注释。
 3. 🟡 **完整PRD 技术栈过时** —— `CamelTv测试平台-完整PRD.md:71,100` 写「React 18.3 · React Router 6」；实际 `package.json:56,61` 为 React 19.2.8 / Router 8.3.0；`现状功能PRD.md:41`、`test-platform-v2/README.md:51-52`、`frontend/README.md:13-17` 均为新版本号。**README 与 package.json 一致 ✅**（仅完整PRD 过时，且完整PRD:94 自己还标注「README 称 Ant Design 5 已过时」，说明该文档长期未同步）。
 4. 🟡 **完整PRD 模块成熟度整体滞后** —— 模块 6/7/10/11/12/13 现状描述与代码不符（见 B.1#8-#13）；现状功能PRD 已同步，建议验收时以「现状功能PRD + 实际路由」为准。
