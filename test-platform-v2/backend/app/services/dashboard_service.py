@@ -37,8 +37,8 @@ def _execution_filter_for_project(db: Session, project_id: int, start: date | No
     base = select(func.count(TestExecution.id)).where(
         TestExecution.plan_case_id.in_(pcase_ids_sub)
     )
-    pass_base = base.where(TestExecution.status == "pass")
-    fail_base = base.where(TestExecution.status == "fail")
+    pass_base = base.where(TestExecution.status == "passed")
+    fail_base = base.where(TestExecution.status == "failed")
 
     if start:
         start_dt = datetime.combine(start, datetime.min.time())

@@ -54,8 +54,8 @@ def _execution_filter(
     base = select(func.count(TestExecution.id)).where(
         TestExecution.plan_case_id.in_(plan_case_ids)
     )
-    pass_base = base.where(TestExecution.status == "pass")
-    fail_base = base.where(TestExecution.status == "fail")
+    pass_base = base.where(TestExecution.status == "passed")
+    fail_base = base.where(TestExecution.status == "failed")
 
     if start_date:
         start_dt = datetime.combine(start_date, datetime.min.time())
@@ -131,7 +131,7 @@ def get_project_statistics(
         select(func.count()).select_from(executed_case_ids.subquery())
     ) or 0
 
-    passed_case_ids = executed_case_ids.where(TestExecution.status == "pass")
+    passed_case_ids = executed_case_ids.where(TestExecution.status == "passed")
     cases_passed = db.scalar(
         select(func.count()).select_from(passed_case_ids.subquery())
     ) or 0

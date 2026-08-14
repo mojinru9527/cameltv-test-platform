@@ -219,7 +219,7 @@ def cancel_run(
     run.error_message = "用户手动取消"
     # Update job status too
     if job.status == "running":
-        job.status = "idle"
+        job.status = "pending"
     db.commit()
     _audit(req, current, db, "uitest:cancel", f"run #{run_id}")
     return R.ok({"status": "cancelled", "run_id": run_id})

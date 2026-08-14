@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.core.base_service import batch_user_names
 from app.core.config import settings
+from app.core.execution_status import canonical_exec_status
 
 logger = logging.getLogger(__name__)
 from app.models.test_case import TestCase
@@ -246,6 +247,8 @@ def execute_case(
 
     now = datetime.now()
     trace_id = extract_trace_id(actual_result) or extract_trace_id(notes) or ""
+    # Batch 182（P1-06）：统一词表兜底（调用方可能传旧值）
+    status = canonical_exec_status(status)
     exec_row = TestExecution(
         plan_case_id=pcase_id,
         executor_id=executor_id,
@@ -419,13 +422,22 @@ def _batch_calc_stats(db: Session, plan_ids: set[int]) -> dict[int, dict]:
     for plan_id, s in rows:
         entry = stats[plan_id]
         entry["total"] += 1
-        key = s if s in ("pending", "pass", "fail", "skip", "block") else "pending"
-        if key == "pass":
-            entry["pass_"] += 1
-        else:
-            entry[key] += 1
+        # Batch 182（P1-06）：DB 词表已统一为 passed/failed/skipped/blocked，
+        # 响应键（pass_/fail/skip/block）保持兼容映射
+        key = _STATS_RESPONSE_KEY.get(canonical_exec_status(s), "pending")
+        entry[key] += 1
 
     return stats
+
+
+# DB 状态 → 计划统计响应键（响应契约兼容）
+_STATS_RESPONSE_KEY = {
+    "pending": "pending",
+    "passed": "pass_",
+    "failed": "fail",
+    "skipped": "skip",
+    "blocked": "block",
+}
 
 
 def _calc_stats(db: Session, plan_id: int) -> dict:
@@ -513,7 +525,7 @@ def auto_execute_api_cases(
                 environment_id=environment_id,
             )
             api_pass = exec_result.get("all_pass", False)
-            status = "pass" if api_pass else "fail"
+            status = "passed" if api_pass else "failed"
             actual_result = json.dumps(exec_result, ensure_ascii=False, default=str)
 
             # 创建执行记录
@@ -910,7 +922,7 @@ def _register_plan_api_snapshot(
     item = ApiExecutionTaskItem(
         task_id=task.id,
         case_id=tc.id,
-        status="passed" if status == "pass" else "failed",
+        status=canonical_exec_status(status),
         duration_ms=float(exec_result.get("duration_ms") or 0),
         request_snapshot=json.dumps(exec_result.get("request_snapshot") or {}, ensure_ascii=False, default=str),
         response_snapshot=json.dumps(exec_result.get("response_snapshot") or {}, ensure_ascii=False, default=str),
@@ -1003,7 +1015,7 @@ def execute_all_cases(
                     environment_id=environment_id,
                 )
                 api_pass = exec_result.get("all_pass", False)
-                status = "pass" if api_pass else "fail"
+                status = "passed" if api_pass else "failed"
                 actual_result = json.dumps(exec_result, ensure_ascii=False, default=str)
                 notes = f"批量自动执行: {tc.api_method or 'GET'} {tc.api_endpoint}"
             except Exception as e:
@@ -1015,7 +1027,7 @@ def execute_all_cases(
             # UI 用例：真实编译 + headless Chromium 执行（batch-74 统一编排）
             try:
                 ui_result = _execute_ui_case_sync(tc, base_url=base_url, storage_state=ui_storage_state)
-                status = "pass" if ui_result.get("ok") else "fail"
+                status = "passed" if ui_result.get("ok") else "failed"
                 actual_result = json.dumps(ui_result, ensure_ascii=False, default=str)
                 if ui_result.get("ok"):
                     notes = (
@@ -1037,7 +1049,7 @@ def execute_all_cases(
             ):
                 try:
                     ui_result = _execute_ui_case_sync(tc, base_url=base_url, storage_state=ui_storage_state)
-                    status = "pass" if ui_result.get("ok") else "fail"
+                    status = "passed" if ui_result.get("ok") else "failed"
                     actual_result = json.dumps(ui_result, ensure_ascii=False, default=str)
                     notes = (
                         f"手动用例自动转 UI 执行: {ui_result.get('total', 0)} 条断言"
@@ -1086,7 +1098,7 @@ def execute_all_cases(
                     now=now,
                 )
             _register_plan_api_snapshot(db, api_task, tc, exec_row, exec_result, status, now)
-            if status == "pass":
+            if status == "passed":
                 api_passed += 1
             else:
                 api_failed += 1
@@ -1096,10 +1108,10 @@ def execute_all_cases(
         pc.last_executed_at = now
         pc.executor_id = executor_id
 
-        if status == "pass":
+        if status == "passed":
             passed += 1
             executed += 1
-        elif status == "fail":
+        elif status == "failed":
             failed += 1
             executed += 1
         else:
@@ -1111,7 +1123,7 @@ def execute_all_cases(
             "case_title": tc.title,
             "case_type": tc.case_type,
             "status": status,
-            "error": notes if status == "skip" else ("" if status == "pass" else notes),
+            "error": notes if status == "skipped" else ("" if status == "passed" else notes),
         })
 
         # Batch 174（FIX-173-P0-03）：分批短事务提交，避免整计划单长事务

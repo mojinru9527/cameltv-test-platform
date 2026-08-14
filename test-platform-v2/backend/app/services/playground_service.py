@@ -359,7 +359,7 @@ def run_case_batch(
             ui_job_id = _write_spec_as_ui_job(db, case, compiled.spec_code, creator_id, project_id)
 
         # 回填用例执行结果（不存大图，只存可追溯摘要）
-        case.last_run_status = "pass" if ok else "fail"
+        case.last_run_status = "pass" if ok else "failed"
         case.last_response_json = json.dumps({
             "source": "playground_batch",
             "passed": ok,

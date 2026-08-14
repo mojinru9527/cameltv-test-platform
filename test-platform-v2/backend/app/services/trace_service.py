@@ -167,7 +167,7 @@ def get_requirement_coverage(db: Session, doc_id: int, project_id: int) -> dict 
         in_plan = c.id in cases_in_plan_set
         exec_status = case_status_map.get(c.id)
         is_executed = exec_status is not None
-        is_passed = exec_status == "pass"
+        is_passed = exec_status == "passed"
         defect_count = defect_map.get(c.id, 0)
 
         if in_plan:
@@ -222,13 +222,14 @@ def get_trend(db: Session, project_id: int, days: int = 30) -> dict:
         .order_by("day")
     ).all()
 
-    # Build daily buckets
+    # Build daily buckets（响应键 pass/fail/skip/block 契约保留；DB 词表已统一）
     from collections import defaultdict
     daily: dict[str, dict] = defaultdict(lambda: {"total": 0, "pass": 0, "fail": 0, "skip": 0, "block": 0})
+    _TREND_KEY = {"passed": "pass", "failed": "fail", "skipped": "skip", "blocked": "block"}
     for day, status, cnt in exec_rows:
         key = str(day)
         daily[key]["total"] += cnt
-        status_key = "pass" if status == "pass" else status
+        status_key = _TREND_KEY.get(status, status)
         if status_key in ("pass", "fail", "skip", "block"):
             daily[key][status_key] += cnt
 

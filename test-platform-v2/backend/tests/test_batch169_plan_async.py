@@ -137,7 +137,7 @@ def test_execute_all_batch_commit_keeps_results_and_api_task(db_session, monkeyp
     from app.models.test_plan import TestExecution
     exec_rows = db_session.query(TestExecution).filter_by(plan_case_id=pcs[0].id).all()
     assert len(exec_rows) == 1
-    assert exec_rows[0].status == "pass"
+    assert exec_rows[0].status == "passed"  # Batch 182（P1-06）：统一词表
 
     # 计划 API 任务快照完整（中间 commit 后 api_task 重新绑定未丢失）
     task = db_session.query(ApiExecutionTask).filter_by(trigger_type="plan").first()

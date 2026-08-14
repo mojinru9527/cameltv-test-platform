@@ -318,11 +318,11 @@ def trigger_job(
     )
     if not pw_ok:
         # Playwright 不可用 → 直接标记失败，无需后台执行
-        run.status = "fail"
+        run.status = "failed"
         run.finished_at = now
         run.error_message = f"Playwright 不可用: {pw_msg}"
         run.result = json.dumps({"error": pw_msg}, ensure_ascii=False)
-        job.status = "fail"
+        job.status = "failed"
         job.last_result = json.dumps({"error": f"Playwright 不可用: {pw_msg}"}, ensure_ascii=False)
 
     db.add(run)
@@ -360,12 +360,12 @@ def execute_playwright_async(run_id: int, job_id: int, project_id: int):
         try:
             run = db.get(UiTestRun, run_id)
             if run:
-                run.status = "fail"
+                run.status = "failed"
                 run.finished_at = datetime.now(timezone.utc)
                 run.error_message = "执行器崩溃: 详见日志"
             job = db.get(UiTestJob, job_id)
             if job:
-                job.status = "fail"
+                job.status = "failed"
                 job.last_result = json.dumps({"error": "执行器内部异常"}, ensure_ascii=False)
                 writeback_case_result(db, job, run) if run else None
             db.commit()
@@ -382,11 +382,17 @@ def writeback_case_result(db: Session, job: UiTestJob, run: UiTestRun) -> None:
         return
     from app.models.test_case import TestCase
 
+    from app.core.execution_status import canonical_exec_status
+
     case = db.get(TestCase, case_id)
     if not case:
         return
-    status_map = {"done": "pass", "fail": "fail", "cancelled": "skipped", "pending": "pending", "running": "running"}
-    case.last_run_status = status_map.get(run.status, run.status)
+    # Batch 182（P1-06）：run.status 已是统一词表（passed/failed/…）；
+    # 兼容历史 done/fail 旧值；回写用例 last_run_status 使用统一词表
+    s = canonical_exec_status(run.status)
+    status_map = {"passed": "passed", "failed": "failed", "cancelled": "skipped",
+                  "pending": "pending", "running": "running"}
+    case.last_run_status = status_map.get(s, s)
     try:
         summary = json.loads(run.result or "{}")
     except (json.JSONDecodeError, TypeError):

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.exceptions import APIException
+from app.core.execution_status import canonical_exec_status
 from app.core.rate_limit import open_api_limiter
 from app.models.api_token import ApiToken
 from app.schemas.common import R
@@ -193,13 +194,16 @@ def ci_post_results(
         raise APIException(code=403, msg="无权访问此执行记录")
 
     # Update fields
+    # Batch 182（P1-06）：接受新旧双值（CI 旧脚本传 pass/fail/skip/block），规范化后落库
     if "status" in body:
-        valid_statuses = {"pass", "fail", "skip", "block", "pending"}
+        valid_statuses = {"pass", "fail", "skip", "block", "pending",
+                          "passed", "failed", "skipped", "blocked", "running", "cancelled"}
         if body["status"] not in valid_statuses:
             raise APIException(code=400, msg=f"无效状态值，允许: {', '.join(sorted(valid_statuses))}")
-        exec_row.status = body["status"]
+        canonical = canonical_exec_status(body["status"])
+        exec_row.status = canonical
         # Also update plan_case last_status
-        plan_case.last_status = body["status"]
+        plan_case.last_status = canonical
         plan_case.last_executed_at = datetime.now(timezone.utc)
 
     if "actual_result" in body:
@@ -213,8 +217,8 @@ def ci_post_results(
     db.commit()
     db.refresh(exec_row)
 
-    # Notify on terminal status
-    if body.get("status") in ("pass", "fail"):
+    # Notify on terminal status（Batch 182：接受新旧双值）
+    if canonical_exec_status(body.get("status", "")) in ("passed", "failed"):
         try:
             from app.services.notify_service import notify_sync
             notify_sync(db, token.project_id, "plan_done", {
@@ -271,18 +275,18 @@ def ci_trigger_ui_test(
         base_url = env.base_url if env else ""
 
     now = datetime.now(timezone.utc)
-    job.status = "running" if pw_ok else "fail"
+    job.status = "running" if pw_ok else "failed"
     job.last_result = json.dumps({} if pw_ok else {"error": pw_msg}, ensure_ascii=False)
 
     run = UiTestRun(
         job_id=job_id,
-        status="pending" if pw_ok else "fail",
+        status="pending" if pw_ok else "failed",
         base_url=base_url,
         started_at=now,
         result=json.dumps({}, ensure_ascii=False),
     )
     if not pw_ok:
-        run.status = "fail"
+        run.status = "failed"
         run.finished_at = now
         run.error_message = f"Playwright 不可用: {pw_msg}"
         run.result = json.dumps({"error": pw_msg}, ensure_ascii=False)
