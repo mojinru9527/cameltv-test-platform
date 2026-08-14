@@ -108,6 +108,11 @@ def get_project(db: Session, project_id: int) -> dict | None:
     return _project_to_dict(r, owner_name)
 
 
+def get_project_orm(db: Session, project_id: int) -> Project | None:
+    """按主键查找项目 ORM 对象（路由层 ORM 收敛薄函数）。"""
+    return db.get(Project, project_id)
+
+
 def create_project(
     db: Session,
     data,

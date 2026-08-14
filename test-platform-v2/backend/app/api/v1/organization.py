@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
@@ -21,8 +20,7 @@ from app.schemas.organization import (
     OrganizationOut,
     OrganizationUpdate,
 )
-from app.models.user import User
-from app.services import organization_service
+from app.services import organization_service, user_service
 
 router = APIRouter(prefix="/organizations", tags=["组织"])
 
@@ -128,7 +126,7 @@ def add_member(
     username = body.get("username", "")
     if not user_id and username:
         # 按用户名邀请（不暴露用户目录）：精确匹配
-        user = db.scalar(select(User).where(User.username == username))
+        user = user_service.get_user_by_username(db, username)
         if not user:
             raise APIException(code=400, msg="用户不存在，请先确认对方已注册", http_status=400)
         user_id = user.id

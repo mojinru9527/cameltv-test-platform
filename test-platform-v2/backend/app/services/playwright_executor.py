@@ -335,7 +335,7 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
             db.commit()
             # Update job status on cancel
             if job.status == "running":
-                job.status = "idle"
+                job.status = "pending"
                 db.commit()
             return {"status": "cancelled", "run_id": run_id}
 
@@ -412,7 +412,7 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
 
         return _complete_run(
             db, job, run,
-            status="done" if fail_count == 0 else "fail",
+            status="passed" if fail_count == 0 else "failed",
             total=total, passed=passed, failed=fail_count, skipped=skipped,
             duration=duration_sec,
             screenshots=screenshots,
@@ -469,12 +469,12 @@ def _safe_communicate(proc: subprocess.Popen) -> tuple[str, str]:
 
 def _fail_run(db: Session, run, message: str, job=None) -> dict:
     """标记 run 为失败并落库 error_message。所有失败路径必须调用此函数。"""
-    run.status = "fail"
+    run.status = "failed"
     run.finished_at = datetime.now(timezone.utc)
     run.error_message = message
     run.result = json.dumps({"error": message, "total": 0, "pass_": 0, "fail": 0, "skip": 0, "duration": 0}, ensure_ascii=False)
     if job:
-        job.status = "fail"
+        job.status = "failed"
         job.last_result = json.dumps({"error": message}, ensure_ascii=False)
     db.commit()
     db.refresh(run)

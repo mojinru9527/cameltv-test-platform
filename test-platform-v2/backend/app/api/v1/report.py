@@ -32,7 +32,12 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
 
 
 def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
-    """在独立 DB session 中发送通知（供 BackgroundTasks 调用）。"""
+    """在独立 DB session 中发送通知（供 BackgroundTasks 调用）。
+
+    Batch 182（C181-1）路由层禁 ORM 豁免：SessionLocal() 仅用于
+    BackgroundTasks 独立会话模式（响应返回后原请求 db session 已关闭），
+    不含任何查询/ORM 操作；查询已全部收敛至 services。
+    """
     from app.core.db import SessionLocal
     from app.services.notify_service import notify_sync
 

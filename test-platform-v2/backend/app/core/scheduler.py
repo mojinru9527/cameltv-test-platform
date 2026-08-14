@@ -115,7 +115,7 @@ def _execute_schedule(schedule_id: int, run_id: int | None = None):
             )
             result = {
                 "report_id": report.get("report_id") or report.get("id") or "",
-                "status": "completed",
+                "status": "passed",
                 "total": 0,
                 "pass_": 0,
                 "fail": 0,
@@ -143,7 +143,7 @@ def _execute_schedule(schedule_id: int, run_id: int | None = None):
         sched = db.get(TestSchedule, schedule_id)
         if run is None or sched is None:
             raise RuntimeError("调度运行记录在执行期间被删除")
-        run.status = "completed"
+        run.status = "passed"
         run.result = json.dumps(result, ensure_ascii=False)
         run.heartbeat_at = datetime.now(timezone.utc)
         run.finished_at = datetime.now(timezone.utc)

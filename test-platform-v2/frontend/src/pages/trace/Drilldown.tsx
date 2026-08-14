@@ -11,12 +11,21 @@ import {
   type RequirementTraceSummary,
 } from '@/api/trace'
 import { FileText, Bug, Play, Link2, RefreshCw } from '@/lib/icons'
+import { execStatusLabel, normalizeExecStatus } from '@/utils/executionStatus'
 
-const statusTone: Record<string, 'default' | 'secondary' | 'ghost' | 'destructive' | 'outline'> = {
-  pass: 'secondary',
-  fail: 'destructive',
-  skip: 'outline',
-  block: 'destructive',
+// P3-03：执行状态图例 — 按规范词表着色（兼容历史 pass/fail/skip/block 旧值）
+const EXEC_TONE: Record<string, 'default' | 'secondary' | 'ghost' | 'destructive' | 'outline'> = {
+  pending: 'secondary',
+  running: 'secondary',
+  passed: 'secondary',
+  failed: 'destructive',
+  skipped: 'outline',
+  cancelled: 'outline',
+  blocked: 'destructive',
+}
+
+function execTone(value?: string): 'default' | 'secondary' | 'ghost' | 'destructive' | 'outline' {
+  return EXEC_TONE[normalizeExecStatus(value)] ?? 'outline'
 }
 
 export default function TraceDrilldown() {
@@ -158,11 +167,11 @@ export default function TraceDrilldown() {
                         <div key={pl.plan_id} className="rounded border px-2 py-1 text-xs">
                           <span className="font-medium">{pl.plan_name}</span>
                           {' '}
-                          <Badge variant={statusTone[pl.last_status] ?? 'outline'}>{pl.last_status}</Badge>
+                          <Badge variant={execTone(pl.last_status)}>{execStatusLabel(pl.last_status)}</Badge>
                           <div className="mt-1 text-muted-foreground">
                             {(pl.executions ?? []).map((ex) => (
                               <span key={ex.id} className="mr-2">
-                                {new Date(ex.executed_at ?? '').toLocaleString()} → {ex.status}
+                                {new Date(ex.executed_at ?? '').toLocaleString()} → {execStatusLabel(ex.status)}
                               </span>
                             ))}
                           </div>
@@ -180,7 +189,7 @@ export default function TraceDrilldown() {
                           <span className="font-medium">{df.title}</span>
                           {' '}
                           <Badge variant="outline">{df.severity}</Badge>
-                          <Badge variant={statusTone[df.status] ?? 'outline'}>{df.status}</Badge>
+                          <Badge variant={execTone(df.status)}>{df.status}</Badge>
                         </div>
                       ))}
                       {(c.defects ?? []).length === 0 && (

@@ -924,7 +924,7 @@ def test_requirement_coverage_uses_real_case_plan_execution_and_defect_links(
         ExecutionModel(
             plan_case_id=plan_case.id,
             executor_id=1,
-            status="pass",
+            status="passed",
             actual_result="passed",
         )
     )

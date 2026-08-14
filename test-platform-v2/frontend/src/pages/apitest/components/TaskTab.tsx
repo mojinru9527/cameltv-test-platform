@@ -8,13 +8,21 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { fetchApiExecutionTasks, fetchApiExecutionTask, cancelApiExecutionTask, retryApiExecutionTask, deleteApiExecutionTask } from '@/api/apitest'
 import type { ApiExecutionTask, ApiTaskDetail } from '@/types'
+import { execStatusLabel, normalizeExecStatus } from '@/utils/executionStatus'
 
-const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  pending: { label: '待执行', className: 'bg-muted text-muted-foreground' },
-  running: { label: '执行中', className: 'bg-status-info-muted text-status-info' },
-  success: { label: '成功', className: 'bg-status-success-muted text-status-success' },
-  failed: { label: '失败', className: 'bg-status-danger-muted text-status-danger' },
-  cancelled: { label: '已取消', className: 'bg-status-warning-muted text-status-warning' },
+/** 旧值 → 规范值兼容映射（后端已迁移，兼容历史数据） */
+const STATUS_TONE_BY_NORMALIZED: Record<string, string> = {
+  pending: 'bg-muted text-muted-foreground',
+  running: 'bg-status-info-muted text-status-info',
+  passed: 'bg-status-success-muted text-status-success',
+  failed: 'bg-status-danger-muted text-status-danger',
+  cancelled: 'bg-status-warning-muted text-status-warning',
+  skipped: 'bg-status-warning-muted text-status-warning',
+  blocked: 'bg-status-danger-muted text-status-danger',
+}
+
+function statusBadgeClass(status?: string): string {
+  return STATUS_TONE_BY_NORMALIZED[normalizeExecStatus(status)] ?? 'bg-muted text-muted-foreground'
 }
 
 export default function TaskTab() {
@@ -114,7 +122,7 @@ export default function TaskTab() {
                 <span className="text-status-danger">{task.failed} 失败</span>
                 {task.skipped > 0 && <span className="text-muted-foreground">{task.skipped} 跳过</span>}
               </div>
-              <Badge className={STATUS_MAP[task.status]?.className || ''}>{STATUS_MAP[task.status]?.label || task.status}</Badge>
+              <Badge className={statusBadgeClass(task.status)}>{execStatusLabel(task.status)}</Badge>
               <div className="flex items-center gap-1 shrink-0">
                 <Button
                   size="icon-sm"
@@ -193,7 +201,7 @@ export default function TaskTab() {
               <div className="bg-muted rounded p-2"><div className="text-lg font-bold">{detail.skipped}</div><div className="text-xs text-muted-foreground">跳过</div></div>
             </div>
             <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-              {detail.items.map((item, i) => (
+              {detail.items.map((item) => (
                 <SnapshotCard key={item.id} item={item} />
               ))}
             </div>
@@ -224,7 +232,7 @@ function SnapshotCard({ item }: { item: { id: number; case_id: number; status: s
         {item.status === 'passed' ? <CheckCircle2 className="size-3 text-status-success" /> : <XCircle className="size-3 text-status-danger" />}
         <span className="font-medium">用例 #{item.case_id}</span>
         <span className="text-muted-foreground">{item.duration_ms}ms</span>
-        <Badge className={STATUS_MAP[item.status]?.className || ''}>{STATUS_MAP[item.status]?.label || item.status}</Badge>
+        <Badge className={statusBadgeClass(item.status)}>{execStatusLabel(item.status)}</Badge>
         {item.test_execution_id ? <span className="text-muted-foreground">关联计划执行 #{item.test_execution_id}</span> : null}
       </div>
       {item.error_message && <p className="text-status-danger mt-1">{item.error_message}</p>}

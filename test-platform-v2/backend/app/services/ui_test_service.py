@@ -318,11 +318,11 @@ def trigger_job(
     )
     if not pw_ok:
         # Playwright 不可用 → 直接标记失败，无需后台执行
-        run.status = "fail"
+        run.status = "failed"
         run.finished_at = now
         run.error_message = f"Playwright 不可用: {pw_msg}"
         run.result = json.dumps({"error": pw_msg}, ensure_ascii=False)
-        job.status = "fail"
+        job.status = "failed"
         job.last_result = json.dumps({"error": f"Playwright 不可用: {pw_msg}"}, ensure_ascii=False)
 
     db.add(run)
@@ -360,12 +360,12 @@ def execute_playwright_async(run_id: int, job_id: int, project_id: int):
         try:
             run = db.get(UiTestRun, run_id)
             if run:
-                run.status = "fail"
+                run.status = "failed"
                 run.finished_at = datetime.now(timezone.utc)
                 run.error_message = "执行器崩溃: 详见日志"
             job = db.get(UiTestJob, job_id)
             if job:
-                job.status = "fail"
+                job.status = "failed"
                 job.last_result = json.dumps({"error": "执行器内部异常"}, ensure_ascii=False)
                 writeback_case_result(db, job, run) if run else None
             db.commit()
@@ -382,11 +382,17 @@ def writeback_case_result(db: Session, job: UiTestJob, run: UiTestRun) -> None:
         return
     from app.models.test_case import TestCase
 
+    from app.core.execution_status import canonical_exec_status
+
     case = db.get(TestCase, case_id)
     if not case:
         return
-    status_map = {"done": "pass", "fail": "fail", "cancelled": "skipped", "pending": "pending", "running": "running"}
-    case.last_run_status = status_map.get(run.status, run.status)
+    # Batch 182（P1-06）：run.status 已是统一词表（passed/failed/…）；
+    # 兼容历史 done/fail 旧值；回写用例 last_run_status 使用统一词表
+    s = canonical_exec_status(run.status)
+    status_map = {"passed": "passed", "failed": "failed", "cancelled": "skipped",
+                  "pending": "pending", "running": "running"}
+    case.last_run_status = status_map.get(s, s)
     try:
         summary = json.loads(run.result or "{}")
     except (json.JSONDecodeError, TypeError):
@@ -465,6 +471,25 @@ def get_run(db: Session, run_id: int, project_id: int | None = None) -> dict | N
     return _run_to_dict(r, job)
 
 
+def get_project_run(db: Session, run_id: int, project_id: int) -> UiTestRun | None:
+    """Load a run only through its owning job and current project (route-layer)."""
+    return db.scalar(
+        select(UiTestRun)
+        .join(UiTestJob, UiTestJob.id == UiTestRun.job_id)
+        .where(UiTestRun.id == run_id, UiTestJob.project_id == project_id)
+    )
+
+
+def get_run_orm(db: Session, run_id: int) -> UiTestRun | None:
+    """Fetch a run record by primary key (route-layer cancel path)."""
+    return db.get(UiTestRun, run_id)
+
+
+def get_job_orm(db: Session, job_id: int) -> UiTestJob | None:
+    """Fetch a job record by primary key (route-layer cancel path)."""
+    return db.get(UiTestJob, job_id)
+
+
 # ═══════════════════════════════════════════════════════
 # UI 脚本资产管理
 # ═══════════════════════════════════════════════════════
@@ -538,3 +563,68 @@ def _script_to_dict(r) -> dict:
         "owner": r.owner, "tags": r.tags, "status": r.status,
         "created_at": r.created_at, "updated_at": r.updated_at,
     }
+
+
+# ═══════════════════════════════════════════════════════
+# Batch 182（C181-1）open_api 路由层 ORM 收敛薄函数
+# ═══════════════════════════════════════════════════════
+
+def get_job_row(db: Session, job_id: int, project_id: int) -> UiTestJob | None:
+    """项目内按 id 查询 UI 任务行（open_api CI 触发复用）。"""
+    return db.scalar(
+        select(UiTestJob).where(UiTestJob.id == job_id, UiTestJob.project_id == project_id)
+    )
+
+
+def trigger_ui_test_from_ci(
+    db: Session,
+    job_id: int,
+    project_id: int,
+    *,
+    token_name: str,
+) -> tuple[UiTestJob | None, UiTestRun | None, str | None]:
+    """外部 CI 触发 UI 任务：创建 run 记录并更新 job 状态。
+
+    返回 (job, run, pw_error)：
+    - job 不存在 → (None, None, None)；
+    - 任务正在执行 → 抛 ValueError（路由层转 400）；
+    - Playwright 不可用 → run 已标记 failed，pw_error 为原因（非空）。
+    沿用调用方会话、不 commit（提交由路由层负责）。
+    """
+    job = get_job_row(db, job_id, project_id)
+    if not job:
+        return None, None, None
+
+    if job.status == "running":
+        raise ValueError("任务正在执行中，请等待完成后再触发")
+
+    # 检查 Playwright
+    from app.services.playwright_executor import _check_playwright_installed
+    pw_ok, pw_msg = _check_playwright_installed()
+
+    # 解析环境 base_url
+    base_url = ""
+    if job.environment_id:
+        env = _resolve_environment(db, job.environment_id, project_id)
+        base_url = env.base_url if env else ""
+
+    now = datetime.now(timezone.utc)
+    job.status = "running" if pw_ok else "failed"
+    job.last_result = json.dumps({} if pw_ok else {"error": pw_msg}, ensure_ascii=False)
+
+    run = UiTestRun(
+        job_id=job_id,
+        status="pending" if pw_ok else "failed",
+        base_url=base_url,
+        started_at=now,
+        result=json.dumps({}, ensure_ascii=False),
+    )
+    if not pw_ok:
+        run.status = "failed"
+        run.finished_at = now
+        run.error_message = f"Playwright 不可用: {pw_msg}"
+        run.result = json.dumps({"error": pw_msg}, ensure_ascii=False)
+
+    db.add(run)
+    db.flush()
+    return job, run, None if pw_ok else pw_msg

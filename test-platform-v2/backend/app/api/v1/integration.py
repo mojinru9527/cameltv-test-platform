@@ -15,7 +15,7 @@ from app.schemas.integration import (
     TestConnectionRequest,
     TestConnectionResponse,
 )
-from app.services import integration_service
+from app.services import defect_service, integration_service
 from app.services.audit_service import write_audit
 from app.services.production_operation_guard import ProductionOperation, require_allowed_operation
 
@@ -128,7 +128,6 @@ def sync_now(
     db: Session = Depends(get_db),
 ):
     from app.services.sync import engine as sync_engine
-    from app.models.defect import Defect
 
     cfg = integration_service.get_integration(db, integration_id, current.project_id or 0)
     if not cfg:
@@ -155,10 +154,9 @@ def sync_now(
     errors = 0
 
     if direction in ("bidirectional", "push_only"):
-        unlinked = db.query(Defect).filter(
-            Defect.project_id == current.project_id,
-            Defect.external_id == "",
-        ).all()
+        unlinked = defect_service.list_defects_by_external_id(
+            db, current.project_id or 0, linked=False
+        )
         for d in unlinked:
             try:
                 sync_engine.push_defect(db, integration_id, d.id, current.project_id or 0)
@@ -168,10 +166,9 @@ def sync_now(
                 errors += 1
 
     if direction in ("bidirectional", "pull_only"):
-        linked = db.query(Defect).filter(
-            Defect.project_id == current.project_id,
-            Defect.external_id != "",
-        ).all()
+        linked = defect_service.list_defects_by_external_id(
+            db, current.project_id or 0, linked=True
+        )
         for d in linked:
             try:
                 sync_engine.pull_defect_status(db, integration_id, d.id, current.project_id or 0)

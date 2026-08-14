@@ -129,14 +129,14 @@ class TestUiJobCaseMapping:
         job = UiTestJob(project_id=1, name="B154TMP-回写任务", case_id=case.id)
         db_session.add(job)
         db_session.flush()
-        run = UiTestRun(job_id=job.id, status="done", result='{"pass_":2,"fail":0}')
+        run = UiTestRun(job_id=job.id, status="passed", result='{"pass_":2,"fail":0}')
         db_session.add(run)
         db_session.flush()
 
         writeback_case_result(db_session, job, run)
         db_session.flush()
         db_session.refresh(case)
-        assert case.last_run_status == "pass"
+        assert case.last_run_status == "passed"
         assert "ui_run_id" in case.last_response_json
 
     def test_create_jobs_from_cases(self, client, auth_headers):

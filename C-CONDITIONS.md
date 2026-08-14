@@ -22,13 +22,20 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## Open (待处理)
 
-### batch-181 — 架构专项（2026-08-16，TaskQueue/软删/路由拆分）
+### batch-182 — 收尾批次（2026-08-16，状态机/ORM/P3）
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C181-1 | 路由层禁 ORM 剩余收敛：非本批 9 域的既有路由文件（defect/report/open_api/perf_ws/playground/token/integration/ui_test/auth/organization/project 等）仍含直连查询，后续批次按 `backend/CLAUDE.md` 约定逐域收敛（守卫测试允许名单可随收敛缩小） | P2 | 2026-08-16 |
-| C181-2 | P1-06 执行状态机 4 套取值统一（pending/running/passed/failed/skipped/cancelled）未开工；TaskQueue 基类已就绪，建议下一架构批次承接 | P1 | 2026-08-16 |
-| C181-3 | P3 打磨三项（追溯轴标签/域命名体系/>800 行页面）随迭代自然消化，不设专项 | P3 | 2026-08-16 |
+| C182-1 | 执行记录双写（计划执行同时写 test_execution 与 api_execution_task_item）为双 UI 契约（计划页/接口任务页）服务，本批保留双写、统一词表；单一事实源改造需 UI 合并决策后另立专项 | P2 | 2026-08-16 |
+| C182-2 | 域命名回填脚本 `scripts/backfill-domain-naming-b182.py` 已在生产数据上 dry-run 核对后，由人工执行 `--apply` 归一存量 domain（脚本幂等） | P3 | 2026-08-16 |
+
+### batch-181 — 架构专项（2026-08-16，TaskQueue/软删/路由拆分）—— 已由 Batch 182 全部关闭
+
+| ID | 内容 | 优先级 | 关闭 |
+|----|------|--------|------|
+| ~~C181-1~~ | ~~路由层禁 ORM 剩余收敛~~ → **Closed**：Batch 182 完成 12 路由文件收敛（commit f146b50），守卫收紧为 api/v1 全量 3/3 绿 | P2 | 2026-08-16 |
+| ~~C181-2~~ | ~~P1-06 执行状态机统一~~ → **Closed**：Batch 182 完成 5 表词表迁移 + 18 文件写读站点 + open_api 双值兼容（commit 26c8249/4a5b965/fcfd963），全量 1502/0 | P1 | 2026-08-16 |
+| ~~C181-3~~ | ~~P3 打磨三项~~ → **Closed**：Batch 182 完成追溯轴标签/域命名体系/>800 行页面拆分（commit bfb5e2b/4ff7d78） | P3 | 2026-08-16 |
 
 ### batch-172 — DSH Harness 集成（2026-08-14）
 

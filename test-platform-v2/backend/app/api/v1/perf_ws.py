@@ -18,10 +18,8 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.db import SessionLocal
 from app.core.security import decode_token
-from app.models.perf import PerfSession
-from app.models.user import User
 from app.services import perf_collector_service as collector
-from app.services import perf_service, project_service, rbac_service
+from app.services import perf_service, project_service, rbac_service, user_service
 
 logger = logging.getLogger("perf.ws")
 router = APIRouter()
@@ -34,7 +32,7 @@ async def _authorize_stream(
     ws: WebSocket,
     db: Session,
     session_id: int,
-) -> PerfSession | None:
+):
     """Authenticate the socket and scope the requested session to one project."""
     origin = (ws.headers.get("origin") or "").rstrip("/")
     allowed_origins = (
@@ -70,7 +68,7 @@ async def _authorize_stream(
         await ws.close(code=4403, reason="Project context required")
         return None
 
-    user = db.get(User, user_id)
+    user = user_service.get_user_orm(db, user_id)
     if not user or user.status != 1:
         await ws.close(code=4401, reason="Authentication required")
         return None
@@ -85,7 +83,7 @@ async def _authorize_stream(
         await ws.close(code=4403, reason="Forbidden")
         return None
 
-    session = db.get(PerfSession, session_id)
+    session = perf_service.get_session(db, session_id)
     if not session or session.project_id != project_id:
         await ws.close(code=4404, reason="Session not found")
         return None
@@ -94,8 +92,10 @@ async def _authorize_stream(
 
 async def _collect_loop(session_id: int, ws: WebSocket, planned_duration_s: int) -> None:
     """后台采集循环——每 500ms 采样一次并通过 WebSocket 推送。"""
+    # C181-1 豁免：WebSocket 独立流会话——采集循环长驻（与请求会话解耦），
+    # 独立 SessionLocal 会话仅供本流内查询/写入，随连接生命周期关闭。
     db: Session = SessionLocal()
-    session = db.get(PerfSession, session_id)
+    session = perf_service.get_session(db, session_id)
 
     if not session:
         await ws.send_json({"type": "error", "detail": "会话不存在"})
@@ -215,6 +215,8 @@ async def perf_stream(ws: WebSocket, session_id: int) -> None:
     客户端可发送 {"action": "stop"} 主动停止采集。
     采集达到计划时长或客户端断开时自动结束。
     """
+    # C181-1 豁免：WebSocket 独立流会话——连接级鉴权/状态读取使用本流专属
+    # SessionLocal 会话，随连接生命周期关闭，与请求会话解耦。
     db: Session = SessionLocal()
     session = await _authorize_stream(ws, db, session_id)
     if not session:

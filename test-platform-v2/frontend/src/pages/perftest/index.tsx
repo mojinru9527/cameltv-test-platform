@@ -1,58 +1,28 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import {
-  Smartphone, Play, Square, History, BarChart3, RefreshCw,
-  Loader2, Wifi, WifiOff, AlertCircle, CheckCircle2, XCircle, Gauge,
+  Smartphone, History, BarChart3, Gauge,
 } from '@/lib/icons'
-import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis,
-  CartesianGrid, Tooltip, Legend,
-} from 'recharts'
 import { Button } from '@/ui'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/ui'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Input } from '@/ui'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import PageHeader from '@/components/PageHeader'
-import DataTable from '@/components/DataTable'
-import ChartFrame from '@/components/charts/ChartFrame'
 import { usePerfWebSocket } from '@/hooks/usePerfWebSocket'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import { perfConnectionLabel } from './connectionStatus'
 import {
   fetchDevices, fetchSessions, fetchSession, createSession,
   deleteSession, startSession, stopSession,
   fetchReport, compareSessions,
   type PerfDevice, type PerfSession, type PerfSessionCreate,
-  type PerfReport, type MetricStatsItem, type CompareResponse,
+  type PerfReport, type CompareResponse,
 } from '@/api/perftest'
-
-// ── Constants ──
-
-const METRIC_LABELS: Record<string, string> = {
-  cpu: 'CPU', memory: '内存', fps: '帧率', jank: '卡顿(Jank)',
-  startup: '启动耗时', anr: 'ANR/崩溃',
-}
-const METRIC_UNITS: Record<string, string> = {
-  cpu: '%', memory: 'MB', fps: 'fps', jank: '次', startup: 'ms', anr: '次',
-}
-const STATUS_LABELS: Record<string, string> = {
-  pending: '等待中', running: '采集中', completed: '已完成', failed: '失败', cancelled: '已取消',
-}
-const STATUS_TONES: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
-  pending: 'neutral', running: 'info', completed: 'success', failed: 'danger', cancelled: 'neutral',
-}
-
-function isCollectorUnavailable(error: unknown): boolean {
-  if (!error || typeof error !== 'object' || !('response' in error)) return false
-  const response = (error as { response?: { status?: number } }).response
-  return response?.status === 503
-}
+import { isCollectorUnavailable } from './components/perfShared'
+import CollectorUnavailableBanner from './components/CollectorUnavailableBanner'
+import DeviceCollectionPanel from './components/DeviceCollectionPanel'
+import MonitorPanel from './components/MonitorPanel'
+import SessionHistoryPanel from './components/SessionHistoryPanel'
+import ReportPanel from './components/ReportPanel'
 
 // ── Page ──
 
@@ -240,31 +210,10 @@ export default function PerfTestPage() {
       <PageHeader title="性能测试" description="客户端性能采集（Android / iOS）——对标 PerfDog 数据口径，基于 SoloX 引擎" />
 
       {collectorUnavailable && (
-        <div
-          role="alert"
-          aria-labelledby="perf-collector-unavailable-title"
-          className="flex flex-col gap-3 rounded-lg border border-status-warning/40 bg-status-warning/10 p-4 text-sm sm:flex-row sm:items-start"
-        >
-          <AlertCircle className="mt-0.5 size-5 shrink-0 text-status-warning" aria-hidden="true" />
-          <div className="min-w-0 flex-1 space-y-1">
-            <h2 id="perf-collector-unavailable-title" className="font-semibold">
-              真实性能采集不可用
-            </h2>
-            <p className="text-muted-foreground">
-              当前服务未安装或未启用 SoloX。平台不会生成模拟数据；请完成 SoloX 部署并连接已授权设备后重试。
-            </p>
-          </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => { void loadDevices() }}
-            disabled={loading}
-            className="shrink-0"
-          >
-            {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            重新检测采集器
-          </Button>
-        </div>
+        <CollectorUnavailableBanner
+          loading={loading}
+          onRetry={() => { void loadDevices() }}
+        />
       )}
 
       <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setSearchParams({ tab: v }) }}>
@@ -278,647 +227,70 @@ export default function PerfTestPage() {
         {/* ── Tab 1: Device & Collection ── */}
         <TabsContent value="device">
           {activeTab === 'device' && (
-            <div className="grid gap-4 lg:grid-cols-2">
-              {/* Device list */}
-              <Card>
-                <CardHeader className="pb-2 flex-row items-center justify-between">
-                  <CardTitle className="text-base">已连接设备</CardTitle>
-                  <Button variant="ghost" size="icon" onClick={() => { void loadDevices() }} disabled={loading} aria-label="刷新设备列表">
-                    <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  {loading && devices.length === 0 ? (
-                    <div className="grid min-h-[120px] place-items-center"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>
-                  ) : collectorUnavailable ? (
-                    <div className="grid min-h-[120px] place-items-center text-sm text-muted-foreground">
-                      <p>采集器恢复后，可在此选择真实设备。</p>
-                    </div>
-                  ) : devices.length === 0 ? (
-                    <div className="grid min-h-[120px] place-items-center text-sm text-muted-foreground">
-                      <div className="text-center space-y-2">
-                        <Smartphone className="size-8 mx-auto opacity-30" />
-                        <p>未检测到设备</p>
-                        <p className="text-xs">请确保 Android: ADB 已连接 ｜ iOS: iTunes + tidevice 已安装</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-2">
-                      {devices.map((d) => (
-                        <button
-                          key={d.device_id}
-                          onClick={() => { setSelectedDevice(d); setSelectedApp('') }}
-                          className={`flex items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted/50 ${
-                            selectedDevice?.device_id === d.device_id ? 'border-primary ring-2 ring-primary/20' : ''
-                          }`}
-                        >
-                          <div className={`size-2.5 rounded-full ${d.status === 'online' ? 'bg-status-success-solid' : 'bg-status-danger-solid'}`} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{d.device_name || d.device_id}</p>
-                            <p className="text-xs text-muted-foreground">{d.device_model} · {d.os_version}</p>
-                          </div>
-                          <Badge tone="neutral" className="text-xs">{d.platform}</Badge>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Session form */}
-              <Card>
-                <CardHeader className="pb-2"><CardTitle className="text-base">采集配置</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                  {/* App selection */}
-                  <div>
-                    <Label className="text-sm">目标应用</Label>
-                    {selectedDevice ? (
-                      <Select value={selectedApp} onValueChange={setSelectedApp}>
-                        <SelectTrigger className="mt-1.5 h-9" aria-label="选择性能采集目标应用">
-                          <SelectValue placeholder="选择或输入包名…" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(selectedDevice.installed_apps ?? []).map((app) => (
-                            <SelectItem key={app} value={app}>{app}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <p className="mt-1.5 text-sm text-muted-foreground">请先选择设备</p>
-                    )}
-                    {/* Allow manual input even without installed_apps */}
-                    {selectedDevice && (
-                      <Input
-                        className="mt-1.5 h-9"
-                        placeholder="或手动输入包名 (如 com.cameltv.app)"
-                        value={selectedApp}
-                        onChange={(e) => setSelectedApp(e.target.value)}
-                      />
-                    )}
-                  </div>
-
-                  {/* Metrics */}
-                  <div>
-                    <Label className="text-sm">采集指标</Label>
-                    <div className="mt-1.5 flex flex-wrap gap-2">
-                      {Object.entries(METRIC_LABELS).map(([key, label]) => (
-                        <label key={key} className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm cursor-pointer hover:bg-muted/50">
-                          <Checkbox
-                            checked={selectedMetrics.includes(key)}
-                            onCheckedChange={(c) => {
-                              if (c) setSelectedMetrics([...selectedMetrics, key])
-                              else setSelectedMetrics(selectedMetrics.filter((m) => m !== key))
-                            }}
-                          />
-                          {label}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Duration */}
-                  <div>
-                    <Label className="text-sm">采集时长 (秒)</Label>
-                    <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))}>
-                      <SelectTrigger className="mt-1.5 h-9 w-40" aria-label="选择性能采集时长">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="30">30 秒</SelectItem>
-                        <SelectItem value="60">60 秒</SelectItem>
-                        <SelectItem value="300">5 分钟</SelectItem>
-                        <SelectItem value="600">10 分钟</SelectItem>
-                        <SelectItem value="0">不限时长</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <Button onClick={handleCreateSession} disabled={!selectedDevice || !selectedApp}>
-                      创建会话
-                    </Button>
-                    {currentSession && currentSession.status === 'pending' && (
-                      <Button onClick={handleStartMonitor} variant="primary" className="gap-1.5">
-                        <Play className="size-4" />开始采集
-                      </Button>
-                    )}
-                  </div>
-
-                  {currentSession && (
-                    <p className="text-xs text-muted-foreground">
-                      当前会话: {currentSession.session_id} ({STATUS_LABELS[currentSession.status] ?? currentSession.status})
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+            <DeviceCollectionPanel
+              devices={devices}
+              loading={loading}
+              collectorUnavailable={collectorUnavailable}
+              selectedDevice={selectedDevice}
+              setSelectedDevice={setSelectedDevice}
+              selectedApp={selectedApp}
+              setSelectedApp={setSelectedApp}
+              selectedMetrics={selectedMetrics}
+              setSelectedMetrics={setSelectedMetrics}
+              duration={duration}
+              setDuration={setDuration}
+              currentSession={currentSession}
+              onCreateSession={handleCreateSession}
+              onStartMonitor={handleStartMonitor}
+              onRefreshDevices={() => { void loadDevices() }}
+            />
           )}
         </TabsContent>
 
         {/* ── Tab 2: Monitor ── */}
         <TabsContent value="monitor">
           {activeTab === 'monitor' && (
-            <div className="space-y-4">
-              {/* Status bar */}
-              <Card>
-                <CardContent className="flex items-center gap-4 py-3">
-                  <div className="flex items-center gap-2">
-                    {!monitoring ? <WifiOff className="size-4 text-muted-foreground" /> : wsMode === 'websocket' ? <Wifi className="size-4 text-status-success" /> : wsMode === 'polling' ? <WifiOff className="size-4 text-status-warning" /> : <Loader2 className="size-4 animate-spin" />}
-                    <span className="text-sm">{perfConnectionLabel(monitoring, wsMode)}</span>
-                    {reconnectCount > 0 && <Badge tone="neutral" className="text-xs">重连 {reconnectCount}/3</Badge>}
-                  </div>
-                  <div className="ml-auto flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      采样: {snapshots.length} 次
-                      {snapshots.length > 0 && ` · ${snapshots[snapshots.length - 1].elapsed.toFixed(0)}s`}
-                    </span>
-                    {monitoring ? (
-                      <Button onClick={handleStopMonitor} variant="danger" size="sm" className="gap-1.5">
-                        <Square className="size-3" />停止采集
-                      </Button>
-                    ) : (
-                      currentSession && currentSession.status === 'pending' && (
-                        <Button onClick={handleStartMonitor} size="sm" className="gap-1.5">
-                          <Play className="size-3" />开始采集
-                        </Button>
-                      )
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Live values */}
-              {latestValues && (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                  {['cpu', 'memory', 'fps', 'jank', 'battery', 'network'].map((key) => {
-                    let val = '—'
-                    const data = latestValues[key]
-                    if (key === 'cpu' && data?.appCpuRate !== undefined) val = `${data.appCpuRate}%`
-                    else if (key === 'memory' && data?.total !== undefined) val = `${data.total} MB`
-                    else if (key === 'fps' && data?.fps !== undefined) val = `${data.fps} fps`
-                    else if (key === 'jank' && data?.jank !== undefined) val = `${data.jank} 次`
-                    else if (key === 'battery' && data?.level !== undefined) val = `${data.level}% / ${data.temperature}°C`
-                    else if (key === 'network' && data?.recv !== undefined) val = `${data.recv} KB/s`
-                    if (key === 'battery' || key === 'network') return null // hide optional ones in MVP
-                    return (
-                      <Card key={key} className="p-3">
-                        <p className="text-xs text-muted-foreground">{METRIC_LABELS[key] ?? key}</p>
-                        <p className="text-2xl font-bold tabular-nums">{val}</p>
-                      </Card>
-                    )
-                  })}
-                </div>
-              )}
-
-              {!monitoring && snapshots.length === 0 && (
-                <Card>
-                  <CardContent className="grid min-h-[200px] place-items-center text-sm text-muted-foreground">
-                    <div className="text-center space-y-2">
-                      <Gauge className="size-10 mx-auto opacity-30" />
-                      <p>等待采集开始…</p>
-                      <p className="text-xs">在"设备与采集"页创建会话并点击"开始采集"</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Realtime trend charts */}
-              {snapshots.length > 0 && (
-                <PerfTrendChart snapshots={snapshots} selectedMetrics={selectedMetrics} />
-              )}
-            </div>
+            <MonitorPanel
+              monitoring={monitoring}
+              wsMode={wsMode}
+              reconnectCount={reconnectCount}
+              snapshots={snapshots}
+              latestValues={latestValues}
+              selectedMetrics={selectedMetrics}
+              currentSession={currentSession}
+              onStartMonitor={handleStartMonitor}
+              onStopMonitor={handleStopMonitor}
+            />
           )}
         </TabsContent>
 
         {/* ── Tab 3: History ── */}
         <TabsContent value="history">
           {activeTab === 'history' && (
-            <Card>
-              <CardHeader className="pb-2 flex-row items-center justify-between">
-                <CardTitle className="text-base">采集记录 ({totalSessions})</CardTitle>
-                <Button variant="ghost" size="icon" onClick={() => { void loadSessions() }} aria-label="刷新采集记录">
-                  <RefreshCw className="size-4" aria-hidden="true" />
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {sessions.length === 0 ? (
-                  <div className="grid min-h-[120px] place-items-center text-sm text-muted-foreground">
-                    暂无采集记录
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b text-left text-xs text-muted-foreground">
-                          <th className="py-2 pr-4">会话ID</th>
-                          <th className="py-2 pr-4">平台</th>
-                          <th className="py-2 pr-4">设备</th>
-                          <th className="py-2 pr-4">应用</th>
-                          <th className="py-2 pr-4">时长</th>
-                          <th className="py-2 pr-4">状态</th>
-                          <th className="py-2 pr-4">时间</th>
-                          <th className="py-2">操作</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sessions.map((s) => (
-                          <tr key={s.id} className="border-b">
-                            <td className="py-2 pr-4 font-mono text-xs">{s.session_id}</td>
-                            <td className="py-2 pr-4">{s.platform}</td>
-                            <td className="py-2 pr-4 max-w-[120px] truncate" title={s.device_name}>{s.device_name}</td>
-                            <td className="py-2 pr-4 font-mono text-xs max-w-[150px] truncate" title={s.pkg_name}>{s.pkg_name}</td>
-                            <td className="py-2 pr-4">{s.actual_duration_s || s.duration}s</td>
-                            <td className="py-2 pr-4">
-                              <Badge tone={STATUS_TONES[s.status] ?? 'neutral'} className="text-xs">
-                                {STATUS_LABELS[s.status] ?? s.status}
-                              </Badge>
-                            </td>
-                            <td className="py-2 pr-4 text-xs text-muted-foreground">
-                              {s.created_at ? new Date(s.created_at).toLocaleString() : ''}
-                            </td>
-                            <td className="py-2">
-                              <div className="flex gap-1">
-                                <Button variant="ghost" size="sm" onClick={() => loadReport(s.id)} disabled={s.status !== 'completed'}>
-                                  报告
-                                </Button>
-                                <Button variant="ghost" size="sm" onClick={() => {
-                                  setCompareA(compareA === s.id ? null : s.id)
-                                  if (compareA && compareA !== s.id) setCompareB(s.id)
-                                }}>
-                                  {compareA === s.id ? '已选A' : compareB === s.id ? '已选B' : '对比'}
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-                {compareA && compareB && (
-                  <div className="mt-3 flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">已选择 #{compareA} vs #{compareB}</span>
-                    <Button size="sm" onClick={handleCompare}>执行对比</Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <SessionHistoryPanel
+              sessions={sessions}
+              totalSessions={totalSessions}
+              compareA={compareA}
+              compareB={compareB}
+              setCompareA={setCompareA}
+              setCompareB={setCompareB}
+              onLoadReport={loadReport}
+              onCompare={handleCompare}
+              onRefresh={() => { void loadSessions() }}
+            />
           )}
         </TabsContent>
 
         {/* ── Tab 4: Report & Compare ── */}
         <TabsContent value="report">
           {activeTab === 'report' && (
-            <div className="space-y-4">
-              {/* Report */}
-              {report && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">
-                      采集报告: {report.session.session_id}
-                      <Badge tone="neutral" className="ml-2 text-xs">
-                        {STATUS_LABELS[report.session.status] ?? report.session.status}
-                      </Badge>
-                    </CardTitle>
-                    <p className="text-xs text-muted-foreground">
-                      {report.session.device_name} · {report.session.pkg_name} · {report.session.platform} · {report.session.actual_duration_s || report.session.duration}s
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    {report.metrics.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">暂无指标数据</p>
-                    ) : (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {report.metrics.map((m) => (
-                          <MetricStatCard key={m.metric_type} stat={m} />
-                        ))}
-                      </div>
-                    )}
-
-                    {report.anomalies.length > 0 && (
-                      <div className="mt-4">
-                        <h4 className="text-sm font-medium mb-2">异常事件 ({report.anomalies.length})</h4>
-                        <div className="space-y-1">
-                          {report.anomalies.map((a, i) => (
-                            <div key={i} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
-                              <AlertCircle className="size-4 text-status-warning shrink-0" />
-                              <span className="text-xs text-muted-foreground font-mono">{new Date(a.timestamp * 1000).toLocaleTimeString()}</span>
-                              <Badge tone="neutral" className="text-xs">{a.event_type}</Badge>
-                              <span className="text-xs flex-1 truncate">{a.detail}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Compare */}
-              {compareResult && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">
-                      对比: {compareResult.session_a.session_id} vs {compareResult.session_b.session_id}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {compareResult.deltas.map((d) => (
-                        <Card key={d.metric_type} className={`p-3 ${d.significant ? (d.direction === 'degraded' ? 'border-status-danger-border bg-status-danger-muted' : 'border-status-success-border bg-status-success-muted') : ''}`}>
-                          <p className="text-xs text-muted-foreground">{METRIC_LABELS[d.metric_type] ?? d.metric_type}</p>
-                          <div className="flex items-baseline gap-2 mt-1">
-                            <span className="text-lg font-bold tabular-nums">{d.session_a_mean}</span>
-                            <span className="text-xs text-muted-foreground">vs</span>
-                            <span className="text-sm tabular-nums">{d.session_b_mean}</span>
-                          </div>
-                          <p className={`text-xs mt-0.5 ${
-                            d.direction === 'degraded' ? 'text-status-danger' :
-                            d.direction === 'improved' ? 'text-status-success' :
-                            'text-muted-foreground'
-                          }`}>
-                            {d.delta_absolute > 0 ? '+' : ''}{d.delta_absolute} ({d.delta_percent > 0 ? '+' : ''}{d.delta_percent}%)
-                            {d.significant && (
-                              <span className="ml-1 inline-flex items-center gap-1">
-                                {d.direction === 'degraded'
-                                  ? <><AlertCircle className="size-3.5" />恶化</>
-                                  : d.direction === 'improved'
-                                    ? <><CheckCircle2 className="size-3.5" />改善</>
-                                    : null}
-                              </span>
-                            )}
-                          </p>
-                        </Card>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {!report && !compareResult && (
-                <Card>
-                  <CardContent className="grid min-h-[160px] place-items-center text-sm text-muted-foreground">
-                    <div className="text-center space-y-2">
-                      <BarChart3 className="size-10 mx-auto opacity-30" />
-                      <p>在"历史记录"中点击"报告"查看单次采集报告</p>
-                      <p className="text-xs">或选择 2 个会话进行对比</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+            <ReportPanel
+              report={report}
+              compareResult={compareResult}
+            />
           )}
         </TabsContent>
       </Tabs>
-    </div>
-  )
-}
-
-// ── Trend chart ──
-
-const CHART_COLORS: Record<string, string> = {
-  fps: '#10b981',    // emerald-500
-  cpu: '#3b82f6',    // blue-500
-  memory: '#f59e0b', // amber-500
-  jank: '#ef4444',   // red-500
-}
-
-function PerfTrendChart({
-  snapshots,
-  selectedMetrics,
-}: {
-  snapshots: { ts: number; elapsed: number; values: Record<string, any> }[]
-  selectedMetrics: string[]
-}) {
-  const chartData = useMemo(() => {
-    // Take last 120 points to keep the chart readable
-    const recent = snapshots.slice(-120)
-    return recent.map((s) => {
-      const fpsVal = s.values?.fps?.fps ?? s.values?.fps ?? null
-      const cpuVal = s.values?.cpu?.appCpuRate ?? s.values?.cpu ?? null
-      const memVal = s.values?.memory?.total ?? s.values?.memory?.pss ?? s.values?.memory ?? null
-      const jankVal = s.values?.jank?.jank ?? s.values?.jank ?? null
-      return {
-        elapsed: Number(s.elapsed.toFixed(1)),
-        fps: fpsVal != null ? Number(fpsVal) : null,
-        cpu: cpuVal != null ? Number(cpuVal) : null,
-        memory: memVal != null ? Number(memVal) : null,
-        jank: jankVal != null ? Number(jankVal) : null,
-      }
-    })
-  }, [snapshots])
-
-  const visibleMetrics = selectedMetrics.filter((m) => m !== 'startup' && m !== 'anr')
-
-  if (visibleMetrics.length === 0) return null
-
-  return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      {/* FPS chart — primary, always full-width on mobile */}
-      {(visibleMetrics.includes('fps') || visibleMetrics.includes('jank')) && (
-        <Card className={visibleMetrics.length > 2 ? 'lg:col-span-2' : ''}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">帧率 FPS</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartFrame
-              title="帧率 FPS"
-              summary={`共 ${chartData.length} 个采样点，展示帧率与卡顿次数随采集时间的变化。`}
-              data={chartData}
-              columns={[
-                { key: 'elapsed', label: '采集时间', format: (value) => `${value}s` },
-                { key: 'fps', label: 'FPS', format: (value) => value == null ? '—' : `${value} fps` },
-                { key: 'jank', label: '卡顿', format: (value) => value == null ? '—' : `${value} 次` },
-              ]}
-            >
-              <div className="h-[220px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" />
-                  <XAxis
-                    dataKey="elapsed"
-                    tick={{ fontSize: 12 }}
-                    tickFormatter={(v: number) => `${v}s`}
-                    className="text-muted-foreground"
-                  />
-                  <YAxis
-                    yAxisId="fps"
-                    domain={[0, 'auto']}
-                    tick={{ fontSize: 12 }}
-                    className="text-muted-foreground"
-                  />
-                  <Tooltip
-                    contentStyle={{ fontSize: 12 }}
-                    labelFormatter={(v: any) => `${v}s`}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  {visibleMetrics.includes('fps') && (
-                    <Line
-                      yAxisId="fps"
-                      type="monotone"
-                      dataKey="fps"
-                      stroke={CHART_COLORS.fps}
-                      strokeWidth={2}
-                      dot={false}
-                      name="FPS"
-                      unit=" fps"
-                      connectNulls
-                    />
-                  )}
-                  {visibleMetrics.includes('jank') && (
-                    <Line
-                      yAxisId="fps"
-                      type="stepAfter"
-                      dataKey="jank"
-                      stroke={CHART_COLORS.jank}
-                      strokeWidth={1.5}
-                      dot={false}
-                      name="Jank"
-                      unit=" 次"
-                      connectNulls
-                    />
-                  )}
-                </LineChart>
-              </ResponsiveContainer>
-              </div>
-            </ChartFrame>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* CPU chart */}
-      {visibleMetrics.includes('cpu') && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">CPU 使用率</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartFrame
-              title="CPU 使用率"
-              summary={`共 ${chartData.length} 个采样点，单位为百分比。`}
-              data={chartData}
-              columns={[
-                { key: 'elapsed', label: '采集时间', format: (value) => `${value}s` },
-                { key: 'cpu', label: 'CPU 使用率', format: (value) => value == null ? '—' : `${value}%` },
-              ]}
-            >
-              <div className="h-[220px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" />
-                  <XAxis
-                    dataKey="elapsed"
-                    tick={{ fontSize: 12 }}
-                    tickFormatter={(v: number) => `${v}s`}
-                    className="text-muted-foreground"
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    tick={{ fontSize: 12 }}
-                    className="text-muted-foreground"
-                  />
-                  <Tooltip
-                    contentStyle={{ fontSize: 12 }}
-                    labelFormatter={(v: any) => `${v}s`}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="cpu"
-                    stroke={CHART_COLORS.cpu}
-                    strokeWidth={2}
-                    dot={false}
-                    name="CPU"
-                    unit="%"
-                    connectNulls
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-              </div>
-            </ChartFrame>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Memory chart */}
-      {visibleMetrics.includes('memory') && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">内存</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartFrame
-              title="内存"
-              summary={`共 ${chartData.length} 个采样点，单位为 MB。`}
-              data={chartData}
-              columns={[
-                { key: 'elapsed', label: '采集时间', format: (value) => `${value}s` },
-                { key: 'memory', label: '内存', format: (value) => value == null ? '—' : `${value} MB` },
-              ]}
-            >
-              <div className="h-[220px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" />
-                  <XAxis
-                    dataKey="elapsed"
-                    tick={{ fontSize: 12 }}
-                    tickFormatter={(v: number) => `${v}s`}
-                    className="text-muted-foreground"
-                  />
-                  <YAxis
-                    domain={[0, 'auto']}
-                    tick={{ fontSize: 12 }}
-                    className="text-muted-foreground"
-                  />
-                  <Tooltip
-                    contentStyle={{ fontSize: 12 }}
-                    labelFormatter={(v: any) => `${v}s`}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="memory"
-                    stroke={CHART_COLORS.memory}
-                    strokeWidth={2}
-                    dot={false}
-                    name="内存"
-                    unit=" MB"
-                    connectNulls
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-              </div>
-            </ChartFrame>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  )
-}
-
-// ── Metric stat card ──
-
-function MetricStatCard({ stat }: { stat: MetricStatsItem }) {
-  const label = METRIC_LABELS[stat.metric_type] ?? stat.metric_type
-  const unit = stat.unit || METRIC_UNITS[stat.metric_type] || ''
-  return (
-    <div className={`rounded-lg border p-3 ${
-      stat.passed ? 'border-status-success-border bg-status-success-muted dark:bg-status-success-muted' : 'border-status-danger-border bg-status-danger-muted dark:bg-status-danger-muted'
-    }`}>
-      <div className="flex items-center gap-1.5 mb-1">
-        <span className="text-xs font-medium">{label}</span>
-        {stat.passed ? <CheckCircle2 className="size-3 text-status-success" /> : <XCircle className="size-3 text-status-danger" />}
-      </div>
-      <p className="text-2xl font-bold tabular-nums">
-        {stat.mean}
-        <span className="text-sm font-normal text-muted-foreground ml-1">{unit}</span>
-      </p>
-      <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
-        <span>中位: {stat.median}</span>
-        <span>P95: {stat.p95}</span>
-        <span>最小: {stat.min_val}</span>
-        <span>最大: {stat.max_val}</span>
-        <span className="col-span-2">样本: {stat.samples} · SD: {stat.stddev}</span>
-      </div>
     </div>
   )
 }

@@ -57,7 +57,7 @@ def triage_failed_cases(
         TestPlanCase, TestExecution.plan_case_id == TestPlanCase.id
     ).filter(
         TestPlanCase.plan_id == plan_id,
-        TestExecution.status == "fail",
+        TestExecution.status == "failed",
     ).all()
 
     if not executions:

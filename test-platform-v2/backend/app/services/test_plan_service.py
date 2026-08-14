@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.core.base_service import batch_user_names
 from app.core.config import settings
+from app.core.execution_status import canonical_exec_status
 
 logger = logging.getLogger(__name__)
 from app.models.test_case import TestCase
@@ -246,6 +247,8 @@ def execute_case(
 
     now = datetime.now()
     trace_id = extract_trace_id(actual_result) or extract_trace_id(notes) or ""
+    # Batch 182（P1-06）：统一词表兜底（调用方可能传旧值）
+    status = canonical_exec_status(status)
     exec_row = TestExecution(
         plan_case_id=pcase_id,
         executor_id=executor_id,
@@ -419,13 +422,22 @@ def _batch_calc_stats(db: Session, plan_ids: set[int]) -> dict[int, dict]:
     for plan_id, s in rows:
         entry = stats[plan_id]
         entry["total"] += 1
-        key = s if s in ("pending", "pass", "fail", "skip", "block") else "pending"
-        if key == "pass":
-            entry["pass_"] += 1
-        else:
-            entry[key] += 1
+        # Batch 182（P1-06）：DB 词表已统一为 passed/failed/skipped/blocked，
+        # 响应键（pass_/fail/skip/block）保持兼容映射
+        key = _STATS_RESPONSE_KEY.get(canonical_exec_status(s), "pending")
+        entry[key] += 1
 
     return stats
+
+
+# DB 状态 → 计划统计响应键（响应契约兼容）
+_STATS_RESPONSE_KEY = {
+    "pending": "pending",
+    "passed": "pass_",
+    "failed": "fail",
+    "skipped": "skip",
+    "blocked": "block",
+}
 
 
 def _calc_stats(db: Session, plan_id: int) -> dict:
@@ -513,7 +525,7 @@ def auto_execute_api_cases(
                 environment_id=environment_id,
             )
             api_pass = exec_result.get("all_pass", False)
-            status = "pass" if api_pass else "fail"
+            status = "passed" if api_pass else "failed"
             actual_result = json.dumps(exec_result, ensure_ascii=False, default=str)
 
             # 创建执行记录
@@ -549,7 +561,7 @@ def auto_execute_api_cases(
                 failed += 1
 
         except Exception as e:
-            status = "fail"
+            status = "failed"
             exec_result = {"error": str(e), "status_code": 0}
             actual_result = json.dumps(exec_result, ensure_ascii=False)
             exec_status_code, exec_error_type, exec_error_message = _execution_error_fields(actual_result)
@@ -910,7 +922,7 @@ def _register_plan_api_snapshot(
     item = ApiExecutionTaskItem(
         task_id=task.id,
         case_id=tc.id,
-        status="passed" if status == "pass" else "failed",
+        status=canonical_exec_status(status),
         duration_ms=float(exec_result.get("duration_ms") or 0),
         request_snapshot=json.dumps(exec_result.get("request_snapshot") or {}, ensure_ascii=False, default=str),
         response_snapshot=json.dumps(exec_result.get("response_snapshot") or {}, ensure_ascii=False, default=str),
@@ -992,7 +1004,7 @@ def execute_all_cases(
         tc = _case_map.get(pc.case_id)
         if not tc:
             skipped += 1
-            details.append({"plan_case_id": pc.id, "case_id": pc.case_id, "case_title": "(已删除)", "case_type": "unknown", "status": "skip", "error": "用例不存在"})
+            details.append({"plan_case_id": pc.id, "case_id": pc.case_id, "case_title": "(已删除)", "case_type": "unknown", "status": "skipped", "error": "用例不存在"})
             continue
 
         if tc.case_type == "api":
@@ -1003,11 +1015,11 @@ def execute_all_cases(
                     environment_id=environment_id,
                 )
                 api_pass = exec_result.get("all_pass", False)
-                status = "pass" if api_pass else "fail"
+                status = "passed" if api_pass else "failed"
                 actual_result = json.dumps(exec_result, ensure_ascii=False, default=str)
                 notes = f"批量自动执行: {tc.api_method or 'GET'} {tc.api_endpoint}"
             except Exception as e:
-                status = "fail"
+                status = "failed"
                 exec_result = {"error": str(e), "status_code": 0}
                 actual_result = json.dumps(exec_result, ensure_ascii=False)
                 notes = f"批量执行异常: {e}"
@@ -1015,7 +1027,7 @@ def execute_all_cases(
             # UI 用例：真实编译 + headless Chromium 执行（batch-74 统一编排）
             try:
                 ui_result = _execute_ui_case_sync(tc, base_url=base_url, storage_state=ui_storage_state)
-                status = "pass" if ui_result.get("ok") else "fail"
+                status = "passed" if ui_result.get("ok") else "failed"
                 actual_result = json.dumps(ui_result, ensure_ascii=False, default=str)
                 if ui_result.get("ok"):
                     notes = (
@@ -1025,7 +1037,7 @@ def execute_all_cases(
                 else:
                     notes = f"UI 执行失败: {_ui_error_summary(ui_result)}"
             except Exception as e:
-                status = "fail"
+                status = "failed"
                 actual_result = json.dumps({"error": str(e)}, ensure_ascii=False)
                 notes = f"UI 执行异常: {e}"
         else:
@@ -1037,7 +1049,7 @@ def execute_all_cases(
             ):
                 try:
                     ui_result = _execute_ui_case_sync(tc, base_url=base_url, storage_state=ui_storage_state)
-                    status = "pass" if ui_result.get("ok") else "fail"
+                    status = "passed" if ui_result.get("ok") else "failed"
                     actual_result = json.dumps(ui_result, ensure_ascii=False, default=str)
                     notes = (
                         f"手动用例自动转 UI 执行: {ui_result.get('total', 0)} 条断言"
@@ -1046,11 +1058,11 @@ def execute_all_cases(
                     if ui_result.get("ok") or ui_result.get("spec_code"):
                         _write_plan_ui_job(db, tc, ui_result.get("spec_code", ""), executor_id, project_id)
                 except Exception as e:
-                    status = "fail"
+                    status = "failed"
                     actual_result = json.dumps({"error": str(e)}, ensure_ascii=False)
                     notes = f"手动用例转 UI 执行异常: {e}"
             else:
-                status = "skip"
+                status = "skipped"
                 actual_result = ""
                 notes = "需人工执行（无步骤/优先级低于 P1/auto_ui 关闭）"
 
@@ -1086,7 +1098,7 @@ def execute_all_cases(
                     now=now,
                 )
             _register_plan_api_snapshot(db, api_task, tc, exec_row, exec_result, status, now)
-            if status == "pass":
+            if status == "passed":
                 api_passed += 1
             else:
                 api_failed += 1
@@ -1096,10 +1108,10 @@ def execute_all_cases(
         pc.last_executed_at = now
         pc.executor_id = executor_id
 
-        if status == "pass":
+        if status == "passed":
             passed += 1
             executed += 1
-        elif status == "fail":
+        elif status == "failed":
             failed += 1
             executed += 1
         else:
@@ -1111,7 +1123,7 @@ def execute_all_cases(
             "case_title": tc.title,
             "case_type": tc.case_type,
             "status": status,
-            "error": notes if status == "skip" else ("" if status == "pass" else notes),
+            "error": notes if status == "skipped" else ("" if status == "passed" else notes),
         })
 
         # Batch 174（FIX-173-P0-03）：分批短事务提交，避免整计划单长事务
@@ -1429,4 +1441,67 @@ def create_plan_with_cases(
         ))
 
     return {"id": plan.id, "plan_id": plan_id_str, "name": name, "case_count": len(case_ids)}
+
+
+# ── Batch 182（C181-1）open_api 路由层 ORM 收敛薄函数 ──
+
+def get_plan_row(db: Session, plan_id: int, project_id: int) -> TestPlan | None:
+    """项目内按 id 查询计划行（open_api CI 触发复用）。"""
+    return db.scalar(
+        select(TestPlan).where(TestPlan.id == plan_id, TestPlan.project_id == project_id)
+    )
+
+
+def list_plan_cases(db: Session, plan_id: int) -> list[TestPlanCase]:
+    """计划下全部用例关联行（open_api CI 触发复用）。"""
+    return list(
+        db.scalars(select(TestPlanCase).where(TestPlanCase.plan_id == plan_id)).all()
+    )
+
+
+def get_execution(db: Session, run_id: int) -> TestExecution | None:
+    """按 id 查询执行记录（open_api CI 查询/回写复用）。"""
+    return db.scalar(select(TestExecution).where(TestExecution.id == run_id))
+
+
+def get_plan_case(db: Session, plan_case_id: int) -> TestPlanCase | None:
+    """按 id 查询计划用例行（连带 plan，避免路由层惰性加载）。"""
+    return db.scalar(
+        select(TestPlanCase)
+        .where(TestPlanCase.id == plan_case_id)
+        .options(joinedload(TestPlanCase.plan))
+    )
+
+
+def trigger_plan_from_ci(
+    db: Session,
+    plan_id: int,
+    project_id: int,
+    *,
+    token_name: str,
+) -> tuple[TestPlan | None, int]:
+    """外部 CI 触发计划：为全部用例创建 pending 执行并回写 last_status。
+
+    返回 (plan_row, executed)；plan 不存在返回 (None, 0)。
+    沿用调用方会话、不 commit（提交由路由层负责）。
+    """
+    plan = get_plan_row(db, plan_id, project_id)
+    if not plan:
+        return None, 0
+    pcases = list_plan_cases(db, plan_id)
+
+    now = datetime.now()
+    executed = 0
+    for pc in pcases:
+        exec_row = TestExecution(
+            plan_case_id=pc.id, executor_id=0, status="pending",
+            actual_result="", notes=f"[CI 自动触发] token={token_name}",
+            executed_at=now,
+        )
+        db.add(exec_row)
+        pc.last_status = "pending"
+        pc.last_executed_at = now
+        executed += 1
+    db.flush()
+    return plan, executed
 

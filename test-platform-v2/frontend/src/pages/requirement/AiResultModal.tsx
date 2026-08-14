@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import {
   confirmApiMatches,
@@ -15,26 +15,22 @@ import type {
   AIGenerateResult, AIGeneratedCase, FeatureExtractionResult, RequirementAnalysis,
   TestModule, ApiMatchItem, ApiService,
 } from '@/types'
-import { Button } from '@/ui'
-import { Badge } from '@/ui'
-import { Card, CardContent } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Badge, Button } from '@/ui'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table'
-import {
-  Search, CheckCircle2, Info, Import, Loader2, FileText, Edit,
-  Layers, ChevronDown, ChevronRight, AlertTriangle, RefreshCw,
-  Monitor, Smartphone, Globe, Server, Zap, Link2, BarChart3, ArrowRight, Pencil, Plus, ClipboardCheck,
+  Search, CheckCircle2, Info, Import, Loader2, FileText,
+  Layers, AlertTriangle, RefreshCw,
+  Monitor, Server, Zap, BarChart3,
 } from '@/lib/icons'
+import AiAnalysisPanel from './components/AiAnalysisPanel'
+import AiExtractionPanel from './components/AiExtractionPanel'
+import AiFuncCasesPanel from './components/AiFuncCasesPanel'
+import AiApiCasesPanel from './components/AiApiCasesPanel'
+import AiRegressionPanel from './components/AiRegressionPanel'
+import AiCoveragePanel from './components/AiCoveragePanel'
 
 interface Props {
   open: boolean
@@ -47,290 +43,6 @@ interface Props {
   onExtractionConfirmAndGenerate: (aiResult: AIGenerateResult) => void
   onExtractionReject: () => void
 }
-
-const PRIORITY_CLASSES: Record<string, string> = {
-  P0: 'border-status-danger-border bg-status-danger-muted text-status-danger',
-  P1: 'border-status-warning-border bg-status-warning-muted text-status-warning',
-  P2: 'border-status-info-border bg-status-info-muted text-status-info',
-  P3: 'border-border bg-muted text-muted-foreground',
-}
-
-const SEVERITY_CONFIG: Record<string, { color: string; label: string }> = {
-  high: { color: 'var(--color-status-danger)', label: '高' },
-  medium: { color: 'var(--color-status-warning)', label: '中' },
-  low: { color: 'var(--color-status-info)', label: '低' },
-}
-
-const SEVERITY_BADGE_CLASSES: Record<string, string> = {
-  high: 'border-status-danger-border bg-status-danger-muted text-status-danger',
-  medium: 'border-status-warning-border bg-status-warning-muted text-status-warning',
-  low: 'border-status-info-border bg-status-info-muted text-status-info',
-}
-
-const TYPE_LABELS: Record<string, string> = {
-  functional: '功能',
-  ui: '界面',
-  data: '数据',
-  integration: '集成',
-}
-
-// ── Client scope display helpers ──
-
-const CLIENT_SCOPE_CONFIG: Record<string, { icon: typeof Monitor; label: string; className: string }> = {
-  app: { icon: Smartphone, label: 'App', className: 'border-status-success-border bg-status-success-muted text-status-success' },
-  pc: { icon: Monitor, label: 'PC', className: 'border-status-info-border bg-status-info-muted text-status-info' },
-  web: { icon: Globe, label: 'Web', className: 'border-status-accent-border bg-status-accent-muted text-status-accent' },
-}
-
-function ClientScopeBadges({ clients }: { clients: string[] }) {
-  if (!clients || clients.length === 0) return null
-  return (
-    <span className="inline-flex gap-0.5 ml-1 align-middle">
-      {clients.map((c) => {
-        const cfg = CLIENT_SCOPE_CONFIG[c]
-        if (!cfg) return null
-        const Icon = cfg.icon
-        return (
-          <Badge key={c} tone="neutral" className={`text-xs leading-[16px] px-1 gap-0.5 ${cfg.className}`} title={cfg.label + '端'}>
-            <Icon className="size-3" />
-            {cfg.label}
-          </Badge>
-        )
-      })}
-    </span>
-  )
-}
-
-/** VersionMarkerBadge — shows version origin for function points (batch-28). */
-function VersionMarkerBadge({ fp, diffStatus, baseVersion }: {
-  fp: { _inherited?: boolean; _from_version?: string }
-  diffStatus?: string
-  baseVersion?: string
-}) {
-  if (fp._inherited) {
-    return (
-      <Badge tone="neutral" className="text-xs text-status-info border-status-info-border">
-        <ArrowRight className="size-3" />沿用自 {fp._from_version || baseVersion || '?'}
-      </Badge>
-    )
-  }
-  if (diffStatus === 'update') {
-    return (
-      <Badge tone="neutral" className="text-xs text-status-warning border-status-warning-border">
-        <Pencil className="size-3" />本版本变更
-      </Badge>
-    )
-  }
-  return (
-    <Badge tone="neutral" className="text-xs text-status-success border-status-success-border">
-      <Plus className="size-3" />首次提取
-    </Badge>
-  )
-}
-
-function renderSteps(steps: string) {
-  try {
-    const arr = JSON.parse(steps)
-    if (!Array.isArray(arr) || arr.length === 0) return <span className="text-muted-foreground text-xs">-</span>
-    return (
-      <ol className="m-0 pl-[18px] max-w-[230px] break-words">
-        {arr.map((s: any, i: number) => (
-          <li key={i} className="text-xs leading-[18px] break-words">
-            <span className="text-foreground">{s.desc}</span>
-            {s.expected && <span className="text-status-success ml-1">→ {s.expected}</span>}
-          </li>
-        ))}
-      </ol>
-    )
-  } catch {
-    return <span className="text-xs max-w-[230px] inline-block break-words">{steps}</span>
-  }
-}
-
-function AnalysisPanel({ analysis }: { analysis: RequirementAnalysis }) {
-  const { extracted_requirements, overall_assessment } = analysis
-  const totalIssues = extracted_requirements.reduce((sum, er) => sum + (er.issues?.length || 0), 0)
-  const highIssues = extracted_requirements.reduce(
-    (sum, er) => sum + (er.issues || []).filter((i) => i.severity === 'high').length, 0,
-  )
-  const typeLabels: Record<string, string> = { functional: '功能', ui: '界面', data: '数据', integration: '集成' }
-
-  return (
-    <div className="max-h-[60vh] overflow-auto px-1">
-      {overall_assessment && (
-        <Alert className="mb-4">
-          <Info className="size-4" />
-          <AlertTitle>整体评估</AlertTitle>
-          <AlertDescription>{overall_assessment}</AlertDescription>
-        </Alert>
-      )}
-
-      {extracted_requirements.map((er) => {
-        const issueCount = er.issues?.length || 0
-        const hasHighIssue = er.issues?.some((i) => i.severity === 'high')
-        const hasMediumIssue = er.issues?.some((i) => i.severity === 'medium')
-        const issueBadgeClass = hasHighIssue
-          ? 'border-status-danger-border bg-status-danger-muted text-status-danger'
-          : hasMediumIssue
-            ? 'border-status-warning-border bg-status-warning-muted text-status-warning'
-            : 'border-status-info-border bg-status-info-muted text-status-info'
-
-        return (
-          <Card key={er.id} size="sm" className="mb-3">
-            <CardContent className="pt-3">
-              <div className="flex items-center gap-2 flex-wrap mb-2">
-                <Badge tone="neutral" className="border-status-accent-border bg-status-accent-muted text-status-accent">
-                  {er.id}
-                </Badge>
-                <span className="font-medium text-sm">{er.title}</span>
-                <Badge tone="neutral">{typeLabels[er.type] || er.type}</Badge>
-                {issueCount > 0 && (
-                  <Badge tone="neutral" className={issueBadgeClass}>
-                    {issueCount} 问题
-                  </Badge>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground mb-3">{er.description}</p>
-
-              {(er.issues || []).map((iss, idx) => (
-                <div
-                  key={idx}
-                  style={{ borderColor: SEVERITY_CONFIG[iss.severity]?.color || 'var(--border)' }}
-                  className="mb-2 rounded border bg-muted/50 p-2"
-                >
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      tone="neutral"
-                      className={SEVERITY_BADGE_CLASSES[iss.severity] || 'border-border bg-muted text-muted-foreground'}
-                    >
-                      {SEVERITY_CONFIG[iss.severity]?.label || iss.severity}
-                    </Badge>
-                    <span className="text-sm">{iss.description}</span>
-                  </div>
-                  {iss.suggestion && (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      建议：{iss.suggestion}
-                    </p>
-                  )}
-                </div>
-              ))}
-
-              {issueCount === 0 && (
-                <span className="inline-flex items-center gap-1 text-xs text-status-success"><CheckCircle2 className="size-3.5" aria-hidden="true" />无明显问题</span>
-              )}
-            </CardContent>
-          </Card>
-        )
-      })}
-
-      {extracted_requirements.length === 0 && (
-        <div className="text-center py-5 text-muted-foreground">未提取到需求功能点</div>
-      )}
-    </div>
-  )
-}
-
-// ── Inline edit form for functional cases (no API fields) ──
-
-function InlineEditRow({
-  initial,
-  onSave,
-  onCancel,
-}: {
-  initial: AIGeneratedCase
-  onSave: (updated: AIGeneratedCase) => Promise<boolean>
-  onCancel: () => void
-}) {
-  const [title, setTitle] = useState(initial.title || '')
-  const [priority, setPriority] = useState(initial.priority || 'P2')
-  const [module, setModule] = useState(initial.module || '')
-  const [preconditions, setPreconditions] = useState(initial.preconditions || '')
-  const [steps, setSteps] = useState(() => {
-    try { return JSON.stringify(JSON.parse(initial.steps), null, 2) } catch { return initial.steps || '' }
-  })
-  const [expectedResult, setExpectedResult] = useState(initial.expected_result || '')
-  const [remark, setRemark] = useState(initial.remark || '')
-  const [saving, setSaving] = useState(false)
-
-  const handleSave = async () => {
-    const t = title.trim()
-    if (!t) { toast.warning('请输入用例标题'); return }
-    let s = steps.trim()
-    if (s) { try { JSON.parse(s) } catch { toast.warning('步骤需为有效 JSON 格式'); return } }
-    setSaving(true)
-    try {
-      await onSave({
-        ...initial,
-        title: t,
-        priority,
-        module: module.trim(),
-        preconditions: preconditions.trim(),
-        steps: s,
-        expected_result: expectedResult.trim(),
-        remark: remark.trim(),
-      })
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <TableRow className="bg-status-warning-muted border-status-warning-border">
-      <TableCell colSpan={9} className="p-0">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4">
-          <div className="sm:col-span-2 lg:col-span-3">
-            <label className="mb-1 block text-xs font-medium">用例标题 *</label>
-            <Input placeholder="用例标题" value={title} onChange={(e) => setTitle(e.target.value)} />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium">重要程度</label>
-            <Select value={priority} onValueChange={setPriority}>
-              <SelectTrigger size="sm"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {['P0', 'P1', 'P2', 'P3'].map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium">所属模块</label>
-            <Input placeholder="模块名" value={module} onChange={(e) => setModule(e.target.value)} />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium">备注</label>
-            <Input placeholder="备注信息" value={remark} onChange={(e) => setRemark(e.target.value)} />
-          </div>
-          <div className="sm:col-span-2 lg:col-span-3">
-            <label className="mb-1 block text-xs font-medium">前置条件</label>
-            <Textarea rows={2} placeholder="执行用例前需要满足的条件" value={preconditions} onChange={(e) => setPreconditions(e.target.value)} />
-          </div>
-          <div className="sm:col-span-2 lg:col-span-3">
-            <label className="mb-1 block text-xs font-medium">测试步骤 (JSON)</label>
-            <Textarea
-              rows={4}
-              placeholder='[{"desc":"操作描述","expected":"预期结果"}]'
-              value={steps}
-              onChange={(e) => setSteps(e.target.value)}
-              className="font-mono text-xs"
-            />
-          </div>
-          <div className="sm:col-span-2 lg:col-span-3">
-            <label className="mb-1 block text-xs font-medium">预期结果</label>
-            <Textarea rows={2} placeholder="整体预期结果描述" value={expectedResult} onChange={(e) => setExpectedResult(e.target.value)} />
-          </div>
-          <div className="sm:col-span-2 lg:col-span-3 flex items-center gap-2 pt-1">
-            <Button size="sm" onClick={handleSave} disabled={saving}>
-              {saving && <Loader2 className="size-3.5 animate-spin" />}
-              保存
-            </Button>
-            <Button size="sm" variant="secondary" onClick={onCancel} disabled={saving}>取消</Button>
-          </div>
-        </div>
-      </TableCell>
-    </TableRow>
-  )
-}
-
-// ── Main component ──
 
 export default function AiResultModal({
   open, result, extractionResult, documentId, mode = 'generate', onClose,
@@ -519,6 +231,14 @@ export default function AiResultModal({
     setSelectedFuncKeys((prev) =>
       prev.includes(index) ? prev.filter((k) => k !== index) : [...prev, index],
     )
+  }
+
+  const toggleApiAll = () => {
+    if (selectedApiKeys.length === apiCases.length) {
+      setSelectedApiKeys([])
+    } else {
+      setSelectedApiKeys(apiCases.map((c) => c.index))
+    }
   }
 
   const handleStartEdit = (c: AIGeneratedCase) => {
@@ -832,600 +552,86 @@ export default function AiResultModal({
             {/* ── Tab: 测试点（功能拆分审核） ── */}
             {hasExtraction && (
               <TabsContent value="extraction" className="mt-0">
-                <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[55vh]">
-                  {extractionModules.map((mod) => {
-                    const isExpanded = expandedModules.has(mod.id)
-                    const isSelected = selectedModules.has(mod.id)
-                    const fpCount = mod.function_points?.length || 0
-                    const issueCount =
-                      mod.function_points?.reduce((s, fp) => s + (fp.issues?.length || 0), 0) || 0
-
-                    return (
-                      <Card
-                        key={mod.id}
-                        className={`border transition-colors ${
-                          isSelected ? 'border-primary/40' : 'border-muted opacity-60'
-                        }`}
-                      >
-                        {/* Module header */}
-                        <div className="flex items-center gap-3 px-4 py-3">
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => toggleModuleSelect(mod.id)}
-                          />
-                          <button
-                            className="flex-1 flex items-center gap-2 text-left hover:opacity-80"
-                            onClick={() => toggleModuleExpand(mod.id)}
-                          >
-                            {isExpanded ? (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                            )}
-                            <Badge tone="neutral" className="font-mono text-xs">
-                              {mod.id}
-                            </Badge>
-                            <span className="font-medium text-sm">{mod.name}</span>
-                            <Badge tone="neutral" className="text-xs">
-                              {fpCount} 个功能点
-                            </Badge>
-                            {issueCount > 0 && (
-                              <Badge
-                                tone="neutral"
-                                className="text-xs border-status-warning-border bg-status-warning-muted text-status-warning"
-                              >
-                                {issueCount} 个问题
-                              </Badge>
-                            )}
-                          </button>
-                        </div>
-
-                        {/* Module description + function points */}
-                        {isExpanded && (
-                          <CardContent className="pb-3 pt-0">
-                            {mod.description && (
-                              <p className="text-sm text-muted-foreground mb-3">{mod.description}</p>
-                            )}
-
-                            <div className="space-y-2">
-                              {mod.function_points?.map((fp) => (
-                                <div
-                                  key={fp.id}
-                                  className="border rounded-lg p-3 bg-muted/30"
-                                >
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <Badge tone="neutral" className="font-mono text-xs">
-                                      {fp.id}
-                                    </Badge>
-                                    <span className="text-sm font-medium">{fp.title}</span>
-                                    <Badge tone="neutral" className="text-xs">
-                                      {TYPE_LABELS[fp.type] || fp.type}
-                                    </Badge>
-                                    <ClientScopeBadges clients={fp.client_scope} />
-                                    <VersionMarkerBadge
-                                      fp={fp as any}
-                                      diffStatus={extractionResult?.diff_summary ? 'update' : undefined}
-                                      baseVersion={extractionResult?.inherited_from_version}
-                                    />
-                                  </div>
-                                  {fp.description && (
-                                    <p className="text-xs text-muted-foreground mb-2">
-                                      {fp.description}
-                                    </p>
-                                  )}
-
-                                  {/* Issues */}
-                                  {fp.issues && fp.issues.length > 0 && (
-                                    <div className="space-y-1.5 mt-2">
-                                      {fp.issues.map((issue, i) => {
-                                        const sev = SEVERITY_CONFIG[issue.severity] || SEVERITY_CONFIG.low
-                                        return (
-                                          <div
-                                            key={i}
-                                            className="rounded border p-2 text-xs"
-                                            style={{ borderColor: sev.color }}
-                                          >
-                                            <Badge
-                                              tone="neutral"
-                                              className={`text-xs mr-1 ${
-                                                SEVERITY_BADGE_CLASSES[issue.severity] || ''
-                                              }`}
-                                            >
-                                              {sev.label}
-                                            </Badge>
-                                            <span className="text-foreground">{issue.description}</span>
-                                            {issue.suggestion && (
-                                              <span className="text-muted-foreground ml-1">
-                                                — 建议: {issue.suggestion}
-                                              </span>
-                                            )}
-                                          </div>
-                                        )
-                                      })}
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </CardContent>
-                        )}
-                      </Card>
-                    )
-                  })}
-                </div>
+                <AiExtractionPanel
+                  extractionModules={extractionModules}
+                  expandedModules={expandedModules}
+                  selectedModules={selectedModules}
+                  extractionResult={extractionResult}
+                  onToggleExpand={toggleModuleExpand}
+                  onToggleSelect={toggleModuleSelect}
+                />
               </TabsContent>
             )}
 
             {/* ── Tab: 需求分析 ── */}
             {hasAnalysis && (
               <TabsContent value="analysis" className="mt-0">
-                <AnalysisPanel analysis={analysis!} />
+                <AiAnalysisPanel analysis={analysis!} />
               </TabsContent>
             )}
 
             {/* ── Tab: 功能用例 ── */}
             {funcCases.length > 0 && (
               <TabsContent value="func" className="mt-0">
-                <div className="max-h-[55vh] overflow-auto border rounded-lg">
-                  <Table className="min-w-[1200px]">
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-10">
-                          <Checkbox
-                            checked={selectedFuncKeys.length === funcCases.length && funcCases.length > 0}
-                            onCheckedChange={toggleFuncAll}
-                          />
-                        </TableHead>
-                        <TableHead className="w-[210px]">用例标题</TableHead>
-                        <TableHead className="w-[80px] text-center">重要程度</TableHead>
-                        <TableHead className="w-[110px]">模块</TableHead>
-                        <TableHead className="w-[70px] text-center">适用端</TableHead>
-                        <TableHead className="w-[150px]">前提条件</TableHead>
-                        <TableHead className="w-[240px]">操作步骤</TableHead>
-                        <TableHead className="w-[210px]">预期结果</TableHead>
-                        <TableHead className="w-[110px]">备注</TableHead>
-                        <TableHead className="w-[60px] text-center">操作</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {funcCases.map((c) => {
-                        const display = getDisplayCase(c)
-                        const edited = isCaseEdited(c)
-                        const isEditing = editingIndex === c.index
-
-                        if (isEditing) {
-                          return (
-                            <InlineEditRow
-                              key={c.index}
-                              initial={display}
-                              onSave={handleSaveEdit}
-                              onCancel={() => setEditingIndex(null)}
-                            />
-                          )
-                        }
-
-                        return (
-                          <TableRow key={c.index} className={edited ? 'bg-status-warning-muted' : undefined}>
-                            <TableCell>
-                              <Checkbox
-                                checked={selectedFuncKeys.includes(c.index)}
-                                onCheckedChange={() => toggleFuncOne(c.index)}
-                              />
-                            </TableCell>
-                            <TableCell className="font-medium align-top whitespace-normal">
-                              <div className="break-words max-w-[200px]">
-                                {edited && <span className="text-status-warning mr-1" title="已修改">*</span>}
-                                {display.title}
-                                {display.imported && (
-                                  <Badge tone="neutral" className="ml-1.5 border-status-success-border bg-status-success-muted text-status-success text-xs leading-[16px]">
-                                    已导入
-                                  </Badge>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Badge tone="neutral" className={PRIORITY_CLASSES[display.priority] || 'border-border bg-muted text-muted-foreground'}>
-                                {display.priority}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="break-words max-w-[100px] text-xs align-top whitespace-normal">{display.module || '-'}</TableCell>
-                            <TableCell className="text-center align-top">
-                              <ClientScopeBadges clients={display.client_scope || []} />
-                            </TableCell>
-                            <TableCell className="break-words max-w-[140px] text-xs align-top whitespace-normal">{display.preconditions || '-'}</TableCell>
-                            <TableCell className="whitespace-normal">{renderSteps(display.steps)}</TableCell>
-                            <TableCell className="break-words max-w-[200px] text-xs align-top whitespace-normal">{display.expected_result || '-'}</TableCell>
-                            <TableCell className="break-words max-w-[100px] text-xs text-muted-foreground align-top whitespace-normal">{display.remark || '-'}</TableCell>
-                            <TableCell className="text-center">
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                              aria-label={edited ? '再次编辑用例' : '编辑用例'}
-                                onClick={() => handleStartEdit(c)}
-                              >
-                                <Edit className="size-3.5" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-                <div className="flex items-center justify-between mt-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted-foreground">
-                      已选 {selectedFuncKeys.length}/{funcCases.length} 条
-                      {funcCases.filter((c) => c.imported).length > 0 && (
-                        <span className="text-status-success ml-2">
-                          · 已导入 {funcCases.filter((c) => c.imported).length} 条
-                        </span>
-                      )}
-                    </span>
-                    <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
-                      <Checkbox
-                        checked={createPlan}
-                        onCheckedChange={(v) => setCreatePlan(!!v)}
-                        className="size-3.5"
-                      />
-                      同时创建测试计划
-                    </label>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => doImport(selectedFuncKeys)}
-                    disabled={importing || selectedFuncKeys.length === 0}
-                  >
-                    {importing ? <Loader2 className="size-3.5 animate-spin" /> : <Import className="size-3.5" />}
-                    导入功能用例 ({selectedFuncKeys.length})
-                  </Button>
-                </div>
+                <AiFuncCasesPanel
+                  funcCases={funcCases}
+                  selectedKeys={selectedFuncKeys}
+                  editingIndex={editingIndex}
+                  importing={importing}
+                  createPlan={createPlan}
+                  getDisplayCase={getDisplayCase}
+                  isCaseEdited={isCaseEdited}
+                  onToggleAll={toggleFuncAll}
+                  onToggleOne={toggleFuncOne}
+                  onStartEdit={handleStartEdit}
+                  onSaveEdit={handleSaveEdit}
+                  onCancelEdit={() => setEditingIndex(null)}
+                  onCreatePlanChange={(v) => setCreatePlan(v)}
+                  onImport={doImport}
+                />
               </TabsContent>
             )}
             {/* ── Tab: 接口用例 ── */}
             {apiCases.length > 0 && (
               <TabsContent value="api" className="mt-0">
-                <div className="max-h-[55vh] overflow-auto space-y-3 pr-1">
-                  {/* API Matches Banner */}
-                  <Alert className="border-status-success-border bg-status-success-muted">
-                      <Link2 className="size-4 text-status-success" />
-                      <AlertTitle className="text-status-success text-sm">
-                        候选匹配 {apiMatches.length} 个，已确认 {confirmedEndpointIds.size} 个
-                      </AlertTitle>
-                      <AlertDescription className="space-y-2 text-status-success text-xs">
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                          <Select
-                            value={selectedServiceId == null ? '' : String(selectedServiceId)}
-                            onValueChange={handleServiceChange}
-                          >
-                            <SelectTrigger className="h-8 w-full bg-card sm:w-[240px]" aria-label="选择 API 服务">
-                              <SelectValue placeholder="选择 API 服务后确认匹配" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {apiServices.map((service) => (
-                                <SelectItem key={service.id} value={String(service.id)}>
-                                  {service.display_name || service.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            className="bg-card"
-                            onClick={handleConfirmMatches}
-                            disabled={savingMatches || selectedServiceId == null}
-                          >
-                            {savingMatches && <Loader2 className="size-3.5 animate-spin" />}
-                            确认并保存匹配
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            className="bg-card"
-                            onClick={handleGenerateApiFromEndpoints}
-                            disabled={generatingApiFromEndpoints}
-                          >
-                            {generatingApiFromEndpoints && <Loader2 className="size-3.5 animate-spin" />}
-                            按已导入接口生成用例
-                          </Button>
-                        </div>
-                        <div>
-                          {apiMatches.slice(0, 8).map((m) => {
-                            const selected = confirmedEndpointIds.has(m.endpoint_id)
-                            return (
-                              <button
-                                key={`${m.req_id}-${m.endpoint_id}`}
-                                type="button"
-                                className="mr-1 mb-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                onClick={() => toggleMatchedEndpoint(m.endpoint_id)}
-                                aria-pressed={selected}
-                                aria-label={`${selected ? '取消' : '选择'}匹配 ${m.method} ${m.path}`}
-                              >
-                                <Badge
-                                  tone="neutral"
-                                  className={selected
-                                    ? 'border-status-success-border bg-status-success-muted text-status-success text-xs'
-                                    : 'border-status-success-border bg-card text-status-success text-xs'}
-                                >
-                                  {m.method} {m.path}
-                                </Badge>
-                              </button>
-                            )
-                          })}
-                          {apiMatches.length > 8 && <span className="text-muted-foreground">+{apiMatches.length - 8} 更多</span>}
-                        </div>
-                      </AlertDescription>
-                    </Alert>
-
-                  {loadingMatches && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-                      <Loader2 className="size-3.5 animate-spin" />
-                      正在匹配 API 端点...
-                    </div>
-                  )}
-
-                  {/* API Cases Table */}
-                  <div className="border rounded-lg">
-                    <Table className="min-w-[900px]">
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-10">
-                            <Checkbox
-                              checked={selectedApiKeys.length === apiCases.length && apiCases.length > 0}
-                              onCheckedChange={() => {
-                                if (selectedApiKeys.length === apiCases.length) {
-                                  setSelectedApiKeys([])
-                                } else {
-                                  setSelectedApiKeys(apiCases.map((c) => c.index))
-                                }
-                              }}
-                            />
-                          </TableHead>
-                          <TableHead className="w-[80px]">方法</TableHead>
-                          <TableHead className="w-[210px]">接口路径/用例标题</TableHead>
-                          <TableHead className="w-[80px] text-center">优先级</TableHead>
-                          <TableHead className="w-[110px]">模块</TableHead>
-                          <TableHead className="w-[150px]">请求/前置条件</TableHead>
-                          <TableHead className="w-[240px]">预期结果</TableHead>
-                          <TableHead className="w-[60px] text-center">匹配</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {apiCases.map((c) => {
-                          const display = getDisplayCase(c)
-                          const matchedEndpoint = apiMatches.find(
-                            (m) => m.endpoint_id && display.api_endpoint && m.path === display.api_endpoint
-                          )
-                          return (
-                            <TableRow key={c.index}>
-                              <TableCell>
-                                <Checkbox
-                                  checked={selectedApiKeys.includes(c.index)}
-                                  onCheckedChange={() => {
-                                    setSelectedApiKeys((prev) =>
-                                      prev.includes(c.index) ? prev.filter((k) => k !== c.index) : [...prev, c.index]
-                                    )
-                                  }}
-                                />
-                              </TableCell>
-                              <TableCell>
-                                <Badge
-                                  tone="neutral"
-                                  className={`text-xs font-mono ${
-                                    display.api_method === 'GET' ? 'border-status-info-border bg-status-info-muted text-status-info' :
-                                    display.api_method === 'POST' ? 'border-status-success-border bg-status-success-muted text-status-success' :
-                                    display.api_method === 'PUT' ? 'border-status-warning-border bg-status-warning-muted text-status-warning' :
-                                    display.api_method === 'DELETE' ? 'border-status-danger-border bg-status-danger-muted text-status-danger' :
-                                    'border-border bg-muted text-muted-foreground'
-                                  }`}
-                                >
-                                  {display.api_method || 'GET'}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="font-medium align-top whitespace-normal">
-                                <div className="break-words max-w-[200px]">
-                                  {display.api_endpoint ? (
-                                    <span className="font-mono text-xs text-muted-foreground">{display.api_endpoint}</span>
-                                  ) : null}
-                                  <div className="text-sm mt-0.5">{display.title}</div>
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-center">
-                                <Badge tone="neutral" className={PRIORITY_CLASSES[display.priority] || 'border-border bg-muted text-muted-foreground'}>
-                                  {display.priority}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="break-words max-w-[100px] text-xs align-top whitespace-normal">{display.module || '-'}</TableCell>
-                              <TableCell className="break-words max-w-[140px] text-xs align-top whitespace-normal">{display.preconditions || '-'}</TableCell>
-                              <TableCell className="break-words max-w-[230px] text-xs align-top whitespace-normal">{display.expected_result || '-'}</TableCell>
-                              <TableCell className="text-center">
-                                {matchedEndpoint ? (
-                                  <Badge
-                                    tone="neutral"
-                                    className={confirmedEndpointIds.has(matchedEndpoint.endpoint_id)
-                                      ? 'border-status-success-border bg-status-success-muted text-status-success text-xs'
-                                      : 'border-status-success-border bg-status-success-muted text-status-success text-xs'}
-                                    title={`${matchedEndpoint.method} ${matchedEndpoint.path} (${Math.round(matchedEndpoint.confidence * 100)}%)`}
-                                  >
-                                    <Link2 className="size-3" />
-                                  </Badge>
-                                ) : (
-                                  <span className="text-muted-foreground text-xs">-</span>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          )
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">
-                      已选 {selectedApiKeys.length}/{apiCases.length} 条接口用例
-                    </span>
-                    <Button
-                      size="sm"
-                      onClick={() => doImport(selectedApiKeys)}
-                      disabled={importing || selectedApiKeys.length === 0}
-                    >
-                      {importing ? <Loader2 className="size-3.5 animate-spin" /> : <Import className="size-3.5" />}
-                      导入接口用例 ({selectedApiKeys.length})
-                    </Button>
-                  </div>
-                </div>
+                <AiApiCasesPanel
+                  apiCases={apiCases}
+                  selectedKeys={selectedApiKeys}
+                  apiServices={apiServices}
+                  apiMatches={apiMatches}
+                  confirmedEndpointIds={confirmedEndpointIds}
+                  selectedServiceId={selectedServiceId}
+                  loadingMatches={loadingMatches}
+                  savingMatches={savingMatches}
+                  generatingApiFromEndpoints={generatingApiFromEndpoints}
+                  importing={importing}
+                  getDisplayCase={getDisplayCase}
+                  onToggleAll={toggleApiAll}
+                  onToggleOne={(index) => {
+                    setSelectedApiKeys((prev) =>
+                      prev.includes(index) ? prev.filter((k) => k !== index) : [...prev, index]
+                    )
+                  }}
+                  onServiceChange={handleServiceChange}
+                  onToggleEndpoint={toggleMatchedEndpoint}
+                  onConfirmMatches={handleConfirmMatches}
+                  onGenerateApiFromEndpoints={handleGenerateApiFromEndpoints}
+                  onImport={doImport}
+                />
               </TabsContent>
             )}
 
             {/* ── Tab: UI回归建议 ── */}
             {hasExtraction && extractionModules.some((m) => m.function_points?.some((fp) => fp.type === 'integration')) && (
               <TabsContent value="regression" className="mt-0">
-                <div className="max-h-[55vh] overflow-auto space-y-3 pr-1">
-                  <Alert className="border-status-warning-border bg-status-warning-muted">
-                    <Zap className="size-4 text-status-warning" />
-                    <AlertTitle className="text-status-warning text-sm">UI 回归测试建议</AlertTitle>
-                    <AlertDescription className="text-status-warning text-xs">
-                      基于需求的功能拆分结果，以下模块涉及集成/接口类功能点，建议在对应 release-bundle 发版时触发 UI 回归测试。
-                    </AlertDescription>
-                  </Alert>
-
-                  {extractionModules
-                    .filter((mod) => mod.function_points?.some((fp) => fp.type === 'integration'))
-                    .map((mod) => {
-                      const integrationFps = mod.function_points?.filter((fp) => fp.type === 'integration') || []
-                      const otherFps = mod.function_points?.filter((fp) => fp.type !== 'integration') || []
-                      return (
-                        <Card key={mod.id} size="sm" className="border-status-warning-border">
-                          <CardContent className="pt-3">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Badge tone="neutral" className="font-mono text-xs">{mod.id}</Badge>
-                              <span className="font-medium text-sm">{mod.name}</span>
-                              <Badge tone="neutral" className="text-xs border-status-warning-border bg-status-warning-muted text-status-warning">
-                                {integrationFps.length} 个集成功能点
-                              </Badge>
-                            </div>
-
-                            {/* Integration function points */}
-                            <div className="space-y-2 mb-3">
-                              <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground"><Link2 className="size-3.5" />集成功能点（建议回归）:</p>
-                              {integrationFps.map((fp) => (
-                                <div key={fp.id} className="flex items-start gap-2 border rounded p-2 bg-status-warning-muted">
-                                  <Badge tone="neutral" className="font-mono text-xs shrink-0">{fp.id}</Badge>
-                                  <div className="min-w-0">
-                                    <p className="text-sm font-medium">{fp.title}</p>
-                                    <p className="text-xs text-muted-foreground">{fp.description}</p>
-                                    <div className="flex items-center gap-2 mt-1">
-                                      <ClientScopeBadges clients={fp.client_scope} />
-                                      <span className="text-xs text-muted-foreground">
-                                        建议: Playwright UI 脚本 + API 接口回归
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-
-                            {/* Related function points */}
-                            {otherFps.length > 0 && (
-                              <div>
-                                <p className="mb-1 flex items-center gap-1 text-xs font-medium text-muted-foreground"><ClipboardCheck className="size-3.5" />关联功能点:</p>
-                                <div className="flex flex-wrap gap-1">
-                                  {otherFps.map((fp) => (
-                                    <Badge key={fp.id} tone="neutral" className="text-xs">
-                                      {fp.id} {fp.title}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      )
-                    })}
-
-                  {/* Regression Summary */}
-                  <Card size="sm" className="border-status-info-border bg-status-info-muted">
-                    <CardContent className="pt-3">
-                      <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-status-info"><BarChart3 className="size-4" aria-hidden="true" />回归测试清单</p>
-                      <div className="grid grid-cols-2 gap-2 text-xs text-status-info">
-                        <div className="flex items-center gap-1">
-                          <Monitor className="size-3" /> 建议 UI 自动化回归脚本
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Server className="size-3" /> 建议 API 接口回归用例
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Link2 className="size-3" /> 关联 release-bundle 版本差异
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Zap className="size-3" /> 自动触发回归测试执行
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                <AiRegressionPanel extractionModules={extractionModules} />
               </TabsContent>
             )}
-              {hasCoverage && coverageReport && (
-                <TabsContent value="coverage" className="mt-0">
-                  <div className="flex-1 overflow-y-auto pr-1 max-h-[55vh] space-y-3">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <Badge tone="neutral" className="border-status-success-border bg-status-success-muted text-status-success">
-                        覆盖率 {(coverageReport.coverage_rate * 100).toFixed(1)}%
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        已覆盖 {coverageReport.covered_fp}/{coverageReport.total_fp} 功能点 · 缺口 {coverageReport.gap_count}
-                      </span>
-                    </div>
-                    {coverageReport.gap_count > 0 && (
-                      <div className="border rounded-lg p-2 space-y-1.5">
-                        <p className="text-xs font-medium text-status-warning">覆盖缺口</p>
-                        {coverageReport.gaps.map((g, i) => (
-                          <div key={`${g.module}-${g.function_point}-${i}`} className="text-xs flex items-center gap-1.5">
-                            <Badge tone="neutral" className="border-status-warning-border bg-status-warning-muted text-status-warning">缺口</Badge>
-                            <span>{g.module} · {g.function_point}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {coverageReport.matrix.length > 0 ? (
-                      <div className="border rounded-lg overflow-auto">
-                        <Table className="min-w-[560px]">
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>模块</TableHead>
-                              <TableHead>功能点</TableHead>
-                              <TableHead className="text-center">覆盖</TableHead>
-                              <TableHead className="text-center">用例数</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {coverageReport.matrix.map((row, i) => (
-                              <TableRow key={`${row.module}-${row.function_point}-${i}`}>
-                                <TableCell className="text-xs">{row.module || '-'}</TableCell>
-                                <TableCell className="text-xs">{row.function_point || '-'}</TableCell>
-                                <TableCell className="text-center">
-                                  <Badge
-                                    tone="neutral"
-                                    className={row.covered
-                                      ? 'border-status-success-border bg-status-success-muted text-status-success'
-                                      : 'border-status-danger-border bg-status-danger-muted text-status-danger'}
-                                  >
-                                    {row.covered ? '已覆盖' : '未覆盖'}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-center text-xs">{row.case_count}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground py-4 text-center">暂无覆盖矩阵数据</p>
-                    )}
-                  </div>
-                </TabsContent>
-              )}
+            {hasCoverage && coverageReport && (
+              <TabsContent value="coverage" className="mt-0">
+                <AiCoveragePanel report={coverageReport} />
+              </TabsContent>
+            )}
           </Tabs>
         ) : (
           <div className="text-center py-10 text-muted-foreground">
@@ -1504,6 +710,3 @@ export default function AiResultModal({
     </Dialog>
   )
 }
-
-
-

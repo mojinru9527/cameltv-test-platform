@@ -20,6 +20,16 @@ from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
 from app.models.user import User
 
 
+def get_user_display_name(db: Session, user_id: int) -> str:
+    """返回用户展示名（nickname or username），供路由层组装通知等场景复用。"""
+    if not user_id:
+        return ""
+    u = db.get(User, user_id)
+    if not u:
+        return ""
+    return u.nickname or u.username
+
+
 def _generate_defect_id(db: Session, project_id: int) -> str:
     """Generate DEF-YYYYMMDD-NNN unique within project."""
     today = datetime.now(timezone.utc).strftime("%Y%m%d")
@@ -98,6 +108,22 @@ def list_defects(
         for r in rows
     ]
     return items, total
+
+
+def list_defects_by_external_id(
+    db: Session, project_id: int, *, linked: bool
+) -> list[Defect]:
+    """按外部同步状态列出缺陷（integration sync-now 复用）。
+
+    linked=True  → external_id 非空（已关联外部系统）；
+    linked=False → external_id 为空（未关联）。
+    """
+    stmt = select(Defect).where(Defect.project_id == project_id)
+    if linked:
+        stmt = stmt.where(Defect.external_id != "")
+    else:
+        stmt = stmt.where(Defect.external_id == "")
+    return list(db.scalars(stmt).all())
 
 
 def get_defect(db: Session, defect_id: int, project_id: int) -> dict | None:

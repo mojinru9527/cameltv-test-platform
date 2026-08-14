@@ -10,7 +10,21 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { fetchCoverage, type CoverageData } from '@/api/trace'
 import { FileCheck, Link2, Play, ShieldCheck, Bug, Percent, FileText, Calendar, BarChart3 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
+import { DOMAIN_GROUP_ORDER, groupDomainLabel } from '@/utils/domainNaming'
 import TraceDrilldown from './Drilldown'
+
+// P3-03：用例类型分布轴/图例统一中文标签（兼容后端 canonical 与历史旧值）
+const CASE_TYPE_LABEL: Record<string, string> = {
+  manual: '功能',
+  functional: '功能',
+  api: '接口',
+  interface: '接口',
+  ui: 'UI 自动化',
+}
+
+function typeLabel(t: string): string {
+  return CASE_TYPE_LABEL[t] || t
+}
 
 export default function TracePage() {
   useDocumentTitle('链路追踪')
@@ -40,6 +54,25 @@ export default function TracePage() {
       >
         {(d) => {
           const typeChart = Object.entries(d.by_type).map(([k, v]) => ({ name: typeLabel(k), 数量: v }))
+          // Batch 182（FIX-173-P3-04）：按域覆盖轴按 用户端/运营后台/接口测试/其他 分组聚合，
+          // 组内按用例数降序；标签统一走 domainNaming（裸域补前缀展示，如 UGC → 用户端/UGC）。
+          const domainGroups = (() => {
+            const map = new Map<string, Array<{ domain: string; label: string; count: number }>>()
+            for (const [domain, count] of Object.entries(d.by_domain)) {
+              const { group, label } = groupDomainLabel(domain)
+              if (!map.has(group)) map.set(group, [])
+              map.get(group)!.push({ domain, label, count })
+            }
+            const ordered: Array<{ group: string; items: Array<{ domain: string; label: string; count: number }> }> = []
+            for (const group of DOMAIN_GROUP_ORDER) {
+              const items = map.get(group)
+              if (items) {
+                items.sort((a, b) => (b.count - a.count) || a.label.localeCompare(b.label, 'zh-CN'))
+                ordered.push({ group, items })
+              }
+            }
+            return ordered
+          })()
           return (
             <div className="space-y-6">
               {/* ── 统计卡片 ── */}
@@ -147,7 +180,7 @@ export default function TracePage() {
                 <CardContent>
                   <ChartFrame
                     title="用例类型分布"
-                    summary={`当前共 ${d.total_cases} 条用例，按功能、接口和自动化类型分组。`}
+                    summary={`当前共 ${d.total_cases} 条用例，按功能、接口和 UI 自动化类型分组。`}
                     data={typeChart}
                     columns={[
                       { key: 'name', label: '用例类型' },
@@ -168,18 +201,34 @@ export default function TracePage() {
                 </CardContent>
               </Card>
 
-              {/* ── 按域分布 ── */}
+              {/* ── 按域分布（Batch 182 / FIX-173-P3-04：按组聚合 + 组内排序）── */}
               <Card className="ui-surface">
                 <CardHeader><CardTitle>按域覆盖</CardTitle></CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {Object.entries(d.by_domain).map(([domain, count]) => (
-                      <div key={domain} className="flex justify-between items-center p-3 rounded-lg border">
-                        <span className="text-sm font-medium">{domain || '未分类'}</span>
-                        <Badge tone="neutral">{count}</Badge>
-                      </div>
-                    ))}
-                  </div>
+                  {domainGroups.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">暂无按域覆盖数据</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {domainGroups.map(({ group, items }) => (
+                        <div key={group}>
+                          <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                            {group}
+                            <span className="text-muted-foreground/60">
+                              ({items.reduce((sum, item) => sum + item.count, 0)})
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {items.map((item) => (
+                              <div key={item.domain} className="flex justify-between items-center p-3 rounded-lg border">
+                                <span className="truncate text-sm font-medium" title={item.label}>{item.label}</span>
+                                <Badge tone="neutral">{item.count}</Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -224,9 +273,4 @@ export default function TracePage() {
       </AsyncState>
     </PageShell>
   )
-}
-
-function typeLabel(t: string): string {
-  const m: Record<string, string> = { manual: '功能', api: '接口', ui: '自动化' }
-  return m[t] || t
 }

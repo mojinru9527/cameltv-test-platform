@@ -207,7 +207,7 @@ def execute_task(task_id: int, project_id: int, worker_id: str) -> None:
             task.status = "cancelled"
         else:
             if failed == 0 and skipped == 0:
-                task.status = "success"
+                task.status = "passed"
             elif failed > 0:
                 task.status = "failed"
             else:

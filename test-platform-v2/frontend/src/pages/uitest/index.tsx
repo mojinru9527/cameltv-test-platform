@@ -7,20 +7,10 @@ import {
   RotateCcw,
   Search,
   Trash2,
-  Loader2,
-  XCircle,
   FileText,
-  Image,
-  Video,
-  Download,
-  Terminal,
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-  Ban,
 } from '@/lib/icons'
 import { useCallback, useEffect, useState } from 'react'
-import { createUiJob, deleteUiJob, fetchUiJob, fetchUiJobs, fetchUiRuns, triggerUiJob, updateUiJob, fetchScripts, fetchRunDetail, cancelRun, fetchRunArtifacts, fetchRunArtifactBlob } from '@/api/uitest'
+import { createUiJob, deleteUiJob, fetchUiJob, fetchUiJobs, fetchUiRuns, triggerUiJob, updateUiJob, fetchScripts, fetchRunDetail, cancelRun, fetchRunArtifacts } from '@/api/uitest'
 import { fetchEnvironments } from '@/api/environment'
 import { fetchTestCases } from '@/api/testcase'
 import { useAuthStore } from '@/stores/auth'
@@ -29,14 +19,12 @@ import type { Environment, UiJobItem, UiRunItem, UiRunArtifact } from '@/types'
 import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import { ErrorState } from '@/components/state'
 import PageHeader from '@/components/PageHeader'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -46,19 +34,6 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/ui'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,157 +55,14 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import { parseUiRunResult } from './uiRunResult'
+import { execStatusLabel } from '@/utils/executionStatus'
+import { BROWSER_MAP, browserBadgeClass, getEnvironment, isProductionJob, statusBadgeClass } from './uiShared'
+import UiJobFormDialog, { uiJobFormSchema, type UiJobFormValues } from './components/UiJobFormDialog'
+import UiJobDetailSheet from './components/UiJobDetailSheet'
+import ProductionTriggerDialog from './components/ProductionTriggerDialog'
+import UiRunDetailDialog from './components/UiRunDetailDialog'
 
-const BROWSER_MAP: Record<string, { color: string }> = {
-  chromium: { color: 'blue' },
-  firefox: { color: 'orange' },
-  webkit: { color: 'purple' },
-}
-
-const STATUS_MAP: Record<string, { color: string; label: string }> = {
-  idle: { color: 'default', label: '待执行' },
-  running: { color: 'processing', label: '运行中' },
-  done: { color: 'green', label: '已完成' },
-  fail: { color: 'red', label: '失败' },
-}
-
-const RUN_STATUS_MAP: Record<string, { color: string; label: string }> = {
-  pending: { color: 'default', label: '等待中' },
-  running: { color: 'processing', label: '运行中' },
-  done: { color: 'green', label: '完成' },
-  fail: { color: 'red', label: '失败' },
-  cancelled: { color: 'yellow', label: '已取消' },
-}
-
-function browserBadgeClass(c: string) {
-  const map: Record<string, string> = {
-    blue: 'border-status-info-border bg-status-info-muted text-status-info dark:border-status-info-border dark:bg-status-info-muted dark:text-status-info',
-    orange: 'border-status-warning-border bg-status-warning-muted text-status-warning dark:border-status-warning-border dark:bg-status-warning-muted dark:text-status-warning',
-    purple: 'border-status-accent-border bg-status-accent-muted text-status-accent dark:border-status-accent-border dark:bg-status-accent-muted dark:text-status-accent',
-  }
-  return map[c] ?? ''
-}
-
-function statusBadgeClass(c: string) {
-  const map: Record<string, string> = {
-    default: 'border-border bg-muted text-muted-foreground',
-    processing: 'border-status-info-border bg-status-info-muted text-status-info dark:border-status-info-border dark:bg-status-info-muted dark:text-status-info',
-    green: 'border-status-success-border bg-status-success-muted text-status-success dark:border-status-success-border dark:bg-status-success-muted dark:text-status-success',
-    red: 'border-status-danger-border bg-status-danger-muted text-status-danger dark:border-status-danger-border dark:bg-status-danger-muted dark:text-status-danger',
-    yellow: 'border-status-warning-border bg-status-warning-muted text-status-warning dark:border-status-warning-border dark:bg-status-warning-muted dark:text-status-warning',
-  }
-  return map[c] ?? ''
-}
-
-function UiRunResultSummary({ value }: { value: unknown }) {
-  const summary = parseUiRunResult(value)
-  if (!summary) {
-    return (
-      <pre className="m-0 whitespace-pre-wrap text-xs">
-        {typeof value === 'string' ? value : JSON.stringify(value, null, 2)}
-      </pre>
-    )
-  }
-
-  const metrics = [
-    ['总计', summary.total],
-    ['通过', summary.passed],
-    ['失败', summary.failed],
-    ['跳过', summary.skipped],
-  ] as const
-  return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {metrics.map(([label, value]) => (
-          <div key={label} className="rounded-md border bg-muted/30 p-3 text-center">
-            <div className="text-xs text-muted-foreground">{label}</div>
-            <div className="mt-1 text-lg font-semibold tabular-nums">{value}</div>
-          </div>
-        ))}
-      </div>
-      {summary.duration !== null && (
-        <p className="text-xs text-muted-foreground">执行耗时：{summary.duration} 秒</p>
-      )}
-    </div>
-  )
-}
-
-const uiJobFormSchema = z.object({
-  name: z.string().min(1, '请输入任务名称'),
-  description: z.string().optional().default(''),
-  test_spec: z.string().optional().default(''),
-  browser: z.string().default('chromium'),
-  environment_id: z.number().nullable().default(null),
-  case_id: z.number().nullable().default(null),
-  cron_expression: z.string().optional().default(''),
-  schedule_enabled: z.boolean().optional().default(false),
-})
-
-type UiJobFormValues = z.infer<typeof uiJobFormSchema>
-
-export function ProtectedArtifactMedia({
-  runId,
-  path,
-  name,
-  kind,
-}: {
-  runId: number
-  path: string
-  name: string
-  kind: 'image' | 'video' | 'download' | 'link'
-}) {
-  const [objectUrl, setObjectUrl] = useState('')
-  const [loadFailed, setLoadFailed] = useState(false)
-
-  useEffect(() => {
-    const controller = new AbortController()
-    let createdUrl = ''
-
-    fetchRunArtifactBlob(runId, path, controller.signal)
-      .then((blob) => {
-        if (controller.signal.aborted) return
-        createdUrl = URL.createObjectURL(blob)
-        setObjectUrl(createdUrl)
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setLoadFailed(true)
-      })
-
-    return () => {
-      controller.abort()
-      if (createdUrl) URL.revokeObjectURL(createdUrl)
-    }
-  }, [runId, path])
-
-  if (loadFailed) {
-    return <span role="alert" className="text-xs text-status-danger">{name} 加载失败</span>
-  }
-  if (!objectUrl) {
-    return <span className="text-xs text-muted-foreground">{name} 加载中...</span>
-  }
-  if (kind === 'image') {
-    return (
-      <a href={objectUrl} target="_blank" rel="noreferrer" className="block rounded border overflow-hidden hover:ring-2 hover:ring-primary">
-        <img src={objectUrl} alt={name} className="w-full h-24 object-cover" />
-        <div className="text-xs p-1 truncate">{name}</div>
-      </a>
-    )
-  }
-  if (kind === 'video') {
-    return <video aria-label={name} controls className="w-full max-h-[300px]" src={objectUrl} />
-  }
-  return (
-    <a
-      href={objectUrl}
-      {...(kind === 'download' ? { download: name } : { target: '_blank', rel: 'noreferrer' })}
-      className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-    >
-      {kind === 'download' ? <Download className="size-3" /> : <FileText className="size-4" />}
-      {name}
-    </a>
-  )
-}
+export { ProtectedArtifactMedia } from './components/ProtectedArtifactMedia'
 
 export default function UiTestPage() {
   // (batch-165) 用例/脚本资产可见性
@@ -330,14 +162,6 @@ export default function UiTestPage() {
     defaultValues: { name: '', description: '', test_spec: '', browser: 'chromium', environment_id: null, case_id: null, cron_expression: '', schedule_enabled: false },
   })
 
-  const getEnvironment = (job: UiJobItem) => (
-    environments.find((environment) => environment.id === job.environment_id) ?? null
-  )
-  const isProductionJob = (job: UiJobItem) => {
-    const environment = getEnvironment(job)
-    return environment?.is_production === true || environment?.env_type === 'prod'
-  }
-
   // ── DataTable column definitions ──
   const uiJobColumns: DataTableColumn<UiJobItem>[] = [
     { key: 'name', header: '名称', className: 'max-w-0', render: (r) => (
@@ -357,7 +181,7 @@ export default function UiTestPage() {
       </Badge>
     )},
     { key: 'environment', header: '目标环境', headerClassName: 'w-[180px]', render: (r) => {
-      const environment = getEnvironment(r)
+      const environment = getEnvironment(environments, r)
       if (!environment) return <span className="text-muted-foreground">未绑定</span>
       const production = environment.is_production === true || environment.env_type === 'prod'
       return (
@@ -370,13 +194,13 @@ export default function UiTestPage() {
       )
     }},
     { key: 'status', header: '状态', headerClassName: 'w-[100px]', render: (r) => (
-      <Badge tone="neutral" className={statusBadgeClass(STATUS_MAP[r.status]?.color)}>
-        {STATUS_MAP[r.status]?.label || r.status}
+      <Badge tone="neutral" className={statusBadgeClass(r.status)}>
+        {execStatusLabel(r.status)}
       </Badge>
     )},
     { key: 'last_run_time', header: '上次执行', headerClassName: 'w-[170px]', render: (r) => r.last_run_time ? new Date(r.last_run_time).toLocaleString('zh-CN') : '-' },
     { key: 'actions', header: '操作', headerClassName: 'w-[240px]', render: (r) => {
-      const production = isProductionJob(r)
+      const production = isProductionJob(environments, r)
       const canTriggerTarget = !production || hasPerm('uitest:trigger_prod')
       return <div className="flex items-center gap-1">
         <Button size="xs" variant="secondary" onClick={() => openDetail(r)}>
@@ -467,7 +291,7 @@ export default function UiTestPage() {
   }
 
   const requestTrigger = async (job: UiJobItem) => {
-    if (isProductionJob(job)) {
+    if (isProductionJob(environments, job)) {
       setProdTriggerTarget(job)
       return
     }
@@ -528,6 +352,13 @@ export default function UiTestPage() {
     } catch { setRunDetailLoading(false) }
   }
 
+  const handleRefreshRunDetail = () => {
+    if (!selectedRun) return
+    setRunDetailLoading(true)
+    fetchRunDetail(selectedRun.id).then(setSelectedRun).finally(() => setRunDetailLoading(false))
+    fetchRunArtifacts(selectedRun.id).then(setRunArtifacts).catch(() => {})
+  }
+
   const openEdit = (r: UiJobItem) => {
     setEditing(r)
     form.reset({
@@ -579,8 +410,8 @@ export default function UiTestPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__all__">全部</SelectItem>
-                {Object.entries(STATUS_MAP).map(([k, v]) => (
-                  <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                {(['pending', 'running', 'passed', 'failed'] as const).map((k) => (
+                  <SelectItem key={k} value={k}>{execStatusLabel(k)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -613,427 +444,45 @@ export default function UiTestPage() {
       />
       )}
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null); form.reset() } }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{editing?.id ? '编辑UI测试任务' : '新建UI测试任务'}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={form.handleSubmit(doSave)} className="flex flex-col gap-4">
-            <div data-invalid={!!form.formState.errors.name} aria-invalid={!!form.formState.errors.name}>
-              <label className="text-sm font-medium mb-1 block">任务名称</label>
-              <Input placeholder="如：首页推荐冒烟测试" {...form.register('name')} />
-              {form.formState.errors.name && (
-                <p className="text-xs text-destructive mt-0.5">{form.formState.errors.name.message}</p>
-              )}
-            </div>
+      <UiJobFormDialog
+        open={drawer}
+        onClose={() => { setDrawer(false); setEditing(null); form.reset() }}
+        form={form}
+        editing={editing}
+        saving={saving}
+        environments={environments}
+        uiCases={uiCases}
+        onSubmit={doSave}
+      />
 
-            <div>
-              <label className="text-sm font-medium mb-1 block">描述</label>
-              <Textarea rows={3} placeholder="测试说明" {...form.register('description')} />
-            </div>
+      <UiJobDetailSheet
+        open={detailOpen}
+        onOpenChange={(open) => { if (!open) { setDetailOpen(false); setDetail(null) } }}
+        detail={detail}
+        runs={runs}
+        environments={environments}
+        hasPerm={hasPerm}
+        onRequestTrigger={requestTrigger}
+        onOpenRunDetail={openRunDetail}
+      />
 
-            <div>
-              <label className="text-sm font-medium mb-1 block">测试脚本</label>
-              <ScriptSelector
-                value={form.watch('test_spec') || ''}
-                onChange={(v) => form.setValue('test_spec', v)}
-              />
-            </div>
+      <ProductionTriggerDialog
+        target={prodTriggerTarget}
+        triggering={triggering}
+        environments={environments}
+        onOpenChange={(open) => { if (!open && !triggering) setProdTriggerTarget(null) }}
+        onConfirm={confirmProductionTrigger}
+      />
 
-            <div>
-              <label className="text-sm font-medium mb-1 block">定时 Cron（B112-3）</label>
-              <Input
-                placeholder="如 0 2 * * *（每日 02:00，空=不定时）"
-                value={form.watch('cron_expression') || ''}
-                onChange={(e) => form.setValue('cron_expression', e.target.value)}
-              />
-              <label className="flex items-center gap-2 mt-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={form.watch('schedule_enabled') || false}
-                  onChange={(e) => form.setValue('schedule_enabled', e.target.checked)}
-                />
-                启用定时回归
-              </label>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-1 block">浏览器</label>
-              <Select value={form.watch('browser')} onValueChange={(v) => form.setValue('browser', v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.keys(BROWSER_MAP).map((k) => (
-                    <SelectItem key={k} value={k}>{k}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-1 block">关联用例</label>
-              <Select
-                value={form.watch('case_id') == null ? '__none__' : String(form.watch('case_id'))}
-                onValueChange={(v) => form.setValue('case_id', v === '__none__' ? null : Number(v))}
-              >
-                <SelectTrigger aria-label="关联用例">
-                  <SelectValue placeholder="选择 UI 用例" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">不关联</SelectItem>
-                  {uiCases.map((c: any) => (
-                    <SelectItem key={c.id} value={String(c.id)}>{c.title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-1 block">运行环境</label>
-              <Select
-                value={form.watch('environment_id') == null ? '__none__' : String(form.watch('environment_id'))}
-                onValueChange={(v) => form.setValue('environment_id', v === '__none__' ? null : Number(v))}
-              >
-                <SelectTrigger aria-label="运行环境">
-                  <SelectValue placeholder="选择运行环境" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">不绑定环境</SelectItem>
-                  {environments.map((env) => (
-                    <SelectItem key={env.id} value={String(env.id)}>
-                      {env.name}（{env.base_url || '未配置 Base URL'}）
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                执行时会把所选环境的 Base URL 注入 Playwright。
-              </p>
-            </div>
-
-            <DialogFooter>
-              <Button type="button" variant="secondary" onClick={() => { setDrawer(false); setEditing(null); form.reset() }}>
-                取消
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving && <Loader2 className="size-4 animate-spin" />}
-                保存
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Detail Sheet */}
-      <Sheet open={detailOpen} onOpenChange={(open) => { if (!open) { setDetailOpen(false); setDetail(null) } }}>
-        <SheetContent className="sm:max-w-3xl">
-          <SheetHeader>
-            <SheetTitle>任务详情</SheetTitle>
-          </SheetHeader>
-          {detail && (
-            <div className="flex flex-col gap-4 mt-4 overflow-y-auto flex-1">
-              <dl className="grid grid-cols-2 border rounded-lg">
-                {[
-                  ['名称', detail.name],
-                  ['浏览器', <Badge key="br" tone="neutral" className={browserBadgeClass(BROWSER_MAP[detail.browser]?.color)}><Monitor className="size-3" />{detail.browser}</Badge>],
-                  ['状态', <Badge key="st" tone="neutral" className={statusBadgeClass(STATUS_MAP[detail.status]?.color)}>{STATUS_MAP[detail.status]?.label}</Badge>],
-                  ['测试文件', detail.test_spec || '-'],
-                  ['目标环境', getEnvironment(detail)?.name || '未绑定'],
-                  ['目标地址', getEnvironment(detail)?.base_url || '-'],
-                ].map(([label, value]) => (
-                  <div key={label as string} className="flex flex-col border-b border-r p-2 even:border-r-0 [&:nth-last-child(-n+2)]:border-b-0">
-                    <dt className="text-xs text-muted-foreground">{label}</dt>
-                    <dd className="text-sm mt-0.5">{value}</dd>
-                  </div>
-                ))}
-                <div className="flex flex-col border-b border-r p-2 even:border-r-0 col-span-2 border-r-0 border-b-0">
-                  <dt className="text-xs text-muted-foreground">描述</dt>
-                  <dd className="text-sm mt-0.5">{detail.description || '-'}</dd>
-                </div>
-              </dl>
-
-              {hasPerm('uitest:trigger') && (
-                <div>
-                  <Button
-                    onClick={() => requestTrigger(detail)}
-                    disabled={isProductionJob(detail) && !hasPerm('uitest:trigger_prod')}
-                    title={isProductionJob(detail) && !hasPerm('uitest:trigger_prod') ? '缺少 uitest:trigger_prod 生产执行权限' : undefined}
-                  >
-                    <Play className="size-4" />
-                    执行测试
-                  </Button>
-                </div>
-              )}
-
-              <Tabs defaultValue="runs">
-                <TabsList>
-                  <TabsTrigger value="runs">运行历史 ({runs.total})</TabsTrigger>
-                  <TabsTrigger value="result">最新结果</TabsTrigger>
-                </TabsList>
-                <TabsContent value="runs" className="mt-3">
-                  <div className="rounded-lg border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[80px]">状态</TableHead>
-                          <TableHead className="w-[170px]">开始时间</TableHead>
-                          <TableHead className="w-[170px]">结束时间</TableHead>
-                          <TableHead className="w-[200px]">结果</TableHead>
-                          <TableHead className="w-[120px]">Trace</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {runs.items.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">暂无数据</TableCell>
-                          </TableRow>
-                        ) : (
-                          runs.items.map((run) => (
-                            <TableRow key={run.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openRunDetail(run)}>
-                              <TableCell>
-                                <Badge tone="neutral" className={statusBadgeClass(RUN_STATUS_MAP[run.status]?.color)}>
-                                  {RUN_STATUS_MAP[run.status]?.label || run.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>{run.started_at ? new Date(run.started_at).toLocaleString() : '-'}</TableCell>
-                              <TableCell>{run.finished_at ? new Date(run.finished_at).toLocaleString() : '-'}</TableCell>
-                              <TableCell>
-                                {run.result ? `总计 ${run.result.total} · 通过 ${run.result.pass_} · 失败 ${run.result.fail}` : '-'}
-                              </TableCell>
-                              <TableCell className="max-w-[120px] truncate">{run.trace_id || '-'}</TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </TabsContent>
-                <TabsContent value="result" className="mt-3">
-                  {detail.last_result ? (
-                    <Card size="sm">
-                      <CardContent>
-                        <UiRunResultSummary value={detail.last_result} />
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center py-8">暂无结果</p>
-                  )}
-                </TabsContent>
-              </Tabs>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
-
-      <AlertDialog open={!!prodTriggerTarget} onOpenChange={(open) => { if (!open && !triggering) setProdTriggerTarget(null) }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-destructive">确认执行生产环境 UI 自动化？</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-2 text-sm">
-                <p>该操作将启动真实浏览器并访问生产目标。请确认脚本仅包含已获授权的只读范围。</p>
-                <dl className="rounded-md border p-3 text-foreground">
-                  <div><dt className="inline text-muted-foreground">任务：</dt><dd className="inline">{prodTriggerTarget?.name}</dd></div>
-                  <div><dt className="inline text-muted-foreground">环境：</dt><dd className="inline">{prodTriggerTarget ? getEnvironment(prodTriggerTarget)?.name : '-'}</dd></div>
-                  <div className="break-all"><dt className="inline text-muted-foreground">地址：</dt><dd className="inline">{prodTriggerTarget ? getEnvironment(prodTriggerTarget)?.base_url || '未配置' : '-'}</dd></div>
-                  <div className="break-all"><dt className="inline text-muted-foreground">脚本：</dt><dd className="inline">{prodTriggerTarget?.test_spec || '未配置'}</dd></div>
-                </dl>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={triggering}>取消</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" disabled={triggering} onClick={confirmProductionTrigger}>
-              {triggering ? '正在触发…' : '确认执行生产任务'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Run Detail Dialog */}
-      <Dialog open={runDetailOpen} onOpenChange={(open) => { if (!open) { setRunDetailOpen(false); setSelectedRun(null); setRunArtifacts([]) } }}>
-        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              运行详情 #{selectedRun?.id}
-              {selectedRun && (
-                <Badge tone="neutral" className={statusBadgeClass(RUN_STATUS_MAP[selectedRun.status]?.color)}>
-                  {RUN_STATUS_MAP[selectedRun.status]?.label || selectedRun.status}
-                </Badge>
-              )}
-            </DialogTitle>
-          </DialogHeader>
-
-          {runDetailLoading && !selectedRun ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="size-6 animate-spin" />
-            </div>
-          ) : selectedRun ? (
-            <div className="flex flex-col gap-4">
-              {/* Info grid */}
-              <dl className="grid grid-cols-2 border rounded-lg">
-                {[
-                  ['状态', <Badge key="st" tone="neutral" className={statusBadgeClass(RUN_STATUS_MAP[selectedRun.status]?.color)}>{RUN_STATUS_MAP[selectedRun.status]?.label || selectedRun.status}</Badge>],
-                  ['浏览器', selectedRun.browser ? <Badge key="br" tone="neutral" className={browserBadgeClass(BROWSER_MAP[selectedRun.browser]?.color)}><Monitor className="size-3" />{selectedRun.browser}</Badge> : '-'],
-                  ['Base URL', selectedRun.base_url || '-'],
-                  ['耗时', selectedRun.duration != null ? `${selectedRun.duration}s` : '-'],
-                  ['开始时间', selectedRun.started_at ? new Date(selectedRun.started_at).toLocaleString() : '-'],
-                  ['结束时间', selectedRun.finished_at ? new Date(selectedRun.finished_at).toLocaleString() : '-'],
-                  ['进程 ID', selectedRun.process_id != null ? String(selectedRun.process_id) : '-'],
-                ].map(([label, value], i) => (
-                  <div key={i} className={`flex flex-col border-b border-r p-2 even:border-r-0 ${i >= 6 ? 'border-b-0' : ''}`}>
-                    <dt className="text-xs text-muted-foreground">{label}</dt>
-                    <dd className="text-sm mt-0.5 break-all">{value}</dd>
-                  </div>
-                ))}
-              </dl>
-
-              {/* Error message */}
-              {selectedRun.error_message && (
-                <div className="rounded-lg border border-status-danger-border bg-status-danger-muted p-3 dark:border-status-danger-border dark:bg-status-danger-muted">
-                  <div className="flex items-center gap-2 text-sm font-medium text-status-danger dark:text-status-danger">
-                    <AlertTriangle className="size-4" />
-                    错误信息
-                  </div>
-                  <pre className="mt-1 whitespace-pre-wrap text-xs text-status-danger dark:text-status-danger">{selectedRun.error_message}</pre>
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {(selectedRun.status === 'pending' || selectedRun.status === 'running') && (
-                  <Button variant="secondary" size="sm" onClick={handleCancelRun} className="text-destructive border-destructive/20 hover:bg-destructive/10">
-                    <Ban className="size-4" />
-                    取消运行
-                  </Button>
-                )}
-                {selectedRun.status !== 'pending' && selectedRun.status !== 'running' && (
-                  <Button variant="secondary" size="sm" onClick={() => { setRunDetailLoading(true); fetchRunDetail(selectedRun.id).then(setSelectedRun).finally(() => setRunDetailLoading(false)); fetchRunArtifacts(selectedRun.id).then(setRunArtifacts).catch(() => {}) }}>
-                    <RotateCcw className="size-4" />
-                    刷新
-                  </Button>
-                )}
-              </div>
-
-              {/* Result summary */}
-              {selectedRun.result && (selectedRun.result.total != null) && (
-                <div className="flex gap-3 flex-wrap">
-                  <div className="rounded-lg border px-3 py-2 text-center min-w-[70px]">
-                    <div className="text-xs text-muted-foreground">总计</div>
-                    <div className="text-lg font-semibold">{selectedRun.result.total}</div>
-                  </div>
-                  <div className="rounded-lg border border-status-success-border bg-status-success-muted px-3 py-2 text-center min-w-[70px] dark:border-status-success-border dark:bg-status-success-muted">
-                    <div className="text-xs text-status-success dark:text-status-success">通过</div>
-                    <div className="text-lg font-semibold text-status-success dark:text-status-success">{selectedRun.result.pass_ ?? '-'}</div>
-                  </div>
-                  <div className="rounded-lg border border-status-danger-border bg-status-danger-muted px-3 py-2 text-center min-w-[70px] dark:border-status-danger-border dark:bg-status-danger-muted">
-                    <div className="text-xs text-status-danger dark:text-status-danger">失败</div>
-                    <div className="text-lg font-semibold text-status-danger dark:text-status-danger">{selectedRun.result.fail ?? '-'}</div>
-                  </div>
-                  <div className="rounded-lg border px-3 py-2 text-center min-w-[70px]">
-                    <div className="text-xs text-muted-foreground">跳过</div>
-                    <div className="text-lg font-semibold">{selectedRun.result.skip ?? '-'}</div>
-                  </div>
-                </div>
-              )}
-
-              {/* Stdout/Stderr toggle */}
-              <Tabs defaultValue={selectedRun.stdout ? 'stdout' : selectedRun.stderr ? 'stderr' : 'none'}>
-                <TabsList>
-                  <TabsTrigger value="" disabled>输出</TabsTrigger>
-                  {(selectedRun.stdout) && <TabsTrigger value="stdout"><Terminal className="size-3" />stdout</TabsTrigger>}
-                  {(selectedRun.stderr) && <TabsTrigger value="stderr"><XCircle className="size-3" />stderr</TabsTrigger>}
-                </TabsList>
-                {selectedRun.stdout && (
-                  <TabsContent value="stdout" className="mt-3">
-                    <Card size="sm">
-                      <CardContent>
-                        <pre className="whitespace-pre-wrap m-0 text-xs max-h-[300px] overflow-y-auto font-mono">{selectedRun.stdout}</pre>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                )}
-                {selectedRun.stderr && (
-                  <TabsContent value="stderr" className="mt-3">
-                    <Card size="sm">
-                      <CardContent>
-                        <pre className="whitespace-pre-wrap m-0 text-xs max-h-[300px] overflow-y-auto font-mono text-status-danger dark:text-status-danger">{selectedRun.stderr}</pre>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                )}
-              </Tabs>
-
-              {/* Artifacts */}
-              {runArtifacts.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium flex items-center gap-2">
-                    <FileText className="size-4" />
-                    产物 ({runArtifacts.length})
-                  </h4>
-                  {/* Screenshots */}
-                  {runArtifacts.filter(a => a.type === 'png').length > 0 && (
-                    <div>
-                      <div className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Image className="size-3" />截图</div>
-                      <div className="grid grid-cols-3 gap-2">
-                        {runArtifacts.filter(a => a.type === 'png').slice(0, 9).map((a) => (
-                          <ProtectedArtifactMedia key={a.path} runId={selectedRun.id} path={a.path} name={a.name} kind="image" />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {/* Videos */}
-                  {runArtifacts.filter(a => a.type === 'webm').map((a) => (
-                    <div key={a.path} className="rounded border overflow-hidden">
-                      <div className="text-xs text-muted-foreground p-2 flex items-center gap-1"><Video className="size-3" />视频: {a.name}</div>
-                      <ProtectedArtifactMedia runId={selectedRun.id} path={a.path} name={a.name} kind="video" />
-                    </div>
-                  ))}
-                  {/* Traces */}
-                  {runArtifacts.filter(a => a.type === 'zip').map((a) => (
-                    <div key={a.path}>
-                      <ProtectedArtifactMedia runId={selectedRun.id} path={a.path} name={`下载 Trace: ${a.name}`} kind="download" />
-                    </div>
-                  ))}
-                  {/* Other files */}
-                  {runArtifacts.filter(a => !['png', 'webm', 'zip'].includes(a.type)).length > 0 && (
-                    <div className="text-xs text-muted-foreground flex flex-wrap gap-2">
-                      其他文件:
-                      {runArtifacts.filter(a => !['png', 'webm', 'zip'].includes(a.type)).map((a) => (
-                        <ProtectedArtifactMedia key={a.path} runId={selectedRun.id} path={a.path} name={a.name} kind="download" />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* HTML Report link */}
-              {selectedRun.html_report_path && (
-                <ProtectedArtifactMedia runId={selectedRun.id} path="report/index.html" name="查看 HTML 报告" kind="link" />
-              )}
-
-              {/* Empty artifacts for pending/running */}
-              {runArtifacts.length === 0 && (selectedRun.status === 'pending' || selectedRun.status === 'running') && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground py-4 justify-center">
-                  <Loader2 className="size-4 animate-spin" />
-                  运行中，产物将在完成后显示...
-                </div>
-              )}
-              {runArtifacts.length === 0 && selectedRun.status !== 'pending' && selectedRun.status !== 'running' && (
-                <p className="text-sm text-muted-foreground text-center py-4">暂无产物文件</p>
-              )}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-12">加载失败</p>
-          )}
-
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => { setRunDetailOpen(false); setSelectedRun(null); setRunArtifacts([]) }}>关闭</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <UiRunDetailDialog
+        open={runDetailOpen}
+        onOpenChange={(open) => { if (!open) { setRunDetailOpen(false); setSelectedRun(null); setRunArtifacts([]) } }}
+        run={selectedRun}
+        loading={runDetailLoading}
+        artifacts={runArtifacts}
+        onCancelRun={handleCancelRun}
+        onRefresh={handleRefreshRunDetail}
+      />
         </TabsContent>
 
         <TabsContent value="assets" className="mt-3 space-y-4">
@@ -1108,43 +557,6 @@ export default function UiTestPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  )
-}
-
-// ── Script Selector ──
-
-function ScriptSelector({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [scripts, setScripts] = useState<string[]>([])
-  const [custom, setCustom] = useState(false)
-
-  useAbortableEffect((signal) => {
-    fetchScripts(signal)
-      .then((rows) => { if (!signal.aborted) setScripts(rows) })
-      .catch(() => { if (!signal.aborted) setScripts([]) })
-  }, [])
-
-  if (scripts.length === 0 || custom) {
-    return (
-      <div className="flex gap-2">
-        <Input placeholder="tests/login.spec.js" value={value} onChange={(e) => onChange(e.target.value)} />
-        {scripts.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={() => setCustom(false)}>选择</Button>
-        )}
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex gap-2">
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger><SelectValue placeholder="选择测试脚本" /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="">(空)</SelectItem>
-          {scripts.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-        </SelectContent>
-      </Select>
-      <Button variant="ghost" size="sm" onClick={() => setCustom(true)}>自定义</Button>
     </div>
   )
 }

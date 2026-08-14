@@ -38,7 +38,7 @@ def _add_case_and_failed_execution(db_session, client, auth_headers, plan_id, ca
     exec_row = _TestExecution(
         plan_case_id=pc.id,
         executor_id=1,
-        status="fail",
+        status="failed",  # Batch 182（P1-06）：统一词表
         actual_result=json.dumps({"error": "SERVER ERROR 502 bad gateway", "status_code": 502}),
         notes="B155TMP-失败",
         trace_id="",

@@ -49,6 +49,16 @@ def get_user(db: Session, user_id: int, project_id: int | None = None) -> dict |
     }
 
 
+def get_user_by_username(db: Session, username: str) -> User | None:
+    """精确按用户名查找用户（路由层 ORM 收敛薄函数）。"""
+    return db.scalar(select(User).where(User.username == username))
+
+
+def get_user_orm(db: Session, user_id: int) -> User | None:
+    """按主键查找用户 ORM 对象（路由层 ORM 收敛薄函数）。"""
+    return db.get(User, user_id)
+
+
 def create_user(db: Session, data: dict) -> dict:
     password = data.get("password")
     if not password:

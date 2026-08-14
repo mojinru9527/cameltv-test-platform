@@ -62,6 +62,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
+import { execStatusLabel, normalizeExecStatus } from '@/utils/executionStatus'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import { SkeletonText } from '@/components/ui/skeleton'
 import { useApi } from '@/hooks/useApi'
@@ -103,12 +104,14 @@ import {
 } from '@/lib/icons'
 
 // ── Status config ──
-const STATUS_CONFIG: Record<string, { label: string; icon: typeof CheckCircle2; color: string; tone: 'neutral' | 'danger' }> = {
-  pass: { label: 'pass', icon: CheckCircle2, color: 'text-status-success', tone: 'neutral' },
-  fail: { label: 'fail', icon: XCircle, color: 'text-status-danger', tone: 'danger' },
-  skip: { label: 'skip', icon: MinusCircle, color: 'text-status-warning', tone: 'neutral' },
-  block: { label: 'block', icon: StopCircle, color: 'text-muted-foreground', tone: 'neutral' },
-  pending: { label: 'pending', icon: Clock, color: 'text-muted-foreground', tone: 'neutral' },
+// Batch 182（P1-06）：报告 cases[].last_status 为规范词表（兼容历史旧值），
+// 图标/颜色按归一后取值，标签统一走 execStatusLabel
+const STATUS_CONFIG: Record<string, { icon: typeof CheckCircle2; color: string; tone: 'neutral' | 'danger' }> = {
+  pending: { icon: Clock, color: 'text-muted-foreground', tone: 'neutral' },
+  passed: { icon: CheckCircle2, color: 'text-status-success', tone: 'neutral' },
+  failed: { icon: XCircle, color: 'text-status-danger', tone: 'danger' },
+  skipped: { icon: MinusCircle, color: 'text-status-warning', tone: 'neutral' },
+  blocked: { icon: StopCircle, color: 'text-muted-foreground', tone: 'neutral' },
 }
 
 const PRIORITY_CONFIG: Record<string, 'neutral' | 'danger'> = {
@@ -653,7 +656,7 @@ export default function ReportPage() {
                     <Card size="sm" className="text-center ui-surface">
                       <CardContent className="py-2 px-1">
                         <div className="text-lg font-bold" style={{ color: item.color }}>{item.value}</div>
-                        <div className="text-xs text-muted-foreground">{item.key}</div>
+                        <div className="text-xs text-muted-foreground">{execStatusLabel(item.key)}</div>
                       </CardContent>
                     </Card>
                   </div>
@@ -677,7 +680,7 @@ export default function ReportPage() {
                       </TableHeader>
                       <TableBody>
                         {dCases.map((c: any) => {
-                          const st = STATUS_CONFIG[c.last_status] || STATUS_CONFIG.pending
+                          const st = STATUS_CONFIG[normalizeExecStatus(c.last_status)] || STATUS_CONFIG.pending
                           const StatusIcon = st.icon
                           return (
                             <TableRow key={c.case_id}>
@@ -694,7 +697,7 @@ export default function ReportPage() {
                               <TableCell>
                                 <Badge tone={st.tone}>
                                   <StatusIcon className={cn('size-3', st.color)} />
-                                  <span className="ml-0.5">{st.label}</span>
+                                  <span className="ml-0.5">{execStatusLabel(c.last_status)}</span>
                                 </Badge>
                               </TableCell>
                             </TableRow>

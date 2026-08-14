@@ -137,7 +137,7 @@ class TestExecutionErrorFields:
         execs = client.get(f"/api/v1/test-plans/{plan['id']}/executions", headers=auth_headers).json()["data"]
         assert execs["total"] == 1
         item = execs["items"][0]
-        assert item["status"] == "fail"
+        assert item["status"] == "failed"
         assert item["error_type"] in ("TARGET_POLICY", "NETWORK_ERROR")
         assert item["status_code"] == 0
         assert item["error_message"]

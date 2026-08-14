@@ -232,19 +232,19 @@ class TestUiSummaryWithData:
 
         now = datetime.now(timezone.utc)
         job = UiTestJob(
-            project_id=1, name="UI Job", status="done",
+            project_id=1, name="UI Job", status="passed",
             created_at=now,
         )
         db_session.add(job)
         db_session.flush()
 
         run1 = UiTestRun(
-            job_id=job.id, status="done",
+            job_id=job.id, status="passed",
             result='{"total":10,"pass_":8,"fail":2}',
             started_at=now,
         )
         run2 = UiTestRun(
-            job_id=job.id, status="done",
+            job_id=job.id, status="passed",
             result='{"total":5,"pass_":4,"fail":1}',
             started_at=now,
         )
@@ -261,17 +261,17 @@ class TestUiSummaryWithData:
         from app.models.ui_test import UiTestJob, UiTestRun
 
         now = datetime.now(timezone.utc)
-        job = UiTestJob(project_id=1, name="UI Job", status="done", created_at=now)
+        job = UiTestJob(project_id=1, name="UI Job", status="passed", created_at=now)
         db_session.add(job)
         db_session.flush()
 
         old_run = UiTestRun(
-            job_id=job.id, status="done",
+            job_id=job.id, status="passed",
             result='{"total":1,"pass_":1,"fail":0}',
             started_at=now - timedelta(days=14),
         )
         recent_run = UiTestRun(
-            job_id=job.id, status="done",
+            job_id=job.id, status="passed",
             result='{"total":1,"pass_":0,"fail":1}',
             started_at=now,
         )
@@ -285,8 +285,8 @@ class TestUiSummaryWithData:
         from app.models.ui_test import UiTestJob
 
         now = datetime.now(timezone.utc)
-        j1 = UiTestJob(project_id=1, name="J1", status="done", created_at=now)
-        j2 = UiTestJob(project_id=2, name="J2", status="done", created_at=now)
+        j1 = UiTestJob(project_id=1, name="J1", status="passed", created_at=now)
+        j2 = UiTestJob(project_id=2, name="J2", status="passed", created_at=now)
         db_session.add_all([j1, j2])
         db_session.commit()
 
@@ -301,17 +301,17 @@ class TestUiSummaryWithData:
         from app.models.ui_test import UiTestJob, UiTestRun
 
         now = datetime.now(timezone.utc)
-        job = UiTestJob(project_id=1, name="UI Job", status="fail", created_at=now)
+        job = UiTestJob(project_id=1, name="UI Job", status="failed", created_at=now)
         db_session.add(job)
         db_session.flush()
 
         r1 = UiTestRun(
-            job_id=job.id, status="fail",
+            job_id=job.id, status="failed",
             error_message="Playwright 不可用",
             started_at=now,
         )
         r2 = UiTestRun(
-            job_id=job.id, status="fail",
+            job_id=job.id, status="failed",
             error_message="npx not available on PATH",
             started_at=now,
         )
@@ -329,12 +329,12 @@ class TestUiSummaryWithData:
         from app.models.ui_test import UiTestJob, UiTestRun
 
         now = datetime.now(timezone.utc)
-        job = UiTestJob(project_id=1, name="UI Job", status="done", created_at=now)
+        job = UiTestJob(project_id=1, name="UI Job", status="passed", created_at=now)
         db_session.add(job)
         db_session.flush()
 
         run = UiTestRun(
-            job_id=job.id, status="done",
+            job_id=job.id, status="passed",
             result="not valid json {{{",
             started_at=now,
         )
@@ -351,11 +351,11 @@ class TestUiSummaryWithData:
         from app.models.ui_test import UiTestJob, UiTestRun
 
         now = datetime.now(timezone.utc)
-        job = UiTestJob(project_id=1, name="UI Job", status="done", created_at=now)
+        job = UiTestJob(project_id=1, name="UI Job", status="passed", created_at=now)
         db_session.add(job)
         db_session.flush()
 
-        run = UiTestRun(job_id=job.id, status="done", result="{}", started_at=now)
+        run = UiTestRun(job_id=job.id, status="passed", result="{}", started_at=now)
         db_session.add(run)
         db_session.commit()
 
@@ -396,11 +396,11 @@ class TestCombinedSummary:
         db_session.add(t)
 
         # UI
-        job = UiTestJob(project_id=1, name="UI Job", status="done", created_at=now)
+        job = UiTestJob(project_id=1, name="UI Job", status="passed", created_at=now)
         db_session.add(job)
         db_session.flush()
         run = UiTestRun(
-            job_id=job.id, status="done",
+            job_id=job.id, status="passed",
             result='{"total":3,"pass_":2,"fail":1}',
             started_at=now,
         )

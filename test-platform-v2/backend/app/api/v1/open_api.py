@@ -4,16 +4,21 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, Header, Request
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.exceptions import APIException
+from app.core.execution_status import canonical_exec_status
 from app.core.rate_limit import open_api_limiter
-from app.models.api_token import ApiToken
 from app.schemas.common import R
+from app.services import test_plan_service, token_service, ui_test_service
+
+if TYPE_CHECKING:
+    from app.models.api_token import ApiToken
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +28,7 @@ router = APIRouter(prefix="/open", tags=["开放API"])
 _HEALTH_PATH = "/open/health"
 
 
-def _check_rate_limit(token: ApiToken) -> None:
+def _check_rate_limit(token: "ApiToken") -> None:
     """Enforce 60 req/min per token. Raises 429 if exceeded."""
     allowed, wait = open_api_limiter.is_allowed(token.token_hash)
     if not allowed:
@@ -37,7 +42,7 @@ def _check_rate_limit(token: ApiToken) -> None:
 def verify_api_token(
     authorization: str | None = Header(default=None, alias="Authorization"),
     db: Session = Depends(get_db),
-) -> ApiToken:
+) -> "ApiToken | None":
     """Validate `Bearer tpat_xxx` against stored hashes."""
     if not authorization or not authorization.startswith("Bearer "):
         raise APIException(code=401, msg="缺少 API Token (Authorization: Bearer tpat_xxx)", http_status=401)
@@ -45,9 +50,8 @@ def verify_api_token(
     plain = authorization[len("Bearer "):]
     token_hash = hashlib.sha256(plain.encode()).hexdigest()
 
-    row = db.scalar(
-        select(ApiToken).where(ApiToken.token_hash == token_hash, ApiToken.enabled)
-    )
+    # 鉴权核心查询收敛至 token_service（Batch 182/C181-1）
+    row = token_service.verify_token_hash(db, token_hash)
     if not row:
         raise APIException(code=401, msg="无效或已禁用的 API Token", http_status=401)
 
@@ -69,42 +73,21 @@ def health_check():
 def ci_trigger_plan(
     plan_id: int,
     req: Request,
-    token: ApiToken = Depends(verify_api_token),
+    token: "ApiToken" = Depends(verify_api_token),
     db: Session = Depends(get_db),
 ):
     """外部 CI (Jenkins/GitHub Actions) 通过 API Token 触发测试计划。
 
     触发后返回执行摘要。结果可通过 GET /open/runs/{run_id} 查询。
     """
-    from app.models.test_plan import TestPlan, TestPlanCase, TestExecution
-    from datetime import datetime, timezone
-
-    plan = db.scalar(
-        select(TestPlan).where(TestPlan.id == plan_id, TestPlan.project_id == token.project_id)
+    plan, executed = test_plan_service.trigger_plan_from_ci(
+        db, plan_id, token.project_id, token_name=token.name
     )
     if not plan:
         raise APIException(code=404, msg="计划不存在")
 
-    # Execute all cases in the plan
-    pcases = db.scalars(
-        select(TestPlanCase).where(TestPlanCase.plan_id == plan_id)
-    ).all()
-
-    now = datetime.now(timezone.utc)
-    executed = 0
-    for pc in pcases:
-        exec_row = TestExecution(
-            plan_case_id=pc.id, executor_id=0, status="pending",
-            actual_result="", notes=f"[CI 自动触发] token={token.name}",
-            executed_at=now,
-        )
-        db.add(exec_row)
-        pc.last_status = "pending"
-        pc.last_executed_at = now
-        executed += 1
-
     # Update token last_used
-    token.last_used_at = now
+    token.last_used_at = datetime.now(timezone.utc)
 
     db.commit()
 
@@ -131,22 +114,16 @@ def ci_trigger_plan(
 @router.get("/runs/{run_id}", response_model=R[dict], summary="查询执行结果")
 def ci_get_run(
     run_id: int,
-    token: ApiToken = Depends(verify_api_token),
+    token: "ApiToken" = Depends(verify_api_token),
     db: Session = Depends(get_db),
 ):
     """外部 CI 查询某次执行的状态与结果。"""
-    from app.models.test_plan import TestExecution, TestPlanCase
-
-    exec_row = db.scalar(
-        select(TestExecution).where(TestExecution.id == run_id)
-    )
+    exec_row = test_plan_service.get_execution(db, run_id)
     if not exec_row:
         raise APIException(code=404, msg="执行记录不存在")
 
     # Project isolation via plan_case → plan
-    plan_case = db.scalar(
-        select(TestPlanCase).where(TestPlanCase.id == exec_row.plan_case_id)
-    )
+    plan_case = test_plan_service.get_plan_case(db, exec_row.plan_case_id)
     if not plan_case or plan_case.plan.project_id != token.project_id:
         raise APIException(code=403, msg="无权访问此执行记录")
 
@@ -165,41 +142,37 @@ def ci_get_run(
 @router.post("/results", response_model=R[dict], summary="回写执行结果")
 def ci_post_results(
     body: dict,
-    token: ApiToken = Depends(verify_api_token),
+    token: "ApiToken" = Depends(verify_api_token),
     db: Session = Depends(get_db),
 ):
     """外部 CI 回写执行结果 (status, actual_result, trace_id, notes)。
 
     Body: { run_id: int, status: str, actual_result?: str, trace_id?: str, notes?: str }
     """
-    from datetime import datetime, timezone
-    from app.models.test_plan import TestExecution, TestPlanCase
-
     run_id = body.get("run_id")
     if not run_id:
         raise APIException(code=400, msg="缺少 run_id")
 
-    exec_row = db.scalar(
-        select(TestExecution).where(TestExecution.id == run_id)
-    )
+    exec_row = test_plan_service.get_execution(db, run_id)
     if not exec_row:
         raise APIException(code=404, msg="执行记录不存在")
 
     # Project isolation
-    plan_case = db.scalar(
-        select(TestPlanCase).where(TestPlanCase.id == exec_row.plan_case_id)
-    )
+    plan_case = test_plan_service.get_plan_case(db, exec_row.plan_case_id)
     if not plan_case or plan_case.plan.project_id != token.project_id:
         raise APIException(code=403, msg="无权访问此执行记录")
 
     # Update fields
+    # Batch 182（P1-06）：接受新旧双值（CI 旧脚本传 pass/fail/skip/block），规范化后落库
     if "status" in body:
-        valid_statuses = {"pass", "fail", "skip", "block", "pending"}
+        valid_statuses = {"pass", "fail", "skip", "block", "pending",
+                          "passed", "failed", "skipped", "blocked", "running", "cancelled"}
         if body["status"] not in valid_statuses:
             raise APIException(code=400, msg=f"无效状态值，允许: {', '.join(sorted(valid_statuses))}")
-        exec_row.status = body["status"]
+        canonical = canonical_exec_status(body["status"])
+        exec_row.status = canonical
         # Also update plan_case last_status
-        plan_case.last_status = body["status"]
+        plan_case.last_status = canonical
         plan_case.last_executed_at = datetime.now(timezone.utc)
 
     if "actual_result" in body:
@@ -213,8 +186,8 @@ def ci_post_results(
     db.commit()
     db.refresh(exec_row)
 
-    # Notify on terminal status
-    if body.get("status") in ("pass", "fail"):
+    # Notify on terminal status（Batch 182：接受新旧双值）
+    if canonical_exec_status(body.get("status", "")) in ("passed", "failed"):
         try:
             from app.services.notify_service import notify_sync
             notify_sync(db, token.project_id, "plan_done", {
@@ -238,64 +211,29 @@ def ci_post_results(
 def ci_trigger_ui_test(
     job_id: int,
     req: Request,
-    token: ApiToken = Depends(verify_api_token),
+    token: "ApiToken" = Depends(verify_api_token),
     db: Session = Depends(get_db),
 ):
     """外部 CI (Jenkins/GitHub Actions) 通过 API Token 触发 UI 自动化任务。
 
     返回 run 记录，可通过轮询 GET /api/v1/open/ui-tests/runs/{run_id} 查询状态。
     """
-    from app.models.ui_test import UiTestJob, UiTestRun
-    from datetime import datetime, timezone
-
-    job = db.scalar(
-        select(UiTestJob).where(
-            UiTestJob.id == job_id, UiTestJob.project_id == token.project_id
+    try:
+        job, run, pw_error = ui_test_service.trigger_ui_test_from_ci(
+            db, job_id, token.project_id, token_name=token.name
         )
-    )
-    if not job:
+    except ValueError as e:
+        raise APIException(code=400, msg=str(e))
+    if job is None:
         raise APIException(code=404, msg="UI 测试任务不存在")
 
-    if job.status == "running":
-        raise APIException(code=400, msg="任务正在执行中，请等待完成后再触发")
-
-    # 检查 Playwright
-    from app.services.playwright_executor import _check_playwright_installed
-    pw_ok, pw_msg = _check_playwright_installed()
-
-    # 解析环境 base_url
-    base_url = ""
-    if job.environment_id:
-        from app.models.environment import Environment
-        env = db.get(Environment, job.environment_id)
-        base_url = env.base_url if env else ""
-
-    now = datetime.now(timezone.utc)
-    job.status = "running" if pw_ok else "fail"
-    job.last_result = json.dumps({} if pw_ok else {"error": pw_msg}, ensure_ascii=False)
-
-    run = UiTestRun(
-        job_id=job_id,
-        status="pending" if pw_ok else "fail",
-        base_url=base_url,
-        started_at=now,
-        result=json.dumps({}, ensure_ascii=False),
-    )
-    if not pw_ok:
-        run.status = "fail"
-        run.finished_at = now
-        run.error_message = f"Playwright 不可用: {pw_msg}"
-        run.result = json.dumps({"error": pw_msg}, ensure_ascii=False)
-
-    db.add(run)
-
     # Update token last_used
-    token.last_used_at = now
+    token.last_used_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(run)
 
     # 后台执行 (仅当 Playwright 可用)
-    if pw_ok:
+    if pw_error is None:
         try:
             # Batch 179（FIX-173-P2-05）：统一走 ui_runner_queue 线程池入口，
             # 移除 open_api 专属裸线程（此前 UI 执行存在 三套入口并存 的调度冗余）。
@@ -317,18 +255,16 @@ def ci_trigger_ui_test(
 @router.get("/ui-tests/runs/{run_id}", response_model=R[dict], summary="CI 查询 UI 测试运行状态")
 def ci_get_ui_run(
     run_id: int,
-    token: ApiToken = Depends(verify_api_token),
+    token: "ApiToken" = Depends(verify_api_token),
     db: Session = Depends(get_db),
 ):
     """外部 CI 查询 UI 测试运行的状态与结果。"""
-    from app.models.ui_test import UiTestRun, UiTestJob
-
-    run = db.get(UiTestRun, run_id)
+    run = ui_test_service.get_run_orm(db, run_id)
     if not run:
         raise APIException(code=404, msg="运行记录不存在")
 
     # Project isolation via job
-    job = db.get(UiTestJob, run.job_id)
+    job = ui_test_service.get_job_orm(db, run.job_id)
     if not job or job.project_id != token.project_id:
         raise APIException(code=403, msg="无权访问此运行记录")
 
@@ -357,7 +293,7 @@ def ci_get_ui_run(
 @router.get("/reports/{report_id}/gate/check", summary="CI/CD 质量门禁检查")
 def ci_check_report_gate(
     report_id: int,
-    token: ApiToken = Depends(verify_api_token),
+    token: "ApiToken" = Depends(verify_api_token),
     db: Session = Depends(get_db),
 ):
     """CI/CD pipeline 质量门禁检查（API Token 鉴权）。

@@ -176,7 +176,7 @@ class TestPlaywrightExecutorPopen:
                 result = run_playwright_test(db_session, run.id, job.id, job.project_id)
 
         assert output_reader_started.is_set()
-        assert result["status"] == "done"
+        assert result["status"] == "passed"
         spec_path.unlink(missing_ok=True)
 
     def test_executor_sets_artifact_dir(self, db_session, ui_job_factory, ui_run_factory, monkeypatch):
@@ -338,7 +338,7 @@ class TestPlaywrightExecutorTimeout:
         db_session.refresh(run)
         # Process should have been killed
         mock_proc.kill.assert_called()
-        assert run.status == "fail"
+        assert run.status == "failed"
         assert "超时" in (run.error_message or "")
 
         # Cleanup
@@ -431,7 +431,7 @@ class TestPlaywrightJsonReportFile:
             db_session, run.id, job.id, job.project_id,
         )
 
-        assert result["status"] == "done"
+        assert result["status"] == "passed"
         assert result["result"]["total"] == 1
         assert result["result"]["pass_"] == 1
         assert result["result"]["fail"] == 0
@@ -474,7 +474,7 @@ class TestPlaywrightJsonReportFile:
             db_session, run.id, job.id, job.project_id,
         )
 
-        assert result["status"] == "fail"
+        assert result["status"] == "failed"
         assert result["result"]["total"] == 2
         assert result["result"]["pass_"] == 1
         assert result["result"]["fail"] == 1
@@ -606,7 +606,7 @@ class TestPlaywrightExecutorHelperFunctions:
             with calls_lock:
                 execution_calls.append(claimed_run_id)
             time.sleep(0.1)
-            return {"status": "done", "run_id": claimed_run_id}
+            return {"status": "passed", "run_id": claimed_run_id}
 
         monkeypatch.setattr(playwright_executor, "_run_playwright_test", fake_execute)
         start = threading.Barrier(2)
@@ -626,7 +626,7 @@ class TestPlaywrightExecutorHelperFunctions:
                 ]]
 
             assert execution_calls == [run_id]
-            assert sorted(result["status"] for result in results) == ["done", "running"]
+            assert sorted(result["status"] for result in results) == ["passed", "running"]
 
             # Both the winning and losing consumers must release their slots.
             assert semaphore.acquire(blocking=False) is True

@@ -116,12 +116,12 @@ def _execute_run(run_id: int, job_id: int, project_id: int) -> None:
         try:
             run = db.get(UiTestRun, run_id)
             if run and run.status == "running":
-                run.status = "fail"
+                run.status = "failed"
                 run.finished_at = datetime.now(timezone.utc)
                 run.error_message = "执行器内部异常"
                 job = db.get(UiTestJob, job_id)
                 if job:
-                    job.status = "fail"
+                    job.status = "failed"
                 db.commit()
         except Exception:
             logger.exception("Failed to update run/job after crash: run_id=%s", run_id)

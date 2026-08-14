@@ -40,7 +40,7 @@ def test_manual_p0_converts_to_ui(plan_with_case, db_session, monkeypatch):
     assert result["skipped"] == 0
     assert result["passed"] == 1
     db_session.refresh(pc)
-    assert pc.last_status == "pass"
+    assert pc.last_status == "passed"
 
 
 def test_manual_p2_still_skips(plan_with_case, db_session, monkeypatch):

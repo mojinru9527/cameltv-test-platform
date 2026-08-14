@@ -1,61 +1,28 @@
-import { Badge, Button, PageShell } from '@/ui'
+import { PageShell } from '@/ui'
 import { useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
-import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import { Textarea } from '@/components/ui/textarea'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import DomainTree from '@/components/DomainTree'
-import Pagination from '@/components/Pagination'
-import { AsyncState } from '@/components/state'
 
-import { Search, RotateCcw, Plus, Edit, Trash2, History, FileCheck, CheckCircle2, XCircle, Send, Upload, Download } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { deleteTestCase, fetchDomains, fetchTaxonomy, fetchTestCases, fetchTestCaseStats, batchUpdateCases, batchDeleteCases, fetchVersions, reviewCase, importExcel, importXmind, downloadExport } from '@/api/testcase'
 import type { TaxonomyModuleNode } from '@/api/testcase'
-import { countCasesByType, formatNumberedText, formatStepActions, formatStepExpectations, sortCasesNewestFirst } from './caseListFormatters'
+import { countCasesByType, sortCasesNewestFirst } from './caseListFormatters'
 import { buildCaseListParams, countDirectCases, flattenTaxonomyModules } from './caseTaxonomyFilters'
+import { groupDomains } from '@/utils/domainNaming'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuthStore } from '@/stores/auth'
 import CaseDrawer from './CaseDrawer'
 import VersionDialog from './VersionDialog'
+import CaseFilterBar from './components/CaseFilterBar'
+import CaseBatchToolbar from './components/CaseBatchToolbar'
+import CaseTable from './components/CaseTable'
+import CasePagination from './components/CasePagination'
+import BatchDeleteDialog from './components/BatchDeleteDialog'
+import ReviewDialog from './components/ReviewDialog'
 import type { TestCaseVersion } from '@/types'
-
-import type { BadgeTone } from '@/ui'
-const PRIORITY_TONES: Record<string, BadgeTone> = { P0: 'danger', P1: 'warning', P2: 'info', P3: 'neutral' }
-const REVIEW_LABELS: Record<string, string> = { draft: '草稿', submitted: '已提交', approved: '已通过', rejected: '已驳回' }
-const REVIEW_TONES: Record<string, BadgeTone> = { draft: 'neutral', submitted: 'info', approved: 'success', rejected: 'danger' }
-const CASE_NATURE_LABELS: Record<string, string> = { positive: '正向', negative: '负向', boundary: '边界' }
-const CASE_NATURE_TONES: Record<string, BadgeTone> = { positive: 'success', negative: 'danger', boundary: 'warning' }
-const ALL_FILTER = '__all__'
 
 export default function TestCasePage() {
   useDocumentTitle('用例库')
@@ -250,8 +217,19 @@ export default function TestCasePage() {
     () => taxonomy.find((surface) => surface.surface === selSurface),
     [selSurface, taxonomy],
   )
-  const taxonomyDomains = selectedSurface?.domains || []
+  const taxonomyDomains = useMemo(() => selectedSurface?.domains || [], [selectedSurface])
   const selectedTaxonomyDomain = taxonomyDomains.find((domain) => domain.domain === selDomain)
+
+  // Batch 182（FIX-173-P3-04）：域筛选下拉按 DOMAIN_GROUP_ORDER（用户端/运营后台/接口测试/其他）
+  // 分组，组内按用例数降序（数量更有区分度），标签统一走 domainNaming（裸域补前缀展示）。
+  const groupedTaxonomyDomains = useMemo(() => {
+    return groupDomains(taxonomyDomains, (d) => d.domain).map(([group, items]) => ({
+      group,
+      items: [...items].sort(
+        (a, b) => (b.count - a.count) || a.domain.localeCompare(b.domain, 'zh-CN'),
+      ),
+    }))
+  }, [taxonomyDomains])
 
   // ── Domain tree data ──
   const domainTree = useMemo(() => {
@@ -373,6 +351,10 @@ export default function TestCasePage() {
     }
   }
 
+  const clearFilters = () => {
+    setSelSurface(''); setSelDomain(''); setSelModule(''); setCaseNature(''); setPriority(''); setKeywordInput(''); setKeyword(''); setPage(1)
+  }
+
   return (
     <PageShell
       title="用例服务"
@@ -436,384 +418,88 @@ export default function TestCasePage() {
         {/* Right: Filter + Table */}
         <div className="flex min-h-[540px] min-w-0 flex-1 flex-col lg:h-[calc(100vh-215px)]">
           {/* Filters */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <Select value={selSurface || ALL_FILTER} onValueChange={(v) => {
-              setSelSurface(v === ALL_FILTER ? '' : v)
-              setSelDomain('')
-              setSelModule('')
-              setSelDirect(false)
-              setPage(1)
-            }}>
-              <SelectTrigger className="w-full sm:w-[120px]" size="sm" aria-label="按产品界面筛选">
-                <SelectValue placeholder="全部界面" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value={ALL_FILTER}>全部界面</SelectItem>
-                {taxonomy.map((item) => (
-                  <SelectItem key={item.surface} value={item.surface}>{item.surface} ({item.count})</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select disabled={!selSurface} value={selDomain || ALL_FILTER} onValueChange={(v) => {
-              setSelDomain(v === ALL_FILTER ? '' : v)
-              setSelModule('')
-              setSelDirect(false)
-              setPage(1)
-            }}>
-              <SelectTrigger className="w-full sm:w-[150px]" size="sm" aria-label="按业务模块筛选">
-                <SelectValue placeholder={selSurface ? '全部业务模块' : '先选界面'} />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value={ALL_FILTER}>全部业务模块</SelectItem>
-                {taxonomyDomains.map((d) => (
-                  <SelectItem key={d.domain} value={d.domain}>{d.domain}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select disabled={!selDomain} value={selModule || ALL_FILTER} onValueChange={(v) => { setSelModule(v === ALL_FILTER ? '' : v); setSelDirect(false); setPage(1) }}>
-              <SelectTrigger className="w-full sm:w-[170px]" size="sm" aria-label="按子模块筛选">
-                <SelectValue placeholder={selDomain ? '全部子模块' : '先选业务模块'} />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value={ALL_FILTER}>全部子模块</SelectItem>
-                {selModules.map((m: any) => (
-                  <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={caseNature || ALL_FILTER} onValueChange={(v) => { setCaseNature(v === ALL_FILTER ? '' : v); setPage(1) }}>
-              <SelectTrigger className="w-full sm:w-[110px]" size="sm" aria-label="按用例场景筛选">
-                <SelectValue placeholder="全部场景" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value={ALL_FILTER}>全部场景</SelectItem>
-                <SelectItem value="positive">正向</SelectItem>
-                <SelectItem value="negative">负向</SelectItem>
-                <SelectItem value="boundary">边界</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={priority || ALL_FILTER} onValueChange={(v) => { setPriority(v === ALL_FILTER ? '' : v); setPage(1) }}>
-              <SelectTrigger className="w-full sm:w-[100px]" size="sm" aria-label="按用例优先级筛选">
-                <SelectValue placeholder="全部优先级" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value={ALL_FILTER}>全部优先级</SelectItem>
-                {['P0', 'P1', 'P2', 'P3'].map((v) => (
-                  <SelectItem key={v} value={v}>{v}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <InputGroup className="w-full sm:w-[240px]">
-              <InputGroupAddon>
-                <Search className="size-3.5" />
-              </InputGroupAddon>
-              <InputGroupInput
-                placeholder="搜索标题/关键字"
-                value={keywordInput}
-                onChange={(e) => setKeywordInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    const nextKeyword = keywordInput.trim()
-                    setPage(1)
-                    if (nextKeyword === keyword) refetch()
-                    else setKeyword(nextKeyword)
-                  }
-                }}
-              />
-            </InputGroup>
-
-            <Button size="sm" onClick={() => {
-              const nextKeyword = keywordInput.trim()
-              setPage(1)
-              if (nextKeyword === keyword) refetch()
-              else setKeyword(nextKeyword)
-            }}>
-              <Search className="size-3.5" data-icon="inline-start" />
-              搜索
-            </Button>
-            <Button size="sm" variant="secondary" onClick={() => {
-              setSelSurface(''); setSelDomain(''); setSelModule(''); setCaseNature(''); setPriority(''); setKeywordInput(''); setKeyword(''); setPage(1)
-            }}>
-              <RotateCcw className="size-3.5" data-icon="inline-start" />
-              重置
-            </Button>
-            {(selSurface || selDomain || selModule || caseNature || priority) && (
-              <p className="w-full text-xs text-muted-foreground">当前搜索在已选筛选（界面/域/模块/性质/优先级）内生效</p>
-            )}
-            <div className="hidden flex-1 sm:block" />
-            {canCreate && (
-              <>
-                <input
-                  ref={importInputRef}
-                  type="file"
-                  accept=".xlsx,.xmind"
-                  className="hidden"
-                  aria-label="导入用例文件"
-                  onChange={(e) => handleImportFile(e.target.files?.[0])}
-                />
-                <Button size="sm" variant="secondary" disabled={importing} onClick={() => importInputRef.current?.click()}>
-                  <Upload className="size-3.5" data-icon="inline-start" />
-                  {importing ? '导入中...' : '导入'}
-                </Button>
-              </>
-            )}
-            <Button size="sm" variant="ghost" onClick={() => handleExport('excel')}>
-              <Download className="size-3.5" data-icon="inline-start" />
-              导出 Excel
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => handleExport('xmind')}>
-              <Download className="size-3.5" data-icon="inline-start" />
-              导出 XMind
-            </Button>
-            {canCreate && (
-              <Button size="sm" className="w-full sm:w-auto" onClick={() => openEdit()}>
-                <Plus className="size-3.5" data-icon="inline-start" />
-                新建用例
-              </Button>
-            )}
-          </div>
+          <CaseFilterBar
+            taxonomy={taxonomy}
+            groupedTaxonomyDomains={groupedTaxonomyDomains}
+            selModules={selModules}
+            selSurface={selSurface}
+            setSelSurface={setSelSurface}
+            selDomain={selDomain}
+            setSelDomain={setSelDomain}
+            selModule={selModule}
+            setSelModule={setSelModule}
+            setSelDirect={setSelDirect}
+            caseNature={caseNature}
+            setCaseNature={setCaseNature}
+            priority={priority}
+            setPriority={setPriority}
+            keywordInput={keywordInput}
+            setKeywordInput={setKeywordInput}
+            keyword={keyword}
+            setKeyword={setKeyword}
+            setPage={setPage}
+            refetch={refetch}
+            canCreate={canCreate}
+            importing={importing}
+            importInputRef={importInputRef}
+            onImportFile={handleImportFile}
+            onExport={handleExport}
+            onNewCase={() => openEdit()}
+          />
 
           {/* Batch toolbar */}
           {selected.size > 0 && (
-            <div className="flex items-center gap-2 rounded-md border bg-accent/30 px-3 py-2">
-              <span className="text-sm font-medium">已选 {selected.size} 条</span>
-              {canUpdate && <Select value={batchPriority || undefined} onValueChange={setBatchPriority}>
-                <SelectTrigger className="w-[100px]" size="sm" aria-label="批量设置优先级">
-                  <SelectValue placeholder="优先级" />
-                </SelectTrigger>
-                <SelectContent position="popper">
-                  {['P0','P1','P2','P3'].map(v => (
-                    <SelectItem key={v} value={v}>{v}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>}
-              {canUpdate && <Button size="sm" variant="secondary" onClick={doBatchUpdate} disabled={batchUpdating || !batchPriority}>
-                {batchUpdating ? '更新中...' : '批量更新'}
-              </Button>}
-              <div className="flex-1" />
-              {canDelete && <Button size="sm" variant="danger" onClick={() => setBatchDeleteDialog(true)} disabled={batchDeleting}>
-                <Trash2 className="size-3.5" data-icon="inline-start" />
-                {batchDeleting ? '删除中...' : `批量删除 (${selected.size})`}
-              </Button>}
-              <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>取消</Button>
-            </div>
+            <CaseBatchToolbar
+              selectedCount={selected.size}
+              canUpdate={canUpdate}
+              canDelete={canDelete}
+              batchPriority={batchPriority}
+              setBatchPriority={setBatchPriority}
+              batchUpdating={batchUpdating}
+              batchDeleting={batchDeleting}
+              onBatchUpdate={doBatchUpdate}
+              onOpenBatchDeleteDialog={() => setBatchDeleteDialog(true)}
+              onCancelSelection={() => setSelected(new Set())}
+            />
           )}
 
           {/* Table + Pagination — flex-1 scrollable */}
           <div className="flex-1 min-h-0 flex flex-col">
-            <div
-              className="flex-1 min-h-0 overflow-auto rounded-md border"
-              role="region"
-              aria-label="测试用例数据表"
-              tabIndex={0}
-              data-density={sortedItems.length >= 50 ? 'high' : 'standard'}
-            >
-          <AsyncState
-            isLoading={isLoading}
-            isError={isError}
-            error={error}
-            data={data?.items}
-            onRetry={refetch}
-            emptyTitle="暂无测试用例"
-            emptyDescription="点击「新建用例」开始创建"
-            emptyAction={keyword || selSurface || selDomain || selModule || caseNature || priority
-              ? {
-                  label: '清除筛选',
-                  onClick: () => { setSelSurface(''); setSelDomain(''); setSelModule(''); setCaseNature(''); setPriority(''); setKeywordInput(''); setKeyword(''); setPage(1) },
-                }
-              : canCreate
-                ? { label: '新建用例', onClick: () => openEdit() }
-                : undefined}
-            skeletonType="table"
-            loadingRows={4}
-          >
-            {() => (
-            <div className="min-w-0 overflow-x-auto">
-              <Table className="ui-table min-w-[900px] [&_td]:py-2.5">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[40px]">
-                      {canBatchSelect && <Checkbox
-                        checked={selected.size === sortedItems.length && sortedItems.length > 0}
-                        onCheckedChange={toggleSelectAll}
-                        aria-label="选择当前页全部用例"
-                      />}
-                    </TableHead>
-                    <TableHead className="w-[100px]">模块名称</TableHead>
-                    <TableHead className="w-[160px]">用例标题</TableHead>
-                    <TableHead className="w-[70px]">用例等级</TableHead>
-                    <TableHead className="w-[64px]">场景</TableHead>
-                    <TableHead className="w-[180px]">前置条件</TableHead>
-                    <TableHead className="w-[200px]">操作步骤</TableHead>
-                    <TableHead className="w-[200px]">预期结果</TableHead>
-                    <TableHead className="w-[60px]">评审</TableHead>
-                    <TableHead className="sticky right-0 z-20 w-[132px] bg-card shadow-[-10px_0_18px_-16px_hsl(var(--foreground))]">
-                      操作
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedItems.map((r: any) => (
-                    <TableRow
-                      key={r.id}
-                      className={sortedItems.length >= 50 ? '[content-visibility:auto] [contain-intrinsic-size:auto_44px]' : undefined}
-                    >
-                      <TableCell>
-                        {canBatchSelect && <Checkbox
-                          checked={selected.has(r.id)}
-                          onCheckedChange={() => toggleSelect(r.id)}
-                          aria-label={`选择用例：${r.title || r.id}`}
-                        />}
-                      </TableCell>
-                      <TableCell className="max-w-[100px] truncate">
-                        <span
-                          className="line-clamp-1"
-                          title={[r.taxonomy_domain, r.taxonomy_module].filter(Boolean).join(' / ')}
-                        >
-                          {r.taxonomy_domain || r.module || '......'}
-                        </span>
-                      </TableCell>
-                      <TableCell className="max-w-[160px] truncate">
-                        <button
-                          type="button"
-                          onClick={() => openEdit(r)}
-                          className="line-clamp-1 text-left hover:text-primary hover:underline"
-                          title={`查看/编辑用例：${r.title || r.id}`}
-                        >
-                          {r.title || '......'}
-                        </button>
-                      </TableCell>
-                      <TableCell>
-                        <Badge tone={PRIORITY_TONES[r.priority] || 'neutral'}>
-                          {r.priority}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge tone={CASE_NATURE_TONES[r.positive_negative] || 'neutral'}>
-                          {CASE_NATURE_LABELS[r.positive_negative] || '未标注'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-[180px] truncate text-xs">
-                        <span className="line-clamp-1">{formatNumberedText(r.preconditions).join(' ') || '......'}</span>
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate text-xs">
-                        <span className="line-clamp-1">{formatStepActions(r.steps).join(' ') || '......'}</span>
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate text-xs">
-                        <span className="line-clamp-1">{formatStepExpectations(r.steps, r.expected_result).join(' ') || '......'}</span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge tone={REVIEW_TONES[r.review_status] || 'neutral'} className="text-xs">
-                          {REVIEW_LABELS[r.review_status] || r.review_status || '草稿'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="sticky right-0 z-10 bg-card shadow-[-10px_0_18px_-16px_hsl(var(--foreground))]">
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="icon-xs"
-                            variant="ghost"
-                            onClick={() => openVersionHistory(r)}
-                            aria-label={`查看版本历史：${r.title || r.id}`}
-                          >
-                            <History className="size-3" aria-hidden="true" />
-                          </Button>
-                          {/* Review actions (batch-34) */}
-                          {canSubmitReview && r.review_status === 'draft' && (
-                            <Button
-                              size="icon-xs"
-                              variant="ghost"
-                              onClick={() => openReviewDialog(r, 'submit')}
-                              aria-label={`提交评审：${r.title || r.id}`}
-                            >
-                              <Send className="size-3 text-status-info" aria-hidden="true" />
-                            </Button>
-                          )}
-                          {canApproveReview && r.review_status === 'submitted' && (
-                            <>
-                              <Button
-                                size="icon-xs"
-                                variant="ghost"
-                                onClick={() => openReviewDialog(r, 'approve')}
-                                aria-label={`通过评审：${r.title || r.id}`}
-                              >
-                                <CheckCircle2 className="size-3 text-status-success" aria-hidden="true" />
-                              </Button>
-                              <Button
-                                size="icon-xs"
-                                variant="ghost"
-                                onClick={() => openReviewDialog(r, 'reject')}
-                                aria-label={`驳回评审：${r.title || r.id}`}
-                              >
-                                <XCircle className="size-3 text-status-danger" aria-hidden="true" />
-                              </Button>
-                            </>
-                          )}
-                          {canUpdate && <Button
-                            size="icon-xs"
-                            variant="ghost"
-                            onClick={() => openEdit(r)}
-                            aria-label={`编辑用例：${r.title || r.id}`}
-                          >
-                            <Edit className="size-3" aria-hidden="true" />
-                          </Button>}
-                          {canDelete && <AlertDialog open={deleteTarget === r.id} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                size="icon-xs"
-                                variant="ghost"
-                                className="text-destructive hover:bg-destructive/10"
-                                onClick={() => setDeleteTarget(r.id)}
-                                aria-label={`删除用例：${r.title || r.id}`}
-                              >
-                                <Trash2 className="size-3" aria-hidden="true" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent size="sm">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>确定删除？</AlertDialogTitle>
-                                <AlertDialogDescription>此操作不可撤销。</AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>取消</AlertDialogCancel>
-                                <AlertDialogAction variant="destructive" onClick={() => doDelete(r.id)}>删除</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            )}
-          </AsyncState>
-            </div>
+            <CaseTable
+              isLoading={isLoading}
+              isError={isError}
+              error={error}
+              data={data}
+              sortedItems={sortedItems}
+              refetch={refetch}
+              activeFilters={{ keyword, selSurface, selDomain, selModule, caseNature, priority }}
+              onClearFilters={clearFilters}
+              canCreate={canCreate}
+              canBatchSelect={canBatchSelect}
+              selected={selected}
+              onToggleSelectAll={toggleSelectAll}
+              onToggleSelect={toggleSelect}
+              canSubmitReview={canSubmitReview}
+              canApproveReview={canApproveReview}
+              canUpdate={canUpdate}
+              canDelete={canDelete}
+              deleteTarget={deleteTarget}
+              setDeleteTarget={setDeleteTarget}
+              onDelete={doDelete}
+              onEdit={openEdit}
+              onOpenVersionHistory={openVersionHistory}
+              onOpenReviewDialog={openReviewDialog}
+            />
 
-          {/* Pagination */}
-          <div className="flex shrink-0 flex-col items-stretch justify-between gap-3 border-t pt-2 sm:flex-row sm:items-center sm:gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">每页</span>
-              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1) }}>
-                <SelectTrigger className="w-[80px]" size="sm" aria-label="每页显示条数"><SelectValue /></SelectTrigger>
-                <SelectContent position="popper">
-                  {[20, 50, 100].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <span className="text-sm text-muted-foreground">条</span>
-            </div>
-            <Pagination
+            {/* Pagination */}
+            <CasePagination
               page={data?.page || 1}
               totalPages={totalPages}
               total={data?.total || 0}
-              onChange={(p) => setPage(p)}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
             />
-          </div>
           </div>
         </div>
       </div>
@@ -833,68 +519,25 @@ export default function TestCasePage() {
         versions={versions}
       />
 
-      <AlertDialog open={batchDeleteDialog} onOpenChange={setBatchDeleteDialog}>
-        <AlertDialogContent size="sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>确认批量删除用例？</AlertDialogTitle>
-            <AlertDialogDescription>
-              将从「{currentProjectName}」删除选中的 {selected.size} 条用例。此操作不可撤销，
-              服务端将以原子事务处理全部范围，请确认后继续。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={batchDeleting}>取消</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={(event) => {
-                event.preventDefault()
-                void doBatchDelete()
-              }}
-              disabled={batchDeleting || selected.size === 0}
-            >
-              {batchDeleting ? '删除中...' : '确认删除'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <BatchDeleteDialog
+        open={batchDeleteDialog}
+        onOpenChange={setBatchDeleteDialog}
+        count={selected.size}
+        projectName={currentProjectName}
+        deleting={batchDeleting}
+        onConfirm={doBatchDelete}
+      />
 
       {/* ── Review Dialog (batch-34) ── */}
-      <AlertDialog open={reviewDialog} onOpenChange={setReviewDialog}>
-        <AlertDialogContent size="sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {reviewAction === 'submit' ? '提交评审' : reviewAction === 'approve' ? '通过评审' : '驳回用例'}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {reviewAction === 'submit'
-                ? '确认将此用例提交评审？提交后状态变为"已提交"。'
-                : reviewAction === 'approve'
-                  ? '确认通过此用例的评审？'
-                  : '请填写驳回原因：'}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          {(reviewAction === 'reject') && (
-            <div className="my-3">
-              <Textarea
-                placeholder="驳回原因..."
-                value={reviewComment}
-                onChange={(e) => setReviewComment(e.target.value)}
-                rows={3}
-              />
-            </div>
-          )}
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setReviewDialog(false)}>取消</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={doReview}
-              variant={reviewAction === 'reject' ? 'destructive' : 'default'}
-              disabled={reviewing || (reviewAction === 'reject' && !reviewComment.trim())}
-            >
-              {reviewing ? '处理中...' : reviewAction === 'submit' ? '确认提交' : reviewAction === 'approve' ? '确认通过' : '确认驳回'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ReviewDialog
+        open={reviewDialog}
+        onOpenChange={setReviewDialog}
+        action={reviewAction}
+        comment={reviewComment}
+        setComment={setReviewComment}
+        reviewing={reviewing}
+        onReview={doReview}
+      />
     </div>
     </PageShell>
   )

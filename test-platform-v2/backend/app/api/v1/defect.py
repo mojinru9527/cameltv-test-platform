@@ -13,7 +13,6 @@ from app.schemas.defect import DefectCreate, DefectOut, DefectStats, DefectUpdat
 from app.services import defect_service
 from app.services.audit_service import write_audit
 from app.services.knowledge import ingest_service
-from app.models.user import User
 
 logger = logging.getLogger("defect")
 router = APIRouter(prefix="/defects", tags=["缺陷管理"])
@@ -38,6 +37,8 @@ def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
 
     必须使用独立的 SessionLocal()，因为 BackgroundTasks 在响应返回后执行，
     原请求的 db session 可能已关闭。
+    Batch 182（C181-1）路由层禁 ORM 豁免：SessionLocal() 仅用于此
+    BackgroundTasks 独立会话模式，不含查询；查询已收敛至 services。
     """
     from app.core.db import SessionLocal
     from app.services.notify_service import notify_sync
@@ -108,8 +109,7 @@ def create_defect(
     # (replaces fire-and-forget asyncio.create_task — task is tracked and
     # runs in its own DB session to avoid session-closed errors).
     if body.assignee_id and body.assignee_id > 0:
-        assignee = db.get(User, body.assignee_id)
-        assignee_name = (assignee.nickname or assignee.username) if assignee else ""
+        assignee_name = defect_service.get_user_display_name(db, body.assignee_id)
         background_tasks.add_task(
             _run_notify_in_new_session,
             current.project_id or 0,
