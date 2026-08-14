@@ -10,6 +10,7 @@ import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/ui'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { SearchableSelect } from '@/components/ui/searchable-select'
 import {
   Select,
   SelectContent,
@@ -394,19 +395,27 @@ function CaseForm({ register, control, errors, selType, domains, selModules, wat
       {/* Row: Domain, Module */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="case-domain" className="mb-1 block text-sm font-medium">所属域</label>
+          <label htmlFor="case-domain" className="mb-1 block text-sm font-medium">所属域 <span className="text-destructive">*</span></label>
           <Controller
             name="domain"
             control={control}
             render={({ field }: any) => (
-              <Select value={field.value || undefined} onValueChange={field.onChange}>
-                <SelectTrigger id="case-domain" size="sm"><SelectValue placeholder="选择域" /></SelectTrigger>
-                <SelectContent position="popper">
-                  {domains.map((d: any) => (
-                    <SelectItem key={d.domain} value={d.domain}>{d.domain}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              // Batch 178（FIX-173-P2-03）：可搜索域下拉（100+ 项扁平列表无法定位，
+              // 按 用户端/运营后台/接口测试 分组 + 关键字过滤）
+              <SearchableSelect
+                triggerId="case-domain"
+                value={field.value || undefined}
+                onValueChange={field.onChange}
+                placeholder="选择域"
+                options={(domains || []).map((d: any) => ({
+                  value: d.domain,
+                  label: d.domain,
+                  group: d.domain.startsWith('用户端') ? '用户端'
+                    : d.domain.startsWith('运营后台') ? '运营后台'
+                    : d.domain.startsWith('接口测试') ? '接口测试'
+                    : '其他',
+                }))}
+              />
             )}
           />
           {errors.domain && (
