@@ -30,6 +30,7 @@ import {
 import { fetchEnvironments } from '@/api/environment'
 import { fetchTestCaseStats } from '@/api/testcase'
 import { fetchRequirements } from '@/api/requirement'
+import { fetchCoverage } from '@/api/trace'
 import type { Environment, IntegrationConfig, SyncLog, RequirementDocument } from '@/types'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import ConfirmActionDialog from '@/components/ConfirmActionDialog'
@@ -151,10 +152,13 @@ export default function IntegrationPage() {
   useEffect(() => {
     const controller = new AbortController()
     setLoadingLinkage(true)
+    // Batch 175（FIX-173-P1-01）：需求覆盖率统一为 trace 口径（source_doc_id 实际关联），
+    // 此前用 imported_count 计数器（AI 生成路径不更新）导致 集成页 67% vs 追溯 33.3% 分裂。
     Promise.all([
       fetchRequirements(undefined, controller.signal),
       fetchTestCaseStats(controller.signal),
-    ]).then(([requirementsPage, caseStats]) => {
+      fetchCoverage(),
+    ]).then(([requirementsPage, caseStats, coverage]) => {
       if (controller.signal.aborted) return
       const caseData = caseStats as unknown as { total: number }
       const requirements = requirementsPage.items || []
@@ -162,7 +166,7 @@ export default function IntegrationPage() {
         totalRequirements: requirementsPage.total,
         totalCases: caseData.total || 0,
         linkedCases: requirements.reduce((sum, r) => sum + (r.imported_count || 0), 0),
-        reqsWithCases: requirements.filter(r => (r.imported_count || 0) > 0).length,
+        reqsWithCases: coverage?.requirements_with_cases ?? requirements.filter(r => (r.imported_count || 0) > 0).length,
         apiEndpoints: 0,  // would come from apitest API
         uiScripts: 0,     // would come from uitest API
       })
@@ -375,13 +379,15 @@ export default function IntegrationPage() {
               Promise.all([
                 fetchRequirements().catch(() => [] as RequirementDocument[]),
                 fetchTestCaseStats().catch(() => ({ total: 0 })),
-              ]).then(([reqs, caseStats]) => {
+                fetchCoverage().catch(() => null),
+              ]).then(([reqs, caseStats, coverage]) => {
                 const caseData = caseStats as { total: number }
+                const reqList = reqs as RequirementDocument[]
                 setLinkageData({
-                  totalRequirements: (reqs as RequirementDocument[]).length,
+                  totalRequirements: reqList.length,
                   totalCases: caseData.total || 0,
-                  linkedCases: (reqs as RequirementDocument[]).reduce((sum, r) => sum + (r.imported_count || 0), 0),
-                  reqsWithCases: (reqs as RequirementDocument[]).filter(r => (r.imported_count || 0) > 0).length,
+                  linkedCases: reqList.reduce((sum, r) => sum + (r.imported_count || 0), 0),
+                  reqsWithCases: coverage?.requirements_with_cases ?? reqList.filter(r => (r.imported_count || 0) > 0).length,
                   apiEndpoints: linkageData.apiEndpoints,
                   uiScripts: linkageData.uiScripts,
                 })

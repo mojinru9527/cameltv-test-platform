@@ -17,6 +17,7 @@ class CaseTypeStat(BaseModel):
     execution_fail: int = 0         # 执行失败次数
     pass_rate: float = 0.0          # 通过率 %
     fail_rate: float = 0.0          # 失败率 %
+    execution_pass_rate: float = 0.0  # 执行记录级通过率（Batch 175 口径标注）
 
 
 class CaseTypePriority(BaseModel):
@@ -36,7 +37,8 @@ class DashboardStats(BaseModel):
     total_cases: int = 0
     total_plans: int = 0
     api_cases: int = 0
-    pass_rate: float = 0.0
+    pass_rate: float = 0.0              # 用例级通过率（cases_passed/cases_executed，与追溯一致，Batch 175）
+    execution_pass_rate: float = 0.0    # 执行记录级通过率（含重跑，独立保留并标注口径，Batch 175）
     case_type_stats: list[CaseTypeStat] = []       # 按用例类型分组的执行统计
     priority_distribution: list[CaseTypePriority] = []  # 按用例类型 + 优先级分布
     time_range: Optional[dict] = None

@@ -86,7 +86,11 @@ class TestCaliberConsistency:
         assert manual["execution_total"] == 2
         assert manual["execution_pass"] == 1
         assert manual["execution_fail"] == 1
-        assert dash["pass_rate"] == 50.0
+        # Batch 175（FIX-173-P1-01）：通过率统一为「用例级」口径（与追溯一致）。
+        # 本场景：1 条未删除用例已执行且通过 → pass_rate=100.0；
+        # 执行记录级（含已删用例执行）通过率保留在 execution_pass_rate=50.0。
+        assert dash["pass_rate"] == 100.0
+        assert dash["execution_pass_rate"] == 50.0
 
     def test_trace_execution_counts(self, client, auth_headers):
         c1 = _create_case(client, auth_headers, title="B149TMP-追溯用例")
@@ -99,6 +103,35 @@ class TestCaliberConsistency:
         assert trace["cases_executed"] == 1
         assert trace["cases_passed"] == 1
         assert trace["pass_rate"] == 100.0
+
+    def test_dashboard_trace_pass_rate_same_caliber(self, client, auth_headers):
+        """Batch 175（FIX-173-P1-01）：工作台 pass_rate 与追溯 pass_rate 必须同口径（用例级），
+        消除 9.1% vs 22.1% 的分裂；执行记录级通过率独立字段保留。"""
+        c1 = _create_case(client, auth_headers, title="B175TMP-口径A")
+        c2 = _create_case(client, auth_headers, title="B175TMP-口径B")
+        plan = _create_plan(client, auth_headers, name="B175TMP-口径计划")
+        _add_cases(client, auth_headers, plan, [c1, c2])
+
+        # 两条用例都执行：c1 pass、c2 fail（经列表取第二条）
+        _execute_manual(client, auth_headers, plan, status="pass")
+        detail = client.get(f"/api/v1/test-plans/{plan}", headers=auth_headers).json()["data"]
+        second = detail["cases"][1]
+        resp = client.post(
+            f"/api/v1/test-plans/{plan}/cases/{second['id']}/execute",
+            json={"status": "fail", "notes": "B175TMP-手动执行"},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+
+        dash = client.get("/api/v1/dashboard/stats", headers=auth_headers).json()["data"]
+        trace = client.get("/api/v1/trace/coverage", headers=auth_headers).json()["data"]
+
+        # 用例级：2 条已执行用例中 1 条通过 → 50%
+        assert dash["pass_rate"] == 50.0
+        assert trace["pass_rate"] == 50.0
+        assert dash["pass_rate"] == trace["pass_rate"]
+        # 执行记录级：同样 2 条执行 1 通过 → 50%（无重跑场景下两口径一致）
+        assert dash["execution_pass_rate"] == 50.0
 
 
 class TestPlanListStats:
