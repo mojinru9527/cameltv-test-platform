@@ -110,3 +110,47 @@ def test_meminfo_parses_total_pss_kb_to_mb() -> None:
 def test_meminfo_missing_returns_none() -> None:
     assert _parse_dumpsys_meminfo("no data") is None
 
+
+# ── Batch 185（C99-1-②）：内容感知 jank 口径 ──
+
+def test_video_30fps_on_120hz_not_reported_as_jank() -> None:
+    """30fps 视频在 120Hz 屏（帧间隔≈4×刷新）不再被绝对 2×刷新阈值误报（C99-1-②）。"""
+    refresh = 8_333_333  # 120Hz
+    base = 1_000_000_000_000
+    # 视频帧每 4×刷新周期提交一次（33.3ms），共 60 帧
+    frames = [(base + i * 4 * refresh, base + i * 4 * refresh) for i in range(60)]
+    result = _parse_surfaceflinger_latency(_raw(refresh, frames))
+    assert result["jank"] == 0, f"30fps 视频被误报 jank: {result}"
+
+
+def test_ui_60fps_on_120hz_no_false_jank() -> None:
+    """60fps UI 在 120Hz 屏（间隔=2×刷新）正常不报 jank。"""
+    refresh = 8_333_333
+    base = 1_000_000_000_000
+    frames = [(base + i * 2 * refresh, base + i * 2 * refresh) for i in range(60)]
+    result = _parse_surfaceflinger_latency(_raw(refresh, frames))
+    assert result["jank"] == 0
+
+
+def test_ui_hiccup_still_detected() -> None:
+    """真实 UI 抖动（间隔突增 >2×中位基线）仍被检出。"""
+    refresh = 8_333_333
+    base = 1_000_000_000_000
+    # 120fps 正常帧中插入一次 5×刷新 的卡顿
+    frames = []
+    for i in range(60):
+        delta = 5 * refresh if i == 30 else refresh
+        ts = base + (frames[-1][0] - base + delta) if frames else base
+        frames.append((ts, ts))
+    result = _parse_surfaceflinger_latency(_raw(refresh, frames))
+    assert result["jank"] >= 1
+
+
+def test_small_window_falls_back_to_absolute_rule() -> None:
+    """窗口 <4 帧时回退旧规则（绝对 2×刷新阈值），行为与 Batch 99 一致。"""
+    refresh = 16_666_666
+    base = 1_000_000_000_000
+    frames = [(base, base), (base + 80_000_000, base + 80_000_000)]
+    result = _parse_surfaceflinger_latency(_raw(refresh, frames))
+    assert result["jank"] >= 1
+
