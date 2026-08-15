@@ -34,7 +34,7 @@ def test_runner_dir_relative_points_to_ui_automation(monkeypatch):
 
 def test_runner_dir_absolute_passthrough(monkeypatch):
     """绝对路径直接使用。"""
-    p = Path("C:/tmp/custom-runner")
+    p = Path(__file__).resolve().parent / "custom-runner"
     monkeypatch.setattr("app.core.config.settings.ui_test_runner_dir", str(p))
     assert pe._runner_dir() == p
 
