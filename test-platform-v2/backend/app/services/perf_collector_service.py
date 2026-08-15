@@ -224,8 +224,14 @@ def _parse_surfaceflinger_latency(raw: str) -> dict[str, Any]:
     Android 12+ 首行可能为 `---- TIME: <ts> ----` 头（SoloX 2.9.3 因此解析崩溃），
     必须跳过；随后首个数字行为刷新周期（ns），后续每行 3 个时间戳
     （desired / actual / ready，均为 ns）。
-    fps = 最近 1 秒窗口内实际提交帧数；jank = 连续帧间隔 > 2×刷新周期
-    且 < 500ms（排除空闲/前后台切换边界）的次数，对标 PerfDog 卡顿口径。
+    fps = 最近 1 秒窗口内实际提交帧数。
+
+    jank 判定（Batch 185 / C99-1-②，内容感知口径）：
+    - 窗口 ≥4 帧时，基线 = 帧间隔中位数（反映内容实际节奏：30fps 视频在 120Hz 屏
+      间隔≈4×刷新，UI 120fps 间隔≈1×刷新）；
+      jank = 间隔 > 2×基线 且 间隔 > 2×刷新（下限兜底防退化）且 < 500ms。
+      视频内容不再被绝对「2×刷新」阈值系统性误报。
+    - 窗口 <4 帧时回退旧规则（间隔 > 2×刷新周期），避免小样本中位失真。
     """
     lines = [
         ln.strip()
@@ -257,11 +263,14 @@ def _parse_surfaceflinger_latency(raw: str) -> dict[str, Any]:
     fps = round(len(window), 1)
 
     ordered = sorted(window)
-    jank = 0
-    for prev, curr in zip(ordered, ordered[1:]):
-        delta = curr - prev
-        if 0 < delta < 500_000_000 and delta > refresh_ns * 2.0:
-            jank += 1
+    intervals = [curr - prev for prev, curr in zip(ordered, ordered[1:])]
+    intervals = [d for d in intervals if 0 < d < 500_000_000]
+    if len(intervals) >= 4:
+        baseline = sorted(intervals)[len(intervals) // 2]  # 中位间隔（内容节奏）
+        jank = sum(1 for d in intervals if d > 2 * baseline and d > refresh_ns * 2.0)
+    else:
+        # 小样本回退：绝对阈值（旧规则）
+        jank = sum(1 for d in intervals if d > refresh_ns * 2.0)
     return {
         "fps": fps,
         "jank": jank,
@@ -369,8 +378,38 @@ def _collect_cpu_android(device_id: str, pkg_name: str) -> dict[str, Any]:
             dt = (u2 - u1 + s2 - s1) / hz
             if dt > 0:
                 total += dt
-    # total 为 1 秒窗口内的 CPU 秒数；换算为百分比（多线程/多核可 >100%，如实上报）
-    return {"appCpuRate": round(total * 100.0, 2)}
+    # total 为 1 秒窗口内的 CPU 秒数；换算为百分比。
+    # Batch 185（C99-1-③）：PERF_CPU_REPORT_MODE=raw（默认）聚合值可 >100%（多核如实）；
+    # per_core 时除以核数归一（0-100% 语义）。
+    from app.core.config import settings
+    rate = round(total * 100.0, 2)
+    if settings.perf_cpu_report_mode == "per_core":
+        cores = _core_count(device_id)
+        if cores and cores > 0:
+            rate = round(rate / cores, 2)
+    return {"appCpuRate": rate}
+
+
+def _core_count(device_id: str) -> int | None:
+    """读取设备核数（/sys/devices/system/cpu/possible，如 '0-7'）；失败回退本机 os.cpu_count()。"""
+    import os
+    import subprocess
+
+    try:
+        out = subprocess.run(
+            ["adb", "-s", device_id, "shell", "cat", "/sys/devices/system/cpu/possible"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if out.returncode == 0:
+            raw = out.stdout.strip()
+            if raw and "-" in raw:
+                lo, hi = raw.split("-")
+                return int(hi) - int(lo) + 1
+            if raw.isdigit():
+                return int(raw)
+    except Exception:  # noqa: BLE001 - 读核数失败降级
+        pass
+    return os.cpu_count()
 
 
 def _collect_memory_android(device_id: str, pkg_name: str) -> dict[str, Any]:
@@ -425,28 +464,42 @@ def collect_single_snapshot(device_id: str, pkg_name: str, platform: str = "Andr
             "cpu": (
                 lambda: _collect_cpu_android(device_id, pkg_name)
                 if platform == "Android"
-                else apm.collectCpu
+                else apm.collectCpu()
             ),
             "memory": (
                 lambda: _collect_memory_android(device_id, pkg_name)
                 if platform == "Android"
-                else apm.collectMemory
+                else apm.collectMemory()
             ),
             "fps": (
                 lambda: _collect_fps_android(device_id, pkg_name)
                 if platform == "Android"
-                else apm.collectFps
+                else apm.collectFps()
             ),
-            "battery": apm.collectBattery,
+            "battery": lambda: apm.collectBattery(),
             "network": lambda: apm.collectNetwork(wifi=True),
         }
-        for metric, collect in collectors.items():
+        # Batch 185（C99-1-①）：五指标并行采集，单点耗时从顺序求和（10-55s）
+        # 收敛为 max(各指标)（≈2s）；单指标失败仍降级不影响整体。
+        import concurrent.futures
+
+        def _collect(metric: str, collect) -> tuple[str, dict]:
             try:
-                result[metric] = collect() or {}
+                return metric, collect() or {}
             except Exception as exc:
                 logger.warning("SoloX %s collection failed: %s", metric, exc)
-                result[metric] = {}
-                failures[metric] = str(exc)
+                return metric, {}
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(collectors)) as pool:
+            futures = {
+                pool.submit(_collect, metric, collect): metric
+                for metric, collect in collectors.items()
+            }
+            for fut in concurrent.futures.as_completed(futures):
+                metric, data = fut.result()
+                result[metric] = data
+                if not data:
+                    failures[metric] = "collection returned empty"
 
         populated = any(result[name] for name in collectors)
         if not populated:
