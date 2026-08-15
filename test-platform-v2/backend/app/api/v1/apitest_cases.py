@@ -196,3 +196,80 @@ def analyze_change_impact(
     if body.as_markdown:
         return R.ok({"markdown": changes_to_markdown(result)})
     return R.ok(result)
+
+
+# ═══════════════════════════════════════════════════════
+# 手工用例 → API 用例泛化（C-API-AUTO-004）
+# ═══════════════════════════════════════════════════════
+
+
+class GeneralizeApiCasesRequest(BaseModel):
+    """手工用例 → API 用例泛化请求。"""
+
+    module: str | None = Field(
+        None, description="仅泛化指定模块的手工用例（可选，默认全部）"
+    )
+    mode: str = Field(
+        "rule",
+        description=(
+            "泛化模式：rule（规则映射，确定性）| "
+            "ai（规则 + AI 增强，需 AI_API_KEY）"
+        ),
+    )
+    import_to_case_library: bool = Field(
+        False, description="是否将生成的用例直接入库（默认仅预览）"
+    )
+    limit: int = Field(200, ge=1, le=500, description="最多处理的手工用例数")
+
+
+@router.post(
+    "/cases/generalize-from-manual",
+    response_model=R[dict],
+    summary="手工用例泛化 API 用例",
+)
+def generalize_from_manual(
+    body: GeneralizeApiCasesRequest,
+    current: CurrentUser = Depends(require_permission("apitest:generate")),
+    db: Session = Depends(get_db),
+):
+    """以项目手工功能用例为母本，泛化生成对应 API 用例。
+
+    - rule 模式：从用例步骤识别业务操作（查询/新增/修改/删除），
+      匹配同模块接口资产生成 API 用例骨架，确定性、无需 AI key。
+    - ai 模式：在 rule 基础上调用 LLM 补全请求体样例与断言
+      （需 AI_API_KEY；失败自动降级 rule 结果）。
+    - import_to_case_library=true 时直接入库，否则仅预览。
+    """
+    pid = _current_project_id(current)
+    from app.services.api_generalization_service import (
+        create_generated_cases,
+        generalize_cases,
+    )
+
+    if body.mode not in ("rule", "ai"):
+        raise HTTPException(400, "mode 仅支持 rule 或 ai")
+
+    result = generalize_cases(
+        db,
+        pid,
+        module=body.module,
+        mode=body.mode,
+        limit=body.limit,
+    )
+
+    imported_ids: list[int] = []
+    if body.import_to_case_library and result["generated"]:
+        imported_ids = create_generated_cases(db, pid, result["generated"])
+
+    return R.ok(
+        {
+            "total_manual": result["total_manual"],
+            "matched_endpoints": result["matched_endpoints"],
+            "generated_count": result["generated_count"],
+            "unmatched_count": len(result["unmatched"]),
+            "mode": result["mode"],
+            "generated": result["generated"],
+            "unmatched": result["unmatched"][:20],
+            "imported_case_ids": imported_ids,
+        }
+    )
