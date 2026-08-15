@@ -46,6 +46,8 @@ const READONLY_POST_PATTERNS: RegExp[] = [
   /\/konfi-service\/web\/getDataById$/,
   /\/ee\/sports_live\/(view_match|loadAnchorsByMatchId|heartbeat)$/,
   /\/ee\/sports_live\/football\/match\/analysis$/,
+  // Batch 187：预测模块查询型 POST（预测列表/预测记录/预测首页/赔率查询，只读）
+  /\/ee\/forecast\/(match_list|user_list|index|queryOddsSummaryByMatchId|realtime\/odds)$/,
 ]
 
 // 写型路径特征（禁止命中，命中即拦截）
