@@ -22,6 +22,19 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## Open (待处理)
 
+### batch-184 — DSH 沙箱安全加固（2026-08-16）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C184-1 | OS 级沙箱（seccomp/nsjail）为部署层后续评估：生产 Railway 容器为隔离单元，进程内隔离+配额已落地（Batch 184）；若未来自托管裸机部署 DSH，需补容器级隔离 | P3 | 2026-08-16 |
+
+### batch-172 — DSH Harness 集成（2026-08-14）—— C172-1/2 已由 Batch 184 关闭
+
+| ID | 内容 | 优先级 | 关闭 |
+|----|------|--------|------|
+| ~~C172-1~~ | ~~生产启用 dsh 前完成沙箱加固（隔离容器/受限工作区 + 任务级配额）并补充安全回归证据；未加固前生产 DSH_ENABLED 必须保持 false~~ → **Closed**：Batch 184 完成任务级隔离工作区（ws-{uuid}）、全局并发闸门（DSH_MAX_CONCURRENT）、任务文本配额（DSH_MAX_TASK_CHARS）+ 安全回归 8 例（commit f1eab22）；生产 DSH_ENABLED 仍保持 false（启用为部署决策） | P1 | 2026-08-16 |
+| ~~C172-2~~ | ~~`dsh_runner._run_python_sdk` 通过改 os.environ 传凭据，多线程并发可能互相覆盖；生产 python-sdk 路径启用前改为显式传参或加锁~~ → **Closed**：Batch 184 `_python_sdk_env_lock` 序列化「env 突变+harness.run」（commit f1eab22），并发凭据隔离测试证明（key-a/key-b 互不交叉） | P2 | 2026-08-16 |
+
 ### batch-182 — 收尾批次（2026-08-16，状态机/ORM/P3）
 
 | ID | 内容 | 优先级 | 创建日期 |
