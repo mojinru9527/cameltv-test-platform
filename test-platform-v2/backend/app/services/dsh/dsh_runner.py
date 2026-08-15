@@ -15,6 +15,7 @@ import logging
 import os
 import shutil
 import subprocess
+import threading
 import time
 import uuid
 from dataclasses import dataclass
@@ -26,6 +27,13 @@ logger = logging.getLogger(__name__)
 
 # node runtime 默认入口（Windows 本地 dev 常用位置，可被 DSH_HARNESS_PATH 覆盖）
 _DEFAULT_HARNESS_ENTRY = r"F:\deepseek-harness\apps\cli\lib\bin.js"
+
+# ── Batch 184（C172-1/2）沙箱加固 ──
+# 全局并发闸门：默认串行（安全优先），可经 DSH_MAX_CONCURRENT 上调。
+_concurrency_gate = threading.BoundedSemaphore(max(1, int(getattr(settings, "dsh_max_concurrent", 1) or 1)))
+# python-sdk 运行时通过 os.environ 传递凭据给 SDK（SDK 无显式凭据参数），
+# 并发线程互改 env 会互相污染 → 用锁把「env 突变 + harness.run」序列化（C172-2）。
+_python_sdk_env_lock = threading.Lock()
 
 
 @dataclass
@@ -82,13 +90,17 @@ def _truncate(text: str, limit: int | None = None) -> str:
 
 
 def _workspace_for(workdir: str | None, session_root: Path) -> str:
-    """返回本次任务的工作区：优先调用方指定，否则在 session_root 下建隔离工作区。"""
-    if workdir:
-        return workdir
-    ws = (settings.dsh_workspace or "").strip()
-    if ws:
-        return ws
-    isolated = session_root / "workspaces" / f"ws-{uuid.uuid4().hex[:10]}"
+    """返回本次任务的**隔离**工作区（Batch 184 / C172-1）。
+
+    无论是否配置共享 workspace，每个任务都分配到独立子目录 `{base}/ws-{uuid}`：
+    - 调用方显式传 workdir → 该目录作为隔离根（在其下建 ws-{uuid}）；
+    - 配置 DSH_WORKSPACE → 该目录作为隔离根；
+    - 均无 → session_root/workspaces 作为隔离根。
+    任务间文件互不可见，杜绝共享目录读写覆盖。
+    """
+    base = workdir or (settings.dsh_workspace or "").strip() or str(session_root / "workspaces")
+    base_path = Path(base)
+    isolated = base_path / f"ws-{uuid.uuid4().hex[:10]}"
     isolated.mkdir(parents=True, exist_ok=True)
     return str(isolated)
 
@@ -102,9 +114,20 @@ def run_dsh_task(
     timeout: float | None = None,
     extra_env: dict[str, str] | None = None,
 ) -> DshRunResult:
-    """执行一次 dsh 任务，返回结构化结果。任务文本为空或 DSH 不可用时快速失败。"""
+    """执行一次 dsh 任务，返回结构化结果。
+
+    Batch 184（C172-1）加固：
+    - 任务文本超长直接拒绝（DSH_MAX_TASK_CHARS）；
+    - 全局并发闸门（DSH_MAX_CONCURRENT，默认 1）限制同时在跑的任务数（排队不丢任务）。
+    """
     if not task or not task.strip():
         return DshRunResult(final_response="", exit_code=2, error="任务文本为空")
+    if len(task) > settings.dsh_max_task_chars:
+        return DshRunResult(
+            final_response="",
+            exit_code=2,
+            error=f"任务文本超长（{len(task)} > {settings.dsh_max_task_chars} 字符上限，Batch 184 配额）",
+        )
     available, reason = runtime_available()
     if not available:
         return DshRunResult(final_response="", exit_code=1, error=f"DSH 不可用: {reason}")
@@ -116,10 +139,20 @@ def run_dsh_task(
         sess_root.mkdir(parents=True, exist_ok=True)
     except OSError as exc:  # pragma: no cover - 环境异常
         return DshRunResult(final_response="", exit_code=1, error=f"无法创建会话目录 {sess_root}: {exc}")
-    workdir = _workspace_for(workspace, sess_root)
 
-    if settings.dsh_runtime == "python-sdk":
-        return _run_python_sdk(
+    # 并发闸门：超过 DSH_MAX_CONCURRENT 的任务排队等待
+    with _concurrency_gate:
+        workdir = _workspace_for(workspace, sess_root)
+        if settings.dsh_runtime == "python-sdk":
+            return _run_python_sdk(
+                task,
+                workdir=workdir,
+                session_root=sess_root,
+                model=resolved_model,
+                timeout=resolved_timeout,
+                extra_env=extra_env,
+            )
+        return _run_node_cli(
             task,
             workdir=workdir,
             session_root=sess_root,
@@ -127,14 +160,6 @@ def run_dsh_task(
             timeout=resolved_timeout,
             extra_env=extra_env,
         )
-    return _run_node_cli(
-        task,
-        workdir=workdir,
-        session_root=sess_root,
-        model=resolved_model,
-        timeout=resolved_timeout,
-        extra_env=extra_env,
-    )
 
 
 def _run_node_cli(
@@ -239,38 +264,42 @@ def _run_python_sdk(
     env["DSH_CWD"] = workdir
     if extra_env:
         env.update(extra_env)
-    previous_env = {k: os.environ.get(k) for k in ("DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL", "DSH_MODEL", "DSH_SESSION_ROOT", "DSH_CWD")}
-    for key, value in env.items():
-        if key in previous_env:
-            os.environ[key] = value
 
-    session_id = f"platform-{uuid.uuid4().hex[:10]}"
-    try:
-        with DeepSeekHarness(
-            provider="deepseek-official",
-            model=model,
-            max_tokens=49_152,
-            cwd=workdir,
-            session_root=str(session_root),
-            cordis=str(cordis_path),
-        ) as harness:
-            result = harness.run(task, session_id=session_id)
-        return DshRunResult(
-            final_response=_truncate(result.final_response or ""),
-            exit_code=0,
-            session_dir=str(session_root),
-        )
-    except Exception as exc:  # pragma: no cover - 真实执行异常
-        logger.exception("dsh python-sdk runner failed")
-        return DshRunResult(
-            final_response="",
-            exit_code=1,
-            error=_truncate(str(exc)),
-            session_dir=str(session_root),
-        )
-    finally:
-        for key, value in previous_env.items():
-            if value is None:
-                os.environ.pop(key, None)
-            else:
+    # Batch 184（C172-2）：SDK 从进程 env 读凭据，无显式传参口——
+    # 「env 突变 + harness.run」整体持锁，杜绝多线程互改污染。
+    with _python_sdk_env_lock:
+        previous_env = {k: os.environ.get(k) for k in ("DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL", "DSH_MODEL", "DSH_SESSION_ROOT", "DSH_CWD")}
+        for key, value in env.items():
+            if key in previous_env:
                 os.environ[key] = value
+
+        session_id = f"platform-{uuid.uuid4().hex[:10]}"
+        try:
+            with DeepSeekHarness(
+                provider="deepseek-official",
+                model=model,
+                max_tokens=49_152,
+                cwd=workdir,
+                session_root=str(session_root),
+                cordis=str(cordis_path),
+            ) as harness:
+                result = harness.run(task, session_id=session_id)
+            return DshRunResult(
+                final_response=_truncate(result.final_response or ""),
+                exit_code=0,
+                session_dir=str(session_root),
+            )
+        except Exception as exc:  # pragma: no cover - 真实执行异常
+            logger.exception("dsh python-sdk runner failed")
+            return DshRunResult(
+                final_response="",
+                exit_code=1,
+                error=_truncate(str(exc)),
+                session_dir=str(session_root),
+            )
+        finally:
+            for key, value in previous_env.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
