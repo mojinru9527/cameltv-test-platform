@@ -515,7 +515,6 @@ def auto_execute_api_cases(
     executed = 0
     passed = 0
     failed = 0
-    api_task = None  # Batch 157：计划 API 执行登记为 trigger_type=plan 任务
 
     for idx, (pc, tc) in enumerate(api_cases, start=1):
         try:
@@ -528,7 +527,8 @@ def auto_execute_api_cases(
             status = "passed" if api_pass else "failed"
             actual_result = json.dumps(exec_result, ensure_ascii=False, default=str)
 
-            # 创建执行记录
+            # 创建执行记录（Batch 186 / C182-1：唯一事实源 = test_execution，
+            # 不再双写 api_execution_task/items——统计/报告/追溯已统一读 test_execution）
             exec_status_code, exec_error_type, exec_error_message = _execution_error_fields(actual_result)
             exec_row = TestExecution(
                 plan_case_id=pc.id,
@@ -543,17 +543,6 @@ def auto_execute_api_cases(
                 executed_at=now,
             )
             db.add(exec_row)
-            # Batch 157：登记 API 任务快照并双向关联
-            db.flush()
-            if api_task is None:
-                api_task = _ensure_plan_api_task(
-                    db, plan,
-                    environment_id=environment_id,
-                    project_id=project_id,
-                    executor_id=executor_id,
-                    now=now,
-                )
-            _register_plan_api_snapshot(db, api_task, tc, exec_row, exec_result, status, now)
             executed += 1
             if api_pass:
                 passed += 1
@@ -578,17 +567,6 @@ def auto_execute_api_cases(
                 executed_at=now,
             )
             db.add(exec_row)
-            # Batch 157：登记 API 任务快照并双向关联
-            db.flush()
-            if api_task is None:
-                api_task = _ensure_plan_api_task(
-                    db, plan,
-                    environment_id=environment_id,
-                    project_id=project_id,
-                    executor_id=executor_id,
-                    now=now,
-                )
-            _register_plan_api_snapshot(db, api_task, tc, exec_row, exec_result, status, now)
             executed += 1
             failed += 1
 
@@ -606,18 +584,7 @@ def auto_execute_api_cases(
 
         # Batch 174（FIX-173-P0-03）：分批短事务提交，避免单长事务锁行
         if idx % 10 == 0:
-            api_task_id = api_task.id if api_task is not None else None
             db.commit()
-            if api_task_id is not None:
-                from app.models.api_asset import ApiExecutionTask as _ApiTask
-                api_task = db.get(_ApiTask, api_task_id)
-
-    # Batch 157：同步任务汇总
-    if api_task is not None:
-        api_task.total = len(api_cases)
-        api_task.passed = passed
-        api_task.failed = failed
-        api_task.skipped = 0
 
     db.commit()
 
@@ -870,73 +837,6 @@ def _parse_playwright_report(stdout_text: str) -> tuple[int, int, int, int] | No
 
 
 # ═══════════════════════════════════════════════════════
-# 执行模型双向关联（Batch 157）
-# ═══════════════════════════════════════════════════════
-
-def _ensure_plan_api_task(
-    db: Session,
-    plan: TestPlan,
-    *,
-    environment_id: int | None,
-    project_id: int,
-    executor_id: int,
-    now: datetime,
-):
-    """Batch 157：为计划 API 执行登记一个 trigger_type=plan 的 API 任务（同步已完成）。"""
-    from app.models.api_asset import ApiExecutionTask
-
-    task = ApiExecutionTask(
-        project_id=project_id,
-        task_id=f"PLAN-{uuid.uuid4().hex[:8].upper()}",
-        name=f"计划执行-{plan.name or plan.id}",
-        environment_id=environment_id,
-        service_id=None,
-        status="success",
-        trigger_type="plan",
-        creator_id=executor_id,
-        started_at=now,
-        finished_at=now,
-        confirm_prod=False,
-        total=0,
-        passed=0,
-        failed=0,
-        skipped=0,
-    )
-    db.add(task)
-    db.flush()
-    return task
-
-
-def _register_plan_api_snapshot(
-    db: Session,
-    task,
-    tc: TestCase,
-    exec_row: TestExecution,
-    exec_result: dict,
-    status: str,
-    now: datetime,
-) -> None:
-    """Batch 157：把计划 API 执行结果登记为任务明细并双向关联。"""
-    from app.models.api_asset import ApiExecutionTaskItem
-
-    item = ApiExecutionTaskItem(
-        task_id=task.id,
-        case_id=tc.id,
-        status=canonical_exec_status(status),
-        duration_ms=float(exec_result.get("duration_ms") or 0),
-        request_snapshot=json.dumps(exec_result.get("request_snapshot") or {}, ensure_ascii=False, default=str),
-        response_snapshot=json.dumps(exec_result.get("response_snapshot") or {}, ensure_ascii=False, default=str),
-        assertion_results=json.dumps(exec_result.get("assertions") or [], ensure_ascii=False, default=str),
-        error_message=exec_result.get("error") or "",
-        error_type="execution_error" if exec_result.get("error") else "",
-        started_at=now,
-        finished_at=now,
-        test_execution_id=exec_row.id,
-    )
-    db.add(item)
-    exec_row.api_task_id = task.id
-
-
 # ═══════════════════════════════════════════════════════
 # 批量一键执行 (所有类型)
 # ═══════════════════════════════════════════════════════
@@ -991,13 +891,9 @@ def execute_all_cases(
     passed = 0
     failed = 0
     skipped = 0
-    api_task = None  # Batch 157：计划 API 执行登记为 trigger_type=plan 任务
-    api_passed = 0
-    api_failed = 0
     # Batch 174（FIX-173-P0-03）：分批短事务提交，避免整计划单长事务
     # 锁行数分钟（生产 PG statement timeout / 调度线程阻塞）。每 BATCH_COMMIT_SIZE 条
-    # 提交一次；commit 会 expire ORM 对象，后续访问的 api_task 由 _ensure_plan_api_task
-    # 重新查询，pc/tc 仅取已缓存的 id/status 字段（不触发重查的字段直接使用）。
+    # 提交一次；commit 会 expire ORM 对象，pc/tc 由 SQLAlchemy 自动重查。
     BATCH_COMMIT_SIZE = 10
 
     for idx, pc in enumerate(pcs, start=1):
@@ -1080,28 +976,11 @@ def execute_all_cases(
             error_message=exec_error_message,
             executed_at=now,
         )
-        # Batch 161（G4）：非 API 行延迟 add_all 批量入库；API 行需 flush 获取 id 登记快照
+        # Batch 161（G4）：非 API 行延迟 add_all 批量入库；API 行直接 add（Batch 186/C182-1：不再登记任务快照）
         if tc.case_type == "api":
             db.add(exec_row)
-            db.flush()  # 获取 exec_row.id
         else:
             pending_exec_rows.append(exec_row)
-
-        # Batch 157：计划 API 执行登记 API 任务快照并双向关联
-        if tc.case_type == "api":
-            if api_task is None:
-                api_task = _ensure_plan_api_task(
-                    db, plan,
-                    environment_id=environment_id,
-                    project_id=project_id,
-                    executor_id=executor_id,
-                    now=now,
-                )
-            _register_plan_api_snapshot(db, api_task, tc, exec_row, exec_result, status, now)
-            if status == "passed":
-                api_passed += 1
-            else:
-                api_failed += 1
 
         # 更新 plan_case 状态
         pc.last_status = status
@@ -1128,18 +1007,11 @@ def execute_all_cases(
 
         # Batch 174（FIX-173-P0-03）：分批短事务提交，避免整计划单长事务
         # 锁行数分钟（生产 PG statement timeout / APScheduler 线程阻塞 cron）。
-        # 每 BATCH_COMMIT_SIZE 条用例提交一次；commit 会 expire ORM 对象，
-        # 后续访问的 api_task 用已缓存 id 重新获取，pc/tc 由 SQLAlchemy 自动重查
-        # （SQLite/PG 均廉价；比整计划一条长事务锁数分钟安全得多）。
         if idx % BATCH_COMMIT_SIZE == 0:
             if pending_exec_rows:
                 db.add_all(pending_exec_rows)
                 pending_exec_rows = []
-            api_task_id = api_task.id if api_task is not None else None
             db.commit()
-            if api_task_id is not None:
-                from app.models.api_asset import ApiExecutionTask as _ApiTask
-                api_task = db.get(_ApiTask, api_task_id)
 
     # Batch 161（G4）：非 API 执行记录一次性批量入库（避免数千条逐条 ORM add）
     if pending_exec_rows:
@@ -1148,13 +1020,6 @@ def execute_all_cases(
     # 更新计划状态为 active
     if plan.status == "draft":
         plan.status = "active"
-
-    # Batch 157：同步任务汇总
-    if api_task is not None:
-        api_task.total = api_passed + api_failed
-        api_task.passed = api_passed
-        api_task.failed = api_failed
-        api_task.skipped = 0
 
     db.commit()
 

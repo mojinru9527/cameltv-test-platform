@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-12 (Batch 156: 关闭 C155-1（PR #213 / ac12026）)
+**最后更新**: 2026-08-16 (Batch 186: 关闭 C182-1/C184-1、C182-2 转 Deferred)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -31,11 +31,11 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ~~C99-1③~~ | ~~多核 CPU 语义与阈值~~ → **Closed**：Batch 185 `PERF_CPU_REPORT_MODE=raw|per_core`（默认 raw 兼容；per_core ÷核数，核数 adb 探测+本机回退）（commit 7263d80） | P2 | 2026-08-16 |
 | C99-1④ | iOS 26.5 支持：solox 缺 iOS 26.5 DeviceSupport（GitHub 404）；解除条件=solox 支持该版本或提供受支持 iOS 设备 | P2 | 2026-08-06 |
 
-### batch-184 — DSH 沙箱安全加固（2026-08-16）
+### batch-184 — DSH 沙箱安全加固（2026-08-16）—— C184-1 已由 Batch 186 关闭
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C184-1 | OS 级沙箱（seccomp/nsjail）为部署层后续评估：生产 Railway 容器为隔离单元，进程内隔离+配额已落地（Batch 184）；若未来自托管裸机部署 DSH，需补容器级隔离 | P3 | 2026-08-16 |
+| ~~C184-1~~ | ~~OS 级沙箱（seccomp/nsjail）为部署层后续评估：生产 Railway 容器为隔离单元，进程内隔离+配额已落地（Batch 184）；若未来自托管裸机部署 DSH，需补容器级隔离~~ → **Closed**：Batch 186 ADR-0020 评估成文（L1 进程内/L2 Railway 容器/L3 OS 级三层模型；现状不引入 OS 级沙箱，自托管裸机部署触发重新评估，首选 bubblewrap/备选 nsjail；commit b88a4b9） | P3 | 2026-08-16 |
 
 ### batch-172 — DSH Harness 集成（2026-08-14）—— C172-1/2 已由 Batch 184 关闭
 
@@ -44,12 +44,12 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ~~C172-1~~ | ~~生产启用 dsh 前完成沙箱加固（隔离容器/受限工作区 + 任务级配额）并补充安全回归证据；未加固前生产 DSH_ENABLED 必须保持 false~~ → **Closed**：Batch 184 完成任务级隔离工作区（ws-{uuid}）、全局并发闸门（DSH_MAX_CONCURRENT）、任务文本配额（DSH_MAX_TASK_CHARS）+ 安全回归 8 例（commit f1eab22）；生产 DSH_ENABLED 仍保持 false（启用为部署决策） | P1 | 2026-08-16 |
 | ~~C172-2~~ | ~~`dsh_runner._run_python_sdk` 通过改 os.environ 传凭据，多线程并发可能互相覆盖；生产 python-sdk 路径启用前改为显式传参或加锁~~ → **Closed**：Batch 184 `_python_sdk_env_lock` 序列化「env 突变+harness.run」（commit f1eab22），并发凭据隔离测试证明（key-a/key-b 互不交叉） | P2 | 2026-08-16 |
 
-### batch-182 — 收尾批次（2026-08-16，状态机/ORM/P3）
+### batch-182 — 收尾批次（2026-08-16，状态机/ORM/P3）—— C182-1/2 已由 Batch 186 处理
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C182-1 | 执行记录双写（计划执行同时写 test_execution 与 api_execution_task_item）为双 UI 契约（计划页/接口任务页）服务，本批保留双写、统一词表；单一事实源改造需 UI 合并决策后另立专项 | P2 | 2026-08-16 |
-| C182-2 | 域命名回填脚本 `scripts/backfill-domain-naming-b182.py` 已在生产数据上 dry-run 核对后，由人工执行 `--apply` 归一存量 domain（脚本幂等） | P3 | 2026-08-16 |
+| ~~C182-1~~ | ~~执行记录双写（计划执行同时写 test_execution 与 api_execution_task_item）为双 UI 契约（计划页/接口任务页）服务，本批保留双写、统一词表；单一事实源改造需 UI 合并决策后另立专项~~ → **Closed**：Batch 186 移除计划路径双写（`test_plan_service` 删 `_ensure_plan_api_task`/`_register_plan_api_snapshot`，execute_all/auto_execute 仅写 test_execution；历史 plan 任务保留可读；手动/retry_failed 路径不受影响；新测试 test_single_fact_source 4 例 + test_batch169 更新；commit b88a4b9） | P2 | 2026-08-16 |
+| ~~C182-2~~ | ~~域命名回填脚本 `scripts/backfill-domain-naming-b182.py` 已在生产数据上 dry-run 核对后，由人工执行 `--apply` 归一存量 domain（脚本幂等）~~ → **Deferred**：Batch 186 已交付脚本单测 30 例（映射/聚合/apply/幂等/URL 解析）、本地 dry-run→apply→幂等三阶段证据、生产执行手册（脚本 docstring 六步：备份/dry-run 核对/apply/复核/回滚）；生产 `--apply` 需生产库凭据+人工核对，按仓库凭据策略不自动执行（commit b88a4b9）；**解除条件**=生产运维窗口执行 `--apply` 并登记结果 | P3 | 2026-08-16 |
 
 ### batch-181 — 架构专项（2026-08-16，TaskQueue/软删/路由拆分）—— 已由 Batch 182 全部关闭
 
