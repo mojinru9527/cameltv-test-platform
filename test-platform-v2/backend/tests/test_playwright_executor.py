@@ -330,8 +330,8 @@ class TestPlaywrightExecutorTimeout:
         with patch("subprocess.Popen", MagicMock(return_value=mock_proc)):
             with patch("app.services.playwright_executor.shutil.which", return_value="/usr/bin/npx"):
                 with patch("app.services.playwright_executor.time.sleep", return_value=None):
-                    # Force timeout by using a very short timeout
-                    with patch("app.services.playwright_executor.DEFAULT_TIMEOUT", 0):
+                    # Force timeout by using a very short timeout（Batch 187：超时读取 _runner_timeout()）
+                    with patch("app.services.playwright_executor._runner_timeout", return_value=0.0):
                         from app.services.playwright_executor import run_playwright_test
                         run_playwright_test(db_session, run.id, job.id, job.project_id)
 
