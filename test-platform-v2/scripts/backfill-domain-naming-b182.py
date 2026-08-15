@@ -29,6 +29,21 @@
 
 DATABASE_URL 取值优先级：环境变量 > backend/.env（脚本自动解析）。
 仅更新未软删（is_deleted=0）用例的 domain 字段。
+
+生产执行手册（人工运维步骤，需生产库凭据；Batch 186 补充 C182-2）
+------------------------------------------------------------------
+1. 备份：执行前对生产 `test_case` 表做快照（Railway 控制台 pg_dump / 数据库级备份），
+   并记录备份标识用于回滚预案；
+2. 登录生产后端运行环境（Railway CLI / 运维通道），确认 `DATABASE_URL` 指向生产库
+   （凭据只经运行环境变量注入，不写入仓库或脚本）；
+3. dry-run 核对：`python scripts/backfill-domain-naming-b182.py`
+   —— 逐条核对映射清单，预期仅出现「裸域 → 用户端/{裸域名}」；
+   平台前缀（用户端/运营后台/接口测试 及变体）与 `体育-运营后台-*` 不得出现在清单中；
+4. 人工执行：`python scripts/backfill-domain-naming-b182.py --apply`；
+5. 复核：脚本输出「原裸域值剩余 0 行」；抽查
+   `SELECT domain, count(*) FROM test_case WHERE is_deleted=0 GROUP BY domain;`
+   确认无裸域残留、无二次前缀（幂等）；
+6. 回滚预案：出现异常时用步骤 1 快照恢复；脚本幂等，重复执行不产生二次前缀。
 """
 from __future__ import annotations
 
@@ -101,14 +116,63 @@ def load_database_url() -> str:
             "未找到 DATABASE_URL：请设置环境变量，"
             "或确认 backend/.env 中存在 DATABASE_URL"
         )
-    # 相对 sqlite 路径按 backend 目录解析为绝对路径（任意 cwd 运行不建错目录）
-    if raw.startswith("sqlite:///") and not raw[len("sqlite:///"):].startswith(
-        ("/", "\\\\")
-    ):
+    # 相对 sqlite 路径按 backend 目录解析为绝对路径（任意 cwd 运行不建错目录）；
+    # `:memory:` 内存库与 Windows 盘符绝对路径（`F:/...`）不解析。
+    if raw.startswith("sqlite:///"):
         rel = raw[len("sqlite:///"):]
-        raw = "sqlite:///" + str((BACKEND_DIR / rel).resolve()).replace("\\", "/")
+        is_win_abs = len(rel) >= 2 and rel[0].isalpha() and rel[1] == ":"
+        if rel != ":memory:" and not rel.startswith(("/", "\\\\")) and not is_win_abs:
+            raw = "sqlite:///" + str((BACKEND_DIR / rel).resolve()).replace("\\", "/")
     os.environ["DATABASE_URL"] = raw
     return raw
+
+
+def collect_changed(session) -> tuple[int, int, list[tuple[str, str, int]]]:
+    """只读聚合：返回 (未软删用例总数, 域去重值数, [(原值, 目标值, 条数), ...])。
+
+    dry-run 与 --apply 共用；只读，不写库（Batch 186 抽出以便单元测试）。
+    """
+    from sqlalchemy import func  # noqa: PLC0415
+
+    from app.models.test_case import TestCase  # noqa: PLC0415
+
+    total = session.query(TestCase).filter(TestCase.is_deleted.is_(False)).count()
+    rows = (
+        session.query(TestCase.domain, func.count(TestCase.id))
+        .filter(TestCase.is_deleted.is_(False))
+        .group_by(TestCase.domain)
+        .order_by(func.count(TestCase.id).desc())
+        .all()
+    )
+    changed = [
+        (domain, normalize_domain(domain), cnt)
+        for domain, cnt in rows
+        if normalize_domain(domain) != domain
+    ]
+    return total, len(rows), changed
+
+
+def apply_changes(session, changed: list[tuple[str, str, int]]) -> int:
+    """逐映射 UPDATE 并提交；返回写入行数（幂等：changed 不含目标=原值项）。
+
+    仅更新未软删（is_deleted=0）行；软删行保持原值。
+    """
+    from sqlalchemy import update  # noqa: PLC0415
+
+    from app.models.test_case import TestCase  # noqa: PLC0415
+
+    if not changed:
+        return 0
+    written = 0
+    for src, dst, _ in changed:
+        res = session.execute(
+            update(TestCase)
+            .where(TestCase.domain == src, TestCase.is_deleted.is_(False))
+            .values(domain=dst)
+        )
+        written += res.rowcount or 0
+    session.commit()
+    return written
 
 
 def main() -> int:
@@ -137,7 +201,7 @@ def main() -> int:
 
     # 复用 backend 的 models / 会话（导入前已写入 DATABASE_URL 环境变量）
     sys.path.insert(0, str(BACKEND_DIR))
-    from sqlalchemy import func, inspect, update  # noqa: E402
+    from sqlalchemy import inspect  # noqa: E402
     from sqlalchemy.orm import Session  # noqa: E402
 
     from app.core.db import SessionLocal  # noqa: E402
@@ -151,21 +215,8 @@ def main() -> int:
 
     session: Session = SessionLocal()
     try:
-        # 只读聚合：未软删用例按 domain 分组计数
-        total = session.query(TestCase).filter(TestCase.is_deleted.is_(False)).count()
-        rows = (
-            session.query(TestCase.domain, func.count(TestCase.id))
-            .filter(TestCase.is_deleted.is_(False))
-            .group_by(TestCase.domain)
-            .order_by(func.count(TestCase.id).desc())
-            .all()
-        )
-        distinct = len(rows)
-        changed: list[tuple[str, str, int]] = []  # (原值, 目标值, 条数)
-        for domain, cnt in rows:
-            target = normalize_domain(domain)
-            if target != domain:
-                changed.append((domain, target, cnt))
+        # 只读聚合（dry-run 与 apply 共用同一口径，保证预览=实际写入）
+        total, distinct, changed = collect_changed(session)
         changed_rows = sum(cnt for _, _, cnt in changed)
         known_hit = [d for d, _, _ in changed if d in KNOWN_BARE_DOMAINS]
 
@@ -205,15 +256,7 @@ def main() -> int:
         if not changed:
             print("\n[apply] 无变更可写，跳过。")
             return 0
-        written = 0
-        for src, dst, _ in changed:
-            res = session.execute(
-                update(TestCase)
-                .where(TestCase.domain == src, TestCase.is_deleted.is_(False))
-                .values(domain=dst)
-            )
-            written += res.rowcount or 0
-        session.commit()
+        written = apply_changes(session, changed)
         print(f"\n[apply] 已更新 {written} 行（映射 {len(changed)} 项）。")
         # 复核：原裸域值应已清零
         leftover = session.query(TestCase).filter(

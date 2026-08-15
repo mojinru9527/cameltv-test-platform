@@ -3,15 +3,15 @@ from __future__ import annotations
 
 import subprocess
 
-import pytest
-
 from app.models.test_case import TestCase
 from app.models.test_plan import TestPlan
 from app.services import test_plan_service
 from app.services import case_compiler_service
 
 
-def test_execute_all_async_returns_immediately(db_session, client, auth_headers, monkeypatch):
+def test_execute_all_async_returns_immediately(
+    db_session, client, auth_headers, monkeypatch
+):
     plan = TestPlan(project_id=1, name="B169-PLAN", status="draft")
     db_session.add(plan)
     db_session.commit()
@@ -26,7 +26,10 @@ def test_execute_all_async_returns_immediately(db_session, client, auth_headers,
     resp = client.post(
         f"/api/v1/test-plans/{plan.id}/execute-all",
         headers=auth_headers,
-        json={"environment_id": 1, "ui_environment_id": 2, "auto_ui": True, "async_mode": True},
+        json={
+            "environment_id": 1, "ui_environment_id": 2,
+            "auto_ui": True, "async_mode": True,
+        },
     )
     assert resp.status_code == 200
     data = resp.json()["data"]
@@ -62,7 +65,9 @@ def test_ui_timeout_uses_configured_seconds(db_session, monkeypatch):
 
     monkeypatch.setattr(
         test_plan_service, "_compile_ui_case",
-        lambda tc, base_url: ("import { test, expect } from '@playwright/test';", "llm"),
+        lambda tc, base_url: (
+            "import { test, expect } from '@playwright/test';", "llm"
+        ),
     )
 
     def fake_run(*args, **kwargs):
@@ -82,12 +87,11 @@ def test_compiler_prompt_forbids_networkidle():
 
 
 def test_execute_all_batch_commit_keeps_results_and_api_task(db_session, monkeypatch):
-    """Batch 174（FIX-173-P0-03）：分批短事务提交后，
+    """Batch 174（FIX-173-P0-03）+ Batch 186（C182-1）：分批短事务提交后，
     - 全部用例都有执行记录（不再依赖末尾单次 commit）；
-    - API 用例的任务快照（trigger_type=plan）在中间 commit 后仍正确关联；
+    - 唯一事实源 = test_execution：计划执行不再创建 trigger_type=plan 任务快照；
     - 汇总数字完整。
     """
-    from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
     from app.models.environment import Environment
     from app.models.test_plan import TestPlanCase
 
@@ -133,16 +137,17 @@ def test_execute_all_batch_commit_keeps_results_and_api_task(db_session, monkeyp
     assert result["passed"] == 12
     assert result["failed"] == 0
 
-    # 全部执行记录已落库（分批 commit 后不再依赖末尾单事务）
+    # 全部执行记录已落库（分批 commit 后不再依赖末尾单事务）——唯一事实源
     from app.models.test_plan import TestExecution
     exec_rows = db_session.query(TestExecution).filter_by(plan_case_id=pcs[0].id).all()
     assert len(exec_rows) == 1
     assert exec_rows[0].status == "passed"  # Batch 182（P1-06）：统一词表
 
-    # 计划 API 任务快照完整（中间 commit 后 api_task 重新绑定未丢失）
-    task = db_session.query(ApiExecutionTask).filter_by(trigger_type="plan").first()
-    assert task is not None
-    assert task.total == 12
-    assert task.passed == 12
-    items = db_session.query(ApiExecutionTaskItem).filter_by(task_id=task.id).all()
-    assert len(items) == 12
+    # Batch 186（C182-1）：计划执行不再创建 trigger_type=plan 任务快照（单一事实源）
+    from app.models.api_asset import ApiExecutionTask
+    plan_tasks = (
+        db_session.query(ApiExecutionTask).filter_by(trigger_type="plan").count()
+    )
+    assert plan_tasks == 0, (
+        f"计划执行不应再创建 API 任务: {plan_tasks}"
+    )
