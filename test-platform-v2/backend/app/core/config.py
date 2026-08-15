@@ -142,6 +142,7 @@ class Settings(BaseSettings):
     # ── batch-167: 需求 URL 适配器 ──
     requirement_url_timeout_seconds: float = 30.0   # 需求 URL 抓取超时
     ui_run_timeout_seconds: float = 90.0            # batch-169: 单条 UI 用例执行超时（env UI_RUN_TIMEOUT_SECONDS）
+    ui_test_runner_dir: str = ""                    # C-UI-PROD-001: Playwright 运行根目录（空=默认 backend/tests/playwright；可配 tests/automation/ui 跑体育 E2E）
     pingcode_api_base_url: str = ""                 # PingCode 开放 API 根地址
     pingcode_api_token: str = ""                    # PingCode 访问令牌（环境变量注入）
     confluence_api_base_url: str = ""               # Confluence REST API 根地址
