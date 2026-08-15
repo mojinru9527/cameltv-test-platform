@@ -73,6 +73,8 @@ class TestConcurrencyGate:
         monkeypatch.setattr(settings, "dsh_api_key", "k")
         monkeypatch.setattr(settings, "dsh_model", "m")
         monkeypatch.setattr(settings, "dsh_timeout_seconds", 30)
+        # CI（Linux）无本地 node 入口文件 → runtime 检查结果因环境而异；本测试只验证闸门语义
+        monkeypatch.setattr(runner_mod, "runtime_available", lambda: (True, ""))
         # 重建闸门（模块级常量在 import 时按配置创建）
         runner_mod._concurrency_gate = threading.BoundedSemaphore(2)
 
