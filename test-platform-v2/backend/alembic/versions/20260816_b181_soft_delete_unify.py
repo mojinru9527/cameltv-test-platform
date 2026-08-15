@@ -39,12 +39,12 @@ def upgrade() -> None:
     if _has_table(bind, "knowledge_source") and not _has_col(bind, "knowledge_source", "is_deleted"):
         op.add_column(
             "knowledge_source",
-            sa.Column("is_deleted", sa.Boolean(), nullable=False, server_default=sa.text("0")),
+            sa.Column("is_deleted", sa.Boolean(), nullable=False, server_default=sa.false()),
         )
     if _has_table(bind, "knowledge_chunk") and not _has_col(bind, "knowledge_chunk", "is_deleted"):
         op.add_column(
             "knowledge_chunk",
-            sa.Column("is_deleted", sa.Boolean(), nullable=False, server_default=sa.text("0")),
+            sa.Column("is_deleted", sa.Boolean(), nullable=False, server_default=sa.false()),
         )
 
     # 幂等回填：历史 deprecated/superseded → is_deleted=1
