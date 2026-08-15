@@ -24,12 +24,25 @@ logger = logging.getLogger("playwright")
 # ── 配置 ──
 PLAYWRIGHT_DIR = Path(__file__).resolve().parent.parent.parent / "tests" / "playwright"
 STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "storage" / "ui-runs"
-DEFAULT_TIMEOUT = 300  # 5 minutes
+DEFAULT_TIMEOUT = 300  # 5 minutes（历史默认；可经 UI_RUNNER_TIMEOUT_SECONDS 上调，见 _runner_timeout()）
 MAX_CONCURRENT = 2  # 最大并发执行数
 CANCEL_POLL_INTERVAL = 1.0  # 取消轮询间隔 (秒)
 
 _semaphore = threading.BoundedSemaphore(MAX_CONCURRENT)
 _ENV_KEY_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def _runner_timeout() -> float:
+    """整任务超时（秒）：优先配置 ui_runner_timeout_seconds（默认 900），兜底常量 300。
+
+    Batch 187：10 条用例的多 spec 生产回归实测约 3-5 分钟，硬编码 300s 会误杀
+    正常运行；Railway 生产可经 env UI_RUNNER_TIMEOUT_SECONDS 按需调整。
+    """
+    try:
+        from app.core.config import settings
+        return max(float(settings.ui_runner_timeout_seconds), 60.0)
+    except Exception:
+        return float(DEFAULT_TIMEOUT)
 
 
 def _runner_dir() -> Path:
@@ -350,7 +363,8 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
 
             # 检查超时
             elapsed = time.monotonic() - start_time
-            if elapsed > DEFAULT_TIMEOUT:
+            run_timeout = _runner_timeout()
+            if elapsed > run_timeout:
                 logger.warning(f"Playwright timeout for run #{run_id} after {elapsed:.0f}s")
                 proc.kill()
                 output_thread.join(timeout=10)
@@ -361,7 +375,7 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
                 db.commit()
                 return _fail_run(
                     db, run,
-                    f"测试执行超时 ({DEFAULT_TIMEOUT}s)", job,
+                    f"测试执行超时 ({run_timeout:.0f}s)", job,
                 )
 
             time.sleep(CANCEL_POLL_INTERVAL)
