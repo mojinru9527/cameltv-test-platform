@@ -32,6 +32,29 @@ _semaphore = threading.BoundedSemaphore(MAX_CONCURRENT)
 _ENV_KEY_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
+def _runner_dir() -> Path:
+    """解析 Playwright 运行根目录（C-UI-PROD-001）。
+
+    优先级：
+    1. 模块级 PLAYWRIGHT_DIR 被显式替换（测试/运维注入）→ 使用该值
+    2. 配置 `UI_TEST_RUNNER_DIR`（settings.ui_test_runner_dir）非空：
+       - 相对路径 → 相对 test-platform-v2 根（如 "tests/automation/ui"）
+       - 绝对路径 → 直接使用
+    3. 默认 → backend/tests/playwright（平台自测脚本）
+    """
+    from app.core.config import settings
+
+    configured = (settings.ui_test_runner_dir or "").strip()
+    if not configured:
+        return PLAYWRIGHT_DIR
+    p = Path(configured)
+    if p.is_absolute():
+        return p
+    # __file__ = .../test-platform-v2/backend/app/services/playwright_executor.py
+    # parent×3 = .../test-platform-v2/backend；再上一级 = test-platform-v2 根
+    return Path(__file__).resolve().parent.parent.parent.parent / configured
+
+
 def _claim_pending_run(db: Session, run_id: int) -> bool:
     """Atomically transition exactly one pending run to running.
 
@@ -79,14 +102,17 @@ def _check_playwright_installed() -> tuple[bool, str]:
     npx = _resolve_cmd("npx")
     if not npx:
         return False, "npx 命令不可用，请安装 Node.js"
-    local_test_package = PLAYWRIGHT_DIR / "node_modules" / "@playwright" / "test" / "package.json"
+    runner_dir = _runner_dir()
+    local_test_package = runner_dir / "node_modules" / "@playwright" / "test" / "package.json"
     if not local_test_package.is_file():
-        return False, "UI Runner 本地依赖未安装，请在 backend/tests/playwright 执行 npm ci"
+        return False, (
+            f"UI Runner 本地依赖未安装，请在 {runner_dir} 执行 npm ci"
+        )
     try:
         result = subprocess.run(
             [npx, "playwright", "--version"],
             capture_output=True, text=True, timeout=15,
-            cwd=str(PLAYWRIGHT_DIR) if PLAYWRIGHT_DIR.exists() else os.getcwd(),
+            cwd=str(runner_dir) if runner_dir.exists() else os.getcwd(),
         )
         if result.returncode == 0:
             return True, result.stdout.strip()
@@ -99,13 +125,14 @@ def _check_playwright_installed() -> tuple[bool, str]:
 
 def _list_available_specs() -> list[str]:
     """列出可用的 Playwright 测试脚本。"""
-    if not PLAYWRIGHT_DIR.exists():
+    runner_dir = _runner_dir()
+    if not runner_dir.exists():
         return []
     specs = []
-    for f in PLAYWRIGHT_DIR.rglob("*.spec.js"):
-        specs.append(str(f.relative_to(PLAYWRIGHT_DIR)).replace("\\", "/"))
-    for f in PLAYWRIGHT_DIR.rglob("*.spec.ts"):
-        specs.append(str(f.relative_to(PLAYWRIGHT_DIR)).replace("\\", "/"))
+    for f in runner_dir.rglob("*.spec.js"):
+        specs.append(str(f.relative_to(runner_dir)).replace("\\", "/"))
+    for f in runner_dir.rglob("*.spec.ts"):
+        specs.append(str(f.relative_to(runner_dir)).replace("\\", "/"))
     return sorted(specs)
 
 
@@ -227,23 +254,31 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
 
     test_spec = (job.test_spec or "").strip()
     browser = (job.browser or "chromium").strip()
+    runner_dir = _runner_dir()
 
-    # 3. 验证 test_spec 存在
-    spec_path = PLAYWRIGHT_DIR / test_spec
-    if not test_spec or not spec_path.exists():
+    # 3. 验证 test_spec 存在（防路径穿越：spec 必须位于 runner 目录内）
+    spec_path = (runner_dir / test_spec).resolve()
+    runner_root = runner_dir.resolve()
+    if not test_spec or not spec_path.exists() or not spec_path.is_relative_to(runner_root):
         available = _list_available_specs()
         msg = f"测试脚本不存在: {test_spec or '(未指定)'}"
         if available:
             msg += f"。可用脚本: {', '.join(available[:10])}"
         return _fail_run(db, run, msg, job)
 
-    # 4. 构建执行环境变量（注入 BASE_URL + Playwright 输出路径）
+    # 4. 构建执行环境变量（注入 BASE_URL + 环境变量 + CAMELTV_* 透传 + 输出路径）
     env = os.environ.copy()
     base_url = (run.base_url or "").strip()
     if base_url:
         env["BASE_URL"] = base_url
         logger.info(f"Injecting BASE_URL={base_url} for run #{run_id}")
     env.update(_resolve_environment_variables(db, job.environment_id))
+    # CAMELTV_* 前缀变量透传（体育 E2E preconditions 依赖；如 CAMELTV_TARGET_ENV/
+    # CAMELTV_RUN_LEVEL/AD_BLOCK_DOMAINS 等），便于平台环境注入驱动 tests/automation/ui
+    env.update({
+        k: v for k, v in os.environ.items()
+        if k.startswith("CAMELTV_") and _ENV_KEY_PATTERN.fullmatch(k)
+    })
     # Playwright JSON 报告写入产物目录
     env["PLAYWRIGHT_JSON_OUTPUT_NAME"] = str(artifact_dir / "report.json")
 
@@ -253,12 +288,12 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
 
     # 5. 使用 subprocess.Popen 启动 Playwright 子进程
     cmd = [
-        npx, "playwright", "test", test_spec,
+        npx, "playwright", "test", str(spec_path.relative_to(runner_root)),
         "--project", browser,
         "--reporter", "json",
         "--output", str(artifact_dir),
     ]
-    logger.info(f"Running: {' '.join(cmd)} in {PLAYWRIGHT_DIR}")
+    logger.info(f"Running: {' '.join(cmd)} in {runner_dir}")
 
     try:
         proc = subprocess.Popen(
@@ -268,7 +303,7 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
             text=True,
             encoding="utf-8",
             errors="replace",
-            cwd=str(PLAYWRIGHT_DIR),
+            cwd=str(runner_dir),
             env=env,
         )
 
