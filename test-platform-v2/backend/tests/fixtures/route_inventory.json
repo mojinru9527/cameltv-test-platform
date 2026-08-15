@@ -1,6 +1,6 @@
 {
  "version": "batch-181-baseline",
- "count": 421,
+ "count": 422,
  "routes": [
   {
    "path": "/api/v1/agents/queue",
@@ -48,6 +48,10 @@
   },
   {
    "path": "/api/v1/apitest/cases/change-impact",
+   "method": "POST"
+  },
+  {
+   "path": "/api/v1/apitest/cases/generalize-from-manual",
    "method": "POST"
   },
   {
