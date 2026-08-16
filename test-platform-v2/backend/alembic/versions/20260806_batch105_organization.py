@@ -53,13 +53,18 @@ def _backfill_personal_organizations(conn) -> None:
         if row:
             org_id = row[0]
         else:
+            # 注：真实表结构中 created_at/updated_at 为非空（后续演进），
+            # 回填时必须显式提供时间戳，否则 INSERT 触发 NOT NULL 约束失败。
+            from datetime import datetime, timezone
+
+            now = datetime.now(timezone.utc).isoformat(sep=" ")
             conn.execute(
                 sa.text(
                     "INSERT INTO sys_organization "
-                    "(code, name, description, type, owner_id, status) "
-                    "VALUES (:code, :name, '', 'personal', :owner_id, 1)"
+                    "(code, name, description, type, owner_id, status, created_at, updated_at) "
+                    "VALUES (:code, :name, '', 'personal', :owner_id, 1, :now, :now)"
                 ),
-                {"code": code, "name": "我的组织", "owner_id": user_id},
+                {"code": code, "name": "我的组织", "owner_id": user_id, "now": now},
             )
             org_id = conn.execute(
                 sa.text("SELECT id FROM sys_organization WHERE code = :code"),
