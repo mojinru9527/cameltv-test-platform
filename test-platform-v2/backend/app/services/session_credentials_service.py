@@ -13,6 +13,8 @@
 - session_credential_headers 额外请求头 JSON（可选）
 - session_credential_body   凭证接口请求体模板（可选，支持 ${ENV} 占位）
 - session_credential_app_code 体育平台 appCode 快捷参数（可选，会并入请求体）
+- session_credential_content_type 请求体编码（可选，json=默认 | form=application/x-www-form-urlencoded；
+  体育平台 demo/login 等接口仅接受 form 编码，Batch 188）
 
 注入变量（$session.*）：
 - $session.token  → 响应体 detail.value（蓝湖/体育平台匿名登录响应结构
@@ -30,6 +32,7 @@ from __future__ import annotations
 import json
 import time
 from typing import Any
+from urllib.parse import urlencode
 
 import httpx
 
@@ -42,6 +45,7 @@ KEY_HEADERS = "session_credential_headers"
 KEY_BODY = "session_credential_body"
 KEY_APP_CODE = "session_credential_app_code"
 KEY_FIELD_MAP = "session_field_map"  # 可选 JSON: {"mid": "$.detail.mid"} 自定义取值路径
+KEY_CONTENT_TYPE = "session_credential_content_type"  # json（默认）| form（application/x-www-form-urlencoded）
 
 _SESSION_VAR_PREFIX = "session."
 
@@ -127,6 +131,9 @@ def _load_env_config(db, environment_id: int, project_id: int) -> dict[str, str]
     field_map_raw = resolve_variables(
         db, environment_id, project_id, "${" + KEY_FIELD_MAP + "}"
     )
+    content_type_raw = resolve_variables(
+        db, environment_id, project_id, "${" + KEY_CONTENT_TYPE + "}"
+    )
 
     def _unset(v: str | None) -> bool:
         return not v or (v.startswith("${") and v.endswith("}"))
@@ -140,6 +147,8 @@ def _load_env_config(db, environment_id: int, project_id: int) -> dict[str, str]
         cfg["app_code"] = app_code  # type: ignore[assignment]
     if not _unset(field_map_raw):
         cfg["field_map"] = field_map_raw  # type: ignore[assignment]
+    if not _unset(content_type_raw):
+        cfg["content_type"] = content_type_raw.strip().lower()  # type: ignore[assignment]
     return cfg
 
 
@@ -189,13 +198,25 @@ def fetch_session_credentials(
         body["appCode"] = cfg["app_code"]
 
     try:
-        resp = httpx.request(
-            cfg["method"],
-            cfg["url"],
-            headers=headers,
-            json=body if body else None,
-            timeout=15,
-        )
+        # Batch 188：支持 form-urlencoded 凭证接口（体育平台 demo/login 仅接受
+        # application/x-www-form-urlencoded 请求体；JSON 会被拒绝）
+        if cfg.get("content_type") == "form":
+            headers["Content-Type"] = "application/x-www-form-urlencoded"
+            resp = httpx.request(
+                cfg["method"],
+                cfg["url"],
+                headers=headers,
+                data=urlencode(body) if body else None,
+                timeout=15,
+            )
+        else:
+            resp = httpx.request(
+                cfg["method"],
+                cfg["url"],
+                headers=headers,
+                json=body if body else None,
+                timeout=15,
+            )
         resp.raise_for_status()
         resp_json = resp.json()
     except Exception:

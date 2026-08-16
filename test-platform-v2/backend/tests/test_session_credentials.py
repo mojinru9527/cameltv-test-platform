@@ -101,6 +101,71 @@ def test_unconfigured_returns_empty(db_session):
     assert scs.session_variable_map(db_session, env.id, 1) == {}
 
 
+def test_form_encoded_credentials_fetch(db_session):
+    """form-urlencoded 凭证接口（Batch 188：体育平台 demo/login 仅接受 form 编码）。
+
+    模拟体育平台登录响应结构：{"status":200,"data":{"token","userSig","userId"}}
+    + session_field_map 提取 userSig/userId。
+    """
+    import threading
+    import time
+    import uvicorn
+    from fastapi import FastAPI, Form
+
+    port = 18904
+    app = FastAPI()
+
+    @app.post("/form-login")
+    def form_login(countryCode: str = Form(...), mobile: str = Form(...), password: str = Form(...)):
+        assert countryCode == "86"
+        assert mobile == "18476944071"
+        assert password == "secret"
+        return {
+            "status": 200,
+            "data": {
+                "token": "C_form_token_abc",
+                "userSig": "C_user_sig_xyz",
+                "userId": "11025728",
+            },
+            "msg": "",
+        }
+
+    server = uvicorn.Server(
+        uvicorn.Config(app, host="127.0.0.1", port=port, log_level="error")
+    )
+    thread = threading.Thread(target=server.run, daemon=True)
+    thread.start()
+    try:
+        import httpx
+
+        for _ in range(50):
+            try:
+                httpx.get(f"http://127.0.0.1:{port}/form-login", timeout=1)
+                break
+            except Exception:
+                time.sleep(0.1)
+
+        env = _make_env(db_session, project_id=1)
+        _set_var(
+            db_session, env, "session_credential_url", f"http://127.0.0.1:{port}/form-login"
+        )
+        _set_var(db_session, env, "session_credential_content_type", "form")
+        _set_var(
+            db_session, env, "session_credential_body",
+            json.dumps({"countryCode": "86", "mobile": "18476944071", "password": "secret"}),
+        )
+        _set_var(
+            db_session, env, "session_field_map",
+            json.dumps({"userSig": "$.data.userSig", "userId": "$.data.userId"}),
+        )
+        creds = scs.fetch_session_credentials(db_session, env.id, 1)
+        assert creds.get("token") == "C_form_token_abc", creds
+        assert creds.get("userSig") == "C_user_sig_xyz", creds
+        assert creds.get("userId") == "11025728", creds
+    finally:
+        server.should_exit = True
+
+
 def test_extract_credentials_variants():
     """多种响应结构提取。"""
     r1 = {"code": 0, "detail": {"key": "K1", "value": "V1"}}
