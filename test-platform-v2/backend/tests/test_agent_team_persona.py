@@ -52,12 +52,20 @@ class TestBuildAgentTeamPersona:
         assert "dev" not in p and "design" not in p and "pm" not in p
 
     def test_fixed_steps_present(self):
-        """六固定步骤关键词齐备（建团队→加成员→建任务→认领→汇总→最终报告）。"""
+        """固定步骤关键词齐备（建团队→加成员→建任务→认领→唤醒→轮询→最终报告）。"""
         p = build_agent_team_persona("x", "full")
         for keyword in ("agent_teams_create", "agent_teams_add_member", "agent_teams_create_task",
-                        "agent_teams_claim_task", "agent_teams_send_message", "最终报告"):
+                        "agent_teams_claim_task", "agent_teams_send_message", "agent_teams_status", "最终报告"):
             assert keyword in p
         assert "【用户目标】" in p and "【批次模式】full" in p
+
+    def test_wake_and_wait_discipline(self):
+        """Batch 191 冒烟修复：认领后必须 send_message 唤醒成员、未完成任务不得结束会话。"""
+        p = build_agent_team_persona("x", "light")
+        assert "唤醒" in p
+        assert "每个认领的任务都必须发送消息" in p
+        assert "严禁在存在未完成任务时输出最终报告或结束会话" in p
+        assert "必须等到每个任务状态变为 completed" in p
 
     def test_constraints_present(self):
         p = build_agent_team_persona("x", "light")

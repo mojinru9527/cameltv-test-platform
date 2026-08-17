@@ -24,20 +24,29 @@ _LIGHT_MEMBERS = [
 ]
 
 # 固定步骤（两运行时共用，全文字面；模型自组织失败由 runner 兜底为 failed + 可读 error，R-5）
+# Batch 191 冒烟修复：第 4-6 步重写——原第 4 步只说「认领派发」且第 5 步把
+# send_message 描述成「成员汇报方向」，船长（模型）认领后不唤醒成员即收尾，
+# 成员任务永远 in_progress（R-1 后真实业务任务 5-8 复现）。现明确：
+# 认领后必须 send_message 唤醒、必须轮询到全部 completed 才可结束。
 _STEPS = [
     "1. agent_teams_create：创建团队（name 用目标主题摘要，description 写用户目标原文）。",
     "2. agent_teams_add_member：按批次模式添加成员（见成员集）；role 字段填对应中文角色。",
     "3. agent_teams_create_task：把用户目标拆成带依赖关系的子任务（如 PRD→计划→设计→实现→测试/门禁），"
     "用 dependencies 参数表达先后依赖。",
-    "4. agent_teams_claim_task：按依赖顺序把任务认领派发给对应成员（一次一个任务，"
-    "等成员完成后派发下一个依赖就绪的任务）。",
-    "5. 收集各成员结论：成员完成任务后用 agent_teams_send_message 汇报，你在收件后继续派发后续任务。",
-    "6. 全部任务完成后：汇总各成员结论，写一份【最终报告】（含：团队分工、各任务结果、总体结论），"
+    "4. agent_teams_claim_task：按依赖顺序把一个任务认领给对应成员（assignee 填成员名）。",
+    "5. 认领后必须立即 agent_teams_send_message 唤醒该成员：消息中写明任务 id、任务内容与产出要求，"
+    "并明确『请完成该任务，在回复中输出结果』——send_message 是成员开始工作的唯一方式，"
+    "每个认领的任务都必须发送消息，禁止只认领不发送。",
+    "6. 发送后反复调用 agent_teams_status 查看任务状态：任务仍为 in_progress/claimed 或成员 idle 时"
+    "继续轮询并用 agent_teams_send_message 催办；**必须等到每个任务状态变为 completed（或 failed 且已处理）**，"
+    "严禁在存在未完成任务时输出最终报告或结束会话。",
+    "7. 全部任务完成后：汇总各成员结论，写一份【最终报告】（含：团队分工、各任务结果、总体结论），"
     "作为最终回复输出。",
 ]
 
 _CONSTRAINTS = [
     "不要创建用户目标之外的额外任务；不要删除团队（保留团队档案供平台复盘）。",
+    "每个认领的任务都必须用 agent_teams_send_message 唤醒成员；严禁在存在未完成任务时结束会话。",
 ]
 
 
