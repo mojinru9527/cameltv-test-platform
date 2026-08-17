@@ -305,3 +305,34 @@ def test_open_plan_executions_lists(db_session, client):
     resp = client.get(f"/api/v1/open/plans/{plan.id}/executions", headers=_auth())
     assert resp.status_code == 200
     assert resp.json()["data"]["total"] == 0  # 无执行记录返回空分页
+
+
+# ── UI 自动化查询面（阶段 3 ui-tester 编排入口）──
+
+def test_open_ui_jobs_lists(db_session, client):
+    from app.models.ui_test import UiTestJob
+
+    _mk_token(db_session)
+    db_session.add(UiTestJob(
+        project_id=1, name="登录页 UI 回归", status="active", creator_id=1,
+    ))
+    db_session.commit()
+
+    resp = client.get("/api/v1/open/ui-tests", headers=_auth())
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert data["total"] == 1
+    assert data["items"][0]["name"] == "登录页 UI 回归"
+
+
+def test_open_ui_jobs_project_isolation(db_session, client):
+    from app.models.ui_test import UiTestJob
+
+    _mk_token(db_session)
+    db_session.add(UiTestJob(
+        project_id=2, name="别的项目 UI", status="active", creator_id=1,
+    ))
+    db_session.commit()
+
+    resp = client.get("/api/v1/open/ui-tests", headers=_auth())
+    assert resp.json()["data"]["total"] == 0

@@ -19,13 +19,17 @@ class DshTaskCreate(BaseModel):
         """params.batch_mode 仅团队模式可用且必填（PRD US-1：批次模式必选，无默认）。
 
         DSH 测试 Agent 框架：params.team_kind 区分团队视角——dev（开发批次，默认，
-        沿用 agent_team_persona）| tester（测试视角，沿用 tester_team_persona）。
+        沿用 agent_team_persona）| tester（测试视角，沿用 tester_team_persona）；
+        params.model 覆盖模型（模型池按任务指定，须为非空字符串）。
         """
         params = self.params or {}
         batch_mode = params.get("batch_mode")
         team_kind = params.get("team_kind")
+        model = params.get("model")
         if team_kind is not None and team_kind not in ("dev", "tester"):
             raise ValueError(f"params.team_kind 非法: {team_kind!r}（仅支持 dev|tester）")
+        if model is not None and (not isinstance(model, str) or not model.strip()):
+            raise ValueError("params.model 须为非空字符串")
         if self.mode == "team":
             if batch_mode is None:
                 raise ValueError("mode=team 时必须提供 params.batch_mode（full|light）")

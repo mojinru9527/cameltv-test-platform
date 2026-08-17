@@ -251,3 +251,22 @@ def open_list_plan_executions(
         db, plan_id, page=page, page_size=page_size, project_id=token.project_id,
     )
     return R.ok({"total": total, "page": page, "page_size": page_size, "items": items})
+
+
+# ── UI 自动化查询面（阶段 3 ui-tester 编排入口）──
+
+@router.get("/ui-tests", response_model=R[dict], summary="UI 测试任务列表（Agent 查询面）")
+def open_list_ui_jobs(
+    keyword: str = "",
+    page: int = 1,
+    page_size: int = 20,
+    token: "ApiToken" = Depends(verify_api_token),
+    db: Session = Depends(get_db),
+):
+    """UI 自动化任务列表（含最近运行状态），ui-tester 选择触发目标用。"""
+    from app.services.ui_test_service import list_jobs
+
+    items, total = list_jobs(
+        db, project_id=token.project_id, keyword=keyword, page=page, page_size=page_size,
+    )
+    return R.ok({"total": total, "page": page, "page_size": page_size, "items": items})

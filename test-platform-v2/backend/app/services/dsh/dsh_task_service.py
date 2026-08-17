@@ -163,7 +163,11 @@ def execute_task(db, task: DshTask, runner=None) -> None:
         if task.mode == "team":
             _execute_team(db, task, params, runner)
             return
-        result = runner(task.task, workspace=params.get("workspace") or None)
+        result = runner(
+            task.task,
+            workspace=params.get("workspace") or None,
+            model=params.get("model") or None,  # DSH 测试 Agent 框架：模型池按任务指定
+        )
         task.status = "success" if result.exit_code == 0 else "failed"
         task.output_text = (result.final_response or "")[:20000]
         task.error = (result.error or "")[:2000] if result.exit_code != 0 else ""
@@ -306,12 +310,14 @@ def _team_runner(
     """执行线程：跑 run_dsh_task(mode="team")，结果经线程安全队列传回。
 
     不碰任何 DB session（R-3）；异常兜底为 failed 结果（与 single 一致）。
+    DSH 测试 Agent 框架：params.model 覆盖模型（模型池按任务指定）。
     """
     try:
         result = runner(
             task_text,
             workspace=params.get("workspace") or None,
             mode="team",
+            model=params.get("model") or None,
             timeout=settings.dsh_team_timeout_seconds,
             extra_env={"DSH_SYSTEM_PROMPT": persona},
         )

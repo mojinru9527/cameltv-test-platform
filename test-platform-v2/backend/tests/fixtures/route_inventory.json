@@ -1,5 +1,5 @@
 {
- "count": 431,
+ "count": 432,
  "routes": [
   {
    "path": "/api/v1/agents/queue",
@@ -724,6 +724,10 @@
   {
    "path": "/api/v1/open/test-cases",
    "method": "POST"
+  },
+  {
+   "path": "/api/v1/open/ui-tests",
+   "method": "GET"
   },
   {
    "path": "/api/v1/open/ui-tests/runs/{run_id}",

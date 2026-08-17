@@ -719,3 +719,116 @@ def test_api_create_single_with_team_kind_rejected(dsh_client, dsh_available):
         json={"task": "x", "params": {"team_kind": "tester"}},
     )
     assert resp.status_code == 422
+
+
+# ── DSH 测试 Agent 框架（阶段 3）：模型池与 model 透传 ──
+
+def test_api_create_single_with_model_ok(dsh_client, dsh_available):
+    """mode=single + params.model 合法 → 200（模型池未配置时不限）。"""
+    resp = dsh_client.post(
+        "/api/v1/dsh-tasks",
+        json={"task": "x", "params": {"model": "deepseek-v4-pro"}},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["data"]["status"] == "pending"
+
+
+def test_api_create_team_with_model_ok(dsh_client, dsh_available):
+    """mode=team + params.model 合法 → 200。"""
+    resp = dsh_client.post(
+        "/api/v1/dsh-tasks",
+        json={"task": "x", "mode": "team",
+              "params": {"batch_mode": "full", "team_kind": "tester", "model": "deepseek-v4-pro"}},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["data"]["mode"] == "team"
+
+
+def test_api_create_empty_model_rejected(dsh_client, dsh_available):
+    """params.model 空串 → 422（Pydantic 校验）。"""
+    resp = dsh_client.post(
+        "/api/v1/dsh-tasks",
+        json={"task": "x", "params": {"model": "  "}},
+    )
+    assert resp.status_code == 422
+
+
+def test_api_create_model_out_of_pool_rejected(dsh_client, dsh_available, monkeypatch):
+    """模型池配置后，池外模型 → 400（阶段 3 模型池准入）。"""
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "dsh_model_pool", "deepseek-v4-flash,deepseek-v4-pro")
+    resp = dsh_client.post(
+        "/api/v1/dsh-tasks",
+        json={"task": "x", "params": {"model": "gpt-4"}},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["code"] == 400
+    assert "模型池" in resp.json()["msg"]
+
+
+def test_api_create_model_in_pool_ok(dsh_client, dsh_available, monkeypatch):
+    """模型池配置后，池内模型 → 200。"""
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "dsh_model_pool", "deepseek-v4-flash,deepseek-v4-pro")
+    resp = dsh_client.post(
+        "/api/v1/dsh-tasks",
+        json={"task": "x", "params": {"model": "deepseek-v4-pro"}},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["data"]["status"] == "pending"
+
+
+def test_execute_single_passes_model_to_runner(dsh_db, monkeypatch):
+    """single 任务 params.model 透传给 runner（模型池按任务指定）。"""
+    captured = {}
+
+    def fake_runner(task, **kwargs):
+        captured.update(model=kwargs.get("model"))
+        return DshRunResult(final_response="ok", exit_code=0, session_dir="/tmp/x")
+
+    db = dsh_db()
+    try:
+        row = dsh_task_service.submit_task(
+            db, project_id=1, task="run", operator_id=1,
+            params={"model": "deepseek-v4-pro"},
+        )
+        claimed = dsh_task_service.claim_next_task(db)
+        dsh_task_service.execute_task(db, claimed, runner=fake_runner)
+        assert claimed.status == "success"
+        assert captured["model"] == "deepseek-v4-pro"
+    finally:
+        db.close()
+
+
+def test_execute_team_passes_model_to_runner(dsh_db, monkeypatch, tmp_path):
+    """team 任务 params.model 透传给 runner。"""
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "dsh_team_poll_seconds", 0.05)
+    ws_root = tmp_path / "ws-isolation"
+    ws_root.mkdir()
+    team_id = "team-model"
+    captured = {}
+
+    def fake_runner(task, **kwargs):
+        captured.update(model=kwargs.get("model"))
+        ws = ws_root / "ws-0001"
+        ws.mkdir(exist_ok=True)
+        _write_team_json(ws, team_id, _team_snapshot(team_id, "模型团队"))
+        return DshRunResult(final_response="done", exit_code=0, session_dir=str(tmp_path), workspace=str(ws))
+
+    db = dsh_db()
+    try:
+        row = dsh_task_service.submit_task(
+            db, project_id=1, task="团队任务", operator_id=1,
+            mode="team", params={"batch_mode": "full", "team_kind": "tester",
+                                 "model": "deepseek-v4-pro", "workspace": str(ws_root)},
+        )
+        claimed = dsh_task_service.claim_next_task(db)
+        dsh_task_service.execute_task(db, claimed, runner=fake_runner)
+        assert claimed.status == "success"
+        assert captured["model"] == "deepseek-v4-pro"
+    finally:
+        db.close()

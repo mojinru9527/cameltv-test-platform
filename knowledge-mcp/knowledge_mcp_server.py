@@ -172,6 +172,30 @@ def get_execution_result(run_id: int) -> dict:
     return _call("GET", f"/runs/{run_id}")
 
 
+# ── UI 自动化面（阶段 3 ui-tester 编排入口）──────────────
+
+@mcp.tool()
+def get_ui_test_jobs(keyword: str = "") -> dict:
+    """UI 自动化任务列表（含最近运行状态），ui-tester 选择触发目标用。"""
+    params = {"keyword": keyword} if keyword else None
+    return _call("GET", "/ui-tests", params=params)
+
+
+@mcp.tool()
+def trigger_ui_test(job_id: int) -> dict:
+    """触发平台 UI 自动化任务（平台 Runner 执行）。
+
+    返回 run_id/run_status；结果用 get_ui_test_run 查询。
+    """
+    return _call("POST", f"/ui-tests/{job_id}/trigger")
+
+
+@mcp.tool()
+def get_ui_test_run(run_id: int) -> dict:
+    """查询 UI 测试运行状态与结果。"""
+    return _call("GET", f"/ui-tests/runs/{run_id}")
+
+
 # ── 回写面 ────────────────────────────────────────────
 
 @mcp.tool()

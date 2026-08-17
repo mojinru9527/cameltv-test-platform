@@ -117,6 +117,33 @@ def test_get_execution_result(monkeypatch):
     assert calls[0]["path"] == "/runs/99"
 
 
+# ── UI 自动化面（阶段 3）──
+
+def test_get_ui_test_jobs(monkeypatch):
+    calls = _capture(monkeypatch)
+    kms.get_ui_test_jobs()
+    assert calls[0]["path"] == "/ui-tests"
+    assert calls[0]["params"] is None
+
+    calls.clear()
+    kms.get_ui_test_jobs("登录")
+    assert calls[0]["params"] == {"keyword": "登录"}
+
+
+def test_trigger_ui_test(monkeypatch):
+    calls = _capture(monkeypatch)
+    kms.trigger_ui_test(7)
+    assert calls[0]["method"] == "POST"
+    assert calls[0]["path"] == "/ui-tests/7/trigger"
+
+
+def test_get_ui_test_run(monkeypatch):
+    calls = _capture(monkeypatch)
+    kms.get_ui_test_run(88)
+    assert calls[0]["method"] == "GET"
+    assert calls[0]["path"] == "/ui-tests/runs/88"
+
+
 # ── 回写面 ──
 
 def test_submit_test_cases(monkeypatch):
