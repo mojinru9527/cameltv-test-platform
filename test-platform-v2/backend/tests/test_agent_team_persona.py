@@ -78,13 +78,21 @@ class TestTeamCordis:
         team = _load_yaml(_DSH_DIR / "team.cordis.yml")
         minimal = _load_yaml(_DSH_DIR / "minimal.cordis.yml")
         assert isinstance(team, list)
-        assert len(team) == len(minimal) + 1, "team.cordis.yml = minimal 全部行 + 1 插件行"
+        assert len(team) == len(minimal) + 3, (
+            "team.cordis.yml = minimal 全部行 + subagent / subagent-spawn-in-process / agent-teams "
+            "3 行（C191-1：agent-teams 依赖 subagents 服务，minimal 不含提供者）"
+        )
         ids = [d.get("id") for d in team]
         assert "agent-teams" in ids
+        assert "subagent" in ids
+        assert "subagent-spawn-in-process" in ids
         plugin = next(d for d in team if d.get("id") == "agent-teams")
         assert plugin["name"] == "@nanmicoder/dsh-agent-teams"
         assert plugin["config"]["stateDir"] == ".agent-teams"
         assert plugin["config"]["memberProvider"] == "spawn"
+        spawn = next(d for d in team if d.get("id") == "subagent-spawn-in-process")
+        assert spawn["name"] == "@deepseek-ai/dsh-subagent-spawn-in-process"
+        assert spawn["config"]["providerName"] == "spawn"
 
     def test_minimal_rows_unchanged(self):
         team = _load_yaml(_DSH_DIR / "team.cordis.yml")

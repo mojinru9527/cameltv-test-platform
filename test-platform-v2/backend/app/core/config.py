@@ -140,6 +140,7 @@ class Settings(BaseSettings):
     # ── Batch 191：AgentTeams 团队模式配置 ──
     dsh_team_timeout_seconds: float = 1800.0     # 团队任务超时（覆盖单任务 600s；R-4）
     dsh_team_poll_seconds: float = 3.0           # 团队进度轮询间隔（PRD 成功指标引用）
+    dsh_team_heartbeat_seconds: float = 60.0     # 团队执行心跳间隔（locked_at 续期，防 stale 误回收；R-1 冒烟暴露）
     dsh_team_profile: str = "agent-team"         # node runtime 团队 profile 名（CLI 从 $DSH_HOME/profiles/ 解析）
     dsh_team_cordis_config: str = ""             # python-sdk runtime 团队 cordis 路径；空 = 内置 team.cordis.yml
     dsh_team_harness_path: str = ""              # 团队 profile 的 DSH_HOME 覆盖；空 = CLI 默认 $DSH_HOME（自动探测）
