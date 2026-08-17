@@ -191,6 +191,8 @@ def _run_node_cli(
     entry = _node_entry()
     profile_name = "headless" if mode != "team" else (settings.dsh_team_profile or "agent-team")
     cmd = ["node", str(entry), "--profile", profile_name, task]
+    # 规范 §3.1：workspace 仅供团队模式终态 team.json 读取回传；single 留空（既有断言不回归）
+    ws_field = workdir if mode == "team" else ""
     env = os.environ.copy()
     env["DEEPSEEK_API_KEY"] = settings.dsh_api_key_effective
     if settings.dsh_base_url_effective:
@@ -223,11 +225,11 @@ def _run_node_cli(
             error=f"dsh 执行超时（>{int(timeout)}s）",
             session_dir=str(session_root),
             timed_out=True,
-            workspace=workdir,
+            workspace=ws_field,
         )
     except Exception as exc:  # pragma: no cover - 环境异常
         logger.exception("dsh node runner failed")
-        return DshRunResult(final_response="", exit_code=1, error=str(exc), session_dir=str(session_root), workspace=workdir)
+        return DshRunResult(final_response="", exit_code=1, error=str(exc), session_dir=str(session_root), workspace=ws_field)
 
     elapsed = time.monotonic() - started
     stdout = _truncate((proc.stdout or "").strip())
@@ -238,10 +240,10 @@ def _run_node_cli(
             exit_code=proc.returncode,
             error=_truncate(stderr or f"dsh 退出码 {proc.returncode}"),
             session_dir=str(session_root),
-            workspace=workdir,
+            workspace=ws_field,
         )
     logger.info("dsh node runner ok in %.1fs (exit 0)", elapsed)
-    return DshRunResult(final_response=stdout, exit_code=0, session_dir=str(session_root), workspace=workdir)
+    return DshRunResult(final_response=stdout, exit_code=0, session_dir=str(session_root), workspace=ws_field)
 
 
 def _run_python_sdk(
@@ -255,6 +257,8 @@ def _run_python_sdk(
     mode: str = "single",
 ) -> DshRunResult:
     """通过官方 Python SDK 执行任务（生产 Linux 路径）。需要 deepseek-harness-sdk。"""
+    # 规范 §3.1：workspace 仅供团队模式回传；single 留空
+    ws_field = workdir if mode == "team" else ""
     try:
         from deepseek_harness import DeepSeekHarness
     except Exception as exc:  # pragma: no cover - 依赖缺失
@@ -263,7 +267,7 @@ def _run_python_sdk(
             exit_code=1,
             error=f"deepseek-harness-sdk 未安装或不可用: {exc}",
             session_dir=str(session_root),
-            workspace=workdir,
+            workspace=ws_field,
         )
 
     if mode == "team":
@@ -284,7 +288,7 @@ def _run_python_sdk(
             exit_code=1,
             error=f"DSH cordis 配置不存在: {cordis_path}",
             session_dir=str(session_root),
-            workspace=workdir,
+            workspace=ws_field,
         )
 
     env = os.environ.copy()
@@ -320,7 +324,7 @@ def _run_python_sdk(
                 final_response=_truncate(result.final_response or ""),
                 exit_code=0,
                 session_dir=str(session_root),
-                workspace=workdir,
+                workspace=ws_field,
             )
         except Exception as exc:  # pragma: no cover - 真实执行异常
             logger.exception("dsh python-sdk runner failed")
@@ -329,7 +333,7 @@ def _run_python_sdk(
                 exit_code=1,
                 error=_truncate(str(exc)),
                 session_dir=str(session_root),
-                workspace=workdir,
+                workspace=ws_field,
             )
         finally:
             for key, value in previous_env.items():
