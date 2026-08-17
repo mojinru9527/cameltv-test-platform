@@ -272,6 +272,26 @@ def _team_poller(task_id: int, stop_event: threading.Event, poll_seconds: float,
             logger.warning("DSH team poller error (task %s): %s", task_id, exc)
 
 
+def _team_heartbeat(task_id: int, stop_event: threading.Event, interval: float) -> None:
+    """团队执行期间心跳续期 locked_at（R-3：独立短 SessionLocal）。
+
+    R-1 冒烟暴露（Batch 191 缺陷修复）：团队任务最长 dsh_team_timeout_seconds(1800s)，
+    远超 _STALE_CLAIM_SECONDS(300s)，执行期间无锁续期会被 reap_stale 误回收置 failed。
+    执行进程存活期间每 interval 秒续期一次锁；进程崩溃 → 心跳停止 → 5 分钟后照常回收
+    （原失联语义不回归）。
+    """
+    while not stop_event.wait(max(0.1, interval)):
+        try:
+            with SessionLocal() as s:
+                row = s.get(DshTask, task_id)
+                if row is None:
+                    return
+                row.locked_at = utcnow()
+                s.commit()
+        except Exception as exc:  # noqa: BLE001 - 单轮失败不退出心跳
+            logger.warning("DSH team heartbeat error (task %s): %s", task_id, exc)
+
+
 def _team_runner(
     task_text: str,
     params: dict,
@@ -324,13 +344,20 @@ def _execute_team(db, task: DshTask, params: dict, runner) -> None:
         args=(task.id, stop_event, poll_seconds, root),
         daemon=True,
     )
+    t_beat = threading.Thread(
+        target=_team_heartbeat,
+        args=(task.id, stop_event, settings.dsh_team_heartbeat_seconds),
+        daemon=True,
+    )
     t_exec.start()
     t_poll.start()
+    t_beat.start()
 
-    # 防御性兜底：join 超时后强制终止轮询，执行结果可能未产生
+    # 防御性兜底：join 超时后强制终止轮询/心跳，执行结果可能未产生
     t_exec.join(timeout=settings.dsh_team_timeout_seconds + 60)
     stop_event.set()
     t_poll.join(timeout=5)
+    t_beat.join(timeout=5)
 
     if result_box.empty():
         result = DshRunResult(final_response="", exit_code=1, error="团队执行线程异常终止（未知原因）")
