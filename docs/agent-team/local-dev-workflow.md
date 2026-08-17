@@ -83,10 +83,11 @@ pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -Expected
 | 补丁写进了主工作区（F:\CamelTv） | 编辑工具默认以会话工作目录为根（batch-104 实测） | 先小样验证相对路径前缀（如 `../CamelTv-worktrees/{task}/...`），落盘后立即 `git status` 核对；误写后用同内容反向恢复并复制到目标 worktree |
 | 周审计误报大量 HARD | scan 未排除普通 `venv/`（batch-82 已修复） | F:\CamelTv 更新到含修复的 main |
 | 要改 Agent Team 技能 | `.claude` 是入库事实源，`.agents` 是本地镜像 | 改 `.claude` 进 PR + 同步 `.agents` 镜像 + CHANGELOG |
+| 推送时 pre-push 门禁未触发 | 新环境未安装 guardrails：`git config core.hooksPath` 为空（batch-190 实测） | 运行 `pwsh scripts/git/install-git-guardrails.ps1`（需 gh 已认证）；推送前手动 `verify-ai-worktree.ps1 -RequireClean -RequireMetadata` 兜底 |
 
 ## 6. 直接任务（不走 Agent Team）
 
-非 Agent Team 的直接任务使用 `scripts/git/start-codex-task.ps1`（Codex）/ `start-claude-task.ps1`（Claude），同样生成独立 worktree + `.ai-worktree.json`；push 门禁、Draft PR、审计流程与 Agent Team 一致。
+非 Agent Team 的直接任务使用 `scripts/git/start-codex-task.ps1`（Codex）/ `start-claude-task.ps1`（Claude）/ `start-deepseek-harness-task.ps1`（DeepSeek Harness），同样生成独立 worktree + `.ai-worktree.json`；push 门禁、Draft PR、审计流程与 Agent Team 一致。
 
 ## 7. 常用命令速查
 
@@ -94,10 +95,10 @@ pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -Expected
 |------|------|
 | 查看工作区与分支占用 | `git worktree list` |
 | 主干视图更新 | `git -C F:\CamelTv pull --ff-only`（或 fetch + merge --ff-only） |
-| 创建 Agent Team 工作区 | `pwsh scripts/git/start-agent-team-task.ps1 -Executor {codex|claude} -UserConfirmedExecutor -Kind feature -Task ... -Scope ... -FrontendPort ... -BackendPort ...` |
+| 创建 Agent Team 工作区 | `pwsh scripts/git/start-agent-team-task.ps1 -Executor {codex|claude|DeepSeek_Harness} -UserConfirmedExecutor -Kind feature -Task ... -Scope ... -FrontendPort ... -BackendPort ...` |
 | 创建直接任务工作区 | `pwsh scripts/git/start-codex-task.ps1 -Kind fix -Task ... -Scope ... -FrontendPort ... -BackendPort ...` |
-| 工作区隔离验证 | `pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow {direct|agent-team} -ExpectedExecutor {codex|claude}` |
-| PR 审计 | `pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow {direct|agent-team} -ExpectedExecutor {codex|claude} [-RequireSuccessfulChecks]` |
+| 工作区隔离验证 | `pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow {direct|agent-team} -ExpectedExecutor {codex|claude|DeepSeek_Harness}` |
+| PR 审计 | `pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow {direct|agent-team} -ExpectedExecutor {codex|claude|DeepSeek_Harness} [-RequireSuccessfulChecks]` |
 | C 条件审计 | `pwsh scripts/git/audit-cconditions.ps1 -RequireLatestBatch` |
 | WARN 周审计 | `pwsh scripts/git/run-warn-audit.ps1 -RepositoryPath F:\CamelTv` |
 
