@@ -156,6 +156,18 @@ pytest tests/ -v --tb=short
   - 全局并发闸门 `DSH_MAX_CONCURRENT`（默认 1，安全优先）与任务文本上限 `DSH_MAX_TASK_CHARS`（超限拒绝）；
   - python-sdk 凭据经 `os.environ` 传递必须持 `_python_sdk_env_lock`（env 突变+执行整体锁，禁止裸改）；
   - **生产启用前置**：`DSH_ENABLED=true` 仅在本批加固 + `tests/test_dsh_sandbox.py` 全绿 + 部署人工确认后允许；OS 级沙箱（seccomp/nsjail）为部署层后续（C184-1）
+- **DSH 团队模式（Batch 191，AgentTeams）**：
+  - 资产：`services/dsh/agent_team_persona.py`（船长提示词纯函数，full 五成员/light 两成员）、
+    `services/dsh/team.cordis.yml`（= minimal + agent-teams 插件行，python-sdk 用）、
+    `services/dsh/agent-team/`（profile 模板 + 安装 README，**实际安装位 `$DSH_HOME/profiles/agent-team`，不入库**）；
+  - 路由：`run_dsh_task(mode="team")` → node `--profile agent-team` / python-sdk `team.cordis.yml`；
+    `DSH_TEAM_HARNESS_PATH` 语义 = **DSH_HOME 覆盖**（非 bin.js 路径）；
+  - 线程铁律（R-3）：`dsh_task_service._team_poller` 每次写库用**独立短 `SessionLocal`**，
+    禁止复用 `execute_task` 的认领 session；`team_json` 全量幂等覆盖，超长截断加 `_truncated`；
+  - 状态词表：`dsh_task.status` 仍用队列词表（pending/running/success/failed/cancelled）；
+    团队内部任务状态（claimed/in_progress 等）是插件 `team.json` 字段，前端单独映射；
+  - 冒烟：node 需先安装 agent-team profile（`dsh plugin --profile agent-team add @nanmicoder/dsh-agent-teams`）；
+    python-sdk bundle 加载未实测 → C191-1 deferred，**不静默 fallback 到 single**
 - **APScheduler**：定时任务在 `main.py` 生命周期中启动，开发时 `--reload` 会导致 scheduler 重复启动
 - **CORS**：生产环境 CORS 配置在 Nginx，本地开发在 `main.py` 中配置 `allow_origins`
 
