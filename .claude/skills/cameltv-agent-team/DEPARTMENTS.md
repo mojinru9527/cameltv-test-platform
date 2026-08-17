@@ -217,7 +217,7 @@ API: {ms}   前端: {s}   覆盖: {%}
 gh pr create --draft --base main --head feature/batch-{N}-{name} \
   --title "feat: Batch {N} — {摘要}" \
   --body "详见 Agent Team 工件: work-logs/"
-pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor claude|codex
+pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor claude|codex|DeepSeek_Harness
 ```
 
 2. Agent Team 在首轮 QA 证据完成后做**一次总确认**（覆盖本批次推送、创建 Draft PR、required checks 通过后合入 main），展示变更摘要并停下等待明确答复；确认后不再逐次询问（AGENTS.md §2.4 Agent Team 例外）。`confirm-agent-team-completion.ps1` 仅作可选完成证据，不再强制。
