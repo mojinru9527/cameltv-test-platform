@@ -181,6 +181,7 @@ GET  /open/test-cases                用例列表（module/keyword 过滤）
 
 ## 13. 关联文档
 
+- 使用手册：`DSH测试Agent-测试工程师使用手册.md`（测试工程师入口）
 - 船长手册：`docs/agent-team/dsh-agent-teams.md`
 - 知识中心：`知识中心-用户使用手册.md`、`RAG知识图谱与Agent持续学习能力落地执行文档.md`
 - 用例规则：`tests/test-case-standards/`、`.agents/skills/test-case-design/`
