@@ -26,8 +26,8 @@
 - [x] 4 个 ps1 语法校验通过（PowerShell AST Parser）
 - [x] `start-agent-team-task.ps1 -Executor DeepSeek_Harness` 实际创建 worktree 成功（本批自身即运行时验证）
 - [x] AgentTeams 依赖强制：t2 依赖 t1 未完成时认领被拒绝
-- [ ] Product 成员抽检 PRD-lite（t1）
-- [ ] QA 成员门禁核对（t2）
+- [x] Product 成员抽检 PRD-lite（t1）：有条件通过，唯一 P2 = C75-3 audit 证据（已实测：EXIT=1，11 个历史孤儿条件，本批未新增）
+- [ ] QA 成员门禁核对（t2，已派发含 C75-3 证据）
 - [ ] Leader 判决 + 一次总确认（推送+PR+合入）
 
 ## 批次记录
