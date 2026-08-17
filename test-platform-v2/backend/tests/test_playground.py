@@ -232,15 +232,20 @@ class TestBatch177PlaygroundUiJobWriteback:
             "FakeGenerated", (),
             {
                 "mkdir": lambda *a, **k: None,
+                "write_text": lambda *a, **k: None,
                 "__truediv__": lambda self, other: fake_file(),
             },
         )
         fake_dir = type(
             "FakeDir", (),
-            {"__truediv__": lambda self, other: fake_generated()},
+            {"__truediv__": lambda self, other: fake_generated(), "mkdir": lambda *a, **k: None},
         )()
         monkeypatch.setattr(
             "app.services.playwright_executor.PLAYWRIGHT_DIR",
+            fake_dir,
+        )
+        monkeypatch.setattr(
+            "app.services.playwright_executor.GENERATED_SPECS_STORAGE",
             fake_dir,
         )
 
@@ -272,15 +277,20 @@ class TestBatch177PlaygroundUiJobWriteback:
             "FakeGenerated", (),
             {
                 "mkdir": lambda *a, **k: None,
+                "write_text": lambda *a, **k: None,
                 "__truediv__": lambda self, other: fake_file(),
             },
         )
         fake_dir = type(
             "FakeDir", (),
-            {"__truediv__": lambda self, other: fake_generated()},
+            {"__truediv__": lambda self, other: fake_generated(), "mkdir": lambda *a, **k: None},
         )()
         monkeypatch.setattr(
             "app.services.playwright_executor.PLAYWRIGHT_DIR",
+            fake_dir,
+        )
+        monkeypatch.setattr(
+            "app.services.playwright_executor.GENERATED_SPECS_STORAGE",
             fake_dir,
         )
 
@@ -288,3 +298,32 @@ class TestBatch177PlaygroundUiJobWriteback:
         assert job_id is not None
         job = db_session.get(UiTestJob, job_id)
         assert job.environment_id is None
+
+
+class TestBatch190GeneratedSpecPersistence:
+    """Batch 190: 回写生成的 spec 必须同步写持久卷副本（重部署后由执行器恢复）。"""
+
+    def test_writeback_persists_storage_copy(self, db_session, monkeypatch, tmp_path):
+        from app.models.test_case import TestCase
+        from app.services.playground_service import _write_spec_as_ui_job
+
+        case = TestCase(project_id=1, title="B190-持久化用例", case_type="manual")
+        db_session.add(case)
+        db_session.commit()
+
+        fake_file = type("FakeFile", (), {"write_text": lambda *a, **k: None})
+        fake_generated = type(
+            "FakeGenerated", (),
+            {"mkdir": lambda *a, **k: None, "__truediv__": lambda self, other: fake_file()},
+        )
+        fake_dir = type("FakeDir", (), {"__truediv__": lambda self, other: fake_generated()})()
+        monkeypatch.setattr("app.services.playwright_executor.PLAYWRIGHT_DIR", fake_dir)
+
+        storage = tmp_path / "playground-specs"
+        monkeypatch.setattr("app.services.playwright_executor.GENERATED_SPECS_STORAGE", storage)
+
+        job_id = _write_spec_as_ui_job(db_session, case, "// spec", 1, 1)
+        assert job_id is not None
+        persisted = storage / f"playground-case-{case.id}.spec.ts"
+        assert persisted.is_file(), "持久卷应存在生成的 spec 副本"
+        assert persisted.read_text(encoding="utf-8") == "// spec"

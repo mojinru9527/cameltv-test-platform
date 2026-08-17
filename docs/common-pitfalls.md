@@ -156,6 +156,19 @@ if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not os.environ.get("ENVIRONM
 
 **相关文件**：`test-platform-v2/backend/app/core/config.py`、`test-platform-v2/backend/.env.example`
 
+### 1.7 运行时生成的脚本/文件写入容器临时目录（重部署即丢失）
+
+**现象**：Playground 批量编译回写的 UI 任务（`[Playground] ...`）在生产重新部署后全部执行失败，报「测试脚本不存在: generated/playground-case-*.spec.ts」，而打包的 `specs/production-*.spec.ts` 任务正常（2026-08-17 生产实测：134 个 UI 任务中 126 个受影响）。
+
+**根因**：`playground_service._write_spec_as_ui_job` 把生成 spec 写到 `tests/playwright/generated/`（容器内临时文件系统），Railway/Vercel 每次重部署（main push 自动触发）即清空该目录；任务行持久化在数据库里，但引用的 spec 文件没了。同类风险：一切「运行时生成 + 被持久化任务/记录引用」的文件（版本任务 UI draft 等）。
+
+**解决方案**：
+1. 写入口同步把生成文件复制到持久卷（`/app/storage/playground-specs`，即 `playwright_executor.GENERATED_SPECS_STORAGE`）。
+2. 执行器在运行前对缺失的 `generated/` 脚本从持久卷自动恢复（`playwright_executor._restore_generated_spec`），恢复失败才报「测试脚本不存在」。
+3. 通用原则：**被 DB 行引用的运行时产物必须落持久卷（/app/storage），不得只写容器临时目录**。
+
+**相关文件**：`test-platform-v2/backend/app/services/playground_service.py`、`test-platform-v2/backend/app/services/playwright_executor.py`
+
 ---
 
 ## 2. 前端陷阱
