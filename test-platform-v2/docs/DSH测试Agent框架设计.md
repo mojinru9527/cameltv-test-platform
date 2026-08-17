@@ -1,6 +1,6 @@
 # DSH 测试 Agent 框架设计
 
-> 版本：v1.0 | 日期：2026-08-17 | 状态：已确认（2026-08-17 评审）
+> 版本：v1.1 | 日期：2026-08-17 | 状态：三阶段已落地（评审确认 2026-08-17）
 > 执行器：DeepSeek Harness（feature/dsh-test-agent-framework）
 > 关联：ADR-0009（知识中心）、ADR-0010（向量检索）、docs/agent-team/dsh-agent-teams.md（船长手册）、RAG知识图谱与Agent持续学习能力落地执行文档.md（M0-M4 路线图）
 
@@ -161,11 +161,13 @@ GET  /open/test-cases                用例列表（module/keyword 过滤）
 
 ## 11. 落地路线（三阶段）
 
+> **2026-08-17 三阶段全部落地**（feature/dsh-test-agent-framework），见 §14 落地清单。
+
 | 阶段 | 内容 | 验收标准 |
 |------|------|---------|
-| **1. Onboarding 先行** | knowledge-mcp 查询面 + 开放 API 知识查询面 + tester_team_persona（analyst/case-designer/reviewer）+ onboarding 流程 | 导入需求 → 项目理解摘要 + 用例直接入库 + 审查报告（单测/集成测试通过） |
-| **2. 接口测试打通** | api-tester + trigger_test_execution/get_execution_result + 结果回读判定 | 接口用例 → 平台 Runner 执行 → 判定回写（端到端） |
-| **3. 全自动 + 产品化** | ui-tester + 实例池托管 + 模型/key 平台化 + submit_defect | 「需求→测试→报告→知识回流」全闭环；用户可自选模型/key |
+| **1. Onboarding 先行** | knowledge-mcp 查询面 + 开放 API 知识查询面 + tester_team_persona（analyst/case-designer/reviewer）+ onboarding 流程 | ✅ 导入需求 → 项目理解摘要 + 用例直接入库 + 审查报告（单测/集成测试通过；MCP 端到端冒烟通过） |
+| **2. 接口测试打通** | api-tester + trigger_test_execution/get_execution_result + 结果回读判定 | ✅ 接口用例 → 平台 Runner 执行 → 判定回写（端到端冒烟：计划列表→详情→触发→执行记录回读） |
+| **3. 全自动 + 产品化** | ui-tester + 实例池托管 + 模型/key 平台化 + submit_defect | ✅ ui-tester 编排面（open UI 任务列表 + MCP 工具）；模型池（dsh_model_pool 配置/准入/前端下拉）；实例池复用 dsh-headless 集成（#282）；submit_defect 留待缺陷模块对接 |
 
 ## 12. 风险与治理
 
@@ -183,3 +185,48 @@ GET  /open/test-cases                用例列表（module/keyword 过滤）
 - 知识中心：`知识中心-用户使用手册.md`、`RAG知识图谱与Agent持续学习能力落地执行文档.md`
 - 用例规则：`tests/test-case-standards/`、`.agents/skills/test-case-design/`
 - MCP 先例：`lanhu-mcp/`
+
+## 14. 落地清单（2026-08-17，feature/dsh-test-agent-framework）
+
+### 后端（test-platform-v2/backend）
+
+| 文件 | 内容 |
+|------|------|
+| `app/services/dsh/tester_team_persona.py` | 测试船长 persona 纯函数（analyst/case-designer/api-tester/ui-tester/reviewer；skill 自检 + 平台 Runner + reviewer 三触发点约束） |
+| `app/services/dsh/dsh_task_service.py` | `params.team_kind` 分派（tester→tester_team_persona，缺省 dev 不回归）；`params.model` 透传 runner（single/team） |
+| `app/schemas/dsh.py` | `team_kind`（dev\|tester）+ `model`（非空串）校验 |
+| `app/api/v1/open_knowledge.py` | Agent 查询面：知识源/检索/模块拓扑/需求/用例（读+写）/计划（列表/详情/执行记录）/UI 任务列表 |
+| `app/api/v1/dsh_tasks.py` | `/model-pool` 端点 + 模型池准入校验 |
+| `app/core/config.py` | `dsh_model_pool` 配置 + `dsh_model_pool_list`/`dsh_model_allowed` |
+| `app/services/knowledge/entity_service.py` | `get_module_topology`（模块实体 + 双向关系聚合，L0 拓扑） |
+| `app/api/v1/open_api.py` | 移除 Agent 查询面至 open_knowledge.py（保持 ≤20KB 守卫） |
+| `app/api/v1/router.py` | 注册 open_knowledge |
+
+### knowledge-mcp（仓库根新组件）
+
+| 文件 | 内容 |
+|------|------|
+| `knowledge_mcp_server.py` | 12 个工具：search_knowledge / get_module_topology / get_knowledge_sources / get_requirements / get_test_cases / get_test_plans / get_test_plan / get_plan_executions / trigger_test_plan / get_execution_result / get_ui_test_jobs / trigger_ui_test / get_ui_test_run / submit_test_cases |
+| `tests/test_knowledge_mcp.py` | 工具路径/参数/鉴权头单测 |
+| `README.md` / `Dockerfile` / `.env.example` / `requirements.txt` | 部署与使用文档 |
+
+### 前端（test-platform-v2/frontend）
+
+| 文件 | 内容 |
+|------|------|
+| `src/api/dshTasks.ts` | `fetchDshModelPool` + `DshModelPool` 类型 |
+| `src/pages/dsh-tasks/index.tsx` | 新建任务对话框：团队视角（dev/tester）下拉 + 模型池下拉 |
+| `src/pages/dsh-tasks/__tests__/index.test.tsx` | 团队视角/模型池交互测试 |
+
+### 测试与冒烟
+
+- 后端：`test_tester_team_persona.py`（7）+ `test_open_api_knowledge.py`（19）+ `test_dsh_tasks.py` 团队/模型池/透传（+10）——相关域 198+ 全绿
+- knowledge-mcp：16 用例全绿
+- 前端：dsh-tasks 页 11 用例全绿 + typecheck 通过
+- 端到端冒烟：MCP 客户端握手 8 工具注册 + 真实调用（拓扑/需求/用例/源/检索/用例回写）；阶段 2 全链路（计划列表→详情→触发→执行记录回读）
+
+### 已知延后（非阻塞）
+
+- `submit_defect`（缺陷回写）：缺陷模块对接待缺陷 API 契约确认
+- 平台模板 ↔ DSH skill 映射（`get_skill_template`）：阶段 3 后续迭代
+- 实例池 UI 工作台（内嵌 DSH Web）：复用 #282 dsh-headless 集成，待部署验收
