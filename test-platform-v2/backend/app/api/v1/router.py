@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.v1 import auth, av_check, dashboard, dataset, defect, dsh_tasks, environment, integration, notify, open_api, ops_releases, organization, perf, perf_ws, playground, project, report, schedule, system, template, token, trace, ui_test, version_mission, agent, interaction_coverage
+from app.api.v1 import auth, av_check, dashboard, dataset, defect, dsh_tasks, environment, integration, notify, open_api, open_knowledge, ops_releases, organization, perf, perf_ws, playground, project, report, schedule, system, template, token, trace, ui_test, version_mission, agent, interaction_coverage
 from app.api.v1 import test_case_taxonomy, test_case_crud, test_case_files
 from app.api.v1 import test_plan_crud, test_plan_execution
 from app.api.v1 import requirement_docs, requirement_ai, requirement_ai_generate, requirement_import
@@ -45,6 +45,7 @@ api_router.include_router(requirement_import.router)
 api_router.include_router(trace.router)
 api_router.include_router(notify.router)
 api_router.include_router(open_api.router)
+api_router.include_router(open_knowledge.router)
 api_router.include_router(token.router)
 api_router.include_router(apitest_assets.router)
 api_router.include_router(apitest_cases.router)

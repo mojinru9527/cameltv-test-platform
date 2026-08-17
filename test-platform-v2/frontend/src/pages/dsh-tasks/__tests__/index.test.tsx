@@ -12,6 +12,7 @@ const mockFetchDshHealth = vi.fn()
 const mockFetchDshTask = vi.fn()
 const mockCreateDshTask = vi.fn()
 const mockCancelDshTask = vi.fn()
+const mockFetchDshModelPool = vi.fn()
 
 vi.mock('@/hooks/useDocumentTitle', () => ({ useDocumentTitle: vi.fn() }))
 vi.mock('@/api/dshTasks', () => ({
@@ -20,6 +21,7 @@ vi.mock('@/api/dshTasks', () => ({
   fetchDshTask: (...args: unknown[]) => mockFetchDshTask(...args),
   createDshTask: (...args: unknown[]) => mockCreateDshTask(...args),
   cancelDshTask: (...args: unknown[]) => mockCancelDshTask(...args),
+  fetchDshModelPool: (...args: unknown[]) => mockFetchDshModelPool(...args),
 }))
 vi.mock('@/stores/auth', () => ({
   // QA 打回 P2：useAuthStore 是 selector 式 hook，mock 必须应用 selector（仓库既有范式）
@@ -35,6 +37,20 @@ afterEach(() => {
   vi.clearAllMocks()
   vi.useRealTimers()
 })
+
+/** 默认 model-pool mock（未配置池 → 前端不渲染模型下拉） */
+function mockDefaultPool() {
+  mockFetchDshModelPool.mockResolvedValue({ models: [], default_model: 'deepseek-v4-flash', pool_configured: false })
+}
+
+/** 配置了池的 model-pool mock（前端渲染模型下拉） */
+function mockConfiguredPool() {
+  mockFetchDshModelPool.mockResolvedValue({
+    models: ['deepseek-v4-flash', 'deepseek-v4-pro'],
+    default_model: 'deepseek-v4-flash',
+    pool_configured: true,
+  })
+}
 
 function taskFixture(overrides: Record<string, any> = {}): Record<string, any> {
   return {
@@ -62,6 +78,7 @@ describe('DSH 任务页（Batch 191 团队模式）', () => {
       { ...taskFixture({ id: 2, mode: 'single' }), task: '标准单任务文本' },
     ], total: 2, page: 1, page_size: 50 })
     mockFetchDshHealth.mockResolvedValue({ available: true, reason: '' })
+    mockDefaultPool()
     render(
       <MemoryRouter>
         <DshTasksPage />
@@ -76,6 +93,7 @@ describe('DSH 任务页（Batch 191 团队模式）', () => {
   it('模式切换：默认标准无批次下拉；切团队出现批次下拉；切回隐藏', async () => {
     mockFetchDshTasks.mockResolvedValue({ items: [], total: 0, page: 1, page_size: 50 })
     mockFetchDshHealth.mockResolvedValue({ available: true, reason: '' })
+    mockDefaultPool()
     render(
       <MemoryRouter>
         <DshTasksPage />
@@ -96,9 +114,10 @@ describe('DSH 任务页（Batch 191 团队模式）', () => {
     await waitFor(() => expect(screen.queryByLabelText('批次模式')).toBeNull())
   })
 
-  it('提交团队任务带 mode 与 batch_mode', async () => {
+  it('提交团队任务带 mode、batch_mode 与 team_kind', async () => {
     mockFetchDshTasks.mockResolvedValue({ items: [], total: 0, page: 1, page_size: 50 })
     mockFetchDshHealth.mockResolvedValue({ available: true, reason: '' })
+    mockDefaultPool()
     mockCreateDshTask.mockResolvedValue(taskFixture({ id: 9, mode: 'team' }))
     render(
       <MemoryRouter>
@@ -110,10 +129,58 @@ describe('DSH 任务页（Batch 191 团队模式）', () => {
     fireEvent.click(screen.getByLabelText('任务模式'))
     fireEvent.click(await screen.findByRole('option', { name: /团队模式/ }))
     await screen.findByLabelText('批次模式')
-    // 默认批次 full
+    // 默认批次 full + 团队视角 dev
     fireEvent.click(screen.getByRole('button', { name: /提交/ }))
     await waitFor(() => expect(mockCreateDshTask).toHaveBeenCalledTimes(1))
-    expect(mockCreateDshTask).toHaveBeenCalledWith('跑回归', { batch_mode: 'full' }, 'team')
+    expect(mockCreateDshTask).toHaveBeenCalledWith('跑回归', { batch_mode: 'full', team_kind: 'dev' }, 'team')
+  })
+
+  it('团队视角切换到测试视角后提交带 team_kind=tester', async () => {
+    mockFetchDshTasks.mockResolvedValue({ items: [], total: 0, page: 1, page_size: 50 })
+    mockFetchDshHealth.mockResolvedValue({ available: true, reason: '' })
+    mockDefaultPool()
+    mockCreateDshTask.mockResolvedValue(taskFixture({ id: 10, mode: 'team' }))
+    render(
+      <MemoryRouter>
+        <DshTasksPage />
+      </MemoryRouter>,
+    )
+    fireEvent.click(await screen.findByRole('button', { name: /新建任务/ }))
+    fireEvent.change(screen.getByLabelText('任务描述'), { target: { value: '为登录模块设计用例并执行' } })
+    fireEvent.click(screen.getByLabelText('任务模式'))
+    fireEvent.click(await screen.findByRole('option', { name: /团队模式/ }))
+    await screen.findByLabelText('团队视角')
+    fireEvent.click(screen.getByLabelText('团队视角'))
+    fireEvent.click(await screen.findByRole('option', { name: /测试视角/ }))
+    fireEvent.click(screen.getByRole('button', { name: /提交/ }))
+    await waitFor(() => expect(mockCreateDshTask).toHaveBeenCalledTimes(1))
+    expect(mockCreateDshTask).toHaveBeenCalledWith(
+      '为登录模块设计用例并执行',
+      { batch_mode: 'full', team_kind: 'tester' },
+      'team',
+    )
+  })
+
+  it('模型池配置后渲染模型下拉，选择模型随提交携带', async () => {
+    mockFetchDshTasks.mockResolvedValue({ items: [], total: 0, page: 1, page_size: 50 })
+    mockFetchDshHealth.mockResolvedValue({ available: true, reason: '' })
+    mockConfiguredPool()
+    mockCreateDshTask.mockResolvedValue(taskFixture({ id: 11, mode: 'single' }))
+    render(
+      <MemoryRouter>
+        <DshTasksPage />
+      </MemoryRouter>,
+    )
+    fireEvent.click(await screen.findByRole('button', { name: /新建任务/ }))
+    fireEvent.change(screen.getByLabelText('任务描述'), { target: { value: '单任务' } })
+    // 模型下拉出现（池已配置）
+    expect(await screen.findByLabelText('模型')).toBeTruthy()
+    fireEvent.click(screen.getByLabelText('模型'))
+    fireEvent.click(await screen.findByRole('option', { name: 'deepseek-v4-pro' }))
+    fireEvent.click(screen.getByRole('button', { name: /提交/ }))
+    await waitFor(() => expect(mockCreateDshTask).toHaveBeenCalledTimes(1))
+    // 标准模式：createDshTask(task, params)（mode 默认 single）
+    expect(mockCreateDshTask).toHaveBeenCalledWith('单任务', { model: 'deepseek-v4-pro' })
   })
 
   it('详情 running 团队任务轮询刷新，卸载后无残留定时器', async () => {
@@ -124,6 +191,7 @@ describe('DSH 任务页（Batch 191 团队模式）', () => {
       taskFixture({ id: 1, mode: 'team', status: 'pending' }),
     ], total: 1, page: 1, page_size: 50 })
     mockFetchDshHealth.mockResolvedValue({ available: true, reason: '' })
+    mockDefaultPool()
     mockFetchDshTask.mockResolvedValue(taskFixture({ id: 1, mode: 'team', status: 'running' }))
     const { unmount } = render(
       <MemoryRouter>
@@ -155,6 +223,7 @@ describe('DSH 任务页（Batch 191 团队模式）', () => {
       taskFixture({ id: 1, mode: 'team', status: 'pending' }),
     ], total: 1, page: 1, page_size: 50 })
     mockFetchDshHealth.mockResolvedValue({ available: true, reason: '' })
+    mockDefaultPool()
     mockFetchDshTask.mockResolvedValue(taskFixture({ id: 1, mode: 'team', status: 'success' }))
     const { unmount } = render(
       <MemoryRouter>

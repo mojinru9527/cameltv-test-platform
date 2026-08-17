@@ -32,11 +32,23 @@ export interface DshHealth {
   reason: string
 }
 
+// DSH 测试 Agent 框架（阶段 3）：模型池
+export interface DshModelPool {
+  models: string[]
+  default_model: string
+  pool_configured: boolean
+}
+
 export interface DshTaskCreateResult extends DshTask {}
 
 export async function fetchDshHealth(signal?: AbortSignal): Promise<DshHealth> {
   if (signal) return api.get('/dsh-tasks/health', { signal })
   return api.get('/dsh-tasks/health')
+}
+
+export async function fetchDshModelPool(signal?: AbortSignal): Promise<DshModelPool> {
+  if (signal) return api.get('/dsh-tasks/model-pool', { signal })
+  return api.get('/dsh-tasks/model-pool')
 }
 
 export async function fetchDshTasks(params: {

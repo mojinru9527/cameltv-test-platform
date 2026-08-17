@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.schemas.common import Page, R
@@ -27,6 +28,19 @@ def dsh_health(
     return R.ok(DshHealthOut(available=ok, reason=reason))
 
 
+@router.get("/model-pool", response_model=R[dict], summary="DSH 可用模型池（阶段 3）")
+def dsh_model_pool(
+    current: CurrentUser = Depends(require_permission("agent:view")),
+):
+    """可用模型清单（模型池配置；未配置池时返回默认模型）。设置页/新建任务下拉用。"""
+    pool = settings.dsh_model_pool_list
+    return R.ok({
+        "models": pool,
+        "default_model": settings.dsh_model or settings.ai_model,
+        "pool_configured": bool(pool),
+    })
+
+
 @router.post("", response_model=R[DshTaskOut], summary="提交 DSH 任务")
 def create_dsh_task(
     body: DshTaskCreate,
@@ -36,6 +50,10 @@ def create_dsh_task(
     ok, reason = runtime_available()
     if not ok:
         return R(code=503, msg=f"DSH 不可用: {reason}")
+    # DSH 测试 Agent 框架（阶段 3）：模型池准入——配置了池则只允许池内模型
+    model = (body.params or {}).get("model")
+    if model and not settings.dsh_model_allowed(model):
+        return R(code=400, msg=f"模型不在可用模型池内: {model}（可选: {', '.join(settings.dsh_model_pool_list) or '未配置池'}）")
     row = dsh_task_service.submit_task(
         db,
         project_id=current.project_id or 0,

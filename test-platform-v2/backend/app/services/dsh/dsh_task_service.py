@@ -163,7 +163,11 @@ def execute_task(db, task: DshTask, runner=None) -> None:
         if task.mode == "team":
             _execute_team(db, task, params, runner)
             return
-        result = runner(task.task, workspace=params.get("workspace") or None)
+        result = runner(
+            task.task,
+            workspace=params.get("workspace") or None,
+            model=params.get("model") or None,  # DSH 测试 Agent 框架：模型池按任务指定
+        )
         task.status = "success" if result.exit_code == 0 else "failed"
         task.output_text = (result.final_response or "")[:20000]
         task.error = (result.error or "")[:2000] if result.exit_code != 0 else ""
@@ -306,12 +310,14 @@ def _team_runner(
     """执行线程：跑 run_dsh_task(mode="team")，结果经线程安全队列传回。
 
     不碰任何 DB session（R-3）；异常兜底为 failed 结果（与 single 一致）。
+    DSH 测试 Agent 框架：params.model 覆盖模型（模型池按任务指定）。
     """
     try:
         result = runner(
             task_text,
             workspace=params.get("workspace") or None,
             mode="team",
+            model=params.get("model") or None,
             timeout=settings.dsh_team_timeout_seconds,
             extra_env={"DSH_SYSTEM_PROMPT": persona},
         )
@@ -324,12 +330,22 @@ def _team_runner(
 
 
 def _execute_team(db, task: DshTask, params: dict, runner) -> None:
-    """团队模式执行：执行线程 + 轮询线程 + 终态快照（设计 §4.2/§4.3）。"""
+    """团队模式执行：执行线程 + 轮询线程 + 终态快照（设计 §4.2/§4.3）。
+
+    DSH 测试 Agent 框架：params.team_kind 分派 persona——tester 用
+    tester_team_persona（分析/用例设计/执行/审查），缺省沿用开发批次 persona。
+    """
     from app.services.dsh.agent_team_persona import build_agent_team_persona
     from app.services.dsh.dsh_runner import DshRunResult
 
     batch_mode = params.get("batch_mode", "full")
-    persona = build_agent_team_persona(task.task, batch_mode)
+    team_kind = params.get("team_kind", "dev")
+    if team_kind == "tester":
+        from app.services.dsh.tester_team_persona import build_tester_team_persona
+
+        persona = build_tester_team_persona(task.task, batch_mode)
+    else:
+        persona = build_agent_team_persona(task.task, batch_mode)
     result_box: queue.Queue = queue.Queue(maxsize=1)
     stop_event = threading.Event()
     root = _team_isolation_root(params)

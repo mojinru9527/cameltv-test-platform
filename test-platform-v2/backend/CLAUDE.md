@@ -184,6 +184,16 @@ pytest tests/ -v --tb=short
     bundles 缺 headless → 任务挂起，见 agent-team/README.md）；python-sdk 走 `team.cordis.yml`
     实测通过（SDK node carrier 45s 团队组合 completed），生产 Linux exe carrier 需把
     agent-teams 打进闭包 → C191-3，**不静默 fallback 到 single**
+- **DSH 测试 Agent 框架（Batch 202，tester 视角）**：
+  - `services/dsh/tester_team_persona.py`：测试船长 persona（analyst/case-designer/api-tester/
+    ui-tester/reviewer；用例必须遵守 test-case-design skill 自检清单、执行必须走平台 Runner、
+    reviewer 独立审查）；`params.team_kind` 分派——`tester` 用测试 persona，缺省 `dev` 沿用开发
+    persona（不回归）；`params.model` 透传 runner（single/team 均支持，模型池按任务指定）；
+  - `api/v1/open_knowledge.py`：Agent 查询面（知识源/检索/模块拓扑/需求/用例读+写/计划/执行
+    记录/UI 任务），API Token 鉴权 + project 隔离——knowledge-mcp 只经此通道访问，不直连库；
+  - 模型池（阶段 3）：`DSH_MODEL_POOL`（逗号分隔）+ `dsh_model_allowed` 准入（`/dsh-tasks`
+    提交时校验）+ `/dsh-tasks/model-pool` 端点（前端下拉渲染）；空池 = 不限；
+  - 使用入口：`docs/DSH测试Agent-测试工程师使用手册.md`；架构：`docs/DSH测试Agent框架设计.md`
 - **APScheduler**：定时任务在 `main.py` 生命周期中启动，开发时 `--reload` 会导致 scheduler 重复启动
 - **CORS**：生产环境 CORS 配置在 Nginx，本地开发在 `main.py` 中配置 `allow_origins`
 

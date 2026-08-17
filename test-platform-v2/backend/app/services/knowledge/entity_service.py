@@ -1161,3 +1161,65 @@ def get_hierarchy_view(
         edges=edges,
         stats=stats,
     )
+
+
+# ── DSH 测试 Agent 框架：模块拓扑视图（L0 骨架对外查询面）──────────
+
+def get_module_topology(
+    db: Session,
+    project_id: int,
+    *,
+    module: str | None = None,
+    limit: int = 50,
+) -> dict:
+    """模块拓扑视图：模块实体 + 其下关联子实体（需求/用例/接口/设计稿）。
+
+    供 knowledge-mcp 的 get_module_topology 与开放 API 知识查询面使用。
+    聚合口径：module 实体经 contains/tested_by/links_to_admin/configures
+    关系挂接的子实体（Batch 122/132 已入库），返回精简 dict（无 ORM 引用）。
+
+    Args:
+        module: 模块名/实体名子串过滤（None=全部）。
+        limit: 返回模块数上限。
+    """
+    pid = project_id
+    modules, _src = get_entities(db, pid, entity_type="module", limit=200)
+    if module:
+        kw = module.strip().lower()
+        modules = [m for m in modules if kw in (m.name or "").lower() or kw in (m.entity_key or "").lower()]
+    modules = modules[:limit]
+
+    out: list[dict] = []
+    for mod in modules:
+        # 双向聚合：from=module（contains 父→子）+ to=module（tested_by 子→父）
+        rels_out = get_relations(db, pid, entity_id=mod.id, limit=500)
+        rels_in = get_relations(db, pid, limit=500)
+        rels_in = [r for r in rels_in if r.to_entity_id == mod.id]
+        children: list[dict] = []
+        seen: set[tuple[int, str]] = set()
+        for rel in [*rels_out, *rels_in]:
+            child_id = rel.to_entity_id if rel.from_entity_id == mod.id else rel.from_entity_id
+            key = (child_id, rel.relation_type)
+            if key in seen:
+                continue
+            seen.add(key)
+            child = db.get(KnowledgeEntity, child_id)
+            if child is None or child.project_id != pid:
+                continue
+            children.append({
+                "entity_id": child.id,
+                "entity_type": child.entity_type,
+                "name": child.name,
+                "entity_key": child.entity_key,
+                "relation_type": rel.relation_type,
+                "confidence": rel.confidence,
+            })
+        out.append({
+            "module_id": mod.id,
+            "module_key": mod.entity_key,
+            "module": mod.name,
+            "description": mod.description or "",
+            "confidence": mod.confidence,
+            "related": children,
+        })
+    return {"project_id": pid, "total": len(out), "modules": out}
