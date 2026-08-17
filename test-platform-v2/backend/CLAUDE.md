@@ -158,16 +158,24 @@ pytest tests/ -v --tb=short
   - **生产启用前置**：`DSH_ENABLED=true` 仅在本批加固 + `tests/test_dsh_sandbox.py` 全绿 + 部署人工确认后允许；OS 级沙箱（seccomp/nsjail）为部署层后续（C184-1）
 - **DSH 团队模式（Batch 191，AgentTeams）**：
   - 资产：`services/dsh/agent_team_persona.py`（船长提示词纯函数，full 五成员/light 两成员）、
-    `services/dsh/team.cordis.yml`（= minimal + agent-teams 插件行，python-sdk 用）、
+    `services/dsh/team.cordis.yml`（= minimal + subagent/subagent-spawn-in-process/agent-teams，
+    python-sdk 用；**C191-1 修复：agent-teams 依赖 subagents 服务，minimal 不含提供者**）、
     `services/dsh/agent-team/`（profile 模板 + 安装 README，**实际安装位 `$DSH_HOME/profiles/agent-team`，不入库**）；
   - 路由：`run_dsh_task(mode="team")` → node `--profile agent-team` / python-sdk `team.cordis.yml`；
     `DSH_TEAM_HARNESS_PATH` 语义 = **DSH_HOME 覆盖**（非 bin.js 路径）；
+  - 心跳（R-1 冒烟修复）：团队执行期间 `_team_heartbeat` 线程按 `DSH_TEAM_HEARTBEAT_SECONDS`
+    （默认 60s）续期 `locked_at`，防 `reap_stale`（300s）误回收 1800s 级长任务；
+    进程崩溃 → 心跳停 → 5 分钟后照常回收（失联语义不回归）；
   - 线程铁律（R-3）：`dsh_task_service._team_poller` 每次写库用**独立短 `SessionLocal`**，
     禁止复用 `execute_task` 的认领 session；`team_json` 全量幂等覆盖，超长截断加 `_truncated`；
   - 状态词表：`dsh_task.status` 仍用队列词表（pending/running/success/failed/cancelled）；
     团队内部任务状态（claimed/in_progress 等）是插件 `team.json` 字段，前端单独映射；
-  - 冒烟：node 需先安装 agent-team profile（`dsh plugin --profile agent-team add @nanmicoder/dsh-agent-teams`）；
-    python-sdk bundle 加载未实测 → C191-1 deferred，**不静默 fallback 到 single**
+  - 冒烟（C191-1 已关闭）：node 需先安装 agent-team profile
+    （`dsh plugin --profile agent-team add @nanmicoder/dsh-agent-teams`），**安装后必须校验
+    `package.json` 的 `dsh.profile.bundles` 含 `@deepseek-ai/dsh-headless`**（CLI 方式 A 生成的
+    bundles 缺 headless → 任务挂起，见 agent-team/README.md）；python-sdk 走 `team.cordis.yml`
+    实测通过（SDK node carrier 45s 团队组合 completed），生产 Linux exe carrier 需把
+    agent-teams 打进闭包 → C191-3，**不静默 fallback 到 single**
 - **APScheduler**：定时任务在 `main.py` 生命周期中启动，开发时 `--reload` 会导致 scheduler 重复启动
 - **CORS**：生产环境 CORS 配置在 Nginx，本地开发在 `main.py` 中配置 `allow_origins`
 

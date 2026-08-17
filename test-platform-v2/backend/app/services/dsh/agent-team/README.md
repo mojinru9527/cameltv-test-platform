@@ -20,6 +20,18 @@ dsh --version
 dsh plugin --profile agent-team add @nanmicoder/dsh-agent-teams
 ```
 
+> **R-1 冒烟踩坑（Batch 191 修复，必须执行）**：CLI 方式 A 生成的
+> `package.json` 的 `dsh.profile.bundles` **只有 `@deepseek-ai/dsh-base` 与插件**，
+> **缺 `@deepseek-ai/dsh-headless`**（headless 单任务执行器）——缺它时
+> `dsh --profile agent-team "任务"` boot 后**静默挂起**（进程存活、无输出、无产物，
+> CPU 恒定）。安装后必须校验并手工补上：
+>
+> ```powershell
+> # 校验：bundles 应含 @deepseek-ai/dsh-headless
+> Get-Content "$env:USERPROFILE\.dsh\profiles\agent-team\package.json"
+> # 若缺失，手工补 bundles 后重跑 pnpm install
+> ```
+
 ## 安装（手工方式 B）
 
 把本目录三个模板复制到 `$DSH_HOME/profiles/agent-team/` 后安装：
