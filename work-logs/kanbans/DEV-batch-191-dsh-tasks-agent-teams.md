@@ -61,3 +61,8 @@
 | è®¾è®¡è§„èŒƒ | [batch-191-dsh-tasks-agent-teams-design-spec.md](../batch-191-dsh-tasks-agent-teams-design-spec.md) | âœ… |
 | è®¾è®¡æ–‡æ¡£ | [2026-08-17-dsh-tasks-agent-teams-design.md](../../docs/superpowers/plans/2026-08-17-dsh-tasks-agent-teams-design.md) | âœ… |
 | QA æŠ¥å‘Š | [batch-191-dsh-tasks-agent-teams-qa-report.md](../batch-191-dsh-tasks-agent-teams-qa-report.md) | â³ |
+
+## Åú´Î¼ÇÂ¼£¨ÊÕÎ²£©
+- Leader ÅĞ¾ö£ºAPPROVED£¨ÓĞÌõ¼ş£©¡ª C191-1/C191-2 È·ÈÏµÇ¼Ç¡¢R-1 Ã°ÑÌÔËÎ¬¸ú½ø
+- QA ¸´Ñé£ºPASS£¨02253b9 ±Õ»·£¬488/488 vitest£©
+- Áù²¿ÃÅ¹¤¼ş£ºPRD/PM/Design/QA/Leader + ¿´°å£¨12 Ìá½»£©
