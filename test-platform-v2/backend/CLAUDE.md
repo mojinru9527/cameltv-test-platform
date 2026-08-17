@@ -166,6 +166,11 @@ pytest tests/ -v --tb=short
   - 心跳（R-1 冒烟修复）：团队执行期间 `_team_heartbeat` 线程按 `DSH_TEAM_HEARTBEAT_SECONDS`
     （默认 60s）续期 `locked_at`，防 `reap_stale`（300s）误回收 1800s 级长任务；
     进程崩溃 → 心跳停 → 5 分钟后照常回收（失联语义不回归）；
+  - 船长纪律（真实业务任务修复）：`agent_team_persona.py` 步骤明确「认领后必须
+    `agent_teams_send_message` 唤醒成员、必须轮询到全部任务 completed 才可结束」；
+    agent-team profile 的 patch 层**禁用 generic subagent 派活工具**
+    （tool-subagent/subagent-fork/control/list-agents，模板已同步）——防止模型混用
+    subagent 工具绕过团队协议（成员 idle、任务 in_progress 挂起）；
   - 线程铁律（R-3）：`dsh_task_service._team_poller` 每次写库用**独立短 `SessionLocal`**，
     禁止复用 `execute_task` 的认领 session；`team_json` 全量幂等覆盖，超长截断加 `_truncated`；
     快照扫描**递归 glob（`**/team.json`，覆盖船长删除团队后的 `archive/` 归档路径）且每轮

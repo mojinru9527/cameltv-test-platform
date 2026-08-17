@@ -12,3 +12,17 @@
         stateDir: .agent-teams
         # Provider used to spawn member subagents ('spawn' or 'fork').
         memberProvider: spawn
+
+# Batch 191 冒烟修复：禁用 generic subagent 派活工具——船长必须用 agent_teams_*
+# 九件套自组织团队，防止模型混用 subagent/subagent_fork 绕过团队协议
+# （真实业务任务 5-9 复现：建团队/任务后派活用 subagent 工具 → 成员 idle、
+# 任务 in_progress 挂起）。成员 spawn 走 subagents 服务（subagent-spawn-in-process），
+# 不受影响。
+- id: tool-subagent
+  disabled: true
+- id: tool-subagent-fork
+  disabled: true
+- id: tool-subagent-control
+  disabled: true
+- id: tool-subagent-list-agents
+  disabled: true
