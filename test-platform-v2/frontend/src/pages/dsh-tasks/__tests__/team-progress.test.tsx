@@ -31,19 +31,21 @@ describe('TeamProgress 团队进度树（Batch 191）', () => {
     render(<TeamProgress teamJson={teamFixture()} status="running" outputText="" />)
     expect(screen.getByText('登录模块回归团队')).toBeTruthy()
     expect(screen.getByText('#team-abc')).toBeTruthy()
-    expect(screen.getByText('执行中')).toBeTruthy()
-    // 成员卡：名字 + 角色 + 在队徽标
-    expect(screen.getByText('product')).toBeTruthy()
+    // 团队头阶段 Badge（running → 执行中）；任务列表的「执行中」断言见下方 getAllByText
+    // 成员卡：名字 + 角色 + 在队徽标（名字可能同时出现在任务 assignee 列 → getAllByText）
+    expect(screen.getAllByText('product').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('产品')).toBeTruthy()
-    expect(screen.getByText('qa')).toBeTruthy()
+    expect(screen.getAllByText('qa').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('测试')).toBeTruthy()
     expect(screen.getAllByText('在队').length).toBe(2)
     // 任务列表：中文状态映射（RF-3 禁裸英文）
     expect(screen.getByText('PRD')).toBeTruthy()
     expect(screen.getByText('用例设计')).toBeTruthy()
     expect(screen.getByText('门禁回归')).toBeTruthy()
-    expect(screen.getByText('已完成')).toBeTruthy()
-    expect(screen.getByText('执行中')).toBeTruthy()
+    // t1/t2 均为 completed → 「已完成」出现 2 次（getAllByText）
+    expect(screen.getAllByText('已完成').length).toBe(2)
+    // P3-1：'执行中' 有歧义（团队头阶段 + 任务 t3 状态各一处）→ 用 getAllByText 精确计数
+    expect(screen.getAllByText('执行中').length).toBe(2)
     // 依赖展示
     expect(screen.getByText(/依赖 #t1/)).toBeTruthy()
     expect(screen.getByText(/依赖 #t2/)).toBeTruthy()

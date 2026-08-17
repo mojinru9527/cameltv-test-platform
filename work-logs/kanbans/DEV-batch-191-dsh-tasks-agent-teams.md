@@ -13,9 +13,9 @@
 |---|------------------|:----:|:----:|:----:|:----:|:----:|------|
 | 1 | T1 配置（dsh_team_* 5 项 + .env.example） | ✅ | ✅ | ✅ | ⏳ | ⏳ | db13ee6 |
 | 2 | T2 模型 + Alembic 20260817_b191_dsh_team_mode | ✅ | ✅ | ✅ | ⏳ | ⏳ | db13ee6；SQLite/PG 双兼容 + 幂等守卫（create_all 已建列场景） |
-| 3 | T3 Schema + API（mode/batch_mode 校验、team_json 出参） | ✅ | ✅ | ✅ | ⏳ | ⏳ | 8e2d4d0（T3/T4/T5 合并提交） |
-| 4 | T4 dsh_runner 团队路由（node profile / sdk cordis / 1800s 超时 / workspace 字段） | ✅ | ✅ | ✅ | ⏳ | ⏳ | 8e2d4d0 + T7 修正（single 留空） |
-| 5 | T5 persona + team.cordis.yml + agent-team profile 模板 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 8e2d4d0 |
+| 3 | T3 Schema + API（mode/batch_mode 校验、team_json 出参） | ✅ | ✅ | ✅ | ⏳ | ⏳ | f190f14（T3/T4/T5 合并提交） |
+| 4 | T4 dsh_runner 团队路由（node profile / sdk cordis / 1800s 超时 / workspace 字段） | ✅ | ✅ | ✅ | ⏳ | ⏳ | f190f14 + 242f31a 修正（single 留空） |
+| 5 | T5 persona + team.cordis.yml + agent-team profile 模板 | ✅ | ✅ | ✅ | ⏳ | ⏳ | f190f14 |
 | 6 | T6 service 团队分支 + 轮询线程（独立 SessionLocal） | ✅ | ✅ | ✅ | ⏳ | ⏳ | 89d1c09 |
 | 7 | T7/T9 后端测试扩展（schema/service/runner/sandbox/persona） | ✅ | ✅ | ✅ | ⏳ | ⏳ | 56 用例全绿 |
 | 8 | T8/T9 前端（模式选择/批次下拉/类型徽标/进度树/轮询/vitest） | ✅ | ✅ | ✅ | ⏳ | ⏳ | 含 team-progress.tsx |

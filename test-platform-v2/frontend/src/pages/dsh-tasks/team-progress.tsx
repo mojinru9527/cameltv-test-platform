@@ -30,17 +30,19 @@ interface TeamProgressProps {
   outputText: string
 }
 
-/** 成员当前任务：首个 in_progress 且 assignee==该成员 的 task.subject；无则「—」 */
-function currentTaskFor(memberId: string, tasks: any[]): string {
+/** 成员当前任务：首个 in_progress 且 assignee==成员名 的 task.subject；无则「—」
+ * 注意：插件 snapshot.js 语义中 task.assignee = 成员 name（非 session id），
+ * member.id 是 session id —— 必须按 m.name 匹配（QA 打回 P1）。 */
+function currentTaskFor(memberName: string, tasks: any[]): string {
   const t = tasks?.find(
-    (task) => task?.status === 'in_progress' && task?.assignee === memberId,
+    (task) => task?.status === 'in_progress' && task?.assignee === memberName,
   )
   return t?.subject ?? '—'
 }
 
-function doneRatio(memberId: string, tasks: any[]): number {
+function doneRatio(memberName: string, tasks: any[]): number {
   if (!Array.isArray(tasks) || tasks.length === 0) return 0
-  const mine = tasks.filter((t) => t?.assignee === memberId)
+  const mine = tasks.filter((t) => t?.assignee === memberName)
   if (mine.length === 0) return 0
   return mine.filter((t) => t?.status === 'completed').length / mine.length
 }
@@ -63,7 +65,7 @@ export default function TeamProgress({ teamJson, status, outputText }: TeamProgr
       {members.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
           {members.map((m) => {
-            const done = doneRatio(m?.id, tasks)
+            const done = doneRatio(m?.name ?? '', tasks)
             const badge = MEMBER_STATUS_BADGE[m?.status] ?? m?.status ?? '—'
             return (
               <Card key={m?.id ?? m?.name} className="p-3">
@@ -74,12 +76,12 @@ export default function TeamProgress({ teamJson, status, outputText }: TeamProgr
                 <p className="text-xs text-muted-foreground mt-0.5">{m?.role || '—'}</p>
                 <div className="mt-2 h-2 rounded bg-muted overflow-hidden">
                   <div
-                    className="h-full rounded bg-status-info transition-all"
+                    className="h-full rounded bg-status-info transition-[width]"
                     style={{ width: `${Math.round(done * 100)}%` }}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground mt-1.5 truncate" title={currentTaskFor(m?.id, tasks)}>
-                  当前：{currentTaskFor(m?.id, tasks)}
+                <p className="text-xs text-muted-foreground mt-1.5 truncate" title={currentTaskFor(m?.name ?? '', tasks)}>
+                  当前：{currentTaskFor(m?.name ?? '', tasks)}
                 </p>
               </Card>
             )
