@@ -104,7 +104,7 @@ shadcn/ui + Radix + Tailwind + CVA；Token 走语义类（bg-muted / text-muted-
 
 **强制节奏**：
 1. **多窗口并行检查**：若已有 ≥1 个 Agent Team 窗口活跃，开工前必须用 `git worktree add` 创建独立 worktree（见 SKILL.md「多窗口并行开发」）。**禁止多个窗口共享同一工作目录。**
-2. 开工前：先在聊天中问用户本任务由 Claude Code 还是 Codex 执行并停下等待；收到明确答复后运行 `scripts/git/start-agent-team-task.ps1 -Executor claude|codex -UserConfirmedExecutor`，从最新 `origin/main` 创建独立任务 worktree，再用 `verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor claude|codex` 验证。不得根据 VS Code、ChatGPT 客户端或进程自动猜测。
+2. 开工前：先在聊天中问用户本任务由 Claude Code、Codex 还是 DeepSeek Harness 执行并停下等待；收到明确答复后运行 `scripts/git/start-agent-team-task.ps1 -Executor claude|codex|DeepSeek_Harness -UserConfirmedExecutor`，从最新 `origin/main` 创建独立任务 worktree，再用 `verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor claude|codex|DeepSeek_Harness` 验证。不得根据 VS Code、ChatGPT 客户端或进程自动猜测。
 3. 开工前先读看板（SKILL.md 第 0 步）。
 4. 编码前扫 `cameltv-bug-guard` skill。
 5. 按切片推进，TDD 先测后码。
@@ -217,7 +217,7 @@ API: {ms}   前端: {s}   覆盖: {%}
 gh pr create --draft --base main --head feature/batch-{N}-{name} \
   --title "feat: Batch {N} — {摘要}" \
   --body "详见 Agent Team 工件: work-logs/"
-pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor claude|codex
+pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor claude|codex|DeepSeek_Harness
 ```
 
 2. Agent Team 在首轮 QA 证据完成后做**一次总确认**（覆盖本批次推送、创建 Draft PR、required checks 通过后合入 main），展示变更摘要并停下等待明确答复；确认后不再逐次询问（AGENTS.md §2.4 Agent Team 例外）。`confirm-agent-team-completion.ps1` 仅作可选完成证据，不再强制。

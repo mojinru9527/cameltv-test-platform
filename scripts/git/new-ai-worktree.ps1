@@ -49,10 +49,10 @@ if ($Task.Length -gt 50 -or $Task -notmatch '^[a-z0-9]+(?:-[a-z0-9]+)*$') {
     throw "Task must be lowercase kebab-case and no longer than 50 characters."
 }
 if ($Workflow -eq "agent-team" -and $Executor -eq "human") {
-    throw "Agent Team workflow executor must be claude or codex."
+    throw "Agent Team workflow executor must be claude, codex or DeepSeek_Harness."
 }
 if ($Workflow -eq "agent-team" -and -not $UserConfirmedExecutor) {
-    throw "Agent Team workflow requires explicit user confirmation before worktree creation. Ask the user whether the executor is Claude Code or Codex, wait for the reply, then pass -UserConfirmedExecutor."
+    throw "Agent Team workflow requires explicit user confirmation before worktree creation. Ask the user whether the executor is Claude Code, Codex or DeepSeek Harness, wait for the reply, then pass -UserConfirmedExecutor."
 }
 if ($FrontendPort -eq $BackendPort) {
     throw "Frontend and backend ports must be different."
