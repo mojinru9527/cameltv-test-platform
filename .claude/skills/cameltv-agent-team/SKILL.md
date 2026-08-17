@@ -151,7 +151,7 @@ git branch -d feature/batch-{N}-{name}
 
 每个代码任务从 `origin/main` 独立创建 worktree。仓库内 ADR-0014、`AGENTS.md` 和本文件是共同事实源；路径绑定的个人 Memory 只作辅助。已结束的旧任务分支禁止继续追加 commit。
 
-Claude Code 作为 VS Code 插件、Codex 作为 ChatGPT 桌面客户端可以并行工作，不会改变 Git 隔离语义。隔离依赖不同 worktree、分支、端口和 `.ai-worktree.json`；两个客户端禁止同时修改同一个 worktree。
+Claude Code 作为 VS Code 插件、Codex 作为 ChatGPT 桌面客户端、DeepSeek Harness 作为 Web/命令行会话可以并行工作，不会改变 Git 隔离语义。隔离依赖不同 worktree、分支、端口和 `.ai-worktree.json`；不同客户端/会话禁止同时修改同一个 worktree。
 
 ### 多窗口并行开发（强制）
 
