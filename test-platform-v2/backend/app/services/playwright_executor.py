@@ -140,15 +140,25 @@ def _check_playwright_installed() -> tuple[bool, str]:
 
 
 def _list_available_specs() -> list[str]:
-    """列出可用的 Playwright 测试脚本。"""
+    """列出可用的 Playwright 测试脚本（跳过点开头的私有目录）。
+
+    Batch 191: Playground 即时执行在 runner 内创建 .playground-tmp/ 工作目录，
+    其中的临时 spec 不得混入可用脚本列表。
+    """
     runner_dir = _runner_dir()
     if not runner_dir.exists():
         return []
     specs = []
     for f in runner_dir.rglob("*.spec.js"):
-        specs.append(str(f.relative_to(runner_dir)).replace("\\", "/"))
+        rel = str(f.relative_to(runner_dir)).replace("\\", "/")
+        if any(part.startswith(".") for part in rel.split("/")):
+            continue
+        specs.append(rel)
     for f in runner_dir.rglob("*.spec.ts"):
-        specs.append(str(f.relative_to(runner_dir)).replace("\\", "/"))
+        rel = str(f.relative_to(runner_dir)).replace("\\", "/")
+        if any(part.startswith(".") for part in rel.split("/")):
+            continue
+        specs.append(rel)
     return sorted(specs)
 
 
