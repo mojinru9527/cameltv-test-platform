@@ -30,3 +30,6 @@ class DshTask(Base):
     locked_at: Mapped[datetime | None] = mapped_column(default=None)
     locked_by: Mapped[str] = mapped_column(default="")
     finished_at: Mapped[datetime | None] = mapped_column(default=None)
+    # Batch 191：团队模式（single|team）与团队进度快照（插件 team.json 原文，全量幂等覆盖写）
+    mode: Mapped[str] = mapped_column(default="single", index=True)
+    team_json: Mapped[str] = mapped_column(Text, default="{}")

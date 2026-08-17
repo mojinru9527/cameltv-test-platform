@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -15,6 +16,7 @@ import useAbortableEffect from '@/hooks/useAbortableEffect'
 import { useAuthStore } from '@/stores/auth'
 import Placeholder from '@/pages/Placeholder'
 import { Play, Loader2, RefreshCw, XCircle, AlertCircle, Eye } from '@/lib/icons'
+import TeamProgress from './team-progress'
 import {
   createDshTask,
   fetchDshTasks,
@@ -33,6 +35,9 @@ const STATUS_BADGE: Record<string, { label: string; color: string }> = {
   cancelled: { label: '已取消', color: 'bg-muted text-muted-foreground' },
 }
 
+// Batch 191：详情进度轮询粒度（与后端 DSH_TEAM_POLL_SECONDS=3 对齐）
+const DETAIL_POLL_MS = 3000
+
 export default function DshTasksPage() {
   useDocumentTitle('DSH 任务')
   const hasPerm = useAuthStore((s) => s.hasPerm)
@@ -48,6 +53,9 @@ export default function DshTasksPage() {
   const [selected, setSelected] = useState<DshTask | null>(null)
   const [detail, setDetail] = useState<DshTask | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+  // Batch 191：任务模式（single/team）+ 批次模式（full/light）
+  const [taskMode, setTaskMode] = useState<'single' | 'team'>('single')
+  const [batchMode, setBatchMode] = useState<'full' | 'light'>('full')
 
   const load = useCallback((signal?: AbortSignal) => {
     setLoading(true)
@@ -95,11 +103,37 @@ export default function DshTasksPage() {
     return () => { if (timer) clearTimeout(timer) }
   }, [hasRunning, load])
 
+  // Batch 191：running 团队详情按 DSH_TEAM_POLL_SECONDS 粒度轮询刷新
+  // （cleanup 必须 clearInterval + AbortController.abort；非 running 不轮询）
+  const detailId = detail?.id
+  const detailMode = detail?.mode
+  const detailStatus = detail?.status
+  useEffect(() => {
+    if (!detailId || detailMode !== 'team' || detailStatus !== 'running') return
+    const controller = new AbortController()
+    const timer = setInterval(async () => {
+      try {
+        const t = await fetchDshTask(detailId, controller.signal)
+        if (!controller.signal.aborted) setDetail(t)
+      } catch (e: any) {
+        if (e?.name !== 'AbortError') toast.error('刷新团队进度失败')
+      }
+    }, DETAIL_POLL_MS)
+    return () => {
+      clearInterval(timer)
+      controller.abort()
+    }
+  }, [detailId, detailMode, detailStatus])
+
   const handleCreate = async () => {
     if (!taskText.trim()) return
     setCreating(true)
     try {
-      await createDshTask(taskText.trim())
+      if (taskMode === 'team') {
+        await createDshTask(taskText.trim(), { batch_mode: batchMode }, 'team')
+      } else {
+        await createDshTask(taskText.trim())
+      }
       toast.success('DSH 任务已提交')
       setCreateOpen(false)
       setTaskText('')
@@ -158,6 +192,7 @@ export default function DshTasksPage() {
               <TableRow>
                 <TableHead className="w-16">ID</TableHead>
                 <TableHead>任务</TableHead>
+                <TableHead className="w-16">类型</TableHead>
                 <TableHead className="w-20">状态</TableHead>
                 <TableHead className="w-28">创建时间</TableHead>
                 <TableHead className="w-24">操作</TableHead>
@@ -169,6 +204,7 @@ export default function DshTasksPage() {
                   <TableRow key={i}>
                     <TableCell><Skeleton className="h-5 w-8" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-10" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-12" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-16" /></TableCell>
@@ -176,7 +212,7 @@ export default function DshTasksPage() {
                 ))
               ) : tasks.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
                     暂无 DSH 任务。点击「新建任务」提交第一个任务。
                   </TableCell>
                 </TableRow>
@@ -188,6 +224,13 @@ export default function DshTasksPage() {
                       <TableCell className="text-xs text-muted-foreground">#{t.id}</TableCell>
                       <TableCell className="text-sm truncate max-w-[26rem]" title={t.task}>
                         {t.task || '-'}
+                      </TableCell>
+                      <TableCell>
+                        {t.mode === 'team' ? (
+                          <Badge className="bg-status-info-muted text-status-info">团队</Badge>
+                        ) : (
+                          <Badge variant="outline">标准</Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge className={status.color}>
@@ -241,6 +284,7 @@ export default function DshTasksPage() {
                 <Badge className={STATUS_BADGE[detail.status]?.color}>
                   {STATUS_BADGE[detail.status]?.label}
                 </Badge>
+                {detail.mode === 'team' && <Badge className="bg-status-info-muted text-status-info">团队</Badge>}
                 <span className="text-xs text-muted-foreground">#{detail.id}</span>
               </div>
               {detail.error && (
@@ -252,7 +296,18 @@ export default function DshTasksPage() {
                 <h4 className="font-medium mb-1">任务</h4>
                 <pre className="text-xs bg-muted p-3 rounded-md whitespace-pre-wrap">{detail.task}</pre>
               </div>
-              {detail.output_text && (
+              {/* Batch 191：团队进度树（mode=team 且快照非空） */}
+              {detail.mode === 'team' && Object.keys(detail.team_json || {}).length > 0 ? (
+                <div>
+                  <h4 className="font-medium mb-1">团队进度</h4>
+                  <TeamProgress teamJson={detail.team_json} status={detail.status} outputText={detail.output_text} />
+                </div>
+              ) : detail.mode === 'team' && detail.status === 'running' ? (
+                <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
+                  团队进度尚未产生，等待船长建队…
+                </div>
+              ) : null}
+              {detail.output_text && detail.mode !== 'team' && (
                 <div>
                   <h4 className="font-medium mb-1">执行输出</h4>
                   <pre className="text-xs bg-muted p-3 rounded-md whitespace-pre-wrap font-mono max-h-96 overflow-y-auto">
@@ -277,6 +332,7 @@ export default function DshTasksPage() {
             <DialogTitle>新建 DSH 任务</DialogTitle>
             <DialogDescription>
               输入自然语言任务描述，DeepSeek Harness 智能体将在受控工作区执行并返回结果。
+              团队模式将创建 DSH 船长会话，自组织多成员团队执行。
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-4">
@@ -288,6 +344,34 @@ export default function DshTasksPage() {
               placeholder="例如：检查 test-platform-v2 后端结构并总结；或：跑一遍接口回归并输出结果"
               rows={5}
             />
+            {/* Batch 191：任务模式选择（标准/团队） */}
+            <div>
+              <Label htmlFor="dsh-task-mode">任务模式</Label>
+              <Select value={taskMode} onValueChange={(v) => setTaskMode(v as 'single' | 'team')}>
+                <SelectTrigger id="dsh-task-mode" aria-label="任务模式" className="w-full mt-1">
+                  <SelectValue placeholder="选择任务模式" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="single">标准模式（single）</SelectItem>
+                  <SelectItem value="team">团队模式（team）</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {/* Batch 191：团队模式批次下拉（仅团队模式显示） */}
+            {taskMode === 'team' && (
+              <div>
+                <Label htmlFor="dsh-task-batch-mode">批次模式</Label>
+                <Select value={batchMode} onValueChange={(v) => setBatchMode(v as 'full' | 'light')}>
+                  <SelectTrigger id="dsh-task-batch-mode" aria-label="批次模式" className="w-full mt-1">
+                    <SelectValue placeholder="选择批次模式" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="full">完整批次（full）</SelectItem>
+                    <SelectItem value="light">轻量批次（light）</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setCreateOpen(false)} disabled={creating}>

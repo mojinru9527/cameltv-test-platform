@@ -13,10 +13,11 @@ related: ["0007-deepseek-llm-test-case-generation.md", "0014-single-main-trunk-a
 ## 状态
 
 ✅ 已采纳（Batch 172，首版 A/B/C 落地）
+✅ 扩展（Batch 191，/dsh-tasks 支持 AgentTeams 团队模式，方案 B1）
 
 ## 日期
 
-2026-08-14
+2026-08-14（首版）；2026-08-17（Batch 191 团队模式扩展）
 
 ## 背景
 
@@ -76,6 +77,33 @@ B（Agent 工作台执行型 Agent）、C（DSH 任务执行模块）。
   dsh Web UI 仅保留为本地开发工具。
 - **方案 B：仅升级直连 LLM 提示词**（不引入 harness）— 无法获得真实执行/验证能力，弃选。
 - **方案 C：每个功能独立接 dsh**（无统一抽象）— 运行时切换/测试成本高，弃选；统一走 dsh_runner。
+
+## Batch 191 扩展：AgentTeams 团队模式（方案 B1）
+
+2026-08-17 扩展 `/dsh-tasks` 支持团队模式（`mode=team`）：用户提交单一自然语言目标 +
+批次模式（full/light），DSH 船长会话（`agent_teams_*` 九件套）自组织多成员团队执行。
+
+- **模型最小扩展**：`dsh_task` 新增 `mode`（single|team，索引）与 `team_json`（Text，默认 `"{}"`）
+  两列；`batch_mode` 随 `params_json` 落库，不加冗余列。
+- **执行路由**：`run_dsh_task(mode=...)` — node 走 `--profile agent-team`
+  （`$DSH_HOME/profiles/agent-team`），python-sdk 走内置 `team.cordis.yml`
+  （minimal + `@nanmicoder/dsh-agent-teams` 插件行，可经 `DSH_TEAM_CORDIS_CONFIG` 覆盖）；
+  团队超时 `DSH_TEAM_TIMEOUT_SECONDS`（1800s）；**沙箱语义完全复用**（ws-{uuid} 隔离工作区、
+  并发闸门、文本配额，C172-1 不回归，无旁路）。
+- **team_json 快照语义**：平台侧只读快照，内容 = 插件 `team.json` 持久化记录原文，
+  全量幂等覆盖写（无增量合并）；实时轮询用「隔离根扫描 ws-*/ 首次命中锁定」，
+  终态读取用 `DshRunResult.workspace` 精确路径；超长截断加 `_truncated` 标记
+  （`DSH_MAX_OUTPUT_CHARS` 口径）。
+- **线程安全（R-3）**：执行线程不碰 DB session；轮询线程每次用独立短 `SessionLocal`
+  全量幂等写 `task.team_json`，绝不与执行线程共享 session。
+- **API/前端**：`DshTaskCreate.mode`（Literal single|team）+ `params.batch_mode` 校验
+  （team 必填 full|light，single 拒绝）；`DshTaskOut.mode/team_json`（字符串→dict，
+  损坏 JSON 兜底 `{}`）；前端提交面板模式选择 + 批次下拉 + 列表类型徽标 + 详情团队进度树
+  （running 3s 轮询，卸载清理遵循 React 副作用规范）。
+- **配置**：`DSH_TEAM_TIMEOUT_SECONDS` / `DSH_TEAM_POLL_SECONDS` / `DSH_TEAM_PROFILE` /
+  `DSH_TEAM_CORDIS_CONFIG` / `DSH_TEAM_HARNESS_PATH`（= DSH_HOME 覆盖，非 bin.js 路径）。
+- **C 条件**：C191-1（python-sdk bundled runtime 加载 npm bundle 插件，失败 → deferred，
+  node 先交付，不静默 fallback）；C191-2（running 团队任务取消延后）。
 
 ## 关联
 

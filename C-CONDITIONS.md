@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-16 (Batch 186: 关闭 C182-1/C184-1、C182-2 转 Deferred)
+**最后更新**: 2026-08-17 (Batch 191: 登记 C191-1/C191-2 建议，待 Leader 判决确认)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -21,6 +21,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ---
 
 ## Open (待处理)
+
+### batch-191 — /dsh-tasks AgentTeams 团队模式（2026-08-17）—— C191-1/C191-2 建议登记（待 Leader 判决）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C191-1 | python-sdk bundled runtime 能否加载 npm bundle 插件（`@nanmicoder/dsh-agent-teams`）未实测通过（R-2）：node 先交付（`--profile agent-team`），python-sdk 走内置 `team.cordis.yml` 但冒烟失败时**不静默 fallback 到单任务**（US-7）；解除条件=SDK bundled runtime 可加载 npm bundle 插件并完成团队组合冒烟（成功后可关闭） | P2 | 2026-08-17 |
+| C191-2 | running 团队任务取消延后：现状仅 pending 可取消（既有语义）；解除条件=下批实现执行中终止（kill 子进程/信号）并覆盖轮询线程停止 | P3 | 2026-08-17 |
 
 ### batch-185 — 性能采集优化（2026-08-16，C99-1 ①②③ 已闭环，④ 保持）
 

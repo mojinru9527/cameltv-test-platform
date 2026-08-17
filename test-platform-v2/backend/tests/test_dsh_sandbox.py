@@ -153,11 +153,9 @@ class TestPythonSdkEnvIsolation:
         # SDK 未安装时注入假模块（runner 在函数内 `from deepseek_harness import DeepSeekHarness`）
         import sys
         import types
-        if "deepseek_harness" not in sys.modules:
-            fake_mod = types.ModuleType("deepseek_harness")
-            fake_mod.DeepSeekHarness = fake_cls
-            sys.modules["deepseek_harness"] = fake_mod
-            monkeypatch.setattr(sys.modules["deepseek_harness"], "DeepSeekHarness", fake_cls)
+        fake_mod = types.ModuleType("deepseek_harness")
+        fake_mod.DeepSeekHarness = fake_cls
+        monkeypatch.setitem(sys.modules, "deepseek_harness", fake_mod)
 
         # 并发两个任务，各自带不同凭据（模拟不同项目/租户）
         def run_with(task, extra):
@@ -201,4 +199,75 @@ class TestTimeoutRegression:
         # _run_node_cli 的 subprocess timeout 已有既有测试；此处仅验证 run_dsh_task 不吞异常
         result = runner_mod.run_dsh_task("正常任务")
         assert result.exit_code in (0, 1)
+        runner_mod._concurrency_gate = threading.BoundedSemaphore(max(1, settings.dsh_max_concurrent))
+
+
+class TestTeamModeSandboxRegression:
+    """Batch 191（C172-1 不回归）：团队任务同样受沙箱语义约束，无旁路。"""
+
+    def test_team_mode_uses_isolated_workspace(self, monkeypatch, tmp_path):
+        """mode=team 仍走 _workspace_for → ws-{uuid} 隔离目录。"""
+        root = tmp_path / "ws-root"
+        monkeypatch.setattr(settings, "dsh_workspace", str(root))
+        monkeypatch.setattr(settings, "dsh_runtime", "node")
+        monkeypatch.setattr(settings, "dsh_enabled", True)
+        monkeypatch.setattr(settings, "dsh_api_key", "k")
+        monkeypatch.setattr(runner_mod, "runtime_available", lambda: (True, ""))
+        runner_mod._concurrency_gate = threading.BoundedSemaphore(1)
+
+        seen = {}
+
+        def fake_node(task, *, workdir, **kwargs):
+            seen["workdir"] = workdir
+            return runner_mod.DshRunResult(final_response="ok", exit_code=0, workspace=workdir)
+
+        monkeypatch.setattr(runner_mod, "_run_node_cli", fake_node)
+        result = runner_mod.run_dsh_task("团队目标", mode="team")
+        assert Path(seen["workdir"]).parent == root
+        assert Path(seen["workdir"]).name.startswith("ws-")
+        assert Path(seen["workdir"]).exists()
+        assert result.workspace == seen["workdir"]
+        runner_mod._concurrency_gate = threading.BoundedSemaphore(max(1, settings.dsh_max_concurrent))
+
+    def test_team_mode_respects_task_chars_quota(self):
+        """DSH_MAX_TASK_CHARS 配额对团队任务同样生效（入口统一检查）。"""
+        long_task = "x" * (settings.dsh_max_task_chars + 1)
+        result = runner_mod.run_dsh_task(long_task, mode="team")
+        assert result.exit_code == 2
+        assert "超长" in result.error
+
+    def test_team_mode_goes_through_concurrency_gate(self, monkeypatch, tmp_path):
+        """团队任务经 _concurrency_gate 排队（DSH_MAX_CONCURRENT=1 串行实证）。"""
+        monkeypatch.setattr(settings, "dsh_max_concurrent", 1)
+        monkeypatch.setattr(settings, "dsh_runtime", "node")
+        monkeypatch.setattr(settings, "dsh_enabled", True)
+        monkeypatch.setattr(settings, "dsh_api_key", "k")
+        monkeypatch.setattr(runner_mod, "runtime_available", lambda: (True, ""))
+        runner_mod._concurrency_gate = threading.BoundedSemaphore(1)
+
+        active = []
+        max_active = [0]
+        lock = threading.Lock()
+
+        def fake_node(task, **kwargs):
+            with lock:
+                active.append(task)
+                max_active[0] = max(max_active[0], len(active))
+            time.sleep(0.1)
+            with lock:
+                active.remove(task)
+            return runner_mod.DshRunResult(final_response="ok", exit_code=0)
+
+        monkeypatch.setattr(runner_mod, "_run_node_cli", fake_node)
+        outputs = []
+        threads = [
+            threading.Thread(target=lambda i=i: outputs.append(runner_mod.run_dsh_task(f"team-{i}", mode="team")))
+            for i in range(3)
+        ]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(timeout=15)
+        assert len(outputs) == 3
+        assert max_active[0] == 1, f"团队任务并发超限: {max_active[0]}"
         runner_mod._concurrency_gate = threading.BoundedSemaphore(max(1, settings.dsh_max_concurrent))
