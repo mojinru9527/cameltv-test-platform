@@ -112,3 +112,10 @@ DSH agent ──knowledge-mcp──> 平台开放 API
 
 - 需求调整时：DSH 用「知识差异对比」找受影响用例（reviewer 触发点②）
 - 流程卡壳时：船长报告含「流程反思卡」，平台据此迭代流程（元审查层 L4）
+
+### 8.1 缺陷自动回写（C-A4）
+
+- reviewer/ui-tester 判定测试失败后，DSH 经 knowledge-mcp `submit_defect` 直接写入平台缺陷库（状态 open，severity P0-P3）
+- 缺陷自动沉淀知识中心（缺陷知识源）——**下次测试检索即可命中历史缺陷**，形成「发现→登记→复用」闭环
+- 缺陷编号平台自动生成（如 `DEF-20260817-001`），建议附 `external_url` 指向执行证据
+- 前提：知识中心入库开关 `knowledge_ingest_enabled=true`（生产部署已开启）

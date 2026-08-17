@@ -1,5 +1,5 @@
 {
- "count": 433,
+ "count": 434,
  "routes": [
   {
    "path": "/api/v1/agents/queue",
@@ -671,6 +671,10 @@
   },
   {
    "path": "/api/v1/notify/test",
+   "method": "POST"
+  },
+  {
+   "path": "/api/v1/open/defects",
    "method": "POST"
   },
   {
