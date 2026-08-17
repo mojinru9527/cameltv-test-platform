@@ -270,3 +270,50 @@ def open_list_ui_jobs(
         db, project_id=token.project_id, keyword=keyword, page=page, page_size=page_size,
     )
     return R.ok({"total": total, "page": page, "page_size": page_size, "items": items})
+
+
+# ── 缺陷回写面（C-A4：Agent 提交缺陷 → 缺陷库 + 知识中心）──
+
+@router.post("/defects", response_model=R[dict], summary="缺陷直接入库（Agent 回写面）")
+def open_create_defect(
+    body: dict,
+    token: "ApiToken" = Depends(verify_api_token),
+    db: Session = Depends(get_db),
+):
+    """Agent 测试发现缺陷直接写入缺陷库（六状态机 open 起步）。
+
+    C-A4（DSH 测试 Agent 框架遗留收口）：reviewer/ui-tester 判定失败后
+    经 knowledge-mcp submit_defect 回写；project 由 token 隔离；
+    缺陷自动入库知识中心（ingest_defect_in_new_session，与 defect.py 同语义）。
+    """
+    from app.schemas.defect import DefectCreate
+    from app.services import defect_service
+
+    try:
+        data = DefectCreate(**body)
+    except Exception as exc:  # noqa: BLE001 - pydantic 校验错误转 400
+        raise APIException(code=400, msg=f"缺陷字段校验失败: {exc}")
+
+    try:
+        r = defect_service.create_defect(db, data, creator_id=0, project_id=token.project_id)
+    except ValueError as e:
+        raise APIException(msg=str(e))
+    db.commit()
+    token.last_used_at = datetime.now(timezone.utc)
+    db.commit()
+
+    # 缺陷 → 知识中心（post-commit 独立会话，与 defect.py 同语义）
+    try:
+        from app.services.knowledge import ingest_service
+
+        ingest_service.ingest_defect_in_new_session(token.project_id, r["id"])
+    except Exception:
+        logger.exception("Agent 回写缺陷入库知识中心失败: defect_id=%s", r.get("id"))
+
+    return R.ok({
+        "id": r["id"],
+        "defect_id": r.get("defect_id", ""),
+        "title": r.get("title", ""),
+        "severity": r.get("severity", ""),
+        "status": r.get("status", ""),
+    })

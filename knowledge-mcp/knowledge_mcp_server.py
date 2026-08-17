@@ -212,6 +212,17 @@ def submit_test_cases(cases: list[dict]) -> list[dict]:
     return results
 
 
+@mcp.tool()
+def submit_defect(defect: dict) -> dict:
+    """缺陷直接入库（C-A4：测试发现缺陷回写平台缺陷库）。
+
+    必填 title；建议含 description/severity(P0-P3)/case_id/execution_id/
+    external_id/external_url（证据链接）。project 由平台 token 隔离；
+    入库后自动沉淀知识中心（缺陷知识源）。
+    """
+    return _call("POST", "/defects", json_body=defect)
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     SERVER_HOST = os.getenv("SERVER_HOST", "0.0.0.0")

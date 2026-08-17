@@ -336,3 +336,50 @@ def test_open_ui_jobs_project_isolation(db_session, client):
 
     resp = client.get("/api/v1/open/ui-tests", headers=_auth())
     assert resp.json()["data"]["total"] == 0
+
+
+# ── 缺陷回写面（C-A4：Agent 提交缺陷）──
+
+def test_open_defects_create(db_session, client):
+    from app.models.defect import Defect
+
+    _mk_token(db_session)
+    body = {
+        "title": "Agent 发现：登录接口返回码错误",
+        "description": "POST /api/v1/auth/login 空密码返回 500（应 400）",
+        "severity": "P1",
+        "external_url": "https://trace.example/runs/99",
+    }
+    resp = client.post("/api/v1/open/defects", json=body, headers=_auth())
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert data["title"] == "Agent 发现：登录接口返回码错误"
+    assert data["severity"] == "P1"
+    assert data["status"] == "open"
+    assert data["defect_id"]  # 自动生成编号（如 BUG-xxx）
+
+    row = db_session.get(Defect, data["id"])
+    assert row is not None
+    assert row.project_id == 1  # token 项目隔离
+    assert row.creator_id == 0  # Agent 无真实用户
+    assert row.external_url == "https://trace.example/runs/99"
+
+
+def test_open_defects_create_validation(db_session, client):
+    _mk_token(db_session)
+    resp = client.post("/api/v1/open/defects", json={"title": None}, headers=_auth())
+    assert resp.status_code == 200
+    assert resp.json()["code"] == 400
+
+
+def test_open_defects_project_isolation(db_session, client):
+    """token 项目隔离：写入 token.project_id 而非请求体。"""
+    from app.models.defect import Defect
+
+    _mk_token(db_session)
+    resp = client.post("/api/v1/open/defects", json={
+        "title": "隔离测试缺陷", "project_id": 999,
+    }, headers=_auth())
+    assert resp.status_code == 200
+    row = db_session.get(Defect, resp.json()["data"]["id"])
+    assert row.project_id == 1
