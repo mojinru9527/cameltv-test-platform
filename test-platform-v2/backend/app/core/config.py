@@ -144,6 +144,10 @@ class Settings(BaseSettings):
     dsh_team_profile: str = "agent-team"         # node runtime 团队 profile 名（CLI 从 $DSH_HOME/profiles/ 解析）
     dsh_team_cordis_config: str = ""             # python-sdk runtime 团队 cordis 路径；空 = 内置 team.cordis.yml
     dsh_team_harness_path: str = ""              # 团队 profile 的 DSH_HOME 覆盖；空 = CLI 默认 $DSH_HOME（自动探测）
+    # ── DSH 测试 Agent 框架：模型池（阶段 3 产品化）──
+    # 逗号分隔可用模型清单（如 "deepseek-v4-flash,deepseek-v4-pro"）；空 = 不限（仅校验非空串）。
+    # 平台侧设置页据此渲染模型下拉，任务经 params.model 按任务指定，runner 注入 DSH_MODEL。
+    dsh_model_pool: str = ""
 
     # ── AI 降级 / 超时（DeepSeek 分类器不可用时的本地降级提取）──
     ai_timeout_seconds: float = 180.0          # 单次 AI 调用超时（秒）
@@ -293,6 +297,18 @@ class Settings(BaseSettings):
         # node runtime 的 CLI 入口检查在 dsh_runner.runtime_available() 中做
         # （支持默认入口兜底），此处只做开关与凭据检查。
         return ""
+
+    @property
+    def dsh_model_pool_list(self) -> list[str]:
+        """模型池清单（DSH 测试 Agent 框架）：逗号分隔 → 去空去重列表。空池 = []。"""
+        return [m.strip() for m in (self.dsh_model_pool or "").split(",") if m.strip()]
+
+    def dsh_model_allowed(self, model: str | None) -> bool:
+        """模型池准入：未配置池（不限）或模型在池内返回 True。"""
+        if not model:
+            return True
+        pool = self.dsh_model_pool_list
+        return (not pool) or (model in pool)
 
     def validate_security(self) -> list[str]:
         """Return a list of security misconfigurations; empty list = ok."""

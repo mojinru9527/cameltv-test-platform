@@ -22,9 +22,11 @@ import {
   fetchDshTasks,
   fetchDshTask,
   fetchDshHealth,
+  fetchDshModelPool,
   cancelDshTask,
   type DshTask,
   type DshHealth,
+  type DshModelPool,
 } from '@/api/dshTasks'
 
 const STATUS_BADGE: Record<string, { label: string; color: string }> = {
@@ -56,6 +58,10 @@ export default function DshTasksPage() {
   // Batch 191：任务模式（single/team）+ 批次模式（full/light）
   const [taskMode, setTaskMode] = useState<'single' | 'team'>('single')
   const [batchMode, setBatchMode] = useState<'full' | 'light'>('full')
+  // DSH 测试 Agent 框架：团队视角（dev/tester）+ 模型选择（模型池）
+  const [teamKind, setTeamKind] = useState<'dev' | 'tester'>('dev')
+  const [modelPool, setModelPool] = useState<DshModelPool | null>(null)
+  const [selectedModel, setSelectedModel] = useState('')
 
   const load = useCallback((signal?: AbortSignal) => {
     setLoading(true)
@@ -71,10 +77,17 @@ export default function DshTasksPage() {
       .catch(() => undefined)
   }, [])
 
+  const loadModelPool = useCallback((signal?: AbortSignal) => {
+    fetchDshModelPool(signal)
+      .then((pool) => { if (!signal?.aborted) setModelPool(pool) })
+      .catch(() => undefined)
+  }, [])
+
   useAbortableEffect((signal) => {
     load(signal)
     loadHealth(signal)
-  }, [load, loadHealth])
+    loadModelPool(signal)
+  }, [load, loadHealth, loadModelPool])
 
   useAbortableEffect((signal) => {
     if (!selected?.id) return
@@ -129,10 +142,14 @@ export default function DshTasksPage() {
     if (!taskText.trim()) return
     setCreating(true)
     try {
+      const params: Record<string, any> = {}
+      if (selectedModel) params.model = selectedModel
       if (taskMode === 'team') {
-        await createDshTask(taskText.trim(), { batch_mode: batchMode }, 'team')
+        params.batch_mode = batchMode
+        params.team_kind = teamKind
+        await createDshTask(taskText.trim(), params, 'team')
       } else {
-        await createDshTask(taskText.trim())
+        await createDshTask(taskText.trim(), params)
       }
       toast.success('DSH 任务已提交')
       setCreateOpen(false)
@@ -332,7 +349,7 @@ export default function DshTasksPage() {
             <DialogTitle>新建 DSH 任务</DialogTitle>
             <DialogDescription>
               输入自然语言任务描述，DeepSeek Harness 智能体将在受控工作区执行并返回结果。
-              团队模式将创建 DSH 船长会话，自组织多成员团队执行。
+              团队模式将创建 DSH 船长会话，自组织多成员团队执行（可选开发批次或测试视角）。
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-4">
@@ -370,6 +387,38 @@ export default function DshTasksPage() {
                     <SelectItem value="light">轻量批次（light）</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            )}
+            {/* DSH 测试 Agent 框架：团队视角（dev 开发批次 / tester 测试视角） */}
+            {taskMode === 'team' && (
+              <div>
+                <Label htmlFor="dsh-task-team-kind">团队视角</Label>
+                <Select value={teamKind} onValueChange={(v) => setTeamKind(v as 'dev' | 'tester')}>
+                  <SelectTrigger id="dsh-task-team-kind" aria-label="团队视角" className="w-full mt-1">
+                    <SelectValue placeholder="选择团队视角" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dev">开发批次（PRD→QA）</SelectItem>
+                    <SelectItem value="tester">测试视角（分析→用例→执行→审查）</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {/* DSH 测试 Agent 框架（阶段 3）：模型选择（模型池） */}
+            {modelPool && modelPool.pool_configured && (
+              <div>
+                <Label htmlFor="dsh-task-model">模型</Label>
+                <Select value={selectedModel} onValueChange={setSelectedModel}>
+                  <SelectTrigger id="dsh-task-model" aria-label="模型" className="w-full mt-1">
+                    <SelectValue placeholder={modelPool.default_model || '默认模型'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {modelPool.models.map((m) => (
+                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">不选择则使用平台默认模型</p>
               </div>
             )}
           </div>
