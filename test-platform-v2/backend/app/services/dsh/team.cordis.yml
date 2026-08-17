@@ -81,6 +81,16 @@
     root: !!js process.env.DSH_SESSION_ROOT ?? './.sessions'
     compression: none
 # ── Batch 191：AgentTeams 团队模式插件行（追加于 minimal.cordis.yml 之后）──
+# C191-1 修复：agent-teams 依赖 subagents 服务（spawn 成员），minimal 组合不含
+# subagent 提供者 → 插件 waiting for service: subagents 无法激活；补齐 dsh-subagent
+# + spawn-in-process（对齐 dsh-base bundle 组合，providerName=spawn 对应
+# memberProvider: spawn）。
+- id: subagent
+  name: '@deepseek-ai/dsh-subagent'
+- id: subagent-spawn-in-process
+  name: '@deepseek-ai/dsh-subagent-spawn-in-process'
+  config:
+    providerName: spawn
 - id: agent-teams
   name: '@nanmicoder/dsh-agent-teams'
   config:

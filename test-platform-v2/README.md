@@ -114,6 +114,7 @@ npm run dev
 |------|------|------|
 | `DSH_TEAM_TIMEOUT_SECONDS` | 1800 | 团队任务超时（覆盖单任务 600s），超时 → failed + 可读 error |
 | `DSH_TEAM_POLL_SECONDS` | 3 | 后端进度轮询间隔（前端详情轮询粒度对齐） |
+| `DSH_TEAM_HEARTBEAT_SECONDS` | 60 | 团队执行心跳间隔（`locked_at` 续期，防 stale 误回收；R-1 冒烟修复） |
 | `DSH_TEAM_PROFILE` | agent-team | node runtime 团队 profile 名（`$DSH_HOME/profiles/agent-team`） |
 | `DSH_TEAM_CORDIS_CONFIG` | 空 | python-sdk 团队 cordis 路径；空 = 内置 `team.cordis.yml` |
 | `DSH_TEAM_HARNESS_PATH` | 空 | 团队 profile 的 **DSH_HOME 覆盖**（非 bin.js 路径）；空 = CLI 默认 `$DSH_HOME` |
@@ -128,15 +129,20 @@ dsh plugin --profile agent-team add @nanmicoder/dsh-agent-teams
 dsh --profile agent-team --dump-config   # 自检：组合树含 agent-teams 插件
 ```
 
+> **R-1 冒烟踩坑**：CLI 方式 A 生成的 `dsh.profile.bundles` **缺
+> `@deepseek-ai/dsh-headless`**（任务执行器），缺失时任务 boot 后静默挂起。
+> 安装后必须校验 `package.json` bundles 含 dsh-headless（缺则手工补），
+> 详见 `backend/app/services/dsh/agent-team/README.md`。
+
 模板与手工安装说明见 `backend/app/services/dsh/agent-team/README.md`。
 
 ### 排队 / deferred 语义
 
 - **排队（R-6）**：团队任务与单任务共用全局并发闸门（`DSH_MAX_CONCURRENT`，默认 1），
   超出上限排队等待，不丢任务。
-- **python-sdk（C191-1）**：SDK bundled runtime 能否加载 npm bundle 插件
-  （`@nanmicoder/dsh-agent-teams`）未实测通过 → 登记 C191-1 deferred，**node 先交付**，
-  失败不静默 fallback 到单任务（US-7）。
+- **python-sdk（C191-1 已关闭）**：SDK bundled runtime 加载 npm bundle 插件实测通过
+  （`team.cordis.yml` 含 subagent 提供者，SDK node carrier 45s 团队组合 completed）；
+  生产 Linux exe carrier 需把 agent-teams 打进闭包 → C191-3，失败不静默 fallback 到单任务（US-7）。
 - **取消（C191-2）**：running 团队任务取消延后（仅 pending 可取消，现状语义）。
 
 ## 生产部署边界

@@ -198,8 +198,10 @@ def test_api_404_other_project(dsh_client, dsh_available):
 
 
 def test_api_create_unavailable(dsh_client, monkeypatch):
+    # 打桩目标必须是 router 模块的引用（dsh_tasks.py `from ... import runtime_available`
+    # 是独立绑定）；只打 dsh_runner 模块属性在 DSH 启用环境不生效（R-1 冒烟暴露）。
     monkeypatch.setattr(
-        "app.services.dsh.dsh_runner.runtime_available",
+        "app.api.v1.dsh_tasks.runtime_available",
         lambda: (False, "DSH 服务未启用"),
     )
     resp = dsh_client.post("/api/v1/dsh-tasks", json={"task": "run"})
@@ -480,4 +482,56 @@ def test_team_json_truncate_marker(dsh_db, monkeypatch, tmp_path):
         assert snap.get("_truncated") is True
         assert len(claimed.team_json) <= settings.dsh_max_output_chars
     finally:
+        db.close()
+
+
+def test_execute_team_heartbeat_prevents_stale_reap(dsh_db, monkeypatch, tmp_path):
+    """R-1 冒烟缺陷修复：团队执行期间心跳续期 locked_at，超过 stale 阈值不被回收。
+
+    回归场景：团队任务最长 1800s >> _STALE_CLAIM_SECONDS(300s)，无心跳会被
+    reap_stale 误回收置 failed（Batch 191 R-1 真实冒烟暴露）。
+    """
+    import threading as _threading
+
+    from app.core.config import settings
+    from app.core.task_queue import reap_stale
+
+    monkeypatch.setattr(settings, "dsh_team_poll_seconds", 0.05)
+    monkeypatch.setattr(settings, "dsh_team_heartbeat_seconds", 0.05)
+
+    release = _threading.Event()
+    calls = []
+
+    def fake_runner(task, **kwargs):
+        calls.append(kwargs.get("mode"))
+        release.wait(5)  # 阻塞模拟长执行（真实场景 30 分钟级）
+        return DshRunResult(final_response="ok", exit_code=0, session_dir=str(tmp_path), workspace="")
+
+    db = dsh_db()
+    try:
+        dsh_task_service.submit_task(
+            db, project_id=1, task="团队任务", operator_id=1,
+            mode="team", params={"batch_mode": "light"},
+        )
+        claimed = dsh_task_service.claim_next_task(db)
+        assert claimed is not None and claimed.status == "running"
+
+        # execute_task 会 join 到 runner 释放，放线程执行
+        t = _threading.Thread(
+            target=dsh_task_service.execute_task,
+            args=(db, claimed),
+            kwargs={"runner": fake_runner},
+            daemon=True,
+        )
+        t.start()
+        time.sleep(0.3)  # > stale 阈值(0.1s)，期间心跳应持续续期 locked_at
+        reaped = reap_stale(db, dsh_task_service._DSH_QUEUE, stale_seconds=0.1)
+        assert reaped == 0, f"团队执行中不应被 stale 回收: reaped={reaped}"
+        release.set()
+        t.join(10)
+        assert not t.is_alive(), "execute_task 线程未在预期时间内结束"
+        assert claimed.status == "success", f"status={claimed.status} error={claimed.error}"
+        assert calls == ["team"]
+    finally:
+        release.set()
         db.close()
