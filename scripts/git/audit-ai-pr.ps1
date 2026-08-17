@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [string]$RepositoryPath = (Get-Location).Path,
     [int]$PrNumber,
