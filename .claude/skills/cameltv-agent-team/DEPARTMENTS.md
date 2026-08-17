@@ -104,7 +104,7 @@ shadcn/ui + Radix + Tailwind + CVA；Token 走语义类（bg-muted / text-muted-
 
 **强制节奏**：
 1. **多窗口并行检查**：若已有 ≥1 个 Agent Team 窗口活跃，开工前必须用 `git worktree add` 创建独立 worktree（见 SKILL.md「多窗口并行开发」）。**禁止多个窗口共享同一工作目录。**
-2. 开工前：先在聊天中问用户本任务由 Claude Code 还是 Codex 执行并停下等待；收到明确答复后运行 `scripts/git/start-agent-team-task.ps1 -Executor claude|codex -UserConfirmedExecutor`，从最新 `origin/main` 创建独立任务 worktree，再用 `verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor claude|codex` 验证。不得根据 VS Code、ChatGPT 客户端或进程自动猜测。
+2. 开工前：先在聊天中问用户本任务由 Claude Code、Codex 还是 DeepSeek Harness 执行并停下等待；收到明确答复后运行 `scripts/git/start-agent-team-task.ps1 -Executor claude|codex|DeepSeek_Harness -UserConfirmedExecutor`，从最新 `origin/main` 创建独立任务 worktree，再用 `verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor claude|codex|DeepSeek_Harness` 验证。不得根据 VS Code、ChatGPT 客户端或进程自动猜测。
 3. 开工前先读看板（SKILL.md 第 0 步）。
 4. 编码前扫 `cameltv-bug-guard` skill。
 5. 按切片推进，TDD 先测后码。

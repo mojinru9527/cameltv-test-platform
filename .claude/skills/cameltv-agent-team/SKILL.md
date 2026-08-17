@@ -17,7 +17,14 @@ description: Use for ANY change to the CamelTv test platform (test-platform-v2/)
 需求输入 → Product(PRD) → PM(Tasks) → Design(Spec) → Dev(Code) → QA(Test) → Leader(Review) → 交付
 ```
 
-一个「批次（batch）」= 走完一轮六部门。每个部门产出一份 `work-logs/` 工件（见下）。执行方式是**工件驱动的手动流水**：依次扮演各部门角色、逐份写出工件，不是运行某个脚本（历史的 `team-orchestrator.js` 已不存在，别引用它）。
+一个「批次（batch）」= 走完一轮六部门。每个部门产出一份 `work-logs/` 工件（见下）。**工件规范与本文件是两种执行模式的共同事实源**（历史的 `team-orchestrator.js` 已不存在，别引用它）：
+
+| 执行模式 | 适用执行器 | 说明 |
+|---------|-----------|------|
+| 模式① 单会话角色扮演（默认） | Claude Code / Codex | 工件驱动的手动流水：单个会话依次扮演各部门角色、逐份写出工件 |
+| 模式② DSH AgentTeams 船长模式 | DeepSeek Harness（需 `@nanmicoder/dsh-agent-teams` 插件） | DSH 会话为船长（兼任 Leader），六部门为持久化成员智能体，流水线为带依赖的任务图；协议见 [docs/agent-team/dsh-agent-teams.md](../../../docs/agent-team/dsh-agent-teams.md) |
+
+两种模式产出相同的 `work-logs/` 工件与看板，遵循相同的批次模式、Git 门禁、复盘卡与流程回写规则；只有「谁来执行」不同。
 
 | # | 部门 | 角色规则 | 交付工件 |
 |---|------|------------|---------|
@@ -96,18 +103,19 @@ QA 报告末尾与 Leader 判决末尾必须附复盘卡，字段见 [docs/agent
 ### 标准流程
 
 ```bash
-# 0. 硬暂停：先在聊天中问用户“本任务由 Claude Code 还是 Codex 执行？”并等待明确答复
+# 0. 硬暂停：先在聊天中问用户“本任务由 Claude Code、Codex 还是 DeepSeek Harness 执行？”并等待明确答复
 # 未收到答复不得 fetch、创建 worktree 或开始开发；不得从 IDE/客户端/进程自动推断
+# DeepSeek Harness 执行 agent-team 时用 -Executor DeepSeek_Harness（模式②船长，见 docs/agent-team/dsh-agent-teams.md）
 
 # 0.1 收到答复后拉取最新代码
 git fetch origin main
 
 # 1. 从最新 main 创建独立 worktree；Agent Team 是 workflow，Executor 是实际宿主
-# 在 Codex 中运行用 codex；在 Claude Code 中运行用 claude
-pwsh scripts/git/start-agent-team-task.ps1 -Executor {claude|codex} -UserConfirmedExecutor -Kind feature -Task batch-{N}-{name} -Scope test-platform-v2 -FrontendPort {独立端口} -BackendPort {独立端口}
+# 在 Codex 中运行用 codex；在 Claude Code 中运行用 claude；在 DeepSeek Harness 中运行用 DeepSeek_Harness
+pwsh scripts/git/start-agent-team-task.ps1 -Executor {claude|codex|DeepSeek_Harness} -UserConfirmedExecutor -Kind feature -Task batch-{N}-{name} -Scope test-platform-v2 -FrontendPort {独立端口} -BackendPort {独立端口}
 
 # 1.1 在新 worktree 开工前验证
-pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor {claude|codex}
+pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor {claude|codex|DeepSeek_Harness}
 
 # 2. 每切片结束后只暂存本切片文件（防夹带其他任务或生成物）；总确认前只本地提交，不推送
 git status --short
@@ -128,10 +136,10 @@ gh pr create \
   --body "Agent Team 六部门流水线已完成。工件见 work-logs/batch-{N}-*-*.md"
 
 # 3.1 PR 创建后做基础审计并等待首轮 required checks
-pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor {claude|codex}
+pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor {claude|codex|DeepSeek_Harness}
 
 # 3.2 总确认后无需再次问询（Agent Team）；required checks 全绿后做最终审计
-pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor {claude|codex} -RequireSuccessfulChecks
+pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor {claude|codex|DeepSeek_Harness} -RequireSuccessfulChecks
 
 # 4. 最终审计通过后由 Leader APPROVED，转 Ready 并 squash 合入 main；确认无需继续修复后从控制 worktree 更新 main 再清理任务 worktree
 git -C F:/CamelTv-control pull --ff-only origin main
@@ -279,6 +287,7 @@ Agent Team 各部门执行任务时自动通过 RAG 检索知识库。检索优�
 
 - [DEPARTMENTS.md](DEPARTMENTS.md) — 六部门角色与交付物模板
 - [CHANGELOG.md](CHANGELOG.md) — 技能变更日志（Batch 75 起强制维护）
+- [dsh-agent-teams.md](../../../docs/agent-team/dsh-agent-teams.md) — 模式② DSH AgentTeams 船长手册（Batch 190 起）
 - [pipeline-modes.md](../../../docs/agent-team/pipeline-modes.md) — 完整/轻量双档批次定义
 - [retro-card-template.md](../../../docs/agent-team/retro-card-template.md) — 复盘卡模板
 - [acceptance-evidence-kit.md](../../../docs/agent-team/acceptance-evidence-kit.md) — 验收证据库规范

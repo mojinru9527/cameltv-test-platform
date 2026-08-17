@@ -2,6 +2,11 @@
 
 > 技能版本化唯一日志。凡修改 `SKILL.md` / `DEPARTMENTS.md` 必须在本文件追加一条。格式：日期 | 批次 | 变更摘要 | 动因。
 
+## 2026-08-17 | Batch 190 | DSH AgentTeams 船长模式（执行方式双模式化）
+
+- **变更**：SKILL.md「流水线」节新增执行模式表（模式①单会话角色扮演保留；模式②DSH AgentTeams 船长模式：船长=Leader、五成员 product/pm/design/dev/qa、带依赖任务图）；Git 工作流与 DEPARTMENTS.md Dev 节的执行器三选问题同步为「Claude Code / Codex / DeepSeek Harness」；新增 `docs/agent-team/dsh-agent-teams.md` 船长手册（完整/轻量批次协议、工件交接规则、常见坑、双模式选用）；新增 `scripts/git/start-deepseek-harness-agent-team.ps1` 便捷入口；start-agent-team-task.ps1 / new-ai-worktree.ps1 / verify-ai-worktree.ps1 报错文案同步三执行器；AGENTS.md §2.3/§2.5 同步。DEPARTMENTS.md 模板本体不变（工件事实源）。
+- **动因**：DeepSeek Harness 已装 `@nanmicoder/dsh-agent-teams` 插件（batch-172 起 DSH 已是平台执行引擎），用户要求把六部门流水线从单会话角色扮演移植为 DSH 船长+持久化成员执行，用于后续测试平台开发；脚本层 batch-173 已支持 DeepSeek_Harness 执行器，本次补齐技能/文档/文案。
+
 ## 2026-08-07 | Batch 115 | 批次合并与发布节奏
 
 - **变更**：SKILL.md 新增「批次合并与发布节奏」节（同域小修复归并轻量批次、纯文档/证据合并提交、合代码 ≠ 发版本）；新增事实源 `docs/agent-team/release-cadence.md` 并加入 SKILL.md 关联；AGENTS.md §2.6 新增发布节奏小节、§4 CI 门禁说明同步（push→main 改为合并冒烟、pr-check 改每日定时观察、CI 工作流/deploy 不再触发双端全量）；deploy/CLAUDE.md、docs/testing-strategy.md、pipeline-modes.md、local-dev-workflow.md 同步。

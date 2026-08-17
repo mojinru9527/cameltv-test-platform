@@ -31,7 +31,7 @@
 
 1. 读看板：`work-logs/kanbans/DEV-{项目}.md`（不存在则用 `work-logs/kanbans/_TEMPLATE.md` 创建）。
 2. 读 `C-CONDITIONS.md`：PRD 必须纳入或豁免全部 Open 条件。
-3. 在聊天中问用户"本任务由 Claude Code 还是 Codex 执行？"并**停下等答复**；不得从 IDE/客户端/进程推断。
+3. 在聊天中问用户"本任务由 Claude Code、Codex 还是 DeepSeek Harness 执行？"并**停下等答复**；不得从 IDE/客户端/进程推断。DeepSeek Harness 执行 agent-team 见 [dsh-agent-teams.md](dsh-agent-teams.md)（模式②船长）。
 
 ### 3.2 创建独立工作区
 
@@ -40,8 +40,10 @@
 pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -UserConfirmedExecutor -Kind feature -Task batch-{N}-{name} -Scope {模块} -FrontendPort {端口} -BackendPort {端口}
 # Claude Code 执行
 pwsh scripts/git/start-agent-team-task.ps1 -Executor claude -UserConfirmedExecutor -Kind feature -Task batch-{N}-{name} -Scope {模块} -FrontendPort {端口} -BackendPort {端口}
+# DeepSeek Harness 执行（模式②船长）
+pwsh scripts/git/start-agent-team-task.ps1 -Executor DeepSeek_Harness -UserConfirmedExecutor -Kind feature -Task batch-{N}-{name} -Scope {模块} -FrontendPort {端口} -BackendPort {端口}
 # 开工前验证
-pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor {codex|claude}
+pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor {codex|claude|DeepSeek_Harness}
 ```
 
 端口必须与现有工作区不冲突（脚本自动检测；查看占用：`git worktree list` + 各 `.ai-worktree.json`）。
@@ -55,7 +57,7 @@ pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -Expected
 ### 3.4 PR 与合入
 
 1. 全部 Slice + 首轮 QA 证据 → `gh pr create --draft --base main --head feature/batch-{N}-{name}`。
-2. 首轮审计：`pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor {codex|claude}`。
+2. 首轮审计：`pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor {codex|claude|DeepSeek_Harness}`。
 3. 一次总确认已覆盖推送/PR/合入，无需二次问询；`confirm-agent-team-completion.ps1` 仅作可选完成证据。
 4. required checks 全绿 → 最终审计（`-RequireSuccessfulChecks`）→ Leader APPROVED → 转 Ready → squash 合入 main。
 5. 合入后：`git -C F:\CamelTv pull --ff-only origin main` 更新主干视图；按需 `git worktree remove` 清理任务工作区。
