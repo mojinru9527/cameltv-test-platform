@@ -83,7 +83,7 @@ if ($metadata) {
         if ($allowedWorkflows -notcontains $workflow) { throw "Unknown metadata workflow '$workflow'." }
         if ($allowedExecutors -notcontains $executor) { throw "Unknown metadata executor '$executor'." }
         if ($workflow -eq "agent-team" -and $executor -eq "human") {
-            throw "Agent Team workflow executor must be claude or codex."
+            throw "Agent Team workflow executor must be claude, codex or DeepSeek_Harness."
         }
         if ($schemaVersion -eq 3 -and $workflow -eq "agent-team") {
             if (-not $metadata.PSObject.Properties["confirmations"] -or

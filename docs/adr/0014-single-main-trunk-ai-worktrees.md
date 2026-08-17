@@ -19,13 +19,13 @@ related: ["AGENTS.md", ".claude/skills/cameltv-agent-team/SKILL.md"]
 2. `main` 禁止直接 push、删除和非快进更新，所有代码通过 PR 和 required checks 合入。
 3. 日常分支仅使用 `feature/*`、`fix/*`、`hotfix/*`、`release/*`，默认 squash merge。
 4. 每个 AI 任务使用独立 worktree、独立分支、独立 `.ai-worktree.json` 元数据与本地端口；控制 worktree 不运行开发任务。
-5. 分支按任务命名；元数据分别记录 workflow（direct/agent-team）和实际 executor（Claude/Codex/human）。Agent Team 是流程而不是执行器，必须在开发前和最终交付前两次向用户确认 Claude 或 Codex；不通过进程名、IDE、客户端、代码风格或 diff 猜测。
+5. 分支按任务命名；元数据分别记录 workflow（direct/agent-team）和实际 executor（Claude/Codex/DeepSeek_Harness/human，batch-173 起支持 DeepSeek_Harness）。Agent Team 是流程而不是执行器，必须在开发前向用户确认 Claude、Codex 或 DeepSeek Harness；不通过进程名、IDE、客户端、代码风格或 diff 猜测。
 6. Agent Team 工件使用唯一 batch 名称和仓库相对路径；仓库文档是共同事实源，路径绑定的 Claude Memory 不作为交付门禁。
-7. Claude Code 位于 VS Code、Codex 位于 ChatGPT 客户端不改变 Git 隔离：任务必须使用不同 worktree、分支、端口和本地元数据，禁止两个客户端并行修改同一 worktree。
+7. Claude Code 位于 VS Code、Codex 位于 ChatGPT 客户端、DeepSeek Harness 位于 Web/命令行会话不改变 Git 隔离：任务必须使用不同 worktree、分支、端口和本地元数据，禁止不同客户端/会话并行修改同一 worktree。
 
 ## 自动执行层
 
-- `start-agent-team-task.ps1 -Executor claude|codex -UserConfirmedExecutor` 只在用户聊天确认后调用，写入 `workflow=agent-team`、实际 executor 和 start confirmed；缺少确认开关时在创建目录/分支前失败。直接任务入口写入 `workflow=direct`。
+- `start-agent-team-task.ps1 -Executor claude|codex|DeepSeek_Harness -UserConfirmedExecutor` 只在用户聊天确认后调用，写入 `workflow=agent-team`、实际 executor 和 start confirmed；缺少确认开关时在创建目录/分支前失败。直接任务入口写入 `workflow=direct`。
 - 新 worktree 使用 schema v3；Agent Team 初始为 start confirmed/completion pending。schema v1/v2 只做兼容读取，旧 Agent Team 元数据不能通过最终完成确认门禁。
 - `confirm-agent-team-completion.ps1` 只在 Draft PR 首轮验证后再次收到用户明确答复时调用；它要求工作区干净、开始身份与完成身份一致，然后写入 completion confirmed。
 - `verify-ai-worktree.ps1` 校验 workflow、executor、确认状态、目录、branch、base、scope、端口和干净状态。
