@@ -83,6 +83,26 @@ def test_get_test_cases(monkeypatch):
 
 # ── 执行面 ──
 
+def test_get_test_plans(monkeypatch):
+    calls = _capture(monkeypatch)
+    kms.get_test_plans(status="active", keyword="登录")
+    assert calls[0]["path"] == "/plans"
+    assert calls[0]["params"] == {"status": "active", "keyword": "登录"}
+
+
+def test_get_test_plan(monkeypatch):
+    calls = _capture(monkeypatch)
+    kms.get_test_plan(42)
+    assert calls[0]["path"] == "/plans/42"
+
+
+def test_get_plan_executions(monkeypatch):
+    calls = _capture(monkeypatch)
+    kms.get_plan_executions(42, page_size=20)
+    assert calls[0]["path"] == "/plans/42/executions"
+    assert calls[0]["params"] == {"page_size": 20}
+
+
 def test_trigger_test_plan(monkeypatch):
     calls = _capture(monkeypatch)
     kms.trigger_test_plan(42)

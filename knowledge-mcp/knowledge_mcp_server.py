@@ -134,6 +134,30 @@ def get_test_cases(module: str = "", keyword: str = "", case_type: str = "", pri
 # ── 执行面（阶段 2 打通，API 已就位）────────────────────
 
 @mcp.tool()
+def get_test_plans(status: str = "", keyword: str = "") -> dict:
+    """测试计划列表（含用例统计），api-tester 选择触发目标用。"""
+    params: dict[str, Any] = {}
+    if status:
+        params["status"] = status
+    if keyword:
+        params["keyword"] = keyword
+    return _call("GET", "/plans", params=params)
+
+
+@mcp.tool()
+def get_test_plan(plan_id: int) -> dict:
+    """测试计划详情（含用例清单），执行前核对用例/环境用。"""
+    return _call("GET", f"/plans/{plan_id}")
+
+
+@mcp.tool()
+def get_plan_executions(plan_id: int, page_size: int = 50) -> dict:
+    """计划最近执行记录（含每条用例 last_status），判定/回读用。"""
+    params = {"page_size": page_size}
+    return _call("GET", f"/plans/{plan_id}/executions", params=params)
+
+
+@mcp.tool()
 def trigger_test_plan(plan_id: int) -> dict:
     """触发平台测试计划执行（平台 Runner 执行，agent 只编排不直连测试环境）。
 

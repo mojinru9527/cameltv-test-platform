@@ -15,6 +15,9 @@
 | 查询 | `get_knowledge_sources(source_type?)` | 知识源列表（需求/接口/用例/缺陷/执行结果） |
 | 查询 | `get_requirements(keyword?)` | 需求文档列表 |
 | 查询 | `get_test_cases(module?, keyword?)` | 用例列表（含三关联元数据） |
+| 执行 | `get_test_plans(status?, keyword?)` | 测试计划列表（api-tester 编排入口） |
+| 执行 | `get_test_plan(plan_id)` | 测试计划详情（含用例清单） |
+| 执行 | `get_plan_executions(plan_id)` | 计划执行记录（判定/回读） |
 | 执行 | `trigger_test_plan(plan_id)` | 触发平台测试计划执行（API Runner） |
 | 执行 | `get_execution_result(run_id)` | 查询执行结果 |
 | 回写 | `submit_test_cases(cases[])` | 用例直接入库（走 skill 规则产出） |

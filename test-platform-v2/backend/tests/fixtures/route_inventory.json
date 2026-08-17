@@ -1,5 +1,5 @@
 {
- "count": 428,
+ "count": 431,
  "routes": [
   {
    "path": "/api/v1/agents/queue",
@@ -683,6 +683,18 @@
   },
   {
    "path": "/api/v1/open/knowledge/sources",
+   "method": "GET"
+  },
+  {
+   "path": "/api/v1/open/plans",
+   "method": "GET"
+  },
+  {
+   "path": "/api/v1/open/plans/{plan_id}",
+   "method": "GET"
+  },
+  {
+   "path": "/api/v1/open/plans/{plan_id}/executions",
    "method": "GET"
   },
   {

@@ -244,3 +244,64 @@ def test_open_test_cases_create_validation(db_session, client):
     resp = client.post("/api/v1/open/test-cases", json={"title": None}, headers=_auth())
     assert resp.status_code == 200
     assert resp.json()["code"] == 400
+
+
+# ── 测试计划查询面（阶段 2 api-tester 编排入口）──
+
+def test_open_plans_lists(db_session, client):
+    from app.models.test_plan import TestPlan
+
+    _mk_token(db_session)
+    db_session.add(TestPlan(
+        project_id=1, name="登录回归计划", plan_id="PLAN-LOGIN-1",
+        status="active", creator_id=1,
+    ))
+    db_session.commit()
+
+    resp = client.get("/api/v1/open/plans", headers=_auth())
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert data["total"] == 1
+    assert data["items"][0]["name"] == "登录回归计划"
+
+
+def test_open_plans_project_isolation(db_session, client):
+    from app.models.test_plan import TestPlan
+
+    _mk_token(db_session)
+    db_session.add(TestPlan(
+        project_id=2, name="别的项目计划", plan_id="PLAN-OTHER-1",
+        status="active", creator_id=1,
+    ))
+    db_session.commit()
+
+    resp = client.get("/api/v1/open/plans", headers=_auth())
+    assert resp.json()["data"]["total"] == 0
+
+
+def test_open_plan_detail_404_other_project(db_session, client):
+    from app.models.test_plan import TestPlan
+
+    _mk_token(db_session)
+    plan = TestPlan(project_id=2, name="别的项目计划", plan_id="PLAN-OTHER-1", status="active", creator_id=1)
+    db_session.add(plan)
+    db_session.commit()
+
+    resp = client.get(f"/api/v1/open/plans/{plan.id}", headers=_auth())
+    assert resp.status_code == 200
+    assert resp.json()["code"] == 404
+
+
+def test_open_plan_executions_lists(db_session, client):
+    from app.models.test_plan import TestPlan, TestPlanCase
+
+    _mk_token(db_session)
+    plan = TestPlan(project_id=1, name="登录回归计划", plan_id="PLAN-LOGIN-1", status="active", creator_id=1)
+    db_session.add(plan)
+    db_session.commit()
+    db_session.add(TestPlanCase(plan_id=plan.id, case_id=1, sort_order=1))
+    db_session.commit()
+
+    resp = client.get(f"/api/v1/open/plans/{plan.id}/executions", headers=_auth())
+    assert resp.status_code == 200
+    assert resp.json()["data"]["total"] == 0  # 无执行记录返回空分页
