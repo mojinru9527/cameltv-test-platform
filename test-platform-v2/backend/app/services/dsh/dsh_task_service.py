@@ -192,10 +192,16 @@ def _team_isolation_root(params: dict) -> Path:
 
 
 def _find_team_json_path(root: Path) -> str | None:
-    """隔离根扫描：`{root}/ws-*/` 下所有 `.agent-teams/<teamId>/team.json`。
+    """隔离根扫描：`{root}/ws-*/` 下所有 `.agent-teams/**/team.json`（含归档）。
+
+    Batch 191 冒烟修复：原 glob `*/team.json` 不匹配船长删除团队后的归档路径
+    `archive/<teamId>/team.json`（任务 10 实测：磁盘 team.json 在 archive/ 下、
+    DB 快照停在 in_progress）；且原实现由调用方**永久锁定首个命中团队**——船长
+    同任务重建团队（废弃旧团队）时快照停留在旧团队。现改为递归 glob + 每轮
+    按 mtime 最新重选（多任务并发由全局并发闸门 DSH_MAX_CONCURRENT 默认 1
+    兜底；调高并发需改为按任务 workspace 隔离扫描）。
 
     返回 mtime 最新的可解析 team.json 路径；解析失败（半写/损坏）跳过该目录。
-    调用方在轮询线程内锁定首次命中路径（此后只读该路径，防并发任务串扰）。
     """
     if not root.is_dir():
         return None
@@ -207,7 +213,7 @@ def _find_team_json_path(root: Path) -> str | None:
             team_root = ws_dir / ".agent-teams"
             if not team_root.is_dir():
                 continue
-            for tj in team_root.glob("*/team.json"):
+            for tj in team_root.glob("**/team.json"):
                 try:
                     data = json.loads(tj.read_text(encoding="utf-8", errors="replace"))
                     if isinstance(data, dict) and data.get("id"):
@@ -248,17 +254,15 @@ def _team_poller(task_id: int, stop_event: threading.Event, poll_seconds: float,
 
     - 每次写库用独立短 SessionLocal，绝不使用 execute_task 的认领 session（R-3）；
     - team_json 全量幂等覆盖（无增量合并）；单轮失败（文件占用/解析失败）记录后下轮重试；
-    - 首次成功解析的路径锁定，此后只读该路径。
+    - 每轮按 mtime 最新重选路径（Batch 191 冒烟修复：船长重建团队/删除归档时跟随最新团队）。
     """
-    locked_path: str | None = None
     while not stop_event.wait(poll_seconds):
         try:
-            if locked_path is None:
-                locked_path = _find_team_json_path(root)
-                if locked_path is None:
-                    continue  # 团队尚未建队（无快照），下轮再扫
+            path = _find_team_json_path(root)
+            if path is None:
+                continue  # 团队尚未建队（无快照），下轮再扫
             try:
-                raw = Path(locked_path).read_text(encoding="utf-8", errors="replace")
+                raw = Path(path).read_text(encoding="utf-8", errors="replace")
             except OSError:
                 continue  # 文件暂不可读，下轮重试
             snapshot = _truncate_team_snapshot(raw)
@@ -365,13 +369,14 @@ def _execute_team(db, task: DshTask, params: dict, runner) -> None:
         result = result_box.get()
 
     # 终态：用 result.workspace 精确路径再读一次 team.json（无扫描歧义）
+    # Batch 191 冒烟修复：glob 递归（**/team.json）覆盖船长删除团队后的归档路径。
     if result.workspace:
         try:
             ws_root = Path(result.workspace)
             team_root = ws_root / ".agent-teams"
             if team_root.is_dir():
                 candidates = sorted(
-                    team_root.glob("*/team.json"),
+                    team_root.glob("**/team.json"),
                     key=lambda p: p.stat().st_mtime,
                     reverse=True,
                 )
