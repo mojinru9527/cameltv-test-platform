@@ -77,10 +77,25 @@ RUN git clone --depth 1 --branch main \
 # pnpm 为 dsh plugin 命令所需（转发 pnpm 安装插件）；必须用 pnpm 11+
 # （pnpm 9 对 workspace root 的 add 报 ERR_PNPM_ADDING_TO_ROOT）。
 # 生产 DSH_HARNESS_PATH=/usr/local/lib/node_modules/@deepseek-ai/dsh/lib/bin.js
+# （NodeSource Node 22 布局实际为 /usr/lib/node_modules/...，生产环境变量按此配置）
 RUN npm install -g pnpm@11 \
     && npm install -g @deepseek-ai/dsh@0.1.0-rc.7 \
     && DSH_HOME=/home/cameltv/.dsh dsh plugin --profile agent-team add '@nanmicoder/dsh-agent-teams@^0.1.5' \
     && node -e "const fs=require('fs');const p='/home/cameltv/.dsh/profiles/agent-team/package.json';const j=JSON.parse(fs.readFileSync(p));if(!j.dsh.profile.bundles.includes('@deepseek-ai/dsh-headless')){j.dsh.profile.bundles.splice(1,0,'@deepseek-ai/dsh-headless');fs.writeFileSync(p,JSON.stringify(j,null,2));console.log('agent-team bundles:',j.dsh.profile.bundles.join(','))}" \
+    # Batch 191 船长纪律（生产实测补强）：覆盖写用户 patch 层，禁用 generic
+    # subagent 派活工具——船长必须用 agent_teams_* 九件套自组织团队（与本地
+    # $DSH_HOME 配置一致；缺失时模型混用 subagent 工具导致成员任务挂起/收尾过早）
+    && printf '%s\n' \
+        '# 禁用 generic subagent 派活工具（Batch 191 船长纪律，见 agent-team/README.md）' \
+        '- id: tool-subagent' \
+        '  disabled: true' \
+        '- id: tool-subagent-fork' \
+        '  disabled: true' \
+        '- id: tool-subagent-control' \
+        '  disabled: true' \
+        '- id: tool-subagent-list-agents' \
+        '  disabled: true' \
+        > /home/cameltv/.dsh/profiles/agent-team/cordis.patch.yml \
     && DSH_HOME=/home/cameltv/.dsh dsh --profile agent-team --dump-config >/dev/null \
     && chown -R cameltv:cameltv /home/cameltv/.dsh
 
