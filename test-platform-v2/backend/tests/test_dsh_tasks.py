@@ -614,3 +614,108 @@ def test_execute_team_poller_follows_latest_team(dsh_db, monkeypatch, tmp_path):
     finally:
         release.set()
         db.close()
+
+
+# ── DSH 测试 Agent 框架：team_kind 分派 ──
+
+def test_execute_team_team_kind_tester_uses_tester_persona(dsh_db, monkeypatch, tmp_path):
+    """params.team_kind=tester → DSH_SYSTEM_PROMPT 注入 tester_team_persona（测试视角）。"""
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "dsh_team_poll_seconds", 0.05)
+    ws_root = tmp_path / "ws-isolation"
+    ws_root.mkdir()
+    team_id = "team-tester"
+    injected = {}
+
+    def fake_runner(task, **kwargs):
+        injected["prompt"] = kwargs["extra_env"]["DSH_SYSTEM_PROMPT"]
+        assert kwargs.get("mode") == "team"
+        ws = ws_root / "ws-0001"
+        ws.mkdir(exist_ok=True)
+        _write_team_json(ws, team_id, _team_snapshot(team_id, "测试团队"))
+        return DshRunResult(final_response="【最终报告】测试完成", exit_code=0, session_dir=str(tmp_path), workspace=str(ws))
+
+    db = dsh_db()
+    try:
+        row = dsh_task_service.submit_task(
+            db, project_id=1, task="为登录模块设计用例并执行", operator_id=1,
+            mode="team", params={"batch_mode": "full", "team_kind": "tester", "workspace": str(ws_root)},
+        )
+        claimed = dsh_task_service.claim_next_task(db)
+        dsh_task_service.execute_task(db, claimed, runner=fake_runner)
+        assert claimed.status == "success"
+        prompt = injected["prompt"]
+        assert "tester-lead" in prompt
+        assert "analyst" in prompt and "case-designer" in prompt and "reviewer" in prompt
+        assert "test-case-design skill" in prompt
+        assert "trigger_test_execution" in prompt
+        # 开发批次专属成员不得混入
+        assert "product" not in prompt
+    finally:
+        db.close()
+
+
+def test_execute_team_team_kind_dev_uses_dev_persona(dsh_db, monkeypatch, tmp_path):
+    """缺省/显式 team_kind=dev → 沿用 agent_team_persona（开发批次不回归）。"""
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "dsh_team_poll_seconds", 0.05)
+    ws_root = tmp_path / "ws-isolation"
+    ws_root.mkdir()
+    team_id = "team-dev"
+    injected = {}
+
+    def fake_runner(task, **kwargs):
+        injected["prompt"] = kwargs["extra_env"]["DSH_SYSTEM_PROMPT"]
+        ws = ws_root / "ws-0001"
+        ws.mkdir(exist_ok=True)
+        _write_team_json(ws, team_id, _team_snapshot(team_id, "开发团队"))
+        return DshRunResult(final_response="done", exit_code=0, session_dir=str(tmp_path), workspace=str(ws))
+
+    db = dsh_db()
+    try:
+        row = dsh_task_service.submit_task(
+            db, project_id=1, task="开发批次任务", operator_id=1,
+            mode="team", params={"batch_mode": "full", "team_kind": "dev", "workspace": str(ws_root)},
+        )
+        claimed = dsh_task_service.claim_next_task(db)
+        dsh_task_service.execute_task(db, claimed, runner=fake_runner)
+        assert claimed.status == "success"
+        prompt = injected["prompt"]
+        assert "product" in prompt and "dev" in prompt and "qa" in prompt
+        assert "tester-lead" not in prompt
+    finally:
+        db.close()
+
+
+def test_api_create_team_tester_kind_ok(dsh_client, dsh_available):
+    """mode=team + team_kind=tester 创建成功（batch_mode 必填规则不变）。"""
+    resp = dsh_client.post(
+        "/api/v1/dsh-tasks",
+        json={"task": "测试任务", "mode": "team", "params": {"batch_mode": "full", "team_kind": "tester"}},
+    )
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert data["mode"] == "team"
+    assert data["status"] == "pending"
+
+
+def test_api_create_team_invalid_team_kind_rejected(dsh_client, dsh_available):
+    """mode=team + team_kind 非法值 → 422。"""
+    resp = dsh_client.post(
+        "/api/v1/dsh-tasks",
+        json={"task": "x", "mode": "team", "params": {"batch_mode": "full", "team_kind": "hacker"}},
+    )
+    assert resp.status_code == 422
+    body = resp.json()
+    assert any("team_kind" in str(d.get("msg", "")) for d in body.get("detail", []))
+
+
+def test_api_create_single_with_team_kind_rejected(dsh_client, dsh_available):
+    """mode=single 带 team_kind → 422（严格拒绝防误用）。"""
+    resp = dsh_client.post(
+        "/api/v1/dsh-tasks",
+        json={"task": "x", "params": {"team_kind": "tester"}},
+    )
+    assert resp.status_code == 422

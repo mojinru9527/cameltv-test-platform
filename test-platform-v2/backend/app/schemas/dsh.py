@@ -11,13 +11,21 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 class DshTaskCreate(BaseModel):
     """创建 DSH 任务请求。"""
     task: str = Field(..., min_length=1, max_length=20000, description="任务文本")
-    params: dict = Field(default_factory=dict, description="附加参数（batch_mode 等）")
+    params: dict = Field(default_factory=dict, description="附加参数（batch_mode / team_kind 等）")
     mode: Literal["single", "team"] = "single"  # Batch 191：任务形态（默认单任务）
 
     @model_validator(mode="after")
     def _validate_batch_mode(self):
-        """params.batch_mode 仅团队模式可用且必填（PRD US-1：批次模式必选，无默认）。"""
-        batch_mode = (self.params or {}).get("batch_mode")
+        """params.batch_mode 仅团队模式可用且必填（PRD US-1：批次模式必选，无默认）。
+
+        DSH 测试 Agent 框架：params.team_kind 区分团队视角——dev（开发批次，默认，
+        沿用 agent_team_persona）| tester（测试视角，沿用 tester_team_persona）。
+        """
+        params = self.params or {}
+        batch_mode = params.get("batch_mode")
+        team_kind = params.get("team_kind")
+        if team_kind is not None and team_kind not in ("dev", "tester"):
+            raise ValueError(f"params.team_kind 非法: {team_kind!r}（仅支持 dev|tester）")
         if self.mode == "team":
             if batch_mode is None:
                 raise ValueError("mode=team 时必须提供 params.batch_mode（full|light）")
@@ -26,6 +34,8 @@ class DshTaskCreate(BaseModel):
         else:
             if batch_mode is not None:
                 raise ValueError("params.batch_mode 仅团队模式（mode=team）可用")
+            if team_kind is not None:
+                raise ValueError("params.team_kind 仅团队模式（mode=team）可用")
         return self
 
 

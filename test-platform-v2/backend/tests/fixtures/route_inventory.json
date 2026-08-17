@@ -1,6 +1,5 @@
 {
- "version": "batch-181-baseline",
- "count": 422,
+ "count": 428,
  "routes": [
   {
    "path": "/api/v1/agents/queue",
@@ -68,11 +67,11 @@
   },
   {
    "path": "/api/v1/apitest/endpoints/{endpoint_id}",
-   "method": "DELETE"
+   "method": "PUT"
   },
   {
    "path": "/api/v1/apitest/endpoints/{endpoint_id}",
-   "method": "PUT"
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/apitest/import/confirm",
@@ -92,27 +91,27 @@
   },
   {
    "path": "/api/v1/apitest/services/{service_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/apitest/services/{service_id}",
    "method": "PUT"
   },
   {
-   "path": "/api/v1/apitest/tasks",
-   "method": "GET"
+   "path": "/api/v1/apitest/services/{service_id}",
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/apitest/tasks",
    "method": "POST"
   },
   {
-   "path": "/api/v1/apitest/tasks/{task_id}",
-   "method": "DELETE"
+   "path": "/api/v1/apitest/tasks",
+   "method": "GET"
   },
   {
    "path": "/api/v1/apitest/tasks/{task_id}",
    "method": "GET"
+  },
+  {
+   "path": "/api/v1/apitest/tasks/{task_id}",
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/apitest/tasks/{task_id}/analysis",
@@ -180,10 +179,6 @@
   },
   {
    "path": "/api/v1/av-checks/{task_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/av-checks/{task_id}",
    "method": "GET"
   },
   {
@@ -191,16 +186,20 @@
    "method": "PUT"
   },
   {
+   "path": "/api/v1/av-checks/{task_id}",
+   "method": "DELETE"
+  },
+  {
    "path": "/api/v1/av-checks/{task_id}/measurements",
    "method": "POST"
   },
   {
    "path": "/api/v1/av-checks/{task_id}/measurements/{measurement_id}",
-   "method": "DELETE"
+   "method": "PUT"
   },
   {
    "path": "/api/v1/av-checks/{task_id}/measurements/{measurement_id}",
-   "method": "PUT"
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/av-checks/{task_id}/metrics",
@@ -240,15 +239,15 @@
   },
   {
    "path": "/api/v1/datasets/{dataset_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/datasets/{dataset_id}",
    "method": "GET"
   },
   {
    "path": "/api/v1/datasets/{dataset_id}",
    "method": "PUT"
+  },
+  {
+   "path": "/api/v1/datasets/{dataset_id}",
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/defects",
@@ -264,10 +263,6 @@
   },
   {
    "path": "/api/v1/defects/{defect_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/defects/{defect_id}",
    "method": "GET"
   },
   {
@@ -275,20 +270,24 @@
    "method": "PUT"
   },
   {
-   "path": "/api/v1/defects/{defect_id}/attachments",
-   "method": "GET"
+   "path": "/api/v1/defects/{defect_id}",
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/defects/{defect_id}/attachments",
    "method": "POST"
   },
   {
-   "path": "/api/v1/defects/{defect_id}/attachments/{attachment_id}",
-   "method": "DELETE"
+   "path": "/api/v1/defects/{defect_id}/attachments",
+   "method": "GET"
   },
   {
    "path": "/api/v1/defects/{defect_id}/attachments/{attachment_id}",
    "method": "GET"
+  },
+  {
+   "path": "/api/v1/defects/{defect_id}/attachments/{attachment_id}",
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/defects/{defect_id}/comments",
@@ -316,11 +315,11 @@
   },
   {
    "path": "/api/v1/dsh-tasks",
-   "method": "GET"
+   "method": "POST"
   },
   {
    "path": "/api/v1/dsh-tasks",
-   "method": "POST"
+   "method": "GET"
   },
   {
    "path": "/api/v1/dsh-tasks/health",
@@ -348,11 +347,11 @@
   },
   {
    "path": "/api/v1/environments/{env_id}",
-   "method": "DELETE"
+   "method": "PUT"
   },
   {
    "path": "/api/v1/environments/{env_id}",
-   "method": "PUT"
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/environments/{env_id}/variables",
@@ -364,11 +363,11 @@
   },
   {
    "path": "/api/v1/environments/{env_id}/variables/{var_id}",
-   "method": "DELETE"
+   "method": "PUT"
   },
   {
    "path": "/api/v1/environments/{env_id}/variables/{var_id}",
-   "method": "PUT"
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/integrations",
@@ -384,15 +383,15 @@
   },
   {
    "path": "/api/v1/integrations/{integration_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/integrations/{integration_id}",
    "method": "GET"
   },
   {
    "path": "/api/v1/integrations/{integration_id}",
    "method": "PUT"
+  },
+  {
+   "path": "/api/v1/integrations/{integration_id}",
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/integrations/{integration_id}/sync-logs",
@@ -520,11 +519,11 @@
   },
   {
    "path": "/api/v1/knowledge/iterations",
-   "method": "GET"
+   "method": "POST"
   },
   {
    "path": "/api/v1/knowledge/iterations",
-   "method": "POST"
+   "method": "GET"
   },
   {
    "path": "/api/v1/knowledge/iterations/{iteration_id}",
@@ -604,19 +603,19 @@
   },
   {
    "path": "/api/v1/lanhu-evidence/jobs",
-   "method": "GET"
+   "method": "POST"
   },
   {
    "path": "/api/v1/lanhu-evidence/jobs",
-   "method": "POST"
+   "method": "GET"
+  },
+  {
+   "path": "/api/v1/lanhu-evidence/jobs/{job_id}",
+   "method": "GET"
   },
   {
    "path": "/api/v1/lanhu-evidence/jobs/{job_id}",
    "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/lanhu-evidence/jobs/{job_id}",
-   "method": "GET"
   },
   {
    "path": "/api/v1/lanhu-evidence/jobs/{job_id}/assets",
@@ -660,11 +659,11 @@
   },
   {
    "path": "/api/v1/notify/channels/{ch_id}",
-   "method": "DELETE"
+   "method": "PUT"
   },
   {
    "path": "/api/v1/notify/channels/{ch_id}",
-   "method": "PUT"
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/notify/test",
@@ -672,6 +671,18 @@
   },
   {
    "path": "/api/v1/open/health",
+   "method": "GET"
+  },
+  {
+   "path": "/api/v1/open/knowledge/modules",
+   "method": "GET"
+  },
+  {
+   "path": "/api/v1/open/knowledge/search",
+   "method": "POST"
+  },
+  {
+   "path": "/api/v1/open/knowledge/sources",
    "method": "GET"
   },
   {
@@ -683,12 +694,24 @@
    "method": "GET"
   },
   {
+   "path": "/api/v1/open/requirements",
+   "method": "GET"
+  },
+  {
    "path": "/api/v1/open/results",
    "method": "POST"
   },
   {
    "path": "/api/v1/open/runs/{run_id}",
    "method": "GET"
+  },
+  {
+   "path": "/api/v1/open/test-cases",
+   "method": "GET"
+  },
+  {
+   "path": "/api/v1/open/test-cases",
+   "method": "POST"
   },
   {
    "path": "/api/v1/open/ui-tests/runs/{run_id}",
@@ -720,11 +743,11 @@
   },
   {
    "path": "/api/v1/organizations/{organization_id}",
-   "method": "DELETE"
+   "method": "PUT"
   },
   {
    "path": "/api/v1/organizations/{organization_id}",
-   "method": "PUT"
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/organizations/{organization_id}/members",
@@ -744,11 +767,11 @@
   },
   {
    "path": "/api/v1/perf-sessions",
-   "method": "GET"
+   "method": "POST"
   },
   {
    "path": "/api/v1/perf-sessions",
-   "method": "POST"
+   "method": "GET"
   },
   {
    "path": "/api/v1/perf-sessions/compare",
@@ -760,11 +783,11 @@
   },
   {
    "path": "/api/v1/perf-sessions/{session_id}",
-   "method": "DELETE"
+   "method": "GET"
   },
   {
    "path": "/api/v1/perf-sessions/{session_id}",
-   "method": "GET"
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/perf-sessions/{session_id}/metrics",
@@ -816,10 +839,6 @@
   },
   {
    "path": "/api/v1/projects/{project_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/projects/{project_id}",
    "method": "GET"
   },
   {
@@ -827,12 +846,16 @@
    "method": "PUT"
   },
   {
-   "path": "/api/v1/projects/{project_id}/invites",
-   "method": "GET"
+   "path": "/api/v1/projects/{project_id}",
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/projects/{project_id}/invites",
    "method": "POST"
+  },
+  {
+   "path": "/api/v1/projects/{project_id}/invites",
+   "method": "GET"
   },
   {
    "path": "/api/v1/projects/{project_id}/invites/{invite_id}/disable",
@@ -840,11 +863,11 @@
   },
   {
    "path": "/api/v1/projects/{project_id}/members",
-   "method": "GET"
+   "method": "POST"
   },
   {
    "path": "/api/v1/projects/{project_id}/members",
-   "method": "POST"
+   "method": "GET"
   },
   {
    "path": "/api/v1/projects/{project_id}/members/{user_id}",
@@ -868,15 +891,15 @@
   },
   {
    "path": "/api/v1/release-bundles/{bundle_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/release-bundles/{bundle_id}",
    "method": "GET"
   },
   {
    "path": "/api/v1/release-bundles/{bundle_id}",
    "method": "PUT"
+  },
+  {
+   "path": "/api/v1/release-bundles/{bundle_id}",
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/release-bundles/{bundle_id}/coverage",
@@ -916,15 +939,15 @@
   },
   {
    "path": "/api/v1/report-templates/{template_id}",
+   "method": "PUT"
+  },
+  {
+   "path": "/api/v1/report-templates/{template_id}",
    "method": "DELETE"
   },
   {
    "path": "/api/v1/report-templates/{template_id}",
    "method": "GET"
-  },
-  {
-   "path": "/api/v1/report-templates/{template_id}",
-   "method": "PUT"
   },
   {
    "path": "/api/v1/reports",
@@ -940,11 +963,11 @@
   },
   {
    "path": "/api/v1/reports/{report_id}",
-   "method": "DELETE"
+   "method": "GET"
   },
   {
    "path": "/api/v1/reports/{report_id}",
-   "method": "GET"
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/reports/{report_id}/export",
@@ -1052,11 +1075,11 @@
   },
   {
    "path": "/api/v1/requirements/{document_id}",
-   "method": "DELETE"
+   "method": "GET"
   },
   {
    "path": "/api/v1/requirements/{document_id}",
-   "method": "GET"
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/requirements/{document_id}/cases",
@@ -1132,15 +1155,15 @@
   },
   {
    "path": "/api/v1/schedules/{schedule_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/schedules/{schedule_id}",
    "method": "GET"
   },
   {
    "path": "/api/v1/schedules/{schedule_id}",
    "method": "PUT"
+  },
+  {
+   "path": "/api/v1/schedules/{schedule_id}",
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/schedules/{schedule_id}/runs",
@@ -1188,15 +1211,15 @@
   },
   {
    "path": "/api/v1/system/roles/{role_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/system/roles/{role_id}",
    "method": "GET"
   },
   {
    "path": "/api/v1/system/roles/{role_id}",
    "method": "PUT"
+  },
+  {
+   "path": "/api/v1/system/roles/{role_id}",
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/system/users",
@@ -1208,15 +1231,15 @@
   },
   {
    "path": "/api/v1/system/users/{user_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/system/users/{user_id}",
    "method": "GET"
   },
   {
    "path": "/api/v1/system/users/{user_id}",
    "method": "PUT"
+  },
+  {
+   "path": "/api/v1/system/users/{user_id}",
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/test-cases",
@@ -1228,11 +1251,11 @@
   },
   {
    "path": "/api/v1/test-cases/batch",
-   "method": "DELETE"
+   "method": "PUT"
   },
   {
    "path": "/api/v1/test-cases/batch",
-   "method": "PUT"
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/test-cases/domains",
@@ -1280,15 +1303,15 @@
   },
   {
    "path": "/api/v1/test-cases/{case_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/test-cases/{case_id}",
    "method": "GET"
   },
   {
    "path": "/api/v1/test-cases/{case_id}",
    "method": "PUT"
+  },
+  {
+   "path": "/api/v1/test-cases/{case_id}",
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/test-cases/{case_id}/execute",
@@ -1320,15 +1343,15 @@
   },
   {
    "path": "/api/v1/test-plans/{plan_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/test-plans/{plan_id}",
    "method": "GET"
   },
   {
    "path": "/api/v1/test-plans/{plan_id}",
    "method": "PUT"
+  },
+  {
+   "path": "/api/v1/test-plans/{plan_id}",
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/test-plans/{plan_id}/auto-execute",
@@ -1340,11 +1363,11 @@
   },
   {
    "path": "/api/v1/test-plans/{plan_id}/cases",
-   "method": "DELETE"
+   "method": "POST"
   },
   {
    "path": "/api/v1/test-plans/{plan_id}/cases",
-   "method": "POST"
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/test-plans/{plan_id}/cases/assign",
@@ -1388,11 +1411,11 @@
   },
   {
    "path": "/api/v1/tokens/{token_id}",
-   "method": "DELETE"
+   "method": "PUT"
   },
   {
    "path": "/api/v1/tokens/{token_id}",
-   "method": "PUT"
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/trace/case/{case_id}",
@@ -1460,10 +1483,6 @@
   },
   {
    "path": "/api/v1/ui-tests/scripts/{script_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/ui-tests/scripts/{script_id}",
    "method": "GET"
   },
   {
@@ -1471,7 +1490,7 @@
    "method": "PUT"
   },
   {
-   "path": "/api/v1/ui-tests/{job_id}",
+   "path": "/api/v1/ui-tests/scripts/{script_id}",
    "method": "DELETE"
   },
   {
@@ -1481,6 +1500,10 @@
   {
    "path": "/api/v1/ui-tests/{job_id}",
    "method": "PUT"
+  },
+  {
+   "path": "/api/v1/ui-tests/{job_id}",
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/ui-tests/{job_id}/runs",
@@ -1500,15 +1523,15 @@
   },
   {
    "path": "/api/v1/version-missions/{mission_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/version-missions/{mission_id}",
    "method": "GET"
   },
   {
    "path": "/api/v1/version-missions/{mission_id}",
    "method": "PUT"
+  },
+  {
+   "path": "/api/v1/version-missions/{mission_id}",
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/version-missions/{mission_id}/generate/api-openapi",
@@ -1524,11 +1547,11 @@
   },
   {
    "path": "/api/v1/version-missions/{mission_id}/logs",
-   "method": "GET"
+   "method": "POST"
   },
   {
    "path": "/api/v1/version-missions/{mission_id}/logs",
-   "method": "POST"
+   "method": "GET"
   },
   {
    "path": "/api/v1/version-missions/{mission_id}/quality-gate",
@@ -1552,11 +1575,11 @@
   },
   {
    "path": "/api/v1/wiki/diff/tasks",
-   "method": "GET"
+   "method": "POST"
   },
   {
    "path": "/api/v1/wiki/diff/tasks",
-   "method": "POST"
+   "method": "GET"
   },
   {
    "path": "/api/v1/wiki/diff/tasks/{task_id}",
@@ -1564,15 +1587,11 @@
   },
   {
    "path": "/api/v1/wiki/external-connections",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/external-connections",
    "method": "POST"
   },
   {
-   "path": "/api/v1/wiki/external-connections/{conn_id}",
-   "method": "DELETE"
+   "path": "/api/v1/wiki/external-connections",
+   "method": "GET"
   },
   {
    "path": "/api/v1/wiki/external-connections/{conn_id}",
@@ -1581,6 +1600,10 @@
   {
    "path": "/api/v1/wiki/external-connections/{conn_id}",
    "method": "PUT"
+  },
+  {
+   "path": "/api/v1/wiki/external-connections/{conn_id}",
+   "method": "DELETE"
   },
   {
    "path": "/api/v1/wiki/external-connections/{conn_id}/files/content",

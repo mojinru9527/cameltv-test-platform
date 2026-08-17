@@ -324,12 +324,22 @@ def _team_runner(
 
 
 def _execute_team(db, task: DshTask, params: dict, runner) -> None:
-    """团队模式执行：执行线程 + 轮询线程 + 终态快照（设计 §4.2/§4.3）。"""
+    """团队模式执行：执行线程 + 轮询线程 + 终态快照（设计 §4.2/§4.3）。
+
+    DSH 测试 Agent 框架：params.team_kind 分派 persona——tester 用
+    tester_team_persona（分析/用例设计/执行/审查），缺省沿用开发批次 persona。
+    """
     from app.services.dsh.agent_team_persona import build_agent_team_persona
     from app.services.dsh.dsh_runner import DshRunResult
 
     batch_mode = params.get("batch_mode", "full")
-    persona = build_agent_team_persona(task.task, batch_mode)
+    team_kind = params.get("team_kind", "dev")
+    if team_kind == "tester":
+        from app.services.dsh.tester_team_persona import build_tester_team_persona
+
+        persona = build_tester_team_persona(task.task, batch_mode)
+    else:
+        persona = build_agent_team_persona(task.task, batch_mode)
     result_box: queue.Queue = queue.Queue(maxsize=1)
     stop_event = threading.Event()
     root = _team_isolation_root(params)
