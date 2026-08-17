@@ -75,6 +75,16 @@ services:
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASSWORD=${SMTP_PASSWORD:-}
       - SMTP_FROM=${SMTP_FROM:-}
+      # ── DeepSeek Harness（DSH 测试 Agent 框架）──
+      - DSH_ENABLED=${DSH_ENABLED:-false}
+      - DSH_RUNTIME=${DSH_RUNTIME:-python-sdk}
+      - DSH_MODEL=${DSH_MODEL:-deepseek-v4-flash}
+      - DSH_MODEL_POOL=${DSH_MODEL_POOL:-}
+      - DSH_BASE_URL=${DSH_BASE_URL:-}
+      - DSH_API_KEY=${DSH_API_KEY:-}
+      - DSH_TEAM_TIMEOUT_SECONDS=${DSH_TEAM_TIMEOUT_SECONDS:-1800}
+      - DSH_TEAM_HEARTBEAT_SECONDS=${DSH_TEAM_HEARTBEAT_SECONDS:-60}
+      - DSH_MAX_CONCURRENT=${DSH_MAX_CONCURRENT:-1}
     depends_on:
       postgres:
         condition: service_healthy
