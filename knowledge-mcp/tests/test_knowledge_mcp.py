@@ -157,6 +157,25 @@ def test_submit_test_cases(monkeypatch):
     assert calls[0]["json"] == {"title": "用例1", "module": "登录"}
 
 
+def test_submit_defect(monkeypatch):
+    calls = _capture(monkeypatch)
+    kms.submit_defect({
+        "title": "登录接口返回码错误",
+        "description": "空密码返回 500",
+        "severity": "P1",
+        "external_url": "https://trace.example/runs/99",
+    })
+    assert len(calls) == 1
+    assert calls[0]["method"] == "POST"
+    assert calls[0]["path"] == "/defects"
+    assert calls[0]["json"] == {
+        "title": "登录接口返回码错误",
+        "description": "空密码返回 500",
+        "severity": "P1",
+        "external_url": "https://trace.example/runs/99",
+    }
+
+
 # ── 鉴权头/URL 组装（真实 _call，httpx 打桩）──
 
 def test_call_builds_auth_headers(monkeypatch):
