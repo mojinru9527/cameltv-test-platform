@@ -41,6 +41,7 @@ def create_dsh_task(
         project_id=current.project_id or 0,
         task=body.task,
         params=body.params,
+        mode=body.mode,
         operator_id=current.user.id,
     )
     return R.ok(DshTaskOut.model_validate(row))
