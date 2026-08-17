@@ -180,7 +180,8 @@ Claude Code 作为 VS Code 插件、Codex 作为 ChatGPT 桌面客户端可以�
 # Step 1：每个窗口开工前，在主仓库执行一次
 pwsh scripts/git/start-agent-team-task.ps1 -Executor claude -UserConfirmedExecutor -Kind feature -Task batch-{N1}-{name1} -Scope {模块1} -FrontendPort 5173 -BackendPort 8000
 pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -UserConfirmedExecutor -Kind feature -Task batch-{N2}-{name2} -Scope {模块2} -FrontendPort 5174 -BackendPort 8001
-# 只有不走六部门 Agent Team 的直接任务才使用 start-claude-task.ps1 / start-codex-task.ps1
+pwsh scripts/git/start-agent-team-task.ps1 -Executor DeepSeek_Harness -UserConfirmedExecutor -Kind feature -Task batch-{N3}-{name3} -Scope {模块3} -FrontendPort 5175 -BackendPort 8002
+# 只有不走六部门 Agent Team 的直接任务才使用 start-claude-task.ps1 / start-codex-task.ps1 / start-deepseek-harness-task.ps1
 
 # Step 2：每个 VSCode 窗口 Open Folder 打开对应的 worktree 目录
 # Step 3：各自独立开发、每切片 commit+push（遵循上方标准流程）
