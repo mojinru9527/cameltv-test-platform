@@ -81,15 +81,16 @@ feature/* 或 fix/*
 # 1. 检查工作区状态，保护已有修改
 git status
 
-# 2. Agent Team 必须先在聊天中问用户“本任务由 Claude Code 还是 Codex 执行？”并停下等待明确答复
+# 2. Agent Team 必须先在聊天中问用户“本任务由 Claude Code、Codex 还是 DeepSeek Harness 执行？”并停下等待明确答复
 # 收到答复后才允许拉取远端状态和创建 worktree；不得根据 IDE、客户端或进程名猜测
 git fetch origin
 
 # 3. 从唯一主干创建独立 worktree
-# Agent Team 是工作流，必须显式声明实际运行它的 Claude Code/Codex 执行器
+# Agent Team 是工作流，必须显式声明实际运行它的 Claude Code/Codex/DeepSeek Harness 执行器
 pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -UserConfirmedExecutor -Kind feature -Task {描述} -Scope test-platform-v2/frontend -FrontendPort 5174 -BackendPort 8001
-# 在 Claude Code 中运行 Agent Team 时用 -Executor claude
-# 不走 Agent Team 的直接任务才使用 start-claude-task.ps1 / start-codex-task.ps1
+# 在 Claude Code 中运行 Agent Team 时用 -Executor claude；在 DeepSeek Harness 中运行时用 -Executor DeepSeek_Harness
+# （DSH 船长模式见 docs/agent-team/dsh-agent-teams.md；便捷入口 start-deepseek-harness-agent-team.ps1）
+# 不走 Agent Team 的直接任务才使用 start-claude-task.ps1 / start-codex-task.ps1 / start-deepseek-harness-task.ps1
 
 # 4. 在新 worktree 开工前执行
 pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor codex
@@ -110,9 +111,11 @@ gh pr create --draft --base main --head feature/{描述} --title "..." --body ".
 
 # 10. 先做基础审计并等待 Draft PR 首轮 checks
 pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor codex
+#    （DeepSeek Harness 执行时 -ExpectedExecutor DeepSeek_Harness）
 
 # 11. 总确认后无需再次问询（Agent Team）；对应 checks 全绿后，运行最终审计
 pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor codex -RequireSuccessfulChecks
+#    （DeepSeek Harness 执行时 -ExpectedExecutor DeepSeek_Harness）
 
 # 12. 最终审计通过后由 Leader APPROVED，转 Ready 并 squash 合并到 main（无需再次授权）
 ```
@@ -139,8 +142,8 @@ pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor 
 - 每个 Agent Team 窗口 = 一个 worktree + 独立分支
 - 所有分支从 `origin/main` 切出
 - 每个 worktree 使用独立 `.ai-worktree.json`、前后端端口、SQLite 和 `.env`
-- `.ai-worktree.json` 分开记录 workflow（`direct|agent-team`）和 executor（`claude|codex|human`）
-- Agent Team 入口要求在聊天中问询并等待用户明确选择 `claude|codex`，然后才可传入 `-UserConfirmedExecutor`；Git 无法从进程名、IDE、客户端、代码风格或 diff 可靠猜测实际 AI
+- `.ai-worktree.json` 分开记录 workflow（`direct|agent-team`）和 executor（`claude|codex|DeepSeek_Harness|human`）
+- Agent Team 入口要求在聊天中问询并等待用户明确选择 `claude|codex|DeepSeek_Harness`，然后才可传入 `-UserConfirmedExecutor`；Git 无法从进程名、IDE、客户端、代码风格或 diff 可靠猜测实际 AI
 - Agent Team 在 Draft PR 首轮验证后不再二次问询（Batch 83 一次总确认已覆盖推送/PR/合入）；`confirm-agent-team-completion.ps1` 仅作可选完成证据，最终 PR 审计不再强制要求
 - Claude Code 位于 VS Code、Codex 位于 ChatGPT 客户端不影响隔离；隔离由独立 worktree、分支、端口和元数据实现，两个客户端不得打开同一任务 worktree 并行修改
 - 目录按 executor 隔离；分支仍按业务任务命名，pre-push 自动核对 workflow/executor、目录、分支和范围

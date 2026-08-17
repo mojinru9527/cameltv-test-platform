@@ -1,10 +1,6 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [ValidateSet("claude", "codex", "DeepSeek_Harness")]
-    [string]$Executor,
-    [switch]$UserConfirmedExecutor,
-    [Parameter(Mandatory)]
     [ValidateSet("feature", "fix", "hotfix", "release")]
     [string]$Kind,
     [Parameter(Mandatory)] [string]$Task,
@@ -15,12 +11,12 @@ param(
     [string]$DestinationRoot
 )
 
+# (batch-190) DeepSeek Harness Agent Team（模式②船长）入口：与 start-agent-team-task.ps1 同构，
+# 固定 executor=DeepSeek_Harness、workflow=agent-team。使用前提：用户在聊天中已明确
+# 本任务由 DeepSeek Harness 执行（三选：Claude Code / Codex / DeepSeek Harness）。
 $ErrorActionPreference = "Stop"
-if (-not $UserConfirmedExecutor) {
-    throw "Agent Team must ask the user whether this task runs in Claude Code, Codex or DeepSeek Harness and wait for the explicit reply before starting. After confirmation, rerun with -UserConfirmedExecutor."
-}
 $arguments = @{
-    Executor = $Executor
+    Executor = "DeepSeek_Harness"
     Workflow = "agent-team"
     Kind = $Kind
     Task = $Task
