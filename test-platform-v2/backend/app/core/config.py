@@ -137,6 +137,12 @@ class Settings(BaseSettings):
     # ── Batch 184（C172-1）沙箱加固配置 ──
     dsh_max_concurrent: int = 1                  # 全局并发 DSH 任务上限（安全优先默认串行；node/python-sdk 均受控）
     dsh_max_task_chars: int = 20000              # 单任务文本长度上限（超限直接拒绝）
+    # ── Batch 191：AgentTeams 团队模式配置 ──
+    dsh_team_timeout_seconds: float = 1800.0     # 团队任务超时（覆盖单任务 600s；R-4）
+    dsh_team_poll_seconds: float = 3.0           # 团队进度轮询间隔（PRD 成功指标引用）
+    dsh_team_profile: str = "agent-team"         # node runtime 团队 profile 名（CLI 从 $DSH_HOME/profiles/ 解析）
+    dsh_team_cordis_config: str = ""             # python-sdk runtime 团队 cordis 路径；空 = 内置 team.cordis.yml
+    dsh_team_harness_path: str = ""              # 团队 profile 的 DSH_HOME 覆盖；空 = CLI 默认 $DSH_HOME（自动探测）
 
     # ── AI 降级 / 超时（DeepSeek 分类器不可用时的本地降级提取）──
     ai_timeout_seconds: float = 180.0          # 单次 AI 调用超时（秒）
