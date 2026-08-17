@@ -45,6 +45,8 @@ class DshRunResult:
     error: str = ""
     session_dir: str = ""
     timed_out: bool = False
+    # Batch 191：本次任务的 ws-{uuid} 隔离工作区路径（终态 team.json 精确读取用；single 模式留空）
+    workspace: str = ""
 
 
 class DshRunnerError(RuntimeError):
@@ -113,12 +115,16 @@ def run_dsh_task(
     model: str | None = None,
     timeout: float | None = None,
     extra_env: dict[str, str] | None = None,
+    mode: str = "single",          # Batch 191：single | team（团队路由到 agent-team profile / team.cordis.yml）
 ) -> DshRunResult:
     """执行一次 dsh 任务，返回结构化结果。
 
     Batch 184（C172-1）加固：
     - 任务文本超长直接拒绝（DSH_MAX_TASK_CHARS）；
     - 全局并发闸门（DSH_MAX_CONCURRENT，默认 1）限制同时在跑的任务数（排队不丢任务）。
+    Batch 191（AgentTeams 团队模式）：
+    - mode=team 时 node 走 --profile agent-team、python-sdk 走 team.cordis.yml，
+      超时用 dsh_team_timeout_seconds（1800s）；沙箱语义（隔离工作区/闸门/配额）完全复用。
     """
     if not task or not task.strip():
         return DshRunResult(final_response="", exit_code=2, error="任务文本为空")
@@ -133,14 +139,17 @@ def run_dsh_task(
         return DshRunResult(final_response="", exit_code=1, error=f"DSH 不可用: {reason}")
 
     resolved_model = model or settings.dsh_model or settings.ai_model
-    resolved_timeout = timeout or settings.dsh_timeout_seconds
+    if mode == "team":
+        resolved_timeout = timeout or settings.dsh_team_timeout_seconds
+    else:
+        resolved_timeout = timeout or settings.dsh_timeout_seconds
     sess_root = Path(session_root or str(_session_root()))
     try:
         sess_root.mkdir(parents=True, exist_ok=True)
     except OSError as exc:  # pragma: no cover - 环境异常
         return DshRunResult(final_response="", exit_code=1, error=f"无法创建会话目录 {sess_root}: {exc}")
 
-    # 并发闸门：超过 DSH_MAX_CONCURRENT 的任务排队等待
+    # 并发闸门：超过 DSH_MAX_CONCURRENT 的任务排队等待（团队任务同样受控，C172-1 不回归）
     with _concurrency_gate:
         workdir = _workspace_for(workspace, sess_root)
         if settings.dsh_runtime == "python-sdk":
@@ -151,6 +160,7 @@ def run_dsh_task(
                 model=resolved_model,
                 timeout=resolved_timeout,
                 extra_env=extra_env,
+                mode=mode,
             )
         return _run_node_cli(
             task,
@@ -159,6 +169,7 @@ def run_dsh_task(
             model=resolved_model,
             timeout=resolved_timeout,
             extra_env=extra_env,
+            mode=mode,
         )
 
 
@@ -170,16 +181,25 @@ def _run_node_cli(
     model: str,
     timeout: float,
     extra_env: dict[str, str] | None,
+    mode: str = "single",
 ) -> DshRunResult:
-    """通过 Node CLI headless 执行任务（Windows 本地开发路径）。"""
+    """通过 Node CLI headless 执行任务（Windows 本地开发路径）。
+
+    Batch 191：mode=team 时 --profile 用 dsh_team_profile（默认 agent-team）；
+    profile 由 CLI 从 $DSH_HOME/profiles/ 解析（平台不传路径，见设计 §7.2）。
+    """
     entry = _node_entry()
-    cmd = ["node", str(entry), "--profile", "headless", task]
+    profile_name = "headless" if mode != "team" else (settings.dsh_team_profile or "agent-team")
+    cmd = ["node", str(entry), "--profile", profile_name, task]
     env = os.environ.copy()
     env["DEEPSEEK_API_KEY"] = settings.dsh_api_key_effective
     if settings.dsh_base_url_effective:
         env["DEEPSEEK_BASE_URL"] = settings.dsh_base_url_effective
     env["DSH_MODEL"] = model
     env["DSH_SESSION_ROOT"] = str(session_root)
+    if mode == "team" and (settings.dsh_team_harness_path or "").strip():
+        # Batch 191：dsh_team_harness_path 语义 = DSH_HOME 覆盖（profile 从 {path}/profiles/ 解析）
+        env["DSH_HOME"] = settings.dsh_team_harness_path.strip()
     if extra_env:
         env.update(extra_env)
 
@@ -203,10 +223,11 @@ def _run_node_cli(
             error=f"dsh 执行超时（>{int(timeout)}s）",
             session_dir=str(session_root),
             timed_out=True,
+            workspace=workdir,
         )
     except Exception as exc:  # pragma: no cover - 环境异常
         logger.exception("dsh node runner failed")
-        return DshRunResult(final_response="", exit_code=1, error=str(exc), session_dir=str(session_root))
+        return DshRunResult(final_response="", exit_code=1, error=str(exc), session_dir=str(session_root), workspace=workdir)
 
     elapsed = time.monotonic() - started
     stdout = _truncate((proc.stdout or "").strip())
@@ -217,9 +238,10 @@ def _run_node_cli(
             exit_code=proc.returncode,
             error=_truncate(stderr or f"dsh 退出码 {proc.returncode}"),
             session_dir=str(session_root),
+            workspace=workdir,
         )
     logger.info("dsh node runner ok in %.1fs (exit 0)", elapsed)
-    return DshRunResult(final_response=stdout, exit_code=0, session_dir=str(session_root))
+    return DshRunResult(final_response=stdout, exit_code=0, session_dir=str(session_root), workspace=workdir)
 
 
 def _run_python_sdk(
@@ -230,6 +252,7 @@ def _run_python_sdk(
     model: str,
     timeout: float,
     extra_env: dict[str, str] | None,
+    mode: str = "single",
 ) -> DshRunResult:
     """通过官方 Python SDK 执行任务（生产 Linux 路径）。需要 deepseek-harness-sdk。"""
     try:
@@ -240,19 +263,28 @@ def _run_python_sdk(
             exit_code=1,
             error=f"deepseek-harness-sdk 未安装或不可用: {exc}",
             session_dir=str(session_root),
+            workspace=workdir,
         )
 
-    cordis = (settings.dsh_cordis_config or "").strip()
-    if cordis:
-        cordis_path = Path(cordis)
+    if mode == "team":
+        cordis = (settings.dsh_team_cordis_config or "").strip()
+        if cordis:
+            cordis_path = Path(cordis)
+        else:
+            cordis_path = Path(__file__).resolve().parent / "team.cordis.yml"
     else:
-        cordis_path = Path(__file__).resolve().parent / "minimal.cordis.yml"
+        cordis = (settings.dsh_cordis_config or "").strip()
+        if cordis:
+            cordis_path = Path(cordis)
+        else:
+            cordis_path = Path(__file__).resolve().parent / "minimal.cordis.yml"
     if not cordis_path.exists():
         return DshRunResult(
             final_response="",
             exit_code=1,
             error=f"DSH cordis 配置不存在: {cordis_path}",
             session_dir=str(session_root),
+            workspace=workdir,
         )
 
     env = os.environ.copy()
@@ -288,6 +320,7 @@ def _run_python_sdk(
                 final_response=_truncate(result.final_response or ""),
                 exit_code=0,
                 session_dir=str(session_root),
+                workspace=workdir,
             )
         except Exception as exc:  # pragma: no cover - 真实执行异常
             logger.exception("dsh python-sdk runner failed")
@@ -296,6 +329,7 @@ def _run_python_sdk(
                 exit_code=1,
                 error=_truncate(str(exc)),
                 session_dir=str(session_root),
+                workspace=workdir,
             )
         finally:
             for key, value in previous_env.items():

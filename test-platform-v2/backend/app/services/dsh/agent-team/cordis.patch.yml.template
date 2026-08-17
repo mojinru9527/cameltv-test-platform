@@ -1,0 +1,14 @@
+# AgentTeams 团队模式插件行（Batch 191）。
+# 安装方式 A（推荐，CLI 官方命令 `dsh plugin --profile agent-team add @nanmicoder/dsh-agent-teams`）
+# 会自动生成此 patch 层；手工安装（方式 B）时把本文件复制为
+# $DSH_HOME/profiles/agent-team/cordis.patch.yml（格式照插件自带 cordis.patch.yml）。
+- insert:
+    - id: agent-teams
+      # Node-resolvable package name — must stay in sync with package.json `name`.
+      name: '@nanmicoder/dsh-agent-teams'
+      config:
+        # Team state lives under `<session workspace>/<stateDir>/<teamId>/`
+        # (team.json + inbox/*.jsonl mailboxes).
+        stateDir: .agent-teams
+        # Provider used to spawn member subagents ('spawn' or 'fork').
+        memberProvider: spawn

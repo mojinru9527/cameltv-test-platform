@@ -57,6 +57,7 @@ def submit_task(
     project_id: int,
     task: str,
     params: dict | None = None,
+    mode: str = "single",
     operator_id: int = 0,
 ) -> DshTask:
     """插入 pending 任务并唤醒 worker（多 worker 部署下任何进程均可认领）。"""
@@ -66,6 +67,8 @@ def submit_task(
         status="pending",
         params_json=json.dumps(params or {}, ensure_ascii=False),
         operator_id=operator_id,
+        mode=mode,
+        team_json="{}",
     )
     db.add(row)
     db.commit()
