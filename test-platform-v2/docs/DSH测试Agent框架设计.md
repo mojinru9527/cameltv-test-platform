@@ -228,6 +228,15 @@ GET  /open/test-cases                用例列表（module/keyword 过滤）
 
 ### 已知延后（非阻塞）
 
-- `submit_defect`（缺陷回写）：缺陷模块对接待缺陷 API 契约确认
+- `submit_defect`（缺陷回写）：✅ **已关闭（C-A4）**——open API `POST /open/defects` + knowledge-mcp `submit_defect` 工具 + 缺陷知识入库；端到端冒烟产出 `DEF-20260817-001/002` 且知识检索命中缺陷切片
 - 平台模板 ↔ DSH skill 映射（`get_skill_template`）：阶段 3 后续迭代
 - 实例池 UI 工作台（内嵌 DSH Web）：复用 #282 dsh-headless 集成，待部署验收
+
+### C 条件状态（遗留收口批次，feature/dsh-agent-followups）
+
+| 条件 | 内容 | 状态 |
+|------|------|:----:|
+| C-A1 | knowledge-mcp Docker 镜像构建与启动验收 | ⏸ 代码/配置就绪（Dockerfile + requirements），本地 Docker Desktop daemon 未就绪（需桌面授权），镜像构建列入部署期验收 |
+| C-A2 | DSH_MODEL_POOL 生产配置 | ✅ 已关闭——backend/.env.example 已有 + deploy/.env.example、docker-compose.yml environment 透传、config/runtime/production.env.example 三处收口 |
+| C-A3 | 真实需求导入 → tester 团队全流程冒烟 | ✅ 已关闭——seed 登录注册需求/模块拓扑/用例/计划后，MCP 全链路：需求检索→拓扑→现有用例→submit_test_cases（2 条入库）→触发计划（queued=2）→执行回读（pending）→submit_defect（DEF-20260817-002）→知识检索命中缺陷/用例切片（知识回流闭环成立） |
+| C-A4 | submit_defect 缺陷回写 | ✅ 已关闭（见上） |

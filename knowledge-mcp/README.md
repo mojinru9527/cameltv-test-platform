@@ -1,12 +1,12 @@
 # knowledge-mcp — 测试平台知识中心 MCP 服务器（DSH 测试 Agent 框架）
 
-> 版本：v1.1 | 日期：2026-08-17 | 关联：`test-platform-v2/docs/DSH测试Agent框架设计.md`
+> 版本：v1.2 | 日期：2026-08-17 | 关联：`test-platform-v2/docs/DSH测试Agent框架设计.md`
 >
 > 把测试平台知识中心（骨架）暴露为 MCP 工具，供 DeepSeek Harness 测试船长团队
 > （tester-team）查询项目知识、触发平台 Runner 执行、回写用例/缺陷。
 > 仿照 `lanhu-mcp/` 的 FastMCP HTTP 模式与部署形态。
 
-## 核心能力（16 工具）
+## 核心能力（17 工具）
 
 | 工具面 | 工具 | 说明 |
 |--------|------|------|
@@ -24,9 +24,9 @@
 | 执行 | `trigger_ui_test(job_id)` | 触发平台 UI 自动化任务 |
 | 执行 | `get_ui_test_run(run_id)` | 查询 UI 测试运行状态与结果 |
 | 回写 | `submit_test_cases(cases[])` | 用例直接入库（走 skill 规则产出） |
+| 回写 | `submit_defect(defect)` | 缺陷直接入库（C-A4：自动沉淀知识中心缺陷源） |
 
-> 阶段 3 起完整工具面 16 个（含阶段 2 计划工具 4 个与阶段 3 UI 工具 3 个）；
-> `submit_defect`（缺陷回写）待缺陷模块 API 契约确认后追加。
+> 完整工具面 17 个（查询 5 / 计划执行 5 / UI 执行 3 / 回写 2）。
 
 ## 启动方式
 
