@@ -799,3 +799,22 @@ class TestGeneratedSpecRestore:
             assert restored_path.read_text(encoding="utf-8") == "// spec"
         finally:
             restored_path.unlink(missing_ok=True)
+
+
+class TestListAvailableSpecsDotDirs:
+    """Batch 191: 点开头的私有目录（.playground-tmp）不得混入可用脚本列表。"""
+
+    def test_skips_dot_dirs(self, monkeypatch, tmp_path):
+        from app.services.playwright_executor import _list_available_specs
+
+        specs_dir = tmp_path / "playwright"
+        tmp_work = specs_dir / ".playground-tmp" / "run-abc"
+        tmp_work.mkdir(parents=True)
+        (specs_dir / "real.spec.ts").write_text("// real", encoding="utf-8")
+        (tmp_work / "playground.spec.ts").write_text("// temp", encoding="utf-8")
+        (specs_dir / ".hidden" / "inner.spec.ts").parent.mkdir()
+        (specs_dir / ".hidden" / "inner.spec.ts").write_text("// hidden", encoding="utf-8")
+
+        with patch("app.services.playwright_executor.PLAYWRIGHT_DIR", specs_dir):
+            specs = _list_available_specs()
+            assert specs == ["real.spec.ts"], specs
