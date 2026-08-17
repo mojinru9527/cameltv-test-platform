@@ -43,6 +43,11 @@ pip install -r requirements.txt
 python knowledge_mcp_server.py
 ```
 
+## 部署验收（C-A1）
+
+部署机/CI 上执行 `bash verify.sh` 一键验收：构建镜像 → 启动容器 → fastmcp 客户端握手验证
+17 工具 + 平台 API 连通（步骤可拆分：`verify.sh build|run|tools`）。
+
 ## MCP 连接配置
 
 在 DSH / Claude Code / Cursor 的 MCP 配置中添加：

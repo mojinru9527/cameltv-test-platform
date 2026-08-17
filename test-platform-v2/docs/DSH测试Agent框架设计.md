@@ -236,7 +236,7 @@ GET  /open/test-cases                用例列表（module/keyword 过滤）
 
 | 条件 | 内容 | 状态 |
 |------|------|:----:|
-| C-A1 | knowledge-mcp Docker 镜像构建与启动验收 | ⏸ 代码/配置就绪（Dockerfile + requirements），本地 Docker Desktop daemon 未就绪（需桌面授权），镜像构建列入部署期验收 |
+| C-A1 | knowledge-mcp Docker 镜像构建与启动验收 | ⏸ 代码/配置/验收脚本就绪（Dockerfile + requirements + `verify.sh` 一键 build/run/tools 握手），本地 Docker Desktop daemon 未就绪（需桌面授权），镜像构建列入部署期验收 |
 | C-A2 | DSH_MODEL_POOL 生产配置 | ✅ 已关闭——backend/.env.example 已有 + deploy/.env.example、docker-compose.yml environment 透传、config/runtime/production.env.example 三处收口 |
 | C-A3 | 真实需求导入 → tester 团队全流程冒烟 | ✅ 已关闭——seed 登录注册需求/模块拓扑/用例/计划后，MCP 全链路：需求检索→拓扑→现有用例→submit_test_cases（2 条入库）→触发计划（queued=2）→执行回读（pending）→submit_defect（DEF-20260817-002）→知识检索命中缺陷/用例切片（知识回流闭环成立） |
 | C-A4 | submit_defect 缺陷回写 | ✅ 已关闭（见上） |
