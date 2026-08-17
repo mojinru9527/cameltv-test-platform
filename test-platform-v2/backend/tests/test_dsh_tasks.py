@@ -165,6 +165,28 @@ def test_api_health(dsh_client, dsh_available):
     assert resp.json()["data"]["available"] is True
 
 
+def test_api_model_pool(dsh_client, dsh_available):
+    """模型池端点：未配置时返回空池 + 默认模型。"""
+    resp = dsh_client.get("/api/v1/dsh-tasks/model-pool")
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert data["models"] == []
+    assert data["pool_configured"] is False
+    assert data["default_model"]
+
+
+def test_api_model_pool_configured(dsh_client, dsh_available, monkeypatch):
+    """模型池配置后返回池内模型清单。"""
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "dsh_model_pool", "deepseek-v4-flash,deepseek-v4-pro")
+    resp = dsh_client.get("/api/v1/dsh-tasks/model-pool")
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert data["models"] == ["deepseek-v4-flash", "deepseek-v4-pro"]
+    assert data["pool_configured"] is True
+
+
 def test_api_create_list_detail_cancel(dsh_client, dsh_available, monkeypatch):
     monkeypatch.setattr("app.services.dsh.dsh_runner.run_dsh_task", _fake_run("done"))
     r1 = dsh_client.post("/api/v1/dsh-tasks", json={"task": "run the suite"})

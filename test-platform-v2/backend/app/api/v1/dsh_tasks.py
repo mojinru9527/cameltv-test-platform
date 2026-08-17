@@ -28,6 +28,19 @@ def dsh_health(
     return R.ok(DshHealthOut(available=ok, reason=reason))
 
 
+@router.get("/model-pool", response_model=R[dict], summary="DSH 可用模型池（阶段 3）")
+def dsh_model_pool(
+    current: CurrentUser = Depends(require_permission("agent:view")),
+):
+    """可用模型清单（模型池配置；未配置池时返回默认模型）。设置页/新建任务下拉用。"""
+    pool = settings.dsh_model_pool_list
+    return R.ok({
+        "models": pool,
+        "default_model": settings.dsh_model or settings.ai_model,
+        "pool_configured": bool(pool),
+    })
+
+
 @router.post("", response_model=R[DshTaskOut], summary="提交 DSH 任务")
 def create_dsh_task(
     body: DshTaskCreate,
