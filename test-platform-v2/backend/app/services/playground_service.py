@@ -438,7 +438,7 @@ def _write_spec_as_ui_job(db, case, spec_code: str, creator_id: int, project_id:
       永远无法执行」的断链。
     """
     try:
-        from app.services.playwright_executor import PLAYWRIGHT_DIR
+        from app.services.playwright_executor import GENERATED_SPECS_STORAGE, PLAYWRIGHT_DIR
         from app.schemas.ui_test import UiTestJobCreate
         from app.services import ui_test_service
         from app.models.environment import Environment
@@ -448,7 +448,16 @@ def _write_spec_as_ui_job(db, case, spec_code: str, creator_id: int, project_id:
         generated_dir = PLAYWRIGHT_DIR / "generated"
         generated_dir.mkdir(parents=True, exist_ok=True)
         rel = f"generated/playground-case-{case.id}.spec.ts"
-        (generated_dir / f"playground-case-{case.id}.spec.ts").write_text(spec_code, encoding="utf-8")
+        spec_name = f"playground-case-{case.id}.spec.ts"
+        (generated_dir / spec_name).write_text(spec_code, encoding="utf-8")
+        # Batch 190: 同步写持久卷副本 —— 容器重部署后 generated/ 目录会被清空，
+        # 执行器会在运行时从 GENERATED_SPECS_STORAGE 自动恢复该副本，避免
+        # 已创建的 [Playground] UI 任务在重部署后报「测试脚本不存在」。
+        try:
+            GENERATED_SPECS_STORAGE.mkdir(parents=True, exist_ok=True)
+            (GENERATED_SPECS_STORAGE / spec_name).write_text(spec_code, encoding="utf-8")
+        except OSError:
+            logger.exception("Playground spec 持久化副本写入失败: case=%s", case.id)
 
         # 幂等：同 (case_id, spec) 已存在任务则复用，避免重复堆积
         existing = db.scalar(
