@@ -27,13 +27,16 @@ ENV VIRTUAL_ENV=/opt/venv \
     HOME=/home/cameltv \
     XDG_CACHE_HOME=/home/cameltv/.cache
 
+# Node 22（NodeSource）：dsh CLI 依赖 commander>=22.12 / pi-ai>=22.19，
+# Debian apt 的 nodejs（18/20）不满足（Batch 191 生产构建报 EBADENGINE）。
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
+        curl \
         git \
         ffmpeg \
-        nodejs \
-        npm \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --gid "${APP_GID}" cameltv \
@@ -67,13 +70,14 @@ RUN git clone --depth 1 --branch main \
 
 # ── DSH 运行时（Batch 191 生产启用）──────────────────────────────
 # npm 发布版 @deepseek-ai/dsh 依赖自洽（dsh-base/dsh-headless 随依赖树安装，
-# 容器模拟已验证：npm 全局 dsh 0.1.0-rc.7 + pnpm + agent-team profile
+# 容器模拟已验证：npm 全局 dsh 0.1.0-rc.7 + pnpm 11 + agent-team profile
 # dump-config 组合自检通过）；agent-team profile 供团队模式使用。
 # CLI 方式 A（dsh plugin add）生成的 bundles 缺 @deepseek-ai/dsh-headless →
 # 任务挂起（见 agent-team/README.md），构建期用 node 补丁补齐后再自检。
-# pnpm 为 dsh plugin 命令所需（转发 pnpm 安装插件）。
+# pnpm 为 dsh plugin 命令所需（转发 pnpm 安装插件）；必须用 pnpm 11+
+# （pnpm 9 对 workspace root 的 add 报 ERR_PNPM_ADDING_TO_ROOT）。
 # 生产 DSH_HARNESS_PATH=/usr/local/lib/node_modules/@deepseek-ai/dsh/lib/bin.js
-RUN npm install -g pnpm@9 \
+RUN npm install -g pnpm@11 \
     && npm install -g @deepseek-ai/dsh@0.1.0-rc.7 \
     && DSH_HOME=/home/cameltv/.dsh dsh plugin --profile agent-team add '@nanmicoder/dsh-agent-teams@^0.1.5' \
     && node -e "const fs=require('fs');const p='/home/cameltv/.dsh/profiles/agent-team/package.json';const j=JSON.parse(fs.readFileSync(p));if(!j.dsh.profile.bundles.includes('@deepseek-ai/dsh-headless')){j.dsh.profile.bundles.splice(1,0,'@deepseek-ai/dsh-headless');fs.writeFileSync(p,JSON.stringify(j,null,2));console.log('agent-team bundles:',j.dsh.profile.bundles.join(','))}" \
