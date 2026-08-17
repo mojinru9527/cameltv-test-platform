@@ -105,12 +105,15 @@ export default function DshTasksPage() {
 
   // Batch 191：running 团队详情按 DSH_TEAM_POLL_SECONDS 粒度轮询刷新
   // （cleanup 必须 clearInterval + AbortController.abort；非 running 不轮询）
+  const detailId = detail?.id
+  const detailMode = detail?.mode
+  const detailStatus = detail?.status
   useEffect(() => {
-    if (!detail || detail.mode !== 'team' || detail.status !== 'running') return
+    if (!detailId || detailMode !== 'team' || detailStatus !== 'running') return
     const controller = new AbortController()
     const timer = setInterval(async () => {
       try {
-        const t = await fetchDshTask(detail.id, controller.signal)
+        const t = await fetchDshTask(detailId, controller.signal)
         if (!controller.signal.aborted) setDetail(t)
       } catch (e: any) {
         if (e?.name !== 'AbortError') toast.error('刷新团队进度失败')
@@ -120,7 +123,7 @@ export default function DshTasksPage() {
       clearInterval(timer)
       controller.abort()
     }
-  }, [detail?.id, detail?.mode, detail?.status])
+  }, [detailId, detailMode, detailStatus])
 
   const handleCreate = async () => {
     if (!taskText.trim()) return
