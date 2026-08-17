@@ -45,11 +45,13 @@
 | `diff-classifier-baseline.json` 被测试运行漂移（非本批范围） | 两次 revert，QA 报告记录 | 本判决 + QA 报告 |
 | agent-team profile 安装位=$DSH_HOME/profiles/（CLI bin.js 语义） | Design 开工核实修正 PM 假设 | 设计规范 §7 + team.cordis.yml 资产 |
 | 成员完成工作但漏更新任务状态（t4/t5 各一次） | 船长以工件落盘为准代确认 | 本判决 + 船长手册常见坑 |
+| `audit-ai-pr.ps1` 无 BOM + LF-only，PowerShell 引擎按 ANSI(GBK) 解码 UTF-8 → 解析失败（4 处） | 临时以 UTF-8 BOM 修复后审计通过（batch-190 审计时该文件可正常解析，损坏系历史批次引入并已随 main 传播）；需独立 fix 批次合入（仓库级阻塞，所有后续 PR 审计受影响） | 本判决 + 流程回写 |
+| CI 前端 lint（`eslint --max-warnings=0`）首轮 FAIL：index.tsx:123 exhaustive-deps missing 'detail' | 本地自检只跑了 vitest/typecheck/build 漏 lint；已修复 12d5aa1（effect 外解构字段），自检清单补 `npm run lint` | 本判决 + 复盘卡 |
 
 ## 复盘卡
 
 | 计划耗时 | 缺陷(P0/P1/P2/P3) | 返工次数 | 根因分类 | 下次避免 |
 |----------|-------------------|----------|----------|----------|
-| 完整批次 1 轮 vs 实际 1 轮 + 1 修复轮 | 0/1/2/2（P1 assignee 语义、P2×2 mock/治理、P3×2） | 1（QA 打回→修复→复验） | 需求语义（插件数据模型未对齐）+ 测试基建 | 实现前先读插件 snapshot.js 数据语义（assignee 存 name）；前端测试 mock 遵循仓库既有范式 |
+| 完整批次 1 轮 vs 实际 1 轮 + 1 修复轮 | 0/1/2/2（P1 assignee 语义、P2×2 mock/治理、P3×2）+ CI lint 1 条（exhaustive-deps，QA 漏跑 lint） | 2（QA 打回→修复→复验；CI lint 打回→修复） | 需求语义（插件数据模型未对齐）+ 测试基建 + 自检清单缺 lint | 实现前先读插件 snapshot.js 数据语义（assignee 存 name）；前端测试 mock 遵循仓库既有范式；本地自检必须含 `npm run lint` |
 
 **技能使用**: cameltv-agent-team（DEPARTMENTS 模板/批次判定）；AgentTeams 插件（本批六部门流水线全流程实战，模式②首次完整批次自举）
