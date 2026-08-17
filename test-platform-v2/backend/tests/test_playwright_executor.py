@@ -723,3 +723,79 @@ class TestPlaywrightExecutorHelperFunctions:
             assert any("test1.spec.ts" in s for s in specs)
             assert any("test2.spec.js" in s for s in specs)
             assert any("sub/test3.spec.ts" in s for s in specs)
+
+
+class TestGeneratedSpecRestore:
+    """Batch 190: generated/ 脚本在容器重部署丢失后从持久化存储自动恢复。"""
+
+    def test_restore_missing_generated_spec(self, tmp_path, monkeypatch):
+        """runner 内缺失的 generated spec 应从存储副本恢复。"""
+        from app.services.playwright_executor import _restore_generated_spec
+
+        storage = tmp_path / "playground-specs"
+        storage.mkdir()
+        monkeypatch.setattr("app.services.playwright_executor.GENERATED_SPECS_STORAGE", storage)
+        runner = tmp_path / "runner"
+        runner.mkdir()
+        (storage / "playground-case-42.spec.ts").write_text("// restored", encoding="utf-8")
+
+        assert _restore_generated_spec(runner, "generated/playground-case-42.spec.ts") is True
+        restored = runner / "generated" / "playground-case-42.spec.ts"
+        assert restored.is_file()
+        assert restored.read_text(encoding="utf-8") == "// restored"
+
+    def test_restore_skips_non_generated_spec(self, tmp_path, monkeypatch):
+        """非 generated/ 前缀的 spec 不触发恢复（打包 specs 不走存储）。"""
+        from app.services.playwright_executor import _restore_generated_spec
+
+        runner = tmp_path / "runner"
+        runner.mkdir()
+        assert _restore_generated_spec(runner, "specs/production-smoke.spec.ts") is False
+
+    def test_restore_false_when_storage_missing(self, tmp_path, monkeypatch):
+        """存储副本也不存在时返回 False（保持原有「测试脚本不存在」语义）。"""
+        from app.services.playwright_executor import _restore_generated_spec
+
+        storage = tmp_path / "empty-storage"
+        storage.mkdir()
+        monkeypatch.setattr("app.services.playwright_executor.GENERATED_SPECS_STORAGE", storage)
+        runner = tmp_path / "runner"
+        runner.mkdir()
+
+        assert _restore_generated_spec(runner, "generated/playground-case-7.spec.ts") is False
+        assert not (runner / "generated" / "playground-case-7.spec.ts").exists()
+
+    def test_run_restores_generated_spec_before_execution(
+        self, db_session, ui_job_factory, ui_run_factory, tmp_path, monkeypatch,
+    ):
+        """执行流程中：generated spec 缺失时先恢复再运行（模拟重部署后首次触发）。"""
+        from app.services.playwright_executor import PLAYWRIGHT_DIR, run_playwright_test
+
+        spec_name = "playground-case-77.spec.ts"
+        job = ui_job_factory(test_spec=f"generated/{spec_name}")
+
+        storage = tmp_path / "playground-specs"
+        storage.mkdir()
+        monkeypatch.setattr("app.services.playwright_executor.GENERATED_SPECS_STORAGE", storage)
+        (storage / spec_name).write_text("// spec", encoding="utf-8")
+
+        run = ui_run_factory(job_id=job.id, status="pending")
+
+        mock_proc = MagicMock(spec=subprocess.Popen)
+        mock_proc.pid = 99997
+        mock_proc.poll.return_value = 0
+        mock_proc.communicate.return_value = ('{"suites":[]}', "")
+        mock_proc.returncode = 0
+
+        restored_path = PLAYWRIGHT_DIR / f"generated/{spec_name}"
+        restored_path.unlink(missing_ok=True)
+        try:
+            with patch("subprocess.Popen", return_value=mock_proc):
+                with patch("app.services.playwright_executor.shutil.which", return_value="/usr/bin/npx"):
+                    result = run_playwright_test(db_session, run.id, job.id, job.project_id)
+            db_session.refresh(run)
+            assert result["status"] == "passed"
+            assert restored_path.is_file(), "缺失的 generated spec 应已从存储自动恢复"
+            assert restored_path.read_text(encoding="utf-8") == "// spec"
+        finally:
+            restored_path.unlink(missing_ok=True)

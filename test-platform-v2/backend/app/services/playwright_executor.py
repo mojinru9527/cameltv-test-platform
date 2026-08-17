@@ -24,6 +24,9 @@ logger = logging.getLogger("playwright")
 # ── 配置 ──
 PLAYWRIGHT_DIR = Path(__file__).resolve().parent.parent.parent / "tests" / "playwright"
 STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "storage" / "ui-runs"
+# Batch 190: generated/ 下生成脚本的持久化副本目录（/app/storage 为持久卷；
+# 容器重部署后 tests/playwright/generated 会被清空，执行器运行时从此处恢复）
+GENERATED_SPECS_STORAGE = STORAGE_DIR.parent / "playground-specs"
 DEFAULT_TIMEOUT = 300  # 5 minutes（历史默认；可经 UI_RUNNER_TIMEOUT_SECONDS 上调，见 _runner_timeout()）
 MAX_CONCURRENT = 2  # 最大并发执行数
 CANCEL_POLL_INTERVAL = 1.0  # 取消轮询间隔 (秒)
@@ -149,6 +152,34 @@ def _list_available_specs() -> list[str]:
     return sorted(specs)
 
 
+def _restore_generated_spec(runner_dir: Path, test_spec: str) -> bool:
+    """从持久化存储恢复缺失的 generated/ 脚本（容器重部署后生成文件丢失）。
+
+    Playground 回写生成的 spec 位于 runner 的 generated/ 目录（容器内临时
+    文件系统），每次重新部署即被清空；持久化副本保存在
+    GENERATED_SPECS_STORAGE（/app/storage/playground-specs，持久卷）。
+    执行前发现缺失时自动恢复，避免 [Playground] UI 任务在重部署后全部报
+    「测试脚本不存在」。
+    """
+    if not test_spec.startswith("generated/"):
+        return False
+    target = (runner_dir / test_spec).resolve()
+    runner_root = runner_dir.resolve()
+    if not target.is_relative_to(runner_root):
+        return False
+    stored = GENERATED_SPECS_STORAGE / Path(test_spec).name
+    if not stored.is_file():
+        return False
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(stored.read_text(encoding="utf-8"), encoding="utf-8")
+        logger.info("Restored generated spec %s from persistent storage", test_spec)
+        return True
+    except OSError:
+        logger.exception("Failed to restore generated spec %s", test_spec)
+        return False
+
+
 def _resolve_environment_variables(db: Session, environment_id: int | None) -> dict[str, str]:
     """Return decrypted, shell-safe variables for the selected environment."""
     if not environment_id:
@@ -272,7 +303,16 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
     # 3. 验证 test_spec 存在（防路径穿越：spec 必须位于 runner 目录内）
     spec_path = (runner_dir / test_spec).resolve()
     runner_root = runner_dir.resolve()
-    if not test_spec or not spec_path.exists() or not spec_path.is_relative_to(runner_root):
+    if not test_spec or not spec_path.is_relative_to(runner_root):
+        available = _list_available_specs()
+        msg = f"测试脚本不存在: {test_spec or '(未指定)'}"
+        if available:
+            msg += f"。可用脚本: {', '.join(available[:10])}"
+        return _fail_run(db, run, msg, job)
+
+    # Batch 190: 容器重部署后 generated/ 下生成脚本会被清空（Playground 回写
+    # 产物），缺失时先从持久化存储恢复；恢复失败才按脚本缺失处理。
+    if not spec_path.exists() and not _restore_generated_spec(runner_dir, test_spec):
         available = _list_available_specs()
         msg = f"测试脚本不存在: {test_spec or '(未指定)'}"
         if available:
