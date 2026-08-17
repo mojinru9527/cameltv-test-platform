@@ -7,7 +7,7 @@
 
 | 条件 | 内容 | 状态 |
 |------|------|:----:|
-| C-A1 | knowledge-mcp Docker 镜像构建验收 | ⏸ 代码/配置就绪；本地 Docker Desktop daemon 未就绪（需桌面授权），构建列入部署期验收 |
+| C-A1 | knowledge-mcp Docker 镜像构建验收 | ⏸ 代码/配置/**verify.sh 一键验收脚本**就绪；本地 Docker Desktop daemon 未就绪（需桌面授权），构建列入部署期验收（`bash verify.sh`：build → run → 17 工具握手） |
 | C-A2 | DSH_MODEL_POOL 生产配置 | ✅ deploy/.env.example + docker-compose.yml 透传 + production.env.example 三处收口 |
 | C-A3 | 真实需求导入 → tester 团队全流程冒烟 | ✅ 端到端通过（见 §3） |
 | C-A4 | submit_defect 缺陷回写 | ✅ open API + MCP 工具 + 知识入库 + 测试 |
