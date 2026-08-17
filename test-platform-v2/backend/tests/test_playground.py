@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import tempfile
 
 from app.schemas.playground import CompileRequest, ExecuteRequest, SourceType
 from app.services.playground_service import (
@@ -327,3 +329,80 @@ class TestBatch190GeneratedSpecPersistence:
         persisted = storage / f"playground-case-{case.id}.spec.ts"
         assert persisted.is_file(), "持久卷应存在生成的 spec 副本"
         assert persisted.read_text(encoding="utf-8") == "// spec"
+
+
+class TestExecuteSpecRuntimeSelection:
+    """Batch 191: execute_spec 优先复用 UI Runner 的 Playwright 运行时。"""
+
+    def _fake_run(self, **kwargs):
+        return subprocess.CompletedProcess(kwargs.get("args", []), 0, stdout="ok", stderr="")
+
+    def test_uses_runner_dir_when_playwright_test_installed(self, tmp_path, monkeypatch):
+        from app.schemas.playground import ExecuteRequest
+        from app.services.playground_service import execute_spec
+
+        runner = tmp_path / "runner"
+        (runner / "node_modules" / "@playwright" / "test").mkdir(parents=True)
+        (runner / "node_modules" / "@playwright" / "test" / "package.json").write_text(
+            "{}", encoding="utf-8"
+        )
+        monkeypatch.setattr(
+            "app.services.playground_service._playground_runner_dir",
+            lambda: runner,
+        )
+        captured: dict = {}
+        import subprocess as _sp
+
+        def fake_run(args, **kwargs):
+            captured["args"] = args
+            captured["cwd"] = kwargs.get("cwd")
+            return _sp.CompletedProcess(args, 0, stdout="ok", stderr="")
+
+        monkeypatch.setattr("app.services.playground_service.subprocess.run", fake_run)
+
+        result = execute_spec(ExecuteRequest(spec_code="// spec", timeout_ms=10000))
+
+        assert result.passed is True
+        assert captured["cwd"], "应使用 runner 内的工作目录"
+        assert str(captured["cwd"]).startswith(str(runner / ".playground-tmp"))
+        # 临时工作目录执行后应清理
+        leftovers = list((runner / ".playground-tmp").iterdir()) if (runner / ".playground-tmp").exists() else []
+        assert leftovers == [], f"执行后残留临时目录: {leftovers}"
+
+    def test_falls_back_to_system_temp_without_runner(self, tmp_path, monkeypatch):
+        from app.schemas.playground import ExecuteRequest
+        from app.services.playground_service import execute_spec
+
+        monkeypatch.setattr(
+            "app.services.playground_service._playground_runner_dir",
+            lambda: None,
+        )
+        captured: dict = {}
+        import subprocess as _sp
+
+        def fake_run(args, **kwargs):
+            captured["args"] = args
+            captured["cwd"] = kwargs.get("cwd")
+            return _sp.CompletedProcess(args, 0, stdout="ok", stderr="")
+
+        monkeypatch.setattr("app.services.playground_service.subprocess.run", fake_run)
+
+        result = execute_spec(ExecuteRequest(spec_code="// spec", timeout_ms=10000))
+
+        assert result.passed is True
+        assert captured["cwd"], "应使用系统临时目录"
+        cwd = str(captured["cwd"])
+        assert cwd.startswith(tempfile.gettempdir()), f"cwd 应在系统临时目录: {cwd}"
+        assert ".playground-tmp" not in cwd
+
+    def test_runner_dir_helper_detects_missing_deps(self, tmp_path, monkeypatch):
+        """runner 缺少 @playwright/test 时 helper 返回 None（回退旧行为）。"""
+        from app.services.playground_service import _playground_runner_dir
+
+        empty_runner = tmp_path / "empty-runner"
+        empty_runner.mkdir()
+        monkeypatch.setattr(
+            "app.services.playwright_executor._runner_dir",
+            lambda: empty_runner,
+        )
+        assert _playground_runner_dir() is None

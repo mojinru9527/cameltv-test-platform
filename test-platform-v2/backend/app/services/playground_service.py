@@ -5,6 +5,7 @@ import base64
 import json
 import logging
 import re
+import shutil
 import subprocess
 import tempfile
 import time
@@ -221,21 +222,50 @@ def build_gherkin_from_case(case) -> str:
     return "\n".join(lines)
 
 
+def _playground_runner_dir() -> Path | None:
+    """定位带 Playwright 运行时的 runner 目录（含 npm ci 锁定的 @playwright/test）。
+
+    Batch 191: Playground 即时执行复用 UI Runner 的运行时（与 UI 任务同版本
+    浏览器/依赖），而不是在系统临时目录 npx 下载游离 playwright —— 修复
+    `Cannot find module '@playwright/test'`。runner 不可用时返回 None，
+    execute_spec 回退到旧行为。
+    """
+    try:
+        from app.services.playwright_executor import _runner_dir
+
+        runner = _runner_dir()
+        if (runner / "node_modules" / "@playwright" / "test" / "package.json").is_file():
+            return runner
+        logger.warning("UI Runner 的 @playwright/test 未安装（%s），回退 npx 临时目录", runner)
+    except Exception:
+        logger.warning("Playground 运行时探测失败，回退 npx 临时目录", exc_info=True)
+    return None
+
+
 def execute_spec(req: ExecuteRequest) -> ExecuteResponse:
     """Execute a Playwright spec in headless Chromium via subprocess.
 
-    Writes spec to temp file, runs npx playwright test, captures output.
-    Returns result with optional screenshot.
+    优先把工作目录放在 UI Runner 内（模块解析可命中 npm ci 锁定的
+    @playwright/test，npx 也直接复用本地二进制，不触发下载）；runner 不可用
+    时回退系统临时目录 + npx（旧行为）。Batch 191: 修复 npx 下载游离
+    playwright 导致的 Cannot find module '@playwright/test'。
     """
     t0 = time.perf_counter()
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmppath = Path(tmpdir)
-        spec_file = tmppath / "playground.spec.ts"
+    runner = _playground_runner_dir()
+    if runner is not None:
+        work_root = runner / ".playground-tmp"
+        work_root.mkdir(parents=True, exist_ok=True)
+        tmpdir = Path(tempfile.mkdtemp(prefix="run-", dir=str(work_root)))
+    else:
+        tmpdir = Path(tempfile.mkdtemp(prefix="playground-"))
+
+    try:
+        spec_file = tmpdir / "playground.spec.ts"
         spec_file.write_text(req.spec_code, encoding="utf-8")
 
         # Minimal Playwright config for this single spec
-        config = tmppath / "playwright.config.ts"
+        config = tmpdir / "playwright.config.ts"
         config.write_text(f"""import {{ defineConfig }} from '@playwright/test';
 export default defineConfig({{
   testDir: '.',
@@ -251,7 +281,7 @@ export default defineConfig({{
                 capture_output=True,
                 text=True,
                 timeout=req.timeout_ms // 1000 + 15,
-                cwd=str(tmppath),
+                cwd=str(tmpdir),
             )
             passed = result.returncode == 0
             stdout = result.stdout or ""
@@ -267,7 +297,7 @@ export default defineConfig({{
 
         # Look for screenshot
         screenshot_base64: Optional[str] = None
-        screenshots = list(tmppath.glob("**/*.png"))
+        screenshots = list(tmpdir.glob("**/*.png"))
         if screenshots:
             try:
                 screenshot_base64 = base64.b64encode(screenshots[0].read_bytes()).decode()
@@ -282,6 +312,8 @@ export default defineConfig({{
             screenshot_base64=screenshot_base64,
             duration_ms=round(duration_ms, 2),
         )
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 # ── Batch 166：功能用例批量编译 / 批量执行 ──
