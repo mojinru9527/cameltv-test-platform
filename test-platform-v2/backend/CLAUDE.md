@@ -168,6 +168,9 @@ pytest tests/ -v --tb=short
     进程崩溃 → 心跳停 → 5 分钟后照常回收（失联语义不回归）；
   - 线程铁律（R-3）：`dsh_task_service._team_poller` 每次写库用**独立短 `SessionLocal`**，
     禁止复用 `execute_task` 的认领 session；`team_json` 全量幂等覆盖，超长截断加 `_truncated`；
+    快照扫描**递归 glob（`**/team.json`，覆盖船长删除团队后的 `archive/` 归档路径）且每轮
+    按 mtime 最新重选**（船长同任务重建团队时跟随最新，不永久锁定首个命中；并发串扰由
+    `DSH_MAX_CONCURRENT` 默认 1 兜底，调高并发需按任务 workspace 隔离扫描）；
   - 状态词表：`dsh_task.status` 仍用队列词表（pending/running/success/failed/cancelled）；
     团队内部任务状态（claimed/in_progress 等）是插件 `team.json` 字段，前端单独映射；
   - 冒烟（C191-1 已关闭）：node 需先安装 agent-team profile

@@ -535,3 +535,82 @@ def test_execute_team_heartbeat_prevents_stale_reap(dsh_db, monkeypatch, tmp_pat
     finally:
         release.set()
         db.close()
+
+
+def test_execute_team_final_snapshot_reads_archived_team(dsh_db, monkeypatch, tmp_path):
+    """Batch 191 冒烟修复：船长删除团队（归档 archive/<teamId>/team.json）后，
+    轮询与终态读取仍能读到快照（glob 递归覆盖 archive 路径，任务 10 实测回归）。"""
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "dsh_team_poll_seconds", 0.05)
+    ws_root = tmp_path / "ws-isolation-arch"
+    ws_root.mkdir()
+
+    def fake_runner(task, **kwargs):
+        ws = ws_root / "ws-0001"
+        # 模拟船长删除团队：team.json 落在 .agent-teams/archive/<teamId>/ 下
+        team_dir = ws / ".agent-teams" / "archive" / "team-archived"
+        team_dir.mkdir(parents=True, exist_ok=True)
+        tj = team_dir / "team.json"
+        tj.write_text(json.dumps(_team_snapshot("team-archived", "已归档团队"), ensure_ascii=False), encoding="utf-8")
+        return DshRunResult(final_response="done", exit_code=0, session_dir=str(tmp_path), workspace=str(ws))
+
+    db = dsh_db()
+    try:
+        dsh_task_service.submit_task(
+            db, project_id=1, task="团队任务", operator_id=1,
+            mode="team", params={"batch_mode": "light", "workspace": str(ws_root)},
+        )
+        claimed = dsh_task_service.claim_next_task(db)
+        dsh_task_service.execute_task(db, claimed, runner=fake_runner)
+        assert claimed.status == "success"
+        snap = json.loads(claimed.team_json or "{}")
+        assert snap.get("id") == "team-archived", f"归档团队快照未读到: {snap.get('id')}"
+        assert snap.get("name") == "已归档团队"
+    finally:
+        db.close()
+
+
+def test_execute_team_poller_follows_latest_team(dsh_db, monkeypatch, tmp_path):
+    """Batch 191 冒烟修复：船长同任务重建团队（旧团队被废弃）时，
+    轮询/终态跟随 mtime 最新的团队，而非永久锁定首个命中团队（任务 10 实测回归）。"""
+    import threading as _threading
+
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "dsh_team_poll_seconds", 0.05)
+    ws_root = tmp_path / "ws-isolation-multi"
+    ws_root.mkdir()
+    release = _threading.Event()
+
+    def fake_runner(task, **kwargs):
+        ws = ws_root / "ws-0001"
+        # 先建旧团队（active 路径），稍后船长重建新团队（归档路径，mtime 更新）
+        _write_team_json(ws, "team-old", _team_snapshot("team-old", "旧团队"))
+        release.wait(5)
+        team_dir = ws / ".agent-teams" / "archive" / "team-new"
+        team_dir.mkdir(parents=True, exist_ok=True)
+        tj = team_dir / "team.json"
+        tj.write_text(json.dumps(_team_snapshot("team-new", "新团队"), ensure_ascii=False), encoding="utf-8")
+        time.sleep(0.1)  # 保证 mtime 递增（Windows 文件时间粒度）
+        return DshRunResult(final_response="done", exit_code=0, session_dir=str(tmp_path), workspace=str(ws))
+
+    db = dsh_db()
+    try:
+        dsh_task_service.submit_task(
+            db, project_id=1, task="团队任务", operator_id=1,
+            mode="team", params={"batch_mode": "light", "workspace": str(ws_root)},
+        )
+        claimed = dsh_task_service.claim_next_task(db)
+        # execute_task 会 join 到 runner 释放，放线程执行；释放前轮询应已锁定旧团队
+        t = _threading.Thread(target=dsh_task_service.execute_task, args=(db, claimed), kwargs={"runner": fake_runner}, daemon=True)
+        t.start()
+        time.sleep(0.3)  # 轮询数轮（旧团队已被写入快照）
+        release.set()
+        t.join(15)
+        assert claimed.status == "success"
+        snap = json.loads(claimed.team_json or "{}")
+        assert snap.get("id") == "team-new", f"快照未跟随最新团队: {snap.get('id')}"
+    finally:
+        release.set()
+        db.close()
