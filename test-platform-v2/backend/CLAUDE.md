@@ -110,6 +110,7 @@ Router (api/v1/)  →  Service (services/)  →  Model (models/)
 | integration.py | `/api/v1/integration` | — | 集成配置 |
 | knowledge.py | `/api/v1/knowledge` | — | 知识中心 |
 | agent.py | `/api/v1/agent` | — | Agent 工作台 |
+| ai_config.py | `/api/v1/ai-config` | ai_config_service | AI 模型配置中心（项目级提供方池） |
 
 ## 核心配置
 
@@ -146,7 +147,19 @@ pytest tests/ -v --tb=short
 
 - **不要在 Router 中写业务逻辑**——Router 只做参数校验和调用 Service
 - **大文件上传**：需求文档解析（Word/Excel）走 `file_parser_service.py`，注意内存控制
-- **AI 调用**：`ai_service.py` 调用 DeepSeek LLM，注意超时和重试
+- **AI 调用（Batch A 起按项目解析）**：所有 AI 消费点统一经 `ai_config_service.resolve(db, project_id)` 获取
+  运行时配置（项目级提供方池），禁止再直接读 `settings.ai_api_key / ai_api_base_url / ai_model`；
+  未配置提供方的项目抛 `AIProviderUnconfiguredError`（AI 功能按项目禁用）。见下方「AI 模型配置中心」。
+- **AI 模型配置中心（Batch A）**：
+  - 数据：`ai_provider` 表（项目级多提供方池）；Key 用 Fernet 加密（`SECRET_KEY` 派生），列表只回掩码；
+  - 解析：`ai_config_service.resolve(db, project_id) -> EffectiveAiConfig`（provider_id/provider_name/
+    provider_type/api_base_url/api_key/model）；消费点入口签名带 `db + project_id` 透传；
+  - API：`api/v1/ai_config.py`（`/api/v1/ai-config/*`，权限 `ai_config:view/manage`）+ `/resolve` 供前端状态条；
+  - DSH 凭据：`dsh_runner.run_dsh_task(provider=...)` 注入 `DEEPSEEK_API_KEY/DEEPSEEK_BASE_URL/DSH_MODEL`，
+    provider 为空回退 settings（仅测试兼容）；任务提交时快照 `provider_id` 到 params，worker 执行时重建；
+  - 退役 env：`AI_API_KEY/AI_API_BASE_URL/AI_MODEL/DSH_API_KEY/DSH_BASE_URL/DSH_MODEL/DSH_MODEL_POOL`
+    （见 `.env.example` 退役标注）；`DSH_ENABLED/DSH_RUNTIME` 等部署基础设施保留；
+  - 迁移幂等：新增迁移必须带「表/列存在检查」守卫（stamp 回退重跑 upgrade 自愈，对齐 b191 惯例）。
 - **DSH 执行（Batch 172 / Batch 184 沙箱加固）**：`services/dsh/` 提供 DeepSeek Harness 执行抽象（`dsh_runner.run_dsh_task`）；
   A 用例生成 harness 模式经 `ai_service._call_ai_api_with_harness`（默认关、失败降级直连）；
   B Agent 工作台 `dsh_execution` 类型走 orchestrator 分发；C DSH 任务模块 `api/v1/dsh_tasks.py` + `models/dsh_task.py`。

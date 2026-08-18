@@ -44,6 +44,7 @@ test-platform-v2/
 | 环境 / 数据集 | `/environment` `/dataset` | 🟡 | 项目级数据和变量链可用；生产目标防误触发仍需统一验证 |
 | 通知 / 集成 | `/notify` `/integration` | ⛔ | 本地模型和错误路径存在；真实 SMTP/Webhook/Jira/TAPD/ELK 缺非生产凭据与端点 |
 | 知识 / Agent / 发布包 | `/knowledge` `/agent-workbench` `/release-bundles` | 🟡 / ⛔ | 无 AI/Wiki/活动发布包时已 fail closed；外部链路和交互标注回归未全部完成 |
+| AI 配置 / DSH 任务 | `/ai-config` `/dsh-tasks` | 🟡 | 项目级 AI 提供方池（Batch A）+ DSH 执行入口（Batch 172/191/202）；无配置即禁用 AI，未配置引导入口已接入 |
 | 开放 API | API-only `/api/v1/open` | 🟡 | 独立 API Token Bearer 鉴权；属于 API-only 能力，前端入口和生产级契约验收不完整 |
 | 性能监控 | `/perftest` | ⛔ | 缺 SoloX、授权真机与采集窗口；不得按页面或 WebSocket 存在判定通过 |
 | 主题实验室 | `/theme-lab` | ✅ | 本地设计/响应式验证工具，不是业务生产能力 |
