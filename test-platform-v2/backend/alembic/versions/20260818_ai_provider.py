@@ -11,6 +11,11 @@ depends_on = None
 
 
 def upgrade() -> None:
+    # 幂等守卫（仓库迁移惯例，对齐 b191/batch148）：stamp 回退后重跑 upgrade
+    # 时表已存在则跳过，避免 "table ai_provider already exists"。
+    conn = op.get_bind()
+    if "ai_provider" in sa.inspect(conn).get_table_names():
+        return
     op.create_table(
         "ai_provider",
         sa.Column("id", sa.Integer(), primary_key=True),
@@ -29,4 +34,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    conn = op.get_bind()
+    if "ai_provider" not in sa.inspect(conn).get_table_names():
+        return
     op.drop_table("ai_provider")
