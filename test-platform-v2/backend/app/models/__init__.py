@@ -1,4 +1,5 @@
 """统一导出所有模型，确保 Base.metadata 能感知全部表。"""
+from app.models.ai_provider import AiProvider
 from app.models.ai_task import AiTask
 from app.models.interaction_edge import InteractionEdge
 from app.models.api_asset import ApiEndpoint, ApiExecutionTask, ApiExecutionTaskItem, ApiImportBatch, ApiService
@@ -67,6 +68,7 @@ from app.models.wiki import (
 )
 
 __all__ = [
+    "AiProvider",
     "ApiEndpoint",
     "ApiExecutionTask",
     "ApiExecutionTaskItem",
