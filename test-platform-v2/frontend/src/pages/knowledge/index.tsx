@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { cn } from '@/lib/utils'
 import { useSearchParams } from 'react-router'
 import PageHeader from '@/components/PageHeader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -146,40 +147,40 @@ export default function KnowledgePage() {
         </TabsList>
         </div>
 
-        <TabsContent value="project" className="mt-4" forceMount={visitedTabs.has('project') ? true : undefined}>
+        <TabsContent value="project" className={cn('mt-4', tab !== 'project' && 'hidden')} forceMount={visitedTabs.has('project') ? true : undefined}>
           <ProjectTab />
         </TabsContent>
-        <TabsContent value="platform" className="mt-4" forceMount={visitedTabs.has('platform') ? true : undefined}>
+        <TabsContent value="platform" className={cn('mt-4', tab !== 'platform' && 'hidden')} forceMount={visitedTabs.has('platform') ? true : undefined}>
           <PlatformTab />
         </TabsContent>
-        <TabsContent value="overview" className="mt-4" forceMount={visitedTabs.has('overview') ? true : undefined}>
+        <TabsContent value="overview" className={cn('mt-4', tab !== 'overview' && 'hidden')} forceMount={visitedTabs.has('overview') ? true : undefined}>
           <OverviewTab />
         </TabsContent>
-        <TabsContent value="search" className="mt-4" forceMount={visitedTabs.has('search') ? true : undefined}>
+        <TabsContent value="search" className={cn('mt-4', tab !== 'search' && 'hidden')} forceMount={visitedTabs.has('search') ? true : undefined}>
           <SearchTab />
         </TabsContent>
-        <TabsContent value="sources" className="mt-4" forceMount={visitedTabs.has('sources') ? true : undefined}>
+        <TabsContent value="sources" className={cn('mt-4', tab !== 'sources' && 'hidden')} forceMount={visitedTabs.has('sources') ? true : undefined}>
           <SourceListTab />
         </TabsContent>
-        <TabsContent value="artifacts" className="mt-4" forceMount={visitedTabs.has('artifacts') ? true : undefined}>
+        <TabsContent value="artifacts" className={cn('mt-4', tab !== 'artifacts' && 'hidden')} forceMount={visitedTabs.has('artifacts') ? true : undefined}>
           <ArtifactReviewTab />
         </TabsContent>
-        <TabsContent value="graph" className="mt-4" forceMount={visitedTabs.has('graph') ? true : undefined}>
+        <TabsContent value="graph" className={cn('mt-4', tab !== 'graph' && 'hidden')} forceMount={visitedTabs.has('graph') ? true : undefined}>
           <GraphTab />
         </TabsContent>
-        <TabsContent value="entities" className="mt-4" forceMount={visitedTabs.has('entities') ? true : undefined}>
+        <TabsContent value="entities" className={cn('mt-4', tab !== 'entities' && 'hidden')} forceMount={visitedTabs.has('entities') ? true : undefined}>
           <EntityTab />
         </TabsContent>
-        <TabsContent value="iterations" className="mt-4" forceMount={visitedTabs.has('iterations') ? true : undefined}>
+        <TabsContent value="iterations" className={cn('mt-4', tab !== 'iterations' && 'hidden')} forceMount={visitedTabs.has('iterations') ? true : undefined}>
           <IterationTab />
         </TabsContent>
-        <TabsContent value="wiki" className="mt-4" forceMount={visitedTabs.has('wiki') ? true : undefined}>
+        <TabsContent value="wiki" className={cn('mt-4', tab !== 'wiki' && 'hidden')} forceMount={visitedTabs.has('wiki') ? true : undefined}>
           <WikiTab />
         </TabsContent>
-        <TabsContent value="wikidiff" className="mt-4" forceMount={visitedTabs.has('wikidiff') ? true : undefined}>
+        <TabsContent value="wikidiff" className={cn('mt-4', tab !== 'wikidiff' && 'hidden')} forceMount={visitedTabs.has('wikidiff') ? true : undefined}>
           <WikiDiffTab />
         </TabsContent>
-        <TabsContent value="skills" className="mt-4" forceMount={visitedTabs.has('skills') ? true : undefined}>
+        <TabsContent value="skills" className={cn('mt-4', tab !== 'skills' && 'hidden')} forceMount={visitedTabs.has('skills') ? true : undefined}>
           <SkillsTab />
         </TabsContent>
       </Tabs>
