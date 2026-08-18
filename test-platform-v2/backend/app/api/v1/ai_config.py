@@ -1,4 +1,5 @@
 """AI 配置 API —— /api/v1/ai-config/*（项目级提供方池）。"""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
@@ -49,22 +50,30 @@ def create_provider(
     current: CurrentUser = Depends(require_permission("ai_config:manage")),
     db: Session = Depends(get_db),
 ):
-    row = ai_config_service.create_provider(db, current.project_id or 0, body.model_dump())
+    row = ai_config_service.create_provider(
+        db, current.project_id or 0, body.model_dump()
+    )
     return R.ok({"id": row.id})
 
 
-@router.put("/providers/{provider_id}", response_model=R[dict], summary="更新 AI 提供方")
+@router.put(
+    "/providers/{provider_id}", response_model=R[dict], summary="更新 AI 提供方"
+)
 def update_provider(
     provider_id: int,
     body: ProviderUpdateIn,
     current: CurrentUser = Depends(require_permission("ai_config:manage")),
     db: Session = Depends(get_db),
 ):
-    row = ai_config_service.update_provider(db, current.project_id or 0, provider_id, body.model_dump(exclude_none=True))
+    row = ai_config_service.update_provider(
+        db, current.project_id or 0, provider_id, body.model_dump(exclude_none=True)
+    )
     return R.ok({"id": row.id})
 
 
-@router.delete("/providers/{provider_id}", response_model=R[dict], summary="删除 AI 提供方")
+@router.delete(
+    "/providers/{provider_id}", response_model=R[dict], summary="删除 AI 提供方"
+)
 def delete_provider(
     provider_id: int,
     current: CurrentUser = Depends(require_permission("ai_config:manage")),
@@ -74,13 +83,19 @@ def delete_provider(
     return R.ok({"deleted": provider_id})
 
 
-@router.post("/providers/{provider_id}/test-connection", response_model=R[dict], summary="测试提供方连通性")
+@router.post(
+    "/providers/{provider_id}/test-connection",
+    response_model=R[dict],
+    summary="测试提供方连通性",
+)
 def test_connection(
     provider_id: int,
     current: CurrentUser = Depends(require_permission("ai_config:manage")),
     db: Session = Depends(get_db),
 ):
-    return R.ok(ai_config_service.test_connection(db, current.project_id or 0, provider_id))
+    return R.ok(
+        ai_config_service.test_connection(db, current.project_id or 0, provider_id)
+    )
 
 
 @router.get("/resolve", response_model=R[dict], summary="当前项目生效 AI 配置")

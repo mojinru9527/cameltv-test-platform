@@ -3,6 +3,7 @@
 所有 AI 消费点统一经 `resolve(project_id)` 获取运行时配置；项目无配置抛
 `AIProviderUnconfiguredError`（前端据此引导配置，AI 功能按项目禁用）。
 """
+
 from __future__ import annotations
 
 import base64
@@ -93,7 +94,9 @@ class AiConfigService:
 
     def list_providers(self, db: Session, project_id: int) -> list[dict]:
         rows = db.scalars(
-            select(AiProvider).where(AiProvider.project_id == project_id).order_by(AiProvider.id.asc())
+            select(AiProvider)
+            .where(AiProvider.project_id == project_id)
+            .order_by(AiProvider.id.asc())
         ).all()
         return [
             {
@@ -115,7 +118,14 @@ class AiConfigService:
             cfg = self.resolve(db, project_id)
         except AIProviderUnconfiguredError:
             return {"configured": False, "provider": None}
-        return {"configured": True, "provider": {"id": cfg.provider_id, "name": cfg.provider_name, "model": cfg.model}}
+        return {
+            "configured": True,
+            "provider": {
+                "id": cfg.provider_id,
+                "name": cfg.provider_name,
+                "model": cfg.model,
+            },
+        }
 
     # ── 写 ──
 
@@ -142,7 +152,9 @@ class AiConfigService:
         db.refresh(row)
         return row
 
-    def update_provider(self, db: Session, project_id: int, provider_id: int, data: dict) -> AiProvider:
+    def update_provider(
+        self, db: Session, project_id: int, provider_id: int, data: dict
+    ) -> AiProvider:
         row = self._get(db, project_id, provider_id)
         if "name" in data:
             row.name = (data["name"] or "").strip()
@@ -168,7 +180,9 @@ class AiConfigService:
     def delete_provider(self, db: Session, project_id: int, provider_id: int) -> None:
         row = self._get(db, project_id, provider_id)
         if row.is_default:
-            raise APIException(code=400, msg="默认提供方不可删除，请先转移默认", http_status=400)
+            raise APIException(
+                code=400, msg="默认提供方不可删除，请先转移默认", http_status=400
+            )
         db.delete(row)
         db.commit()
 
@@ -178,9 +192,13 @@ class AiConfigService:
             raise APIException(code=404, msg="AI 提供方不存在", http_status=404)
         return row
 
-    def _ensure_single_default(self, db: Session, project_id: int, keep_id: int) -> None:
+    def _ensure_single_default(
+        self, db: Session, project_id: int, keep_id: int
+    ) -> None:
         rows = db.scalars(
-            select(AiProvider).where(AiProvider.project_id == project_id, AiProvider.is_default.is_(True))
+            select(AiProvider).where(
+                AiProvider.project_id == project_id, AiProvider.is_default.is_(True)
+            )
         ).all()
         for r in rows:
             if r.id != keep_id:
@@ -199,7 +217,10 @@ class AiConfigService:
         try:
             resp = httpx.post(
                 f"{cfg.api_base_url}/chat/completions",
-                headers={"Authorization": f"Bearer {cfg.api_key}", "Content-Type": "application/json"},
+                headers={
+                    "Authorization": f"Bearer {cfg.api_key}",
+                    "Content-Type": "application/json",
+                },
                 json={
                     "model": cfg.model,
                     "messages": [{"role": "user", "content": "ping"}],
@@ -208,7 +229,11 @@ class AiConfigService:
                 timeout=30.0,
             )
             resp.raise_for_status()
-            return {"ok": True, "latency_ms": round((time.perf_counter() - t0) * 1000, 1), "model": cfg.model}
+            return {
+                "ok": True,
+                "latency_ms": round((time.perf_counter() - t0) * 1000, 1),
+                "model": cfg.model,
+            }
         except Exception as exc:  # noqa: BLE001 - 连通性测试需吞掉具体异常转为可读信息
             return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
 
