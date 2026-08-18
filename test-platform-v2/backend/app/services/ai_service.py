@@ -29,6 +29,7 @@ from pathlib import Path
 import httpx
 
 from app.core.config import settings
+from app.services.ai_config_service import AIProviderUnconfiguredError, ai_config_service
 from app.services.external.lanhu_provider import _extract_lanhu_content  # 蓝湖提取已抽到 provider，委托调用
 
 
@@ -728,25 +729,27 @@ def _salvage_json_parts(text: str) -> dict | None:
 
 # ── AI API Call ──────────────────────────────────────────────
 
-async def _call_ai_api(system_prompt: str, user_message: str, label: str = "",
-                       max_tokens: int | None = None) -> dict:
+async def _call_ai_api(db, project_id: int, system_prompt: str, user_message: str,
+                       label: str = "", max_tokens: int | None = None) -> dict:
     """Make a single AI API call and return the parsed result."""
-    if not settings.ai_api_key:
+    try:
+        cfg = ai_config_service.resolve(db, project_id)
+    except AIProviderUnconfiguredError as exc:
         return {"result": None, "raw": "", "finish_reason": "error", "truncated": False,
-                "error": "AI_API_KEY 未配置"}
+                "error": str(exc)}
 
     effective_max_tokens = max_tokens if max_tokens is not None else settings.ai_max_tokens
 
     try:
         async with httpx.AsyncClient(timeout=180.0) as client:
             resp = await client.post(
-                f"{settings.ai_api_base_url.rstrip('/')}/chat/completions",
+                f"{cfg.api_base_url.rstrip('/')}/chat/completions",
                 headers={
-                    "Authorization": f"Bearer {settings.ai_api_key}",
+                    "Authorization": f"Bearer {cfg.api_key}",
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": settings.ai_model,
+                    "model": cfg.model,
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_message},
@@ -942,11 +945,13 @@ def _extract_chunk_message(chunk: str, index: int, total: int) -> str:
     )
 
 
-async def _extract_in_chunks(content: str, system_prompt: str) -> list[dict]:
+async def _extract_in_chunks(db, project_id: int, content: str, system_prompt: str) -> list[dict]:
     chunks = _split_content_chunks(content)
     results: list[dict] = []
     for index, chunk in enumerate(chunks, start=1):
         resp = await _call_ai_api(
+            db,
+            project_id,
             system_prompt,
             _extract_chunk_message(chunk, index, len(chunks)),
             f"extraction-chunk-{index}",
@@ -1065,7 +1070,7 @@ def _build_local_extraction_fallback(
     }
 
 
-async def extract_features(content: str, file_type: str = "", source_ref: str = "") -> dict:
+async def extract_features(db, project_id: int, content: str, file_type: str = "", source_ref: str = "") -> dict:
     """Stage 1: Extract test modules and function points from requirement content.
 
     For Lanhu URLs, uses the changelog-first extraction pipeline:
@@ -1077,8 +1082,10 @@ async def extract_features(content: str, file_type: str = "", source_ref: str = 
     Returns dict with keys: modules, overall_assessment, extraction_summary,
     changelog, client_scope.
     """
-    if not settings.ai_api_key:
-        raise ValueError("AI_API_KEY 未配置，请在 .env 中设置 AI_API_KEY")
+    try:
+        ai_config_service.resolve(db, project_id)
+    except AIProviderUnconfiguredError as exc:
+        raise ValueError(str(exc)) from exc
 
     effective_content = content
     extraction_summary = ""
@@ -1140,7 +1147,7 @@ async def extract_features(content: str, file_type: str = "", source_ref: str = 
 
     # batch-167: 大文档直接分块提取，避免单次调用截断丢功能点
     if len(effective_content) >= _EXTRACT_CHUNK_CHARS:
-        merged = _merge_extractions(await _extract_in_chunks(effective_content, system_prompt))
+        merged = _merge_extractions(await _extract_in_chunks(db, project_id, effective_content, system_prompt))
         merged["extraction_meta"] = {
             "mode": "chunked",
             "chunks": len(_split_content_chunks(effective_content)),
@@ -1157,10 +1164,10 @@ async def extract_features(content: str, file_type: str = "", source_ref: str = 
         return merged
 
     extraction_max_tokens = max(settings.ai_max_tokens * 2, 32768)
-    resp = await _call_ai_api(system_prompt, user_message, "extraction",
+    resp = await _call_ai_api(db, project_id, system_prompt, user_message, "extraction",
                               max_tokens=extraction_max_tokens)
     if resp["result"] is None and resp.get("truncated"):
-        merged = _merge_extractions(await _extract_in_chunks(effective_content, system_prompt))
+        merged = _merge_extractions(await _extract_in_chunks(db, project_id, effective_content, system_prompt))
         merged["extraction_meta"] = {
             "mode": "chunked",
             "chunks": len(_split_content_chunks(effective_content)),
@@ -1219,7 +1226,7 @@ async def extract_features(content: str, file_type: str = "", source_ref: str = 
 
 # ── Batch 172: DSH harness 模式（可选，默认关闭；失败自动降级直连）──
 
-async def _run_harness_generation(system_prompt: str, user_message: str, label: str = "") -> dict:
+async def _run_harness_generation(db, project_id: int, system_prompt: str, user_message: str, label: str = "") -> dict:
     """通过 DeepSeek Harness 执行一次生成任务，返回与 _call_ai_api 同构的结果。
 
     harness 有工具/执行能力，可读取并校验输出；本处把「系统规范 + 用户任务」作为
@@ -1258,7 +1265,8 @@ async def _run_harness_generation(system_prompt: str, user_message: str, label: 
         return {"result": None, "raw": raw, "finish_reason": "error", "truncated": False, "error": str(exc)}
 
 
-async def _call_ai_api_with_harness(
+async def _call_ai_api_with_harness(    db,
+    project_id: int,
     system_prompt: str,
     user_message: str,
     label: str = "",
@@ -1271,16 +1279,16 @@ async def _call_ai_api_with_harness(
     """
     harness_on = settings.dsh_enabled if use_harness is None else use_harness
     if harness_on:
-        harness_resp = await _run_harness_generation(system_prompt, user_message, label)
+        harness_resp = await _run_harness_generation(db, project_id, system_prompt, user_message, label)
         if harness_resp["result"] is not None:
             return harness_resp
         logger.warning("[ai_service] %s harness 模式未产出可用结果，降级直连", label)
-    return await _call_ai_api(system_prompt, user_message, label, max_tokens)
+    return await _call_ai_api(db, project_id, system_prompt, user_message, label, max_tokens)
 
 
 # ── Public API: Stage 2 — Test Case Generation ───────────────
 
-async def generate_test_cases(content: str, file_type: str = "", source_ref: str = "",
+async def generate_test_cases(db, project_id: int, content: str, file_type: str = "", source_ref: str = "",
                               extraction: dict | None = None,
                               use_harness: bool | None = None) -> dict:
     """Generate test cases from requirement content using AI.
@@ -1292,8 +1300,10 @@ async def generate_test_cases(content: str, file_type: str = "", source_ref: str
     When extraction is provided (Stage 2 guided generation), the confirmed
     modules and function points are injected as context.
     """
-    if not settings.ai_api_key:
-        raise ValueError("AI_API_KEY 未配置，请在 .env 中设置 AI_API_KEY")
+    try:
+        ai_config_service.resolve(db, project_id)
+    except AIProviderUnconfiguredError as exc:
+        raise ValueError(str(exc)) from exc
 
     effective_content = content
     extraction_summary = ""
@@ -1355,10 +1365,10 @@ async def generate_test_cases(content: str, file_type: str = "", source_ref: str
                     effective_content, effective_file_type, source_ref, {"modules": chunk}
                 )
                 label = f"functional-chunk-{index}"
-                func_resp = await _call_ai_api_with_harness(functional_system, chunk_user, label, use_harness=use_harness)
+                func_resp = await _call_ai_api_with_harness(db, project_id, functional_system, chunk_user, label, use_harness=use_harness)
                 if func_resp["truncated"]:
                     chunk_warnings.append(f"{label} 生成被截断，已重试")
-                    func_resp = await _call_ai_api_with_harness(functional_system, chunk_user, f"{label}-retry", use_harness=use_harness)
+                    func_resp = await _call_ai_api_with_harness(db, project_id, functional_system, chunk_user, f"{label}-retry", use_harness=use_harness)
                 if func_resp["result"] is None:
                     chunk_warnings.append(
                         f"{label} 生成失败：{func_resp.get('error', '未知错误')}（该块未产出用例）"
@@ -1394,7 +1404,7 @@ async def generate_test_cases(content: str, file_type: str = "", source_ref: str
                 page_filtered=page_filtered, folder_name=folder_name,
                 changelog=changelog_info, client_scope=client_scope,
             )
-        func_resp = await _call_ai_api_with_harness(functional_system, user_message, "functional", use_harness=use_harness)
+        func_resp = await _call_ai_api_with_harness(db, project_id, functional_system, user_message, "functional", use_harness=use_harness)
         if func_resp["truncated"]:
             warnings.append("功能用例生成被截断，结果可能不完整")
         if func_resp["result"] is None:

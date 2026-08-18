@@ -120,6 +120,8 @@ def _run_extract(db, document_id: int, project_id: int = 0) -> dict:
     from app.services.ai_service import extract_features as _ai_extract
 
     result = asyncio.run(_ai_extract(
+        db,
+        project_id,
         content,
         file_type=doc.get("file_type", ""),
         source_ref=str(doc.get("source_ref") or ""),
@@ -152,6 +154,8 @@ def _run_generate(db, document_id: int, project_id: int = 0) -> dict:
     import asyncio
 
     result = asyncio.run(_ai_gen(
+        db,
+        project_id,
         content,
         file_type=doc.get("file_type", ""),
         source_ref=str(doc.get("source_ref") or ""),

@@ -161,9 +161,11 @@ async def extract_features(
         from app.services.ai_service import extract_features as ai_extract
 
         extraction_result = await ai_extract(
+            db,
             content=doc_content,
             file_type=doc["file_type"],
             source_ref=doc["source_ref"],
+            project_id=current.project_id or 0,
         )
     except ValueError as e:
         return R(code=400, msg=str(e))
