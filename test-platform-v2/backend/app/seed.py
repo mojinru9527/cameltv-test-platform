@@ -239,7 +239,7 @@ _TESTER_ACTIONS = {
     "menu:dsh_tasks",
     "wiki:view", "wiki:diff",
     # AI 配置中心（查看权限；管理留管理员）
-    "ai_config:view",
+    "menu:ai_config", "ai_config:view",
     # 蓝湖证据包（采集可发起；导入/审核留管理员）
     "lanhu_evidence:view", "lanhu_evidence:run",
     # 性能监控
