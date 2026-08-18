@@ -29,6 +29,7 @@ from sqlalchemy.orm import Session
 
 from app.models.api_asset import ApiEndpoint
 from app.models.test_case import TestCase
+from app.services.ai_config_service import AIProviderUnconfiguredError, ai_config_service
 
 # ── 业务操作动词 → HTTP 方法 映射（规则模式核心） ──
 _VERB_METHOD: dict[str, str] = {
@@ -289,20 +290,20 @@ def generalize_cases(
     }
 
     if mode == "ai":
-        _enhance_with_ai(result)
+        _enhance_with_ai(db, project_id, result)
 
     return result
 
 
-def _enhance_with_ai(result: dict) -> None:
+def _enhance_with_ai(db, project_id: int, result: dict) -> None:
     """AI 增强：为生成的用例补全请求体样例与断言细节。
 
-    依赖 settings.ai_api_key；未配置或调用失败时静默保留规则结果（降级）。
+    依赖项目级 AI 配置；未配置或调用失败时静默保留规则结果（降级）。
     """
-    from app.core.config import settings
-
-    if not settings.ai_api_key:
-        # 未配置 AI key：降级为 rule 模式（result["mode"] 原为请求值 "ai"）
+    try:
+        ai_config_service.resolve(db, project_id)
+    except AIProviderUnconfiguredError:
+        # 未配置 AI：降级为 rule 模式（result["mode"] 原为请求值 "ai"）
         result["mode"] = "rule"
         return
     if not result["generated"]:
@@ -333,7 +334,7 @@ def _enhance_with_ai(result: dict) -> None:
         user_message = json.dumps(payloads, ensure_ascii=False)
 
         raw = asyncio.run(
-            _call_ai_api(system_prompt, user_message, "manual-api-generalization")
+            _call_ai_api(db, project_id, system_prompt, user_message, "manual-api-generalization")
         )
         parsed = _parse_ai_array(raw)
         for case, extra in zip(result["generated"], parsed):
