@@ -36,7 +36,8 @@ from __future__ import annotations
 from sqlalchemy import Boolean, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.db import Base, TimestampMixin
+from app.core.db import Base
+from app.models.base import TimestampMixin
 
 
 class AiProvider(Base, TimestampMixin):
@@ -54,11 +55,11 @@ class AiProvider(Base, TimestampMixin):
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
 ```
 
-（`Base`/`TimestampMixin` 从 `app.core.db` 导入；与 `models/dsh_task.py` 同款声明。若 `TimestampMixin` 位于其他模块，按仓库现有模型的实际导入路径为准。）
+（已核实：`Base` 在 `app/core/db.py`（`class Base(DeclarativeBase)`），`TimestampMixin` 在 `app/models/base.py`（created_at/updated_at datetime）。）
 
 - [ ] **Step 3: 模型注册 + Alembic 迁移**
 
-在 `app/models/__init__.py` 导出 `AiProvider`（若该文件集中注册模型则追加 import 行）。
+在 `app/models/__init__.py` 追加 `from app.models.ai_provider import AiProvider`（该文件集中导出全部模型，已核实）。
 
 创建迁移文件 `alembic/versions/20260818_ai_provider.py`（参考 `20260817_b191_dsh_team_mode.py` 格式，SQLite/PG 兼容）：
 
@@ -70,7 +71,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision = "20260818_ai_provider"
-down_revision = "<当前 head revision 标识>"  # 执行时用 `alembic heads` 查实际值
+down_revision = "20260817_b191_dsh_team_mode"  # 已核实：迁移链 head（af68b09103f3 是另一条旧链，非 head）
 branch_labels = None
 depends_on = None
 
