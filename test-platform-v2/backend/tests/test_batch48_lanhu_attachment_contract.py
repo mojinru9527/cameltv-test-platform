@@ -53,7 +53,7 @@ def test_mixed_attachment_result_keeps_success_and_flags_missing_text_for_manual
     )
     db_session.flush()
 
-    async def fake_analyze(raw_text: str, attachment_name: str):
+    async def fake_analyze(db, project_id, raw_text: str, attachment_name: str):
         return attachment_extractor.AttachmentContent(
             summary=f"{attachment_name} 已提取",
             raw_text=raw_text,

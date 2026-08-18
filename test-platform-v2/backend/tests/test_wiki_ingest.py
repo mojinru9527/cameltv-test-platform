@@ -41,14 +41,14 @@ class TestAnalysis:
     def test_uses_llm_result(self, monkeypatch, db_session):
         monkeypatch.setattr(ingest_service, "_call_llm_sync",
                             lambda *a, **k: {"result": _ANALYSIS, "raw": "", "error": None})
-        out = ingest_service._run_analysis(_raw(db_session))
+        out = ingest_service._run_analysis(db_session, 1, _raw(db_session))
         assert out["requirements"][0]["title"] == "比赛推送"
         assert not out.get("_fallback")
 
     def test_fallback_when_llm_unavailable(self, monkeypatch, db_session):
         monkeypatch.setattr(ingest_service, "_call_llm_sync",
                             lambda *a, **k: {"result": None, "raw": "", "error": "AI_API_KEY 未配置"})
-        out = ingest_service._run_analysis(_raw(db_session))
+        out = ingest_service._run_analysis(db_session, 1, _raw(db_session))
         assert out.get("_fallback") is True
         assert out["requirements"] and out["requirements"][0]["title"] == "比赛推送"
 
