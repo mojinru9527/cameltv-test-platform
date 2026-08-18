@@ -208,10 +208,11 @@ class SkillApplyResult(BaseModel):
 @router.get("/skills", response_model=R[list[dict]], summary="列出可用 Skills 模板")
 def list_skills(
     current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
 ):
     """列出所有预置 AI 能力模板（生成用例、分析缺陷、提取契约等）。"""
     from app.services.knowledge.skill_service import list_skills
-    return R.ok(list_skills())
+    return R.ok(list_skills(db, current.project_id or 0))
 
 
 @router.post("/skills/{skill_name}/apply", response_model=R[SkillApplyResult], summary="应用 Skills 模板")

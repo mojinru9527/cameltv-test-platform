@@ -151,6 +151,8 @@ def _classify_action_type(action: str) -> str:
 # ── P2: AI semantic analysis over locally extracted text ──
 
 async def _p2_ai_multimodal(
+    db,
+    project_id: int,
     page: RequirementModule,
     evidence_page: LanhuEvidencePage | None,
 ) -> list[PageInteraction]:
@@ -170,6 +172,8 @@ async def _p2_ai_multimodal(
         return []
 
     payload = await call_json_model(
+        db=db,
+        project_id=project_id,
         system_prompt=(
             "根据页面名称和本地 OCR/DOM 文本识别明确的点击跳转。不得把普通正文猜成按钮。"
             "返回 JSON 对象，字段 interactions 为数组；每项包含 trigger、target_page、"
@@ -281,6 +285,7 @@ async def extract_page_interactions(
     db: Session,
     *,
     page_module_id: int,
+    project_id: int = 0,
     evidence_page_id: int | None = None,
     preferred_layers: list[str] | None = None,
 ) -> tuple[list[PageInteraction], ExtractionReport]:
@@ -316,7 +321,7 @@ async def extract_page_interactions(
             layer_interactions = _p1_dom_extraction(evidence_page)
         elif layer == "ai":
             try:
-                layer_interactions = await _p2_ai_multimodal(page, evidence_page)
+                layer_interactions = await _p2_ai_multimodal(db, project_id, page, evidence_page)
             except (LLMUnavailableError, LLMResponseError) as exc:
                 warning = f"Page #{page.id} AI semantic extraction unavailable: {exc}"
                 logger.warning(warning)
@@ -365,6 +370,7 @@ async def extract_all_pages(
     db: Session,
     *,
     release_bundle_id: int,
+    project_id: int = 0,
     preferred_layers: list[str] | None = None,
     save: bool = True,
 ) -> ExtractionReport:
@@ -400,6 +406,7 @@ async def extract_all_pages(
             interactions, page_report = await extract_page_interactions(
                 db,
                 page_module_id=page.id,
+                project_id=project_id,
                 evidence_page_id=evidence_page.id if evidence_page else None,
                 preferred_layers=preferred_layers,
             )
