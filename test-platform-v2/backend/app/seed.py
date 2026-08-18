@@ -49,6 +49,8 @@ _MENUS = [
     ("menu:agent-workbench", "Agent 工作台", "", "/agent-workbench", "SparklesOutlined", 21),
     # (batch-172) DSH 任务执行模块
     ("menu:dsh_tasks", "DSH 任务", "", "/dsh-tasks", "TerminalOutlined", 22),
+    # (batch A) AI 模型配置中心
+    ("menu:ai_config", "AI 配置", "", "/ai-config", "SettingOutlined", 23),
     # (batch-165) 性能监控已按用户要求隐藏：注释菜单行，避免新库生成该入口。
     #     ("menu:perftest", "性能监控", "", "/perftest", "CpuOutlined", 22),
     ("menu:lanhu_evidence", "蓝湖证据包", "", "/lanhu-evidence", "FileTextOutlined", 23),
@@ -189,6 +191,9 @@ _ACTIONS = [
     ("perftest:delete", "删除性能监控会话", "button"),
     ("perftest:execute", "执行性能监控", "button"),
     ("perftest:report", "查看性能报告", "button"),
+    # AI 配置中心（Batch A）
+    ("ai_config:view", "查看 AI 配置", "button"),
+    ("ai_config:manage", "管理 AI 配置", "button"),
 ]
 
 # 测试人员可见的菜单子集
@@ -233,6 +238,8 @@ _TESTER_ACTIONS = {
     "agent:view", "agent:list",
     "menu:dsh_tasks",
     "wiki:view", "wiki:diff",
+    # AI 配置中心（查看权限；管理留管理员）
+    "ai_config:view",
     # 蓝湖证据包（采集可发起；导入/审核留管理员）
     "lanhu_evidence:view", "lanhu_evidence:run",
     # 性能监控
