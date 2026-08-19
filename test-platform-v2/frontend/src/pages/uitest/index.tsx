@@ -8,8 +8,10 @@ import {
   Search,
   Trash2,
   FileText,
+  MessageSquare,
 } from '@/lib/icons'
 import { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { createUiJob, deleteUiJob, fetchUiJob, fetchUiJobs, fetchUiRuns, triggerUiJob, updateUiJob, fetchScripts, fetchRunDetail, cancelRun, fetchRunArtifacts } from '@/api/uitest'
 import { fetchEnvironments } from '@/api/environment'
 import { fetchTestCases } from '@/api/testcase'
@@ -65,6 +67,7 @@ import UiRunDetailDialog from './components/UiRunDetailDialog'
 export { ProtectedArtifactMedia } from './components/ProtectedArtifactMedia'
 
 export default function UiTestPage() {
+  const navigate = useNavigate()
   // (batch-165) 用例/脚本资产可见性
   const [pageTab, setPageTab] = useState<'jobs' | 'assets'>('jobs')
   const [uiScripts, setUiScripts] = useState<string[]>([])
@@ -522,6 +525,15 @@ export default function UiTestPage() {
                             onClick={() => { form.reset({ name: `${c.title}-任务`, description: '', test_spec: '', browser: 'chromium', environment_id: null, case_id: c.id, cron_expression: '', schedule_enabled: false }); setEditing(null); setDrawer(true) }}
                           >
                             以此用例新建任务
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            title="用 DSH 场景向导生成 UI 自动化用例"
+                            onClick={() => navigate(`/dsh-tasks?scene=ui&hint=${encodeURIComponent(c.title || '')}`)}
+                          >
+                            <MessageSquare className="size-3.5" />
+                            用 DSH 生成
                           </Button>
                         </TableCell>
                       </TableRow>
