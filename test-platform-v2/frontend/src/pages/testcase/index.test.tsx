@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router'
 import { useAuthStore } from '@/stores/auth'
 
 const api = vi.hoisted(() => ({
@@ -113,7 +114,7 @@ describe('用例批量删除确认', () => {
   })
 
   it('确认前不提交，确认后按当前页选中范围提交', async () => {
-    render(<TestCasePage />)
+    render(<MemoryRouter><TestCasePage /></MemoryRouter>)
 
     fireEvent.click(await screen.findByRole('checkbox', { name: '选择当前页全部用例' }))
     fireEvent.click(screen.getByRole('button', { name: '批量删除 (2)' }))
@@ -128,7 +129,7 @@ describe('用例批量删除确认', () => {
   })
 
   it('默认展示功能用例，并提供全部规范用例类型入口', () => {
-    render(<TestCasePage />)
+    render(<MemoryRouter><TestCasePage /></MemoryRouter>)
 
     expect(screen.getByRole('button', { name: /功能用例/ }).getAttribute('aria-pressed')).toBe('true')
     expect(screen.getByRole('button', { name: /^接口用例 \(/ })).toBeTruthy()
@@ -137,7 +138,7 @@ describe('用例批量删除确认', () => {
   })
 
   it('按界面和异常性质提供规范化筛选，并显示场景标签', () => {
-    render(<TestCasePage />)
+    render(<MemoryRouter><TestCasePage /></MemoryRouter>)
 
     expect(screen.getByRole('combobox', { name: '按产品界面筛选' })).toBeTruthy()
     expect(screen.getByRole('combobox', { name: '按用例场景筛选' })).toBeTruthy()
@@ -146,7 +147,7 @@ describe('用例批量删除确认', () => {
   })
 
   it('显式展示父模块直属用例，使父子计数可以完整对账', () => {
-    render(<TestCasePage />)
+    render(<MemoryRouter><TestCasePage /></MemoryRouter>)
 
     const directRows = screen.getAllByText('直属用例')
     const counts = directRows.map((el) => el.parentElement?.textContent || '')
@@ -162,7 +163,7 @@ describe('用例批量删除确认', () => {
   })
 
   it('取消批量删除时产生零写请求', async () => {
-    render(<TestCasePage />)
+    render(<MemoryRouter><TestCasePage /></MemoryRouter>)
 
     fireEvent.click(await screen.findByRole('checkbox', { name: '选择当前页全部用例' }))
     fireEvent.click(screen.getByRole('button', { name: '批量删除 (2)' }))
@@ -177,7 +178,7 @@ describe('用例批量删除确认', () => {
     api.batchDeleteCases.mockImplementation(() => new Promise<void>((resolve) => {
       resolveDelete = resolve
     }))
-    render(<TestCasePage />)
+    render(<MemoryRouter><TestCasePage /></MemoryRouter>)
 
     fireEvent.click(await screen.findByRole('checkbox', { name: '选择当前页全部用例' }))
     fireEvent.click(screen.getByRole('button', { name: '批量删除 (2)' }))
@@ -192,7 +193,7 @@ describe('用例批量删除确认', () => {
 
   it('服务端原子失败时保留删除范围供复核', async () => {
     api.batchDeleteCases.mockRejectedValue(new Error('atomic rollback'))
-    render(<TestCasePage />)
+    render(<MemoryRouter><TestCasePage /></MemoryRouter>)
 
     fireEvent.click(await screen.findByRole('checkbox', { name: '选择当前页全部用例' }))
     fireEvent.click(screen.getByRole('button', { name: '批量删除 (2)' }))

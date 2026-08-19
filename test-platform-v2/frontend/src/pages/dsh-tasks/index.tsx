@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
 import { Button } from '@/ui'
@@ -33,7 +33,7 @@ import {
   type DshTaskArtifact,
 } from '@/api/dshTasks'
 import { fetchAiResolve, fetchAiProviders, type AiResolveResult, type AiProviderItem } from '@/api/aiConfig'
-import { SCENES, sceneLabel, type SceneDef } from './scenes'
+import { SCENES, SCENE_BY_ID, sceneLabel, type SceneDef } from './scenes'
 import SceneWizard from './components/SceneWizard'
 
 const STATUS_BADGE: Record<string, { label: string; color: string }> = {
@@ -91,6 +91,9 @@ export default function DshTasksPage() {
   // B1：AI 提供方池（场景向导配置项）+ 向导选中场景
   const [providers, setProviders] = useState<AiProviderItem[]>([])
   const [wizardScene, setWizardScene] = useState<SceneDef | null>(null)
+  // B3：深链预填输入（?scene=xxx&hint=yyy）
+  const [wizardInput, setWizardInput] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const load = useCallback((signal?: AbortSignal) => {
     setLoading(true)
@@ -132,6 +135,21 @@ export default function DshTasksPage() {
     loadAiResolve(signal)
     loadProviders(signal)
   }, [load, loadHealth, loadModelPool, loadAiResolve, loadProviders])
+
+  // B3 全量深链：?scene=<sceneId>&hint=<文本> → 自动打开对应场景向导并预填输入（一次，随后清 URL）
+  useEffect(() => {
+    const sceneId = searchParams.get('scene')
+    if (!sceneId) return
+    const scene = SCENE_BY_ID[sceneId]
+    if (!scene || scene.id === 'general') {
+      setSearchParams({}, { replace: true })
+      return
+    }
+    setWizardInput(searchParams.get('hint') || '')
+    setWizardScene(scene)
+    setSearchParams({}, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useAbortableEffect((signal) => {
     if (!selected?.id) return
@@ -584,6 +602,7 @@ export default function DshTasksPage() {
           onOpenChange={(o) => { if (!o) setWizardScene(null) }}
           scene={wizardScene}
           providers={providers}
+          initialInput={wizardInput}
           onSubmitted={load}
         />
       )}

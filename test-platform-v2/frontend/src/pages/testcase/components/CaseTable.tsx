@@ -1,4 +1,5 @@
 import { Fragment, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { Badge, Button } from '@/ui'
 import type { BadgeTone } from '@/ui'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -22,7 +23,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { AsyncState } from '@/components/state'
-import { CheckCircle2, ChevronDown, ChevronRight, Edit, History, Send, Trash2, XCircle } from '@/lib/icons'
+import { CheckCircle2, ChevronDown, ChevronRight, Edit, History, Send, Trash2, XCircle, MessageSquare } from '@/lib/icons'
 import { formatNumberedText, formatStepActions, formatStepExpectations } from '../caseListFormatters'
 
 const PRIORITY_TONES: Record<string, BadgeTone> = { P0: 'danger', P1: 'warning', P2: 'info', P3: 'neutral' }
@@ -89,6 +90,7 @@ export default function CaseTable({
   onOpenVersionHistory,
   onOpenReviewDialog,
 }: CaseTableProps) {
+  const navigate = useNavigate()
   const { keyword, selSurface, selDomain, selModule, caseNature, priority } = activeFilters
 
   // Batch 183（FIX-173-P3-10）：行内展开查看步骤/预期配对（折叠三列高密度全文）
@@ -211,6 +213,15 @@ export default function CaseTable({
                     </TableCell>
                     <TableCell className="sticky right-0 z-10 bg-card shadow-[-10px_0_18px_-16px_hsl(var(--foreground))]">
                       <div className="flex items-center gap-1">
+                        <Button
+                          size="icon-xs"
+                          variant="ghost"
+                          onClick={() => navigate(`/dsh-tasks?scene=functional&hint=${encodeURIComponent(r.title || '')}`)}
+                          aria-label={`用 DSH 补充用例：${r.title || r.id}`}
+                          title="用 DSH 场景向导补充用例"
+                        >
+                          <MessageSquare className="size-3" aria-hidden="true" />
+                        </Button>
                         <Button
                           size="icon-xs"
                           variant="ghost"

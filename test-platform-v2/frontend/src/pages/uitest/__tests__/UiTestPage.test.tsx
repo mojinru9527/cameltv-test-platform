@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router'
 import { useAuthStore } from '@/stores/auth'
 
 const api = vi.hoisted(() => ({
@@ -62,7 +63,7 @@ describe('UI 自动化页面请求状态', () => {
   it('列表请求失败时显示可重试错误态而不是空数据', async () => {
     api.fetchUiJobs.mockRejectedValue(new Error('无权访问当前项目'))
 
-    render(<UiTestPage />)
+    render(<MemoryRouter><UiTestPage /></MemoryRouter>)
 
     expect(await screen.findByRole('alert')).toBeTruthy()
     expect(screen.getByText('无权访问当前项目')).toBeTruthy()
@@ -71,7 +72,7 @@ describe('UI 自动化页面请求状态', () => {
   })
 
   it('打开脚本选择器只请求一次脚本列表', async () => {
-    render(<UiTestPage />)
+    render(<MemoryRouter><UiTestPage /></MemoryRouter>)
     await waitFor(() => expect(api.fetchUiJobs).toHaveBeenCalledTimes(1))
 
     fireEvent.click(screen.getByRole('button', { name: '新建任务' }))
@@ -141,7 +142,7 @@ describe('UI 自动化页面请求状态', () => {
       }],
     })
 
-    render(<UiTestPage />)
+    render(<MemoryRouter><UiTestPage /></MemoryRouter>)
 
     expect(await screen.findByText('体育生产只读')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: '执行' }))
@@ -189,7 +190,7 @@ describe('UI 自动化页面请求状态', () => {
       }],
     })
 
-    render(<UiTestPage />)
+    render(<MemoryRouter><UiTestPage /></MemoryRouter>)
 
     const trigger = await screen.findByRole('button', { name: '执行' })
     expect((trigger as HTMLButtonElement).disabled).toBe(true)

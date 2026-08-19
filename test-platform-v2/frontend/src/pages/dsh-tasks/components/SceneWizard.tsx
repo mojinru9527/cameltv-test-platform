@@ -17,10 +17,11 @@ interface SceneWizardProps {
   onOpenChange: (o: boolean) => void
   scene: SceneDef
   providers: AiProviderItem[]
+  initialInput?: string
   onSubmitted: () => void
 }
 
-export default function SceneWizard({ open, onOpenChange, scene, providers, onSubmitted }: SceneWizardProps) {
+export default function SceneWizard({ open, onOpenChange, scene, providers, initialInput, onSubmitted }: SceneWizardProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [input, setInput] = useState('')
   // Step 2 配置
@@ -33,11 +34,11 @@ export default function SceneWizard({ open, onOpenChange, scene, providers, onSu
   const [taskText, setTaskText] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  // 打开/场景切换时重置（选择 provider 与默认 model）
+  // 打开/场景切换时重置（选择 provider 与默认 model；B3 深链预填 input）
   useEffect(() => {
     if (!open) return
     setStep(1)
-    setInput('')
+    setInput(initialInput ?? '')
     setMode('team')
     setBatchMode('full')
     setTeamKind('tester')

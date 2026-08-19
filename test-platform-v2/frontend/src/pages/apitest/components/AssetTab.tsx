@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
-import { Search, FileUp, RefreshCw, FlaskConical, Zap, ChevronLeft, ChevronRight } from '@/lib/icons'
+import { Search, FileUp, RefreshCw, FlaskConical, Zap, ChevronLeft, ChevronRight, MessageSquare } from '@/lib/icons'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
 import { Badge } from '@/ui'
@@ -26,6 +27,7 @@ interface Props {
 }
 
 export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: Props) {
+  const navigate = useNavigate()
   const [services, setServices] = useState<ApiService[]>([])
   const [selectedService, setSelectedService] = useState<number | undefined>()
   const [endpoints, setEndpoints] = useState<ApiEndpoint[]>([])
@@ -218,6 +220,18 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
             title={!aiConfigured ? '当前项目未配置 AI 提供方' : undefined}
           >
             <Zap className={`size-4 ${generating.has(ep.id) ? 'animate-pulse' : ''}`} />
+          </Button>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            aria-label={`用 DSH 生成接口用例 ${ep.summary || ep.path}`}
+            title="用 DSH 场景向导生成接口用例"
+            onClick={(e) => {
+              e.stopPropagation()
+              navigate(`/dsh-tasks?scene=api&hint=${encodeURIComponent(`${ep.method || 'GET'} ${ep.path}`)}`)
+            }}
+          >
+            <MessageSquare className="size-4" />
           </Button>
         </div>
       </div>

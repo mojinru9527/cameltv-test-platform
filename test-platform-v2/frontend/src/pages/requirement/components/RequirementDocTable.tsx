@@ -439,6 +439,15 @@ export default function RequirementDocTable({
                           )}
                           <Button
                             size="sm"
+                            variant="secondary"
+                            title="用 DSH 场景向导生成功能用例"
+                            onClick={() => onNavigate(`/dsh-tasks?scene=functional&hint=${encodeURIComponent(r.title || '')}`)}
+                          >
+                            <Sparkles className="size-3.5" />
+                            用 DSH 生成
+                          </Button>
+                          <Button
+                            size="sm"
                             variant="danger"
                             disabled={!canWriteDocs}
                             onClick={() => onDelete(r)}

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router'
 
 // jsdom polyfill: ResizeObserver not available in test environment
 global.ResizeObserver = class {
@@ -84,7 +85,7 @@ describe('接口资产服务与模块层级', () => {
   })
 
   it('加载后展示服务 Tab，全部服务视图有服务名分组', async () => {
-    render(<AssetTab onOpenImport={vi.fn()} refreshKey={0} />)
+    render(<MemoryRouter><AssetTab onOpenImport={vi.fn()} refreshKey={0} /></MemoryRouter>)
 
     // Services are loaded as tabs
     expect(await screen.findByRole('tab', { name: /服务 A/ })).toBeTruthy()
@@ -100,7 +101,7 @@ describe('接口资产服务与模块层级', () => {
   })
 
   it('服务 Tab 提供左右滑动控制并按可滚动范围禁用', async () => {
-    render(<AssetTab onOpenImport={vi.fn()} refreshKey={0} />)
+    render(<MemoryRouter><AssetTab onOpenImport={vi.fn()} refreshKey={0} /></MemoryRouter>)
 
     await screen.findByRole('tab', { name: /服务 A/ })
     const viewport = screen.getByTestId('service-tabs-viewport')

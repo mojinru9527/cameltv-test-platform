@@ -8,6 +8,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router'
 
 // ── Mock API client ──
 const mockGet = vi.fn()
@@ -198,7 +199,7 @@ describe('UiRunDetail component rendering', () => {
     })
 
     const { default: UiTestPage } = await import('@/pages/uitest/index')
-    render(<UiTestPage />)
+    render(<MemoryRouter><UiTestPage /></MemoryRouter>)
 
     fireEvent.click(await screen.findByRole('button', { name: '详情' }))
     const resultCell = await screen.findByText('总计 1 · 通过 1 · 失败 0')
@@ -284,7 +285,7 @@ describe('UiRunDetail component rendering', () => {
     })
 
     const { default: UiTestPage } = await import('@/pages/uitest/index')
-    render(<UiTestPage />)
+    render(<MemoryRouter><UiTestPage /></MemoryRouter>)
 
     fireEvent.click(await screen.findByRole('button', { name: '编辑' }))
 
