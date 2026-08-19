@@ -16,6 +16,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
 import { useAuthStore } from '@/stores/auth'
 import Placeholder from '@/pages/Placeholder'
+import { cn } from '@/lib/utils'
 import { Play, Loader2, RefreshCw, XCircle, AlertCircle, Eye } from '@/lib/icons'
 import TeamProgress from './team-progress'
 import {
@@ -29,7 +30,9 @@ import {
   type DshHealth,
   type DshModelPool,
 } from '@/api/dshTasks'
-import { fetchAiResolve, type AiResolveResult } from '@/api/aiConfig'
+import { fetchAiResolve, fetchAiProviders, type AiResolveResult, type AiProviderItem } from '@/api/aiConfig'
+import { SCENES, sceneLabel, type SceneDef } from './scenes'
+import SceneWizard from './components/SceneWizard'
 
 const STATUS_BADGE: Record<string, { label: string; color: string }> = {
   pending: { label: '等待中', color: 'bg-muted text-muted-foreground' },
@@ -66,6 +69,9 @@ export default function DshTasksPage() {
   const [selectedModel, setSelectedModel] = useState('')
   // Batch A：项目 AI 配置状态（未配置则引导去 AI 配置页）
   const [aiResolve, setAiResolve] = useState<AiResolveResult | null>(null)
+  // B1：AI 提供方池（场景向导配置项）+ 向导选中场景
+  const [providers, setProviders] = useState<AiProviderItem[]>([])
+  const [wizardScene, setWizardScene] = useState<SceneDef | null>(null)
 
   const load = useCallback((signal?: AbortSignal) => {
     setLoading(true)
@@ -93,12 +99,20 @@ export default function DshTasksPage() {
       .catch(() => undefined)
   }, [])
 
+  // B1：场景向导需要 AI 提供方池（静默失败，空则向导内提示去配置）
+  const loadProviders = useCallback((signal?: AbortSignal) => {
+    fetchAiProviders(signal)
+      .then((res) => { if (!signal?.aborted) setProviders(res) })
+      .catch(() => undefined)
+  }, [])
+
   useAbortableEffect((signal) => {
     load(signal)
     loadHealth(signal)
     loadModelPool(signal)
     loadAiResolve(signal)
-  }, [load, loadHealth, loadModelPool, loadAiResolve])
+    loadProviders(signal)
+  }, [load, loadHealth, loadModelPool, loadAiResolve, loadProviders])
 
   useAbortableEffect((signal) => {
     if (!selected?.id) return
@@ -188,6 +202,16 @@ export default function DshTasksPage() {
   }
 
   const unavailable = Boolean(health && !health.available)
+  const sceneDisabled = !canRun || unavailable || Boolean(aiResolve && !aiResolve.configured)
+
+  const handleSceneClick = (scene: SceneDef) => {
+    if (sceneDisabled) return
+    if (scene.id === 'general') {
+      setCreateOpen(true)
+      return
+    }
+    setWizardScene(scene)
+  }
 
   return (
     <div className="space-y-4">
@@ -228,6 +252,39 @@ export default function DshTasksPage() {
         </Button>
       </PageHeader>
 
+      {/* B1：场景卡片区（5 场景，点击打开对应向导；general 复用原新建对话框） */}
+      <Card>
+        <CardContent className="pt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {SCENES.map((scene) => {
+              const Icon = scene.icon
+              const disabled = sceneDisabled
+              return (
+                <button
+                  key={scene.id}
+                  type="button"
+                  onClick={() => handleSceneClick(scene)}
+                  disabled={disabled}
+                  title={disabled ? (aiResolve && !aiResolve.configured ? '当前项目未配置 AI 提供方，请先到 AI 配置页设置' : 'DSH 服务不可用或无权限') : undefined}
+                  className={cn(
+                    'flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-colors',
+                    disabled
+                      ? 'cursor-not-allowed opacity-50'
+                      : 'hover:border-ring hover:bg-muted/50',
+                  )}
+                >
+                  <Icon className="size-5 text-muted-foreground" />
+                  <div>
+                    <div className="text-sm font-medium">{scene.label}</div>
+                    <div className="text-xs text-muted-foreground mt-1 leading-relaxed">{scene.description}</div>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -235,7 +292,7 @@ export default function DshTasksPage() {
               <TableRow>
                 <TableHead className="w-16">ID</TableHead>
                 <TableHead>任务</TableHead>
-                <TableHead className="w-16">类型</TableHead>
+                <TableHead className="w-16">场景</TableHead>
                 <TableHead className="w-20">状态</TableHead>
                 <TableHead className="w-28">创建时间</TableHead>
                 <TableHead className="w-24">操作</TableHead>
@@ -269,11 +326,17 @@ export default function DshTasksPage() {
                         {t.task || '-'}
                       </TableCell>
                       <TableCell>
-                        {t.mode === 'team' ? (
-                          <Badge className="bg-status-info-muted text-status-info">团队</Badge>
-                        ) : (
-                          <Badge variant="outline">标准</Badge>
-                        )}
+                        {(() => {
+                          const label = sceneLabel(t.scene)
+                          if (label !== t.scene) {
+                            return <Badge variant="outline">{label}</Badge>
+                          }
+                          return t.mode === 'team' ? (
+                            <Badge className="bg-status-info-muted text-status-info">团队</Badge>
+                          ) : (
+                            <Badge variant="outline">标准</Badge>
+                          )
+                        })()}
                       </TableCell>
                       <TableCell>
                         <Badge className={status.color}>
@@ -339,6 +402,11 @@ export default function DshTasksPage() {
                 <h4 className="font-medium mb-1">任务</h4>
                 <pre className="text-xs bg-muted p-3 rounded-md whitespace-pre-wrap">{detail.task}</pre>
               </div>
+              {sceneLabel(detail.scene) !== detail.scene && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>场景: {sceneLabel(detail.scene)}</span>
+                </div>
+              )}
               {/* Batch 191：团队进度树（mode=team 且快照非空） */}
               {detail.mode === 'team' && Object.keys(detail.team_json || {}).length > 0 ? (
                 <div>
@@ -459,6 +527,16 @@ export default function DshTasksPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {wizardScene && wizardScene.id !== 'general' && (
+        <SceneWizard
+          open={Boolean(wizardScene)}
+          onOpenChange={(o) => { if (!o) setWizardScene(null) }}
+          scene={wizardScene}
+          providers={providers}
+          onSubmitted={load}
+        />
+      )}
     </div>
   )
 }
