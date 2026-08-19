@@ -1,27 +1,47 @@
 from __future__ import annotations
 
 import asyncio
+from types import SimpleNamespace
 
 import pytest
 
+from app.services.ai_config_service import AIProviderUnconfiguredError
 from app.services.knowledge import skill_service
 
 
+def _stub_resolve(monkeypatch, *, configured: bool):
+    """项目级 AI 配置打桩：configured=False 时 resolve 抛 AIProviderUnconfiguredError。"""
+
+    def _resolve(db, project_id):
+        if not configured:
+            raise AIProviderUnconfiguredError()
+        return SimpleNamespace(
+            provider_id=1,
+            provider_name="t",
+            provider_type="openai_compatible",
+            api_base_url="https://api.deepseek.com",
+            api_key="sk-test",
+            model="deepseek-v4-pro",
+        )
+
+    monkeypatch.setattr(skill_service.ai_config_service, "resolve", _resolve)
+
+
 @pytest.mark.parametrize(
-    ("ai_enabled", "ai_api_key", "available", "reason"),
+    ("ai_enabled", "configured", "available", "reason"),
     [
-        (False, "configured-key", False, "AI 服务未启用"),
-        (True, "", False, "AI_API_KEY 未配置"),
-        (True, "configured-key", True, ""),
+        (False, True, False, "AI 服务未启用"),
+        (True, False, False, "当前项目未配置 AI 提供方"),
+        (True, True, True, ""),
     ],
 )
 def test_list_skills_reports_ai_availability(
-    monkeypatch, ai_enabled: bool, ai_api_key: str, available: bool, reason: str
+    monkeypatch, ai_enabled: bool, configured: bool, available: bool, reason: str
 ):
     monkeypatch.setattr(skill_service.settings, "ai_enabled", ai_enabled)
-    monkeypatch.setattr(skill_service.settings, "ai_api_key", ai_api_key)
+    _stub_resolve(monkeypatch, configured=configured)
 
-    skills = skill_service.list_skills()
+    skills = skill_service.list_skills(None, 1)
 
     assert skills
     assert all(skill["available"] is available for skill in skills)
@@ -29,17 +49,17 @@ def test_list_skills_reports_ai_availability(
 
 
 @pytest.mark.parametrize(
-    ("ai_enabled", "ai_api_key", "reason"),
+    ("ai_enabled", "configured", "reason"),
     [
-        (False, "configured-key", "AI 服务未启用"),
-        (True, "", "AI_API_KEY 未配置"),
+        (False, True, "AI 服务未启用"),
+        (True, False, "当前项目未配置 AI 提供方"),
     ],
 )
 def test_apply_skill_fails_closed_without_ai(
-    monkeypatch, ai_enabled: bool, ai_api_key: str, reason: str
+    monkeypatch, ai_enabled: bool, configured: bool, reason: str
 ):
     monkeypatch.setattr(skill_service.settings, "ai_enabled", ai_enabled)
-    monkeypatch.setattr(skill_service.settings, "ai_api_key", ai_api_key)
+    _stub_resolve(monkeypatch, configured=configured)
 
     result = asyncio.run(
         skill_service.apply_skill_in_new_session(1, "generate-testcases")
@@ -61,7 +81,7 @@ def _prepare_configured_skill(monkeypatch):
             pass
 
     monkeypatch.setattr(skill_service.settings, "ai_enabled", True)
-    monkeypatch.setattr(skill_service.settings, "ai_api_key", "configured-key")
+    _stub_resolve(monkeypatch, configured=True)
     monkeypatch.setattr(db_module, "SessionLocal", FakeSession)
     monkeypatch.setattr(
         skill_service,

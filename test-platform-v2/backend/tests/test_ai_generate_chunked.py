@@ -72,9 +72,23 @@ class TestDedupeAndRenumber:
 class TestChunkedConcurrentGeneration:
     def test_chunks_merge_in_order(self, monkeypatch):
         monkeypatch.setattr(_settings, "ai_api_key", "test-key")
+        from types import SimpleNamespace
+
+        import app.services.ai_service as _ai_service
+
+        # A2：项目级 AI 配置 —— 打桩 resolve
+        monkeypatch.setattr(
+            _ai_service.ai_config_service,
+            "resolve",
+            lambda db, project_id: SimpleNamespace(
+                api_base_url="https://api.deepseek.com",
+                api_key="sk-test",
+                model="deepseek-v4-pro",
+            ),
+        )
         calls = []
 
-        async def fake_call(system_prompt, user_message, label, max_tokens=None):
+        async def fake_call(db, project_id, system_prompt, user_message, label, max_tokens=None):
             calls.append(label)
             idx = len(calls)
             return {
@@ -102,6 +116,8 @@ class TestChunkedConcurrentGeneration:
         }
         result = asyncio.run(
             generate_test_cases(
+                None,
+                1,
                 content="# 测试需求\n\n模块 A 功能说明",
                 file_type="md",
                 extraction=extraction,

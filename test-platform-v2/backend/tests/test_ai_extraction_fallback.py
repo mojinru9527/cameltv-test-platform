@@ -18,10 +18,24 @@ from app.services.ai_service import extract_features
 
 def test_extract_features_falls_back_when_deepseek_times_out(monkeypatch):
     """DeepSeek classifier timeout should return reviewable local modules instead of blocking."""
+    from types import SimpleNamespace
+
+    import app.services.ai_service as _ai_service
+
     monkeypatch.setattr(settings, "ai_api_key", "test-key")
     monkeypatch.setattr(settings, "ai_timeout_seconds", 0.01)
     monkeypatch.setattr(settings, "ai_retry_attempts", 1)
     monkeypatch.setattr(settings, "ai_fallback_on_failure", True)
+    # A2：项目级 AI 配置 —— 打桩 resolve
+    monkeypatch.setattr(
+        _ai_service.ai_config_service,
+        "resolve",
+        lambda db, project_id: SimpleNamespace(
+            api_base_url="https://api.deepseek.com",
+            api_key="sk-test",
+            model="deepseek-v4-pro",
+        ),
+    )
 
     async def raise_timeout(*_args, **_kwargs):
         """Simulate an intermittent DeepSeek network stall."""
@@ -31,6 +45,8 @@ def test_extract_features_falls_back_when_deepseek_times_out(monkeypatch):
 
     result = asyncio.run(
         extract_features(
+            None,
+            1,
             "登录页面\n用户输入手机号和密码\n系统校验账号状态\n登录成功后进入首页",
             file_type="md",
             source_ref="fallback-test.md",

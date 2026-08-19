@@ -40,13 +40,20 @@ def test_json_parser_rejects_non_object_response():
 
 def test_json_client_rejects_missing_api_key_before_network(monkeypatch):
     from app.services.knowledge import llm_json_client
+    from app.services.ai_config_service import AIProviderUnconfiguredError
 
     monkeypatch.setattr(llm_json_client.settings, "ai_enabled", True)
-    monkeypatch.setattr(llm_json_client.settings, "ai_api_key", "")
+    monkeypatch.setattr(
+        llm_json_client.ai_config_service,
+        "resolve",
+        lambda db, project_id: (_ for _ in ()).throw(AIProviderUnconfiguredError()),
+    )
 
-    with pytest.raises(LLMUnavailableError, match="AI_API_KEY"):
+    with pytest.raises(LLMUnavailableError, match="未配置 AI 提供方"):
         asyncio.run(
             call_json_model(
+                db=None,
+                project_id=0,
                 system_prompt="仅返回 JSON",
                 user_payload={"text": "hello"},
             )
@@ -82,6 +89,8 @@ def test_attachment_ai_maps_structured_model_response(monkeypatch):
 
     result = asyncio.run(
         attachment_extractor._ai_analyze_attachment(
+            None,
+            1,
             "用户支付失败后可重试，最多三次。",
             "支付说明",
         )
@@ -103,7 +112,7 @@ def test_attachment_ai_rejects_empty_semantic_result(monkeypatch):
 
     with pytest.raises(ValueError, match="usable"):
         asyncio.run(
-            attachment_extractor._ai_analyze_attachment("有效正文", "空响应附件")
+            attachment_extractor._ai_analyze_attachment(None, 1, "有效正文", "空响应附件")
         )
 
 
@@ -118,7 +127,7 @@ def test_version_diff_records_explicit_warning_when_ai_unavailable(monkeypatch):
         diff_confidence=0.85,
     )
 
-    result = asyncio.run(version_differ._ai_diff(None, [], [], rule_result))
+    result = asyncio.run(version_differ._ai_diff(None, 0, [], [], rule_result))
 
     assert result is rule_result
     assert result.diff_confidence <= 0.85
@@ -175,6 +184,7 @@ def test_version_diff_applies_validated_module_rename(monkeypatch):
     result = asyncio.run(
         version_differ._ai_diff(
             None,
+            0,
             [page, unchanged_page],
             [parent],
             rule_result,
@@ -215,7 +225,7 @@ def test_navigation_ai_uses_text_and_maps_interactions(monkeypatch):
         {"merged_text": "首页 赛程 数据", "ocr_text": "", "dom_text": ""},
     )()
 
-    result = asyncio.run(navigates_to_extractor._p2_ai_multimodal(page, evidence))
+    result = asyncio.run(navigates_to_extractor._p2_ai_multimodal(None, 1, page, evidence))
 
     assert result == [
         PageInteraction(

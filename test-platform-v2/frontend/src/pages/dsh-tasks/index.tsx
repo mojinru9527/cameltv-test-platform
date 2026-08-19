@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
 import { Button } from '@/ui'
@@ -28,6 +29,7 @@ import {
   type DshHealth,
   type DshModelPool,
 } from '@/api/dshTasks'
+import { fetchAiResolve, type AiResolveResult } from '@/api/aiConfig'
 
 const STATUS_BADGE: Record<string, { label: string; color: string }> = {
   pending: { label: '等待中', color: 'bg-muted text-muted-foreground' },
@@ -62,6 +64,8 @@ export default function DshTasksPage() {
   const [teamKind, setTeamKind] = useState<'dev' | 'tester'>('dev')
   const [modelPool, setModelPool] = useState<DshModelPool | null>(null)
   const [selectedModel, setSelectedModel] = useState('')
+  // Batch A：项目 AI 配置状态（未配置则引导去 AI 配置页）
+  const [aiResolve, setAiResolve] = useState<AiResolveResult | null>(null)
 
   const load = useCallback((signal?: AbortSignal) => {
     setLoading(true)
@@ -83,11 +87,18 @@ export default function DshTasksPage() {
       .catch(() => undefined)
   }, [])
 
+  const loadAiResolve = useCallback((signal?: AbortSignal) => {
+    fetchAiResolve(signal)
+      .then((res) => { if (!signal?.aborted) setAiResolve(res) })
+      .catch(() => undefined)
+  }, [])
+
   useAbortableEffect((signal) => {
     load(signal)
     loadHealth(signal)
     loadModelPool(signal)
-  }, [load, loadHealth, loadModelPool])
+    loadAiResolve(signal)
+  }, [load, loadHealth, loadModelPool, loadAiResolve])
 
   useAbortableEffect((signal) => {
     if (!selected?.id) return
@@ -192,7 +203,22 @@ export default function DshTasksPage() {
         ) : (
           <Badge className="bg-status-success-muted text-status-success">DSH 可用</Badge>
         )}
-        <Button onClick={() => setCreateOpen(true)} disabled={!canRun || unavailable}>
+        {aiResolve && !aiResolve.configured ? (
+          <div className="flex items-center gap-2 text-xs text-status-warning bg-status-warning-muted border border-status-warning-border rounded-md px-3 py-1.5">
+            <AlertCircle className="size-4" />
+            当前项目未配置 AI 提供方，
+            <Link to="/ai-config" className="underline">去配置</Link>
+          </div>
+        ) : aiResolve?.configured && aiResolve.provider ? (
+          <Badge className="bg-status-success-muted text-status-success">
+            AI: {aiResolve.provider.name} / {aiResolve.provider.model}
+          </Badge>
+        ) : null}
+        <Button
+          onClick={() => setCreateOpen(true)}
+          disabled={!canRun || unavailable || Boolean(aiResolve && !aiResolve.configured)}
+          title={aiResolve && !aiResolve.configured ? '当前项目未配置 AI 提供方，请先到 AI 配置页设置' : undefined}
+        >
           <Play className="size-4 mr-1" />
           新建任务
         </Button>

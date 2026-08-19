@@ -148,10 +148,12 @@ async def generate_test_cases(
         from app.services.ai_service import generate_test_cases as ai_generate
 
         ai_result = await ai_generate(
+            db,
             content=doc["content"],
             file_type=doc["file_type"],
             source_ref=doc["source_ref"],
             extraction=extraction,
+            project_id=current.project_id or 0,
         )
     except ValueError as e:
         return R(code=400, msg=str(e))

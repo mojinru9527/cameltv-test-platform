@@ -26,7 +26,7 @@ logger = logging.getLogger("wiki.ingest")
 
 # ── 阶段1：分析 ──
 
-def _run_analysis(raw: WikiRawSource) -> dict:
+def _run_analysis(db, project_id: int, raw: WikiRawSource) -> dict:
     meta = json.loads(raw.metadata_json or "{}")
     user_msg = (
         f"来源标题：{raw.title}\n"
@@ -34,7 +34,7 @@ def _run_analysis(raw: WikiRawSource) -> dict:
         f"immutable_version：{raw.immutable_version}\n\n"
         f"来源内容：\n{raw.content_md}"
     )
-    res = _call_llm_sync(build_system_prompt("wiki_ingest"), user_msg)
+    res = _call_llm_sync(db, project_id, build_system_prompt("wiki_ingest"), user_msg)
     result = res.get("result")
     if isinstance(result, dict) and result.get("requirements") is not None:
         return result
@@ -183,7 +183,7 @@ def run_wiki_ingest_in_new_session(project_id: int, job_id: int) -> None:
             job.finished_at = datetime.now(); db.commit(); return
 
         job.status = "running"; job.stage = "analysis"; db.commit()
-        analysis = _run_analysis(raw)
+        analysis = _run_analysis(db, project_id, raw)
         job.analysis_json = json.dumps(analysis, ensure_ascii=False)
         job.stage = "generation"; db.commit()
 

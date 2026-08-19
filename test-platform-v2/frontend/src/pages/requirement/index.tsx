@@ -5,6 +5,7 @@ import { useDropzone } from 'react-dropzone'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth'
 import { fetchDomains } from '@/api/testcase'
+import { fetchAiResolve } from '@/api/aiConfig'
 import {
   confirmExtraction, deleteRequirement, extractFeatures, extractFeaturesAsync, fetchGeneratedCases,
   fetchRequirement, fetchRequirementCoverage, fetchRequirements,
@@ -64,6 +65,8 @@ export default function RequirementPage() {
   const [domainPage, setDomainPage] = useState(1)
   const [debouncedKeyword, setDebouncedKeyword] = useState('')
   const [evidenceRefreshKey, setEvidenceRefreshKey] = useState(0)
+  // Batch A：项目 AI 配置状态（未配置禁用生成入口）
+  const [aiConfigured, setAiConfigured] = useState(true)
 
   // ── Stage 1: Feature Extraction state ──
   const [extractionResult, setExtractionResult] = useState<FeatureExtractionResult | null>(null)
@@ -108,6 +111,15 @@ export default function RequirementPage() {
     const timer = window.setTimeout(() => setDebouncedKeyword(keyword.trim()), 300)
     return () => window.clearTimeout(timer)
   }, [keyword])
+
+  // Batch A：项目 AI 配置状态（未配置时禁用 AI 生成入口，引导去 AI 配置页）
+  useEffect(() => {
+    let cancelled = false
+    fetchAiResolve()
+      .then((res) => { if (!cancelled) setAiConfigured(res.configured) })
+      .catch(() => undefined)
+    return () => { cancelled = true }
+  }, [])
 
   // Domain metadata is independent from the server-paginated document list.
   const {
@@ -514,6 +526,7 @@ export default function RequirementPage() {
         page={docPage}
         totalPages={totalDocPages}
         total={totalDocuments}
+        aiConfigured={aiConfigured}
         onKeywordChange={(value) => { setKeyword(value); setDocPage(1) }}
         onClearKeyword={() => { setKeyword(''); setDocPage(1) }}
         onPreviewDoc={(id) => { setActiveDocId(id); setPreviewExpanded(false) }}

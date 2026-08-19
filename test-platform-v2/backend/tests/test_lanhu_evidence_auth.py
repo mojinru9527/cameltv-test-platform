@@ -94,9 +94,21 @@ class TestEvidenceFlowSessionFailure:
 
 class TestAiServiceDoesNotSwallowSessionError:
     def test_session_error_is_not_folded_into_image_format_fallback(self, monkeypatch):
+        from types import SimpleNamespace
+
         from app.services import ai_service
 
         monkeypatch.setattr(ai_service.settings, "ai_api_key", "test-key")
+        # A2：项目级 AI 配置 —— 打桩 resolve（成功，让流程走到 lanhu 分支）
+        monkeypatch.setattr(
+            ai_service.ai_config_service,
+            "resolve",
+            lambda db, project_id: SimpleNamespace(
+                api_base_url="https://api.deepseek.com",
+                api_key="sk-test",
+                model="deepseek-v4-pro",
+            ),
+        )
 
         async def _raise_session(url, auto_login=True):
             raise ValueError("蓝湖认证失败，Cookie 已过期或已被拒绝（HTTP 418 表示会话失效）")
@@ -105,6 +117,8 @@ class TestAiServiceDoesNotSwallowSessionError:
         # 旧逻辑会把任何 ValueError 当作"图片格式"兜底；新逻辑必须透传会话失效
         with pytest.raises(ValueError) as excinfo:
             asyncio.run(ai_service.extract_features(
+                None,
+                1,
                 content="补充说明文字补充说明文字补充说明文字补充说明文字补充说明文字补充说明文字补充说明文字补充说明文字补充说明文字补充说明文字",
                 file_type="lanhu",
                 source_ref="https://lanhuapp.com/web/#/item/project/product?tid=t1&pid=p1&docId=doc-1",

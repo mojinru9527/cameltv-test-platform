@@ -1,5 +1,5 @@
 {
- "count": 434,
+ "count": 440,
  "routes": [
   {
    "path": "/api/v1/agents/queue",
@@ -35,6 +35,30 @@
   },
   {
    "path": "/api/v1/agents/types",
+   "method": "GET"
+  },
+  {
+   "path": "/api/v1/ai-config/providers",
+   "method": "GET"
+  },
+  {
+   "path": "/api/v1/ai-config/providers",
+   "method": "POST"
+  },
+  {
+   "path": "/api/v1/ai-config/providers/{provider_id}",
+   "method": "DELETE"
+  },
+  {
+   "path": "/api/v1/ai-config/providers/{provider_id}",
+   "method": "PUT"
+  },
+  {
+   "path": "/api/v1/ai-config/providers/{provider_id}/test-connection",
+   "method": "POST"
+  },
+  {
+   "path": "/api/v1/ai-config/resolve",
    "method": "GET"
   },
   {

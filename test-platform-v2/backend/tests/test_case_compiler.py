@@ -137,14 +137,14 @@ class TestCleanGeneratedCode:
 class TestCompileToPlaywright:
     def test_no_steps_returns_error(self):
         case = _make_mock_case(steps="[]")
-        result = compile_to_playwright(case, validate=False)
+        result = compile_to_playwright(None, case, project_id=1, validate=False)
         assert result["error"] is not None
         assert "没有测试步骤" in result["error"]
         assert result["spec_code"] == ""
 
     def test_empty_steps_string_returns_error(self):
         case = _make_mock_case(steps="")
-        result = compile_to_playwright(case, validate=False)
+        result = compile_to_playwright(None, case, project_id=1, validate=False)
         assert result["error"] is not None
 
     @patch("app.services.case_compiler_service._call_llm_for_code")
@@ -162,7 +162,7 @@ class TestCompileToPlaywright:
             {"prompt_tokens": 500, "completion_tokens": 200},
         )
         case = _make_mock_case()
-        result = compile_to_playwright(case, validate=False)
+        result = compile_to_playwright(None, case, project_id=1, validate=False)
 
         assert result["error"] is None
         assert result["case_id"] == 1
@@ -177,7 +177,7 @@ class TestCompileToPlaywright:
     def test_llm_error_handling(self, mock_llm):
         mock_llm.side_effect = RuntimeError("API key missing")
         case = _make_mock_case()
-        result = compile_to_playwright(case, validate=False)
+        result = compile_to_playwright(None, case, project_id=1, validate=False)
         assert result["error"] is not None
         assert "LLM 调用失败" in result["error"]
 
@@ -185,7 +185,7 @@ class TestCompileToPlaywright:
     def test_empty_response(self, mock_llm):
         mock_llm.return_value = ("", None)
         case = _make_mock_case()
-        result = compile_to_playwright(case, validate=False)
+        result = compile_to_playwright(None, case, project_id=1, validate=False)
         assert result["error"] == "LLM 返回空代码"
 
     @patch("app.services.case_compiler_service._call_llm_for_code")
@@ -195,6 +195,6 @@ class TestCompileToPlaywright:
             {},
         )
         case = _make_mock_case()
-        result = compile_to_playwright(case, validate=False)
+        result = compile_to_playwright(None, case, project_id=1, validate=False)
         assert "```" not in result["spec_code"]
         assert result["spec_code"].startswith("import")

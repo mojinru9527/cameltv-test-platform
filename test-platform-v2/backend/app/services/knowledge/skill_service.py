@@ -15,6 +15,7 @@ import logging
 from typing import Any
 
 from app.core.config import settings
+from app.services.ai_config_service import AIProviderUnconfiguredError, ai_config_service
 
 logger = logging.getLogger("knowledge.skills")
 
@@ -139,17 +140,19 @@ SKILL_TEMPLATES: dict[str, dict[str, Any]] = {
 }
 
 
-def _skill_unavailable_reason() -> str:
+def _skill_unavailable_reason(db, project_id: int) -> str:
     if not settings.ai_enabled:
         return "AI 服务未启用"
-    if not settings.ai_api_key:
-        return "AI_API_KEY 未配置"
+    try:
+        ai_config_service.resolve(db, project_id)
+    except AIProviderUnconfiguredError:
+        return "当前项目未配置 AI 提供方"
     return ""
 
 
-def list_skills() -> list[dict[str, Any]]:
+def list_skills(db, project_id: int) -> list[dict[str, Any]]:
     """列出所有 Skills 模板及当前可用性（不含 prompt_template 细节）。"""
-    unavailable_reason = _skill_unavailable_reason()
+    unavailable_reason = _skill_unavailable_reason(db, project_id)
     return [
         {
             "name": s["name"],
@@ -223,28 +226,28 @@ async def apply_skill_in_new_session(
     if not skill:
         return {"error": f"未知 Skill: {skill_name}", "success": False}
 
-    unavailable_reason = _skill_unavailable_reason()
-    if unavailable_reason:
-        return {
-            "success": False,
-            "skill": skill_name,
-            "error": unavailable_reason,
-        }
-
-    params = params or {}
-
-    # 填充默认参数
-    filled_params: dict[str, Any] = {}
-    for p in skill["input_params"]:
-        key = p["key"]
-        filled_params[key] = params.get(key, p.get("default", ""))
-    # 也传递原始参数中的额外值
-    for k, v in params.items():
-        if k not in filled_params:
-            filled_params[k] = v
-
     db = SessionLocal()
     try:
+        unavailable_reason = _skill_unavailable_reason(db, project_id)
+        if unavailable_reason:
+            return {
+                "success": False,
+                "skill": skill_name,
+                "error": unavailable_reason,
+            }
+
+        params = params or {}
+
+        # 填充默认参数
+        filled_params: dict[str, Any] = {}
+        for p in skill["input_params"]:
+            key = p["key"]
+            filled_params[key] = params.get(key, p.get("default", ""))
+        # 也传递原始参数中的额外值
+        for k, v in params.items():
+            if k not in filled_params:
+                filled_params[k] = v
+
         # 构建知识上下文
         knowledge_context = build_skill_knowledge_context(db, project_id, skill_name, filled_params)
 

@@ -13,6 +13,7 @@ from typing import Any
 import httpx
 
 from app.core.config import settings
+from app.services.ai_config_service import AIProviderUnconfiguredError, ai_config_service
 
 
 class LLMUnavailableError(RuntimeError):
@@ -71,6 +72,8 @@ def _parse_json_object(raw: str) -> dict[str, Any]:
 
 async def call_json_model(
     *,
+    db,
+    project_id: int,
     system_prompt: str,
     user_payload: dict[str, Any],
     max_tokens: int = 4096,
@@ -78,11 +81,13 @@ async def call_json_model(
     """Call the configured model and return one validated JSON object."""
     if not settings.ai_enabled:
         raise LLMUnavailableError("AI service is disabled")
-    if not settings.ai_api_key:
-        raise LLMUnavailableError("AI_API_KEY 未配置")
+    try:
+        cfg = ai_config_service.resolve(db, project_id)
+    except AIProviderUnconfiguredError as exc:
+        raise LLMUnavailableError(str(exc)) from exc
 
     request_body = {
-        "model": settings.ai_model,
+        "model": cfg.model,
         "messages": [
             {"role": "system", "content": sanitize_external_text(system_prompt)},
             {
@@ -104,9 +109,9 @@ async def call_json_model(
         try:
             async with httpx.AsyncClient(timeout=settings.ai_timeout_seconds) as client:
                 response = await client.post(
-                    f"{settings.ai_api_base_url.rstrip('/')}/chat/completions",
+                    f"{cfg.api_base_url.rstrip('/')}/chat/completions",
                     headers={
-                        "Authorization": f"Bearer {settings.ai_api_key}",
+                        "Authorization": f"Bearer {cfg.api_key}",
                         "Content-Type": "application/json",
                     },
                     json=request_body,

@@ -193,7 +193,7 @@ def test_execute_all_uses_separate_ui_environment(db_session, monkeypatch):
     db_session.commit()
     seen = {}
 
-    def fake_exec(tc, base_url="", storage_state=None):
+    def fake_exec(db, tc, project_id, base_url="", storage_state=None):
         seen["base_url"] = base_url
         return {"ok": False, "exit_code": 1, "stdout_tail": "assertion failed: expected 首页"}
 

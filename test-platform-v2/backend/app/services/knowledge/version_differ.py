@@ -183,6 +183,7 @@ def _rule_diff(
 
 async def _ai_diff(
     db: Session,
+    project_id: int,
     current_pages: list[LanhuEvidencePage],
     parent_modules: list[RequirementModule],
     rule_result: VersionDiffResult,
@@ -190,6 +191,8 @@ async def _ai_diff(
     """Use sanitized OCR text to resolve renames and content-level changes."""
     try:
         payload = await call_json_model(
+            db=db,
+            project_id=project_id,
             system_prompt=(
                 "比较两个需求版本。只根据提供的数据判断模块重命名和页面内容变化，"
                 "不得补造。返回 JSON：module_matches 数组，每项包含 current_module、"
@@ -493,7 +496,7 @@ async def diff_bundle(
 
     # Phase B: AI fallback (async, currently stub)
     if result.diff_confidence < 0.9:
-        result = await _ai_diff(db, current_pages, parent_modules, result)
+        result = await _ai_diff(db, project_id, current_pages, parent_modules, result)
 
     return result
 

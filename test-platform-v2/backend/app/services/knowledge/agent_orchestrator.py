@@ -20,6 +20,7 @@ import httpx
 from app.core.config import settings
 from app.core.db import SessionLocal
 from app.models.knowledge import AiArtifact
+from app.services.ai_config_service import AIProviderUnconfiguredError, ai_config_service
 from app.services.knowledge.artifact_confidence import artifact_confidence_from_output
 from app.services.knowledge.agent_prompts import AGENT_META, build_system_prompt
 from app.services.knowledge import agent_run_service, search_service
@@ -30,20 +31,22 @@ logger = logging.getLogger("knowledge.orchestrator")
 _LLM_TIMEOUT = 180.0  # 秒
 
 
-def _call_llm_sync(system_prompt: str, user_message: str, max_tokens: int = 4096) -> dict:
+def _call_llm_sync(db, project_id: int, system_prompt: str, user_message: str, max_tokens: int = 4096) -> dict:
     """同步调用 LLM（OpenAI 兼容 API），返回 {"result": dict|None, "raw": str, "error": str|None}。"""
-    if not settings.ai_api_key:
-        return {"result": None, "raw": "", "error": "AI_API_KEY 未配置"}
+    try:
+        cfg = ai_config_service.resolve(db, project_id)
+    except AIProviderUnconfiguredError as exc:
+        return {"result": None, "raw": "", "error": str(exc)}
 
     try:
         resp = httpx.post(
-            f"{settings.ai_api_base_url.rstrip('/')}/chat/completions",
+            f"{cfg.api_base_url.rstrip('/')}/chat/completions",
             headers={
-                "Authorization": f"Bearer {settings.ai_api_key}",
+                "Authorization": f"Bearer {cfg.api_key}",
                 "Content-Type": "application/json",
             },
             json={
-                "model": settings.ai_model,
+                "model": cfg.model,
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message},
@@ -145,7 +148,12 @@ def _run_dsh_agent(
         return _finish_failed("DSH 执行任务文本为空")
 
     try:
-        result = run_dsh_task(task_text)
+        provider = None
+        try:
+            provider = ai_config_service.resolve(db, project_id)
+        except AIProviderUnconfiguredError:
+            pass
+        result = run_dsh_task(task_text, provider=provider)
     except Exception as exc:  # noqa: BLE001 - runner 异常统一失败留痕
         logger.exception("dsh_execution run failed")
         return _finish_failed(f"dsh 执行异常: {exc}")
@@ -246,7 +254,7 @@ def run_agent_in_new_session(
             retrieved = {}
 
         # 4. LLM 调用
-        llm_resp = _call_llm_sync(system_prompt, user_message)
+        llm_resp = _call_llm_sync(db, project_id, system_prompt, user_message)
 
         duration_ms = int((time.perf_counter() - start) * 1000)
 

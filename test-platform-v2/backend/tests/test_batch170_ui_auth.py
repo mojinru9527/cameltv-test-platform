@@ -38,7 +38,7 @@ def test_execute_ui_injects_storage_state_env(db_session, monkeypatch, tmp_path)
     db_session.commit()
     monkeypatch.setattr(
         test_plan_service, "_compile_ui_case",
-        lambda tc, base_url: ("import { test, expect } from '@playwright/test';", "llm"),
+        lambda db, tc, project_id, base_url: ("import { test, expect } from '@playwright/test';", "llm"),
     )
     captured = {}
 
@@ -49,7 +49,7 @@ def test_execute_ui_injects_storage_state_env(db_session, monkeypatch, tmp_path)
     monkeypatch.setattr(subprocess, "run", fake_run)
     state = {"cookies": [{"name": "auth", "value": "C_xxx", "domain": ".camel1.tv"}]}
     result = test_plan_service._execute_ui_case_sync(
-        case, base_url="https://www.camel1.tv", storage_state=state,
+        None, case, 1, base_url="https://www.camel1.tv", storage_state=state,
     )
     assert result["ok"] is False
     env = captured.get("env") or {}

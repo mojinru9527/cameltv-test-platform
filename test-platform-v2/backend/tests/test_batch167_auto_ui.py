@@ -32,7 +32,7 @@ def test_manual_p0_converts_to_ui(plan_with_case, db_session, monkeypatch):
     plan, case, pc = plan_with_case
     monkeypatch.setattr(
         test_plan_service, "_execute_ui_case_sync",
-        lambda tc, base_url="", storage_state=None: {"ok": True, "total": 1, "screenshots": [], "spec_code": "//spec", "compiler": "llm"},
+        lambda db, tc, project_id, base_url="", storage_state=None: {"ok": True, "total": 1, "screenshots": [], "spec_code": "//spec", "compiler": "llm"},
     )
     monkeypatch.setattr(test_plan_service, "_write_plan_ui_job", lambda *a, **k: None)
     result = test_plan_service.execute_all_cases(db_session, plan.id, project_id=1, auto_ui=True)
@@ -48,7 +48,7 @@ def test_manual_p2_still_skips(plan_with_case, db_session, monkeypatch):
     case.priority = "P2"
     db_session.commit()
     called = {"n": 0}
-    def fake_exec(tc, base_url=""):
+    def fake_exec(db, tc, project_id, base_url=""):
         called["n"] += 1
         return {"ok": True}
     monkeypatch.setattr(test_plan_service, "_execute_ui_case_sync", fake_exec)
@@ -60,7 +60,7 @@ def test_manual_p2_still_skips(plan_with_case, db_session, monkeypatch):
 def test_auto_ui_off_skips(plan_with_case, db_session, monkeypatch):
     plan, case, pc = plan_with_case
     called = {"n": 0}
-    def fake_exec(tc, base_url=""):
+    def fake_exec(db, tc, project_id, base_url=""):
         called["n"] += 1
         return {"ok": True}
     monkeypatch.setattr(test_plan_service, "_execute_ui_case_sync", fake_exec)
@@ -76,7 +76,7 @@ def test_ui_case_uses_environment_base_url(plan_with_case, db_session, monkeypat
     db_session.add(env)
     db_session.commit()
     seen = {}
-    def fake_exec(tc, base_url="", storage_state=None):
+    def fake_exec(db, tc, project_id, base_url="", storage_state=None):
         seen["base_url"] = base_url
         return {"ok": True, "total": 1, "screenshots": [], "spec_code": "//spec", "compiler": "rules"}
     monkeypatch.setattr(test_plan_service, "_execute_ui_case_sync", fake_exec)
@@ -87,7 +87,7 @@ def test_ui_case_uses_environment_base_url(plan_with_case, db_session, monkeypat
 def test_compile_fallback_returns_spec(plan_with_case, monkeypatch):
     plan, case, pc = plan_with_case
     monkeypatch.setattr("app.services.case_compiler_service.compile_to_playwright", lambda *a, **k: {"spec_code": "", "error": "no key"})
-    spec, compiler = test_plan_service._compile_ui_case(case, "http://localhost:5173")
+    spec, compiler = test_plan_service._compile_ui_case(None, case, 1, "http://localhost:5173")
     assert compiler == "rules"
     assert "import { test" in spec
 

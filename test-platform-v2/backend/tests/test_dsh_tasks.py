@@ -19,9 +19,11 @@ from sqlalchemy.pool import StaticPool
 
 import app.models  # noqa: F401
 from app.core.db import Base
+from app.models.ai_provider import AiProvider
 from app.models.dsh_task import DshTask
 from app.models.project import Project, ProjectMember
 from app.models.user import User
+from app.services.ai_config_service import ai_config_service
 from app.services.dsh import dsh_task_service
 from app.services.dsh.dsh_runner import DshRunResult
 
@@ -44,7 +46,27 @@ def dsh_db(monkeypatch):
     project = Project(id=1, code="test-proj", name="Test Project", owner_id=1, status=1)
     session.add(project)
     session.add(ProjectMember(project_id=1, user_id=1, role_id=0))
+    # A2：项目级 AI 配置 —— 种入 provider 并打桩 resolve（submit/execute 需 provider_id 快照）
+    provider = AiProvider(
+        id=1, project_id=1, name="test-provider", provider_type="openai_compatible",
+        api_base_url="https://api.deepseek.com",
+        api_key_encrypted=ai_config_service._encrypt_key("sk-test"),
+        models='["deepseek-v4-pro"]', default_model="deepseek-v4-pro",
+        is_default=True, enabled=True,
+    )
+    session.add(provider)
     session.commit()
+    session.close()
+    monkeypatch.setattr(
+        dsh_task_service.ai_config_service,
+        "resolve",
+        lambda db, project_id: SimpleNamespace(
+            provider_id=1, provider_name="test-provider",
+            provider_type="openai_compatible",
+            api_base_url="https://api.deepseek.com",
+            api_key="sk-test", model="deepseek-v4-pro",
+        ),
+    )
     return maker
 
 

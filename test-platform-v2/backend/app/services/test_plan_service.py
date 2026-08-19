@@ -597,11 +597,11 @@ def auto_execute_api_cases(
     }
 
 
-def _compile_ui_case(case, base_url: str) -> tuple[str, str]:
+def _compile_ui_case(db, case, project_id: int, base_url: str) -> tuple[str, str]:
     """LLM 优先编译 UI spec；LLM 不可用/失败时回退规则引擎。返回 (spec_code, compiler)。"""
     try:
         from app.services.case_compiler_service import compile_to_playwright
-        compiled = compile_to_playwright(case, base_url=base_url, validate=False)
+        compiled = compile_to_playwright(db, case, project_id=project_id, base_url=base_url, validate=False)
         spec_code = (compiled.get("spec_code") or "").strip()
         if spec_code and "TODO" not in spec_code:
             return spec_code, "llm"
@@ -699,7 +699,7 @@ def _write_plan_ui_job(db: Session, case, spec_code: str, creator_id: int, proje
         logger.exception("计划 UI 任务回写失败: case=%s", getattr(case, "id", None))
 
 
-def _execute_ui_case_sync(case, *, base_url: str = "", storage_state: dict | None = None) -> dict:
+def _execute_ui_case_sync(db, case, project_id: int, *, base_url: str = "", storage_state: dict | None = None) -> dict:
     """同步编译并执行一条 UI 用例（batch-167: LLM 优先 + 规则兜底 + 真实 Playwright 链路）。
 
     返回 pass/fail、产物与执行摘要；编译含 TODO 占位或执行失败都如实返回。
@@ -708,7 +708,7 @@ def _execute_ui_case_sync(case, *, base_url: str = "", storage_state: dict | Non
     from app.services.playground_service import build_gherkin_from_case, compile_spec
 
     base_url = (base_url or "").strip() or "http://localhost:5173"
-    spec_code, compiler = _compile_ui_case(case, base_url)
+    spec_code, compiler = _compile_ui_case(db, case, project_id, base_url)
     if not spec_code:
         return {"ok": False, "error": "编译失败，未生成可执行 spec", "compiler": compiler, "spec_code": ""}
     if "TODO" in spec_code:
@@ -922,7 +922,7 @@ def execute_all_cases(
         elif tc.case_type == "ui":
             # UI 用例：真实编译 + headless Chromium 执行（batch-74 统一编排）
             try:
-                ui_result = _execute_ui_case_sync(tc, base_url=base_url, storage_state=ui_storage_state)
+                ui_result = _execute_ui_case_sync(db, tc, project_id, base_url=base_url, storage_state=ui_storage_state)
                 status = "passed" if ui_result.get("ok") else "failed"
                 actual_result = json.dumps(ui_result, ensure_ascii=False, default=str)
                 if ui_result.get("ok"):
@@ -944,7 +944,7 @@ def execute_all_cases(
                 and _case_has_actionable_steps(tc)
             ):
                 try:
-                    ui_result = _execute_ui_case_sync(tc, base_url=base_url, storage_state=ui_storage_state)
+                    ui_result = _execute_ui_case_sync(db, tc, project_id, base_url=base_url, storage_state=ui_storage_state)
                     status = "passed" if ui_result.get("ok") else "failed"
                     actual_result = json.dumps(ui_result, ensure_ascii=False, default=str)
                     notes = (

@@ -118,11 +118,15 @@ def _extract_text_from_evidence(
 # ── AI Analysis ──
 
 async def _ai_analyze_attachment(
+    db,
+    project_id: int,
     raw_text: str,
     attachment_name: str,
 ) -> AttachmentContent:
     """Analyze already-extracted, sanitized text with the configured model."""
     payload = await call_json_model(
+        db=db,
+        project_id=project_id,
         system_prompt=(
             "你是需求分析助手。仅根据提供的附件文本提取信息，不补造内容。"
             "返回 JSON 对象，字段为 summary、functional_points、business_rules、"
@@ -228,7 +232,7 @@ async def extract_attachment_content(
         )
 
     # Step 2: AI analysis
-    content = await _ai_analyze_attachment(raw_text, attachment.name)
+    content = await _ai_analyze_attachment(db, project_id, raw_text, attachment.name)
 
     # Step 3: Persist results
     if content.summary:
