@@ -204,6 +204,14 @@ def execute_task(db, task: DshTask, runner=None) -> None:
         task.session_dir = result.session_dir
         task.finished_at = _now()
         db.commit()
+        # B2：产物闭环——成功任务解析产物清单落审核台（容错，失败不影响任务状态）
+        if task.status == "success":
+            try:
+                from app.services.dsh.dsh_artifact_service import ingest_artifacts
+
+                ingest_artifacts(db, task)
+            except Exception:  # noqa: BLE001 - 产物解析失败不改变任务状态
+                logger.exception("dsh artifact ingest failed for task %s", task.id)
     except Exception as exc:  # noqa: BLE001 - 任务失败写回
         task.status = "failed"
         task.error = str(exc)[:2000]
@@ -440,6 +448,15 @@ def _execute_team(db, task: DshTask, params: dict, runner, provider: "EffectiveA
     task.session_dir = result.session_dir
     task.finished_at = _now()
     db.commit()
+
+    # B2：产物闭环——团队成功任务解析产物清单落审核台（容错，失败不影响任务状态）
+    if task.status == "success":
+        try:
+            from app.services.dsh.dsh_artifact_service import ingest_artifacts
+
+            ingest_artifacts(db, task)
+        except Exception:  # noqa: BLE001 - 产物解析失败不改变任务状态
+            logger.exception("dsh artifact ingest failed for task %s", task.id)
 
 
 def _process_claimed(task_id: int) -> None:

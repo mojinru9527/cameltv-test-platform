@@ -100,6 +100,32 @@ def get_dsh_task(
     return R.ok(DshTaskOut.model_validate(row))
 
 
+@router.get("/{task_id}/artifacts", response_model=R[list], summary="DSH 任务产物（审核台条目）")
+def dsh_task_artifacts(
+    task_id: int,
+    current: CurrentUser = Depends(require_permission("agent:view")),
+    db: Session = Depends(get_db),
+):
+    """B2 产物闭环：任务落库的 AI 产物回链（类型/标题/审核状态/导入结果）。"""
+    row = dsh_task_service.get_task(db, task_id, current.project_id or 0)
+    if not row:
+        return R(code=404, msg="DSH 任务不存在")
+    from app.services.dsh.dsh_artifact_service import list_task_artifacts
+
+    rows = list_task_artifacts(db, task_id, current.project_id or 0)
+    return R.ok([
+        {
+            "id": a.id,
+            "artifact_type": a.artifact_type,
+            "title": a.title,
+            "review_status": a.review_status,
+            "imported_ref_type": a.imported_ref_type,
+            "imported_ref_id": a.imported_ref_id,
+        }
+        for a in rows
+    ])
+
+
 @router.post("/{task_id}/cancel", response_model=R[DshTaskCancelResponse], summary="取消 DSH 任务")
 def cancel_dsh_task(
     task_id: int,

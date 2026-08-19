@@ -116,12 +116,14 @@ def batch_reject(
 
 
 def import_to_test_case(db: Session, artifact_id: int, project_id: int) -> dict:
-    """将审核通过的 AI 用例产物导入正式用例库。
+    """将审核通过的 AI 用例产物导入正式用例库。B2 扩展：支持 functional_case / api_case。
 
     治理守卫：
     - 产物必须存在且属于当前项目；
     - review_status 必须为 'approved'，否则拒绝（403）——落实「未审核不得进正式库」；
-    - artifact_type 必须为 'test_case'。
+    - artifact_type 必须为 test_case / api_case / functional_case 之一；
+      requirement / ui_case 明确拒绝并提示「暂不支持导入」（B2 后续批次支持）。
+    case_type 映射：api_case→"api"、test_case→"api"（兼容旧）、functional_case→"manual"。
     """
     from app.services import test_case_service
 
@@ -132,20 +134,27 @@ def import_to_test_case(db: Session, artifact_id: int, project_id: int) -> dict:
         raise APIException(code=1, msg="该产物已导入，请勿重复导入")
     if row.review_status != "approved":
         raise forbidden("未审核通过的 AI 产物不允许导入正式用例库")
-    if row.artifact_type != "test_case":
+    if row.artifact_type not in ("test_case", "api_case", "functional_case"):
         raise APIException(code=1, msg=f"artifact_type={row.artifact_type} 暂不支持导入用例库")
 
     try:
         payload = json.loads(row.content_json or "{}")
     except (json.JSONDecodeError, TypeError):
         raise APIException(code=1, msg="AI 产物内容解析失败")
+    if not isinstance(payload, dict):
+        raise APIException(code=1, msg="AI 产物内容解析失败")
+
+    # case_type / domain 按 artifact_type 映射（functional_case 默认「用户端」，
+    # 可被 content.domain 覆盖；api_case/test_case 默认「接口测试」）
+    case_type = "manual" if row.artifact_type == "functional_case" else "api"
+    default_domain = "用户端" if row.artifact_type == "functional_case" else "接口测试"
 
     data = {
         "project_id": project_id,
         "title": payload.get("title") or row.title,
-        "domain": payload.get("domain", "接口测试"),
+        "domain": payload.get("domain") or default_domain,
         "module": payload.get("module", ""),
-        "case_type": "api",
+        "case_type": case_type,
         "priority": payload.get("priority", "P2"),
         "preconditions": payload.get("preconditions", ""),
         "steps": json.dumps(payload.get("steps", []), ensure_ascii=False),

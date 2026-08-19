@@ -695,6 +695,93 @@ def test_execute_team_poller_follows_latest_team(dsh_db, monkeypatch, tmp_path):
         db.close()
 
 
+def test_execute_single_with_manifest_ingests_artifacts(dsh_db, monkeypatch):
+    """B2：single 成功且输出含产物清单 → 任务 success 且落 AiArtifact（pending）。"""
+    from app.models.knowledge import AiArtifact
+
+    manifest = (
+        "## 产物清单\n```json\n"
+        + json.dumps([{"type": "functional_case", "title": "登录用例", "summary": "s", "content": {}}], ensure_ascii=False)
+        + "\n```\n"
+    )
+    monkeypatch.setattr("app.services.dsh.dsh_runner.run_dsh_task", _fake_run(manifest))
+    db = dsh_db()
+    try:
+        row = dsh_task_service.submit_task(
+            db, project_id=1, task="设计功能用例", operator_id=1,
+            params={"scene": "functional"},
+        )
+        claimed = dsh_task_service.claim_next_task(db)
+        dsh_task_service.execute_task(db, claimed)
+        assert claimed.status == "success"
+        db.commit()
+        artifacts = list(db.query(AiArtifact).all())
+        assert len(artifacts) == 1
+        assert artifacts[0].artifact_type == "functional_case"
+        assert artifacts[0].review_status == "pending"
+        assert f'"dsh_task:{claimed.id}"' in artifacts[0].source_refs
+    finally:
+        db.close()
+
+
+def test_execute_single_invalid_manifest_zero_artifacts_no_raise(dsh_db, monkeypatch):
+    """B2：single 成功但输出非法 → 任务仍 success 且 0 产物（容错）。"""
+    from app.models.knowledge import AiArtifact
+
+    monkeypatch.setattr("app.services.dsh.dsh_runner.run_dsh_task", _fake_run("## 产物清单\n```json\n[bad\n```"))
+    db = dsh_db()
+    try:
+        row = dsh_task_service.submit_task(
+            db, project_id=1, task="设计功能用例", operator_id=1,
+            params={"scene": "functional"},
+        )
+        claimed = dsh_task_service.claim_next_task(db)
+        dsh_task_service.execute_task(db, claimed)
+        assert claimed.status == "success"
+        db.commit()
+        assert db.query(AiArtifact).count() == 0
+    finally:
+        db.close()
+
+
+def test_execute_team_with_manifest_ingests_artifacts(dsh_db, monkeypatch, tmp_path):
+    """B2：team 成功且输出含产物清单 → 任务 success 且落 AiArtifact。"""
+    from app.core.config import settings
+    from app.models.knowledge import AiArtifact
+
+    monkeypatch.setattr(settings, "dsh_team_poll_seconds", 0.05)
+    ws_root = tmp_path / "ws-isolation"
+    ws_root.mkdir()
+    team_id = "team-artifact"
+    manifest = (
+        "## 产物清单\n```json\n"
+        + json.dumps([{"type": "api_case", "title": "订单接口用例", "content": {"api_endpoint": "/x"}}], ensure_ascii=False)
+        + "\n```\n"
+    )
+
+    def fake_runner(task, **kwargs):
+        ws = ws_root / "ws-0001"
+        ws.mkdir(exist_ok=True)
+        _write_team_json(ws, team_id, _team_snapshot(team_id, "产物团队"))
+        return DshRunResult(final_response=manifest, exit_code=0, session_dir=str(tmp_path), workspace=str(ws))
+
+    db = dsh_db()
+    try:
+        row = dsh_task_service.submit_task(
+            db, project_id=1, task="接口用例团队任务", operator_id=1,
+            mode="team", params={"batch_mode": "full", "scene": "api", "workspace": str(ws_root)},
+        )
+        claimed = dsh_task_service.claim_next_task(db)
+        dsh_task_service.execute_task(db, claimed, runner=fake_runner)
+        assert claimed.status == "success"
+        db.commit()
+        artifacts = list(db.query(AiArtifact).all())
+        assert len(artifacts) == 1
+        assert artifacts[0].artifact_type == "api_case"
+    finally:
+        db.close()
+
+
 # ── DSH 测试 Agent 框架：team_kind 分派 ──
 
 def test_execute_team_team_kind_tester_uses_tester_persona(dsh_db, monkeypatch, tmp_path):
@@ -909,5 +996,37 @@ def test_execute_team_passes_model_to_runner(dsh_db, monkeypatch, tmp_path):
         dsh_task_service.execute_task(db, claimed, runner=fake_runner)
         assert claimed.status == "success"
         assert captured["model"] == "deepseek-v4-pro"
+    finally:
+        db.close()
+
+# ── B2 产物闭环：任务产物查询 API ──
+
+def test_api_task_artifacts_empty_and_list(dsh_client, dsh_db):
+    """GET /dsh-tasks/{id}/artifacts：无产物返回空列表；有产物返回回链信息。"""
+    from app.models.knowledge import AiArtifact
+
+    db = dsh_db()
+    try:
+        row = dsh_task_service.submit_task(db, project_id=1, task="B2 产物", operator_id=1, mode="single")
+        db.commit()
+
+        resp_empty = dsh_client.get(f"/api/v1/dsh-tasks/{row.id}/artifacts")
+        assert resp_empty.status_code == 200
+        assert resp_empty.json()["data"] == []
+
+        db.add(AiArtifact(
+            project_id=1, artifact_type="functional_case", title="登录功能用例",
+            content_json="{}", source_refs=f'["dsh_task:{row.id}"]',
+            review_status="approved", imported_ref_type="test_case", imported_ref_id=7,
+        ))
+        db.commit()
+
+        resp = dsh_client.get(f"/api/v1/dsh-tasks/{row.id}/artifacts")
+        assert resp.status_code == 200
+        items = resp.json()["data"]
+        assert len(items) == 1
+        assert items[0]["artifact_type"] == "functional_case"
+        assert items[0]["review_status"] == "approved"
+        assert items[0]["imported_ref_id"] == 7
     finally:
         db.close()

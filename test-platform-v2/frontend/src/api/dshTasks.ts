@@ -87,3 +87,19 @@ export async function createDshTask(
 export async function cancelDshTask(id: number): Promise<{ id: number; status: string; message: string }> {
   return api.post(`/dsh-tasks/${id}/cancel`)
 }
+
+// ── B2 产物闭环：任务产物回链 ──
+
+export interface DshTaskArtifact {
+  id: number
+  artifact_type: string
+  title: string
+  review_status: string
+  imported_ref_type: string
+  imported_ref_id: number | null
+}
+
+export async function fetchDshTaskArtifacts(id: number, signal?: AbortSignal): Promise<DshTaskArtifact[]> {
+  if (signal) return api.get(`/dsh-tasks/${id}/artifacts`, { signal })
+  return api.get(`/dsh-tasks/${id}/artifacts`)
+}

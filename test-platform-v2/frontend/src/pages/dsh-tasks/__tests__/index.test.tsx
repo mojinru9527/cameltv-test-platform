@@ -13,6 +13,7 @@ const mockFetchDshTask = vi.fn()
 const mockCreateDshTask = vi.fn()
 const mockCancelDshTask = vi.fn()
 const mockFetchDshModelPool = vi.fn()
+const mockFetchDshTaskArtifacts = vi.fn().mockResolvedValue([])
 
 vi.mock('@/hooks/useDocumentTitle', () => ({ useDocumentTitle: vi.fn() }))
 vi.mock('@/api/dshTasks', () => ({
@@ -22,6 +23,7 @@ vi.mock('@/api/dshTasks', () => ({
   createDshTask: (...args: unknown[]) => mockCreateDshTask(...args),
   cancelDshTask: (...args: unknown[]) => mockCancelDshTask(...args),
   fetchDshModelPool: (...args: unknown[]) => mockFetchDshModelPool(...args),
+  fetchDshTaskArtifacts: (...args: unknown[]) => mockFetchDshTaskArtifacts(...args),
 }))
 vi.mock('@/stores/auth', () => ({
   // QA 打回 P2：useAuthStore 是 selector 式 hook，mock 必须应用 selector（仓库既有范式）
