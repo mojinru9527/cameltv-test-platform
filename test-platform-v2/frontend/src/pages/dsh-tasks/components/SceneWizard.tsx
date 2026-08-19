@@ -24,7 +24,6 @@ export default function SceneWizard({ open, onOpenChange, scene, providers, onSu
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [input, setInput] = useState('')
   // Step 2 配置
-  const defaultProvider = useMemo(() => providers.find((p) => p.is_default) ?? providers[0] ?? null, [providers])
   const [providerId, setProviderId] = useState<string>('')
   const [model, setModel] = useState<string>('')
   const [mode, setMode] = useState<'single' | 'team'>('team')
@@ -47,6 +46,7 @@ export default function SceneWizard({ open, onOpenChange, scene, providers, onSu
     const p = providers.find((x) => x.is_default) ?? providers[0] ?? null
     setProviderId(p ? String(p.id) : '')
     setModel(p ? p.default_model || (p.models?.[0] ?? '') : '')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, scene.id])
 
   const currentProvider = useMemo(
