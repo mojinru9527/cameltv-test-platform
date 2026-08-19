@@ -288,10 +288,10 @@ class TestIngestDedup:
 # ═══════════════════════════════════════════════════════
 
 class TestGovernance:
-    def _make_artifact(self, db_session, review_status: str):
+    def _make_artifact(self, db_session, review_status: str, artifact_type: str = "test_case"):
         from app.models.knowledge import AiArtifact
         a = AiArtifact(
-            project_id=1, artifact_type="test_case", title="AI 用例",
+            project_id=1, artifact_type=artifact_type, title="AI 用例",
             content_json=json.dumps({
                 "title": "AI 生成用例", "api_method": "POST", "api_endpoint": "/x",
             }),
@@ -320,6 +320,60 @@ class TestGovernance:
         db_session.refresh(a)
         assert a.review_status == "imported"
         assert a.imported_ref_id == case.id
+
+    def test_import_api_case_creates_api_case(self, db_session):
+        """B2：api_case approved → 导入成功，case_type=api。"""
+        from app.models.test_case import TestCase
+        from app.services.knowledge import artifact_service
+        a = self._make_artifact(db_session, "approved", artifact_type="api_case")
+        result = artifact_service.import_to_test_case(db_session, a.id, 1)
+        db_session.commit()
+        case = db_session.get(TestCase, result["case_id"])
+        assert case is not None and case.case_type == "api"
+
+    def test_import_functional_case_creates_manual_case(self, db_session):
+        """B2：functional_case approved → 导入成功，case_type=manual，domain 默认用户端。"""
+        from app.models.test_case import TestCase
+        from app.services.knowledge import artifact_service
+        a = self._make_artifact(db_session, "approved", artifact_type="functional_case")
+        result = artifact_service.import_to_test_case(db_session, a.id, 1)
+        db_session.commit()
+        case = db_session.get(TestCase, result["case_id"])
+        assert case is not None and case.case_type == "manual"
+        assert case.domain == "用户端"
+
+    def test_import_functional_case_domain_override(self, db_session):
+        """B2：functional_case content.domain 覆盖默认用户端。"""
+        from app.models.knowledge import AiArtifact
+        from app.models.test_case import TestCase
+        from app.services.knowledge import artifact_service
+        a = AiArtifact(
+            project_id=1, artifact_type="functional_case", title="功能用例",
+            content_json=json.dumps({"title": "x", "domain": "运营后台", "steps": []}),
+            review_status="approved",
+        )
+        db_session.add(a)
+        db_session.commit()
+        result = artifact_service.import_to_test_case(db_session, a.id, 1)
+        db_session.commit()
+        case = db_session.get(TestCase, result["case_id"])
+        assert case.domain == "运营后台"
+
+    def test_import_requirement_rejected(self, db_session):
+        """B2：requirement approved → 拒绝「暂不支持导入」。"""
+        from app.services.knowledge import artifact_service
+        a = self._make_artifact(db_session, "approved", artifact_type="requirement")
+        with pytest.raises(APIException) as ei:
+            artifact_service.import_to_test_case(db_session, a.id, 1)
+        assert "暂不支持" in ei.value.msg
+
+    def test_import_ui_case_rejected(self, db_session):
+        """B2：ui_case approved → 拒绝「暂不支持导入」。"""
+        from app.services.knowledge import artifact_service
+        a = self._make_artifact(db_session, "approved", artifact_type="ui_case")
+        with pytest.raises(APIException) as ei:
+            artifact_service.import_to_test_case(db_session, a.id, 1)
+        assert "暂不支持" in ei.value.msg
 
     def test_batch_import_blocked_when_flag_off(self, db_session, monkeypatch):
         """QA #3 回归：批量导入未开启时（>1 条）应被治理门拒绝（403）。"""
