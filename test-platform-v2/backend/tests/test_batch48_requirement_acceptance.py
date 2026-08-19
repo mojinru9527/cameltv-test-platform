@@ -746,7 +746,7 @@ def test_generate_persists_inherited_cases_before_cases_get_and_import(
     child.parent_id = parent.id
     db_session.commit()
 
-    async def fake_generate(**_kwargs):
+    async def fake_generate(*_args, **_kwargs):
         return {
             "functional_cases": [],
             "api_cases": [],

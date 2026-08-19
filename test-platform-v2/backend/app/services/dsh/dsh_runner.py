@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from app.core.config import settings
+from app.services.ai_config_service import EffectiveAiConfig
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +117,7 @@ def run_dsh_task(
     timeout: float | None = None,
     extra_env: dict[str, str] | None = None,
     mode: str = "single",          # Batch 191：single | team（团队路由到 agent-team profile / team.cordis.yml）
+    provider: EffectiveAiConfig | None = None,
 ) -> DshRunResult:
     """执行一次 dsh 任务，返回结构化结果。
 
@@ -138,7 +140,7 @@ def run_dsh_task(
     if not available:
         return DshRunResult(final_response="", exit_code=1, error=f"DSH 不可用: {reason}")
 
-    resolved_model = model or settings.dsh_model or settings.ai_model
+    resolved_model = model or (provider.model if provider else None) or settings.dsh_model or settings.ai_model
     if mode == "team":
         resolved_timeout = timeout or settings.dsh_team_timeout_seconds
     else:
@@ -161,6 +163,7 @@ def run_dsh_task(
                 timeout=resolved_timeout,
                 extra_env=extra_env,
                 mode=mode,
+                provider=provider,
             )
         return _run_node_cli(
             task,
@@ -170,6 +173,7 @@ def run_dsh_task(
             timeout=resolved_timeout,
             extra_env=extra_env,
             mode=mode,
+            provider=provider,
         )
 
 
@@ -182,6 +186,7 @@ def _run_node_cli(
     timeout: float,
     extra_env: dict[str, str] | None,
     mode: str = "single",
+    provider: EffectiveAiConfig | None = None,
 ) -> DshRunResult:
     """通过 Node CLI headless 执行任务（Windows 本地开发路径）。
 
@@ -194,9 +199,14 @@ def _run_node_cli(
     # 规范 §3.1：workspace 仅供团队模式终态 team.json 读取回传；single 留空（既有断言不回归）
     ws_field = workdir if mode == "team" else ""
     env = os.environ.copy()
-    env["DEEPSEEK_API_KEY"] = settings.dsh_api_key_effective
-    if settings.dsh_base_url_effective:
-        env["DEEPSEEK_BASE_URL"] = settings.dsh_base_url_effective
+    if provider is not None:
+        env["DEEPSEEK_API_KEY"] = provider.api_key
+        if provider.api_base_url:
+            env["DEEPSEEK_BASE_URL"] = provider.api_base_url
+    else:
+        env["DEEPSEEK_API_KEY"] = settings.dsh_api_key_effective
+        if settings.dsh_base_url_effective:
+            env["DEEPSEEK_BASE_URL"] = settings.dsh_base_url_effective
     env["DSH_MODEL"] = model
     env["DSH_SESSION_ROOT"] = str(session_root)
     if mode == "team" and (settings.dsh_team_harness_path or "").strip():
@@ -255,6 +265,7 @@ def _run_python_sdk(
     timeout: float,
     extra_env: dict[str, str] | None,
     mode: str = "single",
+    provider: EffectiveAiConfig | None = None,
 ) -> DshRunResult:
     """通过官方 Python SDK 执行任务（生产 Linux 路径）。需要 deepseek-harness-sdk。"""
     # 规范 §3.1：workspace 仅供团队模式回传；single 留空
@@ -292,9 +303,14 @@ def _run_python_sdk(
         )
 
     env = os.environ.copy()
-    env["DEEPSEEK_API_KEY"] = settings.dsh_api_key_effective
-    if settings.dsh_base_url_effective:
-        env["DEEPSEEK_BASE_URL"] = settings.dsh_base_url_effective
+    if provider is not None:
+        env["DEEPSEEK_API_KEY"] = provider.api_key
+        if provider.api_base_url:
+            env["DEEPSEEK_BASE_URL"] = provider.api_base_url
+    else:
+        env["DEEPSEEK_API_KEY"] = settings.dsh_api_key_effective
+        if settings.dsh_base_url_effective:
+            env["DEEPSEEK_BASE_URL"] = settings.dsh_base_url_effective
     env["DSH_MODEL"] = model
     env["DSH_SESSION_ROOT"] = str(session_root)
     env["DSH_CWD"] = workdir

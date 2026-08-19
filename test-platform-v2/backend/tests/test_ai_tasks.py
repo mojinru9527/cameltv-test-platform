@@ -176,7 +176,7 @@ def test_run_generate_awaits_async_ai(monkeypatch, db_session):
     """C120-2 回归：_run_generate 必须 await async AI（否则 coroutine 对象报错）。"""
     from app.services import ai_tasks
 
-    async def fake_gen(content, file_type="", source_ref="", extraction=None):
+    async def fake_gen(db, project_id, content, file_type="", source_ref="", extraction=None):
         return {"functional_cases": [{"title": "async-ok"}]}
 
     monkeypatch.setattr(
@@ -228,7 +228,7 @@ class TestBatch161FollowupProjectScope:
             },
         )
 
-        async def fake_gen(content, file_type="", source_ref="", extraction=None):
+        async def fake_gen(db, project_id, content, file_type="", source_ref="", extraction=None):
             seen["extraction"] = extraction
             return {"functional_cases": [{"title": "guided-ok"}]}
 
@@ -251,7 +251,7 @@ class TestBatch161FollowupProjectScope:
         )
         import asyncio as _asyncio
 
-        async def fake_extract(content, file_type="", source_ref=""):
+        async def fake_extract(db, project_id, content, file_type="", source_ref=""):
             return {"modules": []}
 
         monkeypatch.setattr("app.services.ai_service.extract_features", fake_extract)
@@ -270,7 +270,7 @@ class TestBatch161Followup2Persist:
         db_session.add(doc)
         db_session.commit()
 
-        async def fake_extract(content, file_type="", source_ref=""):
+        async def fake_extract(db, project_id, content, file_type="", source_ref=""):
             return {"modules": [{"id": "MOD-1", "name": "广告", "function_points": []}]}
 
         monkeypatch.setattr("app.services.ai_service.extract_features", fake_extract)
@@ -292,7 +292,7 @@ class TestBatch161Followup2Persist:
         db_session.add(doc)
         db_session.commit()
 
-        async def fake_gen(content, file_type="", source_ref="", extraction=None):
+        async def fake_gen(db, project_id, content, file_type="", source_ref="", extraction=None):
             return {"functional_cases": [{"title": "persist-ok"}]}
 
         monkeypatch.setattr("app.services.ai_service.generate_test_cases", fake_gen)

@@ -85,7 +85,7 @@ def extract_contract(db: Session, project_id: int, *, kb_type: str, query: str) 
         "permissions[{role,actions[]}],data_dependencies[{name,source,type}],"
         "acceptance_criteria[],exception_paths[],test_cases[]。只依据片段，不编造。"
     )
-    res = _call_llm_sync(prompt, f"需求关键词：{query}\n\n知识片段：\n{text}")
+    res = _call_llm_sync(db, project_id, prompt, f"需求关键词：{query}\n\n知识片段：\n{text}")
     result = res.get("result")
     if isinstance(result, dict):
         return _normalize_contract(result, title=query, source_refs=refs)

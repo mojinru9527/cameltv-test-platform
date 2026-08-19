@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
 from app.models.test_case import TestCase
+from app.services.ai_config_service import AIProviderUnconfiguredError, ai_config_service
 
 logger = logging.getLogger("triage")
 
@@ -97,9 +98,14 @@ def triage_failed_cases(
         classified.append({**fc, **rule_result})
 
     # 4. LLM 深度分析（可选）
-    if use_llm and settings.ai_enabled and settings.ai_api_key:
+    if use_llm and settings.ai_enabled:
         try:
-            classified = _llm_deep_analyze(classified)
+            ai_config_service.resolve(db, project_id)
+        except AIProviderUnconfiguredError:
+            use_llm = False
+    if use_llm and settings.ai_enabled:
+        try:
+            classified = _llm_deep_analyze(db, project_id, classified)
             method = "llm"
         except Exception:
             logger.exception("LLM triage failed, using rule-only results")
@@ -238,12 +244,14 @@ def _rule_based_classify(failure: dict) -> dict:
             "explanation": explanation, "suggested_action": suggested_action}
 
 
-def _llm_deep_analyze(classified: list[dict]) -> list[dict]:
+def _llm_deep_analyze(db, project_id: int, classified: list[dict]) -> list[dict]:
     """使用 LLM 深度分析失败用例。如 LLM 不可用，返回原始分类。"""
     if not classified:
         return classified
 
     import httpx
+
+    cfg = ai_config_service.resolve(db, project_id)
 
     # 构建分析 prompt
     cases_text = []
@@ -272,13 +280,13 @@ def _llm_deep_analyze(classified: list[dict]) -> list[dict]:
     try:
         with httpx.Client(timeout=120.0) as client:
             resp = client.post(
-                f"{settings.ai_api_base_url.rstrip('/')}/chat/completions",
+                f"{cfg.api_base_url.rstrip('/')}/chat/completions",
                 headers={
-                    "Authorization": f"Bearer {settings.ai_api_key}",
+                    "Authorization": f"Bearer {cfg.api_key}",
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": settings.ai_model,
+                    "model": cfg.model,
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_msg},

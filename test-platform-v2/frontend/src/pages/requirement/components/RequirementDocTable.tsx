@@ -62,6 +62,7 @@ interface Props {
   page: number
   totalPages: number
   total: number
+  aiConfigured: boolean
   onKeywordChange: (value: string) => void
   onClearKeyword: () => void
   onPreviewDoc: (id: number) => void
@@ -92,6 +93,7 @@ export default function RequirementDocTable({
   page,
   totalPages,
   total,
+  aiConfigured,
   onKeywordChange,
   onClearKeyword,
   onPreviewDoc,
@@ -285,7 +287,8 @@ export default function RequirementDocTable({
                                 <Button
                                   size="sm"
                                   variant="primary"
-                                  disabled={!canWriteDocs || (generating && generatingDocId === r.id)}
+                                  disabled={!canWriteDocs || !aiConfigured || (generating && generatingDocId === r.id)}
+                                  title={!aiConfigured ? '当前项目未配置 AI 提供方' : undefined}
                                   onClick={() => onGenerate(r.id, true)}
                                 >
                                   {generating && generatingDocId === r.id ? (
@@ -299,7 +302,8 @@ export default function RequirementDocTable({
                                 <Button
                                   size="sm"
                                   variant="primary"
-                                  disabled={!canWriteDocs || (extracting && extractingDocId === r.id)}
+                                  disabled={!canWriteDocs || !aiConfigured || (extracting && extractingDocId === r.id)}
+                                  title={!aiConfigured ? '当前项目未配置 AI 提供方' : undefined}
                                   onClick={() => onExtract(r.id)}
                                 >
                                   {extracting && extractingDocId === r.id ? (
@@ -313,7 +317,8 @@ export default function RequirementDocTable({
                                 <Button
                                   size="sm"
                                   variant="primary"
-                                  disabled={!canWriteDocs || (extracting && extractingDocId === r.id)}
+                                  disabled={!canWriteDocs || !aiConfigured || (extracting && extractingDocId === r.id)}
+                                  title={!aiConfigured ? '当前项目未配置 AI 提供方' : undefined}
                                   onClick={() => onExtract(r.id)}
                                 >
                                   {extracting && extractingDocId === r.id ? (
@@ -329,11 +334,12 @@ export default function RequirementDocTable({
                               <Button
                                 size="sm"
                                 variant="secondary"
-                                disabled={!canWriteDocs || (
+                                disabled={!canWriteDocs || !aiConfigured || (
                                   r.extraction_status === 'confirmed'
                                     ? extracting && extractingDocId === r.id
                                     : generating && generatingDocId === r.id
                                 )}
+                                title={!aiConfigured ? '当前项目未配置 AI 提供方' : undefined}
                                 onClick={() => {
                                   if (r.extraction_status === 'confirmed') {
                                     onReExtract(r.id)

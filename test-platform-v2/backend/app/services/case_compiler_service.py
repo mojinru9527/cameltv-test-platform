@@ -20,6 +20,7 @@ import httpx
 
 from app.core.config import settings
 from app.models.test_case import TestCase
+from app.services.ai_config_service import ai_config_service
 
 logger = logging.getLogger(__name__)
 
@@ -95,15 +96,19 @@ SYSTEM_PROMPT = """你是 Playwright 测试自动化专家。根据测试用例�
 # ═══════════════════════════════════════════════════════════
 
 def compile_to_playwright(
+    db,
     db_case: TestCase,
     *,
+    project_id: int = 0,
     base_url: str = "http://localhost:5173",
     validate: bool = True,
 ) -> dict:
     """将 TestCase 的 steps 编译为 Playwright .spec.ts 代码。
 
     Args:
+        db: 数据库会话（项目级 AI 配置解析用）
         db_case: 已从 DB 加载的 TestCase ORM 对象（需含 steps/preconditions/expected_result）
+        project_id: 项目 ID（用于 ai_config_service.resolve）
         base_url: 被测前端地址，传入 Playwright 作为 baseUrl
         validate: 是否执行 dry-run 校验
 
@@ -138,7 +143,7 @@ def compile_to_playwright(
 
     # 1. 调用 LLM 生成代码
     try:
-        raw_code, usage = _call_llm_for_code(SYSTEM_PROMPT, user_message)
+        raw_code, usage = _call_llm_for_code(db, project_id, SYSTEM_PROMPT, user_message)
     except Exception as exc:
         logger.exception("LLM call failed for case %s", db_case.id)
         return _error_result(db_case.id, f"LLM 调用失败: {exc}")
@@ -219,27 +224,26 @@ def _build_user_message(db_case: TestCase, steps: list[dict], base_url: str) -> 
     return "\n".join(lines)
 
 
-def _call_llm_for_code(system_prompt: str, user_message: str) -> tuple[str | None, dict | None]:
+def _call_llm_for_code(db, project_id: int, system_prompt: str, user_message: str) -> tuple[str | None, dict | None]:
     """调用 DeepSeek API 生成代码（纯文本输出，非 JSON）。
 
     与 ai_service._call_ai_api 的关键区别：
     - 不传 response_format（默认为 None/纯文本），代码不是 JSON
     - 适当提高 max_tokens 以容纳较长的 spec 文件
     """
-    if not settings.ai_api_key:
-        raise RuntimeError("AI_API_KEY 未配置，无法编译用例")
+    cfg = ai_config_service.resolve(db, project_id)
 
     code_max_tokens = max(settings.ai_max_tokens, 8192)  # 代码生成至少 8K tokens
 
     with httpx.Client(timeout=settings.ai_timeout_seconds) as client:
         resp = client.post(
-            f"{settings.ai_api_base_url.rstrip('/')}/chat/completions",
+            f"{cfg.api_base_url.rstrip('/')}/chat/completions",
             headers={
-                "Authorization": f"Bearer {settings.ai_api_key}",
+                "Authorization": f"Bearer {cfg.api_key}",
                 "Content-Type": "application/json",
             },
             json={
-                "model": settings.ai_model,
+                "model": cfg.model,
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message},

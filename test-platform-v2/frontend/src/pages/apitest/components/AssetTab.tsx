@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { fetchApiServices, fetchApiEndpoints, generateApiCases, batchGenerateApiCases } from '@/api/apitest'
+import { fetchAiResolve } from '@/api/aiConfig'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
 import EndpointDetailPanel from './EndpointDetailPanel'
 import type { ApiService, ApiEndpoint } from '@/types'
@@ -35,6 +36,8 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
   const [generating, setGenerating] = useState<Set<number>>(new Set())
   const [generatingService, setGeneratingService] = useState(false)
   const [selectedEndpoint, setSelectedEndpoint] = useState<ApiEndpoint | null>(null)
+  // Batch A：项目 AI 配置状态（未配置禁用生成入口）
+  const [aiConfigured, setAiConfigured] = useState(true)
 
   // Tab state
   const [activeTab, setActiveTab] = useState('_all')
@@ -74,6 +77,15 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
 
   useAbortableEffect((signal) => { void loadServices(signal) }, [loadServices])
   useAbortableEffect((signal) => { void loadEndpoints(signal) }, [loadEndpoints])
+
+  // Batch A：项目 AI 配置状态
+  useEffect(() => {
+    let cancelled = false
+    fetchAiResolve()
+      .then((res) => { if (!cancelled) setAiConfigured(res.configured) })
+      .catch(() => undefined)
+    return () => { cancelled = true }
+  }, [])
 
   // Service → Module → PathGroup → Endpoints (four-level hierarchy)
   const hierarchy = useMemo(() => {
@@ -202,7 +214,8 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
             variant="ghost"
             aria-label={`为接口 ${ep.summary || ep.path} 生成用例`}
             onClick={(e) => { e.stopPropagation(); handleGenerate(ep) }}
-            disabled={generating.has(ep.id)}
+            disabled={generating.has(ep.id) || !aiConfigured}
+            title={!aiConfigured ? '当前项目未配置 AI 提供方' : undefined}
           >
             <Zap className={`size-4 ${generating.has(ep.id) ? 'animate-pulse' : ''}`} />
           </Button>
@@ -317,7 +330,8 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
             <Button
               size="sm"
               variant="secondary"
-              disabled={generatingService}
+              disabled={generatingService || !aiConfigured}
+              title={!aiConfigured ? '当前项目未配置 AI 提供方' : undefined}
               onClick={() => handleGenerateService(Number(activeTab), svcNameOf(endpoints[0]))}
               aria-label={`为服务 ${svcNameOf(endpoints[0])} 批量生成用例`}
             >

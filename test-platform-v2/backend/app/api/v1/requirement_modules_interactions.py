@@ -77,6 +77,7 @@ async def extract_interactions(
     report = await extract_all_pages(
         db,
         release_bundle_id=bundle_id,
+        project_id=pid,
         preferred_layers=body.preferred_layers,
         save=True,
     )

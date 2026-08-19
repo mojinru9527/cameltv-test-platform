@@ -37,7 +37,13 @@ from app.core.task_queue import (
     atomic_claim,
     utcnow,
 )
+from app.models.ai_provider import AiProvider
 from app.models.dsh_task import DshTask
+from app.services.ai_config_service import (
+    AIProviderUnconfiguredError,
+    EffectiveAiConfig,
+    ai_config_service,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -74,12 +80,19 @@ def submit_task(
     mode: str = "single",
     operator_id: int = 0,
 ) -> DshTask:
-    """插入 pending 任务并唤醒 worker（多 worker 部署下任何进程均可认领）。"""
+    """插入 pending 任务并唤醒 worker（多 worker 部署下任何进程均可认领）。
+
+    项目满级 AI 配置解析：无配置抛 AIProviderUnconfiguredError（400，项目未配置 AI 提供方）；
+    配置成功则快照 provider_id 到 params（仅存 id，不存明文 key）。
+    """
+    cfg = ai_config_service.resolve(db, project_id)
+    params = dict(params or {})
+    params["provider_id"] = cfg.provider_id
     row = DshTask(
         project_id=project_id,
         task=task,
         status="pending",
-        params_json=json.dumps(params or {}, ensure_ascii=False),
+        params_json=json.dumps(params, ensure_ascii=False),
         operator_id=operator_id,
         mode=mode,
         team_json="{}",
@@ -145,6 +158,21 @@ def claim_next_task(db, now: datetime | None = None) -> DshTask | None:
     return atomic_claim(db, _DSH_QUEUE, worker_id="dsh-worker", stale_seconds=_STALE_CLAIM_SECONDS)
 
 
+def _resolve_task_provider(db, task: DshTask, params: dict) -> EffectiveAiConfig | None:
+    """从任务 params 的 provider_id 构造 EffectiveAiConfig（校验同项目）。
+
+    provider_id 缺失/提供方被删 → 任务失败并留 error 提示（fail-closed）。
+    构造无效时向上抛（由 execute_task 外层捕获写回 task.error）。
+    """
+    provider_id = params.get("provider_id")
+    if not provider_id:
+        raise ValueError("AI 提供方缺失，请重新提交任务")
+    provider = db.get(AiProvider, provider_id)
+    if provider is None or provider.project_id != task.project_id:
+        raise ValueError("AI 提供方已被删除或不属于当前项目，请重新配置")
+    return EffectiveAiConfig(provider)
+
+
 def execute_task(db, task: DshTask, runner=None) -> None:
     """执行已认领任务并写回结果/错误。runner 可注入用于测试。
 
@@ -160,13 +188,15 @@ def execute_task(db, task: DshTask, runner=None) -> None:
             params = json.loads(task.params_json or "{}")
         except json.JSONDecodeError:
             params = {}
+        provider = _resolve_task_provider(db, task, params)
         if task.mode == "team":
-            _execute_team(db, task, params, runner)
+            _execute_team(db, task, params, runner, provider=provider)
             return
         result = runner(
             task.task,
             workspace=params.get("workspace") or None,
             model=params.get("model") or None,  # DSH 测试 Agent 框架：模型池按任务指定
+            provider=provider,
         )
         task.status = "success" if result.exit_code == 0 else "failed"
         task.output_text = (result.final_response or "")[:20000]
@@ -306,6 +336,7 @@ def _team_runner(
     persona: str,
     result_box: queue.Queue,
     runner,
+    provider: "EffectiveAiConfig | None" = None,
 ) -> None:
     """执行线程：跑 run_dsh_task(mode="team")，结果经线程安全队列传回。
 
@@ -320,6 +351,7 @@ def _team_runner(
             model=params.get("model") or None,
             timeout=settings.dsh_team_timeout_seconds,
             extra_env={"DSH_SYSTEM_PROMPT": persona},
+            provider=provider,
         )
         result_box.put(result)
     except Exception as exc:  # noqa: BLE001 - 执行线程异常兜底
@@ -329,7 +361,7 @@ def _team_runner(
         result_box.put(DshRunResult(final_response="", exit_code=1, error=f"团队执行线程异常: {exc}"))
 
 
-def _execute_team(db, task: DshTask, params: dict, runner) -> None:
+def _execute_team(db, task: DshTask, params: dict, runner, provider: "EffectiveAiConfig | None" = None) -> None:
     """团队模式执行：执行线程 + 轮询线程 + 终态快照（设计 §4.2/§4.3）。
 
     DSH 测试 Agent 框架：params.team_kind 分派 persona——tester 用
@@ -356,7 +388,7 @@ def _execute_team(db, task: DshTask, params: dict, runner) -> None:
 
     t_exec = threading.Thread(
         target=_team_runner,
-        args=(task_text, params, persona, result_box, runner),
+        args=(task_text, params, persona, result_box, runner, provider),
         daemon=True,
     )
     t_poll = threading.Thread(

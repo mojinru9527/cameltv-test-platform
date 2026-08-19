@@ -166,9 +166,15 @@ def test_create_generated_cases_persists(db_session):
 
 def test_ai_mode_without_key_falls_back(db_session, monkeypatch):
     """AI 模式未配置 key 时降级为 rule 模式。"""
-    from app.core.config import settings
+    from types import SimpleNamespace
 
-    monkeypatch.setattr(settings, "ai_api_key", "")
+    from app.services.ai_config_service import AIProviderUnconfiguredError
+
+    monkeypatch.setattr(
+        ags.ai_config_service,
+        "resolve",
+        lambda db, project_id: (_ for _ in ()).throw(AIProviderUnconfiguredError()),
+    )
     _mk_manual(
         db_session,
         1,

@@ -18,11 +18,21 @@ def _run(coro):
 def _ai_key(monkeypatch):
     monkeypatch.setattr(settings, "ai_api_key", "sk-test")
     monkeypatch.setattr(settings, "dsh_enabled", False)
+    # A2：项目级 AI 配置 —— 打桩 resolve，返回假 EffectiveAiConfig（db 参数可为 None）
+    monkeypatch.setattr(
+        ai_service.ai_config_service,
+        "resolve",
+        lambda db, project_id: SimpleNamespace(
+            api_base_url="https://api.deepseek.com",
+            api_key="sk-test",
+            model="deepseek-v4-pro",
+        ),
+    )
     yield
 
 
 def _fake_call_ai(monkeypatch, result_dict):
-    async def fake(system_prompt, user_message, label="", max_tokens=None):
+    async def fake(db, project_id, system_prompt, user_message, label="", max_tokens=None):
         return result_dict
     monkeypatch.setattr(ai_service, "_call_ai_api", fake)
 
@@ -48,7 +58,7 @@ def test_harness_off_keeps_direct_behavior(monkeypatch):
     }
     _fake_call_ai(monkeypatch, {"result": expected, "raw": "{}", "finish_reason": "completed", "truncated": False, "error": None})
 
-    result = _run(ai_service.generate_test_cases("需求：登录功能", use_harness=False))
+    result = _run(ai_service.generate_test_cases(None, 1, "需求：登录功能", use_harness=False))
     assert result["functional_cases"] == [{"title": "case-1"}]
     assert result["api_cases"] == []
 
@@ -61,7 +71,7 @@ def test_harness_on_uses_runner(monkeypatch):
     # 若走了直连则失败（直连返回空）
     _fake_call_ai(monkeypatch, {"result": None, "raw": "", "finish_reason": "error", "truncated": False, "error": "should not be called"})
 
-    result = _run(ai_service.generate_test_cases("需求：登录功能", use_harness=True))
+    result = _run(ai_service.generate_test_cases(None, 1, "需求：登录功能", use_harness=True))
     assert result["functional_cases"][0]["title"] == "harness-case"
     assert result["api_cases"] == []
 
@@ -76,7 +86,7 @@ def test_harness_failure_falls_back_to_direct(monkeypatch):
     }
     _fake_call_ai(monkeypatch, {"result": direct, "raw": "{}", "finish_reason": "completed", "truncated": False, "error": None})
 
-    result = _run(ai_service.generate_test_cases("需求：登录功能", use_harness=True))
+    result = _run(ai_service.generate_test_cases(None, 1, "需求：登录功能", use_harness=True))
     assert result["functional_cases"][0]["title"] == "direct-case"
 
 
@@ -90,5 +100,5 @@ def test_harness_bad_json_falls_back_to_direct(monkeypatch):
     }
     _fake_call_ai(monkeypatch, {"result": direct, "raw": "{}", "finish_reason": "completed", "truncated": False, "error": None})
 
-    result = _run(ai_service.generate_test_cases("需求：登录功能", use_harness=True))
+    result = _run(ai_service.generate_test_cases(None, 1, "需求：登录功能", use_harness=True))
     assert result["functional_cases"][0]["title"] == "fallback"
