@@ -253,6 +253,41 @@ def test_api_create_unavailable(dsh_client, monkeypatch):
     assert resp.json()["code"] == 503
 
 
+# ── B1：scene 场景字段 ──
+
+def test_api_create_scene_functional_echoes(dsh_client, dsh_available):
+    """scene=functional + scene_params → 200，且回显 scene=functional。"""
+    resp = dsh_client.post(
+        "/api/v1/dsh-tasks",
+        json={
+            "task": "为登录模块设计功能用例",
+            "scene": "functional",
+            "scene_params": {"requirement_text": "测试需求"},
+        },
+    )
+    assert resp.status_code == 200
+    assert resp.json()["data"]["scene"] == "functional"
+
+
+def test_api_create_invalid_scene_rejected(dsh_client, dsh_available):
+    """scene=xxx → 422（Pydantic validator）。"""
+    resp = dsh_client.post(
+        "/api/v1/dsh-tasks",
+        json={"task": "x", "scene": "xxx"},
+    )
+    assert resp.status_code == 422
+
+
+def test_api_create_scene_api_single_ok(dsh_client, dsh_available):
+    """scene=api + mode=single（无 batch_mode）→ 200（scene 不影响模式校验）。"""
+    resp = dsh_client.post(
+        "/api/v1/dsh-tasks",
+        json={"task": "为订单接口设计用例", "scene": "api", "mode": "single"},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["data"]["status"] == "pending"
+
+
 # ── Batch 191：团队模式 schema / API ──
 
 def test_api_create_team_mode_ok(dsh_client, dsh_available):

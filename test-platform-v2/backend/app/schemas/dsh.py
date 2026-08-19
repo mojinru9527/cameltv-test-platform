@@ -13,6 +13,8 @@ class DshTaskCreate(BaseModel):
     task: str = Field(..., min_length=1, max_length=20000, description="任务文本")
     params: dict = Field(default_factory=dict, description="附加参数（batch_mode / team_kind 等）")
     mode: Literal["single", "team"] = "single"  # Batch 191：任务形态（默认单任务）
+    scene: str = "general"                      # B1：场景标识（import_requirement/functional/api/ui/general）
+    scene_params: dict = Field(default_factory=dict, description="B1：场景输入参数（需求文本/接口定义等）")
 
     @model_validator(mode="after")
     def _validate_batch_mode(self):
@@ -22,10 +24,17 @@ class DshTaskCreate(BaseModel):
         沿用 agent_team_persona）| tester（测试视角，沿用 tester_team_persona）；
         params.model 覆盖模型（模型池按任务指定，须为非空字符串）。
         """
+        if self.scene not in ("import_requirement", "functional", "api", "ui", "general"):
+            raise ValueError(f"scene 非法: {self.scene!r}（仅支持 import_requirement/functional/api/ui/general）")
         params = self.params or {}
-        batch_mode = params.get("batch_mode")
-        team_kind = params.get("team_kind")
-        model = params.get("model")
+        merged = dict(params)
+        merged.setdefault("scene", self.scene)
+        if self.scene_params:
+            merged["scene_params"] = self.scene_params
+        self.params = merged
+        batch_mode = merged.get("batch_mode")
+        team_kind = merged.get("team_kind")
+        model = merged.get("model")
         if team_kind is not None and team_kind not in ("dev", "tester"):
             raise ValueError(f"params.team_kind 非法: {team_kind!r}（仅支持 dev|tester）")
         if model is not None and (not isinstance(model, str) or not model.strip()):
@@ -57,6 +66,7 @@ class DshTaskOut(BaseModel):
     status: str
     mode: str = "single"          # Batch 191：single | team
     team_json: dict = {}          # Batch 191：团队进度快照（响应恒为对象；ORM 存字符串经 before validator 转换）
+    scene: str = "general"        # B1：场景标识（从 params_json 提取）
     output_text: str = ""
     session_dir: str = ""
     error: str = ""
@@ -77,6 +87,64 @@ class DshTaskOut(BaseModel):
             except json.JSONDecodeError:
                 return {}
         return {}
+
+    @field_validator("scene", mode="before")
+    @classmethod
+    def _scene_from_params(cls, v, info):
+        """dict 构造路径下：优先从 params_json 提取 scene；无则用默认。
+
+        from_attributes 校验走的是下方 model_validator(mode="before")——
+        info.data 不含未声明字段 params_json，故 ORM 路径不依赖本 validator。
+        """
+        if v and v != "general":
+            return v
+        params = (info.data or {}).get("params_json") or "{}"
+        if isinstance(params, str):
+            try:
+                params = json.loads(params)
+            except (json.JSONDecodeError, TypeError):
+                params = {}
+        if isinstance(params, dict):
+            return params.get("scene") or "general"
+        return "general"
+
+    @model_validator(mode="before")
+    @classmethod
+    def _scene_from_orm_row(cls, data):
+        """from_attributes 校验时 data 是 ORM 行——从 row.params_json 提取 scene 回显。
+
+        B1：参数提交时 scene 已合并进 params（DshTaskCreate._validate_batch_mode），
+        落库 params_json；此处把 scene 解析出来作为显式字段，避免字段级 before
+        validator 拿不到信息（info.data 不含未声明的 params_json）。
+        """
+        if isinstance(data, dict):
+            return data
+        if not hasattr(data, "params_json"):
+            return data
+        raw = getattr(data, "params_json", None) or "{}"
+        scene = "general"
+        try:
+            parsed = json.loads(raw) if isinstance(raw, str) else raw
+            if isinstance(parsed, dict):
+                scene = parsed.get("scene") or "general"
+        except (json.JSONDecodeError, TypeError):
+            pass
+        return {
+            "id": getattr(data, "id", None),
+            "project_id": getattr(data, "project_id", None),
+            "task": getattr(data, "task", None),
+            "status": getattr(data, "status", None),
+            "mode": getattr(data, "mode", None),
+            "team_json": getattr(data, "team_json", "{}"),
+            "scene": scene,
+            "output_text": getattr(data, "output_text", ""),
+            "session_dir": getattr(data, "session_dir", ""),
+            "error": getattr(data, "error", ""),
+            "operator_id": getattr(data, "operator_id", 0),
+            "created_at": getattr(data, "created_at", None),
+            "started_at": getattr(data, "started_at", None),
+            "finished_at": getattr(data, "finished_at", None),
+        }
 
     model_config = {"from_attributes": True}
 
