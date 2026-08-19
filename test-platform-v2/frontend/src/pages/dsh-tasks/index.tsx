@@ -26,9 +26,11 @@ import {
   fetchDshHealth,
   fetchDshModelPool,
   cancelDshTask,
+  fetchDshTaskArtifacts,
   type DshTask,
   type DshHealth,
   type DshModelPool,
+  type DshTaskArtifact,
 } from '@/api/dshTasks'
 import { fetchAiResolve, fetchAiProviders, type AiResolveResult, type AiProviderItem } from '@/api/aiConfig'
 import { SCENES, sceneLabel, type SceneDef } from './scenes'
@@ -40,6 +42,21 @@ const STATUS_BADGE: Record<string, { label: string; color: string }> = {
   success: { label: '成功', color: 'bg-status-success-muted text-status-success' },
   failed: { label: '失败', color: 'bg-status-danger-muted text-status-danger' },
   cancelled: { label: '已取消', color: 'bg-muted text-muted-foreground' },
+}
+
+// B2：产物类型/审核状态中文标签
+const ARTIFACT_TYPE_LABELS: Record<string, string> = {
+  functional_case: '功能用例',
+  api_case: '接口用例',
+  ui_case: 'UI 自动化用例',
+  requirement: '需求分析',
+  test_case: '测试用例',
+}
+const ARTIFACT_REVIEW_LABELS: Record<string, string> = {
+  pending: '待审核',
+  approved: '已采纳',
+  rejected: '已驳回',
+  imported: '已导入',
 }
 
 // Batch 191：详情进度轮询粒度（与后端 DSH_TEAM_POLL_SECONDS=3 对齐）
@@ -60,6 +77,8 @@ export default function DshTasksPage() {
   const [selected, setSelected] = useState<DshTask | null>(null)
   const [detail, setDetail] = useState<DshTask | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+  // B2：任务产物回链（审核台条目）
+  const [detailArtifacts, setDetailArtifacts] = useState<DshTaskArtifact[]>([])
   // Batch 191：任务模式（single/team）+ 批次模式（full/light）
   const [taskMode, setTaskMode] = useState<'single' | 'team'>('single')
   const [batchMode, setBatchMode] = useState<'full' | 'light'>('full')
@@ -121,6 +140,10 @@ export default function DshTasksPage() {
       .then((t) => { if (!signal.aborted) setDetail(t) })
       .catch(() => { if (!signal.aborted) toast.error('加载详情失败') })
       .finally(() => { if (!signal.aborted) setDetailLoading(false) })
+    // B2：任务产物回链（静默失败）
+    fetchDshTaskArtifacts(selected.id, signal)
+      .then((items) => { if (!signal.aborted) setDetailArtifacts(items) })
+      .catch(() => undefined)
   }, [selected?.id])
 
   const hasRunning = tasks.some((t) => t.status === 'running')
@@ -426,6 +449,33 @@ export default function DshTasksPage() {
                   </pre>
                 </div>
               )}
+              {/* B2 产物闭环：任务产物回链（审核台条目） */}
+              <div>
+                <h4 className="font-medium mb-1">产物（审核台）</h4>
+                {detailArtifacts.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">本任务暂无产物</p>
+                ) : (
+                  <div className="space-y-2">
+                    {detailArtifacts.map((a) => (
+                      <div key={a.id} className="rounded-md border p-2 text-xs">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium truncate" title={a.title}>{a.title || `#${a.id}`}</span>
+                          <Badge className="bg-muted text-muted-foreground">
+                            {ARTIFACT_TYPE_LABELS[a.artifact_type] || a.artifact_type}
+                          </Badge>
+                        </div>
+                        <div className="mt-1 flex items-center gap-2 text-muted-foreground">
+                          <span>{ARTIFACT_REVIEW_LABELS[a.review_status] || a.review_status}</span>
+                          {a.imported_ref_type && a.imported_ref_id ? (
+                            <span>已导入: {a.imported_ref_type}#{a.imported_ref_id}</span>
+                          ) : null}
+                          <Link to="/knowledge?tab=artifacts" className="underline">去审核台</Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                 <div>创建: {detail.created_at?.slice(0, 19)?.replace('T', ' ') || '-'}</div>
                 <div>开始: {detail.started_at?.slice(0, 19)?.replace('T', ' ') || '-'}</div>

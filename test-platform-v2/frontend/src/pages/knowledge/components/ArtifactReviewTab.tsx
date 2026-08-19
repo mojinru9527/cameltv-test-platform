@@ -60,7 +60,14 @@ const TYPE_LABELS: Record<string, string> = {
   requirement_analysis: '需求分析',
   impact_analysis: '影响分析',
   failure_analysis: '失败分析',
+  // B2 产物闭环：DSH 场景任务产物类型
+  functional_case: '功能用例',
+  api_case: '接口用例',
+  ui_case: 'UI 自动化用例',
+  requirement: '需求分析',
 }
+// B2：暂不支持导入正式库的产物类型（审核台可审/驳，导入按钮禁用提示）
+const IMPORT_UNSUPPORTED_TYPES = new Set(['ui_case', 'requirement'])
 const PAGE_SIZE = 20
 
 export default function ArtifactReviewTab() {
@@ -383,7 +390,8 @@ export default function ArtifactReviewTab() {
                             size="icon"
                             className="size-8"
                             onClick={() => handleImport(a.id)}
-                            disabled={importingId === a.id}
+                            disabled={importingId === a.id || IMPORT_UNSUPPORTED_TYPES.has(a.artifact_type)}
+                            title={IMPORT_UNSUPPORTED_TYPES.has(a.artifact_type) ? '该类型导入后续批次支持' : undefined}
                             aria-label={`导入制品 ${a.title || a.id}`}
                           >
                             {importingId === a.id
