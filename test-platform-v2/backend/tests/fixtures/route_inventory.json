@@ -1,1765 +1,1769 @@
 {
- "count": 440,
- "routes": [
-  {
-   "path": "/api/v1/agents/queue",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/agents/queue/stats",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/agents/queue/{item_id}/cancel",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/agents/run/{agent_type}",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/agents/runs",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/agents/runs/{run_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/agents/triggers/check",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/agents/triggers/rules",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/agents/types",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/ai-config/providers",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/ai-config/providers",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/ai-config/providers/{provider_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/ai-config/providers/{provider_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/ai-config/providers/{provider_id}/test-connection",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/ai-config/resolve",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/apitest/api-execute",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/apitest/cases/batch-generate",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/apitest/cases/change-impact",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/apitest/cases/generalize-from-manual",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/apitest/cases/generate",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/apitest/endpoints",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/apitest/endpoints",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/apitest/endpoints/{endpoint_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/apitest/endpoints/{endpoint_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/apitest/import/confirm",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/apitest/import/preview",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/apitest/services",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/apitest/services",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/apitest/services/{service_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/apitest/services/{service_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/apitest/tasks",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/apitest/tasks",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/apitest/tasks/{task_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/apitest/tasks/{task_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/apitest/tasks/{task_id}/analysis",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/apitest/tasks/{task_id}/cancel",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/apitest/tasks/{task_id}/items/{item_id}/curl",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/apitest/tasks/{task_id}/retry-failed",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/auth/change-password",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/auth/forgot-password",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/auth/login",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/auth/logout",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/auth/me",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/auth/public-access",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/auth/register",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/auth/reset-password",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/auth/sso-config",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/av-checks",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/av-checks",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/av-checks/templates/measurements",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/av-checks/{task_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/av-checks/{task_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/av-checks/{task_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/av-checks/{task_id}/measurements",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/av-checks/{task_id}/measurements/{measurement_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/av-checks/{task_id}/measurements/{measurement_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/av-checks/{task_id}/metrics",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/av-checks/{task_id}/trigger",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/dashboard/cross-project",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/dashboard/stats",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/dashboard/test-summary",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/datasets",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/datasets",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/datasets/preview",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/datasets/upload",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/datasets/{dataset_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/datasets/{dataset_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/datasets/{dataset_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/defects",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/defects",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/defects/stats",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/defects/{defect_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/defects/{defect_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/defects/{defect_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/defects/{defect_id}/attachments",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/defects/{defect_id}/attachments",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/defects/{defect_id}/attachments/{attachment_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/defects/{defect_id}/attachments/{attachment_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/defects/{defect_id}/comments",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/defects/{defect_id}/comments",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/defects/{defect_id}/sync-pull",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/defects/{defect_id}/sync-push",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/defects/{defect_id}/transition",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/defects/{defect_id}/transitions",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/dsh-tasks",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/dsh-tasks",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/dsh-tasks/health",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/dsh-tasks/model-pool",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/dsh-tasks/{task_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/dsh-tasks/{task_id}/cancel",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/environments",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/environments",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/environments/resolve",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/environments/{env_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/environments/{env_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/environments/{env_id}/variables",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/environments/{env_id}/variables",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/environments/{env_id}/variables/{var_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/environments/{env_id}/variables/{var_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/integrations",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/integrations",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/integrations/test-connection",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/integrations/{integration_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/integrations/{integration_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/integrations/{integration_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/integrations/{integration_id}/sync-logs",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/integrations/{integration_id}/sync-now",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/interaction-coverage/gaps",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/interaction-coverage/import",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/interaction-coverage/topology",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/ai-artifacts",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/ai-artifacts/batch-approve",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/ai-artifacts/batch-import",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/ai-artifacts/batch-reject",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/ai-artifacts/{artifact_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/ai-artifacts/{artifact_id}/approve",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/ai-artifacts/{artifact_id}/import-to-test-cases",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/ai-artifacts/{artifact_id}/reject",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/capture",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/chunks/{chunk_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/design-assets/import",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/design-assets/{source_id}/{filename}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/graph/auto-build",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/graph/backfill-source",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/graph/entities",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/graph/entities/stats",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/graph/entities/{entity_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/graph/evolve",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/graph/extract",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/graph/hierarchy",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/graph/module-associations",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/graph/relations",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/graph/relations/{relation_id}/approve",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/graph/relations/{relation_id}/reject",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/graph/sync-test-cases",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/graph/view",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/iterations",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/iterations",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/iterations/{iteration_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/iterations/{iteration_id}/close",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/iterations/{iteration_id}/compare",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/iterations/{iteration_id}/snapshots",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/overview",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/predict/regression-scope",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/reembed",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/search",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/search/health",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/skills",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/skills/{skill_name}/apply",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/sources",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/sources/{source_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/sources/{source_id}/chunks",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/knowledge/sources/{source_id}/classify",
-   "method": "PATCH"
-  },
-  {
-   "path": "/api/v1/knowledge/sources/{source_id}/deprecate",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/knowledge/sources/{source_id}/verify",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/lanhu-evidence/assets/{asset_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/lanhu-evidence/cookie",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/lanhu-evidence/jobs",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/lanhu-evidence/jobs",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/lanhu-evidence/jobs/{job_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/lanhu-evidence/jobs/{job_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/lanhu-evidence/jobs/{job_id}/assets",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/lanhu-evidence/jobs/{job_id}/cancel",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/lanhu-evidence/jobs/{job_id}/import",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/lanhu-evidence/jobs/{job_id}/pages",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/lanhu-evidence/jobs/{job_id}/retry",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/lanhu-evidence/login",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/lanhu-evidence/pages/{page_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/lanhu-evidence/pages/{page_id}/review",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/notify/channels",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/notify/channels",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/notify/channels/{ch_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/notify/channels/{ch_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/notify/test",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/open/defects",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/open/health",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/open/knowledge/modules",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/open/knowledge/search",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/open/knowledge/sources",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/open/plans",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/open/plans/{plan_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/open/plans/{plan_id}/executions",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/open/plans/{plan_id}/trigger",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/open/reports/{report_id}/gate/check",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/open/requirements",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/open/results",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/open/runs/{run_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/open/test-cases",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/open/test-cases",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/open/ui-tests",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/open/ui-tests/runs/{run_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/open/ui-tests/{job_id}/trigger",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/ops/deployments",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/ops/deployments/{deployment_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/ops/deployments/{deployment_id}/events",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/organizations",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/organizations",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/organizations/{organization_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/organizations/{organization_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/organizations/{organization_id}/members",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/organizations/{organization_id}/members",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/organizations/{organization_id}/members/{user_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/organizations/{organization_id}/projects",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/perf-sessions",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/perf-sessions",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/perf-sessions/compare",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/perf-sessions/devices",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/perf-sessions/{session_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/perf-sessions/{session_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/perf-sessions/{session_id}/metrics",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/perf-sessions/{session_id}/report",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/perf-sessions/{session_id}/start",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/perf-sessions/{session_id}/stop",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/playground/batch-compile",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/playground/batch-run",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/playground/compile",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/playground/execute",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/projects",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/projects",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/projects/all",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/projects/current",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/projects/{project_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/projects/{project_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/projects/{project_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/projects/{project_id}/invites",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/projects/{project_id}/invites",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/projects/{project_id}/invites/{invite_id}/disable",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/projects/{project_id}/members",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/projects/{project_id}/members",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/projects/{project_id}/members/{user_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/projects/{project_id}/quality-gate",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/projects/{project_id}/quality-gate",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/release-bundles",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/release-bundles",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/release-bundles/{bundle_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/release-bundles/{bundle_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/release-bundles/{bundle_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/release-bundles/{bundle_id}/coverage",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/release-bundles/{bundle_id}/diff",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/release-bundles/{bundle_id}/diff/confirm",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/release-bundles/{bundle_id}/import-requirement",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/release-bundles/{bundle_id}/regression-scope",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/release-bundles/{bundle_id}/trigger-regression",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/release-bundles/{bundle_id}/version-chain",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/report-templates",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/report-templates",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/report-templates/{template_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/report-templates/{template_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/report-templates/{template_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/reports",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/reports",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/reports/trends",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/reports/{report_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/reports/{report_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/reports/{report_id}/export",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/reports/{report_id}/gate",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/reports/{report_id}/gate/check",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirement-modules",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirement-modules/admin-links",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirement-modules/admin-links/{link_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/requirement-modules/build-from-document",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirement-modules/bundle/{bundle_id}/admin-links",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirement-modules/bundle/{bundle_id}/children/{parent_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirement-modules/bundle/{bundle_id}/classify-global-nav",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirement-modules/bundle/{bundle_id}/confirm-configures",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirement-modules/bundle/{bundle_id}/extract",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirement-modules/bundle/{bundle_id}/extract-attachments",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirement-modules/bundle/{bundle_id}/extract-interactions",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirement-modules/bundle/{bundle_id}/global-nav",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirement-modules/bundle/{bundle_id}/link-test-cases",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirement-modules/bundle/{bundle_id}/suggest-configures",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirement-modules/bundle/{bundle_id}/tree",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirement-modules/import-tree",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirement-modules/production-diff",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirement-modules/{module_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirement-modules/{module_id}/interactions",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/requirement-modules/{module_id}/test-summary",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirements",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirements/ai-task/{task_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirements/upload",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}/cases",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}/coverage",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}/extract",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}/extract-async",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}/extraction",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}/extraction-quality",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}/extraction/confirm",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}/generate",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}/generate-api-from-endpoints",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}/generate-async",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}/import",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}/match-api",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}/match-api/confirm",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}/match-api/selection",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}/review-state",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/requirements/{document_id}/review/{case_index}",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/schedules",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/schedules",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/schedules/{schedule_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/schedules/{schedule_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/schedules/{schedule_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/schedules/{schedule_id}/runs",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/schedules/{schedule_id}/trigger",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/system/audit-logs",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/system/audit-logs/export",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/system/invite-codes",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/system/invite-codes",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/system/invite-codes/{invite_id}/disable",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/system/menus",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/system/permissions",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/system/roles",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/system/roles",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/system/roles/{role_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/system/roles/{role_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/system/roles/{role_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/system/users",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/system/users",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/system/users/{user_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/system/users/{user_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/system/users/{user_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/test-cases",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/test-cases",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/test-cases/batch",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/test-cases/batch",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/test-cases/domains",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/test-cases/domains",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/test-cases/domains/{domain_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/test-cases/domains/{domain_id}/modules",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/test-cases/domains/{domain_id}/modules/{module_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/test-cases/export/excel",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/test-cases/export/xmind",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/test-cases/import/excel",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/test-cases/import/xmind",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/test-cases/stats",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/test-cases/taxonomy",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/test-cases/{case_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/test-cases/{case_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/test-cases/{case_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/test-cases/{case_id}/execute",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/test-cases/{case_id}/review",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/test-cases/{case_id}/review-history",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/test-cases/{case_id}/versions",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/test-cases/{case_id}/versions/{version_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/test-plans",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/test-plans",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/test-plans/{plan_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/test-plans/{plan_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/test-plans/{plan_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/test-plans/{plan_id}/auto-execute",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/test-plans/{plan_id}/batch-execute",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/test-plans/{plan_id}/cases",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/test-plans/{plan_id}/cases",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/test-plans/{plan_id}/cases/assign",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/test-plans/{plan_id}/cases/{pcase_id}/execute",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/test-plans/{plan_id}/cases/{pcase_id}/sort",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/test-plans/{plan_id}/execute-all",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/test-plans/{plan_id}/executions",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/test-plans/{plan_id}/stats",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/test-plans/{plan_id}/triage",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/test-plans/{plan_id}/triage/{execution_id}/draft-defect",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/tokens",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/tokens",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/tokens/{token_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/tokens/{token_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/trace/case/{case_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/trace/coverage",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/trace/requirement/{doc_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/trace/trend",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/ui-tests",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/ui-tests",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/ui-tests/capture",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/ui-tests/capture/{task_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/ui-tests/jobs/from-cases",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/ui-tests/runner/health",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/ui-tests/runs/{run_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/ui-tests/runs/{run_id}/artifacts",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/ui-tests/runs/{run_id}/artifacts/{filename}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/ui-tests/runs/{run_id}/cancel",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/ui-tests/scripts",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/ui-tests/scripts",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/ui-tests/scripts/{script_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/ui-tests/scripts/{script_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/ui-tests/scripts/{script_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/ui-tests/{job_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/ui-tests/{job_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/ui-tests/{job_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/ui-tests/{job_id}/runs",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/ui-tests/{job_id}/trigger",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/version-missions",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/version-missions",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/version-missions/{mission_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/version-missions/{mission_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/version-missions/{mission_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/version-missions/{mission_id}/generate/api-openapi",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/version-missions/{mission_id}/generate/api-traffic",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/version-missions/{mission_id}/generate/ui-draft",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/version-missions/{mission_id}/logs",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/version-missions/{mission_id}/logs",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/version-missions/{mission_id}/quality-gate",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/config",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/diff/items/{item_id}/accept",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/wiki/diff/items/{item_id}/create-artifact",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/wiki/diff/items/{item_id}/reject",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/wiki/diff/tasks",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/wiki/diff/tasks",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/diff/tasks/{task_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/external-connections",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/wiki/external-connections",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/external-connections/{conn_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/external-connections/{conn_id}",
-   "method": "PUT"
-  },
-  {
-   "path": "/api/v1/wiki/external-connections/{conn_id}",
-   "method": "DELETE"
-  },
-  {
-   "path": "/api/v1/wiki/external-connections/{conn_id}/files/content",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/external-connections/{conn_id}/graph",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/external-connections/{conn_id}/health-check",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/wiki/external-connections/{conn_id}/search",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/wiki/import/lanhu",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/wiki/ingest-jobs",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/wiki/ingest-jobs/{job_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/ingest-jobs/{job_id}/cancel",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/wiki/ingest-jobs/{job_id}/retry",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/wiki/lint",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/wiki/lint/reports",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/lint/reports/{report_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/lint/reports/{report_id}/convert",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/wiki/pages",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/pages/{page_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/pages/{page_id}/approve",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/wiki/pages/{page_id}/links",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/pages/{page_id}/reject",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/wiki/raw-sources",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/raw-sources/{raw_source_id}",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/search",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/sync/availability",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/sync/bundle/{bundle_id}",
-   "method": "POST"
-  },
-  {
-   "path": "/api/v1/wiki/sync/bundle/{bundle_id}/coverage",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/sync/bundle/{bundle_id}/diff",
-   "method": "GET"
-  },
-  {
-   "path": "/api/v1/wiki/sync/bundle/{bundle_id}/tree",
-   "method": "GET"
-  },
-  {
-   "path": "/health",
-   "method": "GET"
-  }
- ]
+  "count": 441,
+  "routes": [
+    {
+      "path": "/api/v1/agents/queue",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/agents/queue/stats",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/agents/queue/{item_id}/cancel",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/agents/run/{agent_type}",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/agents/runs",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/agents/runs/{run_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/agents/triggers/check",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/agents/triggers/rules",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/agents/types",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ai-config/providers",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ai-config/providers",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ai-config/providers/{provider_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/ai-config/providers/{provider_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/ai-config/providers/{provider_id}/test-connection",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ai-config/resolve",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/apitest/api-execute",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/apitest/cases/batch-generate",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/apitest/cases/change-impact",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/apitest/cases/generalize-from-manual",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/apitest/cases/generate",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/apitest/endpoints",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/apitest/endpoints",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/apitest/endpoints/{endpoint_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/apitest/endpoints/{endpoint_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/apitest/import/confirm",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/apitest/import/preview",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/apitest/services",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/apitest/services",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/apitest/services/{service_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/apitest/services/{service_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/apitest/tasks",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/apitest/tasks",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/apitest/tasks/{task_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/apitest/tasks/{task_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/apitest/tasks/{task_id}/analysis",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/apitest/tasks/{task_id}/cancel",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/apitest/tasks/{task_id}/items/{item_id}/curl",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/apitest/tasks/{task_id}/retry-failed",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/auth/change-password",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/auth/forgot-password",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/auth/login",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/auth/logout",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/public-access",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/register",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/auth/reset-password",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/auth/sso-config",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/av-checks",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/av-checks",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/av-checks/templates/measurements",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/av-checks/{task_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/av-checks/{task_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/av-checks/{task_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/av-checks/{task_id}/measurements",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/av-checks/{task_id}/measurements/{measurement_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/av-checks/{task_id}/measurements/{measurement_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/av-checks/{task_id}/metrics",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/av-checks/{task_id}/trigger",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/dashboard/cross-project",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/dashboard/stats",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/dashboard/test-summary",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/datasets",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/datasets",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/datasets/preview",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/datasets/upload",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/datasets/{dataset_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/datasets/{dataset_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/datasets/{dataset_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/defects",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/defects",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/defects/stats",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}/attachments",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}/attachments",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}/attachments/{attachment_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}/attachments/{attachment_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}/comments",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}/comments",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}/sync-pull",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}/sync-push",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}/transition",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}/transitions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/dsh-tasks",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/dsh-tasks",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/dsh-tasks/health",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/dsh-tasks/model-pool",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/dsh-tasks/{task_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/dsh-tasks/{task_id}/artifacts",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/dsh-tasks/{task_id}/cancel",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/environments",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/environments",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/environments/resolve",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/environments/{env_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/environments/{env_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/environments/{env_id}/variables",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/environments/{env_id}/variables",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/environments/{env_id}/variables/{var_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/environments/{env_id}/variables/{var_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/integrations",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/integrations",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/integrations/test-connection",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/integrations/{integration_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/integrations/{integration_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/integrations/{integration_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/integrations/{integration_id}/sync-logs",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/integrations/{integration_id}/sync-now",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/interaction-coverage/gaps",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/interaction-coverage/import",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/interaction-coverage/topology",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/ai-artifacts",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/ai-artifacts/batch-approve",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/ai-artifacts/batch-import",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/ai-artifacts/batch-reject",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/ai-artifacts/{artifact_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/ai-artifacts/{artifact_id}/approve",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/ai-artifacts/{artifact_id}/import-to-test-cases",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/ai-artifacts/{artifact_id}/reject",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/capture",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/chunks/{chunk_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/design-assets/import",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/design-assets/{source_id}/{filename}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/graph/auto-build",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/graph/backfill-source",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/graph/entities",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/graph/entities/stats",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/graph/entities/{entity_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/graph/evolve",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/graph/extract",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/graph/hierarchy",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/graph/module-associations",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/graph/relations",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/graph/relations/{relation_id}/approve",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/graph/relations/{relation_id}/reject",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/graph/sync-test-cases",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/graph/view",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/iterations",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/iterations",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/iterations/{iteration_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/iterations/{iteration_id}/close",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/iterations/{iteration_id}/compare",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/iterations/{iteration_id}/snapshots",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/overview",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/predict/regression-scope",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/reembed",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/search",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/search/health",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/skills",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/skills/{skill_name}/apply",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/sources",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/sources/{source_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/sources/{source_id}/chunks",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/knowledge/sources/{source_id}/classify",
+      "method": "PATCH"
+    },
+    {
+      "path": "/api/v1/knowledge/sources/{source_id}/deprecate",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/knowledge/sources/{source_id}/verify",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/lanhu-evidence/assets/{asset_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/lanhu-evidence/cookie",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/lanhu-evidence/jobs",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/lanhu-evidence/jobs",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/lanhu-evidence/jobs/{job_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/lanhu-evidence/jobs/{job_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/lanhu-evidence/jobs/{job_id}/assets",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/lanhu-evidence/jobs/{job_id}/cancel",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/lanhu-evidence/jobs/{job_id}/import",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/lanhu-evidence/jobs/{job_id}/pages",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/lanhu-evidence/jobs/{job_id}/retry",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/lanhu-evidence/login",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/lanhu-evidence/pages/{page_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/lanhu-evidence/pages/{page_id}/review",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/notify/channels",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/notify/channels",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/notify/channels/{ch_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/notify/channels/{ch_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/notify/test",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/open/defects",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/open/health",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/open/knowledge/modules",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/open/knowledge/search",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/open/knowledge/sources",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/open/plans",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/open/plans/{plan_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/open/plans/{plan_id}/executions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/open/plans/{plan_id}/trigger",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/open/reports/{report_id}/gate/check",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/open/requirements",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/open/results",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/open/runs/{run_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/open/test-cases",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/open/test-cases",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/open/ui-tests",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/open/ui-tests/runs/{run_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/open/ui-tests/{job_id}/trigger",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ops/deployments",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ops/deployments/{deployment_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ops/deployments/{deployment_id}/events",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/organizations",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/organizations",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/organizations/{organization_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/organizations/{organization_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/organizations/{organization_id}/members",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/organizations/{organization_id}/members",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/organizations/{organization_id}/members/{user_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/organizations/{organization_id}/projects",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/perf-sessions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/perf-sessions",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/perf-sessions/compare",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/perf-sessions/devices",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/perf-sessions/{session_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/perf-sessions/{session_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/perf-sessions/{session_id}/metrics",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/perf-sessions/{session_id}/report",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/perf-sessions/{session_id}/start",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/perf-sessions/{session_id}/stop",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/playground/batch-compile",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/playground/batch-run",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/playground/compile",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/playground/execute",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/projects",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/projects",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/projects/all",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/projects/current",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/projects/{project_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/projects/{project_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/projects/{project_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/projects/{project_id}/invites",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/projects/{project_id}/invites",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/projects/{project_id}/invites/{invite_id}/disable",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/projects/{project_id}/members",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/projects/{project_id}/members",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/projects/{project_id}/members/{user_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/projects/{project_id}/quality-gate",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/projects/{project_id}/quality-gate",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/release-bundles",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/release-bundles",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/release-bundles/{bundle_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/release-bundles/{bundle_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/release-bundles/{bundle_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/release-bundles/{bundle_id}/coverage",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/release-bundles/{bundle_id}/diff",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/release-bundles/{bundle_id}/diff/confirm",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/release-bundles/{bundle_id}/import-requirement",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/release-bundles/{bundle_id}/regression-scope",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/release-bundles/{bundle_id}/trigger-regression",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/release-bundles/{bundle_id}/version-chain",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/report-templates",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/report-templates",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/report-templates/{template_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/report-templates/{template_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/report-templates/{template_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/reports",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/reports",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/reports/trends",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/reports/{report_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/reports/{report_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/reports/{report_id}/export",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/reports/{report_id}/gate",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/reports/{report_id}/gate/check",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirement-modules",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirement-modules/admin-links",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirement-modules/admin-links/{link_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/requirement-modules/build-from-document",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirement-modules/bundle/{bundle_id}/admin-links",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirement-modules/bundle/{bundle_id}/children/{parent_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirement-modules/bundle/{bundle_id}/classify-global-nav",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirement-modules/bundle/{bundle_id}/confirm-configures",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirement-modules/bundle/{bundle_id}/extract",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirement-modules/bundle/{bundle_id}/extract-attachments",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirement-modules/bundle/{bundle_id}/extract-interactions",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirement-modules/bundle/{bundle_id}/global-nav",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirement-modules/bundle/{bundle_id}/link-test-cases",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirement-modules/bundle/{bundle_id}/suggest-configures",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirement-modules/bundle/{bundle_id}/tree",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirement-modules/import-tree",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirement-modules/production-diff",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirement-modules/{module_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirement-modules/{module_id}/interactions",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/requirement-modules/{module_id}/test-summary",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirements",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirements/ai-task/{task_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirements/upload",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}/cases",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}/coverage",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}/extract",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}/extract-async",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}/extraction",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}/extraction-quality",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}/extraction/confirm",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}/generate",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}/generate-api-from-endpoints",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}/generate-async",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}/import",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}/match-api",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}/match-api/confirm",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}/match-api/selection",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}/review-state",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/requirements/{document_id}/review/{case_index}",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/schedules",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/schedules",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/schedules/{schedule_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/schedules/{schedule_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/schedules/{schedule_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/schedules/{schedule_id}/runs",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/schedules/{schedule_id}/trigger",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/system/audit-logs",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/system/audit-logs/export",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/system/invite-codes",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/system/invite-codes",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/system/invite-codes/{invite_id}/disable",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/system/menus",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/system/permissions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/system/roles",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/system/roles",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/system/roles/{role_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/system/roles/{role_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/system/roles/{role_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/system/users",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/system/users",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/system/users/{user_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/system/users/{user_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/system/users/{user_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/test-cases",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/test-cases",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/test-cases/batch",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/test-cases/batch",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/test-cases/domains",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/test-cases/domains",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/test-cases/domains/{domain_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/test-cases/domains/{domain_id}/modules",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/test-cases/domains/{domain_id}/modules/{module_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/test-cases/export/excel",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/test-cases/export/xmind",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/test-cases/import/excel",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/test-cases/import/xmind",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/test-cases/stats",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/test-cases/taxonomy",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/test-cases/{case_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/test-cases/{case_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/test-cases/{case_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/test-cases/{case_id}/execute",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/test-cases/{case_id}/review",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/test-cases/{case_id}/review-history",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/test-cases/{case_id}/versions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/test-cases/{case_id}/versions/{version_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/test-plans",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/test-plans",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/test-plans/{plan_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/test-plans/{plan_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/test-plans/{plan_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/test-plans/{plan_id}/auto-execute",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/test-plans/{plan_id}/batch-execute",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/test-plans/{plan_id}/cases",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/test-plans/{plan_id}/cases",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/test-plans/{plan_id}/cases/assign",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/test-plans/{plan_id}/cases/{pcase_id}/execute",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/test-plans/{plan_id}/cases/{pcase_id}/sort",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/test-plans/{plan_id}/execute-all",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/test-plans/{plan_id}/executions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/test-plans/{plan_id}/stats",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/test-plans/{plan_id}/triage",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/test-plans/{plan_id}/triage/{execution_id}/draft-defect",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/tokens",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/tokens",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/tokens/{token_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/tokens/{token_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/trace/case/{case_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/trace/coverage",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/trace/requirement/{doc_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/trace/trend",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ui-tests",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ui-tests",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ui-tests/capture",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ui-tests/capture/{task_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ui-tests/jobs/from-cases",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ui-tests/runner/health",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ui-tests/runs/{run_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ui-tests/runs/{run_id}/artifacts",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ui-tests/runs/{run_id}/artifacts/{filename}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ui-tests/runs/{run_id}/cancel",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ui-tests/scripts",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ui-tests/scripts",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ui-tests/scripts/{script_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/ui-tests/scripts/{script_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ui-tests/scripts/{script_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/ui-tests/{job_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/ui-tests/{job_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ui-tests/{job_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/ui-tests/{job_id}/runs",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ui-tests/{job_id}/trigger",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-missions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-missions",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-missions/{mission_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/version-missions/{mission_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-missions/{mission_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/version-missions/{mission_id}/generate/api-openapi",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-missions/{mission_id}/generate/api-traffic",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-missions/{mission_id}/generate/ui-draft",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-missions/{mission_id}/logs",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-missions/{mission_id}/logs",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-missions/{mission_id}/quality-gate",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/config",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/diff/items/{item_id}/accept",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/diff/items/{item_id}/create-artifact",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/diff/items/{item_id}/reject",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/diff/tasks",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/diff/tasks",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/diff/tasks/{task_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/external-connections",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/external-connections",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/external-connections/{conn_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/wiki/external-connections/{conn_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/external-connections/{conn_id}",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/wiki/external-connections/{conn_id}/files/content",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/external-connections/{conn_id}/graph",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/external-connections/{conn_id}/health-check",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/external-connections/{conn_id}/search",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/import/lanhu",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/ingest-jobs",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/ingest-jobs/{job_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/ingest-jobs/{job_id}/cancel",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/ingest-jobs/{job_id}/retry",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/lint",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/lint/reports",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/lint/reports/{report_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/lint/reports/{report_id}/convert",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/pages",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/pages/{page_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/pages/{page_id}/approve",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/pages/{page_id}/links",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/pages/{page_id}/reject",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/raw-sources",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/raw-sources/{raw_source_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/search",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/sync/availability",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/sync/bundle/{bundle_id}",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/sync/bundle/{bundle_id}/coverage",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/sync/bundle/{bundle_id}/diff",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/sync/bundle/{bundle_id}/tree",
+      "method": "GET"
+    },
+    {
+      "path": "/health",
+      "method": "GET"
+    }
+  ]
 }
