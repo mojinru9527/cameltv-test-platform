@@ -23,7 +23,19 @@ def test_menu_paths_match_frontend_routes():
     assert path_by_code["menu:defect"] == "/defect"
     assert path_by_code["menu:dataset"] == "/dataset"
     assert path_by_code["menu:integration"] == "/integration"
-    assert path_by_code["menu:agent-workbench"] == "/agent-workbench"
+
+
+def test_p1b_agent_workbench_menu_removed_from_seed():
+    """(P1b 入口收敛) Agent 工作台已并入 DSH 任务：菜单种子移除，
+    menu_service.HIDDEN_MENU_CODES 拦截存量库旧权限行，前端路由重定向 /dsh-tasks。"""
+    from app.seed import _TESTER_ACTIONS
+
+    codes = [entry[0] for entry in _MENUS]
+    assert "menu:agent-workbench" not in codes
+    assert "menu:agent-workbench" not in _TESTER_MENUS
+    # 承接入口：DSH 任务菜单存在且 tester 角色经 _TESTER_ACTIONS 获得
+    assert "menu:dsh_tasks" in codes
+    assert "menu:dsh_tasks" in _TESTER_ACTIONS
 
 
 def test_batch165_hidden_menus_removed_from_seed():
@@ -54,7 +66,6 @@ def test_tester_role_has_all_mature_module_menus():
         "menu:notify",
         "menu:environment",
         "menu:knowledge",
-        "menu:agent-workbench",
     ]:
         assert required in _TESTER_MENUS, f"tester 缺少菜单 {required}"
 
