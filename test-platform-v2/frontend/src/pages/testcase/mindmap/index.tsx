@@ -6,7 +6,7 @@ import { fetchTaxonomy } from '@/api/testcase'
 import type { TaxonomyDomainNode, TaxonomySurfaceNode } from '@/api/testcase'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
-import { RotateCcw, Download, Maximize2, Minimize2 } from '@/lib/icons'
+import { RotateCcw, Maximize2, Minimize2 } from '@/lib/icons'
 import { buildTaxonomyMindmapMarkdown } from './caseTaxonomy'
 
 /**
