@@ -13,7 +13,7 @@ const PUBLIC_MODULE_PATHS = [
   '/testplan',
   '/apitest',
   '/uitest',
-  '/playground',
+  // (P2b) '/playground' 已并入用例服务 Tab，访客目录不再单列
   '/schedule',
   '/report',
   '/system',

@@ -29,7 +29,7 @@ frontend/
 │   │   ├── workbench/         工作台
 │   │   ├── my-projects/       我的项目（项目管理/组织已收敛于此）
 │   │   ├── system/            系统管理 (用户/角色/审计)
-│   │   ├── testcase/          用例管理（含 mindmap/ 脑图视图 Tab 组件，P2a 起并入）
+│   │   ├── testcase/          用例管理（含 mindmap/ 脑图视图、playground/ 编排沙箱两个 Tab 组件，P2a/P2b 起并入）
 │   │   ├── testplan/          测试计划
 │   │   ├── requirement/       需求管理
 │   │   ├── report/            报告中心
@@ -93,7 +93,7 @@ npm run gen:api
 /workbench          → 工作台 (需登录)
 /my-projects        → 我的项目 (/project、/organizations 已重定向于此)
 /system/*           → 系统管理 (用户/角色/审计)
-/testcase           → 用例管理
+/testcase           → 用例管理（?tab=mindmap=脑图视图，?tab=playground=编排沙箱；P2a/P2b 起并入）
 /testplan           → 测试计划
 /requirement        → 需求管理
 /report             → 报告中心

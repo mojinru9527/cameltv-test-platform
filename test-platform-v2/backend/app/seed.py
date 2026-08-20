@@ -32,7 +32,9 @@ _MENUS = [
     ("menu:testplan", "测试计划", "", "/testplan", "ScheduleOutlined", 8),
     ("menu:apitest", "接口测试", "", "/apitest", "ApiOutlined", 9),
     ("menu:uitest", "UI 自动化", "", "/uitest", "RobotOutlined", 10),
-    ("menu:playground", "Playground", "", "/playground", "PlayCircleOutlined", 10),
+    # (P2b 入口收敛) Playground 已并入用例服务 Tab（/playground → /testcase?tab=playground 重定向），
+    # 不再生成菜单；menu_service.HIDDEN_MENU_CODES 继续拦截存量库中的旧权限行。
+    # ("menu:playground", "Playground", "", "/playground", "PlayCircleOutlined", 10),
     ("menu:schedule", "定时任务", "", "/schedule", "ClockCircleOutlined", 12),
     ("menu:report", "报告中心", "", "/report", "BarChartOutlined", 13),
     ("menu:system", "系统管理", "", "/system", "SettingOutlined", 14),
@@ -251,7 +253,7 @@ _VIEWER_ACTIONS = {
 
 _TESTER_MENUS = {
     "menu:workbench", "menu:trace", "menu:requirement", "menu:versionmission", "menu:testcase", "menu:testplan",
-    "menu:apitest", "menu:uitest", "menu:playground", "menu:schedule", "menu:report",  # (batch-165) menu:special 已隐藏
+    "menu:apitest", "menu:uitest", "menu:schedule", "menu:report",  # (batch-165) menu:special 已隐藏
     "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge",
     "menu:notify", "menu:environment",  # (batch-165) menu:perftest 已隐藏
     "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph", "menu:knowledge:artifacts",
