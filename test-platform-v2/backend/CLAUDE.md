@@ -99,7 +99,7 @@ Router (api/v1/)  →  Service (services/)  →  Model (models/)
 | dashboard.py | `/api/v1/dashboard` | — | 工作台看板 |
 | schedule.py | `/api/v1/schedules` | schedule_service | 定时任务 |
 | notify.py | `/api/v1/notify` | notify_service | Webhook 通知 |
-| trace.py | `/api/v1/trace` | trace_service | 质量追溯 |
+| trace.py | `/api/v1/trace` | trace_service | 质量追溯（P2c 起前端并入报告中心 Tab，本 API 保留） |
 | ui_test.py | `/api/v1/ui-test` | — | UI 自动化 |
 | open_api.py | `/api/v1/open` | — | 开放 API |
 | environment.py | `/api/v1/environment` | — | 环境/变量管理 |

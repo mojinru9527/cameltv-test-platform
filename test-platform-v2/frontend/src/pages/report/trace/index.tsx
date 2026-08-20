@@ -1,11 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge, PageShell, SpatialChain, type ChainNode } from '@/ui'
+import { Badge, SpatialChain, type ChainNode } from '@/ui'
 import StatCard from '@/components/StatCard'
 import ChartFrame from '@/components/charts/ChartFrame'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
 import { useChartColors } from '@/hooks/use-chart-colors'
-import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { fetchCoverage, type CoverageData } from '@/api/trace'
 import { FileCheck, Link2, Play, ShieldCheck, Bug, Percent, FileText, Calendar, BarChart3 } from '@/lib/icons'
@@ -26,8 +25,8 @@ function typeLabel(t: string): string {
   return CASE_TYPE_LABEL[t] || t
 }
 
-export default function TracePage() {
-  useDocumentTitle('链路追踪')
+/** （P2c）质量追溯面板——作为报告中心的「质量追溯」Tab 嵌入，不再是独立页面。 */
+export default function TracePanel() {
   const chartColors = useChartColors()
   const { data, isLoading, isError, error, refetch } = useApi<CoverageData>(
     () => fetchCoverage(),
@@ -35,11 +34,10 @@ export default function TracePage() {
   )
 
   return (
-    <PageShell
-      title="质量追溯"
-      description="追踪需求→用例→计划→执行→缺陷→报告的完整质量链路，定位覆盖缺口。"
-      glass
-    >
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        追踪需求→用例→计划→执行→缺陷→报告的完整质量链路，定位覆盖缺口。
+      </p>
       <AsyncState
         isLoading={isLoading}
         isError={isError}
@@ -271,6 +269,6 @@ export default function TracePage() {
           )
         }}
       </AsyncState>
-    </PageShell>
+    </div>
   )
 }

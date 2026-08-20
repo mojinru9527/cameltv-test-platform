@@ -23,7 +23,6 @@ const SchedulePage = lazy(() => import('@/pages/schedule'))
 const Workbench = lazy(() => import('@/pages/workbench'))
 const DefectPage = lazy(() => import('@/pages/defect'))
 const UiTestPage = lazy(() => import('@/pages/uitest'))
-const TracePage = lazy(() => import('@/pages/trace'))
 const RequirementPage = lazy(() => import('@/pages/requirement'))
 const RequirementReviewPage = lazy(() => import('@/pages/requirement/ReviewPage'))
 const ApiTestPage = lazy(() => import('@/pages/apitest'))
@@ -192,7 +191,8 @@ export const router = createBrowserRouter([
       { path: 'my-projects', element: <PageLoader><MyProjectsPage /></PageLoader> },
       { path: 'organizations', element: <Navigate to="/my-projects" replace /> },
       { path: 'workbench', element: <PageLoader><Workbench /></PageLoader> },
-      { path: 'trace', element: <PageLoader><TracePage /></PageLoader> },
+      // (P2c) 质量追溯已并入报告中心 Tab，旧书签重定向
+      { path: 'trace', element: <Navigate to="/report?tab=trace" replace /> },
       { path: 'requirement', element: <PageLoader><RequirementPage /></PageLoader> },
       { path: 'requirement/:id/review', element: <PageLoader><RequirementReviewPage /></PageLoader> },
       { path: 'testcase', element: <PageLoader><TestCasePage /></PageLoader> },

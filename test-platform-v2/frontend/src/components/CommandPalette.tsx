@@ -49,7 +49,8 @@ export const ALL_COMMAND_ROUTES: CommandRoute[] = [
   { label: '报告中心', path: '/report', icon: BarChart3, group: '页面' },
   { label: '定时任务', path: '/schedule', icon: Clock, group: '页面' },
   { label: '缺陷管理', path: '/defect', icon: Bug, group: '页面' },
-  { label: '质量追溯', path: '/trace', icon: Share2, group: '页面' },
+  // (P2c) 质量追溯并入报告中心 Tab，入口指向带参路径
+  { label: '质量追溯', path: '/report?tab=trace', icon: Share2, group: '页面' },
   // (P2a) 思维导图并入用例服务「脑图视图」Tab，入口指向带参路径
   { label: '思维导图', path: '/testcase?tab=mindmap', icon: Share2, group: '页面' },
   { label: '版本发布包', path: '/release-bundles', icon: GitBranch, group: '页面' },
