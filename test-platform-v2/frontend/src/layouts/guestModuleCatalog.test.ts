@@ -4,7 +4,7 @@ import { resolveGuestModule } from './guestModuleCatalog'
 
 const PUBLIC_MODULE_PATHS = [
   '/workbench',
-  '/trace',
+  // (P2c) '/trace' 已并入报告中心 Tab，访客目录不再单列
   '/requirement',
   '/release-bundles',
   '/knowledge',

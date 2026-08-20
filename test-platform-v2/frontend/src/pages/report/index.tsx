@@ -1,5 +1,6 @@
 import { Badge, Button, PageShell } from '@/ui'
 import { useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { useChartColors } from '@/hooks/use-chart-colors'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -8,6 +9,7 @@ import { toast } from 'sonner'
 import { createReport, deleteReport, exportReportUrl, fetchReport, fetchReports, fetchTrends, type TrendsData } from '@/api/report'
 import { fetchTemplates, type ReportTemplate } from '@/api/reportTemplate'
 import TemplateManager from './TemplateManager'
+import TracePanel from './trace'
 import { fetchPlans } from '@/api/testplan'
 import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
@@ -137,6 +139,12 @@ export function getReportPassCount(stats: Record<string, unknown>): number {
 
 export default function ReportPage() {
   useDocumentTitle('报告中心')
+  // 视图切换（P2c）：报告中心 / 质量追溯，?tab=trace 可直达（旧 /trace 路由重定向至此）
+  const [searchParams, setSearchParams] = useSearchParams()
+  const viewTab = searchParams.get('tab') === 'trace' ? 'trace' : 'reports'
+  const setViewTab = (next: 'reports' | 'trace') => {
+    setSearchParams(next === 'trace' ? { tab: 'trace' } : {}, { replace: true })
+  }
   const chartColors = useChartColors()
   const [keywordInput, setKeywordInput] = useState('')
   const [keyword, setKeyword] = useState('')
@@ -302,7 +310,30 @@ export default function ReportPage() {
       description="聚合测试执行结果，生成多维度质量报告，支持导出与钻取分析。"
       glass
     >
-      <div>
+      <div className="space-y-4">
+      {/* 视图切换（P2c）：报告中心 / 质量追溯 */}
+      <div className="flex items-center gap-2" role="tablist" aria-label="报告视图切换">
+        {([['reports', '报告中心'], ['trace', '质量追溯']] as const).map(([k, label]) => (
+          <button
+            key={k}
+            type="button"
+            role="tab"
+            aria-selected={viewTab === k}
+            className={cn(
+              'rounded-md px-4 py-1 text-sm font-medium transition-colors',
+              viewTab === k
+                ? 'bg-accent text-accent-foreground font-semibold'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+            onClick={() => setViewTab(k)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {viewTab === 'trace' ? <TracePanel /> : (
+      <>
       {/* ── Trend Section ── */}
       <AsyncState
         isLoading={trendsState.isLoading}
@@ -721,6 +752,8 @@ export default function ReportPage() {
           )}
         </SheetContent>
       </Sheet>
+      </>
+      )}
     </div>
       <TemplateManager
         open={templateManagerOpen}

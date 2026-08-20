@@ -13,9 +13,10 @@ from app.schemas.system import MenuOut
 # (P1b) menu:agent-workbench：入口收敛进 DSH 任务（页面删除，路由重定向 /dsh-tasks）。
 # (P2a) menu:mindmap：思维导图并入用例服务「脑图视图」Tab（路由重定向 /testcase?tab=mindmap）。
 # (P2b) menu:playground：Playground 并入用例服务 Tab（路由重定向 /testcase?tab=playground）。
+# (P2c) menu:trace：质量追溯并入报告中心 Tab（路由重定向 /report?tab=trace）。
 HIDDEN_MENU_CODES = {
     "menu:special", "menu:perftest", "menu:project", "menu:organization",
-    "menu:agent-workbench", "menu:mindmap", "menu:playground",
+    "menu:agent-workbench", "menu:mindmap", "menu:playground", "menu:trace",
 }
 
 

@@ -35,7 +35,6 @@ frontend/
 │   │   ├── report/            报告中心
 │   │   ├── schedule/          定时任务
 │   │   ├── defect/            缺陷管理
-│   │   ├── trace/             质量追溯
 │   │   ├── apitest/           API 测试
 │   │   ├── uitest/            UI 自动化
 │   │   ├── knowledge/         知识中心
@@ -99,7 +98,7 @@ npm run gen:api
 /report             → 报告中心
 /schedule           → 定时任务
 /defect             → 缺陷管理
-/trace              → 质量追溯
+/trace              → （P2c 起重定向至 /report?tab=trace，质量追溯已并入报告中心 Tab）
 /apitest            → API 测试
 /uitest             → UI 自动化
 /notify             → 通知管理
