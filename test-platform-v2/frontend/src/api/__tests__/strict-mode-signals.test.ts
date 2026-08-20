@@ -15,13 +15,8 @@ import { fetchMenus } from '../auth'
 import { fetchApiEndpoints, fetchApiServices } from '../apitest'
 import { fetchUiJobs, fetchScripts } from '../uitest'
 import { fetchKnowledgeOverview } from '../knowledge'
-import {
-  fetchAgentRun,
-  fetchAgentRuns,
-  fetchAgentTypes,
-  fetchQueueItems,
-  fetchQueueStats,
-} from '../agent'
+// (P1b) api/agent.ts 已随 Agent 工作台页面删除（入口收敛进 DSH 任务）；
+// 后端 /agents API 保留，其 signal 透传契约不再由前端覆盖。
 import { fetchExecutions, fetchPlan } from '../testplan'
 
 describe('StrictMode request cancellation contracts', () => {
@@ -39,11 +34,6 @@ describe('StrictMode request cancellation contracts', () => {
     await fetchUiJobs({ page: 1 }, signal)
     await fetchScripts(signal)
     await fetchKnowledgeOverview(signal)
-    await fetchAgentRuns({ page_size: 50 }, signal)
-    await fetchAgentRun(7, signal)
-    await fetchAgentTypes(signal)
-    await fetchQueueItems({ page_size: 100 }, signal)
-    await fetchQueueStats(signal)
     await fetchPlan(9, signal)
     await fetchExecutions(9, undefined, signal)
 
@@ -59,11 +49,6 @@ describe('StrictMode request cancellation contracts', () => {
       ['/ui-tests', { params: { page: 1 }, signal }],
       ['/ui-tests/scripts', { signal }],
       ['/knowledge/overview', { signal }],
-      ['/agents/runs', { params: { page_size: 50 }, signal }],
-      ['/agents/runs/7', { signal }],
-      ['/agents/types', { signal }],
-      ['/agents/queue', { params: { page_size: 100 }, signal }],
-      ['/agents/queue/stats', { signal }],
       ['/test-plans/9', { signal }],
       ['/test-plans/9/executions', { params: { pcase_id: 0 }, signal }],
     ])
