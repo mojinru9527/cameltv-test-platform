@@ -66,8 +66,14 @@ const TYPE_LABELS: Record<string, string> = {
   ui_case: 'UI 自动化用例',
   requirement: '需求分析',
 }
-// B2：暂不支持导入正式库的产物类型（审核台可审/驳，导入按钮禁用提示）
-const IMPORT_UNSUPPORTED_TYPES = new Set(['ui_case', 'requirement'])
+// 导入目标库标签（requirement → 需求库，其余 → 用例库）
+const IMPORT_TARGET_LABELS: Record<string, string> = {
+  test_case: '用例库',
+  functional_case: '用例库',
+  api_case: '用例库',
+  ui_case: '用例库',
+  requirement: '需求库',
+}
 const PAGE_SIZE = 20
 
 export default function ArtifactReviewTab() {
@@ -137,10 +143,11 @@ export default function ArtifactReviewTab() {
     setImportingId(id)
     try {
       await importArtifact(id)
+      const target = rows.find((r) => r.id === id)
       setRows((prev) =>
         prev.map((r) => (r.id === id ? { ...r, review_status: 'imported' } : r))
       )
-      toast.success('已导入产物')
+      toast.success(`已导入${IMPORT_TARGET_LABELS[target?.artifact_type || ''] || '正式库'}`)
     } catch (importError: any) {
       toast.error(importError?.message || '导入失败')
     } finally {
@@ -390,8 +397,7 @@ export default function ArtifactReviewTab() {
                             size="icon"
                             className="size-8"
                             onClick={() => handleImport(a.id)}
-                            disabled={importingId === a.id || IMPORT_UNSUPPORTED_TYPES.has(a.artifact_type)}
-                            title={IMPORT_UNSUPPORTED_TYPES.has(a.artifact_type) ? '该类型导入后续批次支持' : undefined}
+                            disabled={importingId === a.id}
                             aria-label={`导入制品 ${a.title || a.id}`}
                           >
                             {importingId === a.id
@@ -466,7 +472,7 @@ export default function ArtifactReviewTab() {
             </DialogTitle>
             <DialogDescription>
               {actionTarget?.action === 'approve'
-                ? '采纳后该产物可被导入到正式用例库。'
+                ? '采纳后该产物可被导入到正式库（用例/需求）。'
                 : '驳回后该产物将不会被导入，可作为参考保留。'}
             </DialogDescription>
           </DialogHeader>
@@ -504,7 +510,7 @@ export default function ArtifactReviewTab() {
             </DialogTitle>
             <DialogDescription>
               已选 {selectedIds.length} 条产物
-              {batchMode === 'import' ? '（仅已采纳产物可导入正式用例库）' : ''}
+              {batchMode === 'import' ? '（仅已采纳产物可导入正式库）' : ''}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-4">
