@@ -37,7 +37,8 @@ test-platform-v2/
 | 项目管理 | `/project` | ✅ | 多项目、成员、主题与停用语义已有本地证据 |
 | 工作台 / 用例 / 计划 / 报告 | `/workbench` `/testcase` `/testplan` `/report` | 🟡 | 核心本地闭环真实可用；跨页查询、批量破坏操作、全路由权限和可访问性仍需回归 |
 | 缺陷 / 定时 / 追溯 | `/defect` `/schedule` `/trace` | 🟡 | 状态流、定时和追溯链存在；全量 UI/API/DB/审计一致性与三身份矩阵未完成 |
-| 需求 / 脑图 | `/requirement` `/mindmap` | 🟡 / ⛔ | 本地持久化与展示可用；真实 LLM、蓝湖与旧 PostgreSQL 快照验收受外部输入阻塞 |
+| 需求 | `/requirement` | 🟡 | 本地持久化与展示可用；真实 LLM、蓝湖与旧 PostgreSQL 快照验收受外部输入阻塞 |
+| 用例脑图 | `/testcase?tab=mindmap` | 🟡 | P2a 起并入用例服务「脑图视图」Tab（`/mindmap` 重定向，菜单种子移除）；脑图内容实际为用例 taxonomy 聚合 |
 | API 测试 | `/apitest` | 🟡 | OpenAPI/Swagger 导入、httpx 执行、任务/快照已实现；五入口一致性、生产保护与 Test5 当前契约待验收 |
 | UI 自动化 | `/uitest` | 🟡 | 本地 Runner、环境注入和产物闭环已验证；不能替代体育 Test5/生产业务 E2E |
 | ~~音视频专项~~ | ~~`/special`~~ | 已移除 | batch-165 隐藏菜单后，代码已随死代码清理批次整体删除（路由/服务/模型/页面）；如需恢复从 git 历史取回 |

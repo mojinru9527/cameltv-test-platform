@@ -8,7 +8,7 @@ const PUBLIC_MODULE_PATHS = [
   '/requirement',
   '/release-bundles',
   '/knowledge',
-  '/mindmap',
+  // (P2a) '/mindmap' 已并入用例服务「脑图视图」Tab，访客目录不再单列
   '/testcase',
   '/testplan',
   '/apitest',
