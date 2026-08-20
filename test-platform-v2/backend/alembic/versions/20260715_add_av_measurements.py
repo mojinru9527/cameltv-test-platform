@@ -18,6 +18,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     inspector = sa.inspect(op.get_bind())
+    # 父表 av_check_task 随音视频专项模块移除（模型删除后，初始迁移按当前
+    # Base.metadata.create_all 不再建表）。存量库仍有父表则照常创建本表；
+    # 全新 PG 迁移链无父表则跳过，保持链路幂等可过（对齐 b191 守卫惯例）。
+    if "av_check_task" not in inspector.get_table_names():
+        return
     if "av_check_measurement" not in inspector.get_table_names():
         op.create_table(
             "av_check_measurement",
