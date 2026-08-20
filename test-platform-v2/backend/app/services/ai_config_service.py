@@ -10,7 +10,7 @@ import base64
 import hashlib
 import json
 
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -22,10 +22,10 @@ _DEEPSEEK_OFFICIAL_URL = "https://api.deepseek.com"
 
 
 class AIProviderUnconfiguredError(APIException):
-    def __init__(self) -> None:
+    def __init__(self, msg: str | None = None) -> None:
         super().__init__(
             code=400,
-            msg="当前项目未配置 AI 提供方，请在「AI 配置」中添加提供方后重试",
+            msg=msg or "当前项目未配置 AI 提供方，请在「AI 配置」中添加提供方后重试",
             http_status=400,
         )
 
@@ -70,7 +70,13 @@ def _encrypt_key(plain: str) -> str:
 def _decrypt_key(stored: str) -> str:
     if not stored:
         return ""
-    return _fernet().decrypt(stored.encode("utf-8")).decode("utf-8")
+    try:
+        return _fernet().decrypt(stored.encode("utf-8")).decode("utf-8")
+    except InvalidToken:
+        # SECRET_KEY 轮换后存量密文无法解密——转业务错误引导重新录入，避免裸 500。
+        raise AIProviderUnconfiguredError(
+            "AI 配置密钥已失效（可能 SECRET_KEY 已轮换），请在「AI 配置」中重新输入该提供方的 API Key"
+        )
 
 
 class AiConfigService:
