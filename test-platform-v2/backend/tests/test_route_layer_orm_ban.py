@@ -4,7 +4,7 @@
 1. api/v1 全部路由文件禁止 `from app.models import ...`（模型 import 清零）
 2. 禁止 `select(` / `db.query(`（查询收敛 services）
 3. `SessionLocal(` 豁免：BackgroundTasks/WebSocket 独立会话模式（defect/report/
-   test_plan/perf_ws 等既有模式，仅指会话管理，不含查询）——本守卫不检查 SessionLocal
+   test_plan 等既有模式，仅指会话管理，不含查询）——本守卫不检查 SessionLocal
 4. 路由文件体积上限 20KB（P2-10 验收）
 """
 from __future__ import annotations

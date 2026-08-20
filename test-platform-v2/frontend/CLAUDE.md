@@ -27,7 +27,7 @@ frontend/
 │   ├── pages/                 页面组件
 │   │   ├── login/             登录页
 │   │   ├── workbench/         工作台
-│   │   ├── project/           项目管理
+│   │   ├── my-projects/       我的项目（项目管理/组织已收敛于此）
 │   │   ├── system/            系统管理 (用户/角色/审计)
 │   │   ├── testcase/          用例管理
 │   │   ├── testplan/          测试计划
@@ -38,8 +38,6 @@ frontend/
 │   │   ├── trace/             质量追溯
 │   │   ├── apitest/           API 测试
 │   │   ├── uitest/            UI 自动化
-│   │   ├── special/           音视频专项
-│   │   ├── perftest/          性能监控
 │   │   ├── knowledge/         知识中心
 │   │   ├── notify/            通知管理
 │   │   ├── environment/       环境配置
@@ -94,7 +92,7 @@ npm run gen:api
 /login              → 登录页 (公开)
 /                   → 重定向到 /workbench
 /workbench          → 工作台 (需登录)
-/project            → 项目管理
+/my-projects        → 我的项目 (/project、/organizations 已重定向于此)
 /system/*           → 系统管理 (用户/角色/审计)
 /testcase           → 用例管理
 /testplan           → 测试计划
@@ -105,8 +103,6 @@ npm run gen:api
 /trace              → 质量追溯
 /apitest            → API 测试
 /uitest             → UI 自动化
-/special            → 音视频专项
-/perftest           → 性能监控
 /notify             → 通知管理
 /environment        → 环境配置
 /dataset            → 测试数据集
@@ -127,8 +123,7 @@ npx vitest           # 运行测试
 
 ## 常见陷阱
 
-- **演示态模块**（special）：数据为前端随机生成，不连接真实后端服务。修改时注意区分
-- **真实执行引擎**（apitest/uitest/perftest）：已连接真实后端服务，通过 httpx/Playwright/WebSocket 执行实际测试
+- **真实执行引擎**（apitest/uitest）：已连接真实后端服务，通过 httpx/Playwright 执行实际测试（音视频专项与性能监控模块已整体移除，勿再从 git 历史引用其页面）
 - **JWT 过期**：Axios 拦截器处理 401，自动跳转登录。后端 token 过期时间在 `core/config.py` 配置
 - **shadcn/ui 组件**：直接用 `npx shadcn-ui@latest add <component>` 添加，组件在 `src/components/ui/`
 - **Tailwind**：使用 `cn()` 工具函数（clsx + tailwind-merge）合并类名，不要直接用字符串拼接
