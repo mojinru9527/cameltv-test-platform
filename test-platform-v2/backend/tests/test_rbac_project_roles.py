@@ -34,8 +34,6 @@ REQUIRED_TESTER_CODES = {
     "notify:list", "notify:manage",
     "uitest:list", "uitest:detail", "uitest:create", "uitest:update",
     "uitest:delete", "uitest:trigger",
-    "avcheck:list", "avcheck:detail", "avcheck:create", "avcheck:delete",
-    "avcheck:trigger",
 }
 
 # 明确不授予 tester 的管理/生产/系统权限

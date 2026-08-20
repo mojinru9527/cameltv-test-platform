@@ -10,9 +10,6 @@ const rawColorAllowlist = new Set([
   'lib/themes.ts',
   'pages/knowledge/components/GraphTab.tsx',
   'pages/knowledge/components/SphereTab.tsx',
-  'pages/perftest/index.tsx',
-  // Batch 182（P3-09）：perftest 指标图抽到同目录 components，图表色板随组件迁移。
-  'pages/perftest/components/PerfTrendChart.tsx',
   // Obsidian-only visual shells are intentionally isolated behind the theme adapter.
   'ui/components/MetricStrip.tsx',
   'ui/patterns/ObsidianListPage.tsx',

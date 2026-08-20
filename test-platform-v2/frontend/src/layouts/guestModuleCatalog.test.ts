@@ -14,7 +14,6 @@ const PUBLIC_MODULE_PATHS = [
   '/apitest',
   '/uitest',
   '/playground',
-  '/special',
   '/schedule',
   '/report',
   '/system',
@@ -25,7 +24,6 @@ const PUBLIC_MODULE_PATHS = [
   '/notify',
   '/environment',
   '/agent-workbench',
-  '/perftest',
   '/lanhu-evidence',
 ] as const
 

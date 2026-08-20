@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session
 from app.models.rbac import Permission
 from app.schemas.system import MenuOut
 
-# (batch-165) 按用户要求隐藏的菜单 code（存量库同样生效；seed.py 已注释新库生成）
+# (batch-165) 已下线模块的菜单 code。存量库中可能仍有这些权限行，继续过滤防止
+# 指向已删除路由的菜单复活；seed.py 已不再为新库生成。
 HIDDEN_MENU_CODES = {"menu:special", "menu:perftest", "menu:project", "menu:organization"}
 
 
