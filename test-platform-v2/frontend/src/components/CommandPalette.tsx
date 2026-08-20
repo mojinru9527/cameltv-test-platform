@@ -36,6 +36,8 @@ export interface CommandRoute {
   group: string
   /** 需要该权限才可见（缺省 = 登录即可见） */
   permission?: string
+  /** 入口由菜单种子背书：菜单被 DISABLED_MENUS 软下线时同步从命令面板隐藏 */
+  menuBacked?: boolean
 }
 
 // Route registry — all searchable pages（与 router/seed 菜单对账）
@@ -53,9 +55,9 @@ export const ALL_COMMAND_ROUTES: CommandRoute[] = [
   { label: '知识中心', path: '/knowledge', icon: Sparkles, group: '页面' },
   { label: '测试数据集', path: '/dataset', icon: Database, group: '页面' },
   { label: 'Playground', path: '/playground', icon: Terminal, group: '页面' },
-  { label: '集成配置', path: '/integration', icon: Link2, group: '页面' },
+  { label: '集成配置', path: '/integration', icon: Link2, group: '页面', menuBacked: true },
   { label: '目标环境', path: '/environment', icon: Globe, group: '页面' },
-  { label: '通知配置', path: '/notify', icon: Bell, group: '页面' },
+  { label: '通知配置', path: '/notify', icon: Bell, group: '页面', menuBacked: true },
   { label: '我的项目', path: '/my-projects', icon: Settings, group: '页面' },
   { label: '系统管理', path: '/system', icon: Settings, group: '页面' },
   { label: '接口测试', path: '/apitest', icon: FileText, group: '页面' },
@@ -67,11 +69,18 @@ export const ALL_COMMAND_ROUTES: CommandRoute[] = [
 export function filterCommandRoutes(
   routes: CommandRoute[],
   hasPerm: (code: string) => boolean,
+  visibleMenuPaths?: ReadonlySet<string>,
 ): CommandRoute[] {
-  return routes.filter((route) => !route.permission || hasPerm(route.permission))
+  return routes.filter((route) => {
+    if (route.permission && !hasPerm(route.permission)) return false
+    // menuBacked 条目跟随菜单可见性（DISABLED_MENUS 软下线即隐藏）；
+    // 未传菜单路径集合时保持旧行为（仅按权限过滤），兼容既有调用方。
+    if (route.menuBacked && visibleMenuPaths && !visibleMenuPaths.has(route.path)) return false
+    return true
+  })
 }
 
-export default function CommandPalette() {
+export default function CommandPalette({ visibleMenuPaths }: { visibleMenuPaths?: ReadonlySet<string> }) {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -95,7 +104,7 @@ export default function CommandPalette() {
   }, [onKeyDown])
 
   const filtered = useMemo(() => {
-    const visible = filterCommandRoutes(ALL_COMMAND_ROUTES, hasPerm)
+    const visible = filterCommandRoutes(ALL_COMMAND_ROUTES, hasPerm, visibleMenuPaths)
     if (!query.trim()) return visible
     const q = query.toLowerCase()
     return visible.filter(
@@ -104,7 +113,7 @@ export default function CommandPalette() {
         r.path.toLowerCase().includes(q) ||
         r.group.toLowerCase().includes(q),
     )
-  }, [query, hasPerm])
+  }, [query, hasPerm, visibleMenuPaths])
 
   const groups = useMemo(() => {
     const map = new Map<string, CommandRoute[]>()

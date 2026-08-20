@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { fetchMenus, fetchPublicAccess, logoutApi } from '@/api/auth'
@@ -196,6 +196,19 @@ function findMenuLabel(items: MenuItem[], target: string, pathname: string): str
     || ''
 }
 
+/** 当前用户可见菜单的路径集合（去查询串），供命令面板同步菜单软下线状态。 */
+function collectVisibleMenuPaths(items: MenuItem[]): Set<string> {
+  const paths = new Set<string>()
+  const walk = (list: MenuItem[]) => {
+    for (const item of list) {
+      if (item.path) paths.add(item.path.split('?')[0])
+      if (item.children?.length) walk(item.children)
+    }
+  }
+  walk(items)
+  return paths
+}
+
 export default function MainLayout() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -239,6 +252,8 @@ export default function MainLayout() {
   useEffect(() => {
     document.getElementById('main-content')?.focus()
   }, [location.pathname])
+
+  const visibleMenuPaths = useMemo(() => collectVisibleMenuPaths(menus), [menus])
 
   const navigateMenu = (path: string) => {
     navigate(path || '/')
@@ -612,7 +627,7 @@ export default function MainLayout() {
         </main>
         <IcpFooter />
       </SidebarInset>
-      {isAuthenticated && <CommandPalette />}
+      {isAuthenticated && <CommandPalette visibleMenuPaths={visibleMenuPaths} />}
       <LoginGateDialog
         open={!isAuthenticated && Boolean(loginTarget)}
         destinationLabel={loginTarget?.label || '该模块'}

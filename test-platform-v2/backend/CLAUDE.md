@@ -119,6 +119,9 @@ DATABASE_URL=sqlite:///./cameltv.db    # 本地开发
 AUTO_CREATE_TABLES=true                # 本地开发自动建表
 SECRET_KEY=<random>                    # JWT 签名密钥
 ELK_BASE_URL=                          # 本地开发留空，生产填 Kibana URL
+DISABLED_MENUS=menu:notify,menu:integration  # 模块可见性开关（P1a）：逗号分隔菜单 code，
+                                             # 软下线侧边栏/访客目录/命令面板入口；
+                                             # 页面路由保留可直达，置空即恢复全部入口
 ```
 
 ## 数据库迁移

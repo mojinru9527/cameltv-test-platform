@@ -4,6 +4,7 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.rbac import Permission
 from app.schemas.system import MenuOut
 
@@ -12,12 +13,24 @@ from app.schemas.system import MenuOut
 HIDDEN_MENU_CODES = {"menu:special", "menu:perftest", "menu:project", "menu:organization"}
 
 
+def effective_hidden_menu_codes() -> set[str]:
+    """硬下线菜单 ∪ 环境变量 DISABLED_MENUS 声明的软下线菜单。
+
+    软下线（默认 menu:notify / menu:integration）：通知与集成为 fail-closed 占位
+    配置页（缺真实 SMTP/Webhook/Jira 端点），默认对用户隐藏；管理员可在 .env 将
+    DISABLED_MENUS 置空或改为其他 code 列表后恢复。权限点本身仍保留在库中。
+    """
+    extra = {code.strip() for code in settings.disabled_menus.split(",") if code.strip()}
+    return HIDDEN_MENU_CODES | extra
+
+
 def menu_tree(db: Session, codes: list[str]) -> list[MenuOut]:
     perms = db.scalars(
         select(Permission).where(Permission.type == "menu").order_by(Permission.sort)
     ).all()
     is_super = "*" in codes
-    visible = [p for p in perms if (is_super or p.code in codes) and p.code not in HIDDEN_MENU_CODES]
+    hidden = effective_hidden_menu_codes()
+    visible = [p for p in perms if (is_super or p.code in codes) and p.code not in hidden]
 
     # Build flat list first
     nodes: dict[int, MenuOut] = {}

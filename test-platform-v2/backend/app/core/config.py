@@ -52,6 +52,12 @@ class Settings(BaseSettings):
     # 前端正式域名（Batch 109）：可分享链接（项目邀请等）使用的地址；空=回退请求域名
     frontend_url: str = ""
 
+    # ── 模块可见性开关（P1a）──
+    # 逗号分隔的菜单 code，软下线对应入口（侧边栏 + 访客目录；页面路由保留可直达）。
+    # 默认隐藏通知配置与集成配置：两者缺真实 SMTP/Webhook/Jira/ELK 端点，属 fail-closed
+    # 占位配置页。恢复方法：DISABLED_MENUS= 置空或按需删减 code。
+    disabled_menus: str = "menu:notify,menu:integration"
+
     @property
     def effective_login_rate_limit(self) -> tuple[int, int]:
         """生产保持安全默认；开发/测试环境放宽以支持自动化验收（非安全降级）。"""

@@ -42,7 +42,7 @@ test-platform-v2/
 | UI 自动化 | `/uitest` | 🟡 | 本地 Runner、环境注入和产物闭环已验证；不能替代体育 Test5/生产业务 E2E |
 | ~~音视频专项~~ | ~~`/special`~~ | 已移除 | batch-165 隐藏菜单后，代码已随死代码清理批次整体删除（路由/服务/模型/页面）；如需恢复从 git 历史取回 |
 | 环境 / 数据集 | `/environment` `/dataset` | 🟡 | 项目级数据和变量链可用；生产目标防误触发仍需统一验证 |
-| 通知 / 集成 | `/notify` `/integration` | ⛔ | 本地模型和错误路径存在；真实 SMTP/Webhook/Jira/TAPD/ELK 缺非生产凭据与端点 |
+| 通知 / 集成 | `/notify` `/integration` | ⛔（默认隐藏） | 本地模型和错误路径存在；真实 SMTP/Webhook/Jira/TAPD/ELK 缺非生产凭据与端点。P1a 起入口默认经 `DISABLED_MENUS` 软下线（侧边栏+访客目录+命令面板隐藏，页面路由保留可直达），恢复：`DISABLED_MENUS=` 置空 |
 | 知识 / Agent / 发布包 | `/knowledge` `/agent-workbench` `/release-bundles` | 🟡 / ⛔ | 无 AI/Wiki/活动发布包时已 fail closed；外部链路和交互标注回归未全部完成 |
 | AI 配置 / DSH 任务 | `/ai-config` `/dsh-tasks` | 🟡 | 项目级 AI 提供方池（Batch A）+ DSH 执行入口（Batch 172/191/202）；无配置即禁用 AI，未配置引导入口已接入 |
 | 开放 API | API-only `/api/v1/open` | 🟡 | 独立 API Token Bearer 鉴权；属于 API-only 能力，前端入口和生产级契约验收不完整 |
