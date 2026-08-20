@@ -178,9 +178,11 @@ def import_artifact(
     current: CurrentUser = Depends(require_permission("ai_artifact:import")),
     db: Session = Depends(get_db),
 ):
-    """治理守卫：仅 review_status='approved' 的 AI 用例产物允许导入正式库。"""
-    result = artifact_service.import_to_test_case(db, artifact_id, current.project_id or 0)
-    _audit(req, current, db, "ai_artifact:import", f"artifact#{artifact_id} → case#{result['case_id']}", body.comment)
+    """治理守卫：仅 review_status='approved' 的 AI 产物允许导入正式库（按类型分发用例库/需求库）。"""
+    result = artifact_service.import_artifact(
+        db, artifact_id, current.project_id or 0, operator_id=current.user.id,
+    )
+    _audit(req, current, db, "ai_artifact:import", f"artifact#{artifact_id} → {result['ref_type']}#{result['ref_id']}", body.comment)
     db.commit()
     return R.ok(result)
 
