@@ -71,11 +71,7 @@ const GUEST_MODULES: Record<string, GuestModuleDefinition> = {
     ['任务执行', '在指定环境触发 UI 回归并查看实时与最终状态。'],
     ['失败证据', '查看截图、控制台、网络和步骤信息，辅助复现问题。'],
   ]),
-  '/playground': defineModule('Playground', '用于编辑、编译和验证测试编排草稿，具体执行受环境与权限控制。', [
-    ['场景编辑', '编写可读的测试场景和步骤，形成可讨论的自动化草稿。'],
-    ['编译检查', '检查场景结构、步骤匹配和运行前条件。'],
-    ['受控执行', '在已配置运行器和授权环境中验证编排结果。'],
-  ]),
+  // (P2b) Playground 已并入用例服务 Tab（/playground → /testcase?tab=playground），访客目录并入用例服务
   '/schedule': defineModule('定时任务', '按计划自动触发 API、UI 或其他回归任务。', [
     ['调度配置', '设置 Cron、任务类型、运行范围和启停状态。'],
     ['运行历史', '查看每次触发的时间、状态、耗时和结果。'],

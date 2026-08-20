@@ -33,7 +33,6 @@ const DatasetPage = lazy(() => import('@/pages/dataset'))
 const IntegrationPage = lazy(() => import('@/pages/integration'))
 const KnowledgePage = lazy(() => import('@/pages/knowledge'))
 const OperationsReleasePage = lazy(() => import('@/pages/operations-release'))
-const PlaygroundPage = lazy(() => import('@/pages/playground'))
 const DshTasksPage = lazy(() => import('@/pages/dsh-tasks'))
 const AiConfigPage = lazy(() => import('@/pages/ai-config'))
 const ReleaseBundlesPage = lazy(() => import('@/pages/release-bundles'))
@@ -214,7 +213,8 @@ export const router = createBrowserRouter([
       { path: 'dataset', element: <PageLoader><DatasetPage /></PageLoader> },
       { path: 'integration', element: <PageLoader><IntegrationPage /></PageLoader> },
       { path: 'knowledge', element: <PageLoader><KnowledgePage /></PageLoader> },
-      { path: 'playground', element: <PageLoader><PlaygroundPage /></PageLoader> },
+      // (P2b) Playground 已并入用例服务 Tab，旧书签重定向
+      { path: 'playground', element: <Navigate to="/testcase?tab=playground" replace /> },
       { path: 'dsh-tasks', element: <PageLoader><DshTasksPage /></PageLoader> },
       { path: 'ai-config', element: <PageLoader><AiConfigPage /></PageLoader> },
       { path: 'version-mission', element: <Navigate to="/release-bundles" replace /> },
