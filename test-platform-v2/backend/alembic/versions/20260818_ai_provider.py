@@ -26,8 +26,8 @@ def upgrade() -> None:
         sa.Column("api_key_encrypted", sa.Text(), nullable=False, server_default=""),
         sa.Column("models", sa.Text(), nullable=False, server_default="[]"),
         sa.Column("default_model", sa.String(100), nullable=False, server_default=""),
-        sa.Column("is_default", sa.Boolean(), nullable=False, server_default=sa.text("0")),
-        sa.Column("enabled", sa.Boolean(), nullable=False, server_default=sa.text("1")),
+        sa.Column("is_default", sa.Boolean(), nullable=False, server_default=sa.false()),
+        sa.Column("enabled", sa.Boolean(), nullable=False, server_default=sa.true()),
         sa.Column("created_at", sa.DateTime(), nullable=True),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
     )

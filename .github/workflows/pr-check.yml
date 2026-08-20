@@ -133,9 +133,11 @@ jobs:
 
       - name: Install Dependencies
         working-directory: test-platform-v2/backend
+        # 与生产 Dockerfile 同源（--require-hashes 安装 lock 锁定版本），
+        # 避免 requirements.txt 未锁定版本与生产行为漂移导致观察假绿
+        # （如 sqlalchemy 2.0.51→2.0.52 布尔 server_default 渲染差异）。
         run: |
-          pip install -r requirements.txt
-          pip install psycopg2-binary
+          pip install --require-hashes -r requirements.lock
 
       - name: Verify Alembic migrations on PostgreSQL
         working-directory: test-platform-v2/backend
