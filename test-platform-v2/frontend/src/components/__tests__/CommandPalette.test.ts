@@ -28,10 +28,14 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
       '/system',
       '/apitest',
       '/uitest',
-      '/agent-workbench',
     ]) {
       expect(paths).toContain(expected)
     }
+  })
+
+  it('P1b：Agent 工作台已收敛进 DSH 任务，入口不再单列', () => {
+    const paths = ALL_COMMAND_ROUTES.map((route) => route.path)
+    expect(paths).not.toContain('/agent-workbench')
   })
 
   it('batch-165：专项测试/性能监控入口已隐藏', () => {

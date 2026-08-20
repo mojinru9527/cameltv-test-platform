@@ -43,7 +43,6 @@ frontend/
 │   │   ├── environment/       环境配置
 │   │   ├── dataset/           测试数据集
 │   │   ├── integration/       集成配置
-│   │   └── agent-workbench/   Agent 工作台
 │   ├── components/            shadcn/ui 组件 (34 个)
 │   ├── hooks/                 自定义 hooks
 │   ├── lib/                   工具函数 (cn, formatters)
@@ -108,7 +107,7 @@ npm run gen:api
 /dataset            → 测试数据集
 /integration        → 集成配置
 /knowledge          → 知识中心
-/agent-workbench    → Agent 工作台
+/agent-workbench    → （P1b 起重定向至 /dsh-tasks，Agent 工作台入口已收敛）
 ```
 
 ## 本地开发

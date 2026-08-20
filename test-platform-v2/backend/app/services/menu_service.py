@@ -10,7 +10,11 @@ from app.schemas.system import MenuOut
 
 # (batch-165) 已下线模块的菜单 code。存量库中可能仍有这些权限行，继续过滤防止
 # 指向已删除路由的菜单复活；seed.py 已不再为新库生成。
-HIDDEN_MENU_CODES = {"menu:special", "menu:perftest", "menu:project", "menu:organization"}
+# (P1b) menu:agent-workbench：入口收敛进 DSH 任务（页面删除，路由重定向 /dsh-tasks）。
+HIDDEN_MENU_CODES = {
+    "menu:special", "menu:perftest", "menu:project", "menu:organization",
+    "menu:agent-workbench",
+}
 
 
 def effective_hidden_menu_codes() -> set[str]:

@@ -40,7 +40,9 @@ _MENUS = [
     ("menu:integration", "集成配置", "", "/integration", "LinkOutlined", 18),
     ("menu:notify", "通知配置", "", "/notify", "NotificationOutlined", 19),
     ("menu:environment", "目标环境", "", "/environment", "EnvironmentOutlined", 20),
-    ("menu:agent-workbench", "Agent 工作台", "", "/agent-workbench", "SparklesOutlined", 21),
+    # (P1b 入口收敛) Agent 工作台已收敛进 DSH 任务（/agent-workbench → /dsh-tasks 重定向），
+    # 不再生成菜单；menu_service.HIDDEN_MENU_CODES 继续拦截存量库中的旧权限行。
+    # ("menu:agent-workbench", "Agent 工作台", "", "/agent-workbench", "SparklesOutlined", 21),
     # (batch-172) DSH 任务执行模块
     ("menu:dsh_tasks", "DSH 任务", "", "/dsh-tasks", "TerminalOutlined", 22),
     # (batch A) AI 模型配置中心
@@ -248,7 +250,7 @@ _VIEWER_ACTIONS = {
 _TESTER_MENUS = {
     "menu:workbench", "menu:trace", "menu:requirement", "menu:versionmission", "menu:mindmap", "menu:testcase", "menu:testplan",
     "menu:apitest", "menu:uitest", "menu:playground", "menu:schedule", "menu:report",  # (batch-165) menu:special 已隐藏
-    "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge", "menu:agent-workbench",
+    "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge",
     "menu:notify", "menu:environment",  # (batch-165) menu:perftest 已隐藏
     "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph", "menu:knowledge:artifacts",
     "menu:lanhu_evidence",

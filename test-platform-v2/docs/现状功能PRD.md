@@ -58,7 +58,7 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 | 13 | 音视频专项 | `/special` | 🟡 真实样本/ffprobe 指标链已取代随机数；外部真实流矩阵未完成 |
 | 14 | 环境 / 数据集 | `/environment` `/dataset` | 🟡 项目级数据与加密变量存在；跨项目和生产目标安全矩阵待补 |
 | 15 | 通知 / 集成 | `/notify` `/integration` | ⛔ 本地模型与错误路径可验；真实 SMTP/Webhook/Jira/TAPD/ELK 缺凭据和非生产端点 |
-| 16 | 知识 / Agent / 发布包 | `/knowledge` `/agent-workbench` `/release-bundles` | 🟡 / ⛔ 前置条件缺失时已 fail closed；真实外部链和交互标注回归待补 |
+| 16 | 知识 / 发布包 | `/knowledge` `/release-bundles` | 🟡 前置条件缺失时已 fail closed；真实外部链和交互标注回归待补。Agent 工作台自 P1b 起收敛进 DSH 任务（页面删除，`/agent-workbench` → `/dsh-tasks` 重定向） |
 | 17 | 性能监控 | `/perftest` | ⛔ 缺 SoloX、授权真机和采集窗口，页面存在不等于验收通过 |
 | 18 | 开放 API | API-only `/api/v1/open` | 🟡 独立 API Token Bearer 鉴权；前端入口和生产级契约证据不完整 |
 | 19 | 主题实验室 | `/theme-lab` | ✅ 本地设计/响应式验证工具，不是业务生产能力 |

@@ -106,7 +106,7 @@ Router (api/v1/)  →  Service (services/)  →  Model (models/)
 | dataset.py | `/api/v1/datasets` | — | 测试数据集 |
 | integration.py | `/api/v1/integration` | — | 集成配置 |
 | knowledge.py | `/api/v1/knowledge` | — | 知识中心 |
-| agent.py | `/api/v1/agent` | — | Agent 工作台 |
+| agent.py | `/api/v1/agent` | — | Agent 执行记录 API（P1b 起前端入口收敛进 DSH 任务，本 API 保留供知识/排障链路与调试调用） |
 | ai_config.py | `/api/v1/ai-config` | ai_config_service | AI 模型配置中心（项目级提供方池） |
 
 ## 核心配置

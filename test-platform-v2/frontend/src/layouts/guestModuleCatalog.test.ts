@@ -23,7 +23,7 @@ const PUBLIC_MODULE_PATHS = [
   '/integration',
   '/notify',
   '/environment',
-  '/agent-workbench',
+  // (P1b) '/agent-workbench' 已收敛进 DSH 任务，访客目录不再单列
   '/lanhu-evidence',
 ] as const
 

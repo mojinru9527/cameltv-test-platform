@@ -33,7 +33,6 @@ const EnvironmentPage = lazy(() => import('@/pages/environment'))
 const DatasetPage = lazy(() => import('@/pages/dataset'))
 const IntegrationPage = lazy(() => import('@/pages/integration'))
 const KnowledgePage = lazy(() => import('@/pages/knowledge'))
-const AgentWorkbenchPage = lazy(() => import('@/pages/agent-workbench'))
 const OperationsReleasePage = lazy(() => import('@/pages/operations-release'))
 const PlaygroundPage = lazy(() => import('@/pages/playground'))
 const DshTasksPage = lazy(() => import('@/pages/dsh-tasks'))
@@ -222,7 +221,8 @@ export const router = createBrowserRouter([
       { path: 'release-bundles', element: <PageLoader><ReleaseBundlesPage /></PageLoader> },
       { path: 'release-bundles/:id', element: <PageLoader><BundleDetailPage /></PageLoader> },
       { path: 'release-bundles/:id/panorama', element: <PageLoader><VersionPanoramaPage /></PageLoader> },
-      { path: 'agent-workbench', element: <PageLoader><AgentWorkbenchPage /></PageLoader> },
+      // (P1b) Agent 工作台已收敛进 DSH 任务，旧书签重定向
+      { path: 'agent-workbench', element: <Navigate to="/dsh-tasks" replace /> },
       { path: 'lanhu-evidence', element: <PageLoader><LanhuEvidencePage /></PageLoader> },
       { path: 'lanhu-evidence/:id', element: <PageLoader><LanhuEvidenceJobDetail /></PageLoader> },
       { path: 'operations-release', element: <PageLoader><OperationsReleasePage /></PageLoader> },
