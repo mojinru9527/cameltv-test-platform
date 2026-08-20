@@ -17,7 +17,7 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
       '/schedule',
       '/defect',
       '/trace',
-      '/mindmap',
+      '/testcase?tab=mindmap',
       '/release-bundles',
       '/knowledge',
       '/dataset',
@@ -36,6 +36,12 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
   it('P1b：Agent 工作台已收敛进 DSH 任务，入口不再单列', () => {
     const paths = ALL_COMMAND_ROUTES.map((route) => route.path)
     expect(paths).not.toContain('/agent-workbench')
+  })
+
+  it('P2a：思维导图并入用例服务脑图视图 Tab，旧独立路径不再出现', () => {
+    const paths = ALL_COMMAND_ROUTES.map((route) => route.path)
+    expect(paths).not.toContain('/mindmap')
+    expect(paths).toContain('/testcase?tab=mindmap')
   })
 
   it('batch-165：专项测试/性能监控入口已隐藏', () => {

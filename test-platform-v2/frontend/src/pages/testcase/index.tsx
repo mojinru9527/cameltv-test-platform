@@ -1,5 +1,6 @@
 import { PageShell } from '@/ui'
 import { useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -15,6 +16,7 @@ import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuthStore } from '@/stores/auth'
 import CaseDrawer from './CaseDrawer'
+import MindmapPanel from './mindmap'
 import VersionDialog from './VersionDialog'
 import CaseFilterBar from './components/CaseFilterBar'
 import CaseBatchToolbar from './components/CaseBatchToolbar'
@@ -39,6 +41,12 @@ export default function TestCasePage() {
   const canBatchSelect = canUpdate || canDelete
   // filter state (default to manual - api cases managed in apitest module)
   const [actTab, setActTab] = useState('manual')
+  // 视图切换（P2a）：用例列表 / 脑图视图，?tab=mindmap 可直达（旧 /mindmap 路由重定向至此）
+  const [searchParams, setSearchParams] = useSearchParams()
+  const viewTab = searchParams.get('tab') === 'mindmap' ? 'mindmap' : 'list'
+  const setViewTab = (next: 'list' | 'mindmap') => {
+    setSearchParams(next === 'mindmap' ? { tab: 'mindmap' } : {}, { replace: true })
+  }
   const [selSurface, setSelSurface] = useState('')
   const [selDomain, setSelDomain] = useState('')
   const [selModule, setSelModule] = useState('')
@@ -362,6 +370,29 @@ export default function TestCasePage() {
       glass
     >
       <div className="space-y-4">
+      {/* 视图切换（P2a）：用例列表 / 脑图视图 */}
+      <div className="flex items-center gap-2" role="tablist" aria-label="用例视图切换">
+        {([['list', '用例列表'], ['mindmap', '脑图视图']] as const).map(([k, label]) => (
+          <button
+            key={k}
+            type="button"
+            role="tab"
+            aria-selected={viewTab === k}
+            className={cn(
+              'rounded-md px-4 py-1 text-sm font-medium transition-colors',
+              viewTab === k
+                ? 'bg-accent text-accent-foreground font-semibold'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+            onClick={() => setViewTab(k)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {viewTab === 'mindmap' ? <MindmapPanel /> : (
+      <>
       {/* Top Tabs */}
       <div className="flex items-center gap-2">
         {([
@@ -503,6 +534,8 @@ export default function TestCasePage() {
           </div>
         </div>
       </div>
+      </>
+      )}
 
       <CaseDrawer
         open={drawer}

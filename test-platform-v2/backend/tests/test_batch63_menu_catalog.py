@@ -38,6 +38,18 @@ def test_p1b_agent_workbench_menu_removed_from_seed():
     assert "menu:dsh_tasks" in _TESTER_ACTIONS
 
 
+def test_p2a_mindmap_menu_removed_from_seed():
+    """(P2a 入口收敛) 思维导图已并入用例服务「脑图视图」Tab：菜单种子移除，
+    HIDDEN_MENU_CODES 拦截存量库旧权限行，前端路由重定向 /testcase?tab=mindmap。"""
+    from app.services.menu_service import HIDDEN_MENU_CODES
+
+    codes = [entry[0] for entry in _MENUS]
+    assert "menu:mindmap" not in codes
+    assert "menu:mindmap" not in _TESTER_MENUS
+    assert "menu:mindmap" in HIDDEN_MENU_CODES
+    assert "menu:testcase" in codes
+
+
 def test_batch165_hidden_menus_removed_from_seed():
     """(batch-165) 专项测试/性能监控已从菜单种子移除，避免新库生成入口。"""
     codes = [entry[0] for entry in _MENUS]

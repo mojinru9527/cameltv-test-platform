@@ -26,7 +26,6 @@ const UiTestPage = lazy(() => import('@/pages/uitest'))
 const TracePage = lazy(() => import('@/pages/trace'))
 const RequirementPage = lazy(() => import('@/pages/requirement'))
 const RequirementReviewPage = lazy(() => import('@/pages/requirement/ReviewPage'))
-const MindmapPage = lazy(() => import('@/pages/mindmap'))
 const ApiTestPage = lazy(() => import('@/pages/apitest'))
 const NotifyPage = lazy(() => import('@/pages/notify'))
 const EnvironmentPage = lazy(() => import('@/pages/environment'))
@@ -200,7 +199,8 @@ export const router = createBrowserRouter([
       { path: 'testcase', element: <PageLoader><TestCasePage /></PageLoader> },
       { path: 'testplan', element: <PageLoader><TestPlanPage /></PageLoader> },
       { path: 'testplan/:id', element: <PageLoader><PlanDetail /></PageLoader> },
-      { path: 'mindmap', element: <PageLoader><MindmapPage /></PageLoader> },
+      // (P2a) 思维导图已并入用例服务「脑图视图」Tab，旧书签重定向
+      { path: 'mindmap', element: <Navigate to="/testcase?tab=mindmap" replace /> },
       { path: 'apitest', element: <PageLoader><ApiTestPage /></PageLoader> },
       { path: 'uitest', element: <PageLoader><UiTestPage /></PageLoader> },
       { path: 'schedule', element: <PageLoader><SchedulePage /></PageLoader> },

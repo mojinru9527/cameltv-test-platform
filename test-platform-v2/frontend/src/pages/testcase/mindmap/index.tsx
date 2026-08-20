@@ -6,12 +6,12 @@ import { fetchTaxonomy } from '@/api/testcase'
 import type { TaxonomyDomainNode, TaxonomySurfaceNode } from '@/api/testcase'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
-import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import { RotateCcw, Download, Maximize2, Minimize2 } from '@/lib/icons'
+import { RotateCcw, Maximize2, Minimize2 } from '@/lib/icons'
 import { buildTaxonomyMindmapMarkdown } from './caseTaxonomy'
 
 /**
- * MindmapView — interactive test case mindmap.
+ * MindmapPanel — interactive test case mindmap
+ *（P2a：作为用例服务的「脑图视图」Tab 嵌入，不再是独立页面）。
  *
  * Uses markmap-lib + markmap-view (npm packages) to render test cases
  * as an interactive mindmap (domain → module → test case hierarchy).
@@ -19,8 +19,7 @@ import { buildTaxonomyMindmapMarkdown } from './caseTaxonomy'
  * Install: npm install markmap-lib markmap-view
  */
 
-export default function MindmapPage() {
-  useDocumentTitle('思维导图')
+export default function MindmapPanel() {
   const containerRef = useRef<HTMLDivElement>(null)
   const mmRef = useRef<any>(null)
   const renderVersionRef = useRef(0)
@@ -174,9 +173,9 @@ export default function MindmapPage() {
   }, [fullscreen])
 
   return (
-    <div className="space-y-4 p-4 sm:p-6">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold">脑图视图</h1>
+        <h2 className="text-lg font-semibold">脑图视图</h2>
 
         <Select value={caseType} onValueChange={(value) => {
           setCaseType(value)

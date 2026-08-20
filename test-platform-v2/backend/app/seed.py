@@ -25,7 +25,9 @@ _MENUS = [
     ("menu:knowledge:graph", "知识图谱", "menu:knowledge", "/knowledge?tab=graph", "GitBranchOutlined", 3),
     ("menu:knowledge:artifacts", "AI审核台", "menu:knowledge", "/knowledge?tab=artifacts", "FileTextOutlined", 4),
     # ── 其余菜单 ──
-    ("menu:mindmap", "思维导图", "", "/mindmap", "ShareAltOutlined", 6),
+    # (P2a 入口收敛) 思维导图已并入用例服务「脑图视图」Tab（/mindmap → /testcase?tab=mindmap 重定向），
+    # 不再生成菜单；menu_service.HIDDEN_MENU_CODES 继续拦截存量库中的旧权限行。
+    # ("menu:mindmap", "思维导图", "", "/mindmap", "ShareAltOutlined", 6),
     ("menu:testcase", "用例服务", "", "/testcase", "ProfileOutlined", 7),
     ("menu:testplan", "测试计划", "", "/testplan", "ScheduleOutlined", 8),
     ("menu:apitest", "接口测试", "", "/apitest", "ApiOutlined", 9),
@@ -248,7 +250,7 @@ _VIEWER_ACTIONS = {
 }
 
 _TESTER_MENUS = {
-    "menu:workbench", "menu:trace", "menu:requirement", "menu:versionmission", "menu:mindmap", "menu:testcase", "menu:testplan",
+    "menu:workbench", "menu:trace", "menu:requirement", "menu:versionmission", "menu:testcase", "menu:testplan",
     "menu:apitest", "menu:uitest", "menu:playground", "menu:schedule", "menu:report",  # (batch-165) menu:special 已隐藏
     "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge",
     "menu:notify", "menu:environment",  # (batch-165) menu:perftest 已隐藏
