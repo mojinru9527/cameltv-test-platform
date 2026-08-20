@@ -15,7 +15,9 @@ from app.models.user import User
 # 菜单权限点：(code, name, parent_code, path, icon, sort)
 _MENUS = [
     ("menu:workbench", "工作台", "", "/workbench", "DashboardOutlined", 1),
-    ("menu:trace", "质量追溯", "", "/trace", "NodeIndexOutlined", 2),
+    # (P2c 入口收敛) 质量追溯已并入报告中心 Tab（/trace → /report?tab=trace 重定向），
+    # 不再生成菜单；menu_service.HIDDEN_MENU_CODES 继续拦截存量库中的旧权限行。
+    # ("menu:trace", "质量追溯", "", "/trace", "NodeIndexOutlined", 2),
     ("menu:requirement", "需求文档", "", "/requirement", "FileTextOutlined", 3),
     ("menu:versionmission", "版本发布包", "", "/release-bundles", "GitBranchOutlined", 4),
     # ── 知识中心（独立分组）──
@@ -229,7 +231,7 @@ _TESTER_ACTIONS = {
 
 # 运营只读角色（C31-3）：仅查看，无任何写操作
 _VIEWER_MENUS = {
-    "menu:workbench", "menu:trace", "menu:requirement", "menu:report", "menu:defect",
+    "menu:workbench", "menu:requirement", "menu:report", "menu:defect",
     "menu:dataset", "menu:knowledge",
     "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph",
     "menu:knowledge:artifacts",
@@ -252,7 +254,7 @@ _VIEWER_ACTIONS = {
 }
 
 _TESTER_MENUS = {
-    "menu:workbench", "menu:trace", "menu:requirement", "menu:versionmission", "menu:testcase", "menu:testplan",
+    "menu:workbench", "menu:requirement", "menu:versionmission", "menu:testcase", "menu:testplan",
     "menu:apitest", "menu:uitest", "menu:schedule", "menu:report",  # (batch-165) menu:special 已隐藏
     "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge",
     "menu:notify", "menu:environment",  # (batch-165) menu:perftest 已隐藏

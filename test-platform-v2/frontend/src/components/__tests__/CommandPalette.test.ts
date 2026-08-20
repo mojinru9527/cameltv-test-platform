@@ -16,7 +16,7 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
       '/report',
       '/schedule',
       '/defect',
-      '/trace',
+      '/report?tab=trace',
       '/testcase?tab=mindmap',
       '/release-bundles',
       '/knowledge',
@@ -48,6 +48,12 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
     const paths = ALL_COMMAND_ROUTES.map((route) => route.path)
     expect(paths).not.toContain('/playground')
     expect(paths).toContain('/testcase?tab=playground')
+  })
+
+  it('P2c：质量追溯并入报告中心 Tab，旧独立路径不再出现', () => {
+    const paths = ALL_COMMAND_ROUTES.map((route) => route.path)
+    expect(paths).not.toContain('/trace')
+    expect(paths).toContain('/report?tab=trace')
   })
 
   it('batch-165：专项测试/性能监控入口已隐藏', () => {

@@ -61,6 +61,23 @@ def test_p2b_playground_menu_removed_from_seed():
     assert "menu:playground" in HIDDEN_MENU_CODES
 
 
+def test_p2c_trace_menu_removed_from_seed():
+    """(P2c 入口收敛) 质量追溯已并入报告中心 Tab：菜单种子移除（tester/viewer
+    角色清单同步移除，viewer 仍持有 menu:report 保持可达），
+    HIDDEN_MENU_CODES 拦截存量库旧权限行，前端路由重定向 /report?tab=trace。"""
+    from app.seed import _VIEWER_MENUS
+    from app.services.menu_service import HIDDEN_MENU_CODES
+
+    codes = [entry[0] for entry in _MENUS]
+    assert "menu:trace" not in codes
+    assert "menu:trace" not in _TESTER_MENUS
+    assert "menu:trace" not in _VIEWER_MENUS
+    assert "menu:trace" in HIDDEN_MENU_CODES
+    # 承接入口：报告中心菜单对两个角色均保留
+    assert "menu:report" in codes
+    assert "menu:report" in _VIEWER_MENUS
+
+
 def test_batch165_hidden_menus_removed_from_seed():
     """(batch-165) 专项测试/性能监控已从菜单种子移除，避免新库生成入口。"""
     codes = [entry[0] for entry in _MENUS]

@@ -36,7 +36,8 @@ test-platform-v2/
 | 用户/角色/权限 RBAC | `/system` | 🟡 | 三级数据范围与审计存在；admin/tester/viewer 全能力矩阵未完成 |
 | 项目管理 | `/project` | ✅ | 多项目、成员、主题与停用语义已有本地证据 |
 | 工作台 / 用例 / 计划 / 报告 | `/workbench` `/testcase` `/testplan` `/report` | 🟡 | 核心本地闭环真实可用；跨页查询、批量破坏操作、全路由权限和可访问性仍需回归 |
-| 缺陷 / 定时 / 追溯 | `/defect` `/schedule` `/trace` | 🟡 | 状态流、定时和追溯链存在；全量 UI/API/DB/审计一致性与三身份矩阵未完成 |
+| 缺陷 / 定时 | `/defect` `/schedule` | 🟡 | 状态流和定时存在；全量 UI/API/DB/审计一致性与三身份矩阵未完成 |
+| 质量追溯 | `/report?tab=trace` | 🟡 | P2c 起并入报告中心 Tab（`/trace` 重定向，菜单种子移除）；后端 `/api/v1/trace` API 保留 |
 | 需求 | `/requirement` | 🟡 | 本地持久化与展示可用；真实 LLM、蓝湖与旧 PostgreSQL 快照验收受外部输入阻塞 |
 | 用例脑图 | `/testcase?tab=mindmap` | 🟡 | P2a 起并入用例服务「脑图视图」Tab（`/mindmap` 重定向，菜单种子移除）；脑图内容实际为用例 taxonomy 聚合 |
 | API 测试 | `/apitest` | 🟡 | OpenAPI/Swagger 导入、httpx 执行、任务/快照已实现；五入口一致性、生产保护与 Test5 当前契约待验收 |
