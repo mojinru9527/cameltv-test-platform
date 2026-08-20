@@ -24,7 +24,7 @@ def upgrade() -> None:
     if "must_change_password" not in columns:
         op.add_column(
             "sys_user",
-            sa.Column("must_change_password", sa.Boolean(), nullable=False, server_default=sa.text("0")),
+            sa.Column("must_change_password", sa.Boolean(), nullable=False, server_default=sa.false()),
         )
 
 
