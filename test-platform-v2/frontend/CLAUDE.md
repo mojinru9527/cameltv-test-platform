@@ -29,7 +29,7 @@ frontend/
 │   │   ├── workbench/         工作台
 │   │   ├── my-projects/       我的项目（项目管理/组织已收敛于此）
 │   │   ├── system/            系统管理 (用户/角色/审计)
-│   │   ├── testcase/          用例管理
+│   │   ├── testcase/          用例管理（含 mindmap/ 脑图视图 Tab 组件，P2a 起并入）
 │   │   ├── testplan/          测试计划
 │   │   ├── requirement/       需求管理
 │   │   ├── report/            报告中心
