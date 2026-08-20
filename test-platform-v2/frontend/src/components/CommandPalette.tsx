@@ -55,7 +55,8 @@ export const ALL_COMMAND_ROUTES: CommandRoute[] = [
   { label: '版本发布包', path: '/release-bundles', icon: GitBranch, group: '页面' },
   { label: '知识中心', path: '/knowledge', icon: Sparkles, group: '页面' },
   { label: '测试数据集', path: '/dataset', icon: Database, group: '页面' },
-  { label: 'Playground', path: '/playground', icon: Terminal, group: '页面' },
+  // (P2b) Playground 并入用例服务 Tab，入口指向带参路径
+  { label: 'Playground', path: '/testcase?tab=playground', icon: Terminal, group: '页面' },
   { label: '集成配置', path: '/integration', icon: Link2, group: '页面', menuBacked: true },
   { label: '目标环境', path: '/environment', icon: Globe, group: '页面' },
   { label: '通知配置', path: '/notify', icon: Bell, group: '页面', menuBacked: true },

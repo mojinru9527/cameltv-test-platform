@@ -44,6 +44,12 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
     expect(paths).toContain('/testcase?tab=mindmap')
   })
 
+  it('P2b：Playground 并入用例服务 Tab，旧独立路径不再出现', () => {
+    const paths = ALL_COMMAND_ROUTES.map((route) => route.path)
+    expect(paths).not.toContain('/playground')
+    expect(paths).toContain('/testcase?tab=playground')
+  })
+
   it('batch-165：专项测试/性能监控入口已隐藏', () => {
     const paths = ALL_COMMAND_ROUTES.map((route) => route.path)
     expect(paths).not.toContain('/special')

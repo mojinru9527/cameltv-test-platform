@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { Button, Badge, Input } from '@/ui'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent } from '@/components/ui/card'
@@ -22,8 +21,8 @@ import type { PlaygroundCompileResult, PlaygroundExecuteResult, PlaygroundCaseRu
 
 interface DomainOption { id?: number; domain: string; modules: { id?: number; module: string; count: number }[] }
 
-export default function PlaygroundPage() {
-  useDocumentTitle('Playground')
+export default function PlaygroundPanel() {
+  // （P2b）作为用例服务的「Playground」Tab 嵌入，不再是独立页面
 
   // ── 批量功能用例模式 ──
   const [domains, setDomains] = useState<DomainOption[]>([])
@@ -159,9 +158,9 @@ export default function PlaygroundPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Playground</h1>
+        <h2 className="text-lg font-semibold tracking-tight">Playground</h2>
         <p className="text-sm text-muted-foreground mt-1">
           功能用例库批量编译 → Playwright 执行 / 截图 / 回写 UI 任务
         </p>
