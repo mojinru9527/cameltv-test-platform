@@ -40,13 +40,13 @@ test-platform-v2/
 | 需求 / 脑图 | `/requirement` `/mindmap` | 🟡 / ⛔ | 本地持久化与展示可用；真实 LLM、蓝湖与旧 PostgreSQL 快照验收受外部输入阻塞 |
 | API 测试 | `/apitest` | 🟡 | OpenAPI/Swagger 导入、httpx 执行、任务/快照已实现；五入口一致性、生产保护与 Test5 当前契约待验收 |
 | UI 自动化 | `/uitest` | 🟡 | 本地 Runner、环境注入和产物闭环已验证；不能替代体育 Test5/生产业务 E2E |
-| 音视频专项 | `/special` | 🟡 | 已从随机模拟改为真实样本/ffprobe 指标；外部真实流矩阵未完成 |
+| ~~音视频专项~~ | ~~`/special`~~ | 已移除 | batch-165 隐藏菜单后，代码已随死代码清理批次整体删除（路由/服务/模型/页面）；如需恢复从 git 历史取回 |
 | 环境 / 数据集 | `/environment` `/dataset` | 🟡 | 项目级数据和变量链可用；生产目标防误触发仍需统一验证 |
 | 通知 / 集成 | `/notify` `/integration` | ⛔ | 本地模型和错误路径存在；真实 SMTP/Webhook/Jira/TAPD/ELK 缺非生产凭据与端点 |
 | 知识 / Agent / 发布包 | `/knowledge` `/agent-workbench` `/release-bundles` | 🟡 / ⛔ | 无 AI/Wiki/活动发布包时已 fail closed；外部链路和交互标注回归未全部完成 |
 | AI 配置 / DSH 任务 | `/ai-config` `/dsh-tasks` | 🟡 | 项目级 AI 提供方池（Batch A）+ DSH 执行入口（Batch 172/191/202）；无配置即禁用 AI，未配置引导入口已接入 |
 | 开放 API | API-only `/api/v1/open` | 🟡 | 独立 API Token Bearer 鉴权；属于 API-only 能力，前端入口和生产级契约验收不完整 |
-| 性能监控 | `/perftest` | ⛔ | 缺 SoloX、授权真机与采集窗口；不得按页面或 WebSocket 存在判定通过 |
+| ~~性能监控~~ | ~~`/perftest`~~ | 已移除 | 缺 SoloX/真机等外部条件从未可用；代码已随死代码清理批次整体删除（含 WebSocket 采集）；如需恢复从 git 历史取回 |
 | 主题实验室 | `/theme-lab` | ✅ | 本地设计/响应式验证工具，不是业务生产能力 |
 | 运维发布控制 | 独立项目，无产品路由 | ⛔ | Batch 61 在 `../deploy/release-control/` 建设 test-only CLI/领域库；生产适配拒绝，控制面 API/UI 延后到 Batch 62 |
 

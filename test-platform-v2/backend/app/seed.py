@@ -31,16 +31,10 @@ _MENUS = [
     ("menu:apitest", "接口测试", "", "/apitest", "ApiOutlined", 9),
     ("menu:uitest", "UI 自动化", "", "/uitest", "RobotOutlined", 10),
     ("menu:playground", "Playground", "", "/playground", "PlayCircleOutlined", 10),
-    # (batch-165) 专项测试已按用户要求隐藏：注释菜单行，避免新库生成该入口。
-    #     ("menu:special", "专项测试", "", "/special", "PlayCircleOutlined", 11),
     ("menu:schedule", "定时任务", "", "/schedule", "ClockCircleOutlined", 12),
     ("menu:report", "报告中心", "", "/report", "BarChartOutlined", 13),
     ("menu:system", "系统管理", "", "/system", "SettingOutlined", 14),
-    # (batch-165 C165-2) 项目管理已收敛到 我的项目：注释菜单行，避免新库生成入口。
-    #     ("menu:project", "项目管理", "", "/project", "AppstoreOutlined", 15),
     ("menu:myproject", "我的项目", "", "/my-projects", "AppstoreOutlined", 15),
-    # (batch-165 C165-2) 组织管理已折叠进 我的项目：注释菜单行，避免新库生成入口。
-    #     ("menu:organization", "组织管理", "", "/organizations", "AppstoreOutlined", 16),
     ("menu:defect", "缺陷管理", "", "/defect", "BugOutlined", 16),
     ("menu:dataset", "测试数据集", "", "/dataset", "DatabaseOutlined", 17),
     ("menu:integration", "集成配置", "", "/integration", "LinkOutlined", 18),
@@ -51,8 +45,6 @@ _MENUS = [
     ("menu:dsh_tasks", "DSH 任务", "", "/dsh-tasks", "TerminalOutlined", 22),
     # (batch A) AI 模型配置中心
     ("menu:ai_config", "AI 配置", "", "/ai-config", "SettingOutlined", 23),
-    # (batch-165) 性能监控已按用户要求隐藏：注释菜单行，避免新库生成该入口。
-    #     ("menu:perftest", "性能监控", "", "/perftest", "CpuOutlined", 22),
     ("menu:lanhu_evidence", "蓝湖证据包", "", "/lanhu-evidence", "FileTextOutlined", 23),
 ]
 
@@ -105,12 +97,6 @@ _ACTIONS = [
     ("defect:create", "新建缺陷", "button"),
     ("defect:update", "编辑缺陷", "button"),
     ("defect:delete", "删除缺陷", "button"),
-    # 专项测试
-    ("avcheck:list", "查看专项测试", "button"),
-    ("avcheck:detail", "查看专项测试详情", "button"),
-    ("avcheck:create", "创建专项测试", "button"),
-    ("avcheck:delete", "删除专项测试", "button"),
-    ("avcheck:trigger", "触发专项检测", "button"),
     # UI 自动化
     ("uitest:list", "查看UI自动化", "button"),
     ("uitest:detail", "查看UI自动化详情", "button"),
@@ -185,12 +171,6 @@ _ACTIONS = [
     ("lanhu_evidence:run", "创建蓝湖证据包", "button"),
     ("lanhu_evidence:review", "人工审核证据页（OCR 缺失豁免）", "button"),
     ("lanhu_evidence:import", "导入蓝湖证据包", "button"),
-    # 性能监控
-    ("perftest:list", "查看性能监控", "button"),
-    ("perftest:create", "创建性能监控会话", "button"),
-    ("perftest:delete", "删除性能监控会话", "button"),
-    ("perftest:execute", "执行性能监控", "button"),
-    ("perftest:report", "查看性能报告", "button"),
     # AI 配置中心（Batch A）
     ("ai_config:view", "查看 AI 配置", "button"),
     ("ai_config:manage", "管理 AI 配置", "button"),
@@ -227,9 +207,6 @@ _TESTER_ACTIONS = {
     # UI 自动化（生产触发留管理员）
     "uitest:list", "uitest:detail", "uitest:create", "uitest:update",
     "uitest:delete", "uitest:trigger",
-    # 专项测试
-    "avcheck:list", "avcheck:detail", "avcheck:create", "avcheck:delete",
-    "avcheck:trigger",
     # 接口测试（保留；生产执行留管理员）
     "apitest:execute", "apitest:view", "apitest:import", "apitest:generate",
     "apitest:task", "apitest:asset_manage",
@@ -242,8 +219,6 @@ _TESTER_ACTIONS = {
     "menu:ai_config", "ai_config:view",
     # 蓝湖证据包（采集可发起；导入/审核留管理员）
     "lanhu_evidence:view", "lanhu_evidence:run",
-    # 性能监控
-    "perftest:list", "perftest:create", "perftest:delete", "perftest:execute", "perftest:report",
 }
 
 # 运营只读角色（C31-3）：仅查看，无任何写操作
@@ -265,10 +240,8 @@ _VIEWER_ACTIONS = {
     "knowledge:view",
     "wiki:view",
     "lanhu_evidence:view",
-    "perftest:list",
     "apitest:view",
     "uitest:list",
-    "avcheck:list",
     "mission:list",
 }
 

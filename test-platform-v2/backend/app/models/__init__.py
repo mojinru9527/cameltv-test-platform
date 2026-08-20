@@ -5,7 +5,6 @@ from app.models.interaction_edge import InteractionEdge
 from app.models.api_asset import ApiEndpoint, ApiExecutionTask, ApiExecutionTaskItem, ApiImportBatch, ApiService
 from app.models.api_token import ApiToken
 from app.models.audit import AuditLog
-from app.models.av_check import AvCheckMeasurement, AvCheckMetric, AvCheckTask
 from app.models.dataset import Dataset
 from app.models.dsh_task import DshTask
 from app.models.defect import Defect
@@ -34,7 +33,6 @@ from app.models.project import Project, ProjectMember
 from app.models.project_invite import ProjectInvite
 from app.models.notification import NotificationChannel, NotificationLog
 from app.models.organization import Organization, OrganizationMember
-from app.models.perf import PerfDevice, PerfMetric, PerfSession
 from app.models.quality_gate import QualityGateConfig
 from app.models.report_template import ReportTemplate
 from app.models.release_bundle import ReleaseBundle
@@ -106,15 +104,9 @@ __all__ = [
     "Dataset",
     "DshTask",
     "Defect",
-    "AvCheckTask",
-    "AvCheckMetric",
-    "AvCheckMeasurement",
     "UiTestJob",
     "UiTestRun",
     "UiTestScript",
-    "PerfSession",
-    "PerfMetric",
-    "PerfDevice",
     "RequirementDocument",
     "RequirementReview",
     "RequirementModule",

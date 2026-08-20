@@ -14,7 +14,6 @@ vi.mock('../client', () => ({
 import { fetchMenus } from '../auth'
 import { fetchApiEndpoints, fetchApiServices } from '../apitest'
 import { fetchUiJobs, fetchScripts } from '../uitest'
-import { fetchAvTasks } from '../avcheck'
 import { fetchKnowledgeOverview } from '../knowledge'
 import {
   fetchAgentRun,
@@ -39,7 +38,6 @@ describe('StrictMode request cancellation contracts', () => {
     await fetchApiEndpoints({ page: 1 }, signal)
     await fetchUiJobs({ page: 1 }, signal)
     await fetchScripts(signal)
-    await fetchAvTasks({ page: 1 }, signal)
     await fetchKnowledgeOverview(signal)
     await fetchAgentRuns({ page_size: 50 }, signal)
     await fetchAgentRun(7, signal)
@@ -60,7 +58,6 @@ describe('StrictMode request cancellation contracts', () => {
       ['/apitest/endpoints', { params: { page: 1 }, signal }],
       ['/ui-tests', { params: { page: 1 }, signal }],
       ['/ui-tests/scripts', { signal }],
-      ['/av-checks', { params: { page: 1 }, signal }],
       ['/knowledge/overview', { signal }],
       ['/agents/runs', { params: { page_size: 50 }, signal }],
       ['/agents/runs/7', { signal }],

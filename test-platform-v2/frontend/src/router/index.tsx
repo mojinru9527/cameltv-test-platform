@@ -14,8 +14,6 @@ import { Button, Input } from '@/ui'
 const LoginPage = lazy(() => import('@/pages/login'))
 const RegisterPage = lazy(() => import('@/pages/register'))
 const MyProjectsPage = lazy(() => import('@/pages/my-projects'))
-// (batch-165 C165-2) 组织管理已折叠进 我的项目：注释路由懒加载。
-// const OrganizationPage = lazy(() => import('@/pages/organization'))
 const SystemPage = lazy(() => import('@/pages/system'))
 const TestCasePage = lazy(() => import('@/pages/testcase'))
 const TestPlanPage = lazy(() => import('@/pages/testplan'))
@@ -24,11 +22,7 @@ const ReportPage = lazy(() => import('@/pages/report'))
 const SchedulePage = lazy(() => import('@/pages/schedule'))
 const Workbench = lazy(() => import('@/pages/workbench'))
 const DefectPage = lazy(() => import('@/pages/defect'))
-// (batch-165) 专项测试已隐藏：注释路由与懒加载
-// const SpecialPage = lazy(() => import('@/pages/special'))
 const UiTestPage = lazy(() => import('@/pages/uitest'))
-// (batch-165 C165-2) 项目管理已收敛到 我的项目：注释路由懒加载。
-// const ProjectPage = lazy(() => import('@/pages/project'))
 const TracePage = lazy(() => import('@/pages/trace'))
 const RequirementPage = lazy(() => import('@/pages/requirement'))
 const RequirementReviewPage = lazy(() => import('@/pages/requirement/ReviewPage'))
@@ -40,8 +34,6 @@ const DatasetPage = lazy(() => import('@/pages/dataset'))
 const IntegrationPage = lazy(() => import('@/pages/integration'))
 const KnowledgePage = lazy(() => import('@/pages/knowledge'))
 const AgentWorkbenchPage = lazy(() => import('@/pages/agent-workbench'))
-// (batch-165) 性能监控已隐藏：注释路由与懒加载
-// const PerftestPage = lazy(() => import('@/pages/perftest'))
 const OperationsReleasePage = lazy(() => import('@/pages/operations-release'))
 const PlaygroundPage = lazy(() => import('@/pages/playground'))
 const DshTasksPage = lazy(() => import('@/pages/dsh-tasks'))
@@ -212,8 +204,6 @@ export const router = createBrowserRouter([
       { path: 'mindmap', element: <PageLoader><MindmapPage /></PageLoader> },
       { path: 'apitest', element: <PageLoader><ApiTestPage /></PageLoader> },
       { path: 'uitest', element: <PageLoader><UiTestPage /></PageLoader> },
-      // (batch-165) 专项测试已隐藏：注释路由
-      //       { path: 'special', element: <PageLoader><SpecialPage /></PageLoader> },
       { path: 'schedule', element: <PageLoader><SchedulePage /></PageLoader> },
       { path: 'defect', element: <PageLoader><DefectPage /></PageLoader> },
       { path: 'defect/:id', element: <PageLoader><DefectPage /></PageLoader> },
@@ -233,8 +223,6 @@ export const router = createBrowserRouter([
       { path: 'release-bundles/:id', element: <PageLoader><BundleDetailPage /></PageLoader> },
       { path: 'release-bundles/:id/panorama', element: <PageLoader><VersionPanoramaPage /></PageLoader> },
       { path: 'agent-workbench', element: <PageLoader><AgentWorkbenchPage /></PageLoader> },
-      // (batch-165) 性能监控已隐藏：注释路由
-      //       { path: 'perftest', element: <PageLoader><PerftestPage /></PageLoader> },
       { path: 'lanhu-evidence', element: <PageLoader><LanhuEvidencePage /></PageLoader> },
       { path: 'lanhu-evidence/:id', element: <PageLoader><LanhuEvidenceJobDetail /></PageLoader> },
       { path: 'operations-release', element: <PageLoader><OperationsReleasePage /></PageLoader> },

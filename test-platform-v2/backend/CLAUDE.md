@@ -100,11 +100,8 @@ Router (api/v1/)  →  Service (services/)  →  Model (models/)
 | schedule.py | `/api/v1/schedules` | schedule_service | 定时任务 |
 | notify.py | `/api/v1/notify` | notify_service | Webhook 通知 |
 | trace.py | `/api/v1/trace` | trace_service | 质量追溯 |
-| av_check.py | `/api/v1/av-check` | — | 音视频专项 |
 | ui_test.py | `/api/v1/ui-test` | — | UI 自动化 |
 | open_api.py | `/api/v1/open` | — | 开放 API |
-| perf.py | `/api/v1/perf` | perf_service | 性能监控 |
-| perf_ws.py | `/ws/perf` | — | WebSocket 实时指标采集 |
 | environment.py | `/api/v1/environment` | — | 环境/变量管理 |
 | dataset.py | `/api/v1/datasets` | — | 测试数据集 |
 | integration.py | `/api/v1/integration` | — | 集成配置 |

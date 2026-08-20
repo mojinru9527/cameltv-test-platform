@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.v1 import auth, av_check, dashboard, dataset, defect, dsh_tasks, environment, integration, notify, open_api, open_knowledge, ops_releases, organization, perf, perf_ws, playground, project, report, schedule, system, template, token, trace, ui_test, version_mission, agent, interaction_coverage
+from app.api.v1 import auth, dashboard, dataset, defect, dsh_tasks, environment, integration, notify, open_api, open_knowledge, ops_releases, organization, playground, project, report, schedule, system, template, token, trace, ui_test, version_mission, agent, interaction_coverage
 from app.api.v1 import ai_config
 from app.api.v1 import test_case_taxonomy, test_case_crud, test_case_files
 from app.api.v1 import test_plan_crud, test_plan_execution
@@ -37,7 +37,6 @@ api_router.include_router(report.router)
 api_router.include_router(schedule.router)
 api_router.include_router(test_plan_crud.router)
 api_router.include_router(test_plan_execution.router)
-api_router.include_router(av_check.router)
 api_router.include_router(ui_test.router)
 api_router.include_router(requirement_docs.router)
 api_router.include_router(requirement_ai.router)
@@ -74,7 +73,5 @@ api_router.include_router(interaction_coverage.router)
 api_router.include_router(lanhu_evidence_jobs.router)
 api_router.include_router(lanhu_evidence_assets.router)
 api_router.include_router(lanhu_evidence_review.router)
-api_router.include_router(perf.router)
-api_router.include_router(perf_ws.router)
 api_router.include_router(playground.router)
 api_router.include_router(template.router)
