@@ -160,6 +160,8 @@ pytest tests/ -v --tb=short
   - 退役 env：`AI_API_KEY/AI_API_BASE_URL/AI_MODEL/DSH_API_KEY/DSH_BASE_URL/DSH_MODEL/DSH_MODEL_POOL`
     （见 `.env.example` 退役标注）；`DSH_ENABLED/DSH_RUNTIME` 等部署基础设施保留；
   - 迁移幂等：新增迁移必须带「表/列存在检查」守卫（stamp 回退重跑 upgrade 自愈，对齐 b191 惯例）。
+  - 轮换注意：轮换 `SECRET_KEY` 会使存量 Fernet 加密 API Key 全部失效（解密失败已转业务错误
+    `AIProviderUnconfiguredError`，提示重新录入）；轮换后须各项目在「AI 配置」页重新录入 API Key。
 - **DSH 执行（Batch 172 / Batch 184 沙箱加固）**：`services/dsh/` 提供 DeepSeek Harness 执行抽象（`dsh_runner.run_dsh_task`）；
   A 用例生成 harness 模式经 `ai_service._call_ai_api_with_harness`（默认关、失败降级直连）；
   B Agent 工作台 `dsh_execution` 类型走 orchestrator 分发；C DSH 任务模块 `api/v1/dsh_tasks.py` + `models/dsh_task.py`。
