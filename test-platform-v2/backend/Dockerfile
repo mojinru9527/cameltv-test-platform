@@ -62,9 +62,15 @@ COPY test-platform-v2/backend/tests/playwright ./tests/playwright
 
 # lanhu-mcp 是 Git 子模块。优先使用构建上下文中的本地子模块文件
 # （自建服务器/离线构建场景）；缺失时从 remote 拉取（云构建场景）。
-COPY lanhu-mcp/lanhu_mcp_server.py /tmp/lanhu-mcp-local.py
-RUN if [ -s /tmp/lanhu-mcp-local.py ]; then \
-      mkdir -p /app/lanhu-mcp && cp /tmp/lanhu-mcp-local.py /app/lanhu-mcp/lanhu_mcp_server.py && rm -f /tmp/lanhu-mcp-local.py; \
+# 注意：不能以 "COPY lanhu-mcp/..." 探测子模块是否本地存在——COPY 源缺失时
+# 构建会直接失败，RUN 里的回退分支根本不会执行（#300 生产部署回调）。
+# 改用 BuildKit bind-mount：把上下文中的 lanhu-mcp 目录挂进构建环境，
+# 本地构建（子模块已初始化、文件存在）直接复制；云构建（Railway/CI 的
+# checkout 中子模块为未初始化空目录）走 git clone 回退。
+RUN --mount=type=bind,source=lanhu-mcp,target=/lanhu-mcp-src \
+    if [ -s /lanhu-mcp-src/lanhu_mcp_server.py ]; then \
+      mkdir -p /app/lanhu-mcp \
+      && cp /lanhu-mcp-src/lanhu_mcp_server.py /app/lanhu-mcp/lanhu_mcp_server.py; \
     else \
       git clone --depth 1 --branch main https://github.com/mojinru9527/lanhu-mcp.git /tmp/lanhu-mcp \
       && mkdir -p /app/lanhu-mcp \
