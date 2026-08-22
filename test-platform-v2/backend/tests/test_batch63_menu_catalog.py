@@ -114,3 +114,63 @@ def test_tester_menu_entries_exist_in_catalog():
     catalog = {entry[0] for entry in _MENUS}
     orphans = sorted(_TESTER_MENUS - catalog)
     assert orphans == []
+
+
+_C1653_KNOWLEDGE_CHILDREN = [
+    "menu:knowledge:project",
+    "menu:knowledge:platform",
+    "menu:knowledge:graph",
+    "menu:knowledge:artifacts",
+]
+
+
+def test_c1653_knowledge_children_removed_from_seed():
+    """(c165-3 入口收敛) 知识中心四个子项与页内 Tab 完全同源（/knowledge?tab=xxx），
+    菜单种子移除（tester/viewer 角色清单同步移除），HIDDEN_MENU_CODES 拦截存量库
+    旧权限行；父级 menu:knowledge 保留为叶子入口。"""
+    from app.seed import _VIEWER_MENUS
+    from app.services.menu_service import HIDDEN_MENU_CODES
+
+    codes = [entry[0] for entry in _MENUS]
+    for child in _C1653_KNOWLEDGE_CHILDREN:
+        assert child not in codes
+        assert child not in _TESTER_MENUS
+        assert child not in _VIEWER_MENUS
+        assert child in HIDDEN_MENU_CODES
+    # 承接入口：知识中心父级保留，两个角色均持有
+    assert "menu:knowledge" in codes
+    assert "menu:knowledge" in _TESTER_MENUS
+    assert "menu:knowledge" in _VIEWER_MENUS
+
+
+def test_c1653_menu_tree_hides_knowledge_children(db_session):
+    """(c165-3) menu_tree 对存量库生效：知识子项被过滤，父级保留为无子叶子。"""
+    from app.models.rbac import Permission
+    from app.services.menu_service import menu_tree
+
+    parent = Permission(
+        code="menu:knowledge", name="知识中心", type="menu", path="/knowledge", sort=5
+    )
+    db_session.add(parent)
+    db_session.flush()
+    for idx, child in enumerate(_C1653_KNOWLEDGE_CHILDREN, start=1):
+        db_session.add(
+            Permission(
+                code=child,
+                name=child.rsplit(":", 1)[-1],
+                type="menu",
+                parent_id=parent.id,
+                path="/knowledge?tab=x",
+                sort=idx,
+            )
+        )
+    db_session.add(Permission(code="menu:workbench", name="工作台", type="menu", path="/workbench", sort=1))
+    db_session.commit()
+
+    tree = menu_tree(db_session, ["*"])
+    flat = {node.code: node for node in tree}
+    assert "menu:knowledge" in flat
+    assert flat["menu:knowledge"].children == []
+    for child in _C1653_KNOWLEDGE_CHILDREN:
+        assert child not in flat
+    assert "menu:workbench" in flat

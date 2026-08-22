@@ -20,12 +20,14 @@ _MENUS = [
     # ("menu:trace", "质量追溯", "", "/trace", "NodeIndexOutlined", 2),
     ("menu:requirement", "需求文档", "", "/requirement", "FileTextOutlined", 3),
     ("menu:versionmission", "版本发布包", "", "/release-bundles", "GitBranchOutlined", 4),
-    # ── 知识中心（独立分组）──
+    # ── 知识中心 ──
     ("menu:knowledge", "知识中心", "", "/knowledge", "BrainCircuitOutlined", 5),
-    ("menu:knowledge:project", "项目知识", "menu:knowledge", "/knowledge?tab=project", "FolderOpenOutlined", 1),
-    ("menu:knowledge:platform", "平台研发", "menu:knowledge", "/knowledge?tab=platform", "SparklesOutlined", 2),
-    ("menu:knowledge:graph", "知识图谱", "menu:knowledge", "/knowledge?tab=graph", "GitBranchOutlined", 3),
-    ("menu:knowledge:artifacts", "AI审核台", "menu:knowledge", "/knowledge?tab=artifacts", "FileTextOutlined", 4),
+    # (c165-3 入口收敛) 知识中心四个子项与页内 Tab 完全同源（/knowledge?tab=xxx），
+    # 不再生成菜单；menu_service.HIDDEN_MENU_CODES 继续拦截存量库中的旧权限行。
+    # ("menu:knowledge:project", "项目知识", "menu:knowledge", "/knowledge?tab=project", "FolderOpenOutlined", 1),
+    # ("menu:knowledge:platform", "平台研发", "menu:knowledge", "/knowledge?tab=platform", "SparklesOutlined", 2),
+    # ("menu:knowledge:graph", "知识图谱", "menu:knowledge", "/knowledge?tab=graph", "GitBranchOutlined", 3),
+    # ("menu:knowledge:artifacts", "AI审核台", "menu:knowledge", "/knowledge?tab=artifacts", "FileTextOutlined", 4),
     # ── 其余菜单 ──
     # (P2a 入口收敛) 思维导图已并入用例服务「脑图视图」Tab（/mindmap → /testcase?tab=mindmap 重定向），
     # 不再生成菜单；menu_service.HIDDEN_MENU_CODES 继续拦截存量库中的旧权限行。
@@ -232,9 +234,7 @@ _TESTER_ACTIONS = {
 # 运营只读角色（C31-3）：仅查看，无任何写操作
 _VIEWER_MENUS = {
     "menu:workbench", "menu:requirement", "menu:report", "menu:defect",
-    "menu:dataset", "menu:knowledge",
-    "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph",
-    "menu:knowledge:artifacts",
+    "menu:dataset", "menu:knowledge",  # (c165-3) menu:knowledge:* 子项已收敛进页内 Tab
     "menu:myproject",
 }
 
@@ -258,7 +258,7 @@ _TESTER_MENUS = {
     "menu:apitest", "menu:uitest", "menu:schedule", "menu:report",  # (batch-165) menu:special 已隐藏
     "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge",
     "menu:notify", "menu:environment",  # (batch-165) menu:perftest 已隐藏
-    "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph", "menu:knowledge:artifacts",
+    # (c165-3) menu:knowledge:* 子项已收敛进页内 Tab，不再分配菜单权限
     "menu:lanhu_evidence",
     "menu:myproject",
 }
