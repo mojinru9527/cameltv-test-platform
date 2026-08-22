@@ -17,14 +17,8 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarProvider,
   SidebarTrigger,
-  useSidebar,
 } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -56,138 +50,22 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  LayoutDashboard,
-  FileText,
-  FolderOpen,
-  Clock,
-  Bug,
-  BarChart3,
-  Settings,
   LogOut,
   User,
   ChevronDown,
   Monitor,
   Sun,
   Moon,
-  GitBranch,
-  Share2,
   Palette,
   TestTube2,
-  Sparkles,
-  Cpu,
-  Terminal,
-  Database,
-  Link2,
-  Bell,
-  Globe,
   CheckCircle2,
-  type LucideIcon,
 } from '@/lib/icons'
-
-// Backend menu icon string → lucide-react component
-const ICONS: Record<string, LucideIcon> = {
-  DashboardOutlined: LayoutDashboard,
-  NodeIndexOutlined: GitBranch,
-  ShareAltOutlined: Share2,
-  FileTextOutlined: FileText,
-  ProfileOutlined: FolderOpen,
-  ScheduleOutlined: Clock,
-  ApiOutlined: FileText,
-  RobotOutlined: FileText,
-  PlayCircleOutlined: FileText,
-  ClockCircleOutlined: Clock,
-  BarChartOutlined: BarChart3,
-  SettingOutlined: Settings,
-  AppstoreOutlined: LayoutDashboard,
-  BugOutlined: Bug,
-  DatabaseOutlined: Database,
-  LinkOutlined: Link2,
-  NotificationOutlined: Bell,
-  EnvironmentOutlined: Globe,
-  BrainCircuitOutlined: Sparkles,
-  SparklesOutlined: Sparkles,
-  TerminalOutlined: Terminal,
-  GitBranchOutlined: GitBranch,
-  FolderOpenOutlined: FolderOpen,
-  CpuOutlined: Cpu,
-}
+import { NavigationMenuItems } from './NavigationMenuItems'
+import { MoreMenusGroup } from './MoreMenusGroup'
+import { splitMenusByFrequency } from './nav-config'
 
 // Theme lookup helper — delegates to themes.ts registry
 const getTheme = (id: ColorTheme) => getThemeDefinition(id)
-
-function NavigationMenuItems({
-  items,
-  pathname,
-  onNavigate,
-}: {
-  items: MenuItem[]
-  pathname: string
-  onNavigate: (path: string, label: string) => void
-}) {
-  const { isMobile, setOpenMobile } = useSidebar()
-
-  const goTo = (path: string, label: string) => {
-    onNavigate(path, label)
-    if (isMobile) setOpenMobile(false)
-  }
-
-  return items.map((m) => {
-    const Icon = ICONS[m.icon] ?? LayoutDashboard
-    const isActive = pathname === m.path || (m.path !== '/' && pathname.startsWith(m.path))
-    const hasChildren = m.children && m.children.length > 0
-
-    if (hasChildren) {
-      return (
-        <SidebarMenuItem key={m.path || m.code}>
-          <SidebarMenuButton
-            onClick={() => goTo(m.path, m.name)}
-            isActive={isActive}
-            aria-current={isActive ? 'page' : undefined}
-            tooltip={m.name}
-            className="peer/menu-parent"
-          >
-            <Icon aria-hidden="true" />
-            <span>{m.name}</span>
-          </SidebarMenuButton>
-          <SidebarMenuSub>
-            {m.children!.map((child) => {
-              const ChildIcon = ICONS[child.icon] ?? LayoutDashboard
-              const childActive =
-                pathname === child.path ||
-                (child.path !== '/' && pathname.startsWith(child.path))
-              return (
-                <SidebarMenuSubItem key={child.path || child.code}>
-                  <SidebarMenuSubButton
-                    onClick={() => goTo(child.path, child.name)}
-                    isActive={childActive}
-                    aria-current={childActive ? 'page' : undefined}
-                  >
-                    <ChildIcon className="size-3.5" aria-hidden="true" />
-                    <span>{child.name}</span>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-              )
-            })}
-          </SidebarMenuSub>
-        </SidebarMenuItem>
-      )
-    }
-
-    return (
-      <SidebarMenuItem key={m.path || m.code}>
-        <SidebarMenuButton
-          onClick={() => goTo(m.path, m.name)}
-          isActive={isActive}
-          aria-current={isActive ? 'page' : undefined}
-          tooltip={m.name}
-        >
-          <Icon aria-hidden="true" />
-          <span>{m.name}</span>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    )
-  })
-}
 
 function findMenuLabel(items: MenuItem[], target: string, pathname: string): string {
   const flattened = items.flatMap((item) => [item, ...(item.children || [])])
@@ -288,16 +166,13 @@ export default function MainLayout() {
 
   const userInitials = (user?.nickname || user?.username || 'U')[0].toUpperCase()
 
-  // Split menus into three groups: knowledge, primary nav, system
-  const knowledgeMenus = menus.filter((m) =>
-    m.code?.startsWith("menu:knowledge")
-  )
-  const systemMenus = menus.filter((m) =>
-    ['system', 'settings'].includes(m.code?.toLowerCase())
-  )
-  const mainMenus = menus.filter((m) =>
-    !['system', 'settings'].includes(m.code?.toLowerCase()) &&
-    !m.code?.startsWith("menu:knowledge")
+  // (c165-3) 导航按使用频率分层：9 个高频平铺，其余一级菜单收进「更多功能」折叠组
+  // （fail-safe：未在 PRIMARY_MENU_CODES 中的 code 一律落入 more）。
+  // 原 knowledge/system 特例分组随之移除（system 过滤以 'system' 对比 'menu:system'
+  // 形式的 code，从未命中，属死逻辑）。
+  const { primary: primaryMenus, more: moreMenus } = useMemo(
+    () => splitMenusByFrequency(menus),
+    [menus],
   )
 
   return (
@@ -341,43 +216,24 @@ export default function MainLayout() {
               </Button>
             </div>
           )}
-          {/* ── 知识 (Knowledge) ── */}
-          {knowledgeMenus.length > 0 && (
-            <SidebarGroup>
-              <SidebarGroupLabel>知识</SidebarGroupLabel>
-              <SidebarMenu>
-                <NavigationMenuItems
-                  items={knowledgeMenus}
-                  pathname={location.pathname}
-                  onNavigate={navigateMenu}
-                />
-              </SidebarMenu>
-            </SidebarGroup>
-          )}
-
+          {/* ── 高频导航（c165-3 频率分层）── */}
           <SidebarGroup>
             <SidebarGroupLabel>导航菜单</SidebarGroupLabel>
             <SidebarMenu>
               <NavigationMenuItems
-                items={mainMenus}
+                items={primaryMenus}
                 pathname={location.pathname}
                 onNavigate={navigateMenu}
               />
             </SidebarMenu>
           </SidebarGroup>
 
-          {systemMenus.length > 0 && (
-            <SidebarGroup>
-              <SidebarGroupLabel>系统</SidebarGroupLabel>
-              <SidebarMenu>
-                <NavigationMenuItems
-                  items={systemMenus}
-                  pathname={location.pathname}
-                  onNavigate={navigateMenu}
-                />
-              </SidebarMenu>
-            </SidebarGroup>
-          )}
+          {/* ── 低频入口：「更多功能」折叠组（默认收起）── */}
+          <MoreMenusGroup
+            items={moreMenus}
+            pathname={location.pathname}
+            onNavigate={navigateMenu}
+          />
         </SidebarContent>
 
         {/* ── Sidebar footer: user info ── */}
