@@ -209,12 +209,13 @@ pytest tests/ -v --tb=short
   - 模型池（阶段 3）：`DSH_MODEL_POOL`（逗号分隔）+ `dsh_model_allowed` 准入（`/dsh-tasks`
     提交时校验）+ `/dsh-tasks/model-pool` 端点（前端下拉渲染）；空池 = 不限；
   - 使用入口：`docs/DSH测试Agent-测试工程师使用手册.md`；架构：`docs/DSH测试Agent框架设计.md`
-- **DSH node 模式模型修复（Batch fix，生产事故）**：`@deepseek-ai/dsh-base` 固定
+- **DSH node 模式多提供方路由（Batch fix，生产事故）**：`@deepseek-ai/dsh-base` 固定
   `agent-default-model=deepseek-v4-flash`，node 模式**不读 `DSH_MODEL` env** → 任务所选 AI
   提供方模型失效（生产实测 `HTTP_422 Model Not Exist`）。Dockerfile 构建期向
-  `headless`/`agent-team` 两个 profile 的 `cordis.patch.yml` 注入
-  `model: !!js process.env.DSH_MODEL ?? 'deepseek-v4-flash'` 覆盖（runner 已按任务注入
-  provider 模型到 DSH_MODEL；密钥/端点走 DEEPSEEK_API_KEY/DEEPSEEK_BASE_URL env）。
+  `headless`/`agent-team` 两个 profile 的 `cordis.patch.yml` 注入 **llm-pi-ai `platform` 路由**
+  （api=openai-completions，apiKeyEnv=DEEPSEEK_API_KEY，baseURL 读 DEEPSEEK_BASE_URL env，
+  models 读 DSH_MODEL env）→ 任意 OpenAI 兼容端点按项目接入不同模型（DeepSeek 官方/SCNET/
+  Kimi/GLM…）；runner 每任务注入 provider 密钥/端点/模型，生产实测路由生效。
 - **存储保留期清理（`services/storage_retention.py`）**：每日定时（默认 02:30，
   `STORAGE_RETENTION_ENABLED` 开关）按 mtime 清理超保留期（默认 7 天）的
   `ui-runs/<纯数字id>/`、`dsh-sessions/workspaces/ws-*`、会话 `*.jsonl`；

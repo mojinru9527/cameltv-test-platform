@@ -99,6 +99,7 @@ find /app/storage/dsh-sessions/workspaces -maxdepth 1 -type d -name 'ws-*' -mtim
 - DSH 任务失败提示已做可读化映射（`dsh_task_service._friendly_error`）：
   `HTTP_422 Model Not Exist` → 提示核对 AI 配置模型名；`RATE_LIMIT quota` → 提示充值/换提供方；
   `401` → 提示更新密钥；未命中保持原文。
-- 若任务仍报 `HTTP_422: Model Not Exist`，见 Dockerfile 中 `agent-default-model` 补丁说明
-  （node 模式 profile 已内置读 `DSH_MODEL` env 的模型覆盖，随镜像发布；确保部署后
-  `dsh --profile headless --dump-config` 的 `agent-default-model` 含 `process.env.DSH_MODEL`）。
+- 若任务仍报 `HTTP_422: Model Not Exist`，见 Dockerfile 中多提供方补丁说明
+  （node 模式 profile 已内置 llm-pi-ai `platform` 路由，读 `DSH_MODEL`/`DEEPSEEK_BASE_URL` env，
+  任意 OpenAI 兼容端点按项目接入不同模型；部署后验证 `dsh --profile headless --dump-config`
+  的 `llm-pi-ai.providers.platform` 含 `process.env.DEEPSEEK_BASE_URL`）。
