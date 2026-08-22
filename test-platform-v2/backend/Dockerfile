@@ -60,23 +60,20 @@ COPY test-platform-v2/backend/alembic ./alembic
 COPY test-platform-v2/backend/alembic.ini .
 COPY test-platform-v2/backend/tests/playwright ./tests/playwright
 
-# lanhu-mcp 是 Git 子模块。优先使用构建上下文中的本地子模块文件
-# （自建服务器/离线构建场景）；缺失时从 remote 拉取（云构建场景）。
-# 注意：不能以 "COPY lanhu-mcp/..." 探测子模块是否本地存在——COPY 源缺失时
-# 构建会直接失败，RUN 里的回退分支根本不会执行（#300 生产部署回调）。
-# 改用 BuildKit bind-mount：把上下文中的 lanhu-mcp 目录挂进构建环境，
-# 本地构建（子模块已初始化、文件存在）直接复制；云构建（Railway/CI 的
-# checkout 中子模块为未初始化空目录）走 git clone 回退。
-RUN --mount=type=bind,source=lanhu-mcp,target=/lanhu-mcp-src \
-    if [ -s /lanhu-mcp-src/lanhu_mcp_server.py ]; then \
-      mkdir -p /app/lanhu-mcp \
-      && cp /lanhu-mcp-src/lanhu_mcp_server.py /app/lanhu-mcp/lanhu_mcp_server.py; \
-    else \
-      git clone --depth 1 --branch main https://github.com/mojinru9527/lanhu-mcp.git /tmp/lanhu-mcp \
-      && mkdir -p /app/lanhu-mcp \
-      && cp /tmp/lanhu-mcp/lanhu_mcp_server.py /app/lanhu-mcp/lanhu_mcp_server.py \
-      && rm -rf /tmp/lanhu-mcp; \
-    fi
+# lanhu-mcp 是 Git 子模块，云构建（Railway/Vercel/CI）默认不拉取子模块内容。
+# 在构建期直接从子模块 remote 拉取，保证无本地子模块也能构建（长期验证路径）。
+# 注意（2026-08-22 生产部署三连失败复盘）：
+#  - #300 的 "COPY 本地优先、缺失回退" 不可行：Railway builder 以 archive 发运
+#    仓库（子模块空目录被丢弃，lanhu-mcp/ 目录不存在），COPY 源缺失=构建直接失败；
+#  - bind-mount 方案亦不可行：Railway Metal builder 只支持 type=cache 挂载，
+#    报 "dockerfile invalid: other mount types are not supported"。
+# 如自建/离线服务器需要本地子模块文件，请使用独立本地变体 Dockerfile（COPY 方式），
+# 勿改动本 Dockerfile 的 clone 路径。
+RUN git clone --depth 1 --branch main \
+        https://github.com/mojinru9527/lanhu-mcp.git /tmp/lanhu-mcp \
+    && mkdir -p /app/lanhu-mcp \
+    && cp /tmp/lanhu-mcp/lanhu_mcp_server.py /app/lanhu-mcp/lanhu_mcp_server.py \
+    && rm -rf /tmp/lanhu-mcp
 
 # ── DSH 运行时（Batch 191 生产启用）──────────────────────────────
 # npm 发布版 @deepseek-ai/dsh 依赖自洽（dsh-base/dsh-headless 随依赖树安装，
