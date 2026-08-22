@@ -35,6 +35,7 @@ import {
 import { fetchAiResolve, fetchAiProviders, type AiResolveResult, type AiProviderItem } from '@/api/aiConfig'
 import { SCENES, SCENE_BY_ID, sceneLabel, type SceneDef } from './scenes'
 import SceneWizard from './components/SceneWizard'
+import DshImageAttach, { attachFiles, clipPasteImages, type AttachImage } from './components/DshImageAttach'
 
 const STATUS_BADGE: Record<string, { label: string; color: string }> = {
   pending: { label: '等待中', color: 'bg-muted text-muted-foreground' },
@@ -73,6 +74,7 @@ export default function DshTasksPage() {
   const [health, setHealth] = useState<DshHealth | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [taskText, setTaskText] = useState('')
+  const [attachImages, setAttachImages] = useState<AttachImage[]>([])
   const [creating, setCreating] = useState(false)
   const [selected, setSelected] = useState<DshTask | null>(null)
   const [detail, setDetail] = useState<DshTask | null>(null)
@@ -206,10 +208,15 @@ export default function DshTasksPage() {
 
   const handleCreate = async () => {
     if (!taskText.trim()) return
+    if (attachImages.some((im) => !im.file_id)) {
+      toast.error('图片仍在上传中，请稍候')
+      return
+    }
     setCreating(true)
     try {
       const params: Record<string, any> = {}
       if (selectedModel) params.model = selectedModel
+      if (attachImages.length) params.image_files = attachImages.map((im) => im.file_id)
       if (taskMode === 'team') {
         params.batch_mode = batchMode
         params.team_kind = teamKind
@@ -520,9 +527,17 @@ export default function DshTasksPage() {
               id="dsh-task-text"
               value={taskText}
               onChange={(e) => setTaskText(e.target.value)}
+              onPaste={(e) => {
+                const files = clipPasteImages(e)
+                if (files.length) {
+                  e.preventDefault()
+                  attachFiles(setAttachImages, files)
+                }
+              }}
               placeholder="例如：检查 test-platform-v2 后端结构并总结；或：跑一遍接口回归并输出结果"
               rows={5}
             />
+            <DshImageAttach images={attachImages} setImages={setAttachImages} />
             {/* Batch 191：任务模式选择（标准/团队） */}
             <div>
               <Label htmlFor="dsh-task-mode">任务模式</Label>

@@ -209,6 +209,13 @@ pytest tests/ -v --tb=short
   - 模型池（阶段 3）：`DSH_MODEL_POOL`（逗号分隔）+ `dsh_model_allowed` 准入（`/dsh-tasks`
     提交时校验）+ `/dsh-tasks/model-pool` 端点（前端下拉渲染）；空池 = 不限；
   - 使用入口：`docs/DSH测试Agent-测试工程师使用手册.md`；架构：`docs/DSH测试Agent框架设计.md`
+- **AI 配置模型发现（Batch fix）**：`POST /ai-config/providers/discover-models` 调用提供方
+  `GET /models`（OpenAI 兼容）返回模型清单，前端「获取模型列表」按钮免手填；401/无 /models
+  转可读错误，仍可手动填写。
+- **DSH 任务图片附件（Batch fix）**：`POST /dsh-tasks/upload-image`（PNG/JPEG/WebP/GIF，魔数
+  校验，≤10MB）→ file_id 经 `params.image_files` 提交（32 位 hex 校验）→ 执行时
+  `dsh_attachment_service.resolve_images` 复制到工作区 `attachments/`，runner 在任务文本
+  末尾追加 read_image 提示；视觉模型（如官方 deepseek-v4-flash-vision-exp）可查看附件。
 - **DSH node 模式多提供方路由（Batch fix，生产事故）**：`@deepseek-ai/dsh-base` 固定
   `agent-default-model=deepseek-v4-flash`，node 模式**不读 `DSH_MODEL` env** → 任务所选 AI
   提供方模型失效（生产实测 `HTTP_422 Model Not Exist`）。Dockerfile 构建期向

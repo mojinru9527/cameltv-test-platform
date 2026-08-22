@@ -88,6 +88,20 @@ export async function cancelDshTask(id: number): Promise<{ id: number; status: s
   return api.post(`/dsh-tasks/${id}/cancel`)
 }
 
+// ── 图片附件（Batch fix：对齐 DSH web 贴图） ──
+export interface DshImageUploadResult {
+  file_id: string
+  filename: string
+  bytes: number
+}
+
+/** 上传任务图片附件（PNG/JPEG/WebP/GIF，≤10MB）；提交任务时放 params.image_files */
+export async function uploadDshTaskImage(file: File): Promise<DshImageUploadResult> {
+  const form = new FormData()
+  form.append('file', file)
+  return api.post('/dsh-tasks/upload-image', form)
+}
+
 // ── B2 产物闭环：任务产物回链 ──
 
 export interface DshTaskArtifact {

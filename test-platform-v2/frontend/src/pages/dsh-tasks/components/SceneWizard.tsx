@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, AlertCircle } from '@/lib/icons'
 import { createDshTask } from '@/api/dshTasks'
+import DshImageAttach, { attachFiles, clipPasteImages, type AttachImage } from './DshImageAttach'
 import type { AiProviderItem } from '@/api/aiConfig'
 import type { SceneDef } from '../scenes'
 
@@ -24,6 +25,7 @@ interface SceneWizardProps {
 export default function SceneWizard({ open, onOpenChange, scene, providers, initialInput, onSubmitted }: SceneWizardProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [input, setInput] = useState('')
+  const [images, setImages] = useState<AttachImage[]>([])
   // Step 2 配置
   const [providerId, setProviderId] = useState<string>('')
   const [model, setModel] = useState<string>('')
@@ -39,6 +41,7 @@ export default function SceneWizard({ open, onOpenChange, scene, providers, init
     if (!open) return
     setStep(1)
     setInput(initialInput ?? '')
+    setImages([])
     setMode('team')
     setBatchMode('full')
     setTeamKind('tester')
@@ -73,6 +76,10 @@ export default function SceneWizard({ open, onOpenChange, scene, providers, init
   const handleSubmit = async () => {
     const text = taskText.trim()
     if (!text) return
+    if (images.some((im) => !im.file_id)) {
+      toast.error('图片仍在上传中，请稍候')
+      return
+    }
     setSubmitting(true)
     try {
       const params: Record<string, any> = {}
@@ -81,6 +88,7 @@ export default function SceneWizard({ open, onOpenChange, scene, providers, init
         params.batch_mode = batchMode
         params.team_kind = teamKind
       }
+      if (images.length) params.image_files = images.map((im) => im.file_id)
       await createDshTask(text, params, mode, scene.id, { text: input })
       toast.success('DSH 任务已提交')
       onSubmitted()
@@ -129,9 +137,17 @@ export default function SceneWizard({ open, onOpenChange, scene, providers, init
               id="scene-wizard-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onPaste={(e) => {
+                const files = clipPasteImages(e)
+                if (files.length) {
+                  e.preventDefault()
+                  attachFiles(setImages, files)
+                }
+              }}
               placeholder={scene.inputPlaceholder}
               rows={scene.inputRows}
             />
+            <DshImageAttach images={images} setImages={setImages} />
           </div>
         )}
 

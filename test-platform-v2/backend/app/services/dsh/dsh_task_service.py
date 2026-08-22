@@ -242,6 +242,7 @@ def execute_task(db, task: DshTask, runner=None) -> None:
             workspace=params.get("workspace") or None,
             model=params.get("model") or None,  # DSH 测试 Agent 框架：模型池按任务指定
             provider=provider,
+            images=params.get("image_files") or None,
         )
         task.status = "success" if result.exit_code == 0 else "failed"
         task.output_text = (result.final_response or "")[:20000]
@@ -412,6 +413,7 @@ def _team_runner(
             timeout=settings.dsh_team_timeout_seconds,
             extra_env={"DSH_SYSTEM_PROMPT": persona},
             provider=provider,
+            images=params.get("image_files") or None,
         )
         result_box.put(result)
     except Exception as exc:  # noqa: BLE001 - 执行线程异常兜底

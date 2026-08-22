@@ -243,6 +243,38 @@ class AiConfigService:
         except Exception as exc:  # noqa: BLE001 - 连通性测试需吞掉具体异常转为可读信息
             return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
 
+    def discover_models(self, api_base_url: str = "", api_key: str = "") -> dict:
+        """调用提供方公开的 GET /models 发现可用模型清单（OpenAI 兼容）。
+
+        新增提供方时替代手填模型清单：返回 data[].id 列表；未实现 /models 的
+        提供方返回可读错误，用户仍可手动填写。
+        """
+        import httpx
+
+        base = (api_base_url or _DEEPSEEK_OFFICIAL_URL).strip().rstrip("/")
+        if not api_key:
+            return {"ok": False, "error": "请先填写 API Key 再获取模型列表"}
+        try:
+            resp = httpx.get(
+                f"{base}/models",
+                headers={"Authorization": f"Bearer {api_key}"},
+                timeout=15.0,
+            )
+            if resp.status_code == 401:
+                return {"ok": False, "error": "API Key 无效（401）——请确认密钥"}
+            resp.raise_for_status()
+            data = resp.json()
+            items = data.get("data") if isinstance(data, dict) else None
+            if not isinstance(items, list):
+                return {"ok": False, "error": "提供方返回格式不含模型清单（/models），请手动填写"}
+            ids = [m.get("id") for m in items if isinstance(m, dict) and m.get("id")]
+            ids = [i for i in ids if i]
+            if not ids:
+                return {"ok": False, "error": "提供方 /models 未返回模型，请手动填写"}
+            return {"ok": True, "models": ids, "count": len(ids)}
+        except Exception as exc:  # noqa: BLE001 - 发现失败转为可读提示
+            return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+
 
 def _models_list(models_json: str) -> list[str]:
     try:
