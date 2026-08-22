@@ -60,13 +60,17 @@ COPY test-platform-v2/backend/alembic ./alembic
 COPY test-platform-v2/backend/alembic.ini .
 COPY test-platform-v2/backend/tests/playwright ./tests/playwright
 
-# lanhu-mcp 是 Git 子模块，云构建（Railway/Vercel/CI）默认不拉取子模块内容。
-# 这里在构建期直接从子模块 remote 拉取，保证无本地子模块也能构建。
-RUN git clone --depth 1 --branch main \
-        https://github.com/mojinru9527/lanhu-mcp.git /tmp/lanhu-mcp \
-    && mkdir -p /app/lanhu-mcp \
-    && cp /tmp/lanhu-mcp/lanhu_mcp_server.py /app/lanhu-mcp/lanhu_mcp_server.py \
-    && rm -rf /tmp/lanhu-mcp
+# lanhu-mcp 是 Git 子模块。优先使用构建上下文中的本地子模块文件
+# （自建服务器/离线构建场景）；缺失时从 remote 拉取（云构建场景）。
+COPY lanhu-mcp/lanhu_mcp_server.py /tmp/lanhu-mcp-local.py
+RUN if [ -s /tmp/lanhu-mcp-local.py ]; then \
+      mkdir -p /app/lanhu-mcp && cp /tmp/lanhu-mcp-local.py /app/lanhu-mcp/lanhu_mcp_server.py && rm -f /tmp/lanhu-mcp-local.py; \
+    else \
+      git clone --depth 1 --branch main https://github.com/mojinru9527/lanhu-mcp.git /tmp/lanhu-mcp \
+      && mkdir -p /app/lanhu-mcp \
+      && cp /tmp/lanhu-mcp/lanhu_mcp_server.py /app/lanhu-mcp/lanhu_mcp_server.py \
+      && rm -rf /tmp/lanhu-mcp; \
+    fi
 
 # ── DSH 运行时（Batch 191 生产启用）──────────────────────────────
 # npm 发布版 @deepseek-ai/dsh 依赖自洽（dsh-base/dsh-headless 随依赖树安装，
