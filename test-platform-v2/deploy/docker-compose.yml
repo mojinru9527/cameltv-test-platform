@@ -90,6 +90,9 @@ services:
       - DSH_TEAM_TIMEOUT_SECONDS=${DSH_TEAM_TIMEOUT_SECONDS:-1800}
       - DSH_TEAM_HEARTBEAT_SECONDS=${DSH_TEAM_HEARTBEAT_SECONDS:-60}
       - DSH_MAX_CONCURRENT=${DSH_MAX_CONCURRENT:-1}
+      # 生产 Linux 用 node 运行时（镜像未内置 deepseek-harness-sdk，python-sdk 不可用）；
+      # NodeSource Node 22 全局包布局为 /usr/lib/node_modules/...（见 Dockerfile 注释）
+      - DSH_HARNESS_PATH=${DSH_HARNESS_PATH:-/usr/lib/node_modules/@deepseek-ai/dsh/lib/bin.js}
       # ── 存储保留期清理（生产磁盘防护）──
       - STORAGE_RETENTION_ENABLED=${STORAGE_RETENTION_ENABLED:-false}
       - STORAGE_RETENTION_DAYS=${STORAGE_RETENTION_DAYS:-7}
