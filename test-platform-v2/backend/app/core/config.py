@@ -154,6 +154,14 @@ class Settings(BaseSettings):
     # 逗号分隔可用模型清单（如 "deepseek-v4-flash,deepseek-v4-pro"）；空 = 不限（仅校验非空串）。
     # 平台侧设置页据此渲染模型下拉，任务经 params.model 按任务指定，runner 注入 DSH_MODEL。
     dsh_model_pool: str = ""
+    # ── 存储保留期清理（生产磁盘防护）──
+    # 生产 Railway 卷曾被 ui-runs/dsh-sessions 累积写满导致 DSH 任务 ENOSPC；
+    # 按 mtime 清理超期旧产物（ui-runs 运行目录 + ws-* 工作区 + 会话 jsonl）。
+    storage_retention_enabled: bool = False          # 总开关；生产建议开启
+    storage_retention_days: int = 7                  # 超过 N 天的旧产物删除
+    storage_retention_hour: int = 2                  # 每日执行时刻（Asia/Shanghai）
+    storage_retention_minute: int = 30
+    storage_retention_root: str = ""                 # 清理根目录；空 = 复用 dsh_session_root 父目录（生产 /app/storage）
 
     # ── AI 降级 / 超时（DeepSeek 分类器不可用时的本地降级提取）──
     ai_timeout_seconds: float = 180.0          # 单次 AI 调用超时（秒）

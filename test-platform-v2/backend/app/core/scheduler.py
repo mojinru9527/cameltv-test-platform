@@ -433,6 +433,35 @@ def init_scheduler():
     except Exception as e:
         logger.error(f"[scheduler] Failed to register graph evolution: {e}")
 
+    # ── 存储保留期清理（每日定时 + 启动即跑；生产磁盘防护）──
+    try:
+        from app.core.config import settings
+        from app.services.storage_retention import cleanup_storage
+
+        if settings.storage_retention_enabled:
+            scheduler.add_job(
+                func=cleanup_storage,
+                trigger=CronTrigger(
+                    hour=settings.storage_retention_hour,
+                    minute=settings.storage_retention_minute,
+                ),
+                id="storage_retention_cleanup",
+                replace_existing=True,
+            )
+            cleanup_storage()
+            logger.info(
+                "[scheduler] Storage retention cleanup registered (daily %02d:%02d)",
+                settings.storage_retention_hour,
+                settings.storage_retention_minute,
+            )
+        else:
+            logger.info(
+                "[scheduler] Storage retention cleanup disabled "
+                "(STORAGE_RETENTION_ENABLED=false)"
+            )
+    except Exception as e:
+        logger.error(f"[scheduler] Failed to register storage retention: {e}")
+
 
 def shutdown_scheduler():
     """Called at app shutdown."""

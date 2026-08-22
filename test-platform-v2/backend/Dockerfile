@@ -102,8 +102,27 @@ RUN npm install -g pnpm@11 \
         '  disabled: true' \
         '- id: tool-subagent-list-agents' \
         '  disabled: true' \
+        '' \
+        '# 模型走平台注入：dsh-base 固定 agent-default-model=deepseek-v4-flash，' \
+        '# node 模式不读 DSH_MODEL → 任务所选 AI 提供方模型失效（生产实测 422 Model Not Exist）。' \
+        '# 此处改为读取 DSH_MODEL env（平台 runner 已按任务注入 provider 模型），缺失回退原默认。' \
+        '- id: agent-default-model' \
+        '  config:' \
+        '    provider: deepseek-official' \
+        "    model: !!js process.env.DSH_MODEL ?? 'deepseek-v4-flash'" \
         > /home/cameltv/.dsh/profiles/agent-team/cordis.patch.yml \
     && DSH_HOME=/home/cameltv/.dsh dsh --profile agent-team --dump-config >/dev/null \
+    # headless profile 由 CLI 首次运行才生成：构建期预生成并注入同一模型覆盖，
+    # 否则平台 single 模式任务永远用 dsh-base 固定默认模型
+    && DSH_HOME=/home/cameltv/.dsh dsh --profile headless --dump-config >/dev/null \
+    && printf '%s\n' \
+        '# 模型走平台注入：读取 DSH_MODEL env（runner 按任务 AI 提供方注入），缺失回退默认' \
+        '- id: agent-default-model' \
+        '  config:' \
+        '    provider: deepseek-official' \
+        "    model: !!js process.env.DSH_MODEL ?? 'deepseek-v4-flash'" \
+        > /home/cameltv/.dsh/profiles/headless/cordis.patch.yml \
+    && DSH_HOME=/home/cameltv/.dsh dsh --profile headless --dump-config >/dev/null \
     && chown -R cameltv:cameltv /home/cameltv/.dsh
 
 RUN mkdir -p /app/storage /app/storage/lanhu-data /ms-playwright "${XDG_CACHE_HOME}" \
