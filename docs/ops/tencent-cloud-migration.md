@@ -2,7 +2,7 @@
 title: "腾讯云广州生产迁移手册（swiftbugs.cn）"
 owner: "devops"
 created: "2026-08-13"
-status: "draft"
+status: "completed"
 tags: ["tencent-cloud", "production", "migration", "icp", "swiftbugs.cn"]
 related: ["../test-platform-v2/config/runtime/production.env.example", "../test-platform-v2/scripts/migrate-tencent-production.sh", "railway-storage.md"]
 ---
@@ -11,7 +11,11 @@ related: ["../test-platform-v2/config/runtime/production.env.example", "../test-
 
 > 目标：把测试平台生产环境从 **Vercel（前端）+ Railway（后端）+ Supabase（PostgreSQL）**
 > 迁移到 **腾讯云广州轻量服务器单机部署**（Docker Compose：Nginx 前端 + FastAPI 后端 + PostgreSQL）。
-> 域名：`swiftbugs.cn`（个人备案中）。
+> 域名：`swiftbugs.cn`（个人备案已通过：粤ICP备2026121122号-1）。
+
+> ✅ **执行状态（2026-08-22 已完成并上线验证）**：
+> 所有阶段已执行完毕，`https://swiftbugs.cn` 已可访问（Let's Encrypt 证书已签发、登录/工作台/统计数据/备案号 footer 均验证通过）。
+> 实际执行记录与经验见附录 A；旧 Vercel/Railway/Supabase 保留观察 ≥24h 后按 §8 下线。
 
 ## 1. 目标架构
 
@@ -34,11 +38,11 @@ related: ["../test-platform-v2/config/runtime/production.env.example", "../test-
 
 | # | 资源 | 要求 | 状态 |
 |---|------|------|------|
-| 1 | 账号实名 | 个人实名（人脸核验），新用户新实名才有优惠价 | ☐ |
-| 2 | 域名 `swiftbugs.cn` | 腾讯云购买 + **域名实名认证**，所有者=备案主体（本人姓名） | ☐ |
-| 3 | 服务器 | 广州轻量 2核4G 起（推荐 4核4G 38元/年秒杀，**年付**；备案要求订阅≥3个月） | ☐ |
-| 4 | ICP 备案 | 域名实名满 3 个自然日后提交；腾讯云初审 1-2 工作日 + 管局终审 ≤20 工作日 | ☐ |
-| 5 | 安全组 | 备案通过前**只放行 22**；通过后放行 80/443 | ☐ |
+| 1 | 账号实名 | 个人实名（人脸核验），新用户新实名才有优惠价 | ✅ 完成 |
+| 2 | 域名 `swiftbugs.cn` | 腾讯云购买 + **域名实名认证**，所有者=备案主体（本人姓名） | ✅ 完成 |
+| 3 | 服务器 | 广州轻量 2核4G 起（推荐 4核4G 38元/年秒杀，**年付**；备案要求订阅≥3个月） | ✅ 完成（111.230.155.116 / Ubuntu 24.04 / 4C4G） |
+| 4 | ICP 备案 | 域名实名满 3 个自然日后提交；腾讯云初审 1-2 工作日 + 管局终审 ≤20 工作日 | ✅ 完成（粤ICP备2026121122号-1） |
+| 5 | 安全组/防火墙 | 备案通过前**只放行 22**；通过后放行 80/443 | ✅ 完成（控制台 + ufw 双放行） |
 
 > ⚠️ 备案等待期纪律：备案通过前**不得用公网 80/443 对外提供服务**。等待期只做镜像构建、环境配置、本地数据演练。
 
@@ -226,3 +230,42 @@ docker compose --project-name cameltv-tp-production --env-file config/runtime/pr
 - 单机 Compose：`test-platform-v2/deploy/docker-compose.yml`
 - 蓝湖证据卷：`docs/ops/railway-storage.md`
 - 灰度/发布节奏：`docs/灰度放量SOP.md`、`docs/agent-team/release-cadence.md`
+
+## 附录 A：执行记录（2026-08-22）
+
+> 本次实际执行（DeepSeek Harness 会话驱动，11 项任务全部完成并验证）。
+> 服务器：`111.230.155.116`（Ubuntu 24.04 / 4C4G / Docker 29.7.2 + Compose v5.4.0）。
+
+### A1. 执行概要
+
+| 阶段 | 结果 | 备注 |
+|------|------|------|
+| Supabase 全库 dump | ✅ 15.1MB（PG 17.6 custom 格式） | 本机 Docker 用 `postgres:17-alpine`；6543 transaction pooler 可连，6544 session pooler 超时 |
+| 代码部署 | ✅ 本地打包 2.4MB tar → scp | **GitHub 直连服务器超时不可用**，改为本地打包传输（含 lanhu-mcp 子模块文件） |
+| 数据库恢复 | ✅ pg_restore `--clean --if-exists` | dump 是 PG17 格式（1.16），需 `postgres:17-alpine` 的 pg_restore 连 PG16 服务器；`supabase_vault` 扩展缺失（测试平台不使用，可忽略）；`transaction_timeout` 参数 PG16 不支持（无害提示） |
+| Alembic | ✅ 单头 `20260818_ai_provider` | `#294` 修复（server_default 布尔 PG 兼容）必须用 main 分支而非 release/v2.10.0 |
+| /app/storage 卷 | ✅ 403MB 完整迁移 | railway CLI 已登录 → `railway ssh config --dry-run` 拿 User id → 直接 OpenSSH 打包 → 下载 → 上传 → `docker run --user 0:0` 拷贝进卷（受限文件 root 持有） |
+| 镜像构建 | ✅ 本机构建 + docker save/load | 服务器构建不可行：PyPI 17KB/s、apt/nodesource/npmmirror 均 <15KB/s；本机（有代理）构建 backend 5.3GB/前端 27MB 后上传加载 |
+| Caddy HTTPS | ✅ Let's Encrypt 正式签发（swiftbugs.cn + www） | 证书/配置在 `/etc/caddy/Caddyfile`；`caddy reload` 不触发重试，需 `systemctl restart` |
+| 防火墙 | ✅ 控制台规则 + **ufw 放行 80/443** | 关键：腾讯云轻量服务器预装 **ufw 且默认 DROP**，仅控制台放行不够，必须 `ufw allow 80/tcp && ufw allow 443/tcp` |
+| DNS | ✅ @ + www A 记录 → 111.230.155.116 | 传播后 Caddy 自动申请证书 |
+| 冒烟 | ✅ health 200 / 登录 / 工作台 11388 用例 / 备案号 footer | sportsadmin 密码验证通过；AI provider Fernet 解密 OK |
+
+### A2. 关键经验（后续运维复用）
+
+1. **服务器无法直连 GitHub/PyPI/npm**：国内轻量服务器出网受限（GitHub TLS 中断、PyPI 17KB/s）。解决 = 本地构建镜像 `docker save` → scp → `docker load`；代码用本地 tar 打包传输。
+2. **ufw 是隐藏拦截层**：腾讯云控制台防火墙规则之外，实例内 `ufw status` 必须同步放行 80/443，否则 ACME 验证和公网访问全部失败。
+3. **Dockerfile 构建期 clone lanhu-mcp 需改本地 COPY**：`COPY lanhu-mcp/lanhu_mcp_server.py /tmp/lanhu-mcp-local.py` + `RUN if [ -s ... ]` 条件分支，本地文件缺失时回退 git clone（云构建兼容）。此修改已合入 main（待 PR 确认）。
+4. **SECRET_KEY 必须复用 Railway 生产值**：Fernet 密钥 = sha256(SECRET_KEY)，且 AI provider 的 `api_key_encrypted` 用它解密。本地旧 production.env 的 SECRET_KEY（43 字符）与 Railway 生产（64 字符）不同，导致 `InvalidToken`。用 `railway variable list --kv` 拉取生产值对齐。
+5. **PG 密码不一致**：compose `up` 不重建已存在容器，POSTGRES_PASSWORD 只在首次初始化生效；环境文件改密码后必须 `ALTER USER` 或 `--force-recreate`，DATABASE_URL 密码需与容器实际一致。
+6. **Nginx 反代 DNS 缓存**：backend 容器 recreate 后 IP 变化，frontend Nginx 缓存的旧 DNS 导致 `/api` 502；重启 frontend 刷新即可。
+7. **前端端口映射**：Caddy 占宿主 80，前端容器须映射 `127.0.0.1:8080:80`（改主 compose `docker-compose.yml` 的 `FRONTEND_PORT` 硬编码，override 追加端口会与主配置合并冲突）。
+8. **railway ssh 直接连**：`railway ssh` 子命令会挂起；用 `railway ssh config --dry-run` 取 User id 后直接 `ssh <user>@ssh.railway.com`。
+9. **admin 密码为验收时重置值**：旧 production.env 的 `ADMIN_PASSWORD` 是发布初始密码，生产验收被临时重置过；当前有效管理员密码为 sportsadmin（体育平台管理员）+ 验收时设置的新值。
+
+### A3. 待办（上线后）
+
+- [ ] 旧 Vercel/Railway/Supabase 保留观察 ≥24h（截止 2026-08-23 24:00）后按 §8 下线
+- [ ] 确认 admin 账号当前有效密码或执行密码重置
+- [ ] Dockerfile lanhu-mcp 本地 COPY 修改合入 main（PR 流程）
+- [ ] 迁移经验（附录 A2）同步到 `docs/common-pitfalls.md`
