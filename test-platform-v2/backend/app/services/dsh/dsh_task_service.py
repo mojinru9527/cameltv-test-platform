@@ -22,6 +22,7 @@ from __future__ import annotations
 import json
 import logging
 import queue
+import re
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -173,6 +174,50 @@ def _resolve_task_provider(db, task: DshTask, params: dict) -> EffectiveAiConfig
     return EffectiveAiConfig(provider)
 
 
+# ── 生产事故可读性：harness 原始错误 → 中文提示（Batch fix）──
+# 裸错误如 "dsh: HTTP_422: Model Not Exist: deepseek-v4-flash" 用户无法定位；
+# 匹配到已知模式时给出可操作建议，未命中保持原文（含提供方名便于多提供方定位）。
+_DSH_ERROR_RULES: list[tuple[re.Pattern, object]] = [
+    (
+        re.compile(r"HTTP_422.*?Model Not Exist:\s*([\w.\-]+)", re.IGNORECASE),
+        lambda m: (
+            f'AI 模型 "{m.group(1)}" 在当前提供方不存在（HTTP 422）——'
+            "请到「AI 配置」核对提供方填写的模型名称是否与提供方支持的一致"
+        ),
+    ),
+    (
+        re.compile(r"RATE_LIMIT.*?(quota|exceeded)", re.IGNORECASE),
+        lambda m: (
+            "AI 提供方额度不足（Token Plan 已用完，RATE_LIMIT）——"
+            "请充值或更换提供方"
+        ),
+    ),
+    (
+        re.compile(r"HTTP_401|401.*?(Unauthorized|invalid|key)", re.IGNORECASE),
+        lambda m: "AI 提供方 API Key 无效或已过期（401）——请到「AI 配置」更新密钥",
+    ),
+    (
+        re.compile(r"HTTP_429|429.*?(rate|limit)", re.IGNORECASE),
+        lambda m: "AI 提供方请求过频（429）——请稍后重试",
+    ),
+]
+
+
+def _friendly_error(error: str, provider_name: str = "") -> str:
+    """把 harness 原始错误映射为可读中文；不匹配时原样返回。"""
+    text = (error or "").strip()
+    if not text:
+        return text
+    for pattern, repl in _DSH_ERROR_RULES:
+        match = pattern.search(text)
+        if match:
+            msg = repl(match)
+            if provider_name:
+                msg += f"（提供方：{provider_name}）"
+            return msg[:2000]
+    return text
+
+
 def execute_task(db, task: DshTask, runner=None) -> None:
     """执行已认领任务并写回结果/错误。runner 可注入用于测试。
 
@@ -200,7 +245,14 @@ def execute_task(db, task: DshTask, runner=None) -> None:
         )
         task.status = "success" if result.exit_code == 0 else "failed"
         task.output_text = (result.final_response or "")[:20000]
-        task.error = (result.error or "")[:2000] if result.exit_code != 0 else ""
+        task.error = (
+            _friendly_error(
+                result.error or "",
+                provider.provider_name if provider else "",
+            )[:2000]
+            if result.exit_code != 0
+            else ""
+        )
         task.session_dir = result.session_dir
         task.finished_at = _now()
         db.commit()
@@ -214,7 +266,7 @@ def execute_task(db, task: DshTask, runner=None) -> None:
                 logger.exception("dsh artifact ingest failed for task %s", task.id)
     except Exception as exc:  # noqa: BLE001 - 任务失败写回
         task.status = "failed"
-        task.error = str(exc)[:2000]
+        task.error = _friendly_error(str(exc))[:2000]
         task.finished_at = _now()
         db.commit()
 
@@ -444,7 +496,14 @@ def _execute_team(db, task: DshTask, params: dict, runner, provider: "EffectiveA
 
     task.status = "success" if result.exit_code == 0 else "failed"
     task.output_text = (result.final_response or "")[:20000]
-    task.error = (result.error or "")[:2000] if result.exit_code != 0 else ""
+    task.error = (
+        _friendly_error(
+            result.error or "",
+            provider.provider_name if provider else "",
+        )[:2000]
+        if result.exit_code != 0
+        else ""
+    )
     task.session_dir = result.session_dir
     task.finished_at = _now()
     db.commit()

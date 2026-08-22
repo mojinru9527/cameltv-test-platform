@@ -5,7 +5,8 @@ UI 测试产物累积写满，导致新建 DSH 任务 ENOSPC。本服务按 mtim
 超过 `storage_retention_days` 天的旧产物：
 
 - `{root}/ui-runs/<数字运行id>/`：UI 测试运行产物（截图/录像，最大占用源）；
-  只清理纯数字目录，`plan-sync`（计划执行逐用例产物，与历史计划关联）默认不清理。
+  只清理纯数字目录，`plan-sync`（计划执行逐用例产物，与历史计划关联）仅在
+  `STORAGE_RETENTION_INCLUDE_PLAN_SYNC=true` 时按同一保留期清理。
 - `{root}/dsh-sessions/workspaces/ws-*`：DSH 任务隔离工作区。
 - `{root}/dsh-sessions/*.jsonl*`：DSH 会话日志。
 
@@ -134,12 +135,38 @@ def cleanup_storage() -> dict:
         )
         sf_deleted, sf_freed = _purge_files(root / "dsh-sessions", ".jsonl", cutoff)
 
+        # plan-sync（计划执行逐用例产物）与历史计划记录关联，默认不清理；
+        # 显式开启 STORAGE_RETENTION_INCLUDE_PLAN_SYNC=true 后按同一保留期清理。
+        ps_deleted = 0
+        ps_freed = 0
+        if settings.storage_retention_include_plan_sync:
+            plan_sync_root = root / "ui-runs" / "plan-sync"
+            if plan_sync_root.is_dir():
+                for child in plan_sync_root.iterdir():
+                    try:
+                        if not child.is_dir():
+                            continue
+                        mtime = child.stat().st_mtime
+                        if mtime >= cutoff:
+                            continue
+                        size = _dir_size(child)
+                        shutil.rmtree(child, ignore_errors=True)
+                        if not child.exists():
+                            ps_deleted += 1
+                            ps_freed += size
+                    except OSError as exc:  # noqa: PERF203
+                        logger.warning(
+                            "[storage-retention] skip plan-sync %s: %s", child, exc
+                        )
+
         stats["ui_runs_deleted"] = ui_deleted
         stats["ui_runs_freed_mb"] = round(ui_freed / 1024 / 1024, 1)
         stats["workspaces_deleted"] = ws_deleted
         stats["workspaces_freed_mb"] = round(ws_freed / 1024 / 1024, 1)
         stats["session_files_deleted"] = sf_deleted
         stats["session_files_freed_mb"] = round(sf_freed / 1024 / 1024, 1)
+        stats["plan_sync_deleted"] = ps_deleted
+        stats["plan_sync_freed_mb"] = round(ps_freed / 1024 / 1024, 1)
     except Exception as exc:  # noqa: BLE001 - 清理失败不阻断应用
         logger.exception("[storage-retention] cleanup failed: %s", exc)
         stats["error"] = str(exc)[:500]
@@ -150,6 +177,7 @@ def cleanup_storage() -> dict:
                 stats["ui_runs_freed_mb"],
                 stats["workspaces_freed_mb"],
                 stats["session_files_freed_mb"],
+                stats["plan_sync_freed_mb"],
             ]
         ),
         1,
@@ -157,10 +185,11 @@ def cleanup_storage() -> dict:
     stats["total_freed_mb"] = total_mb
     logger.info(
         "[storage-retention] done: ui_runs=%s workspaces=%s "
-        "session_files=%s freed=%.1f MB",
+        "session_files=%s plan_sync=%s freed=%.1f MB",
         stats["ui_runs_deleted"],
         stats["workspaces_deleted"],
         stats["session_files_deleted"],
+        stats["plan_sync_deleted"],
         total_mb,
     )
     return stats

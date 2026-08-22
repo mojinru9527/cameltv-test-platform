@@ -60,7 +60,24 @@ class TestUiRunsCleanup:
             stats = cleanup_storage()
 
         assert stats["ui_runs_deleted"] == 0
+        assert stats["plan_sync_deleted"] == 0
         assert plan.exists()
+
+    def test_plan_sync_cleanup_when_enabled(self, tmp_path):
+        """STORAGE_RETENTION_INCLUDE_PLAN_SYNC=true 时按同一保留期清理过期子目录。"""
+        old_plan = _make_dirs(tmp_path / "ui-runs" / "plan-sync" / "TC-10001")[0]
+        new_plan = _make_dirs(tmp_path / "ui-runs" / "plan-sync" / "SP-B130-XYZ")[0]
+        _age(old_plan, OLD)
+        _age(new_plan, NEW)
+
+        with patch.object(settings, "storage_retention_root", str(tmp_path)), \
+                patch.object(settings, "storage_retention_days", 7), \
+                patch.object(settings, "storage_retention_include_plan_sync", True):
+            stats = cleanup_storage()
+
+        assert stats["plan_sync_deleted"] == 1
+        assert not old_plan.exists()
+        assert new_plan.exists()
 
 
 class TestDshSessionsCleanup:

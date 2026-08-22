@@ -162,6 +162,7 @@ class Settings(BaseSettings):
     storage_retention_hour: int = 2                  # 每日执行时刻（Asia/Shanghai）
     storage_retention_minute: int = 30
     storage_retention_root: str = ""                 # 清理根目录；空 = 复用 dsh_session_root 父目录（生产 /app/storage）
+    storage_retention_include_plan_sync: bool = False  # 是否一并清理 plan-sync 过期子目录（与计划执行历史关联，默认关）
 
     # ── AI 降级 / 超时（DeepSeek 分类器不可用时的本地降级提取）──
     ai_timeout_seconds: float = 180.0          # 单次 AI 调用超时（秒）

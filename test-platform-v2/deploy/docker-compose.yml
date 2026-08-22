@@ -13,6 +13,11 @@ services:
     expose:
       - "5432"
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cameltv}"]
       interval: 10s
@@ -85,6 +90,11 @@ services:
       - DSH_TEAM_TIMEOUT_SECONDS=${DSH_TEAM_TIMEOUT_SECONDS:-1800}
       - DSH_TEAM_HEARTBEAT_SECONDS=${DSH_TEAM_HEARTBEAT_SECONDS:-60}
       - DSH_MAX_CONCURRENT=${DSH_MAX_CONCURRENT:-1}
+      # ── 存储保留期清理（生产磁盘防护）──
+      - STORAGE_RETENTION_ENABLED=${STORAGE_RETENTION_ENABLED:-false}
+      - STORAGE_RETENTION_DAYS=${STORAGE_RETENTION_DAYS:-7}
+      - STORAGE_RETENTION_HOUR=${STORAGE_RETENTION_HOUR:-2}
+      - STORAGE_RETENTION_MINUTE=${STORAGE_RETENTION_MINUTE:-30}
     depends_on:
       postgres:
         condition: service_healthy
@@ -96,6 +106,12 @@ services:
     expose:
       - "8000"
     restart: unless-stopped
+    # 日志轮转：容器 stdout 无上限增长会写满宿主磁盘（json-file 默认不轮转）
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
@@ -129,6 +145,11 @@ services:
     ports:
       - "${FRONTEND_PORT:-80}:80"
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "nginx", "-t"]
       interval: 30s

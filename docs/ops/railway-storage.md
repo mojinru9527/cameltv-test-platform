@@ -86,13 +86,19 @@ find /app/storage/dsh-sessions/workspaces -maxdepth 1 -type d -name 'ws-*' -mtim
   - `ui-runs/<纯数字运行id>/`（UI 测试截图/录像，最大占用源）
   - `dsh-sessions/workspaces/ws-*`（DSH 任务隔离工作区）
   - `dsh-sessions/*.jsonl*`（DSH 会话日志）
-  - `plan-sync/` 与蓝湖证据**不在**默认清理范围（与历史记录强关联，后续按需加配置开关）
+  - `plan-sync/`（计划执行逐用例产物）与蓝湖证据**默认不在**清理范围；
+    若需要清理 plan-sync，显式设 `STORAGE_RETENTION_INCLUDE_PLAN_SYNC=true`
 - Railway Variables 配置（生产启用）：
   ```
   STORAGE_RETENTION_ENABLED=true
   STORAGE_RETENTION_DAYS=7
   ```
-- 补充建议：Docker 日志轮转与磁盘使用率告警（卷 >80% 告警），避免再次被动应急。
+- 容器日志轮转已内置（deploy/docker-compose.yml：json-file max-size 50m / max-file 3），
+  防止容器 stdout 写满宿主磁盘；宿主机定期 `docker image prune -a` 清理废弃镜像。
+- 补充建议：磁盘使用率告警（卷 >80% 告警），避免再次被动应急。
+- DSH 任务失败提示已做可读化映射（`dsh_task_service._friendly_error`）：
+  `HTTP_422 Model Not Exist` → 提示核对 AI 配置模型名；`RATE_LIMIT quota` → 提示充值/换提供方；
+  `401` → 提示更新密钥；未命中保持原文。
 - 若任务仍报 `HTTP_422: Model Not Exist`，见 Dockerfile 中 `agent-default-model` 补丁说明
   （node 模式 profile 已内置读 `DSH_MODEL` env 的模型覆盖，随镜像发布；确保部署后
   `dsh --profile headless --dump-config` 的 `agent-default-model` 含 `process.env.DSH_MODEL`）。
