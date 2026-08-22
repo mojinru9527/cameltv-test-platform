@@ -14,9 +14,13 @@ from app.schemas.system import MenuOut
 # (P2a) menu:mindmap：思维导图并入用例服务「脑图视图」Tab（路由重定向 /testcase?tab=mindmap）。
 # (P2b) menu:playground：Playground 并入用例服务 Tab（路由重定向 /testcase?tab=playground）。
 # (P2c) menu:trace：质量追溯并入报告中心 Tab（路由重定向 /report?tab=trace）。
+# (c165-3) menu:knowledge:* 四个子项：与知识中心页内 Tab 完全同源（/knowledge?tab=xxx），
+# 导航频率分层后不再单列；权限行保留在库，?tab= 深链与旧书签不受影响。
 HIDDEN_MENU_CODES = {
     "menu:special", "menu:perftest", "menu:project", "menu:organization",
     "menu:agent-workbench", "menu:mindmap", "menu:playground", "menu:trace",
+    "menu:knowledge:project", "menu:knowledge:platform",
+    "menu:knowledge:graph", "menu:knowledge:artifacts",
 }
 
 

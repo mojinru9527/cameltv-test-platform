@@ -24,6 +24,9 @@ frontend/
 │   │   └── auth.ts            鉴权状态 (localStorage 持久化)
 │   ├── router/                React Router 8 路由表 + 登录守卫
 │   ├── layouts/               MainLayout (侧边菜单 + 项目切换 + 用户菜单)
+│   │   ├── nav-config.ts      c165-3 导航频率分层：PRIMARY_MENU_CODES 高频集合 + 分组纯函数
+│   │   ├── MoreMenusGroup.tsx 「更多功能」低频折叠组（localStorage 持久化 + 活跃自动展开）
+│   │   └── NavigationMenuItems.tsx 侧边菜单项渲染（MainLayout/MoreMenusGroup 共用）
 │   ├── pages/                 页面组件
 │   │   ├── login/             登录页
 │   │   ├── workbench/         工作台
