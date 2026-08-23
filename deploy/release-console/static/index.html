@@ -85,19 +85,24 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    const TOKEN = localStorage.getItem('console_token') || '';
+    // 动态读取令牌（保存后立即生效，无需刷新页面）
+    function getToken() { return localStorage.getItem('console_token') || ''; }
 
     async function saveToken() {
       const v = document.getElementById('f-token').value.trim();
       if (!v) { localStorage.removeItem('console_token'); showToast('令牌已清除'); loadDeployments(); return; }
       // 先验证再保存
-      const ok = await fetch('/api/health');
-      if (ok.ok) {
-        localStorage.setItem('console_token', v);
-        showToast('令牌已保存');
-        loadDeployments();
-      } else {
-        showToast('服务不可达');
+      try {
+        const ok = await fetch('/api/health');
+        if (ok.ok) {
+          localStorage.setItem('console_token', v);
+          showToast('令牌已保存 ✓');
+          loadDeployments();
+        } else {
+          showToast('服务不可达，请检查网络');
+        }
+      } catch (err) {
+        showToast('验证失败: ' + err.message);
       }
     }
     let DEPLOYMENTS = [];
@@ -106,7 +111,7 @@
     async function api(path, opts = {}) {
       const res = await fetch(path, {
         ...opts,
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN, ...(opts.headers||{}) },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken(), ...(opts.headers||{}) },
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.detail || res.status);
