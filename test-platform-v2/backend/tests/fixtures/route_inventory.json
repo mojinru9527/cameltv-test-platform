@@ -1,5 +1,5 @@
 {
-  "count": 422,
+  "count": 427,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -43,6 +43,10 @@
     },
     {
       "path": "/api/v1/ai-config/providers",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ai-config/providers/discover-models",
       "method": "POST"
     },
     {
@@ -308,6 +312,10 @@
     {
       "path": "/api/v1/dsh-tasks/model-pool",
       "method": "GET"
+    },
+    {
+      "path": "/api/v1/dsh-tasks/upload-image",
+      "method": "POST"
     },
     {
       "path": "/api/v1/dsh-tasks/{task_id}",
@@ -734,12 +742,32 @@
       "method": "GET"
     },
     {
+      "path": "/api/v1/ops/deployments",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ops/deployments/health-check",
+      "method": "POST"
+    },
+    {
       "path": "/api/v1/ops/deployments/{deployment_id}",
       "method": "GET"
     },
     {
+      "path": "/api/v1/ops/deployments/{deployment_id}/backup",
+      "method": "POST"
+    },
+    {
       "path": "/api/v1/ops/deployments/{deployment_id}/events",
       "method": "GET"
+    },
+    {
+      "path": "/api/v1/ops/deployments/{deployment_id}/publish",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ops/deployments/{deployment_id}/rollback",
+      "method": "POST"
     },
     {
       "path": "/api/v1/organizations",
@@ -1680,14 +1708,6 @@
     {
       "path": "/health",
       "method": "GET"
-    },
-    {
-      "path": "/api/v1/ai-config/providers/discover-models",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/dsh-tasks/upload-image",
-      "method": "POST"
     }
   ]
 }

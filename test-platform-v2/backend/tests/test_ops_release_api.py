@@ -53,7 +53,7 @@ def _configure_store(tmp_path, manifest) -> tuple[ReleaseStore, str]:
     database_path = tmp_path / "release-control.sqlite3"
     store = ReleaseStore(database_path)
     service = ReleaseControlService(store)
-    deployment = service.request_test_deploy(manifest, "test", "ops", "ops-api-1").deployment
+    deployment = service.request_deploy(manifest, "test", "ops", "ops-api-1").deployment
     assert service.transition(deployment.id, "VALIDATED", "validate").code == "ACCEPTED"
     return store, deployment.id
 
