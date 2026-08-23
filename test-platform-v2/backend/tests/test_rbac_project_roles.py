@@ -50,7 +50,6 @@ FORBIDDEN_TESTER_CODES = {
     "lanhu_evidence:import", "lanhu_evidence:review",
     "integration:sync_prod", "apitest:execute_prod", "uitest:trigger_prod",
     "report:delete", "defect:delete", "mission:delete", "mission:generate",
-    "release:view",
 }
 
 

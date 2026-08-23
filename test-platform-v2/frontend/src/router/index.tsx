@@ -31,7 +31,6 @@ const EnvironmentPage = lazy(() => import('@/pages/environment'))
 const DatasetPage = lazy(() => import('@/pages/dataset'))
 const IntegrationPage = lazy(() => import('@/pages/integration'))
 const KnowledgePage = lazy(() => import('@/pages/knowledge'))
-const OperationsReleasePage = lazy(() => import('@/pages/operations-release'))
 const DshTasksPage = lazy(() => import('@/pages/dsh-tasks'))
 const AiConfigPage = lazy(() => import('@/pages/ai-config'))
 const ReleaseBundlesPage = lazy(() => import('@/pages/release-bundles'))
@@ -225,7 +224,6 @@ export const router = createBrowserRouter([
       { path: 'agent-workbench', element: <Navigate to="/dsh-tasks" replace /> },
       { path: 'lanhu-evidence', element: <PageLoader><LanhuEvidencePage /></PageLoader> },
       { path: 'lanhu-evidence/:id', element: <PageLoader><LanhuEvidenceJobDetail /></PageLoader> },
-      { path: 'operations-release', element: <PageLoader><OperationsReleasePage /></PageLoader> },
       {
         path: 'theme-lab',
         element: themeLabEnabled

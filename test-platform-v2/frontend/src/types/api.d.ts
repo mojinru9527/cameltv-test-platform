@@ -539,57 +539,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/ops/deployments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 运维发布记录列表 */
-        get: operations["list_deployments_api_v1_ops_deployments_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/ops/deployments/{deployment_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 运维发布记录详情 */
-        get: operations["get_deployment_api_v1_ops_deployments__deployment_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/ops/deployments/{deployment_id}/events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 运维发布事件 */
-        get: operations["list_deployment_events_api_v1_ops_deployments__deployment_id__events_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/projects": {
         parameters: {
             query?: never;
@@ -1196,26 +1145,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/test-cases/batch-delete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 批量删除用例
-         * @description 批量删除指定用例。POST 入口避免 DELETE body 和动态路由匹配兼容性问题。
-         */
-        post: operations["batch_delete_test_cases_post_api_v1_test_cases_batch_delete_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/test-cases/{case_id}/execute": {
         parameters: {
             query?: never;
@@ -1269,6 +1198,46 @@ export interface paths {
          * @description 返回用例的完整评审流转记录。
          */
         get: operations["review_history_api_v1_test_cases__case_id__review_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/test-cases/{case_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 用例版本历史
+         * @description 返回用例的所有版本快照列表。
+         */
+        get: operations["list_versions_api_v1_test_cases__case_id__versions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/test-cases/{case_id}/versions/{version_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 版本详情
+         * @description 返回单个版本快照详情（含完整 snapshot）。
+         */
+        get: operations["get_version_detail_api_v1_test_cases__case_id__versions__version_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1351,46 +1320,6 @@ export interface paths {
          * @description 解析 Excel 文件，批量创建用例。
          */
         post: operations["import_excel_api_v1_test_cases_import_excel_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/test-cases/{case_id}/versions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 用例版本历史
-         * @description 返回用例的所有版本快照列表。
-         */
-        get: operations["list_versions_api_v1_test_cases__case_id__versions_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/test-cases/{case_id}/versions/{version_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 版本详情
-         * @description 返回单个版本快照详情（含完整 snapshot）。
-         */
-        get: operations["get_version_detail_api_v1_test_cases__case_id__versions__version_id__get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1660,6 +1589,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/test-plans/{plan_id}/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Plan Stats */
+        get: operations["get_plan_stats_api_v1_test_plans__plan_id__stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/test-plans/{plan_id}/cases/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 批量指派用例
+         * @description 批量指派计划中的用例给执行人。
+         */
+        put: operations["batch_assign_cases_api_v1_test_plans__plan_id__cases_assign_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/test-plans/{plan_id}/cases/{pcase_id}/execute": {
         parameters: {
             query?: never;
@@ -1689,6 +1655,8 @@ export interface paths {
         /**
          * 一键批量执行计划全部用例
          * @description 一键执行计划中全部用例：API 用例自动执行，人工/UI 用例标记为 skip。
+         *
+         *     batch-169：async_mode=true 时后台执行并立即返回，避免多 UI 用例超过网关 300s。
          */
         post: operations["execute_all_cases_api_v1_test_plans__plan_id__execute_all_post"];
         delete?: never;
@@ -1768,23 +1736,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/test-plans/{plan_id}/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Plan Stats */
-        get: operations["get_plan_stats_api_v1_test_plans__plan_id__stats_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/test-plans/{plan_id}/batch-execute": {
         parameters: {
             query?: never;
@@ -1797,151 +1748,11 @@ export interface paths {
         /**
          * 批量执行计划中的用例
          * @description 批量执行（更新状态）计划中选中的用例，适用于手动测试场景。
+         *
+         *     Batch 161：手动标记失败的用例同样进入 失败→缺陷/报告/通知 自动链路
+         *     （前提：计划开启 auto_defect_on_fail）。
          */
         post: operations["batch_execute_cases_api_v1_test_plans__plan_id__batch_execute_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/test-plans/{plan_id}/cases/assign": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * 批量指派用例
-         * @description 批量指派计划中的用例给执行人。
-         */
-        put: operations["batch_assign_cases_api_v1_test_plans__plan_id__cases_assign_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/av-checks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Tasks */
-        get: operations["list_tasks_api_v1_av_checks_get"];
-        put?: never;
-        /** Create Task */
-        post: operations["create_task_api_v1_av_checks_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/av-checks/templates/measurements": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 音视频测量模板 */
-        get: operations["measurement_templates_api_v1_av_checks_templates_measurements_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/av-checks/{task_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Task */
-        get: operations["get_task_api_v1_av_checks__task_id__get"];
-        /** Update Task */
-        put: operations["update_task_api_v1_av_checks__task_id__put"];
-        post?: never;
-        /** Delete Task */
-        delete: operations["delete_task_api_v1_av_checks__task_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/av-checks/{task_id}/measurements": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create Measurement */
-        post: operations["create_measurement_api_v1_av_checks__task_id__measurements_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/av-checks/{task_id}/measurements/{measurement_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Update Measurement */
-        put: operations["update_measurement_api_v1_av_checks__task_id__measurements__measurement_id__put"];
-        post?: never;
-        /** Delete Measurement */
-        delete: operations["delete_measurement_api_v1_av_checks__task_id__measurements__measurement_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/av-checks/{task_id}/trigger": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Trigger Task */
-        post: operations["trigger_task_api_v1_av_checks__task_id__trigger_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/av-checks/{task_id}/metrics": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Metrics */
-        get: operations["get_metrics_api_v1_av_checks__task_id__metrics_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1960,6 +1771,23 @@ export interface paths {
         put?: never;
         /** Create Job */
         post: operations["create_job_api_v1_ui_tests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ui-tests/jobs/from-cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 从用例批量创建 UI 任务（C151-1） */
+        post: operations["create_jobs_from_cases_api_v1_ui_tests_jobs_from_cases_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2263,6 +2091,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/requirements/{document_id}/coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 需求覆盖率
+         * @description 返回单个需求文档的用例覆盖情况：已生成用例数、纳入计划数、执行/通过数、缺陷关联数。
+         */
+        get: operations["get_requirement_coverage_api_v1_requirements__document_id__coverage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/requirements/{document_id}/extract": {
         parameters: {
             query?: never;
@@ -2307,6 +2155,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/requirements/{document_id}/extraction-quality": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 提取完整度与降级状态（Phase 1）
+         * @description 返回提取模式（single/chunked）、截断、降级与功能点计数。
+         */
+        get: operations["get_extraction_quality_api_v1_requirements__document_id__extraction_quality_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/requirements/{document_id}/extraction/confirm": {
         parameters: {
             query?: never;
@@ -2324,6 +2192,57 @@ export interface paths {
          *     - action=reject: Reset extraction_status to not_started for re-extraction.
          */
         post: operations["confirm_extraction_api_v1_requirements__document_id__extraction_confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/requirements/{document_id}/extract-async": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 异步 AI 提取（C102-1，大文档不 502） */
+        post: operations["extract_features_async_api_v1_requirements__document_id__extract_async_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/requirements/{document_id}/generate-async": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 异步 AI 生成用例（C102-1，大文档不 502） */
+        post: operations["generate_test_cases_async_api_v1_requirements__document_id__generate_async_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/requirements/ai-task/{task_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 异步 AI 任务状态（C102-1） */
+        get: operations["get_ai_task_status_api_v1_requirements_ai_task__task_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2348,6 +2267,26 @@ export interface paths {
          *     test case generation (Stage 2 of the two-stage pipeline).
          */
         post: operations["generate_test_cases_api_v1_requirements__document_id__generate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/requirements/{document_id}/generate-api-from-endpoints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 按已导入接口生成真实接口用例（Phase 2）
+         * @description 对需求 integration 功能点匹配已导入 ApiEndpoint，确定性生成接口用例并回填模块关联。
+         */
+        post: operations["generate_api_from_endpoints_api_v1_requirements__document_id__generate_api_from_endpoints_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2474,77 +2413,6 @@ export interface paths {
          * @description View previously generated test cases for a document.
          */
         get: operations["get_generated_cases_api_v1_requirements__document_id__cases_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/requirements/{document_id}/coverage": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 需求覆盖率
-         * @description 返回单个需求文档的用例覆盖情况：已生成用例数、纳入计划数、执行/通过数、缺陷关联数。
-         */
-        get: operations["get_requirement_coverage_api_v1_requirements__document_id__coverage_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/requirements/{document_id}/extract-async": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 异步 AI 提取（C102-1，大文档不 502） */
-        post: operations["extract_features_async_api_v1_requirements__document_id__extract_async_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/requirements/{document_id}/generate-async": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 异步 AI 生成用例（C102-1，大文档不 502） */
-        post: operations["generate_test_cases_async_api_v1_requirements__document_id__generate_async_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/requirements/ai-task/{task_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 异步 AI 任务状态（C102-1） */
-        get: operations["get_ai_task_status_api_v1_requirements_ai_task__task_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2838,6 +2706,219 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/open/knowledge/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 知识源列表（Agent 查询面）
+         * @description 知识中心知识源列表（需求/接口/用例/缺陷/执行结果），Agent onboarding 用。
+         */
+        get: operations["open_list_knowledge_sources_api_v1_open_knowledge_sources_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/open/knowledge/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 知识混合检索（Agent 查询面）
+         * @description RAG 混合检索（rag 不可用时自动降级关键词），Agent 熟悉项目/定位用例用。
+         */
+        post: operations["open_search_knowledge_api_v1_open_knowledge_search_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/open/knowledge/modules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 模块拓扑（Agent 查询面）
+         * @description 项目知识拓扑：模块实体 + 挂接的子实体（需求/用例/接口/设计稿）。
+         *
+         *     L0 骨架的对外视图——Agent onboarding 先取拓扑定位影响面，再按需拉详情。
+         */
+        get: operations["open_get_module_topology_api_v1_open_knowledge_modules_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/open/requirements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 需求文档列表（Agent 查询面）
+         * @description 需求文档列表（不含全文），Agent 定位需求用。
+         */
+        get: operations["open_list_requirements_api_v1_open_requirements_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/open/test-cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 用例列表（Agent 查询面）
+         * @description 用例列表（含三关联元数据：模块/需求追溯/接口契约），Agent 按图索骥用。
+         */
+        get: operations["open_list_test_cases_api_v1_open_test_cases_get"];
+        put?: never;
+        /**
+         * 用例直接入库（Agent 回写面）
+         * @description Agent 设计用例直接写入用例库（走 skill 规则产出，不经 AI 审核台）。
+         *
+         *     2026-08-17 评审决策：用例生成规则单一事实源 = test-case-design skill，
+         *     reviewer 审查留痕兜底。project 由 token 隔离，调用方不可指定。
+         */
+        post: operations["open_create_test_case_api_v1_open_test_cases_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/open/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 测试计划列表（Agent 查询面）
+         * @description 测试计划列表（含用例统计），api-tester 选择触发目标用。
+         */
+        get: operations["open_list_plans_api_v1_open_plans_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/open/plans/{plan_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 测试计划详情（Agent 查询面）
+         * @description 测试计划详情（含用例清单），api-tester 执行前核对用例/环境用。
+         */
+        get: operations["open_get_plan_api_v1_open_plans__plan_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/open/plans/{plan_id}/executions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 计划执行记录（Agent 查询面）
+         * @description 计划最近执行记录（含每条用例的 last_status），api-tester 判定/回读用。
+         */
+        get: operations["open_list_plan_executions_api_v1_open_plans__plan_id__executions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/open/ui-tests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * UI 测试任务列表（Agent 查询面）
+         * @description UI 自动化任务列表（含最近运行状态），ui-tester 选择触发目标用。
+         */
+        get: operations["open_list_ui_jobs_api_v1_open_ui_tests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/open/defects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 缺陷直接入库（Agent 回写面）
+         * @description Agent 测试发现缺陷直接写入缺陷库（六状态机 open 起步）。
+         *
+         *     C-A4（DSH 测试 Agent 框架遗留收口）：reviewer/ui-tester 判定失败后
+         *     经 knowledge-mcp submit_defect 回写；project 由 token 隔离；
+         *     缺陷自动入库知识中心（ingest_defect_in_new_session，与 defect.py 同语义）。
+         */
+        post: operations["open_create_defect_api_v1_open_defects_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tokens": {
         parameters: {
             query?: never;
@@ -2869,28 +2950,6 @@ export interface paths {
         post?: never;
         /** 删除 API Token */
         delete: operations["delete_token_api_v1_tokens__token_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/apitest/api-execute": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 即时执行（调试）
-         * @description 发送一个接口请求并返回响应+断言结果（不保存为用例）。
-         *
-         *     生产环境写操作需要 apitest:execute_prod 权限 + confirm_prod=true。
-         */
-        post: operations["api_quick_execute_api_v1_apitest_api_execute_post"];
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3054,6 +3113,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/apitest/cases/change-impact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 接口变更影响分析
+         * @description 对比新旧 OpenAPI 文档，输出变更接口清单与受影响用例。
+         *
+         *     用途：版本迭代后接口变更的增量维护 —— 找出新增/删除/修改的接口，
+         *     定位用例库中受影响的 API 用例，输出定向修改建议（无需全量重生成）。
+         */
+        post: operations["analyze_change_impact_api_v1_apitest_cases_change_impact_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/apitest/cases/generalize-from-manual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 手工用例泛化 API 用例
+         * @description 以项目手工功能用例为母本，泛化生成对应 API 用例。
+         *
+         *     - rule 模式：从用例步骤识别业务操作（查询/新增/修改/删除），
+         *       匹配同模块接口资产生成 API 用例骨架，确定性、无需 AI key。
+         *     - ai 模式：在 rule 基础上调用 LLM 补全请求体样例与断言
+         *       （需 AI_API_KEY；失败自动降级 rule 结果）。
+         *     - import_to_case_library=true 时直接入库，否则仅预览。
+         */
+        post: operations["generalize_from_manual_api_v1_apitest_cases_generalize_from_manual_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/apitest/api-execute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 即时执行（调试）
+         * @description 发送一个接口请求并返回响应+断言结果（不保存为用例）。
+         *
+         *     生产环境写操作需要 apitest:execute_prod 权限 + confirm_prod=true。
+         */
+        post: operations["api_quick_execute_api_v1_apitest_api_execute_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/apitest/tasks": {
         parameters: {
             query?: never;
@@ -3091,7 +3221,11 @@ export interface paths {
         get: operations["get_task_api_v1_apitest_tasks__task_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * 删除执行任务
+         * @description 删除执行任务及其明细（仅终态任务可删）。
+         */
+        delete: operations["delete_task_api_v1_apitest_tasks__task_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3689,6 +3823,332 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/knowledge/graph/extract": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 触发实体提取与关系建图
+         * @description 对项目内 active 切片执行规则驱动的实体提取+关系构建（独立 Session，异步入库）。
+         */
+        post: operations["extract_graph_api_v1_knowledge_graph_extract_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/graph/entities/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 实体统计
+         * @description Return project-wide totals without conflating them with the list limit.
+         */
+        get: operations["entity_stats_api_v1_knowledge_graph_entities_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/graph/entities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 实体列表
+         * @description 列出项目内知识图谱实体（支持按类型/关键词/知识域过滤）。
+         */
+        get: operations["list_entities_api_v1_knowledge_graph_entities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/graph/entities/{entity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 实体详情 */
+        get: operations["get_entity_api_v1_knowledge_graph_entities__entity_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/graph/relations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 关系列表
+         * @description 列出项目内知识图谱关系。
+         */
+        get: operations["list_relations_api_v1_knowledge_graph_relations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/graph/view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 图谱可视化数据
+         * @description 返回力导向图所需的 nodes + edges 数据。支持按 knowledge_domain 过滤。
+         */
+        get: operations["graph_view_api_v1_knowledge_graph_view_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/graph/relations/{relation_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 采纳关系 */
+        post: operations["approve_relation_api_v1_knowledge_graph_relations__relation_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/graph/relations/{relation_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 驳回关系 */
+        post: operations["reject_relation_api_v1_knowledge_graph_relations__relation_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/graph/backfill-source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 回填缺失来源的图谱实体（C147-9）
+         * @description 按名称匹配用例/需求，回填 source_id/source_ref；未匹配保持 None。
+         */
+        post: operations["backfill_graph_source_api_v1_knowledge_graph_backfill_source_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/graph/evolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 概念地图自演化
+         * @description 触发概念地图自演化：合并重复实体、更新置信度、发现隐含关系。
+         */
+        post: operations["evolve_graph_api_v1_knowledge_graph_evolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/graph/auto-build": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 自动构建知识图谱（从 ReleaseBundle）
+         * @description 从 ReleaseBundle + RequirementModule 树构建完整层级知识图谱。
+         *
+         *     创建实体类型: project, release_bundle, platform, client_module, admin_module, page, changelog_entry
+         *     创建关系类型: contains, has_platform, has_module, has_page, belongs_to_version,
+         *                   navigates_to, links_to_admin, configures, evolves_from, described_by
+         *
+         *     幂等：重复调用相同 release_bundle_id 不重复创建（返回 skipped > 0）。
+         *     使用 force=true 强制重建。
+         */
+        post: operations["auto_build_graph_api_v1_knowledge_graph_auto_build_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/graph/module-associations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 体育模块关联入库（Batch 122 用例结构）
+         * @description 从用例结构批量入库模块/用例/接口实体与业务关系（幂等）。
+         *
+         *     实体：module / test_case / api；关系：contains / tested_by / navigates_to / links_to_admin / configures。
+         *     幂等：按 entity_key 与 from+relation_type+to 去重，重复调用不重复创建。
+         */
+        post: operations["import_module_associations_api_v1_knowledge_graph_module_associations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/graph/sync-test-cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 全量用例入图（Batch 132）
+         * @description 将项目全部 active 用例同步为图谱用例实体并回填来源（C125-3/C126-1），幂等。
+         *
+         *     用例实体统一挂到"用例库全量"知识源（project 域）；能关联模块的用例建立
+         *     tested_by 关联。返回 total_cases / test_case_entities / created /
+         *     source_backfilled / linked_cases。
+         */
+        post: operations["sync_test_cases_to_graph_api_v1_knowledge_graph_sync_test_cases_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/design-assets/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 需求/设计稿入库（文本+图片）
+         * @description 把需求原型页（文本+设计稿图片）入库为知识源，幂等（按 content_hash 去重）。
+         */
+        post: operations["import_design_assets_api_v1_knowledge_design_assets_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/design-assets/{source_id}/{filename}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 需求设计稿图片
+         * @description 服务需求设计稿图片（路径逃逸防护）。
+         */
+        get: operations["get_design_asset_api_v1_knowledge_design_assets__source_id___filename__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/graph/hierarchy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 项目球层级图谱
+         * @description 返回「项目球」层级图谱数据：project → version → platform → module → page
+         *     （边：contains/configures/tested_by）。
+         */
+        get: operations["graph_hierarchy_api_v1_knowledge_graph_hierarchy_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/knowledge/ai-artifacts": {
         parameters: {
             query?: never;
@@ -3822,270 +4282,9 @@ export interface paths {
         put?: never;
         /**
          * 导入正式用例库
-         * @description 治理守卫：仅 review_status='approved' 的 AI 用例产物允许导入正式库。
+         * @description 治理守卫：仅 review_status='approved' 的 AI 产物允许导入正式库（按类型分发用例库/需求库）。
          */
         post: operations["import_artifact_api_v1_knowledge_ai_artifacts__artifact_id__import_to_test_cases_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/knowledge/graph/extract": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 触发实体提取与关系建图
-         * @description 对项目内 active 切片执行规则驱动的实体提取+关系构建（独立 Session，异步入库）。
-         */
-        post: operations["extract_graph_api_v1_knowledge_graph_extract_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/knowledge/graph/entities/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 实体统计
-         * @description Return project-wide totals without conflating them with the list limit.
-         */
-        get: operations["entity_stats_api_v1_knowledge_graph_entities_stats_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/knowledge/graph/entities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 实体列表
-         * @description 列出项目内知识图谱实体（支持按类型和关键词过滤）。
-         */
-        get: operations["list_entities_api_v1_knowledge_graph_entities_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/knowledge/graph/entities/{entity_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 实体详情 */
-        get: operations["get_entity_api_v1_knowledge_graph_entities__entity_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/knowledge/graph/relations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 关系列表
-         * @description 列出项目内知识图谱关系。
-         */
-        get: operations["list_relations_api_v1_knowledge_graph_relations_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/knowledge/graph/view": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 图谱可视化数据
-         * @description 返回力导向图所需的 nodes + edges 数据。支持按 knowledge_domain 过滤。
-         */
-        get: operations["graph_view_api_v1_knowledge_graph_view_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/knowledge/graph/relations/{relation_id}/approve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 采纳关系 */
-        post: operations["approve_relation_api_v1_knowledge_graph_relations__relation_id__approve_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/knowledge/graph/relations/{relation_id}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 驳回关系 */
-        post: operations["reject_relation_api_v1_knowledge_graph_relations__relation_id__reject_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/knowledge/graph/evolve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 概念地图自演化
-         * @description 触发概念地图自演化：合并重复实体、更新置信度、发现隐含关系。
-         */
-        post: operations["evolve_graph_api_v1_knowledge_graph_evolve_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/knowledge/graph/auto-build": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 自动构建知识图谱（从 ReleaseBundle）
-         * @description 从 ReleaseBundle + RequirementModule 树构建完整层级知识图谱。
-         *
-         *     创建实体类型: project, release_bundle, platform, client_module, admin_module, page, changelog_entry
-         *     创建关系类型: contains, has_platform, has_module, has_page, belongs_to_version,
-         *                   navigates_to, links_to_admin, configures, evolves_from, described_by
-         *
-         *     幂等：重复调用相同 release_bundle_id 不重复创建（返回 skipped > 0）。
-         *     使用 force=true 强制重建。
-         */
-        post: operations["auto_build_graph_api_v1_knowledge_graph_auto_build_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/knowledge/graph/module-associations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 体育模块关联入库（Batch 122 用例结构）
-         * @description 从用例结构批量入库模块/用例/接口实体与业务关系（幂等）。
-         *
-         *     实体：module / test_case / api；关系：contains / tested_by / navigates_to / links_to_admin / configures。
-         *     幂等：按 entity_key 与 from+relation_type+to 去重，重复调用不重复创建。
-         */
-        post: operations["import_module_associations_api_v1_knowledge_graph_module_associations_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/knowledge/design-assets/import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 需求/设计稿入库（文本+图片）
-         * @description 把需求原型页（文本+设计稿图片）入库为知识源，幂等（按 content_hash 去重）。
-         */
-        post: operations["import_design_assets_api_v1_knowledge_design_assets_import_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/knowledge/design-assets/{source_id}/{filename}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 需求设计稿图片
-         * @description 服务需求设计稿图片（路径逃逸防护）。
-         */
-        get: operations["get_design_asset_api_v1_knowledge_design_assets__source_id___filename__get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4219,31 +4418,6 @@ export interface paths {
          * @description 对比两个迭代的快照数据，返回增量和趋势。
          */
         get: operations["compare_iteration_api_v1_knowledge_iterations__iteration_id__compare_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/knowledge/graph/hierarchy": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 项目球层级图谱
-         * @description 返回「项目球」层级图谱数据：project → version → platform → module → page。
-         *
-         *     包含三种关系边：
-         *       - contains: 层级包含关系（版本→平台→模块→页面）
-         *       - configures: 跨系统配置关联（运营后台模块→用户端模块）
-         *       - tested_by: 测试用例覆盖关系
-         */
-        get: operations["graph_hierarchy_api_v1_knowledge_graph_hierarchy_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4434,6 +4608,226 @@ export interface paths {
         put?: never;
         /** 取消队列任务 */
         post: operations["cancel_queue_api_v1_agents_queue__item_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dsh-tasks/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** DSH 运行可用性 */
+        get: operations["dsh_health_api_v1_dsh_tasks_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dsh-tasks/model-pool": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * DSH 可用模型池（阶段 3）
+         * @description 可用模型清单（模型池配置；未配置池时返回默认模型）。设置页/新建任务下拉用。
+         */
+        get: operations["dsh_model_pool_api_v1_dsh_tasks_model_pool_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dsh-tasks/upload-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 上传 DSH 任务图片附件
+         * @description 图片附件上传（PNG/JPEG/WebP/GIF，≤10MB）。返回 file_id，提交任务时
+         *     经 params.image_files 引用；执行时自动落任务工作区供模型 read_image 查看。
+         */
+        post: operations["upload_task_image_api_v1_dsh_tasks_upload_image_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dsh-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** DSH 任务列表 */
+        get: operations["list_dsh_tasks_api_v1_dsh_tasks_get"];
+        put?: never;
+        /** 提交 DSH 任务 */
+        post: operations["create_dsh_task_api_v1_dsh_tasks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dsh-tasks/{task_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** DSH 任务详情 */
+        get: operations["get_dsh_task_api_v1_dsh_tasks__task_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dsh-tasks/{task_id}/artifacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * DSH 任务产物（审核台条目）
+         * @description B2 产物闭环：任务落库的 AI 产物回链（类型/标题/审核状态/导入结果）。
+         */
+        get: operations["dsh_task_artifacts_api_v1_dsh_tasks__task_id__artifacts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dsh-tasks/{task_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 取消 DSH 任务 */
+        post: operations["cancel_dsh_task_api_v1_dsh_tasks__task_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai-config/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 项目 AI 提供方列表 */
+        get: operations["list_providers_api_v1_ai_config_providers_get"];
+        put?: never;
+        /** 新建 AI 提供方 */
+        post: operations["create_provider_api_v1_ai_config_providers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai-config/providers/{provider_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 更新 AI 提供方 */
+        put: operations["update_provider_api_v1_ai_config_providers__provider_id__put"];
+        post?: never;
+        /** 删除 AI 提供方 */
+        delete: operations["delete_provider_api_v1_ai_config_providers__provider_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai-config/providers/{provider_id}/test-connection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 测试提供方连通性 */
+        post: operations["test_connection_api_v1_ai_config_providers__provider_id__test_connection_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai-config/providers/discover-models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 发现提供方支持的模型清单
+         * @description 调用提供方 GET /models 返回模型清单（新增提供方时免手填）。
+         */
+        post: operations["discover_models_api_v1_ai_config_providers_discover_models_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai-config/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 当前项目生效 AI 配置 */
+        get: operations["resolve_config_api_v1_ai_config_resolve_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5106,6 +5500,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/release-bundles/{bundle_id}/coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 版本三类型模块覆盖矩阵（Phase 0）
+         * @description 返回发布包模块 × 功能/接口/UI × 执行状态的覆盖矩阵与 60% 门禁。
+         */
+        get: operations["get_bundle_coverage_api_v1_release_bundles__bundle_id__coverage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/release-bundles/{bundle_id}/import-requirement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 从需求地址创建需求文档并关联发布包（Phase 1）
+         * @description 抓取 bundle.requirement_url 并创建关联该发布包的需求文档（同 URL 已存在则复用）。
+         */
+        post: operations["import_bundle_requirement_api_v1_release_bundles__bundle_id__import_requirement_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/release-bundles/{bundle_id}/version-chain": {
         parameters: {
             query?: never;
@@ -5120,50 +5554,6 @@ export interface paths {
         get: operations["get_version_chain_api_v1_release_bundles__bundle_id__version_chain_get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/release-bundles/{bundle_id}/diff": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 触发版本差异对比
-         * @description 对比当前发布包与父发布包的模块/页面变化（Phase A 规则引擎 + Phase B AI 辅助）。
-         *
-         *     返回 VersionDiffResult 供人工审核后通过 confirm 入库。
-         */
-        post: operations["diff_bundle_api_v1_release_bundles__bundle_id__diff_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/release-bundles/{bundle_id}/diff/confirm": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 确认差异并构建模块树
-         * @description 确认版本差异对比结果，将差异应用到模块树（创建 RequirementModule 节点）。
-         *
-         *     支持 overrides 人工修正：reclassify（重分类模块类型）和 skip_modules（跳过指定模块）。
-         */
-        post: operations["confirm_diff_api_v1_release_bundles__bundle_id__diff_confirm_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5211,6 +5601,50 @@ export interface paths {
          *     根据模块名称匹配 UiTestScript，触发对应的 UiTestJob 执行。
          */
         post: operations["trigger_regression_for_bundle_api_v1_release_bundles__bundle_id__trigger_regression_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/release-bundles/{bundle_id}/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 触发版本差异对比
+         * @description 对比当前发布包与父发布包的模块/页面变化（Phase A 规则引擎 + Phase B AI 辅助）。
+         *
+         *     返回 VersionDiffResult 供人工审核后通过 confirm 入库。
+         */
+        post: operations["diff_bundle_api_v1_release_bundles__bundle_id__diff_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/release-bundles/{bundle_id}/diff/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 确认差异并构建模块树
+         * @description 确认版本差异对比结果，将差异应用到模块树（创建 RequirementModule 节点）。
+         *
+         *     支持 overrides 人工修正：reclassify（重分类模块类型）和 skip_modules（跳过指定模块）。
+         */
+        post: operations["confirm_diff_api_v1_release_bundles__bundle_id__diff_confirm_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5385,6 +5819,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/requirement-modules/production-diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 生产页面 vs 需求原型差异标注（C102-4）
+         * @description 对比发布包模块树与生产页面清单，输出 new / matched / missing 差异标注。
+         */
+        post: operations["production_diff_annotate_api_v1_requirement_modules_production_diff_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/requirement-modules/import-tree": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 导入需求模块树（蓝湖 sitemap 层级）
+         * @description 把蓝湖导出 sitemap 的层级树导入 requirement_module（幂等）。
+         *
+         *     按 path 层级建 parent_module_id（path 即 平台/模块/页）；node_type=module|page；
+         *     lanhu_page_id=html 文件；screenshot_urls=设计稿截图清单。
+         */
+        post: operations["import_module_tree_api_v1_requirement_modules_import_tree_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/requirement-modules/bundle/{bundle_id}/extract-interactions": {
         parameters: {
             query?: never;
@@ -5513,6 +5990,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/requirement-modules/bundle/{bundle_id}/extract-attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 提取附件内容
+         * @description 提取发布包内所有 attachment 类型模块的结构化内容。
+         *
+         *     过程：下载附件→OCR/文本提取→AI 分析→存储为功能点+业务规则 KnowledgeEntity。
+         */
+        post: operations["extract_attachments_api_v1_requirement_modules_bundle__bundle_id__extract_attachments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/requirement-modules/bundle/{bundle_id}/admin-links": {
         parameters: {
             query?: never;
@@ -5568,71 +6067,6 @@ export interface paths {
          * @description 删除指定的跨系统模块关联。
          */
         delete: operations["delete_admin_link_api_v1_requirement_modules_admin_links__link_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/requirement-modules/bundle/{bundle_id}/extract-attachments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 提取附件内容
-         * @description 提取发布包内所有 attachment 类型模块的结构化内容。
-         *
-         *     过程：下载附件→OCR/文本提取→AI 分析→存储为功能点+业务规则 KnowledgeEntity。
-         */
-        post: operations["extract_attachments_api_v1_requirement_modules_bundle__bundle_id__extract_attachments_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/requirement-modules/production-diff": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 生产页面 vs 需求原型差异标注（C102-4）
-         * @description 对比发布包模块树与生产页面清单，输出 new / matched / missing 差异标注。
-         */
-        post: operations["production_diff_annotate_api_v1_requirement_modules_production_diff_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/requirement-modules/import-tree": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 导入需求模块树（蓝湖 sitemap 层级）
-         * @description 把蓝湖导出 sitemap 的层级树导入 requirement_module（幂等）。
-         *
-         *     按 path 层级建 parent_module_id（path 即 平台/模块/页）；node_type=module|page；
-         *     lanhu_page_id=html 文件；screenshot_urls=设计稿截图清单。
-         */
-        post: operations["import_module_tree_api_v1_requirement_modules_import_tree_post"];
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -5700,6 +6134,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/lanhu-evidence/cookie": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 保存/清除蓝湖 Cookie（Batch 133）
+         * @description 保存用户更新的蓝湖 Cookie（重新登录后粘贴），后续采集自动使用；仅存 Cookie，不存密码。
+         */
+        post: operations["update_lanhu_cookie_api_v1_lanhu_evidence_cookie_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lanhu-evidence/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 蓝湖重新登录（Batch 133，尽力而为）
+         * @description 用蓝湖账号密码尝试重新登录并保存新 Cookie。
+         *
+         *     依赖 lanhu-mcp 提供 lanhu_login 自动登录能力；当前 pinned 子模块未提供时，
+         *     明确返回"请粘贴 Cookie / 联系管理员更新 LANHU_COOKIE"的兜底指引。
+         */
+        post: operations["lanhu_relogin_api_v1_lanhu_evidence_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/lanhu-evidence/jobs": {
         parameters: {
             query?: never;
@@ -5734,6 +6211,40 @@ export interface paths {
          * @description 删除证据包任务：级联删除页面、资产、OCR块和任务自身，并清理磁盘存储目录。
          */
         delete: operations["delete_job_api_v1_lanhu_evidence_jobs__job_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lanhu-evidence/jobs/{job_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 取消证据包任务 */
+        post: operations["cancel_job_api_v1_lanhu_evidence_jobs__job_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lanhu-evidence/jobs/{job_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 重试证据包任务 */
+        post: operations["retry_job_api_v1_lanhu_evidence_jobs__job_id__retry_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -5790,23 +6301,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/lanhu-evidence/pages/{page_id}/review": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 人工审核证据页（OCR 缺失豁免） */
-        post: operations["review_page_api_v1_lanhu_evidence_pages__page_id__review_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/lanhu-evidence/assets/{asset_id}": {
         parameters: {
             query?: never;
@@ -5818,40 +6312,6 @@ export interface paths {
         get: operations["download_asset_api_v1_lanhu_evidence_assets__asset_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/lanhu-evidence/jobs/{job_id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 取消证据包任务 */
-        post: operations["cancel_job_api_v1_lanhu_evidence_jobs__job_id__cancel_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/lanhu-evidence/jobs/{job_id}/retry": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 重试证据包任务 */
-        post: operations["retry_job_api_v1_lanhu_evidence_jobs__job_id__retry_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5875,75 +6335,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/perf-sessions/devices": {
+    "/api/v1/lanhu-evidence/pages/{page_id}/review": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * List Devices
-         * @description 列出当前 PC 连接的 Android/iOS 设备。
-         */
-        get: operations["list_devices_api_v1_perf_sessions_devices_get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** 人工审核证据页（OCR 缺失豁免） */
+        post: operations["review_page_api_v1_lanhu_evidence_pages__page_id__review_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/perf-sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Sessions
-         * @description 分页查询采集会话列表。
-         */
-        get: operations["list_sessions_api_v1_perf_sessions_get"];
-        put?: never;
-        /**
-         * Create Session
-         * @description 创建性能采集会话。
-         */
-        post: operations["create_session_api_v1_perf_sessions_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/perf-sessions/{session_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Session
-         * @description 获取指定会话详情。
-         */
-        get: operations["get_session_api_v1_perf_sessions__session_id__get"];
-        put?: never;
-        post?: never;
-        /**
-         * Delete Session
-         * @description 删除采集会话及关联指标数据。
-         */
-        delete: operations["delete_session_api_v1_perf_sessions__session_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/perf-sessions/{session_id}/start": {
+    "/api/v1/playground/batch-compile": {
         parameters: {
             query?: never;
             header?: never;
@@ -5953,17 +6362,17 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Start Session
-         * @description 启动采集会话。
+         * Batch Compile Endpoint
+         * @description 从功能用例库批量编译 Playwright spec。
          */
-        post: operations["start_session_api_v1_perf_sessions__session_id__start_post"];
+        post: operations["batch_compile_endpoint_api_v1_playground_batch_compile_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/perf-sessions/{session_id}/stop": {
+    "/api/v1/playground/batch-run": {
         parameters: {
             query?: never;
             header?: never;
@@ -5973,70 +6382,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Stop Session
-         * @description 停止采集会话。
+         * Batch Run Endpoint
+         * @description 批量编译 + 执行功能用例，并把结果回填用例 / 回写 UI 任务。
          */
-        post: operations["stop_session_api_v1_perf_sessions__session_id__stop_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/perf-sessions/{session_id}/metrics": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Metrics
-         * @description 获取会话时序数据点。
-         */
-        get: operations["get_metrics_api_v1_perf_sessions__session_id__metrics_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/perf-sessions/{session_id}/report": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Report
-         * @description 获取采集报告。
-         */
-        get: operations["get_report_api_v1_perf_sessions__session_id__report_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/perf-sessions/compare": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Compare Sessions
-         * @description 对比两次采集会话。
-         */
-        post: operations["compare_sessions_api_v1_perf_sessions_compare_post"];
+        post: operations["batch_run_endpoint_api_v1_playground_batch_run_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6497,19 +6846,6 @@ export interface components {
             /** Created At */
             created_at?: string | null;
         };
-        /** AnomalyEvent */
-        AnomalyEvent: {
-            /** Timestamp */
-            timestamp: number;
-            /** Event Type */
-            event_type: string;
-            /** Detail */
-            detail: string;
-            /** Metric Snapshot */
-            metric_snapshot?: {
-                [key: string]: unknown;
-            } | null;
-        };
         /** ApiEndpointCreate */
         ApiEndpointCreate: {
             /** Service Id */
@@ -6901,6 +7237,8 @@ export interface components {
              * @default
              */
             error_type: string;
+            /** Test Execution Id */
+            test_execution_id?: number | null;
             /**
              * Retry Count
              * @default 0
@@ -7121,279 +7459,6 @@ export interface components {
             /** Environment Id */
             environment_id?: number | null;
         };
-        /** AvCheckMeasurementCreate */
-        AvCheckMeasurementCreate: {
-            /** Metric Type */
-            metric_type: string;
-            /**
-             * Scenario
-             * @default
-             */
-            scenario: string;
-            /**
-             * Method
-             * @default
-             */
-            method: string;
-            /**
-             * Environment
-             * @default
-             */
-            environment: string;
-            /**
-             * Device Info
-             * @default
-             */
-            device_info: string;
-            /**
-             * Network Condition
-             * @default
-             */
-            network_condition: string;
-            /** Samples */
-            samples: number[];
-            /** Threshold */
-            threshold?: number | null;
-            /**
-             * Notes
-             * @default
-             */
-            notes: string;
-        };
-        /** AvCheckMeasurementOut */
-        AvCheckMeasurementOut: {
-            /** Id */
-            id: number;
-            /** Task Id */
-            task_id: number;
-            /** Metric Type */
-            metric_type: string;
-            /** Metric Name */
-            metric_name: string;
-            /**
-             * Scenario
-             * @default
-             */
-            scenario: string;
-            /**
-             * Method
-             * @default
-             */
-            method: string;
-            /**
-             * Environment
-             * @default
-             */
-            environment: string;
-            /**
-             * Device Info
-             * @default
-             */
-            device_info: string;
-            /**
-             * Network Condition
-             * @default
-             */
-            network_condition: string;
-            /** Samples */
-            samples: number[];
-            /** Sample Count */
-            sample_count: number;
-            /** Unit */
-            unit: string;
-            /** Threshold */
-            threshold: number;
-            /** Comparator */
-            comparator: string;
-            /** Mean */
-            mean: number;
-            /** Median */
-            median: number;
-            /** Min */
-            min: number;
-            /** Max */
-            max: number;
-            /** Stddev */
-            stddev: number;
-            /** P95 */
-            p95: number;
-            /** Pass Basis */
-            pass_basis: string;
-            /** Passed */
-            passed: boolean;
-            /**
-             * Simulated
-             * @default false
-             */
-            simulated: boolean;
-            /**
-             * Notes
-             * @default
-             */
-            notes: string;
-            /**
-             * Creator Id
-             * @default 0
-             */
-            creator_id: number;
-            /** Created At */
-            created_at?: string | null;
-            /** Updated At */
-            updated_at?: string | null;
-        };
-        /** AvCheckMeasurementUpdate */
-        AvCheckMeasurementUpdate: {
-            /** Metric Type */
-            metric_type: string;
-            /**
-             * Scenario
-             * @default
-             */
-            scenario: string;
-            /**
-             * Method
-             * @default
-             */
-            method: string;
-            /**
-             * Environment
-             * @default
-             */
-            environment: string;
-            /**
-             * Device Info
-             * @default
-             */
-            device_info: string;
-            /**
-             * Network Condition
-             * @default
-             */
-            network_condition: string;
-            /** Samples */
-            samples: number[];
-            /** Threshold */
-            threshold?: number | null;
-            /**
-             * Notes
-             * @default
-             */
-            notes: string;
-        };
-        /** AvCheckMetricOut */
-        AvCheckMetricOut: {
-            /** Id */
-            id: number;
-            /** Task Id */
-            task_id: number;
-            /** Metric Name */
-            metric_name: string;
-            /**
-             * Metric Value
-             * @default 0
-             */
-            metric_value: number;
-            /**
-             * Threshold
-             * @default 0
-             */
-            threshold: number;
-            /**
-             * Pass
-             * @default true
-             */
-            pass_: boolean;
-            /**
-             * Detail
-             * @default {}
-             */
-            detail: string;
-        };
-        /** AvCheckTaskCreate */
-        AvCheckTaskCreate: {
-            /** Name */
-            name: string;
-            /**
-             * Stream Url
-             * @default
-             */
-            stream_url: string;
-            /**
-             * Protocol
-             * @default HLS
-             */
-            protocol: string;
-        };
-        /** AvCheckTaskOut */
-        AvCheckTaskOut: {
-            /** Id */
-            id: number;
-            /**
-             * Project Id
-             * @default 0
-             */
-            project_id: number;
-            /**
-             * Task Id
-             * @default
-             */
-            task_id: string;
-            /** Name */
-            name: string;
-            /**
-             * Stream Url
-             * @default
-             */
-            stream_url: string;
-            /**
-             * Protocol
-             * @default HLS
-             */
-            protocol: string;
-            /**
-             * Status
-             * @default idle
-             */
-            status: string;
-            /**
-             * Last Result
-             * @default {}
-             */
-            last_result: string;
-            /**
-             * Creator Id
-             * @default 0
-             */
-            creator_id: number;
-            /** Created At */
-            created_at?: string | null;
-            /** Updated At */
-            updated_at?: string | null;
-            /**
-             * Creator Name
-             * @default
-             */
-            creator_name: string;
-            /**
-             * Metrics
-             * @default []
-             */
-            metrics: components["schemas"]["AvCheckMetricOut"][];
-            /**
-             * Measurements
-             * @default []
-             */
-            measurements: components["schemas"]["AvCheckMeasurementOut"][];
-        };
-        /** AvCheckTaskUpdate */
-        AvCheckTaskUpdate: {
-            /** Name */
-            name?: string | null;
-            /** Stream Url */
-            stream_url?: string | null;
-            /** Protocol */
-            protocol?: string | null;
-        };
         /** BatchAssignBody */
         BatchAssignBody: {
             /**
@@ -7421,7 +7486,7 @@ export interface components {
             pcase_ids: number[];
             /**
              * Status
-             * @default pass
+             * @default passed
              */
             status: string;
             /**
@@ -7525,6 +7590,16 @@ export interface components {
              * @default
              */
             lanhu_description: string;
+            /**
+             * Source Url
+             * @default
+             */
+            source_url: string;
+        };
+        /** Body_upload_task_image_api_v1_dsh_tasks_upload_image_post */
+        Body_upload_task_image_api_v1_dsh_tasks_upload_image_post: {
+            /** File */
+            file: string;
         };
         /**
          * BuildFromDocumentRequest
@@ -7570,6 +7645,11 @@ export interface components {
              * @default false
              */
             create_plan: boolean;
+            /**
+             * Create Ui Cases
+             * @default false
+             */
+            create_ui_cases: boolean;
         };
         /** CaseImportResult */
         CaseImportResult: {
@@ -7683,6 +7763,11 @@ export interface components {
              * @default 0
              */
             fail_rate: number;
+            /**
+             * Execution Pass Rate
+             * @default 0
+             */
+            execution_pass_rate: number;
         };
         /**
          * ChangeCheckRequest
@@ -7717,20 +7802,6 @@ export interface components {
         CommentBody: {
             /** Content */
             content: string;
-        };
-        /** CompareRequest */
-        CompareRequest: {
-            /** Session A Id */
-            session_a_id: number;
-            /** Session B Id */
-            session_b_id: number;
-        };
-        /** CompareResponse */
-        CompareResponse: {
-            session_a: components["schemas"]["PerfSessionOut"];
-            session_b: components["schemas"]["PerfSessionOut"];
-            /** Deltas */
-            deltas: components["schemas"]["MetricDelta"][];
         };
         /** CompareSnapshotsOut */
         CompareSnapshotsOut: {
@@ -7862,6 +7933,11 @@ export interface components {
              * @default 0
              */
             pass_rate: number;
+            /**
+             * Execution Pass Rate
+             * @default 0
+             */
+            execution_pass_rate: number;
             /**
              * Case Type Stats
              * @default []
@@ -8006,11 +8082,8 @@ export interface components {
             case_id?: number | null;
             /** Execution Id */
             execution_id?: number | null;
-            /**
-             * Assignee Id
-             * @default 0
-             */
-            assignee_id: number;
+            /** Assignee Id */
+            assignee_id?: number | null;
             /**
              * External Id
              * @default
@@ -8151,38 +8224,6 @@ export interface components {
             /** Resolved At */
             resolved_at?: string | null;
         };
-        /** DeploymentEventOut */
-        DeploymentEventOut: {
-            /** Sequence */
-            sequence: number;
-            /** From State */
-            from_state: string;
-            /** To State */
-            to_state: string;
-            /** Phase */
-            phase: string;
-            /** Reason */
-            reason: string;
-            /** Actor */
-            actor: string;
-            /** Created At */
-            created_at: string;
-        };
-        /** DeploymentOut */
-        DeploymentOut: {
-            /** Id */
-            id: string;
-            /** Release Id */
-            release_id: string;
-            /** Manifest Sha256 */
-            manifest_sha256: string;
-            /** Environment */
-            environment: string;
-            /** State */
-            state: string;
-            /** Created At */
-            created_at: string;
-        };
         /** DesignAssetImage */
         DesignAssetImage: {
             /** Filename */
@@ -8242,10 +8283,18 @@ export interface components {
              */
             images: components["schemas"]["DesignAssetImage"][];
         };
-        /** DeviceListResponse */
-        DeviceListResponse: {
-            /** Devices */
-            devices: components["schemas"]["PerfDeviceOut"][];
+        /** DiscoverModelsIn */
+        DiscoverModelsIn: {
+            /**
+             * Api Base Url
+             * @default
+             */
+            api_base_url: string;
+            /**
+             * Api Key
+             * @default
+             */
+            api_key: string;
         };
         /** DomainCreate */
         DomainCreate: {
@@ -8268,6 +8317,118 @@ export interface components {
              * @default []
              */
             modules: components["schemas"]["ModuleNode"][];
+        };
+        /** DshHealthOut */
+        DshHealthOut: {
+            /** Available */
+            available: boolean;
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+        };
+        /** DshTaskCancelResponse */
+        DshTaskCancelResponse: {
+            /** Id */
+            id: number;
+            /** Status */
+            status: string;
+            /** Message */
+            message: string;
+        };
+        /**
+         * DshTaskCreate
+         * @description 创建 DSH 任务请求。
+         */
+        DshTaskCreate: {
+            /**
+             * Task
+             * @description 任务文本
+             */
+            task: string;
+            /**
+             * Params
+             * @description 附加参数（batch_mode / team_kind 等）
+             */
+            params?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Mode
+             * @default single
+             * @enum {string}
+             */
+            mode: "single" | "team";
+            /**
+             * Scene
+             * @default general
+             */
+            scene: string;
+            /**
+             * Scene Params
+             * @description B1：场景输入参数（需求文本/接口定义等）
+             */
+            scene_params?: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * DshTaskOut
+         * @description DSH 任务详情/列表项。
+         */
+        DshTaskOut: {
+            /** Id */
+            id: number;
+            /** Project Id */
+            project_id: number;
+            /** Task */
+            task: string;
+            /** Status */
+            status: string;
+            /**
+             * Mode
+             * @default single
+             */
+            mode: string;
+            /**
+             * Team Json
+             * @default {}
+             */
+            team_json: {
+                [key: string]: unknown;
+            };
+            /**
+             * Scene
+             * @default general
+             */
+            scene: string;
+            /**
+             * Output Text
+             * @default
+             */
+            output_text: string;
+            /**
+             * Session Dir
+             * @default
+             */
+            session_dir: string;
+            /**
+             * Error
+             * @default
+             */
+            error: string;
+            /**
+             * Operator Id
+             * @default 0
+             */
+            operator_id: number;
+            /** Created At */
+            created_at?: string | null;
+            /** Started At */
+            started_at?: string | null;
+            /** Finished At */
+            finished_at?: string | null;
         };
         /**
          * EntityExtractRequest
@@ -8368,6 +8529,18 @@ export interface components {
         ExecuteAllBody: {
             /** Environment Id */
             environment_id?: number | null;
+            /**
+             * Auto Ui
+             * @default true
+             */
+            auto_ui: boolean;
+            /** Ui Environment Id */
+            ui_environment_id?: number | null;
+            /**
+             * Async Mode
+             * @default false
+             */
+            async_mode: boolean;
         };
         /** ExecuteRequest */
         ExecuteRequest: {
@@ -8472,6 +8645,23 @@ export interface components {
             executed_at?: string | null;
             /** Created At */
             created_at?: string | null;
+            /**
+             * Status Code
+             * @default 0
+             */
+            status_code: number;
+            /**
+             * Error Type
+             * @default
+             */
+            error_type: string;
+            /**
+             * Error Message
+             * @default
+             */
+            error_message: string;
+            /** Api Task Id */
+            api_task_id?: number | null;
             /**
              * Case Id
              * @default 0
@@ -8692,6 +8882,51 @@ export interface components {
              */
             rejected_notes: string;
         };
+        /**
+         * ExtractionQualityOut
+         * @description batch-167: 提取完整度与降级状态（提取质量门禁的展示口径）。
+         */
+        ExtractionQualityOut: {
+            /** Document Id */
+            document_id: number;
+            /**
+             * Mode
+             * @default single
+             */
+            mode: string;
+            /**
+             * Chunks
+             * @default 1
+             */
+            chunks: number;
+            /**
+             * Truncated
+             * @default false
+             */
+            truncated: boolean;
+            /**
+             * Fallback
+             * @default false
+             */
+            fallback: boolean;
+            /**
+             * Module Count
+             * @default 0
+             */
+            module_count: number;
+            /**
+             * Function Point Count
+             * @default 0
+             */
+            function_point_count: number;
+            /** Warnings */
+            warnings?: string[];
+            /**
+             * Extraction Meta
+             * @default {}
+             */
+            extraction_meta: string;
+        };
         /** FeatureExtractionResult */
         FeatureExtractionResult: {
             /** Document Id */
@@ -8722,6 +8957,11 @@ export interface components {
              */
             extraction_status: string;
             /**
+             * Extraction Meta
+             * @default {}
+             */
+            extraction_meta: string;
+            /**
              * Version Info
              * @default []
              */
@@ -8750,6 +8990,14 @@ export interface components {
         ForgotPasswordRequest: {
             /** Username */
             username: string;
+        };
+        /** FromCasesRequest */
+        FromCasesRequest: {
+            /**
+             * Case Ids
+             * @default []
+             */
+            case_ids: number[];
         };
         /** GateConfigBody */
         GateConfigBody: {
@@ -8788,6 +9036,35 @@ export interface components {
              * @default true
              */
             enabled: boolean | null;
+        };
+        /**
+         * GeneralizeApiCasesRequest
+         * @description 手工用例 → API 用例泛化请求。
+         */
+        GeneralizeApiCasesRequest: {
+            /**
+             * Module
+             * @description 仅泛化指定模块的手工用例（可选，默认全部）
+             */
+            module?: string | null;
+            /**
+             * Mode
+             * @description 泛化模式：rule（规则映射，确定性）| ai（规则 + AI 增强，需 AI_API_KEY）
+             * @default rule
+             */
+            mode: string;
+            /**
+             * Import To Case Library
+             * @description 是否将生成的用例直接入库（默认仅预览）
+             * @default false
+             */
+            import_to_case_library: boolean;
+            /**
+             * Limit
+             * @description 最多处理的手工用例数
+             * @default 200
+             */
+            limit: number;
         };
         /** GenerateApiCasesRequest */
         GenerateApiCasesRequest: {
@@ -9348,6 +9625,11 @@ export interface components {
              * @default 0
              */
             missing_source: number;
+            /**
+             * Test Case Total
+             * @default 0
+             */
+            test_case_total: number;
         };
         /** KnowledgeHealth */
         KnowledgeHealth: {
@@ -9611,6 +9893,19 @@ export interface components {
             /** Updated At */
             updated_at?: string | null;
         };
+        /** LanhuCookieUpdateRequest */
+        LanhuCookieUpdateRequest: {
+            /**
+             * Cookie
+             * @default
+             */
+            cookie: string;
+            /**
+             * Clear
+             * @default false
+             */
+            clear: boolean;
+        };
         /** LanhuEvidenceAssetOut */
         LanhuEvidenceAssetOut: {
             /** Id */
@@ -9669,6 +9964,11 @@ export interface components {
              * @default true
              */
             capture_all_pages: boolean;
+            /**
+             * Latest Version Only
+             * @default false
+             */
+            latest_version_only: boolean;
             /**
              * Include Word
              * @default true
@@ -9944,6 +10244,19 @@ export interface components {
              */
             extract_graph: boolean;
         };
+        /** LanhuLoginRequest */
+        LanhuLoginRequest: {
+            /**
+             * Username
+             * @default
+             */
+            username: string;
+            /**
+             * Password
+             * @default
+             */
+            password: string;
+        };
         /** LoginIn */
         LoginIn: {
             /** Username */
@@ -10038,70 +10351,6 @@ export interface components {
              * @default []
              */
             children: components["schemas"]["MenuOut"][];
-        };
-        /** MetricDataPoint */
-        MetricDataPoint: {
-            /** Timestamp */
-            timestamp: number;
-            /** Elapsed S */
-            elapsed_s: number;
-            /** Values */
-            values: {
-                [key: string]: unknown;
-            };
-        };
-        /** MetricDelta */
-        MetricDelta: {
-            /** Metric Type */
-            metric_type: string;
-            /** Session A Mean */
-            session_a_mean: number;
-            /** Session B Mean */
-            session_b_mean: number;
-            /** Delta Absolute */
-            delta_absolute: number;
-            /** Delta Percent */
-            delta_percent: number;
-            /** Direction */
-            direction: string;
-            /** Significant */
-            significant: boolean;
-        };
-        /** MetricStats */
-        MetricStats: {
-            /** Metric Type */
-            metric_type: string;
-            /** Unit */
-            unit: string;
-            /** Samples */
-            samples: number;
-            /** Mean */
-            mean: number;
-            /** Median */
-            median: number;
-            /** P95 */
-            p95: number;
-            /** Min Val */
-            min_val: number;
-            /** Max Val */
-            max_val: number;
-            /** Stddev */
-            stddev: number;
-            /** Threshold */
-            threshold: number;
-            /** Threshold Comparator */
-            threshold_comparator: string;
-            /** Passed */
-            passed: boolean;
-        };
-        /** MetricTimeseriesResponse */
-        MetricTimeseriesResponse: {
-            /** Session Id */
-            session_id: string;
-            /** Metrics */
-            metrics: components["schemas"]["MetricDataPoint"][];
-            /** Total Points */
-            total_points: number;
         };
         /**
          * ModuleAdminLinkCreate
@@ -10227,6 +10476,76 @@ export interface components {
              * @default 0
              */
             total_relations: number;
+        };
+        /**
+         * ModuleCoverageRow
+         * @description 单个版本模块的三类型用例与执行覆盖统计。
+         */
+        ModuleCoverageRow: {
+            /** Module Id */
+            module_id?: number | null;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /**
+             * Platform
+             * @default
+             */
+            platform: string;
+            /**
+             * Change Type
+             * @default
+             */
+            change_type: string;
+            /**
+             * Is P0P1
+             * @default false
+             */
+            is_p0p1: boolean;
+            /**
+             * Functional Count
+             * @default 0
+             */
+            functional_count: number;
+            /**
+             * Api Count
+             * @default 0
+             */
+            api_count: number;
+            /**
+             * Ui Count
+             * @default 0
+             */
+            ui_count: number;
+            /**
+             * Functional Executed
+             * @default 0
+             */
+            functional_executed: number;
+            /**
+             * Api Executed
+             * @default 0
+             */
+            api_executed: number;
+            /**
+             * Ui Executed
+             * @default 0
+             */
+            ui_executed: number;
+            /**
+             * Covered
+             * @default false
+             */
+            covered: boolean;
+            /**
+             * Executed Covered
+             * @default false
+             */
+            executed_covered: boolean;
+            /** Gap Types */
+            gap_types?: string[];
         };
         /** ModuleCreate */
         ModuleCreate: {
@@ -10462,6 +10781,37 @@ export interface components {
              * @default 0
              */
             total_attachments: number;
+        };
+        /**
+         * OpenApiChangeAnalyzeRequest
+         * @description 新旧 OpenAPI spec 对比请求。
+         */
+        OpenApiChangeAnalyzeRequest: {
+            /**
+             * Old Spec
+             * @description 旧版本 OpenAPI/Swagger 文档（dict）
+             */
+            old_spec: {
+                [key: string]: unknown;
+            };
+            /**
+             * New Spec
+             * @description 新版本 OpenAPI/Swagger 文档（dict）
+             */
+            new_spec: {
+                [key: string]: unknown;
+            };
+            /**
+             * Case Module
+             * @description 仅分析指定模块的用例（可选）
+             */
+            case_module?: string | null;
+            /**
+             * As Markdown
+             * @description 返回 Markdown 报告（默认返回结构化 JSON）
+             * @default false
+             */
+            as_markdown: boolean;
         };
         /** OpenApiGenerateRequest */
         OpenApiGenerateRequest: {
@@ -10726,6 +11076,29 @@ export interface components {
              * @default []
              */
             items: components["schemas"]["DatasetListItem"][];
+        };
+        /** Page[DshTaskOut] */
+        Page_DshTaskOut_: {
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Page
+             * @default 1
+             */
+            page: number;
+            /**
+             * Page Size
+             * @default 20
+             */
+            page_size: number;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["DshTaskOut"][];
         };
         /** Page[ExecutionOut] */
         Page_ExecutionOut_: {
@@ -11049,111 +11422,6 @@ export interface components {
              */
             items: components["schemas"]["WikiRawSourceBrief"][];
         };
-        /** PerfDeviceOut */
-        PerfDeviceOut: {
-            /** Device Id */
-            device_id: string;
-            /** Device Name */
-            device_name: string;
-            /** Device Model */
-            device_model: string;
-            /** Platform */
-            platform: string;
-            /** Os Version */
-            os_version: string;
-            /** Status */
-            status: string;
-            /** Installed Apps */
-            installed_apps?: string[] | null;
-        };
-        /** PerfReportResponse */
-        PerfReportResponse: {
-            session: components["schemas"]["PerfSessionOut"];
-            /** Metrics */
-            metrics: components["schemas"]["MetricStats"][];
-            /** Anomalies */
-            anomalies: components["schemas"]["AnomalyEvent"][];
-        };
-        /** PerfSessionCreate */
-        PerfSessionCreate: {
-            /** Device Id */
-            device_id: string;
-            /**
-             * Platform
-             * @default Android
-             */
-            platform: string;
-            /** Pkg Name */
-            pkg_name: string;
-            /**
-             * Device Name
-             * @default
-             */
-            device_name: string;
-            /**
-             * Device Model
-             * @default
-             */
-            device_model: string;
-            /** Metrics */
-            metrics?: string[];
-            /**
-             * Duration
-             * @default 300
-             */
-            duration: number;
-        };
-        /** PerfSessionListResponse */
-        PerfSessionListResponse: {
-            /** Items */
-            items: components["schemas"]["PerfSessionOut"][];
-            /** Total */
-            total: number;
-            /** Page */
-            page: number;
-            /** Page Size */
-            page_size: number;
-        };
-        /** PerfSessionOut */
-        PerfSessionOut: {
-            /** Id */
-            id: number;
-            /** Session Id */
-            session_id: string;
-            /** Device Id */
-            device_id: string;
-            /** Device Name */
-            device_name: string;
-            /** Device Model */
-            device_model: string;
-            /** Platform */
-            platform: string;
-            /** Pkg Name */
-            pkg_name: string;
-            /** Metrics */
-            metrics: string;
-            /** Status */
-            status: string;
-            /** Duration */
-            duration: number;
-            /** Actual Duration S */
-            actual_duration_s: number;
-            /** Summary Json */
-            summary_json: string;
-            /** Error Message */
-            error_message: string;
-            /** Creator Id */
-            creator_id: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Started At */
-            started_at: string | null;
-            /** Ended At */
-            ended_at: string | null;
-        };
         /**
          * PermissionGroup
          * @description 按分组整理的权限列表，前端 Checkbox 用。
@@ -11299,6 +11567,11 @@ export interface components {
             end_date?: string | null;
             /** Due Date */
             due_date?: string | null;
+            /**
+             * Auto Defect On Fail
+             * @default false
+             */
+            auto_defect_on_fail: boolean;
         };
         /** PlanDetailOut */
         PlanDetailOut: {
@@ -11355,10 +11628,10 @@ export interface components {
              */
             assignee_name: string;
             /**
-             * Cases
-             * @default []
+             * Auto Defect On Fail
+             * @default false
              */
-            cases: components["schemas"]["PlanCaseOut"][];
+            auto_defect_on_fail: boolean;
             /**
              * @default {
              *       "total": 0,
@@ -11370,6 +11643,11 @@ export interface components {
              *     }
              */
             stats: components["schemas"]["PlanStats"];
+            /**
+             * Cases
+             * @default []
+             */
+            cases: components["schemas"]["PlanCaseOut"][];
         };
         /** PlanOut */
         PlanOut: {
@@ -11425,6 +11703,22 @@ export interface components {
              * @default
              */
             assignee_name: string;
+            /**
+             * Auto Defect On Fail
+             * @default false
+             */
+            auto_defect_on_fail: boolean;
+            /**
+             * @default {
+             *       "total": 0,
+             *       "pending": 0,
+             *       "pass_": 0,
+             *       "fail": 0,
+             *       "skip": 0,
+             *       "block": 0
+             *     }
+             */
+            stats: components["schemas"]["PlanStats"];
         };
         /** PlanStats */
         PlanStats: {
@@ -11477,6 +11771,130 @@ export interface components {
             end_date?: string | null;
             /** Due Date */
             due_date?: string | null;
+            /** Auto Defect On Fail */
+            auto_defect_on_fail?: boolean | null;
+        };
+        /** PlaygroundBatchCompileRequest */
+        PlaygroundBatchCompileRequest: {
+            /** Case Ids */
+            case_ids: number[];
+        };
+        /** PlaygroundBatchCompileResponse */
+        PlaygroundBatchCompileResponse: {
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["PlaygroundCaseCompileItem"][];
+        };
+        /** PlaygroundBatchRunRequest */
+        PlaygroundBatchRunRequest: {
+            /** Case Ids */
+            case_ids: number[];
+            /**
+             * Write Back To Ui
+             * @default true
+             */
+            write_back_to_ui: boolean;
+            /**
+             * Timeout Ms
+             * @default 60000
+             */
+            timeout_ms: number;
+        };
+        /** PlaygroundBatchRunResponse */
+        PlaygroundBatchRunResponse: {
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Passed
+             * @default 0
+             */
+            passed: number;
+            /**
+             * Failed
+             * @default 0
+             */
+            failed: number;
+            /**
+             * Results
+             * @default []
+             */
+            results: components["schemas"]["PlaygroundCaseRunResult"][];
+            /**
+             * Report
+             * @default {}
+             */
+            report: {
+                [key: string]: unknown;
+            };
+        };
+        /** PlaygroundCaseCompileItem */
+        PlaygroundCaseCompileItem: {
+            /** Case Id */
+            case_id: number;
+            /**
+             * Case Title
+             * @default
+             */
+            case_title: string;
+            /**
+             * Spec Code
+             * @default
+             */
+            spec_code: string;
+            /**
+             * Has Todo
+             * @default false
+             */
+            has_todo: boolean;
+        };
+        /** PlaygroundCaseRunResult */
+        PlaygroundCaseRunResult: {
+            /** Case Id */
+            case_id: number;
+            /**
+             * Case Title
+             * @default
+             */
+            case_title: string;
+            /**
+             * Spec Code
+             * @default
+             */
+            spec_code: string;
+            /**
+             * Passed
+             * @default false
+             */
+            passed: boolean;
+            /**
+             * Stdout
+             * @default
+             */
+            stdout: string;
+            /**
+             * Stderr
+             * @default
+             */
+            stderr: string;
+            /** Screenshot Base64 */
+            screenshot_base64?: string | null;
+            /**
+             * Duration Ms
+             * @default 0
+             */
+            duration_ms: number;
+            /** Ui Job Id */
+            ui_job_id?: number | null;
         };
         /** PreviewRequest */
         PreviewRequest: {
@@ -11706,6 +12124,65 @@ export interface components {
             description?: string | null;
             /** Status */
             status?: number | null;
+        };
+        /** ProviderIn */
+        ProviderIn: {
+            /** Name */
+            name: string;
+            /**
+             * Provider Type
+             * @default openai_compatible
+             */
+            provider_type: string;
+            /**
+             * Api Base Url
+             * @default
+             */
+            api_base_url: string;
+            /**
+             * Api Key
+             * @default
+             */
+            api_key: string;
+            /**
+             * Models
+             * @default []
+             */
+            models: string[];
+            /**
+             * Default Model
+             * @default
+             */
+            default_model: string;
+            /**
+             * Is Default
+             * @default false
+             */
+            is_default: boolean;
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+        };
+        /** ProviderUpdateIn */
+        ProviderUpdateIn: {
+            /** Name */
+            name?: string | null;
+            /** Provider Type */
+            provider_type?: string | null;
+            /** Api Base Url */
+            api_base_url?: string | null;
+            /** Api Key */
+            api_key?: string | null;
+            /** Models */
+            models?: string[] | null;
+            /** Default Model */
+            default_model?: string | null;
+            /** Is Default */
+            is_default?: boolean | null;
+            /** Enabled */
+            enabled?: boolean | null;
         };
         /**
          * PublicAccessOut
@@ -11944,34 +12421,6 @@ export interface components {
             msg: string;
             data?: components["schemas"]["AutoBuildResult"] | null;
         };
-        /** R[AvCheckMeasurementOut] */
-        R_AvCheckMeasurementOut_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @default ok
-             */
-            msg: string;
-            data?: components["schemas"]["AvCheckMeasurementOut"] | null;
-        };
-        /** R[AvCheckTaskOut] */
-        R_AvCheckTaskOut_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @default ok
-             */
-            msg: string;
-            data?: components["schemas"]["AvCheckTaskOut"] | null;
-        };
         /** R[CaseImportResult] */
         R_CaseImportResult_: {
             /**
@@ -11985,20 +12434,6 @@ export interface components {
              */
             msg: string;
             data?: components["schemas"]["CaseImportResult"] | null;
-        };
-        /** R[CompareResponse] */
-        R_CompareResponse_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @default ok
-             */
-            msg: string;
-            data?: components["schemas"]["CompareResponse"] | null;
         };
         /** R[CompareSnapshotsOut] */
         R_CompareSnapshotsOut_: {
@@ -12098,20 +12533,6 @@ export interface components {
             msg: string;
             data?: components["schemas"]["DefectStats"] | null;
         };
-        /** R[DeploymentOut] */
-        R_DeploymentOut_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @default ok
-             */
-            msg: string;
-            data?: components["schemas"]["DeploymentOut"] | null;
-        };
         /** R[DesignAssetImportResult] */
         R_DesignAssetImportResult_: {
             /**
@@ -12126,8 +12547,8 @@ export interface components {
             msg: string;
             data?: components["schemas"]["DesignAssetImportResult"] | null;
         };
-        /** R[DeviceListResponse] */
-        R_DeviceListResponse_: {
+        /** R[DshHealthOut] */
+        R_DshHealthOut_: {
             /**
              * Code
              * @default 0
@@ -12138,7 +12559,35 @@ export interface components {
              * @default ok
              */
             msg: string;
-            data?: components["schemas"]["DeviceListResponse"] | null;
+            data?: components["schemas"]["DshHealthOut"] | null;
+        };
+        /** R[DshTaskCancelResponse] */
+        R_DshTaskCancelResponse_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            data?: components["schemas"]["DshTaskCancelResponse"] | null;
+        };
+        /** R[DshTaskOut] */
+        R_DshTaskOut_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            data?: components["schemas"]["DshTaskOut"] | null;
         };
         /** R[EntityExtractResult] */
         R_EntityExtractResult_: {
@@ -12251,6 +12700,20 @@ export interface components {
              */
             msg: string;
             data?: components["schemas"]["ExternalWikiSearchResult"] | null;
+        };
+        /** R[ExtractionQualityOut] */
+        R_ExtractionQualityOut_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            data?: components["schemas"]["ExtractionQualityOut"] | null;
         };
         /** R[FeatureExtractionResult] */
         R_FeatureExtractionResult_: {
@@ -12504,20 +12967,6 @@ export interface components {
             msg: string;
             data?: components["schemas"]["MeOut"] | null;
         };
-        /** R[MetricTimeseriesResponse] */
-        R_MetricTimeseriesResponse_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @default ok
-             */
-            msg: string;
-            data?: components["schemas"]["MetricTimeseriesResponse"] | null;
-        };
         /** R[ModuleAdminLinkOut] */
         R_ModuleAdminLinkOut_: {
             /**
@@ -12700,6 +13149,20 @@ export interface components {
              */
             msg: string;
             data?: components["schemas"]["Page_DatasetListItem_"] | null;
+        };
+        /** R[Page[DshTaskOut]] */
+        R_Page_DshTaskOut__: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            data?: components["schemas"]["Page_DshTaskOut_"] | null;
         };
         /** R[Page[ExecutionOut]] */
         R_Page_ExecutionOut__: {
@@ -12896,48 +13359,6 @@ export interface components {
              */
             msg: string;
             data?: components["schemas"]["Page_WikiRawSourceBrief_"] | null;
-        };
-        /** R[PerfReportResponse] */
-        R_PerfReportResponse_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @default ok
-             */
-            msg: string;
-            data?: components["schemas"]["PerfReportResponse"] | null;
-        };
-        /** R[PerfSessionListResponse] */
-        R_PerfSessionListResponse_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @default ok
-             */
-            msg: string;
-            data?: components["schemas"]["PerfSessionListResponse"] | null;
-        };
-        /** R[PerfSessionOut] */
-        R_PerfSessionOut_: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @default ok
-             */
-            msg: string;
-            data?: components["schemas"]["PerfSessionOut"] | null;
         };
         /** R[PlanDetailOut] */
         R_PlanDetailOut_: {
@@ -13359,6 +13780,20 @@ export interface components {
             msg: string;
             data?: components["schemas"]["VariableResponse"] | null;
         };
+        /** R[VersionCoverageOut] */
+        R_VersionCoverageOut_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            data?: components["schemas"]["VersionCoverageOut"] | null;
+        };
         /** R[VersionMissionOut] */
         R_VersionMissionOut_: {
             /**
@@ -13588,36 +14023,6 @@ export interface components {
             msg: string;
             /** Data */
             data?: components["schemas"]["ApiServiceOut"][] | null;
-        };
-        /** R[list[DeploymentEventOut]] */
-        R_list_DeploymentEventOut__: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @default ok
-             */
-            msg: string;
-            /** Data */
-            data?: components["schemas"]["DeploymentEventOut"][] | null;
-        };
-        /** R[list[DeploymentOut]] */
-        R_list_DeploymentOut__: {
-            /**
-             * Code
-             * @default 0
-             */
-            code: number;
-            /**
-             * Msg
-             * @default ok
-             */
-            msg: string;
-            /** Data */
-            data?: components["schemas"]["DeploymentOut"][] | null;
         };
         /** R[list[DomainNode]] */
         R_list_DomainNode__: {
@@ -14142,6 +14547,35 @@ export interface components {
              * @description 父发布包 ID，形成版本链
              */
             parent_bundle_id?: number | null;
+            /**
+             * Requirement Url
+             * @description 需求地址（蓝湖/PingCode/Confluence/HTML）
+             * @default
+             */
+            requirement_url: string;
+            /**
+             * User Env Url
+             * @description 体育用户端地址
+             * @default
+             */
+            user_env_url: string;
+            /**
+             * Api Spec Url
+             * @description 接口 OpenAPI/Swagger 地址
+             * @default
+             */
+            api_spec_url: string;
+            /**
+             * Admin Env Url
+             * @description 运营后台地址
+             * @default
+             */
+            admin_env_url: string;
+            /**
+             * Environment Id
+             * @description 账号/变量环境 ID
+             */
+            environment_id?: number | null;
         };
         /**
          * ReleaseBundleListItem
@@ -14210,6 +14644,28 @@ export interface components {
              * @default []
              */
             global_navigation: string;
+            /**
+             * Requirement Url
+             * @default
+             */
+            requirement_url: string;
+            /**
+             * User Env Url
+             * @default
+             */
+            user_env_url: string;
+            /**
+             * Api Spec Url
+             * @default
+             */
+            api_spec_url: string;
+            /**
+             * Admin Env Url
+             * @default
+             */
+            admin_env_url: string;
+            /** Environment Id */
+            environment_id?: number | null;
             /** Created At */
             created_at?: string | null;
             /** Updated At */
@@ -14242,6 +14698,31 @@ export interface components {
              * @description 版本差异摘要 JSON
              */
             diff_summary?: string | null;
+            /**
+             * Requirement Url
+             * @description 需求地址
+             */
+            requirement_url?: string | null;
+            /**
+             * User Env Url
+             * @description 体育用户端地址
+             */
+            user_env_url?: string | null;
+            /**
+             * Api Spec Url
+             * @description 接口 OpenAPI/Swagger 地址
+             */
+            api_spec_url?: string | null;
+            /**
+             * Admin Env Url
+             * @description 运营后台地址
+             */
+            admin_env_url?: string | null;
+            /**
+             * Environment Id
+             * @description 账号/变量环境 ID
+             */
+            environment_id?: number | null;
         };
         /**
          * ReleaseBundleVersionChain
@@ -14432,6 +14913,11 @@ export interface components {
              */
             source_ref: string;
             /**
+             * Source Url
+             * @default
+             */
+            source_url: string;
+            /**
              * Status
              * @default uploaded
              */
@@ -14461,6 +14947,11 @@ export interface components {
              * @default not_started
              */
             extraction_status: string;
+            /**
+             * Extraction Meta
+             * @default {}
+             */
+            extraction_meta: string;
             /**
              * Doc Id
              * @default
@@ -14520,6 +15011,11 @@ export interface components {
              * @default
              */
             source_ref: string;
+            /**
+             * Source Url
+             * @default
+             */
+            source_url: string;
             /**
              * Content
              * @default
@@ -14902,6 +15398,8 @@ export interface components {
             description: string;
             /** Plan Id */
             plan_id?: number | null;
+            /** Environment Id */
+            environment_id?: number | null;
             /**
              * Job Type
              * @default plan
@@ -14916,6 +15414,8 @@ export interface components {
              * @default true
              */
             enabled: boolean;
+            /** Disabled Reason */
+            disabled_reason?: string | null;
         };
         /** ScheduleOut */
         ScheduleOut: {
@@ -14941,6 +15441,8 @@ export interface components {
              * @default 0
              */
             plan_id: number | null;
+            /** Environment Id */
+            environment_id?: number | null;
             /**
              * Job Type
              * @default plan
@@ -14958,6 +15460,11 @@ export interface components {
              * @default true
              */
             enabled: boolean;
+            /**
+             * Disabled Reason
+             * @default
+             */
+            disabled_reason: string;
             /** Next Run */
             next_run?: string | null;
             /** Last Run */
@@ -14985,6 +15492,8 @@ export interface components {
             description?: string | null;
             /** Plan Id */
             plan_id?: number | null;
+            /** Environment Id */
+            environment_id?: number | null;
             /** Job Type */
             job_type?: string | null;
             /** Job Id */
@@ -14993,6 +15502,8 @@ export interface components {
             cron_expression?: string | null;
             /** Enabled */
             enabled?: boolean | null;
+            /** Disabled Reason */
+            disabled_reason?: string | null;
         };
         /**
          * SearchHealthOut
@@ -15345,6 +15856,8 @@ export interface components {
              * @default
              */
             source_req_id: string;
+            /** Dataset Id */
+            dataset_id?: number | null;
         };
         /** TestCaseOut */
         TestCaseOut: {
@@ -15499,6 +16012,8 @@ export interface components {
             source_req_id: string;
             /** Source Doc Id */
             source_doc_id?: number | null;
+            /** Dataset Id */
+            dataset_id?: number | null;
             /** Old Id */
             old_id?: number | null;
             /**
@@ -15573,6 +16088,8 @@ export interface components {
             source_req_id?: string | null;
             /** Source Doc Id */
             source_doc_id?: number | null;
+            /** Dataset Id */
+            dataset_id?: number | null;
         };
         /** TestConnectionRequest */
         TestConnectionRequest: {
@@ -15824,6 +16341,8 @@ export interface components {
             browser: string;
             /** Environment Id */
             environment_id?: number | null;
+            /** Case Id */
+            case_id?: number | null;
             /**
              * Cron Expression
              * @default
@@ -15863,6 +16382,13 @@ export interface components {
             browser: string;
             /** Environment Id */
             environment_id?: number | null;
+            /** Case Id */
+            case_id?: number | null;
+            /**
+             * Case Title
+             * @default
+             */
+            case_title: string;
             /**
              * Status
              * @default idle
@@ -15938,6 +16464,13 @@ export interface components {
             browser: string;
             /** Environment Id */
             environment_id?: number | null;
+            /** Case Id */
+            case_id?: number | null;
+            /**
+             * Case Title
+             * @default
+             */
+            case_title: string;
             /**
              * Status
              * @default idle
@@ -15992,6 +16525,8 @@ export interface components {
             browser?: string | null;
             /** Environment Id */
             environment_id?: number | null;
+            /** Case Id */
+            case_id?: number | null;
             /** Cron Expression */
             cron_expression?: string | null;
             /** Schedule Enabled */
@@ -16258,6 +16793,91 @@ export interface components {
             description?: string | null;
         };
         /**
+         * VersionCoverageOut
+         * @description 版本级三类型模块覆盖矩阵与 60% 门禁。
+         */
+        VersionCoverageOut: {
+            /** Bundle Id */
+            bundle_id: number;
+            /**
+             * Bundle Name
+             * @default
+             */
+            bundle_name: string;
+            /**
+             * Client Version
+             * @default
+             */
+            client_version: string;
+            /**
+             * Admin Version
+             * @default
+             */
+            admin_version: string;
+            /**
+             * Total Modules
+             * @default 0
+             */
+            total_modules: number;
+            /**
+             * Covered Modules
+             * @default 0
+             */
+            covered_modules: number;
+            /**
+             * Covered Rate
+             * @default 0
+             */
+            covered_rate: number;
+            /**
+             * Covered Rate Percent
+             * @default 0
+             */
+            covered_rate_percent: number;
+            /**
+             * Executed Covered Modules
+             * @default 0
+             */
+            executed_covered_modules: number;
+            /**
+             * Executed Covered Rate
+             * @default 0
+             */
+            executed_covered_rate: number;
+            /**
+             * Executed Covered Rate Percent
+             * @default 0
+             */
+            executed_covered_rate_percent: number;
+            /**
+             * P0P1 Modules
+             * @default 0
+             */
+            p0p1_modules: number;
+            /**
+             * P0P1 Covered Modules
+             * @default 0
+             */
+            p0p1_covered_modules: number;
+            /**
+             * Target Rate
+             * @default 0.6
+             */
+            target_rate: number;
+            /**
+             * Target Rate Percent
+             * @default 60
+             */
+            target_rate_percent: number;
+            /**
+             * Gate Passed
+             * @default false
+             */
+            gate_passed: boolean;
+            /** Rows */
+            rows?: components["schemas"]["ModuleCoverageRow"][];
+        };
+        /**
          * VersionDiffConfirmRequest
          * @description 确认版本差异并构建模块树请求体。
          */
@@ -16339,6 +16959,11 @@ export interface components {
              * @default
              */
             admin_env_url: string;
+            /**
+             * Api Spec Url
+             * @default
+             */
+            api_spec_url: string;
             /** Environment Id */
             environment_id?: number | null;
             /** Requirement Doc Id */
@@ -16373,6 +16998,8 @@ export interface components {
             test_env_url: string;
             /** Admin Env Url */
             admin_env_url: string;
+            /** Api Spec Url */
+            api_spec_url: string;
             /** Environment Id */
             environment_id: number | null;
             /** Requirement Doc Id */
@@ -16408,6 +17035,8 @@ export interface components {
             test_env_url?: string | null;
             /** Admin Env Url */
             admin_env_url?: string | null;
+            /** Api Spec Url */
+            api_spec_url?: string | null;
             /** Environment Id */
             environment_id?: number | null;
             /** Requirement Doc Id */
@@ -18359,103 +18988,6 @@ export interface operations {
             };
         };
     };
-    list_deployments_api_v1_ops_deployments_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_list_DeploymentOut__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_deployment_api_v1_ops_deployments__deployment_id__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                deployment_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_DeploymentOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_deployment_events_api_v1_ops_deployments__deployment_id__events_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                deployment_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_list_DeploymentEventOut__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     list_projects_api_v1_projects_get: {
         parameters: {
             query?: never;
@@ -20058,6 +20590,7 @@ export interface operations {
                 surface?: string;
                 taxonomy_domain?: string;
                 taxonomy_module?: string;
+                taxonomy_direct?: boolean;
                 case_type?: string;
                 positive_negative?: string;
                 priority?: string;
@@ -20302,41 +20835,6 @@ export interface operations {
             };
         };
     };
-    batch_delete_test_cases_post_api_v1_test_cases_batch_delete_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BatchDeleteBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     execute_test_case_api_v1_test_cases__case_id__execute_post: {
         parameters: {
             query?: never;
@@ -20444,6 +20942,73 @@ export interface operations {
             };
         };
     };
+    list_versions_api_v1_test_cases__case_id__versions_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                case_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_list_dict__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_version_detail_api_v1_test_cases__case_id__versions__version_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                case_id: number;
+                version_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     export_xmind_api_v1_test_cases_export_xmind_get: {
         parameters: {
             query?: {
@@ -20452,6 +21017,7 @@ export interface operations {
                 surface?: string;
                 taxonomy_domain?: string;
                 taxonomy_module?: string;
+                taxonomy_direct?: boolean;
                 positive_negative?: string;
             };
             header?: {
@@ -20525,6 +21091,7 @@ export interface operations {
                 surface?: string;
                 taxonomy_domain?: string;
                 taxonomy_module?: string;
+                taxonomy_direct?: boolean;
                 positive_negative?: string;
             };
             header?: {
@@ -20569,73 +21136,6 @@ export interface operations {
                 "multipart/form-data": components["schemas"]["Body_import_excel_api_v1_test_cases_import_excel_post"];
             };
         };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_versions_api_v1_test_cases__case_id__versions_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                case_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_list_dict__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_version_detail_api_v1_test_cases__case_id__versions__version_id__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                case_id: number;
-                version_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -21453,6 +21953,76 @@ export interface operations {
             };
         };
     };
+    get_plan_stats_api_v1_test_plans__plan_id__stats_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_PlanStats_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    batch_assign_cases_api_v1_test_plans__plan_id__cases_assign_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchAssignBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     execute_case_api_v1_test_plans__plan_id__cases__pcase_id__execute_post: {
         parameters: {
             query?: never;
@@ -21669,39 +22239,6 @@ export interface operations {
             };
         };
     };
-    get_plan_stats_api_v1_test_plans__plan_id__stats_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                plan_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_PlanStats_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     batch_execute_cases_api_v1_test_plans__plan_id__batch_execute_post: {
         parameters: {
             query?: never;
@@ -21726,424 +22263,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    batch_assign_cases_api_v1_test_plans__plan_id__cases_assign_put: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                plan_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BatchAssignBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_tasks_api_v1_av_checks_get: {
-        parameters: {
-            query?: {
-                protocol?: string | null;
-                status?: string | null;
-                keyword?: string;
-                page?: number;
-                page_size?: number;
-            };
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_task_api_v1_av_checks_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AvCheckTaskCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_AvCheckTaskOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    measurement_templates_api_v1_av_checks_templates_measurements_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_list_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_task_api_v1_av_checks__task_id__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                task_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_AvCheckTaskOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_task_api_v1_av_checks__task_id__put: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                task_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AvCheckTaskUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_AvCheckTaskOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_task_api_v1_av_checks__task_id__delete: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                task_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_measurement_api_v1_av_checks__task_id__measurements_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                task_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AvCheckMeasurementCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_AvCheckMeasurementOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_measurement_api_v1_av_checks__task_id__measurements__measurement_id__put: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                task_id: number;
-                measurement_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AvCheckMeasurementUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_AvCheckMeasurementOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_measurement_api_v1_av_checks__task_id__measurements__measurement_id__delete: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                task_id: number;
-                measurement_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    trigger_task_api_v1_av_checks__task_id__trigger_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                task_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_AvCheckTaskOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_metrics_api_v1_av_checks__task_id__metrics_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                task_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_list_"];
                 };
             };
             /** @description Validation Error */
@@ -22215,6 +22334,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["R_UiTestJobOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_jobs_from_cases_api_v1_ui_tests_jobs_from_cases_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FromCasesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
                 };
             };
             /** @description Validation Error */
@@ -22940,6 +23094,39 @@ export interface operations {
             };
         };
     };
+    get_requirement_coverage_api_v1_requirements__document_id__coverage_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     extract_features_api_v1_requirements__document_id__extract_post: {
         parameters: {
             query?: never;
@@ -23006,6 +23193,39 @@ export interface operations {
             };
         };
     };
+    get_extraction_quality_api_v1_requirements__document_id__extraction_quality_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_ExtractionQualityOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     confirm_extraction_api_v1_requirements__document_id__extraction_confirm_post: {
         parameters: {
             query?: never;
@@ -23022,6 +23242,105 @@ export interface operations {
                 "application/json": components["schemas"]["ExtractionConfirmRequest"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    extract_features_async_api_v1_requirements__document_id__extract_async_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_test_cases_async_api_v1_requirements__document_id__generate_async_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_ai_task_status_api_v1_requirements_ai_task__task_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -23067,6 +23386,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["R_AIGenerateResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_api_from_endpoints_api_v1_requirements__document_id__generate_api_from_endpoints_post: {
+        parameters: {
+            query?: {
+                service_id?: number | null;
+            };
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
                 };
             };
             /** @description Validation Error */
@@ -23315,138 +23669,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["R_AIGenerateResult_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_requirement_coverage_api_v1_requirements__document_id__coverage_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                document_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    extract_features_async_api_v1_requirements__document_id__extract_async_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                document_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    generate_test_cases_async_api_v1_requirements__document_id__generate_async_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                document_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_ai_task_status_api_v1_requirements_ai_task__task_id__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                task_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
                 };
             };
             /** @description Validation Error */
@@ -23989,6 +24211,401 @@ export interface operations {
             };
         };
     };
+    open_list_knowledge_sources_api_v1_open_knowledge_sources_get: {
+        parameters: {
+            query?: {
+                source_type?: string | null;
+                keyword?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: {
+                Authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_search_knowledge_api_v1_open_knowledge_search_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_list_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_get_module_topology_api_v1_open_knowledge_modules_get: {
+        parameters: {
+            query?: {
+                module?: string | null;
+                limit?: number;
+            };
+            header?: {
+                Authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_list_requirements_api_v1_open_requirements_get: {
+        parameters: {
+            query?: {
+                keyword?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: {
+                Authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_list_test_cases_api_v1_open_test_cases_get: {
+        parameters: {
+            query?: {
+                module?: string;
+                domain?: string;
+                case_type?: string;
+                priority?: string;
+                keyword?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: {
+                Authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_create_test_case_api_v1_open_test_cases_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_list_plans_api_v1_open_plans_get: {
+        parameters: {
+            query?: {
+                status?: string;
+                keyword?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: {
+                Authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_get_plan_api_v1_open_plans__plan_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string | null;
+            };
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_list_plan_executions_api_v1_open_plans__plan_id__executions_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: {
+                Authorization?: string | null;
+            };
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_list_ui_jobs_api_v1_open_ui_tests_get: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: {
+                Authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_create_defect_api_v1_open_defects_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_tokens_api_v1_tokens_get: {
         parameters: {
             query?: never;
@@ -24108,41 +24725,6 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    api_quick_execute_api_v1_apitest_api_execute_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ApiExecutionRequest"];
-            };
-        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -24583,6 +25165,111 @@ export interface operations {
             };
         };
     };
+    analyze_change_impact_api_v1_apitest_cases_change_impact_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpenApiChangeAnalyzeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generalize_from_manual_api_v1_apitest_cases_generalize_from_manual_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GeneralizeApiCasesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_quick_execute_api_v1_apitest_api_execute_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiExecutionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_tasks_api_v1_apitest_tasks_get: {
         parameters: {
             query?: {
@@ -24674,6 +25361,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["R_ApiTaskDetailOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_task_api_v1_apitest_tasks__task_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
                 };
             };
             /** @description Validation Error */
@@ -26139,6 +26859,560 @@ export interface operations {
             };
         };
     };
+    extract_graph_api_v1_knowledge_graph_extract_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntityExtractRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_EntityExtractResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    entity_stats_api_v1_knowledge_graph_entities_stats_get: {
+        parameters: {
+            query?: {
+                entity_type?: string | null;
+                keyword?: string | null;
+                /** @description 知识域过滤: project | platform */
+                knowledge_domain?: string | null;
+            };
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_KnowledgeEntityStats_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_entities_api_v1_knowledge_graph_entities_get: {
+        parameters: {
+            query?: {
+                entity_type?: string | null;
+                keyword?: string | null;
+                /** @description 知识域过滤: project | platform */
+                knowledge_domain?: string | null;
+                limit?: number;
+            };
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_list_KnowledgeEntityBrief__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_entity_api_v1_knowledge_graph_entities__entity_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_KnowledgeEntityOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_relations_api_v1_knowledge_graph_relations_get: {
+        parameters: {
+            query?: {
+                /** @description 过滤以该实体为起点的关系 */
+                entity_id?: number | null;
+                relation_type?: string | null;
+                limit?: number;
+            };
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_list_KnowledgeRelationOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    graph_view_api_v1_knowledge_graph_view_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description 知识域过滤: project | platform */
+                knowledge_domain?: string | null;
+            };
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_GraphViewOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_relation_api_v1_knowledge_graph_relations__relation_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                relation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelationApprovalRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_KnowledgeRelationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_relation_api_v1_knowledge_graph_relations__relation_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                relation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelationApprovalRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_KnowledgeRelationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    backfill_graph_source_api_v1_knowledge_graph_backfill_source_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    evolve_graph_api_v1_knowledge_graph_evolve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_GraphEvolveResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auto_build_graph_api_v1_knowledge_graph_auto_build_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AutoBuildRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_AutoBuildResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_module_associations_api_v1_knowledge_graph_module_associations_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModuleAssociationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_ModuleAssociationResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sync_test_cases_to_graph_api_v1_knowledge_graph_sync_test_cases_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_design_assets_api_v1_knowledge_design_assets_import_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DesignAssetImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_DesignAssetImportResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_design_asset_api_v1_knowledge_design_assets__source_id___filename__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                source_id: number;
+                filename: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    graph_hierarchy_api_v1_knowledge_graph_hierarchy_get: {
+        parameters: {
+            query?: {
+                /** @description 指定发布包，不传则返回最新 active */
+                release_bundle_id?: number | null;
+                /** @description 层级深度：1=项目, 2=版本, 3=平台, 4=模块, 5=页面 */
+                max_depth?: number;
+            };
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_ProjectSphereView_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_artifacts_api_v1_knowledge_ai_artifacts_get: {
         parameters: {
             query?: {
@@ -26424,458 +27698,6 @@ export interface operations {
             };
         };
     };
-    extract_graph_api_v1_knowledge_graph_extract_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["EntityExtractRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_EntityExtractResult_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    entity_stats_api_v1_knowledge_graph_entities_stats_get: {
-        parameters: {
-            query?: {
-                entity_type?: string | null;
-                keyword?: string | null;
-            };
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_KnowledgeEntityStats_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_entities_api_v1_knowledge_graph_entities_get: {
-        parameters: {
-            query?: {
-                entity_type?: string | null;
-                keyword?: string | null;
-                limit?: number;
-            };
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_list_KnowledgeEntityBrief__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_entity_api_v1_knowledge_graph_entities__entity_id__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                entity_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_KnowledgeEntityOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_relations_api_v1_knowledge_graph_relations_get: {
-        parameters: {
-            query?: {
-                /** @description 过滤以该实体为起点的关系 */
-                entity_id?: number | null;
-                relation_type?: string | null;
-                limit?: number;
-            };
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_list_KnowledgeRelationOut__"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    graph_view_api_v1_knowledge_graph_view_get: {
-        parameters: {
-            query?: {
-                limit?: number;
-                /** @description 知识域过滤: project | platform */
-                knowledge_domain?: string | null;
-            };
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_GraphViewOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    approve_relation_api_v1_knowledge_graph_relations__relation_id__approve_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                relation_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RelationApprovalRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_KnowledgeRelationOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    reject_relation_api_v1_knowledge_graph_relations__relation_id__reject_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                relation_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RelationApprovalRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_KnowledgeRelationOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    evolve_graph_api_v1_knowledge_graph_evolve_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_GraphEvolveResult_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    auto_build_graph_api_v1_knowledge_graph_auto_build_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AutoBuildRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_AutoBuildResult_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    import_module_associations_api_v1_knowledge_graph_module_associations_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ModuleAssociationRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_ModuleAssociationResult_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    import_design_assets_api_v1_knowledge_design_assets_import_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DesignAssetImportRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_DesignAssetImportResult_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_design_asset_api_v1_knowledge_design_assets__source_id___filename__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                source_id: number;
-                filename: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     list_skills_api_v1_knowledge_skills_get: {
         parameters: {
             query?: never;
@@ -27137,42 +27959,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["R_CompareSnapshotsOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    graph_hierarchy_api_v1_knowledge_graph_hierarchy_get: {
-        parameters: {
-            query?: {
-                /** @description 指定发布包，不传则返回最新 active */
-                release_bundle_id?: number | null;
-                /** @description 层级深度：1=项目, 2=版本, 3=平台, 4=模块, 5=页面 */
-                max_depth?: number;
-            };
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_ProjectSphereView_"];
                 };
             };
             /** @description Validation Error */
@@ -27500,6 +28286,507 @@ export interface operations {
             path: {
                 item_id: number;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dsh_health_api_v1_dsh_tasks_health_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_DshHealthOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dsh_model_pool_api_v1_dsh_tasks_model_pool_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_task_image_api_v1_dsh_tasks_upload_image_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_task_image_api_v1_dsh_tasks_upload_image_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_dsh_tasks_api_v1_dsh_tasks_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_Page_DshTaskOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_dsh_task_api_v1_dsh_tasks_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DshTaskCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_DshTaskOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_dsh_task_api_v1_dsh_tasks__task_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_DshTaskOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dsh_task_artifacts_api_v1_dsh_tasks__task_id__artifacts_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_list_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_dsh_task_api_v1_dsh_tasks__task_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_DshTaskCancelResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_providers_api_v1_ai_config_providers_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_list_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_provider_api_v1_ai_config_providers_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProviderIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_provider_api_v1_ai_config_providers__provider_id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                provider_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProviderUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_provider_api_v1_ai_config_providers__provider_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                provider_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    test_connection_api_v1_ai_config_providers__provider_id__test_connection_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                provider_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    discover_models_api_v1_ai_config_providers_discover_models_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscoverModelsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_config_api_v1_ai_config_resolve_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -29020,6 +30307,72 @@ export interface operations {
             };
         };
     };
+    get_bundle_coverage_api_v1_release_bundles__bundle_id__coverage_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                bundle_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_VersionCoverageOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_bundle_requirement_api_v1_release_bundles__bundle_id__import_requirement_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                bundle_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_version_chain_api_v1_release_bundles__bundle_id__version_chain_get: {
         parameters: {
             query?: never;
@@ -29040,6 +30393,76 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["R_list_ReleaseBundleVersionChain__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_regression_scope_api_v1_release_bundles__bundle_id__regression_scope_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                bundle_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trigger_regression_for_bundle_api_v1_release_bundles__bundle_id__trigger_regression_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                bundle_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TriggerRegressionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
                 };
             };
             /** @description Validation Error */
@@ -29104,76 +30527,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["VersionDiffConfirmRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_regression_scope_api_v1_release_bundles__bundle_id__regression_scope_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                bundle_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    trigger_regression_for_bundle_api_v1_release_bundles__bundle_id__trigger_regression_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                bundle_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TriggerRegressionRequest"];
             };
         };
         responses: {
@@ -29483,6 +30836,76 @@ export interface operations {
             };
         };
     };
+    production_diff_annotate_api_v1_requirement_modules_production_diff_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductionDiffRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_module_tree_api_v1_requirement_modules_import_tree_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModuleTreeImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_ModuleTreeImportResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     extract_interactions_api_v1_requirement_modules_bundle__bundle_id__extract_interactions_post: {
         parameters: {
             query?: never;
@@ -29701,6 +31124,43 @@ export interface operations {
             };
         };
     };
+    extract_attachments_api_v1_requirement_modules_bundle__bundle_id__extract_attachments_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                bundle_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttachmentExtractRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_AttachmentExtractResultOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_admin_links_api_v1_requirement_modules_bundle__bundle_id__admin_links_get: {
         parameters: {
             query?: {
@@ -29805,113 +31265,6 @@ export interface operations {
             };
         };
     };
-    extract_attachments_api_v1_requirement_modules_bundle__bundle_id__extract_attachments_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                bundle_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AttachmentExtractRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_AttachmentExtractResultOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    production_diff_annotate_api_v1_requirement_modules_production_diff_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProductionDiffRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    import_module_tree_api_v1_requirement_modules_import_tree_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ModuleTreeImportRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_ModuleTreeImportResult_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     topology_edges_api_v1_interaction_coverage_topology_get: {
         parameters: {
             query?: never;
@@ -29992,6 +31345,76 @@ export interface operations {
                 "application/json": {
                     [key: string]: unknown;
                 };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_lanhu_cookie_api_v1_lanhu_evidence_cookie_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LanhuCookieUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lanhu_relogin_api_v1_lanhu_evidence_login_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LanhuLoginRequest"];
             };
         };
         responses: {
@@ -30150,6 +31573,72 @@ export interface operations {
             };
         };
     };
+    cancel_job_api_v1_lanhu_evidence_jobs__job_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                job_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_LanhuEvidenceJobOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_job_api_v1_lanhu_evidence_jobs__job_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                job_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_LanhuEvidenceJobOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_pages_api_v1_lanhu_evidence_jobs__job_id__pages_get: {
         parameters: {
             query?: never;
@@ -30249,43 +31738,6 @@ export interface operations {
             };
         };
     };
-    review_page_api_v1_lanhu_evidence_pages__page_id__review_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                page_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LanhuEvidencePageReviewRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_LanhuEvidencePageOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     download_asset_api_v1_lanhu_evidence_assets__asset_id__get: {
         parameters: {
             query?: never;
@@ -30306,72 +31758,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    cancel_job_api_v1_lanhu_evidence_jobs__job_id__cancel_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                job_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_LanhuEvidenceJobOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    retry_job_api_v1_lanhu_evidence_jobs__job_id__retry_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                job_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_LanhuEvidenceJobOut_"];
                 };
             };
             /** @description Validation Error */
@@ -30422,16 +31808,22 @@ export interface operations {
             };
         };
     };
-    list_devices_api_v1_perf_sessions_devices_get: {
+    review_page_api_v1_lanhu_evidence_pages__page_id__review_post: {
         parameters: {
             query?: never;
             header?: {
                 "X-Project-Id"?: number | null;
             };
-            path?: never;
+            path: {
+                page_id: number;
+            };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LanhuEvidencePageReviewRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -30439,7 +31831,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["R_DeviceListResponse_"];
+                    "application/json": components["schemas"]["R_LanhuEvidencePageOut_"];
                 };
             };
             /** @description Validation Error */
@@ -30453,44 +31845,7 @@ export interface operations {
             };
         };
     };
-    list_sessions_api_v1_perf_sessions_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-                platform?: string | null;
-                device_id?: string | null;
-                pkg_name?: string | null;
-            };
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_PerfSessionListResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_session_api_v1_perf_sessions_post: {
+    batch_compile_endpoint_api_v1_playground_batch_compile_post: {
         parameters: {
             query?: never;
             header?: {
@@ -30501,7 +31856,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PerfSessionCreate"];
+                "application/json": components["schemas"]["PlaygroundBatchCompileRequest"];
             };
         };
         responses: {
@@ -30511,7 +31866,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["R_PerfSessionOut_"];
+                    "application/json": components["schemas"]["PlaygroundBatchCompileResponse"];
                 };
             };
             /** @description Validation Error */
@@ -30525,207 +31880,7 @@ export interface operations {
             };
         };
     };
-    get_session_api_v1_perf_sessions__session_id__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                session_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_PerfSessionOut_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_session_api_v1_perf_sessions__session_id__delete: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                session_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    start_session_api_v1_perf_sessions__session_id__start_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                session_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    stop_session_api_v1_perf_sessions__session_id__stop_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                session_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_metrics_api_v1_perf_sessions__session_id__metrics_get: {
-        parameters: {
-            query?: {
-                sinceTs?: number;
-            };
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                session_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_MetricTimeseriesResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_report_api_v1_perf_sessions__session_id__report_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Project-Id"?: number | null;
-            };
-            path: {
-                session_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["R_PerfReportResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    compare_sessions_api_v1_perf_sessions_compare_post: {
+    batch_run_endpoint_api_v1_playground_batch_run_post: {
         parameters: {
             query?: never;
             header?: {
@@ -30736,7 +31891,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CompareRequest"];
+                "application/json": components["schemas"]["PlaygroundBatchRunRequest"];
             };
         };
         responses: {
@@ -30746,7 +31901,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["R_CompareResponse_"];
+                    "application/json": components["schemas"]["PlaygroundBatchRunResponse"];
                 };
             };
             /** @description Validation Error */
