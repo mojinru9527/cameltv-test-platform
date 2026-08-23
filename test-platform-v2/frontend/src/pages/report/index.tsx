@@ -110,10 +110,12 @@ import {
 // 图标/颜色按归一后取值，标签统一走 execStatusLabel
 const STATUS_CONFIG: Record<string, { icon: typeof CheckCircle2; color: string; tone: 'neutral' | 'danger' }> = {
   pending: { icon: Clock, color: 'text-muted-foreground', tone: 'neutral' },
+  running: { icon: Loader2, color: 'text-status-info', tone: 'neutral' },
   passed: { icon: CheckCircle2, color: 'text-status-success', tone: 'neutral' },
   failed: { icon: XCircle, color: 'text-status-danger', tone: 'danger' },
   skipped: { icon: MinusCircle, color: 'text-status-warning', tone: 'neutral' },
   blocked: { icon: StopCircle, color: 'text-muted-foreground', tone: 'neutral' },
+  cancelled: { icon: StopCircle, color: 'text-status-warning', tone: 'neutral' },
 }
 
 const PRIORITY_CONFIG: Record<string, 'neutral' | 'danger'> = {

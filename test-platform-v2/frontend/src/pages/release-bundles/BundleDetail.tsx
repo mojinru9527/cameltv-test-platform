@@ -95,6 +95,7 @@ export default function BundleDetailPage() {
     api_spec_url: '',
     admin_env_url: '',
     environment_id: undefined as number | null | undefined,
+    parent_bundle_id: undefined as number | null | undefined,
   })
   const [importingRequirement, setImportingRequirement] = useState(false)
 
@@ -135,6 +136,7 @@ export default function BundleDetailPage() {
       api_spec_url: bundle.api_spec_url ?? '',
       admin_env_url: bundle.admin_env_url ?? '',
       environment_id: bundle.environment_id ?? undefined,
+      parent_bundle_id: bundle.parent_bundle_id ?? undefined,
     })
     setEditing(true)
   }
@@ -152,7 +154,8 @@ export default function BundleDetailPage() {
         user_env_url: editForm.user_env_url,
         api_spec_url: editForm.api_spec_url,
         admin_env_url: editForm.admin_env_url,
-        environment_id: editForm.environment_id ?? null
+        environment_id: editForm.environment_id ?? null,
+        parent_bundle_id: editForm.parent_bundle_id ?? null,
       })
       setData(updated)
       setEditing(false)
@@ -532,6 +535,18 @@ export default function BundleDetailPage() {
                   <option value="active">活跃</option>
                   <option value="archived">已归档</option>
                 </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>父版本（parent_bundle_id）</Label>
+                <Input
+                  type="number"
+                  placeholder="父发布包 ID；留空表示独立版本（可用于版本差异对比）"
+                  value={editForm.parent_bundle_id ?? ''}
+                  onChange={(e) => setEditForm({
+                    ...editForm,
+                    parent_bundle_id: e.target.value === '' ? null : Number(e.target.value),
+                  })}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>账号/变量环境</Label>

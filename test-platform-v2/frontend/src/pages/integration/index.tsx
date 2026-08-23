@@ -300,10 +300,23 @@ export default function IntegrationPage() {
         direction: target.sync_direction,
         confirm_prod: isProductionEnvironment,
       })
-      toast.success(`同步完成: 推送 ${r.pushed}, 拉取 ${r.pulled}, 错误 ${r.errors}`)
+      // B1：按后端真实结果提示（code=0 且成功才绿色）
+      toast.success(r.message || `同步完成: 推送 ${r.pushed}, 拉取 ${r.pulled}`)
       refresh()
     } catch (e: any) {
-      toast.error(e?.message || '同步失败')
+      // B1：后端 code!=0（errors>0 失败语义 / 推拉全 0 无变更）在此拒绝
+      const data = e?.data ?? {}
+      const errors = data.errors ?? 0
+      const pushed = data.pushed ?? 0
+      const pulled = data.pulled ?? 0
+      const msg = e?.message || '同步失败'
+      if (errors > 0) {
+        toast.error(msg)
+      } else if (pushed === 0 && pulled === 0) {
+        toast.warning(msg)
+      } else {
+        toast.error(msg)
+      }
     } finally {
       setSyncing(null)
     }
