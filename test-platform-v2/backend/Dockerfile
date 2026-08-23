@@ -29,12 +29,14 @@ ENV VIRTUAL_ENV=/opt/venv \
 
 # Node 22（NodeSource）：dsh CLI 依赖 commander>=22.12 / pi-ai>=22.19，
 # Debian apt 的 nodejs（18/20）不满足（Batch 191 生产构建报 EBADENGINE）。
+# openssh-client：发布平台 SSH 执行器（release-platform batch）依赖 ssh/scp。
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         curl \
         git \
         ffmpeg \
+        openssh-client \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
