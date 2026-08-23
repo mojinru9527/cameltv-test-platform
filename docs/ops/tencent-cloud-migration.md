@@ -255,20 +255,20 @@ docker compose --project-name cameltv-tp-production --env-file config/runtime/pr
 
 1. **服务器无法直连 GitHub/PyPI/npm**：国内轻量服务器出网受限（GitHub TLS 中断、PyPI 17KB/s）。解决 = 本地构建镜像 `docker save` → scp → `docker load`；代码用本地 tar 打包传输。
 2. **ufw 是隐藏拦截层**：腾讯云控制台防火墙规则之外，实例内 `ufw status` 必须同步放行 80/443，否则 ACME 验证和公网访问全部失败。
-3. **Dockerfile 构建期 clone lanhu-mcp 需改本地 COPY**：`COPY lanhu-mcp/lanhu_mcp_server.py /tmp/lanhu-mcp-local.py` + `RUN if [ -s ... ]` 条件分支，本地文件缺失时回退 git clone（云构建兼容）。此修改已合入 main（待 PR 确认）。
+3. **Dockerfile 构建期 clone lanhu-mcp 需改本地 COPY**：`COPY lanhu-mcp/lanhu_mcp_server.py /tmp/lanhu-mcp-local.py` + `RUN if [ -s ... ]` 条件分支，本地文件缺失时回退 git clone（云构建兼容）。#300 曾合入，后被 #302/#303 回退为**全量 git clone**（Railway builder 不支持 bind-mount 且 archive 发运丢弃子模块空目录，COPY 缺失=构建直接失败）；服务器本地构建不受影响，使用本地变体 `test-platform-v2/backend/Dockerfile.local`（COPY 方式，本批新增）。
 4. **SECRET_KEY 必须复用 Railway 生产值**：Fernet 密钥 = sha256(SECRET_KEY)，且 AI provider 的 `api_key_encrypted` 用它解密。本地旧 production.env 的 SECRET_KEY（43 字符）与 Railway 生产（64 字符）不同，导致 `InvalidToken`。用 `railway variable list --kv` 拉取生产值对齐。
 5. **PG 密码不一致**：compose `up` 不重建已存在容器，POSTGRES_PASSWORD 只在首次初始化生效；环境文件改密码后必须 `ALTER USER` 或 `--force-recreate`，DATABASE_URL 密码需与容器实际一致。
 6. **Nginx 反代 DNS 缓存**：backend 容器 recreate 后 IP 变化，frontend Nginx 缓存的旧 DNS 导致 `/api` 502；重启 frontend 刷新即可。
 7. **前端端口映射**：Caddy 占宿主 80，前端容器须映射 `127.0.0.1:8080:80`（改主 compose `docker-compose.yml` 的 `FRONTEND_PORT` 硬编码，override 追加端口会与主配置合并冲突）。
 8. **railway ssh 直接连**：`railway ssh` 子命令会挂起；用 `railway ssh config --dry-run` 取 User id 后直接 `ssh <user>@ssh.railway.com`。
-9. **admin 密码为验收时重置值**：旧 production.env 的 `ADMIN_PASSWORD` 是发布初始密码，生产验收被临时重置过；当前有效管理员密码为 sportsadmin（体育平台管理员）+ 验收时设置的新值。
+9. **admin 密码为验收时重置值**：旧 production.env 的 `ADMIN_PASSWORD` 是发布初始密码，生产验收被临时重置过；当前有效管理员密码**以发布控制台/密码管理器记录为准，不回写仓库**（见 A3 待办：确认/重置 admin 密码）。
 
 ### A3. 待办（上线后）
 
-- [ ] 旧 Vercel/Railway/Supabase 保留观察 ≥24h（截止 2026-08-23 24:00）后按 §8 下线（观察期已过；是否下线由负责人确认，参见附录 B3）
-- [ ] 确认 admin 账号当前有效密码或执行密码重置
-- [x] Dockerfile lanhu-mcp 本地 COPY 修改合入 main（PR 流程）——#300 合入后被 #302/#303 回退为全量 git clone（Railway builder 不支持 bind-mount 且 archive 丢弃子模块空目录；服务器本地构建不受影响，见附录 B1 模板）
-- [ ] 迁移经验（附录 A2）同步到 `docs/common-pitfalls.md`
+- [x] 旧 Vercel/Railway/Supabase 保留观察 ≥24h（截止 2026-08-23 24:00）后按 §8 下线——**2026-08-23 用户确认已下架**；清单与执行登记见 `docs/ops/old-env-decommission-checklist.md`
+- [ ] 确认 admin 账号当前有效密码或执行密码重置（运维动作，需用户配合；生产口令不回写仓库）
+- [x] Dockerfile lanhu-mcp 本地 COPY 修改合入 main（PR 流程）——#300 合入后被 #302/#303 回退为全量 git clone（Railway builder 不支持 bind-mount 且 archive 丢弃子模块空目录；服务器本地构建不受影响，见附录 B1 模板）；本批新增本地变体 `test-platform-v2/backend/Dockerfile.local`
+- [x] 迁移经验（附录 A2）同步到 `docs/common-pitfalls.md`（本批完成）
 
 ## 附录 B：c165-3 增量升级记录（2026-08-23）
 

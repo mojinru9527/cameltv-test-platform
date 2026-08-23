@@ -112,7 +112,7 @@ def call_import(client: httpx.Client, base: str, headers: dict, batch: list[dict
 def main() -> int:
     ap = argparse.ArgumentParser(description="需求/设计稿入库（蓝湖导出 → design-assets）")
     ap.add_argument("--export-dir", type=Path, default=DEFAULT_EXPORT)
-    ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://test-platform.up.railway.app/api/v1"))
+    ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://swiftbugs.cn/api/v1"))
     ap.add_argument("--username", default=os.environ.get("TP_ADMIN_USER", "sportsadmin"))
     ap.add_argument("--password", default=os.environ.get("TP_ADMIN_PASSWORD", ""))
     ap.add_argument("--dry-run", action="store_true", help="只打印不请求")
@@ -133,7 +133,7 @@ def main() -> int:
         return 1
 
     base = args.backend_url.rstrip("/")
-    headers = {"X-Project-Id": "0", "Origin": "https://test-platform.up.railway.app"}
+    headers = {"X-Project-Id": "0", "Origin": "https://swiftbugs.cn"}
     if not args.dry_run:
         with httpx.Client(timeout=120) as client:
             r = client.post(base + "/auth/login", json={"username": args.username, "password": args.password})

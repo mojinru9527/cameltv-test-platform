@@ -8,6 +8,8 @@ tags: ["batch-58", "production", "cloudflare", "vercel", "supabase", "registrati
 
 # Batch 58 生产基础设施注册操作单
 
+> ⚠️ **已迁移/退役（2026-08-22 → swiftbugs.cn）**：本操作单描述 2026-07-30 注册 Vercel/Cloudflare/Supabase 的历史流程，仅作存档；当前生产为腾讯云广州单机 https://swiftbugs.cn（ICP 粤ICP备2026121122号-1），部署/运维见 docs/ops/tencent-cloud-migration.md。
+
 > 三个平台均需浏览器交互注册。以下为逐步操作指南。
 
 ## 0. 前置准备
