@@ -30,4 +30,41 @@ describe('接口资产路径处理', () => {
     expect(displayAssetSegment('/ee/search')).toBe('ee-search')
     expect(displayAssetSegment('/synonyms/cou')).toBe('synonyms-cou')
   })
+
+  it('A组：tags 当模块且不是路径前缀时，不误作模块路径（从 path 推导）', () => {
+    // 证据：module=sports-live-controller（tags[0]），path=/ee/sports_live/home_match
+    // 旧实现把 controller 名拼进 URL → …/camel-service/sports-live-controller/ee/sports_live/home_match
+    expect(splitAssetRoute('camel-service', 'sports-live-controller', '/ee/sports_live/home_match')).toEqual({
+      modulePath: '/ee/sports_live',
+      endpointPath: '/home_match',
+    })
+    expect(composeAssetUrl(
+      'http://camel-api-gateway05.svc.elelive.cn',
+      'camel-service',
+      '/ee/sports_live',
+      '/home_match',
+    )).toBe('http://camel-api-gateway05.svc.elelive.cn/camel-service/ee/sports_live/home_match')
+  })
+
+  it('A组：path 已含服务名前缀时不再双拼 serviceName', () => {
+    expect(splitAssetRoute('camel-service', '', '/camel-service/ee/sports_live/home_match')).toEqual({
+      modulePath: '/ee/sports_live',
+      endpointPath: '/home_match',
+    })
+    expect(composeAssetUrl(
+      'http://camel-api-gateway05.svc.elelive.cn',
+      'camel-service',
+      '/ee/sports_live',
+      '/home_match',
+    )).toBe('http://camel-api-gateway05.svc.elelive.cn/camel-service/ee/sports_live/home_match')
+  })
+
+  it('A组：base 已含服务名尾段时不再重复拼接服务名', () => {
+    expect(composeAssetUrl(
+      'http://camel-api-gateway05.svc.elelive.cn/camel-service',
+      'camel-service',
+      '/ee/sports_live',
+      '/home_match',
+    )).toBe('http://camel-api-gateway05.svc.elelive.cn/camel-service/ee/sports_live/home_match')
+  })
 })

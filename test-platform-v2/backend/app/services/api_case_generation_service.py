@@ -62,7 +62,7 @@ def generate_cases_from_real_sample(endpoint: dict, real_sample: dict) -> list[d
             "module": endpoint.get("module", ""),
             "case_type": "api",
             "priority": priority,
-            "preconditions": f"接口 {method} {path} 可访问",
+            "preconditions": _describe_preconditions(method, path, endpoint),
             "steps": [{"step": 1, "action": f"发送 {method} 请求到 {path}", "expected": expected}],
             "expected_result": expected,
             "api_method": method,
@@ -89,7 +89,7 @@ def generate_cases_from_real_sample(endpoint: dict, real_sample: dict) -> list[d
             {"type": "status_code", "expected": 200, "operator": "gte"},
             {"type": "status_code", "expected": 300, "operator": "lt"},
             {"type": "response_time", "expected": 5000, "operator": "lt"},
-        ] + _resp_assertions,
+        ] + _resp_assertions + _contract_business_assertions(endpoint),
         priority="P0",
     ))
 
@@ -102,7 +102,7 @@ def generate_cases_from_real_sample(endpoint: dict, real_sample: dict) -> list[d
             assertions=[
                 {"type": "status_code", "expected": 200, "operator": "gte"},
                 {"type": "status_code", "expected": 300, "operator": "lt"},
-            ] + _resp_assertions,
+            ] + _resp_assertions + _contract_business_assertions(endpoint),
             priority="P0",
         ))
 
@@ -115,7 +115,7 @@ def generate_cases_from_real_sample(endpoint: dict, real_sample: dict) -> list[d
             {"type": "status_code", "expected": 200, "operator": "gte"},
             {"type": "status_code", "expected": 300, "operator": "lt"},
             {"type": "response_time", "expected": 5000, "operator": "lt"},
-        ] + _resp_assertions,
+        ] + _resp_assertions + _contract_business_assertions(endpoint),
         priority="P0",
     ))
 
@@ -408,8 +408,8 @@ def _build_positive_case(ep: dict, real: dict | None = None) -> dict:
             {"type": "status_code", "expected": 200, "operator": "gte"},   # >=200
             {"type": "status_code", "expected": 300, "operator": "lt"},    # <300 = 2xx
             {"type": "response_time", "expected": 5000, "operator": "lt"},
-        ],
-        expected="接口返回 2xx 状态码，响应时间 < 5s。",
+        ] + _contract_business_assertions(ep),
+        expected="接口返回 2xx 状态码，响应时间 < 5s，业务码/核心字段按契约校验。",
     )
     if data_note:
         c["test_data_note"] = data_note
@@ -440,8 +440,8 @@ def _build_query_param_case(ep: dict, query_params: list, real: dict | None = No
         assertions=[
             {"type": "status_code", "expected": 200, "operator": "gte"},
             {"type": "status_code", "expected": 300, "operator": "lt"},
-        ],
-        expected="正确传入 query 参数时返回 2xx。",
+        ] + _contract_business_assertions(ep),
+        expected="正确传入 query 参数时返回 2xx，业务码/核心字段按契约校验。",
     )
     if real:
         c["test_data_note"] = "数据来源：生产/测试环境真实业务请求样本（query 参数真实值）。"
@@ -1100,7 +1100,7 @@ def _build_smoke_cases(ep: dict, real: dict | None = None) -> list[dict]:
         {"type": "status_code", "expected": 200, "operator": "gte"},
         {"type": "status_code", "expected": 300, "operator": "lt"},
         {"type": "response_time", "expected": 5000, "operator": "lt"},
-    ]
+    ] + _contract_business_assertions(ep)
     if real:
         assertions.extend(_response_structure_assertions(real))
     return [_make_case(
@@ -1711,7 +1711,7 @@ def _make_case(
         "module": module,
         "case_type": "api",
         "priority": priority,
-        "preconditions": f"接口 {method} {path} 可访问",
+        "preconditions": _describe_preconditions(method, path, ep),
         "steps": [
             {"step": 1, "action": f"发送 {method} 请求到 {path}", "expected": expected},
         ],
@@ -1731,6 +1731,102 @@ def _make_case(
             "source:ai_generated",
         ],
     }
+
+
+def _schema_of_ep(ep: dict, key: str) -> dict:
+    """从 endpoint dict 读取 schema 字段（DB 转 str 或 dict 两种形态）。"""
+    raw = ep.get(key) or {}
+    if isinstance(raw, str):
+        if not raw.strip():
+            return {}
+        try:
+            parsed = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+    return raw if isinstance(raw, dict) else {}
+
+
+def _describe_preconditions(method: str, path: str, endpoint: dict) -> str:
+    """构造用例前置条件：契约真实描述（A组，替换「接口 XX 可访问」空话）。
+
+    包含：接口可达性 + 认证要求 + 必填 Header/query/path 参数 + 接口说明。
+    """
+    parts = [f"{method} {path} 可访问"]
+    if endpoint.get("auth_required"):
+        parts.append("接口需要认证（携带有效凭证）")
+    schema = _schema_of_ep(endpoint, "request_schema")
+    if schema:
+        headers = schema.get("header") or []
+        req_headers = [
+            h.get("name") for h in headers
+            if isinstance(h, dict) and h.get("required") and h.get("name")
+        ]
+        if req_headers:
+            parts.append("需携带 Header：" + "、".join(req_headers))
+        for loc in ("query", "path"):
+            params = schema.get(loc) or []
+            req_params = [
+                p.get("name") for p in params
+                if isinstance(p, dict) and p.get("required") and p.get("name")
+            ]
+            if req_params:
+                parts.append(f"{loc} 必填参数：" + "、".join(req_params))
+    summary = (endpoint.get("summary") or "").strip()
+    if summary:
+        parts.append(f"接口说明：{summary}")
+    return "；".join(parts)
+
+
+def _contract_business_assertions(endpoint: dict) -> list[dict]:
+    """从契约响应结构生成「业务码 + 核心字段」断言（release 口径，A组）。
+
+    返回 jsonpath 断言（业务码字段 + 核心字段）；响应契约无可用结构信息时返回空列表
+    （调用方保留 2xx 状态码断言，不虚构字段断言，避免用例注定失败）。
+    """
+    out: list[dict] = []
+    schema = _schema_of_ep(endpoint, "response_schema")
+    props = schema.get("properties")
+    if not isinstance(props, dict) or not props:
+        return out
+    _META = {"message", "msg", "timestamp", "traceid", "requestid", "success"}
+
+    biz_key = next(
+        (k for k in ("code", "status", "businessCode", "business_code", "retCode", "resultCode")
+         if k in props),
+        None,
+    )
+    if biz_key:
+        biz_prop = props[biz_key]
+        if not isinstance(biz_prop, dict):
+            biz_prop = {}
+        expected = biz_prop.get("example")
+        if expected is None:
+            expected = biz_prop.get("default")
+        if expected is None and isinstance(biz_prop.get("enum"), list) and biz_prop["enum"]:
+            expected = biz_prop["enum"][0]
+        if expected is not None:
+            out.append({"type": "jsonpath", "path": f"$.{biz_key}", "operator": "eq", "expected": expected})
+        else:
+            out.append({"type": "jsonpath", "path": f"$.{biz_key}", "operator": "exists"})
+
+    data_key = next(
+        (k for k in ("data", "result", "rows", "list", "records", "items") if k in props),
+        None,
+    )
+    if data_key:
+        data_prop = props[data_key]
+        sub_props = data_prop.get("properties") if isinstance(data_prop, dict) else None
+        if isinstance(sub_props, dict) and sub_props:
+            for k in [k for k in sub_props if k not in _META][:2]:
+                out.append({"type": "jsonpath", "path": f"$.{data_key}.{k}", "operator": "exists"})
+        else:
+            out.append({"type": "jsonpath", "path": f"$.{data_key}", "operator": "exists"})
+    else:
+        for k in [k for k in props if k not in _META and k != biz_key][:2]:
+            out.append({"type": "jsonpath", "path": f"$.{k}", "operator": "exists"})
+
+    return out[:3]
 
 
 def _build_valid_body(ep: dict, exclude_fields: list[str] | None = None, overrides: dict | None = None) -> dict:
@@ -1757,11 +1853,21 @@ def _build_valid_body(ep: dict, exclude_fields: list[str] | None = None, overrid
 
 
 def _sample_value_for_prop(prop: dict) -> Any:
-    """根据属性定义生成样本值。"""
-    ptype = prop.get("type", "string")
+    """根据属性定义生成样本值。
 
-    if "enum" in prop:
+    A组：优先取契约真实值 example → default → enum[0]（不再默认产出占位假数据），
+    缺失时再按类型回退（格式/边界作为兜底）。
+    """
+    if not isinstance(prop, dict):
+        return "test"
+    if "example" in prop and prop["example"] is not None:
+        return prop["example"]
+    if "default" in prop and prop["default"] is not None:
+        return prop["default"]
+    if "enum" in prop and isinstance(prop["enum"], list) and prop["enum"]:
         return prop["enum"][0]
+
+    ptype = prop.get("type", "string")
 
     if ptype == "string":
         fmt = prop.get("format", "")

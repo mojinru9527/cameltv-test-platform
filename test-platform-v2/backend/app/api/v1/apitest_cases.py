@@ -70,6 +70,7 @@ def generate_cases(
             "path": ep.path,
             "summary": ep.summary,
             "request_schema": _safe_json(ep.request_schema, {}),
+            "response_schema": _safe_json(ep.response_schema, {}),
         }
     elif body.endpoint_data:
         endpoint_data = body.endpoint_data
@@ -126,6 +127,7 @@ def batch_generate_cases(
             "path": ep.path,
             "summary": ep.summary,
             "request_schema": _safe_json(ep.request_schema, {}),
+            "response_schema": _safe_json(ep.response_schema, {}),
         }
         cases = generate_cases_from_endpoint(endpoint_data, templates=body.templates)
         total_generated += len(cases)
