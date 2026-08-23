@@ -265,7 +265,42 @@ docker compose --project-name cameltv-tp-production --env-file config/runtime/pr
 
 ### A3. 待办（上线后）
 
-- [ ] 旧 Vercel/Railway/Supabase 保留观察 ≥24h（截止 2026-08-23 24:00）后按 §8 下线
+- [ ] 旧 Vercel/Railway/Supabase 保留观察 ≥24h（截止 2026-08-23 24:00）后按 §8 下线（观察期已过；是否下线由负责人确认，参见附录 B3）
 - [ ] 确认 admin 账号当前有效密码或执行密码重置
-- [ ] Dockerfile lanhu-mcp 本地 COPY 修改合入 main（PR 流程）
+- [x] Dockerfile lanhu-mcp 本地 COPY 修改合入 main（PR 流程）——#300 合入后被 #302/#303 回退为全量 git clone（Railway builder 不支持 bind-mount 且 archive 丢弃子模块空目录；服务器本地构建不受影响，见附录 B1 模板）
 - [ ] 迁移经验（附录 A2）同步到 `docs/common-pitfalls.md`
+
+## 附录 B：c165-3 增量升级记录（2026-08-23）
+
+> DeepSeek Harness 会话驱动，把 #301（导航频率分层，#302/#303 Dockerfile 修复、#304 DSH 路由/存储清理顺带带入）增量部署到 swiftbugs.cn。**首次线上升级，验证走完整链路；本轮无 Alembic 迁移。**
+
+### B1. 增量升级模板（后续复用）
+
+1. **本机构建镜像**（服务器出网受限不可构建，见 A2-1）：
+   - 后端：`docker build -t cameltv-tp-backend:<tag> -f test-platform-v2/backend/Dockerfile .`（仓库根为上下文）
+   - 前端：`docker build --build-arg VITE_ICP_NUMBER=粤ICP备2026121122号-1 -t cameltv-tp-frontend:<tag> -f Dockerfile .`（frontend 目录）
+2. **打包传输**：`docker save` 两镜像 → 本机无 gzip.exe，用 `python -c "import gzip,shutil;shutil.copyfileobj(open('src.tar','rb'),gzip.open('dst.gz','wb',compresslevel=1))"` → `scp` 到服务器 `/root/` → `gunzip` + `docker load`。
+3. **双标签**：`docker tag cameltv-tp-backend:<tag> cameltv-tp-backend:main`（同时 `:release-plat`）——compose override 与运行容器 `Config.Image` 均引用 `:main`（`release-plat` 为历史遗留标签名，双标保险）。
+4. **重启**（postgres/数据卷/env 一律不动）：
+   ```bash
+   cd /opt/cameltv-tp/test-platform-v2
+   docker compose -p cameltv-tp-production --env-file config/runtime/production.env \
+     -f deploy/docker-compose.yml -f deploy/docker-compose.override.yml up -d --no-deps backend frontend
+   ```
+5. **验证**：容器级代码检查（c165-3：`docker exec cameltv-tp-production-backend-1 python -c "from app.services.menu_service import HIDDEN_MENU_CODES; print(len(HIDDEN_MENU_CODES))"` 应=12）；`GET https://swiftbugs.cn/api/v1/auth/public-access` 知识中心 `children` 为空；前端 bundle 含「更多功能」；用户浏览器确认。
+6. **回滚**：升级前先把旧镜像打 `:prev-plat`（`docker tag cameltv-tp-backend:release-plat cameltv-tp-backend:prev-plat`）；回滚 = 把 `:main`/`:release-plat` 指回 prev 再 compose up。
+
+### B2. 本轮踩坑（必读）
+
+1. **本机主仓可能落后 origin/main**：首次构建镜像时 `F:\CamelTv` 停在旧 main（9e5a339c），"新"镜像实为旧代码（容器内 HIDDEN len=8，部署后 API 仍 4 子项、前端无「更多功能」）。**建镜像前先 `git -C F:\CamelTv pull` 并与 origin/main 比对 HEAD**；且必须做容器级代码验证（镜像构建成功 ≠ 代码正确）。
+2. **火绒驱动级锁密钥**：`C:\Users\26029\.ssh\cameltv_tencent_lighthouse` 被火绒文件保护锁死——连属主（用户会话）`takeown`/`icacls`/copy 均 Access denied，`cipher /c` 显示非 EFS（U）。本次临时退出火绒解决。**建议把 ssh.exe 或 .ssh 目录加入火绒白名单**，避免每次部署前退出防护。
+3. **本机无 gzip.exe**（Git 未装或不在 PATH）：用 Python gzip 替代（见 B1-2）。
+4. **`docker compose up` 输出可能只显示 Running/Healthy**：以 `docker inspect <container> --format '{{.Image}}'` + 容器内代码检查确认真实生效，不要按输出判断。
+
+### B3. 当前状态
+
+- [x] #301/#302/#303/#304 已上线 swiftbugs.cn（2026-08-23，负责人已在浏览器确认新导航：9 高频 + 更多功能折叠组）
+- [x] 后端容器 HIDDEN_MENU_CODES=12；public-access 知识中心 children=0；前端 bundle 含「更多功能」
+- [x] 旧镜像备份 `:prev-plat`（backend 51f4a178 / frontend 0f85f1fd）
+- [ ] 旧 Vercel/Railway/Supabase 下线决策（观察期 2026-08-23 24:00 已过，由负责人按 §8 确认执行）
+- [ ] 火绒防护已恢复（部署期间临时退出，确认后应尽快恢复/加入白名单）
