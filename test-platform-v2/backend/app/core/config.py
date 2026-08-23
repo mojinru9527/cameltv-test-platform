@@ -95,6 +95,21 @@ class Settings(BaseSettings):
     allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     auto_create_tables: bool = True
 
+    # ── 腾讯云发布执行器（release-platform batch）──────────────────────
+    # 全部为空/未配置时，发布/回滚/备份 API 保持 fail-closed（返回 503）。
+    # SSH 私钥经 base64 注入（TENCENT_SSH_KEY），绝不落库/落日志。
+    tencent_executor_host: str = ""
+    tencent_executor_user: str = ""
+    tencent_executor_ssh_key: str = ""
+    tencent_executor_compose_dir: str = "/opt/cameltv-tp/test-platform-v2/deploy"
+    tencent_executor_release_dir: str = "/opt/cameltv-release"
+    tencent_executor_backup_dir: str = "/opt/cameltv-backup"
+    tencent_executor_image_backend: str = "cameltv-tp-backend:latest"
+    tencent_executor_image_frontend: str = "cameltv-tp-frontend:latest"
+    tencent_executor_compose_project: str = "cameltv-tp-production"
+    tencent_executor_timeout: int = 600
+    tencent_executor_keep_backups: int = 7
+
     # ── PostgreSQL connection pooling (V2.6) ──
     db_pool_size: int = 10
     db_max_overflow: int = 20

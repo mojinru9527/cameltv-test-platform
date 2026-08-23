@@ -108,9 +108,9 @@ class ReleaseStore:
         actor: str,
         idempotency_key: str,
     ) -> CreateDeploymentResult:
-        """Persist one test deployment, replaying an identical request safely."""
-        if environment != "test":
-            return CreateDeploymentResult(code="PRODUCTION_NOT_CONFIGURED")
+        """Persist one deployment (test or production), replaying an identical request safely."""
+        if environment not in {"test", "production"}:
+            return CreateDeploymentResult(code="UNSUPPORTED_ENVIRONMENT")
         manifest_hash = manifest.manifest_sha256()
         manifest_json = manifest.canonical_json().decode("utf-8")
         with self._connect() as connection:
@@ -153,7 +153,7 @@ class ReleaseStore:
                 "",
                 "DRAFT",
                 "register",
-                "test deployment registered",
+                f"{environment} deployment registered",
                 actor,
             )
             deployment = Deployment(deployment_id, manifest.release_id, manifest_hash, environment, "DRAFT")
@@ -213,7 +213,15 @@ class ReleaseStore:
                 return False
             connection.execute("UPDATE deployments SET state = ? WHERE id = ?", (to_state, deployment_id))
             self._append_event_in_transaction(connection, deployment_id, from_state, to_state, phase, reason, actor)
-            if to_state in {"TEST_VERIFIED", "TEST_FAILED", "TEST_ROLLED_BACK"}:
+            if to_state in {
+                "TEST_VERIFIED",
+                "TEST_FAILED",
+                "TEST_ROLLED_BACK",
+                "PRODUCTION_VERIFIED",
+                "PROD_FAILED",
+                "PROD_ROLLED_BACK",
+                "CANCELLED",
+            }:
                 connection.execute("DELETE FROM environment_locks WHERE deployment_id = ?", (deployment_id,))
             return True
 
