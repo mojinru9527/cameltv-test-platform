@@ -39,6 +39,13 @@ class DshTaskCreate(BaseModel):
             raise ValueError(f"params.team_kind 非法: {team_kind!r}（仅支持 dev|tester）")
         if model is not None and (not isinstance(model, str) or not model.strip()):
             raise ValueError("params.model 须为非空字符串")
+        image_files = merged.get("image_files")
+        if image_files is not None:
+            if not isinstance(image_files, list) or not all(
+                isinstance(i, str) and len(i) == 32 and all(c in "0123456789abcdef" for c in i)
+                for i in image_files
+            ):
+                raise ValueError("params.image_files 须为 file_id 列表（32 位十六进制）")
         if self.mode == "team":
             if batch_mode is None:
                 raise ValueError("mode=team 时必须提供 params.batch_mode（full|light）")

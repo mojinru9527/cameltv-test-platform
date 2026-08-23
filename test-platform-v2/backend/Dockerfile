@@ -102,8 +102,47 @@ RUN npm install -g pnpm@11 \
         '  disabled: true' \
         '- id: tool-subagent-list-agents' \
         '  disabled: true' \
+        '' \
+        '# 多提供方模型路由（Batch fix）：平台 runner 按任务 AI 提供方注入 env ——' \
+        '# DEEPSEEK_API_KEY / DEEPSEEK_BASE_URL / DSH_MODEL。dsh-base 固定默认模型且' \
+        '# node 模式不读 DSH_MODEL → 任务所选提供方模型失效（生产实测 422 Model Not Exist）。' \
+        '# 此处定义 llm-pi-ai 的 platform 路由读取这些 env：任意 OpenAI 兼容端点' \
+        '# （DeepSeek 官方/超算互联网 SCNET/Kimi/GLM...）均可按项目接入不同模型。' \
+        '- id: agent-default-model' \
+        '  config:' \
+        '    provider: platform' \
+        "    model: !!js process.env.DSH_MODEL || 'deepseek-v4-flash'" \
+        '- id: llm-pi-ai' \
+        '  config:' \
+        '    providers:' \
+        '      platform:' \
+        '        api: openai-completions' \
+        '        apiKeyEnv: DEEPSEEK_API_KEY' \
+        "        baseURL: !!js process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com'" \
+        '        models:' \
+        "          - id: !!js process.env.DSH_MODEL || 'deepseek-v4-flash'" \
         > /home/cameltv/.dsh/profiles/agent-team/cordis.patch.yml \
     && DSH_HOME=/home/cameltv/.dsh dsh --profile agent-team --dump-config >/dev/null \
+    # headless profile 由 CLI 首次运行才生成：构建期预生成并注入同一多提供方覆盖，
+    # 否则平台 single 模式任务永远用 dsh-base 固定默认模型
+    && DSH_HOME=/home/cameltv/.dsh dsh --profile headless --dump-config >/dev/null \
+    && printf '%s\n' \
+        '# 多提供方模型路由：读取平台 runner 按任务注入的 env（密钥/端点/模型）' \
+        '- id: agent-default-model' \
+        '  config:' \
+        '    provider: platform' \
+        "    model: !!js process.env.DSH_MODEL || 'deepseek-v4-flash'" \
+        '- id: llm-pi-ai' \
+        '  config:' \
+        '    providers:' \
+        '      platform:' \
+        '        api: openai-completions' \
+        '        apiKeyEnv: DEEPSEEK_API_KEY' \
+        "        baseURL: !!js process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com'" \
+        '        models:' \
+        "          - id: !!js process.env.DSH_MODEL || 'deepseek-v4-flash'" \
+        > /home/cameltv/.dsh/profiles/headless/cordis.patch.yml \
+    && DSH_HOME=/home/cameltv/.dsh dsh --profile headless --dump-config >/dev/null \
     && chown -R cameltv:cameltv /home/cameltv/.dsh
 
 RUN mkdir -p /app/storage /app/storage/lanhu-data /ms-playwright "${XDG_CACHE_HOME}" \
