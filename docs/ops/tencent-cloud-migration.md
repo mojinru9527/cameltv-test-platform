@@ -349,3 +349,58 @@ docker compose --project-name cameltv-tp-production --env-file config/runtime/pr
 - [x] E2E 任务 x2 均 success（Real DeepSeek 官方 key + deepseek-v4-flash）
 - [x] 新功能可用：AI 配置「获取模型列表」、DSH 任务图片附件、错误可读化
 - [x] 镜像备份：附录 B3 `:prev-plat`（backend 51f4a178 / frontend 0f85f1fd）仍保留（未被本轮删除）
+
+## 附录 D：发布控制台建设 + 旧环境下线（2026-08-23）
+
+> 迁移完成后追加两步：① 发布平台独立化（解除与测试平台耦合）；② 旧环境下线清单。
+> 关联 PR：#305（发布平台初版）、#308（解耦独立）、#309（易用化）。
+
+### D1. 发布平台演进（快速回顾）
+
+| 阶段 | PR | 说明 |
+|------|----|------|
+| 初版（耦合） | #305 | `/operations-release` 页面 + `/api/v1/ops/deployments` 跑在测试平台内 |
+| **解耦独立** | #308 | 独立 `deploy/release-console/`（61MB 镜像），子域 `release.swiftbugs.cn`，测试平台移除发布入口 |
+| **易用化** | #309 | 网页令牌输入框（免 F12）+ `scripts/ops/release.ps1` 一键发布（自动提取 digest/提交/上传/发布） |
+
+### D2. 发布平台架构（当前）
+
+```
+用户/运维 → https://release.swiftbugs.cn（Caddy HTTPS）
+              ↓ 反代
+    release-console 容器 :8111（FastAPI + SQLite + 单页前端）
+              ↓ SSH（Token + 密钥环境变量注入，复用于测试平台发布）
+        111.230.155.116（测试平台生产；即使测试平台挂掉也能发布/回滚）
+```
+
+- 状态库：`/opt/cameltv-release-console/data/release-control.sqlite3`（独立于业务库）
+- 令牌：`RELEASE_CONSOLE_TOKEN`（服务器 env + 本地 `~\.cameltv-release-console\token.json`）
+- 一键脚本：`pwsh scripts/ops/release.ps1 -Tag release-xxx -Publish`
+
+### D3. 旧环境下线清单
+
+> 详见 `docs/ops/old-env-decommission-checklist.md`。前置检查（0.1–0.5）已全绿（2026-08-23）。
+> **下线前的最后闸门**：发布控制台真实发布演练（D1 方案）通过后才执行删除。
+
+| 环境 | 下线方式 | 预计费用影响 |
+|------|---------|-------------|
+| Vercel（cameltv-test-platform） | 删项目 | 免费，无影响 |
+| Railway（keen-amazement） | 删项目（**按量计费**，尽快） | 停止计费 |
+| Supabase（myhwdpjmxdsodqgeecpn） | 删项目（数据已本地化） | 免费额度释放 |
+
+### D4. 本轮踩坑（与 B2/C2 不重复）
+
+1. **PowerShell 脚本 UTF-8 编码**（PS 5.1 中文解析坑）：`write` 工具生成的无 BOM `.ps1` 会被 PS 5.1 按 ANSI 读，中文字符串/注释导致 Parse 报错（如 `"[" 后面缺少类型名称`）——**解决方案：文件加 UTF-8 BOM**（`[Text.UTF8Encoding]::new($true)`）。
+2. **`@` 在字符串中触发 splatting**：`"$UserName@$HostName"` 中 `@` 被当作 splat 前缀 → 改用 `${UserName}@${HostName}`（花括号包裹）。
+3. **FastAPI Header 注入**：路由参数 `authorization: str | None = None` 被 FastAPI 当 query 参数（永远 None）→ 必须 `Header(None, alias="Authorization", include_in_schema=False)`；否则 401。
+4. **rebase 误删文件**：rebase 冲突解决时 `git ls-tree HEAD` 与工作区不一致（index 残留），CI 报 `Cannot find module '@/pages/workbench'`——**修复=丢弃 worktree 重建 + 备份文件重应用**（干净分支单 commit）。
+5. **前端令牌动态读取**：`const TOKEN` 初始化后保存不生效 → 改 `getToken()` 每次读 localStorage。
+6. **Docker Desktop SYSTEM 会话**：本机以 SYSTEM 跑导致引擎掉线（记忆已验证）；服务器端可用 `docker cp` 热更新容器内静态文件绕开。
+
+### D5. 当前状态（2026-08-23）
+
+- [x] 发布控制台独立子域 `release.swiftbugs.cn` 上线（v4 镜像，含令牌输入框）
+- [x] 一键脚本 `release.ps1` 合入 main（release/rollback/backup 三命令）
+- [x] 测试平台发布入口彻底移除（/operations-release + ops API + release:view 权限）
+- [x] 旧环境下线清单就绪（前置检查全绿，待真实发布演练后执行）
+- [ ] **待执行**：发布控制台真实发布演练（D1 方案）→ 旧环境下线删项目
