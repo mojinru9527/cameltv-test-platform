@@ -303,3 +303,36 @@ class TestGeneratedAssertionsTriple:
         asserts = _contract_business_assertions(endpoint)
         assert any(a.get("path") == "$.code" for a in asserts)
         assert any(a.get("path") == "$.result.id" for a in asserts)
+
+
+# ═══════════════════════════════════════════════════════
+# 5. release 口径衔接：生成断言（$.status 业务码）可通过门禁
+# ═══════════════════════════════════════════════════════
+
+class TestReleaseGateAlignment:
+    def test_gate_accepts_status_business_code_path(self):
+        """生成器按契约产出的 $.status 业务码断言应被 release 门禁识别（对齐网关契约）。"""
+        from app.services.api_execution_service import _assertion_contract_error
+
+        err = _assertion_contract_error(
+            [
+                {"type": "status_code", "expected": 200, "operator": "gte"},
+                {"type": "jsonpath", "path": "$.status", "operator": "eq", "expected": 200},
+                {"type": "jsonpath", "path": "$.data.id", "operator": "exists"},
+            ],
+            require_release_assertions=True,
+        )
+        assert err == ""
+
+    def test_gate_still_rejects_missing_business_code(self):
+        """不写业务码断言的 approved 用例仍被门禁拦截（不放松既有口径）。"""
+        from app.services.api_execution_service import _assertion_contract_error
+
+        err = _assertion_contract_error(
+            [
+                {"type": "status_code", "expected": 200, "operator": "gte"},
+                {"type": "jsonpath", "path": "$.data.id", "operator": "exists"},
+            ],
+            require_release_assertions=True,
+        )
+        assert "business-code" in err
