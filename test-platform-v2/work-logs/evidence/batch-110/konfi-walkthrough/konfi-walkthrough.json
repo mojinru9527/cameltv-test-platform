@@ -46,10 +46,10 @@
     },
     {
       "method": "POST",
-      "url": "https://konfi.cameltv.live/user/login?loginName=admin-test&password=test123&t=null",
-      "post": "{\"t\":null,\"loginName\":\"admin-test\",\"password\":\"test123\"}",
+      "url": "https://konfi.cameltv.live/user/login?loginName=admin-test&password=<redacted>&t=null",
+      "post": "{\"t\":null,\"loginName\":\"admin-test\",\"password\":\"<redacted>\"}",
       "page": "https://konfi-web.cameltv.live/login",
-      "response": "{\"traceId\":\"fei0nbvj1e002k\",\"timestamp\":1786025888208,\"status\":200,\"data\":{\"token\":\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3ODYwNjkwODgsInVzZXJuYW1lIjoiYWRtaW4tdGVzdCJ9.SOOihoXPN-YmzPOexmuo7voHnnMhHJGlXC5sVY03Vqg\",\"userInfo\":{\"loginName\":\"admin-test\",\"userCode\":\"normal\"}},\"msg\":\"\"}"
+      "response": "{\"traceId\":\"fei0nbvj1e002k\",\"timestamp\":1786025888208,\"status\":200,\"data\":{\"token\":\"<redacted>\",\"userInfo\":{\"loginName\":\"admin-test\",\"userCode\":\"normal\"}},\"msg\":\"\"}"
     },
     {
       "method": "POST",

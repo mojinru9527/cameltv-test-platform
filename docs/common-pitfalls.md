@@ -626,6 +626,77 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ---
 
+## 7. 部署/运维（腾讯云生产迁移，2026-08-22 起）
+
+> 经验来源：`docs/ops/tencent-cloud-migration.md` 附录 A2 + 附录 B（增量升级模板）。
+
+### 7.1 国内服务器无法直连 GitHub/PyPI/npm
+
+**现象**：国内云服务器 `git clone` GitHub 超时（TLS 中断）、PyPI ~17KB/s、apt/nodesource/npmmirror <15KB/s，构建直接卡死。
+
+**根因**：国内轻量服务器出网受限（非沙箱配置问题）。
+
+**解决方案**：
+1. 代码：可联网机器本地 `git clone`（含 `lanhu-mcp` 子模块）→ 打 tar → scp 到服务器。
+2. 镜像：**本机构建** `docker build` → `docker save` →（gzip）→ scp → `docker load`；不要在服务器上 `compose build`。
+3. lanhu-mcp 构建源：服务器本地构建用 `test-platform-v2/backend/Dockerfile.local`（COPY 子模块，不走 git clone）；云端构建（Railway/CI）仍用主 Dockerfile（clone 路径）。
+
+**相关文件**：`test-platform-v2/backend/Dockerfile`、`test-platform-v2/backend/Dockerfile.local`、`docs/ops/tencent-cloud-migration.md` 附录 B1。
+
+### 7.2 ufw 是隐藏拦截层
+
+**现象**：腾讯云控制台防火墙已放行 80/443，但 ACME 证书签发和公网访问全部失败。
+
+**根因**：腾讯云轻量（Ubuntu）预装 **ufw 且默认 DROP**；控制台规则与实例内 ufw 是两层独立防线。
+
+**解决方案**：`ufw allow 80/tcp && ufw allow 443/tcp`（部署纪律：控制台 + ufw 双放行）。
+
+### 7.3 Dockerfile COPY 与 bind-mount 在云构建的兼容性
+
+**现象**：#300（COPY 本地优先、缺失回退）与 #302（BuildKit bind-mount）都在 Railway 构建失败（COPY 源缺失 / `other mount types are not supported`）。
+
+**根因**：Railway builder 以 archive 发运仓库（子模块空目录被丢弃）；Metal builder 只支持 `type=cache` 挂载。
+
+**解决方案**：统一走「主 Dockerfile clone 路径」；本地/离线服务器用独立本地变体 `Dockerfile.local`（勿把 COPY 子模块的语句加回主 Dockerfile）。
+
+### 7.4 SECRET_KEY 必须复用旧生产值
+
+**现象**：迁移后 AI provider 报 `InvalidToken`（Fernet 解密失败）。
+
+**根因**：Fernet 密钥 = `sha256(SECRET_KEY)`；本地旧 production.env 的 SECRET_KEY 与 Railway 生产值不同，`api_key_encrypted` 无法解密。
+
+**解决方案**：从旧生产环境（Railway variable / 密码管理器）拉取生产 SECRET_KEY 对齐；轮换 SECRET_KEY 会使所有加密 API Key 失效（需在「AI 配置」重新录入，见 backend/CLAUDE.md）。
+
+### 7.5 compose 改密码后容器不生效
+
+**现象**：修改 `POSTGRES_PASSWORD` 后连接失败。
+
+**根因**：compose `up` 不重建已存在容器，`POSTGRES_PASSWORD` 只在首次初始化生效。
+
+**解决方案**：`ALTER USER ... PASSWORD` 或 `--force-recreate`；`DATABASE_URL` 中的密码与容器实际一致（URL 编码）。
+
+### 7.6 Nginx 反代 DNS 缓存导致 /api 502
+
+**现象**：backend 容器 recreate 后 `/api` 502。
+
+**根因**：frontend Nginx 缓存了 backend 容器旧 IP。
+
+**解决方案**：重启 frontend 容器刷新 DNS。
+
+### 7.7 Caddy 与前端容器端口映射
+
+**现象**：Caddy 已占宿主 80，前端容器再映射 80 冲突。
+
+**解决方案**：前端容器 `127.0.0.1:8080:80`（改主 compose 的 `FRONTEND_PORT`；override 追加端口会与主配置合并冲突）。
+
+### 7.8 备份与回滚基线
+
+**现象**：无 dump 就无法做数据回滚。
+
+**解决方案**：迁移后固定保留 PG dump（`pg_dump -Fc`，`/opt/cameltv-backup/` + 本地 `F:\CamelTv-safe-backup\supabase-dump\cameltv-prod.dump`）；恢复用 `pg_restore --clean --if-exists`（仅空新库）。
+
+---
+
 ## 排查速查表
 
 | 症状 | 可能原因 | 查阅章节 |
@@ -649,6 +720,13 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 | Vite 配置改了却不生效 | 过期 JS 配置覆盖 TS | 6.4 |
 | 已开发功能显示占位页或 API 404 | 菜单/路由未接线 | 6.5 |
 | 父模块计数与子级之和不符 | 父节点含直属用例，树未显式核算 | 2.6 |
+| 服务器构建卡死/超时 | 出网受限（GitHub/PyPI/npm） | 7.1 |
+| 证书签发/公网访问失败 | ufw 未放行（控制台规则之外） | 7.2 |
+| 云构建 COPY 源缺失 | 子模块 archive 丢弃 / bind-mount 不支持 | 7.3 |
+| 迁移后 AI 配置 InvalidToken | SECRET_KEY 未复用生产值（Fernet） | 7.4 |
+| 改密码后连接失败 | POSTGRES_PASSWORD 仅首次初始化生效 | 7.5 |
+| /api 502（容器重启后） | Nginx DNS 缓存 | 7.6 |
+| Caddy 与前端端口冲突 | 前端容器须映射 127.0.0.1:8080:80 | 7.7 |
 
 ---
 

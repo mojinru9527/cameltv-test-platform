@@ -8,6 +8,8 @@ tags: ["production", "architecture", "cloudflare", "vercel", "supabase", "batch-
 
 # 生产环境部署架构 (Batch 58)
 
+> ⚠️ **已迁移/退役（2026-08-22 → swiftbugs.cn）**：本文档描述仓库迁移前的 Vercel/Railway/Supabase 方案，内容仅作历史存档。当前生产：腾讯云广州单机 https://swiftbugs.cn（ICP 粤ICP备2026121122号-1），迁移/运维见 docs/ops/tencent-cloud-migration.md，旧环境下线见 docs/ops/old-env-decommission-checklist.md。
+
 ## 架构概览
 
 ```

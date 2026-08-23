@@ -1,5 +1,7 @@
 # 生产启用检查清单（外放 + 租户）
 
+> ⚠️ **已迁移/退役（2026-08-22 → swiftbugs.cn）**：本文档描述仓库迁移前的 Vercel/Railway/Supabase 方案，内容仅作历史存档。当前生产：腾讯云广州单机 https://swiftbugs.cn（ICP 粤ICP备2026121122号-1），迁移/运维见 docs/ops/tencent-cloud-migration.md，旧环境下线见 docs/ops/old-env-decommission-checklist.md。
+
 > 归属：Batch 106（C104-2 / C105-2）。目标：把外放轻量模式与租户模式在生产环境
 > （Railway 后端 + Supabase PostgreSQL + Vercel 前端）正式启用，并保留可回滚步骤。
 
@@ -26,7 +28,8 @@ REGISTER_RATE_LIMIT_MAX=5
 REGISTER_RATE_LIMIT_WINDOW_SECONDS=900
 
 # Batch 109 新增：正式前端域名 + 内置演示账号开关
-FRONTEND_URL=https://cameltv-test-platform1.vercel.app
+# （2026-08-22 起正式域名 = https://swiftbugs.cn；旧 cameltv-test-platform1.vercel.app 已下线）
+FRONTEND_URL=https://swiftbugs.cn
 SEED_DEMO_USERS=false
 ```
 

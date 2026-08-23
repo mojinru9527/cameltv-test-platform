@@ -62,21 +62,19 @@ COPY test-platform-v2/backend/alembic ./alembic
 COPY test-platform-v2/backend/alembic.ini .
 COPY test-platform-v2/backend/tests/playwright ./tests/playwright
 
-# lanhu-mcp 是 Git 子模块，云构建（Railway/Vercel/CI）默认不拉取子模块内容。
-# 在构建期直接从子模块 remote 拉取，保证无本地子模块也能构建（长期验证路径）。
-# 注意（2026-08-22 生产部署三连失败复盘）：
-#  - #300 的 "COPY 本地优先、缺失回退" 不可行：Railway builder 以 archive 发运
-#    仓库（子模块空目录被丢弃，lanhu-mcp/ 目录不存在），COPY 源缺失=构建直接失败；
-#  - bind-mount 方案亦不可行：Railway Metal builder 只支持 type=cache 挂载，
-#    报 "dockerfile invalid: other mount types are not supported"。
-# 如自建/离线服务器需要本地子模块文件，请使用本地变体 Dockerfile
-# （./Dockerfile.local，COPY 方式；国内服务器无法访问 GitHub 时用），
-# 勿改动本 Dockerfile 的 clone 路径。
-RUN git clone --depth 1 --branch main \
-        https://github.com/mojinru9527/lanhu-mcp.git /tmp/lanhu-mcp \
-    && mkdir -p /app/lanhu-mcp \
-    && cp /tmp/lanhu-mcp/lanhu_mcp_server.py /app/lanhu-mcp/lanhu_mcp_server.py \
-    && rm -rf /tmp/lanhu-mcp
+# ── lanhu-mcp（本地构建变体：COPY 子模块文件，不走网络）────────────────────
+# 本文件是 Dockerfile 的本地变体，唯一差异是 lanhu-mcp 来源：
+#       Dockerfile       → git clone https://github.com/mojinru9527/lanhu-mcp.git
+#       Dockerfile.local → COPY lanhu-mcp/...（构建上下文内已初始化的子模块）
+# 背景：国内生产服务器无法直连 github.com（2026-08-22 腾讯云迁移复盘，
+# docs/ops/tencent-cloud-migration.md 附录 A2）。主 Dockerfile 保留 clone 路径
+# 供 Railway/CI 云端构建（archive 发运不携带子模块，COPY 缺失会直接构建失败，
+# 见主 Dockerfile 注释 #300/#302/#303）。
+# 使用（在服务器/离线环境）：
+#   git submodule update --init --recursive lanhu-mcp
+#   docker build -f test-platform-v2/backend/Dockerfile.local -t cameltv-tp-backend:local .
+# 注意：修改主 Dockerfile 时必须同步本文件。
+COPY lanhu-mcp/lanhu_mcp_server.py /app/lanhu-mcp/lanhu_mcp_server.py
 
 # ── DSH 运行时（Batch 191 生产启用）──────────────────────────────
 # npm 发布版 @deepseek-ai/dsh 依赖自洽（dsh-base/dsh-headless 随依赖树安装，

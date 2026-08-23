@@ -51,9 +51,9 @@ related: ["test-platform-v2/CLAUDE.md", "docs/adr/README.md", "COMMANDS.md"]
 | 环境 | 用途 | 部署方式 |
 |------|------|---------|
 | localhost | 本地开发 | `uvicorn` + `npm run dev` |
-| test | 测试环境 | Jenkins 自动部署 |
-| staging | 预发布 | 手动 docker compose |
-| prod | 生产环境 | 需 VPN 接入 |
+| test | 测试环境 | 本地/测试实例 Docker Compose（staging 替代，见 docs/agent-team/staging-environment.md） |
+| staging | 预发布 | 未单独启用（以 test/生产同构实例承担） |
+| prod | 生产环境 | 腾讯云广州单机（`https://swiftbugs.cn`，Caddy→Nginx→FastAPI→PostgreSQL；ICP 粤ICP备2026121122号-1；旧 Vercel/Railway/Supabase 已于 2026-08-22 下线） |
 
 ## 常用命令入口
 

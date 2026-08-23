@@ -11,11 +11,12 @@
 | 环境 | 用途 | 数据 | 入口 | 发布方式 |
 |------|------|------|------|---------|
 | dev（本地 worktree） | 开发/验收 | 独立 SQLite | localhost 端口（每任务独立） | 不发布 |
-| test | 内部联调 | 测试库 | Vercel Preview + Railway test 实例 | PR 合入后自动 |
+| test（staging 替代） | 内部联调/发布前验证 | 生产同构 PostgreSQL（本地/测试实例） | `https://swiftbugs.cn`（生产）或本地实例 | PR 合入后按发布火车部署 |
 | staging（如启用） | 发布前验证 | staging 库 | 独立域名/实例 | 手动触发 |
-| prod | 对外生产 | Supabase PG | `cameltv-test-platform1.vercel.app` + Railway | **灰度放量** |
+| prod | 对外生产 | 本机 PostgreSQL（容器卷 `pg-data`） | `https://swiftbugs.cn`（Caddy→Nginx→FastAPI→PostgreSQL） | **灰度放量** |
 
-> 当前仓库以 Vercel（前端）+ Railway（后端 `/api` 反代）承载；staging 未单独启用时，test 承担预发布验证。
+> 2026-08-22 起生产迁移至腾讯云广州单机（`swiftbugs.cn`，ICP 粤ICP备2026121122号-1）；
+> 旧 Vercel（前端）+ Railway（后端 `/api` 反代）+ Supabase 已下线；staging 未单独启用时，test 承担预发布验证。
 
 ## 3. 发布前置检查（每次必做）
 
@@ -30,11 +31,12 @@
 ```text
 PR 合入 main
   → CI 全绿（required checks）
-  → Vercel 自动部署前端（Preview → Production）
-  → 后端 Railway 部署（health /api/v1/open/health 200）
+  → 构建前端/后端镜像（本机构建 docker save/load 或服务器可用网络时 compose build）
+  → 腾讯云服务器部署（docker compose up -d --build；Caddy 自动 HTTPS）
+  → 冒烟 https://swiftbugs.cn/api/v1/open/health 200
   → 灰度观察窗口（默认 30 分钟）：
       1. 冒烟：登录 / 工作台 / 关键链路（用例→计划→执行→报告）
-      2. 监控：Vercel/Railway 日志无 5xx 峰值、无 console 报错
+      2. 监控：容器日志无 5xx 峰值、无 console 报错（docker compose logs）
       3. 数据：无异常写入/回滚请求
   → 灰度通过：宣布完成，登记交付清单
 ```
@@ -43,9 +45,8 @@ PR 合入 main
 
 ## 5. 回滚
 
-- **前端**：Vercel 回滚到上一 Production Deployment（1 键）。
-- **后端**：Railway 回滚到上一部署版本；若涉及迁移，先执行 `alembic downgrade <target>`（禁止 `downgrade -1` 相对回退，见 runbook）。
-- **数据**：灰度期禁止破坏性 DDL；需要迁移时先备份、演练 upgrade/downgrade 双向（batch-18-C7/C21-P1-5 要求的 staging 演练）。
+- **前端/后端**：腾讯云服务器回滚到上一镜像或上一代码版本（`git revert` 后重新构建镜像）；Caddy 可临时指向旧部署。
+- **数据**：灰度期禁止破坏性 DDL；需要迁移时先备份、演练 upgrade/downgrade 双向（batch-18-C7/C21-P1-5 要求的 staging 演练）。迁移前保留 `cameltv-prod-<date>.dump`（`pg_dump -Fc`），必要时整库重导。
 - 回滚后 24h 内复盘，登记缺陷并转下批修复。
 
 ## 6. 检查清单（发布后 24h）
@@ -60,7 +61,7 @@ PR 合入 main
 | 动作 | 负责 |
 |------|------|
 | PR 合并与 checks | Agent Team Leader + CI |
-| 前端发布 | Vercel（自动） |
-| 后端发布 | Railway（自动/手动触发） |
+| 前端发布 | 腾讯云服务器镜像构建/部署（Caddy + Nginx 容器） |
+| 后端发布 | 腾讯云服务器 `docker compose up -d --build`（含 Alembic 迁移） |
 | 灰度观察与回滚决策 | 运维/测试负责人 |
-| 回滚执行 | 运维（Vercel/Railway 控制台） |
+| 回滚执行 | 运维（服务器镜像/代码回退 + `pg_restore` 数据回滚） |

@@ -63,7 +63,10 @@ test-platform-v2/
 | 环境 | 固定入口 | 数据库 | 启动方式 |
 |------|----------|--------|----------|
 | local | `http://localhost:5173` | 独立 SQLite `platform-local.db` | `scripts/start-platform-environment.ps1` |
-| production | `https://cameltv-test-platform1.vercel.app` | 由独立后端部署环境配置 | Vercel 前端 + Railway 后端；生产验收默认只读 |
+| production | `https://swiftbugs.cn` | 生产 PostgreSQL（`docker compose` 卷 `pg-data`） | 腾讯云广州轻量单机 Docker Compose（Caddy→Nginx→FastAPI→PostgreSQL）；2026-08-22 起替代旧 Vercel+Railway+Supabase；生产验收默认只读 |
+
+> 2026-08-22 生产已迁移至国内（腾讯云广州，域名 `swiftbugs.cn`，ICP 粤ICP备2026121122号-1）；
+> 旧 Vercel/Railway/Supabase 已下线，迁移与运维手册见 `docs/ops/tencent-cloud-migration.md`。
 
 local 与 production 保持实例、数据库和凭据隔离。页面 `/environment` 只管理被测系统目标，
 不得用它切换测试平台自身的数据源。生产写操作、发布和迁移仍需各自的审批与发布门禁；

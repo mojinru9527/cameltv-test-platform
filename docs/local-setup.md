@@ -21,6 +21,13 @@ cd cameltv-test-platform
 git submodule update --init --recursive
 ```
 
+> ⚠️ **国内网络**：云服务器/受限网络直连 `github.com` 可能超时（2026-08-22 腾讯云迁移实测：
+> GitHub TLS 中断、PyPI ~17KB/s、npm 镜像 <15KB/s）。替代方案：
+> ① 在可联网机器 `git clone`（含子模块）后打 tar 上传：`tar czf cameltv-platform.tar.gz --exclude=.git cameltv-test-platform`；
+> ② 用 GitHub 加速代理/镜像站替换 URL 前缀；
+> ③ 服务器本地构建镜像时 lanhu-mcp 走 `test-platform-v2/backend/Dockerfile.local`（COPY 子模块，不走 git clone）；
+> ④ 生产部署完整 SOP 见 `docs/ops/tencent-cloud-migration.md`。
+
 ## 3. 一键启动（推荐）
 
 Windows PowerShell / macOS Terminal：

@@ -1,7 +1,12 @@
-"""Restart Vite dev server by killing old and spawning new."""
+"""Restart Vite dev server by killing old and spawning new.
+
+凭据策略（安全审计修复）：不再在仓库内硬编码 JWT；认证检查令牌从环境变量
+TP_TOKEN 读取，未配置时跳过鉴权探测（仅提示）。
+"""
 import subprocess, time, os, signal, sys
 
 os.chdir(r"F:\CamelTv\test-platform-v2\frontend")
+TOKEN = os.environ.get("TP_TOKEN", "").strip()
 
 # Kill existing Vite
 print("Killing existing Vite...")
@@ -32,12 +37,15 @@ try:
 except Exception as e:
     print(f"Frontend error: {e}")
 
-# Test proxy
+# Test proxy (auth token from env TP_TOKEN; 未设置时跳过鉴权探测)
 try:
-    req = urllib.request.Request("http://localhost:5173/api/v1/system/menus",
-        headers={"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzg0NTcxNTA3fQ.CPTWOPm7Ju2vRcSpbKXtR7hbw5PVdw_3tx_4PMQ8DL4"})
-    r = json.loads(urllib.request.urlopen(req, timeout=10).read())
-    print(f"Proxy menus: code={r['code']} count={len(r['data'])}")
+    if not TOKEN:
+        print("Proxy menus: TP_TOKEN 未设置，跳过鉴权探测（获取方式见运维手册）")
+    else:
+        req = urllib.request.Request("http://localhost:5173/api/v1/system/menus",
+            headers={"Authorization": f"Bearer {TOKEN}"})
+        r = json.loads(urllib.request.urlopen(req, timeout=10).read())
+        print(f"Proxy menus: code={r['code']} count={len(r['data'])}")
 except urllib.error.HTTPError as e:
     body = e.read().decode()[:300]
     print(f"Proxy menus ERROR: HTTP {e.code}: {body}")

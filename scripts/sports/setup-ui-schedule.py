@@ -20,7 +20,7 @@ EVIDENCE_DIR = REPO_ROOT / "test-platform-v2" / "work-logs" / "evidence" / "batc
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://test-platform.up.railway.app/api/v1"))
+    ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://swiftbugs.cn/api/v1"))
     ap.add_argument("--username", default="sportsadmin")
     ap.add_argument("--password", default=os.environ.get("TP_ADMIN_PASSWORD", ""))
     ap.add_argument("--label", default="batch-111", help="证据目录标签（如 batch-112）")
@@ -32,7 +32,7 @@ def main() -> int:
         return 1
 
     with httpx.Client(base_url=args.backend_url.rstrip("/"), timeout=180,
-                      headers={"Origin": "https://cameltv-test-platform1.vercel.app", "X-Project-Id": "1"}) as c:
+                      headers={"Origin": "https://swiftbugs.cn", "X-Project-Id": "1"}) as c:
         r = c.post("/auth/login", json={"username": args.username, "password": args.password})
         r.raise_for_status()
         c.headers["Authorization"] = f"Bearer {r.json()['data']['access_token']}"
