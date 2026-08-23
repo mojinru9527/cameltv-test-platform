@@ -66,7 +66,6 @@ export const ALL_COMMAND_ROUTES: CommandRoute[] = [
   { label: '接口测试', path: '/apitest', icon: FileText, group: '页面' },
   { label: 'UI 自动化', path: '/uitest', icon: FileText, group: '页面' },
   // (P1b) Agent 工作台已收敛进 DSH 任务，路由重定向 /dsh-tasks，入口不再单列
-  { label: '运维发布记录', path: '/operations-release', icon: FileText, group: '页面', permission: 'release:view' },
 ]
 
 export function filterCommandRoutes(

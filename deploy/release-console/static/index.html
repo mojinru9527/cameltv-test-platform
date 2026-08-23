@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CamelTv 发布控制台</title>
+  <style>
+    :root { --bg:#0f1115; --card:#1a1d24; --border:#2a2e38; --text:#e8eaf0; --muted:#9aa3b2; --accent:#4f8cff; --danger:#e5484d; --ok:#30a46c; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
+    .wrap { max-width:1100px; margin:0 auto; padding:24px; }
+    h1 { font-size:22px; margin:0 0 4px; }
+    .sub { color:var(--muted); font-size:13px; margin-bottom:24px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    @media (max-width:800px){ .grid{grid-template-columns:1fr} }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; }
+    .card h2 { font-size:15px; margin:0 0 12px; }
+    .row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+    .row:last-child { border-bottom:none; }
+    .row .name { font-weight:600; font-size:14px; }
+    .row .meta { color:var(--muted); font-size:12px; }
+    .badge { padding:2px 8px; border-radius:99px; font-size:11px; font-weight:600; }
+    .b-draft{ background:#3a3f4b; }
+    .b-active{ background:#2b4a7a; }
+    .b-ok{ background:#1f4a38; }
+    .b-err{ background:#5c2b2e; }
+    .b-warn{ background:#5c4a1f; }
+    button { background:var(--accent); color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:13px; cursor:pointer; }
+    button:disabled { opacity:.4; cursor:not-allowed; }
+    button.danger { background:var(--danger); }
+    button.ghost { background:transparent; border:1px solid var(--border); color:var(--muted); }
+    input, textarea { width:100%; background:#12141a; border:1px solid var(--border); border-radius:8px; padding:8px 10px; color:var(--text); font-size:13px; margin-bottom:8px; }
+    label { display:block; color:var(--muted); font-size:12px; margin-bottom:4px; }
+    .timeline { max-height:400px; overflow-y:auto; }
+    .event { border-left:2px solid var(--accent); padding-left:12px; margin-bottom:12px; }
+    .event .t { font-size:12px; color:var(--muted); }
+    .event .r { font-size:13px; margin-top:2px; }
+    .logs { color:var(--muted); font-size:11px; white-space:pre-wrap; max-height:150px; overflow:auto; font-family:monospace; }
+    .toast { position:fixed; bottom:20px; right:20px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 16px; font-size:13px; display:none; }
+    .toast.show{ display:block; }
+    mjx { font-size:5px }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>CamelTv 发布控制台</h1>
+    <div class="sub">独立运维入口 · 与测试平台解耦 · 发布目标: <code>swiftbugs.cn</code>（腾讯云 111.230.155.116）</div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>提交发布登记</h2>
+        <label>Release ID</label><input id="f-releaseId" placeholder="rel-20260823-0002">
+        <label>Git SHA</label><input id="f-gitSha" placeholder="40 位 commit sha">
+        <label>前端镜像 Digest</label><input id="f-feDigest" placeholder="64 位 sha256 hex">
+        <label>后端镜像 Digest</label><input id="f-beDigest" placeholder="64 位 sha256 hex">
+        <label>镜像 Tag</label><input id="f-tag" placeholder="release-20260823-0002">
+        <button onclick="submitRelease()">提交登记</button>
+      </div>
+
+      <div class="card">
+        <h2>发布记录</h2>
+        <div id="deploys" class="timeline"><p style="color:var(--muted)">加载中…</p></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <h2>事件时间线</h2>
+      <div id="events"><p style="color:var(--muted)">选择一条发布记录查看。</p></div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <h2>操作结果</h2>
+      <div id="result" class="logs"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const TOKEN = localStorage.getItem('console_token') || '';
+    let DEPLOYMENTS = [];
+    let SELECTED = null;
+
+    async function api(path, opts = {}) {
+      const res = await fetch(path, {
+        ...opts,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN, ...(opts.headers||{}) },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || res.status);
+      return data;
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'), 3500);
+    }
+
+    function fmtManifest() {
+      return JSON.stringify({
+        schema_version:'1.0',
+        release_id:document.getElementById('f-releaseId').value,
+        git_sha:document.getElementById('f-gitSha').value,
+        frontend:{ image:'cameltv-tp-frontend', digest:'sha256:'+document.getElementById('f-feDigest').value, sbom_sha256:'0'.repeat(64) },
+        backend:{ image:'cameltv-tp-backend', digest:'sha256:'+document.getElementById('f-beDigest').value, sbom_sha256:'0'.repeat(64), openapi_sha256:'0'.repeat(64) },
+        database:{ alembic_heads:['see-verified-head'], target_revision:'see-verified-head', rollback_mode:'application-rollback-or-forward-fix' },
+        config_schema:'platform-runtime/v1',
+        secret_refs:['secret://production/cameltv/platform@v1'],
+        qa_evidence:['artifact://release-platform/qa-e2e']
+      });
+    }
+
+    async function submitRelease() {
+      try {
+        const r = await api('/api/deployments', {
+          method:'POST',
+          body: JSON.stringify({
+            release_id: document.getElementById('f-releaseId').value,
+            image_tag: document.getElementById('f-tag').value,
+            manifest_json: fmtManifest(),
+          })
+        });
+        showToast('提交成功: ' + r.summary);
+        loadDeployments();
+      } catch (e) { showToast('提交失败: ' + e.message); }
+    }
+
+    function badge(state) {
+      const m = { DRAFT:'b-draft','VALIDATED':'b-ok','PROD_DEPLOYING':'b-active','PROD_OBSERVING':'b-active','PRODUCTION_VERIFIED':'b-ok','PROD_FAILED':'b-err','PROD_ROLLING_BACK':'b-warn','PROD_ROLLED_BACK':'b-warn','CANCELLED':'b-warn' };
+      return '<span class="badge '+(m[state]||'b-draft')+'">'+state+'</span>';
+    }
+
+    async function loadDeployments() {
+      try {
+        const list = await api('/api/deployments');
+        DEPLOYMENTS = list;
+        const el = document.getElementById('deploys');
+        if (!list.length) { el.innerHTML = '<p style="color:var(--muted)">暂无记录</p>'; return; }
+        el.innerHTML = list.map(d => `
+          <div class="row" onclick="selectDeploy('${d.id}')" style="cursor:pointer">
+            <span class="name">${d.release_id}</span>
+            ${badge(d.state)}
+            <span class="meta">${new Date(d.created_at).toLocaleString('zh-CN')}</span>
+          </div>
+        `).join('');
+      } catch (e) {
+        document.getElementById('deploys').innerHTML = '<p style="color:var(--danger)">加载失败: '+e.message+'<br>（配置 RELEASE_CONSOLE_TOKEN 后重试）</p>';
+      }
+    }
+
+    async function selectDeploy(id) {
+      SELECTED = id;
+      try {
+        const events = await api('/api/deployments/' + id + '/events');
+        document.getElementById('events').innerHTML = events.map(ev => `
+          <div class="event">
+            <div class="t">#${ev.sequence} ${ev.from_state||'—'} → ${ev.to_state} · ${ev.phase}</div>
+            <div class="r">${ev.reason}</div>
+            <div class="t">${ev.actor} · ${new Date(ev.created_at).toLocaleString('zh-CN')}</div>
+          </div>
+        `).join('');
+      } catch (e) {
+        document.getElementById('events').innerHTML = '<p style="color:var(--danger)">'+e.message+'</p>';
+      }
+    }
+
+    async function act(action) {
+      if (!SELECTED) { showToast('请先选择发布记录'); return; }
+      const tag = action === 'publish' ? (prompt('发布镜像 tag','release-current')||'') : (action === 'rollback' ? (prompt('回滚到镜像 tag','main')||'') : '');
+      try {
+        const r = await api('/api/deployments/' + SELECTED + '/' + action, {
+          method:'POST', body: JSON.stringify(action==='backup'?{}:{image_tag:tag})
+        });
+        document.getElementById('result').textContent = r.logs || r.summary;
+        showToast(action + ' 成功: ' + r.summary);
+        loadDeployments(); selectDeploy(SELECTED);
+      } catch (e) { showToast(action + ' 失败: ' + e.message); }
+    }
+
+    loadDeployments();
+  </script>
+</body>
+</html>
