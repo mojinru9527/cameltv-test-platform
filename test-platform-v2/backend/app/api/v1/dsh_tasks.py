@@ -5,7 +5,7 @@
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, File, Query, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -14,7 +14,7 @@ from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.schemas.common import Page, R
 from app.schemas.dsh import DshHealthOut, DshTaskCancelResponse, DshTaskCreate, DshTaskOut
-from app.services.dsh import dsh_task_service
+from app.services.dsh import dsh_attachment_service, dsh_task_service
 from app.services.dsh.dsh_runner import runtime_available
 
 router = APIRouter(prefix="/dsh-tasks", tags=["DSH 任务"])
@@ -39,6 +39,23 @@ def dsh_model_pool(
         "default_model": settings.dsh_model or settings.ai_model,
         "pool_configured": bool(pool),
     })
+
+
+@router.post("/upload-image", response_model=R[dict], summary="上传 DSH 任务图片附件")
+async def upload_task_image(
+    file: UploadFile = File(...),
+    current: CurrentUser = Depends(require_permission("agent:run")),
+):
+    """图片附件上传（PNG/JPEG/WebP/GIF，≤10MB）。返回 file_id，提交任务时
+    经 params.image_files 引用；执行时自动落任务工作区供模型 read_image 查看。"""
+    data = await file.read()
+    try:
+        result = dsh_attachment_service.save_upload(
+            data, file.filename or "", file.content_type or ""
+        )
+    except ValueError as exc:
+        return R(code=400, msg=str(exc))
+    return R.ok(result)
 
 
 @router.post("", response_model=R[DshTaskOut], summary="提交 DSH 任务")

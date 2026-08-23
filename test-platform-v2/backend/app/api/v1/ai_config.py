@@ -36,6 +36,11 @@ class ProviderUpdateIn(BaseModel):
     enabled: bool | None = None
 
 
+class DiscoverModelsIn(BaseModel):
+    api_base_url: str = ""
+    api_key: str = ""
+
+
 @router.get("/providers", response_model=R[list], summary="项目 AI 提供方列表")
 def list_providers(
     current: CurrentUser = Depends(require_permission("ai_config:view")),
@@ -96,6 +101,19 @@ def test_connection(
     return R.ok(
         ai_config_service.test_connection(db, current.project_id or 0, provider_id)
     )
+
+
+@router.post(
+    "/providers/discover-models",
+    response_model=R[dict],
+    summary="发现提供方支持的模型清单",
+)
+def discover_models(
+    body: DiscoverModelsIn,
+    current: CurrentUser = Depends(require_permission("ai_config:manage")),
+):
+    """调用提供方 GET /models 返回模型清单（新增提供方时免手填）。"""
+    return R.ok(ai_config_service.discover_models(body.api_base_url, body.api_key))
 
 
 @router.get("/resolve", response_model=R[dict], summary="当前项目生效 AI 配置")

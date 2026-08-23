@@ -118,6 +118,7 @@ def run_dsh_task(
     extra_env: dict[str, str] | None = None,
     mode: str = "single",          # Batch 191：single | team（团队路由到 agent-team profile / team.cordis.yml）
     provider: EffectiveAiConfig | None = None,
+    images: list[str] | None = None,  # 图片附件 file_id 列表（Batch fix：对齐 DSH web 贴图）
 ) -> DshRunResult:
     """执行一次 dsh 任务，返回结构化结果。
 
@@ -154,6 +155,14 @@ def run_dsh_task(
     # 并发闸门：超过 DSH_MAX_CONCURRENT 的任务排队等待（团队任务同样受控，C172-1 不回归）
     with _concurrency_gate:
         workdir = _workspace_for(workspace, sess_root)
+        if images:
+            # 图片附件：上传文件落任务工作区，并在任务文本末尾追加可读提示
+            from app.services.dsh.dsh_attachment_service import image_hint, resolve_images
+
+            paths = resolve_images(images, Path(workdir))
+            hint = image_hint(paths)
+            if hint:
+                task = task + hint
         if settings.dsh_runtime == "python-sdk":
             return _run_python_sdk(
                 task,

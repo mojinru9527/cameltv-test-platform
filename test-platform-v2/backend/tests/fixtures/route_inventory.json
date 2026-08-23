@@ -1,5 +1,5 @@
 {
-  "count": 420,
+  "count": 422,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -1680,6 +1680,14 @@
     {
       "path": "/health",
       "method": "GET"
+    },
+    {
+      "path": "/api/v1/ai-config/providers/discover-models",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/dsh-tasks/upload-image",
+      "method": "POST"
     }
   ]
 }

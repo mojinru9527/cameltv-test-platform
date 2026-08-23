@@ -17,12 +17,14 @@ expect.extend({
 
 const mocks = vi.hoisted(() => ({
   createDshTask: vi.fn(),
+  uploadDshTaskImage: vi.fn(),
   toastSuccess: vi.fn(),
   toastError: vi.fn(),
 }))
 
 vi.mock('@/api/dshTasks', () => ({
   createDshTask: (...args: unknown[]) => mocks.createDshTask(...args),
+  uploadDshTaskImage: (...args: unknown[]) => mocks.uploadDshTaskImage(...args),
 }))
 vi.mock('@/api/aiConfig', () => ({}))
 vi.mock('sonner', () => ({
@@ -131,5 +133,31 @@ describe('SceneWizard 三步向导', () => {
     fireEvent.click(screen.getByRole('button', { name: '提交' }))
 
     await waitFor(() => expect(mocks.toastError).toHaveBeenCalledWith('提交失败'))
+  })
+
+  it('添加图片 → 上传回填 file_id → 提交携带 image_files', async () => {
+    const fileId = 'a'.repeat(32)
+    mocks.uploadDshTaskImage.mockResolvedValue({ file_id: fileId, filename: 'shot.png', bytes: 100 })
+    mocks.createDshTask.mockResolvedValue({ id: 1 })
+    renderWizard()
+
+    // Step 1：通过隐藏 file input 选择图片
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    const file = new File(['fake-png-bytes'], 'shot.png', { type: 'image/png' })
+    fireEvent.change(fileInput, { target: { files: [file] } })
+    await waitFor(() => expect(screen.getByText('shot.png')).toBeInTheDocument())
+
+    // 走完三步提交
+    fireEvent.change(screen.getByLabelText(functional.inputLabel), { target: { value: '功能需求内容' } })
+    fireEvent.click(screen.getByRole('button', { name: '下一步' }))
+    await waitFor(() => expect(screen.getByText('AI 提供方')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: '下一步' }))
+    await waitFor(() => expect(screen.getByText('任务描述（可编辑）')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: '提交' }))
+
+    await waitFor(() => expect(mocks.createDshTask).toHaveBeenCalledTimes(1))
+    const params = mocks.createDshTask.mock.calls[0][1] as Record<string, any>
+    expect(params.image_files).toEqual([fileId])
+    expect(params.model).toBe('deepseek-v4-pro')
   })
 })
