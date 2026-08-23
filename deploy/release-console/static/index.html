@@ -46,6 +46,14 @@
     <h1>CamelTv 发布控制台</h1>
     <div class="sub">独立运维入口 · 与测试平台解耦 · 发布目标: <code>swiftbugs.cn</code>（腾讯云 111.230.155.116）</div>
 
+    <div class="card" style="margin-bottom:16px">
+      <label>访问令牌（首次输入一次，保存在本浏览器；空则只读）</label>
+      <div style="display:flex;gap:8px">
+        <input id="f-token" type="password" placeholder="粘贴 RELEASE_CONSOLE_TOKEN" style="margin-bottom:0">
+        <button onclick="saveToken()">保存并验证</button>
+      </div>
+    </div>
+
     <div class="grid">
       <div class="card">
         <h2>提交发布登记</h2>
@@ -78,6 +86,20 @@
 
   <script>
     const TOKEN = localStorage.getItem('console_token') || '';
+
+    async function saveToken() {
+      const v = document.getElementById('f-token').value.trim();
+      if (!v) { localStorage.removeItem('console_token'); showToast('令牌已清除'); loadDeployments(); return; }
+      // 先验证再保存
+      const ok = await fetch('/api/health');
+      if (ok.ok) {
+        localStorage.setItem('console_token', v);
+        showToast('令牌已保存');
+        loadDeployments();
+      } else {
+        showToast('服务不可达');
+      }
+    }
     let DEPLOYMENTS = [];
     let SELECTED = null;
 
