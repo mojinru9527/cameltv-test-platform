@@ -82,5 +82,6 @@ class PlaygroundBatchRunResponse(BaseModel):
     total: int = 0
     passed: int = 0
     failed: int = 0
+    todo_blocked: int = 0
     results: list[PlaygroundCaseRunResult] = []
     report: dict = {}

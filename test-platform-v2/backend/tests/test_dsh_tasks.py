@@ -725,7 +725,7 @@ def test_execute_single_with_manifest_ingests_artifacts(dsh_db, monkeypatch):
 
 
 def test_execute_single_invalid_manifest_zero_artifacts_no_raise(dsh_db, monkeypatch):
-    """B2：single 成功但输出非法 → 任务仍 success 且 0 产物（容错）。"""
+    """B2/B4：single 成功但输出非法（0 产物）→ 生产场景任务回落 failed 并记录原因，0 产物（容错不抛）。"""
     from app.models.knowledge import AiArtifact
 
     monkeypatch.setattr("app.services.dsh.dsh_runner.run_dsh_task", _fake_run("## 产物清单\n```json\n[bad\n```"))
@@ -737,7 +737,9 @@ def test_execute_single_invalid_manifest_zero_artifacts_no_raise(dsh_db, monkeyp
         )
         claimed = dsh_task_service.claim_next_task(db)
         dsh_task_service.execute_task(db, claimed)
-        assert claimed.status == "success"
+        # B4：场景任务 0 产物不得标 success（不再是旧的恒成功容错）
+        assert claimed.status == "failed"
+        assert "0 产物" in (claimed.error or "")
         db.commit()
         assert db.query(AiArtifact).count() == 0
     finally:

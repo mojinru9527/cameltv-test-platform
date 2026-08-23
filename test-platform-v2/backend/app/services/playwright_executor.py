@@ -329,12 +329,15 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
             msg += f"。可用脚本: {', '.join(available[:10])}"
         return _fail_run(db, run, msg, job)
 
-    # 4. 构建执行环境变量（注入 BASE_URL + 环境变量 + CAMELTV_* 透传 + 输出路径）
+    # 4. 构建执行环境变量（注入 BASE_URL + CAMELTV_BASE_URL + 环境变量 + CAMELTV_* 透传 + 输出路径）
     env = os.environ.copy()
     base_url = (run.base_url or "").strip()
     if base_url:
         env["BASE_URL"] = base_url
-        logger.info(f"Injecting BASE_URL={base_url} for run #{run_id}")
+        # B14：真实体育 E2E（tests/automation/ui）读取 CAMELTV_BASE_URL（preconditions.ts），
+        # 仅注入 BASE_URL 会导致契约变量缺失而 BlockedRunError。二者同时注入，缺失契约变量时诚实报错。
+        env["CAMELTV_BASE_URL"] = base_url
+        logger.info(f"Injecting BASE_URL/CAMELTV_BASE_URL={base_url} for run #{run_id}")
     env.update(_resolve_environment_variables(db, job.environment_id))
     # CAMELTV_* 前缀变量透传（体育 E2E preconditions 依赖；如 CAMELTV_TARGET_ENV/
     # CAMELTV_RUN_LEVEL/AD_BLOCK_DOMAINS 等），便于平台环境注入驱动 tests/automation/ui

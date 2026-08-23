@@ -473,6 +473,7 @@ def run_case_batch(
         total=len(results),
         passed=passed,
         failed=failed,
+        todo_blocked=todo_blocked,
         results=results,
         report=report,
     )
