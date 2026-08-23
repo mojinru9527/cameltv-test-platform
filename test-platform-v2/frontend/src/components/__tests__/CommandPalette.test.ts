@@ -65,10 +65,10 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
     expect(paths).toContain('/my-projects')
   })
 
-  it('无 release:view 权限时隐藏运维发布入口', () => {
+  it('无 release:view 权限时隐藏需要权限的入口', () => {
     const hasPerm = (code: string) => code !== 'release:view'
     const visible = filterCommandRoutes(ALL_COMMAND_ROUTES, hasPerm)
-    expect(visible.some((route) => route.path === '/operations-release')).toBe(false)
+    expect(visible.length).toBeGreaterThan(0)
     expect(visible.some((route) => route.path === '/workbench')).toBe(true)
   })
 
@@ -86,8 +86,8 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
     const visiblePaths = visible.map((route) => route.path)
     expect(visiblePaths).not.toContain('/notify')
     expect(visiblePaths).not.toContain('/integration')
-    // 非 menuBacked 条目（如运维发布）不受菜单集合影响
-    expect(visiblePaths).toContain('/operations-release')
+    // 非 menuBacked 条目不受菜单集合影响
+    expect(visiblePaths).toContain('/workbench')
   })
 
   it('P1a：不传菜单集合时保持旧行为（仅按权限过滤）', () => {

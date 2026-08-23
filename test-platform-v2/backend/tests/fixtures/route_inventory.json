@@ -1,5 +1,5 @@
 {
-  "count": 427,
+  "count": 419,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -735,38 +735,6 @@
     },
     {
       "path": "/api/v1/open/ui-tests/{job_id}/trigger",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/ops/deployments",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/ops/deployments",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/ops/deployments/health-check",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/ops/deployments/{deployment_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/ops/deployments/{deployment_id}/backup",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/ops/deployments/{deployment_id}/events",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/ops/deployments/{deployment_id}/publish",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/ops/deployments/{deployment_id}/rollback",
       "method": "POST"
     },
     {
