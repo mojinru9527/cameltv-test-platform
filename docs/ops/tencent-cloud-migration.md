@@ -304,3 +304,48 @@ docker compose --project-name cameltv-tp-production --env-file config/runtime/pr
 - [x] 旧镜像备份 `:prev-plat`（backend 51f4a178 / frontend 0f85f1fd）
 - [ ] 旧 Vercel/Railway/Supabase 下线决策（观察期 2026-08-23 24:00 已过，由负责人按 §8 确认执行）
 - [ ] 火绒防护已恢复（部署期间临时退出，确认后应尽快恢复/加入白名单）
+
+## 附录 C：PR #304 DSH 修复部署记录（2026-08-23）
+
+> PR #304（fix(dsh)：多提供方模型路由 + 存储保留期清理 + 模型发现与任务图片附件）
+> 合入 main（961e0d9a）后当日的镜像重建与上线记录；与附录 B 同日合并两个批次。
+
+### C1. 部署概要
+
+1. 主仓 `git merge --ff-only origin/main` 到 961e0d9a（B2-1 教训：先同步再构建）。
+2. 本地构建（Docker 代理走通，见 C2-2）：
+   - backend `354bbd28f718` / frontend `5481d095cd96`，双标签 `:main` + `:release-20260823-0002`（B1-3 约定）。
+3. 传输：`docker save -o F:\_dsh_deploy_images.tar img1 img2`（1.35GB）→ `scp -C`（压缩，替代 B1-2 的 Python gzip 方案）→ 服务器 `docker load < /tmp/...` → 删除 tar。
+4. 部署：`docker compose -p cameltv-tp-production --env-file ... up -d backend frontend`（override `:main` 自动生效，postgres/数据卷不动）。
+5. 验证（除 B1-5 通用项外，DSH 域）：
+   ```bash
+   docker exec cameltv-tp-production-backend-1 sh -c "env | grep -E '^DSH_RUNTIME|^DSH_HARNESS|^STORAGE_RETENTION'"
+   docker exec -u 10001:10001 cameltv-tp-production-backend-1 bash -c \
+     'DSH_HOME=/home/cameltv/.dsh dsh --profile headless --dump-config | grep -A6 "id: llm-pi-ai"'  # 应见 platform 路由
+   ```
+   端到端：DB 插入测试任务 + `docker exec -d` 拉起 worker → `success`（真实 DeepSeek 官方执行）。
+
+### C2. 本轮额外踩坑（与 B2 不重复）
+
+1. **production.env 拼接坑（真实事故）**：文件末行 `SMTP_FROM=` 无换行，`printf "VO=1\n" >>` 追加后变成
+   `SMTP_FROM=VO=1` → 变量值丢失（容器内读到 compose 默认值 false）。**追加前先补换行**：
+   `[ -n "$(tail -c1 file)" ] && echo >> file`；追加后 `grep -c "^VAR="` 校验，且重建容器后
+   `docker exec env | grep` 端到端确认。
+2. **构建需代理**：Dockerfile 装 Node 走 deb.nodesource.com（直连被墙 False；npm/pypi 直连 OK）。
+   确认构建网络：`docker run --rm postgres:16-alpine wget -q -O /dev/null -T 20 https://deb.nodesource.com`（exit 0）。
+   代理挂掉时 gh/git 也受影响（HTTP_PROXY=/HTTPS_PROXY=127.0.0.1:7688 残留、端口无人监听）——
+   临时 `$env:HTTP_PROXY='';$env:HTTPS_PROXY=''` 可直连 api.github.com（本机直连可用）。
+3. **worker 懒启动**：DSH worker 仅 `submit_task`（API）时拉起；直接 SQL 插入测试任务不会被认领，
+   需 `docker exec -d` 手动执行 `ensure_worker_running()` 启动（容器重建后该进程失效）。
+4. **docker build exit code 假象**：`docker build ... 2>&1 | Select-Object -Last N` 管道下即使构建成功
+   也可能返回 1——以 `docker images` digest 与镜像内容检查为准（如 `grep llm-pi-ai …/cordis.patch.yml`）。
+5. **SSH 密钥被锁**：B2-2 同源（火绒），用户修复后恢复；临时副本 ACL 需 SYSTEM/用户自持有
+   （DSH SYSTEM 会话 vs 用户会话差异）。
+
+### C3. 当前状态（2026-08-23 部署后）
+
+- [x] swiftbugs.cn 后端 version **2.3.0**；`STORAGE_RETENTION_ENABLED=true`（每日 02:30 清理，磁盘 95%→57%）
+- [x] 容器内 DSH：node 运行时 + `DSH_HARNESS_PATH` + headless/agent-team 多提供方补丁（镜像烘焙，重建不再丢）
+- [x] E2E 任务 x2 均 success（Real DeepSeek 官方 key + deepseek-v4-flash）
+- [x] 新功能可用：AI 配置「获取模型列表」、DSH 任务图片附件、错误可读化
+- [x] 镜像备份：附录 B3 `:prev-plat`（backend 51f4a178 / frontend 0f85f1fd）仍保留（未被本轮删除）
