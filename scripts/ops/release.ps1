@@ -1,4 +1,4 @@
-﻿#requires -Version 5.1
+#requires -Version 5.1
 <#
 release.ps1 — 腾讯云一键发布（自动化：build → digest → 提交 → 上传 → 发布）
 
@@ -164,7 +164,10 @@ function Invoke-Backup {
     $list = Invoke-Api "GET" "/api/deployments"
     if (-not $list) { return }
     $deploy = $list.data | Select-Object -First 1
-    if (-not $deploy) { Write-Host "无发布记录，备份直接调用" -ForegroundColor Yellow }
+    if (-not $deploy) {
+        Write-Host "无发布记录，无法备份（需先发布）" -ForegroundColor Yellow
+        return
+    }
     $bk = Invoke-Api "POST" "/api/deployments/$($deploy.id)/backup" $null
     if ($bk) { Write-Host "==> 备份成功: $($bk.data.summary)" -ForegroundColor Green }
 }
