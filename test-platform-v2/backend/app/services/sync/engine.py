@@ -182,8 +182,11 @@ def run_scheduled_sync(integration_id: int) -> dict:
             ).all()
             for d in unlinked:
                 try:
-                    push_defect(db, integration_id, d.id, integration.project_id)
-                    pushed += 1
+                    log_entry = push_defect(db, integration_id, d.id, integration.project_id)
+                    if log_entry.get("status") == "success":
+                        pushed += 1
+                    elif log_entry.get("status") == "failed":
+                        errors += 1
                 except Exception as e:
                     logger.error("Scheduled push failed for defect %d: %s", d.id, e)
                     errors += 1
@@ -196,15 +199,25 @@ def run_scheduled_sync(integration_id: int) -> dict:
             ).all()
             for d in linked:
                 try:
-                    pull_defect_status(db, integration_id, d.id, integration.project_id)
-                    pulled += 1
+                    log_entry = pull_defect_status(db, integration_id, d.id, integration.project_id)
+                    if log_entry.get("status") == "success":
+                        pulled += 1
+                    elif log_entry.get("status") == "failed":
+                        errors += 1
                 except Exception as e:
                     logger.error("Scheduled pull failed for defect %d: %s", d.id, e)
                     errors += 1
 
         logger.info("Scheduled sync for integration %d: pushed=%d, pulled=%d, errors=%d",
                     integration_id, pushed, pulled, errors)
-        return {"pushed": pushed, "pulled": pulled, "errors": errors, "message": "Sync complete"}
+        # B1：诚实语义——不复用恒成功「Sync complete」；errors>0 或零变更时如实暴露
+        if errors > 0:
+            message = f"同步完成但 {errors} 项失败（推 {pushed} / 拉 {pulled}）；详见同步日志"
+        elif pushed == 0 and pulled == 0:
+            message = "同步未产生任何变更（无待同步缺陷或配置不可达）"
+        else:
+            message = f"同步完成：推 {pushed} / 拉 {pulled}"
+        return {"pushed": pushed, "pulled": pulled, "errors": errors, "message": message}
     finally:
         db.close()
 

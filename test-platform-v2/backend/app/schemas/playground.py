@@ -75,6 +75,7 @@ class PlaygroundCaseRunResult(BaseModel):
     screenshot_base64: Optional[str] = None
     duration_ms: float = 0.0
     ui_job_id: Optional[int] = None
+    todo_blocked: bool = False
 
 
 class PlaygroundBatchRunResponse(BaseModel):

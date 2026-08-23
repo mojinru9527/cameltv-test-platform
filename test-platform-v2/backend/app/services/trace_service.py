@@ -222,15 +222,18 @@ def get_trend(db: Session, project_id: int, days: int = 30) -> dict:
         .order_by("day")
     ).all()
 
-    # Build daily buckets（响应键 pass/fail/skip/block 契约保留；DB 词表已统一）
+    # Build daily buckets（响应键 pass/fail/skip/block/running/cancelled 契约保留；
+    # DB 词表已统一。B7：running/cancelled 不丢弃、不误判为 pass/fail/pending）
     from collections import defaultdict
-    daily: dict[str, dict] = defaultdict(lambda: {"total": 0, "pass": 0, "fail": 0, "skip": 0, "block": 0})
-    _TREND_KEY = {"passed": "pass", "failed": "fail", "skipped": "skip", "blocked": "block"}
+    daily: dict[str, dict] = defaultdict(lambda: {"total": 0, "pass": 0, "fail": 0, "skip": 0, "block": 0,
+                                                 "running": 0, "cancelled": 0})
+    _TREND_KEY = {"passed": "pass", "failed": "fail", "skipped": "skip", "blocked": "block",
+                  "running": "running", "cancelled": "cancelled"}
     for day, status, cnt in exec_rows:
         key = str(day)
         daily[key]["total"] += cnt
         status_key = _TREND_KEY.get(status, status)
-        if status_key in ("pass", "fail", "skip", "block"):
+        if status_key in ("pass", "fail", "skip", "block", "running", "cancelled"):
             daily[key][status_key] += cnt
 
     trend = []
@@ -244,6 +247,8 @@ def get_trend(db: Session, project_id: int, days: int = 30) -> dict:
             "fail": d["fail"],
             "skip": d["skip"],
             "block": d["block"],
+            "running": d["running"],
+            "cancelled": d["cancelled"],
             "pass_rate": rate,
         })
 

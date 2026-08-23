@@ -159,8 +159,11 @@ def sync_now(
         )
         for d in unlinked:
             try:
-                sync_engine.push_defect(db, integration_id, d.id, current.project_id or 0)
-                pushed += 1
+                log_entry = sync_engine.push_defect(db, integration_id, d.id, current.project_id or 0)
+                if log_entry.get("status") == "success":
+                    pushed += 1
+                elif log_entry.get("status") == "failed":
+                    errors += 1
             except Exception as e:
                 logger.error("Sync push failed for defect %d: %s", d.id, e)
                 errors += 1
@@ -171,13 +174,30 @@ def sync_now(
         )
         for d in linked:
             try:
-                sync_engine.pull_defect_status(db, integration_id, d.id, current.project_id or 0)
-                pulled += 1
+                log_entry = sync_engine.pull_defect_status(db, integration_id, d.id, current.project_id or 0)
+                if log_entry.get("status") == "success":
+                    pulled += 1
+                elif log_entry.get("status") == "failed":
+                    errors += 1
             except Exception as e:
                 logger.error("Sync pull failed for defect %d: %s", d.id, e)
                 errors += 1
 
-    return R.ok({"pushed": pushed, "pulled": pulled, "errors": errors, "message": "Sync complete"})
+    # B1：诚实语义——失败/无变更一律不报「同步完成」；errors>0 返回失败 code
+    if errors > 0:
+        message = (
+            f"同步完成但 {errors} 项失败（推 {pushed} / 拉 {pulled}）；"
+            f"同步明细见「同步日志」"
+        )
+        return R(code=1, msg=message, data={
+            "pushed": pushed, "pulled": pulled, "errors": errors, "message": message,
+        })
+    if pushed == 0 and pulled == 0:
+        message = "同步未产生任何变更，请确认集成已绑定缺陷数据（可能无待同步项或配置不可达）"
+        return R(code=1, msg=message, data={
+            "pushed": pushed, "pulled": pulled, "errors": errors, "message": message,
+        })
+    return R.ok({"pushed": pushed, "pulled": pulled, "errors": errors, "message": f"同步完成：推 {pushed} / 拉 {pulled}"})
 
 
 # ── Sync logs ──

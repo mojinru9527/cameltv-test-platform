@@ -91,7 +91,12 @@ def delete_user_api(
     current: CurrentUser = Depends(require_permission("system:user:delete")),
     db: Session = Depends(get_db),
 ):
-    ok_ = user_service.delete_user(db, user_id)
+    try:
+        ok_ = user_service.delete_user(db, user_id)
+    except ValueError as e:
+        # B11：被业务记录引用时返回明确 4xx（原为 FK 违反 500）
+        from app.core.exceptions import APIException
+        raise APIException(code=400, msg=str(e), http_status=400)
     if not ok_:
         from app.core.exceptions import not_found
         raise not_found("用户不存在")

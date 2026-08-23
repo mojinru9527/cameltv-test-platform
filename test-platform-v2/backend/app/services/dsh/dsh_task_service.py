@@ -237,13 +237,27 @@ def execute_task(db, task: DshTask, runner=None) -> None:
         if task.mode == "team":
             _execute_team(db, task, params, runner, provider=provider)
             return
-        result = runner(
-            task.task,
-            workspace=params.get("workspace") or None,
-            model=params.get("model") or None,  # DSH 测试 Agent 框架：模型池按任务指定
-            provider=provider,
-            images=params.get("image_files") or None,
+        # B8：single 路径补心跳（与 team 一致）——执行期间定期续期 locked_at，
+        # 避免长任务超过 _STALE_CLAIM_SECONDS(300s) 被 reap_stale 误回收置 failed、
+        # 线程结束后又写回 success 的「失败→成功闪烁」。
+        _beat_stop = threading.Event()
+        _beat = threading.Thread(
+            target=_single_heartbeat,
+            args=(task.id, _beat_stop, settings.dsh_team_heartbeat_seconds),
+            daemon=True,
         )
+        _beat.start()
+        try:
+            result = runner(
+                task.task,
+                workspace=params.get("workspace") or None,
+                model=params.get("model") or None,  # DSH 测试 Agent 框架：模型池按任务指定
+                provider=provider,
+                images=params.get("image_files") or None,
+            )
+        finally:
+            _beat_stop.set()
+            _beat.join(timeout=5)
         task.status = "success" if result.exit_code == 0 else "failed"
         task.output_text = (result.final_response or "")[:20000]
         task.error = (
@@ -257,12 +271,17 @@ def execute_task(db, task: DshTask, runner=None) -> None:
         task.session_dir = result.session_dir
         task.finished_at = _now()
         db.commit()
-        # B2：产物闭环——成功任务解析产物清单落审核台（容错，失败不影响任务状态）
+        # B2/B4：产物闭环——成功任务解析产物清单落审核台（容错，失败不影响任务状态）。
+        # 生产场景任务（scene=functional/api/ui/import_requirement）0 产物不得标 success。
         if task.status == "success":
             try:
                 from app.services.dsh.dsh_artifact_service import ingest_artifacts
 
-                ingest_artifacts(db, task)
+                written, reason = ingest_artifacts(db, task)
+                if written == 0 and reason:
+                    task.status = "failed"
+                    task.error = (task.error + "；" if task.error else "") + reason
+                    db.commit()
             except Exception:  # noqa: BLE001 - 产物解析失败不改变任务状态
                 logger.exception("dsh artifact ingest failed for task %s", task.id)
     except Exception as exc:  # noqa: BLE001 - 任务失败写回
@@ -391,6 +410,26 @@ def _team_heartbeat(task_id: int, stop_event: threading.Event, interval: float) 
             logger.warning("DSH team heartbeat error (task %s): %s", task_id, exc)
 
 
+def _single_heartbeat(task_id: int, stop_event: threading.Event, interval: float) -> None:
+    """B8：single 任务执行期间心跳续期 locked_at（R-3：独立短 SessionLocal）。
+
+    与 `_team_heartbeat` 同机制。single 路径原本无心跳，长任务超过
+    `_STALE_CLAIM_SECONDS`(300s) 会被 reap_stale 误回收置 failed，
+    执行线程结束后又把结果写回 success（失败→成功闪烁）。执行进程存活期间每
+    interval 秒续期一次锁；进程崩溃 → 心跳停止 → 超过阈值后照常回收（失联语义不回归）。
+    """
+    while not stop_event.wait(max(0.1, interval)):
+        try:
+            with SessionLocal() as s:
+                row = s.get(DshTask, task_id)
+                if row is None:
+                    return
+                row.locked_at = utcnow()
+                s.commit()
+        except Exception as exc:  # noqa: BLE001 - 单轮失败不退出心跳
+            logger.warning("DSH single heartbeat error (task %s): %s", task_id, exc)
+
+
 def _team_runner(
     task_text: str,
     params: dict,
@@ -510,12 +549,17 @@ def _execute_team(db, task: DshTask, params: dict, runner, provider: "EffectiveA
     task.finished_at = _now()
     db.commit()
 
-    # B2：产物闭环——团队成功任务解析产物清单落审核台（容错，失败不影响任务状态）
+    # B2/B4：产物闭环——团队成功任务解析产物清单落审核台（容错，失败不影响任务状态）；
+    # 生产场景任务 0 产物不得标 success。
     if task.status == "success":
         try:
             from app.services.dsh.dsh_artifact_service import ingest_artifacts
 
-            ingest_artifacts(db, task)
+            written, reason = ingest_artifacts(db, task)
+            if written == 0 and reason:
+                task.status = "failed"
+                task.error = (task.error + "；" if task.error else "") + reason
+                db.commit()
         except Exception:  # noqa: BLE001 - 产物解析失败不改变任务状态
             logger.exception("dsh artifact ingest failed for task %s", task.id)
 
