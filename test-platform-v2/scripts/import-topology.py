@@ -15,7 +15,7 @@ import httpx
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--evidence", default=str(Path(__file__).resolve().parents[1] / "work-logs" / "evidence" / "batch-113" / "interaction-paths.json"))
-    ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://test-platform.up.railway.app/api/v1"))
+    ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://swiftbugs.cn/api/v1"))
     ap.add_argument("--username", default="sportsadmin")
     ap.add_argument("--password", default=os.environ.get("TP_ADMIN_PASSWORD", ""))
     ap.add_argument("--source-batch", default="batch-113")
@@ -39,7 +39,7 @@ def main() -> int:
     print(f"[edges] {len(edges)} 条（evidence {args.evidence}）", flush=True)
 
     with httpx.Client(base_url=args.backend_url.rstrip("/"), timeout=120,
-                      headers={"Origin": "https://cameltv-test-platform1.vercel.app", "X-Project-Id": "1"}) as c:
+                      headers={"Origin": "https://swiftbugs.cn", "X-Project-Id": "1"}) as c:
         r = c.post("/auth/login", json={"username": args.username, "password": args.password})
         r.raise_for_status()
         c.headers["Authorization"] = f"Bearer {r.json()['data']['access_token']}"

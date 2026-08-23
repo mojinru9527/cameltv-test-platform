@@ -8,6 +8,8 @@ tags: ["cloudflare", "dns", "production", "batch-58"]
 
 # Cloudflare DNS Records — 测试平台生产环境
 
+> ⚠️ **已迁移/退役（2026-08-22 → swiftbugs.cn）**：本文档描述仓库迁移前的 Vercel/Railway/Supabase 方案，内容仅作历史存档。当前生产：腾讯云广州单机 https://swiftbugs.cn（ICP 粤ICP备2026121122号-1），迁移/运维见 docs/ops/tencent-cloud-migration.md，旧环境下线见 docs/ops/old-env-decommission-checklist.md。
+
 > ⚠️ 本文档中的域名和 IP 地址为占位符。注册 Cloudflare 并添加站点后回填真实值。
 
 ## 1. 域名规划

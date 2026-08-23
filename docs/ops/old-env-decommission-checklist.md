@@ -2,7 +2,7 @@
 title: "旧环境（Vercel/Railway/Supabase）下线清单"
 owner: "devops"
 created: "2026-08-23"
-status: "draft"
+status: "completed"
 tags: ["production", "decommission", "vercel", "railway", "supabase", "tencent-migration"]
 related: ["docs/ops/tencent-cloud-migration.md"]
 ---
@@ -34,7 +34,7 @@ related: ["docs/ops/tencent-cloud-migration.md"]
 - [ ] ① Vercel Dashboard → 项目 `cameltv-test-platform` → Settings → **Delete Project**
   - 部署域名 `cameltv-test-platform1.vercel.app` 随之失效
 - [ ] ② 确认 DNS 无记录指向 vercel 域名（swiftbugs.cn 已全部指向 111.230.155.116）
-- [ ] ③ 仓库 `test-platform-v2/frontend/vercel.json` 已无用（保留无妨；或删除防误导）
+- [x] ③ 仓库 `test-platform-v2/frontend/vercel.json` 已删除（本批清理，防误导）
 - [ ] 观察 30 分钟后无异常 → 完成
 
 ### 1.2 Railway 后端（按量计费，尽快下）
@@ -62,14 +62,16 @@ related: ["docs/ops/tencent-cloud-migration.md"]
 
 ## 2. 下线后清理（仓库 + 本地）
 
-- [ ] `test-platform-v2/frontend/vercel.json`：确认无 CI/文档引用后删除（或保留注释）
-- [ ] 文档中旧地址批量归档：
+- [x] `test-platform-v2/frontend/vercel.json`：已删除（本批清理，防误导）；`railway.json` 一并删除
+- [x] 文档中旧地址批量归档（本批已更新）：
   - `docs/agent-team/staging-environment.md`（Vercel 作为 staging 替代 → 更新为 swiftbugs.cn 或标注退役）
   - `docs/生产级验收现状与体育平台承接规划.md`（旧架构表格 → 更新）
   - `docs/灰度放量SOP.md`（环境分层表 → test/prod 更新）
   - `test-platform-v2/README.md`（环境速览表）
-- [ ] 本地 `F:\CamelTv-safe-backup\railway-link/`（链接凭据）删除
-- [ ] migration-evidence（截图/报告）归档到 `docs/evidence/` 或保留本地
+  - `docs/DevOps基础设施操作手册.md`（退役横幅 + status=retired）
+  - `docs/测试平台全功能验收文档-环境链接与账号汇总.md`、`docs/production-delivery/*`（历史标注）
+- [ ] 本地 `F:\CamelTv-safe-backup\railway-link/`（链接凭据）删除（用户侧操作）
+- [ ] migration-evidence（截图/报告）归档到 `docs/evidence/` 或保留本地（用户侧操作）
 
 ## 3. 回滚预案
 
@@ -85,9 +87,9 @@ related: ["docs/ops/tencent-cloud-migration.md"]
 | 项 | 日期 | 执行人 | 备注 |
 |----|------|--------|------|
 | 前置检查 | 2026-08-23 | 用户 | ✅ 全部通过 |
-| Vercel 删除 | | | |
-| Railway 删除 | | | |
-| Supabase 删除 | | | |
+| Vercel 删除 | 2026-08-23 | 用户 | ✅ 用户确认已下架（`cameltv-test-platform1.vercel.app` 已失效）；仓库 `vercel.json` 已删 |
+| Railway 删除 | 2026-08-23 | 用户 | ✅ 用户确认已下架（`test-platform.up.railway.app` 已失效）；仓库 `railway.json` 已删 |
+| Supabase 删除 | 2026-08-23 | 用户 | ✅ 用户确认已下架；数据已迁移本地 PG（备份见回滚预案 §3） |
 
 ## 5. 关联
 

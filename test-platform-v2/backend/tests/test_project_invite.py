@@ -129,7 +129,7 @@ class TestProjectInvite:
     ):
         from app.core.config import settings
         monkeypatch.setattr(
-            settings, "frontend_url", "https://cameltv-test-platform1.vercel.app"
+            settings, "frontend_url", "https://swiftbugs.cn"
         )
         headers = _login(client, "alice")
         project = _create_project(client, headers)
@@ -141,7 +141,7 @@ class TestProjectInvite:
         assert resp.status_code == 200
         url = resp.json()["data"]["url"]
         assert url.startswith(
-            "https://cameltv-test-platform1.vercel.app/register?invite="
+            "https://swiftbugs.cn/register?invite="
         )
 
     def test_non_owner_cannot_generate(self, client, db_session, tester_role):

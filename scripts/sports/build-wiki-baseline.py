@@ -37,7 +37,7 @@ def _api(base: str, username: str, password: str) -> httpx.Client:
     c = httpx.Client(
         base_url=base.rstrip("/"),
         timeout=120,
-        headers={"Origin": "https://cameltv-test-platform1.vercel.app", "X-Project-Id": "1"},
+        headers={"Origin": "https://swiftbugs.cn", "X-Project-Id": "1"},
     )
     r = c.post("/auth/login", json={"username": username, "password": password})
     r.raise_for_status()
@@ -154,7 +154,7 @@ def build_tree(dsn: str, client: httpx.Client, doc_ids: list[int]) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://test-platform.up.railway.app/api/v1"))
+    ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://swiftbugs.cn/api/v1"))
     ap.add_argument("--username", default="sportsadmin")
     ap.add_argument("--password", default=os.environ.get("TP_ADMIN_PASSWORD", ""))
     ap.add_argument("--database-url", default=os.environ.get("TP_DATABASE_URL", ""))

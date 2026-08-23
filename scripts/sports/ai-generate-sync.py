@@ -49,7 +49,7 @@ def _load_ai_service():
 
 def _api_client(base: str, username: str, password: str) -> httpx.Client:
     c = httpx.Client(
-        headers={"Origin": "https://cameltv-test-platform1.vercel.app", "X-Project-Id": "1"},
+        headers={"Origin": "https://swiftbugs.cn", "X-Project-Id": "1"},
         timeout=60,
     )
     r = c.post(base.rstrip("/") + "/auth/login", json={"username": username, "password": password})
@@ -116,7 +116,7 @@ def sync_to_db(dsn: str, doc_id: int, ai_result: dict) -> None:
 
 async def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://test-platform.up.railway.app/api/v1"))
+    ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://swiftbugs.cn/api/v1"))
     ap.add_argument("--username", default="sportsadmin")
     ap.add_argument("--password", default=os.environ.get("TP_ADMIN_PASSWORD", ""))
     ap.add_argument("--database-url", default=os.environ.get("TP_DATABASE_URL", ""))
