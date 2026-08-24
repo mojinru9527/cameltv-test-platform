@@ -12,6 +12,7 @@ import {
 } from '@/api/trace'
 import { FileText, Bug, Play, Link2, RefreshCw } from '@/lib/icons'
 import { execStatusLabel, normalizeExecStatus } from '@/utils/executionStatus'
+import { STATUS_MAP as DEFECT_STATUS_MAP } from '@/pages/defect/constants'
 
 // P3-03：执行状态图例 — 按规范词表着色（兼容历史 pass/fail/skip/block 旧值）
 const EXEC_TONE: Record<string, 'default' | 'secondary' | 'ghost' | 'destructive' | 'outline'> = {
@@ -189,7 +190,7 @@ export default function TraceDrilldown() {
                           <span className="font-medium">{df.title}</span>
                           {' '}
                           <Badge variant="outline">{df.severity}</Badge>
-                          <Badge variant={execTone(df.status)}>{df.status}</Badge>
+                          <Badge variant="outline">{DEFECT_STATUS_MAP[df.status]?.label ?? df.status}</Badge>
                         </div>
                       ))}
                       {(c.defects ?? []).length === 0 && (

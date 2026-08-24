@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/table'
 import PageHeader from '@/components/PageHeader'
 import { AsyncState } from '@/components/state'
+import Pagination from '@/components/Pagination'
 import useApi from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { Plus, Eye, RotateCcw, XCircle, Trash2, Loader2 } from '@/lib/icons'
@@ -72,11 +73,14 @@ export default function LanhuEvidencePage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
+  const [page, setPage] = useState(1)
+  const [pageSize] = useState(20)
   const { data, isLoading, isError, error, refetch } = useApi(
-    () => fetchLanhuEvidenceJobs(),
-    [],
+    () => fetchLanhuEvidenceJobs({ page, page_size: pageSize }),
+    [page, pageSize],
   )
   const jobs = data?.items || []
+  const total = data?.total || 0
 
   const openCreate = () => {
     setForm(emptyForm())
@@ -268,6 +272,16 @@ export default function LanhuEvidencePage() {
             </div>
           )}
         </AsyncState>
+        {total > 0 && (
+          <div className="mt-4">
+            <Pagination
+              page={page}
+              totalPages={Math.max(1, Math.ceil(total / pageSize))}
+              total={total}
+              onChange={setPage}
+            />
+          </div>
+        )}
       </div>
 
       {/* ── 新建任务 Dialog ── */}

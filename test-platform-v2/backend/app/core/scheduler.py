@@ -113,9 +113,11 @@ def _execute_schedule(schedule_id: int, run_id: int | None = None):
                 creator_id=0,
                 project_id=sched.project_id,
             )
+            report_id = report.get("report_id") or report.get("id") or ""
+            # B2：调度结果状态回填真实产出，不得硬编码 passed
             result = {
-                "report_id": report.get("report_id") or report.get("id") or "",
-                "status": "passed",
+                "report_id": report_id,
+                "status": "passed" if report_id else "failed",
                 "total": 0,
                 "pass_": 0,
                 "fail": 0,
@@ -143,7 +145,17 @@ def _execute_schedule(schedule_id: int, run_id: int | None = None):
         sched = db.get(TestSchedule, schedule_id)
         if run is None or sched is None:
             raise RuntimeError("调度运行记录在执行期间被删除")
-        run.status = "passed"
+        # B2：运行状态按实际执行结果回填（不得硬编码 passed）
+        fail_count = int(result.get("fail", 0) or 0)
+        result_status = str(result.get("status", "") or "")
+        if fail_count > 0:
+            run.status = "failed"
+        elif result_status in ("failed", "fail"):
+            run.status = "failed"
+        elif result_status in ("running", "pending", "started"):
+            run.status = "running"
+        else:
+            run.status = "passed"
         run.result = json.dumps(result, ensure_ascii=False)
         run.heartbeat_at = datetime.now(timezone.utc)
         run.finished_at = datetime.now(timezone.utc)

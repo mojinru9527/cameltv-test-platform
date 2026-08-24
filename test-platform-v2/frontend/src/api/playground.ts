@@ -50,12 +50,14 @@ export interface PlaygroundCaseRunResult {
   screenshot_base64?: string | null
   duration_ms: number
   ui_job_id?: number | null
+  todo_blocked?: boolean
 }
 
 export interface PlaygroundBatchRunResult {
   total: number
   passed: number
   failed: number
+  todo_blocked?: number
   results: PlaygroundCaseRunResult[]
   report: Record<string, any>
 }

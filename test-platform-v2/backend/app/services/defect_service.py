@@ -218,11 +218,6 @@ def update_defect(db: Session, defect_id: int, data, project_id: int) -> dict | 
     if not r:
         return None
 
-    update_fields = [
-        "title", "description", "severity", "status",
-        "case_id", "execution_id", "assignee_id",
-        "external_id", "external_url", "resolved_at",
-    ]
     update_data = data.model_dump(exclude_none=True)
     _validate_defect_references(
         db,
@@ -230,14 +225,26 @@ def update_defect(db: Session, defect_id: int, data, project_id: int) -> dict | 
         case_id=update_data.get("case_id", r.case_id),
         execution_id=update_data.get("execution_id", r.execution_id),
     )
+
+    # B5：status 变更必须走缺陷状态机（非法转移抛明确错误，派生字段仅在合法流转时维护）。
+    # 复用 transition_defect 的校验/流转历史/resolved_at 维护；同 status 更新为幂等 no-op。
+    if "status" in update_data and update_data["status"] != r.status:
+        target_raw = update_data.pop("status")
+        transition_defect(
+            db, defect_id, target_raw,
+            project_id=project_id,
+        )
+        # 同一 session identity map，r 与 transition_defect 内部对象一致；重新取以防刷新差异
+        r = db.scalar(select(Defect).where(Defect.id == defect_id, Defect.project_id == project_id))
+
+    update_fields = [
+        "title", "description", "severity",
+        "case_id", "execution_id", "assignee_id",
+        "external_id", "external_url", "resolved_at",
+    ]
     for k in update_fields:
         if k in update_data:
             setattr(r, k, update_data[k])
-
-    # Auto-set resolved_at when transitioning to resolved/closed
-    if "status" in update_data and update_data["status"] in ("resolved", "closed", "wontfix"):
-        if not r.resolved_at:
-            r.resolved_at = datetime.now(timezone.utc)
 
     db.flush()
     db.refresh(r)

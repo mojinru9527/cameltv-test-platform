@@ -102,7 +102,8 @@ export default function PlaygroundPanel() {
         timeout_ms: 60000,
       })
       setRunResults(result.results)
-      toast.success(`执行完成：${result.passed} 通过 / ${result.failed} 失败`)
+      const todoMsg = result.todo_blocked ? `，${result.todo_blocked} 条 TODO 拦截` : ''
+      toast.success(`执行完成：${result.passed} 通过 / ${result.failed} 失败${todoMsg}`)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '批量执行失败')
     } finally {
@@ -288,9 +289,19 @@ export default function PlaygroundPanel() {
               {runResults.map((r) => (
                 <div key={r.case_id} className="rounded-md border p-3">
                   <div className="flex items-center gap-2">
-                    {r.passed ? <CheckCircle2 className="size-4 text-status-success" /> : <XCircle className="size-4 text-status-danger" />}
-                    <span className="font-medium text-sm">{r.case_title}</span>
-                    <Badge tone={r.passed ? 'success' : 'danger'}>{r.passed ? '通过' : '失败'}</Badge>
+                    {r.todo_blocked ? (
+                      <>
+                        <XCircle className="size-4 text-status-warning" />
+                        <span className="font-medium text-sm">{r.case_title}</span>
+                        <Badge tone="warning">TODO 拦截（未执行）</Badge>
+                      </>
+                    ) : (
+                      <>
+                        {r.passed ? <CheckCircle2 className="size-4 text-status-success" /> : <XCircle className="size-4 text-status-danger" />}
+                        <span className="font-medium text-sm">{r.case_title}</span>
+                        <Badge tone={r.passed ? 'success' : 'danger'}>{r.passed ? '通过' : '失败'}</Badge>
+                      </>
+                    )}
                     {r.ui_job_id ? <Badge tone="neutral">UI 任务 #{r.ui_job_id}</Badge> : null}
                     <span className="text-xs text-muted-foreground">{r.duration_ms} ms</span>
                   </div>

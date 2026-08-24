@@ -96,6 +96,7 @@ export default function ReleaseBundlesPage() {
     description: '',
     client_version: '',
     admin_version: '',
+    parent_bundle_id: undefined as number | null | undefined,
   })
 
   // ── Data ──
@@ -125,10 +126,11 @@ export default function ReleaseBundlesPage() {
         description: form.description.trim(),
         client_version: form.client_version.trim(),
         admin_version: form.admin_version.trim(),
+        parent_bundle_id: form.parent_bundle_id ?? null,
       })
       toast.success('创建成功')
       setCreateOpen(false)
-      setForm({ name: '', description: '', client_version: '', admin_version: '' })
+      setForm({ name: '', description: '', client_version: '', admin_version: '', parent_bundle_id: undefined })
       refetch()
       navigate(`/release-bundles/${created.id}`)
     } finally {
@@ -213,6 +215,21 @@ export default function ReleaseBundlesPage() {
                   value={form.description}
                   onChange={(e) =>
                     setForm({ ...form, description: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="rb-parent">父版本（parent_bundle_id）</Label>
+                <Input
+                  id="rb-parent"
+                  type="number"
+                  placeholder="父发布包 ID；留空表示独立版本（可用于版本差异对比）"
+                  value={form.parent_bundle_id ?? ''}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      parent_bundle_id: e.target.value === '' ? null : Number(e.target.value),
+                    })
                   }
                 />
               </div>

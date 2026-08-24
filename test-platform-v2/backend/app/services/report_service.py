@@ -14,12 +14,15 @@ from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
 
 # Batch 182（P1-06）：DB 状态词表（passed/failed/…）→ 报告响应键（pass/fail/…）映射
+# B7（P1-08）：补 running/cancelled，不再落入 pending 兜底
 _REPORT_STATS_KEY = {
     "pending": "pending",
+    "running": "running",
     "passed": "pass",
     "failed": "fail",
     "skipped": "skip",
     "blocked": "block",
+    "cancelled": "cancelled",
 }
 from app.models.test_report import TestReport
 from app.models.user import User
@@ -117,7 +120,8 @@ def _build_content(db: Session, plan_id: int) -> str:
         }
 
     cases = []
-    stats = {"total": 0, "pass": 0, "fail": 0, "skip": 0, "block": 0, "pending": 0}
+    stats = {"total": 0, "pass": 0, "fail": 0, "skip": 0, "block": 0, "pending": 0,
+             "running": 0, "cancelled": 0}
     for pc, tc in pcases:
         latest_execution = case_execution_map.get(pc.id)
         trace_id = latest_execution.trace_id if latest_execution else ""
