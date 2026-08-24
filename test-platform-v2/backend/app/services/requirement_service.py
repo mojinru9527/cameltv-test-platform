@@ -1412,6 +1412,12 @@ def generate_api_cases_from_linked_endpoints(
             request_schema = {}
         if not isinstance(request_schema, dict):
             request_schema = {}
+        try:
+            response_schema = json.loads(ep.response_schema or "{}")
+        except (json.JSONDecodeError, TypeError):
+            response_schema = {}
+        if not isinstance(response_schema, dict):
+            response_schema = {}
         endpoint_dict = {
             "service_name": service_names.get(ep.id, ""),
             "module": match.get("module") or ep.module or "",
@@ -1419,6 +1425,7 @@ def generate_api_cases_from_linked_endpoints(
             "path": ep.path or "",
             "summary": ep.summary or "",
             "request_schema": request_schema,
+            "response_schema": response_schema,
         }
         module_name = match.get("module") or ep.module or ""
         templates = ["basic", "invalid", "boundary", "security", "smoke"] if match.get("source") == "fp" else ["basic", "positive", "negative"]
