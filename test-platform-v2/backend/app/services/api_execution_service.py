@@ -428,10 +428,13 @@ def _assertion_contract_error(
 
     has_status = any(rule.get("type") == "status_code" for rule in assertions)
     jsonpath_rules = [rule for rule in assertions if rule.get("type") == "jsonpath"]
+    # A组：业务码路径识别对齐真实网关契约（body.status 为业务码，如 Test5 网关）
     business_paths = {
         str(rule.get("path") or "").casefold()
         for rule in jsonpath_rules
-        if str(rule.get("path") or "").casefold().endswith((".code", ".business_code"))
+        if str(rule.get("path") or "").casefold().endswith(
+            (".code", ".business_code", ".status", ".resultcode")
+        )
     }
     has_business_code = bool(business_paths)
     has_core_field = any(

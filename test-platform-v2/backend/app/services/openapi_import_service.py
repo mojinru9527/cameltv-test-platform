@@ -301,6 +301,14 @@ def _extract_request_schema(detail: dict, spec: dict | None = None) -> dict:
             if not isinstance(p, dict):
                 continue
 
+            # 参数本身可能是 $ref（components/parameters），先解析保留真实契约信息
+            if "$ref" in p and spec:
+                resolved_ref = _resolve_ref(spec, p["$ref"])
+                if resolved_ref:
+                    p = resolved_ref
+                    if not isinstance(p, dict):
+                        continue
+
             # Swagger 2.0 body parameter
             if p.get("in") == "body":
                 body_schema = p.get("schema", {})
@@ -317,12 +325,28 @@ def _extract_request_schema(detail: dict, spec: dict | None = None) -> dict:
                 }
                 continue
 
+            param_schema = p.get("schema", {})
+            if not isinstance(param_schema, dict):
+                param_schema = {}
+            if "$ref" in param_schema and spec:
+                resolved_param_schema = _resolve_ref(spec, param_schema["$ref"])
+                if resolved_param_schema:
+                    param_schema = resolved_param_schema
+
+            # A组：参数保留 example/default/enum（真实契约信息，供生成/调试取真实样本值）
             param_info = {
                 "name": p.get("name", ""),
-                "type": _resolve_schema_type(p.get("schema", {})) if p.get("schema") else p.get("type", "string"),
+                "type": _resolve_schema_type(param_schema) if param_schema else p.get("type", "string"),
                 "required": p.get("required", False),
-                "description": p.get("description", ""),
+                "description": p.get("description", "") or param_schema.get("description", ""),
+                "example": p.get("example") if "example" in p else param_schema.get("example"),
+                "default": p.get("default") if "default" in p else param_schema.get("default"),
             }
+            param_enum = param_schema.get("enum")
+            if param_enum is None:
+                param_enum = p.get("enum")
+            if isinstance(param_enum, list) and param_enum:
+                param_info["enum"] = param_enum
             if p.get("in") == "query":
                 query_params.append(param_info)
             elif p.get("in") == "path":
@@ -340,9 +364,19 @@ def _extract_request_schema(detail: dict, spec: dict | None = None) -> dict:
     # requestBody (OpenAPI 3.x)
     request_body = detail.get("requestBody", {})
     if request_body:
+        # requestBody 整体可能是 $ref（components/requestBodies）
+        if "$ref" in request_body and spec:
+            resolved_request_body = _resolve_ref(spec, request_body["$ref"])
+            if resolved_request_body:
+                request_body = resolved_request_body
         content = request_body.get("content", {})
         for media_type, media_schema in content.items():
             body_schema = media_schema.get("schema", {})
+            # body schema 可能是 $ref（components/schemas），解析后 properties/example 齐备
+            if "$ref" in body_schema and spec:
+                resolved_body_schema = _resolve_ref(spec, body_schema["$ref"])
+                if resolved_body_schema:
+                    body_schema = resolved_body_schema
             schema["body"] = {
                 "content_type": media_type,
                 "type": body_schema.get("type", "object"),

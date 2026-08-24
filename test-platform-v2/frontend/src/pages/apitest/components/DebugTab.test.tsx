@@ -158,4 +158,50 @@ describe('快速调试资产预填', () => {
     expect((screen.getByLabelText('Header 2 名称') as HTMLInputElement).value).toBe('X-Trace-Id')
     expect((screen.getByLabelText('请求 Body') as HTMLTextAreaElement).value).toContain('"text"')
   })
+
+  it('A组：tags 当模块时 URL 不再拼接模块名；参数取契约 example；默认断言非空', async () => {
+    render(
+      <DebugTab
+        endpoint={{
+          id: 2,
+          project_id: 1,
+          service_id: 3,
+          service_name: 'camel-test-confirm',
+          module: 'sports-live-controller',
+          method: 'GET',
+          path: '/ee/sports_live/home_match',
+          summary: '首页赛事',
+          description: '',
+          request_schema: JSON.stringify({
+            query: [{ name: 'day', type: 'string', required: true, example: '20260615' }],
+            body: {
+              content_type: 'application/json',
+              properties: { formKey: { type: 'string', example: 'sport_live_follow_conf' } },
+            },
+          }),
+          response_schema: '{}',
+          auth_required: false,
+          deprecated: false,
+          source: 'knife4j',
+          import_batch_id: 1,
+          version: '1.0',
+          created_at: null,
+          updated_at: null,
+        }}
+      />,
+    )
+
+    await selectTest5Environment()
+    // tags=sports-live-controller 不再作为模块路径混入
+    expect((screen.getByLabelText('模块名') as HTMLInputElement).value).toBe('/ee/sports_live')
+    expect((screen.getByLabelText('接口路径') as HTMLInputElement).value).toBe('/home_match')
+    expect((screen.getByLabelText('完整请求地址') as HTMLInputElement).value).toBe(
+      'http://camel-api-gateway05.svc.elelive.cn/camel-test-confirm/ee/sports_live/home_match',
+    )
+    // 参数预填取契约真实 example（不再空值/占位）
+    expect((screen.getByLabelText('参数 1 名称') as HTMLInputElement).value).toBe('day')
+    expect((screen.getByLabelText('参数 1 值') as HTMLInputElement).value).toBe('20260615')
+    // 默认断言非空（2xx + 响应时间）
+    expect(screen.getByText('断言规则 (3)')).toBeTruthy()
+  })
 })

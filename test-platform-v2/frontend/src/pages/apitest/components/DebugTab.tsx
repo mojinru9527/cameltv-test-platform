@@ -15,9 +15,18 @@ import { quickExecute } from '@/api/apitest'
 import { fetchEnvironments } from '@/api/environment'
 import { fetchDatasets } from '@/api/dataset'
 import AssertionEditor from './AssertionEditor'
-import { buildSampleBody, formatBody } from './utils'
+import { buildSampleBody, formatBody, defaultAssertions } from './utils'
+import { composeAssetUrl, splitAssetRoute } from './assetRoute'
 import { buildApiExecutionRequest } from '../apiExecutionRequest'
 import type { ApiEndpoint, ApiExecutionResult, ApiAssertionResult, BatchExecutionResult, DatasetListItem, Environment } from '@/types'
+
+/** A组：参数预填取契约真实值（example → default → enum[0]），无契约值时留空不造假。 */
+function prefillParamValue(p: Record<string, any>): string {
+  if (p && p.example !== undefined && p.example !== null) return String(p.example)
+  if (p && p.default !== undefined && p.default !== null) return String(p.default)
+  if (Array.isArray(p?.enum) && p.enum.length > 0) return String(p.enum[0])
+  return ''
+}
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const
 
@@ -45,47 +54,6 @@ function isBatchResult(res: ApiExecutionResult | BatchExecutionResult): res is B
   return 'batch_mode' in res && (res as any).batch_mode
 }
 
-/**
- * Compose a full URL from address segments, correctly handling slashes.
- * Example: composeAssetUrl('https://api.example.com', 'api', '/v1/ee/search', '/synonyms/cou')
- *       → 'https://api.example.com/api/v1/ee/search/synonyms/cou'
- */
-function composeAssetUrl(baseUrl: string, serviceName: string, modulePath: string, endpointPath: string): string {
-  let result = baseUrl.replace(/\/+$/, '')
-  if (serviceName) {
-    result += '/' + serviceName.replace(/^\/+|\/+$/g, '')
-  }
-  if (modulePath) {
-    const cleaned = modulePath.replace(/\/+$/g, '')
-    result += cleaned.startsWith('/') ? cleaned : '/' + cleaned
-  }
-  if (endpointPath) {
-    const cleaned = endpointPath.replace(/\/+$/g, '')
-    result += cleaned.startsWith('/') ? cleaned : '/' + cleaned
-  }
-  return result
-}
-
-function splitAssetPath(path: string, declaredModule: string): { modulePath: string; endpointPath: string } {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`
-  if (declaredModule) {
-    const normalizedModule = declaredModule.startsWith('/') ? declaredModule : `/${declaredModule}`
-    const endpointPath = normalizedPath.startsWith(normalizedModule)
-      ? normalizedPath.slice(normalizedModule.length) || '/'
-      : normalizedPath
-    return { modulePath: normalizedModule, endpointPath }
-  }
-
-  const segments = normalizedPath.split('/').filter(Boolean)
-  if (segments.length >= 4) {
-    return {
-      modulePath: `/${segments.slice(0, 2).join('/')}`,
-      endpointPath: `/${segments.slice(2).join('/')}`,
-    }
-  }
-  return { modulePath: '', endpointPath: normalizedPath }
-}
-
 interface Props {
   endpoint?: ApiEndpoint | null
   serviceName?: string
@@ -106,7 +74,7 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
   const [bodyType, setBodyType] = useState<string>('json')
   const [body, setBody] = useState('')
   const [headersJson, setHeadersJson] = useState('{}')
-  const [assertions, setAssertions] = useState('[]')
+  const [assertions, setAssertions] = useState<string>(defaultAssertions())
   const [envId, setEnvId] = useState<number | undefined>()
   const [envs, setEnvs] = useState<Environment[]>([])
   const executionInFlightRef = useRef(false)
@@ -145,9 +113,13 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
     setMethod(endpoint.method || 'GET')
 
     setServiceName(svcName || endpoint.service_name || '')
-    const splitPath = splitAssetPath(endpoint.path || '', endpoint.module || '')
+    // A组：URL 三段组装统一走 assetRoute（服务名/模块/路径唯一来源；
+    // 模块来自 tags 且不是路径前缀时不再误作模块路径，path 含服务前缀时防双拼）
+    const splitPath = splitAssetRoute(svcName || endpoint.service_name || '', endpoint.module || '', endpoint.path || '')
     setModulePath(splitPath.modulePath)
     setEndpointPath(splitPath.endpointPath)
+    // A组：快速调试默认断言非空（2xx + 响应时间），不再「必失败」
+    setAssertions(defaultAssertions())
 
     // Parse request_schema to pre-fill headers/body/params
     try {
@@ -158,12 +130,12 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
       const pathParams: ParamRow[] = Array.isArray(schema.path)
         ? schema.path
           .filter((p: any) => p.required)
-          .map((p: any) => ({ key: p.name, value: '' }))
+          .map((p: any) => ({ key: p.name, value: prefillParamValue(p) }))
         : []
       const queryParams: ParamRow[] = Array.isArray(schema.query)
         ? schema.query
           .filter((p: any) => p.required)
-          .map((p: any) => ({ key: p.name, value: '' }))
+          .map((p: any) => ({ key: p.name, value: prefillParamValue(p) }))
         : []
       setParamRows([...pathParams, ...queryParams])
 
