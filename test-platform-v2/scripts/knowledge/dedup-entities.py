@@ -16,7 +16,7 @@ USERNAME = "sportsadmin"
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://test-platform.up.railway.app/api/v1"))
+    ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://swiftbugs.cn/api/v1"))
     ap.add_argument("--password", default=os.environ.get("TP_ADMIN_PASSWORD", ""))
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
@@ -26,7 +26,7 @@ def main() -> int:
 
     # 通过 /knowledge/graph/entities 拉取并本地分组统计重复（后端不提供批量删除端点，登记结果）
     with httpx.Client(base_url=args.backend_url.rstrip("/"), timeout=120,
-                      headers={"Origin": "https://cameltv-test-platform1.vercel.app", "X-Project-Id": "1"}) as client:
+                      headers={"Origin": "https://swiftbugs.cn", "X-Project-Id": "1"}) as client:
         r = client.post("/auth/login", json={"username": USERNAME, "password": args.password})
         r.raise_for_status()
         client.headers["Authorization"] = f"Bearer {r.json()['data']['access_token']}"
