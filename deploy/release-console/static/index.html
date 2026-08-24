@@ -74,6 +74,7 @@
     <div class="card" style="margin-top:20px">
       <h2>事件时间线</h2>
       <div id="events"><p style="color:var(--muted)">选择一条发布记录查看。</p></div>
+      <div id="actions" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"></div>
     </div>
 
     <div class="card" style="margin-top:20px">
@@ -182,6 +183,14 @@
             <div class="t">${ev.actor} · ${new Date(ev.created_at).toLocaleString('zh-CN')}</div>
           </div>
         `).join('');
+        const d = DEPLOYMENTS.find(x => x.id === id) || {};
+        const acts = [];
+        if (d.state === 'DRAFT') acts.push(['validate', '验证']);
+        if (d.state === 'VALIDATED' || d.state === 'TEST_VERIFIED') acts.push(['publish', '发布']);
+        if (d.state === 'PROD_OBSERVING') acts.push(['verify', '确认上线']);
+        if (!['DRAFT', 'CANCELLED'].includes(d.state)) acts.push(['rollback', '回滚']);
+        acts.push(['backup', '备份']);
+        document.getElementById('actions').innerHTML = acts.map(([a, l]) => `<button onclick="act('${a}')">${l}</button>`).join('');
       } catch (e) {
         document.getElementById('events').innerHTML = '<p style="color:var(--danger)">'+e.message+'</p>';
       }
@@ -189,10 +198,11 @@
 
     async function act(action) {
       if (!SELECTED) { showToast('请先选择发布记录'); return; }
-      const tag = action === 'publish' ? (prompt('发布镜像 tag','release-current')||'') : (action === 'rollback' ? (prompt('回滚到镜像 tag','main')||'') : '');
+      const noTag = ['validate', 'verify', 'backup'];
+      const tag = noTag.includes(action) ? '' : (action === 'publish' ? (prompt('发布镜像 tag', 'release-20260825-0001') || '') : (prompt('回滚到镜像 tag', 'main') || ''));
       try {
         const r = await api('/api/deployments/' + SELECTED + '/' + action, {
-          method:'POST', body: JSON.stringify(action==='backup'?{}:{image_tag:tag})
+          method: 'POST', body: JSON.stringify(noTag.includes(action) ? {} : { image_tag: tag })
         });
         document.getElementById('result').textContent = r.logs || r.summary;
         showToast(action + ' 成功: ' + r.summary);

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
@@ -320,6 +321,46 @@ def submit_release(body: SubmitReleaseIn, authorization: str | None = Header(Non
     )
 
 
+@app.post("/api/deployments/{deployment_id}/validate")
+def validate_deployment(deployment_id: str, authorization: str | None = Header(None, alias="Authorization", include_in_schema=False)):
+    """DRAFT → VALIDATED：不可变 manifest 结构校验（ADR-0015 门禁）。"""
+    _require_token(authorization)
+    with _store_conn() as conn:
+        _ensure_schema(conn)
+        row = conn.execute(
+            "SELECT r.release_id AS release_id, r.manifest_json AS manifest_json, d.state AS state "
+            "FROM deployments d JOIN releases r ON r.release_id = d.release_id WHERE d.id = ?",
+            (deployment_id,),
+        ).fetchone()
+    if row is None:
+        raise HTTPException(404, "发布记录不存在")
+    if row["state"] != "DRAFT":
+        raise HTTPException(409, f"当前状态 {row['state']} 不允许验证")
+    try:
+        manifest = json.loads(row["manifest_json"])
+    except json.JSONDecodeError as exc:
+        raise HTTPException(422, f"manifest 不是合法 JSON: {exc}") from exc
+    if not isinstance(manifest, dict) or manifest.get("schema_version") != "1.0":
+        raise HTTPException(422, "manifest schema_version 必须为 1.0")
+    if manifest.get("release_id") != row["release_id"]:
+        raise HTTPException(422, "manifest release_id 与登记记录不一致")
+    if not re.fullmatch(r"[0-9a-f]{40}", str(manifest.get("git_sha", ""))):
+        raise HTTPException(422, "manifest git_sha 必须是 40 位 hex")
+    for side in ("frontend", "backend"):
+        digest = str((manifest.get(side) or {}).get("digest", ""))
+        if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
+            raise HTTPException(422, f"manifest {side}.digest 必须是 sha256:<64 位 hex>")
+    if not _transition_state(deployment_id, "DRAFT", "VALIDATED", "validate", "console", "manifest validated"):
+        raise HTTPException(409, "状态已变化，验证失败")
+    return ActionOut(
+        action="validate",
+        ok=True,
+        summary=f"release {row['release_id']} validated",
+        deployment_id=deployment_id,
+        state="VALIDATED",
+    )
+
+
 @app.post("/api/deployments/{deployment_id}/publish")
 def publish_deployment(deployment_id: str, body: PublishIn, authorization: str | None = Header(None, alias="Authorization", include_in_schema=False)):
     _require_token(authorization)
@@ -349,6 +390,34 @@ def publish_deployment(deployment_id: str, body: PublishIn, authorization: str |
         logs=result.logs,
         deployment_id=deployment_id,
         state="PROD_OBSERVING",
+    )
+
+
+@app.post("/api/deployments/{deployment_id}/verify")
+def verify_deployment(deployment_id: str, authorization: str | None = Header(None, alias="Authorization", include_in_schema=False)):
+    """PROD_OBSERVING → PRODUCTION_VERIFIED：执行线上健康检查后确认上线。"""
+    _require_token(authorization)
+    with _store_conn() as conn:
+        _ensure_schema(conn)
+        row = conn.execute("SELECT state FROM deployments WHERE id = ?", (deployment_id,)).fetchone()
+    if row is None:
+        raise HTTPException(404, "发布记录不存在")
+    if row["state"] != "PROD_OBSERVING":
+        raise HTTPException(409, f"当前状态 {row['state']} 不允许确认上线")
+    executor = _executor()
+    try:
+        result = executor.health()
+    except ExecutorCommandFailed as exc:
+        raise HTTPException(500, f"上线健康检查失败: {exc}") from exc
+    if not _transition_state(deployment_id, "PROD_OBSERVING", "PRODUCTION_VERIFIED", "verify", "console", "production health ok"):
+        raise HTTPException(409, "状态已变化，确认上线失败")
+    return ActionOut(
+        action="verify",
+        ok=True,
+        summary="production verified (health ok)",
+        logs=result.logs,
+        deployment_id=deployment_id,
+        state="PRODUCTION_VERIFIED",
     )
 
 

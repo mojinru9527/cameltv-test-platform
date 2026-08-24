@@ -1,9 +1,9 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 <#
 release.ps1 — 腾讯云一键发布（自动化：build → digest → 提交 → 上传 → 发布）
 
 用法（仓库根目录执行）:
-  # 全流程（构建+提取digest+提交登记+上传+发布）
+  # 全流程（构建+提取digest+提交登记+上传+验证+发布+确认上线）
   pwsh scripts/ops/release.ps1 -Tag release-20260823-0003 -Publish
 
   # 只构建+提交登记（不发布，线下检查后网页点发布）
@@ -65,7 +65,7 @@ if (-not $KeyPath) {
 # ── 辅助 ────────────────────────────────────────────────────────
 function Invoke-Api([string]$method, [string]$path, $body = $null) {
     $headers = @{ Authorization = "Bearer $Token"; "Content-Type" = "application/json" }
-    $params = @{ Uri = "$BaseUrl$path"; Method = $method; Headers = $headers; UseBasicParsing = $true }
+    $params = @{ Uri = "$BaseUrl$path"; Method = $method; Headers = $headers; UseBasicParsing = $true; TimeoutSec = 900 }
     if ($body) { $params.Body = ($body | ConvertTo-Json -Depth 6) }
     try {
         $r = Invoke-RestMethod @params
@@ -127,8 +127,8 @@ function Invoke-Release {
     $submit = Invoke-Api "POST" "/api/deployments" @{
         release_id = $releaseId; image_tag = $Tag; manifest_json = $manifest
     }
-    if (-not $submit) { throw "提交登记失败" }
-    $deploymentId = $submit.data.deployment_id
+    if (-not $submit -or -not $submit.deployment_id) { throw "提交登记失败" }
+    $deploymentId = $submit.deployment_id
     Write-Host "==> 登记成功 id=$deploymentId（状态 DRAFT）" -ForegroundColor Green
 
     # 4. 导出 + 上传 tar
@@ -142,9 +142,17 @@ function Invoke-Release {
 
     # 5. 发布（可选）
     if ($Publish) {
+        Write-Host "==> 验证 manifest $deploymentId" -ForegroundColor Cyan
+        $val = Invoke-Api "POST" "/api/deployments/$deploymentId/validate" $null
+        if (-not $val) { throw "验证失败（manifest 校验未通过，请到网页检查）" }
         Write-Host "==> 发布 $deploymentId" -ForegroundColor Cyan
         $pub = Invoke-Api "POST" "/api/deployments/$deploymentId/publish" @{ image_tag = $Tag }
-        if ($pub) { Write-Host "==> 发布成功: $($pub.data.summary)" -ForegroundColor Green }
+        if (-not $pub) { throw "发布失败" }
+        Write-Host "==> 发布成功: $($pub.summary)" -ForegroundColor Green
+        Write-Host "==> 确认上线（线上健康检查）" -ForegroundColor Cyan
+        $ver = Invoke-Api "POST" "/api/deployments/$deploymentId/verify" $null
+        if ($ver) { Write-Host "==> 上线确认: $($ver.summary)" -ForegroundColor Green }
+        else { Write-Host "==> 上线确认未通过，请到网页 https://release.swiftbugs.cn 手动「确认上线」" -ForegroundColor Yellow }
     } else {
         Write-Host "==> 构建+提交完成。去网页 https://release.swiftbugs.cn 点「发布」即可（状态 VALIDATED 后）" -ForegroundColor Yellow
     }
@@ -154,22 +162,22 @@ function Invoke-Rollback {
     if (-not $Tag) { throw "rollback 需 -Tag（目标镜像如 main）" }
     $list = Invoke-Api "GET" "/api/deployments"
     if (-not $list) { return }
-    $deploy = $list.data | Select-Object -First 1
+    $deploy = @($list) | Select-Object -First 1
     if (-not $deploy) { Write-Host "无发布记录" -ForegroundColor Yellow; return }
     $rb = Invoke-Api "POST" "/api/deployments/$($deploy.id)/rollback" @{ image_tag = $Tag }
-    if ($rb) { Write-Host "==> 回滚成功: $($rb.data.summary)" -ForegroundColor Green }
+    if ($rb) { Write-Host "==> 回滚成功: $($rb.summary)" -ForegroundColor Green }
 }
 
 function Invoke-Backup {
     $list = Invoke-Api "GET" "/api/deployments"
     if (-not $list) { return }
-    $deploy = $list.data | Select-Object -First 1
+    $deploy = @($list) | Select-Object -First 1
     if (-not $deploy) {
         Write-Host "无发布记录，无法备份（需先发布）" -ForegroundColor Yellow
         return
     }
     $bk = Invoke-Api "POST" "/api/deployments/$($deploy.id)/backup" $null
-    if ($bk) { Write-Host "==> 备份成功: $($bk.data.summary)" -ForegroundColor Green }
+    if ($bk) { Write-Host "==> 备份成功: $($bk.summary)" -ForegroundColor Green }
 }
 
 switch ($Command) {
