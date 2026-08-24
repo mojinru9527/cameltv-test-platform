@@ -47,7 +47,7 @@ export default function ReviewDialog({
         {(action === 'reject') && (
           <div className="my-3">
             <Textarea
-              placeholder="驳回原因..."
+              placeholder="驳回原因…"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}
@@ -61,7 +61,7 @@ export default function ReviewDialog({
             variant={action === 'reject' ? 'destructive' : 'default'}
             disabled={reviewing || (action === 'reject' && !comment.trim())}
           >
-            {reviewing ? '处理中...' : action === 'submit' ? '确认提交' : action === 'approve' ? '确认通过' : '确认驳回'}
+            {reviewing ? '处理中…' : action === 'submit' ? '确认提交' : action === 'approve' ? '确认通过' : '确认驳回'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -113,7 +113,7 @@ export default function ConfiguresPanel({ bundleId }: ConfiguresPanelProps) {
               disabled={suggesting}
             >
               <Sparkles className="h-3.5 w-3.5 mr-1" />
-              {suggesting ? '推荐中...' : 'AI 推荐'}
+              {suggesting ? '推荐中…' : 'AI 推荐'}
             </Button>
             <Button
               variant="secondary"
@@ -122,7 +122,7 @@ export default function ConfiguresPanel({ bundleId }: ConfiguresPanelProps) {
               disabled={confirming || links.length === 0}
             >
               <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-              {confirming ? '确认中...' : '批量确认'}
+              {confirming ? '确认中…' : '批量确认'}
             </Button>
           </div>
         </div>

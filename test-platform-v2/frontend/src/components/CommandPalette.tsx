@@ -130,7 +130,7 @@ export default function CommandPalette({ visibleMenuPaths }: { visibleMenuPaths?
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
       <CommandInput
-        placeholder="搜索页面..."
+        placeholder="搜索页面…"
         value={query}
         onValueChange={setQuery}
       />

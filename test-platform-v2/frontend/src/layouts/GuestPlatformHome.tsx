@@ -36,7 +36,7 @@ export default function GuestPlatformHome({
             未登录也可以进入模块说明页了解平台能力。真正开始使用时，我们会请你登录；新用户可以直接注册并创建自己的项目。
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button type="button" onClick={() => onRequireLogin('/workbench', '工作台')}>
+            <Button type="button" variant="primary" onClick={() => onRequireLogin('/workbench', '工作台')}>
               登录并开始使用
               <ArrowRight className="size-4" aria-hidden="true" />
             </Button>

@@ -217,7 +217,7 @@ export default function EvidenceTaskPanel({
         {loading && jobs.length === 0 ? (
           <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
             <Loader2 className="size-4 animate-spin mr-2" />
-            加载中...
+            加载中…
           </div>
         ) : sorted.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground text-sm gap-2">

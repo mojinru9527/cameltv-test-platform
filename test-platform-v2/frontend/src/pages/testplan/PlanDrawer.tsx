@@ -271,7 +271,7 @@ export default function PlanDrawer({ open, editing, onClose, onSaved }: Props) {
             <Button variant="secondary" onClick={onClose}>取消</Button>
           </DialogClose>
           <Button disabled={saving} onClick={handleSubmit(doSave)}>
-            {saving ? '保存中...' : '保存'}
+            {saving ? '保存中…' : '保存'}
           </Button>
         </DialogFooter>
       </DialogContent>

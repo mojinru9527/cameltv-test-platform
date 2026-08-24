@@ -141,7 +141,7 @@ export default function WikiLintPanel() {
               ) : (
                 <Bug className="size-4 mr-1" />
               )}
-              {running ? '扫描中...' : '运行体检'}
+              {running ? '扫描中…' : '运行体检'}
             </Button>
           )}
         </div>

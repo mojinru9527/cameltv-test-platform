@@ -306,7 +306,7 @@ export default function DefectDetailSheet({
                 <Textarea
                   id="detail-comment"
                   rows={2}
-                  placeholder="输入评论..."
+                  placeholder="输入评论…"
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   onKeyDown={(e) => {
@@ -333,7 +333,7 @@ export default function DefectDetailSheet({
             <TabsContent value="attachments" className="flex flex-col flex-1 overflow-hidden mt-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm text-muted-foreground">
-                  {attachments ? `${attachments.length} 个文件` : '加载中...'}
+                  {attachments ? `${attachments.length} 个文件` : '加载中…'}
                 </span>
                 <input
                   ref={fileInputRef}

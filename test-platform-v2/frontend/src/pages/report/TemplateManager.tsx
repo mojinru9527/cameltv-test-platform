@@ -188,7 +188,7 @@ export default function TemplateManager({ open, onOpenChange, templates, onChang
                 )}
                 <Button type="submit" disabled={saving}>
                   <Plus className="size-4" />
-                  {saving ? '保存中...' : editing ? '保存' : '创建'}
+                  {saving ? '保存中…' : editing ? '保存' : '创建'}
                 </Button>
               </DialogFooter>
             </form>

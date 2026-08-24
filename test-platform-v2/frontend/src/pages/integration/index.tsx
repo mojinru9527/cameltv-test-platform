@@ -684,7 +684,7 @@ export default function IntegrationPage() {
                 {editing ? '保存' : '创建'}
               </Button>
               <Button type="button" variant="secondary" disabled={testing || saving} onClick={handleTest}>
-                {testing ? '测试中...' : '测试连接'}
+                {testing ? '测试中…' : '测试连接'}
               </Button>
             </div>
           </form>

@@ -47,12 +47,12 @@ export default function CaseBatchToolbar({
         </SelectContent>
       </Select>}
       {canUpdate && <Button size="sm" variant="secondary" onClick={onBatchUpdate} disabled={batchUpdating || !batchPriority}>
-        {batchUpdating ? '更新中...' : '批量更新'}
+        {batchUpdating ? '更新中…' : '批量更新'}
       </Button>}
       <div className="flex-1" />
       {canDelete && <Button size="sm" variant="danger" onClick={onOpenBatchDeleteDialog} disabled={batchDeleting}>
         <Trash2 className="size-3.5" data-icon="inline-start" />
-        {batchDeleting ? '删除中...' : `批量删除 (${selectedCount})`}
+        {batchDeleting ? '删除中…' : `批量删除 (${selectedCount})`}
       </Button>}
       <Button size="sm" variant="ghost" onClick={onCancelSelection}>取消</Button>
     </div>

@@ -94,7 +94,7 @@ export default function LoginForm({ onSuccess, submitLabel = '登录' }: LoginFo
 
       {submitError && <p role="alert" className="text-sm text-destructive">{submitError}</p>}
 
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button type="submit" variant="primary" className="w-full" disabled={loading}>
         {loading && <Loader2 className="size-4 animate-spin" data-icon="inline-start" />}
         {submitLabel}
       </Button>

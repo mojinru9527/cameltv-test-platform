@@ -83,7 +83,7 @@ export function SearchableSelect({
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
         <Command shouldFilter={false}>
           <CommandInput
-            placeholder={`搜索${placeholder}...`}
+            placeholder={`搜索${placeholder}…`}
             value={search}
             onValueChange={setSearch}
           />

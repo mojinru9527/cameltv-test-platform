@@ -250,7 +250,7 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
           </DialogClose>
           {activeTab === 'form' && (
             <Button disabled={saving} onClick={handleSubmit(doSave)}>
-              {saving ? '保存中...' : '保存'}
+              {saving ? '保存中…' : '保存'}
             </Button>
           )}
         </DialogFooter>

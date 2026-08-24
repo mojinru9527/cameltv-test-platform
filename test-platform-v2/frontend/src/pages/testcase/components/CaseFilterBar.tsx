@@ -201,7 +201,7 @@ export default function CaseFilterBar({
           />
           <Button size="sm" variant="secondary" disabled={importing} onClick={() => importInputRef.current?.click()}>
             <Upload className="size-3.5" data-icon="inline-start" />
-            {importing ? '导入中...' : '导入'}
+            {importing ? '导入中…' : '导入'}
           </Button>
         </>
       )}
@@ -214,7 +214,7 @@ export default function CaseFilterBar({
         导出 XMind
       </Button>
       {canCreate && (
-        <Button size="sm" className="w-full sm:w-auto" onClick={onNewCase}>
+        <Button size="sm" variant="primary" className="w-full sm:w-auto" onClick={onNewCase}>
           <Plus className="size-3.5" data-icon="inline-start" />
           新建用例
         </Button>

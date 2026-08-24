@@ -46,7 +46,7 @@ export default function BatchDeleteDialog({
             }}
             disabled={deleting || count === 0}
           >
-            {deleting ? '删除中...' : '确认删除'}
+            {deleting ? '删除中…' : '确认删除'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

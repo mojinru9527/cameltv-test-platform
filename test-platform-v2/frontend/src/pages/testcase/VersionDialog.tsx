@@ -115,7 +115,7 @@ export default function VersionDialog({ open, onClose, caseData, versions }: Pro
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-                  {loading ? '加载中...' : '选择左侧版本查看快照'}
+                  {loading ? '加载中…' : '选择左侧版本查看快照'}
                 </div>
               )}
             </div>

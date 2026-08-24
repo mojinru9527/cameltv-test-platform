@@ -580,7 +580,7 @@ export default function SchedulePage() {
               disabled={saving || (editing?.id ? !canUpdate : !canCreate)}
               onClick={form.handleSubmit(doSave)}
             >
-              {saving ? '保存中...' : '保存'}
+              {saving ? '保存中…' : '保存'}
             </Button>
           </DialogFooter>
         </DialogContent>

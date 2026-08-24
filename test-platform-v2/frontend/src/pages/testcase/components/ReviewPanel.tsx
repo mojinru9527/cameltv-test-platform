@@ -39,16 +39,16 @@ export default function ReviewPanel({
       <div className="flex flex-wrap gap-2">
         {(reviewStatus === 'draft' || reviewStatus === 'rejected') && (
           <Button size="sm" onClick={() => onReview('submit')} disabled={reviewing}>
-            {reviewing ? '提交中...' : '提交评审'}
+            {reviewing ? '提交中…' : '提交评审'}
           </Button>
         )}
         {reviewStatus === 'submitted' && (
           <>
             <Button size="sm" variant="primary" onClick={() => onReview('approve')} disabled={reviewing}>
-              {reviewing ? '处理中...' : '通过'}
+              {reviewing ? '处理中…' : '通过'}
             </Button>
             <Button size="sm" variant="danger" onClick={() => onReview('reject')} disabled={reviewing}>
-              {reviewing ? '处理中...' : '驳回'}
+              {reviewing ? '处理中…' : '驳回'}
             </Button>
             <Button size="sm" variant="secondary" onClick={() => onReview('withdraw')} disabled={reviewing}>
               撤回

@@ -172,7 +172,7 @@ function TreeNode({ node, depth = 0 }: { node: ModuleTreeNode; depth?: number })
         {/* Description tooltip */}
         {node.description && (
           <span className="text-xs text-muted-foreground truncate hidden sm:inline">
-            — {node.description.slice(0, 60)}{node.description.length > 60 ? '...' : ''}
+            — {node.description.slice(0, 60)}{node.description.length > 60 ? '…' : ''}
           </span>
         )}
 

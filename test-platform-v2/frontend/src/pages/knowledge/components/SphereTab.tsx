@@ -331,7 +331,7 @@ export default function SphereTab() {
       {isLoading && (
         <div className="text-center py-12 text-muted-foreground">
           <RefreshCw className="size-8 mx-auto mb-2 animate-spin opacity-40" />
-          <p className="text-sm">加载项目球图谱...</p>
+          <p className="text-sm">加载项目球图谱…</p>
         </div>
       )}
       {isError && (

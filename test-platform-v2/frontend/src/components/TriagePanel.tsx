@@ -206,7 +206,7 @@ export default function TriagePanel({ planId, hasFailures }: TriagePanelProps) {
         <div className="space-y-3 py-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" />
-            AI 正在分析失败用例...
+            AI 正在分析失败用例…
           </div>
           <SkeletonText lines={4} />
         </div>

@@ -594,7 +594,7 @@ export default function InteractionAnnotator({
                 onClick={handleSave}
                 disabled={saving || regions.length === 0}
               >
-                {saving ? '保存中...' : '保存'}
+                {saving ? '保存中…' : '保存'}
               </Button>
               <Button
                 variant="secondary"

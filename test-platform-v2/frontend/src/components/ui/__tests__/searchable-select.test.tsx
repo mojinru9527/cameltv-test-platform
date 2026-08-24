@@ -55,7 +55,7 @@ describe('SearchableSelect（Batch 178 / FIX-173-P2-03）', () => {
   it('输入关键字过滤选项（搜索 100+ 项域列表的核心能力）', () => {
     render(<SearchableSelect value="" onValueChange={() => {}} options={options} placeholder="选择域" />)
     fireEvent.click(screen.getByRole('combobox'))
-    const input = screen.getByPlaceholderText('搜索选择域...')
+    const input = screen.getByPlaceholderText('搜索选择域…')
     fireEvent.change(input, { target: { value: '直播' } })
     expect(screen.getByText('用户端/直播')).toBeTruthy()
     expect(screen.queryByText('用户端/首页')).toBeNull()
@@ -65,7 +65,7 @@ describe('SearchableSelect（Batch 178 / FIX-173-P2-03）', () => {
   it('无匹配时展示空态文案', () => {
     render(<SearchableSelect value="" onValueChange={() => {}} options={options} placeholder="选择域" />)
     fireEvent.click(screen.getByRole('combobox'))
-    const input = screen.getByPlaceholderText('搜索选择域...')
+    const input = screen.getByPlaceholderText('搜索选择域…')
     fireEvent.change(input, { target: { value: '不存在的域xyz' } })
     expect(screen.getByText('无匹配选项')).toBeTruthy()
   })

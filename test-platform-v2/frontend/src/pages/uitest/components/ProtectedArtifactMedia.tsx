@@ -40,7 +40,7 @@ export function ProtectedArtifactMedia({
     return <span role="alert" className="text-xs text-status-danger">{name} 加载失败</span>
   }
   if (!objectUrl) {
-    return <span className="text-xs text-muted-foreground">{name} 加载中...</span>
+    return <span className="text-xs text-muted-foreground">{name} 加载中…</span>
   }
   if (kind === 'image') {
     return (
