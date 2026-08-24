@@ -121,11 +121,18 @@ def ingest_artifacts(db: Session, task: DshTask) -> tuple[int, str | None]:
         return 0, None
 
     items = parse_artifact_list(task.output_text or "")
-    if not items:
-        return 0, None
-
     scene = _scene_from_params(task)
     scene_type = _SCENE_TYPE_MAP.get(scene)
+    if not items:
+        if scene_type is None:
+            # scene=general（或未知 scene）→ 不落产物是正常（空产物场景）
+            return 0, None
+        # B4：生产场景任务 0 产物——诚实上报原因，供调用方不再标 success
+        return 0, (
+            f"scene={scene} 场景任务未解析到产物清单（0 产物）："
+            "任务输出缺少「## 产物清单」或 JSON 解析失败"
+        )
+
     if scene_type is None:
         # scene=general（或未知 scene）→ 不落产物（保持现行为）
         return 0, None

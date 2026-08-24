@@ -33,8 +33,10 @@ client.interceptors.response.use(
       if (body.code !== 0) {
         // 业务错误不在此 toast，由调用方组件按需提示；
         // Batch 160：错误对象附带 envelope code，供调用方区分业务 404（HTTP 200 + code=404）等场景
-        const businessError = new Error(body.msg) as Error & { code?: number }
+        // B13：附带 envelope data（如 sync-now 的 pushed/pulled/errors）供调用方精确提示
+        const businessError = new Error(body.msg) as Error & { code?: number; data?: unknown }
         businessError.code = body.code
+        businessError.data = body.data
         return Promise.reject(businessError)
       }
       return body.data
@@ -92,7 +94,10 @@ const getCache = new Map<string, CacheEntry>()
 const inflightGets = new Map<string, Promise<unknown>>()
 
 function cacheKey(url: string, params?: Record<string, unknown>): string {
-  return `${url}?${JSON.stringify(params ?? {})}`
+  // B13：缓存键纳入当前 X-Project-Id，项目切换后不读上一项目数据（与请求头一致的 currentProjectId）
+  const { currentProjectId } = useAuthStore.getState()
+  const projectKey = currentProjectId ?? 0
+  return `${url}?project=${projectKey}&${JSON.stringify(params ?? {})}`
 }
 
 /**

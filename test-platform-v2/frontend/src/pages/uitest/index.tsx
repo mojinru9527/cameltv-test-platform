@@ -58,7 +58,7 @@ import {
 } from '@/components/ui/table'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { execStatusLabel } from '@/utils/executionStatus'
-import { BROWSER_MAP, browserBadgeClass, getEnvironment, isProductionJob, statusBadgeClass } from './uiShared'
+import { BROWSER_MAP, browserBadgeClass, getEnvironment, isProductionJob, statusBadgeClass, JOB_STATUS_FILTERS } from './uiShared'
 import UiJobFormDialog, { uiJobFormSchema, type UiJobFormValues } from './components/UiJobFormDialog'
 import UiJobDetailSheet from './components/UiJobDetailSheet'
 import ProductionTriggerDialog from './components/ProductionTriggerDialog'
@@ -413,8 +413,8 @@ export default function UiTestPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__all__">全部</SelectItem>
-                {(['pending', 'running', 'passed', 'failed'] as const).map((k) => (
-                  <SelectItem key={k} value={k}>{execStatusLabel(k)}</SelectItem>
+                {JOB_STATUS_FILTERS.map((f) => (
+                  <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -437,7 +437,7 @@ export default function UiTestPage() {
               刷新
             </Button>
             {hasPerm('uitest:create') && (
-              <Button onClick={() => { form.reset({ name: '', description: '', test_spec: '', browser: 'chromium', environment_id: null, case_id: null, cron_expression: '', schedule_enabled: false }); setEditing(null); setDrawer(true) }}>
+              <Button onClick={() => { form.reset({ name: '', description: '', test_spec: '', browser: 'chromium', environment_id: environments[0]?.id ?? null, case_id: null, cron_expression: '', schedule_enabled: false }); setEditing(null); setDrawer(true) }}>
                 <Plus className="size-4" />
                 新建任务
               </Button>
@@ -522,7 +522,7 @@ export default function UiTestPage() {
                           <Button
                             size="sm"
                             variant="secondary"
-                            onClick={() => { form.reset({ name: `${c.title}-任务`, description: '', test_spec: '', browser: 'chromium', environment_id: null, case_id: c.id, cron_expression: '', schedule_enabled: false }); setEditing(null); setDrawer(true) }}
+                            onClick={() => { form.reset({ name: `${c.title}-任务`, description: '', test_spec: '', browser: 'chromium', environment_id: environments[0]?.id ?? null, case_id: c.id, cron_expression: '', schedule_enabled: false }); setEditing(null); setDrawer(true) }}
                           >
                             以此用例新建任务
                           </Button>

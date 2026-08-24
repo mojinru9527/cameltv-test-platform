@@ -388,48 +388,64 @@ def run_case_batch(
     """
     from datetime import datetime, timezone
     from app.models.test_case import TestCase
+    from app.core.execution_status import canonical_exec_status
 
     cases = _get_project_cases(db, project_id, case_ids)
     results: list[PlaygroundCaseRunResult] = []
     passed = 0
     failed = 0
+    todo_blocked = 0
 
     for case in cases:
         source = build_gherkin_from_case(case)
         compiled = compile_spec(CompileRequest(source=source, source_type=SourceType.gherkin))
-        executed = execute_spec(ExecuteRequest(spec_code=compiled.spec_code, timeout_ms=timeout_ms))
-        ok = executed.passed
-        if ok:
-            passed += 1
-        else:
+        has_todo = _spec_has_todo(compiled.spec_code)
+        executed = None
+        if has_todo:
+            # B3：TODO 规格不得执行/判通过，返回拦截语义并回填 blocked 状态
+            todo_blocked += 1
             failed += 1
+            ok = False
+        else:
+            executed = execute_spec(ExecuteRequest(spec_code=compiled.spec_code, timeout_ms=timeout_ms))
+            ok = executed.passed
+            if ok:
+                passed += 1
+            else:
+                failed += 1
 
         ui_job_id = None
-        if write_back_to_ui:
+        if write_back_to_ui and not has_todo:
             ui_job_id = _write_spec_as_ui_job(db, case, compiled.spec_code, creator_id, project_id)
 
-        # 回填用例执行结果（不存大图，只存可追溯摘要）
-        case.last_run_status = "pass" if ok else "failed"
-        case.last_response_json = json.dumps({
+        # 回填用例执行结果（不存大图，只存可追溯摘要）；B3：TODO 拦截写 failed + 原因
+        case.last_run_status = canonical_exec_status("passed" if ok else "failed")
+        summary = {
             "source": "playground_batch",
             "passed": ok,
-            "duration_ms": round(executed.duration_ms, 2),
-            "stdout": (executed.stdout or "")[-2000:],
-            "stderr": (executed.stderr or "")[-2000:],
+            "todo_blocked": has_todo,
             "ui_job_id": ui_job_id,
             "executed_at": datetime.now(timezone.utc).isoformat(),
-        }, ensure_ascii=False, default=str)
+        }
+        if has_todo:
+            summary["reason"] = "TODO 拦截：用例存在未识别步骤，未执行；请先在 Playground 补充可映射步骤"
+        else:
+            summary["duration_ms"] = round(executed.duration_ms, 2)
+            summary["stdout"] = (executed.stdout or "")[-2000:]
+            summary["stderr"] = (executed.stderr or "")[-2000:]
+        case.last_response_json = json.dumps(summary, ensure_ascii=False, default=str)
 
         results.append(PlaygroundCaseRunResult(
             case_id=case.id,
             case_title=case.title or "",
             spec_code=compiled.spec_code,
             passed=ok,
-            stdout=executed.stdout or "",
-            stderr=executed.stderr or "",
-            screenshot_base64=executed.screenshot_base64,
-            duration_ms=executed.duration_ms,
+            stdout=executed.stdout if executed else "",
+            stderr=executed.stderr if executed else "TODO 拦截：存在未识别步骤，未执行",
+            screenshot_base64=executed.screenshot_base64 if executed else None,
+            duration_ms=executed.duration_ms if executed else 0.0,
             ui_job_id=ui_job_id,
+            todo_blocked=has_todo,
         ))
 
     db.commit()
@@ -439,12 +455,14 @@ def run_case_batch(
         "total": len(results),
         "passed": passed,
         "failed": failed,
+        "todo_blocked": todo_blocked,
         "write_back_to_ui": write_back_to_ui,
         "items": [
             {
                 "case_id": r.case_id,
                 "case_title": r.case_title,
                 "passed": r.passed,
+                "todo_blocked": r.todo_blocked,
                 "duration_ms": r.duration_ms,
                 "ui_job_id": r.ui_job_id,
             }
@@ -455,6 +473,7 @@ def run_case_batch(
         total=len(results),
         passed=passed,
         failed=failed,
+        todo_blocked=todo_blocked,
         results=results,
         report=report,
     )

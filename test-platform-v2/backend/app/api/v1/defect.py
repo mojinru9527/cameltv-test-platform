@@ -150,8 +150,8 @@ def update_defect(
     try:
         r = defect_service.update_defect(db, defect_id, body, current.project_id or 0)
     except ValueError as e:
-        from app.core.exceptions import APIException
-        raise APIException(msg=str(e))
+        # B5：非法状态流转/引用校验失败 → 业务拒绝 envelope（HTTP 200 + code=1，符合仓库约定）
+        return R.err(code=1, msg=str(e))
     if not r:
         from app.core.exceptions import not_found
         raise not_found("缺陷")

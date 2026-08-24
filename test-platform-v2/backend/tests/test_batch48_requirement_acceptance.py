@@ -190,7 +190,8 @@ def test_upload_20mb_plus_one_returns_413_without_database_or_audit_side_effects
     assert response.status_code == 413
     assert response.json()["code"] == 413
     assert db_session.scalar(select(func.count(RequirementDocument.id))) == 0
-    assert db_session.scalar(select(func.count(AuditLog.id))) == 0
+    # auth.* 审计（认证事件，B12 起记录）不属于上传链路副作用
+    assert db_session.scalar(select(func.count(AuditLog.id)).where(AuditLog.action.not_like("auth.%"))) == 0
 
 
 def test_upload_exactly_20mb_is_not_rejected_as_multipart_overhead(
@@ -243,7 +244,8 @@ def test_forged_small_content_length_cannot_bypass_actual_upload_limit(
     assert response.status_code == 413
     assert response.json()["code"] == 413
     assert db_session.scalar(select(func.count(RequirementDocument.id))) == 0
-    assert db_session.scalar(select(func.count(AuditLog.id))) == 0
+    # auth.* 审计（认证事件，B12 起记录）不属于上传链路副作用
+    assert db_session.scalar(select(func.count(AuditLog.id)).where(AuditLog.action.not_like("auth.%"))) == 0
 
 
 @pytest.mark.parametrize(
@@ -268,7 +270,7 @@ def test_invalid_requirement_upload_returns_400_without_side_effects(
     assert response.json()["code"] == 400
     assert response.json()["msg"]
     assert db_session.scalar(select(func.count(RequirementDocument.id))) == 0
-    assert db_session.scalar(select(func.count(AuditLog.id))) == 0
+    assert db_session.scalar(select(func.count(AuditLog.id)).where(AuditLog.action.not_like("auth.%"))) == 0
 
 
 def test_requirement_upload_and_audit_are_committed_together(

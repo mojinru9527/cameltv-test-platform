@@ -75,11 +75,13 @@ class PlaygroundCaseRunResult(BaseModel):
     screenshot_base64: Optional[str] = None
     duration_ms: float = 0.0
     ui_job_id: Optional[int] = None
+    todo_blocked: bool = False
 
 
 class PlaygroundBatchRunResponse(BaseModel):
     total: int = 0
     passed: int = 0
     failed: int = 0
+    todo_blocked: int = 0
     results: list[PlaygroundCaseRunResult] = []
     report: dict = {}

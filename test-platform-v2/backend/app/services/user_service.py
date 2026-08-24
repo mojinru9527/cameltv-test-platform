@@ -99,6 +99,29 @@ def delete_user(db: Session, user_id: int) -> bool:
     user = db.get(User, user_id)
     if not user:
         return False
+    # B11：删除前校验业务引用（test_plan.assignee_id 为 FK 无 ondelete → DB 层会 500；
+    # 其余为整型引用，也应避免遗留孤儿数据）。有引用时抛 ValueError，由路由层转 4xx。
+    from app.models.defect import Defect
+    from app.models.test_plan import TestPlan, TestPlanCase
+
+    refs: list[str] = []
+    plan_assignee = db.scalars(
+        select(TestPlan).where(TestPlan.assignee_id == user_id)
+    ).all()
+    if plan_assignee:
+        names = "、".join((p.name or f"#{p.id}") for p in plan_assignee[:5])
+        refs.append(f"测试计划指派人（{names}{' 等' if len(plan_assignee) > 5 else ''}）")
+    if db.scalar(select(TestPlan.id).where(TestPlan.creator_id == user_id).limit(1)):
+        refs.append("测试计划创建人")
+    if db.scalar(select(TestPlanCase.id).where(TestPlanCase.executor_id == user_id).limit(1)):
+        refs.append("计划用例执行人")
+    if db.scalar(select(Defect.id).where(Defect.assignee_id == user_id).limit(1)):
+        refs.append("缺陷指派人")
+    if db.scalar(select(Defect.id).where(Defect.creator_id == user_id).limit(1)):
+        refs.append("缺陷创建人")
+    if refs:
+        raise ValueError("该用户被以下业务记录引用，无法删除：" + "、".join(refs))
+
     db.execute(sa_delete(UserRole).where(UserRole.user_id == user_id))
     db.delete(user)
     db.commit()
