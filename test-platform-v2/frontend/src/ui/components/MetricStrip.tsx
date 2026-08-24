@@ -17,17 +17,17 @@ export interface MetricStripProps {
 }
 
 const toneBorder: Record<MetricTone, string> = {
-  positive: 'border-l-[#35e68a]/20',
-  active: 'border-l-[#80c4ff]/20',
-  risk: 'border-l-[#ff9a90]/20',
-  neutral: 'border-l-[#718077]/20',
+  positive: 'border-l-obsidian-tone-positive/20',
+  active: 'border-l-obsidian-tone-active/20',
+  risk: 'border-l-obsidian-tone-risk/20',
+  neutral: 'border-l-obsidian-tone-neutral/20',
 }
 
 const toneText: Record<MetricTone, string> = {
-  positive: 'text-[#80dba6]',
-  active: 'text-[#80c4ff]',
-  risk: 'text-[#ff9a90]',
-  neutral: 'text-[#909f95]',
+  positive: 'text-obsidian-tone-positive',
+  active: 'text-obsidian-tone-active',
+  risk: 'text-obsidian-tone-risk',
+  neutral: 'text-obsidian-tone-neutral',
 }
 
 export function MetricStrip({ metrics, className }: MetricStripProps) {
@@ -35,7 +35,7 @@ export function MetricStrip({ metrics, className }: MetricStripProps) {
     <div
       className={cn(
         'grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))]',
-        'border-y border-[rgba(218,239,224,0.08)]',
+        'border-y border-obsidian-border-soft',
         'py-3',
         className,
       )}
@@ -47,7 +47,7 @@ export function MetricStrip({ metrics, className }: MetricStripProps) {
           className={cn(
             'relative grid grid-cols-[1fr_auto] gap-x-3 gap-y-[5px]',
             'min-w-0 px-6 py-2',
-            i > 0 && 'border-l border-[rgba(218,239,224,0.08)]',
+            i > 0 && 'border-l border-obsidian-border-soft',
             i === 0 && 'pl-0',
           )}
         >
@@ -55,10 +55,10 @@ export function MetricStrip({ metrics, className }: MetricStripProps) {
             {m.icon}
             {m.label}
           </span>
-          <b className="row-span-2 col-start-2 self-center text-[1.75rem] font-[560] tracking-tight text-[#eef6f0]">
+          <b className="row-span-2 col-start-2 self-center text-[1.75rem] font-[560] tracking-tight text-foreground">
             {m.value}
           </b>
-          <small className="text-[0.75rem] text-[#718077]">{m.note}</small>
+          <small className="text-caption text-muted-foreground">{m.note}</small>
         </div>
       ))}
     </div>

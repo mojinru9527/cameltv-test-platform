@@ -13,7 +13,7 @@ export default function PageHeader({ title, icon: Icon, description, children, c
   return (
     <div className={cn('flex items-center justify-between flex-wrap gap-2', className)}>
       <div>
-        <h1 className="text-lg font-semibold tracking-tight flex items-center gap-2">
+        <h1 className="text-page font-semibold tracking-[-0.03em] flex items-center gap-2">
           {Icon && <Icon className="size-5" />}
           {title}
         </h1>

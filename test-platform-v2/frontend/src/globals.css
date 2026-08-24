@@ -1963,6 +1963,26 @@ html.theme-transition *::after {
   --text-muted-high-contrast: #a7b5ab;
   --border-high-contrast: rgba(218, 239, 224, 0.18);
   --theme-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ── Obsidian shell 语义层（审计 H2：壳组件不再硬编码 hex/字阶/圆角） ── */
+  /* 文本层级 */
+  --obsidian-fg: #f5faf6;            /* 页头主标题（比 --foreground 更亮一档） */
+  --obsidian-fg-2: #d9e4dc;          /* 次要文本：刷新按钮、强调区块 */
+  --obsidian-muted-2: #829087;       /* 面包屑 / 次级说明 */
+  --obsidian-muted-3: #819086;       /* 状态栏默认 */
+  --obsidian-live: #bbf3d0;          /* 实时状态强调 */
+  --obsidian-dot: #536159;           /* 分隔装饰点 */
+  /* 玻璃与平面 */
+  --obsidian-surface: #141c17;       /* 内容平面 / 筛选卡片（与 --card 同值，独立语义） */
+  --obsidian-glass: rgba(255, 255, 255, 0.025);
+  --obsidian-glass-hover: rgba(255, 255, 255, 0.05);
+  --obsidian-border-soft: rgba(218, 239, 224, 0.08);
+  --obsidian-border-strong: rgba(218, 239, 224, 0.12);
+  /* 指标语气色（tone neutral 与 note 分隔） */
+  --obsidian-tone-positive: #80dba6;
+  --obsidian-tone-active: #80c4ff;
+  --obsidian-tone-risk: #ff9a90;
+  --obsidian-tone-neutral: #909f95;
 }
 
 .mindmap-canvas foreignObject,

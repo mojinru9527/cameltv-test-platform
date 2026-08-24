@@ -3,9 +3,13 @@
  *
  * 为所有列表类页面提供统一的暗色玻璃页头和内容平面。
  * 兼容现有业务组件，零侵入式包裹。
+ *
+ * 约定（审计 H2）：颜色走 --obsidian-* 主题变量，字阶走 --text-* token，
+ * 不再在组件里写死 hex。
  */
 
 import { type ReactNode, type PointerEvent, useState } from 'react'
+import { Button } from '../primitives/Button'
 import { RefreshCw } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 
@@ -49,7 +53,7 @@ export function ObsidianListPage({
 
   return (
     <div
-      className={cn('relative min-h-full text-[#eef6f0]', className)}
+      className={cn('relative min-h-full text-foreground', className)}
       onPointerMove={setSpotlight}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -66,19 +70,19 @@ export function ObsidianListPage({
       {/* 页头 */}
       <header className="relative z-10 mb-6">
         {subtitle && (
-          <div className="flex items-center gap-2 mb-3 text-[0.75rem] font-[650] tracking-[0.09em] text-[#91a398]">
-            <span className="w-[22px] h-px bg-[#35e68a] shadow-[0_0_10px_rgba(53,230,138,0.55)]" />
+          <div className="flex items-center gap-2 mb-3 text-caption font-[650] tracking-[0.09em] text-muted-foreground">
+            <span className="w-[22px] h-px bg-primary shadow-[0_0_10px_rgba(53,230,138,0.55)]" />
             {subtitle}
           </div>
         )}
 
         <div className="flex items-center justify-between gap-6">
           <div className="min-w-0">
-            <h1 className="text-[clamp(1.75rem,2.4vw,2.25rem)] font-[580] tracking-[-0.03em] leading-[1.08] text-[#f5faf6] text-balance">
+            <h1 className="text-[clamp(1.75rem,2.4vw,2.25rem)] font-semibold tracking-[-0.03em] leading-[1.08] text-obsidian-fg text-balance">
               {title}
             </h1>
             {description && (
-              <p className="mt-3 max-w-[70ch] text-[0.9375rem] leading-relaxed text-[#a7b5ab]">
+              <p className="mt-3 max-w-[70ch] text-body leading-relaxed text-muted-hc">
                 {description}
               </p>
             )}
@@ -86,14 +90,16 @@ export function ObsidianListPage({
 
           <div className="flex flex-shrink-0 items-center gap-2">
             {onRefresh && (
-              <button
+              <Button
+                variant="ghost"
+                size="md"
+                loading={loading}
                 onClick={onRefresh}
-                disabled={loading}
-                className="inline-flex items-center gap-2 min-h-[42px] px-4 rounded-[9px] border border-[rgba(218,239,224,0.12)] text-[0.875rem] text-[#d9e4dc] bg-[rgba(255,255,255,0.025)] hover:bg-[rgba(255,255,255,0.05)] transition-colors disabled:opacity-40"
+                className="min-h-[42px] rounded-md border border-obsidian-border-strong px-4 text-control text-obsidian-fg-2 bg-obsidian-glass hover:bg-obsidian-glass-hover"
               >
-                <RefreshCw className={cn('size-4', loading && 'animate-spin')} aria-hidden="true" />
-                {loading ? '加载中…' : '刷新'}
-              </button>
+                <RefreshCw className="size-4" aria-hidden="true" />
+                刷新
+              </Button>
             )}
             {actions}
             {headerRight}
@@ -103,17 +109,17 @@ export function ObsidianListPage({
 
       {/* 筛选栏 */}
       {filterBar && (
-        <div className="relative z-10 mb-4 p-4 rounded-xl bg-[#141c17] border border-[rgba(218,239,224,0.08)]">
+        <div className="relative z-10 mb-4 p-4 rounded-xl bg-card border border-obsidian-border-soft">
           {filterBar}
         </div>
       )}
 
       {/* 内容平面 */}
-      <div className="relative z-10 bg-[#141c17] rounded-xl border border-[rgba(218,239,224,0.08)] overflow-hidden">
+      <div className="relative z-10 bg-card rounded-xl border border-obsidian-border-soft overflow-hidden">
         {loading ? (
           <div className="p-8 space-y-4 animate-pulse" aria-busy="true">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-12 bg-[rgba(255,255,255,0.03)] rounded-lg" />
+              <div key={i} className="h-12 bg-obsidian-glass rounded-lg" />
             ))}
           </div>
         ) : (

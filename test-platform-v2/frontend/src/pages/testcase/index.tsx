@@ -1,5 +1,5 @@
 import { PageShell } from '@/ui'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
@@ -40,27 +40,67 @@ export default function TestCasePage() {
   const currentProjectName = projects.find((project) => project.id === currentProjectId)?.name
     || (currentProjectId ? `项目 #${currentProjectId}` : '未选择项目')
   const canBatchSelect = canUpdate || canDelete
+  // M4：URL 为筛选/视图唯一事实源（surface/domain/module/nature/priority/keyword/page/pageSize/type/tab）
+  const [searchParams, setSearchParams] = useSearchParams()
   // filter state (default to manual - api cases managed in apitest module)
-  const [actTab, setActTab] = useState('manual')
+  // M4：actTab（用例类型）同步 ?type=，刷新/分享不丢上下文
+  const [actTab, setActTab] = useState(() => {
+    const t = searchParams.get('type')
+    return t === 'api' || t === 'ui' || t === 'all' ? (t === 'all' ? '' : t) : 'manual'
+  })
   // 视图切换（P2a/P2b）：用例列表 / 脑图视图 / Playground，
   // ?tab=mindmap|playground 可直达（旧 /mindmap、/playground 路由重定向至此）
   type ViewTab = 'list' | 'mindmap' | 'playground'
-  const [searchParams, setSearchParams] = useSearchParams()
   const tabParam = searchParams.get('tab')
   const viewTab: ViewTab = tabParam === 'mindmap' || tabParam === 'playground' ? tabParam : 'list'
   const setViewTab = (next: ViewTab) => {
-    setSearchParams(next === 'list' ? {} : { tab: next }, { replace: true })
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev)
+      if (next === 'list') params.delete('tab')
+      else params.set('tab', next)
+      return params
+    }, { replace: true })
   }
-  const [selSurface, setSelSurface] = useState('')
-  const [selDomain, setSelDomain] = useState('')
-  const [selModule, setSelModule] = useState('')
-  const [selDirect, setSelDirect] = useState(false)
-  const [caseNature, setCaseNature] = useState('')
-  const [priority, setPriority] = useState('')
-  const [keywordInput, setKeywordInput] = useState('')
-  const [keyword, setKeyword] = useState('')
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(20)
+  // M4：筛选状态自 URL 初始化（surface/domain/module/nature/priority/keyword/page/pageSize）
+  const [selSurface, setSelSurface] = useState(() => searchParams.get('surface') || '')
+  const [selDomain, setSelDomain] = useState(() => searchParams.get('domain') || '')
+  const [selModule, setSelModule] = useState(() => searchParams.get('module') || '')
+  const [selDirect, setSelDirect] = useState(() => searchParams.get('direct') === 'true')
+  const [caseNature, setCaseNature] = useState(() => searchParams.get('nature') || '')
+  const [priority, setPriority] = useState(() => {
+    const p = searchParams.get('priority')
+    return p === 'P0' || p === 'P1' || p === 'P2' || p === 'P3' ? p : ''
+  })
+  const [keywordInput, setKeywordInput] = useState(() => searchParams.get('keyword') || '')
+  const [keyword, setKeyword] = useState(() => searchParams.get('keyword') || '')
+  const [page, setPage] = useState(() => {
+    const p = Number(searchParams.get('page'))
+    return Number.isInteger(p) && p > 0 ? p : 1
+  })
+  const [pageSize, setPageSize] = useState(() => {
+    const s = Number(searchParams.get('pageSize'))
+    return s === 20 || s === 50 || s === 100 ? s : 20
+  })
+
+  // M4：筛选变化单向写回 URL（保留视图 tab，replace 避免历史堆积）
+  useEffect(() => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      const setOrDelete = (k: string, v: string) => { if (v) next.set(k, v); else next.delete(k) }
+      setOrDelete('type', actTab === '' ? 'all' : actTab === 'manual' ? '' : actTab)
+      setOrDelete('surface', selSurface)
+      setOrDelete('domain', selDomain)
+      setOrDelete('module', selModule)
+      setOrDelete('direct', selDirect ? 'true' : '')
+      setOrDelete('nature', caseNature)
+      setOrDelete('priority', priority)
+      setOrDelete('keyword', keyword)
+      if (page > 1) next.set('page', String(page)); else next.delete('page')
+      if (pageSize !== 20) next.set('pageSize', String(pageSize)); else next.delete('pageSize')
+      const serialized = next.toString()
+      return serialized === prev.toString() ? prev : next
+    }, { replace: true })
+  }, [actTab, selSurface, selDomain, selModule, selDirect, caseNature, priority, keyword, page, pageSize, setSearchParams])
 
   // drawer
   const [drawer, setDrawer] = useState(false)
