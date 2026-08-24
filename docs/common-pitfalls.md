@@ -626,6 +626,34 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ---
 
+### 6.6 PowerShell 5.1 + git stderr 导致 AI worktree 脚本中断（NativeCommandError）
+
+**现象**：在 Windows PowerShell 5.1 下运行 `scripts/git/start-agent-team-task.ps1`、`new-ai-worktree.ps1`、`audit-ai-pr.ps1`，当 `git fetch` / `git worktree add` 向 stderr 输出进度（如 `From github.com:…`、`Preparing worktree (new branch '…')`）时脚本抛 `NativeCommandError` 中断，worktree 创建/审计失败；无更新（stderr 为空）时反而正常，误导排查。
+
+**根因**：脚本内 `Invoke-CheckedGit` 使用 `$output = @(& git … 2>&1)` 且 `$ErrorActionPreference = "Stop"`；PowerShell 5.1 把重定向的 native stderr 转成 ErrorRecord，首条即终止。PowerShell 7 行为不同，因此仓库历史多在 pwsh7 下执行成功。
+
+**解决方案**：
+1. 先执行 `git fetch origin --quiet`（或等待上一次 fetch 后的安静窗口）再跑脚本，让脚本内部 fetch 无 stderr 输出；
+2. 或手动等价创建：`git worktree add -b <branch> <路径> origin/main -q` + 按 `new-ai-worktree.ps1` 模板写 `.ai-worktree.json`（schema v3，含 confirmations.start）/`.env` 端口文件，最后必须过 `verify-ai-worktree.ps1 -RequireClean -RequireMetadata` 硬门禁；
+3. 根治建议：脚本内 git 命令加 `-q`，并用 `$LASTEXITCODE` 判定（参考 verify-ai-worktree.ps1 写法）。
+
+**修复**：2026-08-24 / Batch 203（本批 worktree 创建即因此种方式完成）。
+
+### 6.7 系统残留 HTTP_PROXY 污染 httpx / gh / curl
+
+**现象**：本机环境变量残留 `HTTP_PROXY=http://127.0.0.1:7688`（失效代理）时：平台后端 httpx 执行引擎对真实接口全部超时/502；`gh` 命令报 `proxyconnect tcp: dial tcp 127.0.0.1:7688: connectex…refused`；`curl` 直连返回 `code=000`。仅设 `NO_PROXY=*` 对 IWR（PS 5.1）不生效时请同时清空 `HTTP_PROXY/HTTPS_PROXY`。
+
+**根因**：开发机曾配置本地代理，失效后未清理；httpx 默认 `trust_env=True` 读取该变量。
+
+**解决方案**：
+1. 执行任何真实网络取证/执行前统一：`$env:NO_PROXY='*'; $env:HTTP_PROXY=''; $env:HTTPS_PROXY='';`（或 `env -u HTTP_PROXY`，Linux 下 `NO_PROXY=*`）；
+2. 平台 Runner 启动脚本/CI 添加 `trust_env=False` 或显式 NO_PROXY；
+3. `gh` 不认 PS 的 `-NoProxy`，必须走环境变量清空。
+
+**修复**：2026-08-24 / Batch 203（QA 报告 §8 已首次记录；本批 gh/curl 复现后固化本节）。
+
+---
+
 ## 7. 部署/运维（腾讯云生产迁移，2026-08-22 起）
 
 > 经验来源：`docs/ops/tencent-cloud-migration.md` 附录 A2 + 附录 B（增量升级模板）。
