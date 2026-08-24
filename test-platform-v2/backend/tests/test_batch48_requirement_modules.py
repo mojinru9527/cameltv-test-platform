@@ -678,7 +678,10 @@ def test_admin_link_and_audit_are_atomic(
         )
 
     assert db_session.scalar(select(func.count()).select_from(ModuleAdminLink)) == 0
-    assert db_session.scalar(select(func.count()).select_from(AuditLog)) == 0
+    # auth.* 审计（认证事件，B12 起记录）不属于本链路副作用
+    assert db_session.scalar(
+        select(func.count()).select_from(AuditLog).where(AuditLog.action.not_like("auth.%"))
+    ) == 0
 
 
 def test_api_match_rejects_missing_document_foreign_service_and_endpoint(

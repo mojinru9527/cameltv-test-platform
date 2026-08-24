@@ -150,9 +150,8 @@ def update_defect(
     try:
         r = defect_service.update_defect(db, defect_id, body, current.project_id or 0)
     except ValueError as e:
-        # B5：非法状态流转（或引用校验失败）返回明确 4xx，而非业务 code=1 的 200
-        from app.core.exceptions import APIException
-        raise APIException(code=400, msg=str(e), http_status=400)
+        # B5：非法状态流转/引用校验失败 → 业务拒绝 envelope（HTTP 200 + code=1，符合仓库约定）
+        return R.err(code=1, msg=str(e))
     if not r:
         from app.core.exceptions import not_found
         raise not_found("缺陷")

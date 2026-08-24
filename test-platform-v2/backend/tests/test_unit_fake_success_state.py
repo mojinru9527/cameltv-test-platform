@@ -137,12 +137,14 @@ class TestB5DefectPutStateMachine:
         db_session.commit()
         return d
 
-    def test_illegal_transition_open_to_closed_returns_4xx(self, client, auth_headers, db_session):
+    def test_illegal_transition_open_to_closed_rejected(self, client, auth_headers, db_session):
+        """非法状态流转按仓库 envelope 契约拒绝（HTTP 200 + code=1），状态保持不变。"""
         d = self._mk_defect(db_session, status="open", defect_id="DEF-T1")
         resp = client.put(
             f"/api/v1/defects/{d.id}", headers=auth_headers, json={"status": "closed"},
         )
-        assert resp.status_code == 400, resp.text
+        assert resp.status_code == 200, resp.text
+        assert resp.json()["code"] == 1, resp.text
         assert "流转" in resp.json()["msg"]
         db_session.refresh(d)
         assert d.status == "open"
