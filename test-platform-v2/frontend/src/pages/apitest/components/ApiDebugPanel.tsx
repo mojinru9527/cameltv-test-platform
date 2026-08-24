@@ -174,7 +174,7 @@ export default function ApiDebugPanel({
     setBodyType('json')
     setAssertions(source.assertions
       ? JSON.stringify(normalizeJson(source.assertions, []), null, 2)
-      : '[]')
+      : defaultAssertions())
   }, [endpoint, source])
 
   const addHeader = () => setHeaderRows(prev => [...prev, { key: '', value: '', enabled: true }])

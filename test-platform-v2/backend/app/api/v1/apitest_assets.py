@@ -160,6 +160,7 @@ def _batch_generate_for_endpoints(db: Session, batch_id: int, project_id: int) -
             "path": ep.path,
             "summary": ep.summary,
             "request_schema": _safe_json(ep.request_schema, {}),
+            "response_schema": _safe_json(ep.response_schema, {}),
         }
         cases = generate_cases_from_endpoint(ep_data, templates=["basic"])
         for c in cases:

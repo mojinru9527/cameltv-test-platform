@@ -26,32 +26,36 @@ export function defaultAssertions(): string {
 }
 
 /**
+ * 根据 OpenAPI schema 属性生成示例值（A组：优先契约真实值 example → default → enum[0]，
+ * 缺失时再按类型兜底；不再默认产出占位假数据）。
+ */
+export function sampleValueForProp(prop: Record<string, any>, key?: string): any {
+  const p = (prop || {}) as Record<string, any>
+  if ('example' in p && p.example !== undefined && p.example !== null) return p.example
+  if ('default' in p && p.default !== undefined && p.default !== null) return p.default
+  if (Array.isArray(p.enum) && p.enum.length > 0) return p.enum[0]
+  if (p.type === 'string') {
+    if (p.format === 'email') return 'test@example.com'
+    if (p.format === 'uri' || p.format === 'url') return 'https://example.com'
+    if (p.format === 'date') return '2026-01-01'
+    if (p.format === 'date-time') return '2026-01-01T00:00:00Z'
+    return `test_${key || 'value'}`
+  }
+  if (p.type === 'integer' || p.type === 'number') return p.minimum ?? 1
+  if (p.type === 'boolean') return true
+  if (p.type === 'array') return []
+  if (p.type === 'object') return {}
+  return 'test'
+}
+
+/**
  * 根据 OpenAPI schema properties 生成示例请求体 JSON 字符串
  * 用于 pre-fill endpoint 的 Body 编辑区
  */
 export function buildSampleBody(properties: Record<string, any>): string {
   const obj: Record<string, any> = {}
-  for (const [key, prop] of Object.entries(properties)) {
-    const p = prop as any
-    if (p.enum) {
-      obj[key] = p.enum[0]
-    } else if (p.type === 'string') {
-      if (p.format === 'email') obj[key] = 'test@example.com'
-      else if (p.format === 'uri' || p.format === 'url') obj[key] = 'https://example.com'
-      else if (p.format === 'date') obj[key] = '2026-01-01'
-      else if (p.format === 'date-time') obj[key] = '2026-01-01T00:00:00Z'
-      else obj[key] = `test_${key}`
-    } else if (p.type === 'integer' || p.type === 'number') {
-      obj[key] = p.minimum ?? 1
-    } else if (p.type === 'boolean') {
-      obj[key] = true
-    } else if (p.type === 'array') {
-      obj[key] = []
-    } else if (p.type === 'object') {
-      obj[key] = {}
-    } else {
-      obj[key] = 'test'
-    }
+  for (const [key, prop] of Object.entries(properties || {})) {
+    obj[key] = sampleValueForProp(prop as any, key)
   }
   return JSON.stringify(obj, null, 2)
 }
