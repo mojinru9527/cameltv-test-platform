@@ -43,7 +43,7 @@ export default function GuestPlatformHome({
             {registrationEnabled && (
               <Link
                 to="/register"
-                className="inline-flex min-h-11 items-center justify-center rounded-lg bg-secondary px-4 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="inline-flex min-h-11 touch-manipulation items-center justify-center rounded-lg bg-secondary px-4 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 免费注册
               </Link>
