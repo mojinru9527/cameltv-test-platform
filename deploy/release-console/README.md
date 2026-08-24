@@ -27,16 +27,24 @@ FastAPI + SQLite + SSH，与测试平台 backend 无任何代码/运行时耦合
 | `RELEASE_CONSOLE_TOKEN` | 控制台访问令牌（Bearer，前端 localStorage 保存） |
 | `TENCENT_EXECUTOR_HOST` / `USER` / `SSH_KEY` | SSH 目标 + base64 私钥 |
 | `TENCENT_EXECUTOR_COMPOSE_DIR` / `RELEASE_DIR` / `BACKUP_DIR` | 服务器目录 |
-| `TENCENT_EXECUTOR_IMAGE_BACKEND` / `FRONTEND` | 目标镜像 |
+| `TENCENT_EXECUTOR_IMAGE_BACKEND` / `FRONTEND` | 目标镜像（**必须与服务器 compose override 引用的 tag 一致**） |
 | `TENCENT_EXECUTOR_COMPOSE_PROJECT` / `TIMEOUT` / `KEEP_BACKUPS` | 发布参数 |
+
+> ⚠️ **IMAGE_* 与 compose tag 对齐**：腾讯云生产 compose（`test-platform-v2/deploy/docker-compose.override.yml`）
+> 引用 `cameltv-tp-backend:main` / `cameltv-tp-frontend:main`，因此服务器上 `release-console.env` 必须配置
+> `TENCENT_EXECUTOR_IMAGE_BACKEND=cameltv-tp-backend:main`、`TENCENT_EXECUTOR_IMAGE_FRONTEND=cameltv-tp-frontend:main`。
+> 若两者不一致，deploy/rollback 会 retag 到 compose 未引用的 tag，容器不重建（**假成功**）。
 
 ## 部署
 
 ```bash
 cd deploy/release-console
 docker build -t cameltv-release-console:latest .
-docker run -d --name release-console -p 127.0.0.1:8111:8003 \
-  --env-file /opt/cameltv-tp/test-platform-v2/config/runtime/production.env \
+# 生产实际运行参数（腾讯云 111.230.155.116）：
+docker run -d --name release-console --restart unless-stopped \
+  -p 127.0.0.1:8111:8003 \
+  -v /opt/cameltv-release-console/data:/data \
+  --env-file /opt/cameltv-release-console/release-console.env \
   cameltv-release-console:latest
 ```
 
@@ -53,7 +61,11 @@ release.swiftbugs.cn {
 1. 浏览器打开 https://release.swiftbugs.cn
 2. 首次使用在浏览器 console 设置 token：
    `localStorage.setItem('console_token', '<RELEASE_CONSOLE_TOKEN>')`
-3. 提交发布登记 →（本地构建脚本上传镜像）→ 发布/回滚/备份
+   （或使用页面顶部「访问令牌」输入框保存）
+3. 状态机闭环：提交登记（DRAFT）→ 验证（VALIDATED）→ 发布（PROD_OBSERVING）→ 确认上线（PRODUCTION_VERIFIED）；
+   任意非终态可回滚（PROD_ROLLED_BACK），备份随时可做。
+4. 命令行一键：`pwsh scripts/ops/release.ps1 -Tag release-YYYYMMDD-NNNN -Publish`
+   （构建 → digest → 提交 → 上传 → 验证 → 发布 → 确认上线全自动）
 
 ## 安全
 
