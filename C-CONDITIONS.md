@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-17 (Batch 191 冒烟修复: C191-1 已关闭（实测通过），新增 C191-3)
+**最后更新**: 2026-08-24 (Batch 203 轻量修复: 新增 C203-1/C203-2)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -21,6 +21,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ---
 
 ## Open (待处理)
+
+### batch-203 — 参数真实化 + 假成功与状态一致性修复（2026-08-24）—— 新增
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C203-1 | lanhu-mcp 子模块相关 5 例基线失败：`test_deploy_compose_contract::test_backend_build_context_contains_runner_and_root_lanhu_submodule`、`test_lanhu_login_hook`×2、`test_lanhu_provider`×2，在 Batch 203 A/B 全量（1686/1703）与 CI 全新检出重复失败，主仓库同样失败；解除条件=修复 lanhu-mcp 子模块内容/指针（或补齐构建期初始化）并使双端全新检出全量回归绿（5 例归零证据 + PR/commit） | P1 | 2026-08-24 |
+| C203-2 | Test5 `camel-service` 网关服务未恢复（404/无路由）：`/ee/sports_live/home_match` 真实参数成功用例未补测（URL 组装、参数预填、2xx 语义已对照验证；camel-service 恢复前 E/F 组证据保持）；解除条件=服务恢复后经平台 DebugTab 执行 `day=20260615` 返回 2xx + 业务码 200 并留截图/响应体证据 | P2 | 2026-08-24 |
 
 ### batch-191 — /dsh-tasks AgentTeams 团队模式（2026-08-17）—— C191-1 已关闭 / C191-2/C191-3 保持
 
