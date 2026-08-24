@@ -1,10 +1,17 @@
-"""Quick check: wiki job status, wiki pages, KB sources, RAG search."""
+"""Quick check: wiki job status, wiki pages, KB sources, RAG search.
+
+凭据策略（安全审计修复）：令牌从环境变量 TP_TOKEN 读取（不再硬编码 JWT）。
+用法：$env:TP_TOKEN='<token>'; python check_status.py
+"""
 import httpx
 import json
+import os
 
-TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzgzOTk1MzUzfQ.gW1PlU3TJ0G3Kjcd4hToyRpdV5a1EIxsO7Wgr8ei1C8"
+TOKEN = os.environ.get("TP_TOKEN", "").strip()
+if not TOKEN:
+    raise SystemExit("TP_TOKEN 未设置：请先登录平台获取 API Token 并设置环境变量")
 HEADERS = {"Authorization": f"Bearer {TOKEN}", "X-Project-Id": "1"}
-BASE = "http://127.0.0.1:8000/api/v1"
+BASE = os.environ.get("TP_BACKEND_URL", "http://127.0.0.1:8000/api/v1")
 
 def get(path):
     r = httpx.get(f"{BASE}{path}", headers=HEADERS, timeout=15)

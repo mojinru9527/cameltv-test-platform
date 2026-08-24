@@ -277,10 +277,10 @@ def _dry_response(method: str, path: str):
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://test-platform.up.railway.app/api/v1"))
+    ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://swiftbugs.cn/api/v1"))
     ap.add_argument("--username", default="sportsadmin")
     ap.add_argument("--password", default=os.environ.get("TP_ADMIN_PASSWORD", ""))
-    ap.add_argument("--origin", default="https://cameltv-test-platform1.vercel.app")
+    ap.add_argument("--origin", default="https://swiftbugs.cn")
     ap.add_argument("--docs-only", action="store_true", help="只上传需求文档并提取确认")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()

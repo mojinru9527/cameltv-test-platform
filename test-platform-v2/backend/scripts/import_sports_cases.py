@@ -191,7 +191,7 @@ def to_create(c: dict, source_module: str, prefix: str = "SP-B125") -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://test-platform.up.railway.app/api/v1"))
+    ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://swiftbugs.cn/api/v1"))
     ap.add_argument("--username", default=os.environ.get("TP_ADMIN_USER", "sportsadmin"))
     ap.add_argument("--password", default=os.environ.get("TP_ADMIN_PASSWORD", ""))
     ap.add_argument("--dry-run", action="store_true")
@@ -206,7 +206,7 @@ def main() -> int:
     print(f"[import] 汇总: {summary}", flush=True)
 
     base = args.backend_url.rstrip("/")
-    headers = {"X-Project-Id": "0", "Origin": "https://test-platform.up.railway.app"}
+    headers = {"X-Project-Id": "0", "Origin": "https://swiftbugs.cn"}
     if not args.dry_run:
         with httpx.Client(timeout=120) as client:
             r = client.post(base + "/auth/login", json={"username": args.username, "password": args.password})

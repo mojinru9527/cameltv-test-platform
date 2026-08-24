@@ -2,15 +2,18 @@
 title: "DevOps 基础设施操作手册（C58-06 / OPS1 / G2~G6）"
 owner: "devops"
 created: "2026-08-02"
-status: "active"
-tags: ["devops", "railway", "github-packages", "runner", "postgres", "secrets"]
+status: "retired"
+tags: ["devops", "railway", "github-packages", "runner", "postgres", "secrets", "retired"]
 related:
-  - "../test-platform-v2/backend/Dockerfile"
-  - "../test-platform-v2/frontend/vercel.json"
+  - "../test-platform-v2/backend/Dockerfile.local"
+  - "ops/tencent-cloud-migration.md"
+  - "ops/old-env-decommission-checklist.md"
   - "外部阻塞项手动填写清单.md"
 ---
 
-# DevOps 基础设施操作手册
+# DevOps 基础设施操作手册（已退役 — 2026-08-22 起被腾讯云迁移替代）
+
+> ⚠️ **已迁移/退役（2026-08-22 → swiftbugs.cn）**：本文档描述仓库迁移前的 Vercel/Railway/Supabase 方案，内容仅作历史存档。当前生产：腾讯云广州单机 https://swiftbugs.cn（ICP 粤ICP备2026121122号-1），迁移/运维见 docs/ops/tencent-cloud-migration.md，旧环境下线见 docs/ops/old-env-decommission-checklist.md。
 
 > 目标：把 G2~G6 与 C58-06（后端托管）变成您按步骤可执行的清单。
 > 原则：**需要您本人在 GitHub/Railway 网页上点击的步骤**已明确标注「您操作」；
@@ -22,7 +25,7 @@ related:
 - lanhu-mcp 子模块 remote：`https://github.com/mojinru9527/lanhu-mcp.git`
   （若为私有仓库，云构建拉取时需要公开或提供 PAT，见 §1.4）。
 
-## 1. Railway 后端部署（C58-06 / F5）
+## 1. Railway 后端部署（C58-06 / F5）——【历史章节，仅存档；当前部署见 `ops/tencent-cloud-migration.md`】
 
 ### 1.1 新建项目
 

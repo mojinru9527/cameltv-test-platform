@@ -255,20 +255,20 @@ docker compose --project-name cameltv-tp-production --env-file config/runtime/pr
 
 1. **服务器无法直连 GitHub/PyPI/npm**：国内轻量服务器出网受限（GitHub TLS 中断、PyPI 17KB/s）。解决 = 本地构建镜像 `docker save` → scp → `docker load`；代码用本地 tar 打包传输。
 2. **ufw 是隐藏拦截层**：腾讯云控制台防火墙规则之外，实例内 `ufw status` 必须同步放行 80/443，否则 ACME 验证和公网访问全部失败。
-3. **Dockerfile 构建期 clone lanhu-mcp 需改本地 COPY**：`COPY lanhu-mcp/lanhu_mcp_server.py /tmp/lanhu-mcp-local.py` + `RUN if [ -s ... ]` 条件分支，本地文件缺失时回退 git clone（云构建兼容）。此修改已合入 main（待 PR 确认）。
+3. **Dockerfile 构建期 clone lanhu-mcp 需改本地 COPY**：`COPY lanhu-mcp/lanhu_mcp_server.py /tmp/lanhu-mcp-local.py` + `RUN if [ -s ... ]` 条件分支，本地文件缺失时回退 git clone（云构建兼容）。#300 曾合入，后被 #302/#303 回退为**全量 git clone**（Railway builder 不支持 bind-mount 且 archive 发运丢弃子模块空目录，COPY 缺失=构建直接失败）；服务器本地构建不受影响，使用本地变体 `test-platform-v2/backend/Dockerfile.local`（COPY 方式，本批新增）。
 4. **SECRET_KEY 必须复用 Railway 生产值**：Fernet 密钥 = sha256(SECRET_KEY)，且 AI provider 的 `api_key_encrypted` 用它解密。本地旧 production.env 的 SECRET_KEY（43 字符）与 Railway 生产（64 字符）不同，导致 `InvalidToken`。用 `railway variable list --kv` 拉取生产值对齐。
 5. **PG 密码不一致**：compose `up` 不重建已存在容器，POSTGRES_PASSWORD 只在首次初始化生效；环境文件改密码后必须 `ALTER USER` 或 `--force-recreate`，DATABASE_URL 密码需与容器实际一致。
 6. **Nginx 反代 DNS 缓存**：backend 容器 recreate 后 IP 变化，frontend Nginx 缓存的旧 DNS 导致 `/api` 502；重启 frontend 刷新即可。
 7. **前端端口映射**：Caddy 占宿主 80，前端容器须映射 `127.0.0.1:8080:80`（改主 compose `docker-compose.yml` 的 `FRONTEND_PORT` 硬编码，override 追加端口会与主配置合并冲突）。
 8. **railway ssh 直接连**：`railway ssh` 子命令会挂起；用 `railway ssh config --dry-run` 取 User id 后直接 `ssh <user>@ssh.railway.com`。
-9. **admin 密码为验收时重置值**：旧 production.env 的 `ADMIN_PASSWORD` 是发布初始密码，生产验收被临时重置过；当前有效管理员密码为 sportsadmin（体育平台管理员）+ 验收时设置的新值。
+9. **admin 密码为验收时重置值**：旧 production.env 的 `ADMIN_PASSWORD` 是发布初始密码，生产验收被临时重置过；当前有效管理员密码**以发布控制台/密码管理器记录为准，不回写仓库**（见 A3 待办：确认/重置 admin 密码）。
 
 ### A3. 待办（上线后）
 
-- [ ] 旧 Vercel/Railway/Supabase 保留观察 ≥24h（截止 2026-08-23 24:00）后按 §8 下线（观察期已过；是否下线由负责人确认，参见附录 B3）
-- [ ] 确认 admin 账号当前有效密码或执行密码重置
-- [x] Dockerfile lanhu-mcp 本地 COPY 修改合入 main（PR 流程）——#300 合入后被 #302/#303 回退为全量 git clone（Railway builder 不支持 bind-mount 且 archive 丢弃子模块空目录；服务器本地构建不受影响，见附录 B1 模板）
-- [ ] 迁移经验（附录 A2）同步到 `docs/common-pitfalls.md`
+- [x] 旧 Vercel/Railway/Supabase 保留观察 ≥24h（截止 2026-08-23 24:00）后按 §8 下线——**2026-08-23 用户确认已下架**；清单与执行登记见 `docs/ops/old-env-decommission-checklist.md`
+- [ ] 确认 admin 账号当前有效密码或执行密码重置（运维动作，需用户配合；生产口令不回写仓库）
+- [x] Dockerfile lanhu-mcp 本地 COPY 修改合入 main（PR 流程）——#300 合入后被 #302/#303 回退为全量 git clone（Railway builder 不支持 bind-mount 且 archive 丢弃子模块空目录；服务器本地构建不受影响，见附录 B1 模板）；本批新增本地变体 `test-platform-v2/backend/Dockerfile.local`
+- [x] 迁移经验（附录 A2）同步到 `docs/common-pitfalls.md`（本批完成）
 
 ## 附录 B：c165-3 增量升级记录（2026-08-23）
 
@@ -349,3 +349,58 @@ docker compose --project-name cameltv-tp-production --env-file config/runtime/pr
 - [x] E2E 任务 x2 均 success（Real DeepSeek 官方 key + deepseek-v4-flash）
 - [x] 新功能可用：AI 配置「获取模型列表」、DSH 任务图片附件、错误可读化
 - [x] 镜像备份：附录 B3 `:prev-plat`（backend 51f4a178 / frontend 0f85f1fd）仍保留（未被本轮删除）
+
+## 附录 D：发布控制台建设 + 旧环境下线（2026-08-23）
+
+> 迁移完成后追加两步：① 发布平台独立化（解除与测试平台耦合）；② 旧环境下线清单。
+> 关联 PR：#305（发布平台初版）、#308（解耦独立）、#309（易用化）。
+
+### D1. 发布平台演进（快速回顾）
+
+| 阶段 | PR | 说明 |
+|------|----|------|
+| 初版（耦合） | #305 | `/operations-release` 页面 + `/api/v1/ops/deployments` 跑在测试平台内 |
+| **解耦独立** | #308 | 独立 `deploy/release-console/`（61MB 镜像），子域 `release.swiftbugs.cn`，测试平台移除发布入口 |
+| **易用化** | #309 | 网页令牌输入框（免 F12）+ `scripts/ops/release.ps1` 一键发布（自动提取 digest/提交/上传/发布） |
+
+### D2. 发布平台架构（当前）
+
+```
+用户/运维 → https://release.swiftbugs.cn（Caddy HTTPS）
+              ↓ 反代
+    release-console 容器 :8111（FastAPI + SQLite + 单页前端）
+              ↓ SSH（Token + 密钥环境变量注入，复用于测试平台发布）
+        111.230.155.116（测试平台生产；即使测试平台挂掉也能发布/回滚）
+```
+
+- 状态库：`/opt/cameltv-release-console/data/release-control.sqlite3`（独立于业务库）
+- 令牌：`RELEASE_CONSOLE_TOKEN`（服务器 env + 本地 `~\.cameltv-release-console\token.json`）
+- 一键脚本：`pwsh scripts/ops/release.ps1 -Tag release-xxx -Publish`
+
+### D3. 旧环境下线清单
+
+> 详见 `docs/ops/old-env-decommission-checklist.md`。前置检查（0.1–0.5）已全绿（2026-08-23）。
+> **下线前的最后闸门**：发布控制台真实发布演练（D1 方案）通过后才执行删除。
+
+| 环境 | 下线方式 | 预计费用影响 |
+|------|---------|-------------|
+| Vercel（cameltv-test-platform） | 删项目 | 免费，无影响 |
+| Railway（keen-amazement） | 删项目（**按量计费**，尽快） | 停止计费 |
+| Supabase（myhwdpjmxdsodqgeecpn） | 删项目（数据已本地化） | 免费额度释放 |
+
+### D4. 本轮踩坑（与 B2/C2 不重复）
+
+1. **PowerShell 脚本 UTF-8 编码**（PS 5.1 中文解析坑）：`write` 工具生成的无 BOM `.ps1` 会被 PS 5.1 按 ANSI 读，中文字符串/注释导致 Parse 报错（如 `"[" 后面缺少类型名称`）——**解决方案：文件加 UTF-8 BOM**（`[Text.UTF8Encoding]::new($true)`）。
+2. **`@` 在字符串中触发 splatting**：`"$UserName@$HostName"` 中 `@` 被当作 splat 前缀 → 改用 `${UserName}@${HostName}`（花括号包裹）。
+3. **FastAPI Header 注入**：路由参数 `authorization: str | None = None` 被 FastAPI 当 query 参数（永远 None）→ 必须 `Header(None, alias="Authorization", include_in_schema=False)`；否则 401。
+4. **rebase 误删文件**：rebase 冲突解决时 `git ls-tree HEAD` 与工作区不一致（index 残留），CI 报 `Cannot find module '@/pages/workbench'`——**修复=丢弃 worktree 重建 + 备份文件重应用**（干净分支单 commit）。
+5. **前端令牌动态读取**：`const TOKEN` 初始化后保存不生效 → 改 `getToken()` 每次读 localStorage。
+6. **Docker Desktop SYSTEM 会话**：本机以 SYSTEM 跑导致引擎掉线（记忆已验证）；服务器端可用 `docker cp` 热更新容器内静态文件绕开。
+
+### D5. 当前状态（2026-08-23）
+
+- [x] 发布控制台独立子域 `release.swiftbugs.cn` 上线（v4 镜像，含令牌输入框）
+- [x] 一键脚本 `release.ps1` 合入 main（release/rollback/backup 三命令）
+- [x] 测试平台发布入口彻底移除（/operations-release + ops API + release:view 权限）
+- [x] 旧环境下线清单就绪（前置检查全绿，待真实发布演练后执行）
+- [ ] **待执行**：发布控制台真实发布演练（D1 方案）→ 旧环境下线删项目
