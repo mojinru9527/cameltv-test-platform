@@ -32,7 +32,7 @@ const variantClassMap: Record<ButtonVariant, string> = {
 
 const sizeClassMap: Record<ButtonSize, string> = {
   xs: 'ui-btn-xs h-6 gap-1 rounded-lg px-2 text-xs [&_svg:not([class*="size-"])]:size-3',
-  sm: 'ui-btn-sm h-7 gap-1 rounded-lg px-2.5 text-[0.8rem] [&_svg:not([class*="size-"])]:size-3.5',
+  sm: 'ui-btn-sm h-7 gap-1 rounded-lg px-2.5 text-meta [&_svg:not([class*="size-"])]:size-3.5',
   md: 'h-8 gap-1.5 px-2.5',
   lg: 'ui-btn-lg h-9 gap-1.5 px-3',
   icon: 'ui-btn-icon size-8',
