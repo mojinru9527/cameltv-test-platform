@@ -211,7 +211,7 @@ export default function UiRunDetailDialog({
             {artifacts.length === 0 && (run.status === 'pending' || run.status === 'running') && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground py-4 justify-center">
                 <Loader2 className="size-4 animate-spin" />
-                运行中，产物将在完成后显示...
+                运行中，产物将在完成后显示…
               </div>
             )}
             {artifacts.length === 0 && run.status !== 'pending' && run.status !== 'running' && (

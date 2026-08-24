@@ -113,7 +113,7 @@ export function ObsidianWorkbench({
                 className="inline-flex items-center gap-2 min-h-[42px] px-4 rounded-[9px] border border-[rgba(218,239,224,0.12)] text-[0.875rem] text-[#d9e4dc] bg-[rgba(255,255,255,0.025)] hover:bg-[rgba(255,255,255,0.05)] transition-colors disabled:opacity-40"
               >
                 <RefreshCw className={cn('size-4', loading && 'animate-spin')} aria-hidden="true" />
-                {loading ? '加载中...' : '刷新'}
+                {loading ? '加载中…' : '刷新'}
               </button>
             )}
             {actions}

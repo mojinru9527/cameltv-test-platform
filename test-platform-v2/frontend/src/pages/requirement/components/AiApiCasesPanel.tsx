@@ -125,7 +125,7 @@ export default function AiApiCasesPanel({
       {loadingMatches && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
           <Loader2 className="size-3.5 animate-spin" />
-          正在匹配 API 端点...
+          正在匹配 API 端点…
         </div>
       )}
 

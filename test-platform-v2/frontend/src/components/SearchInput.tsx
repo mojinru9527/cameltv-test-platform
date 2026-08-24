@@ -18,7 +18,7 @@ export default function SearchInput({
   value,
   onChange,
   onSearch,
-  placeholder = '搜索...',
+  placeholder = '搜索…',
   showButton = true,
   buttonText = '搜索',
   inputClassName,

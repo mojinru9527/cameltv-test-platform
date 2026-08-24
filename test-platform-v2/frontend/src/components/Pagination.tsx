@@ -45,7 +45,7 @@ export default function Pagination({ page, totalPages, total, onChange }: Pagina
         <span className="ml-2">跳转到</span>
         <input
           className="min-h-9 w-[50px] rounded-md border bg-background px-2 py-1 text-center text-sm text-foreground placeholder:text-muted-foreground"
-          placeholder="..."
+          placeholder="…"
           value={jumpValue}
           onChange={(e) => setJumpValue(e.target.value.replace(/\D/g, ''))}
           onKeyDown={(e) => { if (e.key === 'Enter') handleJump() }}

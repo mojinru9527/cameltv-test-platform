@@ -222,7 +222,7 @@ export default function MindmapPanel() {
 
         <Button size="sm" variant="secondary" onClick={refetch} disabled={isLoading}>
           <RotateCcw className="size-3.5" data-icon="inline-start" />
-          {isLoading ? '加载中...' : '刷新'}
+          {isLoading ? '加载中…' : '刷新'}
         </Button>
 
         <div className="flex-1" />

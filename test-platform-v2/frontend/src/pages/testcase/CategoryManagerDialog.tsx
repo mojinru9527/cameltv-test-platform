@@ -318,7 +318,7 @@ export default function CategoryManagerDialog({ open, domains, onClose, onChange
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>取消</AlertDialogCancel>
             <AlertDialogAction variant="destructive" disabled={deleting} onClick={confirmDelete}>
-              {deleting ? '删除中...' : '确认删除'}
+              {deleting ? '删除中…' : '确认删除'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

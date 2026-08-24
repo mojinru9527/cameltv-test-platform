@@ -747,7 +747,7 @@ export default function PlanDetail() {
                 else void doExecuteAll()
               }}
             >
-              {execAllLoading || autoExecuting ? '执行中...' : '确认执行'}
+              {execAllLoading || autoExecuting ? '执行中…' : '确认执行'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -789,7 +789,7 @@ export default function PlanDetail() {
           <DialogFooter>
             <Button variant="secondary" onClick={() => setExecModal({ open: false, pcase: null })}>取消</Button>
             <Button disabled={execSaving} onClick={doExecute}>
-              {execSaving ? '保存中...' : '确认'}
+              {execSaving ? '保存中…' : '确认'}
             </Button>
           </DialogFooter>
         </DialogContent>

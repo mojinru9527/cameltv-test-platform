@@ -166,7 +166,7 @@ export default function Workbench() {
       data={stats}
       onRetry={refetch}
       skeletonType="card"
-      loadingText="加载仪表盘数据..."
+      loadingText="加载仪表盘数据…"
       emptyTitle="暂无仪表盘数据"
     >
   {(_s) => {
@@ -561,7 +561,7 @@ function CrossProjectDashboard({ dateRange }: { dateRange: { start: string; end:
       data={crossStats}
       onRetry={refetch}
       skeletonType="card"
-      loadingText="加载跨项目数据..."
+      loadingText="加载跨项目数据…"
       emptyTitle="暂无跨项目数据"
     >
       {(stats) => (

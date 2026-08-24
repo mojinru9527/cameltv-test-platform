@@ -38,7 +38,7 @@ function toLabel(url: string): string {
     /* 非法编码回退原串 */
   }
   const clean = decoded.replace(/^https?:\/\//, '').split('?')[0]
-  return clean.length > 60 ? `${clean.slice(0, 57)}...` : clean
+  return clean.length > 60 ? `${clean.slice(0, 57)}…` : clean
 }
 
 export default function InteractionGapPanel() {

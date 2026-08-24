@@ -62,7 +62,7 @@ export default function RequirementUploadCard({
                 <Link2 className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-primary pointer-events-none" />
                 <Input
                   className="pl-8 sm:rounded-r-none sm:border-r-0 focus-visible:z-10"
-                  placeholder="输入蓝湖设计稿链接..."
+                  placeholder="输入蓝湖设计稿链接…"
                   value={lanhuUrl}
                   onChange={(e) => onLanhuUrlChange(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && onLanhuSubmit()}

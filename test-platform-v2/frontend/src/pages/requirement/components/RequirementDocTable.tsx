@@ -34,7 +34,7 @@ function formatSourceRef(sourceRef: string, fileType: string): { label: string; 
     const url = new URL(sourceRef)
     return { label: url.hostname, isLink: true }
   } catch {
-    return { label: sourceRef.length > 30 ? sourceRef.slice(0, 30) + '...' : sourceRef, isLink: false }
+    return { label: sourceRef.length > 30 ? sourceRef.slice(0, 30) + '…' : sourceRef, isLink: false }
   }
 }
 

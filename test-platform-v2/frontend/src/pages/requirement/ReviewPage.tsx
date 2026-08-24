@@ -299,7 +299,7 @@ export default function ReviewPage() {
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />
                 <Input
                   className="pl-7 h-7 text-xs"
-                  placeholder="搜索..."
+                  placeholder="搜索…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
