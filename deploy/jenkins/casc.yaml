@@ -2,7 +2,7 @@
 # 首次启动自动加载，跳过安装向导。修改后 docker compose restart jenkins 生效。
 
 jenkins:
-  systemMessage: "CamelTv 体育平台 CI/CD — 自动化构建服务"
+  systemMessage: "测试平台 CI/CD — 自动化构建服务"
   numExecutors: 4
   quietPeriod: 5
   scmCheckoutRetryCount: 2

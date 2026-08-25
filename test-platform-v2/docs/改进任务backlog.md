@@ -5,10 +5,10 @@ last_reviewed: "2026-07-30"
 status: "active"
 expires: "2026-12-26"
 tags: ["backlog", "改进任务", "开发任务", "issue"]
-related: ["test-platform-v2/docs/现状功能PRD.md", "test-platform-v2/docs/代码审查与产品重构PRD.md", "test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "work-logs/P1-安全加固与体验优化-PRD.md", "docs/adr/0015-operations-release-control-plane.md", "test-platform-v2/docs/operations/运维发布平台-架构与交付要求.md"]
+related: ["test-platform-v2/docs/现状功能PRD.md", "test-platform-v2/docs/代码审查与产品重构PRD.md", "test-platform-v2/docs/测试平台-完整PRD.md", "work-logs/P1-安全加固与体验优化-PRD.md", "docs/adr/0015-operations-release-control-plane.md", "test-platform-v2/docs/operations/运维发布平台-架构与交付要求.md"]
 ---
 
-# CamelTv 测试平台 —— 改进任务 Backlog（可领取开发任务）
+# 测试平台 —— 改进任务 Backlog（可领取开发任务）
 
 > 来源 1：《现状功能PRD.md》第 5.3 节「已知能力缺口」8 条改进项（Epic G~I）。
 > 来源 2：《P1-安全加固与体验优化-PRD.md》8 项安全/可靠性/体验改进（Epic S1~S8），2026-07-01 新增。

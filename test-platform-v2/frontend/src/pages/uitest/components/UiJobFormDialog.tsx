@@ -155,7 +155,7 @@ export default function UiJobFormDialog({
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground mt-1">
-              执行时会把所选环境的 Base URL 注入 Playwright 的 <code>CAMELTV_BASE_URL</code>；真实体育业务 E2E 脚本还需
+              执行时会把所选环境的 Base URL 注入 Playwright 的 <code>CAMELTV_BASE_URL</code>；业务 E2E 脚本还需
               <code>CAMELTV_TARGET_ENV</code>/<code>CAMELTV_RUN_LEVEL</code>/<code>CAMELTV_ALLOWED_HOSTS</code> 等契约变量，缺失时脚本会真实报错，不伪造通过。
             </p>
           </div>

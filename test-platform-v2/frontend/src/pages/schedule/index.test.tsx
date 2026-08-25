@@ -33,9 +33,9 @@ beforeAll(() => {
 
 const schedule = {
   id: 1,
-  name: '每日体育回归',
+  name: '每日回归',
   plan_id: 1,
-  plan_name: '体育接口回归计划',
+  plan_name: '接口回归计划',
   cron_expression: '0 9 * * 1-5',
   enabled: true,
   last_run: null,
@@ -87,7 +87,7 @@ describe('定时任务权限与空状态', () => {
     fireEvent.click(await screen.findByRole('button', { name: '新建调度' }))
     const dialog = await screen.findByRole('dialog', { name: '新建调度' })
     fireEvent.change(within(dialog).getByPlaceholderText('如：每日回归测试'), {
-      target: { value: '每日体育回归' },
+      target: { value: '每日回归' },
     })
     fireEvent.change(within(dialog).getByPlaceholderText('0 9 * * 1-5'), {
       target: { value: '0 9 * * 1-5' },

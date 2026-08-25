@@ -72,7 +72,7 @@ def _assert_tester_has_default_project(
 ) -> None:
     with session_factory() as db:
         user = db.scalar(select(User).where(User.username == username))
-        project = db.scalar(select(Project).where(Project.code == "cameltv"))
+        project = db.scalar(select(Project).where(Project.code == "default"))
         assert user is not None
         assert project is not None
         membership = db.scalar(
@@ -250,7 +250,7 @@ def test_seed_demo_users_disabled_skips_tester_and_viewer(
             db.scalar(select(User).where(User.username == local_settings.viewer_username))
             is None
         )
-        project = db.scalar(select(Project).where(Project.code == "cameltv"))
+        project = db.scalar(select(Project).where(Project.code == "default"))
         assert project is not None
 
 

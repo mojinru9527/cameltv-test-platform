@@ -26,7 +26,7 @@ feat(apitest/uitest/wiki): production testing + P1 fix + wiki activation
 - apitest.py create_task: added missing BackgroundTasks parameter → fixes 500 error
   (task_worker polling was masking this real defect)
 
-== Production Testing (www.camel1.tv) ==
+== Production Testing (www.target.example.com) ==
 - 5/5 Playwright UI tests PASSED (production-smoke.spec.ts)
   TC-PROD-001 homepage, TC-PROD-002 login, TC-PROD-003 interaction (622 elements),
   TC-PROD-004 API health (56 calls), TC-PROD-005 performance (6.1s load)

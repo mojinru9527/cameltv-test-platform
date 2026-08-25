@@ -110,7 +110,7 @@ related:
 
 | 输入 ID | 仓库路径 | 字节数 | SHA-256 | 适用范围 |
 | --- | --- | ---: | --- | --- |
-| `R1-PLATFORM-PRD` | `test-platform-v2/docs/CamelTv测试平台-完整PRD.md` | 21229 | `cefc99292ab1b92563368e82ae0449057affa443ac895323456eb5b3169b2ddf` | 全平台需求基线 |
+| `R1-PLATFORM-PRD` | `test-platform-v2/docs/测试平台-完整PRD.md` | 21229 | `cefc99292ab1b92563368e82ae0449057affa443ac895323456eb5b3169b2ddf` | 全平台需求基线 |
 | `R1-CURRENT-PRD` | `test-platform-v2/docs/现状功能PRD.md` | 23528 | `ce46bf066183459601dd4283802f602aba1faca69e65096f218a4477879147e2` | 当前实现范围 |
 | `R1-API-PRD` | `test-platform-v2/docs/接口测试模块优化PRD.md` | 15307 | `71f4f2fb8d238620202923603e258f2be6495a683c492ed2ca7bdafda8cfe0ce` | API 测试模块 |
 | `R1-TEST5-HISTORY` | `test-platform-v2/docs/DEV-Test5-使用与授权清单.md` | 7521 | `64b5f362efa45afb6599bb72c79531473693eee37b9092275916b6ac87941941` | 历史导入规模与授权边界，不作当前连通证据 |

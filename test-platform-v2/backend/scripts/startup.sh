@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "=== CamelTv Test Platform v2.6 ==="
+echo "=== Test Platform v2.6 ==="
 echo "Running database migrations..."
 alembic upgrade head
 

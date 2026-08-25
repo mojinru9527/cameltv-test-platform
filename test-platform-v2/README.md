@@ -1,14 +1,14 @@
 ---
-title: "CamelTv 测试平台 v2（前后端分离重构）"
+title: "测试平台 v2（前后端分离重构）"
 owner: "qa-team"
 last_reviewed: "2026-08-09"
 status: "active"
 expires: "2026-12-26"
 tags: ["test-platform", "v2", "fullstack", "fastapi", "react"]
-related: ["test-platform-v2/backend/README.md", "test-platform-v2/frontend/README.md", "test-platform-v2/docs/CamelTv测试平台-完整PRD.md"]
+related: ["test-platform-v2/backend/README.md", "test-platform-v2/frontend/README.md", "test-platform-v2/docs/测试平台-完整PRD.md"]
 ---
 
-# CamelTv 测试平台 v2（前后端分离重构）
+# 测试平台 v2（前后端分离重构）
 
 > 按《测试平台-前后端分离重构方案 v2.1》搭建的全新项目，与重构前的 `../test-platform/` 物理隔离。
 
@@ -32,7 +32,7 @@ test-platform-v2/
 | 需求、脑图、知识、Agent、Playground、发布包 | `/requirement` `/mindmap` `/knowledge` `/agent-workbench` `/playground` `/release-bundles` | 🟡 / ⛔ | 本地持久化链和动态详情存在；真实 LLM、蓝湖、Wiki 等依赖缺授权凭据时必须 fail closed，不能据本地回归宣称外部链路通过 |
 | DSH 任务执行（Batch 172 / Batch 191 团队模式） | `/dsh-tasks` | 🟡 | 提交自然语言任务由 DeepSeek Harness 执行，状态/输出/会话目录可追溯，Agent 工作台含执行型 Agent；Batch 191 起支持团队模式（`mode=team`：DSH 船长自组织多成员团队，详情实时展示团队进度树）；默认 `DSH_ENABLED=false` 时不可用并明确提示 |
 | API 测试 | `/apitest` | 🟡 | OpenAPI/Swagger 预览与导入、httpx 真实执行、任务和快照已实现；五入口一致性、生产保护、当前 Test5 六服务契约与业务回归仍待验收 |
-| UI 自动化 | `/uitest` | 🟡 | 本地 Runner 可启动真实 Playwright 并持久化结果/产物；这不等于 `tests/automation/ui/` 的体育 Test5/生产业务 E2E 已通过 |
+| UI 自动化 | `/uitest` | 🟡 | 本地 Runner 可启动真实 Playwright 并持久化结果/产物；这不等于目标环境业务 E2E 已通过 |
 | 音视频专项 | `/special` | 🟡 | 已有真实媒体样本与 ffprobe 指标链；外部真实流、设备和完整发布矩阵仍未覆盖 |
 | 环境、数据集、通知、集成 | `/environment` `/dataset` `/notify` `/integration` | 🟡 / ⛔ | 本地数据模型和错误路径可用；SMTP/Webhook/Jira/TAPD/ELK 等真实链路缺非生产端点与凭据时保持阻塞 |
 | 性能监控 | `/perftest` | ⛔ | 页面和服务可受控降级，设备发现有超时上限；缺授权真机和采集窗口时不能把采集链标为通过 |
@@ -195,8 +195,8 @@ API 测试资产导入支持 OpenAPI 3.x 与 Swagger 2.0 的 JSON/YAML 文本或
 ## UI 自动化证据边界
 
 - `backend/tests/playwright/specs/` 是测试平台 UI Runner 的本地 smoke 资产，验证 Runner、浏览器、状态和产物闭环。
-- `tests/automation/ui/` 是体育用户端/运营后台业务 E2E 资产，必须在获授权的 Test5/生产只读目标上以当前契约、账号和稳定数据单独执行。
-- 脚本可收集、本地 Runner 绿色、历史截图或历史接口数量，均不能换算成体育业务 E2E 通过。
+- 业务 E2E 资产由使用方维护，必须在获授权的目标环境（只读）上以当前契约、账号和稳定数据单独执行。
+- 脚本可收集、本地 Runner 绿色、历史截图或历史接口数量，均不能换算成业务 E2E 通过。
 
 ## 运维发布项目边界
 

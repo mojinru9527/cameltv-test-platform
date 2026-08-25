@@ -1,7 +1,7 @@
 """会话凭证自动注入服务 — 为 API 用例执行提供全局 token/mid 自动获取与注入。
 
 背景（XMind「测试流程与AI自动化」建议落地）：
-- 体育平台等被测系统通常需要「先匿名登录/获取会话，再携带 token 访问业务接口」。
+- 被测系统通常需要「先匿名登录/获取会话，再携带 token 访问业务接口」。
 - 传统做法：人工在环境变量里手填 token，token 过期后需人工刷新。
 - 本服务：在环境变量中配置会话凭证获取接口（session_credential_url 等），
   执行 API 用例时若请求引用了 $session.* 变量，则自动调用凭证接口获取
@@ -12,12 +12,12 @@
 - session_credential_method 凭证接口方法，默认 POST
 - session_credential_headers 额外请求头 JSON（可选）
 - session_credential_body   凭证接口请求体模板（可选，支持 ${ENV} 占位）
-- session_credential_app_code 体育平台 appCode 快捷参数（可选，会并入请求体）
+- session_credential_app_code 被测系统 appCode 快捷参数（可选，会并入请求体）
 - session_credential_content_type 请求体编码（可选，json=默认 | form=application/x-www-form-urlencoded；
-  体育平台 demo/login 等接口仅接受 form 编码，Batch 188）
+  demo/login 等接口可能仅接受 form 编码）
 
 注入变量（$session.*）：
-- $session.token  → 响应体 detail.value（蓝湖/体育平台匿名登录响应结构
+- $session.token  → 响应体 detail.value（匿名登录响应结构
                     {"code":0,"detail":{"key":"Anonyxxx","value":"C_..."}}）
 - $session.key    → 响应体 detail.key
 - $session.mid    → 响应体 detail.mid（若存在）或自定义 jsonpath（见下）
@@ -74,7 +74,7 @@ def _extract_credentials(resp_json: dict) -> dict[str, str]:
     """从凭证接口响应中提取 token/key/mid。
 
     支持响应结构：
-    - {"code":0,"detail":{"key":"Anonyxxx","value":"C_..."}}        （体育平台匿名登录）
+    - {"code":0,"detail":{"key":"Anonyxxx","value":"C_..."}}        （匿名登录）
     - {"code":0,"data":{"token":"...","mid":"..."}}
     - {"result":{"token":"...","key":"..."}}
     """
@@ -198,7 +198,7 @@ def fetch_session_credentials(
         body["appCode"] = cfg["app_code"]
 
     try:
-        # Batch 188：支持 form-urlencoded 凭证接口（体育平台 demo/login 仅接受
+        # Batch 188：支持 form-urlencoded 凭证接口（部分被测系统 demo/login 仅接受
         # application/x-www-form-urlencoded 请求体；JSON 会被拒绝）
         if cfg.get("content_type") == "form":
             headers["Content-Type"] = "application/x-www-form-urlencoded"

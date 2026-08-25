@@ -5,7 +5,7 @@ last_reviewed: "2026-08-01"
 status: "active"
 expires: "2026-12-26"
 tags: ["test-platform", "v2", "fastapi", "react"]
-related: ["backend/CLAUDE.md", "frontend/CLAUDE.md", "docs/CamelTv测试平台-完整PRD.md", "../docs/adr/0003-frontend-backend-physical-separation.md"]
+related: ["backend/CLAUDE.md", "frontend/CLAUDE.md", "docs/测试平台-完整PRD.md", "../docs/adr/0003-frontend-backend-physical-separation.md"]
 ---
 
 # test-platform-v2 — 测试平台 v2（前后端分离）
@@ -41,7 +41,7 @@ test-platform-v2/
 | 需求 | `/requirement` | 🟡 | 本地持久化与展示可用；真实 LLM、蓝湖与旧 PostgreSQL 快照验收受外部输入阻塞 |
 | 用例脑图 | `/testcase?tab=mindmap` | 🟡 | P2a 起并入用例服务「脑图视图」Tab（`/mindmap` 重定向，菜单种子移除）；脑图内容实际为用例 taxonomy 聚合 |
 | API 测试 | `/apitest` | 🟡 | OpenAPI/Swagger 导入、httpx 执行、任务/快照已实现；五入口一致性、生产保护与 Test5 当前契约待验收 |
-| UI 自动化 | `/uitest` | 🟡 | 本地 Runner、环境注入和产物闭环已验证；不能替代体育 Test5/生产业务 E2E |
+| UI 自动化 | `/uitest` | 🟡 | 本地 Runner、环境注入和产物闭环已验证；业务 E2E 需在获授权的目标环境单独执行 |
 | ~~音视频专项~~ | ~~`/special`~~ | 已移除 | batch-165 隐藏菜单后，代码已随死代码清理批次整体删除（路由/服务/模型/页面）；如需恢复从 git 历史取回 |
 | 环境 / 数据集 | `/environment` `/dataset` | 🟡 | 项目级数据和变量链可用；生产目标防误触发仍需统一验证 |
 | 通知 / 集成 | `/notify` `/integration` | ⛔（默认隐藏） | 本地模型和错误路径存在；真实 SMTP/Webhook/Jira/TAPD/ELK 缺非生产凭据与端点。P1a 起入口默认经 `DISABLED_MENUS` 软下线（侧边栏+访客目录+命令面板隐藏，页面路由保留可直达），恢复：`DISABLED_MENUS=` 置空 |
@@ -57,7 +57,7 @@ test-platform-v2/
 - FastAPI 版本以 `backend/requirements.lock` 的 `0.140.13` 为可复现基线；`requirements.txt` 的 `>=0.110` 只是声明下限。前端锁文件基线为 React `19.2.8`、React Router `8.3.0`、Vite `7.3.6`。
 - FastAPI 在 `/openapi.json` 生成运行时契约，文档入口为 `/docs` 与 `/redoc`；业务 API 前缀为 `/api/v1`，`/health` 独立。`npm run gen:api` 需要显式刷新前端生成类型，生成文件不能代替运行时契约检查。
 - API 资产导入支持 OpenAPI 3.x / Swagger 2.0 的 JSON/YAML 文本或 URL，以及 Knife4j/Swagger 文档来源的预览/确认；导入成功不等于目标环境接口回归通过。
-- `backend/tests/playwright/specs/` 验证测试平台本地 Runner；`../tests/automation/ui/` 才是体育用户端/运营后台业务 E2E。两类结果必须分开统计和索引。
+- `backend/tests/playwright/specs/` 验证测试平台本地 Runner；业务 E2E 资产由使用方在获授权的目标环境单独执行。两类结果必须分开统计和索引。
 
 ## 关键架构决策
 
@@ -76,7 +76,7 @@ test-platform-v2/
 
 ## 关联文档
 
-- 完整 PRD：[docs/CamelTv测试平台-完整PRD.md](docs/CamelTv测试平台-完整PRD.md)
+- 完整 PRD：[docs/测试平台-完整PRD.md](docs/测试平台-完整PRD.md)
 - 现状功能：[docs/现状功能PRD.md](docs/现状功能PRD.md)
 - 代码审查/重构：[docs/代码审查与产品重构PRD.md](docs/代码审查与产品重构PRD.md)
 - 改进 Backlog：[docs/改进任务backlog.md](docs/改进任务backlog.md)

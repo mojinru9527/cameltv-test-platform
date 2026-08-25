@@ -13,7 +13,7 @@ const defect = {
   severity: 'P1',
   status: 'open',
   assignee_name: '测试工程师',
-  case_title: '体育平台移动端验收',
+  case_title: '业务平台移动端验收',
   created_at: '2026-08-01T00:00:00Z',
 }
 

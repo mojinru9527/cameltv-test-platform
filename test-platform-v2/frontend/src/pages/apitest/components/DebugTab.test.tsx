@@ -32,7 +32,7 @@ describe('快速调试资产预填', () => {
         id: 5,
         name: '测试5',
         env_type: 'test',
-        base_url: 'http://camel-api-gateway05.svc.elelive.cn/',
+        base_url: 'https://api.example.com/',
       },
       {
         id: 6,
@@ -145,13 +145,13 @@ describe('快速调试资产预填', () => {
 
     await selectTest5Environment()
     expect((screen.getByLabelText('服务器地址') as HTMLInputElement).value).toBe(
-      'http://camel-api-gateway05.svc.elelive.cn/',
+      'https://api.example.com/',
     )
     expect((screen.getByLabelText('服务名') as HTMLInputElement).value).toBe('camel-service')
     expect((screen.getByLabelText('模块名') as HTMLInputElement).value).toBe('/ee/search')
     expect((screen.getByLabelText('接口路径') as HTMLInputElement).value).toBe('/synonyms/cou')
     expect((screen.getByLabelText('完整请求地址') as HTMLInputElement).value).toBe(
-      'http://camel-api-gateway05.svc.elelive.cn/camel-service/ee/search/synonyms/cou',
+      'https://api.example.com/camel-service/ee/search/synonyms/cou',
     )
     expect((screen.getByLabelText('参数 1 名称') as HTMLInputElement).value).toBe('tenantId')
     expect((screen.getByLabelText('参数 2 名称') as HTMLInputElement).value).toBe('keyword')
@@ -169,8 +169,8 @@ describe('快速调试资产预填', () => {
           service_name: 'camel-test-confirm',
           module: 'sports-live-controller',
           method: 'GET',
-          path: '/ee/sports_live/home_match',
-          summary: '首页赛事',
+          path: '/ee/live/home_match',
+          summary: '首页模块',
           description: '',
           request_schema: JSON.stringify({
             query: [{ name: 'day', type: 'string', required: true, example: '20260615' }],
@@ -193,10 +193,10 @@ describe('快速调试资产预填', () => {
 
     await selectTest5Environment()
     // tags=sports-live-controller 不再作为模块路径混入
-    expect((screen.getByLabelText('模块名') as HTMLInputElement).value).toBe('/ee/sports_live')
+    expect((screen.getByLabelText('模块名') as HTMLInputElement).value).toBe('/ee/live')
     expect((screen.getByLabelText('接口路径') as HTMLInputElement).value).toBe('/home_match')
     expect((screen.getByLabelText('完整请求地址') as HTMLInputElement).value).toBe(
-      'http://camel-api-gateway05.svc.elelive.cn/camel-test-confirm/ee/sports_live/home_match',
+      'https://api.example.com/camel-test-confirm/ee/live/home_match',
     )
     // 参数预填取契约真实 example（不再空值/占位）
     expect((screen.getByLabelText('参数 1 名称') as HTMLInputElement).value).toBe('day')

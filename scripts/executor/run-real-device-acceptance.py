@@ -2,8 +2,8 @@
 
   场景（--scenario）:
   scroll        滚动压测（旧口径，仅作辅助数据）
-  chrome-sports 安卓 Chrome 打开 www.camel1.tv，任选一场有视频流的比赛观看 10 分钟
-  app-live      小象直播 App 任选一个视频流直播间观看 10 分钟
+  chrome-web    安卓 Chrome 打开被测站点，任选一个有视频流的页面观看 10 分钟
+  app-live      被测直播 App 任选一个视频流直播间观看 10 分钟
   manual        用户手动驱动目标应用/页面，平台仅按 duration 采样（广告/登录受限场景兜底）
 
 流程: 登录 → 取项目 → 建会话 → start → WebSocket 采样（期间驱动目标视频场景）
@@ -95,7 +95,7 @@ def drive_scroll(adb: str, device: str, pkg: str, seconds: int) -> None:
 
 
 def drive_chrome_sports(adb: str, device: str, dump_path: Path) -> None:
-    """Chrome 打开 www.camel1.tv，任选一场有视频流的比赛（LIVE 卡片）进入。"""
+    """Chrome 打开被测站点，任选一个有视频流的页面（LIVE 卡片）进入。"""
     chrome = "com.android.chrome"
     adb_cmd(adb, device, "shell", "svc", "power", "stayon", "true")
     adb_cmd(adb, device, "shell", "input", "keyevent", "KEYCODE_WAKEUP")
@@ -103,7 +103,7 @@ def drive_chrome_sports(adb: str, device: str, dump_path: Path) -> None:
     adb_cmd(
         adb, device, "shell",
         "am", "start", "-a", "android.intent.action.VIEW",
-        "-d", "https://www.camel1.tv",
+        "-d", "https://<target-host>",
         "-n", "com.android.chrome/com.google.android.apps.chrome.Main",
     )
     time.sleep(14)
@@ -127,7 +127,7 @@ def drive_chrome_sports(adb: str, device: str, dump_path: Path) -> None:
 
 
 def drive_app_live(adb: str, device: str, pkg: str, dump_path: Path) -> None:
-    """小象直播 App：启动 → 进入任一直播间（视频流）。"""
+    """被测直播 App：启动 → 进入任一直播间（视频流）。"""
     adb_cmd(adb, device, "shell", "svc", "power", "stayon", "true")
     adb_cmd(adb, device, "shell", "input", "keyevent", "KEYCODE_WAKEUP")
     adb_cmd(adb, device, "shell", "am", "force-stop", pkg)

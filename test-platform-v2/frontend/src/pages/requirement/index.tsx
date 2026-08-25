@@ -630,7 +630,7 @@ export default function RequirementPage() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-3">
-              <h4 className="flex items-center gap-1.5 text-sm font-medium text-status-info"><Smartphone className="size-4" aria-hidden="true" />用户端 (CamelTv)</h4>
+              <h4 className="flex items-center gap-1.5 text-sm font-medium text-status-info"><Smartphone className="size-4" aria-hidden="true" />用户端</h4>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <Label>Project ID</Label>

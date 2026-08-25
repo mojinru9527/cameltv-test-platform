@@ -45,7 +45,7 @@ API_TOKEN = os.getenv("PLATFORM_API_TOKEN", "")
 PROJECT_ID = os.getenv("PLATFORM_PROJECT_ID", "1")
 HTTP_TIMEOUT = float(os.getenv("HTTP_TIMEOUT", "30"))
 
-mcp = FastMCP("CamelTv Knowledge Center")
+mcp = FastMCP("Knowledge Center MCP")
 
 
 def _headers() -> dict[str, str]:

@@ -1,18 +1,18 @@
 ---
-title: "CamelTv 仓库地图"
+title: "仓库地图"
 owner: "qa-team"
 last_reviewed: "2026-06-26"
 status: "active"
 expires: "2027-06-26"
 tags: ["repo-map", "reference", "navigation", "onboarding"]
-related: ["CLAUDE.md", "docs/business-glossary.md", "docs/adr/README.md"]
+related: ["CLAUDE.md", "docs/adr/README.md"]
 ---
 
-# CamelTv 仓库地图
+# 仓库地图
 
-> 本文档是 CamelTv 仓库的完整导航地图。新人入职第一份文档，也是 AI 编码助手理解项目结构的权威索引。
+> 本文档是仓库的完整导航地图。新人入职第一份文档，也是 AI 编码助手理解项目结构的权威索引。
 >
-> 仓库地址：`f:\CamelTv` | 主分支：`main`（开发合并至 `master`）
+> 仓库地址：`f:\CamelTv` | 主分支：`main`
 
 ---
 
@@ -47,7 +47,7 @@ related: ["CLAUDE.md", "docs/business-glossary.md", "docs/adr/README.md"]
 | `frontend/src/components/` | 前端组件库（shadcn/ui 基础组件 + 业务组件） | — |
 | `frontend/src/stores/` | Zustand 状态管理（authStore、projectStore 等） | — |
 | `frontend/src/api/` | Axios HTTP 客户端，拦截器处理 JWT 刷新和 401 | — |
-| `docs/` | v2 专属文档：完整 PRD、接入指南、架构图、改进 Backlog | `CamelTv测试平台-完整PRD.md`、`onboarding.md` |
+| `docs/` | v2 专属文档：完整 PRD、接入指南、架构图、改进 Backlog | `测试平台-完整PRD.md`、`onboarding.md` |
 | `docs/diagrams/` | 18 张 Mermaid + PNG 架构图 | — |
 | `deploy/` | v2 Docker Compose 部署编排（Nginx + FastAPI） | `docker-compose.yml` |
 
@@ -72,24 +72,17 @@ related: ["CLAUDE.md", "docs/business-glossary.md", "docs/adr/README.md"]
 
 ### 2.4 `tests/` — 测试资产中心（持续积累）
 
-> **一句话职责**：CamelTv 全链路测试资产：功能用例 + 接口测试 + UI 自动化 + 音视频专项。
+> **一句话职责**：测试资产中心：平台自身验收用例 + 通用测试标准。
 >
-> **技术栈**：Markdown（用例）| Playwright + TypeScript（UI 自动化）| Python（服务层自动化）
+> **技术栈**：Markdown（用例）
 
 | 子目录 | 职责 | 关键文件 |
 |--------|------|---------|
-| `test-case-standards/` | 10 篇测试标准规范文档（用例模板、检查清单、优先级定义等） | `测试用例标准.md` |
-| `test-cases/functional/` | 功能测试用例：ADMIN / BASELINE / P0-* 分级 | `TC-{模块}-{编号}.md` |
+| `test-case-standards/` | 11 篇测试标准规范文档（用例模板、检查清单、优先级定义等） | `测试用例标准.md` |
+| `test-cases/functional/` | 功能测试用例（平台自身验收资产：BATCH47/48/55） | `TC-{模块}-{编号}.md` |
 | `test-cases/integration/` | 集成测试用例 | — |
 | `test-cases/performance/` | 性能测试用例 | — |
 | `test-cases/security/` | 安全测试用例 | — |
-| `automation/ui/` | Playwright TypeScript UI 自动化，6 个模块覆盖 | `home/`、`list/`、`detail/`、`pay/`、`refund/`、`bonus/` |
-| `automation/service/` | 接口/服务层自动化 | — |
-| `automation/fixtures/` | 测试数据与夹具 | — |
-| `api-testing/` | 接口测试集合（Postman/Bruno）+ 环境配置 | `collections/`、`environments/` |
-| `requirements/` | 需求分析和文档库 | `documents/`、`traceability-matrix/` |
-| `音视频测试/` | 10 篇音视频测试指南 | — |
-| `音视频项目测试/` | 测试素材 + 分析脚本 | — |
 
 ### 2.5 `deploy/` — CI/CD 部署（稳定）
 
@@ -108,7 +101,6 @@ related: ["CLAUDE.md", "docs/business-glossary.md", "docs/adr/README.md"]
 | 子目录/文件 | 职责 |
 |-------------|------|
 | `docs/document-standards.md` | 所有 Markdown 文档的元数据和编写规范 |
-| `docs/business-glossary.md` | 业务术语表，项目内统一语言 |
 | `docs/repo-map.md` | 本文档，仓库完整导航地图 |
 | `docs/common-pitfalls.md` | 常见陷阱与已知问题库 |
 | `docs/adr/` | 架构决策记录（6 篇已采纳 ADR） |
@@ -151,7 +143,7 @@ related: ["CLAUDE.md", "docs/business-glossary.md", "docs/adr/README.md"]
 
 | 文件 | 说明 |
 |------|------|
-| `CamelTv-测试自动化平台-建设方案.md` | 顶层架构方案 |
+| `测试平台-建设方案.md` | 顶层架构方案 |
 | `测试平台-前后端分离重构方案.md` | v1 → v2 重构设计 |
 
 ---
@@ -162,11 +154,10 @@ related: ["CLAUDE.md", "docs/business-glossary.md", "docs/adr/README.md"]
 
 ```
 1. CLAUDE.md              → 理解项目全景和架构原则
-2. docs/business-glossary.md → 掌握统一业务语言
-3. docs/repo-map.md        → 建立空间认知（本文档）
-4. docs/adr/README.md      → 理解关键架构决策
-5. test-platform-v2/CLAUDE.md → 深入主力平台
-6. COMMANDS.md             → 跑起来
+2. docs/repo-map.md        → 建立空间认知（本文档）
+3. docs/adr/README.md      → 理解关键架构决策
+4. test-platform-v2/CLAUDE.md → 深入主力平台
+5. COMMANDS.md             → 跑起来
 ```
 
 ### 按角色导航
@@ -184,7 +175,7 @@ related: ["CLAUDE.md", "docs/business-glossary.md", "docs/adr/README.md"]
 | 想做什么 | 去哪里 |
 |---------|--------|
 | 写功能测试用例 | `tests/test-case-standards/` → `tests/test-cases/functional/` |
-| 写接口/API 测试用例 | `tests/api-testing/` |
+| 写接口/API 测试用例 | `tests/test-case-standards/` → `API接口测试方案.md` |
 | 生成测试用例（AI） | `test-platform-v2/backend/app/services/ai_service.py` |
 | 配置 CI/CD 流水线 | `Jenkinsfile` + `deploy/jenkins/` + `.github/workflows/` |
 | 提取蓝湖原型数据 | `lanhu-mcp/` → `python lanhu_mcp_server.py` |

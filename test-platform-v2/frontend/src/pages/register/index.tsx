@@ -91,7 +91,7 @@ export default function RegisterPage() {
         project_invite_token: inviteParam,
       })
       setLogin(data)
-      toast.success('注册成功，欢迎使用 CamelTv 测试平台')
+      toast.success('注册成功，欢迎使用测试平台')
       navigate('/my-projects', { replace: true })
     } catch (reason) {
       setSubmitError(reason instanceof Error ? reason.message : '注册失败，请稍后重试')
@@ -105,7 +105,7 @@ export default function RegisterPage() {
       <Card className="w-full max-w-[400px] border border-border/60 shadow-lg">
         <CardHeader className="text-center">
           <CardTitle role="heading" aria-level={1} className="text-2xl">
-            注册 CamelTv 测试平台
+            注册测试平台
           </CardTitle>
           <CardDescription>
             {needsPlatformInvite ? '当前环境需要平台邀请码' : '无需邀请码即可创建账号'}

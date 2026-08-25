@@ -40,7 +40,7 @@ const available = {
   available: true,
   reason: '',
   release_bundle_id: 17,
-  release_bundle_name: 'Batch 60 体育生产验收',
+  release_bundle_name: 'Batch 60 生产验收',
   release_bundle_status: 'active',
 }
 

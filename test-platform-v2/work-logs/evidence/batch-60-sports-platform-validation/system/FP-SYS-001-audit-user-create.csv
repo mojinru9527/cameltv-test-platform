@@ -1,3 +1,0 @@
-﻿时间,操作人,操作,目标,详情,IP
-2026-07-31T00:10:43.943837,admin,user:create,用户 batch60_delete_1785427843301,"{'username': 'batch60_delete_1785427843301', 'nickname': 'Batch 60 删除临时用户', 'email': 'batch60-delete-1785427843301@cameltv.local', 'status': 1, 'role_codes': []}",127.0.0.1
-2026-07-31T00:05:26.062588,admin,user:create,用户 batch60_delete_1785427525091,"{'username': 'batch60_delete_1785427525091', 'nickname': 'Batch 60 删除临时用户', 'email': 'batch60-delete-1785427525091@cameltv.local', 'status': 1, 'role_codes': []}",127.0.0.1

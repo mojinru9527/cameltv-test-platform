@@ -18,8 +18,8 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
-const STORAGE_MODE_KEY = "cameltv-theme-mode"
-const STORAGE_COLOR_KEY = "cameltv-theme-color"
+const STORAGE_MODE_KEY = "test-platform-theme-mode"
+const STORAGE_COLOR_KEY = "test-platform-theme-color"
 
 function getStoredMode(): ThemeMode {
   try {

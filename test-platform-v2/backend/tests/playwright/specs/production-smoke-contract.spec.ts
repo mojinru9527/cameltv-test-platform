@@ -20,8 +20,8 @@ test.describe('Batch 61 production smoke truth contract', () => {
   test('missing business fixture cannot produce a green smoke result', () => {
     expect(() =>
       readProductionSmokeRuntime({
-        BASE_URL: 'https://www.camel1.tv',
-        PROD_ALLOWED_HOSTS: 'www.camel1.tv',
+        BASE_URL: 'https://www.target.example.com',
+        PROD_ALLOWED_HOSTS: 'www.target.example.com',
       }),
     ).toThrow(/B61-BLOCKED:PROD_EXPECTED_BUSINESS_TEXT/)
   })
@@ -59,29 +59,29 @@ test.describe('Batch 61 production smoke truth contract', () => {
 
   test('production subrequests require an explicit host and read-only method', () => {
     const runtime = readProductionSmokeRuntime({
-      BASE_URL: 'https://www.camel1.tv',
-      PROD_ALLOWED_HOSTS: 'www.camel1.tv,api.camel1.tv',
+      BASE_URL: 'https://www.target.example.com',
+      PROD_ALLOWED_HOSTS: 'www.target.example.com,api.target.example.com',
       PROD_EXPECTED_BUSINESS_TEXT: 'Camel Live',
     })
 
     expect(() =>
       assertProductionRequestAllowed(
         runtime,
-        'https://api.camel1.tv/api/home',
+        'https://api.target.example.com/api/home',
         'GET',
       ),
     ).not.toThrow()
     expect(() =>
       assertProductionRequestAllowed(
         runtime,
-        'https://cdn.camel1.tv/app.js',
+        'https://cdn.target.example.com/app.js',
         'GET',
       ),
     ).toThrow(/B61-BLOCKED:PROD_REQUEST_HOST/)
     expect(() =>
       assertProductionRequestAllowed(
         runtime,
-        'https://api.camel1.tv/api/order',
+        'https://api.target.example.com/api/order',
         'POST',
       ),
     ).toThrow(/B61-BLOCKED:PROD_WRITE_METHOD/)

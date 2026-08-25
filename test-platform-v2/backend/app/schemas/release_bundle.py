@@ -26,7 +26,7 @@ class ReleaseBundleCreate(BaseModel):
     release_date: date | None = Field(None, description="发布日期")
     parent_bundle_id: int | None = Field(None, description="父发布包 ID，形成版本链")
     requirement_url: str = Field("", description="需求地址（蓝湖/PingCode/Confluence/HTML）")
-    user_env_url: str = Field("", description="体育用户端地址")
+    user_env_url: str = Field("", description="用户端地址")
     api_spec_url: str = Field("", description="接口 OpenAPI/Swagger 地址")
     admin_env_url: str = Field("", description="运营后台地址")
     environment_id: int | None = Field(None, description="账号/变量环境 ID")
@@ -43,7 +43,7 @@ class ReleaseBundleUpdate(BaseModel):
     parent_bundle_id: int | None = None
     diff_summary: str | None = Field(None, description="版本差异摘要 JSON")
     requirement_url: str | None = Field(None, description="需求地址")
-    user_env_url: str | None = Field(None, description="体育用户端地址")
+    user_env_url: str | None = Field(None, description="用户端地址")
     api_spec_url: str | None = Field(None, description="接口 OpenAPI/Swagger 地址")
     admin_env_url: str | None = Field(None, description="运营后台地址")
     environment_id: int | None = Field(None, description="账号/变量环境 ID")

@@ -4051,7 +4051,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 体育模块关联入库（Batch 122 用例结构）
+         * 模块关联入库（用例结构）
          * @description 从用例结构批量入库模块/用例/接口实体与业务关系（幂等）。
          *
          *     实体：module / test_case / api；关系：contains / tested_by / navigates_to / links_to_admin / configures。
@@ -14555,7 +14555,7 @@ export interface components {
             requirement_url: string;
             /**
              * User Env Url
-             * @description 体育用户端地址
+             * @description 用户端地址
              * @default
              */
             user_env_url: string;
@@ -14705,7 +14705,7 @@ export interface components {
             requirement_url?: string | null;
             /**
              * User Env Url
-             * @description 体育用户端地址
+             * @description 用户端地址
              */
             user_env_url?: string | null;
             /**

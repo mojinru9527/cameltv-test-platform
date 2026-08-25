@@ -91,12 +91,12 @@ describe('UI 自动化页面请求状态', () => {
       <ProtectedArtifactMedia
         runId={42}
         path="screenshots/home.png"
-        name="体育首页证据"
+        name="业务首页证据"
         kind="image"
       />,
     )
 
-    const image = await screen.findByRole('img', { name: '体育首页证据' })
+    const image = await screen.findByRole('img', { name: '业务首页证据' })
     expect(api.fetchRunArtifactBlob).toHaveBeenCalledWith(
       42,
       'screenshots/home.png',
@@ -113,7 +113,7 @@ describe('UI 自动化页面请求状态', () => {
       {
         id: 9,
         project_id: 1,
-        name: '体育生产只读',
+        name: '生产只读',
         env_type: 'prod',
         base_url: 'https://production.example.invalid',
         description: '',
@@ -144,7 +144,7 @@ describe('UI 自动化页面请求状态', () => {
 
     render(<MemoryRouter><UiTestPage /></MemoryRouter>)
 
-    expect(await screen.findByText('体育生产只读')).toBeTruthy()
+    expect(await screen.findByText('生产只读')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: '执行' }))
 
     expect(await screen.findByRole('alertdialog')).toBeTruthy()
@@ -161,7 +161,7 @@ describe('UI 自动化页面请求状态', () => {
       {
         id: 9,
         project_id: 1,
-        name: '体育生产只读',
+        name: '生产只读',
         env_type: 'prod',
         base_url: 'https://production.example.invalid',
         description: '',

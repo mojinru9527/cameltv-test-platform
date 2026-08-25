@@ -1,4 +1,4 @@
-# CamelTv 测试平台 — CI 集成协议
+# 测试平台 — CI 集成协议
 
 > 版本：2.3.0 | 更新：2026-07-02
 
@@ -157,7 +157,7 @@ Content-Type: application/json
 ```mermaid
 sequenceDiagram
     participant CI as Jenkins / GitHub Actions
-    participant API as CamelTv API
+    participant API as Test Platform API
     participant ELK as ELK / 日志系统
 
     CI->>API: GET /open/health

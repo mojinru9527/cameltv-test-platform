@@ -77,7 +77,7 @@ export const useAuthStore = create<AuthState>()(
         return perms.includes('*') || perms.includes(code)
       },
     }),
-    { name: 'cameltv-auth',
+    { name: 'test-platform-auth',
       // P1-1: token 不再持久化到 localStorage（防 XSS 窃取），鉴权由 httpOnly cookie 承载。
       // token 仅保留在内存中，供过渡期 Authorization 头回退使用；刷新后为 null，由 cookie 鉴权。
       partialize: (s) => ({
