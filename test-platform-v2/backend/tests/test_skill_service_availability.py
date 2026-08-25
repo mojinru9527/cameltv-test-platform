@@ -86,7 +86,7 @@ def _prepare_configured_skill(monkeypatch):
     monkeypatch.setattr(
         skill_service,
         "build_skill_knowledge_context",
-        lambda *_args, **_kwargs: "真实体育项目知识",
+        lambda *_args, **_kwargs: "真实业务项目知识",
     )
 
 

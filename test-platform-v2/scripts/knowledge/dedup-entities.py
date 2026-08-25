@@ -11,7 +11,7 @@ import sys
 
 import httpx
 
-USERNAME = "sportsadmin"
+USERNAME = "admin"
 
 
 def main() -> int:

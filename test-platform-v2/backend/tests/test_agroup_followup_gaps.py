@@ -42,9 +42,9 @@ class TestResponseSchemaRefResolution:
             }
         },
         "paths": {
-            "/ee/sports_live/home_match": {
+            "/ee/live/home_match": {
                 "get": {
-                    "tags": ["sports-live-controller"],
+                    "tags": ["live-controller"],
                     "parameters": [
                         {"name": "day", "in": "query", "required": True,
                          "schema": {"type": "string", "example": "20260615"}},
@@ -112,18 +112,18 @@ class TestCaseExecutionUrl:
         db_session.add(svc)
         db_session.flush()
         ep = ApiEndpoint(
-            project_id=1, service_id=svc.id, method="GET", path="/ee/sports_live/home_match",
+            project_id=1, service_id=svc.id, method="GET", path="/ee/live/home_match",
         )
         db_session.add(ep)
         db_session.flush()
         case = TestCase(
             project_id=1, title="t", case_type="api", api_method="GET",
-            api_endpoint="/ee/sports_live/home_match", api_endpoint_id=ep.id,
+            api_endpoint="/ee/live/home_match", api_endpoint_id=ep.id,
         )
         db_session.add(case)
         db_session.commit()
 
-        assert _case_execution_url(db_session, case) == "/camel-service/ee/sports_live/home_match"
+        assert _case_execution_url(db_session, case) == "/camel-service/ee/live/home_match"
 
     def test_absolute_and_unbound_endpoints_unchanged(self, db_session):
         from app.models.test_case import TestCase

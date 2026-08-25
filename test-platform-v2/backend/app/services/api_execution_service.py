@@ -755,7 +755,7 @@ def _apply_dependency_variables(request_def: dict, dep_responses: dict) -> dict:
 def _assert_response_structure(rule: dict, data: Any) -> dict:
     """响应结构断言（Batch 112）：exists / not_empty / is_object_or_array / len_lte。
 
-    语义与 scripts/sports/execute-interface-cases.py::_assert_structure 对齐（97/97 已验证）：
+    语义与历史接口用例执行脚本的 _assert_structure 对齐（已验证）：
     - envelope 键缺失 -> 失败；
     - 200 信封下 data.* 动态缺失 -> warning（passed=True，不判失败，B110-5 口径）；
     - records[0].* 记录字段以键存在为准（实时数据字段值可合法为空）；

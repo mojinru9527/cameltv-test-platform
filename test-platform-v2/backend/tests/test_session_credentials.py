@@ -102,9 +102,9 @@ def test_unconfigured_returns_empty(db_session):
 
 
 def test_form_encoded_credentials_fetch(db_session):
-    """form-urlencoded 凭证接口（Batch 188：体育平台 demo/login 仅接受 form 编码）。
+    """form-urlencoded 凭证接口（Batch 188：被测系统 demo/login 仅接受 form 编码）。
 
-    模拟体育平台登录响应结构：{"status":200,"data":{"token","userSig","userId"}}
+    模拟被测系统登录响应结构：{"status":200,"data":{"token","userSig","userId"}}
     + session_field_map 提取 userSig/userId。
     """
     import threading
