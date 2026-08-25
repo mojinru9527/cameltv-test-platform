@@ -1788,6 +1788,10 @@ def _contract_business_assertions(endpoint: dict) -> list[dict]:
     schema = _schema_of_ep(endpoint, "response_schema")
     props = schema.get("properties")
     if not isinstance(props, dict) or not props:
+        # 导入存储形态为 {status_code, content_type, schema:{properties}}；兼容内层
+        inner = schema.get("schema")
+        props = inner.get("properties") if isinstance(inner, dict) else None
+    if not isinstance(props, dict) or not props:
         return out
     _META = {"message", "msg", "timestamp", "traceid", "requestid", "success"}
 
@@ -1818,7 +1822,18 @@ def _contract_business_assertions(endpoint: dict) -> list[dict]:
         data_prop = props[data_key]
         sub_props = data_prop.get("properties") if isinstance(data_prop, dict) else None
         if isinstance(sub_props, dict) and sub_props:
-            for k in [k for k in sub_props if k not in _META][:2]:
+            # 核心字段优先原始类型（string/integer/...）：真实响应常省略空数组/对象分组
+            # （如 favorite_group/hot_group 空时整键缺失），原始类型字段 exists 更稳定
+            candidates = [k for k in sub_props if k not in _META]
+            primitives = [
+                k for k in candidates
+                if isinstance(sub_props[k], dict)
+                and sub_props[k].get("type") in ("string", "integer", "number", "boolean")
+            ]
+            # 有原始类型字段只取原始类型（最多 2 个）；否则回退 1 个非原始字段。
+            # 真实响应常省略空数组/对象分组（整键缺失），exists 断言对原始类型更稳定。
+            ordered = primitives[:2] if primitives else candidates[:1]
+            for k in ordered:
                 out.append({"type": "jsonpath", "path": f"$.{data_key}.{k}", "operator": "exists"})
         else:
             out.append({"type": "jsonpath", "path": f"$.{data_key}", "operator": "exists"})
@@ -1926,6 +1941,7 @@ def create_test_case_from_generated(
         api_method=case_data.get("api_method", "GET"),
         api_endpoint=case_data.get("api_endpoint", ""),
         api_spec_ref=f"api_endpoint:{endpoint_id}" if endpoint_id else "",
+        api_endpoint_id=endpoint_id,
         api_headers=json.dumps(case_data.get("api_headers", {}), ensure_ascii=False),
         api_body=case_data.get("api_body", ""),
         api_assertions=json.dumps(case_data.get("api_assertions", []), ensure_ascii=False),

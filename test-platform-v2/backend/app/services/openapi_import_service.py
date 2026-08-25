@@ -222,7 +222,7 @@ def _extract_endpoints(spec: dict) -> list[dict]:
             request_schema = _extract_request_schema(detail, spec)
 
             # 提取 response schema
-            response_schema = _extract_response_schema(detail)
+            response_schema = _extract_response_schema(detail, spec)
 
             # 检查是否需要认证
             auth_required = _check_auth_required(detail)
@@ -388,8 +388,35 @@ def _extract_request_schema(detail: dict, spec: dict | None = None) -> dict:
     return schema
 
 
-def _extract_response_schema(detail: dict) -> dict:
-    """提取成功响应 schema。"""
+def _resolve_schema_deep(schema: dict, spec: dict, _depth: int = 0, _seen: frozenset | None = None) -> dict:
+    """递归解析 schema 中的 $ref（含 properties/items），保留 example/default/enum。
+
+    深度受限 + 引用去重，防循环；无法解析的 $ref 原样保留。
+    """
+    if not isinstance(schema, dict):
+        return {}
+    if _depth > 8:
+        return dict(schema)
+    seen = _seen or frozenset()
+    if "$ref" in schema and spec:
+        ref = schema["$ref"]
+        if ref not in seen:
+            target = _resolve_ref(spec, ref)
+            if target:
+                return _resolve_schema_deep(target, spec, _depth + 1, seen | {ref})
+    out = dict(schema)
+    if isinstance(out.get("properties"), dict):
+        out["properties"] = {
+            k: _resolve_schema_deep(v, spec, _depth + 1, seen)
+            for k, v in out["properties"].items()
+        }
+    if isinstance(out.get("items"), dict):
+        out["items"] = _resolve_schema_deep(out["items"], spec, _depth + 1, seen)
+    return out
+
+
+def _extract_response_schema(detail: dict, spec: dict | None = None) -> dict:
+    """提取成功响应 schema（A组补强：解析 $ref，保留 properties/example/enum/default）。"""
     responses = detail.get("responses", {})
     # 优先取 200/201 响应
     for code in ("200", "201"):
@@ -397,10 +424,13 @@ def _extract_response_schema(detail: dict) -> dict:
         if resp:
             content = resp.get("content", {})
             for media_type, media_schema in content.items():
+                body_schema = media_schema.get("schema", {})
+                if spec:
+                    body_schema = _resolve_schema_deep(body_schema, spec)
                 return {
                     "status_code": code,
                     "content_type": media_type,
-                    "schema": media_schema.get("schema", {}),
+                    "schema": body_schema,
                 }
     return {}
 
