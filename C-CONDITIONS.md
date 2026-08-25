@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-24 (Batch 203: C203-2 已关闭（camel-service 恢复后平台实测 200+status=200）；C203-1 保持 Open)
+**最后更新**: 2026-08-24 (Batch 203: C203-2 已关闭并补扩展证据（接口用例链路缺口由 fix/a-response-ref-and-case-url 修复）；C203-1 保持 Open)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -27,7 +27,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | C203-1 | lanhu-mcp 子模块相关 5 例基线失败：`test_deploy_compose_contract::test_backend_build_context_contains_runner_and_root_lanhu_submodule`、`test_lanhu_login_hook`×2、`test_lanhu_provider`×2，在 Batch 203 A/B 全量（1686/1703）与 CI 全新检出重复失败，主仓库同样失败；解除条件=修复 lanhu-mcp 子模块内容/指针（或补齐构建期初始化）并使双端全新检出全量回归绿（5 例归零证据 + PR/commit） | P1 | 2026-08-24 |
-| ~~C203-2~~ | ~~Test5 `camel-service` 网关服务未恢复（404/无路由）：`/ee/sports_live/home_match` 真实参数成功用例未补测（URL 组装、参数预填、2xx 语义已对照验证；camel-service 恢复前 E/F 组证据保持）；解除条件=服务恢复后经平台 DebugTab 执行 `day=20260615` 返回 2xx + 业务码 200 并留截图/响应体证据~~ → **Closed**：2026-08-24 camel-service 恢复后实测——平台 DebugTab 执行 `GET http://camel-api-gateway05.svc.elelive.cn/camel-service/ee/sports_live/home_match?day=20260615` → **HTTP 200 / 506.5ms / 业务码 `status=200`**，响应体含真实赛事数据（`today=20260824`，`hot_group` FIFA World Cup/芬兰赛真实赛程）；直连 curl 同 URL 亦 200；证据截图见会话留存（响应面板 976×586，断言 3/3 通过）；合入 PR/commit 见关闭记录 | P2 | 2026-08-24 |
+| ~~C203-2~~ | ~~Test5 `camel-service` 网关服务未恢复（404/无路由）：`/ee/sports_live/home_match` 真实参数成功用例未补测（URL 组装、参数预填、2xx 语义已对照验证；camel-service 恢复前 E/F 组证据保持）；解除条件=服务恢复后经平台 DebugTab 执行 `day=20260615` 返回 2xx + 业务码 200 并留截图/响应体证据~~ → **Closed**：2026-08-24 camel-service 恢复后实测——平台 DebugTab 执行 `GET http://camel-api-gateway05.svc.elelive.cn/camel-service/ee/sports_live/home_match?day=20260615` → **HTTP 200 / 506.5ms / 业务码 `status=200`**，响应体含真实赛事数据（`today=20260824`，`hot_group` FIFA World Cup/芬兰赛真实赛程）；直连 curl 同 URL 亦 200；合入 commit `04c6406c`（PR #316）。**扩展证据（同日，按「全部接口与接口用例」口径）**：平台引擎（quick-execute，断言=2xx+`$.status=200`+`$.data` exists）补测——`home_match_by_group?day=20260615&group=hot`、`search/hot`（POST）、`hot_match`、`version/version` 全部 HTTP 200 + all_pass + 真实数据；`init_basic_info` 超时 30s（接口侧慢，平台诚实失败，非平台缺陷）。**用例链路缺口已由本修复关闭**：①导入 response `$ref` 未解析 → 生成用例缺业务码断言；②用例执行 URL 缺服务前缀 → 网关 404。修复后 E2E（线上契约解析→资产更新→生成→执行）：生成断言=2xx+rt+`$.status`+`$.data.today`，执行 `/camel-service/ee/sports_live/home_match` → HTTP 200 / 5 断言全过 / 真实数据（合入 commit/PR 见关闭记录） | P2 | 2026-08-24 |
 
 ### batch-191 — /dsh-tasks AgentTeams 团队模式（2026-08-17）—— C191-1 已关闭 / C191-2/C191-3 保持
 

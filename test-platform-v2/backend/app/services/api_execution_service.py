@@ -42,6 +42,29 @@ SENSITIVE_FIELD_NAMES = {
 # 公共 API
 # ═══════════════════════════════════════════════════════
 
+def _case_execution_url(db: Session, case: TestCase) -> str:
+    """用例执行 URL（A组补强）：相对 api_endpoint 且绑定接口资产时补服务名前缀。
+
+    网关按服务路由（如 /camel-service/ee/...）；与 DebugTab 组装一致。
+    绝对 URL、无绑定资产、或已含服务前缀时原样返回。
+    """
+    url = case.api_endpoint or ""
+    if url.startswith(("http://", "https://")) or not case.api_endpoint_id:
+        return url
+    from app.models.api_asset import ApiEndpoint, ApiService
+
+    ep = db.get(ApiEndpoint, case.api_endpoint_id)
+    if not ep or not ep.service_id:
+        return url
+    svc = db.get(ApiService, ep.service_id)
+    if not svc or not svc.name:
+        return url
+    prefix = "/" + svc.name.strip("/")
+    if url.startswith(prefix + "/") or url == prefix:
+        return url
+    return prefix + (url if url.startswith("/") else "/" + url)
+
+
 def execute_api_case(
     db: Session,
     case_id: int,
@@ -88,7 +111,7 @@ def execute_api_case(
 
     request_def = {
         "method": case.api_method or "GET",
-        "url": case.api_endpoint or "",
+        "url": _case_execution_url(db, case),
         "headers": headers,
         "body": body,
     }
