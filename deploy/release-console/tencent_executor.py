@@ -167,7 +167,11 @@ class TencentSshExecutor:
             f"docker load -i {self.config.release_dir}/{image_tag}-frontend.tar",
             f"docker tag cameltv-tp-backend:{image_tag} {self.config.image_backend}",
             f"docker tag cameltv-tp-frontend:{image_tag} {self.config.image_frontend}",
-            self._compose("up", "-d", "--no-build"),
+            # 生产演练实测：服务器 docker（containerd snapshotter）下，
+            # compose up --no-build 不识别 docker tag 重指（镜像 ID 变更被忽略，
+            # 容器不重建 = 假成功）。必须显式 --force-recreate 且限定业务服务
+            # （不动 postgres，避免不必要的数据库重启）。
+            self._compose("up", "-d", "--no-build", "--force-recreate", "backend", "frontend"),
             "sleep 20 && curl -sk -o /dev/null -w '%{http_code}' "
             "http://127.0.0.1:8080/api/v1/open/health | grep -q 200",
         ]
@@ -188,7 +192,8 @@ class TencentSshExecutor:
         commands = [
             f"docker tag {backend_repo}:{image_tag} {self.config.image_backend} || true",  # noqa: E501
             f"docker tag {frontend_repo}:{image_tag} {self.config.image_frontend} || true",  # noqa: E501
-            self._compose("up", "-d", "--no-build"),
+            # 同 deploy：containerd snapshotter 下必须 --force-recreate 才会换镜像。
+            self._compose("up", "-d", "--no-build", "--force-recreate", "backend", "frontend"),
             "sleep 20 && curl -sk -o /dev/null -w '%{http_code}' "
             "http://127.0.0.1:8080/api/v1/open/health | grep -q 200",
         ]
