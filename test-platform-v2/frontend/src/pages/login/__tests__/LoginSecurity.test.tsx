@@ -15,7 +15,7 @@ describe('登录页敏感信息保护', () => {
       </MemoryRouter>,
     )
 
-    const heading = screen.getByRole('heading', { name: 'CamelTv 测试平台' })
+    const heading = screen.getByRole('heading', { name: '测试平台' })
     expect(heading).toBeTruthy()
     expect((screen.getByLabelText('用户名') as HTMLInputElement).value).toBe('')
     expect((screen.getByLabelText('密码') as HTMLInputElement).value).toBe('')

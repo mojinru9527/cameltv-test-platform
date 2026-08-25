@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 /**
- * CamelTv 测试平台 — Jenkins CI 集成函数库
+ * 测试平台 — Jenkins CI 集成函数库
  *
  * 用法: 将此文件加载为 Jenkins Shared Library，或直接复制到 pipeline 中
  *
@@ -25,7 +25,7 @@ def triggerPlan(int planId) {
     )
     def health = readJSON(text: healthResp.content)
     if (health.data?.status != 'ok') {
-        error("CamelTv API 不可达")
+        error("测试平台 API 不可达")
     }
     echo "✅ CamelTv API v${health.data.version} 可达"
 

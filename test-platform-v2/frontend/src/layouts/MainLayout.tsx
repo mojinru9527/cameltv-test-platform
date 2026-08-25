@@ -192,7 +192,7 @@ export default function MainLayout() {
             </div>
             {/* Text brand — hidden when collapsed */}
             <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-              <span className="text-sm font-bold sidebar-brand">CamelTv</span>
+              <span className="text-sm font-bold sidebar-brand">测试平台</span>
               <span className="text-xs text-sidebar-foreground">测试平台</span>
             </div>
           </div>

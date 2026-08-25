@@ -34,7 +34,7 @@ def _module(db_session, bundle_id: int, name: str, node_type: str = "module") ->
 
 def _prod_pages():
     return [
-        {"label": "首页", "title": "Home", "url": "https://www.camel1.tv/"},
+        {"label": "首页", "title": "Home", "url": "https://www.target.example.com/"},
         {"label": "match-replay", "title": "Match Replays", "url": "/match-replay"},
         {"label": "资讯列表", "title": "News", "url": "/q/news"},
     ]

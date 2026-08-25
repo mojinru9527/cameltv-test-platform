@@ -61,7 +61,7 @@ class WikiSyncAvailability:
 @dataclass
 class WikiTreeNode:
     """A node in the Wiki directory tree."""
-    path: str  # e.g. "/体育平台/APP端/资讯/资讯列表"
+    path: str  # e.g. "/默认项目/用户端/资讯/资讯列表"
     title: str
     page_type: str  # module | page | attachment | changelog
     children: list[WikiTreeNode] = field(default_factory=list)
@@ -71,7 +71,7 @@ class WikiTreeNode:
 
 # ── Constants ──
 
-_PROJECT_NAME = "体育平台"  # default; could be parameterized per project_id
+_PROJECT_NAME = "默认项目"  # default; could be parameterized per project_id
 
 _PAGE_TYPE_MAP = {
     "module": "module",

@@ -1,5 +1,5 @@
 ---
-title: "CamelTv 测试自动化平台 — AI 编码助手入口"
+title: "测试自动化平台 — AI 编码助手入口"
 owner: "qa-team"
 last_reviewed: "2026-06-26"
 status: "active"
@@ -8,13 +8,13 @@ tags: ["project-overview", "ai-entry", "architecture"]
 related: ["test-platform-v2/CLAUDE.md", "docs/adr/README.md", "COMMANDS.md"]
 ---
 
-# CamelTv 测试自动化平台
+# 测试自动化平台
 
 > AI 编码助手入口文件。本文件为仓库级 system prompt，为 AI 提供项目全景、架构原则和导航索引。
 
 ## 项目定位
 
-为 **CamelTv 体育平台**（用户端 + 运营后台）提供全链路测试能力的一体化测试平台。覆盖：
+提供全链路测试能力的一体化测试平台。覆盖：
 - **管理闭环**：需求 → AI 生成用例 → 用例库 → 测试计划 → 执行 → 报告/缺陷
 - **专项测试**：API 测试、UI 自动化、音视频质量检测
 - **CI/CD 集成**：Jenkins Pipeline + GitHub Actions 双通道
@@ -27,7 +27,7 @@ related: ["test-platform-v2/CLAUDE.md", "docs/adr/README.md", "COMMANDS.md"]
 | ~~test-platform/~~ | 测试平台 v1 旧版 | FastAPI + React 18 | ✅ 已退役（Batch 100） | 整体移除；API 回归资产迁移至 tests/api-testing/ |
 | [lanhu-mcp/](lanhu-mcp/CLAUDE.md) | 蓝湖 MCP 服务 | FastMCP + Playwright | 稳定 | 桥接蓝湖原型与 AI 编码助手 |
 | [knowledge-mcp/](knowledge-mcp/README.md) | 知识中心 MCP 服务 | FastMCP + httpx | 新增（Batch 202） | 桥接测试平台知识中心与 DSH 测试 Agent（查询/执行/回写） |
-| [tests/](tests/CLAUDE.md) | 测试资产 | Markdown + Playwright | 持续积累 | 功能用例 + API 测试 + 自动化 |
+| [tests/](tests/CLAUDE.md) | 测试资产 | Markdown + Playwright | 持续积累 | 平台验收用例 + 测试标准 |
 | [deploy/](deploy/CLAUDE.md) | CI/CD 部署 | Jenkins + Docker + GitHub Actions | 稳定 | 11 阶段 Pipeline |
 
 ## 架构原则
@@ -40,7 +40,7 @@ related: ["test-platform-v2/CLAUDE.md", "docs/adr/README.md", "COMMANDS.md"]
 
 ## 关键约定
 
-- **版本号**：引用蓝湖「更新日志」页产品手写版本号（用户端 14.1.0 / 运营后台 8.2.0），非系统版本号
+- **版本号**：引用被测系统（蓝湖原型「更新日志」页）产品手写版本号，非系统版本号
 - **用例规范**：所有功能用例和接口用例必须遵循 [tests/test-case-standards/](tests/test-case-standards/) 下的标准
 - **命名规范**：测试用例 `TC-{模块}-{编号}.md`，需求文档 `{系统}-{版本}-需求规格说明书.md`
 - **Git 规范**：唯一主干 `main`；功能分支 `feature/xxx`、修复分支 `fix/xxx`，必须使用独立 worktree 和 PR，禁止直接 push 主干
@@ -68,9 +68,9 @@ related: ["test-platform-v2/CLAUDE.md", "docs/adr/README.md", "COMMANDS.md"]
 
 | 文档 | 路径 | 说明 |
 |------|------|------|
-| 建设方案 | [CamelTv-测试自动化平台-建设方案.md](CamelTv-测试自动化平台-建设方案.md) | 顶层架构方案 |
+| 建设方案 | [测试平台-建设方案.md](测试平台-建设方案.md) | 顶层架构方案 |
 | 重构方案 | [测试平台-前后端分离重构方案.md](测试平台-前后端分离重构方案.md) | v1→v2 重构设计 |
-| v2 PRD | [test-platform-v2/docs/CamelTv测试平台-完整PRD.md](test-platform-v2/docs/CamelTv测试平台-完整PRD.md) | v2 完整产品需求 |
+| v2 PRD | [test-platform-v2/docs/测试平台-完整PRD.md](test-platform-v2/docs/测试平台-完整PRD.md) | v2 完整产品需求 |
 | v2 接入指南 | [test-platform-v2/docs/onboarding.md](test-platform-v2/docs/onboarding.md) | 新项目接入流程 |
 | v2 改进 Backlog | [test-platform-v2/docs/改进任务backlog.md](test-platform-v2/docs/改进任务backlog.md) | 待领任务清单 |
 | ADR | [docs/adr/](docs/adr/) | 架构决策记录 |

@@ -10,7 +10,7 @@ from app.services.interaction_coverage_service import (
 def _cases():
     return [
         {"title": "首页-入口可达：Match Replays 区块跳转回放列表", "module": "首页",
-         "steps": "1.打开生产首页 https://www.camel1.tv/\n2.定位 Match Replays 区块\n3.点击首条回放链接", "expected_result": "跳转 /match-replay"},
+         "steps": "1.打开生产首页 https://www.target.example.com/\n2.定位 Match Replays 区块\n3.点击首条回放链接", "expected_result": "跳转 /match-replay"},
         {"title": "赛事详情-从首页赛事卡跳转并渲染标题/比分", "module": "赛事详情",
          "steps": "1.打开首页\n2.点击赛事卡片", "expected_result": "进入赛事详情页"},
     ]

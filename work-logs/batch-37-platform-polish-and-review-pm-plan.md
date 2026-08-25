@@ -79,7 +79,7 @@
 
 **涉及文件**:
 - `test-platform-v2/` — 全平台
-- `test-platform-v2/docs/CamelTv测试平台-完整PRD.md` — 原始 PRD 对照
+- `test-platform-v2/docs/测试平台-完整PRD.md` — 原始 PRD 对照
 - 蓝湖用户端需求文档 — 对照验证
 - 蓝湖运营后台需求文档 — 对照验证
 

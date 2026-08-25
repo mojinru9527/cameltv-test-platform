@@ -5,7 +5,7 @@ created: "2026-07-27"
 status: "executed"
 tags: ["batch-47", "test-platform-v2", "requirement-service", "acceptance"]
 related:
-  - "../../../test-platform-v2/docs/CamelTv测试平台-完整PRD.md"
+  - "../../../test-platform-v2/docs/测试平台-完整PRD.md"
   - "../../../test-platform-v2/docs/现状功能PRD.md"
   - "../../../work-logs/batch-34-测试平台V2初版验收报告-2026-07-23.md"
   - "../../../work-logs/batch-47-需求服务生产级验收报告-2026-07-27.md"

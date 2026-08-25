@@ -35,7 +35,7 @@ const WRITE_PATTERNS: RegExp[] = [
   /bet|cancel|pay|order|refund|recharge|withdraw|deposit|favorite\/add|like\b|comment|review|create|save|update|delete|add|remove|send|publish|bonus|gift|diamond\/withdraw|invite\/bind|feedback|report|exchange$/,
 ]
 
-const BUSINESS_HOSTS = new Set(['api.cameltv.live', 'www.camel1.tv', 'www.cameltv.live', 'livecdn.cameltv.live', 'img.cameltv.live', 'sensors.cameltv.live'])
+const BUSINESS_HOSTS = new Set(['api.cameltv.live', 'www.target.example.com', 'www.cameltv.live', 'livecdn.cameltv.live', 'img.cameltv.live', 'sensors.cameltv.live'])
 
 function assertAuthRequestAllowed(rawUrl: string, method: string): string | null {
   const url = new URL(rawUrl)
@@ -90,18 +90,18 @@ async function loginAndInject(page: Page): Promise<void> {
     {
       name: 'auth',
       value: JSON.stringify({ token: data.token, userId: data.userId, userSig: data.userSig }),
-      domain: '.camel1.tv',
+      domain: '.target.example.com',
       path: '/',
     },
   ])
 }
 
 function siteUrl(path: string): string {
-  const base = process.env.BASE_URL || 'https://www.camel1.tv'
+  const base = process.env.BASE_URL || 'https://www.target.example.com'
   return new URL(path, base).toString()
 }
 
-test.describe('体育平台 生产 P0 登录态业务模块 → UI 自动化（只读，Batch 189 二期）', () => {
+test.describe('生产 P0 登录态业务模块 → UI 自动化（只读，Batch 189 二期）', () => {
   test.describe.configure({ retries: 1 })
 
   test.beforeEach(async ({ page }) => {

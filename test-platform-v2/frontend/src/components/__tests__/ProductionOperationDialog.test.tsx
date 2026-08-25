@@ -6,7 +6,7 @@ import ProductionOperationDialog from '../ProductionOperationDialog'
 const productionProps = {
   open: true,
   onOpenChange: vi.fn(),
-  project: '体育直播平台',
+  project: '业务直播平台',
   environment: '生产环境',
   baseUrl: 'https://api.example.com',
   operation: '发送 POST /matches 请求',
@@ -26,7 +26,7 @@ describe('ProductionOperationDialog', () => {
     render(<ProductionOperationDialog {...productionProps} />)
 
     expect(screen.getByRole('alertdialog', { name: '确认生产环境操作' })).toBeTruthy()
-    expect(screen.getByText('体育直播平台')).toBeTruthy()
+    expect(screen.getByText('业务直播平台')).toBeTruthy()
     expect(screen.getByText('生产环境')).toBeTruthy()
     expect(screen.getByText('https://api.example.com')).toBeTruthy()
     expect(screen.getByText('发送 POST /matches 请求')).toBeTruthy()
@@ -72,7 +72,7 @@ describe('ProductionOperationDialog', () => {
         {...productionProps}
         environment="Test5 测试环境"
         baseUrl="https://test5.example.com"
-        operation="读取赛事列表"
+        operation="读取模块列表"
         classification="read"
         affectedCount={12}
         isProduction={false}

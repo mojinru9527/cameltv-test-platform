@@ -861,7 +861,7 @@ def import_module_associations(
     entities: list,
     relations: list,
 ) -> dict:
-    """体育模块关联入库（Batch 122 用例结构），幂等。返回入库计数。"""
+    """模块关联入库（用例结构），幂等。返回入库计数。"""
     pid = project_id
     created_e = created_r = skipped_e = skipped_r = 0
     key_to_id: dict[str, int] = {}

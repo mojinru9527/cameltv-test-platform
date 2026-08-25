@@ -28,7 +28,7 @@ related:
 | 输入 ID | 来源 | 字节 | SHA-256 | 业务用途 | 脱敏/读写说明 |
 |---|---|---:|---|---|---|
 | B56-R1-ENV | `docs/测试平台全功能验收文档-环境链接与账号汇总.md` | 28867 | `5150002a36625131ddd10951791553dcf8ad24099a759a040f68b564c5c3b10a` | 环境、公开账号名、凭证槽位、资源索引和外部操作边界 | 不含实际凭据；只读取环境变量名 |
-| B56-R1-PRD-FULL | `test-platform-v2/docs/CamelTv测试平台-完整PRD.md` | 21229 | `cefc99292ab1b92563368e82ae0449057affa443ac895323456eb5b3169b2ddf` | 测试平台模块、业务闭环与验收期望 | 仓库固定快照 |
+| B56-R1-PRD-FULL | `test-platform-v2/docs/测试平台-完整PRD.md` | 21229 | `cefc99292ab1b92563368e82ae0449057affa443ac895323456eb5b3169b2ddf` | 测试平台模块、业务闭环与验收期望 | 仓库固定快照 |
 | B56-R1-PRD-ASIS | `test-platform-v2/docs/现状功能PRD.md` | 23528 | `ce46bf066183459601dd4283802f602aba1faca69e65096f218a4477879147e2` | 现状能力与宣称事实核对 | 仓库固定快照 |
 | B56-R1-PRD-API | `test-platform-v2/docs/接口测试模块优化PRD.md` | 15307 | `71f4f2fb8d238620202923603e258f2be6495a683c492ed2ca7bdafda8cfe0ce` | API 资产、调试、任务、快照、取消与生产保护 | 仓库固定快照 |
 | B56-R1-USER-REQ | `tests/requirements/documents/用户端原型-需求分析.md` | 19430 | `0ac601bc19a01c456bf42638473548ceeb277f8b33e74f7c28d68028b465ca02` | 用户端真实业务术语、需求导入、用例与追溯 | 仓库脱敏需求分析 |

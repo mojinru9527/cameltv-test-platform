@@ -187,7 +187,7 @@ export async function fetchEnvironments(signal?: AbortSignal) {
 
 1. 🔴 **`docs/local-setup.md` 引用路径歧义** —— 手册:11「Windows/macOS 完整步骤见 `docs/local-setup.md`」、手册:51「详见 `docs/local-setup.md`」；`test-platform-v2/docs/` 下无该文件（有 `perf-setup.md`、`onboarding.md`，无 local-setup），但**仓库根 `docs/local-setup.md` 存在**（Batch 152）——手册相对路径解析失效，读者按文档找不到文件。
 2. 🔴 **音视频专项 / 性能监控「手册可用 vs 路由下线」** —— 手册:9,35,39,150-161,269 声称存在；`router/index.tsx:214-215`（special）、`234-235`（perftest）为注释路由；`guestModuleCatalog.ts:83-86,151-155` 同步注释。
-3. 🟡 **完整PRD 技术栈过时** —— `CamelTv测试平台-完整PRD.md:71,100` 写「React 18.3 · React Router 6」；实际 `package.json:56,61` 为 React 19.2.8 / Router 8.3.0；`现状功能PRD.md:41`、`test-platform-v2/README.md:51-52`、`frontend/README.md:13-17` 均为新版本号。**README 与 package.json 一致 ✅**（仅完整PRD 过时，且完整PRD:94 自己还标注「README 称 Ant Design 5 已过时」，说明该文档长期未同步）。
+3. 🟡 **完整PRD 技术栈过时** —— `测试平台-完整PRD.md:71,100` 写「React 18.3 · React Router 6」；实际 `package.json:56,61` 为 React 19.2.8 / Router 8.3.0；`现状功能PRD.md:41`、`test-platform-v2/README.md:51-52`、`frontend/README.md:13-17` 均为新版本号。**README 与 package.json 一致 ✅**（仅完整PRD 过时，且完整PRD:94 自己还标注「README 称 Ant Design 5 已过时」，说明该文档长期未同步）。
 4. 🟡 **完整PRD 模块成熟度整体滞后** —— 模块 6/7/10/11/12/13 现状描述与代码不符（见 B.1#8-#13）；现状功能PRD 已同步，建议验收时以「现状功能PRD + 实际路由」为准。
 5. 🟡 **手册「文件导入」无对应 UI** —— 手册:107 vs `ImportDialog.tsx:96-112`（仅 URL/文本两 Tab）。
 6. 🟡 **入口命名** —— 手册:64「项目管理」vs 实际入口「我的项目」（`router/index.tsx:221` 重定向）。
@@ -199,7 +199,7 @@ export async function fetchEnvironments(signal?: AbortSignal) {
 |---------|------|---------------------|
 | `frontend/README.md:13-17` | React 19 · React Router 8 · shadcn/ui · Vite · TS | ✅ 一致 |
 | `test-platform-v2/README.md:51-52` | React 19.2.8 + Router 8.3.0 + shadcn/ui(Radix+Tailwind) | ✅ 一致 |
-| `CamelTv测试平台-完整PRD.md:100` | React 18.3 · Router 6 | ❌ 过时 |
+| `测试平台-完整PRD.md:100` | React 18.3 · Router 6 | ❌ 过时 |
 | `现状功能PRD.md:41` | React 19.2.8 + Router 8.3.0 | ✅ 一致 |
 | `package.json` | react ^19.2.8（:56）、react-router ^8.3.0（:61）、axios ^1.7.7（:48） | 基准 |
 

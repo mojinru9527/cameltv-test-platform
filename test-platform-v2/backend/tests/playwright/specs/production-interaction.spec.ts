@@ -29,7 +29,7 @@ async function clickFirst(page: Page, locator: string): Promise<string | null> {
   return href
 }
 
-const SITE_HOSTS = new Set(['www.camel1.tv', 'camel1.tv', 'www.cameltv.live', 'cameltv.live', 'www.camel1.to', 'camel1.to'])
+const SITE_HOSTS = new Set(['www.target.example.com', 'target.example.com', 'www.cameltv.live', 'cameltv.live', 'www.camel1.to', 'camel1.to'])
 const FALLBACK_MATCH = '/football/as-monaco-vs-getafe/n54qllhn0vwjqvy'
 
 async function clickMatchEntry(page: Page, runtime: P0Runtime): Promise<string | null> {
@@ -51,7 +51,7 @@ async function clickMatchEntry(page: Page, runtime: P0Runtime): Promise<string |
   }
   return href
 }
-test.describe('体育平台 生产 P0 交互路径 → UI 自动化（只读，Batch 114）', () => {
+test.describe('生产 P0 交互路径 → UI 自动化（只读，Batch 114）', () => {
   // 数据中心 Runner 页面崩溃/OOM flaky（B114-2）：失败自动重试 1 次
   test.describe.configure({ retries: 1 })
   let runtime: P0Runtime

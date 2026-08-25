@@ -387,7 +387,7 @@ class ModuleAssociationResult(BaseModel):
     total_relations: int = 0
 
 
-@router.post("/graph/module-associations", response_model=R[ModuleAssociationResult], summary="体育模块关联入库（Batch 122 用例结构）")
+@router.post("/graph/module-associations", response_model=R[ModuleAssociationResult], summary="模块关联入库（用例结构）")
 def import_module_associations(
     body: ModuleAssociationRequest,
     req: Request,

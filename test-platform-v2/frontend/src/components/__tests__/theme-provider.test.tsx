@@ -59,7 +59,7 @@ describe('ThemeProvider', () => {
   })
 
   it('applies and persists an approved theme ID', async () => {
-    localStorage.setItem('cameltv-theme-color', 'cyberpunk')
+    localStorage.setItem('test-platform-theme-color', 'cyberpunk')
     render(<ThemeProvider><ThemeHarness /></ThemeProvider>)
 
     fireEvent.click(screen.getByRole('button', { name: 'cyberpunk' }))
@@ -68,7 +68,7 @@ describe('ThemeProvider', () => {
       expect(document.documentElement.dataset.themeId).toBe('liquid-glass')
     })
     expect(document.documentElement.dataset.theme).toBe('liquid-glass')
-    expect(localStorage.getItem('cameltv-theme-color')).toBe('liquid-glass')
+    expect(localStorage.getItem('test-platform-theme-color')).toBe('liquid-glass')
   })
 
   it('applies the complete dark-only root contract for Obsidian Flow', async () => {
@@ -90,7 +90,7 @@ describe('ThemeProvider', () => {
   })
 
   it('preserves every canonical theme through the compatibility adapter', async () => {
-    localStorage.setItem('cameltv-theme-color', 'cyberpunk')
+    localStorage.setItem('test-platform-theme-color', 'cyberpunk')
     render(
       <ThemeProvider>
         <UiThemeProvider>
@@ -106,13 +106,13 @@ describe('ThemeProvider', () => {
       expect(screen.getByRole('button', { name: 'apple' })).toBeTruthy()
     })
     expect(document.documentElement.dataset.themeId).toBe('apple')
-    expect(localStorage.getItem('cameltv-theme-color')).toBe('apple')
+    expect(localStorage.getItem('test-platform-theme-color')).toBe('apple')
     expect(localStorage.getItem('cameltv-ui-theme')).toBeNull()
   })
 
   it('resolves an unsupported saved mode before applying Obsidian Flow', async () => {
-    localStorage.setItem('cameltv-theme-color', 'obsidian-flow')
-    localStorage.setItem('cameltv-theme-mode', 'light')
+    localStorage.setItem('test-platform-theme-color', 'obsidian-flow')
+    localStorage.setItem('test-platform-theme-mode', 'light')
     render(<ThemeProvider><ThemeHarness /></ThemeProvider>)
 
     expect(screen.getByTestId('mode').textContent).toBe('dark')
@@ -120,12 +120,12 @@ describe('ThemeProvider', () => {
       expect(document.documentElement.classList.contains('dark')).toBe(true)
     })
     expect(document.documentElement.classList.contains('light')).toBe(false)
-    expect(localStorage.getItem('cameltv-theme-mode')).toBe('dark')
+    expect(localStorage.getItem('test-platform-theme-mode')).toBe('dark')
   })
 
   it('clears an older transition timer before a newer theme transition', () => {
     vi.useFakeTimers()
-    localStorage.setItem('cameltv-theme-color', 'cyberpunk')
+    localStorage.setItem('test-platform-theme-color', 'cyberpunk')
     render(<ThemeProvider><ThemeHarness /></ThemeProvider>)
 
     act(() => vi.advanceTimersByTime(100))
@@ -139,13 +139,13 @@ describe('ThemeProvider', () => {
   })
 
   it('restores a legacy saved theme through the migration map', async () => {
-    localStorage.setItem('cameltv-theme-color', 'blue')
+    localStorage.setItem('test-platform-theme-color', 'blue')
     render(<ThemeProvider><ThemeHarness /></ThemeProvider>)
 
     expect(screen.getByRole('button', { name: 'apple' })).toBeTruthy()
     await waitFor(() => {
       expect(document.documentElement.dataset.themeId).toBe('apple')
     })
-    expect(localStorage.getItem('cameltv-theme-color')).toBe('apple')
+    expect(localStorage.getItem('test-platform-theme-color')).toBe('apple')
   })
 })

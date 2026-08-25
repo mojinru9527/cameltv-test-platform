@@ -11,7 +11,7 @@ describe('domainNaming（Batch 182 / FIX-173-P3-04）', () => {
   it('平台前缀直接取前缀并保留原名', () => {
     expect(groupDomainLabel('用户端/首页')).toEqual({ group: '用户端', label: '用户端/首页' })
     expect(groupDomainLabel('运营后台/广告管理')).toEqual({ group: '运营后台', label: '运营后台/广告管理' })
-    expect(groupDomainLabel('接口测试/赛事接口')).toEqual({ group: '接口测试', label: '接口测试/赛事接口' })
+    expect(groupDomainLabel('接口测试/业务接口')).toEqual({ group: '接口测试', label: '接口测试/业务接口' })
   })
 
   it('平台名本身的裸值归对应组且不改标签', () => {
@@ -19,14 +19,14 @@ describe('domainNaming（Batch 182 / FIX-173-P3-04）', () => {
     expect(groupDomainLabel('用户端')).toEqual({ group: '用户端', label: '用户端' })
   })
 
-  it('连字符平台前缀与体育-运营后台-* 归运营后台组', () => {
+  it('连字符平台前缀与业务-运营后台-* 归运营后台组', () => {
     expect(groupDomainLabel('运营后台-热门比赛配置')).toEqual({
       group: '运营后台',
       label: '运营后台-热门比赛配置',
     })
-    expect(groupDomainLabel('体育-运营后台-功能')).toEqual({
+    expect(groupDomainLabel('业务-运营后台-功能')).toEqual({
       group: '运营后台',
-      label: '体育-运营后台-功能',
+      label: '业务-运营后台-功能',
     })
   })
 

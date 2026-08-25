@@ -52,7 +52,7 @@ const surfaceTitle = (surface: Surface) => navItems.find((item) => item.id === s
 export function InteractionPrototype() {
   const [concept, setConcept] = useState<Concept>('bright')
   const [surface, setSurface] = useState<Surface>('overview')
-  const [project, setProject] = useState('CamelTv 核心平台')
+  const [project, setProject] = useState('核心平台')
   const [environment, setEnvironment] = useState('测试环境')
   const [pendingEnvironment, setPendingEnvironment] = useState<string | null>(null)
   const [selectedRunId, setSelectedRunId] = useState('RUN-5128')
@@ -357,7 +357,7 @@ function Sidebar({
       <div className="brand">
         <span className="brand-mark"><TestTube2 aria-hidden="true" /></span>
         <span className="brand-copy">
-          <b>CamelTv</b>
+          <b>测试平台</b>
           <small>测试平台</small>
         </span>
       </div>
@@ -404,7 +404,7 @@ function Topbar({
           <span className="control-label">当前项目</span>
           <span className="select-wrap">
             <select value={project} onChange={(event) => onProjectChange(event.target.value)} aria-label="当前项目">
-              <option>CamelTv 核心平台</option>
+              <option>核心平台</option>
               <option>海外业务平台</option>
               <option>增长实验项目</option>
             </select>

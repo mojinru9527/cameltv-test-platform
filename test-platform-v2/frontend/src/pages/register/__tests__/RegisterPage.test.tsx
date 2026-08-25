@@ -54,7 +54,7 @@ describe('注册页', () => {
         <RegisterPage />
       </MemoryRouter>,
     )
-    expect(screen.getByRole('heading', { name: '注册 CamelTv 测试平台' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: '注册测试平台' })).toBeTruthy()
     expect(screen.getByLabelText('用户名')).toBeTruthy()
     expect(screen.getByLabelText('密码')).toBeTruthy()
     expect(screen.getByLabelText('确认密码')).toBeTruthy()

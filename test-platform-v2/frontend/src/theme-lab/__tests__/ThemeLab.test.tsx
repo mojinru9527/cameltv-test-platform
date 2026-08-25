@@ -10,7 +10,7 @@ function renderThemeLab() {
 describe('ThemeLab', () => {
   beforeEach(() => {
     localStorage.clear()
-    localStorage.setItem('cameltv-theme-color', 'obsidian-flow')
+    localStorage.setItem('test-platform-theme-color', 'obsidian-flow')
     Object.defineProperty(window, 'matchMedia', {
       configurable: true,
       value: vi.fn().mockImplementation((query: string) => ({

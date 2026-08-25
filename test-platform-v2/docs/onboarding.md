@@ -5,7 +5,7 @@ last_reviewed: "2026-06-26"
 status: "active"
 expires: "2026-12-26"
 tags: ["onboarding", "接入指南", "新手入门"]
-related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md"]
+related: ["test-platform-v2/docs/测试平台-完整PRD.md"]
 ---
 
 # 接入向导

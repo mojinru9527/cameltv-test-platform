@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # ── App identity ──
-    app_name: str = "CamelTv Test Platform API"
+    app_name: str = "Test Platform API"
     app_version: str = "2.1.0"
     environment: str = "development"          # "development" | "production"
 
@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 1440
 
     # ── Auth cookie (P1-1: JWT via httpOnly cookie, XSS-hardened) ──
-    cookie_name: str = "cameltv_token"
+    cookie_name: str = "test_platform_token"
     cookie_secure: bool = False               # production: true (requires HTTPS)
     cookie_samesite: str = "lax"              # "strict" | "lax" | "none"
     cookie_domain: str = ""                    # empty = host-only cookie
@@ -173,7 +173,7 @@ class Settings(BaseSettings):
     requirement_url_timeout_seconds: float = 30.0   # 需求 URL 抓取超时
     ui_run_timeout_seconds: float = 90.0            # batch-169: 单条 UI 用例执行超时（env UI_RUN_TIMEOUT_SECONDS）
     ui_runner_timeout_seconds: float = 900.0        # Batch 187: UI Runner 整任务超时（env UI_RUNNER_TIMEOUT_SECONDS；默认 15min，覆盖 10 条用例多 spec 回归）
-    ui_test_runner_dir: str = ""                    # C-UI-PROD-001: Playwright 运行根目录（空=默认 backend/tests/playwright；可配 tests/automation/ui 跑体育 E2E）
+    ui_test_runner_dir: str = ""                    # C-UI-PROD-001: Playwright 运行根目录（空=默认 backend/tests/playwright；可配业务 E2E 目录）
     # ── 性能采集（Batch 185 / C99-1）──
     perf_cpu_report_mode: str = "raw"            # raw=聚合可>100%（多核如实）| per_core=除以核数归一（0-100%）
     pingcode_api_base_url: str = ""                 # PingCode 开放 API 根地址

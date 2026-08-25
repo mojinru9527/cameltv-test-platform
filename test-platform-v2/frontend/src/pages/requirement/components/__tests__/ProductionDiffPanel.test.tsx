@@ -32,7 +32,7 @@ describe('ProductionDiffPanel', () => {
 
   it('generates diff and renders summary + items', async () => {
     mockListBundles.mockResolvedValue({
-      items: [{ id: 1, name: '体育平台-生产', client_version: '14.2.0', status: 'active' }],
+      items: [{ id: 1, name: '业务平台-生产', client_version: '14.2.0', status: 'active' }],
       total: 1,
     })
     mockProductionDiff.mockResolvedValue({
@@ -76,7 +76,7 @@ describe('ProductionDiffPanel capture loading (C119-1)', () => {
     mockGetCaptureTask.mockResolvedValue({
       task_id: 'cap-1',
       status: 'done',
-      pages: ['https://www.camel1.tv/match-replay', '/worldcup-2026'],
+      pages: ['https://target.example.com/match-replay', '/worldcup-2026'],
       samples: [],
     })
     mockProductionDiff.mockResolvedValue({

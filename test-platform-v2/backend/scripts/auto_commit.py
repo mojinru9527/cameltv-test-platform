@@ -32,7 +32,7 @@ run("git status --short")
 msg = (
     "feat(apitest/uitest/wiki): production testing + P1 fix + wiki activation\n\n"
     "P1 Fix: apitest.py create_task missing BackgroundTasks param -> 500\n"
-    "UI Tests: 5/5 Playwright tests PASSED on camel1.tv\n"
+    "UI Tests: 5/5 Playwright tests PASSED on target.example.com\n"
     "API: 200 endpoints discovered across 7 microservices\n"
     "KB: 4 sources, 27 chunks ingested (production + Lanhu)\n"
     "Wiki: 4 pages generated from Lanhu doc (52K chars, app+pc+web)\n"

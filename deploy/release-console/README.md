@@ -1,4 +1,4 @@
-# CamelTv Release Console（独立发布控制台）
+# Release Console（独立发布控制台）
 
 > 与测试平台**完全解耦**的运维发布入口。测试平台（swiftbugs.cn）即使不可用，
 > 依然可以通过本控制台发布/回滚/备份/查看发布历史。

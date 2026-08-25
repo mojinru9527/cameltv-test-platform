@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # ============================================================
-# Test5 验收执行器（Ubuntu WSL2）安装脚本
-# Batch 66 / ADR-0017 / test-platform-v2/docs/operations/test5-runner-isolation.md
+# 远程验收执行器（Ubuntu WSL2）安装脚本
+# Batch 66 / ADR-0017
 #
-# 职责：在 Ubuntu WSL2 内安装 OpenVPN 并准备 Test5 验收执行环境。
+# 职责：在 Ubuntu WSL2 内安装 OpenVPN 并准备远程验收执行环境。
 # 原则：真实 CA / 凭据不入库；本脚本只接受本地文件与环境变量。
 #
 # 用法（在 WSL2 Ubuntu 内执行）:
 #   bash scripts/executor/wsl2-executor-setup.sh \
-#       --ovpn /mnt/c/Users/26029/Desktop/test5.ovpn \
+#       --ovpn /path/to/remote.ovpn \
 #       --auth-user <VPN用户名>
 # 凭据: 脚本会交互式读取 VPN 密码并写入 /opt/test5-runner/test5.auth (chmod 600)
 # ============================================================
@@ -20,7 +20,7 @@ OVPN_DEST="/etc/openvpn/client/test5.conf"
 AUTH_FILE="/opt/test5-runner/test5.auth"
 
 usage() {
-    echo "Usage: $0 --ovpn <path-to-test5.ovpn> --auth-user <vpn-username>"
+    echo "Usage: $0 --ovpn <path-to.ovpn> --auth-user <vpn-username>"
     exit 1
 }
 
@@ -79,8 +79,8 @@ cat <<'EOF'
 ===== 安装完成 =====
 验证命令:
   ip route                    # 应看到 10.0.0.0/8 经 tun 的路由
-  ping -c 2 <Test5内网IP>     # V2: Test5 内网连通
-  curl -I https://camelive-g3-test5.elelive.cn  # V3: Test5 域名连通
+  ping -c 2 <内网IP>     # V2: 内网连通
+  curl -I https://<target-host>  # V3: 目标域名连通
 
 连接日志: sudo tail -f /var/log/openvpn/*.log  （或 journalctl -u openvpn）
 重连:     sudo pkill -f "openvpn --config $OVPN_DEST"; sudo openvpn --config "$OVPN_DEST" --daemon

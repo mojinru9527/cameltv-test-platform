@@ -1,5 +1,5 @@
 ---
-title: "CamelTv 文档标准"
+title: "文档标准"
 owner: "qa-team"
 last_reviewed: "2026-06-26"
 status: "active"
@@ -8,7 +8,7 @@ tags: ["standards", "documentation", "frontmatter", "freshness"]
 related: ["adr/README.md", "adr/template.md"]
 ---
 
-# CamelTv 文档标准
+# 文档标准
 
 > 项目内所有 Markdown 文档的元数据和编写规范。
 
@@ -63,7 +63,7 @@ draft → active → deprecated → archived
 | README | 固定名称 | `README.md` |
 | ADR | `NNNN-{slug}.md` | `0001-use-python-fastapi-monostack.md` |
 | 设计方案 | `{主题}-{类型}.md` | `测试平台-前后端分离重构方案.md` |
-| PRD | `{产品}-{类型}PRD.md` | `CamelTv测试平台-完整PRD.md` |
+| PRD | `{产品}-{类型}PRD.md` | `测试平台-完整PRD.md` |
 | 接入指南 | `{动词}.md` | `onboarding.md` |
 | 命令速查 | `COMMANDS.md` | 固定名称 |
 

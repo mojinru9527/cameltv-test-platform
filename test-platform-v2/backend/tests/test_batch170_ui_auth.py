@@ -10,12 +10,12 @@ from app.services import test_plan_service
 
 
 def test_resolve_ui_storage_state_from_encrypted_variable(db_session):
-    env = Environment(project_id=1, name="ui-prod", env_type="prod", base_url="https://www.camel1.tv")
+    env = Environment(project_id=1, name="ui-prod", env_type="prod", base_url="https://www.target.example.com")
     db_session.add(env)
     db_session.flush()
     db_session.add(EnvironmentVariable(
         environment_id=env.id, key="UI_STORAGE_STATE_JSON",
-        value=json.dumps({"cookies": [{"name": "auth", "value": "v", "domain": ".camel1.tv"}]}),
+        value=json.dumps({"cookies": [{"name": "auth", "value": "v", "domain": ".target.example.com"}]}),
         encrypted=False,
     ))
     db_session.commit()
@@ -47,9 +47,9 @@ def test_execute_ui_injects_storage_state_env(db_session, monkeypatch, tmp_path)
         raise subprocess.TimeoutExpired(cmd="npx", timeout=1)
 
     monkeypatch.setattr(subprocess, "run", fake_run)
-    state = {"cookies": [{"name": "auth", "value": "C_xxx", "domain": ".camel1.tv"}]}
+    state = {"cookies": [{"name": "auth", "value": "C_xxx", "domain": ".target.example.com"}]}
     result = test_plan_service._execute_ui_case_sync(
-        None, case, 1, base_url="https://www.camel1.tv", storage_state=state,
+        None, case, 1, base_url="https://www.target.example.com", storage_state=state,
     )
     assert result["ok"] is False
     env = captured.get("env") or {}

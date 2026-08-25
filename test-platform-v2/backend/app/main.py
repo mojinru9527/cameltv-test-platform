@@ -167,7 +167,7 @@ async def lifespan(_: FastAPI):
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description="CamelTv test platform REST API.",
+    description="Test platform REST API.",
     lifespan=lifespan,
 )
 

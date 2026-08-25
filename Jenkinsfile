@@ -1,4 +1,4 @@
-// CamelTv 体育平台 — CI/CD Pipeline
+// 测试平台 — CI/CD Pipeline
 // 触发：代码 push / PR / 定时（每日构建）/ 手动
 // 架构：test-platform-v2 (FastAPI + React) + test-platform (v1 旧版) + lanhu-mcp
 

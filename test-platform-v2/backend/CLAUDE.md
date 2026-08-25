@@ -115,7 +115,7 @@ Router (api/v1/)  →  Service (services/)  →  Model (models/)
 
 关键环境变量：
 ```bash
-DATABASE_URL=sqlite:///./cameltv.db    # 本地开发
+DATABASE_URL=sqlite:///./test-platform.db    # 本地开发
 AUTO_CREATE_TABLES=true                # 本地开发自动建表
 SECRET_KEY=<random>                    # JWT 签名密钥
 ELK_BASE_URL=                          # 本地开发留空，生产填 Kibana URL

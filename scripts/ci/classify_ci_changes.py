@@ -109,7 +109,7 @@ def _write_github_output(path: Path, result: Classification) -> None:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Classify CamelTv CI impact by changed path.")
+    parser = argparse.ArgumentParser(description="Classify CI impact by changed path.")
     parser.add_argument("paths", nargs="*", help="Changed repository paths.")
     parser.add_argument("--files-from", type=Path, help="Read changed paths from a file.")
     parser.add_argument("--null", action="store_true", help="Use NUL-delimited --files-from input.")

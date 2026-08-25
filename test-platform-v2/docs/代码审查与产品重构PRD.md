@@ -5,7 +5,7 @@ last_reviewed: "2026-06-26"
 status: "active"
 expires: "2026-12-26"
 tags: ["代码审查", "架构", "重构", "PRD", "技术债"]
-related: ["test-platform-v2/docs/现状功能PRD.md", "test-platform-v2/docs/改进任务backlog.md", "test-platform-v2/docs/CamelTv测试平台-完整PRD.md"]
+related: ["test-platform-v2/docs/现状功能PRD.md", "test-platform-v2/docs/改进任务backlog.md", "test-platform-v2/docs/测试平台-完整PRD.md"]
 ---
 
 # CamelTv 测试平台 v2 —— 代码审查 + 架构提取 + 产品重构 PRD

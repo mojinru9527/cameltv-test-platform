@@ -27,8 +27,8 @@ function runThemeBootstrap({
   delete document.documentElement.dataset.themeId
   delete document.documentElement.dataset.uiTheme
 
-  if (mode) localStorage.setItem('cameltv-theme-mode', mode)
-  if (colorTheme) localStorage.setItem('cameltv-theme-color', colorTheme)
+  if (mode) localStorage.setItem('test-platform-theme-mode', mode)
+  if (colorTheme) localStorage.setItem('test-platform-theme-color', colorTheme)
 
   vi.stubGlobal('matchMedia', vi.fn((query: string) => ({
     matches: query === '(prefers-color-scheme: dark)' ? prefersDark : false,

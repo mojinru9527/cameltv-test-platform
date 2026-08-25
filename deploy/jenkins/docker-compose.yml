@@ -1,4 +1,4 @@
-# CamelTv 体育平台 — Jenkins CI/CD 一键部署
+# 测试平台 — Jenkins CI/CD 一键部署
 # 用法: docker compose up -d → 浏览器打开 http://localhost:8080
 #
 # 包含:

@@ -113,7 +113,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="需求/设计稿入库（蓝湖导出 → design-assets）")
     ap.add_argument("--export-dir", type=Path, default=DEFAULT_EXPORT)
     ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://swiftbugs.cn/api/v1"))
-    ap.add_argument("--username", default=os.environ.get("TP_ADMIN_USER", "sportsadmin"))
+    ap.add_argument("--username", default=os.environ.get("TP_ADMIN_USER", "admin"))
     ap.add_argument("--password", default=os.environ.get("TP_ADMIN_PASSWORD", ""))
     ap.add_argument("--dry-run", action="store_true", help="只打印不请求")
     ap.add_argument("--limit", type=int, default=0, help="最多导入 N 页（0=全部）")

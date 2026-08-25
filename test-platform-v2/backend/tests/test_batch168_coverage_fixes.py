@@ -188,7 +188,7 @@ def test_execute_all_uses_separate_ui_environment(db_session, monkeypatch):
     db_session.add(pc)
     db_session.flush()
     api_env = Environment(project_id=1, name="api", env_type="prod", base_url="https://api.cameltv.live")
-    ui_env = Environment(project_id=1, name="ui", env_type="prod", base_url="https://www.camel1.tv")
+    ui_env = Environment(project_id=1, name="ui", env_type="prod", base_url="https://www.target.example.com")
     db_session.add_all([api_env, ui_env])
     db_session.commit()
     seen = {}
@@ -202,7 +202,7 @@ def test_execute_all_uses_separate_ui_environment(db_session, monkeypatch):
     result = test_plan_service.execute_all_cases(
         db_session, plan.id, project_id=1, environment_id=api_env.id, ui_environment_id=ui_env.id,
     )
-    assert seen["base_url"] == "https://www.camel1.tv"
+    assert seen["base_url"] == "https://www.target.example.com"
     assert result["failed"] == 1
     assert "assertion failed" in result["details"][0].get("error", "")
 

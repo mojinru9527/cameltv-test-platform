@@ -1,5 +1,5 @@
 /**
- * @ui — CamelTv 语义 UI 系统入口
+ * @ui — 语义 UI 系统入口
  *
  * 业务页面唯一导入来源。禁止从 @/components/ui 或 @radix-ui/* 直接导入。
  *

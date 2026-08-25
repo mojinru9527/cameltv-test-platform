@@ -44,7 +44,7 @@ class TapdSyncProvider(BaseSyncProvider):
             return False, str(e)
 
     async def push_defect(self, defect: dict) -> tuple[bool, str, str]:
-        """Create a new TAPD bug from a CamelTv defect."""
+        """Create a new TAPD bug from a platform defect."""
         try:
             workspace_id = self._workspace_id()
             if not workspace_id:

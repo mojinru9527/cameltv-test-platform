@@ -8,7 +8,7 @@ related:
   - "work-logs/batch-34-测试平台V2初版验收报告-2026-07-23.md"
   - "work-logs/batch-34-模块联动设计方案-2026-07-23.md"
   - "test-platform-v2/docs/改进任务backlog.md"
-  - "test-platform-v2/docs/CamelTv测试平台-完整PRD.md"
+  - "test-platform-v2/docs/测试平台-完整PRD.md"
   - "test-platform-v2/docs/现状功能PRD.md"
 ---
 

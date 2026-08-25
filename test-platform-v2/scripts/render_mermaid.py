@@ -1,7 +1,7 @@
 """Extract Mermaid blocks from a Markdown file and render each as PNG.
 
 Usage: python scripts/render_mermaid.py [markdown_file] [output_dir]
-Default: docs/CamelTv测试平台-完整PRD.md → docs/diagrams/
+Default: docs/测试平台-完整PRD.md → docs/diagrams/
 """
 from __future__ import annotations
 
@@ -92,6 +92,6 @@ def render_diagrams(prd_path: str, output_dir: str) -> list[str]:
 
 
 if __name__ == "__main__":
-    prd = sys.argv[1] if len(sys.argv) > 1 else "docs/CamelTv测试平台-完整PRD.md"
+    prd = sys.argv[1] if len(sys.argv) > 1 else "docs/测试平台-完整PRD.md"
     out_dir = sys.argv[2] if len(sys.argv) > 2 else "docs/diagrams"
     render_diagrams(prd, out_dir)

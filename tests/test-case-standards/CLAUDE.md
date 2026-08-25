@@ -10,7 +10,7 @@ related: ["../CLAUDE.md", "../../test-platform-v2/CLAUDE.md", "../../.claude/ski
 
 # tests/test-case-standards — 测试用例标准中心
 
-> CamelTv 所有测试用例的统一编写规范。11 篇标准覆盖功能测试、接口测试、UI 测试、生产验收和缺陷管理的全流程。
+> 所有测试用例的统一编写规范。11 篇标准覆盖功能测试、接口测试、UI 测试、生产验收和缺陷管理的全流程。
 
 ## 核心原则
 

@@ -6,7 +6,7 @@ import {
   type P0Runtime,
 } from '../support/production-p0-contract'
 
-const SITE_HOSTS = new Set(['www.camel1.tv', 'camel1.tv', 'www.cameltv.live', 'cameltv.live', 'www.camel1.to', 'camel1.to'])
+const SITE_HOSTS = new Set(['www.target.example.com', 'target.example.com', 'www.cameltv.live', 'cameltv.live', 'www.camel1.to', 'camel1.to'])
 const MATCH_URL = '/football/as-monaco-vs-getafe/n54qllhn0vwjqvy'
 const TEAM_FALLBACK = '/team/Chelsea/j1l4rjnhpdxm7vx'
 const PLAYER_FALLBACK = '/player/Martin%20Odegaard/4wyrn4hdjonq86p'
@@ -48,7 +48,7 @@ async function openFirstLink(page: Page, runtime: P0Runtime, hrefPart: string, f
   }
 }
 
-test.describe('体育平台 生产 P0 补充用例 → UI 自动化（只读，Batch 187）', () => {
+test.describe('生产 P0 补充用例 → UI 自动化（只读，Batch 187）', () => {
   test.describe.configure({ retries: 1 })
   let runtime: P0Runtime
 
@@ -177,7 +177,7 @@ test.describe('体育平台 生产 P0 补充用例 → UI 自动化（只读，B
     expect(rejected).toEqual([])
   })
 
-  test('SUPP-009 16.0.0 体育项目 TAB：Football/Basketball 切换（P0，TAB 未上线则跳过）', async ({ page }) => {
+  test('SUPP-009 项目 TAB：Football/Basketball 切换（P0，TAB 未上线则跳过）', async ({ page }) => {
     const rejected = await guardP0(page, runtime)
     await page.goto(runtime.baseUrl.toString(), { waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(2000)

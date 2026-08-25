@@ -164,13 +164,13 @@ _TYPE_PROMPTS = {
 输出 JSON 格式：
 {
   "source_summary": "来源摘要（2-4 句）",
-  "detected_modules": ["赛事模块"],
+  "detected_modules": ["首页模块"],
   "requirements": [
     {
       "stable_key": "lanhu:e6b5ce1e:2b4c4235:match_push",
-      "title": "比赛推送",
-      "module": "赛事模块",
-      "description": "当比赛进行到指定分钟推送...",
+      "title": "消息推送",
+      "module": "首页模块",
+      "description": "当活动进行到指定状态时推送...",
       "client_scope": ["app"],
       "business_rules": [{"id": "R1", "rule": "matchId 必填", "evidence": "页面出现 matchId"}],
       "fields": [{"name": "matchId", "location": "query", "type": "string", "required": true}],

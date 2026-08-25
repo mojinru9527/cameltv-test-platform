@@ -5,7 +5,7 @@ last_reviewed: "2026-07-27"
 status: "active"
 expires: "2026-12-26"
 tags: ["test-cases", "functional", "integration", "performance", "security", "template"]
-related: ["tests/requirements/README.md", "tests/test-case-standards/", "tests/test-case-standards/生产级模块验收规则.md"]
+related: ["tests/test-case-standards/", "tests/test-case-standards/生产级模块验收规则.md"]
 ---
 
 # 测试用例

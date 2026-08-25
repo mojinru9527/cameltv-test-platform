@@ -1,4 +1,4 @@
-"""Batch 123 — 体育模块关联图谱入库端点测试（幂等 + 可查询）。"""
+"""Batch 123 — 模块关联图谱入库端点测试（幂等 + 可查询）。"""
 from __future__ import annotations
 
 import pytest

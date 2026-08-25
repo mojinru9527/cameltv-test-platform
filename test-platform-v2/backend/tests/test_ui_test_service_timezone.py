@@ -13,7 +13,7 @@ def _run(**overrides):
         "screenshots": "[]",
         "video_url": "",
         "trace_id": "",
-        "base_url": "https://www.camel1.tv",
+        "base_url": "https://www.target.example.com",
         "started_at": datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=2),
         "finished_at": None,
         "error_message": "",

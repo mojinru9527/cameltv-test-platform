@@ -29,7 +29,7 @@ afterEach(() => vi.clearAllMocks())
 
 describe('DefectPage deep link', () => {
   it('loads the project-scoped defect and opens its detail sheet', async () => {
-    apiMocks.fetchDefect.mockResolvedValue({ id: 7, title: '体育接口分诊缺陷' })
+    apiMocks.fetchDefect.mockResolvedValue({ id: 7, title: '接口分诊缺陷' })
 
     render(
       <MemoryRouter initialEntries={['/defect/7']}>
@@ -40,6 +40,6 @@ describe('DefectPage deep link', () => {
     )
 
     await waitFor(() => expect(apiMocks.fetchDefect).toHaveBeenCalledWith(7))
-    expect(screen.getByText('深链缺陷：体育接口分诊缺陷')).not.toBeNull()
+    expect(screen.getByText('深链缺陷：接口分诊缺陷')).not.toBeNull()
   })
 })

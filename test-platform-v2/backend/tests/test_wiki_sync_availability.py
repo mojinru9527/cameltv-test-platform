@@ -62,7 +62,7 @@ def test_sync_availability_selects_active_bundle_from_current_project(
 ):
     current = ReleaseBundle(
         project_id=1,
-        name="Batch 60 体育生产验收",
+        name="Batch 60 生产验收",
         client_version="60.0.0",
         status="active",
     )

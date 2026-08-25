@@ -24,7 +24,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-[380px] border border-border/60 shadow-lg">
         <CardHeader className="text-center">
           <CardTitle role="heading" aria-level={1} className="text-2xl">
-            CamelTv 测试平台
+            测试平台
           </CardTitle>
           <CardDescription>前后端分离 · 多项目测试管理</CardDescription>
         </CardHeader>

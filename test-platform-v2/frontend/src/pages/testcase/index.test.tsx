@@ -73,8 +73,8 @@ vi.mock('@/hooks/useApi', () => ({
           page: 1,
           page_size: 20,
           items: [
-            { id: 11, title: '体育接口用例 A', domain: '赛事', module: '直播', priority: 'P0', positive_negative: 'positive', review_status: 'draft' },
-            { id: 12, title: '体育接口用例 B', domain: '赛事', module: '直播', priority: 'P1', positive_negative: 'negative', review_status: 'draft' },
+            { id: 11, title: '业务接口用例 A', domain: '赛事', module: '直播', priority: 'P0', positive_negative: 'positive', review_status: 'draft' },
+            { id: 12, title: '业务接口用例 B', domain: '赛事', module: '直播', priority: 'P1', positive_negative: 'negative', review_status: 'draft' },
           ],
         },
         isLoading: false,

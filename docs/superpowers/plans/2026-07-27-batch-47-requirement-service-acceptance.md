@@ -16,7 +16,7 @@
 
 **Files:**
 - Read: `docs/测试平台全功能验收文档-环境链接与账号汇总.md`
-- Read: `test-platform-v2/docs/CamelTv测试平台-完整PRD.md`
+- Read: `test-platform-v2/docs/测试平台-完整PRD.md`
 - Read: `test-platform-v2/docs/现状功能PRD.md`
 - Read: `test-platform-v2/docs/测试平台使用手册.md`
 - Read: `work-logs/batch-34-测试平台V2初版验收报告-2026-07-23.md`

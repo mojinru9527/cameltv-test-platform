@@ -1,13 +1,13 @@
 """
 CamelTv 生产环境 API 冒烟测试
-目标: https://www.camel1.tv/
+目标: https://www.target.example.com/
 测试核心 API 端点可达性
 """
 import json
 import time
 import httpx
 
-SITE_URL = "https://www.camel1.tv"
+SITE_URL = "https://www.target.example.com"
 TIMEOUT = 30
 
 API_TESTS = [

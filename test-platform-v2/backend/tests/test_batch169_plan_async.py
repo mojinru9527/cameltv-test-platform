@@ -74,7 +74,7 @@ def test_ui_timeout_uses_configured_seconds(db_session, monkeypatch):
         raise subprocess.TimeoutExpired(cmd="npx", timeout=7)
 
     monkeypatch.setattr(subprocess, "run", fake_run)
-    result = test_plan_service._execute_ui_case_sync(None, case, 1, base_url="https://www.camel1.tv")
+    result = test_plan_service._execute_ui_case_sync(None, case, 1, base_url="https://www.target.example.com")
     assert result["ok"] is False
     assert "7s" in result["error"]
 

@@ -11,8 +11,8 @@ api-regression.ps1 — 自包含 CI 回归脚本（Batch 98，替代 V1 envcheck
 
 约束: 仅 PowerShell 内建 cmdlet + 正则；无 Python/第三方依赖；run 前自动安装依赖（有 lockfile 用 npm ci，否则 npm install）。
 用法示例:
-  pwsh scripts/ci/api-regression.ps1 health -BaseUrls "https://www.camel1.tv/,https://api.cameltv.live/"
-  pwsh scripts/ci/api-regression.ps1 run -BaseUrl "https://api.cameltv.live" -AuthToken $env:CAMELTV_AUTH_TOKEN -ReportDir "$env:GITHUB_WORKSPACE/artifacts"
+  pwsh scripts/ci/api-regression.ps1 health -BaseUrls "https://<host1>,https://<host2>"
+  pwsh scripts/ci/api-regression.ps1 run -BaseUrl "https://<api-host>" -AuthToken $env:API_AUTH_TOKEN -ReportDir "$env:GITHUB_WORKSPACE/artifacts"
   pwsh scripts/ci/api-regression.ps1 collect-elk -JunitPath "artifacts/api-test-junit.xml" -ElasticUrl $env:ELASTIC_URL -KibanaUrl $env:KIBANA_URL
 #>
 [CmdletBinding()]

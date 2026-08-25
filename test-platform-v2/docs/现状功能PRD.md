@@ -5,10 +5,10 @@ last_reviewed: "2026-08-09"
 status: "active"
 expires: "2026-12-26"
 tags: ["PRD", "现状", "功能清单", "基线"]
-related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platform-v2/docs/代码审查与产品重构PRD.md", "test-platform-v2/docs/改进任务backlog.md"]
+related: ["test-platform-v2/docs/测试平台-完整PRD.md", "test-platform-v2/docs/代码审查与产品重构PRD.md", "test-platform-v2/docs/改进任务backlog.md"]
 ---
 
-# CamelTv 测试平台 v2 —— 现状功能 PRD（As-Built）
+# 测试平台 v2 —— 现状功能 PRD（As-Built）
 
 > 文档性质：**现状反向 PRD**——逆向梳理平台「当前已实现」的功能，逐模块给出目标 / 用户故事 / 功能点 / 字段 / 状态机 / 业务规则 / 接口 / 成熟度标注。
 > 用途：作为后续功能增 / 删 / 改的**基线**。每节末尾「现状与局限」即改进入口。
@@ -54,7 +54,7 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 | 9 | 定时任务 | `/schedule` | 🟡 调度、空状态与部分 RBAC 有证据；生产环境保护待统一 |
 | 10 | 缺陷管理 | `/defect` `/defect/:id` | 🟡 内建状态流、评论、附件与深链存在；全权限/原子性矩阵待补 |
 | 11 | API 测试 | `/apitest` | 🟡 OpenAPI/Swagger 导入和 httpx 真实执行存在；五入口一致性、生产保护与 Test5 当前契约待验收 |
-| 12 | UI 自动化 | `/uitest` | 🟡 本地 Runner 真实执行和产物链可用；不代表体育业务 E2E 通过 |
+| 12 | UI 自动化 | `/uitest` | 🟡 本地 Runner 真实执行和产物链可用；不代表业务 E2E 通过 |
 | 13 | 音视频专项 | `/special` | 🟡 真实样本/ffprobe 指标链已取代随机数；外部真实流矩阵未完成 |
 | 14 | 环境 / 数据集 | `/environment` `/dataset` | 🟡 项目级数据与加密变量存在；跨项目和生产目标安全矩阵待补 |
 | 15 | 通知 / 集成 | `/notify` `/integration` | ⛔ 本地模型与错误路径可验；真实 SMTP/Webhook/Jira/TAPD/ELK 缺凭据和非生产端点 |
@@ -71,8 +71,8 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 ## 2. 全局机制（跨模块通用规范）
 
 ### 2.1 登录与会话
-- 账号密码登录签发 JWT（`access_token_expire_minutes` 默认 1440min/24h），同时写入名为 `cameltv_token` 的 `httpOnly` Cookie；默认 `SameSite=Lax`、`Path=/api`，production 配置必须启用 `Secure`。
-- 登录响应依然返回 `access_token` 以兼容过渡期客户端。前端 Zustand `cameltv-auth` 只持久化用户、项目、权限和主题等非 Token 状态；Token 仅在当前内存会话中保留作 Bearer 回退，刷新后由 Cookie 继续鉴权。
+- 账号密码登录签发 JWT（`access_token_expire_minutes` 默认 1440min/24h），同时写入名为 `test_platform_token` 的 `httpOnly` Cookie；默认 `SameSite=Lax`、`Path=/api`，production 配置必须启用 `Secure`。
+- 登录响应依然返回 `access_token` 以兼容过渡期客户端。前端 Zustand `test-platform-auth` 只持久化用户、项目、权限和主题等非 Token 状态；Token 仅在当前内存会话中保留作 Bearer 回退，刷新后由 Cookie 继续鉴权。
 - API 客户端使用 `withCredentials: true`，后端优先读 Cookie，仅在 Cookie 缺失时接受 `Authorization: Bearer` 并记录弃用回退告警；独立开放 API Token `tpat_*` 仍使用 Bearer，与浏览器 JWT Cookie 会话分离。
 - Cookie 写请求受 Origin/Referer CSRF 中间件保护；`401` 由前端清理本地用户态并跳转 `/login`，显式登出先请求 `/api/v1/auth/logout` 清除 Cookie。
 
@@ -363,14 +363,14 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 需求/资产 → 用例库 → 测试计划 → 执行 → 报告/缺陷/追溯的本地链存在，RBAC、多项目和审计也有真实实现。API 测试是后端 httpx 真实执行，UI Runner 是真实 Playwright 子进程，音视频已有真实媒体样本指标链。这些结论仅限具体已执行的 R1/本地证据。
 
 ### 5.2 生产级结论与边界
-Batch 60 最终结论是 `NEEDS WORK`，production 发布是 `DEFERRED`。平台本地 Runner 成功不是体育业务 E2E；OpenAPI 导入成功不是 Test5 六服务契约回归；脚本可收集、历史截图、892 个资产或 1323 条候选用例也不是本轮通过数。真实 LLM/蓝湖/通知/集成/真机/旧 PostgreSQL 快照缺授权输入时必须保持 `BLOCKED` 或 fail closed。
+Batch 60 最终结论是 `NEEDS WORK`，production 发布是 `DEFERRED`。平台本地 Runner 成功不是业务 E2E；OpenAPI 导入成功不是目标系统契约回归；脚本可收集、历史截图、892 个资产或 1323 条候选用例也不是本轮通过数。真实 LLM/蓝湖/通知/集成/真机/旧 PostgreSQL 快照缺授权输入时必须保持 `BLOCKED` 或 fail closed。
 
 ### 5.3 Batch 61 事实源对应的待闭环项
 1. 统一 API/UI/发布包/集成等执行入口的目标环境、请求性质、生产拒绝与审计语义。
 2. 完成全模块 A→B→A 项目隔离和 admin/tester/viewer 能力矩阵，补破坏性操作、强制改密、无障碍与响应式证据。
 3. 将运行时数据库、备份、Playwright 结果/报告和原始流量产物排除在版本库外，已跟踪产物需在明确授权后单独移除。
-4. 取得当前 Test5 六服务契约、最小权限账号、稳定数据和清理授权后，才能单独签发体育 API/UI R2 结论。
-5. 解决体育 UI 自动化供应链高危依赖，并获取完整后端依赖审计结果。
+4. 取得目标系统契约、最小权限账号、稳定数据和清理授权后，才能单独签发 API/UI R2 结论。
+5. 解决业务 UI 自动化供应链高危依赖，并获取完整后端依赖审计结果。
 6. 在仓库独立项目 `deploy/release-control/` 实现 test-only 不可变发布、回滚和防篡改证据；Batch 61 没有产品控制台 UI，production 操作必须返回 `PRODUCTION_NOT_CONFIGURED`，控制面 API/UI 是 Batch 62 消费者。
 
 ---

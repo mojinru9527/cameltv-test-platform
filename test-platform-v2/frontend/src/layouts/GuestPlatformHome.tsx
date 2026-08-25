@@ -28,7 +28,7 @@ export default function GuestPlatformHome({
           <div className="mb-5 flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <TestTube2 className="size-5" aria-hidden="true" />
           </div>
-          <p className="text-sm font-medium text-primary">CamelTv 测试平台</p>
+          <p className="text-sm font-medium text-primary">测试平台</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-foreground sm:text-4xl">
             先浏览平台，再登录开始工作
           </h1>
