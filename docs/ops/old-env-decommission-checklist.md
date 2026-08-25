@@ -24,6 +24,8 @@ related: ["docs/ops/tencent-cloud-migration.md"]
 
 > ⚠️ **下线前必须完成一次"近期真实发布"**（release.ps1 全链路），确认发布/回滚闭环无误。
 > 2026-08-23 计划：D1（发布控制台真实发布演练）作为最后一道闸门。
+> **D1 已完成（2026-08-25）**：发布→回滚→再发布→备份全链路演练通过，详见
+> `docs/ops/tencent-cloud-migration.md` 附录 D5。
 
 ## 1. 下线顺序与步骤
 
@@ -90,6 +92,7 @@ related: ["docs/ops/tencent-cloud-migration.md"]
 | Vercel 删除 | 2026-08-23 | 用户 | ✅ 用户确认已下架（`cameltv-test-platform1.vercel.app` 已失效）；仓库 `vercel.json` 已删 |
 | Railway 删除 | 2026-08-23 | 用户 | ✅ 用户确认已下架（`test-platform.up.railway.app` 已失效）；仓库 `railway.json` 已删 |
 | Supabase 删除 | 2026-08-23 | 用户 | ✅ 用户确认已下架；数据已迁移本地 PG（备份见回滚预案 §3） |
+| D1 发布演练 | 2026-08-25 | DSH | ✅ 全链路通过：发布 release-20260825-0001（PRODUCTION_VERIFIED）→ 回滚锚定版（PROD_ROLLED_BACK）→ 再发布（PRODUCTION_VERIFIED）→ 备份 cameltv-prod-20260825-020315.dump；期间修复发布控制台 5 处缺陷（#317/#320/#321），数据零丢失 |
 
 ## 5. 关联
 
