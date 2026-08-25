@@ -4,7 +4,7 @@ import PageHeader from '@/components/PageHeader'
 import StatCard from '@/components/StatCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import type { WorkbenchMetric } from '@/ui'
@@ -125,7 +125,6 @@ export default function Workbench() {
   // ── Derived chart data (computed from stats, safe even when undefined) ──
   const s = stats
   const caseTypes = s?.case_type_stats || []
-  const priorityData = s?.priority_distribution || []
 
   const barData = caseTypes.map((ct) => ({
     name: ct.label,
