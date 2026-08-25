@@ -69,6 +69,8 @@ class TestJWTHttpOnlyCookie:
 
     def test_login_sets_cookie(self, client, admin_user):
         """S1a: /auth/login sets the auth cookie with correct attributes."""
+        from app.core.config import settings
+
         resp = client.post("/api/v1/auth/login", json={
             "username": "admin_test", "password": "admin123",
         })
@@ -76,7 +78,7 @@ class TestJWTHttpOnlyCookie:
 
         # Verify Set-Cookie header
         cookies = resp.headers.get("set-cookie", "")
-        assert "cameltv_token=" in cookies, f"Cookie not set: {cookies}"
+        assert settings.cookie_name + "=" in cookies, f"Cookie not set: {cookies}"
         assert "HttpOnly" in cookies, f"Cookie not HttpOnly: {cookies}"
         assert "SameSite" in cookies, f"Cookie missing SameSite: {cookies}"
         assert "Path=/api" in cookies, f"Cookie missing Path=/api: {cookies}"
@@ -89,11 +91,13 @@ class TestJWTHttpOnlyCookie:
 
     def test_logout_clears_cookie(self, client, auth_headers):
         """S1a: /auth/logout clears the auth cookie (Max-Age=0)."""
+        from app.core.config import settings
+
         resp = client.post("/api/v1/auth/logout", headers=auth_headers)
         assert resp.status_code == 200
 
         cookies = resp.headers.get("set-cookie", "")
-        assert "cameltv_token=" in cookies
+        assert settings.cookie_name + "=" in cookies
         assert "Max-Age=0" in cookies or "max-age=0" in cookies.lower(), \
             f"Cookie not cleared: {cookies}"
 
@@ -113,7 +117,7 @@ class TestJWTHttpOnlyCookie:
         resp = client.get(
             "/api/v1/auth/me",
             headers={
-                "Cookie": cookie.split(";")[0],  # cameltv_token=xxx
+                "Cookie": cookie.split(";")[0],  # {cookie_name}=xxx
                 "X-Project-Id": "1",
             },
         )
@@ -129,7 +133,7 @@ class TestJWTHttpOnlyCookie:
         })
         token = resp.json()["data"]["access_token"]
 
-        # TestClient 会持久化 login 下发的 cameltv_token cookie，后续请求自动带上它。
+        # TestClient 会持久化 login 下发的 auth cookie，后续请求自动带上它。
         # deps.get_current_user 优先用 cookie（used_fallback=False，不打告警）。要真正
         # 触发「Authorization 头回退」分支，必须先清空 cookie jar，只留 Authorization 头。
         client.cookies.clear()
@@ -470,6 +474,8 @@ class TestP1EndToEnd:
 
     def test_full_lifecycle(self, client, admin_user):
         """Complete lifecycle: login, access resources, logout."""
+        from app.core.config import settings
+
         # 1. Login — verify cookie + token
         login_resp = client.post("/api/v1/auth/login", json={
             "username": "admin_test", "password": "admin123",
@@ -478,7 +484,7 @@ class TestP1EndToEnd:
         data = login_resp.json()["data"]
         token = data["access_token"]
         cookie = login_resp.headers.get("set-cookie", "")
-        assert "cameltv_token=" in cookie
+        assert settings.cookie_name + "=" in cookie
         assert "HttpOnly" in cookie
 
         headers = {"Authorization": f"Bearer {token}", "X-Project-Id": "1"}
@@ -501,7 +507,7 @@ class TestP1EndToEnd:
         logout_resp = client.post("/api/v1/auth/logout", headers=headers)
         assert logout_resp.status_code == 200
         logout_cookie = logout_resp.headers.get("set-cookie", "")
-        assert "cameltv_token=" in logout_cookie
+        assert settings.cookie_name + "=" in logout_cookie
         assert "Max-Age=0" in logout_cookie or "max-age=0" in logout_cookie.lower()
 
 
@@ -531,7 +537,7 @@ class TestSecurityConfig:
     def test_cookie_is_http_only(self):
         """S1a: Cookie name is configured."""
         from app.core.config import settings
-        assert settings.cookie_name == "cameltv_token"
+        assert settings.cookie_name == "test_platform_token"
 
     def test_validate_security_returns_no_errors_in_dev(self):
         """Production-critical validation exists and runs."""
