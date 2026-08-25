@@ -163,7 +163,7 @@ describe('UiRunDetail component rendering', () => {
           total: 1, page: 1, page_size: 20,
           items: [{
             id: 10,
-            name: 'Batch 60 体育 UI 回归',
+            name: 'Batch 60 UI 回归',
             description: '',
             test_spec: 'specs/production-smoke.spec.ts',
             browser: 'chromium',
@@ -182,7 +182,7 @@ describe('UiRunDetail component rendering', () => {
       if (url === '/ui-tests/10') {
         return Promise.resolve({
           id: 10,
-          name: 'Batch 60 体育 UI 回归',
+          name: 'Batch 60 UI 回归',
           description: '',
           test_spec: 'specs/production-smoke.spec.ts',
           browser: 'chromium',
@@ -250,9 +250,9 @@ describe('UiRunDetail component rendering', () => {
         return Promise.resolve([{
           id: 1,
           project_id: 1,
-          name: 'CamelTv 体育生产环境',
+          name: '生产环境',
           env_type: 'prod',
-          base_url: 'https://www.camel1.tv',
+          base_url: 'https://target.example.com',
           description: '',
           created_at: null,
           updated_at: null,
@@ -265,7 +265,7 @@ describe('UiRunDetail component rendering', () => {
           page_size: 20,
           items: [{
             id: 10,
-            name: 'DEV体育生产全功能Smoke-20260715',
+            name: 'DEV生产全功能Smoke-20260715',
             description: '',
             test_spec: 'specs/production-smoke.spec.ts',
             browser: 'chromium',
@@ -290,7 +290,7 @@ describe('UiRunDetail component rendering', () => {
     fireEvent.click(await screen.findByRole('button', { name: '编辑' }))
 
     const environmentSelect = await screen.findByRole('combobox', { name: '运行环境' })
-    expect(environmentSelect.textContent).toContain('CamelTv 体育生产环境（https://www.camel1.tv）')
+    expect(environmentSelect.textContent).toContain('生产环境（https://target.example.com）')
   })
 
   it('renders run table with clickable rows', async () => {

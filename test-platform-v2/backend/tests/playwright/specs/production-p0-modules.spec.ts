@@ -34,7 +34,7 @@ function apiObservations(page: Page): string[] {
   return urls
 }
 
-test.describe('体育平台 生产 P0 功能用例 → UI 自动化（只读）', () => {
+test.describe('生产 P0 功能用例 → UI 自动化（只读）', () => {
   // 数据中心 Runner 页面崩溃/OOM flaky（B114-2，2026-08-15 生产复现）：失败自动重试 1 次
   test.describe.configure({ retries: 1 })
   let runtime: P0Runtime

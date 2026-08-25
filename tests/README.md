@@ -1,61 +1,45 @@
 ---
-title: "CamelTv 测试体系"
+title: "测试资产中心"
 owner: "qa-team"
 last_reviewed: "2026-06-26"
 status: "active"
 expires: "2026-12-26"
-tags: ["testing", "test-cases", "api-testing", "automation", "qa"]
+tags: ["testing", "test-cases", "test-case-standards", "qa"]
 related: ["tests/CLAUDE.md", "test-platform-v2/README.md"]
 ---
 
-# 测试体系
+# 测试资产中心
 
 ## 目录结构
 
 ```
 tests/
-├── README.md                          # 本文件 — 测试体系总览与规范
-├── requirements/                      # 需求分析
-│   ├── documents/                     # 需求规格说明书（PRD/FRD）
-│   └── traceability-matrix/           # 需求-用例追溯矩阵
+├── README.md                          # 本文件 — 测试资产中心总览与规范
 ├── test-cases/                        # 测试用例
-│   ├── functional/                    # 功能测试用例
+│   ├── functional/                    # 功能测试用例（平台自身验收资产）
 │   ├── integration/                   # 集成测试用例
 │   ├── performance/                   # 性能测试用例
 │   └── security/                      # 安全测试用例
-├── api-testing/                       # 接口测试
-│   ├── collections/                   # 接口集合（Postman / Bruno 等）
-│   ├── environments/                  # 环境变量配置
-│   └── reports/                       # 测试报告
-└── automation/                        # 自动化测试
-    ├── ui/                            # UI 自动化
-    ├── service/                       # 接口/服务层自动化
-    ├── fixtures/                      # 测试数据与夹具
-    ├── utils/                         # 公共工具模块
-    ├── config/                        # 运行配置
-    └── reports/                       # 自动化报告
+└── test-case-standards/               # 通用测试标准（用例模板、优先级、检查点）
 ```
 
 ## 模块职责
 
-### requirements/ — 需求分析
-存放需求文档、评审记录和需求-用例的双向追溯矩阵，确保每条需求都有对应的测试覆盖。
-
 ### test-cases/ — 测试用例
 按类型划分：功能、集成、性能、安全。用例采用统一模板（ID、前置条件、步骤、预期结果、优先级）。
+当前保留平台自身验收资产（BATCH47/48/55 需求服务生产级验收/复测、batch-63 全功能点正负面矩阵），
+业务系统用例由使用方按 `test-case-standards/` 标准自行沉淀。
 
-### api-testing/ — 接口测试
-手工/半自动接口测试资产：请求集合、环境变量、一次性的测试报告。可复用的自动化脚本应放入 `automation/service/`。
-
-### automation/ — 自动化测试
-可重复执行的自动化代码。UI 和 Service 层分离，公共逻辑抽取到 utils/，测试数据集中管理在 fixtures/。
+### test-case-standards/ — 测试标准
+通用测试规范与模板：功能/接口用例规范、检查点、生产级模块验收规则、缺陷管理制度等。
+所有测试用例必须遵循该目录下的标准。
 
 ## 命名规范
 
 | 类型       | 格式                                        | 示例                                     |
 | ---------- | ------------------------------------------- | ---------------------------------------- |
 | 测试用例   | `TC-{模块}-{编号}.md`                       | `TC-login-001.md`                        |
-| 需求文档   | `{系统}-{版本}-需求规格说明书.md`           | `CamelTv-v1.0-需求规格说明书.md`          |
+| 需求文档   | `{系统}-{版本}-需求规格说明书.md`           | `demo-v1.0-需求规格说明书.md`            |
 | 接口集合   | `{服务名}-{环境}.json`                      | `user-service-dev.json`                  |
 | 自动化脚本 | `test_{模块}.py` / `test_{module}.ts`       | `test_login.py`                          |
 | 测试数据   | `{实体}_{场景}.json`                        | `user_invalid.json`                      |

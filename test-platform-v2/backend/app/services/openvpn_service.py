@@ -80,7 +80,7 @@ def ensure_vpn_for_test_environment(
         if _system_resolves_to_fake_ip(target_url):
             raise VpnConnectionError(
                 "OpenVPN 隧道已建立，但目标域名仍被其他代理解析为 Fake-IP。"
-                "请将 svc.elelive.cn 加入代理软件的 fake-ip-filter/直连规则后重试。"
+                "请将目标服务域名加入代理软件的 fake-ip-filter/直连规则后重试。"
             )
         raise VpnConnectionError(
             "OpenVPN 隧道已建立，但测试环境仍不可访问。"

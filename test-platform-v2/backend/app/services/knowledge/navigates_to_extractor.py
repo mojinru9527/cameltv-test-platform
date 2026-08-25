@@ -120,7 +120,7 @@ def _p3_cv_heuristic(page: RequirementModule, evidence_page: LanhuEvidencePage |
         ))
 
     # Detect tab-like patterns: repeated short labels on the same line
-    tab_pattern = re.findall(r'(?:首页|推荐|发现|消息|我的|赛事|直播|数据|[^\s]{1,4})\s*', ocr_text)
+    tab_pattern = re.findall(r'(?:首页|推荐|发现|消息|我的|数据|[^\s]{1,4})\s*', ocr_text)
     if len(tab_pattern) >= 3:
         for tab in tab_pattern[:6]:
             tab = tab.strip()

@@ -72,7 +72,7 @@ def test_auto_ui_off_skips(plan_with_case, db_session, monkeypatch):
 def test_ui_case_uses_environment_base_url(plan_with_case, db_session, monkeypatch):
     plan, case, pc = plan_with_case
     case.case_type = "ui"
-    env = Environment(project_id=1, name="test", env_type="test", base_url="https://sports.test.example")
+    env = Environment(project_id=1, name="test", env_type="test", base_url="https://target.test.example")
     db_session.add(env)
     db_session.commit()
     seen = {}
@@ -81,7 +81,7 @@ def test_ui_case_uses_environment_base_url(plan_with_case, db_session, monkeypat
         return {"ok": True, "total": 1, "screenshots": [], "spec_code": "//spec", "compiler": "rules"}
     monkeypatch.setattr(test_plan_service, "_execute_ui_case_sync", fake_exec)
     test_plan_service.execute_all_cases(db_session, plan.id, project_id=1, environment_id=env.id, auto_ui=True)
-    assert seen["base_url"] == "https://sports.test.example"
+    assert seen["base_url"] == "https://target.test.example"
 
 
 def test_compile_fallback_returns_spec(plan_with_case, monkeypatch):

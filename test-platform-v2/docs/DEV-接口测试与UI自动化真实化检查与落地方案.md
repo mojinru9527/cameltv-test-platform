@@ -40,7 +40,7 @@ related:
 
 - `CLAUDE.md` 仍写 API 测试为“纯前端 fetch + localStorage”。
 - `CLAUDE.md` 仍写 UI 自动化为“结果为 random 模拟”。
-- `docs/现状功能PRD.md`、`docs/CamelTv测试平台-完整PRD.md`、`docs/代码审查与产品重构PRD.md` 中也仍有旧描述。
+- `docs/现状功能PRD.md`、`docs/测试平台-完整PRD.md`、`docs/代码审查与产品重构PRD.md` 中也仍有旧描述。
 
 但从当前代码看，这些文档已经滞后。当前代码里：
 
@@ -431,7 +431,7 @@ flowchart LR
 
 - 更新 `CLAUDE.md`。
 - 更新 `docs/现状功能PRD.md`。
-- 更新 `docs/CamelTv测试平台-完整PRD.md`。
+- 更新 `docs/测试平台-完整PRD.md`。
 
 成熟度建议：
 

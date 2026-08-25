@@ -1,14 +1,14 @@
 ---
-title: "CamelTv 测试平台命令速查手册"
+title: "测试平台命令速查手册"
 owner: "qa-team"
 last_reviewed: "2026-06-26"
 status: "active"
 expires: "2026-12-26"
 tags: ["命令", "CLI", "参考", "速查"]
-related: ["CamelTv-测试自动化平台-建设方案.md"]
+related: ["测试平台-建设方案.md"]
 ---
 
-# CamelTv 测试平台 — 命令速查手册
+# 测试平台 — 命令速查手册
 
 > 所有命令统一入口，按服务/场景分组。  
 > 标注 `(win)` = Windows PowerShell，`(unix)` = macOS / Linux bash。
@@ -283,10 +283,10 @@ tp envcheck --env prod
 # ──── 拉取 Swagger 生成测试骨架 ────
 
 # 从内网真实 Swagger URL 拉取（需在内网环境）
-tp api pull --source "https://g3-test3.elelive.cn/v3/api-docs"
+tp api pull --source "https://<swagger-host>/v3/api-docs"
 
 # 从本地 YAML/JSON spec 文件生成
-tp api pull --source "tests/api-testing/specs/cameltv-openapi.yaml"
+tp api pull --source "<path-to-openapi.yaml>"
 
 # 自定义输出目录
 tp api pull --source "<url>" --out "tests/api-testing/my-tests"
@@ -321,8 +321,8 @@ tp api capture --session-id "<session_id>"
 
 ```bash
 # 1. 生成测试 → 安装 TS 依赖 → 类型检查 → 执行
-tp api pull --source "tests/api-testing/specs/cameltv-openapi.yaml"
-cd tests/api-testing/generated
+tp api pull --source "<path-to-openapi.yaml>"
+cd <generated-dir>
 npm install
 npx tsc --noEmit              # 0 错误才算通过
 cd ../../../
@@ -507,13 +507,13 @@ python lanhu_mcp_server.py
 
 ```bash
 # ① 修改 swagger spec 或重新拉取
-tp api pull --source "tests/api-testing/specs/cameltv-openapi.yaml"
+tp api pull --source "<path-to-openapi.yaml>"
 
 # ② 安装依赖 + 类型检查
-cd tests/api-testing/generated
+cd <generated-dir>
 npm install
 npx tsc --noEmit
-cd ../../../
+cd <repo-root>
 
 # ③ 打本地后端验证
 tp api run --env test --base-url "http://localhost:8000"

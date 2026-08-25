@@ -1,10 +1,10 @@
-# CamelTv 测试平台 — GitHub Actions CI 集成示例
+# 测试平台 — GitHub Actions CI 集成示例
 #
 # 设置 Secrets:
 #   CAMELTV_API_BASE  — 如 https://test.cameltv.com/api/v1
 #   CAMELTV_API_TOKEN — tpat_xxx
 
-name: Trigger CamelTv Test Plan
+name: Trigger Test Plan
 
 on:
   workflow_dispatch:

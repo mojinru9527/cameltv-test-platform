@@ -1,5 +1,5 @@
 ---
-title: "CamelTv 工程输出规范"
+title: "工程输出规范"
 owner: "dev-team"
 last_reviewed: "2026-07-07"
 status: "active"
@@ -8,7 +8,7 @@ tags: ["engineering", "dev", "qa", "automation", "comments"]
 related: ["testing-strategy.md", "../tests/CLAUDE.md", "../tests/automation/README.md"]
 ---
 
-# CamelTv 工程输出规范
+# 工程输出规范
 
 > 本文档定义 DEV 与 QA 在代码层面的交付要求。所有新增、修改、生成的代码和自动化测试均必须遵循。
 

@@ -23,7 +23,7 @@ _LOCK = threading.Lock()
 # 只读查询型 POST（同 production-p0-contract READONLY_POST_PATTERNS）
 _READONLY_POST = ["/ee/ads/activity/get", "/ee/search/", "/ee/news/", "/ee/client/",
                   "/login/anonymous/web", "/konfi-service/web/getDataById",
-                  "/ee/sports_live/", "/ee/setting"]
+                  "/ee/live/", "/ee/setting"]
 _WRITE_MARKERS = ["pay", "order", "refund", "recharge", "withdraw", "deposit", "favorite",
                   "like", "comment", "review", "create", "save", "update", "delete", "add",
                   "remove", "send", "publish", "bonus", "gift", "diamond"]
@@ -92,7 +92,7 @@ def _run(task_id: str, pages: list[str]) -> None:
             page.on("response", on_response)
             for path in pages:
                 try:
-                    page.goto(path if path.startswith("http") else "https://www.camel1.tv" + path,
+                    page.goto(path if path.startswith("http") else "https://<target-host>" + path,
                               wait_until="domcontentloaded", timeout=45000)
                     page.wait_for_timeout(1500)
                 except Exception as exc:

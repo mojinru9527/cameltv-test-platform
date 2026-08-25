@@ -39,7 +39,7 @@ const HIGH_RISK_WRITE: RegExp[] = [
   /pay|recharge|withdraw|deposit|exchange$|bet$|cancel|invite\/bind|diamond\/withdraw|diamond\/trans|refund|order/,
 ]
 
-const BUSINESS_HOSTS = new Set(['api.cameltv.live', 'www.camel1.tv', 'www.cameltv.live', 'livecdn.cameltv.live', 'img.cameltv.live', 'sensors.cameltv.live'])
+const BUSINESS_HOSTS = new Set(['api.cameltv.live', 'www.target.example.com', 'www.cameltv.live', 'livecdn.cameltv.live', 'img.cameltv.live', 'sensors.cameltv.live'])
 
 function assertWriteRequestAllowed(rawUrl: string, method: string): string | null {
   const url = new URL(rawUrl)
@@ -94,18 +94,18 @@ async function loginAndInject(page: Page): Promise<void> {
     {
       name: 'auth',
       value: JSON.stringify({ token: data.token, userId: data.userId, userSig: data.userSig }),
-      domain: '.camel1.tv',
+      domain: '.target.example.com',
       path: '/',
     },
   ])
 }
 
 function siteUrl(path: string): string {
-  const base = process.env.BASE_URL || 'https://www.camel1.tv'
+  const base = process.env.BASE_URL || 'https://www.target.example.com'
   return new URL(path, base).toString()
 }
 
-test.describe('体育平台 生产 P0 登录态写操作 → UI 自动化（Batch 189 三期）', () => {
+test.describe('生产 P0 登录态写操作 → UI 自动化（Batch 189 三期）', () => {
   test.describe.configure({ retries: 1 })
 
   test.beforeEach(async ({ page }) => {

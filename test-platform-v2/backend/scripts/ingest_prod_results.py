@@ -45,7 +45,7 @@ def ingest_report(report_path: str, source_type: str, title: str):
             title=title,
             source_ref=report_path,
             raw_content=content,
-            metadata={"test_env": "production", "site": "https://www.camel1.tv"},
+            metadata={"test_env": "production", "site": "https://www.target.example.com"},
         )
         if src is None:
             print(f"  [SKIP] No change: {title}")

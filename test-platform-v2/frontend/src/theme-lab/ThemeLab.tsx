@@ -333,7 +333,7 @@ export function ThemeLab() {
         <aside className="lab-sidebar" aria-label="平台模块">
           <div className="platform-brand">
             <span className="brand-symbol"><TestTube2 aria-hidden="true" /></span>
-            <span><b>CamelTv</b><small>企业测试平台</small></span>
+            <span><b>测试平台</b><small>企业测试平台</small></span>
           </div>
 
           <nav className="module-nav">
@@ -370,8 +370,8 @@ export function ThemeLab() {
               <label>
                 <span>当前项目</span>
                 <span className="select-control">
-                  <select aria-label="当前项目" defaultValue="CamelTv 核心平台">
-                    <option>CamelTv 核心平台</option>
+                  <select aria-label="当前项目" defaultValue="核心平台">
+                    <option>核心平台</option>
                     <option>海外业务平台</option>
                     <option>增长实验项目</option>
                   </select>

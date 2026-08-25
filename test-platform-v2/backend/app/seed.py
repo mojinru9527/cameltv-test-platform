@@ -348,7 +348,7 @@ def run_seed() -> None:
                 username=settings.admin_username,
                 password=hash_password(settings.get_initial_admin_password()),
                 nickname="超级管理员",
-                email="admin@cameltv.local",
+                email="admin@example.local",
                 status=1,
                 must_change_password=settings.admin_password == "",
             )
@@ -373,7 +373,7 @@ def run_seed() -> None:
                     username=settings.tester_username,
                     password=hash_password(tester_pwd),
                     nickname="测试同学",
-                    email="tester@cameltv.local",
+                    email="tester@example.local",
                     status=1,
                 )
                 db.add(tester_user)
@@ -390,7 +390,7 @@ def run_seed() -> None:
                     username=settings.viewer_username,
                     password=hash_password(viewer_pwd),
                     nickname="运营只读",
-                    email="viewer@cameltv.local",
+                    email="viewer@example.local",
                     status=1,
                 )
                 db.add(viewer_user)
@@ -399,8 +399,8 @@ def run_seed() -> None:
         # 6) 默认项目
         project, _ = _get_or_create(
             db, Project,
-            defaults={"name": "CamelTv 体育平台", "description": "默认样板项目", "owner_id": admin_user.id},
-            code="cameltv",
+            defaults={"name": "默认项目", "description": "默认样板项目", "owner_id": admin_user.id},
+            code="default",
         )
 
         # 7) 管理员加入默认项目 + 全局管理员角色

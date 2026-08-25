@@ -30,7 +30,7 @@ from tencent_executor import (
     build_executor_from_settings,
 )
 
-app = FastAPI(title="CamelTv Release Console", version="1.0")
+app = FastAPI(title="Release Console", version="1.0")
 
 # Allow the standalone console origins (same-host subdomain)
 app.add_middleware(

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-const BASE_TITLE = 'CamelTv 测试平台'
+const BASE_TITLE = '测试平台'
 
 /**
  * Set document.title for the current route. Restores base title on unmount.

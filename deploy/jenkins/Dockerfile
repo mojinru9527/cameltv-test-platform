@@ -1,4 +1,4 @@
-# CamelTv Jenkins Controller — 预装 Python 3.12 + Node 22 + Docker CLI
+# Jenkins Controller — 预装 Python 3.12 + Node 22 + Docker CLI
 FROM jenkins/jenkins:lts
 
 USER root

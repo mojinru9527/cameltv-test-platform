@@ -1,5 +1,5 @@
 ---
-title: "CamelTv 测试策略总纲"
+title: "测试策略总纲"
 owner: "qa-team"
 last_reviewed: "2026-08-07"
 status: "active"
@@ -8,9 +8,9 @@ tags: ["testing", "strategy", "test-pyramid", "quality"]
 related: ["document-standards.md", "common-pitfalls.md", "repo-map.md", "../tests/CLAUDE.md"]
 ---
 
-# CamelTv 测试策略总纲
+# 测试策略总纲
 
-> 本文档定义 CamelTv 项目全链路测试的分层策略、工具选型、执行频率和覆盖目标。
+> 本文档定义被测项目全链路测试的分层策略、工具选型、执行频率和覆盖目标。
 > 所有测试活动（用例编写、自动化执行、CI 集成）均应遵循本文档。
 
 ---

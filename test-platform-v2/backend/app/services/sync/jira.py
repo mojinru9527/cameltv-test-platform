@@ -36,7 +36,7 @@ class JiraSyncProvider(BaseSyncProvider):
             return False, str(e)
 
     async def push_defect(self, defect: dict) -> tuple[bool, str, str]:
-        """Create a new Jira issue from a CamelTv defect."""
+        """Create a new Jira issue from a platform defect."""
         try:
             project_key = self.auth.get("project_key", "")
             if not project_key:

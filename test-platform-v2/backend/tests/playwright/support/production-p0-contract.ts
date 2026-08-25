@@ -1,5 +1,5 @@
 /**
- * Batch 110 — 生产 P0 UI 自动化只读守卫与运行时（体育平台）。
+ * Batch 110 — 生产 P0 UI 自动化只读守卫与运行时。
  *
  * 在 batch-101 冒烟守卫基础上细化：除 GET/HEAD 外，放行「查询型 POST」
  * （搜索/资讯列表/广告查询/匿名登录/konfi 配置读取/直播间查询等），
@@ -58,7 +58,7 @@ const WRITE_PATTERNS: RegExp[] = [
 // 业务 API 主机：严格守卫（GET/HEAD + 查询型 POST 白名单）
 const BUSINESS_HOSTS = new Set([
   'api.cameltv.live',
-  'www.camel1.tv',
+  'www.target.example.com',
   'www.cameltv.live',
   'livecdn.cameltv.live',
   'img.cameltv.live',

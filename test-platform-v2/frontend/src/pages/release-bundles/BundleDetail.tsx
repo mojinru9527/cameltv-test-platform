@@ -566,8 +566,8 @@ export default function BundleDetailPage() {
                 <Input placeholder="PingCode/Confluence/蓝湖链接" value={editForm.requirement_url} onChange={(e) => setEditForm({ ...editForm, requirement_url: e.target.value })} />
               </div>
               <div className="space-y-1.5">
-                <Label>体育用户端地址</Label>
-                <Input placeholder="https://sports.example.com" value={editForm.user_env_url} onChange={(e) => setEditForm({ ...editForm, user_env_url: e.target.value })} />
+                <Label>用户端地址</Label>
+                <Input placeholder="https://user.example.com" value={editForm.user_env_url} onChange={(e) => setEditForm({ ...editForm, user_env_url: e.target.value })} />
               </div>
               <div className="space-y-1.5">
                 <Label>接口 OpenAPI/Swagger 地址</Label>

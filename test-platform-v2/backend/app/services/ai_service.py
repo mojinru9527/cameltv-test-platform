@@ -324,20 +324,6 @@ def _build_user_message_with_extraction(content: str, file_type: str, source_ref
     # Build structured extraction summary
     extraction_lines = ["\n## 已确认的测试模块与功能点\n"]
 
-    # C115：生成前注入知识中心关联基座（模块→接口/后台/konfi），先按关联定位再产出用例
-    try:
-        from app.services.association_baseline import association_context
-        association_lines = []
-        for mod in modules:
-            ctx = association_context(str(mod.get("name") or ""))
-            if ctx:
-                association_lines.append(ctx)
-        if association_lines:
-            extraction_lines.append("")
-            extraction_lines.append("## 模块-接口-功能关联基座（生成前按关联定位）")
-            extraction_lines.extend(association_lines)
-    except Exception as exc:
-        logger.warning("关联基座构建失败，继续基础提取: %s", exc)
     for mod in modules:
         mod_id = mod.get("id", "")
         mod_name = mod.get("name", "")

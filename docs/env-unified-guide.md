@@ -1,8 +1,8 @@
-# CamelTv 测试平台 — 环境变量统一入口指南（C152-1）
+  CamelTv 测试平台 — 环境变量统一入口指南（C152-1）
 
 > Batch 154（2026-08-11）新增。目标：一份文档说清所有 env 文件与唯一入口，避免分散配置。
 
-## 1. 统一入口（唯一事实源）
+   1. 统一入口（唯一事实源）
 
 **本地开发一律通过 launcher 启动，它统一读取/生成运行时配置：**
 
@@ -14,7 +14,7 @@ pwsh test-platform-v2/scripts/start-platform-environment.ps1 -Target local -Acti
 - 首次用 `-InitializeLocal` 自动生成；`ADMIN_PASSWORD` 等密钥只存在该文件
 - 生产/测试目标：`config/runtime/{target}.env`（由部署流程注入）
 
-## 2. env 文件清单（5 份）
+   2. env 文件清单（5 份）
 
 | 文件 | 用途 | 是否入库 | 备注 |
 |------|------|---------|------|
@@ -26,7 +26,7 @@ pwsh test-platform-v2/scripts/start-platform-environment.ps1 -Target local -Acti
 
 > 说明：仓库已无「7 份 env」中的其余重复文件；本清单为当前全部。统一入口为 launcher + `config/runtime/`。
 
-## 3. 校验
+   3. 校验
 
 ```powershell
 pwsh scripts/env-inventory.ps1
@@ -34,7 +34,7 @@ pwsh scripts/env-inventory.ps1
 
 输出：各 env 文件是否存在、关键变量是否缺失（只读，不修改任何文件）。
 
-## 4. 约定
+   4. 约定
 
 1. 新增环境变量：先改 `.env.example`，再同步 `scripts/env-inventory.ps1` 的必填清单。
 2. 密钥（DB 密码/Token/AI Key）禁止写入 git；一律放运行时 profile 或 CI Secret。
