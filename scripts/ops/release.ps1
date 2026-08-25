@@ -134,8 +134,15 @@ function Invoke-Release {
     # 4. 导出 + 上传 tar
     Write-Host "==> 导出并上传镜像" -ForegroundColor Cyan
     New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
-    docker save "cameltv-tp-backend:$Tag" -o "$OutputDir\$Tag-backend.tar"
-    docker save "cameltv-tp-frontend:$Tag" -o "$OutputDir\$Tag-frontend.tar"
+    # containerd 存储（io.containerd.snapshotter.v1）下 docker save 可能产出
+    # 残缺 OCI tar（缺 index.json/manifest.json → 服务器 load 报
+    # "unrecognized image format"，2026-08-25 演练实测），改用 buildx
+    # type=docker 导出（含 manifest.json 的经典 docker 归档，服务器可 load）。
+    docker buildx build --builder desktop-linux -t "cameltv-tp-backend:$Tag" -f test-platform-v2/backend/Dockerfile --output=type=docker,dest="$OutputDir\$Tag-backend.tar" . 2>&1 | Select-Object -Last 2
+    if ($LASTEXITCODE -ne 0) { throw "后端镜像导出失败" }
+    Push-Location "$repoRoot\test-platform-v2\frontend"
+    try { docker buildx build --builder desktop-linux --build-arg "VITE_ICP_NUMBER=$IcpNumber" -t "cameltv-tp-frontend:$Tag" --output=type=docker,dest="$OutputDir\$Tag-frontend.tar" . 2>&1 | Select-Object -Last 2 } finally { Pop-Location }
+    if ($LASTEXITCODE -ne 0) { throw "前端镜像导出失败" }
     ssh -i $KeyPath -o BatchMode=yes "${UserName}@${HostName}" "mkdir -p $ReleaseDir" 2>&1 | Out-Null
     scp -i $KeyPath -o BatchMode=yes "$OutputDir\$Tag-backend.tar" "${UserName}@${HostName}:$ReleaseDir/"
     scp -i $KeyPath -o BatchMode=yes "$OutputDir\$Tag-frontend.tar" "${UserName}@${HostName}:$ReleaseDir/"

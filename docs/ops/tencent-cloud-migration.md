@@ -403,4 +403,50 @@ docker compose --project-name cameltv-tp-production --env-file config/runtime/pr
 - [x] 一键脚本 `release.ps1` 合入 main（release/rollback/backup 三命令）
 - [x] 测试平台发布入口彻底移除（/operations-release + ops API + release:view 权限）
 - [x] 旧环境下线清单就绪（前置检查全绿，待真实发布演练后执行）
-- [ ] **待执行**：发布控制台真实发布演练（D1 方案）→ 旧环境下线删项目
+- [x] **真实发布演练完成（2026-08-25）**：发布→回滚→再发布→备份全链路通过（见附录 D6）；旧环境下线最后闸门解除
+
+## 附录 D6：真实发布演练记录（2026-08-25）
+
+> DSH 会话驱动，把 A+B 方案代码（#313/#314，含入 main `36b70d22`）通过发布控制台
+> 全链路真实发布到 swiftbugs.cn，并验证发布/回滚/备份闭环。**期间发现并修复发布链路
+> 5 处必死缺陷（#317/#320/#321）**，是本次演练的最大产出。
+
+### D6-1. 演练发现的缺陷与修复
+
+| # | 缺陷 | 影响 | 修复（PR） |
+|---|------|------|-----------|
+| 1 | 状态机缺口：无 validate 端点（DRAFT 到不了 VALIDATED）、无 verify 端点（到不了 PRODUCTION_VERIFIED） | publish 必 409，状态机无终态 | 新增 `/validate`（manifest 结构校验）+ `/verify`（线上健康检查）（#317） |
+| 2 | release.ps1 解析 `$submit.data.deployment_id`（API 返回顶层字段）；GET /deployments 裸数组被当对象；无超时 | `-Publish` 静默失败；rollback/backup 失效；docker load 期间客户端超时假失败 | 修正解析 + validate→publish→verify 三步 + TimeoutSec 900（#317） |
+| 3 | 网页端无操作按钮；控制台 env `IMAGE_*=:latest` 与服务器 compose override 钉死的 `:main` 失配 | 网页无法发布；deploy/rollback retag 到 compose 未引用标签 → **假成功** | 按状态渲染按钮；服务器 env 改 `:main` + README 对齐警告（#317） |
+| 4 | 服务器 docker 29.7.2（`io.containerd.snapshotter.v1`）下 `docker tag` 重指后 `compose up --no-build` 不识别镜像变更 | 回滚锚定版本时容器停留在旧镜像（实测） | executor deploy/rollback 改 `--force-recreate backend frontend`（#320） |
+| 5 | 本机 Docker Desktop（containerd 存储）`docker save` 产出残缺 OCI tar（缺 index.json/manifest.json） | 服务器 `docker load` 报 "unrecognized image format" | release.ps1 改用 `docker buildx build --output=type=docker,dest=...` 导出（#321） |
+
+### D6-2. 演练时间线与结果
+
+| 步骤 | 结果 |
+|------|------|
+| 发布 release-20260825-0001（git_sha 36b70d22，digest fe=f66e3408 / be=85ecc2b8） | ✅ deployment 9052dca7 → PRODUCTION_VERIFIED；容器切新镜像（be 1e4509d9bf17 / fe c734785f445b），健康 200 |
+| 回滚演练（锚定 `prev-prod-20260825` = 发布前 354bbd28f718/5481d095cd96） | ✅ deployment 9052dca7 → PROD_ROLLED_BACK；容器精确切回发布前镜像 |
+| 再发布（deployment 05cd97f4） | ✅ DRAFT→VALIDATED→PROD_OBSERVING→PRODUCTION_VERIFIED 全状态机闭环；修复后 force-recreate 真实生效 |
+| 备份演练 | ✅ `cameltv-prod-20260825-020315.dump`（与 8-23 备份共 2 份保留） |
+| 数据完整性 | ✅ sys_user=13、sys_project=5、test_case=13153、test_plan=16、defect=9、requirement_document=7、lanhu_evidence_asset=229、knowledge_source=642（发布→回滚→再发布零丢失） |
+
+### D6-3. 本轮新增踩坑（承接 D4）
+
+1. **构建强依赖本地代理**：本机构建（apt/nodesource/npm/git clone）全部走 Docker Desktop 系统代理
+   （Windows 系统代理 127.0.0.1:7688，vpn07）。vpn07 断线时容器内 HTTP 被透明重定向到死代理
+   （`connectex refused`），HTTPS 与 HTTP 表现不一致——**构建前必须先确认 vpn07 在线**，
+   失败后 BuildKit 缓存可断点续建（重试成本低）。
+2. **docker save 损坏（containerd 存储）**：`UseContainerdSnapshotter` 下 save 可能输出
+   blobs-only 残缺 tar（tar 可读但无 index.json）→ 服务器 load "unrecognized image format"。
+   **解决方案：`docker buildx build --output=type=docker,dest=xxx.tar`**（含 manifest.json，
+   服务器 dockerd 稳定 load）。同时 `docker builder prune -af` 修复 "unexpected digest" 缓存损坏。
+3. **compose 不识别 tag 重指**：服务器同样启用 containerd 存储时，`docker tag` 重指
+   `cameltv-tp-backend:main` 后 compose 认为无变化不重建 → 必须 `--force-recreate backend frontend`。
+4. **发布前打锚点**：现役镜像只有 `:main` 一个 tag 时，发布覆盖后旧版变 dangling。
+   **每次发布前给现役镜像打保留 tag**（本次人工补 `prev-prod-20260825`）；后续 executor
+   可考虑自动锚定（backlog）。
+5. **Docker Desktop 掉线**：长构建期间 Docker Desktop 曾整体退出（进程消失），
+   疑似内存压力（0x800705AF）；重启 Desktop 后引擎秒级恢复，缓存不丢。
+6. **health 检查时序**：executor `sleep 20` 后检查 200 实际可行——compose `up -d` 本身
+   等待 backend healthy（depends_on condition）才返回，无需延长。
