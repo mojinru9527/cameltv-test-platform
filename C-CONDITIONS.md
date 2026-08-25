@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-24 (Batch 203: C203-2 已关闭并补扩展证据（接口用例链路缺口由 fix/a-response-ref-and-case-url 修复）；C203-1 保持 Open)
+**最后更新**: 2026-08-25 (Batch 204 体育只读 GET 全量回归: 新增 C204-1/C204-2/C204-3；C203-1 保持 Open)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -21,6 +21,14 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ---
 
 ## Open (待处理)
+
+### batch-204 — 体育接口服务只读 GET 全量回归（2026-08-25）—— 新增
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C204-1 | camel-service-final、camel-test-confirm 两副本服务在 Test5 网关无路由：232 条端点 + 5 条 article/match 用例全 404（网关 Spring JSON「Not Found」）；平台链路本身正常。解除条件=确认两服务下线或网关路由恢复后：归档/停用相关资产与用例（或恢复路由）并复跑本批矩阵归零 404 + 证据 PR/commit | P1 | 2026-08-25 |
+| C204-2 | 18 条聚合类 GET 超过 25s（camel list_competition/list_faceoff/init_name2id/init_season_stats/hot_match、account captcha/generate 等），平台引擎 30s 超时边缘，本批按 NETWORK 记录。解除条件=服务侧优化或平台执行超时配置化后，长超时重试该 18 条并记录通过/超时证据 | P2 | 2026-08-25 |
+| C204-3 | 生成器负向用例断言口径失配：HTTP 4xx 断言 vs 网关信封（HTTP 200 + status=400），负向用例执行 all_pass=False（如 getById id 缺失/类型/鉴权用例）。解除条件=生成器负向断言对齐业务码口径（2xx + `$.status` 4xx）并回归 test_apitest_generation 等既有测试 + 真实执行证据 | P2 | 2026-08-25 |
 
 ### batch-203 — 参数真实化 + 假成功与状态一致性修复（2026-08-24）—— 新增
 
