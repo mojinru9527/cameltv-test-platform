@@ -47,13 +47,22 @@ def _case_execution_url(db: Session, case: TestCase) -> str:
 
     网关按服务路由（如 /camel-service/ee/...）；与 DebugTab 组装一致。
     绝对 URL、无绑定资产、或已含服务前缀时原样返回。
+    Batch 204：存量用例（is_deleted=0、api_endpoint_id 为空）可从
+    api_spec_ref 的 `api_endpoint:{id}` 前缀回退解析资产绑定。
     """
     url = case.api_endpoint or ""
-    if url.startswith(("http://", "https://")) or not case.api_endpoint_id:
+    if url.startswith(("http://", "https://")):
+        return url
+    endpoint_id = case.api_endpoint_id
+    if endpoint_id is None:
+        spec_ref = getattr(case, "api_spec_ref", "") or ""
+        if spec_ref.startswith("api_endpoint:") and spec_ref.split(":", 1)[1].strip().isdigit():
+            endpoint_id = int(spec_ref.split(":", 1)[1].strip())
+    if not endpoint_id:
         return url
     from app.models.api_asset import ApiEndpoint, ApiService
 
-    ep = db.get(ApiEndpoint, case.api_endpoint_id)
+    ep = db.get(ApiEndpoint, endpoint_id)
     if not ep or not ep.service_id:
         return url
     svc = db.get(ApiService, ep.service_id)
