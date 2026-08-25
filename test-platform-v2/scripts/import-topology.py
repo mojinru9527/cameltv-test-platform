@@ -16,7 +16,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--evidence", default=str(Path(__file__).resolve().parents[1] / "work-logs" / "evidence" / "batch-113" / "interaction-paths.json"))
     ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://swiftbugs.cn/api/v1"))
-    ap.add_argument("--username", default="sportsadmin")
+    ap.add_argument("--username", default="admin")
     ap.add_argument("--password", default=os.environ.get("TP_ADMIN_PASSWORD", ""))
     ap.add_argument("--source-batch", default="batch-113")
     args = ap.parse_args()

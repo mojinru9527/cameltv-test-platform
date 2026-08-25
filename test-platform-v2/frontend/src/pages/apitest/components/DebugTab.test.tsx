@@ -167,7 +167,7 @@ describe('快速调试资产预填', () => {
           project_id: 1,
           service_id: 3,
           service_name: 'camel-test-confirm',
-          module: 'sports-live-controller',
+          module: 'live-controller',
           method: 'GET',
           path: '/ee/live/home_match',
           summary: '首页模块',
@@ -192,7 +192,7 @@ describe('快速调试资产预填', () => {
     )
 
     await selectTest5Environment()
-    // tags=sports-live-controller 不再作为模块路径混入
+    // tags=live-controller 不再作为模块路径混入
     expect((screen.getByLabelText('模块名') as HTMLInputElement).value).toBe('/ee/live')
     expect((screen.getByLabelText('接口路径') as HTMLInputElement).value).toBe('/home_match')
     expect((screen.getByLabelText('完整请求地址') as HTMLInputElement).value).toBe(

@@ -41,7 +41,7 @@ import ReleaseBundlesPage from '../index'
 
 const bundle = {
   id: 60,
-  name: 'Batch 60 sports release',
+  name: 'Batch 60 release',
   description: '',
   client_version: '60.0.0',
   admin_version: '60.0.0',

@@ -1,6 +1,6 @@
 """Batch 112 — response_structure 断言引擎测试（worktree 落点校验 OK）。
 
-与 scripts/sports/execute-interface-cases.py::_assert_structure 语义对齐：
+与历史接口用例执行脚本的 _assert_structure 语义对齐：
 - envelope 键缺失 → 失败
 - data.* 缺失（200 信封动态数据）→ warning（passed=True，不判失败）
 - records[0].* 记录字段以键存在为准（值可为空）
