@@ -170,7 +170,7 @@ export default function DefectTable({
                               <AlertDialogFooter>
                                 <AlertDialogCancel onClick={() => setDeleteTarget(null)}>取消</AlertDialogCancel>
                                 <AlertDialogAction onClick={handleDelete} disabled={deleting}>
-                                  {deleting ? '删除中...' : '确定删除'}
+                                  {deleting ? '删除中…' : '确定删除'}
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>

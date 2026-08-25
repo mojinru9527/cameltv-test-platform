@@ -262,7 +262,7 @@ export default function AddCasesModal({ open, planId, onClose, onAdded }: Props)
                   {loading && data.items.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
-                        加载中...
+                        加载中…
                       </TableCell>
                     </TableRow>
                   ) : data.items.length === 0 ? (

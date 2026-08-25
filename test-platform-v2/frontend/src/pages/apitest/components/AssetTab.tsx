@@ -350,7 +350,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
               aria-label={`为服务 ${svcNameOf(endpoints[0])} 批量生成用例`}
             >
               <Zap className={`size-3.5 ${generatingService ? 'animate-pulse' : ''}`} data-icon="inline-start" />
-              {generatingService ? '生成中...' : '生成全部用例'}
+              {generatingService ? '生成中…' : '生成全部用例'}
             </Button>
           </div>
         )}
@@ -372,7 +372,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
         </Select>
         <div className="flex items-center gap-1 flex-1 min-w-[200px]">
           <Search className="size-4 text-muted-foreground shrink-0" />
-          <Input placeholder="搜索服务名、模块名、路径..." value={keyword} onChange={e => { setKeyword(e.target.value); setPage(1) }} className="border-0 shadow-none" />
+          <Input placeholder="搜索服务名、模块名、路径…" value={keyword} onChange={e => { setKeyword(e.target.value); setPage(1) }} className="border-0 shadow-none" />
         </div>
         <Button
           variant="secondary"

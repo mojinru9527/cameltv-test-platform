@@ -363,7 +363,7 @@ export default function AiResultModal({
         action: 'confirm',
         modules: confirmedModules,
       })
-      toast.success('功能拆分已确认，正在生成用例...')
+      toast.success('功能拆分已确认，正在生成用例…')
 
       setGenerating(true)
       try {
@@ -644,7 +644,7 @@ export default function AiResultModal({
           {isExtractMode && rejectMode && (
             <div className="flex-1 mr-2">
               <Textarea
-                placeholder="请说明哪些部分需要重新提取，以及原因..."
+                placeholder="请说明哪些部分需要重新提取，以及原因…"
                 value={rejectNotes}
                 onChange={(e) => setRejectNotes(e.target.value)}
                 rows={2}
@@ -677,7 +677,7 @@ export default function AiResultModal({
                     ) : (
                       <CheckCircle2 className="h-4 w-4 mr-1" />
                     )}
-                    {generating ? '正在生成用例...' : '确认并生成用例'}
+                    {generating ? '正在生成用例…' : '确认并生成用例'}
                   </Button>
                 </>
               ) : (

@@ -69,7 +69,7 @@ export default function DefectTransitionDialog({
             <Textarea
               id="transition-comment"
               rows={3}
-              placeholder="输入流转备注..."
+              placeholder="输入流转备注…"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
             />

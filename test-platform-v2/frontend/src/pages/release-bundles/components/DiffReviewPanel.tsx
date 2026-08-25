@@ -351,7 +351,7 @@ export default function DiffReviewPanel({
         <div className="flex items-center gap-2 pt-2">
           <Button onClick={handleConfirmAll} disabled={confirming}>
             <CheckCircle2 className="h-4 w-4 mr-1" />
-            {confirming ? '确认中...' : '确认全部'}
+            {confirming ? '确认中…' : '确认全部'}
           </Button>
         </div>
       )}

@@ -91,7 +91,7 @@ export function ErrorState({
   // Default description falls back to a truncated error message.
   const displayDescription =
     description ||
-    (err.message ? (err.message.length > 120 ? err.message.slice(0, 120) + '...' : err.message) : undefined)
+    (err.message ? (err.message.length > 120 ? err.message.slice(0, 120) + '…' : err.message) : undefined)
 
   return (
     <div

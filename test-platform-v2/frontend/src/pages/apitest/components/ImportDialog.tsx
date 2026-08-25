@@ -104,7 +104,7 @@ export default function ImportDialog({ open, onClose, onImported }: Props) {
             <TabsContent value="text" className="mt-2">
               <Textarea
                 rows={10}
-                placeholder='粘贴 OpenAPI JSON/YAML ...'
+                placeholder='粘贴 OpenAPI JSON/YAML …'
                 value={specContent}
                 onChange={e => setSpecContent(e.target.value)}
               />

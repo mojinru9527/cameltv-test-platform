@@ -31,7 +31,7 @@ export interface ListToolbarProps {
   /** Called on Enter or search button click. */
   onSearch?: () => void
 
-  /** Placeholder for search input. @default "搜索..." */
+  /** Placeholder for search input. @default "搜索…" */
   searchPlaceholder?: string
 
   /** Extra filter controls rendered between search and actions. */
@@ -51,7 +51,7 @@ export default function ListToolbar({
   searchValue,
   onSearchChange,
   onSearch,
-  searchPlaceholder = '搜索...',
+  searchPlaceholder = '搜索…',
   children,
   actions,
   onReset,

@@ -279,7 +279,7 @@ export default function BundleDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-muted-foreground text-sm">加载中...</div>
+        <div className="text-muted-foreground text-sm">加载中…</div>
       </div>
     )
   }
@@ -726,7 +726,7 @@ export default function BundleDetailPage() {
               )}
             </div>
           ) : (
-            <div className="text-center py-12 text-muted-foreground">加载覆盖数据中...</div>
+            <div className="text-center py-12 text-muted-foreground">加载覆盖数据中…</div>
           )}
           </>)}
         </TabsContent>

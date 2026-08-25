@@ -434,7 +434,7 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
                 bodyType === 'json' ? '{"key":"value"}'
                   : bodyType === 'form' ? 'key1=value1\nkey2=value2'
                   : bodyType === 'x-www-form-urlencoded' ? 'key1=value1&key2=value2'
-                  : 'Raw body content...'
+                  : 'Raw body content…'
               }
               value={body}
               onChange={(e) => setBody(e.target.value)}
@@ -507,7 +507,7 @@ export function ResponsePanel({ result, loading }: { result: any; loading: boole
       <CardHeader><CardTitle>响应结果</CardTitle></CardHeader>
       <CardContent>
         {loading ? (
-          <div className="flex items-center gap-2 text-muted-foreground py-8 justify-center"><Loader2 className="animate-spin size-5" /><span>请求中...</span></div>
+          <div className="flex items-center gap-2 text-muted-foreground py-8 justify-center"><Loader2 className="animate-spin size-5" /><span>请求中…</span></div>
         ) : result ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2 flex-wrap">

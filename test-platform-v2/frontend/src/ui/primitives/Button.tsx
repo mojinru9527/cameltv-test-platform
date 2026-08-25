@@ -1,4 +1,5 @@
 import { type ButtonHTMLAttributes, forwardRef } from 'react'
+import { Slot } from '@radix-ui/react-slot'
 import { cn } from '@/lib/utils'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
@@ -7,6 +8,8 @@ export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'icon' | 'icon-sm' | 'icon-
 type BaseButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant
   loading?: boolean
+  /** 渲染为子元素（如 <Link>），继承按钮的 variant/size/焦点/按压样式 */
+  asChild?: boolean
 }
 
 type IconButtonProps = BaseButtonProps & {
@@ -29,7 +32,7 @@ const variantClassMap: Record<ButtonVariant, string> = {
 
 const sizeClassMap: Record<ButtonSize, string> = {
   xs: 'ui-btn-xs h-6 gap-1 rounded-lg px-2 text-xs [&_svg:not([class*="size-"])]:size-3',
-  sm: 'ui-btn-sm h-7 gap-1 rounded-lg px-2.5 text-[0.8rem] [&_svg:not([class*="size-"])]:size-3.5',
+  sm: 'ui-btn-sm h-7 gap-1 rounded-lg px-2.5 text-meta [&_svg:not([class*="size-"])]:size-3.5',
   md: 'h-8 gap-1.5 px-2.5',
   lg: 'ui-btn-lg h-9 gap-1.5 px-3',
   icon: 'ui-btn-icon size-8',
@@ -38,14 +41,15 @@ const sizeClassMap: Record<ButtonSize, string> = {
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'secondary', size = 'md', loading, disabled, type = 'button', children, ...props }, ref) => {
+  ({ className, variant = 'secondary', size = 'md', loading, disabled, type = 'button', asChild, children, ...props }, ref) => {
+    const Comp = asChild ? Slot : 'button'
     return (
-      <button
+      <Comp
         ref={ref}
         data-slot="button"
         data-variant={variant}
         data-size={size}
-        type={type}
+        type={asChild ? undefined : type}
         className={cn(
           'ui-btn inline-flex shrink-0 touch-manipulation items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-colors outline-none select-none',
           'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-px',
@@ -55,7 +59,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           sizeClassMap[size],
           className,
         )}
-        disabled={disabled || loading}
+        disabled={!asChild && (disabled || loading)}
         aria-busy={loading || undefined}
         {...props}
       >
@@ -70,7 +74,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ) : (
           children
         )}
-      </button>
+      </Comp>
     )
   },
 )

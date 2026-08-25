@@ -6,10 +6,14 @@
  * - 实时状态栏
  * - Bento 指标条
  * - 可选的 SpatialChain / Inspector / RiskRadar / ReleasePulse
+ *
+ * 约定（审计 H2）：颜色走 --obsidian-* 主题变量，字阶走 --text-* token，
+ * 字重走 --weight-* token（font-semibold=580），不再在组件里写死 hex。
  */
 
 import { type ReactNode, type CSSProperties, type PointerEvent, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { Button } from '../primitives/Button'
 import { RefreshCw } from '@/lib/icons'
 
 export interface WorkbenchMetric {
@@ -50,10 +54,10 @@ function setSpotlight(event: PointerEvent<HTMLElement>) {
 }
 
 const toneVars: Record<string, string> = {
-  positive: '#80dba6',
-  active: '#80c4ff',
-  risk: '#ff9a90',
-  neutral: '#909f95',
+  positive: 'var(--obsidian-tone-positive)',
+  active: 'var(--obsidian-tone-active)',
+  risk: 'var(--obsidian-tone-risk)',
+  neutral: 'var(--obsidian-tone-neutral)',
 }
 
 export function ObsidianWorkbench({
@@ -73,7 +77,7 @@ export function ObsidianWorkbench({
 
   return (
     <section
-      className={cn('relative text-[#eef6f0]', className)}
+      className={cn('relative text-foreground', className)}
       role="region"
       aria-label={title}
       onPointerMove={setSpotlight}
@@ -83,8 +87,8 @@ export function ObsidianWorkbench({
       {/* ── 页头 ── */}
       <header className="mb-6">
         {/* Kicker */}
-        <div className="flex items-center gap-2 mb-3 text-[0.75rem] font-[650] tracking-[0.09em] text-[#91a398]">
-          <span className="w-[22px] h-px bg-[#35e68a] shadow-[0_0_10px_rgba(53,230,138,0.55)]" />
+        <div className="flex items-center gap-2 mb-3 text-caption font-[650] tracking-[0.09em] text-muted-foreground">
+          <span className="w-[22px] h-px bg-primary shadow-[0_0_10px_rgba(53,230,138,0.55)]" />
           {kicker}
         </div>
 
@@ -92,13 +96,13 @@ export function ObsidianWorkbench({
         <div className="flex items-center justify-between gap-8">
           <div className="min-w-0 max-w-[850px]">
             {breadcrumbs && (
-              <span className="block mb-2 text-[0.8125rem] text-[#829087]">{breadcrumbs}</span>
+              <span className="block mb-2 text-meta text-obsidian-muted-2">{breadcrumbs}</span>
             )}
-            <h1 className="max-w-[32ch] text-[clamp(1.75rem,2.4vw,2.25rem)] font-[580] tracking-[-0.03em] leading-[1.08] text-[#f5faf6] text-balance">
+            <h1 className="max-w-[32ch] text-[clamp(1.75rem,2.4vw,2.25rem)] font-semibold tracking-[-0.03em] leading-[1.08] text-obsidian-fg text-balance">
               {title}
             </h1>
             {description && (
-              <p className="max-w-[70ch] mt-4 text-[1rem] leading-relaxed text-[#a7b5ab]">
+              <p className="max-w-[70ch] mt-4 text-body leading-relaxed text-muted-hc">
                 {description}
               </p>
             )}
@@ -107,14 +111,16 @@ export function ObsidianWorkbench({
           {/* 操作区 */}
           <div className="flex flex-shrink-0 gap-2">
             {onRefresh && (
-              <button
+              <Button
+                variant="ghost"
+                size="md"
+                loading={loading}
                 onClick={onRefresh}
-                disabled={loading}
-                className="inline-flex items-center gap-2 min-h-[42px] px-4 rounded-[9px] border border-[rgba(218,239,224,0.12)] text-[0.875rem] text-[#d9e4dc] bg-[rgba(255,255,255,0.025)] hover:bg-[rgba(255,255,255,0.05)] transition-colors disabled:opacity-40"
+                className="min-h-[42px] rounded-md border border-obsidian-border-strong px-4 text-control text-obsidian-fg-2 bg-obsidian-glass hover:bg-obsidian-glass-hover"
               >
-                <RefreshCw className={cn('size-4', loading && 'animate-spin')} aria-hidden="true" />
-                {loading ? '加载中...' : '刷新'}
-              </button>
+                <RefreshCw className="size-4" aria-hidden="true" />
+                刷新
+              </Button>
             )}
             {actions}
           </div>
@@ -122,18 +128,21 @@ export function ObsidianWorkbench({
 
         {/* 状态栏 */}
         {statusLine && statusLine.length > 0 && (
-          <div className="flex items-center gap-4 mt-4 text-[0.8125rem] text-[#819086]">
+          <div className="flex items-center gap-4 mt-4 text-meta text-obsidian-muted-3">
             {statusLine.map((item, i) => (
               <span
                 key={i}
                 className={cn(
                   'flex items-center gap-2',
-                  item.live && 'text-[#bbf3d0]',
-                  i > 0 && 'relative pl-4 before:absolute before:top-1/2 before:left-0 before:w-[3px] before:h-[3px] before:rounded-full before:bg-[#536159] before:-translate-y-1/2',
+                  item.live && 'text-obsidian-live',
+                  i > 0 && 'relative pl-4 before:absolute before:top-1/2 before:left-0 before:w-[3px] before:h-[3px] before:rounded-full before:bg-obsidian-dot before:-translate-y-1/2',
                 )}
               >
                 {item.live && (
-                  <i className="w-[7px] h-[7px] rounded-full bg-[#35e68a] shadow-[0_0_0_4px_rgba(53,230,138,0.09),0_0_12px_rgba(53,230,138,0.4)]" />
+                  <i
+                    className="w-[7px] h-[7px] rounded-full bg-primary shadow-[0_0_0_4px_rgba(53,230,138,0.09),0_0_12px_rgba(53,230,138,0.4)]"
+                    aria-hidden="true"
+                  />
                 )}
                 {item.label}
               </span>
@@ -146,7 +155,7 @@ export function ObsidianWorkbench({
       {metrics && metrics.length > 0 && (
         <div
           className={cn(
-            'grid mb-6 py-3 border-y border-[rgba(218,239,224,0.08)]',
+            'grid mb-6 py-3 border-y border-obsidian-border-soft',
             metrics.length <= 2
               ? 'grid-cols-1 sm:grid-cols-2'
               : metrics.length === 3
@@ -161,19 +170,19 @@ export function ObsidianWorkbench({
               className={cn(
                 'relative grid grid-cols-[1fr_auto] gap-x-3 gap-y-[5px] min-w-0 px-3 py-2 sm:px-6',
                 metrics.length <= 3
-                  ? i > 0 && 'sm:border-l sm:border-[rgba(218,239,224,0.08)]'
-                  : i % 2 === 1 && 'border-l border-[rgba(218,239,224,0.08)] lg:border-l',
-                metrics.length > 3 && i > 0 && 'lg:border-l lg:border-[rgba(218,239,224,0.08)]',
+                  ? i > 0 && 'sm:border-l sm:border-obsidian-border-soft'
+                  : i % 2 === 1 && 'border-l border-obsidian-border-soft lg:border-l',
+                metrics.length > 3 && i > 0 && 'lg:border-l lg:border-obsidian-border-soft',
                 i === 0 && 'pl-0',
               )}
             >
-              <span className="flex items-center gap-[7px] text-[0.8125rem]" style={{ color: toneVars[m.tone] }}>
+              <span className="flex items-center gap-[7px] text-meta" style={{ color: toneVars[m.tone] }}>
                 {m.label}
               </span>
-              <b className="row-span-2 col-start-2 self-center text-[1.75rem] font-[560] tracking-[-0.03em] text-[#eef6f0]">
+              <b className="row-span-2 col-start-2 self-center text-[1.75rem] font-[560] tracking-[-0.03em] text-foreground">
                 {m.value}
               </b>
-              <small className="text-[0.75rem] text-[#91a398]">{m.note}</small>
+              <small className="text-caption text-muted-foreground">{m.note}</small>
             </div>
           ))}
         </div>
@@ -207,12 +216,12 @@ function WorkbenchSkeleton() {
     <div className="space-y-6 animate-pulse" aria-busy="true" aria-label="加载中">
       <div className="grid grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-24 bg-[rgba(255,255,255,0.03)] rounded-xl" />
+          <div key={i} className="h-24 bg-obsidian-glass rounded-xl" />
         ))}
       </div>
       <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2 h-64 bg-[rgba(255,255,255,0.03)] rounded-xl" />
-        <div className="h-64 bg-[rgba(255,255,255,0.03)] rounded-xl" />
+        <div className="col-span-2 h-64 bg-obsidian-glass rounded-xl" />
+        <div className="h-64 bg-obsidian-glass rounded-xl" />
       </div>
     </div>
   )

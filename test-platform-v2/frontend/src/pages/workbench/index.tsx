@@ -5,6 +5,7 @@ import StatCard from '@/components/StatCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import type { WorkbenchMetric } from '@/ui'
 import {
@@ -65,9 +66,23 @@ export default function Workbench() {
 
   const today = format(new Date(), 'yyyy-MM-dd')
   const sevenDaysAgo = format(subDays(new Date(), 7), 'yyyy-MM-dd')
-  const [preset, setPreset] = useState<PresetKey>('7d')
-  const [rangeValue, setRangeValue] = useState<[string, string]>([sevenDaysAgo, today])
-  const [tab, setTab] = useState<'project' | 'cross'>('project')
+  // M4：preset / 时间范围 / Tab 写入 URL，刷新与分享不丢上下文
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [preset, setPreset] = useState<PresetKey>(() => {
+    const p = searchParams.get('preset')
+    return p === '7d' || p === '30d' || p === 'custom' ? p : '7d'
+  })
+  const [rangeValue, setRangeValue] = useState<[string, string]>(() => {
+    const start = searchParams.get('start')
+    const end = searchParams.get('end')
+    const valid = (v: string | null) => (v ? /^\d{4}-\d{2}-\d{2}$/.test(v) : false)
+    // 仅当 preset=custom 且 start/end 双合法时回填 URL 范围，否则走默认 7 天
+    if (searchParams.get('preset') === 'custom' && valid(start) && valid(end)) {
+      return [start as string, end as string]
+    }
+    return [sevenDaysAgo, today]
+  })
+  const [tab, setTab] = useState<'project' | 'cross'>(() => (searchParams.get('tab') === 'cross' ? 'cross' : 'project'))
   const chartColors = useChartColors()
 
   // ── Data fetching with useApi ──
@@ -84,17 +99,32 @@ export default function Workbench() {
   const handlePresetChange = (val: PresetKey) => {
     setPreset(val)
     const now = new Date()
+    let nextRange = rangeValue
     if (val === '7d') {
-      setRangeValue([format(subDays(now, 7), 'yyyy-MM-dd'), format(now, 'yyyy-MM-dd')])
+      nextRange = [format(subDays(now, 7), 'yyyy-MM-dd'), format(now, 'yyyy-MM-dd')]
+      setRangeValue(nextRange)
     } else if (val === '30d') {
-      setRangeValue([format(subDays(now, 30), 'yyyy-MM-dd'), format(now, 'yyyy-MM-dd')])
+      nextRange = [format(subDays(now, 30), 'yyyy-MM-dd'), format(now, 'yyyy-MM-dd')]
+      setRangeValue(nextRange)
     }
+    syncUrlParams(val, nextRange, tab)
+  }
+
+  /** M4：时间范围 preset + 自定义区间 + Tab 同步到 URL（刷新/分享不丢上下文） */
+  const syncUrlParams = (nextPreset: PresetKey, nextRange: [string, string], nextTab: 'project' | 'cross') => {
+    const params: Record<string, string> = {}
+    if (nextPreset !== '7d') params.preset = nextPreset
+    if (nextPreset === 'custom') {
+      params.start = nextRange[0]
+      params.end = nextRange[1]
+    }
+    if (nextTab !== 'project') params.tab = nextTab
+    setSearchParams(params, { replace: true })
   }
 
   // ── Derived chart data (computed from stats, safe even when undefined) ──
   const s = stats
   const caseTypes = s?.case_type_stats || []
-  const priorityData = s?.priority_distribution || []
 
   const barData = caseTypes.map((ct) => ({
     name: ct.label,
@@ -166,7 +196,7 @@ export default function Workbench() {
       data={stats}
       onRetry={refetch}
       skeletonType="card"
-      loadingText="加载仪表盘数据..."
+      loadingText="加载仪表盘数据…"
       emptyTitle="暂无仪表盘数据"
     >
   {(_s) => {
@@ -217,8 +247,10 @@ export default function Workbench() {
                         type="date"
                         value={rangeValue[0]}
                         onChange={(e) => {
+                          const nextRange: [string, string] = [e.target.value, rangeValue[1]]
                           setPreset('custom')
-                          setRangeValue([e.target.value, rangeValue[1]])
+                          setRangeValue(nextRange)
+                          syncUrlParams('custom', nextRange, tab)
                         }}
                         aria-label="开始日期"
                         className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
@@ -229,8 +261,10 @@ export default function Workbench() {
                         aria-label="结束日期"
                         value={rangeValue[1]}
                         onChange={(e) => {
+                          const nextRange: [string, string] = [rangeValue[0], e.target.value]
                           setPreset('custom')
-                          setRangeValue([rangeValue[0], e.target.value])
+                          setRangeValue(nextRange)
+                          syncUrlParams('custom', nextRange, tab)
                         }}
                         className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
                       />
@@ -493,7 +527,11 @@ export default function Workbench() {
 
   // ── 主渲染 ──
   const tabsContent = (
-    <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="mb-4">
+    <Tabs value={tab} onValueChange={(v) => {
+      const nextTab = (v as 'project' | 'cross')
+      setTab(nextTab)
+      syncUrlParams(preset, rangeValue, nextTab)
+    }} className="mb-4">
       <TabsList>
         <TabsTrigger value="project">项目概览</TabsTrigger>
         <TabsTrigger value="cross">多项目概览</TabsTrigger>
@@ -561,7 +599,7 @@ function CrossProjectDashboard({ dateRange }: { dateRange: { start: string; end:
       data={crossStats}
       onRetry={refetch}
       skeletonType="card"
-      loadingText="加载跨项目数据..."
+      loadingText="加载跨项目数据…"
       emptyTitle="暂无跨项目数据"
     >
       {(stats) => (

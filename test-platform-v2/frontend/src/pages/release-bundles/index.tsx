@@ -257,7 +257,7 @@ export default function ReleaseBundlesPage() {
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             className="pl-8 h-9"
-            placeholder="搜索发布包名称或版本号..."
+            placeholder="搜索发布包名称或版本号…"
             value={keyword}
             onChange={(e) => {
               setKeyword(e.target.value)
