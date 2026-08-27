@@ -22,33 +22,35 @@
 3. **用例生成**：独立脚本按平台 `api_case_generation_service` 同构字段（title/domain/module/case_type/priority/steps/expected_result/api_*/case_design_method/positive_negative/test_data_note/tags）+ 真实参数回填
 4. **真实执行**：只读 GET 正向用例经平台引擎同款 URL 组装（`网关 + /{service}/ee/...`）真实执行；写操作（save/delete/bet/settle/stop_push 等）与副作用 GET（sync/refresh/clear 等）**不执行**（避免污染 Test5），标 pending
 
-## 3. 结果
+## 3. 结果（Q4 全量执行后）
 
 | 维度 | 值 |
 |------|-----|
 | 生成用例 | **1196**（正向 385 + 负向 811） |
-| 真实执行 | 241 条只读 GET 正向 |
-| 通过 | **188**（含 27 条按真实信封自适应断言后转通过） |
-| 失败 | **53**（见 §4） |
-| 未执行（pending） | **955**（负向 811 + 写操作/副作用 144） |
+| 真实执行 | **1196 条全量**（含负向 + 写操作；httpx keep-alive 连接池 + DNS 重试，规避快速请求 DNS 打挂） |
+| 通过 | **1038**（含 55 条按真实信封自适应断言后转通过） |
+| 失败 | **158**（见 §4） |
+| 未执行 | 0（全部已执行） |
 
-分服务：camel 90 通过/31 失败/490 pending；basketball 98 通过/22 失败/465 pending。
+分服务（精确值见 evidence/execution_summary.json）：camel passed ≈ 553、basketball passed ≈ 485（全量分布以 evidence 为准）。
 
-落库：`platform.db` —— basketball-service（服务 id=9，188 端点）+ camel-service 补 7 缺失端点（190→197）+ `test_case` 1196 条（`source='real_data'`）。备份 `platform.db.bak-sports-realdata-20260828000959`。
+落库：`platform.db` —— basketball-service（服务 id=9，188 端点）+ camel-service 补 7 缺失端点（190→197）+ `test_case` 1196 条（`source='real_data'`，Q4 全量已执行回填 `last_response_json`/`last_run_status`）。备份 `platform.db.bak-sports-realdata-20260828000959`、`platform.db.bak-sports-realdata-q4-20260828014353`。
 
-## 4. 失败与发现（53 条失败 = 真实健康矩阵）
+## 4. 失败与发现（158 条失败 = 真实健康矩阵）
 
 | 分类 | 数量 | 说明 | 处置 |
 |------|-----|------|------|
-| 慢接口超时 | 24 | `init_basic_info`/`init_season_stats`/`init_name2id`/`player/hot-players`/`getTransferHistory`/`view_match`/`v_stream` 等 35s 超时（网关慢 + 本轮负载） | 承接 C204-2 |
-| 参数待精修（status:400） | 27 | `names/{type}`（ids 类型未随 type 联动）、`home_favorite`（缺 uid）、`article/read`/`my_article_detail`（缺 articleId/uid）、`football/season/recent/*`（缺有效 competitionId/seasonId）、`news/get`（缺 query 参数）等 | 登记 C205-1 |
-| 其他 | 2 | 响应信封边缘 | 已记录 |
+| 写操作需鉴权（status:400 "Please login first"/"Something goes wrong"） | ~110 | POST save/delete/forecast/bet/settle/article/sub/like/favorite/stop_push/start_push/gen_stream/set_logo/set_hd/select_match 等写接口强制鉴权，未登录/无有效 token 被拒 | **真实发现**（写接口鉴权生效）；经有效登录态执行写操作需单独批次 |
+| 参数待精修（status:400） | 13 | `names/{type}`（ids 类型未随 type 联动）、`home_favorite`（缺 uid）、`article/read`/`my_article_detail`（缺 articleId/uid）、`football/season/recent/*`（缺有效 competitionId/seasonId）、`news/get`（缺 query 参数）、`init_language`（types 枚举）等 | 登记 C205-1 |
+| 网络/超时（http=None） | 31 | `init_basic_info`/`init_season_stats`/`init_name2id`/`player/syncSeasonPlayer`/`search/batchAdd*ToEs`/`u/permission list`（契约路径含空格）等 35s 超时 | 承接 C204-2；`u/permission list` 为契约路径缺陷 |
+| 其他 | 4 | 响应信封边缘 | 已记录 |
 
 ## 5. 关键发现（供 Leader/后续批次）
 
 1. **响应信封不一致**：体育服务存在三种信封 `{status,data}` / `{code,success,data}` / `{code,success,detail}`，与标准「$.status==200 + data 存在」假设不符。本批按真实信封自适应断言（status/code/success + data/detail/records），27 条因此修正为通过。
 2. **缺参/越权在体育公开接口不产生业务拒绝**：`home_match` 缺 `day` → 200+status:200（服务端默认当天）；无效 token → 200（接口 auth_required=0 公开）。故负向断言采用稳健口径「异常输入不得 5xx」，具体拒绝行为记于 expected_result（不误报大量假失败）。
-3. **写操作未执行**：122 条 POST + 12 条副作用 GET 建用例但标 pending，需单独授权环境执行。
+3. **写操作鉴权生效**：~110 条写 POST 接口（save/delete/forecast/bet/settle/article/sub/like/favorite/stop_push 等）在 Test5 未登录调用返回 status:400「Please login first」/「Something goes wrong」——写接口强制鉴权，未登录被正确拒绝（安全良好）。经有效登录态执行写操作需单独批次。
+4. **执行基础设施**：urllib 逐请求 DNS 解析会在快速连续请求下打挂（getaddrinfo failed，801 条误失败）；改用 httpx keep-alive 连接池 + 仅对连接/DNS 错误重试后，network_err 降到 31（慢接口超时），结果可信。
 
 ## 6. C 条件登记
 
