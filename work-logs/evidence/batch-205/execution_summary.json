@@ -1,0 +1,38 @@
+{
+ "batch": "batch-205",
+ "generated_cases": 1196,
+ "by_status": {
+  "pending": 955,
+  "failed": 53,
+  "passed": 188
+ },
+ "by_positive_negative": {
+  "positive": 385,
+  "negative": 811
+ },
+ "by_service_status": {
+  "basketball:failed": 22,
+  "basketball:passed": 98,
+  "basketball:pending": 465,
+  "camel:failed": 31,
+  "camel:passed": 90,
+  "camel:pending": 490
+ },
+ "execution_summary": {
+  "total": 1196,
+  "by_status": {
+   "pending": 955,
+   "failed": 53,
+   "passed": 188
+  },
+  "envelope_reasserted": 27
+ },
+ "services": {
+  "camel-service": {
+   "endpoints": 197
+  },
+  "basketball-service": {
+   "endpoints": 188
+  }
+ }
+}
