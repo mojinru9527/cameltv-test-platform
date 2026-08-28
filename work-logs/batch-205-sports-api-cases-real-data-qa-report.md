@@ -69,3 +69,44 @@
 ```
 
 **证据**：`work-logs/evidence/batch-205/real_param_pool.json`、`execution_summary.json`。
+
+---
+
+## 8. 生产测试平台交付（swiftbugs.cn / proj#1「CamelTv 体育平台」，2026-08-28）
+
+> 用户确认目标=生产测试平台，走生产平台 API（`sportsadmin` 登录 swiftbugs.cn）。本地 1710 条 real-data 用例导入生产 proj#1，并清除非 real-data 模板用例。
+
+### 8.1 生产导入结果
+| 服务 | real-data 用例 | 覆盖 |
+|---|---|---|
+| camel-service | 607 | 197/197 = 100% |
+| basketball-service | 573 | 188/188 = 100% |
+| account-service | 251 | 42/162 可访问 |
+| studio-service | 138 | 43/418 可访问 |
+| live-platform | 56 | 15/45 可访问 |
+| camel-mimo | 54 | 17/34 可访问 |
+| payment-service | 18 | 8/26 可访问 |
+| api-gateway-service | 4 | 2/17 可访问 |
+| **合计** | **1701** | — |
+
+### 8.2 覆盖口径
+- 体育内容主链（camel/basketball）**100%**；6 个基础服务仅覆盖「真实数据可访问」子集。
+- **575 个后台管理端点跳过**（广告主/直播间/充值商品/网关 actuator）：非体育内容主链；需 sports 网关专用管理 JWT（admin 平台会话 `aa` 被单会话锁、`cc` 禁用、用户站埋点 cookie 非鉴权），鉴权封闭无法访问。**用户确认「忽略」**（C205-4）。
+
+### 8.3 清理
+- 生产 proj#1 原有 2479 条非 real-data api 用例（ai_generated/模板假参 + batch-125）**已软删**（is_deleted=1，可恢复）。
+- 现 proj#1 api 用例 = **1701 条全为 real-data**（真实参数 + 断言 + 真实执行结果回填）。
+
+### 8.4 C 条件
+| ID | 内容 | 优先级 |
+|----|------|--------|
+| C205-3 | ~110 条写 POST 接口（save/delete/forecast/bet/sub 等）未登录调用返回 status:400「Please login first」——写接口鉴权生效；经有效登录态执行写操作需单独批次 | P2 |
+| C205-4 | 575 个后台管理端点（account/studio/payment admin + gateway actuator + camel-mimo user/redis）无 real-data 用例：需 sports 网关专用管理 JWT；暂忽略。解除条件=获得该 JWT 后遍历补全 | P2 |
+
+### 8.5 复现（生产）
+```text
+1. 登录生产平台：POST https://swiftbugs.cn/api/v1/auth/login {sportsadmin}
+2. 导入用例：POST /api/v1/test-cases（全字段保真，source=real_data）
+3. 清非 real-data：DELETE /api/v1/test-cases/batch（软删）
+4. 生产 real-data 用例分布：GET /api/v1/test-cases?case_type=api（1701 条）
+```
