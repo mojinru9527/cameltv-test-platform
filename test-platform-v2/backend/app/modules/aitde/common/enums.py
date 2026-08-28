@@ -140,3 +140,21 @@ class ProposalStatus(str, Enum):
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
     APPLIED = "APPLIED"
+
+
+class OracleType(str, Enum):
+    UI = "UI"
+    API = "API"
+    DB = "DB"
+    EVENT = "EVENT"
+    LOG = "LOG"
+    CONTRACT = "CONTRACT"
+    VISUAL = "VISUAL"
+    PERFORMANCE = "PERFORMANCE"
+
+
+class ScenarioReviewStatus(str, Enum):
+    PROPOSED = "PROPOSED"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    REQUEST_CHANGE = "REQUEST_CHANGE"

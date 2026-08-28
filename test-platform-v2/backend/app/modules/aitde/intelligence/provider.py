@@ -29,6 +29,12 @@ from app.modules.aitde.contract.schemas import (
     ContractRule,
     ContractSnapshot,
 )
+from app.modules.aitde.common.enums import OracleType
+from app.modules.aitde.scenario.schemas import (
+    OracleCandidate,
+    ScenarioCandidate,
+    ScenarioDesignOutput,
+)
 from app.modules.aitde.scope.schemas import ScopeAnalysisOutput, SourceRef
 
 
@@ -61,6 +67,14 @@ class ContractContext:
     intents: list[dict]  # approved intents
 
 
+@dataclass
+class ScenarioContext:
+    mission_id: int
+    contract_version_id: int
+    rules: list[dict]  # frozen contract rules ({rule_key,title,statement,risk_level})
+    outcomes: list[dict]  # required outcomes
+
+
 class IntelligenceProvider(Protocol):
     def analyze_scope(self, context: ScopeContext) -> ScopeAnalysisOutput: ...
 
@@ -71,6 +85,8 @@ class IntelligenceProvider(Protocol):
     def design_intents(self, context: ScopeIntentContext) -> IntentDetectionOutput: ...
 
     def build_contract(self, context: ContractContext) -> ContractSnapshot: ...
+
+    def design_scenarios(self, context: ScenarioContext) -> ScenarioDesignOutput: ...
 
 
 class DeterministicScopeProvider:
@@ -176,6 +192,41 @@ class DeterministicScopeProvider:
             required_outcomes=outcomes,
         )
 
+    def design_scenarios(self, context: ScenarioContext) -> ScenarioDesignOutput:
+        items = []
+        for i, rule in enumerate(context.rules):
+            oracle = OracleCandidate(
+                oracle_key=f"oracle-{rule['rule_key']}",
+                oracle_type=OracleType.DB,
+                target={"state": rule.get("statement", "")},
+                operator="eq",
+                expected_value={"ok": True},
+                source_type="AI_INFERRED",
+                source_refs=[SourceRef(artifact_id=0, fragment_id=0)],
+                required=True,
+                confidence=0.7,
+            )
+            items.append(
+                ScenarioCandidate(
+                    scenario_key=f"{rule['rule_key']}-SCEN-{i + 1:03d}",
+                    title=rule.get("title", rule["rule_key"]),
+                    business_goal=rule.get("statement", ""),
+                    priority=RiskLevel(rule.get("risk_level", "P2")),
+                    risk_level=RiskLevel(rule.get("risk_level", "P2")),
+                    given={"state": "precondition"},
+                    when={"action": rule["rule_key"]},
+                    expected_state=rule,
+                    source_refs=[SourceRef(artifact_id=0, fragment_id=0)],
+                    oracles=[oracle],
+                )
+            )
+        return ScenarioDesignOutput(
+            schema_version="1.0",
+            contract_version_id=context.contract_version_id,
+            mission_id=context.mission_id,
+            items=items,
+        )
+
 
 class LegacyAIServiceProvider:
     """Wrap the platform AI service when configured; falls back to deterministic."""
@@ -200,3 +251,6 @@ class LegacyAIServiceProvider:
 
     def build_contract(self, context: ContractContext) -> ContractSnapshot:
         return self._fallback.build_contract(context)
+
+    def design_scenarios(self, context: ScenarioContext) -> ScenarioDesignOutput:
+        return self._fallback.design_scenarios(context)
