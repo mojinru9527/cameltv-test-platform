@@ -14,7 +14,6 @@ const v2 = axios.create({
   timeout: 600000,
   withCredentials: true,
 })
-
 v2.interceptors.request.use((config) => {
   const { token, currentProjectId } = useAuthStore.getState()
   if (token) config.headers.Authorization = `Bearer ${token}`
@@ -49,6 +48,9 @@ v2.interceptors.response.use(
     return Promise.reject(err)
   },
 )
+
+/** Shared AITDE v2 axios client (reused by source/scope/contract/scenario api modules). */
+export { v2 as aitdeV2 }
 
 // ── AITDE Mission domain types ──
 

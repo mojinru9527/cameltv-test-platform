@@ -44,6 +44,7 @@ const MissionListPage = lazy(() => import('@/pages/missions'))
 const MissionCreatePage = lazy(() => import('@/pages/missions/CreateMissionPage'))
 const MissionLayout = lazy(() => import('@/pages/missions/MissionLayout'))
 const MissionOverviewPage = lazy(() => import('@/pages/missions/overview'))
+const MissionSourcesPage = lazy(() => import('@/pages/missions/sources'))
 const MissionStage = lazy(() => import('@/pages/missions/StagePlaceholder'))
 const themeLabEnabled = isThemeLabEnabled(import.meta.env.DEV, import.meta.env.VITE_ENABLE_THEME_LAB)
 
@@ -266,7 +267,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="overview" replace /> },
           { path: 'overview', element: <PageLoader><MissionOverviewPage /></PageLoader> },
-          { path: 'sources', element: <PageLoader><MissionStage title="资料" /></PageLoader> },
+          { path: 'sources', element: <PageLoader><MissionSourcesPage /></PageLoader> },
           { path: 'scope', element: <PageLoader><MissionStage title="范围" /></PageLoader> },
           { path: 'contract', element: <PageLoader><MissionStage title="契约" /></PageLoader> },
           { path: 'scenarios', element: <PageLoader><MissionStage title="场景" /></PageLoader> },
