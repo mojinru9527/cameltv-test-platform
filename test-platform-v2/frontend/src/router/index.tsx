@@ -47,7 +47,7 @@ const MissionOverviewPage = lazy(() => import('@/pages/missions/overview'))
 const MissionSourcesPage = lazy(() => import('@/pages/missions/sources'))
 const MissionScopePage = lazy(() => import('@/pages/missions/scope'))
 const MissionContractPage = lazy(() => import('@/pages/missions/contract'))
-const MissionStage = lazy(() => import('@/pages/missions/StagePlaceholder'))
+const MissionScenariosPage = lazy(() => import('@/pages/missions/scenarios'))
 const themeLabEnabled = isThemeLabEnabled(import.meta.env.DEV, import.meta.env.VITE_ENABLE_THEME_LAB)
 
 function PageLoader({ children }: { children: ReactNode }) {
@@ -272,7 +272,7 @@ export const router = createBrowserRouter([
           { path: 'sources', element: <PageLoader><MissionSourcesPage /></PageLoader> },
           { path: 'scope', element: <PageLoader><MissionScopePage /></PageLoader> },
           { path: 'contract', element: <PageLoader><MissionContractPage /></PageLoader> },
-          { path: 'scenarios', element: <PageLoader><MissionStage title="场景" /></PageLoader> },
+          { path: 'scenarios', element: <PageLoader><MissionScenariosPage /></PageLoader> },
         ],
       },
       {
