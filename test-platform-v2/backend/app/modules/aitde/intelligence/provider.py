@@ -16,6 +16,13 @@ from app.modules.aitde.common.enums import (
     ScopeType,
     TestDepth,
 )
+from app.modules.aitde.scope.ambiguity_schemas import (
+    AmbiguityCandidate,
+    AmbiguityDetectionOutput,
+    IntentCandidate,
+    IntentDetectionOutput,
+    Option,
+)
 from app.modules.aitde.scope.schemas import ScopeAnalysisOutput, SourceRef
 
 
@@ -33,8 +40,22 @@ class ParsedFragment:
     text: str
 
 
+@dataclass
+class ScopeIntentContext:
+    mission_id: int
+    scope_items: list[dict]
+
+
 class IntelligenceProvider(Protocol):
     def analyze_scope(self, context: ScopeContext) -> ScopeAnalysisOutput:
+        ...
+
+    def detect_ambiguities(
+        self, context: ScopeIntentContext
+    ) -> AmbiguityDetectionOutput:
+        ...
+
+    def design_intents(self, context: ScopeIntentContext) -> IntentDetectionOutput:
         ...
 
 
@@ -67,6 +88,52 @@ class DeterministicScopeProvider:
             items=items,
         )
 
+    def detect_ambiguities(
+        self, context: ScopeIntentContext
+    ) -> AmbiguityDetectionOutput:
+        items = []
+        for si in context.scope_items:
+            # Flag uncertain / excluded scope as an open ambiguity to resolve.
+            if si.get("ai_confidence", 1.0) < 0.85 or si.get("decision") == "EXCLUDE":
+                items.append(
+                    AmbiguityCandidate(
+                        ambiguity_key=f"amb-{si['scope_key']}",
+                        title=f"{si.get('name', si['scope_key'])} 是否纳入测试范围?",
+                        description=si.get("reason", ""),
+                        severity=RiskLevel(si.get("risk_level", "P2")),
+                        candidate_options=[
+                            Option(key="allow", label="纳入"),
+                            Option(key="deny", label="排除"),
+                            Option(key="out", label="本版本不测"),
+                        ],
+                        confidence=si.get("ai_confidence", 0.5),
+                        source_refs=[SourceRef(artifact_id=0, fragment_id=0)],
+                    )
+                )
+        return AmbiguityDetectionOutput(
+            schema_version="1.0", mission_id=context.mission_id, items=items
+        )
+
+    def design_intents(self, context: ScopeIntentContext) -> IntentDetectionOutput:
+        items = []
+        for si in context.scope_items:
+            if si.get("decision") == "INCLUDE":
+                items.append(
+                    IntentCandidate(
+                        intent_key=f"intent-{si['scope_key']}",
+                        title=si.get("name", si["scope_key"]),
+                        business_goal=si.get("reason", ""),
+                        required_outcomes=[
+                            f"{si.get('name', si['scope_key'])} 正确执行"
+                        ],
+                        risk_level=RiskLevel(si.get("risk_level", "P2")),
+                        source_refs=[SourceRef(artifact_id=0, fragment_id=0)],
+                    )
+                )
+        return IntentDetectionOutput(
+            schema_version="1.0", mission_id=context.mission_id, items=items
+        )
+
 
 class LegacyAIServiceProvider:
     """Wrap the platform AI service when configured; falls back to deterministic."""
@@ -80,3 +147,11 @@ class LegacyAIServiceProvider:
         # and parse its JSON into ScopeAnalysisOutput. Until enabled, produce the
         # deterministic baseline so the review flow is always usable.
         return self._fallback.analyze_scope(context)
+
+    def detect_ambiguities(
+        self, context: ScopeIntentContext
+    ) -> AmbiguityDetectionOutput:
+        return self._fallback.detect_ambiguities(context)
+
+    def design_intents(self, context: ScopeIntentContext) -> IntentDetectionOutput:
+        return self._fallback.design_intents(context)

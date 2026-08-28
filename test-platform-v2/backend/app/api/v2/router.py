@@ -24,11 +24,21 @@ from app.api.v2.missions import router as missions_router  # noqa: E402
 from app.api.v2.mission_sources import router as mission_sources_router  # noqa: E402
 from app.api.v2.mission_sources import single_router as sources_router  # noqa: E402
 from app.api.v2.mission_scope import router as mission_scope_router  # noqa: E402
+from app.api.v2.mission_ambiguities import (  # noqa: E402
+    router as ambiguity_router,
+    intents_router,
+    resolve_router,
+    intent_review_router,
+)
 
 router.include_router(missions_router)
 router.include_router(mission_sources_router)
 router.include_router(sources_router)
 router.include_router(mission_scope_router)
+router.include_router(ambiguity_router)
+router.include_router(intents_router)
+router.include_router(resolve_router)
+router.include_router(intent_review_router)
 
 # Further domain routers are added with their epics:
 # mission_contracts.py (EPIC-05), mission_scenarios.py (EPIC-06),
