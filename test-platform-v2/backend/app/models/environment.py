@@ -18,6 +18,12 @@ class Environment(Base, TimestampMixin):
     base_url: Mapped[str] = mapped_column(default="")            # https://api.example.com
     description: Mapped[str] = mapped_column(default="")
     is_production: Mapped[bool] = mapped_column(default=False)
+    # ── 执行访问模型（Batch 206 / C-内网执行器）──
+    # access_type: public=平台公网可直接访问 | internal=纯内网（平台服务器不可达，需 runner）
+    access_type: Mapped[str] = mapped_column(default="public")   # public / internal
+    # execution_mode: on_platform=平台服务器直接执行 | runner=派发给内网执行器（runner_key 指定）
+    execution_mode: Mapped[str] = mapped_column(default="on_platform")  # on_platform / runner
+    runner_key: Mapped[str] = mapped_column(default="")          # 负责该内网环境的执行器标识
 
 
 class EnvironmentVariable(Base, TimestampMixin):

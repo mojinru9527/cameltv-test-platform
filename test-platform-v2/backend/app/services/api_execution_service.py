@@ -210,6 +210,23 @@ def _do_execute(
                 execution_id=execution_id,
             )
 
+    # 0.0 内网 + runner 执行模式（Batch 206 / C-内网执行器）
+    # 平台服务器（公网部署）不可直达纯内网 API；execution_mode=runner 时派发内网执行器，
+    # 平台不发起网络请求（否则静默 30s 超时），返回明确 needs_runner 以引导。
+    if environment_id:
+        env = get_environment(db, environment_id, project_id)
+        if env and env.get("access_type") == "internal" and env.get("execution_mode") == "runner":
+            return _error_result(
+                f"内网接口需执行器（runner）执行：环境 #{environment_id}「{env.get('name')}」"
+                f"为 internal，execution_mode=runner（runner_key={env.get('runner_key') or '未指定'}）。"
+                f"平台服务器（公网）无法直达该内网 API，请：① 配置该环境的 runner_key 并启动内网执行器；"
+                f"或 ② 把环境改回 execution_mode=on_platform（平台直连，内网不通会超时）。",
+                error_type="NEEDS_RUNNER",
+                environment_id=environment_id,
+                resolved_url=url,
+                execution_id=execution_id,
+            )
+
     # 0.1 生产环境保护检查
     allowed, prod_msg = _check_prod_protection(db, method, environment_id, confirm_prod, has_execute_prod)
     if not allowed:
