@@ -13,6 +13,10 @@ class EnvironmentCreate(BaseModel):
     base_url: str = Field(default="", max_length=500)
     description: str = Field(default="", max_length=500)
     is_production: bool = Field(default=False)
+    # ── 执行访问模型（Batch 206 / C-内网执行器）──
+    access_type: str = Field(default="public", pattern=r"^(public|internal)$")
+    execution_mode: str = Field(default="on_platform", pattern=r"^(on_platform|runner)$")
+    runner_key: str = Field(default="", max_length=64)
 
 
 class EnvironmentUpdate(BaseModel):
@@ -21,6 +25,9 @@ class EnvironmentUpdate(BaseModel):
     base_url: str | None = Field(default=None, max_length=500)
     description: str | None = Field(default=None, max_length=500)
     is_production: bool | None = Field(default=None)
+    access_type: str | None = Field(default=None, pattern=r"^(public|internal)$")
+    execution_mode: str | None = Field(default=None, pattern=r"^(on_platform|runner)$")
+    runner_key: str | None = Field(default=None, max_length=64)
 
 
 class EnvironmentResponse(BaseModel):
@@ -31,6 +38,9 @@ class EnvironmentResponse(BaseModel):
     base_url: str
     description: str
     is_production: bool
+    access_type: str = "public"
+    execution_mode: str = "on_platform"
+    runner_key: str = ""
     created_at: datetime | None = None
     updated_at: datetime | None = None
 

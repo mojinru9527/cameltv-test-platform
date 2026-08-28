@@ -226,6 +226,9 @@ def _env_to_dict(r: Environment) -> dict:
         "base_url": r.base_url,
         "description": r.description,
         "is_production": r.is_production,
+        "access_type": getattr(r, "access_type", "public"),
+        "execution_mode": getattr(r, "execution_mode", "on_platform"),
+        "runner_key": getattr(r, "runner_key", ""),
         "created_at": r.created_at.isoformat() if r.created_at else None,
         "updated_at": r.updated_at.isoformat() if r.updated_at else None,
     }

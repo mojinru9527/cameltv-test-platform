@@ -13,7 +13,7 @@ from app.api.v1 import ai_config
 from app.api.v1 import test_case_taxonomy, test_case_crud, test_case_files
 from app.api.v1 import test_plan_crud, test_plan_execution
 from app.api.v1 import requirement_docs, requirement_ai, requirement_ai_generate, requirement_import
-from app.api.v1 import apitest_assets, apitest_cases, apitest_tasks
+from app.api.v1 import apitest_assets, apitest_cases, apitest_tasks, api_runner
 from app.api.v1 import knowledge_core, knowledge_graph, knowledge_artifacts
 from app.api.v1 import wiki_core, wiki_diff, wiki_external, wiki_sync
 from app.api.v1 import release_bundles_core, release_bundles_diff
@@ -49,6 +49,7 @@ api_router.include_router(token.router)
 api_router.include_router(apitest_assets.router)
 api_router.include_router(apitest_cases.router)
 api_router.include_router(apitest_tasks.router)
+api_router.include_router(api_runner.router)
 api_router.include_router(dataset.router)
 api_router.include_router(integration.router)
 api_router.include_router(version_mission.router)
