@@ -158,3 +158,11 @@ class ScenarioReviewStatus(str, Enum):
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
     REQUEST_CHANGE = "REQUEST_CHANGE"
+
+
+class AIOperationStatus(str, Enum):
+    QUEUED = "QUEUED"
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"

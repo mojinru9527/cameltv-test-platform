@@ -40,6 +40,7 @@ from app.api.v2.mission_scenarios import (  # noqa: E402
     scenario_router,
     oracle_router,
 )
+from app.api.v2.ai_operations import router as ai_operations_router  # noqa: E402
 
 router.include_router(missions_router)
 router.include_router(mission_sources_router)
@@ -55,6 +56,7 @@ router.include_router(scenario_generate_router)
 router.include_router(scenario_list_router)
 router.include_router(scenario_router)
 router.include_router(oracle_router)
+router.include_router(ai_operations_router)
 
 # Further domain routers are added with their epics:
 # mission_contracts.py (EPIC-05), mission_scenarios.py (EPIC-06),
