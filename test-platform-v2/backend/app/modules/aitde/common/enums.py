@@ -72,3 +72,51 @@ class ParseStatus(str, Enum):
     PARSING = "PARSING"
     PARSED = "PARSED"
     FAILED = "FAILED"
+
+
+class ScopeType(str, Enum):
+    FEATURE = "FEATURE"
+    BUSINESS_FLOW = "BUSINESS_FLOW"
+    PAGE = "PAGE"
+    API = "API"
+    DATA_STATE = "DATA_STATE"
+    RISK = "RISK"
+    REGRESSION_AREA = "REGRESSION_AREA"
+
+
+class ScopeDecision(str, Enum):
+    INCLUDE = "INCLUDE"
+    EXCLUDE = "EXCLUDE"
+
+
+class TestDepth(str, Enum):
+    FULL = "FULL"
+    REGRESSION = "REGRESSION"
+    SMOKE = "SMOKE"
+    OBSERVE = "OBSERVE"
+
+
+class RiskLevel(str, Enum):
+    P0 = "P0"
+    P1 = "P1"
+    P2 = "P2"
+    P3 = "P3"
+
+
+class ReviewStatus(str, Enum):
+    PROPOSED = "PROPOSED"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
+class ActorType(str, Enum):
+    USER = "USER"
+    AI = "AI"
+    SYSTEM = "SYSTEM"
+
+
+class AmbiguityStatus(str, Enum):
+    OPEN = "OPEN"
+    RESOLVED = "RESOLVED"
+    DEFERRED = "DEFERRED"
+    OUT_OF_SCOPE = "OUT_OF_SCOPE"
