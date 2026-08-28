@@ -15,6 +15,7 @@ from urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
 import httpx
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
 from app.models.test_case import TestCase
 from app.services.environment_service import resolve_variables
@@ -26,7 +27,8 @@ _COL_VAR_PATTERN = re.compile(r"\$\{(\w+)\}")
 _SESSION_REF_PATTERN = re.compile(r"\$\{session\.(\w+)\}")
 
 # ── 配置 ──
-DEFAULT_TIMEOUT = 30  # seconds
+# C205-2：执行超时配置化（API_EXECUTION_TIMEOUT_SECONDS），默认 30s 兼容原行为。
+DEFAULT_TIMEOUT = settings.api_execution_timeout_seconds  # seconds
 MAX_RESPONSE_BODY_SIZE = 500 * 1024  # 500 KB (max stored in raw_body)
 BODY_PREVIEW_MAX_SIZE = 4096  # chars for response_snapshot.body_preview
 SENSITIVE_HEADERS = {"authorization", "cookie", "set-cookie", "x-api-key", "x-auth-token", "token"}

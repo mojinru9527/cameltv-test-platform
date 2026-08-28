@@ -211,6 +211,11 @@ class Settings(BaseSettings):
     sync_retry_attempts: int = 2
     sync_timeout_seconds: int = 30
 
+    # ── API 执行超时（C205-2：慢接口超时配置化）──
+    # 体育部分聚合接口（init_*/hot-players 等）>30s，默认 30s 会误判超时。
+    # 环境变量 API_EXECUTION_TIMEOUT_SECONDS；默认 30s 保持兼容。
+    api_execution_timeout_seconds: float = 30.0
+
     # ── Knowledge Center / RAG / Agent (M0 治理开关) ──
     # 安全默认：全部 OFF。知识入库为写路径的后台副作用，须由运维在评审脱敏与容量后
     # 显式开启（避免合入即在共享/测试环境自动激活对全量写操作的入库）。
