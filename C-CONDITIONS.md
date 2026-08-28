@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-25 (Batch 204 体育只读 GET 全量回归: 新增 C204-1/C204-2/C204-3；C203-1 保持 Open)
+**最后更新**: 2026-08-28 (Batch 205 Q4 全量执行: C205-1 收敛至 13、C205-2 扩至 31、新增 C205-3 写接口鉴权；C204-1/2/3、C203-1 保持 Open)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -21,6 +21,15 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ---
 
 ## Open (待处理)
+
+### batch-205 — 足球/篮球接口用例真实数据版（2026-08-27）—— 新增
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C205-1 | 13 条 GET 端点 status:400 参数待精修：`names/{type}` 的 `ids` 未随 path `type` 联动（应为 team/player/competition 对应 id）；`home_favorite`/`article/read`/`my_article_detail` 缺 uid/articleId；`football/season/recent/*` 缺有效 competitionId+seasonId；`news/get`/`get_visible` 缺 query 参数；`init_language` 的 `types` 枚举待对齐。解除条件=精修参数后复跑该 13 条真实执行归零 status:400 + 证据 PR/commit | P2 | 2026-08-27 |
+| C205-2 | 31 条网络/超时（35s）：`init_basic_info`/`init_season_stats`/`init_name2id`/`player/syncSeasonPlayer`/`search/batchAdd*ToEs` 等（承接 C204-2）；另 `u/permission list` 为契约路径含空格缺陷（需 URL 编码修正）。解除条件=服务侧优化/平台超时配置化/契约路径修正后重试并记录通过/超时证据 | P2 | 2026-08-27 |
+| C205-3 | ~110 条写 POST 接口（save/delete/forecast/bet/settle/article/sub/like/favorite/stop_push 等）未登录调用返回 status:400「Please login first」——写接口鉴权生效。解除条件=经有效登录态（管理员/测试员会话）执行写操作并记录成功/拒绝矩阵 | P2 | 2026-08-27 |
+| C205-4 | 575 个后台管理端点（account/studio/payment 的 /admin/*、api-gateway /actuator/*、camel-mimo /user|redis）无 real-data 用例：需 sports 网关专用管理 JWT（admin 平台会话 aa 被单会话锁、cc 账号禁用、用户站埋点 cookie 非鉴权），鉴权封闭暂无法访问。**用户确认「忽略」**。解除条件=获得体育网关管理 Bearer JWT 后遍历补全 | P2 | 2026-08-28 |
 
 ### batch-204 — 体育接口服务只读 GET 全量回归（2026-08-25）—— 新增
 
