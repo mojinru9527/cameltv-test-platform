@@ -1,4 +1,4 @@
-﻿#requires -Version 5.1
+#requires -Version 5.1
 <#
 release.ps1 — 腾讯云一键发布（自动化：build → digest → 提交 → 上传 → 发布）
 
@@ -85,6 +85,34 @@ function Get-Digest([string]$image) {
     throw "无法获取镜像 $image digest"
 }
 
+function Invoke-BuildxExport {
+    # 通过 cmd /c 把「完整 argv」原样透传给 docker buildx。
+    #
+    # 背景：PowerShell 5.1 脚本模式（pwsh -File / pwsh script.ps1）对含「冒号/反斜杠」的
+    # 原生参数会做二次引号包裹（native argument re-quoting），导致 buildx 解析
+    # --output=type=docker,dest=... 时报：
+    #   ERROR: parse error on line 1, column 18: bare " in non-quoted-field
+    # 并以非零退出码失败（2026-08-29 批量 206 发布实践实测；同命令交互式 -Command 却正常）。
+    # cmd /c 不会重新引号，argv 原样透传，无论交互式/脚本模式都能稳定导出。
+    param(
+        [string]$Cwd,
+        [string]$Image,
+        [string]$Dockerfile,
+        [string]$BuildArg,
+        [string]$Dest
+    )
+    Push-Location $Cwd
+    try {
+        $cmd = "docker buildx build --builder desktop-linux -t `"$Image`""
+        if ($Dockerfile) { $cmd += " -f `"$Dockerfile`"" }
+        if ($BuildArg)   { $cmd += " --build-arg `"$BuildArg`"" }
+        $cmd += " --output=type=docker,dest=`"$Dest`" ."
+        Write-Host "  buildx export: $cmd" -ForegroundColor DarkGray
+        cmd /c $cmd 2>&1 | Select-Object -Last 2
+        if ($LASTEXITCODE -ne 0) { throw "buildx 导出失败: $cmd" }
+    } finally { Pop-Location }
+}
+
 # ── 发布流程 ────────────────────────────────────────────────────
 function Invoke-Release {
     if (-not $Tag) { throw "-Tag 必填（如 release-20260823-0003）" }
@@ -138,11 +166,9 @@ function Invoke-Release {
     # 残缺 OCI tar（缺 index.json/manifest.json → 服务器 load 报
     # "unrecognized image format"，2026-08-25 演练实测），改用 buildx
     # type=docker 导出（含 manifest.json 的经典 docker 归档，服务器可 load）。
-    docker buildx build --builder desktop-linux -t "cameltv-tp-backend:$Tag" -f test-platform-v2/backend/Dockerfile --output=type=docker,dest="$OutputDir\$Tag-backend.tar" . 2>&1 | Select-Object -Last 2
-    if ($LASTEXITCODE -ne 0) { throw "后端镜像导出失败" }
-    Push-Location "$repoRoot\test-platform-v2\frontend"
-    try { docker buildx build --builder desktop-linux --build-arg "VITE_ICP_NUMBER=$IcpNumber" -t "cameltv-tp-frontend:$Tag" --output=type=docker,dest="$OutputDir\$Tag-frontend.tar" . 2>&1 | Select-Object -Last 2 } finally { Pop-Location }
-    if ($LASTEXITCODE -ne 0) { throw "前端镜像导出失败" }
+    # 经 cmd /c 透传以规避 PS5.1 脚本模式对 --output 的原生参数重引号问题（见 Invoke-BuildxExport）。
+    Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-backend:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Dest "$OutputDir\$Tag-backend.tar"
+    Invoke-BuildxExport -Cwd "$repoRoot\test-platform-v2\frontend" -Image "cameltv-tp-frontend:$Tag" -BuildArg "VITE_ICP_NUMBER=$IcpNumber" -Dest "$OutputDir\$Tag-frontend.tar"
     ssh -i $KeyPath -o BatchMode=yes "${UserName}@${HostName}" "mkdir -p $ReleaseDir" 2>&1 | Out-Null
     scp -i $KeyPath -o BatchMode=yes "$OutputDir\$Tag-backend.tar" "${UserName}@${HostName}:$ReleaseDir/"
     scp -i $KeyPath -o BatchMode=yes "$OutputDir\$Tag-frontend.tar" "${UserName}@${HostName}:$ReleaseDir/"
