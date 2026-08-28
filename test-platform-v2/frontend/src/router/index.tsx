@@ -6,6 +6,7 @@ import NotFound from '@/pages/NotFound'
 import Unavailable from '@/pages/Unavailable'
 import RequireAuth from './guard'
 import { isThemeLabEnabled } from './themeLabAvailability'
+import { AITDE_V3_ENABLED } from '@/config/aitde'
 import client from '@/api/client'
 import { logoutApi } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
@@ -39,6 +40,11 @@ const VersionPanoramaPage = lazy(() => import('@/pages/release-bundles/VersionPa
 const ThemeLabPage = lazy(() => import('@/theme-lab/ThemeLab').then(m => ({ default: m.ThemeLab })))
 const LanhuEvidencePage = lazy(() => import('@/pages/lanhu-evidence'))
 const LanhuEvidenceJobDetail = lazy(() => import('@/pages/lanhu-evidence/JobDetail'))
+const MissionListPage = lazy(() => import('@/pages/missions'))
+const MissionCreatePage = lazy(() => import('@/pages/missions/CreateMissionPage'))
+const MissionLayout = lazy(() => import('@/pages/missions/MissionLayout'))
+const MissionOverviewPage = lazy(() => import('@/pages/missions/overview'))
+const MissionStage = lazy(() => import('@/pages/missions/StagePlaceholder'))
 const themeLabEnabled = isThemeLabEnabled(import.meta.env.DEV, import.meta.env.VITE_ENABLE_THEME_LAB)
 
 function PageLoader({ children }: { children: ReactNode }) {
@@ -224,6 +230,48 @@ export const router = createBrowserRouter([
       { path: 'agent-workbench', element: <Navigate to="/dsh-tasks" replace /> },
       { path: 'lanhu-evidence', element: <PageLoader><LanhuEvidencePage /></PageLoader> },
       { path: 'lanhu-evidence/:id', element: <PageLoader><LanhuEvidenceJobDetail /></PageLoader> },
+      // ── AITDE V3: Mission 主链（V30-102）──
+      {
+        path: 'missions',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><MissionListPage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="测试任务（Mission）入口需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
+      },
+      {
+        path: 'missions/new',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><MissionCreatePage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="测试任务（Mission）入口需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
+      },
+      {
+        path: 'missions/:id',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><MissionLayout /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="测试任务（Mission）入口需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
+        children: [
+          { index: true, element: <Navigate to="overview" replace /> },
+          { path: 'overview', element: <PageLoader><MissionOverviewPage /></PageLoader> },
+          { path: 'sources', element: <PageLoader><MissionStage title="资料" /></PageLoader> },
+          { path: 'scope', element: <PageLoader><MissionStage title="范围" /></PageLoader> },
+          { path: 'contract', element: <PageLoader><MissionStage title="契约" /></PageLoader> },
+          { path: 'scenarios', element: <PageLoader><MissionStage title="场景" /></PageLoader> },
+        ],
+      },
       {
         path: 'theme-lab',
         element: themeLabEnabled
