@@ -120,3 +120,23 @@ class AmbiguityStatus(str, Enum):
     RESOLVED = "RESOLVED"
     DEFERRED = "DEFERRED"
     OUT_OF_SCOPE = "OUT_OF_SCOPE"
+
+
+class ContractVersionStatus(str, Enum):
+    DRAFT = "DRAFT"
+    REVIEWING = "REVIEWING"
+    FROZEN = "FROZEN"
+    SUPERSEDED = "SUPERSEDED"
+
+
+class ProposalTargetType(str, Enum):
+    CONTRACT = "CONTRACT"
+    SCENARIO = "SCENARIO"
+    ORACLE = "ORACLE"
+
+
+class ProposalStatus(str, Enum):
+    OPEN = "OPEN"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    APPLIED = "APPLIED"

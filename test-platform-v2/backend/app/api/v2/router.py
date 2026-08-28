@@ -30,6 +30,10 @@ from app.api.v2.mission_ambiguities import (  # noqa: E402
     resolve_router,
     intent_review_router,
 )
+from app.api.v2.mission_contracts import (  # noqa: E402
+    router as mission_contracts_router,
+    contracts_router as contract_versions_router,
+)
 
 router.include_router(missions_router)
 router.include_router(mission_sources_router)
@@ -39,6 +43,8 @@ router.include_router(ambiguity_router)
 router.include_router(intents_router)
 router.include_router(resolve_router)
 router.include_router(intent_review_router)
+router.include_router(mission_contracts_router)
+router.include_router(contract_versions_router)
 
 # Further domain routers are added with their epics:
 # mission_contracts.py (EPIC-05), mission_scenarios.py (EPIC-06),

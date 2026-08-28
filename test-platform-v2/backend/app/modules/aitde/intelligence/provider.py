@@ -5,6 +5,7 @@ Scope the default implementation is deterministic (built from parsed source
 fragments) so the review flow works without a live AI; ``LegacyAIServiceProvider``
 is the thin wrapper over the platform's existing AI service for production.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -22,6 +23,11 @@ from app.modules.aitde.scope.ambiguity_schemas import (
     IntentCandidate,
     IntentDetectionOutput,
     Option,
+)
+from app.modules.aitde.contract.schemas import (
+    ContractOutcome,
+    ContractRule,
+    ContractSnapshot,
 )
 from app.modules.aitde.scope.schemas import ScopeAnalysisOutput, SourceRef
 
@@ -43,20 +49,28 @@ class ParsedFragment:
 @dataclass
 class ScopeIntentContext:
     mission_id: int
-    scope_items: list[dict]
+    scope_items: list[
+        dict
+    ]  # {scope_key,name,decision,risk_level,ai_confidence,reason,review_status}
+
+
+@dataclass
+class ContractContext:
+    mission_id: int
+    scope_items: list[dict]  # approved INCLUDE scope items
+    intents: list[dict]  # approved intents
 
 
 class IntelligenceProvider(Protocol):
-    def analyze_scope(self, context: ScopeContext) -> ScopeAnalysisOutput:
-        ...
+    def analyze_scope(self, context: ScopeContext) -> ScopeAnalysisOutput: ...
 
     def detect_ambiguities(
         self, context: ScopeIntentContext
-    ) -> AmbiguityDetectionOutput:
-        ...
+    ) -> AmbiguityDetectionOutput: ...
 
-    def design_intents(self, context: ScopeIntentContext) -> IntentDetectionOutput:
-        ...
+    def design_intents(self, context: ScopeIntentContext) -> IntentDetectionOutput: ...
+
+    def build_contract(self, context: ContractContext) -> ContractSnapshot: ...
 
 
 class DeterministicScopeProvider:
@@ -76,9 +90,7 @@ class DeterministicScopeProvider:
                     "reason": text[:200],
                     "confidence": 0.80,
                     "source_refs": [
-                        SourceRef(
-                            artifact_id=artifact_id, fragment_id=fragment_id
-                        )
+                        SourceRef(artifact_id=artifact_id, fragment_id=fragment_id)
                     ],
                 }
             )
@@ -134,6 +146,36 @@ class DeterministicScopeProvider:
             schema_version="1.0", mission_id=context.mission_id, items=items
         )
 
+    def build_contract(self, context: ContractContext) -> ContractSnapshot:
+        rules = [
+            ContractRule(
+                rule_key=f"rule-{si['scope_key']}",
+                title=si.get("name", si["scope_key"]),
+                kind="BUSINESS_RULE",
+                statement=si.get("reason", ""),
+                risk_level=RiskLevel(si.get("risk_level", "P2")),
+                source_type="REQUIREMENT_EXPLICIT",
+                source_refs=[SourceRef(artifact_id=0, fragment_id=0)],
+            )
+            for si in context.scope_items
+        ]
+        outcomes = [
+            ContractOutcome(
+                outcome_key=f"outcome-{it['intent_key']}",
+                statement=it.get("business_goal", ""),
+                source_type="TESTER_APPROVED",
+                source_refs=[SourceRef(artifact_id=0, fragment_id=0)],
+            )
+            for it in context.intents
+        ]
+        return ContractSnapshot(
+            schema_version="1.0",
+            mission_id=context.mission_id,
+            scope_revision=f"scope-hash-{len(context.scope_items)}",
+            rules=rules,
+            required_outcomes=outcomes,
+        )
+
 
 class LegacyAIServiceProvider:
     """Wrap the platform AI service when configured; falls back to deterministic."""
@@ -155,3 +197,6 @@ class LegacyAIServiceProvider:
 
     def design_intents(self, context: ScopeIntentContext) -> IntentDetectionOutput:
         return self._fallback.design_intents(context)
+
+    def build_contract(self, context: ContractContext) -> ContractSnapshot:
+        return self._fallback.build_contract(context)
