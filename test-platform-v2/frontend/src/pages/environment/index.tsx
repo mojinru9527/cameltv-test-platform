@@ -73,7 +73,16 @@ export default function EnvironmentPage() {
   const [editVar, setEditVar] = useState<EnvironmentVariable | null>(null)
 
   // Form state
-  const [envForm, setEnvForm] = useState({ name: '', env_type: 'test' as string, base_url: '', description: '' })
+  // Batch 206 / C-内网执行器：环境加 access_type/execution_mode/runner_key
+  const [envForm, setEnvForm] = useState({
+    name: '',
+    env_type: 'test' as string,
+    base_url: '',
+    description: '',
+    access_type: 'public' as string,
+    execution_mode: 'on_platform' as string,
+    runner_key: '',
+  })
   const [varForm, setVarForm] = useState({ key: '', value: '', encrypted: false, description: '' })
 
   // Confirmation dialogs
@@ -115,13 +124,16 @@ export default function EnvironmentPage() {
 
   const openEnvCreate = () => {
     setEditEnv(null)
-    setEnvForm({ name: '', env_type: 'test', base_url: '', description: '' })
+    setEnvForm({ name: '', env_type: 'test', base_url: '', description: '', access_type: 'public', execution_mode: 'on_platform', runner_key: '' })
     setEnvDialog(true)
   }
 
   const openEnvEdit = (env: Environment) => {
     setEditEnv(env)
-    setEnvForm({ name: env.name, env_type: env.env_type, base_url: env.base_url, description: env.description })
+    // Batch 206：新字段用防御性读取（旧环境缺省 public/on_platform）
+    const ext = env as Environment & { access_type?: string; execution_mode?: string; runner_key?: string }
+    setEnvForm({ name: env.name, env_type: env.env_type, base_url: env.base_url, description: env.description,
+                 access_type: ext.access_type ?? 'public', execution_mode: ext.execution_mode ?? 'on_platform', runner_key: ext.runner_key ?? '' })
     setEnvDialog(true)
   }
 
@@ -412,6 +424,35 @@ export default function EnvironmentPage() {
               <label className="mb-1 block text-sm font-medium" htmlFor="env-desc">描述</label>
               <Textarea id="env-desc" value={envForm.description} onChange={(e) => setEnvForm((f) => ({ ...f, description: e.target.value }))} placeholder="环境用途说明" />
             </div>
+            {/* Batch 206 / C-内网执行器：访问类型 + 执行模式 + runner_key */}
+            <div className="space-y-2">
+              <label className="mb-1 block text-sm font-medium">访问类型</label>
+              <Select value={envForm.access_type} onValueChange={(v) => setEnvForm((f) => ({ ...f, access_type: v, ...(v === 'public' ? { execution_mode: 'on_platform', runner_key: '' } : {}) }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="public">公网 (public)</SelectItem>
+                  <SelectItem value="internal">纯内网 (internal)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">纯内网（平台不可直达）需内网执行器执行。</p>
+            </div>
+            <div className="space-y-2">
+              <label className="mb-1 block text-sm font-medium">执行模式</label>
+              <Select value={envForm.execution_mode} onValueChange={(v) => setEnvForm((f) => ({ ...f, execution_mode: v }))}>
+                <SelectTrigger disabled={envForm.access_type !== 'internal'}><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="on_platform">平台直连 (on_platform)</SelectItem>
+                  <SelectItem value="runner">内网执行器 (runner)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {envForm.access_type === 'internal' && envForm.execution_mode === 'runner' && (
+              <div className="space-y-2">
+                <label className="mb-1 block text-sm font-medium" htmlFor="env-runner-key">runner_key</label>
+                <Input id="env-runner-key" value={envForm.runner_key} onChange={(e) => setEnvForm((f) => ({ ...f, runner_key: e.target.value }))} placeholder="如：test5-internal-01" />
+                <p className="text-xs text-muted-foreground">与内网执行器脚本 RUNNER_KEY 一致。</p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setEnvDialog(false)}>取消</Button>

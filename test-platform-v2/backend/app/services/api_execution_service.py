@@ -15,6 +15,7 @@ from urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
 import httpx
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
 from app.models.test_case import TestCase
 from app.services.environment_service import resolve_variables
@@ -26,7 +27,8 @@ _COL_VAR_PATTERN = re.compile(r"\$\{(\w+)\}")
 _SESSION_REF_PATTERN = re.compile(r"\$\{session\.(\w+)\}")
 
 # ── 配置 ──
-DEFAULT_TIMEOUT = 30  # seconds
+# C205-2：执行超时配置化（API_EXECUTION_TIMEOUT_SECONDS），默认 30s 兼容原行为。
+DEFAULT_TIMEOUT = settings.api_execution_timeout_seconds  # seconds
 MAX_RESPONSE_BODY_SIZE = 500 * 1024  # 500 KB (max stored in raw_body)
 BODY_PREVIEW_MAX_SIZE = 4096  # chars for response_snapshot.body_preview
 SENSITIVE_HEADERS = {"authorization", "cookie", "set-cookie", "x-api-key", "x-auth-token", "token"}
@@ -205,6 +207,23 @@ def _do_execute(
                 "环境不存在或不属于当前项目",
                 error_type="TARGET_POLICY",
                 environment_id=environment_id,
+                execution_id=execution_id,
+            )
+
+    # 0.0 内网 + runner 执行模式（Batch 206 / C-内网执行器）
+    # 平台服务器（公网部署）不可直达纯内网 API；execution_mode=runner 时派发内网执行器，
+    # 平台不发起网络请求（否则静默 30s 超时），返回明确 needs_runner 以引导。
+    if environment_id:
+        env = get_environment(db, environment_id, project_id)
+        if env and env.get("access_type") == "internal" and env.get("execution_mode") == "runner":
+            return _error_result(
+                f"内网接口需执行器（runner）执行：环境 #{environment_id}「{env.get('name')}」"
+                f"为 internal，execution_mode=runner（runner_key={env.get('runner_key') or '未指定'}）。"
+                f"平台服务器（公网）无法直达该内网 API，请：① 配置该环境的 runner_key 并启动内网执行器；"
+                f"或 ② 把环境改回 execution_mode=on_platform（平台直连，内网不通会超时）。",
+                error_type="NEEDS_RUNNER",
+                environment_id=environment_id,
+                resolved_url=url,
                 execution_id=execution_id,
             )
 

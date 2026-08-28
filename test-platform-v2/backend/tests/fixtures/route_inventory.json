@@ -1,5 +1,5 @@
 {
-  "count": 419,
+  "count": 423,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -155,6 +155,22 @@
     },
     {
       "path": "/api/v1/apitest/tasks/{task_id}/retry-failed",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/apitest/runner/claim",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/apitest/runner/report",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/apitest/runner/tasks",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/apitest/runner/tasks",
       "method": "POST"
     },
     {

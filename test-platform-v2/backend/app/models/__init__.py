@@ -39,6 +39,7 @@ from app.models.release_bundle import ReleaseBundle
 from app.models.requirement import RequirementDocument
 from app.models.requirement_module import ModuleAdminLink, RequirementModule
 from app.models.requirement_review import RequirementReview
+from app.models.runner_execution import RunnerExecutionTask
 from app.models.rbac import Permission, Role, RolePermission, UserRole
 from app.models.sync_log import SyncLog
 from app.models.test_case import TestCase
@@ -109,6 +110,7 @@ __all__ = [
     "UiTestScript",
     "RequirementDocument",
     "RequirementReview",
+    "RunnerExecutionTask",
     "RequirementModule",
     "ModuleAdminLink",
     "ReleaseBundle",

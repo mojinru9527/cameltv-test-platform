@@ -1,0 +1,855 @@
+{
+ "success": [
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/u/stop_push",
+   "http": 200,
+   "resp": "{\"traceId\":\"j8caj41k103k9e\",\"timestamp\":1787934617880,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/set_logo",
+   "http": 200,
+   "resp": "{\"traceId\":\"41daj41k1tui4h\",\"timestamp\":1787934618662,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/set_hd",
+   "http": 200,
+   "resp": "{\"traceId\":\"c2daj41k1jigqe\",\"timestamp\":1787934618761,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/news_status",
+   "http": 200,
+   "resp": "{\"traceId\":\"sjdaj41k1eoqc3\",\"timestamp\":1787934619265,\"status\":200,\"data\":{\"likeStatus\":\"NotLiked\",\"favoriteStatus\":\"NotFavorited\"},\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/news/read",
+   "http": 200,
+   "resp": "{\"traceId\":\"0ndaj41k1kci5m\",\"timestamp\":1787934619361,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/list_favorite_team",
+   "http": 200,
+   "resp": "{\"traceId\":\"4qdaj41k1t5oqn\",\"timestamp\":1787934619468,\"status\":200,\"data\":{\"records\":[{\"id\":\"z8yomo4hwpeq0j6\",\"name\":\"Portugal\",\"logo\":\"https://img.thesports.co"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/list_favorite_player",
+   "http": 200,
+   "resp": "{\"traceId\":\"8tdaj41k1vabp0\",\"timestamp\":1787934619568,\"status\":200,\"data\":{\"records\":[{\"id\":\"4jwq2ghxjzkvm0v\",\"name\":\"Lamine Yamal\",\"logo\":\"https://img.thesport"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/list_favorite_news",
+   "http": 200,
+   "resp": "{\"traceId\":\"d0eaj41k16dmk4\",\"timestamp\":1787934619674,\"status\":200,\"data\":{\"records\":[{\"id\":\"921392241732223192\",\"pv\":1,\"groupId\":\"921392241732223153\",\"sport_li"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/list_favorite_competition",
+   "http": 200,
+   "resp": "{\"traceId\":\"t3eaj41k170sks\",\"timestamp\":1787934619779,\"status\":200,\"data\":{\"records\":[{\"id\":\"kp3glrw7hwqdyjv\",\"name\":\"FIFA World Cup\",\"logo\":\"https://img.thespo"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/heartbeat",
+   "http": 200,
+   "resp": "{\"traceId\":\"48eaj41k1g9jjf\",\"timestamp\":1787934619975,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/football/match/gen_stream",
+   "http": 200,
+   "resp": "{\"traceId\":\"gbeaj41k1h8dln\",\"timestamp\":1787934620071,\"status\":200,\"data\":\"rtmp://livepushtest.camel4.live/live/34775_1_1l4rjnh9w5jym7v?txSecret=d26af4805c98b1f"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/football/match/del_stream",
+   "http": 200,
+   "resp": "{\"traceId\":\"ceeaj41k1enpnj\",\"timestamp\":1787934620160,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/favorite",
+   "http": 200,
+   "resp": "{\"traceId\":\"6heaj41k171bbr\",\"timestamp\":1787934620266,\"status\":200,\"data\":{\"currentStatus\":\"Favorited\"},\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/competition_agg_page",
+   "http": 200,
+   "resp": "{\"traceId\":\"gkeaj41k1r8uld\",\"timestamp\":1787934620304,\"status\":200,\"data\":{\"result\":{\"Hot\":[{\"id\":\"z8yomo4h7wq0j6l\",\"name\":\"UEFA Champions League\",\"logo\":\"https"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/cancel_hd",
+   "http": 200,
+   "resp": "{\"traceId\":\"hseaj41k1i62t6\",\"timestamp\":1787934620572,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/batch_get_like_num",
+   "http": 200,
+   "resp": "{\"traceId\":\"kveaj41k1bo6ps\",\"timestamp\":1787934620662,\"status\":200,\"data\":[],\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/search/synonyms/cou",
+   "http": 200,
+   "resp": "{\"traceId\":\"r0faj41k1f33ff\",\"timestamp\":1787934620880,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/search/recommend",
+   "http": 200,
+   "resp": "{\"traceId\":\"4cfaj41k1kp6qa\",\"timestamp\":1787934621061,\"status\":200,\"data\":{\"competitions\":[{\"id\":\"p3glrw7hevqdyjv\",\"name\":\"Argentine Division 1\",\"logo\":\"https:/"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/search/query_match_for_article",
+   "http": 200,
+   "resp": "{\"traceId\":\"8ffaj41k1m6bmq\",\"timestamp\":1787934621563,\"status\":200,\"data\":[{\"match_id\":\"965mkyhkxk76r1g\",\"match_time\":1789830000000,\"competition\":{\"id\":\"p4jwq2g"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/search/hot",
+   "http": 200,
+   "resp": "{\"traceId\":\"ufgaj41k1jeeiq\",\"timestamp\":1787934622206,\"status\":200,\"data\":{\"records\":[{\"id\":12,\"keyword\":\"news\",\"weight\":18,\"jumpType\":\"url\",\"url\":\"https://came"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/search/batchAddCompetitionToEs",
+   "http": 200,
+   "resp": "{\"traceId\":\"1kvbj41k196bha\",\"timestamp\":1787934674665,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/news/related",
+   "http": 200,
+   "resp": "{\"traceId\":\"bu3cj41k187d0u\",\"timestamp\":1787934674961,\"status\":200,\"data\":[],\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/news/audit_pass_all",
+   "http": 200,
+   "resp": "{\"traceId\":\"p64cj41k183lp6\",\"timestamp\":1787934675260,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/news/aggregate_news_kind",
+   "http": 200,
+   "resp": "{\"traceId\":\"ee4cj41k1svn47\",\"timestamp\":1787934675561,\"status\":200,\"data\":[{\"num\":12163},{\"id\":14,\"num\":19},{\"id\":12,\"num\":2193},{\"id\":9,\"num\":315},{\"id\":6,\"num"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/forecast/stop_bet",
+   "http": 200,
+   "resp": "{\"traceId\":\"gp4cj41k13hn29\",\"timestamp\":1787934675768,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/forecast/settle",
+   "http": 200,
+   "resp": "{\"traceId\":\"ks4cj41k1belgu\",\"timestamp\":1787934676008,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/forecast/done",
+   "http": 200,
+   "resp": "{\"traceId\":\"845cj41k1q9u20\",\"timestamp\":1787934676166,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/forecast/cancel",
+   "http": 200,
+   "resp": "{\"traceId\":\"495cj41k1pinmg\",\"timestamp\":1787934676265,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/faq/delete",
+   "http": 200,
+   "resp": "{\"traceId\":\"kg5cj41k1c7fcb\",\"timestamp\":1787934676560,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/article/calc_author_stats",
+   "http": 200,
+   "resp": "{\"traceId\":\"g66cj41k19pbnr\",\"timestamp\":1787934677281,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/u/stop_push",
+   "http": 200,
+   "resp": "{\"traceId\":\"82ccj41k1rm84s\",\"timestamp\":1787934683210,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/set_logo",
+   "http": 200,
+   "resp": "{\"traceId\":\"v6ccj41k1g5a7d\",\"timestamp\":1787934683360,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/set_hd",
+   "http": 200,
+   "resp": "{\"traceId\":\"68ccj41k1uk1rq\",\"timestamp\":1787934683400,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/news_status",
+   "http": 200,
+   "resp": "{\"traceId\":\"7lccj41k19igs5\",\"timestamp\":1787934683818,\"status\":200,\"data\":{\"likeStatus\":\"NotLiked\",\"favoriteStatus\":\"NotFavorited\"},\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/news/read",
+   "http": 200,
+   "resp": "{\"traceId\":\"emccj41k143vue\",\"timestamp\":1787934683855,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/list_favorite_team",
+   "http": 200,
+   "resp": "{\"traceId\":\"jnccj41k14pgcc\",\"timestamp\":1787934683898,\"status\":200,\"data\":{\"records\":[{\"id\":\"8y39mp4t8dkmojx\",\"name\":\"Miami Heat\",\"logo\":\"https://img.thesports."
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/list_favorite_player",
+   "http": 200,
+   "resp": "{\"traceId\":\"voccj41k11hvf8\",\"timestamp\":1787934683941,\"status\":200,\"data\":{\"records\":[{\"id\":\"4jwq25t0d5lq0ve\",\"name\":\"Seyed Mahdi Jafari\",\"logo\":\"https://img.th"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/list_favorite_news",
+   "http": 200,
+   "resp": "{\"traceId\":\"8qccj41k16qo8h\",\"timestamp\":1787934683980,\"status\":200,\"data\":{\"records\":[],\"total\":0,\"size\":20,\"current\":1,\"orders\":[],\"optimizeCountSql\":true,\"sea"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/list_favorite_competition",
+   "http": 200,
+   "resp": "{\"traceId\":\"drccj41k1ei7ms\",\"timestamp\":1787934684052,\"status\":200,\"data\":{\"records\":[{\"id\":\"49vjxm8xt4q6odg\",\"name\":\"National Basketball Association\",\"logo\":\"h"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/heartbeat",
+   "http": 200,
+   "resp": "{\"traceId\":\"3vccj41k1qsmme\",\"timestamp\":1787934684153,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/favorite",
+   "http": 200,
+   "resp": "{\"traceId\":\"t3dcj41k14b7p1\",\"timestamp\":1787934684290,\"status\":200,\"data\":{\"currentStatus\":\"NotFavorited\"},\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/competition_agg_page",
+   "http": 200,
+   "resp": "{\"traceId\":\"85dcj41k17l9ng\",\"timestamp\":1787934684328,\"status\":200,\"data\":{\"result\":{\"Hot\":[{\"id\":\"49vjxm8xt4q6odg\",\"name\":\"National Basketball Association\",\"lo"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/cancel_hd",
+   "http": 200,
+   "resp": "{\"traceId\":\"e6dcj41k1aa8r5\",\"timestamp\":1787934684371,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/batch_get_like_num",
+   "http": 200,
+   "resp": "{\"traceId\":\"p7dcj41k1mbb57\",\"timestamp\":1787934684411,\"status\":200,\"data\":[],\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/search/synonyms/cou",
+   "http": 200,
+   "resp": "{\"traceId\":\"09dcj41k13ebat\",\"timestamp\":1787934684569,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/search/recommend",
+   "http": 200,
+   "resp": "{\"traceId\":\"0edcj41k18fn57\",\"timestamp\":1787934684608,\"status\":200,\"data\":{\"competitions\":[],\"teams\":[]},\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/search/query_match_for_article",
+   "http": 200,
+   "resp": "{\"traceId\":\"6fdcj41k10crls\",\"timestamp\":1787934684653,\"status\":200,\"data\":[],\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/search/hot",
+   "http": 200,
+   "resp": "{\"traceId\":\"kmdcj41k1dl5fh\",\"timestamp\":1787934684884,\"status\":200,\"data\":{\"records\":[{\"id\":13,\"keyword\":\"篮球en\",\"weight\":999,\"jumpType\":\"search\",\"url\":\"\"}]},\"ms"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/search/batchAddCompetitionToEs",
+   "http": 200,
+   "resp": "{\"traceId\":\"o0hdj41k1uv54e\",\"timestamp\":1787934721371,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/forecast/stop_bet",
+   "http": 200,
+   "resp": "{\"traceId\":\"hfhdj41k1kupnr\",\"timestamp\":1787934721556,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/forecast/settle",
+   "http": 200,
+   "resp": "{\"traceId\":\"ihhdj41k154bn7\",\"timestamp\":1787934721650,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/forecast/done",
+   "http": 200,
+   "resp": "{\"traceId\":\"9phdj41k1pr5no\",\"timestamp\":1787934721854,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/forecast/cancel",
+   "http": 200,
+   "resp": "{\"traceId\":\"2rhdj41k1khfm7\",\"timestamp\":1787934721951,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/faq/delete",
+   "http": 200,
+   "resp": "{\"traceId\":\"11idj41k1cimv4\",\"timestamp\":1787934722085,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/article/calc_author_stats",
+   "http": 200,
+   "resp": "{\"traceId\":\"ndidj41k1vtkku\",\"timestamp\":1787934722514,\"status\":200,\"msg\":\"\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/activity/market_value_change/init",
+   "http": 200,
+   "resp": "{\"traceId\":\"slidj41k13nc5u\",\"timestamp\":1787934722751,\"status\":200,\"msg\":\"\"}"
+  }
+ ],
+ "denied": [
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/u/start_push",
+   "http": 200,
+   "resp": "{\"traceId\":\"mpcaj41k1uojo9\",\"timestamp\":1787934618425,\"status\":400,\"msg\":\"camel-service/ee/sports_live/u/start_push; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/u/gen_stream",
+   "http": 200,
+   "resp": "{\"traceId\":\"uqcaj41k165muj\",\"timestamp\":1787934618463,\"status\":400,\"msg\":\"camel-service/ee/sports_live/u/gen_stream; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/test_goal_event",
+   "http": 200,
+   "resp": "{\"traceId\":\"0ucaj41k12ug2j\",\"timestamp\":1787934618561,\"status\":400,\"msg\":\"camel-service/ee/sports_live/test_goal_event; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/select_match",
+   "http": 200,
+   "resp": "{\"traceId\":\"c7daj41k1n4nl5\",\"timestamp\":1787934618862,\"status\":400,\"msg\":\"camel-service/ee/sports_live/select_match; Only selectable in the live broadcasting st"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/player/stat",
+   "http": 200,
+   "resp": "{\"traceId\":\"1bdaj41k18lnma\",\"timestamp\":1787934618978,\"status\":400,\"msg\":\"camel-service/ee/sports_live/player/stat; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/player/match",
+   "http": 200,
+   "resp": "{\"traceId\":\"kddaj41k19jceb\",\"timestamp\":1787934619061,\"status\":400,\"msg\":\"camel-service/ee/sports_live/player/match; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/p/football/match/diary",
+   "http": 200,
+   "resp": "{\"traceId\":\"ogdaj41k11pvod\",\"timestamp\":1787934619162,\"status\":400,\"msg\":\"camel-service/ee/sports_live/p/football/match/diary; Something goes wrong, try it agai"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/sports_live/like",
+   "http": 200,
+   "resp": "{\"traceId\":\"75eaj41k174s5i\",\"timestamp\":1787934619869,\"status\":400,\"msg\":\"camel-service/ee/sports_live/like; News '1l4rjnh9w5jym7v' not exists\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/search/query",
+   "http": 200,
+   "resp": "{\"traceId\":\"n5gaj41k1fvoda\",\"timestamp\":1787934621881,\"status\":400,\"msg\":\"camel-service/ee/search/query; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/search/m/q",
+   "http": 200,
+   "resp": "{\"traceId\":\"98gaj41k1bqm2g\",\"timestamp\":1787934622074,\"status\":400,\"msg\":\"camel-service/ee/search/m/q; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/search/m/c",
+   "http": 200,
+   "resp": "{\"traceId\":\"0dgaj41k1qh19r\",\"timestamp\":1787934622112,\"status\":400,\"msg\":\"null\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/search/m/af",
+   "http": 200,
+   "resp": "{\"traceId\":\"gegaj41k1hanhb\",\"timestamp\":1787934622162,\"status\":400,\"msg\":\"camel-service/ee/search/m/af; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/replay/callback",
+   "http": 200,
+   "resp": "{\"traceId\":\"3s3cj41k12bi7m\",\"timestamp\":1787934674820,\"status\":400,\"msg\":\"camel-service/ee/replay/callback; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/news/save",
+   "http": 200,
+   "resp": "{\"traceId\":\"9t3cj41k1kscok\",\"timestamp\":1787934674858,\"status\":400,\"msg\":\"camel-service/ee/news/save; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/news/list_visible",
+   "http": 200,
+   "resp": "{\"traceId\":\"k34cj41k1hiquq\",\"timestamp\":1787934675061,\"status\":400,\"msg\":\"camel-service/ee/news/list_visible; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/news/list",
+   "http": 200,
+   "resp": "{\"traceId\":\"s44cj41k12tvig\",\"timestamp\":1787934675101,\"status\":400,\"msg\":\"camel-service/ee/news/list; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/news/audit",
+   "http": 200,
+   "resp": "{\"traceId\":\"0d4cj41k17cka3\",\"timestamp\":1787934675361,\"status\":400,\"msg\":\"camel-service/ee/news/audit; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/forecast/user_list",
+   "http": 200,
+   "resp": "{\"traceId\":\"cm4cj41k1c8asu\",\"timestamp\":1787934675661,\"status\":400,\"msg\":\"camel-service/ee/forecast/user_list; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/forecast/match_list",
+   "http": 200,
+   "resp": "{\"traceId\":\"s25cj41k1ku0av\",\"timestamp\":1787934676061,\"status\":400,\"msg\":\"camel-service/ee/forecast/match_list; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/forecast/bet",
+   "http": 200,
+   "resp": "{\"traceId\":\"8c5cj41k17tbrl\",\"timestamp\":1787934676361,\"status\":400,\"msg\":\"camel-service/ee/forecast/bet; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/faq/upsert",
+   "http": 200,
+   "resp": "{\"traceId\":\"jd5cj41k1e94e1\",\"timestamp\":1787934676404,\"status\":400,\"msg\":\"camel-service/ee/faq/upsert; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/article/translate",
+   "http": 200,
+   "resp": "{\"traceId\":\"lj5cj41k1kna6c\",\"timestamp\":1787934676670,\"status\":400,\"msg\":\"camel-service/ee/article/translate; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/article/sub",
+   "http": 200,
+   "resp": "{\"traceId\":\"bu5cj41k1lve8d\",\"timestamp\":1787934676939,\"status\":400,\"msg\":\"Cannot subscribe to oneself\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/article/save_and_audit",
+   "http": 200,
+   "resp": "{\"traceId\":\"906cj41k1a44ko\",\"timestamp\":1787934677002,\"status\":400,\"msg\":\"camel-service/ee/article/save_and_audit; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/article/save",
+   "http": 200,
+   "resp": "{\"traceId\":\"c36cj41k159er7\",\"timestamp\":1787934677101,\"status\":400,\"msg\":\"camel-service/ee/article/save; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/article/calc_result",
+   "http": 200,
+   "resp": "{\"traceId\":\"856cj41k12c95b\",\"timestamp\":1787934677164,\"status\":400,\"msg\":\"camel-service/ee/article/calc_result; match not found\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/article/buy",
+   "http": 200,
+   "resp": "{\"traceId\":\"4a6cj41k1ev1hk\",\"timestamp\":1787934677363,\"status\":400,\"msg\":\"camel-service/ee/article/buy; Non paid articles, no need to purchase\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/article/admin_save_and_audit",
+   "http": 200,
+   "resp": "{\"traceId\":\"pc6cj41k190l4c\",\"timestamp\":1787934677402,\"status\":400,\"msg\":\"camel-service/ee/article/admin_save_and_audit; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/article/admin_save",
+   "http": 200,
+   "resp": "{\"traceId\":\"ke6cj41k17bd7u\",\"timestamp\":1787934677461,\"status\":400,\"msg\":\"camel-service/ee/article/admin_save; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/activity/stream/admin_save",
+   "http": 200,
+   "resp": "{\"traceId\":\"of6cj41k13vakg\",\"timestamp\":1787934677560,\"status\":400,\"msg\":\"camel-service/ee/activity/stream/admin_save; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/activity/market_value_change/init",
+   "http": 200,
+   "resp": "{\"traceId\":\"0j6cj41k15lv17\",\"timestamp\":1787934683170,\"status\":400,\"msg\":\"camel-service/ee/activity/market_value_change/init; Something goes wrong, try it again"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/u/start_push",
+   "http": 200,
+   "resp": "{\"traceId\":\"f3ccj41k1qr6kt\",\"timestamp\":1787934683249,\"status\":400,\"msg\":\"basketball-service/ee/sports_live/u/start_push; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/u/gen_stream",
+   "http": 200,
+   "resp": "{\"traceId\":\"m4ccj41k1m9bb4\",\"timestamp\":1787934683286,\"status\":400,\"msg\":\"basketball-service/ee/sports_live/u/gen_stream; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/test_goal_event",
+   "http": 200,
+   "resp": "{\"traceId\":\"r5ccj41k1ht4a2\",\"timestamp\":1787934683324,\"status\":400,\"msg\":\"basketball-service/ee/sports_live/test_goal_event; Something goes wrong, try it again."
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/select_match",
+   "http": 200,
+   "resp": "{\"traceId\":\"c9ccj41k1ou9s4\",\"timestamp\":1787934683438,\"status\":400,\"msg\":\"basketball-service/ee/sports_live/select_match; Only selectable in the live broadcasti"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/player/stat",
+   "http": 200,
+   "resp": "{\"traceId\":\"qhccj41k1fkrmv\",\"timestamp\":1787934683707,\"status\":400,\"msg\":\"basketball-service/ee/sports_live/player/stat; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/player/match",
+   "http": 200,
+   "resp": "{\"traceId\":\"viccj41k1f5bcn\",\"timestamp\":1787934683744,\"status\":400,\"msg\":\"basketball-service/ee/sports_live/player/match; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/p/football/match/diary",
+   "http": 200,
+   "resp": "{\"traceId\":\"4kccj41k1tqg0j\",\"timestamp\":1787934683780,\"status\":400,\"msg\":\"basketball-service/ee/sports_live/p/football/match/diary; Something goes wrong, try it"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/like",
+   "http": 200,
+   "resp": "{\"traceId\":\"otccj41k13dpmr\",\"timestamp\":1787934684093,\"status\":400,\"msg\":\"basketball-service/ee/sports_live/like; News '1l4rjnh9w5jym7v' not exists\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/football/match/gen_stream",
+   "http": 200,
+   "resp": "{\"traceId\":\"01dcj41k1ri144\",\"timestamp\":1787934684205,\"status\":400,\"msg\":\"basketball-service/ee/sports_live/football/match/gen_stream; Something goes wrong, try"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/sports_live/football/match/del_stream",
+   "http": 200,
+   "resp": "{\"traceId\":\"f2dcj41k1upg2s\",\"timestamp\":1787934684249,\"status\":400,\"msg\":\"basketball-service/ee/sports_live/football/match/del_stream; Something goes wrong, try"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/search/query",
+   "http": 200,
+   "resp": "{\"traceId\":\"ggdcj41k1cvncj\",\"timestamp\":1787934684689,\"status\":400,\"msg\":\"basketball-service/ee/search/query; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/search/m/q",
+   "http": 200,
+   "resp": "{\"traceId\":\"lhdcj41k1mhrp3\",\"timestamp\":1787934684738,\"status\":400,\"msg\":\"basketball-service/ee/search/m/q; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/search/m/c",
+   "http": 200,
+   "resp": "{\"traceId\":\"7jdcj41k1b3mtv\",\"timestamp\":1787934684776,\"status\":400,\"msg\":\"null\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/search/m/af",
+   "http": 200,
+   "resp": "{\"traceId\":\"dkdcj41k1lrjp4\",\"timestamp\":1787934684848,\"status\":400,\"msg\":\"basketball-service/ee/search/m/af; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/replay/callback",
+   "http": 200,
+   "resp": "{\"traceId\":\"vbhdj41k1ae5p3\",\"timestamp\":1787934721448,\"status\":400,\"msg\":\"basketball-service/ee/replay/callback; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/forecast/user_list",
+   "http": 200,
+   "resp": "{\"traceId\":\"cehdj41k1p5dee\",\"timestamp\":1787934721486,\"status\":400,\"msg\":\"basketball-service/ee/forecast/user_list; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/forecast/match_list",
+   "http": 200,
+   "resp": "{\"traceId\":\"cmhdj41k14u2ve\",\"timestamp\":1787934721748,\"status\":400,\"msg\":\"basketball-service/ee/forecast/match_list; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/forecast/bet",
+   "http": 200,
+   "resp": "{\"traceId\":\"2uhdj41k1f7e34\",\"timestamp\":1787934721987,\"status\":400,\"msg\":\"basketball-service/ee/forecast/bet; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/faq/upsert",
+   "http": 200,
+   "resp": "{\"traceId\":\"00idj41k19cbor\",\"timestamp\":1787934722049,\"status\":400,\"msg\":\"basketball-service/ee/faq/upsert; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/article/translate",
+   "http": 200,
+   "resp": "{\"traceId\":\"72idj41k1mf2di\",\"timestamp\":1787934722159,\"status\":400,\"msg\":\"basketball-service/ee/article/translate; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/article/sub",
+   "http": 200,
+   "resp": "{\"traceId\":\"86idj41k1n5hu9\",\"timestamp\":1787934722249,\"status\":400,\"msg\":\"Cannot subscribe to oneself\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/article/save_and_audit",
+   "http": 200,
+   "resp": "{\"traceId\":\"d7idj41k1nklro\",\"timestamp\":1787934722286,\"status\":400,\"msg\":\"basketball-service/ee/article/save_and_audit; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/article/save",
+   "http": 200,
+   "resp": "{\"traceId\":\"c9idj41k13o2d0\",\"timestamp\":1787934722349,\"status\":400,\"msg\":\"basketball-service/ee/article/save; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/article/calc_result",
+   "http": 200,
+   "resp": "{\"traceId\":\"paidj41k1ndh4f\",\"timestamp\":1787934722448,\"status\":400,\"msg\":\"basketball-service/ee/article/calc_result; match not ended\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/article/buy",
+   "http": 200,
+   "resp": "{\"traceId\":\"kfidj41k1edk2q\",\"timestamp\":1787934722552,\"status\":400,\"msg\":\"basketball-service/ee/article/buy; Non paid articles, no need to purchase\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/article/admin_save_and_audit",
+   "http": 200,
+   "resp": "{\"traceId\":\"ugidj41k1tn3at\",\"timestamp\":1787934722590,\"status\":400,\"msg\":\"basketball-service/ee/article/admin_save_and_audit; Something goes wrong, try it again"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/article/admin_save",
+   "http": 200,
+   "resp": "{\"traceId\":\"piidj41k1dvl4c\",\"timestamp\":1787934722649,\"status\":400,\"msg\":\"basketball-service/ee/article/admin_save; Something goes wrong, try it again.\"}"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/activity/stream/admin_save",
+   "http": 200,
+   "resp": "{\"traceId\":\"0kidj41k17farr\",\"timestamp\":1787934722689,\"status\":400,\"msg\":\"basketball-service/ee/activity/stream/admin_save; Something goes wrong, try it again.\""
+  }
+ ],
+ "error": [
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/search/batchAddTeamToEs",
+   "err": "ReadTimeout('timed out')"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/search/batchAddPlayerToEs",
+   "err": "ReadTimeout('timed out')"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/search/batchAddNewsToEs",
+   "err": "ReadTimeout('timed out')"
+  },
+  {
+   "svc": "camel-service",
+   "method": "POST",
+   "path": "/ee/search/batchAddMatchToEs",
+   "err": "ReadTimeout('timed out')"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/search/batchAddTeamToEs",
+   "err": "ReadTimeout('timed out')"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/search/batchAddPlayerToEs",
+   "err": "ReadTimeout('timed out')"
+  },
+  {
+   "svc": "basketball-service",
+   "method": "POST",
+   "path": "/ee/search/batchAddMatchToEs",
+   "err": "ReadTimeout('timed out')"
+  }
+ ]
+}

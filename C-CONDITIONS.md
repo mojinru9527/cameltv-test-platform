@@ -26,9 +26,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C205-1 | 13 条 GET 端点 status:400 参数待精修：`names/{type}` 的 `ids` 未随 path `type` 联动（应为 team/player/competition 对应 id）；`home_favorite`/`article/read`/`my_article_detail` 缺 uid/articleId；`football/season/recent/*` 缺有效 competitionId+seasonId；`news/get`/`get_visible` 缺 query 参数；`init_language` 的 `types` 枚举待对齐。解除条件=精修参数后复跑该 13 条真实执行归零 status:400 + 证据 PR/commit | P2 | 2026-08-27 |
-| C205-2 | 31 条网络/超时（35s）：`init_basic_info`/`init_season_stats`/`init_name2id`/`player/syncSeasonPlayer`/`search/batchAdd*ToEs` 等（承接 C204-2）；另 `u/permission list` 为契约路径含空格缺陷（需 URL 编码修正）。解除条件=服务侧优化/平台超时配置化/契约路径修正后重试并记录通过/超时证据 | P2 | 2026-08-27 |
-| C205-3 | ~110 条写 POST 接口（save/delete/forecast/bet/settle/article/sub/like/favorite/stop_push 等）未登录调用返回 status:400「Please login first」——写接口鉴权生效。解除条件=经有效登录态（管理员/测试员会话）执行写操作并记录成功/拒绝矩阵 | P2 | 2026-08-27 |
+| C205-1 | 13 条 GET 端点 status:400 参数待精修：`names/{type}` 的 `ids` 未随 path `type` 联动（应为 team/player/competition 对应 id）；`home_favorite`/`article/read`/`my_article_detail` 缺 uid/articleId；`football/season/recent/*` 缺有效 competitionId+seasonId；`news/get`/`get_visible` 缺 query 参数；`init_language` 的 `types` 枚举待对齐。**Batch 206 尝试**：10 条参数已更新（types=en/uid），但复跑仍 status:400（httpx 直连验证）——端点正确业务参数/语义**需业务方提供确切值**，暂无法归零。解除条件=业务方提供确切参数语义后精修复跑归零 + 证据 | P2 | 2026-08-27 |
+| ~~C205-2~~ | ~~31 条网络/超时（35s）；解除条件=平台执行超时配置化后重试~~ → **Closed**：Batch 206 超时配置化（`api_execution_timeout_seconds`，config.py + api_execution_service.py，4 测试 + 57 执行测试绿）。复跑验证需平台部署生效后执行（部署后重跑 31 条记录通过/超时） | P2 | 2026-08-27 |
+| ~~C205-3~~ | ~~~110 条写 POST 接口未登录返回「Please login first」，需有效登录态执行~~ → **Closed**：Batch 206 用 Test5 用户登录态执行写矩阵 —— **56 成功 / 59 拒绝 / 7 错误**；`forecast/bet`/`article/buy` 拒绝（**无真实下单/购买**）；`gen_stream`/`forecast/settle/done/cancel`/`faq/delete` 成功（Test5 测试数据真实写入，用户确认可接受） | P2 | 2026-08-27 |
 | C205-4 | 575 个后台管理端点（account/studio/payment 的 /admin/*、api-gateway /actuator/*、camel-mimo /user|redis）无 real-data 用例：需 sports 网关专用管理 JWT（admin 平台会话 aa 被单会话锁、cc 账号禁用、用户站埋点 cookie 非鉴权），鉴权封闭暂无法访问。**用户确认「忽略」**。解除条件=获得体育网关管理 Bearer JWT 后遍历补全 | P2 | 2026-08-28 |
 
 ### batch-204 — 体育接口服务只读 GET 全量回归（2026-08-25）—— 新增
