@@ -1,0 +1,35 @@
+{
+ "batch": "batch-205",
+ "generated_cases": 1196,
+ "by_status": {
+  "failed": 158,
+  "passed": 1038
+ },
+ "by_positive_negative": {
+  "positive": 385,
+  "negative": 811
+ },
+ "by_service_status": {
+  "basketball:failed": 73,
+  "basketball:passed": 512,
+  "camel:failed": 85,
+  "camel:passed": 526
+ },
+ "execution_summary": {
+  "total": 1196,
+  "by_status": {
+   "failed": 158,
+   "passed": 1038
+  },
+  "envelope_reasserted": 55
+ },
+ "execution_mode": "Q4 全量执行（httpx keep-alive + 连接/DNS 错误重试；超时不重试）",
+ "services": {
+  "camel-service": {
+   "endpoints": 197
+  },
+  "basketball-service": {
+   "endpoints": 188
+  }
+ }
+}
