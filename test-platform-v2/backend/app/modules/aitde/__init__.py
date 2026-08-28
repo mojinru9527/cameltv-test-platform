@@ -9,3 +9,4 @@ flat ``app/models`` / ``app/services`` pile-up.
 # Importing the package registers AITDE domain models on ``Base.metadata`` so
 # Alembic and ``create_all`` can discover them (V30-003 DoD).
 from app.modules.aitde.mission import models  # noqa: F401
+from app.modules.aitde.sources import models as sources_models  # noqa: F401

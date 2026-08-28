@@ -21,10 +21,13 @@ def health() -> dict:
 
 # ── Business routers (feature-gated) ──
 from app.api.v2.missions import router as missions_router  # noqa: E402
+from app.api.v2.mission_sources import router as mission_sources_router  # noqa: E402
+from app.api.v2.mission_sources import single_router as sources_router  # noqa: E402
 
 router.include_router(missions_router)
+router.include_router(mission_sources_router)
+router.include_router(sources_router)
 
 # Further domain routers are added with their epics:
-# mission_sources.py (EPIC-02), mission_scope.py (EPIC-03),
-# mission_contracts.py (EPIC-05), mission_scenarios.py (EPIC-06),
-# ai_operations.py (EPIC-07).
+# mission_scope.py (EPIC-03), mission_contracts.py (EPIC-05),
+# mission_scenarios.py (EPIC-06), ai_operations.py (EPIC-07).

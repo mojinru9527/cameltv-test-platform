@@ -42,3 +42,33 @@ class AcceptanceStatus(str, Enum):
     NOT_READY = "NOT_READY"
     PASS = "PASS"
     FAIL = "FAIL"
+
+
+class SourceType(str, Enum):
+    """SourceArtifact 类型（V3.0 真正支持 REQUIREMENT/OPENAPI/MANUAL_NOTE）。"""
+
+    REQUIREMENT = "REQUIREMENT"
+    OPENAPI = "OPENAPI"
+    WIKI = "WIKI"
+    PROTOTYPE = "PROTOTYPE"
+    HISTORICAL_CASE = "HISTORICAL_CASE"
+    HISTORICAL_DEFECT = "HISTORICAL_DEFECT"
+    MANUAL_NOTE = "MANUAL_NOTE"
+
+
+class SourceRole(str, Enum):
+    """Mission-Source 关联角色。"""
+
+    REQUIREMENT = "REQUIREMENT"
+    CONTRACT = "CONTRACT"
+    SUPPORTING = "SUPPORTING"
+    HISTORY = "HISTORY"
+
+
+class ParseStatus(str, Enum):
+    """Source 解析状态。"""
+
+    PENDING = "PENDING"
+    PARSING = "PARSING"
+    PARSED = "PARSED"
+    FAILED = "FAILED"
