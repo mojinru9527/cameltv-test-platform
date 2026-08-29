@@ -1,4 +1,6 @@
-"""AITDE V3.3 Browser session models (V33-006) + healing proposal (V33-011)."""
+"""AITDE V3.3 Browser session models (V33-006) + healing proposal (V33-011)
++ legacy UI asset binding (plan §2)."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -7,7 +9,11 @@ from sqlalchemy import Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
-from app.modules.aitde.common.enums import BrowserSessionMode, HealingProposalStatus
+from app.modules.aitde.common.enums import (
+    BrowserSessionMode,
+    HealingProposalStatus,
+    UiAssetBindingStatus,
+)
 
 
 class BrowserSession(Base):
@@ -32,7 +38,9 @@ class BrowserSession(Base):
 class BrowserObservationEvent(Base):
     __tablename__ = "browser_observation_events"
     __table_args__ = (
-        UniqueConstraint("browser_session_id", "sequence", name="uq_observation_sequence"),
+        UniqueConstraint(
+            "browser_session_id", "sequence", name="uq_observation_sequence"
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -62,3 +70,20 @@ class HealingProposal(Base):
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
     reviewed_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
     reviewed_at: Mapped[datetime | None] = mapped_column(nullable=True)
+
+
+class UiAssetBinding(Base):
+    __tablename__ = "ui_asset_bindings"
+    __table_args__ = (
+        UniqueConstraint(
+            "scenario_adapter_id", "legacy_ui_case_id", name="uq_ui_asset_binding"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    scenario_adapter_id: Mapped[int] = mapped_column(Integer, index=True)
+    legacy_ui_case_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    legacy_ui_script_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    binding_status: Mapped[str] = mapped_column(
+        String(16), default=UiAssetBindingStatus.UNBOUND.value, index=True
+    )
