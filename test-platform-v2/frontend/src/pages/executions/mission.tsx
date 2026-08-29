@@ -44,7 +44,7 @@ import { fetchCurrentContract } from '@/api/contract'
 import { fetchEnvironments } from '@/api/environment'
 import OutcomeBadge from '@/components/executions/OutcomeBadge'
 import RuntimeStatusBadge from '@/components/executions/RuntimeStatusBadge'
-import { Plus, FlaskConical } from '@/lib/icons'
+import { Plus, FlaskConical, AlertTriangle } from '@/lib/icons'
 
 const PAGE_SIZE = 20
 
@@ -368,7 +368,9 @@ export default function MissionExecutionsPage() {
             </div>
 
             {!contractVersionId && (
-              <p className="text-sm text-status-warning">⚠ 契约尚未冻结，须先冻结契约才能创建执行。</p>
+              <p className="text-sm text-status-warning">
+                <AlertTriangle className="size-4 inline-block" /> 契约尚未冻结，须先冻结契约才能创建执行。
+              </p>
             )}
           </div>
 
