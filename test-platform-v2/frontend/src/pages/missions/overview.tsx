@@ -10,13 +10,20 @@ import {
   MISSION_TYPE_LABELS,
   type Mission,
 } from '@/api/missions'
-import { Inbox } from '@/lib/icons'
+import { Inbox, Bug } from '@/lib/icons'
+import { useAuthStore } from '@/stores/auth'
+import { AiDebugDrawer, AI_VIEW_DEBUG_PERMISSION } from './AiDebugDrawer'
 
 export default function MissionOverviewPage() {
   const { id } = useParams()
   const missionId = Number(id)
   const [mission, setMission] = useState<Mission | null>(null)
   const [loading, setLoading] = useState(true)
+  const [debugOpen, setDebugOpen] = useState(false)
+  // V30-085：AI Debug Drawer 仅 permission 可见
+  const canViewAiDebug = useAuthStore((s) => s.permissions).includes(
+    AI_VIEW_DEBUG_PERMISSION,
+  )
 
   useDocumentTitle(mission ? `概览 · ${mission.title}` : '概览')
 
@@ -111,11 +118,29 @@ export default function MissionOverviewPage() {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {canViewAiDebug && (
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label="查看 AI 调试信息"
+            onClick={() => setDebugOpen(true)}
+          >
+            <Bug className="size-4" /> AI 调试
+          </Button>
+        )}
         <Button variant="ghost" size="sm">
           <Inbox className="size-4" /> 归档
         </Button>
       </div>
+
+      {canViewAiDebug && (
+        <AiDebugDrawer
+          missionId={missionId}
+          open={debugOpen}
+          onOpenChange={setDebugOpen}
+        />
+      )}
     </div>
   )
 }
