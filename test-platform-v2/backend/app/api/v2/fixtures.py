@@ -18,6 +18,7 @@ from app.modules.aitde.data import (
 )
 from app.modules.aitde.data.schemas import (
     FixtureLeaseRequest,
+    FixtureProvisionRequest,
     FixtureReleaseRequest,
     SnapshotCaptureRequest,
 )
@@ -28,6 +29,23 @@ router = APIRouter(
     tags=["AITDE - Fixtures"],
     dependencies=[Depends(require_aitde_v3)],
 )
+
+
+@router.post("", response_model=R[dict])
+def provision_fixture(
+    payload: FixtureProvisionRequest,
+    current: CurrentUser = Depends(require_permission("data_source:manage")),
+    db: Session = Depends(get_db),
+):
+    """从数据计划直接 provisioning 一个 fixture（补 V32-009 缺口）。"""
+    fixture = fixture_service.provision_fixture_from_plan(
+        db,
+        payload.plan_id,
+        current.project_id or 0,
+        payload.environment_id,
+        payload.data_source_id,
+    )
+    return R.ok(fixture_service.to_fixture_dict(db, fixture))
 
 
 @router.get("/{fixture_id}", response_model=R[dict])
