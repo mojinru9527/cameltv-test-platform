@@ -100,3 +100,42 @@
 - V3.2 §7/§8：`docs/aitde/versions/V3.2_Detailed_Development_Implementation_Plan.md:313-382`
 - 避坑：`cameltv-bug-guard` skill（写后端/前端前读）；UI 规范：`cameltv-ui-conventions`
 - 每切片提交前：`pwsh scripts/git/scan-common-bugs.ps1`（HARD>0 必须处理）
+
+---
+
+## 7. 交付状态（2026-08-29 开发会话回写）
+
+> 用户指示：不走 agent-team 流程，直接落地；使用 clean code 工具门禁。
+
+### 7.1 已交付（阶段 1 + 阶段 2 部分 + 阶段 3 部分）
+
+| 缺口 | 交付 | 提交 |
+|---|---|---|
+| A1 Legacy Bridge 未接入真实链路 | `legacy_bridge` 深度接线：api_task_worker 执行后桥接（自动创建 LEGACY_BRIDGE Run + REQUEST/RESPONSE 证据）；playwright_executor `_complete_run` 后桥接（真实文件字节 screenshot/video/trace + stdout→CONSOLE）；v2 link 端点加载 legacy payload | 见 git log |
+| A2 EvidenceCompletenessPolicy 死代码 | `service.resolve_evidence_complete`（按 (adapter, oracle) 解析 required 集，含 scenario oracle / 断言快照 / step 类型三级回退）接入 finish_run 端点与桥接 finalize | 同上 |
+| A3 AssertionEngine 无生产写入方 | 桥接断言映射：`passed`→PASS/FAIL（其余 NOT_EVALUATED），oracle_id=0 哨兵 + `source=legacy_bridge` 快照；桥接 Run 自动 finalize 冻结 Outcome（全 PASS+证据齐备→真实 PASS，恒 INCONCLUSIVE 问题消除） | 同上 |
+| B1 /missions 菜单入口 | seed `menu:missions`（SparklesOutlined, sort 24）+ tester 角色；menu_service 按 `aitde_v3_enabled` fail-closed 隐藏 | 同上 |
+| C4 project isolation 专项 | `tests/aitde/v31/test_project_isolation.py`（读取/legacy loader/桥接写入三处租户边界）+ 桥接内显式 run 归属校验（新发现并修复的越权写入面） | 同上 |
+| C5 ambiguity_intent_v1 prompt | `intelligence/prompts/ambiguity_intent_v1.txt`（对齐 Ambiguity/Intent schema 契约）+ loader 测试 | 同上 |
+| C6/C7 门禁文档 | 99_Cross_Version §17 状态注记（有自动化证据的门禁项 / 仍开放项 / 带门进入决策）；V3.2 Checklist 状态注记（11 项保持未勾选，Part C 与 #338 现状复核一致） | 同上 |
+
+### 7.2 未交付（后续批次）
+
+- C1 e2e 冒烟 spec、C2 Golden AI fixtures、C3 missions/executions 组件测试（阶段 2 余项）
+- B2 AI Debug Drawer + `mission:ai_view_debug`、B4 409 STALE UI / Accessibility（阶段 3 余项）
+- B3 TanStack Query 迁移（阶段 4）
+- Shadow Mode ≥100 Run 对比 + False Pass 人工审计基线（99_Cross_Version §17.2，下一批次优先）
+
+### 7.3 门禁与回归记录（clean code 工具）
+
+| 门禁 | 结果 |
+|---|---|
+| `scan-common-bugs.ps1` | HARD=0（WARN 300 为历史基线，不涉及本批文件） |
+| `dev-gate.ps1`（G0–G2） | PASS_WITH_WARN（scan + ruff F821 + tsc + eslint + 路由守卫 4 pass） |
+| `npm run build` | ✓ built（9.1s） |
+| 后端全量 `pytest` | **1962 passed, 0 failed**（初跑 5 个 lanhu 失败系 `lanhu-mcp` submodule 未检出，`git submodule update --init` 后全过；无新增失败） |
+| 前端全量 `npm test` | 121 files / 542 tests passed |
+
+### 7.4 流程注记
+
+- 本批次为直接任务（非 agent-team），未产生六件套工件；分支 `feature/aitde-v331-gap-remediation`，推送/PR/合并按直接任务逐次 Push 确认流程执行。
