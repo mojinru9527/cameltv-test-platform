@@ -87,3 +87,11 @@ description: Use when asked to write, output, design, or supplement test cases o
 - 新增用例:插入到对应功能模块最下方,备注说明。
 
 详见 `功能测试用例规范.md`「用例的维护」、`缺陷管理制度.md`。
+
+## AITDE V3 兼容说明（新增）
+
+AITDE V3 后，新 AI 生成的测试不再以三个 Case 类型作为事实源，而是先产 **TestScenario + Oracle**，旧 `TestCase` 降级为 Scenario Projection / Legacy Case。
+
+- **新生成**：优先走 AITDE V3（`test-scope-analysis` → `test-contract-review` → `test-scenario-design`），产出 `TestScenario`；本 skill 的模板/检查点作为**功能视图投影**（Given/When/Then 的字段与预期可复用）。
+- **兼容期**：旧 `TestCase` 仍可编辑/评审；一旦绑定 `scenario_id`，业务预期不能再独立改，需回到 `Contract/Scenario Change Proposal`。
+- **判定**：本 skill 的用例设计方法（等价类/边界/场景/正交/错误推测）继续有效，只是承载对象从 `TestCase` 迁移到 `TestScenario`。
