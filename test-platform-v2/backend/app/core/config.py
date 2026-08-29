@@ -267,6 +267,12 @@ class Settings(BaseSettings):
     lanhu_ocr_command: str = ""                  # 命令模板，如 paddleocr --image {image}
     lanhu_ocr_min_confidence: float = 0.60
     lanhu_evidence_word_embed_screenshots: bool = True
+
+    # ── AITDE V3.1 Unified Execution object storage (V31-003) ──
+    object_storage_provider: str = "local"         # local | s3
+    object_storage_local_root: str = ""            # 空 = backend/storage/aitde-evidence
+    object_storage_s3_bucket: str = ""
+    object_storage_s3_endpoint: str = ""           # MinIO/S3 endpoint URL
     lanhu_evidence_import_to_requirement: bool = True
     lanhu_evidence_import_to_knowledge: bool = True
     lanhu_evidence_import_to_wiki: bool = True

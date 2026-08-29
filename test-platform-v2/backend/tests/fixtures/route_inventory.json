@@ -1,5 +1,5 @@
 {
-  "count": 456,
+  "count": 474,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -1718,11 +1718,23 @@
       "method": "POST"
     },
     {
+      "path": "/api/v2/environments/{environment_id}/snapshots",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/environments/{environment_id}/snapshots/latest",
+      "method": "GET"
+    },
+    {
       "path": "/api/v2/health",
       "method": "GET"
     },
     {
       "path": "/api/v2/intents/{intent_id}/review",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/legacy-executions/{legacy_type}/{legacy_id}/link",
       "method": "POST"
     },
     {
@@ -1760,6 +1772,10 @@
     {
       "path": "/api/v2/missions/{mission_id}/contracts/generate",
       "method": "POST"
+    },
+    {
+      "path": "/api/v2/missions/{mission_id}/executions",
+      "method": "GET"
     },
     {
       "path": "/api/v2/missions/{mission_id}/intents",
@@ -1806,8 +1822,60 @@
       "method": "POST"
     },
     {
+      "path": "/api/v2/runs/{run_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/runs/{run_id}/assertions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/runs/{run_id}/audit",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/runs/{run_id}/audit",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/runs/{run_id}/cancel",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/runs/{run_id}/evidence",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/runs/{run_id}/finish",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/runs/{run_id}/replay",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/runs/{run_id}/retry",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/runs/{run_id}/steps",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/scenarios/adapters/{adapter_id}",
+      "method": "PATCH"
+    },
+    {
       "path": "/api/v2/scenarios/{scenario_id}",
       "method": "GET"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_id}/adapters",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_id}/adapters",
+      "method": "POST"
     },
     {
       "path": "/api/v2/scenarios/{scenario_id}/functional-projection",
@@ -1815,6 +1883,10 @@
     },
     {
       "path": "/api/v2/scenarios/{scenario_id}/review",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_id}/runs",
       "method": "POST"
     },
     {
