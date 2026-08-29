@@ -306,3 +306,34 @@ Verified
 ```
 
 后一个版本暴露前一层基础不稳定时，优先回去修基础，不用更多 AI 自动化掩盖问题。
+
+---
+
+# 17. v3.3.1 查漏补缺状态注记（2026-08-29）
+
+> 本节为 v3.3.1 查漏补缺批次的**如实状态记录**，不改变上方任何门禁的判定标准。
+> 所有 `[ ]` 复选框保持未勾选——未在本批次实际执行的门禁不得假勾。
+
+## 17.1 已由自动化测试覆盖的门禁证据（部分项）
+
+| 门禁项 | 当前证据 |
+|---|---|
+| §4 "PASS 必须有 Required Oracle/Evidence" | `EvidenceCompletenessPolicy` 已接入 `compute_outcome`/`finish_run`（v331-gap A2）；`tests/aitde/v31/test_completeness_policy.py` |
+| §3 "Legacy v1 Regression 通过"（部分） | Legacy Bridge 已接入真实执行链路（api_task_worker / playwright_executor / v2 link 端点带证据 payload）；`tests/aitde/v31/test_legacy_bridge.py`、`tests/test_api_task_worker.py` |
+| §4 "Locator/Environment Error 不误报 BUSINESS_FAIL" | `outcome_classifier` 决策表单测（既有） |
+| §4 "Evidence Sanitizer Secret Leak = 0" | `test_evidence_sanitizer`（既有） |
+| §3/§4 跨项目授权 | `tests/aitde/v31/test_project_isolation.py`（Run 读取、legacy loader、桥接写入三处租户边界） |
+
+## 17.2 仍开放的门禁（本批次未执行，禁止勾选）
+
+- §4 **至少 100 个 Run 完成 Shadow 对比**：Shadow Mode 自上线以来 0 次执行，无对比数据。
+- §4 **False Pass/False Fail 人工审计基线**：无人工审计样本。
+- §4 Replay 后端重启可用、§5 Fixture 清理/租约真实库演练：属真实环境项，本批次无基础设施。
+- §3 Tester 完整 Design Loop 人工走查：未组织。
+
+## 17.3 决策记录（带门进入）
+
+**决策**：v3.3.1 允许在 §3/§4 门禁未全量执行的情况下继续开发迭代，但：
+1. 上述门禁项保持未勾选，V3.2/V3.1 不得标记 VERIFIED；
+2. Shadow 对比（≥100 Run）与人工审计基线列为下一批次优先验收任务；
+3. 任何发布宣称"版本验收通过"前必须先补齐 §17.2 项。

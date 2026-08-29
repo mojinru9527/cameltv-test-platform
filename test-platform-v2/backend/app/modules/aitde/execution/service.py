@@ -249,3 +249,75 @@ def compute_outcome(assertions: list, evidence_sanitized_ok: bool) -> str:
         evidence_failed=not evidence_sanitized_ok,
     )
     return classify(di)
+
+
+# ── v331-gap A2: EvidenceCompletenessPolicy wiring ──────────────────────────
+
+
+def _resolve_adapter_type(db: Session, run: ExecutionRun) -> str:
+    """Adapter type of the run: bound adapter first, else inferred from steps."""
+    from app.modules.aitde.common.enums import AdapterType, StepType
+
+    if run.adapter_id:
+        adapter = repository.get_adapter(db, run.adapter_id, run.project_id)
+        if adapter:
+            return adapter.adapter_type
+    step_types = {s.step_type for s in repository.list_steps(db, run.id, run.project_id)}
+    if StepType.API.value in step_types:
+        return AdapterType.API.value
+    if StepType.UI.value in step_types:
+        return AdapterType.UI.value
+    if StepType.DB.value in step_types:
+        return AdapterType.DB.value
+    return ""
+
+
+def _resolve_oracle_type(db: Session, run: ExecutionRun) -> str:
+    """Oracle type of the run: frozen scenario oracles first, else the
+    oracle_type recorded in legacy-mapped assertion snapshots."""
+    import json as _json
+
+    oracle_types: set[str] = set()
+    if run.scenario_version_id:
+        from app.modules.aitde.scenario.models import TestOracle
+
+        oracle_types = set(
+            db.scalars(
+                select(TestOracle.oracle_type).where(
+                    TestOracle.scenario_version_id == run.scenario_version_id
+                )
+            ).all()
+        )
+    if len(oracle_types) == 1:
+        return oracle_types.pop()
+    for assertion in repository.list_assertions(db, run.id, run.project_id):
+        try:
+            snapshot = _json.loads(assertion.oracle_snapshot_json or "{}")
+        except ValueError:
+            continue
+        if isinstance(snapshot, dict) and snapshot.get("oracle_type"):
+            return str(snapshot["oracle_type"])
+    return ""
+
+
+def resolve_evidence_complete(db: Session, run: ExecutionRun) -> bool:
+    """True only when every evidence type required by the run's
+    (adapter_type, oracle_type) pair is present AND sanitized.
+
+    Unknown adapter/oracle pairs fall back to the policy's conservative
+    requirement (RESPONSE + SCREENSHOT) — an unknown run can never be a silent
+    PASS (V3.1 plan invariant 4).
+    """
+    from app.modules.aitde.assertion.completeness import is_complete, required_evidence
+    from app.modules.aitde.common.enums import SanitizationStatus
+
+    evidence = repository.list_evidence(db, run.id, run.project_id)
+    present = {
+        e.evidence_type
+        for e in evidence
+        if e.sanitization_status == SanitizationStatus.SANITIZED.value
+    }
+    required = required_evidence(
+        _resolve_adapter_type(db, run), _resolve_oracle_type(db, run)
+    )
+    return is_complete(present, required)

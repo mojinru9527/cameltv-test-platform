@@ -200,6 +200,10 @@ def execute_task(task_id: int, project_id: int, worker_id: str) -> None:
             item.finished_at = datetime.now(timezone.utc)
             db.commit()
 
+            # v331-gap A1: 执行成功后把 item 桥接进统一执行模型
+            # （Run/Step/Evidence/AssertionResult，best-effort，不影响任务本身）
+            _bridge_item(db, task, item, result)
+
         # ── 后处理：标记剩余 pending item 为 skipped（若已取消） ──
         db.refresh(task)
         if task.cancel_requested:
@@ -328,6 +332,32 @@ def _skip_pending_items(db: Session, task_id: int, current_skip_count: int) -> i
     if pending_items:
         db.commit()
     return len(pending_items)
+
+
+def _bridge_item(db: Session, task: ApiExecutionTask, item: ApiExecutionTaskItem, result: dict) -> None:
+    """v331-gap A1/A3：item 执行完成后桥接进 AITDE 统一执行模型。
+
+    Bridge 自动创建 LEGACY_BRIDGE Run，注册 REQUEST/RESPONSE 证据、映射断言并
+    冻结 Outcome（完整性策略 + 分类器）。桥接失败只降级为日志，绝不影响
+    legacy 执行结果本身。
+    """
+    try:
+        from app.modules.aitde.execution import legacy_bridge
+
+        legacy_bridge.bridge_api_item(
+            db,
+            project_id=task.project_id,
+            run_id=None,
+            legacy_id=item.id,
+            request=result.get("request_snapshot") or None,
+            response=result.get("response_snapshot") or None,
+            assertions=result.get("assertions") or [],
+            environment_id=task.environment_id or 0,
+            step_status="SUCCEEDED" if item.status == "passed" else "FAILED",
+        )
+    except Exception:
+        logger.warning("legacy bridge 注册失败 item=%s（降级为仅 legacy 记录）", item.id, exc_info=True)
+        db.rollback()
 
 
 def _build_response_snapshot(result: dict) -> str:
