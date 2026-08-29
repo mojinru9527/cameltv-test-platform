@@ -1,0 +1,17 @@
+{
+  "category": "ambiguous",
+  "fragments": [
+    {
+      "artifact_id": 1,
+      "fragment_id": 5,
+      "title": "PRD 6.1 超时",
+      "text": "接口超时后系统进行相应处理。"
+    },
+    {
+      "artifact_id": 1,
+      "fragment_id": 6,
+      "title": "PRD 6.2 导出",
+      "text": "导出失败时给予提示并允许重试。"
+    }
+  ]
+}

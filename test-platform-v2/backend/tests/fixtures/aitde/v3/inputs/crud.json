@@ -1,0 +1,11 @@
+{
+  "category": "simple-crud",
+  "fragments": [
+    {
+      "artifact_id": 1,
+      "fragment_id": 1,
+      "title": "PRD 2.1 会员管理",
+      "text": "管理员可以创建、查询、更新、删除会员档案；会员编号全局唯一。"
+    }
+  ]
+}

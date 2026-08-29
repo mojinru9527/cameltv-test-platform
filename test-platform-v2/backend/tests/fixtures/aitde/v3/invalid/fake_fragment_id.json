@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "mission_id": 1,
+  "items": [
+    {
+      "scope_key": "ghost",
+      "scope_type": "FEATURE",
+      "name": "幽灵来源",
+      "decision": "INCLUDE",
+      "test_depth": "FULL",
+      "risk_level": "P2",
+      "reason": "artifact 不存在（非占位）",
+      "confidence": 0.5,
+      "source_refs": [
+        {
+          "artifact_id": 99999,
+          "fragment_id": 1,
+          "location": "PRD ?"
+        }
+      ]
+    }
+  ]
+}
