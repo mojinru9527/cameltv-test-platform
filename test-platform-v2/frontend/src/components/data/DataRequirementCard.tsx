@@ -28,21 +28,9 @@ export interface DataRequirementCardProps {
   saving?: boolean
 }
 
-const SHARING_POLICIES = [
-  'read_only',
-  'read_write',
-  'segregated',
-  'shared',
-  'private',
-]
+const SHARING_POLICIES = ['EXCLUSIVE', 'SHARED_READONLY']
 
-const CLEANUP_POLICIES = [
-  'post_run',
-  'ttl_based',
-  'on_release',
-  'manual',
-  'none',
-]
+const CLEANUP_POLICIES = ['ALWAYS', 'ON_SUCCESS', 'MANUAL']
 
 export function DataRequirementCard({ requirement, onUpdate, saving }: DataRequirementCardProps) {
   const [editEntityType, setEditEntityType] = useState(false)
