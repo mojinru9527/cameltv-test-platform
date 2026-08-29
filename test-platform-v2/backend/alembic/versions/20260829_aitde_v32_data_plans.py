@@ -1,7 +1,7 @@
 """aitde v3.2 data_plans + data_plan_steps
 
 Revision ID: 20260829_aitde_v32_data_plans
-Revises: 20260829_aitde_v32_data_requirements
+Revises: 20260829_aitde_v32_requirements
 Create Date: 2026-08-29 02:40:00
 
 AITDE V3.2 (V32-003): a data plan declares a strategy (EXISTING / API_BUILDER /
@@ -15,7 +15,7 @@ import sqlalchemy as sa
 
 
 revision: str = "20260829_aitde_v32_data_plans"
-down_revision: Union[str, None] = "20260829_aitde_v32_data_requirements"
+down_revision: Union[str, None] = "20260829_aitde_v32_requirements"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

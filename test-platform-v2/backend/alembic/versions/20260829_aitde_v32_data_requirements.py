@@ -1,6 +1,6 @@
 """aitde v3.2 data_requirements
 
-Revision ID: 20260829_aitde_v32_data_requirements
+Revision ID: 20260829_aitde_v32_requirements
 Revises: 20260829_aitde_v32_data_sources
 Create Date: 2026-08-29 02:20:00
 
@@ -14,7 +14,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision: str = "20260829_aitde_v32_data_requirements"
+revision: str = "20260829_aitde_v32_requirements"
 down_revision: Union[str, None] = "20260829_aitde_v32_data_sources"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
