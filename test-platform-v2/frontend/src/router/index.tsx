@@ -48,6 +48,10 @@ const MissionSourcesPage = lazy(() => import('@/pages/missions/sources'))
 const MissionScopePage = lazy(() => import('@/pages/missions/scope'))
 const MissionContractPage = lazy(() => import('@/pages/missions/contract'))
 const MissionScenariosPage = lazy(() => import('@/pages/missions/scenarios'))
+const ExecutionCenterPage = lazy(() => import('@/pages/executions'))
+const RunDetailPage = lazy(() => import('@/pages/executions/run/[runId]'))
+const ReplayPage = lazy(() => import('@/pages/executions/replay'))
+const MissionExecutionsPage = lazy(() => import('@/pages/executions/mission'))
 const themeLabEnabled = isThemeLabEnabled(import.meta.env.DEV, import.meta.env.VITE_ENABLE_THEME_LAB)
 
 function PageLoader({ children }: { children: ReactNode }) {
@@ -273,7 +277,42 @@ export const router = createBrowserRouter([
           { path: 'scope', element: <PageLoader><MissionScopePage /></PageLoader> },
           { path: 'contract', element: <PageLoader><MissionContractPage /></PageLoader> },
           { path: 'scenarios', element: <PageLoader><MissionScenariosPage /></PageLoader> },
+          { path: 'executions', element: <PageLoader><MissionExecutionsPage /></PageLoader> },
         ],
+      },
+      // ── AITDE V3.1: Unified Execution + Proof Replay（V31-xxx）──
+      {
+        path: 'executions',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><ExecutionCenterPage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="执行中心需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
+      },
+      {
+        path: 'executions/:runId',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><RunDetailPage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="执行详情需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
+      },
+      {
+        path: 'executions/:runId/replay',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><ReplayPage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="执行回放需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
       },
       {
         path: 'theme-lab',
