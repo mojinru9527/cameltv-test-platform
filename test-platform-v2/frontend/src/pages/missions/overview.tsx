@@ -1,15 +1,11 @@
 import { toast } from 'sonner'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router'
-import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Skeleton } from '@/ui'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import useAbortableEffect from '@/hooks/useAbortableEffect'
-import {
-  fetchMission,
-  MISSION_STATUS_LABELS,
-  MISSION_TYPE_LABELS,
-  type Mission,
-} from '@/api/missions'
+import { fetchMission, MISSION_STATUS_LABELS, MISSION_TYPE_LABELS } from '@/api/missions'
+import { missionKeys } from '@/lib/queryClient'
 import { Inbox, Bug } from '@/lib/icons'
 import { useAuthStore } from '@/stores/auth'
 import { AiDebugDrawer, AI_VIEW_DEBUG_PERMISSION } from './AiDebugDrawer'
@@ -17,30 +13,25 @@ import { AiDebugDrawer, AI_VIEW_DEBUG_PERMISSION } from './AiDebugDrawer'
 export default function MissionOverviewPage() {
   const { id } = useParams()
   const missionId = Number(id)
-  const [mission, setMission] = useState<Mission | null>(null)
-  const [loading, setLoading] = useState(true)
+  // (v331-remediation-2 B3 / V30-100) 与 MissionLayout 共享 detail 缓存（原双请求消除）
+  const { data: mission, isLoading, error } = useQuery({
+    queryKey: missionKeys.detail(missionId),
+    queryFn: ({ signal }) => fetchMission(missionId, signal),
+    enabled: Number.isFinite(missionId) && missionId > 0,
+  })
   const [debugOpen, setDebugOpen] = useState(false)
   // V30-085：AI Debug Drawer 仅 permission 可见
   const canViewAiDebug = useAuthStore((s) => s.permissions).includes(
     AI_VIEW_DEBUG_PERMISSION,
   )
 
+  useEffect(() => {
+    if (error) toast.error(error instanceof Error ? error.message : '加载失败')
+  }, [error])
+
   useDocumentTitle(mission ? `概览 · ${mission.title}` : '概览')
 
-  useAbortableEffect((signal) => {
-    if (!missionId) return
-    setLoading(true)
-    fetchMission(missionId, signal)
-      .then(setMission)
-      .catch((err) => {
-        if (!(err?.code === 'ERR_CANCELED')) toast.error(err.message || '加载失败')
-      })
-      .finally(() => {
-        if (!signal.aborted) setLoading(false)
-      })
-  }, [missionId])
-
-  if (loading && !mission) {
+  if (isLoading && !mission) {
     return (
       <div className="space-y-3">
         <Skeleton className="h-28 w-full" />

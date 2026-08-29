@@ -1,10 +1,11 @@
 import { NavLink, Outlet, useParams } from 'react-router'
+import { useEffect } from 'react'
 import { toast } from 'sonner'
+import { useQuery } from '@tanstack/react-query'
 import { Badge, Skeleton } from '@/ui'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import useAbortableEffect from '@/hooks/useAbortableEffect'
-import { useState } from 'react'
-import { fetchMission, MISSION_STATUS_LABELS, MISSION_TYPE_LABELS, type Mission } from '@/api/missions'
+import { fetchMission, MISSION_STATUS_LABELS, MISSION_TYPE_LABELS } from '@/api/missions'
+import { missionKeys } from '@/lib/queryClient'
 import { cn } from '@/lib/utils'
 
 const TABS = [
@@ -19,25 +20,20 @@ const TABS = [
 export default function MissionLayout() {
   const { id } = useParams()
   const missionId = Number(id)
-  const [mission, setMission] = useState<Mission | null>(null)
-  const [loading, setLoading] = useState(true)
+  // (v331-remediation-2 B3 / V30-100) TanStack Query：detail 与 overview 共享缓存
+  const { data: mission, isLoading, error } = useQuery({
+    queryKey: missionKeys.detail(missionId),
+    queryFn: ({ signal }) => fetchMission(missionId, signal),
+    enabled: Number.isFinite(missionId) && missionId > 0,
+  })
+
+  useEffect(() => {
+    if (error) toast.error(error instanceof Error ? error.message : '加载失败')
+  }, [error])
 
   useDocumentTitle(mission ? mission.title : '测试任务')
 
-  useAbortableEffect((signal) => {
-    if (!missionId) return
-    setLoading(true)
-    fetchMission(missionId, signal)
-      .then(setMission)
-      .catch((err) => {
-        if (!(err?.code === 'ERR_CANCELED')) toast.error(err.message || '加载失败')
-      })
-      .finally(() => {
-        if (!signal.aborted) setLoading(false)
-      })
-  }, [missionId])
-
-  if (loading && !mission) {
+  if (isLoading && !mission) {
     return (
       <div className="space-y-4 p-4">
         <Skeleton className="h-10 w-96" />

@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
 import PageHeader from '@/components/PageHeader'
 import {
   Button,
@@ -21,13 +22,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import useAbortableEffect from '@/hooks/useAbortableEffect'
 import {
   fetchMissions,
   MISSION_STATUS_LABELS,
   MISSION_TYPE_LABELS,
-  type Mission,
 } from '@/api/missions'
+import { missionKeys } from '@/lib/queryClient'
 import { Plus, Target } from '@/lib/icons'
 
 const PAGE_SIZE = 20
@@ -41,24 +41,14 @@ export default function MissionListPage() {
   const status = searchParams.get('status') ?? ''
   const page = Number(searchParams.get('page') ?? '1')
 
-  const [missions, setMissions] = useState<Mission[]>([])
-  const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(true)
-
-  useAbortableEffect((signal) => {
-    setLoading(true)
-    fetchMissions({ keyword, status, page, page_size: PAGE_SIZE }, signal)
-      .then((res) => {
-        setMissions(res.items)
-        setTotal(res.total)
-      })
-      .catch((err) => {
-        if (!(err?.code === 'ERR_CANCELED')) return
-      })
-      .finally(() => {
-        if (!signal.aborted) setLoading(false)
-      })
-  }, [keyword, status, page])
+  // (v331-remediation-2 B3 / V30-100) TanStack Query：替代裸 fetch + useEffect
+  const { data, isLoading } = useQuery({
+    queryKey: missionKeys.list({ keyword, status, page }),
+    queryFn: ({ signal }) =>
+      fetchMissions({ keyword, status, page, page_size: PAGE_SIZE }, signal),
+  })
+  const missions = data?.items ?? []
+  const total = data?.total ?? 0
 
   const applyFilters = useCallback(
     (next: { keyword?: string; status?: string; page?: number }) => {
@@ -123,7 +113,7 @@ export default function MissionListPage() {
         </Button>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <div className="space-y-2" role="status" aria-busy="true" aria-label="加载中">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-11 w-full" />
