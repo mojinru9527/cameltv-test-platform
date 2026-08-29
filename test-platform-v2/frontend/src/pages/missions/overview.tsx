@@ -20,10 +20,8 @@ export default function MissionOverviewPage() {
     enabled: Number.isFinite(missionId) && missionId > 0,
   })
   const [debugOpen, setDebugOpen] = useState(false)
-  // V30-085：AI Debug Drawer 仅 permission 可见
-  const canViewAiDebug = useAuthStore((s) => s.permissions).includes(
-    AI_VIEW_DEBUG_PERMISSION,
-  )
+  // V30-085：AI Debug Drawer 仅 permission 可见（hasPerm 处理 * 通配）
+  const canViewAiDebug = useAuthStore((s) => s.hasPerm(AI_VIEW_DEBUG_PERMISSION))
 
   useEffect(() => {
     if (error) toast.error(error instanceof Error ? error.message : '加载失败')

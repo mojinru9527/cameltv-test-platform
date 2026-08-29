@@ -57,9 +57,8 @@ export function AiDebugDrawer({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const permissions = useAuthStore((s) => s.permissions)
-  const allowed =
-    permissions.includes('*') || permissions.includes(AI_VIEW_DEBUG_PERMISSION)
+  const hasPerm = useAuthStore((s) => s.hasPerm)
+  const allowed = hasPerm(AI_VIEW_DEBUG_PERMISSION)
 
   const [items, setItems] = useState<AiOperation[]>([])
   const [loading, setLoading] = useState(false)
