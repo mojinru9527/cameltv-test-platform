@@ -86,6 +86,8 @@ async def lifespan(_: FastAPI):
         try:
             storage_base.chmod(0o755)
         except OSError:
+            # 容器文件系统可能不支持 chmod 或当前用户无权修改；放权仅尽力而为，
+            # 失败不阻断后续证据文件写入。
             pass
         logger.info(
             "[storage] Lanhu evidence storage base: %s （生产请用持久卷挂载，否则 Railway 重建会清空截图）",

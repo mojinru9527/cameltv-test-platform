@@ -5,7 +5,7 @@ last_reviewed: "2026-07-27"
 status: "active"
 expires: "2026-12-26"
 tags: ["frontend", "react", "typescript", "shadcn-ui", "zustand"]
-related: ["../backend/CLAUDE.md", "../../docs/adr/0005-zustand-over-redux.md", "../../docs/adr/0006-shadcn-ui-over-antd.md"]
+related: ["../backend/CLAUDE.md", "clean-code-standards.md", "../../docs/adr/0005-zustand-over-redux.md", "../../docs/adr/0006-shadcn-ui-over-antd.md"]
 ---
 
 # test-platform-v2/frontend — React 前端

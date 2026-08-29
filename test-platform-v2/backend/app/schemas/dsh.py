@@ -135,6 +135,8 @@ class DshTaskOut(BaseModel):
             if isinstance(parsed, dict):
                 scene = parsed.get("scene") or "general"
         except (json.JSONDecodeError, TypeError):
+            # params_json 容错：非 JSON 或非对象时回退到 "general" 场景，
+            # 不阻断任务列表/详情展示。
             pass
         return {
             "id": getattr(data, "id", None),
