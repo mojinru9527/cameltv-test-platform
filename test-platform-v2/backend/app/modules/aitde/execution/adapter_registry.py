@@ -29,14 +29,20 @@ def create_adapter(
 ) -> ScenarioAdapter:
     adapter_type = (data.get("adapter_type") or AdapterType.API.value)
     if adapter_type not in _VALID_TYPES:
-        raise APIException(code=400, msg=f"非法适配器类型：{adapter_type}", http_status=400)
+        raise APIException(
+            code=400, msg=f"非法适配器类型：{adapter_type}", http_status=400
+        )
 
     scenario_version_id = data.get("scenario_version_id")
     if not scenario_version_id:
-        raise APIException(code=400, msg="scenario_version_id 不能为空", http_status=400)
+        raise APIException(
+            code=400, msg="scenario_version_id 不能为空", http_status=400
+        )
 
     try:
-        repository.validate_adapter_bind(db, scenario_id, int(scenario_version_id), project_id)
+        repository.validate_adapter_bind(
+            db, scenario_id, int(scenario_version_id), project_id
+        )
     except ValueError as exc:
         message = (
             "场景版本不属于当前项目"
@@ -55,13 +61,17 @@ def create_adapter(
                 "status": AdapterStatus.DRAFT.value,
                 "source_asset_type": data.get("source_asset_type"),
                 "source_asset_id": data.get("source_asset_id"),
-                "config_json": json.dumps(data.get("config") or {}, sort_keys=True, ensure_ascii=False),
+                "config_json": json.dumps(
+                    data.get("config") or {}, sort_keys=True, ensure_ascii=False
+                ),
                 "adapter_version": data.get("adapter_version") or "1.0",
             },
             user_id,
         )
     except Exception as exc:  # pragma: no cover - unexpected DB error surfaced as 400
-        raise APIException(code=400, msg=f"创建适配器失败：{exc}", http_status=400) from exc
+        raise APIException(
+            code=400, msg=f"创建适配器失败：{exc}", http_status=400
+        ) from exc
 
 
 def list_adapters(

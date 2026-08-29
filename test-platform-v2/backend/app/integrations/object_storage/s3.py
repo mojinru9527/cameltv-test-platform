@@ -7,7 +7,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.integrations.object_storage.base import ObjectStorage, StorageError, sha256_bytes
+from app.integrations.object_storage.base import (
+    ObjectStorage,
+    StorageError,
+    sha256_bytes,
+)
 
 
 def _client() -> Any:
@@ -66,7 +70,9 @@ class S3Storage(ObjectStorage):
         try:
             import io
             stream = io.BytesIO()
-            self._s3().download_fileobj(Bucket=self.bucket, Key=self._key(uri), Fileobj=stream)
+            self._s3().download_fileobj(
+                Bucket=self.bucket, Key=self._key(uri), Fileobj=stream
+            )
             return stream.getvalue()
         except Exception as exc:  # pragma: no cover - network
             raise StorageError(f"s3 get failed: {exc}") from exc

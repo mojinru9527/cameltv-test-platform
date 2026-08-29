@@ -8,7 +8,11 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from app.integrations.object_storage.base import ObjectStorage, StorageError, sha256_bytes
+from app.integrations.object_storage.base import (
+    ObjectStorage,
+    StorageError,
+    sha256_bytes,
+)
 
 
 class LocalStorage(ObjectStorage):

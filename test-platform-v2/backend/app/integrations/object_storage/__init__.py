@@ -4,7 +4,11 @@ from __future__ import annotations
 import os
 
 from app.core.config import settings
-from app.integrations.object_storage.base import ObjectStorage, StorageError, sha256_bytes
+from app.integrations.object_storage.base import (  # noqa: F401
+    ObjectStorage,
+    StorageError,
+    sha256_bytes,
+)
 from app.integrations.object_storage.local import LocalStorage
 from app.integrations.object_storage.s3 import S3Storage
 
@@ -15,7 +19,9 @@ def get_storage() -> ObjectStorage:
     if provider == "s3":
         bucket = settings.object_storage_s3_bucket
         if not bucket:
-            raise StorageError("object_storage_provider=s3 requires object_storage_s3_bucket")
+            raise StorageError(
+                "object_storage_provider=s3 requires object_storage_s3_bucket"
+            )
         return S3Storage(
             bucket=bucket,
             endpoint_url=settings.object_storage_s3_endpoint or None,

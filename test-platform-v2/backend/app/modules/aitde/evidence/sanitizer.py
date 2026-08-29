@@ -25,9 +25,13 @@ _SENSITIVE_FIELD_KEYS = {
     "api_key", "apikey", "x-api-key", "private_key", "sign", "signature",
     "credential", "credentials", "session", "session_id",
 }
-_BEARER_RE = re.compile(r"(?i)\bbearer\s+[a-z0-9._~+/=-]+")
-_PASSWORD_RE = re.compile(r"(?i)(password|passwd|pwd|secret|token)\s*[=:]\s*[^\s&,\"']+")
-_BODY_SECRET_RE = re.compile(r"(?i)(\"(?:[a-z_]*token|password|secret|api[_-]?key)\"\s*:\s*\")[^\"]+(\")")
+_BEARER_RE = re.compile(r"(?i)\bbearer\s+[A-Za-z0-9._~+/=-]+")
+_PASSWORD_RE = re.compile(
+    r"(?i)(password|passwd|pwd|secret|token)\s*[=:]\s*[^\s&,\"']+"
+)
+_BODY_SECRET_RE = re.compile(
+    r"(?i)(\"(?:[a-z_]*token|password|secret|api[_-]?key)\"\s*:\s*\")[^\"]+(\")"
+)
 
 _REDACTED = "<REDACTED>"
 
@@ -86,7 +90,9 @@ def sanitize_body_bytes(data: bytes, content_type: str) -> bytes:
     return text.encode("utf-8")
 
 
-def sanitize(data: bytes, content_type: str, headers: dict[str, str] | None = None) -> tuple[bytes, SanitizationStatus]:
+def sanitize(
+    data: bytes, content_type: str, headers: dict[str, str] | None = None
+) -> tuple[bytes, SanitizationStatus]:
     """Return (safe_bytes, status). Raises SanitizeError on unparseable body."""
     try:
         body = sanitize_body_bytes(data, content_type)

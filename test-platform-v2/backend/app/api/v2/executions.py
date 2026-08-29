@@ -13,7 +13,11 @@ from sqlalchemy.orm import Session
 from app.api.v2.deps import require_aitde_v3
 from app.core.deps import CurrentUser, get_db, require_permission
 from app.modules.aitde.evidence.service import list_evidence
-from app.modules.aitde.evidence.replay import build_replay_view, get_manifest, manifest_dict
+from app.modules.aitde.evidence.replay import (
+    build_replay_view,
+    get_manifest,
+    manifest_dict,
+)
 from app.modules.aitde.execution import legacy_bridge, repository, service, shadow_audit
 from app.modules.aitde.execution.mapper import (
     assertion_to_dict,
@@ -155,11 +159,10 @@ def finish_run(
 ):
     """Transition to FINISHED and compute the frozen Outcome from the run's
     persisted assertions + evidence completeness (never an AI judgment)."""
-    run = service.get_run(db, run_id, current.project_id or 0)
     assertions = repository.list_assertions(db, run_id, current.project_id or 0)
     evidence = list_evidence(db, run_id, current.project_id or 0)
-    sanitized_ok = (
-        len(evidence) > 0 and all(e.sanitization_status == "SANITIZED" for e in evidence)
+    sanitized_ok = len(evidence) > 0 and all(
+        e.sanitization_status == "SANITIZED" for e in evidence
     )
     outcome = service.compute_outcome(assertions, sanitized_ok)
     updated = service.finish_run(
@@ -168,7 +171,9 @@ def finish_run(
     return R.ok(run_to_dict(updated))
 
 
-@router.post("/legacy-executions/{legacy_type}/{legacy_id}/link", response_model=R[dict])
+@router.post(
+    "/legacy-executions/{legacy_type}/{legacy_id}/link", response_model=R[dict]
+)
 def link_legacy_execution(
     legacy_type: str,
     legacy_id: int,

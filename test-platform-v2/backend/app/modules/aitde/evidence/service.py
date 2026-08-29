@@ -6,14 +6,12 @@ so a broken store can never masquerade as proof.
 """
 from __future__ import annotations
 
-from typing import Any
-
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import APIException
 from app.integrations.object_storage import StorageError, get_storage
 from app.modules.aitde.common.enums import SanitizationStatus
-from app.modules.aitde.evidence.sanitizer import SanitizeError, sanitize
+from app.modules.aitde.evidence.sanitizer import sanitize
 from app.modules.aitde.execution import repository
 from app.modules.aitde.execution.models import EvidenceArtifact
 
@@ -36,16 +34,21 @@ def store_artifact(
 
     safe_bytes, sanitization_status = sanitize(bytes(data), content_type, headers)
     if sanitization_status == SanitizationStatus.REJECTED.value:
-        raise APIException(code=422, msg="证据包含敏感信息且无法安全清洗，已拒绝", http_status=422)
+        raise APIException(
+            code=422, msg="证据包含敏感信息且无法安全清洗，已拒绝", http_status=422
+        )
 
     storage = get_storage()
-    uri = storage.make_uri(project_id, run_id, run_id, f"evidence-{evidence_type.lower()}")
+    filename = f"evidence-{evidence_type.lower()}"
+    uri = storage.make_uri(project_id, 0, run_id, filename)
 
     try:
         info = storage.build(uri, safe_bytes, content_type)
     except StorageError as exc:
         # storage failure must never look like a successful evidence capture
-        raise APIException(code=503, msg=f"证据存储失败：{exc}", http_status=503) from exc
+        raise APIException(
+            code=503, msg=f"证据存储失败：{exc}", http_status=503
+        ) from exc
 
     row = repository.create_evidence(
         db,

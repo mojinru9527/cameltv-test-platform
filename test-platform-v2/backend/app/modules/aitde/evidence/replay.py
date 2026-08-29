@@ -11,7 +11,6 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import APIException
 from app.modules.aitde.evidence.service import list_evidence
 from app.modules.aitde.evidence.manifest import build_manifest, manifest_hash
 from app.modules.aitde.execution import repository, service
@@ -50,7 +49,7 @@ def manifest_dict(row: ReplayManifest) -> dict[str, Any]:
 
 
 def build_replay_view(m: dict[str, Any]) -> dict[str, Any]:
-    """Shape the manifest into the 3-column Replay response (timeline/context/detail)."""
+    """Shape the manifest into the 3-column Replay response."""
     return {
         "outcome": m.get("outcome"),
         "runtime_status": m.get("runtime_status"),

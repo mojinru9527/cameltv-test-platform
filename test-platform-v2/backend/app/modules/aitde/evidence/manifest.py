@@ -66,5 +66,7 @@ def build_manifest(
 
 
 def manifest_hash(manifest: dict[str, Any]) -> str:
-    text = json.dumps(manifest, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    text = json.dumps(
+        manifest, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    )
     return hashlib.sha256(text.encode("utf-8")).hexdigest()

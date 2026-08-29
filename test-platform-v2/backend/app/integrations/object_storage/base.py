@@ -41,7 +41,9 @@ class ObjectStorage(ABC):
     def delete(self, uri: str) -> None:
         ...
 
-    def make_uri(self, project_id: int, mission_id: int, run_id: int, filename: str) -> str:
+    def make_uri(
+        self, project_id: int, mission_id: int, run_id: int, filename: str
+    ) -> str:
         """Canonical run-scoped URI: /project/{p}/mission/{m}/run/{r}/{filename}."""
         safe = str(filename).replace("\\", "/").lstrip("/")
         return f"/project/{project_id}/mission/{mission_id}/run/{run_id}/{safe}"

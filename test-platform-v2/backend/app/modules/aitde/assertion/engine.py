@@ -27,7 +27,9 @@ def _json_or_str(value: str) -> Any:
 
 
 class AssertionEngine:
-    def evaluate(self, oracle_operator: str, expected_raw: str, actual: Any) -> dict[str, Any]:
+    def evaluate(
+        self, oracle_operator: str, expected_raw: str, actual: Any
+    ) -> dict[str, Any]:
         """Return the assertion outcome dict for one oracle vs one observation."""
         expected = _json_or_str(expected_raw)
 
@@ -57,7 +59,9 @@ class AssertionEngine:
                 "actual_json": json.dumps(actual, ensure_ascii=False),
             }
 
-        result = AssertionResultEnum.PASS.value if ok else AssertionResultEnum.FAIL.value
+        result = (
+            AssertionResultEnum.PASS.value if ok else AssertionResultEnum.FAIL.value
+        )
         return {
             "result": result,
             "reason_code": reason,
@@ -89,7 +93,9 @@ def evaluate_and_persist(
             "run_id": run_id,
             "step_id": step_id,
             "oracle_id": oracle_id,
-            "oracle_snapshot_json": json.dumps(oracle_snapshot, ensure_ascii=False, sort_keys=True),
+            "oracle_snapshot_json": json.dumps(
+                oracle_snapshot, ensure_ascii=False, sort_keys=True
+            ),
             "expected_json": outcome["expected_json"],
             "actual_json": outcome["actual_json"],
             "result": outcome["result"],
