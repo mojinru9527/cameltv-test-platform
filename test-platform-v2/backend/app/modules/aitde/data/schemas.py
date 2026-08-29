@@ -104,3 +104,19 @@ class DataPlanRead(BaseModel):
     approved_by: int | None = None
     approved_at: str | None = None
     steps: list[DataPlanStepRead] = []
+
+
+class FixtureLeaseRequest(BaseModel):
+    run_id: int
+    ttl_seconds: int = 3600
+
+
+class FixtureReleaseRequest(BaseModel):
+    lease_id: int
+
+
+class SnapshotCaptureRequest(BaseModel):
+    run_id: int | None = None
+    entity_id: int | None = None
+    snapshot_type: str = "BEFORE"
+    snapshot: dict[str, Any] = Field(default_factory=dict)

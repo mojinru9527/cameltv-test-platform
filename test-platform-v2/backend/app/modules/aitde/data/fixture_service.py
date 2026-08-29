@@ -82,6 +82,13 @@ def provision_fixture(
     return fixture
 
 
+def get_fixture(db: Session, fixture_id: int) -> DataFixture:
+    fixture = repository.get_fixture(db, fixture_id)
+    if not fixture:
+        raise APIException(code=404, msg="Fixture 不存在", http_status=404)
+    return fixture
+
+
 def transition_fixture(
     db: Session, fixture_id: int, target: str
 ) -> DataFixture:
