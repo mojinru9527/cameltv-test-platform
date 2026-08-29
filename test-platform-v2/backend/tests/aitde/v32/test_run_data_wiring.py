@@ -16,15 +16,30 @@ from app.modules.aitde.execution.models import (
 )
 
 
-def _run(db, scenario_version_id, outcome=None, runtime_status=RunStatus.RUNNING.value):
+def _run(db, scenario_version_id, outcome=None, runtime_status=RunStatus.RUNNING.value, environment_id=0):
     run = ExecutionRun(
         project_id=1, mission_id=1, scenario_id=1, scenario_version_id=scenario_version_id,
-        contract_version_id=1, environment_id=0, outcome=outcome,
+        contract_version_id=1, environment_id=environment_id, outcome=outcome,
         runtime_status=runtime_status, started_at=datetime.now(), created_by=9,
     )
     db.add(run)
     db.flush()
     return run
+
+
+def test_prepare_run_data_env_isolation(db, ready_fixture):
+    """§93: fixtures are environment-scoped — never reused across environments."""
+    from app.modules.aitde.data.service import approve_data_plan
+
+    version = ready_fixture["version"]
+    approve_data_plan(db, ready_fixture["plan"].id, 9)  # DB_FIXTURE(P1) needs APPROVED to provision
+    run_a = _run(db, version.id, environment_id=5)
+    run_b = _run(db, version.id, environment_id=6)
+    ra = prepare_run_data(db, run_a, project_id=1)
+    rb = prepare_run_data(db, run_b, project_id=1)
+    assert ra["prepared"] is True
+    assert rb["prepared"] is True
+    assert ra["fixture_id"] != rb["fixture_id"]
 
 
 def test_prepare_run_data_happy(db, ready_fixture):

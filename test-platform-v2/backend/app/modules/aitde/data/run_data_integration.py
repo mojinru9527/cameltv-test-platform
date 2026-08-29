@@ -152,9 +152,10 @@ def to_run_data_context(db: Session, run_id: int) -> dict[str, Any]:
 def prepare_run_data(db: Session, run: ExecutionRun, project_id: int) -> dict[str, Any]:
     """Automatically provision data for a run whose scenario has data requirements.
 
-    Called at run start. Idempotent per (scenario_version, data_plan): reuses an
-    existing fixture and links it to the run instead of re-provisioning. On data
-    failure the run's outcome is set to ``DATA_FAIL`` (never a business failure).
+    Called at run start. Idempotent per (scenario_version, data_plan, environment) —
+    reuses an existing fixture for the same environment and links it to the run.
+    On data failure the run's outcome is set to ``DATA_FAIL`` (never a business
+    failure).
     """
     from app.modules.aitde.data import repository as data_repository
     from app.modules.aitde.data import fixture_service as data_fixture_service
@@ -170,15 +171,18 @@ def prepare_run_data(db: Session, run: ExecutionRun, project_id: int) -> dict[st
         db, run.scenario_version_id
     )
     plan_ids = [p.id for p in plans]
+    # §93: fixtures are environment-scoped — never reuse across environments.
+    env = run.environment_id or None
 
     try:
-        # Reuse a fixture already provisioned for this scenario's plan (idempotent).
+        # Reuse a fixture already provisioned for this scenario's plan + environment.
         existing = None
         if plan_ids:
             existing = db.scalar(
                 select(DataFixture).where(
                     DataFixture.scenario_version_id == run.scenario_version_id,
                     DataFixture.data_plan_id.in_(plan_ids),
+                    DataFixture.environment_id == env,
                 )
             )
         if existing:
@@ -198,7 +202,7 @@ def prepare_run_data(db: Session, run: ExecutionRun, project_id: int) -> dict[st
             if plan is None:
                 return {"prepared": False, "reason": "no_plan"}
             fixture = data_fixture_service.provision_fixture_from_plan(
-                db, plan.id, project_id, run.environment_id or None, None
+                db, plan.id, project_id, env, None
             )
             fixture.run_id = run.id
             db.commit()
