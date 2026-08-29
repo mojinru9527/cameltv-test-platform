@@ -16,6 +16,9 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.db import Base
 from app.models.base import TimestampMixin
 from app.modules.aitde.common.enums import (
+    DataPlanStepType,
+    DataPlanStrategy,
+    DataPlanStatus,
     DataRequirementCleanupPolicy,
     DataRequirementSharingPolicy,
     DataSourceAccessMode,
@@ -80,3 +83,48 @@ class DataRequirement(Base):
     )
     source_refs_json: Mapped[str] = mapped_column(Text, default="[]")
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+
+
+class DataPlan(Base):
+    """A data provisioning plan for a scenario (V32-003).
+
+    Declares *strategy + steps*; it is not executed by the planner. ``plan_hash``
+    must be stable for identical inputs.
+    """
+
+    __tablename__ = "data_plans"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    run_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    scenario_version_id: Mapped[int] = mapped_column(Integer, index=True)
+    environment_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    status: Mapped[str] = mapped_column(
+        String(16), default=DataPlanStatus.DRAFT.value, index=True
+    )
+    strategy: Mapped[str] = mapped_column(
+        String(32), default=DataPlanStrategy.EXISTING.value, index=True
+    )
+    plan_hash: Mapped[str] = mapped_column(String(64), default="", index=True)
+    risk_level: Mapped[str] = mapped_column(String(4), default="P2")
+    created_by_type: Mapped[str] = mapped_column(String(16), default="USER")
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    approved_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    approved_at: Mapped[datetime | None] = mapped_column(nullable=True)
+
+
+class DataPlanStep(Base):
+    __tablename__ = "data_plan_steps"
+    __table_args__ = (
+        UniqueConstraint("data_plan_id", "sequence", name="uq_data_plan_step_seq"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    data_plan_id: Mapped[int] = mapped_column(Integer, index=True)
+    sequence: Mapped[int] = mapped_column(Integer, default=1)
+    step_type: Mapped[str] = mapped_column(
+        String(16), default=DataPlanStepType.CREATE.value
+    )
+    driver: Mapped[str] = mapped_column(String(64), default="")
+    command_json: Mapped[str] = mapped_column(Text, default="{}")
+    compensation_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(16), default="PENDING")

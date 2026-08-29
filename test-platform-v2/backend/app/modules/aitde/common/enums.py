@@ -331,3 +331,35 @@ class DataRequirementCleanupPolicy(str, Enum):
     ALWAYS = "ALWAYS"
     ON_SUCCESS = "ON_SUCCESS"
     MANUAL = "MANUAL"
+
+
+class DataPlanStatus(str, Enum):
+    """数据计划生命周期状态。"""
+
+    DRAFT = "DRAFT"
+    VALIDATED = "VALIDATED"
+    APPROVED = "APPROVED"
+    EXECUTING = "EXECUTING"
+    DONE = "DONE"
+    FAILED = "FAILED"
+
+
+class DataPlanStrategy(str, Enum):
+    """数据计划策略（顺序：Existing → API → DB Fixture → Workflow）。"""
+
+    EXISTING = "EXISTING"
+    API_BUILDER = "API_BUILDER"
+    DB_FIXTURE = "DB_FIXTURE"
+    WORKFLOW = "WORKFLOW"
+
+
+class DataPlanStepType(str, Enum):
+    """数据计划步骤类型。"""
+
+    FIND = "FIND"
+    CREATE = "CREATE"
+    UPDATE = "UPDATE"
+    VERIFY = "VERIFY"
+    LEASE = "LEASE"
+    SNAPSHOT = "SNAPSHOT"
+    CLEANUP = "CLEANUP"

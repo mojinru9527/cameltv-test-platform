@@ -6,6 +6,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from app.modules.aitde.common.enums import (
+    DataPlanStrategy,
     DataRequirementCleanupPolicy,
     DataRequirementSharingPolicy,
     DataSourceAccessMode,
@@ -70,3 +71,36 @@ class DataRequirementDeriveRequest(BaseModel):
     """AI 派生候选数据需求。V32-002 规则式实现；请求体保留占位。"""
 
     pass
+
+
+class DataPlanGenerateRequest(BaseModel):
+    """生成数据计划（V32-003）。环境 + 可选策略提示。"""
+
+    environment_id: int | None = None
+    strategy: DataPlanStrategy | None = None
+
+
+class DataPlanStepRead(BaseModel):
+    id: int
+    data_plan_id: int
+    sequence: int
+    step_type: str
+    driver: str
+    command_json: str
+    compensation_json: str | None = None
+    status: str
+
+
+class DataPlanRead(BaseModel):
+    id: int
+    scenario_version_id: int
+    environment_id: int | None = None
+    status: str
+    strategy: str
+    plan_hash: str
+    risk_level: str
+    created_by_type: str
+    created_at: str | None = None
+    approved_by: int | None = None
+    approved_at: str | None = None
+    steps: list[DataPlanStepRead] = []

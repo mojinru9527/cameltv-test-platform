@@ -6,7 +6,12 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.modules.aitde.data.models import DataRequirement, DataSource
+from app.modules.aitde.data.models import (
+    DataPlan,
+    DataPlanStep,
+    DataRequirement,
+    DataSource,
+)
 
 
 def create_data_source(
@@ -64,3 +69,48 @@ def create_data_requirement(
     db.add(row)
     db.flush()
     return row
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# DataPlan / Step (V32-003)
+# ────────────────────────────────────────────────────────────────────────────
+
+
+def create_data_plan(db: Session, data: dict[str, Any]) -> DataPlan:
+    row = DataPlan(**data)
+    db.add(row)
+    db.flush()
+    return row
+
+
+def get_data_plan(db: Session, plan_id: int) -> DataPlan | None:
+    return db.get(DataPlan, plan_id)
+
+
+def list_data_plans_by_scenario_version(
+    db: Session, scenario_version_id: int
+) -> list[DataPlan]:
+    rows = db.scalars(
+        select(DataPlan)
+        .where(DataPlan.scenario_version_id == scenario_version_id)
+        .order_by(DataPlan.id.asc())
+    ).all()
+    return list(rows)
+
+
+def create_data_plan_step(
+    db: Session, data: dict[str, Any]
+) -> DataPlanStep:
+    row = DataPlanStep(**data)
+    db.add(row)
+    db.flush()
+    return row
+
+
+def list_steps_by_plan(db: Session, plan_id: int) -> list[DataPlanStep]:
+    rows = db.scalars(
+        select(DataPlanStep)
+        .where(DataPlanStep.data_plan_id == plan_id)
+        .order_by(DataPlanStep.sequence.asc())
+    ).all()
+    return list(rows)

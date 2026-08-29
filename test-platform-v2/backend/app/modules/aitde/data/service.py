@@ -10,7 +10,9 @@ Creates / lists / reads typed data sources with a conservative write policy:
 """
 from __future__ import annotations
 
+import hashlib
 import json
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -18,6 +20,9 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import APIException
 from app.models.environment import Environment
 from app.modules.aitde.common.enums import (
+    DataPlanStepType,
+    DataPlanStrategy,
+    DataPlanStatus,
     DataRequirementCleanupPolicy,
     DataRequirementSharingPolicy,
     DataSourceAccessMode,
@@ -25,8 +30,9 @@ from app.modules.aitde.common.enums import (
     DataSourceType,
 )
 from app.modules.aitde.data import repository
-from app.modules.aitde.data.models import DataRequirement, DataSource
+from app.modules.aitde.data.models import DataPlan, DataRequirement, DataSource
 from app.modules.aitde.data.schemas import (
+    DataPlanGenerateRequest,
     DataRequirementUpdate,
     DataSourceCreate,
 )
@@ -296,4 +302,190 @@ def to_requirement_dict(row: DataRequirement) -> dict[str, Any]:
         "cleanup_policy": row.cleanup_policy,
         "source_refs_json": row.source_refs_json,
         "created_at": row.created_at.isoformat() if row.created_at else None,
+    }
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# DataPlan / Step (V32-003) — planner + policy, never executes.
+# ────────────────────────────────────────────────────────────────────────────
+
+
+def _canonical_hash(*parts: Any) -> str:
+    canonical = json.dumps(parts, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _policy_check(db: Session, strategy: str, environment_id: int | None) -> None:
+    """Policy check: V3.2 never writes to production; write strategies need a
+    non-production environment. No free SQL / schema allowlist bypass here."""
+    write_strategies = {
+        DataPlanStrategy.DB_FIXTURE.value,
+        DataPlanStrategy.WORKFLOW.value,
+    }
+    if strategy in write_strategies and _is_prod_environment(db, environment_id):
+        raise APIException(
+            code=400,
+            msg="生产环境禁止写入型数据策略（DB_FIXTURE/WORKFLOW）",
+            http_status=400,
+        )
+
+
+def _choose_strategy(
+    db: Session,
+    project_id: int,
+    environment_id: int | None,
+    requested: DataPlanStrategy | None,
+) -> str:
+    if requested is not None:
+        return requested.value
+    ds = repository.list_data_sources(db, project_id)
+    if environment_id is not None:
+        ds = [
+            d
+            for d in ds
+            if d.environment_id == environment_id or d.environment_id is None
+        ]
+    readonly_db = [
+        d
+        for d in ds
+        if d.access_mode == DataSourceAccessMode.READONLY.value
+        and d.source_type in ("MYSQL", "POSTGRES", "API")
+    ]
+    readwrite_db = [
+        d
+        for d in ds
+        if d.access_mode == DataSourceAccessMode.READWRITE.value
+        and d.source_type in ("MYSQL", "POSTGRES")
+    ]
+    if readonly_db:
+        return DataPlanStrategy.EXISTING.value
+    if readwrite_db:
+        return DataPlanStrategy.DB_FIXTURE.value
+    return DataPlanStrategy.API_BUILDER.value
+
+
+def _risk_for_strategy(strategy: str) -> str:
+    if strategy == DataPlanStrategy.WORKFLOW.value:
+        return "P0"
+    if strategy == DataPlanStrategy.DB_FIXTURE.value:
+        return "P1"
+    return "P2"
+
+
+def _steps_for(requirement: DataRequirement, strategy: str, seq: int) -> dict[str, Any]:
+    is_existing = strategy == DataPlanStrategy.EXISTING.value
+    step_type = (
+        DataPlanStepType.FIND.value if is_existing else DataPlanStepType.CREATE.value
+    )
+    command = {
+        "requirement_key": requirement.requirement_key,
+        "entity": requirement.entity_type,
+        "constraints": json.loads(requirement.constraints_json or "{}"),
+    }
+    compensation = None
+    if step_type == DataPlanStepType.CREATE.value:
+        compensation = {"action": "delete_entity", "entity": requirement.entity_type}
+    return {
+        "sequence": seq,
+        "step_type": step_type,
+        "driver": strategy.lower(),
+        "command_json": json.dumps(command, ensure_ascii=False),
+        "compensation_json": (
+            json.dumps(compensation, ensure_ascii=False) if compensation else None
+        ),
+        "status": "PENDING",
+    }
+
+
+def generate_data_plan(
+    db: Session,
+    scenario_version_id: int,
+    environment_id: int | None,
+    project_id: int,
+    payload: DataPlanGenerateRequest,
+) -> DataPlan:
+    requirements = repository.list_requirements_by_scenario_version(
+        db, scenario_version_id
+    )
+    if not requirements:
+        requirements = derive_data_requirements(db, scenario_version_id)
+    if not requirements:
+        raise APIException(
+            code=400, msg="该场景无数据需求，无法生成数据计划", http_status=400
+        )
+
+    strategy = _choose_strategy(db, project_id, environment_id, payload.strategy)
+    _policy_check(db, strategy, environment_id)
+
+    steps = [_steps_for(r, strategy, i + 1) for i, r in enumerate(requirements)]
+    plan_hash = _canonical_hash(
+        scenario_version_id,
+        strategy,
+        [r.requirement_key for r in requirements],
+        steps,
+    )
+    plan = repository.create_data_plan(
+        db,
+        {
+            "scenario_version_id": scenario_version_id,
+            "environment_id": environment_id,
+            "status": DataPlanStatus.DRAFT.value,
+            "strategy": strategy,
+            "plan_hash": plan_hash,
+            "risk_level": _risk_for_strategy(strategy),
+            "created_by_type": "USER",
+        },
+    )
+    for step in steps:
+        repository.create_data_plan_step(db, {"data_plan_id": plan.id, **step})
+    db.commit()
+    return plan
+
+
+def get_data_plan(db: Session, plan_id: int) -> DataPlan:
+    plan = repository.get_data_plan(db, plan_id)
+    if not plan:
+        raise APIException(code=404, msg="数据计划不存在", http_status=404)
+    return plan
+
+
+def approve_data_plan(db: Session, plan_id: int, user_id: int) -> DataPlan:
+    plan = repository.get_data_plan(db, plan_id)
+    if not plan:
+        raise APIException(code=404, msg="数据计划不存在", http_status=404)
+    plan.status = DataPlanStatus.APPROVED.value
+    plan.approved_by = user_id
+    plan.approved_at = datetime.now()
+    db.commit()
+    db.refresh(plan)
+    return plan
+
+
+def to_plan_dict(db: Session, plan: DataPlan) -> dict[str, Any]:
+    steps = repository.list_steps_by_plan(db, plan.id)
+    return {
+        "id": plan.id,
+        "scenario_version_id": plan.scenario_version_id,
+        "environment_id": plan.environment_id,
+        "status": plan.status,
+        "strategy": plan.strategy,
+        "plan_hash": plan.plan_hash,
+        "risk_level": plan.risk_level,
+        "created_by_type": plan.created_by_type,
+        "created_at": plan.created_at.isoformat() if plan.created_at else None,
+        "approved_by": plan.approved_by,
+        "approved_at": plan.approved_at.isoformat() if plan.approved_at else None,
+        "steps": [
+            {
+                "id": s.id,
+                "data_plan_id": s.data_plan_id,
+                "sequence": s.sequence,
+                "step_type": s.step_type,
+                "driver": s.driver,
+                "command_json": s.command_json,
+                "compensation_json": s.compensation_json,
+                "status": s.status,
+            }
+            for s in steps
+        ],
     }
