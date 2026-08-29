@@ -13,6 +13,7 @@ from app.core.exceptions import APIException
 from app.modules.aitde.data import service
 from app.modules.aitde.data.schemas import DataRequirementUpdate
 from app.modules.aitde.scenario.models import (
+    TestOracle as OracleModel,
     TestScenarioVersion as ScenarioVersion,
 )
 
@@ -88,3 +89,64 @@ def test_update_missing_requirement_rejected(db):
     with pytest.raises(APIException) as exc:
         service.update_data_requirement(db, 9999, DataRequirementUpdate())
     assert exc.value.http_status == 404
+
+
+def test_derive_from_oracle_expected_value(db):
+    """Oracle target.entity + expected_value derives a requirement for that entity."""
+    version = _make_scenario_version(db, given={"state": "precondition"}, expected={})
+    oracle = OracleModel(
+        scenario_version_id=version.id, oracle_key="membership-active",
+        oracle_type="DB", target_json=json.dumps({"entity": "membership"}),
+        operator="eq", expected_value_json=json.dumps({"status": "active"}), required=True,
+    )
+    db.add(oracle)
+    db.flush()
+    rows = service.derive_data_requirements(db, version.id)
+    by_key = {r.requirement_key: r for r in rows}
+    assert "data-membership" in by_key
+    member = by_key["data-membership"]
+    assert json.loads(member.constraints_json) == {"status": "active"}
+    assert "oracle_ids" in member.source_refs_json
+
+
+def test_derive_ignores_non_dotted_state_key(db):
+    """A scalar key without an entity prefix (e.g. 'state') yields no requirement."""
+    version = _make_scenario_version(
+        db, given={"state": "precondition"}, expected={"state": "active"}
+    )
+    rows = service.derive_data_requirements(db, version.id)
+    assert rows == []
+
+
+def test_derive_malformed_oracle_ignored(db):
+    """Malformed oracle target/expected is skipped rather than crashing the derive."""
+    version = _make_scenario_version(db, given={"user.status": "normal"}, expected={})
+    oracle = OracleModel(
+        scenario_version_id=version.id, oracle_key="bad", oracle_type="DB",
+        target_json="not-json", expected_value_json="not-json", required=True,
+    )
+    db.add(oracle)
+    db.flush()
+    rows = service.derive_data_requirements(db, version.id)
+    by_key = {r.requirement_key: r for r in rows}
+    assert "data-user" in by_key
+    assert len(rows) == 1
+
+
+def test_derive_merges_oracle_with_given_entity(db):
+    """Oracle constraints enrich an entity already present in Given."""
+    version = _make_scenario_version(
+        db, given={"membership.status": "expired"}, expected={}
+    )
+    oracle = OracleModel(
+        scenario_version_id=version.id, oracle_key="m", oracle_type="DB",
+        target_json=json.dumps({"entity": "membership"}),
+        operator="eq", expected_value_json=json.dumps({"status": "active"}), required=True,
+    )
+    db.add(oracle)
+    db.flush()
+    rows = service.derive_data_requirements(db, version.id)
+    member = next(r for r in rows if r.entity_type == "membership")
+    constraints = json.loads(member.constraints_json)
+    # given value + oracle expected value both surface (oracle wins for shared field)
+    assert constraints["status"] == "active"

@@ -38,7 +38,8 @@ from app.modules.aitde.data.schemas import (
 )
 from app.modules.aitde.drivers.database import get_driver
 from app.modules.aitde.drivers.database.base import DatabaseDriverUnavailable, ping_driver
-from app.modules.aitde.scenario.models import TestScenarioVersion
+from app.modules.aitde.scenario import repository as scenario_repository
+from app.modules.aitde.scenario.models import TestOracle, TestScenarioVersion
 
 _SOURCE_TYPES = {st.value for st in DataSourceType}
 # Reserved-only in V3.2 (deferred to V3.6); never created this version.
@@ -237,24 +238,72 @@ def _flatten(obj: Any, prefix: str = "") -> dict[str, Any]:
     return out
 
 
+def _entity_constraints(flat: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Group dotted-key constraints by entity (first dotted segment).
+
+    Handles ``entity.field`` keys AND nested dicts (already flattened). Keys with
+    no dotted separator (e.g. "state") are ignored — they are not entity fields.
+    """
+    by_entity: dict[str, dict[str, Any]] = {}
+    for dotted, value in flat.items():
+        entity, sep, field = dotted.partition(".")
+        if not sep:
+            continue
+        by_entity.setdefault(entity, {})[field] = value
+    return by_entity
+
+
+def _oracle_constraints(
+    oracles: list[TestOracle],
+) -> tuple[dict[str, dict[str, Any]], dict[str, list[int]]]:
+    """Derive business constraints from a scenario's Oracs (target.entity + expected_value).
+
+    Guards against schema drift: a malformed ``target_json``/``expected_value_json``
+    is ignored rather than raising — derivation must never emit SQL or crash.
+    """
+    by_entity: dict[str, dict[str, Any]] = {}
+    refs: dict[str, list[int]] = {}
+    for oracle in oracles:
+        try:
+            target = json.loads(oracle.target_json or "{}")
+        except (ValueError, TypeError):
+            target = {}
+        entity = target.get("entity") if isinstance(target, dict) else None
+        if not entity or not isinstance(entity, str):
+            continue
+        try:
+            expected = json.loads(oracle.expected_value_json or "{}")
+        except (ValueError, TypeError):
+            expected = {}
+        for field, value in _flatten(expected).items():
+            by_entity.setdefault(entity, {})[field] = value
+        refs.setdefault(entity, []).append(oracle.id)
+    return by_entity, refs
+
+
 def _derive_candidates(db: Session, scenario_version_id: int) -> list[dict[str, Any]]:
     version = db.get(TestScenarioVersion, scenario_version_id)
     if version is None:
         raise APIException(code=404, msg="ScenarioVersion 不存在", http_status=404)
 
+    # 1) Given / Expected business state (entity.field dotted keys or nested dicts).
     given = json.loads(version.given_model_json or "{}")
     expected = json.loads(version.expected_state_json or "{}")
     merged: dict[str, Any] = {**_flatten(given), **_flatten(expected)}
+    by_entity = _entity_constraints(merged)
 
-    by_entity: dict[str, dict[str, Any]] = {}
-    for dotted, value in merged.items():
-        entity, sep, field = dotted.partition(".")
-        if not sep:
-            continue
-        by_entity.setdefault(entity, {})[field] = value
+    # 2) Oracle target/expected_value — derive candidate data needs too.
+    oracles = scenario_repository.list_oracles(db, scenario_version_id)
+    oracle_entities, oracle_refs = _oracle_constraints(oracles)
+    for entity, constraints in oracle_entities.items():
+        for field, value in constraints.items():
+            by_entity.setdefault(entity, {})[field] = value
 
     candidates: list[dict[str, Any]] = []
     for entity, constraints in sorted(by_entity.items()):
+        source_refs: list[dict[str, Any]] = [{"scenario_version_id": scenario_version_id}]
+        if entity in oracle_refs:
+            source_refs.append({"oracle_ids": oracle_refs[entity]})
         candidates.append(
             {
                 "requirement_key": f"data-{entity}",
@@ -263,9 +312,7 @@ def _derive_candidates(db: Session, scenario_version_id: int) -> list[dict[str, 
                 "required": True,
                 "sharing_policy": DataRequirementSharingPolicy.EXCLUSIVE.value,
                 "cleanup_policy": DataRequirementCleanupPolicy.ALWAYS.value,
-                "source_refs_json": json.dumps(
-                    [{"scenario_version_id": scenario_version_id}], ensure_ascii=False
-                ),
+                "source_refs_json": json.dumps(source_refs, ensure_ascii=False),
             }
         )
     return candidates
