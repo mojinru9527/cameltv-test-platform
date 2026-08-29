@@ -111,6 +111,14 @@ class FixtureLeaseRequest(BaseModel):
     ttl_seconds: int = 3600
 
 
+class FixtureProvisionRequest(BaseModel):
+    """从数据计划直接 provision 一个 fixture（V32-009 补口）。"""
+
+    plan_id: int
+    environment_id: int | None = None
+    data_source_id: int | None = None
+
+
 class FixtureReleaseRequest(BaseModel):
     lease_id: int
 

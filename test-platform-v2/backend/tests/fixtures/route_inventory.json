@@ -1,5 +1,5 @@
 {
-  "count": 490,
+  "count": 491,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -1752,6 +1752,10 @@
     {
       "path": "/api/v2/environments/{environment_id}/snapshots/latest",
       "method": "GET"
+    },
+    {
+      "path": "/api/v2/fixtures",
+      "method": "POST"
     },
     {
       "path": "/api/v2/fixtures/{fixture_id}",
