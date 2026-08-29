@@ -408,3 +408,58 @@ class CleanupStatus(str, Enum):
     SUCCEEDED = "SUCCEEDED"
     FAILED = "FAILED"
     PARTIAL = "PARTIAL"
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# AITDE V3.3 — Browser + Hybrid + Assisted Manual shared enums (V33).
+# ────────────────────────────────────────────────────────────────────────────
+
+
+class CommandPlanStatus(str, Enum):
+    """CommandPlanVersion 状态。ACTIVE 不可变；其它版本可为 DRAFT/VALIDATED/STALE。"""
+
+    DRAFT = "DRAFT"
+    VALIDATED = "VALIDATED"
+    ACTIVE = "ACTIVE"
+    STALE = "STALE"
+
+
+class BrowserSessionMode(str, Enum):
+    """浏览器会话模式（V33-005 四种模式）。"""
+
+    EXPLORE = "EXPLORE"
+    REGRESSION = "REGRESSION"
+    OBSERVE = "OBSERVE"
+    MANUAL_ASSIST = "MANUAL_ASSIST"
+
+
+class BrowserObservationEventType(str, Enum):
+    NAVIGATION = "NAVIGATION"
+    CLICK = "CLICK"
+    INPUT = "INPUT"
+    XHR = "XHR"
+    DOM = "DOM"
+    SCREENSHOT = "SCREENSHOT"
+    CONSOLE = "CONSOLE"
+
+
+class HealingProposalStatus(str, Enum):
+    OPEN = "OPEN"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    APPLIED = "APPLIED"
+
+
+class HealingProposalType(str, Enum):
+    LOCATOR = "LOCATOR"
+    WAIT = "WAIT"
+    NAVIGATION = "NAVIGATION"
+    NON_BUSINESS_ACTION = "NON_BUSINESS_ACTION"
+
+
+class ManualStepStatus(str, Enum):
+    PENDING = "PENDING"
+    DONE = "DONE"
+    FAILED = "FAILED"
+    BLOCKED = "BLOCKED"
+    SKIPPED = "SKIPPED"

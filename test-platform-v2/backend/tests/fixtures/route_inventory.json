@@ -1,5 +1,5 @@
 {
-  "count": 491,
+  "count": 495,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -1690,6 +1690,14 @@
       "method": "GET"
     },
     {
+      "path": "/api/v2/action-plans/{version_id}/approve",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/action-plans/{version_id}/validate",
+      "method": "POST"
+    },
+    {
       "path": "/api/v2/ai-operations/{operation_id}",
       "method": "GET"
     },
@@ -1924,6 +1932,14 @@
     {
       "path": "/api/v2/scenarios/{scenario_id}",
       "method": "GET"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_id}/action-plans",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_id}/action-plans/generate",
+      "method": "POST"
     },
     {
       "path": "/api/v2/scenarios/{scenario_id}/adapters",
