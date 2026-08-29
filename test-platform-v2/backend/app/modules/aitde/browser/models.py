@@ -1,4 +1,4 @@
-"""AITDE V3.3 Browser session models (V33-006)."""
+"""AITDE V3.3 Browser session models (V33-006) + healing proposal (V33-011)."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -7,7 +7,7 @@ from sqlalchemy import Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
-from app.modules.aitde.common.enums import BrowserSessionMode
+from app.modules.aitde.common.enums import BrowserSessionMode, HealingProposalStatus
 
 
 class BrowserSession(Base):
@@ -42,3 +42,23 @@ class BrowserObservationEvent(Base):
     semantic_target_json: Mapped[str] = mapped_column(Text, default="{}")
     payload_ref_json: Mapped[str] = mapped_column(Text, default="{}")
     timestamp: Mapped[datetime] = mapped_column(default=datetime.now)
+
+
+class HealingProposal(Base):
+    __tablename__ = "healing_proposals"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    scenario_adapter_id: Mapped[int] = mapped_column(Integer, index=True)
+    command_plan_version_id: Mapped[int] = mapped_column(Integer, index=True)
+    proposal_type: Mapped[str] = mapped_column(String(32), index=True)
+    before_json: Mapped[str] = mapped_column(Text, default="{}")
+    after_json: Mapped[str] = mapped_column(Text, default="{}")
+    reason: Mapped[str] = mapped_column(Text, default="")
+    evidence_refs_json: Mapped[str] = mapped_column(Text, default="[]")
+    status: Mapped[str] = mapped_column(
+        String(16), default=HealingProposalStatus.OPEN.value, index=True
+    )
+    created_by_type: Mapped[str] = mapped_column(String(16), default="AI")
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    reviewed_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(nullable=True)
