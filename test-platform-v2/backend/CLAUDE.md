@@ -5,7 +5,7 @@ last_reviewed: "2026-06-26"
 status: "active"
 expires: "2026-12-26"
 tags: ["backend", "fastapi", "sqlalchemy", "python"]
-related: ["../frontend/CLAUDE.md", "../../docs/adr/0001-use-python-fastapi-monostack.md", "../../docs/adr/0002-sqlite-with-postgresql-upgrade-path.md", "../../docs/adr/0004-jwt-bcrypt-rbac-auth.md"]
+related: ["../frontend/CLAUDE.md", "clean-code-standards.md", "../../docs/adr/0001-use-python-fastapi-monostack.md", "../../docs/adr/0002-sqlite-with-postgresql-upgrade-path.md", "../../docs/adr/0004-jwt-bcrypt-rbac-auth.md"]
 ---
 
 # test-platform-v2/backend — FastAPI 后端
