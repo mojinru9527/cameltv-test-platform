@@ -1,5 +1,5 @@
 {
-  "count": 495,
+  "count": 504,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -1706,6 +1706,22 @@
       "method": "POST"
     },
     {
+      "path": "/api/v2/browser-sessions",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/browser-sessions/{session_id}/derive-action-plan",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/browser-sessions/{session_id}/events",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/browser-sessions/{session_id}/stop",
+      "method": "POST"
+    },
+    {
       "path": "/api/v2/contracts/{contract_id}/change-proposals",
       "method": "POST"
     },
@@ -1952,6 +1968,26 @@
     {
       "path": "/api/v2/scenarios/{scenario_id}/functional-projection",
       "method": "GET"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_id}/hybrid-runs",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_id}/manual-sessions",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_id}/manual-sessions/{session_id}/steps",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_id}/manual-sessions/{session_id}/steps",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_id}/manual-sessions/{session_id}/steps/{step_id}/complete",
+      "method": "POST"
     },
     {
       "path": "/api/v2/scenarios/{scenario_id}/review",
