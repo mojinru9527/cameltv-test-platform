@@ -12,7 +12,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import APIException
-from app.modules.aitde.common.enums import FixtureStatus
+from app.modules.aitde.common.enums import DataSourceAccessMode, DataSourceType, FixtureStatus
 from app.modules.aitde.data import repository
 from app.modules.aitde.data.models import DataFixture, DataPlan, DataSource
 from app.modules.aitde.data.strategies import get_builder
@@ -80,6 +80,87 @@ def provision_fixture(
     db.commit()
     db.refresh(fixture)
     return fixture
+
+
+def _resolve_source(
+    db: Session,
+    project_id: int,
+    environment_id: int | None,
+    strategy: str,
+    data_source_id: int | None,
+) -> DataSource | None:
+    """Resolve a DataSource for a plan strategy (explicit id wins)."""
+    if data_source_id:
+        source = repository.get_data_source(db, data_source_id, project_id)
+        if not source:
+            raise APIException(code=404, msg="数据源不存在", http_status=404)
+        return source
+
+    sources = repository.list_data_sources(db, project_id)
+    if environment_id is not None:
+        sources = [
+            s
+            for s in sources
+            if s.environment_id == environment_id or s.environment_id is None
+        ]
+
+    if strategy == "EXISTING":
+        chosen = next(
+            (
+                s
+                for s in sources
+                if s.access_mode == DataSourceAccessMode.READONLY.value
+                and s.source_type in ("MYSQL", "POSTGRES", "API")
+            ),
+            None,
+        )
+    elif strategy == "DB_FIXTURE":
+        chosen = next(
+            (
+                s
+                for s in sources
+                if s.access_mode == DataSourceAccessMode.READWRITE.value
+                and s.source_type in ("MYSQL", "POSTGRES")
+            ),
+            None,
+        )
+    elif strategy == "API_BUILDER":
+        chosen = next(
+            (s for s in sources if s.source_type == DataSourceType.API.value), None
+        )
+    else:  # WORKFLOW / STATIC — no external source needed
+        chosen = None
+
+    if strategy in ("EXISTING", "DB_FIXTURE", "API_BUILDER") and chosen is None:
+        raise APIException(
+            code=400, msg=f"缺少可用于 {strategy} 策略的数据源", http_status=400
+        )
+    return chosen
+
+
+def provision_fixture_from_plan(
+    db: Session,
+    plan_id: int,
+    project_id: int,
+    environment_id: int | None,
+    data_source_id: int | None,
+) -> DataFixture:
+    """Provision a fixture directly from a data plan (POST /api/v2/fixtures)."""
+    plan = repository.get_data_plan(db, plan_id)
+    if not plan:
+        raise APIException(code=404, msg="数据计划不存在", http_status=404)
+    # Policy: high-risk plans must be approved; low-risk plans may provision from DRAFT.
+    if plan.status not in ("APPROVED", "EXECUTING"):
+        if not (plan.status == "DRAFT" and plan.risk_level in ("P2", "P3")):
+            raise APIException(
+                code=400,
+                msg="数据计划需先批准（APPROVED）后才能 provision",
+                http_status=400,
+            )
+    source = _resolve_source(
+        db, project_id, environment_id, plan.strategy, data_source_id
+    )
+    return provision_fixture(db, plan, source, environment_id, project_id)
 
 
 def get_fixture(db: Session, fixture_id: int) -> DataFixture:
