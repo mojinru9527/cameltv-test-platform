@@ -152,6 +152,7 @@ def _run_dsh_agent(
         try:
             provider = ai_config_service.resolve(db, project_id)
         except AIProviderUnconfiguredError:
+            # 项目未配置 AI 提供方：允许降级为「无 provider」跑 DSH 默认路由。
             pass
         result = run_dsh_task(task_text, provider=provider)
     except Exception as exc:  # noqa: BLE001 - runner 异常统一失败留痕

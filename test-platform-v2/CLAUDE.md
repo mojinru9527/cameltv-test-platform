@@ -69,6 +69,8 @@ test-platform-v2/
 
 - [backend/CLAUDE.md](backend/CLAUDE.md) — 后端架构、API 约定、服务层模式
 - [frontend/CLAUDE.md](frontend/CLAUDE.md) — 前端架构、组件库、状态管理约定
+- [clean-code-standards.md](clean-code-standards.md) — 适配本平台的 Clean Code 代码规范（命名/函数/错误/分层/测试/AI 生成）
+- [代码开发校验门禁（减少返工）](../../docs/code-development-gate.md) — G0–G4 五道门禁，整合 Clean Code + Gherkin 验收 + QA 管理；本地一键 `scripts/git/dev-gate.ps1`
 
 ## 凭据策略
 

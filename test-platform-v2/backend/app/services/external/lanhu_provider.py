@@ -285,6 +285,7 @@ async def _download_lanhu_resources_scoped(
                 page_mapping = map_resp.json()
                 await extractor._download_page_resources(page_mapping, output_path, skip_document_js=(index > 0))
             except Exception:
+                # 资源URL/下载失败仅降级为「未下载该页资源」，不影响主下载流程。
                 pass
     if not downloaded:
         return None
@@ -299,6 +300,7 @@ async def _download_lanhu_resources_scoped(
             "scoped": True,
         })
     except Exception:
+        # 缓存元数据写入失败不影响下载结果，留待下次再写。
         pass
     return {
         "status": "downloaded",
