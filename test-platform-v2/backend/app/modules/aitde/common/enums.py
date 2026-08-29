@@ -166,3 +166,120 @@ class AIOperationStatus(str, Enum):
     SUCCEEDED = "SUCCEEDED"
     FAILED = "FAILED"
     CANCELLED = "CANCELLED"
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# AITDE V3.1 — Unified Execution + Proof Replay shared enums
+# (V31). These are the frozen V3.x public outcome taxonomy per the V3.1 plan.
+# ────────────────────────────────────────────────────────────────────────────
+
+
+class AdapterType(str, Enum):
+    """ScenarioAdapter 绑定类型。"""
+
+    MANUAL = "MANUAL"
+    API = "API"
+    UI = "UI"
+    DB = "DB"
+    HYBRID = "HYBRID"
+
+
+class AdapterStatus(str, Enum):
+    DRAFT = "DRAFT"
+    VALIDATED = "VALIDATED"
+    STALE = "STALE"
+    DISABLED = "DISABLED"
+
+
+class RunStatus(str, Enum):
+    """runtime_status：执行器调度状态，与 outcome 分离。"""
+
+    QUEUED = "QUEUED"
+    RUNNING = "RUNNING"
+    FINISHED = "FINISHED"
+    CANCELLED = "CANCELLED"
+
+
+class Outcome(str, Enum):
+    """正式结论（V3.x 公共枚举，冻结）。AI 不拥有 PASS/FAIL 裁决权。"""
+
+    PASS = "PASS"
+    BUSINESS_FAIL = "BUSINESS_FAIL"
+    AUTOMATION_FAIL = "AUTOMATION_FAIL"
+    DATA_FAIL = "DATA_FAIL"
+    ENV_FAIL = "ENV_FAIL"
+    ASSERTION_ERROR = "ASSERTION_ERROR"
+    BLOCKED = "BLOCKED"
+    INCONCLUSIVE = "INCONCLUSIVE"
+
+
+class EvidenceStatus(str, Enum):
+    PENDING = "PENDING"
+    COMPLETE = "COMPLETE"
+    INCOMPLETE = "INCOMPLETE"
+    FAILED = "FAILED"
+
+
+class TriggerType(str, Enum):
+    MANUAL = "MANUAL"
+    LEGACY_BRIDGE = "LEGACY_BRIDGE"
+    SYSTEM = "SYSTEM"
+
+
+class StepType(str, Enum):
+    ACTION = "ACTION"
+    API = "API"
+    UI = "UI"
+    DB = "DB"
+    ASSERT = "ASSERT"
+    SYSTEM = "SYSTEM"
+    LEGACY = "LEGACY"
+
+
+class StepStatus(str, Enum):
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+    SKIPPED = "SKIPPED"
+
+
+class AssertionResult(str, Enum):
+    PASS = "PASS"
+    FAIL = "FAIL"
+    NOT_EVALUATED = "NOT_EVALUATED"
+    ERROR = "ERROR"
+
+
+class EvidenceType(str, Enum):
+    REQUEST = "REQUEST"
+    RESPONSE = "RESPONSE"
+    SCREENSHOT = "SCREENSHOT"
+    VIDEO = "VIDEO"
+    PW_TRACE = "PW_TRACE"
+    HAR = "HAR"
+    DOM = "DOM"
+    CONSOLE = "CONSOLE"
+    LOG = "LOG"
+    ASSERTION = "ASSERTION"
+    ENV_SNAPSHOT = "ENV_SNAPSHOT"
+    LEGACY_ARTIFACT = "LEGACY_ARTIFACT"
+
+
+class SanitizationStatus(str, Enum):
+    PENDING = "PENDING"
+    SANITIZED = "SANITIZED"
+    REJECTED = "REJECTED"
+
+
+class LegacyExecutionType(str, Enum):
+    API_TASK_ITEM = "API_TASK_ITEM"
+    UI_RUN = "UI_RUN"
+    TEST_EXECUTION = "TEST_EXECUTION"
+
+
+class SnapshotSource(str, Enum):
+    """环境快照来源：自动捕获或人工 build_label 登记。"""
+
+    AUTO = "AUTO"
+    MANUAL = "MANUAL"
