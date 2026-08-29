@@ -49,6 +49,12 @@ const MissionScopePage = lazy(() => import('@/pages/missions/scope'))
 const MissionContractPage = lazy(() => import('@/pages/missions/contract'))
 const MissionScenariosPage = lazy(() => import('@/pages/missions/scenarios'))
 const MissionDataPage = lazy(() => import('@/pages/missions/data'))
+const ScenarioLayout = lazy(() => import('@/pages/missions/ScenarioLayout'))
+const MissionManualPage = lazy(() => import('@/pages/missions/manual'))
+const ObservatePage = lazy(() => import('@/pages/missions/observe'))
+const MissionActionPlanPage = lazy(() => import('@/pages/missions/action-plan'))
+const HybridRunPage = lazy(() => import('@/pages/missions/hybrid-run'))
+const HealingReviewPage = lazy(() => import('@/pages/healing'))
 const DataSourcesPage = lazy(() => import('@/pages/data-sources'))
 const FixturesPage = lazy(() => import('@/pages/fixtures'))
 const FixtureDetailPage = lazy(() => import('@/pages/fixtures/[fixtureId]'))
@@ -284,6 +290,36 @@ export const router = createBrowserRouter([
           { path: 'data', element: <PageLoader><MissionDataPage /></PageLoader> },
           { path: 'executions', element: <PageLoader><MissionExecutionsPage /></PageLoader> },
         ],
+      },
+      // ── AITDE V3.3: Browser + Hybrid + Assisted Manual（V33-012..016）──
+      {
+        path: 'missions/:missionId/scenarios/:scenarioId',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><ScenarioLayout /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="场景执行（Browser / Hybrid / Assisted Manual）需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
+        children: [
+          { index: true, element: <Navigate to="manual" replace /> },
+          { path: 'manual', element: <PageLoader><MissionManualPage /></PageLoader> },
+          { path: 'observe', element: <PageLoader><ObservatePage /></PageLoader> },
+          { path: 'action-plan', element: <PageLoader><MissionActionPlanPage /></PageLoader> },
+          { path: 'hybrid-run', element: <PageLoader><HybridRunPage /></PageLoader> },
+        ],
+      },
+      {
+        path: 'healing',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><HealingReviewPage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="愈合评审需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
       },
       // ── AITDE V3.1: Unified Execution + Proof Replay（V31-xxx）──
       {

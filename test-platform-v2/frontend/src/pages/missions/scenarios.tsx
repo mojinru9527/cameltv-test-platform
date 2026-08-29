@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams } from 'react-router'
+import { useParams, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { Badge, Button, Skeleton } from '@/ui'
 import {
@@ -30,11 +30,13 @@ import {
   type FunctionalProjection,
 } from '@/api/scenarios'
 import { fetchCurrentContract } from '@/api/contract'
-import { Sparkles, Check, X, FileText } from '@/lib/icons'
+import { AITDE_V3_ENABLED } from '@/config/aitde'
+import { Sparkles, Check, X, FileText, Play } from '@/lib/icons'
 
 export default function MissionScenariosPage() {
   const { id } = useParams()
   const missionId = Number(id)
+  const navigate = useNavigate()
   useDocumentTitle('场景')
 
   const [rows, setRows] = useState<ScenarioRow[]>([])
@@ -161,6 +163,15 @@ export default function MissionScenariosPage() {
                       <TableCell>{r.oracle_count}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          {AITDE_V3_ENABLED && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => navigate(`/missions/${missionId}/scenarios/${r.id}/manual`)}
+                            >
+                              <Play className="size-3.5" /> 执行
+                            </Button>
+                          )}
                           {r.review_status !== 'APPROVED' && (
                             <Button variant="ghost" size="sm" onClick={() => doReview(r, 'approve')}>
                               <Check className="size-3.5" /> 批准
