@@ -291,6 +291,67 @@ class TestApiTaskWorkerExecute:
         assert case.last_response_json is not None
         assert '"status_code": 200' in case.last_response_json
 
+    def test_execute_task_bridges_item_into_unified_run(self, db_session):
+        """v331-gap A1/A3：item 执行完成后必须桥接进统一执行模型。
+
+        Bridge 自动创建 LEGACY_BRIDGE Run，注册 REQUEST/RESPONSE 证据，把旧断言
+        映射为 AssertionResult，并冻结 Outcome（本例全 PASS + 证据齐备 → PASS）。
+        """
+        from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
+        from app.modules.aitde.execution import repository
+        from app.services import api_task_worker
+
+        task = ApiExecutionTask(
+            project_id=1, task_id="T-BRIDGE", name="Bridge Test",
+            total=1, status="pending",
+        )
+        db_session.add(task)
+        db_session.flush()
+        db_session.add(ApiExecutionTaskItem(task_id=task.id, case_id=1, status="pending"))
+        db_session.commit()
+
+        fake_result = {
+            "all_pass": True,
+            "duration_ms": 12,
+            "request_snapshot": {"method": "GET", "resolved_url": "https://api.example.com"},
+            "response_snapshot": {"status_code": 200, "body_preview": '{"code":0}'},
+            "assertions": [
+                {"type": "status_code", "expected": 200, "actual": 200,
+                 "passed": True, "message": "HTTP 200 = 200 ✓"},
+            ],
+        }
+
+        class _NoCloseSession:
+            def __init__(self, inner):
+                self._inner = inner
+
+            def __getattr__(self, name):
+                return getattr(self._inner, name)
+
+            def close(self):
+                pass
+
+        wrapped = _NoCloseSession(db_session)
+        with patch("app.services.api_task_worker.SessionLocal", return_value=wrapped), \
+             patch("app.services.api_execution_service.execute_api_case", return_value=fake_result):
+            api_task_worker.execute_task(task.id, project_id=1, worker_id="test-worker")
+
+        item = db_session.query(ApiExecutionTaskItem).filter_by(task_id=task.id).first()
+        from app.modules.aitde.common.enums import LegacyExecutionType
+        from app.modules.aitde.execution import legacy_bridge
+        link = legacy_bridge.find_link(db_session, LegacyExecutionType.API_TASK_ITEM, item.id)
+        assert link is not None
+        run = repository.get_run(db_session, link.run_id, 1)
+        assert run is not None
+        assert run.trigger_type == "LEGACY_BRIDGE"
+        assert run.runtime_status == "FINISHED"
+        assert run.outcome == "PASS"
+        assertions = repository.list_assertions(db_session, link.run_id, 1)
+        assert len(assertions) == 1
+        assert assertions[0].result == "PASS"
+        evidence_types = {e.evidence_type for e in repository.list_evidence(db_session, link.run_id, 1)}
+        assert {"REQUEST", "RESPONSE"} <= evidence_types
+
     def test_cancel_requested_skips_all_pending_items(self, db_session):
         """cancel_requested=True 时，所有 pending item 应被标记为 skipped，任务状态为 cancelled。"""
         from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem

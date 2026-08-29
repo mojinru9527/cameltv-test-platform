@@ -60,6 +60,18 @@ def test_prompt_loader_returns_version(db):
     assert len(pv.content) > 0
 
 
+def test_prompt_loader_serves_ambiguity_intent_v1(db):
+    """v331-gap C5 (V30-041)：ambiguity_intent_v1 prompt 必须存在且可加载。"""
+    pv = PromptLoader().load("ambiguity_intent_v1")
+    assert pv.name == "ambiguity_intent_v1"
+    assert ":" in pv.version
+    # 输出契约锚点：歧义候选与意图候选的关键字段必须在 prompt 中声明
+    assert "ambiguity_key" in pv.content
+    assert "intent_key" in pv.content
+    assert "candidate_options" in pv.content
+    assert "required_outcomes" in pv.content
+
+
 def test_repair_retry_allows_one_retry(db):
     calls = {"n": 0}
 
