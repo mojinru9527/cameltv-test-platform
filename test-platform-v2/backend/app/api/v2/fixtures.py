@@ -92,7 +92,7 @@ def cleanup_fixture(
     return R.ok(result)
 
 
-@router.get("/{fixture_id}/snapshots", response_model=R[dict])
+@router.get("/{fixture_id}/snapshots", response_model=R[list])
 def list_snapshots(
     fixture_id: int,
     _: CurrentUser = Depends(require_permission("data_source:list")),
