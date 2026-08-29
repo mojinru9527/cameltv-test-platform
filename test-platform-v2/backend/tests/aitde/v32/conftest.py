@@ -8,10 +8,12 @@ from sqlalchemy.pool import StaticPool
 
 from app.core.db import Base
 import app.models.environment  # noqa: F401  registers environment table
+import app.models.dataset  # noqa: F401  registers dataset table
 from app.modules.aitde.data import service  # noqa: F401  registers data_sources table
 import app.modules.aitde.scenario.models  # noqa: F401  registers scenario tables
 import app.modules.aitde.mission.models  # noqa: F401  registers mission tables
 import app.modules.aitde.contract.models  # noqa: F401  registers contract tables
+import app.modules.aitde.execution.models  # noqa: F401  registers execution tables
 
 
 @pytest.fixture()

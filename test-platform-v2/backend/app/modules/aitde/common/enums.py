@@ -234,6 +234,8 @@ class StepType(str, Enum):
     ASSERT = "ASSERT"
     SYSTEM = "SYSTEM"
     LEGACY = "LEGACY"
+    # V3.2 data runtime step (V32-014 timeline)
+    DATA = "DATA"
 
 
 class StepStatus(str, Enum):
@@ -264,6 +266,12 @@ class EvidenceType(str, Enum):
     ASSERTION = "ASSERTION"
     ENV_SNAPSHOT = "ENV_SNAPSHOT"
     LEGACY_ARTIFACT = "LEGACY_ARTIFACT"
+    # V3.2 data runtime evidence (V32-014)
+    DATA_PLAN = "DATA_PLAN"
+    FIXTURE_MANIFEST = "FIXTURE_MANIFEST"
+    DB_BEFORE = "DB_BEFORE"
+    DB_AFTER = "DB_AFTER"
+    DB_CLEANUP_VERIFY = "DB_CLEANUP_VERIFY"
 
 
 class SanitizationStatus(str, Enum):

@@ -16,6 +16,7 @@ from app.modules.aitde.data.models import (
     DataSource,
     FixtureEntity,
     FixtureLease,
+    LegacyDatasetLink,
 )
 
 
@@ -203,4 +204,28 @@ def get_latest_cleanup_record(
         select(CleanupRecord)
         .where(CleanupRecord.fixture_id == fixture_id)
         .order_by(CleanupRecord.attempt_no.desc())
+    )
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# Legacy dataset link (V32-015)
+# ────────────────────────────────────────────────────────────────────────────
+
+
+def create_legacy_link(
+    db: Session, data: dict[str, Any]
+) -> LegacyDatasetLink:
+    row = LegacyDatasetLink(**data)
+    db.add(row)
+    db.flush()
+    return row
+
+
+def get_legacy_link_by_dataset(
+    db: Session, legacy_dataset_id: int
+) -> LegacyDatasetLink | None:
+    return db.scalar(
+        select(LegacyDatasetLink).where(
+            LegacyDatasetLink.legacy_dataset_id == legacy_dataset_id
+        )
     )
