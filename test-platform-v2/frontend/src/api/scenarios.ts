@@ -28,6 +28,7 @@ export interface ScenarioDetail {
   id: number
   scenario_key: string
   version_no: number
+  scenario_version_id: number
   title: string
   business_goal: string
   priority: string

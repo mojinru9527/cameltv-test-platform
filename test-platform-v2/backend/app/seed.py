@@ -141,6 +141,9 @@ _ACTIONS = [
     ("mission:delete", "删除版本测试任务", "button"),
     ("mission:log", "记录Agent部门日志", "button"),
     ("mission:generate", "生成版本测试资产", "button"),
+    # 数据源（AITDE V3.2 Data + DB Runtime）
+    ("data_source:list", "查看数据源", "button"),
+    ("data_source:manage", "管理数据源", "button"),
     # API Token 管理 (P1-6/S3)
     ("token:list", "查看 API Token", "button"),
     ("token:manage", "管理 API Token", "button"),
@@ -210,6 +213,8 @@ _TESTER_ACTIONS = {
     # 版本测试任务（删除与 AI 生成留管理员）
     "mission:list", "mission:detail", "mission:create", "mission:update",
     "mission:log",
+    # 数据源（AITDE V3.2；只读+创建/编辑）
+    "data_source:list", "data_source:manage",
     # 通知配置
     "notify:list", "notify:manage",
     # UI 自动化（生产触发留管理员）
@@ -249,6 +254,7 @@ _VIEWER_ACTIONS = {
     "apitest:view",
     "uitest:list",
     "mission:list",
+    "data_source:list",
 }
 
 _TESTER_MENUS = {

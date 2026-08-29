@@ -48,6 +48,10 @@ const MissionSourcesPage = lazy(() => import('@/pages/missions/sources'))
 const MissionScopePage = lazy(() => import('@/pages/missions/scope'))
 const MissionContractPage = lazy(() => import('@/pages/missions/contract'))
 const MissionScenariosPage = lazy(() => import('@/pages/missions/scenarios'))
+const MissionDataPage = lazy(() => import('@/pages/missions/data'))
+const DataSourcesPage = lazy(() => import('@/pages/data-sources'))
+const FixturesPage = lazy(() => import('@/pages/fixtures'))
+const FixtureDetailPage = lazy(() => import('@/pages/fixtures/[fixtureId]'))
 const ExecutionCenterPage = lazy(() => import('@/pages/executions'))
 const RunDetailPage = lazy(() => import('@/pages/executions/run/[runId]'))
 const ReplayPage = lazy(() => import('@/pages/executions/replay'))
@@ -277,6 +281,7 @@ export const router = createBrowserRouter([
           { path: 'scope', element: <PageLoader><MissionScopePage /></PageLoader> },
           { path: 'contract', element: <PageLoader><MissionContractPage /></PageLoader> },
           { path: 'scenarios', element: <PageLoader><MissionScenariosPage /></PageLoader> },
+          { path: 'data', element: <PageLoader><MissionDataPage /></PageLoader> },
           { path: 'executions', element: <PageLoader><MissionExecutionsPage /></PageLoader> },
         ],
       },
@@ -312,6 +317,31 @@ export const router = createBrowserRouter([
             title="AITDE V3 未开放"
             description="执行回放需启用 AITDE V3 功能开关后开放。"
           />
+        ),
+      },
+      // ── AITDE V3.2: Data + DB Runtime（V32-016..V32-018）──
+      {
+        path: 'data-sources',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><DataSourcesPage /></PageLoader>
+        ) : (
+          <Unavailable title="AITDE V3 未开放" description="数据源管理需启用 AITDE V3 功能开关后开放。" />
+        ),
+      },
+      {
+        path: 'fixtures',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><FixturesPage /></PageLoader>
+        ) : (
+          <Unavailable title="AITDE V3 未开放" description="Fixture 查看需启用 AITDE V3 功能开关后开放。" />
+        ),
+      },
+      {
+        path: 'fixtures/:fixtureId',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><FixtureDetailPage /></PageLoader>
+        ) : (
+          <Unavailable title="AITDE V3 未开放" description="Fixture 查看需启用 AITDE V3 功能开关后开放。" />
         ),
       },
       {

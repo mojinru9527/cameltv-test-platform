@@ -1,5 +1,5 @@
 {
-  "count": 474,
+  "count": 490,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -1718,12 +1718,64 @@
       "method": "POST"
     },
     {
+      "path": "/api/v2/data-plans/{plan_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/data-plans/{plan_id}/approve",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/data-requirements/{requirement_id}",
+      "method": "PATCH"
+    },
+    {
+      "path": "/api/v2/data-sources",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/data-sources",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/data-sources/{data_source_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/data-sources/{data_source_id}/test",
+      "method": "POST"
+    },
+    {
       "path": "/api/v2/environments/{environment_id}/snapshots",
       "method": "POST"
     },
     {
       "path": "/api/v2/environments/{environment_id}/snapshots/latest",
       "method": "GET"
+    },
+    {
+      "path": "/api/v2/fixtures/{fixture_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/fixtures/{fixture_id}/cleanup",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/fixtures/{fixture_id}/lease",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/fixtures/{fixture_id}/release",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/fixtures/{fixture_id}/snapshots",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/fixtures/{fixture_id}/snapshots",
+      "method": "POST"
     },
     {
       "path": "/api/v2/health",
@@ -1887,6 +1939,18 @@
     },
     {
       "path": "/api/v2/scenarios/{scenario_id}/runs",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_version_id}/data-plans",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_version_id}/data-requirements",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_version_id}/data-requirements/derive",
       "method": "POST"
     },
     {
