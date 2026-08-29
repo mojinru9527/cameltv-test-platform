@@ -8,6 +8,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.core.db import Base
 from app.modules.aitde.command import models  # noqa: F401  registers command tables
+from app.modules.aitde.browser import models as browser_models  # noqa: F401  registers browser tables
 
 
 @pytest.fixture()
