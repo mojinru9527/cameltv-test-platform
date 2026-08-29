@@ -32,6 +32,7 @@ related: ["template.md", "0001-use-python-fastapi-monostack.md", "../document-st
 | [0018](0018-dsh-harness-integration.md) | 接入 DeepSeek Harness（dsh）执行型智能体能力 | ✅ 已采纳 | 2026-08 |
 | [0019](0019-task-queue-and-soft-delete-conventions.md) | 认领式任务队列统一与删除语义唯一约定 | ✅ 已采纳 | 2026-08 |
 | [0020](0020-os-level-sandbox-deployment-assessment.md) | OS 级沙箱（seccomp/nsjail）部署层评估结论 | ✅ 已采纳 | 2026-08 |
+| [0021](0021-aitde-v3-1-unified-execution.md) | AITDE V3.1 统一执行 + Proof Replay（确定性结论、无 AI 裁决） | ✅ 已采纳 | 2026-08 |
 
 ## ADR 状态
 

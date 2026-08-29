@@ -13,6 +13,7 @@ const TABS = [
   { key: 'scope', label: '范围', path: 'scope' },
   { key: 'contract', label: '契约', path: 'contract' },
   { key: 'scenarios', label: '场景', path: 'scenarios' },
+  { key: 'executions', label: '执行', path: 'executions' },
 ]
 
 export default function MissionLayout() {
