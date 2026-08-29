@@ -167,7 +167,7 @@ def list_data_sources(db: Session, project_id: int) -> list[DataSource]:
     return repository.list_data_sources(db, project_id)
 
 
-def test_data_source_connection(
+def probe_data_source_connection(
     db: Session, data_source_id: int, project_id: int
 ) -> dict[str, Any]:
     """Best-effort connection test; never leaks the secret value.
