@@ -221,3 +221,21 @@ class LegacyExecutionLink(Base):
         String(32), default=LegacyExecutionType.API_TASK_ITEM.value, index=True
     )
     legacy_id: Mapped[int] = mapped_column(Integer, index=True)
+
+
+class ShadowAuditFeedback(Base):
+    """M31-4: tester deep-audit feedback on a Run's outcome.
+
+    Records CONFIRMED / FALSE_PASS / FALSE_FAIL. Feedback is append-only and
+    NEVER mutates the Run's historical ``outcome`` (the audit is a monitoring
+    signal, not a verdict override).
+    """
+
+    __tablename__ = "shadow_audit_feedback"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    run_id: Mapped[int] = mapped_column(Integer, index=True)
+    audit_outcome: Mapped[str] = mapped_column(String(16), index=True)
+    reason: Mapped[str] = mapped_column(Text, default="")
+    created_by: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now, index=True)

@@ -153,3 +153,8 @@ class AssertionOut(BaseModel):
     reason_code: str = ""
     evidence_refs_json: str = "[]"
     evaluated_at: datetime | None = None
+
+
+class ShadowAuditCreate(BaseModel):
+    audit_outcome: str = Field(min_length=1, max_length=16)
+    reason: str = Field(default="", max_length=2000)

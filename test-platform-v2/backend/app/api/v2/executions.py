@@ -14,14 +14,14 @@ from app.api.v2.deps import require_aitde_v3
 from app.core.deps import CurrentUser, get_db, require_permission
 from app.modules.aitde.evidence.service import list_evidence
 from app.modules.aitde.evidence.replay import build_replay_view, get_manifest, manifest_dict
-from app.modules.aitde.execution import legacy_bridge, repository, service
+from app.modules.aitde.execution import legacy_bridge, repository, service, shadow_audit
 from app.modules.aitde.execution.mapper import (
     assertion_to_dict,
     evidence_to_dict,
     run_to_dict,
     step_to_dict,
 )
-from app.modules.aitde.execution.schemas import RunCreate
+from app.modules.aitde.execution.schemas import RunCreate, ShadowAuditCreate
 from app.schemas.common import R
 
 router = APIRouter(tags=["AITDE - Execution"], dependencies=[Depends(require_aitde_v3)])
@@ -187,3 +187,31 @@ def link_legacy_execution(
     else:
         return R.ok({"error": f"unsupported legacy_type: {legacy_type}"})
     return R.ok(result)
+
+
+@router.post("/runs/{run_id}/audit", response_model=R[dict])
+def submit_audit(
+    run_id: int,
+    payload: ShadowAuditCreate,
+    current: CurrentUser = Depends(require_permission("execution:audit")),
+    db: Session = Depends(get_db),
+):
+    row = shadow_audit.submit_feedback(
+        db,
+        run_id,
+        current.project_id or 0,
+        payload.audit_outcome,
+        payload.reason,
+        current.user.id,
+    )
+    return R.ok(shadow_audit.feedback_to_dict(row))
+
+
+@router.get("/runs/{run_id}/audit", response_model=R[dict])
+def list_audit(
+    run_id: int,
+    current: CurrentUser = Depends(require_permission("execution:detail")),
+    db: Session = Depends(get_db),
+):
+    items = shadow_audit.list_feedback(db, run_id, current.project_id or 0)
+    return R.ok({"items": [shadow_audit.feedback_to_dict(f) for f in items]})
