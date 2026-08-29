@@ -1,5 +1,5 @@
 {
-  "count": 504,
+  "count": 507,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -1803,6 +1803,18 @@
     },
     {
       "path": "/api/v2/fixtures/{fixture_id}/snapshots",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/healing-proposals",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/healing-proposals/{proposal_id}/approve",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/healing-proposals/{proposal_id}/reject",
       "method": "POST"
     },
     {
