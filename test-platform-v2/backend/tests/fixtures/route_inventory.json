@@ -1,5 +1,5 @@
 {
-  "count": 507,
+  "count": 508,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -1696,6 +1696,10 @@
     {
       "path": "/api/v2/action-plans/{version_id}/validate",
       "method": "POST"
+    },
+    {
+      "path": "/api/v2/ai-operations",
+      "method": "GET"
     },
     {
       "path": "/api/v2/ai-operations/{operation_id}",

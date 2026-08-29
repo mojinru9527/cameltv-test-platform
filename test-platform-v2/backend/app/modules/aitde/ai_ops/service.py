@@ -46,6 +46,28 @@ def get_operation(db: Session, operation_id: int) -> AIOperationRecord:
     return row
 
 
+def list_operations(
+    db: Session,
+    mission_id: int,
+    project_id: int,
+    *,
+    limit: int = 50,
+) -> list[AIOperationRecord]:
+    """List a mission's AI operation records, newest first (v331-remediation-2
+    B2 / V30-085). Project-scoped via project_id; bounded page for the drawer."""
+    return list(
+        db.scalars(
+            select(AIOperationRecord)
+            .where(
+                AIOperationRecord.mission_id == mission_id,
+                AIOperationRecord.project_id == project_id,
+            )
+            .order_by(AIOperationRecord.id.desc())
+            .limit(limit)
+        ).all()
+    )
+
+
 def mark_running(db: Session, operation: AIOperationRecord) -> AIOperationRecord:
     operation.status = AIOperationStatus.RUNNING.value
     operation.started_at = operation.started_at or datetime.now()

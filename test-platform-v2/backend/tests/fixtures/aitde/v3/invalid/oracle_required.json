@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "contract_version_id": 1,
+  "mission_id": 1,
+  "items": [
+    {
+      "scenario_key": "required-ai-oracle",
+      "title": "AI_INFERRED 却 required",
+      "business_goal": "违反 Oracle Guard",
+      "priority": "P1",
+      "risk_level": "P1",
+      "given": {},
+      "when": {},
+      "expected_state": {},
+      "source_refs": [
+        {
+          "artifact_id": 1,
+          "fragment_id": 1,
+          "location": "PRD 1.1"
+        }
+      ],
+      "oracles": [
+        {
+          "oracle_key": "bad-required",
+          "oracle_type": "API",
+          "target": {},
+          "operator": "eq",
+          "expected_value": {},
+          "source_type": "AI_INFERRED",
+          "required": true,
+          "confidence": 0.9,
+          "source_refs": [
+            {
+              "artifact_id": 1,
+              "fragment_id": 1,
+              "location": "PRD 1.1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

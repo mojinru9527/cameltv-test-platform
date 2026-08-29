@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "mission_id": 1,
+  "items": [
+    {
+      "scope_key": "over-confident",
+      "scope_type": "FEATURE",
+      "name": "越界置信度",
+      "decision": "INCLUDE",
+      "test_depth": "FULL",
+      "risk_level": "P2",
+      "reason": "confidence > 1",
+      "confidence": 1.5,
+      "source_refs": [
+        {
+          "artifact_id": 1,
+          "fragment_id": 1,
+          "location": "PRD 1.1"
+        }
+      ]
+    }
+  ]
+}

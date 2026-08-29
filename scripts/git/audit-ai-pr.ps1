@@ -31,7 +31,18 @@ function Invoke-CheckedGit {
 
 function Invoke-CheckedGh {
     param([string[]]$Arguments)
-    $output = @(& gh @Arguments 2>&1)
+    # gh 输出为 UTF-8（中文 check 名如「后端全新检出与全量回归」不转义）。
+    # Windows 默认按 OEM 代码页（GBK）解码外部程序输出，会破坏 JSON 字节流，
+    # 导致 ConvertFrom-Json 在 statusCheckRollup 处解析失败（v331 实测）。
+    # 因此临时把控制台输出编码切到 UTF-8，读完后恢复。
+    $previousEncoding = [Console]::OutputEncoding
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    try {
+        $output = @(& gh @Arguments 2>&1)
+    }
+    finally {
+        [Console]::OutputEncoding = $previousEncoding
+    }
     if ($LASTEXITCODE -ne 0) {
         throw "gh $($Arguments -join ' ') failed: $($output -join [Environment]::NewLine)"
     }

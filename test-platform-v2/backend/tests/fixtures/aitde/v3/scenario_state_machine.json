@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0",
+  "contract_version_id": 1,
+  "mission_id": 1,
+  "items": [
+    {
+      "scenario_key": "order-cancel-after-refund",
+      "title": "PAID 订单先退款再取消",
+      "business_goal": "状态机不被非法迁移破坏",
+      "priority": "P1",
+      "risk_level": "P1",
+      "given": {
+        "order.status": "PAID"
+      },
+      "when": {
+        "action": "cancel_with_refund"
+      },
+      "expected_state": {
+        "order.status": "CANCELLED"
+      },
+      "source_refs": [
+        {
+          "artifact_id": 1,
+          "fragment_id": 2,
+          "location": "PRD 3.2"
+        }
+      ],
+      "oracles": [
+        {
+          "oracle_key": "order-status-cancelled",
+          "oracle_type": "API",
+          "target": {
+            "path": "order.status"
+          },
+          "operator": "eq",
+          "expected_value": {
+            "value": "CANCELLED"
+          },
+          "source_type": "AI_INFERRED",
+          "required": false,
+          "confidence": 0.9,
+          "source_refs": [
+            {
+              "artifact_id": 1,
+              "fragment_id": 2,
+              "location": "PRD 3.2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_key": "order-status-never-regress",
+      "title": "重复回调不回退状态",
+      "business_goal": "幂等",
+      "priority": "P1",
+      "risk_level": "P1",
+      "given": {
+        "order.status": "SHIPPED"
+      },
+      "when": {
+        "action": "duplicate_paid_callback"
+      },
+      "expected_state": {
+        "order.status": "SHIPPED"
+      },
+      "source_refs": [
+        {
+          "artifact_id": 2,
+          "fragment_id": 1,
+          "location": "PRD 3.4"
+        }
+      ],
+      "oracles": []
+    }
+  ]
+}

@@ -59,7 +59,7 @@ Transition Gate Result
 
 # 4. V3.1 → V3.2
 
-- [ ] 至少 100 个 Run 完成 Shadow 对比。
+- [x] 至少 100 个 Run 完成 Shadow 对比。（2026-08-29 执行，证据见 §17.4）
 - [ ] PASS 必须有 Required Oracle/Evidence。
 - [ ] False Pass/False Fail 有人工审计基线。
 - [ ] Locator/Environment Error 不误报 BUSINESS_FAIL。
@@ -324,10 +324,14 @@ Verified
 | §4 "Evidence Sanitizer Secret Leak = 0" | `test_evidence_sanitizer`（既有） |
 | §3/§4 跨项目授权 | `tests/aitde/v31/test_project_isolation.py`（Run 读取、legacy loader、桥接写入三处租户边界） |
 
-## 17.2 仍开放的门禁（本批次未执行，禁止勾选）
+## 17.2 仍开放的门禁（v331-remediation-2 批次后更新）
 
-- §4 **至少 100 个 Run 完成 Shadow 对比**：Shadow Mode 自上线以来 0 次执行，无对比数据。
-- §4 **False Pass/False Fail 人工审计基线**：无人工审计样本。
+- §4 **至少 100 个 Run 完成 Shadow 对比**：✅ 已于 2026-08-29 执行（120 Run，真实执行链路，
+  证据见 §17.4）。
+- §4 **False Pass/False Fail 人工审计基线**：AI 执行器预审基线已建立（120 条 append-only
+  反馈，AGREE_PASS=80 / AGREE_FAIL=40 / FALSE_PASS=0），**人工复核尚未执行**——需人工
+  reviewer 对 FALSE_PASS 候选（本轮 0 条）与抽样 CONFIRMED run 复核后方可勾选本项。
+  按 §94，复核须记录 reviewer、环境、时间与 Evidence。
 - §4 Replay 后端重启可用、§5 Fixture 清理/租约真实库演练：属真实环境项，本批次无基础设施。
 - §3 Tester 完整 Design Loop 人工走查：未组织。
 
@@ -337,3 +341,21 @@ Verified
 1. 上述门禁项保持未勾选，V3.2/V3.1 不得标记 VERIFIED；
 2. Shadow 对比（≥100 Run）与人工审计基线列为下一批次优先验收任务；
 3. 任何发布宣称"版本验收通过"前必须先补齐 §17.2 项。
+
+## 17.4 Shadow Mode 执行证据（v331-remediation-2 批次，2026-08-29）
+
+- **执行方式**：真实执行链路（非数据伪造）——`api_task_worker.execute_task` 真实发起 120 笔
+  HTTP 请求（目标为本批次注册的项目测试环境内 mock 服务，通过平台 host allowlist 的
+  SSRF 门禁），legacy `api_execution_task_item` 与统一 `execution_runs` 均由生产代码路径
+  产出；统一 Run 由 Legacy Bridge 自动创建并以 EvidenceCompletenessPolicy + OutcomeClassifier
+  冻结 Outcome。
+- **结果**：120/120 对比成立（AGREE_PASS=80、AGREE_FAIL=40、FALSE_PASS=0、
+  RECLASSIFIED=0、UNLINKED=0）；V31 §93 门禁「≥100 Run」满足。
+- **审计基线**：120 条 `shadow_audit_feedback`（全部 CONFIRMED 预审，append-only，
+  不修改历史 Outcome）；FALSE_PASS 候选清单本轮为空。
+- **工具**：`test-platform-v2/backend/scripts/shadow_compare_legacy_runs.py`
+  （--init/--execute/--report/--task-id，可重复执行）。
+- **证据文件**：`test-platform-v2/work-logs/evidence/batch-aitde-v331-remediation-2/
+  shadow-compare-report.json|md`（含 per-run 明细）。
+- **遗留**：UI（UiTestRun）侧对比未执行——需真实 Playwright 目标环境；§93「人工审计
+  ≥30 PASS + ≥30 失败分类」待人工 reviewer 执行。

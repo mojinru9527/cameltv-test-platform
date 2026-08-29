@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "mission_id": 1,
+  "scope_revision": "r1",
+  "rules": [
+    {
+      "rule_key": "rbac-admin-only-assign",
+      "title": "仅 ADMIN 可分配权限",
+      "kind": "BUSINESS_RULE",
+      "statement": "非 ADMIN 调用分配接口必须 403",
+      "risk_level": "P1",
+      "source_type": "REQUIREMENT_EXPLICIT",
+      "source_refs": [
+        {
+          "artifact_id": 1,
+          "fragment_id": 4,
+          "location": "PRD 5.1"
+        }
+      ]
+    }
+  ],
+  "required_outcomes": []
+}

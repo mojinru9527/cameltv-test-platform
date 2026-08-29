@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "mission_id": 1,
+  "items": [
+    {
+      "scope_key": "magic",
+      "scope_type": "MAGIC",
+      "name": "非法枚举",
+      "decision": "INCLUDE",
+      "test_depth": "FULL",
+      "risk_level": "P2",
+      "reason": "scope_type 非法",
+      "confidence": 0.5,
+      "source_refs": [
+        {
+          "artifact_id": 1,
+          "fragment_id": 1,
+          "location": "PRD 1.1"
+        }
+      ]
+    }
+  ]
+}

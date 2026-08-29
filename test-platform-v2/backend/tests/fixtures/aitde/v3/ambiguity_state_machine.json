@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "mission_id": 1,
+  "items": [
+    {
+      "ambiguity_key": "paid-cancel-precondition",
+      "title": "PAID 后取消是否必须先退款",
+      "description": "PRD 3.2 写明取消必须先退款，但未说明未付款订单取消路径",
+      "severity": "P1",
+      "candidate_options": [
+        {
+          "key": "refund-first",
+          "label": "先退款后取消"
+        },
+        {
+          "key": "cancel-direct",
+          "label": "直接取消"
+        }
+      ],
+      "confidence": 0.8,
+      "source_refs": [
+        {
+          "artifact_id": 1,
+          "fragment_id": 2,
+          "location": "PRD 3.2"
+        }
+      ]
+    }
+  ]
+}

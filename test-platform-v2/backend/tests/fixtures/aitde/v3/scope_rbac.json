@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "mission_id": 1,
+  "items": [
+    {
+      "scope_key": "rbac-assign",
+      "scope_type": "FEATURE",
+      "name": "权限分配与校验",
+      "decision": "INCLUDE",
+      "test_depth": "FULL",
+      "risk_level": "P1",
+      "reason": "未授权访问是安全问题",
+      "confidence": 0.95,
+      "source_refs": [
+        {
+          "artifact_id": 1,
+          "fragment_id": 4,
+          "location": "PRD 5.1"
+        }
+      ]
+    }
+  ]
+}

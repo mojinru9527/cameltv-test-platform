@@ -144,6 +144,10 @@ _ACTIONS = [
     ("mission:delete", "删除版本测试任务", "button"),
     ("mission:log", "记录Agent部门日志", "button"),
     ("mission:generate", "生成版本测试资产", "button"),
+    # (v331-remediation-2 B2 / V30-085) AI Debug Drawer 权限点：
+    # 仅门控 model/prompt version/status/duration/token 的只读展示，
+    # 不展示 secret / hidden chain-of-thought。
+    ("mission:ai_view_debug", "查看 AI 调试信息", "button"),
     # 数据源（AITDE V3.2 Data + DB Runtime）
     ("data_source:list", "查看数据源", "button"),
     ("data_source:manage", "管理数据源", "button"),
@@ -216,6 +220,8 @@ _TESTER_ACTIONS = {
     # 版本测试任务（删除与 AI 生成留管理员）
     "mission:list", "mission:detail", "mission:create", "mission:update",
     "mission:log",
+    # (v331-remediation-2 B2 / V30-085) AI Debug Drawer（只读调试信息）
+    "mission:ai_view_debug",
     # 数据源（AITDE V3.2；只读+创建/编辑）
     "data_source:list", "data_source:manage",
     # 通知配置

@@ -24,6 +24,8 @@ import {
   type ScopeSummary,
 } from '@/api/scope'
 import { Sparkles, Check, X } from '@/lib/icons'
+import { isConflictError } from '@/lib/conflict'
+import { StaleConflictBanner } from './StaleConflictBanner'
 
 export default function MissionScopePage() {
   const { id } = useParams()
@@ -35,8 +37,12 @@ export default function MissionScopePage() {
   const [loading, setLoading] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
   const [pendingKey, setPendingKey] = useState<string | null>(null)
+  const [staleConflict, setStaleConflict] = useState(false)
 
-  const reload = () => setLoading(true)
+  const reload = () => {
+    setStaleConflict(false)
+    setLoading(true)
+  }
 
   useAbortableEffect((signal) => {
     if (!missionId) return
@@ -81,7 +87,12 @@ export default function MissionScopePage() {
       toast.success(action === 'approve' ? '已批准' : '已拒绝')
       reload()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '评审失败')
+      // V30-107：409（评审状态已变更 / Scope 未分析完成等冲突）→ 内联 STALE 提示
+      if (isConflictError(err)) {
+        setStaleConflict(true)
+      } else {
+        toast.error(err instanceof Error ? err.message : '评审失败')
+      }
     } finally {
       setPendingKey(null)
     }
@@ -91,8 +102,9 @@ export default function MissionScopePage() {
 
   return (
     <div className="space-y-4">
+      {staleConflict && <StaleConflictBanner onReload={reload} />}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 text-sm">
+        <div className="flex items-center gap-3 text-sm" role="status">
           <span className="text-muted-foreground">范围 {summary?.total ?? 0} 项</span>
           <span className="text-muted-foreground">
             已评审 {summary ? summary.approved + summary.rejected : 0}
@@ -165,6 +177,7 @@ export default function MissionScopePage() {
                               variant="ghost"
                               size="sm"
                               disabled={pendingKey === s.scope_key}
+                              aria-label={`批准 ${s.name}`}
                               onClick={() => doReview(s, 'approve')}
                             >
                               <Check className="size-3.5" /> 批准
@@ -175,6 +188,7 @@ export default function MissionScopePage() {
                               variant="ghost"
                               size="sm"
                               disabled={pendingKey === s.scope_key}
+                              aria-label={`拒绝 ${s.name}`}
                               onClick={() => doReview(s, 'reject')}
                             >
                               <X className="size-3.5" /> 拒绝

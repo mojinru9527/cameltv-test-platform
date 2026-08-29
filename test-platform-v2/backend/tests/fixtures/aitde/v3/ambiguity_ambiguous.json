@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "mission_id": 1,
+  "items": [
+    {
+      "ambiguity_key": "api-timeout-behavior",
+      "title": "超时后系统行为未定义",
+      "description": "PRD 6.1 未定义「相应处理」：重试、降级还是报错",
+      "severity": "P2",
+      "candidate_options": [
+        {
+          "key": "retry-once",
+          "label": "自动重试一次"
+        },
+        {
+          "key": "fail-fast",
+          "label": "直接失败并提示"
+        }
+      ],
+      "confidence": 0.85,
+      "source_refs": [
+        {
+          "artifact_id": 1,
+          "fragment_id": 5,
+          "location": "PRD 6.1"
+        }
+      ]
+    }
+  ]
+}

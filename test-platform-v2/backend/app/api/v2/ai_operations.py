@@ -1,7 +1,7 @@
 """AITDE v2 AI Operation API (V30-084)."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.v2.deps import require_aitde_v3
@@ -15,6 +15,19 @@ router = APIRouter(
     tags=["AITDE - AI Governance"],
     dependencies=[Depends(require_aitde_v3)],
 )
+
+
+@router.get("", response_model=R[dict])
+def list_operations(
+    mission_id: int = Query(..., description="mission whose AI ops to list"),
+    current: CurrentUser = Depends(require_permission("mission:ai_view_debug")),
+    db: Session = Depends(get_db),
+):
+    """V30-085 AI Debug Drawer feed: model / prompt version / status /
+    duration / token usage only — no secrets, no hidden chain-of-thought
+    (the service layer never stores those)."""
+    items = service.list_operations(db, mission_id, current.project_id or 0)
+    return R.ok({"items": [_to_dict(row) for row in items]})
 
 
 @router.get("/{operation_id}", response_model=R[dict])
@@ -42,6 +55,7 @@ def _to_dict(row: AIOperationRecord) -> dict:
         "error_code": row.error_code,
         "error_message": row.error_message,
         "duration_ms": row.duration_ms,
+        "token_usage_json": row.token_usage_json,
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "finished_at": row.finished_at.isoformat() if row.finished_at else None,
     }

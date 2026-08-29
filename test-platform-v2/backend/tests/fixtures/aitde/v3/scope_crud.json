@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "mission_id": 1,
+  "items": [
+    {
+      "scope_key": "member-crud",
+      "scope_type": "FEATURE",
+      "name": "会员档案 CRUD",
+      "decision": "INCLUDE",
+      "test_depth": "FULL",
+      "risk_level": "P2",
+      "reason": "创建/查询/更新/删除四类主路径",
+      "confidence": 0.9,
+      "source_refs": [
+        {
+          "artifact_id": 1,
+          "fragment_id": 1,
+          "location": "PRD 1.1"
+        }
+      ]
+    }
+  ]
+}

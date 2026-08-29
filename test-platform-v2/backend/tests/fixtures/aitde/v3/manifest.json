@@ -1,0 +1,165 @@
+{
+  "schema_version": "1.0",
+  "doc": "V30-124 Golden AI Evaluation — 人工 Golden 期望 + AI 输出 Schema 语料",
+  "requirement_classes": [
+    "simple-crud",
+    "state-machine",
+    "payment-order-loop",
+    "rbac",
+    "ambiguous"
+  ],
+  "valid": [
+    {
+      "file": "scope_crud.json",
+      "schema": "ScopeAnalysisOutput",
+      "input": "inputs/crud.json",
+      "golden": {
+        "expected_scope_keys": [
+          "member-crud"
+        ]
+      }
+    },
+    {
+      "file": "scope_rbac.json",
+      "schema": "ScopeAnalysisOutput",
+      "input": "inputs/rbac.json",
+      "golden": {
+        "expected_scope_keys": [
+          "rbac-assign"
+        ]
+      }
+    },
+    {
+      "file": "scope_ambiguous.json",
+      "schema": "ScopeAnalysisOutput",
+      "input": "inputs/ambiguous.json",
+      "golden": {
+        "expected_scope_keys": [
+          "export-retry"
+        ]
+      }
+    },
+    {
+      "file": "ambiguity_state_machine.json",
+      "schema": "AmbiguityDetectionOutput",
+      "input": "inputs/state_machine.json",
+      "golden": {
+        "expected_ambiguity_keys": [
+          "paid-cancel-precondition"
+        ],
+        "min_candidate_options": 2
+      }
+    },
+    {
+      "file": "ambiguity_ambiguous.json",
+      "schema": "AmbiguityDetectionOutput",
+      "input": "inputs/ambiguous.json",
+      "golden": {
+        "expected_ambiguity_keys": [
+          "api-timeout-behavior"
+        ],
+        "min_candidate_options": 2
+      }
+    },
+    {
+      "file": "intent_crud.json",
+      "schema": "IntentDetectionOutput",
+      "input": "inputs/crud.json",
+      "golden": {
+        "expected_intent_keys": [
+          "member-data-accuracy"
+        ],
+        "required_outcomes_nonempty": true
+      }
+    },
+    {
+      "file": "intent_payment_order.json",
+      "schema": "IntentDetectionOutput",
+      "input": "inputs/payment_order.json",
+      "golden": {
+        "expected_intent_keys": [
+          "refund-never-overpay"
+        ],
+        "required_outcomes_nonempty": true
+      }
+    },
+    {
+      "file": "contract_payment_order.json",
+      "schema": "ContractSnapshot",
+      "input": "inputs/payment_order.json",
+      "golden": {
+        "required_rule_keys": [
+          "refund-amount-cap",
+          "idempotent-callback"
+        ]
+      }
+    },
+    {
+      "file": "contract_rbac.json",
+      "schema": "ContractSnapshot",
+      "input": "inputs/rbac.json",
+      "golden": {
+        "required_rule_keys": [
+          "rbac-admin-only-assign"
+        ]
+      }
+    },
+    {
+      "file": "scenario_state_machine.json",
+      "schema": "ScenarioDesignOutput",
+      "input": "inputs/state_machine.json",
+      "golden": {
+        "must_have_scenarios": [
+          "order-cancel-after-refund",
+          "order-status-never-regress"
+        ],
+        "ai_inferred_oracles_must_not_be_required": true
+      }
+    },
+    {
+      "file": "scenario_crud.json",
+      "schema": "ScenarioDesignOutput",
+      "input": "inputs/crud.json",
+      "golden": {
+        "must_have_scenarios": [
+          "member-create-then-query"
+        ],
+        "ai_inferred_oracles_must_not_be_required": true
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "file": "invalid/malformed_json.json",
+      "schema": "ScopeAnalysisOutput",
+      "reason": "malformed json"
+    },
+    {
+      "file": "invalid/missing_source_ref.json",
+      "schema": "ScopeAnalysisOutput",
+      "reason": "source_refs min_length=1"
+    },
+    {
+      "file": "invalid/bad_enum.json",
+      "schema": "ScopeAnalysisOutput",
+      "reason": "scope_type closed enum"
+    },
+    {
+      "file": "invalid/confidence_range.json",
+      "schema": "ScopeAnalysisOutput",
+      "reason": "confidence 0..1"
+    },
+    {
+      "file": "invalid/fake_fragment_id.json",
+      "schema": "ScopeAnalysisOutput",
+      "guard": "source_ref",
+      "reason": "artifact_id>0 must exist (validate_source_refs)"
+    },
+    {
+      "file": "invalid/oracle_required.json",
+      "schema": "ScenarioDesignOutput",
+      "guard": "oracle_guard",
+      "reason": "AI_INFERRED oracle required=True violates Oracle Guard (repo layer)"
+    }
+  ]
+}
