@@ -20,6 +20,13 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # The initial schema migration runs ``Base.metadata.create_all``, which also
+    # creates ``missions`` (registered on Base.metadata). Guard so upgrading a
+    # fresh DB (create_all already made the table) is idempotent.
+    inspector = sa.inspect(op.get_bind())
+    if "missions" in inspector.get_table_names():
+        return
+
     op.create_table(
         "missions",
         sa.Column("id", sa.Integer, primary_key=True),

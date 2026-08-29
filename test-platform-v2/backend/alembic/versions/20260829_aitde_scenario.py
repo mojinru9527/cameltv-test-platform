@@ -20,6 +20,10 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    inspector = sa.inspect(op.get_bind())
+    if "test_scenarios" in inspector.get_table_names():
+        return
+
     op.create_table(
         "test_scenarios",
         sa.Column("id", sa.Integer, primary_key=True),

@@ -20,6 +20,12 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # create_all (initial schema migration) also creates these tables on a fresh
+    # DB; skip if already present (idempotent for fresh + incremental upgrades).
+    inspector = sa.inspect(op.get_bind())
+    if "source_artifacts" in inspector.get_table_names():
+        return
+
     op.create_table(
         "source_artifacts",
         sa.Column("id", sa.Integer, primary_key=True),
