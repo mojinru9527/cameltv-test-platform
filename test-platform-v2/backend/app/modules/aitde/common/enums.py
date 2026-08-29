@@ -4,6 +4,7 @@ Central enum definitions for the Mission aggregate's type/status/acceptance
 vocabulary. String-valued so they map cleanly to ``String`` columns and remain
 stable across DB backends.
 """
+
 from __future__ import annotations
 
 from enum import Enum
@@ -463,3 +464,11 @@ class ManualStepStatus(str, Enum):
     FAILED = "FAILED"
     BLOCKED = "BLOCKED"
     SKIPPED = "SKIPPED"
+
+
+class UiAssetBindingStatus(str, Enum):
+    """Legacy UI asset binding status (plan §2 ``ui_asset_bindings``)."""
+
+    UNBOUND = "UNBOUND"
+    BOUND = "BOUND"
+    STALE = "STALE"
