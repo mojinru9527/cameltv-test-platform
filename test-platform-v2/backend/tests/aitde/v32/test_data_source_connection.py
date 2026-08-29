@@ -28,7 +28,7 @@ def _source(db, source_type, config=None, secret_ref=None):
 
 def test_static_connection_ok(db):
     ds = _source(db, DataSourceType.STATIC.value)
-    result = service.test_data_source_connection(db, ds.id, 1)
+    result = service.probe_data_source_connection(db, ds.id, 1)
     assert result["ok"] is True
     assert result["source_type"] == "STATIC"
 
@@ -40,7 +40,7 @@ def test_db_connection_failure_is_categorized_no_secret(db):
         config={"host": "127.0.0.1", "port": 5432, "database": "x", "username": "u"},
         secret_ref="secret/pg",
     )
-    result = service.test_data_source_connection(db, ds.id, 1)
+    result = service.probe_data_source_connection(db, ds.id, 1)
     assert result["ok"] is False
     assert result["detail"].startswith("unavailable:")
     serialized = json.dumps(result, ensure_ascii=False)
@@ -50,7 +50,7 @@ def test_db_connection_failure_is_categorized_no_secret(db):
 
 def test_unsupported_type_reports_category(db):
     ds = _source(db, DataSourceType.API.value)
-    result = service.test_data_source_connection(db, ds.id, 1)
+    result = service.probe_data_source_connection(db, ds.id, 1)
     assert result["ok"] is False
     assert result["detail"] == "unsupported:API"
 
@@ -61,5 +61,5 @@ def test_connection_missing_source_rejected(db):
     from app.core.exceptions import APIException
 
     with pytest.raises(APIException) as exc:
-        service.test_data_source_connection(db, 9999, 1)
+        service.probe_data_source_connection(db, 9999, 1)
     assert exc.value.http_status == 404
