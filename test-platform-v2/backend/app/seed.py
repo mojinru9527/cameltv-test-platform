@@ -56,6 +56,9 @@ _MENUS = [
     # (batch A) AI 模型配置中心
     ("menu:ai_config", "AI 配置", "", "/ai-config", "SettingOutlined", 23),
     ("menu:lanhu_evidence", "蓝湖证据包", "", "/lanhu-evidence", "FileTextOutlined", 23),
+    # (v331-gap B1) AITDE V3.0 智能测试任务入口（V30-103）；AITDE_V3 关闭时由
+    # menu_service 按 flag 隐藏，前端路由同样有 AITDE_V3_ENABLED 兜底。
+    ("menu:missions", "智能测试任务", "", "/missions", "SparklesOutlined", 24),
 ]
 
 # 操作权限点（按模块分组）：(code, name, type)
@@ -265,6 +268,8 @@ _TESTER_MENUS = {
     # (c165-3) menu:knowledge:* 子项已收敛进页内 Tab，不再分配菜单权限
     "menu:lanhu_evidence",
     "menu:myproject",
+    # (v331-gap B1) 智能测试任务入口
+    "menu:missions",
 }
 
 

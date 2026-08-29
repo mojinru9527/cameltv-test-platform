@@ -43,6 +43,11 @@ def menu_tree(db: Session, codes: list[str]) -> list[MenuOut]:
     hidden = effective_hidden_menu_codes()
     visible = [p for p in perms if (is_super or p.code in codes) and p.code not in hidden]
 
+    # (v331-gap B1) AITDE V3 未开启时隐藏智能测试任务入口（与 /api/v2 的
+    # require_aitde_v3 门控同源；前端路由另有 AITDE_V3_ENABLED 兜底）。
+    if not settings.aitde_v3_enabled:
+        visible = [p for p in visible if p.code != "menu:missions"]
+
     # Build flat list first
     nodes: dict[int, MenuOut] = {}
     for p in visible:
