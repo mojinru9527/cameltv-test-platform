@@ -1,4 +1,5 @@
 import { aitdeV2 } from './missions'
+import { parseJson } from './json'
 
 // ── AITDE V3.2 Data + DB Runtime: Data Plan domain ──
 
@@ -7,6 +8,7 @@ export interface DataPlanStep {
   sequence: number
   step_type: string
   driver: string
+  /** Backend sends JSON strings; parsed to objects here. */
   command_json: Record<string, unknown> | null
   compensation_json: Record<string, unknown> | null
   status: string
@@ -32,15 +34,41 @@ export interface CreateDataPlanInput {
   strategy?: string
 }
 
-export function createDataPlan(
+interface RawDataPlanStep extends Omit<DataPlanStep, 'command_json' | 'compensation_json'> {
+  command_json?: string | null
+  compensation_json?: string | null
+}
+
+interface RawDataPlan extends Omit<DataPlan, 'steps'> {
+  steps?: RawDataPlanStep[]
+}
+
+function mapStep(raw: RawDataPlanStep): DataPlanStep {
+  return {
+    ...raw,
+    command_json: parseJson(raw.command_json),
+    compensation_json: parseJson(raw.compensation_json),
+  }
+}
+
+function mapPlan(raw: RawDataPlan): DataPlan {
+  return {
+    ...raw,
+    steps: (raw.steps ?? []).map(mapStep),
+  }
+}
+
+export async function createDataPlan(
   scenarioVersionId: number,
   payload: CreateDataPlanInput = {},
 ): Promise<DataPlan> {
-  return aitdeV2.post(`/scenarios/${scenarioVersionId}/data-plans`, payload)
+  const raw = (await aitdeV2.post(`/scenarios/${scenarioVersionId}/data-plans`, payload)) as RawDataPlan
+  return mapPlan(raw)
 }
 
-export function fetchDataPlan(planId: number, signal?: AbortSignal): Promise<DataPlan> {
-  return aitdeV2.get(`/data-plans/${planId}`, { signal })
+export async function fetchDataPlan(planId: number, signal?: AbortSignal): Promise<DataPlan> {
+  const raw = (await aitdeV2.get(`/data-plans/${planId}`, { signal })) as RawDataPlan
+  return mapPlan(raw)
 }
 
 export function approveDataPlan(planId: number): Promise<DataPlan> {
@@ -48,7 +76,6 @@ export function approveDataPlan(planId: number): Promise<DataPlan> {
 }
 
 // ── UI label/colour maps ──
-
 export const DATA_PLAN_STATUS_LABELS: Record<string, { label: string; color: string }> = {
   DRAFT: { label: '草稿', color: 'bg-muted text-muted-foreground' },
   PENDING_APPROVAL: { label: '待审批', color: 'bg-status-warning-muted text-status-warning' },
@@ -60,18 +87,18 @@ export const DATA_PLAN_STATUS_LABELS: Record<string, { label: string; color: str
 }
 
 export const DATA_PLAN_STEP_TYPE_LABELS: Record<string, string> = {
-  SEED: '数据种子',
-  TRANSFORM: '转换',
-  BACKUP: '备份',
-  SNAPSHOT: '快照',
+  FIND: '查找',
+  CREATE: '创建',
+  UPDATE: '更新',
   VERIFY: '校验',
+  LEASE: '租约',
+  SNAPSHOT: '快照',
   CLEANUP: '清理',
 }
 
 export const DATA_PLAN_STRATEGY_LABELS: Record<string, string> = {
-  snapshot_restore: '快照恢复',
-  reseed: '重新灌数',
-  incremental: '增量更新',
-  synthetic: '合成数据',
-  audit_trail: '审计轨迹',
+  EXISTING: '已有数据',
+  API_BUILDER: 'API 构造',
+  DB_FIXTURE: 'DB 夹具',
+  WORKFLOW: '业务流',
 }
