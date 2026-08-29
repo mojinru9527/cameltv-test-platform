@@ -58,6 +58,11 @@ from app.api.v2.action_plans import (  # noqa: E402
     plans_router as action_plans_router,
     router as scenario_action_plans_router,
 )
+from app.api.v2.browser_interactions import (  # noqa: E402
+    hybrid_router,
+    manual_router,
+    router as browser_sessions_router,
+)
 
 router.include_router(missions_router)
 router.include_router(mission_sources_router)
@@ -85,6 +90,9 @@ router.include_router(data_plan_router)
 router.include_router(fixtures_router)
 router.include_router(scenario_action_plans_router)
 router.include_router(action_plans_router)
+router.include_router(browser_sessions_router)
+router.include_router(manual_router)
+router.include_router(hybrid_router)
 
 # Further domain routers are added with their epics:
 # mission_contracts.py (EPIC-05), mission_scenarios.py (EPIC-06),
