@@ -108,6 +108,7 @@ def get_scenario(db: Session, scenario_id: int, project_id: int) -> dict:
         "id": scenario.id,
         "scenario_key": scenario.scenario_key,
         "version_no": version.version_no,
+        "scenario_version_id": version.id,
         "title": version.title,
         "business_goal": version.business_goal,
         "priority": version.priority,
