@@ -633,6 +633,10 @@ def _complete_run(
     db.commit()
     db.refresh(run)
 
+    # v331-gap A1: UI run 完成后桥接进统一执行模型（best-effort，不影响 legacy 结果）
+    _bridge_ui_run(db, job, run, status=status, screenshots=screenshots,
+                   videos=videos, traces=traces, result=result)
+
     return {
         "id": run.id, "job_id": run.job_id, "status": status,
         "result": result, "screenshots": screenshots or [],
@@ -653,3 +657,48 @@ def _collect_artifacts(base_dir: Path, pattern: str) -> list[str]:
     except Exception:
         logger.warning("Playwright 产物文件列表读取失败，返回部分结果（最多 20 项）")
     return items[:20]  # max 20
+
+
+def _bridge_ui_run(
+    db,
+    job,
+    run,
+    *,
+    status: str,
+    screenshots: list[str] | None,
+    videos: list[str] | None,
+    traces: list[str] | None,
+    result: dict,
+) -> None:
+    """v331-gap A1/A3：UI run 完成后桥接进 AITDE 统一执行模型。
+
+    注册 screenshots/video/trace/console 为 EvidenceArtifact（artifact_dir 存在
+    时读取真实文件字节），映射整体结果断言并冻结 Outcome。桥接失败只降级为
+    日志，绝不影响 legacy 执行结果本身。
+    """
+    try:
+        from app.modules.aitde.execution import legacy_bridge
+
+        legacy_bridge.bridge_ui_run(
+            db,
+            project_id=job.project_id,
+            run_id=None,
+            legacy_id=run.id,
+            screenshots=list(screenshots or []),
+            video_url=videos[0] if videos else None,
+            trace_id=traces[0] if traces else None,
+            artifact_dir=run.artifact_dir or None,
+            console_text=(run.stdout or "") or None,
+            result_summary=result,
+            assertions=[{
+                "type": "ui_result",
+                "passed": status == "passed",
+                "expected": "passed",
+                "actual": status,
+            }],
+            environment_id=job.environment_id or 0,
+            step_status="SUCCEEDED" if status == "passed" else "FAILED",
+        )
+    except Exception:
+        logger.warning("legacy bridge 注册失败 ui_run=%s（降级为仅 legacy 记录）", run.id, exc_info=True)
+        db.rollback()

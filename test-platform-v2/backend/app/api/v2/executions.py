@@ -7,6 +7,9 @@ obeying the tenant boundary via ``X-Project-Id``.
 """
 from __future__ import annotations
 
+import json
+from typing import Any
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -158,17 +161,29 @@ def finish_run(
     db: Session = Depends(get_db),
 ):
     """Transition to FINISHED and compute the frozen Outcome from the run's
-    persisted assertions + evidence completeness (never an AI judgment)."""
+    persisted assertions + evidence completeness (never an AI judgment).
+
+    v331-gap A2: completeness is decided by EvidenceCompletenessPolicy — every
+    evidence type required by the run's (adapter, oracle) pair must be present
+    and sanitized, not merely "some evidence exists".
+    """
+    run = service.get_run(db, run_id, current.project_id or 0)
     assertions = repository.list_assertions(db, run_id, current.project_id or 0)
-    evidence = list_evidence(db, run_id, current.project_id or 0)
-    sanitized_ok = len(evidence) > 0 and all(
-        e.sanitization_status == "SANITIZED" for e in evidence
-    )
-    outcome = service.compute_outcome(assertions, sanitized_ok)
+    evidence_ok = service.resolve_evidence_complete(db, run)
+    outcome = service.compute_outcome(assertions, evidence_ok)
     updated = service.finish_run(
         db, run_id, current.project_id or 0, outcome_str=outcome
     )
     return R.ok(run_to_dict(updated))
+
+
+def _load_json(raw: str | None) -> Any:
+    if not raw:
+        return None
+    try:
+        return json.loads(raw)
+    except ValueError:
+        return None
 
 
 @router.post(
@@ -181,13 +196,32 @@ def link_legacy_execution(
     current: CurrentUser = Depends(require_permission("execution:update")),
     db: Session = Depends(get_db),
 ):
+    """v331-gap A1: link a legacy execution with its real evidence payloads
+    (request/response/screenshots/...) so the bridged Run is not evidence-less.
+    Legacy records are project-scoped: cross-project access is a 404."""
+    project_id = current.project_id or 0
     if legacy_type == "API_TASK_ITEM":
+        item, task = legacy_bridge.load_api_item_for_project(db, legacy_id, project_id)
         result = legacy_bridge.bridge_api_item(
-            db, project_id=current.project_id or 0, run_id=run_id, legacy_id=legacy_id
+            db, project_id=project_id, run_id=run_id, legacy_id=legacy_id,
+            request=_load_json(item.request_snapshot),
+            response=_load_json(item.response_snapshot),
+            assertions=_load_json(item.assertion_results) or [],
+            environment_id=task.environment_id or 0,
+            step_status="SUCCEEDED" if item.status == "passed" else "FAILED",
         )
     elif legacy_type == "UI_RUN":
+        ui_run, job = legacy_bridge.load_ui_run_for_project(db, legacy_id, project_id)
         result = legacy_bridge.bridge_ui_run(
-            db, project_id=current.project_id or 0, run_id=run_id, legacy_id=legacy_id
+            db, project_id=project_id, run_id=run_id, legacy_id=legacy_id,
+            screenshots=_load_json(ui_run.screenshots) or [],
+            video_url=ui_run.video_url or None,
+            trace_id=ui_run.trace_id or None,
+            artifact_dir=ui_run.artifact_dir or None,
+            result_summary=_load_json(ui_run.result),
+            console_text=ui_run.stdout or None,
+            environment_id=job.environment_id or 0,
+            step_status="SUCCEEDED" if ui_run.status in ("passed", "done") else "FAILED",
         )
     else:
         return R.ok({"error": f"unsupported legacy_type: {legacy_type}"})
