@@ -50,3 +50,15 @@ def get_data_source(
 ):
     row = service.get_data_source(db, data_source_id, current.project_id or 0)
     return R.ok(service.to_dict(row))
+
+
+@router.post("/{data_source_id}/test", response_model=R[dict])
+def test_data_source_connection(
+    data_source_id: int,
+    current: CurrentUser = Depends(require_permission("data_source:manage")),
+    db: Session = Depends(get_db),
+):
+    result = service.test_data_source_connection(
+        db, data_source_id, current.project_id or 0
+    )
+    return R.ok(result)

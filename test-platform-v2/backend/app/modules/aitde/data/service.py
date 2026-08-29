@@ -36,6 +36,8 @@ from app.modules.aitde.data.schemas import (
     DataRequirementUpdate,
     DataSourceCreate,
 )
+from app.modules.aitde.drivers.database import get_driver
+from app.modules.aitde.drivers.database.base import DatabaseDriverUnavailable, ping_driver
 from app.modules.aitde.scenario.models import TestScenarioVersion
 
 _SOURCE_TYPES = {st.value for st in DataSourceType}
@@ -162,6 +164,35 @@ def get_data_source(db: Session, data_source_id: int, project_id: int) -> DataSo
 
 def list_data_sources(db: Session, project_id: int) -> list[DataSource]:
     return repository.list_data_sources(db, project_id)
+
+
+def test_data_source_connection(
+    db: Session, data_source_id: int, project_id: int
+) -> dict[str, Any]:
+    """Best-effort connection test; never leaks the secret value.
+
+    DB / STATIC sources ping via the typed driver; unsupported types report a
+    category instead of a raw error. Credentials never enter the result.
+    """
+    row = get_data_source(db, data_source_id, project_id)
+    try:
+        config = json.loads(row.config_json or "{}")
+        driver = get_driver(row.source_type, config, row.secret_ref)
+        result = ping_driver(driver)
+    except DatabaseDriverUnavailable:
+        result = {
+            "ok": False,
+            "latency_ms": 0,
+            "detail": f"unsupported:{row.source_type}",
+            "secret_leaked": False,
+        }
+    # Defense-in-depth: strip any echoed secret reference from the detail.
+    if row.secret_ref and row.secret_ref in str(result.get("detail", "")):
+        result["detail"] = "<REDACTED>"
+    result["data_source_id"] = row.id
+    result["source_type"] = row.source_type
+    result["access_mode"] = row.access_mode
+    return result
 
 
 def to_dict(row: DataSource) -> dict[str, Any]:
