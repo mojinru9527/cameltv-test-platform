@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     app_version: str = "2.1.0"
     environment: str = "development"          # "development" | "production"
 
+    # ── AITDE V3 feature flag (V30-001) ──
+    # 关闭：不展示 V3 菜单；/api/v2 health 可存在，业务入口拒绝；不影响 V1。
+    # 开启：新 Domain 主链（Mission/Source/Scope/Contract/Scenario）进入可试用。
+    aitde_v3_enabled: bool = False
+
     # ── Security (sensitive — no hardcoded defaults) ──
     secret_key: str = ""
     algorithm: str = "HS256"
