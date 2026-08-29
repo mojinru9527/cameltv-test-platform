@@ -29,7 +29,6 @@ export default function DataSourcesPage() {
   const [results, setResults] = useState<Record<number, DataSourceConnectionResult>>({})
 
   useAbortableEffect((signal) => {
-    setLoading(true)
     fetchDataSources(signal)
       .then(setRows)
       .catch((err) => {
@@ -38,7 +37,7 @@ export default function DataSourcesPage() {
       .finally(() => {
         if (!signal.aborted) setLoading(false)
       })
-  }, [refreshKey, loading])
+  }, [refreshKey])
 
   const doCreate = async () => {
     if (creating || !name) return
@@ -52,6 +51,7 @@ export default function DataSourcesPage() {
       })
       toast.success('数据源已创建')
       setName('')
+      setLoading(true)
       setRefreshKey((k) => k + 1)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '创建失败')
