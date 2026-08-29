@@ -39,7 +39,6 @@ export default function ExecutionCenterPage() {
   const navigate = useNavigate()
 
   const [missions, setMissions] = useState<Mission[]>([])
-  const [missionsLoading, setMissionsLoading] = useState(true)
   const [missionId, setMissionId] = useState<number | null>(null)
 
   const [runs, setRuns] = useState<Run[]>([])
@@ -51,7 +50,6 @@ export default function ExecutionCenterPage() {
   const [page, setPage] = useState(1)
 
   useAbortableEffect((signal) => {
-    setMissionsLoading(true)
     fetchMissions({ page: 1, page_size: 100 }, signal)
       .then((res) => {
         setMissions(res.items)
@@ -59,9 +57,6 @@ export default function ExecutionCenterPage() {
       })
       .catch((err) => {
         if (!(err?.code === 'ERR_CANCELED')) return
-      })
-      .finally(() => {
-        if (!signal.aborted) setMissionsLoading(false)
       })
   }, [])
 

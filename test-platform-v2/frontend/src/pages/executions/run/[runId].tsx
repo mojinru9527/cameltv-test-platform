@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Skeleton } from '@/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle, Skeleton } from '@/ui'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
 import {
