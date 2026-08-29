@@ -95,6 +95,7 @@ export default function MissionListPage() {
         <Input
           className="w-64"
           placeholder="搜索标题 / 任务编号"
+          aria-label="搜索标题或任务编号"
           value={keywordInput}
           onChange={(e) => setKeywordInput(e.target.value)}
           onKeyDown={(e) => {
@@ -102,7 +103,7 @@ export default function MissionListPage() {
           }}
         />
         <Select value={status} onValueChange={(v) => applyFilters({ status: v, page: 1 })}>
-          <SelectTrigger className="w-56">
+          <SelectTrigger className="w-56" aria-label="按状态筛选">
             <SelectValue placeholder="全部状态" />
           </SelectTrigger>
           <SelectContent>
@@ -123,7 +124,7 @@ export default function MissionListPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-2">
+        <div className="space-y-2" role="status" aria-busy="true" aria-label="加载中">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-11 w-full" />
           ))}
@@ -152,11 +153,21 @@ export default function MissionListPage() {
               ) : (
                 missions.map((m) => {
                   const statusMeta = MISSION_STATUS_LABELS[m.status]
+                  // V30-109 keyboard：行点击打开同时支持 Enter/Space 键盘触发
+                  const openMission = () => navigate(`/missions/${m.id}/overview`)
                   return (
                     <TableRow
                       key={m.id}
                       className="cursor-pointer"
-                      onClick={() => navigate(`/missions/${m.id}/overview`)}
+                      tabIndex={0}
+                      aria-label={`打开测试任务 ${m.title}`}
+                      onClick={openMission}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          openMission()
+                        }
+                      }}
                     >
                       <TableCell className="font-mono text-xs">{m.mission_key}</TableCell>
                       <TableCell className="font-medium">{m.title}</TableCell>
