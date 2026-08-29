@@ -36,7 +36,6 @@ export default function MissionDataPage() {
 
   useAbortableEffect((signal) => {
     if (!missionId) return
-    setLoading(true)
     fetchMissionScenarios(missionId)
       .then(setRows)
       .catch((err) => {
@@ -45,7 +44,7 @@ export default function MissionDataPage() {
       .finally(() => {
         if (!signal.aborted) setLoading(false)
       })
-  }, [missionId, loading])
+  }, [missionId])
 
   const selectScenario = async (scenarioId: number) => {
     setRequirements([])
