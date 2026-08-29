@@ -14,8 +14,10 @@ from sqlalchemy.orm import Session
 from app.modules.aitde.execution.models import (
     AssertionResult,
     EnvironmentSnapshot,
+    EvidenceArtifact,
     ExecutionRun,
     ExecutionStep,
+    ReplayManifest,
     ScenarioAdapter,
 )
 from app.modules.aitde.scenario.models import TestScenario, TestScenarioVersion
@@ -243,4 +245,57 @@ def add_assertion(db: Session, data: dict[str, Any]) -> AssertionResult:
     db.commit()
     db.refresh(row)
     return row
+
+
+# ── EvidenceArtifact ─────────────────────────────────────────────────────────
+
+
+def create_evidence(db: Session, data: dict[str, Any]) -> EvidenceArtifact:
+    row = EvidenceArtifact(**data)
+    db.add(row)
+    db.flush()
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def list_evidence(db: Session, run_id: int, project_id: int) -> list[EvidenceArtifact]:
+    """Evidence is run-scoped; guard via the owning run's project."""
+    return list(
+        db.scalars(
+            select(EvidenceArtifact)
+            .join(ExecutionRun, EvidenceArtifact.run_id == ExecutionRun.id)
+            .where(EvidenceArtifact.run_id == run_id, ExecutionRun.project_id == project_id)
+            .order_by(EvidenceArtifact.id.asc())
+        ).all()
+    )
+
+
+def get_evidence(db: Session, artifact_id: int, project_id: int) -> EvidenceArtifact | None:
+    return db.scalar(
+        select(EvidenceArtifact)
+        .join(ExecutionRun, EvidenceArtifact.run_id == ExecutionRun.id)
+        .where(EvidenceArtifact.id == artifact_id, ExecutionRun.project_id == project_id)
+    )
+
+
+# ── ReplayManifest ───────────────────────────────────────────────────────────
+
+
+def create_replay_manifest(db: Session, data: dict[str, Any]) -> ReplayManifest:
+    row = ReplayManifest(**data)
+    db.add(row)
+    db.flush()
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def get_replay_manifest(db: Session, run_id: int, project_id: int) -> ReplayManifest | None:
+    return db.scalar(
+        select(ReplayManifest)
+        .join(ExecutionRun, ReplayManifest.run_id == ExecutionRun.id)
+        .where(ReplayManifest.run_id == run_id, ExecutionRun.project_id == project_id)
+    )
+
 

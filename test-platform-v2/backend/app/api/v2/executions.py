@@ -12,9 +12,12 @@ from sqlalchemy.orm import Session
 
 from app.api.v2.deps import require_aitde_v3
 from app.core.deps import CurrentUser, get_db, require_permission
-from app.modules.aitde.execution import repository, service
+from app.modules.aitde.evidence.service import list_evidence
+from app.modules.aitde.evidence.replay import build_replay_view, get_manifest, manifest_dict
+from app.modules.aitde.execution import legacy_bridge, repository, service
 from app.modules.aitde.execution.mapper import (
     assertion_to_dict,
+    evidence_to_dict,
     run_to_dict,
     step_to_dict,
 )
@@ -116,3 +119,71 @@ def list_mission_runs(
             "items": [run_to_dict(r) for r in items],
         }
     )
+
+
+@router.get("/runs/{run_id}/evidence", response_model=R[dict])
+def list_run_evidence(
+    run_id: int,
+    current: CurrentUser = Depends(require_permission("execution:detail")),
+    db: Session = Depends(get_db),
+):
+    items = list_evidence(db, run_id, current.project_id or 0)
+    return R.ok({"items": [evidence_to_dict(e) for e in items]})
+
+
+@router.get("/runs/{run_id}/replay", response_model=R[dict])
+def replay_run(
+    run_id: int,
+    current: CurrentUser = Depends(require_permission("execution:detail")),
+    db: Session = Depends(get_db),
+):
+    manifest = get_manifest(db, run_id, current.project_id or 0)
+    return R.ok(
+        {
+            "manifest": manifest_dict(manifest),
+            "hash": manifest.manifest_hash,
+            "view": build_replay_view(manifest_dict(manifest)),
+        }
+    )
+
+
+@router.post("/runs/{run_id}/finish", response_model=R[dict])
+def finish_run(
+    run_id: int,
+    current: CurrentUser = Depends(require_permission("execution:update")),
+    db: Session = Depends(get_db),
+):
+    """Transition to FINISHED and compute the frozen Outcome from the run's
+    persisted assertions + evidence completeness (never an AI judgment)."""
+    run = service.get_run(db, run_id, current.project_id or 0)
+    assertions = repository.list_assertions(db, run_id, current.project_id or 0)
+    evidence = list_evidence(db, run_id, current.project_id or 0)
+    sanitized_ok = (
+        len(evidence) > 0 and all(e.sanitization_status == "SANITIZED" for e in evidence)
+    )
+    outcome = service.compute_outcome(assertions, sanitized_ok)
+    updated = service.finish_run(
+        db, run_id, current.project_id or 0, outcome_str=outcome
+    )
+    return R.ok(run_to_dict(updated))
+
+
+@router.post("/legacy-executions/{legacy_type}/{legacy_id}/link", response_model=R[dict])
+def link_legacy_execution(
+    legacy_type: str,
+    legacy_id: int,
+    run_id: int = Query(..., description="unified run to link"),
+    current: CurrentUser = Depends(require_permission("execution:update")),
+    db: Session = Depends(get_db),
+):
+    if legacy_type == "API_TASK_ITEM":
+        result = legacy_bridge.bridge_api_item(
+            db, project_id=current.project_id or 0, run_id=run_id, legacy_id=legacy_id
+        )
+    elif legacy_type == "UI_RUN":
+        result = legacy_bridge.bridge_ui_run(
+            db, project_id=current.project_id or 0, run_id=run_id, legacy_id=legacy_id
+        )
+    else:
+        return R.ok({"error": f"unsupported legacy_type: {legacy_type}"})
+    return R.ok(result)

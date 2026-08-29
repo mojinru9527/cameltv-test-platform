@@ -217,3 +217,22 @@ def retry_run(db: Session, run_id: int, project_id: int, user_id: int) -> Execut
         },
         user_id,
     )
+
+
+def compute_outcome(assertions: list, evidence_sanitized_ok: bool) -> str:
+    """Aggregate assertion results + evidence state into a frozen Outcome."""
+    from app.modules.aitde.execution.outcome_classifier import DecisionInput, classify
+
+    passed = sum(1 for a in assertions if a.result == "PASS")
+    failed = sum(1 for a in assertions if a.result == "FAIL")
+    not_eval = sum(1 for a in assertions if a.result == "NOT_EVALUATED")
+    defined = len(assertions)
+    di = DecisionInput(
+        required_oracle_pass=passed,
+        required_oracle_fail=failed,
+        required_oracle_not_evaluated=not_eval,
+        required_oracle_defined=defined,
+        evidence_complete=evidence_sanitized_ok,
+        evidence_failed=not evidence_sanitized_ok,
+    )
+    return classify(di)
