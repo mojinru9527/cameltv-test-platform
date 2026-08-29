@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "mission_id": 1,
+  "scope_revision": "r1",
+  "rules": [
+    {
+      "rule_key": "refund-amount-cap",
+      "title": "退款上限",
+      "kind": "BUSINESS_RULE",
+      "statement": "退款金额 <= 实付金额",
+      "risk_level": "P0",
+      "source_type": "REQUIREMENT_EXPLICIT",
+      "source_refs": [
+        {
+          "artifact_id": 1,
+          "fragment_id": 3,
+          "location": "PRD 4.1"
+        }
+      ]
+    },
+    {
+      "rule_key": "idempotent-callback",
+      "title": "回调幂等",
+      "kind": "BUSINESS_RULE",
+      "statement": "重复支付回调不改变状态",
+      "risk_level": "P1",
+      "source_type": "REQUIREMENT_EXPLICIT",
+      "source_refs": [
+        {
+          "artifact_id": 2,
+          "fragment_id": 1,
+          "location": "PRD 3.4"
+        }
+      ]
+    }
+  ],
+  "required_outcomes": [
+    {
+      "outcome_key": "order-closed-after-full-refund",
+      "statement": "全额退款后订单关闭",
+      "source_type": "TESTER_APPROVED",
+      "source_refs": [
+        {
+          "artifact_id": 1,
+          "fragment_id": 3,
+          "location": "PRD 4.1"
+        }
+      ]
+    }
+  ]
+}

@@ -40,6 +40,8 @@ import {
   type CurrentContract,
 } from '@/api/contract'
 import { Sparkles, Lock } from '@/lib/icons'
+import { isConflictError } from '@/lib/conflict'
+import { StaleConflictBanner } from './StaleConflictBanner'
 
 export default function MissionContractPage() {
   const { id } = useParams()
@@ -53,8 +55,12 @@ export default function MissionContractPage() {
   const [generating, setGenerating] = useState(false)
   const [freezeOpen, setFreezeOpen] = useState(false)
   const [freezing, setFreezing] = useState(false)
+  const [staleConflict, setStaleConflict] = useState(false)
 
-  const reload = () => setLoading(true)
+  const reload = () => {
+    setStaleConflict(false)
+    setLoading(true)
+  }
 
   useAbortableEffect((signal) => {
     if (!missionId) return
@@ -104,7 +110,12 @@ export default function MissionContractPage() {
       toast.success('契约已生成')
       reload()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '生成失败')
+      // V30-107：409（契约已冻结等状态冲突）→ 内联 STALE 提示，不引导原样重试
+      if (isConflictError(err)) {
+        setStaleConflict(true)
+      } else {
+        toast.error(err instanceof Error ? err.message : '生成失败')
+      }
     } finally {
       setGenerating(false)
     }
@@ -119,7 +130,13 @@ export default function MissionContractPage() {
       setFreezeOpen(false)
       reload()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '冻结失败')
+      if (isConflictError(err)) {
+        // 并发冻结/评审状态已变更：关闭对话框，提示刷新
+        setFreezeOpen(false)
+        setStaleConflict(true)
+      } else {
+        toast.error(err instanceof Error ? err.message : '冻结失败')
+      }
     } finally {
       setFreezing(false)
     }
@@ -140,6 +157,7 @@ export default function MissionContractPage() {
 
   return (
     <div className="space-y-4">
+      {staleConflict && <StaleConflictBanner onReload={reload} />}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           Contract = 标准答案。冻结前需解决全部 P0/P1 歧义并完成 Scope 评审。
@@ -153,7 +171,7 @@ export default function MissionContractPage() {
         <CardHeader>
           <CardTitle className="text-base">歧义（Ambiguitity）</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-2" aria-busy={loading}>
           {ambiguities.length === 0 ? (
             <p className="py-4 text-center text-sm text-muted-foreground">
               暂无歧义。点击上方「分析歧义/意图」生成。

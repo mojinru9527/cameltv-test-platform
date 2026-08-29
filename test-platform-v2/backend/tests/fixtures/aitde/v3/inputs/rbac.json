@@ -1,0 +1,11 @@
+{
+  "category": "rbac",
+  "fragments": [
+    {
+      "artifact_id": 1,
+      "fragment_id": 4,
+      "title": "PRD 5.1 权限",
+      "text": "仅 ADMIN 角色可分配权限；操作必须校验角色，未授权返回 403。"
+    }
+  ]
+}

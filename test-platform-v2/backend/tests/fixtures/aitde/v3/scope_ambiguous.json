@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "mission_id": 1,
+  "items": [
+    {
+      "scope_key": "export-retry",
+      "scope_type": "BUSINESS_FLOW",
+      "name": "导出与重试",
+      "decision": "INCLUDE",
+      "test_depth": "SMOKE",
+      "risk_level": "P3",
+      "reason": "失败提示与重试路径",
+      "confidence": 0.7,
+      "source_refs": [
+        {
+          "artifact_id": 1,
+          "fragment_id": 6,
+          "location": "PRD 6.2"
+        }
+      ]
+    }
+  ]
+}

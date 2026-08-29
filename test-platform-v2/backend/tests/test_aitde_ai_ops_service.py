@@ -83,3 +83,43 @@ def test_repair_retry_allows_one_retry(db):
 
     assert ai_ops.repair_retry(boom) == "ok"
     assert calls["n"] == 2
+
+
+# ── v331-remediation-2 B2: AI Debug Drawer list endpoint ────────────────────
+
+
+def test_list_operations_filters_by_mission_and_project(db):
+    from app.modules.aitde.ai_ops import models as ai_models  # noqa: F401 registers tables
+
+    ai_ops.create_operation(db, project_id=1, mission_id=1, operation_type="scope:analyze", user_id=9)
+    ai_ops.create_operation(db, project_id=1, mission_id=1, operation_type="contract:generate", user_id=9)
+    ai_ops.create_operation(db, project_id=1, mission_id=2, operation_type="scope:analyze", user_id=9)
+    ai_ops.create_operation(db, project_id=2, mission_id=1, operation_type="scope:analyze", user_id=9)
+
+    items = ai_ops.list_operations(db, mission_id=1, project_id=1)
+    assert [i.operation_type for i in items] == ["contract:generate", "scope:analyze"]
+
+
+def test_list_operations_endpoint_requires_debug_permission(db_session, client, auth_headers):
+    """mission:ai_view_debug 门控：无权限 403，超级权限 200。"""
+    from app.core import config
+    config.settings.aitde_v3_enabled = True
+    from app.core import deps
+    from app.core.deps import CurrentUser
+    from app.core.exceptions import APIException
+    from app.models.user import User
+
+    checker = deps._require_permission_only("mission:ai_view_debug")
+    tester = CurrentUser(
+        user=User(id=2, username="t", password="x"),
+        permissions=["mission:detail"],
+        project_id=1,
+        system_permissions=None,
+    )
+    with __import__("pytest").raises(APIException) as exc:
+        checker(tester)
+    assert exc.value.http_status == 403
+
+    resp = client.get("/api/v2/ai-operations?mission_id=1", headers=auth_headers)
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["data"]["items"] == []

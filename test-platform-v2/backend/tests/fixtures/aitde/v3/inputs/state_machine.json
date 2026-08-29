@@ -1,0 +1,17 @@
+{
+  "category": "state-machine",
+  "fragments": [
+    {
+      "artifact_id": 1,
+      "fragment_id": 2,
+      "title": "PRD 3.2 订单状态",
+      "text": "订单状态机：PENDING → PAID → SHIPPED → COMPLETED；PAID 后可申请取消，取消必须先退款。"
+    },
+    {
+      "artifact_id": 2,
+      "fragment_id": 1,
+      "title": "PRD 3.4 幂等",
+      "text": "重复支付回调必须幂等，不允许状态回退。"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0",
+  "contract_version_id": 1,
+  "mission_id": 1,
+  "items": [
+    {
+      "scenario_key": "member-create-then-query",
+      "title": "创建会员后可查询",
+      "business_goal": "CRUD 主路径",
+      "priority": "P2",
+      "risk_level": "P2",
+      "given": {
+        "member": "absent"
+      },
+      "when": {
+        "action": "create_member"
+      },
+      "expected_state": {
+        "member.queryable": true
+      },
+      "source_refs": [
+        {
+          "artifact_id": 1,
+          "fragment_id": 1,
+          "location": "PRD 1.1"
+        }
+      ],
+      "oracles": []
+    }
+  ]
+}

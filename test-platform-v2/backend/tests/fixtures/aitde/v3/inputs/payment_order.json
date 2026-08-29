@@ -1,0 +1,11 @@
+{
+  "category": "payment-order-loop",
+  "fragments": [
+    {
+      "artifact_id": 1,
+      "fragment_id": 3,
+      "title": "PRD 4.1 支付闭环",
+      "text": "用户下单 → 支付成功 → 生成支付流水；退款金额不得超过实付金额，退款后订单关闭。"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "mission_id": 1,
+  "items": [
+    {
+      "intent_key": "member-data-accuracy",
+      "title": "会员档案数据准确",
+      "business_goal": "会员资料全生命周期可维护且不错乱",
+      "required_outcomes": [
+        "创建后的会员可被精确查询",
+        "更新不产生脏字段"
+      ],
+      "risk_level": "P2",
+      "source_refs": [
+        {
+          "artifact_id": 1,
+          "fragment_id": 1,
+          "location": "PRD 1.1"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "mission_id": 1,
+  "items": [
+    {
+      "scope_key": "no-ref",
+      "scope_type": "FEATURE",
+      "name": "无来源",
+      "decision": "INCLUDE",
+      "test_depth": "FULL",
+      "risk_level": "P2",
+      "reason": "缺 source_refs",
+      "confidence": 0.5,
+      "source_refs": []
+    }
+  ]
+}

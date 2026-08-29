@@ -139,3 +139,37 @@
 ### 7.4 流程注记
 
 - 本批次为直接任务（非 agent-team），未产生六件套工件；分支 `feature/aitde-v331-gap-remediation`，推送/PR/合并按直接任务逐次 Push 确认流程执行。
+
+---
+
+## 8. 第二批次交付状态（fix/aitde-v331-remediation-2，2026-08-29）
+
+> worktree：`F:/CamelTv-worktrees/claude-aitde-v331-remediation-2`（direct/claude，
+> 基线 main @ da67b867 = 第一批次合入后最新 main）。
+
+### 8.1 已交付（§7.2 全部遗留 + 工具修复）
+
+| 项 | 交付 |
+|---|---|
+| C1 e2e 冒烟 | `e2e/aitde-v3-main-chain.spec.ts`（列表/新建/概览/AI 调试入口）、`aitde-v3-replay.spec.ts`（Run 详情 + Replay manifest）、`aitde-v3-data-runtime.spec.ts`（数据源/Fixture 页）+ `e2e/helpers/aitde.ts`；本地真实环境 7/7 通过 |
+| C2 Golden AI fixtures | `tests/fixtures/aitde/v3/`：5 类需求输入 × golden 输出（覆盖全部 5 个 AI 输出 schema）+ 6 个负例 + manifest；`test_ai_schema_validation.py` + `test_source_ref_validation.py`（Schema Valid 100% / Invalid SourceRef Acceptance=0 / Oracle Guard） |
+| C3 组件测试 | missions：index（渲染+键盘可达）、CreateMissionPage（校验+提交）、StaleConflictBanner（409 语义）、AiDebugDrawer（五要素+无泄漏）；executions：OutcomeBadge（3 态） |
+| B2 AI Debug Drawer | `mission:ai_view_debug` 权限（seed+tester 角色）+ `GET /api/v2/ai-operations` 列表端点（权限/项目双门控）+ Sheet 式 Drawer（仅展示 model/prompt version/status/duration/token，不渲染 error_message/result_ref） |
+| B4 409 STALE + a11y | `isConflictError` + 共享 `StaleConflictBanner`（role=alert，刷新而非原样重试）接入 contract/scope 页；missions 列表键盘可达行、aria-label/aria-busy、scope 进度 role=status |
+| B3 TanStack Query | 安装 + QueryClientProvider（refetchOnWindowFocus/retry 关闭，保证 GET 仅 1 次）+ missionKeys；missions index/MissionLayout/overview 迁移（layout+overview 双请求消除） |
+| Shadow ≥100 Run | `scripts/shadow_compare_legacy_runs.py` 真实链路执行 120 Run 对比：AGREE_PASS=80 / AGREE_FAIL=40 / FALSE_PASS=0（§17.4 证据，json+md 报告入库）；120 条 append-only 预审反馈；99_Cross_Version §4「100 Run 对比」已勾选 |
+| 审计基线 | 预审反馈 + FALSE_PASS 工作清单就绪；**人工复核待执行**（§4 人工审计项保持未勾选，需人工 reviewer 按 §94 记录后勾选） |
+| 工具修复 | `audit-ai-pr.ps1` Invoke-CheckedGh 临时切换 UTF-8 控制台编码，修复中文 check 名导致的 ConvertFrom-Json 崩溃 |
+
+### 8.2 额外发现与修复
+
+- e2e 抓到 B2 缺陷：AI 调试入口未处理 `*` 超级权限 → 统一改用 auth store `hasPerm`。
+- Shadow 首轮试验被平台 SSRF 门禁正确拦截（127.0.0.1）→ 改为注册项目测试环境
+  base_url 的正规路径，同时验证了 host allowlist 机制真实生效。
+- 新增端点触发路由基线守卫（507→508），按守卫要求登记。
+
+### 8.3 门禁与回归（详见 work-logs/batch-aitde-v331-remediation-2-qa-record.md）
+
+- dev-gate PASS_WITH_WARN；后端全量 1984 passed / 0 failed（lanhu submodule 环境失败排除）；
+  前端 vitest 126 files / 554 tests 全过（默认并发 OOM 为机器资源问题，--maxWorkers=2 全绿）；
+  build ✓；e2e 7/7。

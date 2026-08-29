@@ -1,0 +1,132 @@
+# Shadow Mode 对比报告（V31 §93 / 99_Cross_Version §4）
+
+- 生成时间：2026-08-29T16:52:00.979384+00:00
+- Reviewer（执行器预审）：claude(executor)
+- 环境：local worktree SQLite + in-process mock HTTP target (real execution chain: api_task_worker → execute_api_case → legacy_bridge)
+- 对比 Run 数：**120**（门禁要求 ≥100 → 满足）
+- 分类统计：AGREE_PASS=80, FALSE_PASS=0, AGREE_FAIL=40, RECLASSIFIED=0, UNLINKED=0
+
+> feedback rows are AI-executor pre-audits (append-only); a human reviewer must re-verify the FALSE_PASS / sampled CONFIRMED runs before the §93 manual-audit gate items may be checked.
+
+| legacy_id | legacy | run | unified outcome | evidence | category |
+|---|---|---|---|---|---|
+| 1 | passed | 1 | PASS | True | AGREE_PASS |
+| 2 | passed | 2 | PASS | True | AGREE_PASS |
+| 3 | failed | 3 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 4 | passed | 4 | PASS | True | AGREE_PASS |
+| 5 | passed | 5 | PASS | True | AGREE_PASS |
+| 6 | failed | 6 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 7 | passed | 7 | PASS | True | AGREE_PASS |
+| 8 | passed | 8 | PASS | True | AGREE_PASS |
+| 9 | failed | 9 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 10 | passed | 10 | PASS | True | AGREE_PASS |
+| 11 | passed | 11 | PASS | True | AGREE_PASS |
+| 12 | failed | 12 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 13 | passed | 13 | PASS | True | AGREE_PASS |
+| 14 | passed | 14 | PASS | True | AGREE_PASS |
+| 15 | failed | 15 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 16 | passed | 16 | PASS | True | AGREE_PASS |
+| 17 | passed | 17 | PASS | True | AGREE_PASS |
+| 18 | failed | 18 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 19 | passed | 19 | PASS | True | AGREE_PASS |
+| 20 | passed | 20 | PASS | True | AGREE_PASS |
+| 21 | failed | 21 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 22 | passed | 22 | PASS | True | AGREE_PASS |
+| 23 | passed | 23 | PASS | True | AGREE_PASS |
+| 24 | failed | 24 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 25 | passed | 25 | PASS | True | AGREE_PASS |
+| 26 | passed | 26 | PASS | True | AGREE_PASS |
+| 27 | failed | 27 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 28 | passed | 28 | PASS | True | AGREE_PASS |
+| 29 | passed | 29 | PASS | True | AGREE_PASS |
+| 30 | failed | 30 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 31 | passed | 31 | PASS | True | AGREE_PASS |
+| 32 | passed | 32 | PASS | True | AGREE_PASS |
+| 33 | failed | 33 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 34 | passed | 34 | PASS | True | AGREE_PASS |
+| 35 | passed | 35 | PASS | True | AGREE_PASS |
+| 36 | failed | 36 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 37 | passed | 37 | PASS | True | AGREE_PASS |
+| 38 | passed | 38 | PASS | True | AGREE_PASS |
+| 39 | failed | 39 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 40 | passed | 40 | PASS | True | AGREE_PASS |
+| 41 | passed | 41 | PASS | True | AGREE_PASS |
+| 42 | failed | 42 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 43 | passed | 43 | PASS | True | AGREE_PASS |
+| 44 | passed | 44 | PASS | True | AGREE_PASS |
+| 45 | failed | 45 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 46 | passed | 46 | PASS | True | AGREE_PASS |
+| 47 | passed | 47 | PASS | True | AGREE_PASS |
+| 48 | failed | 48 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 49 | passed | 49 | PASS | True | AGREE_PASS |
+| 50 | passed | 50 | PASS | True | AGREE_PASS |
+| 51 | failed | 51 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 52 | passed | 52 | PASS | True | AGREE_PASS |
+| 53 | passed | 53 | PASS | True | AGREE_PASS |
+| 54 | failed | 54 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 55 | passed | 55 | PASS | True | AGREE_PASS |
+| 56 | passed | 56 | PASS | True | AGREE_PASS |
+| 57 | failed | 57 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 58 | passed | 58 | PASS | True | AGREE_PASS |
+| 59 | passed | 59 | PASS | True | AGREE_PASS |
+| 60 | failed | 60 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 61 | passed | 61 | PASS | True | AGREE_PASS |
+| 62 | passed | 62 | PASS | True | AGREE_PASS |
+| 63 | failed | 63 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 64 | passed | 64 | PASS | True | AGREE_PASS |
+| 65 | passed | 65 | PASS | True | AGREE_PASS |
+| 66 | failed | 66 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 67 | passed | 67 | PASS | True | AGREE_PASS |
+| 68 | passed | 68 | PASS | True | AGREE_PASS |
+| 69 | failed | 69 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 70 | passed | 70 | PASS | True | AGREE_PASS |
+| 71 | passed | 71 | PASS | True | AGREE_PASS |
+| 72 | failed | 72 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 73 | passed | 73 | PASS | True | AGREE_PASS |
+| 74 | passed | 74 | PASS | True | AGREE_PASS |
+| 75 | failed | 75 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 76 | passed | 76 | PASS | True | AGREE_PASS |
+| 77 | passed | 77 | PASS | True | AGREE_PASS |
+| 78 | failed | 78 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 79 | passed | 79 | PASS | True | AGREE_PASS |
+| 80 | passed | 80 | PASS | True | AGREE_PASS |
+| 81 | failed | 81 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 82 | passed | 82 | PASS | True | AGREE_PASS |
+| 83 | passed | 83 | PASS | True | AGREE_PASS |
+| 84 | failed | 84 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 85 | passed | 85 | PASS | True | AGREE_PASS |
+| 86 | passed | 86 | PASS | True | AGREE_PASS |
+| 87 | failed | 87 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 88 | passed | 88 | PASS | True | AGREE_PASS |
+| 89 | passed | 89 | PASS | True | AGREE_PASS |
+| 90 | failed | 90 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 91 | passed | 91 | PASS | True | AGREE_PASS |
+| 92 | passed | 92 | PASS | True | AGREE_PASS |
+| 93 | failed | 93 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 94 | passed | 94 | PASS | True | AGREE_PASS |
+| 95 | passed | 95 | PASS | True | AGREE_PASS |
+| 96 | failed | 96 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 97 | passed | 97 | PASS | True | AGREE_PASS |
+| 98 | passed | 98 | PASS | True | AGREE_PASS |
+| 99 | failed | 99 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 100 | passed | 100 | PASS | True | AGREE_PASS |
+| 101 | passed | 101 | PASS | True | AGREE_PASS |
+| 102 | failed | 102 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 103 | passed | 103 | PASS | True | AGREE_PASS |
+| 104 | passed | 104 | PASS | True | AGREE_PASS |
+| 105 | failed | 105 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 106 | passed | 106 | PASS | True | AGREE_PASS |
+| 107 | passed | 107 | PASS | True | AGREE_PASS |
+| 108 | failed | 108 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 109 | passed | 109 | PASS | True | AGREE_PASS |
+| 110 | passed | 110 | PASS | True | AGREE_PASS |
+| 111 | failed | 111 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 112 | passed | 112 | PASS | True | AGREE_PASS |
+| 113 | passed | 113 | PASS | True | AGREE_PASS |
+| 114 | failed | 114 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 115 | passed | 115 | PASS | True | AGREE_PASS |
+| 116 | passed | 116 | PASS | True | AGREE_PASS |
+| 117 | failed | 117 | BUSINESS_FAIL | True | AGREE_FAIL |
+| 118 | passed | 118 | PASS | True | AGREE_PASS |
+| 119 | passed | 119 | PASS | True | AGREE_PASS |
+| 120 | failed | 120 | BUSINESS_FAIL | True | AGREE_FAIL |

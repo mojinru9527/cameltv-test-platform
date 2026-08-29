@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "mission_id": 1,
+  "items": [
+    {
+      "intent_key": "refund-never-overpay",
+      "title": "退款金额受限",
+      "business_goal": "退款金额不得超过实付金额",
+      "required_outcomes": [
+        "超额退款被拒绝",
+        "全额退款后订单关闭"
+      ],
+      "risk_level": "P0",
+      "source_refs": [
+        {
+          "artifact_id": 1,
+          "fragment_id": 3,
+          "location": "PRD 4.1"
+        }
+      ]
+    }
+  ]
+}
