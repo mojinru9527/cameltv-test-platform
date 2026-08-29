@@ -48,7 +48,7 @@ def generate_scenarios(
     return R.ok(result)
 
 
-@list_router.get("", response_model=R[dict])
+@list_router.get("", response_model=R[list])
 def list_scenarios(
     mission_id: int,
     current: CurrentUser = Depends(require_permission("mission:detail")),
