@@ -30,7 +30,7 @@ data_requirement_router = APIRouter(
 )
 
 
-@scenario_data_router.get("", response_model=R[dict])
+@scenario_data_router.get("", response_model=R[list])
 def list_data_requirements(
     scenario_version_id: int,
     _: CurrentUser = Depends(require_permission("data_source:list")),
@@ -40,7 +40,7 @@ def list_data_requirements(
     return R.ok([service.to_requirement_dict(r) for r in rows])
 
 
-@scenario_data_router.post("/derive", response_model=R[dict])
+@scenario_data_router.post("/derive", response_model=R[list])
 def derive_data_requirements(
     scenario_version_id: int,
     _payload: DataRequirementDeriveRequest,
