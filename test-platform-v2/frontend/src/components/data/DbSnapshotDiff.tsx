@@ -66,7 +66,7 @@ export function DbSnapshotDiff({ snapshots }: DbSnapshotDiffProps) {
       const after = ordered[ordered.length - 1]
       const { added, removed, changed, identical } = diffKeys(before.snapshot_json, after.snapshot_json)
       pairs.push({
-        entityId: after.entity_id ?? before.entity_id ?? 'global',
+        entityId: String(after.entity_id ?? before.entity_id ?? 'global'),
         snapshotType: after.snapshot_type ?? before.snapshot_type,
         before,
         after,
