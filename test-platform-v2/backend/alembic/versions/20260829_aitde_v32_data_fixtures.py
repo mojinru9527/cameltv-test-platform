@@ -49,7 +49,7 @@ def upgrade() -> None:
             sa.Column("entity_type", sa.String(64), nullable=False, server_default=sa.text("''")),
             sa.Column("logical_key", sa.String(128), nullable=False, server_default=sa.text("''")),
             sa.Column("physical_ref_json", sa.Text, nullable=False, server_default=sa.text("'{}'")),
-            sa.Column("created_by_fixture", sa.Boolean, nullable=False, server_default=sa.text("1")),
+            sa.Column("created_by_fixture", sa.Boolean, nullable=False, server_default=sa.text("true")),
             sa.Column("before_snapshot_ref", sa.String(255), nullable=True),
             sa.Column("after_snapshot_ref", sa.String(255), nullable=True),
             sa.Column("cleanup_action_json", sa.Text, nullable=True),

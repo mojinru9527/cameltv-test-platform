@@ -32,7 +32,7 @@ def upgrade() -> None:
         sa.Column("requirement_key", sa.String(128), nullable=False, server_default=sa.text("''")),
         sa.Column("entity_type", sa.String(64), nullable=False, server_default=sa.text("''")),
         sa.Column("constraints_json", sa.Text, nullable=False, server_default=sa.text("'{}'")),
-        sa.Column("required", sa.Boolean, nullable=False, server_default=sa.text("1")),
+        sa.Column("required", sa.Boolean, nullable=False, server_default=sa.text("true")),
         sa.Column("sharing_policy", sa.String(32), nullable=False, server_default=sa.text("'EXCLUSIVE'")),
         sa.Column("cleanup_policy", sa.String(32), nullable=False, server_default=sa.text("'ALWAYS'")),
         sa.Column("source_refs_json", sa.Text, nullable=False, server_default=sa.text("'[]'")),
