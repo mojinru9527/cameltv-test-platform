@@ -44,6 +44,16 @@ from app.api.v2.ai_operations import router as ai_operations_router  # noqa: E40
 from app.api.v2.scenario_adapters import router as scenario_adapters_router  # noqa: E402
 from app.api.v2.environment_snapshots import router as environment_snapshots_router  # noqa: E402
 from app.api.v2.executions import router as executions_router  # noqa: E402
+from app.api.v2.data_sources import router as data_sources_router  # noqa: E402
+from app.api.v2.scenario_data_requirements import (  # noqa: E402
+    data_requirement_router,
+    scenario_data_router,
+)
+from app.api.v2.scenario_data_plans import (  # noqa: E402
+    data_plan_router,
+    scenario_plan_router,
+)
+from app.api.v2.fixtures import router as fixtures_router  # noqa: E402
 
 router.include_router(missions_router)
 router.include_router(mission_sources_router)
@@ -63,6 +73,12 @@ router.include_router(ai_operations_router)
 router.include_router(scenario_adapters_router)
 router.include_router(environment_snapshots_router)
 router.include_router(executions_router)
+router.include_router(data_sources_router)
+router.include_router(scenario_data_router)
+router.include_router(data_requirement_router)
+router.include_router(scenario_plan_router)
+router.include_router(data_plan_router)
+router.include_router(fixtures_router)
 
 # Further domain routers are added with their epics:
 # mission_contracts.py (EPIC-05), mission_scenarios.py (EPIC-06),

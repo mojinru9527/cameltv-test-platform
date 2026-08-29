@@ -234,6 +234,8 @@ class StepType(str, Enum):
     ASSERT = "ASSERT"
     SYSTEM = "SYSTEM"
     LEGACY = "LEGACY"
+    # V3.2 data runtime step (V32-014 timeline)
+    DATA = "DATA"
 
 
 class StepStatus(str, Enum):
@@ -264,6 +266,12 @@ class EvidenceType(str, Enum):
     ASSERTION = "ASSERTION"
     ENV_SNAPSHOT = "ENV_SNAPSHOT"
     LEGACY_ARTIFACT = "LEGACY_ARTIFACT"
+    # V3.2 data runtime evidence (V32-014)
+    DATA_PLAN = "DATA_PLAN"
+    FIXTURE_MANIFEST = "FIXTURE_MANIFEST"
+    DB_BEFORE = "DB_BEFORE"
+    DB_AFTER = "DB_AFTER"
+    DB_CLEANUP_VERIFY = "DB_CLEANUP_VERIFY"
 
 
 class SanitizationStatus(str, Enum):
@@ -283,3 +291,120 @@ class SnapshotSource(str, Enum):
 
     AUTO = "AUTO"
     MANUAL = "MANUAL"
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# AITDE V3.2 — Data + DB Runtime shared enums (V32). DataSources, plans,
+# fixtures and the data runtime vocabulary. PROD_TEMPLATE is reserved only;
+# the V3.2 production data-source template capability is deferred to V3.6.
+# ────────────────────────────────────────────────────────────────────────────
+
+
+class DataSourceType(str, Enum):
+    """Data Source 类型（V32-001）。PROD_TEMPLATE 仅预留枚举，不在此版本启用。"""
+
+    STATIC = "STATIC"
+    MYSQL = "MYSQL"
+    POSTGRES = "POSTGRES"
+    API = "API"
+    WORKFLOW = "WORKFLOW"
+    PROD_TEMPLATE = "PROD_TEMPLATE"
+
+
+class DataSourceAccessMode(str, Enum):
+    """Data Source 访问模式。V3.2 仅允许 Test 环境 READWRITE；Production 默认只读。"""
+
+    READONLY = "READONLY"
+    READWRITE = "READWRITE"
+
+
+class DataSourceStatus(str, Enum):
+    """Data Source 连接/可用状态。"""
+
+    ACTIVE = "ACTIVE"
+    DISABLED = "DISABLED"
+    ERROR = "ERROR"
+
+
+class DataRequirementSharingPolicy(str, Enum):
+    """数据需求共享策略：独占或只读共享。"""
+
+    EXCLUSIVE = "EXCLUSIVE"
+    SHARED_READONLY = "SHARED_READONLY"
+
+
+class DataRequirementCleanupPolicy(str, Enum):
+    """数据需求清理策略。"""
+
+    ALWAYS = "ALWAYS"
+    ON_SUCCESS = "ON_SUCCESS"
+    MANUAL = "MANUAL"
+
+
+class DataPlanStatus(str, Enum):
+    """数据计划生命周期状态。"""
+
+    DRAFT = "DRAFT"
+    VALIDATED = "VALIDATED"
+    APPROVED = "APPROVED"
+    EXECUTING = "EXECUTING"
+    DONE = "DONE"
+    FAILED = "FAILED"
+
+
+class DataPlanStrategy(str, Enum):
+    """数据计划策略（顺序：Existing → API → DB Fixture → Workflow）。"""
+
+    EXISTING = "EXISTING"
+    API_BUILDER = "API_BUILDER"
+    DB_FIXTURE = "DB_FIXTURE"
+    WORKFLOW = "WORKFLOW"
+
+
+class DataPlanStepType(str, Enum):
+    """数据计划步骤类型。"""
+
+    FIND = "FIND"
+    CREATE = "CREATE"
+    UPDATE = "UPDATE"
+    VERIFY = "VERIFY"
+    LEASE = "LEASE"
+    SNAPSHOT = "SNAPSHOT"
+    CLEANUP = "CLEANUP"
+
+
+class FixtureStatus(str, Enum):
+    """Fixture 生命周期状态机。"""
+
+    PROVISIONING = "PROVISIONING"
+    READY = "READY"
+    LEASED = "LEASED"
+    IN_USE = "IN_USE"
+    CLEANING = "CLEANING"
+    CLEANED = "CLEANED"
+    FAILED = "FAILED"
+
+
+class FixtureLeaseStatus(str, Enum):
+    """Fixture 租约状态。"""
+
+    ACTIVE = "ACTIVE"
+    RELEASED = "RELEASED"
+    EXPIRED = "EXPIRED"
+
+
+class SnapshotType(str, Enum):
+    """数据快照类型。"""
+
+    BEFORE = "BEFORE"
+    AFTER = "AFTER"
+    CLEANUP_VERIFY = "CLEANUP_VERIFY"
+
+
+class CleanupStatus(str, Enum):
+    """清理记录状态。"""
+
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+    PARTIAL = "PARTIAL"

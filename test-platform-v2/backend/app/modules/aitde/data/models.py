@@ -1,0 +1,237 @@
+"""AITDE V3.2 DataSource model (V32-001).
+
+A ``DataSource`` describes a typed, policy-constrained connection used by the
+V3.2 data runtime: a static payload, a database (mysql/postgres), an API, or a
+workflow. Only a ``secret_ref`` (a reference/key into an external secret store)
+is persisted — the secret value itself is never stored on the row nor returned
+through the API.
+"""
+from __future__ import annotations
+
+from datetime import datetime
+
+from sqlalchemy import Boolean, Integer, String, Text, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column
+from app.core.db import Base
+from app.models.base import TimestampMixin
+from app.modules.aitde.common.enums import (
+    CleanupStatus,
+    DataPlanStepType,
+    DataPlanStrategy,
+    DataPlanStatus,
+    DataRequirementCleanupPolicy,
+    DataRequirementSharingPolicy,
+    DataSourceAccessMode,
+    DataSourceStatus,
+    DataSourceType,
+    FixtureLeaseStatus,
+    FixtureStatus,
+    SnapshotType,
+)
+
+
+class DataSource(Base, TimestampMixin):
+    __tablename__ = "data_sources"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(Integer, default=0, index=True)
+    environment_id: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, index=True
+    )
+    source_type: Mapped[str] = mapped_column(
+        String(32), default=DataSourceType.STATIC.value, index=True
+    )
+    name: Mapped[str] = mapped_column(String(255), default="")
+    network_zone: Mapped[str] = mapped_column(String(64), default="")
+    secret_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    access_mode: Mapped[str] = mapped_column(
+        String(32), default=DataSourceAccessMode.READONLY.value, index=True
+    )
+    config_json: Mapped[str] = mapped_column(Text, default="{}")
+    policy_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(
+        String(32), default=DataSourceStatus.ACTIVE.value, index=True
+    )
+    created_by: Mapped[int] = mapped_column(Integer, default=0)
+    # created_at / updated_at from TimestampMixin
+
+
+class DataRequirement(Base):
+    """A scenario's declared business data requirement (V32-002).
+
+    Describes *what* test data a scenario needs (``entity_type`` +
+    ``constraints_json``) in business terms, not SQL. Bound to a frozen
+    ``ScenarioVersion``.
+    """
+
+    __tablename__ = "data_requirements"
+    __table_args__ = (
+        UniqueConstraint(
+            "scenario_version_id", "requirement_key", name="uq_data_req_scenario_key"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    scenario_version_id: Mapped[int] = mapped_column(Integer, index=True)
+    requirement_key: Mapped[str] = mapped_column(String(128), default="")
+    entity_type: Mapped[str] = mapped_column(String(64), default="")
+    # Business constraints, e.g. {"membership.status": "EXPIRED"} — never SQL.
+    constraints_json: Mapped[str] = mapped_column(Text, default="{}")
+    required: Mapped[bool] = mapped_column(Boolean, default=True)
+    sharing_policy: Mapped[str] = mapped_column(
+        String(32), default=DataRequirementSharingPolicy.EXCLUSIVE.value
+    )
+    cleanup_policy: Mapped[str] = mapped_column(
+        String(32), default=DataRequirementCleanupPolicy.ALWAYS.value
+    )
+    source_refs_json: Mapped[str] = mapped_column(Text, default="[]")
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+
+
+class DataPlan(Base):
+    """A data provisioning plan for a scenario (V32-003).
+
+    Declares *strategy + steps*; it is not executed by the planner. ``plan_hash``
+    must be stable for identical inputs.
+    """
+
+    __tablename__ = "data_plans"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    run_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    scenario_version_id: Mapped[int] = mapped_column(Integer, index=True)
+    environment_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    status: Mapped[str] = mapped_column(
+        String(16), default=DataPlanStatus.DRAFT.value, index=True
+    )
+    strategy: Mapped[str] = mapped_column(
+        String(32), default=DataPlanStrategy.EXISTING.value, index=True
+    )
+    plan_hash: Mapped[str] = mapped_column(String(64), default="", index=True)
+    risk_level: Mapped[str] = mapped_column(String(4), default="P2")
+    created_by_type: Mapped[str] = mapped_column(String(16), default="USER")
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    approved_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    approved_at: Mapped[datetime | None] = mapped_column(nullable=True)
+
+
+class DataPlanStep(Base):
+    __tablename__ = "data_plan_steps"
+    __table_args__ = (
+        UniqueConstraint("data_plan_id", "sequence", name="uq_data_plan_step_seq"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    data_plan_id: Mapped[int] = mapped_column(Integer, index=True)
+    sequence: Mapped[int] = mapped_column(Integer, default=1)
+    step_type: Mapped[str] = mapped_column(
+        String(16), default=DataPlanStepType.CREATE.value
+    )
+    driver: Mapped[str] = mapped_column(String(64), default="")
+    command_json: Mapped[str] = mapped_column(Text, default="{}")
+    compensation_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(16), default="PENDING")
+
+
+class DataFixture(Base):
+    """A provisioned data set with lifecycle state (V32-009)."""
+
+    __tablename__ = "data_fixtures"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(Integer, default=0, index=True)
+    scenario_version_id: Mapped[int] = mapped_column(Integer, index=True)
+    run_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    data_plan_id: Mapped[int] = mapped_column(Integer, index=True)
+    environment_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    data_source_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    strategy: Mapped[str] = mapped_column(
+        String(32), default=DataPlanStrategy.EXISTING.value
+    )
+    status: Mapped[str] = mapped_column(
+        String(16), default=FixtureStatus.PROVISIONING.value, index=True
+    )
+    namespace: Mapped[str] = mapped_column(String(128), default="")
+    manifest_json: Mapped[str] = mapped_column(Text, default="{}")
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    expires_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    cleanup_status: Mapped[str] = mapped_column(String(16), default="")
+
+
+class FixtureEntity(Base):
+    """A single entity a fixture created or referenced (V32-009)."""
+
+    __tablename__ = "fixture_entities"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fixture_id: Mapped[int] = mapped_column(Integer, index=True)
+    entity_type: Mapped[str] = mapped_column(String(64), default="")
+    logical_key: Mapped[str] = mapped_column(String(128), default="")
+    physical_ref_json: Mapped[str] = mapped_column(Text, default="{}")
+    created_by_fixture: Mapped[bool] = mapped_column(Boolean, default=True)
+    before_snapshot_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    after_snapshot_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    cleanup_action_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class FixtureLease(Base):
+    __tablename__ = "fixture_leases"
+    __table_args__ = (
+        UniqueConstraint("fixture_id", "run_id", name="uq_fixture_lease_run"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fixture_id: Mapped[int] = mapped_column(Integer, index=True)
+    run_id: Mapped[int] = mapped_column(Integer, index=True)
+    lease_token: Mapped[str] = mapped_column(String(64), default="")
+    status: Mapped[str] = mapped_column(
+        String(16), default=FixtureLeaseStatus.ACTIVE.value, index=True
+    )
+    leased_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    expires_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    released_at: Mapped[datetime | None] = mapped_column(nullable=True)
+
+
+class DataSnapshot(Base):
+    __tablename__ = "data_snapshots"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fixture_id: Mapped[int] = mapped_column(Integer, index=True)
+    run_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    entity_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    snapshot_type: Mapped[str] = mapped_column(
+        String(24), default=SnapshotType.BEFORE.value, index=True
+    )
+    storage_uri: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    snapshot_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    content_hash: Mapped[str] = mapped_column(String(64), default="")
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+
+
+class CleanupRecord(Base):
+    __tablename__ = "cleanup_records"
+    __table_args__ = (
+        UniqueConstraint("fixture_id", "attempt_no", name="uq_cleanup_fixture_attempt"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fixture_id: Mapped[int] = mapped_column(Integer, index=True)
+    attempt_no: Mapped[int] = mapped_column(Integer, default=1)
+    status: Mapped[str] = mapped_column(
+        String(16), default=CleanupStatus.RUNNING.value, index=True
+    )
+    actions_json: Mapped[str] = mapped_column(Text, default="[]")
+    error_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    started_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    finished_at: Mapped[datetime | None] = mapped_column(nullable=True)
+
+
+class LegacyDatasetLink(Base):
+    __tablename__ = "legacy_dataset_links"
+    __table_args__ = (
+        UniqueConstraint("legacy_dataset_id", name="uq_legacy_dataset_link"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    data_source_id: Mapped[int] = mapped_column(Integer, index=True)
+    legacy_dataset_id: Mapped[int] = mapped_column(Integer, index=True)
