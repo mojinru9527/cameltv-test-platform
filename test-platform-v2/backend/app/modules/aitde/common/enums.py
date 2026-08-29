@@ -316,3 +316,18 @@ class DataSourceStatus(str, Enum):
     ACTIVE = "ACTIVE"
     DISABLED = "DISABLED"
     ERROR = "ERROR"
+
+
+class DataRequirementSharingPolicy(str, Enum):
+    """数据需求共享策略：独占或只读共享。"""
+
+    EXCLUSIVE = "EXCLUSIVE"
+    SHARED_READONLY = "SHARED_READONLY"
+
+
+class DataRequirementCleanupPolicy(str, Enum):
+    """数据需求清理策略。"""
+
+    ALWAYS = "ALWAYS"
+    ON_SUCCESS = "ON_SUCCESS"
+    MANUAL = "MANUAL"

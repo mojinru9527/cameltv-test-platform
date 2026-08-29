@@ -6,7 +6,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.modules.aitde.data.models import DataSource
+from app.modules.aitde.data.models import DataRequirement, DataSource
 
 
 def create_data_source(
@@ -35,3 +35,32 @@ def list_data_sources(db: Session, project_id: int) -> list[DataSource]:
         .order_by(DataSource.id.asc())
     ).all()
     return list(rows)
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# DataRequirement (V32-002)
+# ────────────────────────────────────────────────────────────────────────────
+
+
+def list_requirements_by_scenario_version(
+    db: Session, scenario_version_id: int
+) -> list[DataRequirement]:
+    rows = db.scalars(
+        select(DataRequirement)
+        .where(DataRequirement.scenario_version_id == scenario_version_id)
+        .order_by(DataRequirement.id.asc())
+    ).all()
+    return list(rows)
+
+
+def get_data_requirement(db: Session, requirement_id: int) -> DataRequirement | None:
+    return db.get(DataRequirement, requirement_id)
+
+
+def create_data_requirement(
+    db: Session, scenario_version_id: int, data: dict[str, Any]
+) -> DataRequirement:
+    row = DataRequirement(scenario_version_id=scenario_version_id, **data)
+    db.add(row)
+    db.flush()
+    return row

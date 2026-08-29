@@ -5,7 +5,12 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from app.modules.aitde.common.enums import DataSourceAccessMode, DataSourceType
+from app.modules.aitde.common.enums import (
+    DataRequirementCleanupPolicy,
+    DataRequirementSharingPolicy,
+    DataSourceAccessMode,
+    DataSourceType,
+)
 
 
 class DataSourceCreate(BaseModel):
@@ -36,3 +41,32 @@ class DataSourceRead(BaseModel):
     created_by: int
     created_at: str | None = None
     updated_at: str | None = None
+
+
+class DataRequirementRead(BaseModel):
+    id: int
+    scenario_version_id: int
+    requirement_key: str
+    entity_type: str
+    constraints_json: str
+    required: bool
+    sharing_policy: str
+    cleanup_policy: str
+    source_refs_json: str
+    created_at: str | None = None
+
+
+class DataRequirementUpdate(BaseModel):
+    """Tester 修订（PATCH）— 只允许修订业务描述，绝不生成 SQL。"""
+
+    entity_type: str | None = Field(default=None, max_length=64)
+    constraints: dict[str, Any] | None = None
+    required: bool | None = None
+    sharing_policy: DataRequirementSharingPolicy | None = None
+    cleanup_policy: DataRequirementCleanupPolicy | None = None
+
+
+class DataRequirementDeriveRequest(BaseModel):
+    """AI 派生候选数据需求。V32-002 规则式实现；请求体保留占位。"""
+
+    pass
