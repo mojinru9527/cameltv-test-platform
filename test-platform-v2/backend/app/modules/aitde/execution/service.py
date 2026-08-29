@@ -162,14 +162,27 @@ def transition_runtime_status(row: ExecutionRun, target: str) -> None:
 def mark_running(db: Session, run_id: int, project_id: int) -> ExecutionRun:
     row = get_run(db, run_id, project_id)
     transition_runtime_status(row, RunStatus.RUNNING.value)
-    return repository.update_run(
+    updated = repository.update_run(
         db, row, {"runtime_status": RunStatus.RUNNING.value, "started_at": _utcnow()}
     )
+    # V32-014: at run start, provision data + data timeline + evidence for runs
+    # whose scenario has data requirements. Data failure → DATA_FAIL (never business).
+    from app.modules.aitde.data.run_data_integration import prepare_run_data
+
+    try:
+        prepare_run_data(db, updated, project_id)
+    except Exception:  # noqa: BLE001 — must not block the run itself
+        db.rollback()
+    db.refresh(updated)
+    return updated
 
 
 def finish_run(db: Session, run_id: int, project_id: int, outcome_str: str) -> ExecutionRun:
     row = get_run(db, run_id, project_id)
     transition_runtime_status(row, RunStatus.FINISHED.value)
+    # A data failure is authoritative over a business outcome for that run.
+    if row.outcome == Outcome.DATA_FAIL.value:
+        outcome_str = Outcome.DATA_FAIL.value
     now = _utcnow()
     started = row.started_at
     duration_ms = int((now - started).total_seconds() * 1000) if started else None
