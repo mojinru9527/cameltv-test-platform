@@ -12,10 +12,10 @@ from datetime import datetime
 
 from sqlalchemy import Boolean, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
-
 from app.core.db import Base
 from app.models.base import TimestampMixin
 from app.modules.aitde.common.enums import (
+    CleanupStatus,
     DataPlanStepType,
     DataPlanStrategy,
     DataPlanStatus,
@@ -24,6 +24,9 @@ from app.modules.aitde.common.enums import (
     DataSourceAccessMode,
     DataSourceStatus,
     DataSourceType,
+    FixtureLeaseStatus,
+    FixtureStatus,
+    SnapshotType,
 )
 
 
@@ -128,3 +131,107 @@ class DataPlanStep(Base):
     command_json: Mapped[str] = mapped_column(Text, default="{}")
     compensation_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(16), default="PENDING")
+
+
+class DataFixture(Base):
+    """A provisioned data set with lifecycle state (V32-009)."""
+
+    __tablename__ = "data_fixtures"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(Integer, default=0, index=True)
+    scenario_version_id: Mapped[int] = mapped_column(Integer, index=True)
+    run_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    data_plan_id: Mapped[int] = mapped_column(Integer, index=True)
+    environment_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    data_source_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    strategy: Mapped[str] = mapped_column(
+        String(32), default=DataPlanStrategy.EXISTING.value
+    )
+    status: Mapped[str] = mapped_column(
+        String(16), default=FixtureStatus.PROVISIONING.value, index=True
+    )
+    namespace: Mapped[str] = mapped_column(String(128), default="")
+    manifest_json: Mapped[str] = mapped_column(Text, default="{}")
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    expires_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    cleanup_status: Mapped[str] = mapped_column(String(16), default="")
+
+
+class FixtureEntity(Base):
+    """A single entity a fixture created or referenced (V32-009)."""
+
+    __tablename__ = "fixture_entities"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fixture_id: Mapped[int] = mapped_column(Integer, index=True)
+    entity_type: Mapped[str] = mapped_column(String(64), default="")
+    logical_key: Mapped[str] = mapped_column(String(128), default="")
+    physical_ref_json: Mapped[str] = mapped_column(Text, default="{}")
+    created_by_fixture: Mapped[bool] = mapped_column(Boolean, default=True)
+    before_snapshot_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    after_snapshot_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    cleanup_action_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class FixtureLease(Base):
+    __tablename__ = "fixture_leases"
+    __table_args__ = (
+        UniqueConstraint("fixture_id", "run_id", name="uq_fixture_lease_run"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fixture_id: Mapped[int] = mapped_column(Integer, index=True)
+    run_id: Mapped[int] = mapped_column(Integer, index=True)
+    lease_token: Mapped[str] = mapped_column(String(64), default="")
+    status: Mapped[str] = mapped_column(
+        String(16), default=FixtureLeaseStatus.ACTIVE.value, index=True
+    )
+    leased_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    expires_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    released_at: Mapped[datetime | None] = mapped_column(nullable=True)
+
+
+class DataSnapshot(Base):
+    __tablename__ = "data_snapshots"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fixture_id: Mapped[int] = mapped_column(Integer, index=True)
+    run_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    entity_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    snapshot_type: Mapped[str] = mapped_column(
+        String(24), default=SnapshotType.BEFORE.value, index=True
+    )
+    storage_uri: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    snapshot_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    content_hash: Mapped[str] = mapped_column(String(64), default="")
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+
+
+class CleanupRecord(Base):
+    __tablename__ = "cleanup_records"
+    __table_args__ = (
+        UniqueConstraint("fixture_id", "attempt_no", name="uq_cleanup_fixture_attempt"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fixture_id: Mapped[int] = mapped_column(Integer, index=True)
+    attempt_no: Mapped[int] = mapped_column(Integer, default=1)
+    status: Mapped[str] = mapped_column(
+        String(16), default=CleanupStatus.RUNNING.value, index=True
+    )
+    actions_json: Mapped[str] = mapped_column(Text, default="[]")
+    error_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    started_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    finished_at: Mapped[datetime | None] = mapped_column(nullable=True)
+
+
+class LegacyDatasetLink(Base):
+    __tablename__ = "legacy_dataset_links"
+    __table_args__ = (
+        UniqueConstraint("legacy_dataset_id", name="uq_legacy_dataset_link"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    data_source_id: Mapped[int] = mapped_column(Integer, index=True)
+    legacy_dataset_id: Mapped[int] = mapped_column(Integer, index=True)

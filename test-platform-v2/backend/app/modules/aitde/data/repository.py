@@ -7,10 +7,15 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.modules.aitde.data.models import (
+    CleanupRecord,
+    DataFixture,
     DataPlan,
     DataPlanStep,
     DataRequirement,
+    DataSnapshot,
     DataSource,
+    FixtureEntity,
+    FixtureLease,
 )
 
 
@@ -114,3 +119,88 @@ def list_steps_by_plan(db: Session, plan_id: int) -> list[DataPlanStep]:
         .order_by(DataPlanStep.sequence.asc())
     ).all()
     return list(rows)
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# Fixture / Lease / Snapshot / Cleanup (V32-009..V32-012)
+# ────────────────────────────────────────────────────────────────────────────
+
+
+def create_fixture(db: Session, data: dict[str, Any]) -> DataFixture:
+    row = DataFixture(**data)
+    db.add(row)
+    db.flush()
+    return row
+
+
+def get_fixture(db: Session, fixture_id: int) -> DataFixture | None:
+    return db.get(DataFixture, fixture_id)
+
+
+def list_fixture_entities(db: Session, fixture_id: int) -> list[FixtureEntity]:
+    rows = db.scalars(
+        select(FixtureEntity)
+        .where(FixtureEntity.fixture_id == fixture_id)
+        .order_by(FixtureEntity.id.asc())
+    ).all()
+    return list(rows)
+
+
+def create_fixture_entity(db: Session, data: dict[str, Any]) -> FixtureEntity:
+    row = FixtureEntity(**data)
+    db.add(row)
+    db.flush()
+    return row
+
+
+def create_fixture_lease(
+    db: Session, data: dict[str, Any]
+) -> FixtureLease:
+    row = FixtureLease(**data)
+    db.add(row)
+    db.flush()
+    return row
+
+
+def get_active_lease_for_fixture(
+    db: Session, fixture_id: int
+) -> FixtureLease | None:
+    return db.scalar(
+        select(FixtureLease).where(
+            FixtureLease.fixture_id == fixture_id,
+            FixtureLease.status == "ACTIVE",
+        )
+    )
+
+
+def create_snapshot(db: Session, data: dict[str, Any]) -> DataSnapshot:
+    row = DataSnapshot(**data)
+    db.add(row)
+    db.flush()
+    return row
+
+
+def list_snapshots(db: Session, fixture_id: int) -> list[DataSnapshot]:
+    rows = db.scalars(
+        select(DataSnapshot)
+        .where(DataSnapshot.fixture_id == fixture_id)
+        .order_by(DataSnapshot.id.asc())
+    ).all()
+    return list(rows)
+
+
+def create_cleanup_record(db: Session, data: dict[str, Any]) -> CleanupRecord:
+    row = CleanupRecord(**data)
+    db.add(row)
+    db.flush()
+    return row
+
+
+def get_latest_cleanup_record(
+    db: Session, fixture_id: int
+) -> CleanupRecord | None:
+    return db.scalar(
+        select(CleanupRecord)
+        .where(CleanupRecord.fixture_id == fixture_id)
+        .order_by(CleanupRecord.attempt_no.desc())
+    )

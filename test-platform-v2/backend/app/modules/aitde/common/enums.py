@@ -363,3 +363,40 @@ class DataPlanStepType(str, Enum):
     LEASE = "LEASE"
     SNAPSHOT = "SNAPSHOT"
     CLEANUP = "CLEANUP"
+
+
+class FixtureStatus(str, Enum):
+    """Fixture 生命周期状态机。"""
+
+    PROVISIONING = "PROVISIONING"
+    READY = "READY"
+    LEASED = "LEASED"
+    IN_USE = "IN_USE"
+    CLEANING = "CLEANING"
+    CLEANED = "CLEANED"
+    FAILED = "FAILED"
+
+
+class FixtureLeaseStatus(str, Enum):
+    """Fixture 租约状态。"""
+
+    ACTIVE = "ACTIVE"
+    RELEASED = "RELEASED"
+    EXPIRED = "EXPIRED"
+
+
+class SnapshotType(str, Enum):
+    """数据快照类型。"""
+
+    BEFORE = "BEFORE"
+    AFTER = "AFTER"
+    CLEANUP_VERIFY = "CLEANUP_VERIFY"
+
+
+class CleanupStatus(str, Enum):
+    """清理记录状态。"""
+
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+    PARTIAL = "PARTIAL"

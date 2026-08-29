@@ -29,3 +29,42 @@ def db():
     finally:
         session.close()
         engine.dispose()
+
+
+@pytest.fixture()
+def ready_fixture(db):
+    """A READY fixture produced from a scenario version + readonly source."""
+    import json as _json
+
+    from app.modules.aitde.data import fixture_service
+    from app.modules.aitde.data.models import DataSource
+    from app.modules.aitde.data.schemas import DataPlanGenerateRequest
+    from app.modules.aitde.scenario.models import (
+        TestScenarioVersion as ScenarioVersion,
+    )
+
+    version = ScenarioVersion(
+        scenario_id=1,
+        version_no=1,
+        contract_version_id=1,
+        title="t",
+        given_model_json=_json.dumps({"user.status": "normal"}, ensure_ascii=False),
+        expected_state_json="{}",
+    )
+    db.add(version)
+    db.flush()
+
+    source = DataSource(
+        project_id=1, source_type="MYSQL", name="db",
+        access_mode="READWRITE",
+        config_json=_json.dumps({"table_allowlist": ["user"]}, ensure_ascii=False),
+        created_by=9,
+    )
+    db.add(source)
+    db.flush()
+
+    service.derive_data_requirements(db, version.id)
+    plan = service.generate_data_plan(db, version.id, None, 1, DataPlanGenerateRequest())
+    db.flush()
+    fixture = fixture_service.provision_fixture(db, plan, source, None, 1)
+    return {"version": version, "source": source, "plan": plan, "fixture": fixture}
