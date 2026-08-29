@@ -283,3 +283,36 @@ class SnapshotSource(str, Enum):
 
     AUTO = "AUTO"
     MANUAL = "MANUAL"
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# AITDE V3.2 — Data + DB Runtime shared enums (V32). DataSources, plans,
+# fixtures and the data runtime vocabulary. PROD_TEMPLATE is reserved only;
+# the V3.2 production data-source template capability is deferred to V3.6.
+# ────────────────────────────────────────────────────────────────────────────
+
+
+class DataSourceType(str, Enum):
+    """Data Source 类型（V32-001）。PROD_TEMPLATE 仅预留枚举，不在此版本启用。"""
+
+    STATIC = "STATIC"
+    MYSQL = "MYSQL"
+    POSTGRES = "POSTGRES"
+    API = "API"
+    WORKFLOW = "WORKFLOW"
+    PROD_TEMPLATE = "PROD_TEMPLATE"
+
+
+class DataSourceAccessMode(str, Enum):
+    """Data Source 访问模式。V3.2 仅允许 Test 环境 READWRITE；Production 默认只读。"""
+
+    READONLY = "READONLY"
+    READWRITE = "READWRITE"
+
+
+class DataSourceStatus(str, Enum):
+    """Data Source 连接/可用状态。"""
+
+    ACTIVE = "ACTIVE"
+    DISABLED = "DISABLED"
+    ERROR = "ERROR"

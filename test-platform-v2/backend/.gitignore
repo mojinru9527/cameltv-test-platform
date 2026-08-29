@@ -3,7 +3,9 @@ __pycache__/
 .venv/
 venv/
 .env
-data/
+# SQLite runtime data dir (backend root only). Anchored so source packages named
+# "data" (e.g. app/modules/aitde/data) are not excluded.
+/data/
 *.db
 *.db-wal
 *.db-shm
