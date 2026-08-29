@@ -142,7 +142,7 @@ function Invoke-Scan {
     foreach ($f in ($files | Sort-Object FullName -Unique)) {
         $rel = $f.FullName.Substring($Root.Length).TrimStart('\', '/')
         $rel = $rel -replace '\\', '/'
-        if ($rel -match 'node_modules|__pycache__|\.venv|(^|/)venv/|dist/|\.next/') { continue }
+        if ($rel -match 'node_modules|__pycache__|\.venv|(^|/)venv/|dist/|\.next/|(^|/)data/') { continue }
         $role = $null
         if ($rel -match '^test-platform-v2/backend/tests/') { $role = "backend-tests" }
         elseif ($rel -match '^test-platform-v2/backend/scripts/') { $role = "backend-scripts" }

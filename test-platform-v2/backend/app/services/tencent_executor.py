@@ -145,6 +145,7 @@ class TencentSshExecutor:
                 try:
                     key_path.unlink(missing_ok=True)
                 except OSError:
+                    # 临时私钥清理尽力而为；失败不影响已执行的命令结果。
                     pass
 
     def _compose(self, *args: str) -> str:

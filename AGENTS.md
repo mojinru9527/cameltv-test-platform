@@ -167,6 +167,7 @@ pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor 
 ### 3.1 代码质量
 
 - [ ] **硬门禁通过**: 后端 `ruff check app/ --select F821`，前端 `npm run typecheck && npm run build`
+- [ ] **Clean Code 门禁（G0–G2 机械项）**: 一键跑 `pwsh scripts/git/dev-gate.ps1 -RepositoryPath (Get-Location).Path`（串起 `scan-common-bugs` 提交卫生 + ruff F821 + 前端 typecheck/lint + 路由层守卫测试）；G0–G2 出现 HARD/类型/守卫失败即 Block，见 [docs/code-development-gate.md](docs/code-development-gate.md)。G3 行为验收走 `tests/clean-code/*.feature`（Gherkin），G4 由 CI 全量兜底。
 - [ ] **相关测试通过**: 后端执行受影响模块 Pytest，前端执行受影响模块 Vitest
 - [ ] **全量回归已记录**: PR 前执行后端 `pytest`、前端 `npm test`；若存在已知基线失败，必须列出基线与本分支失败集合，确认无新增失败，禁止只写“历史问题”
 - [ ] **无调试遗留**: 无 `console.log`、`print`、`breakpoint`、`debugger`

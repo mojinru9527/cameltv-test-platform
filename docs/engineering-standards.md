@@ -5,12 +5,15 @@ last_reviewed: "2026-07-07"
 status: "active"
 expires: "2027-01-07"
 tags: ["engineering", "dev", "qa", "automation", "comments"]
-related: ["testing-strategy.md", "../tests/CLAUDE.md", "../tests/automation/README.md"]
+related: ["testing-strategy.md", "clean-code-standards.md", "code-development-gate.md", "../tests/CLAUDE.md", "../tests/automation/README.md"]
 ---
 
 # CamelTv 工程输出规范
 
 > 本文档定义 DEV 与 QA 在代码层面的交付要求。所有新增、修改、生成的代码和自动化测试均必须遵循。
+
+> **配套文档**：如何在代码层面「写好」，见 [测试平台 Clean Code 代码规范](../test-platform-v2/docs/clean-code-standards.md)（命名 / 函数 / 错误处理 / 分层 / 测试 / AI 生成代码适配）。本文档是交付红线，那是写法标准。
+> **门禁**：如何「减少返工」，见 [测试平台 代码开发校验门禁](code-development-gate.md)（G0 提交卫生 → G4 测试与质量 五道闸，含本地一键 `scripts/git/dev-gate.ps1` 与 Gherkin 行为验收）。
 
 ## 1. DEV 代码注释要求
 

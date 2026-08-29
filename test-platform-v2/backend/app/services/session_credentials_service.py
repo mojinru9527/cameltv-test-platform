@@ -184,6 +184,7 @@ def fetch_session_credentials(
         if "headers" in cfg:
             headers.update(json.loads(cfg["headers"]))  # type: ignore[arg-type]
     except (json.JSONDecodeError, TypeError):
+        # 可选 headers 配置：非 JSON 或类型不符时仅忽略该项，不影响其余注入。
         pass
 
     body: dict[str, Any] = {}
@@ -193,6 +194,7 @@ def fetch_session_credentials(
             if isinstance(parsed, dict):
                 body.update(parsed)
     except (json.JSONDecodeError, TypeError):
+        # 可选 body 配置：非 JSON 或非对象时忽略，按空 body 处理。
         pass
     if "app_code" in cfg and "appCode" not in body:
         body["appCode"] = cfg["app_code"]
@@ -235,6 +237,7 @@ def fetch_session_credentials(
                     if val is not None:
                         creds[name] = str(val)
     except (json.JSONDecodeError, TypeError, AttributeError):
+        # field_map 为可选配置，解析或取值失败时忽略，改用基础提取结果。
         pass
 
     if creds:
