@@ -363,7 +363,7 @@ def extract_and_build_graph_in_new_session(
     project_id: int,
     source_id: int | None = None,
     max_chunks: int = 100,
-) -> dict[str, int]:
+) -> dict[str, int | str]:
     """独立 Session 批量提取实体+关系。"""
     from app.core.config import settings
 
