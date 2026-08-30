@@ -162,13 +162,13 @@ def list_requirements_page(
         )
     count_stmt = select(func.count()).select_from(RequirementDocument).where(*filters)
     total = db.scalar(count_stmt) or 0
-    rows = list(db.execute(
+    rows = [(row[0], row[1]) for row in db.execute(
         select(RequirementDocument, User.username)
         .outerjoin(User, User.id == RequirementDocument.creator_id)
         .where(*filters)
         .order_by(RequirementDocument.id.desc())
         .offset((page - 1) * page_size).limit(page_size)
-    ).all())
+    ).all()]
     return total, rows
 
 
