@@ -116,7 +116,7 @@ def generate_ui_drafts(
     if mission.requirement_doc_id:
         stmt = stmt.where(TestCase.source_doc_id == mission.requirement_doc_id)
     cases = db.scalars(stmt.order_by(TestCase.priority, TestCase.id).limit(max_cases)).all()
-    spec_text = _build_playwright_spec(mission, cases)
+    spec_text = _build_playwright_spec(mission, list(cases))
     spec_rel = f"generated/{_slug(mission.mission_key)}.spec.ts"
     spec_abs = PLAYWRIGHT_SPECS_DIR / spec_rel
     if write_specs:
