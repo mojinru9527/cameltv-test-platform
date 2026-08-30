@@ -20,6 +20,7 @@ const TABS = [
   { key: 'changes', label: '变化检测', path: 'changes' },
   { key: 'impact', label: '影响分析', path: 'impact' },
   { key: 'trace', label: 'Lineage', path: 'trace' },
+  { key: 'gaps', label: '场景缺口', path: 'gaps' },
 ]
 
 export default function MissionLayout() {

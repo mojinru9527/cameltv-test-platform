@@ -851,3 +851,132 @@ class SelectionDecision(str, Enum):
     SELECTED = "SELECTED"
     EXCLUDED = "EXCLUDED"
     FALLBACK = "FALLBACK"
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# AITDE V3.8 — AI QA Closed Loop shared enums (V38).
+# Failure triage, healing policy, flaky, strategy performance, scenario gap,
+# suggestion, human feedback and model-evaluation vocabulary per the V3.8 plan
+# §§1-12. String-valued, stable across SQLite/PostgreSQL.
+# ────────────────────────────────────────────────────────────────────────────
+
+
+class FailureHypothesisStatus(str, Enum):
+    """FailureHypothesis 生命周期状态（V38-002/003）。"""
+
+    GENERATED = "GENERATED"
+    REVIEWED = "REVIEWED"
+    CONFIRMED = "CONFIRMED"
+    REJECTED = "REJECTED"
+
+
+class FailureClassification(str, Enum):
+    """失败归因分类（V38-002；AI 只产出 hypothesis，不修改 Outcome）。"""
+
+    BUSINESS_LOGIC_SUSPECTED = "BUSINESS_LOGIC_SUSPECTED"
+    AUTOMATION_ISSUE_SUSPECTED = "AUTOMATION_ISSUE_SUSPECTED"
+    DATA_ISSUE_SUSPECTED = "DATA_ISSUE_SUSPECTED"
+    ENV_ISSUE_SUSPECTED = "ENV_ISSUE_SUSPECTED"
+    FLAKY_SUSPECTED = "FLAKY_SUSPECTED"
+    UNKNOWN = "UNKNOWN"
+
+
+class HealingPolicyDecision(str, Enum):
+    """Healing Policy 判定（V38-004；仅 Action diff 允许）。"""
+
+    ALLOW = "ALLOW"
+    REJECT = "REJECT"
+
+
+class FlakySignalType(str, Enum):
+    """Flaky 信号类型（V38-006；仅 AUTOMATION/ENV 波动纳入）。"""
+
+    RERUN_PASS = "RERUN_PASS"
+    INTERMITTENT_ERROR = "INTERMITTENT_ERROR"
+    TIMEOUT = "TIMEOUT"
+    STALE_LOCATOR = "STALE_LOCATOR"
+    ENV_FLAP = "ENV_FLAP"
+
+
+class FlakyClassification(str, Enum):
+    """Flaky 聚类分类（V38-007）。"""
+
+    FLAKY = "FLAKY"
+    STABLE = "STABLE"
+    FLAPPY = "FLAPPY"
+    UNCLASSIFIED = "UNCLASSIFIED"
+
+
+class SuggestionType(str, Enum):
+    """AI Suggestion 类型（V38-011 Inbox）。"""
+
+    HEALING = "HEALING"
+    DATA_STRATEGY = "DATA_STRATEGY"
+    SCENARIO_GAP = "SCENARIO_GAP"
+    RISK = "RISK"
+    TRIAGE = "TRIAGE"
+
+
+class SuggestionStatus(str, Enum):
+    """AI Suggestion 生命周期状态（V38-011）。"""
+
+    OPEN = "OPEN"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    APPLIED = "APPLIED"
+    EXPIRED = "EXPIRED"
+
+
+class FeedbackType(str, Enum):
+    """Human Feedback 类型（V38-012；append-only）。"""
+
+    CORRECTION = "CORRECTION"
+    CONFIRMATION = "CONFIRMATION"
+    REJECTION = "REJECTION"
+
+
+class StrategyType(str, Enum):
+    """数据/browser 策略类型（V38-008）。"""
+
+    DATA = "DATA"
+    API = "API"
+    DB_FIXTURE = "DB_FIXTURE"
+    WORKFLOW = "WORKFLOW"
+    BROWSER = "BROWSER"
+
+
+class ScenarioGapType(str, Enum):
+    """Scenario Gap 来源类型（V38-010）。"""
+
+    PROD_NEW_STATE = "PROD_NEW_STATE"
+    HISTORICAL_DEFECT = "HISTORICAL_DEFECT"
+    REPEATED_BUSINESS_FAIL = "REPEATED_BUSINESS_FAIL"
+    UNCOVERED_CONTRACT_RULE = "UNCOVERED_CONTRACT_RULE"
+    UNCOVERED_JOURNEY = "UNCOVERED_JOURNEY"
+    NEW_OPENAPI_STATE = "NEW_OPENAPI_STATE"
+
+
+class GapCandidateStatus(str, Enum):
+    """ScenarioGapCandidate 生命周期状态（V38-010；proposal only）。"""
+
+    OPEN = "OPEN"
+    CONVERTED = "CONVERTED"
+    REJECTED = "REJECTED"
+    EXPIRED = "EXPIRED"
+
+
+class ModelEvaluationStatus(str, Enum):
+    """ModelEvaluationRun 生命周期状态（V38-013）。"""
+
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class AutoRetryDecision(str, Enum):
+    """AutoRetry Policy 判定（V38-014）。"""
+
+    RETRY = "RETRY"
+    NO_RETRY = "NO_RETRY"
+    INVALID = "INVALID"
