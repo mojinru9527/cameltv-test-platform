@@ -352,7 +352,7 @@ def get_domain_tree(db: Session, project_id: int = 0) -> list[dict]:
 
     # 排序：用户端 → 运营后台 → 接口测试 → 其他
     _domain_order = {"用户端": 0, "运营后台": 1, "接口测试": 2}
-    result.sort(key=lambda d: _domain_order.get(d["domain"], 99))
+    result.sort(key=lambda d: _domain_order.get(str(d["domain"]), 99))
     return result
 
 
@@ -688,11 +688,11 @@ def get_category_tree(db: Session, project_id: int) -> list[dict]:
             domain_modules[domain][module] = domain_modules[domain].get(module, 0) + cnt
 
     for domain in sorted(domain_modules):
-        modules = domain_modules[domain]
-        total = sum(modules.values())
-        mod_list = [{"module": m, "count": c} for m, c in sorted(modules.items())]
+        domain_mods = domain_modules[domain]
+        total = sum(domain_mods.values())
+        mod_list = [{"module": m, "count": c} for m, c in sorted(domain_mods.items())]
         result.append({"domain": domain, "count": total, "modules": mod_list})
 
     _domain_order = {"用户端": 0, "运营后台": 1, "接口测试": 2}
-    result.sort(key=lambda d: _domain_order.get(d["domain"], 99))
+    result.sort(key=lambda d: _domain_order.get(str(d["domain"]), 99))
     return result

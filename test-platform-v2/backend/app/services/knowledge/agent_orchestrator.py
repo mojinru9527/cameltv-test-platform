@@ -16,6 +16,7 @@ import logging
 import time
 
 import httpx
+from typing import Any
 
 from app.core.config import settings
 from app.core.db import SessionLocal
@@ -123,7 +124,7 @@ def _run_dsh_agent(
     user_input: str,
     params: dict,
     start: float,
-) -> dict[str, any]:
+) -> dict[str, Any]:
     """dsh_execution：通过 DeepSeek Harness 真实执行任务并持久化 AiArtifact。
 
     不走 RAG+LLM 推理链路；user_input（或 params.task）即任务文本。执行输出、
@@ -131,7 +132,7 @@ def _run_dsh_agent(
     """
     from app.services.dsh.dsh_runner import run_dsh_task, runtime_available
 
-    def _finish_failed(message: str, status: str = "failed") -> dict[str, any]:
+    def _finish_failed(message: str, status: str = "failed") -> dict[str, Any]:
         duration_ms = int((time.perf_counter() - start) * 1000)
         agent_run_service.finish_run(
             db, run, status=status, error_message=message, duration_ms=duration_ms,
@@ -205,7 +206,7 @@ def run_agent_in_new_session(
     user_input: str = "",
     params: dict | None = None,
     operator_id: int = 0,
-) -> dict[str, any]:
+) -> dict[str, Any]:
     """独立 Session 执行一次 Agent Pipeline。返回 {"run_id": int, "artifact_id": int|None, "status": str}。
 
     此函数设计为在 BackgroundTasks 中调用，不阻塞 HTTP 响应。

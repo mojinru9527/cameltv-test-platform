@@ -179,17 +179,24 @@ def run_wiki_ingest_in_new_session(project_id: int, job_id: int) -> None:
             return
         raw = db.get(WikiRawSource, job.raw_source_id)
         if not raw:
-            job.status = "failed"; job.error_message = "raw source 不存在"
-            job.finished_at = datetime.now(); db.commit(); return
+            job.status = "failed"
+            job.error_message = "raw source 不存在"
+            job.finished_at = datetime.now()
+            db.commit()
+            return
 
-        job.status = "running"; job.stage = "analysis"; db.commit()
+        job.status = "running"
+        job.stage = "analysis"
+        db.commit()
         analysis = _run_analysis(db, project_id, raw)
         job.analysis_json = json.dumps(analysis, ensure_ascii=False)
-        job.stage = "generation"; db.commit()
+        job.stage = "generation"
+        db.commit()
 
         result = _generate(db, project_id, raw, analysis)
         job.result_json = json.dumps(result, ensure_ascii=False)
-        job.status = "success"; job.finished_at = datetime.now()
+        job.status = "success"
+        job.finished_at = datetime.now()
         db.commit()
     except Exception as e:
         logger.exception("wiki ingest failed: job=%s", job_id)
@@ -197,8 +204,10 @@ def run_wiki_ingest_in_new_session(project_id: int, job_id: int) -> None:
         try:
             job = db.get(WikiIngestJob, job_id)
             if job:
-                job.status = "failed"; job.error_message = str(e)[:500]
-                job.finished_at = datetime.now(); db.commit()
+                job.status = "failed"
+                job.error_message = str(e)[:500]
+                job.finished_at = datetime.now()
+                db.commit()
         except Exception:
             db.rollback()
     finally:

@@ -129,7 +129,7 @@ def trigger_schedule(
         return R.ok(r)
     except ValueError as e:
         from app.core.exceptions import APIException
-        raise APIException(str(e))
+        raise APIException(msg=str(e))
 
 
 @router.get("/{schedule_id}/runs", response_model=R[dict])

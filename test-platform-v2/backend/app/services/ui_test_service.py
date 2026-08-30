@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -45,7 +46,7 @@ def _run_to_dict(r: UiTestRun, job: UiTestJob | None = None) -> dict:
         result = json.loads(r.result) if r.result else {}
     except (json.JSONDecodeError, TypeError):
         result = {}
-    screenshots = []
+    screenshots: list[Any] = []
     try:
         screenshots = json.loads(r.screenshots) if r.screenshots else []
     except (json.JSONDecodeError, TypeError):
@@ -203,7 +204,7 @@ def delete_job(db: Session, job_id: int, project_id: int) -> bool:
 def _sync_schedule(db: Session, job, project_id: int) -> None:
     """B112-3：UI job 定时开关与 cron 联动 TestSchedule（job_type=ui）。"""
     from app.models.test_schedule import TestSchedule
-    from app.core.scheduler import add_schedule_job, toggle_schedule_job
+    from app.core.scheduler import add_schedule_job
 
     sched = db.scalar(
         select(TestSchedule).where(

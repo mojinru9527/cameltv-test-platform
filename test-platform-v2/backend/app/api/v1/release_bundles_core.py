@@ -317,9 +317,23 @@ def get_regression_scope(
     test_summaries = []
     for mod_name in changed_modules:
         try:
-            summary = get_module_test_summary(db, mod_name, pid)
-            if summary.get("total", 0) > 0:
-                test_summaries.append({"module": mod_name, **summary})
+            mod_id = release_bundle_service.get_module_id_by_name(db, mod_name, pid)
+            if mod_id is None:
+                continue
+            summary = get_module_test_summary(db, module_id=mod_id, project_id=pid)
+            if summary.total_test_cases > 0:
+                test_summaries.append({
+                    "module": mod_name,
+                    "module_id": summary.module_id,
+                    "module_name": summary.module_name,
+                    "total": summary.total_test_cases,
+                    "functional": summary.functional,
+                    "api": summary.api,
+                    "automation": summary.automation,
+                    "coverage_rate": summary.coverage_rate,
+                    "last_run_status": summary.last_run_status,
+                    "linked_case_ids": summary.linked_case_ids,
+                })
         except Exception:
             logger.warning("获取模块测试摘要失败: %s", mod_name)
 
@@ -378,6 +392,7 @@ def trigger_regression_for_bundle(
     # 查找匹配的 UI 脚本
     scripts = release_bundle_service.list_active_ui_scripts(db, pid, module_names)
 
+    assert target_environment is not None
     triggered_jobs: list[dict] = []
     for script in scripts:
         try:
@@ -390,7 +405,7 @@ def trigger_regression_for_bundle(
             }
             result = ui_test_service.create_job(db, job_data, current.user.id, pid)
             if result:
-                ui_test_service.trigger_job(db, result["id"], pid, current.user.id)
+                ui_test_service.trigger_job(db, result["id"], pid)
                 triggered_jobs.append({"job_id": result["id"], "module": script.module, "spec": script.name})
         except Exception as e:
             logger.warning(f"Failed to trigger regression for module {script.module}: {e}")

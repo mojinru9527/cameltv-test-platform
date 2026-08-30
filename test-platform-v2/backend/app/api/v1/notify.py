@@ -32,6 +32,7 @@ def list_channels(
     current: CurrentUser = Depends(require_permission("notify:list")),
     db: Session = Depends(get_db),
 ):
+    assert current.project_id is not None
     channels = notify_service.list_channels(db, current.project_id)
     return R.ok(channels)
 
@@ -43,6 +44,7 @@ def create_channel(
     current: CurrentUser = Depends(require_permission("notify:manage")),
     db: Session = Depends(get_db),
 ):
+    assert current.project_id is not None
     ch = notify_service.create_channel(db, body, current.project_id)
     db.commit()
     _audit(req, current, db, "notify:channel:create", ch.get("name", ""))
@@ -57,6 +59,7 @@ def update_channel(
     current: CurrentUser = Depends(require_permission("notify:manage")),
     db: Session = Depends(get_db),
 ):
+    assert current.project_id is not None
     ch = notify_service.update_channel(db, ch_id, body, current.project_id)
     if not ch:
         from app.core.exceptions import not_found
@@ -73,6 +76,7 @@ def delete_channel(
     current: CurrentUser = Depends(require_permission("notify:manage")),
     db: Session = Depends(get_db),
 ):
+    assert current.project_id is not None
     ok = notify_service.delete_channel(db, ch_id, current.project_id)
     if not ok:
         from app.core.exceptions import not_found
@@ -90,6 +94,7 @@ def test_notify(
     db: Session = Depends(get_db),
 ):
     """向项目下所有启用的渠道发送测试通知。"""
+    assert current.project_id is not None
     result = notify_service.notify_sync(
         db, current.project_id,
         event="plan_done",

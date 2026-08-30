@@ -283,15 +283,17 @@ def compute_summary(db: Session, mission_id: int, project_id: int) -> dict:
         by_type[case.case_type] = by_type.get(case.case_type, 0) + 1
         by_priority[case.priority] = by_priority.get(case.priority, 0) + 1
 
-    executions = []
+    executions: list[Any] = []
     if mission.test_plan_id:
         plan_case_ids = db.scalars(
             select(TestPlanCase.id).where(TestPlanCase.plan_id == mission.test_plan_id)
         ).all()
         if plan_case_ids:
-            executions = db.scalars(
-                select(TestExecution).where(TestExecution.plan_case_id.in_(plan_case_ids))
-            ).all()
+            executions = list(
+                db.scalars(
+                    select(TestExecution).where(TestExecution.plan_case_id.in_(plan_case_ids))
+                ).all()
+            )
 
     executed = len(executions)
     passed = sum(1 for e in executions if e.status == "passed")

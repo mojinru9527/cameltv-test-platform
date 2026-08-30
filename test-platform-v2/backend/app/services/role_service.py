@@ -84,7 +84,9 @@ def create_role(db: Session, data: dict) -> dict:
     db.flush()
     _sync_permissions(db, role.id, data.get("permission_codes", []))
     db.commit()
-    return get_role(db, role.id)
+    created = get_role(db, role.id)
+    assert created is not None
+    return created
 
 
 def update_role(db: Session, role_id: int, data: dict) -> dict | None:

@@ -172,7 +172,7 @@ def generate_api_openapi(
             import_to_case_library=body.import_to_case_library,
         )
     except ValueError as e:
-        raise APIException(str(e))
+        raise APIException(msg=str(e))
     return R.ok(data)
 
 
@@ -193,7 +193,7 @@ def generate_api_traffic(
             import_to_case_library=body.import_to_case_library,
         )
     except ValueError as e:
-        raise APIException(str(e))
+        raise APIException(msg=str(e))
     return R.ok(data)
 
 
@@ -214,7 +214,7 @@ def generate_ui_draft(
             max_cases=body.max_cases,
         )
     except ValueError as e:
-        raise APIException(str(e))
+        raise APIException(msg=str(e))
     return R.ok(data)
 
 

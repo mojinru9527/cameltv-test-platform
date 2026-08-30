@@ -162,13 +162,13 @@ def list_requirements_page(
         )
     count_stmt = select(func.count()).select_from(RequirementDocument).where(*filters)
     total = db.scalar(count_stmt) or 0
-    rows = list(db.execute(
+    rows = [(row[0], row[1]) for row in db.execute(
         select(RequirementDocument, User.username)
         .outerjoin(User, User.id == RequirementDocument.creator_id)
         .where(*filters)
         .order_by(RequirementDocument.id.desc())
         .offset((page - 1) * page_size).limit(page_size)
-    ).all())
+    ).all()]
     return total, rows
 
 
@@ -218,14 +218,16 @@ def get_requirement_cases(db: Session, doc_id: int, project_id: int) -> dict | N
         return None
 
     # Parse previously imported indices
+    imported_func_set: set[int] = set()
+    imported_api_set: set[int] = set()
     try:
         imported_func_set = set(json.loads(row.imported_func_indices or "[]"))
     except json.JSONDecodeError:
-        imported_func_set: set[int] = set()
+        pass
     try:
         imported_api_set = set(json.loads(row.imported_api_indices or "[]"))
     except json.JSONDecodeError:
-        imported_api_set: set[int] = set()
+        pass
 
     # Build structured result with indices (same format as generate endpoint)
     func_cases: list[dict] = []
@@ -873,7 +875,7 @@ def import_cases(
                 requested_func_indices.add(case_index)
 
         # batch-167 Phase 3a: 为 P0/P1 有步骤功能用例生成 UI 自动化变体（幂等）
-        ui_case_ids: list[int] = []
+        ui_case_ids = []
         ui_created = 0
         if create_ui_cases:
             # batch-168 D4：补生成 UI 变体时覆盖该文档「全部已导入」功能用例
@@ -1081,7 +1083,6 @@ _CN_EN_KEYWORDS: dict[str, list[str]] = {
     "公告": ["announcement"], "聊天室": ["chat"], "消息": ["message"], "评论": ["comment"],
     "视频": ["video"], "详情": ["detail"], "列表": ["list"], "数据": ["data"],
     "上传": ["upload"], "分析": ["analysis"], "排名": ["rank", "standings"], "赛程": ["schedule"],
-    "回放": ["replay"], "公告": ["announcement"],
 }
 
 
@@ -1336,7 +1337,7 @@ def generate_api_cases_from_linked_endpoints(
         select(ApiService).where(ApiService.id.in_({e.service_id for e in endpoint_rows.values() if e.service_id}))
     ).all()} if endpoint_rows else {}
     service_names = {
-        eid: (svc_rows.get(ep.service_id).display_name or svc_rows.get(ep.service_id).name if ep.service_id in svc_rows else "")
+        eid: (svc_rows[ep.service_id].display_name or svc_rows[ep.service_id].name if ep.service_id in svc_rows else "")
         for eid, ep in endpoint_rows.items()
     }
 
@@ -1344,7 +1345,7 @@ def generate_api_cases_from_linked_endpoints(
     upserted = 0
     inserted = 0
     linked_ids = set(_parse_indices(doc.linked_api_endpoint_ids or "[]"))
-    seen_identity: set[tuple[str, str, str]] = set()
+    seen_identity: set[tuple[str, str, str, str]] = set()
 
     def _persist(case: dict, endpoint_dict: dict, module_name: str, source: str = "fp") -> None:
         nonlocal generated, upserted, inserted

@@ -16,7 +16,7 @@ DEFAULT_TIMEOUT = 30  # seconds per stream probe
 SUPPORTED_PROTOCOLS = {"HLS", "FLV", "RTMP", "DASH", "HTTP", "HTTPS"}
 
 # 指标定义: (名称, ffprobe 提取函数, 阈值, 单位)
-METRIC_DEFS = [
+METRIC_DEFS: list[dict[str, Any]] = [
     {
         "name": "起播时延",
         "unit": "ms",

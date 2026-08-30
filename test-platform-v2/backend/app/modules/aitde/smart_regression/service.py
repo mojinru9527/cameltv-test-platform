@@ -11,7 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime
-from typing import Any
+from typing import Any, Callable
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -505,7 +505,7 @@ class LineageBackfillService:
 class ChangeSetService:
     """Detect a ChangeSet from a Diff Provider and normalize it (V37-003..007)."""
 
-    _DIFF = {
+    _DIFF: dict[str, Callable] = {
         ChangeSetType.PRD.value: diff_mod.diff_requirement,
         ChangeSetType.OPENAPI.value: diff_mod.diff_openapi,
         ChangeSetType.DB_SCHEMA.value: diff_mod.diff_db_schema,

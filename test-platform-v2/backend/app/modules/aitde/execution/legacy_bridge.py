@@ -277,6 +277,7 @@ def bridge_api_item(
         run_row = _ensure_legacy_run(db, project_id, environment_id=environment_id)
     else:
         # Tenant boundary: an explicit run must belong to the caller's project.
+        assert run_id is not None
         run_row = repository.get_run(db, run_id, project_id)
         if run_row is None:
             raise APIException(code=404, msg="统一执行记录不存在", http_status=404)
@@ -340,6 +341,7 @@ def bridge_ui_run(
         run_row = _ensure_legacy_run(db, project_id, environment_id=environment_id)
     else:
         # Tenant boundary: an explicit run must belong to the caller's project.
+        assert run_id is not None
         run_row = repository.get_run(db, run_id, project_id)
         if run_row is None:
             raise APIException(code=404, msg="统一执行记录不存在", http_status=404)

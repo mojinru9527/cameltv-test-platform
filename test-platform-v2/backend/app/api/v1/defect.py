@@ -287,7 +287,7 @@ def upload_attachment(
         if cl > max_bytes:
             from app.core.exceptions import APIException
             raise APIException(
-                f"上传文件超过限制 (max: 50 MB, got: {cl / (1024*1024):.1f} MB)",
+                msg=f"上传文件超过限制 (max: 50 MB, got: {cl / (1024*1024):.1f} MB)",
                 code=413,
             )
     # P1-5b: 直接读取（Content-Length 已做前置检查，max 50 MB；upload_attachment
@@ -295,7 +295,7 @@ def upload_attachment(
     content = file.file.read()
     if len(content) > 50 * 1024 * 1024:
         from app.core.exceptions import APIException
-        raise APIException("附件大小不能超过 50 MB", code=413)
+        raise APIException(msg="附件大小不能超过 50 MB", code=413)
     a = defect_service.upload_attachment(
         db, defect_id, file.filename or "unknown", content,
         project_id=current.project_id or 0,

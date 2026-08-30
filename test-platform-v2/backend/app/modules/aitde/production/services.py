@@ -32,16 +32,13 @@ from app.modules.aitde.common.enums import (
     ObservationSessionStatus,
     PiiClassification,
     PolicyDecision,
-    TemplateValidationStatus,
 )
 from app.modules.aitde.data import repository as data_repository
 from app.modules.aitde.production import repository as repo
 from app.modules.aitde.production import policies
 from app.modules.aitde.production.policies import (
     ProductionDbGuard,
-    ReadOnlyBrowserPolicy,
     production_db_guard,
-    readonly_browser_policy,
 )
 
 
@@ -441,7 +438,7 @@ class EntityGraphExtractor:
     ) -> tuple[dict[str, Any], str]:
         """BFS over relations. ``child_loader`` returns child nodes for a given
         (parent_entity_type, parent_ref_hash, depth). Returns (graph, content_hash)."""
-        visited: set[str] = set()
+        visited: set[tuple[str, str]] = set()
         nodes: list[dict[str, Any]] = []
         edges: list[dict[str, Any]] = []
         queue: list[tuple[str, str, int]] = [(root_entity_type, root_ref_hash, 0)]

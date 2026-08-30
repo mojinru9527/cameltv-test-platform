@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile
-from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.config import settings

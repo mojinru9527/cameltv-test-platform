@@ -79,6 +79,8 @@ from app.models.wiki import (
 
 __all__ = [
     "AiProvider",
+    "AiTask",
+    "InteractionEdge",
     "ApiEndpoint",
     "ApiExecutionTask",
     "ApiExecutionTaskItem",

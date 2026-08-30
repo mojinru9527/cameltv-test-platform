@@ -240,7 +240,7 @@ class ApiTaskItemOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def curl_command(self) -> str:
         """从 request_snapshot 中提取 curl 命令。"""
@@ -250,7 +250,7 @@ class ApiTaskItemOut(BaseModel):
             return ""
         return snap.get("curl", "") or ""
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def truncated(self) -> bool:
         """从 response_snapshot 中提取 truncated 标记。"""

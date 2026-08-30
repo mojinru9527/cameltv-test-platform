@@ -704,8 +704,6 @@ def _execute_ui_case_sync(db, case, project_id: int, *, base_url: str = "", stor
 
     返回 pass/fail、产物与执行摘要；编译含 TODO 占位或执行失败都如实返回。
     """
-    from app.schemas.playground import CompileRequest, SourceType
-    from app.services.playground_service import build_gherkin_from_case, compile_spec
 
     base_url = (base_url or "").strip() or "http://localhost:5173"
     spec_code, compiler = _compile_ui_case(db, case, project_id, base_url)

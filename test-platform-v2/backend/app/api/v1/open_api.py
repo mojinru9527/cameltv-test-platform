@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import logging
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, Header, Request
 from sqlalchemy.orm import Session
@@ -269,7 +268,7 @@ def ci_get_ui_run(
         raise APIException(code=403, msg="无权访问此运行记录")
 
     import json as _json
-    result = {}
+    result: dict[str, Any] = {}
     try:
         result = _json.loads(run.result) if run.result else {}
     except (_json.JSONDecodeError, TypeError):

@@ -23,7 +23,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
-from app.core.task_queue import QueueSpec, atomic_claim_by_id, reap_stale, utcnow
+from app.core.task_queue import QueueSpec, atomic_claim_by_id, reap_stale
 from app.models.knowledge import AgentQueueItem
 from app.services.knowledge.agent_orchestrator import run_agent_in_new_session
 

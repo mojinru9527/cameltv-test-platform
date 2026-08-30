@@ -47,7 +47,7 @@ class TemporalWorkflowGateway:
 
     # ── availability ─────────────────────────────────────────────────────────
 
-    def unavailable(self) -> tuple[str, str]:
+    def unavailable(self) -> tuple[str | None, str | None]:
         """Return (code, detail) when Temporal is not usable; None if usable."""
         if not settings.temporal_enabled:
             return "TEMPORAL_DISABLED", "Temporal Durable Runtime is not enabled"
@@ -58,6 +58,7 @@ class TemporalWorkflowGateway:
     def _ensure_available(self) -> None:
         code, detail = self.unavailable()
         if code is not None:
+            assert detail is not None
             raise APIException(code=400, msg=detail, http_status=503)
 
     # ── client lifecycle ─────────────────────────────────────────────────────
@@ -237,6 +238,7 @@ def get_activities():
 def _ensure_enabled() -> None:
     code, detail = temporal_gateway.unavailable()
     if code is not None:
+        assert detail is not None
         raise APIException(code=400, msg=detail, http_status=503)
 
 

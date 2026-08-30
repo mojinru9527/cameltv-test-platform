@@ -36,8 +36,8 @@ def parse_raw_content(raw_content: str, source_type: str) -> tuple[list[str], li
         if not all(isinstance(item, dict) for item in data):
             raise ValueError("JSON 数组元素必须是对象")
         # Collect all unique keys as columns (preserving order)
-        columns: list[str] = list(dict.fromkeys(k for obj in data for k in obj))
-        return columns, data
+        json_columns: list[str] = list(dict.fromkeys(k for obj in data for k in obj))
+        return json_columns, data
 
     raise ValueError(f"不支持的数据源类型: {source_type}")
 

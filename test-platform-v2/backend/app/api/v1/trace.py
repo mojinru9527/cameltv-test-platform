@@ -17,6 +17,7 @@ def coverage(
     db=Depends(get_db),
 ):
     """返回项目维度覆盖率：用例→计划→执行→缺陷 的统计矩阵。"""
+    assert current.project_id is not None
     result = trace_service.get_project_coverage(db, current.project_id)
     return R(data=result)
 
@@ -28,6 +29,7 @@ def trend(
     db=Depends(get_db),
 ):
     """返回最近 N 天的每日执行通过率趋势。"""
+    assert current.project_id is not None
     result = trace_service.get_trend(db, current.project_id, days=min(days, 180))
     return R(data=result)
 
@@ -39,6 +41,7 @@ def case_trace(
     db=Depends(get_db),
 ):
     """返回单个用例的完整追溯链：关联的计划→执行记录→缺陷。"""
+    assert current.project_id is not None
     result = trace_service.get_case_trace(db, case_id, current.project_id)
     if result is None:
         from app.core.exceptions import not_found
@@ -53,6 +56,7 @@ def requirement_coverage(
     db=Depends(get_db),
 ):
     """返回单个需求文档的覆盖率：关联用例→计划→执行→缺陷的完整矩阵。"""
+    assert current.project_id is not None
     result = trace_service.get_requirement_coverage(db, doc_id, current.project_id)
     if result is None:
         from app.core.exceptions import not_found

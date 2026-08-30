@@ -221,14 +221,14 @@ async def capture_page_segments(page_url: str, output_dir: Path, page_key: str) 
             result.truncated = plan.truncated
 
             prev_hash = ""
-            for idx, top in enumerate(positions):
+            for idx, scroll_top in enumerate(positions):
                 if inner_selector:
                     await page.evaluate(
                         """({selector, y}) => { const el = document.querySelector(selector); if (el) el.scrollTop = y; }""",
-                        {"selector": inner_selector, "y": top},
+                        {"selector": inner_selector, "y": scroll_top},
                     )
                 else:
-                    await page.evaluate("(y) => window.scrollTo(0, y)", top)
+                    await page.evaluate("(y) => window.scrollTo(0, y)", scroll_top)
                 await page.wait_for_timeout(wait_ms)
 
                 if inner_selector:

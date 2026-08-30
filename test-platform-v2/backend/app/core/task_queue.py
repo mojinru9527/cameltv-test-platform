@@ -176,9 +176,9 @@ def _claim_by_id(db: Session, spec: QueueSpec, row_id: Any, *, worker_id: str) -
     if result.rowcount != 1:
         return None
     row = db.get(spec.model, row_id)
-    if row is not None and _has_col(spec, "started_at") and getattr(row, "started_at") is None:
+    if row is not None and _has_col(spec, "started_at") and row.started_at is None:
         # 仅当尚未开始才写入 started_at（幂等恢复场景不覆盖原值）
-        setattr(row, "started_at", now)
+        row.started_at = now
         db.commit()
     return row
 
@@ -221,7 +221,7 @@ def reap_stale(
         getattr(spec.model, spec.status_col).key: failed_value or spec.failed,
     }
     if _has_col(spec, "finished_at"):
-        values[getattr(spec.model, "finished_at").key] = utcnow()
+        values[spec.model.finished_at.key] = utcnow()
     if _has_col(spec, spec.lock_by_col):
         values[getattr(spec.model, spec.lock_by_col).key] = ""
     msg = error_message or (
@@ -272,7 +272,7 @@ def finish_task(
     """
     setattr(row, spec.status_col, status)
     if _has_col(spec, "finished_at"):
-        setattr(row, "finished_at", utcnow())
+        row.finished_at = utcnow()
     if _has_col(spec, spec.lock_by_col):
         setattr(row, spec.lock_by_col, "")
     for key, value in extra.items():

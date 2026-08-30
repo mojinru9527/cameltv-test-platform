@@ -81,8 +81,10 @@ def run_diff_in_new_session(project_id: int, task_id: int) -> None:
         try:
             task = db.get(WikiDiffTask, task_id)
             if task:
-                task.status = "failed"; task.error_message = str(e)[:500]
-                task.finished_at = datetime.now(); db.commit()
+                task.status = "failed"
+                task.error_message = str(e)[:500]
+                task.finished_at = datetime.now()
+                db.commit()
         except Exception:
             db.rollback()
     finally:

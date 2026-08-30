@@ -127,7 +127,7 @@ def _gherkin_to_playwright(source: str) -> str:
         if not matched:
             # Unmatched line → comment + raw
             steps.append(f"  // ⚠️ 未识别步骤（需人工补充）: {stripped}")
-            steps.append(f"  // TODO: 请补充对应的 Playwright 操作")
+            steps.append("  // TODO: 请补充对应的 Playwright 操作")
 
     steps = [_rewrite_click_target(step) for step in steps]
     joined_steps = "\n".join(steps) if steps else "  // No steps parsed"
@@ -387,7 +387,6 @@ def run_case_batch(
     关联用例的 UiTestJob；后续由 UI 自动化任务运行时生成 trace/report 产物。
     """
     from datetime import datetime, timezone
-    from app.models.test_case import TestCase
     from app.core.execution_status import canonical_exec_status
 
     cases = _get_project_cases(db, project_id, case_ids)

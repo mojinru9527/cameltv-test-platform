@@ -48,6 +48,7 @@ def list_projects(current: CurrentUser = Depends(get_current_user), db: Session 
 @router.get("/current", response_model=R[ProjectOut], summary="校验并返回当前项目（需 X-Project-Id）")
 def current_project(current: CurrentUser = Depends(require_project), db: Session = Depends(get_db)):
     from app.core.exceptions import not_found
+    assert current.project_id is not None
     proj = project_service.get_project_orm(db, current.project_id)
     if not proj:
         raise not_found("项目")

@@ -189,7 +189,9 @@ def retry_ingest_job(
         return R(code=404, msg="任务不存在")
     if job.status == "running":
         return R(code=400, msg="任务运行中，无法重试")
-    job.status = "pending"; job.stage = "analysis"; job.error_message = ""
+    job.status = "pending"
+    job.stage = "analysis"
+    job.error_message = ""
     job.retry_count = (job.retry_count or 0) + 1
     db.commit()
     background_tasks.add_task(ingest_service.run_wiki_ingest_in_new_session, job.project_id, job.id)

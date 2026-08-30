@@ -335,7 +335,7 @@ def _execute_commands_hook(payload: dict[str, Any]) -> dict[str, Any]:
                     client.close()
                 try:
                     resp_json = resp.json()
-                except Exception:  
+                except Exception:
                     resp_json = resp.text[:2000]
                 st_row = ExecutionStep(
                     run_id=run_id, sequence=seq,
@@ -352,7 +352,7 @@ def _execute_commands_hook(payload: dict[str, Any]) -> dict[str, Any]:
                 db.add(st_row)
                 db.commit()
                 results.append({"name": step.get("name"), "method": method, "http_status": status, "ok": status < 400})
-            except Exception as exc:  
+            except Exception as exc:
                 db.rollback()
                 results.append({"name": step.get("name"), "method": method, "error": repr(exc)[:120]})
         return {"steps": results, "command_plan_version_id": plan_version_id}

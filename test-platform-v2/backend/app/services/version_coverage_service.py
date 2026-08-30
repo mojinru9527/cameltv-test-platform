@@ -7,7 +7,6 @@
 """
 from __future__ import annotations
 
-import json
 from typing import Any
 
 from sqlalchemy import select
@@ -93,7 +92,7 @@ def compute_bundle_coverage(db: Session, bundle_id: int, project_id: int) -> dic
         from app.core.exceptions import not_found
         raise not_found("发布包")
 
-    module_rows = list(db.scalars(
+    module_rows: list[Any] = list(db.scalars(
         select(RequirementModule).where(
             RequirementModule.release_bundle_id == bundle_id,
             RequirementModule.node_type == "module",
@@ -197,7 +196,7 @@ def compute_bundle_coverage(db: Session, bundle_id: int, project_id: int) -> dic
         if ctype == "manual" and case.priority in ("P0", "P1"):
             slot["p0p1"] += 1
 
-    rows: list[dict[str, Any]] = []
+    out_rows: list[dict[str, Any]] = []
     covered = 0
     executed_covered = 0
     p0p1_total = 0
@@ -206,7 +205,7 @@ def compute_bundle_coverage(db: Session, bundle_id: int, project_id: int) -> dic
         mid = getattr(mod, "id", None)
         mkey = _module_key(mod.name)
 
-        def _slot(ctype: str) -> dict[str, int]:
+        def _slot(ctype: str, mid=mid, mkey=mkey) -> dict[str, int]:
             return case_index.get((mid, mkey, ctype), {})
 
         entry: dict[str, Any] = {
@@ -240,9 +239,9 @@ def compute_bundle_coverage(db: Session, bundle_id: int, project_id: int) -> dic
             p0p1_total += 1
             if entry["covered"]:
                 p0p1_covered += 1
-        rows.append(entry)
+        out_rows.append(entry)
 
-    total = len(rows)
+    total = len(out_rows)
     covered_rate = round(covered / total, 4) if total else 0.0
     executed_rate = round(executed_covered / total, 4) if total else 0.0
     return {
@@ -262,5 +261,5 @@ def compute_bundle_coverage(db: Session, bundle_id: int, project_id: int) -> dic
         "target_rate": TARGET_RATE,
         "target_rate_percent": round(TARGET_RATE * 100, 1),
         "gate_passed": covered_rate >= TARGET_RATE,
-        "rows": rows,
+        "rows": out_rows,
     }
