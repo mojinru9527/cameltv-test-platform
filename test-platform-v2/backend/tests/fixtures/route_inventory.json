@@ -1,5 +1,5 @@
 {
-  "count": 552,
+  "count": 565,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -51,11 +51,11 @@
     },
     {
       "path": "/api/v1/ai-config/providers/{provider_id}",
-      "method": "PUT"
+      "method": "DELETE"
     },
     {
       "path": "/api/v1/ai-config/providers/{provider_id}",
-      "method": "DELETE"
+      "method": "PUT"
     },
     {
       "path": "/api/v1/ai-config/providers/{provider_id}/test-connection",
@@ -95,11 +95,11 @@
     },
     {
       "path": "/api/v1/apitest/endpoints/{endpoint_id}",
-      "method": "PUT"
+      "method": "DELETE"
     },
     {
       "path": "/api/v1/apitest/endpoints/{endpoint_id}",
-      "method": "DELETE"
+      "method": "PUT"
     },
     {
       "path": "/api/v1/apitest/import/confirm",
@@ -119,11 +119,11 @@
     },
     {
       "path": "/api/v1/apitest/runner/tasks",
-      "method": "POST"
+      "method": "GET"
     },
     {
       "path": "/api/v1/apitest/runner/tasks",
-      "method": "GET"
+      "method": "POST"
     },
     {
       "path": "/api/v1/apitest/services",
@@ -132,30 +132,30 @@
     {
       "path": "/api/v1/apitest/services",
       "method": "POST"
+    },
+    {
+      "path": "/api/v1/apitest/services/{service_id}",
+      "method": "DELETE"
     },
     {
       "path": "/api/v1/apitest/services/{service_id}",
       "method": "PUT"
     },
     {
-      "path": "/api/v1/apitest/services/{service_id}",
-      "method": "DELETE"
+      "path": "/api/v1/apitest/tasks",
+      "method": "GET"
     },
     {
       "path": "/api/v1/apitest/tasks",
       "method": "POST"
     },
     {
-      "path": "/api/v1/apitest/tasks",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/apitest/tasks/{task_id}",
-      "method": "GET"
-    },
-    {
       "path": "/api/v1/apitest/tasks/{task_id}",
       "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/apitest/tasks/{task_id}",
+      "method": "GET"
     },
     {
       "path": "/api/v1/apitest/tasks/{task_id}/analysis",
@@ -239,15 +239,15 @@
     },
     {
       "path": "/api/v1/datasets/{dataset_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/datasets/{dataset_id}",
       "method": "GET"
     },
     {
       "path": "/api/v1/datasets/{dataset_id}",
       "method": "PUT"
-    },
-    {
-      "path": "/api/v1/datasets/{dataset_id}",
-      "method": "DELETE"
     },
     {
       "path": "/api/v1/defects",
@@ -263,6 +263,10 @@
     },
     {
       "path": "/api/v1/defects/{defect_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}",
       "method": "GET"
     },
     {
@@ -270,24 +274,20 @@
       "method": "PUT"
     },
     {
-      "path": "/api/v1/defects/{defect_id}",
-      "method": "DELETE"
+      "path": "/api/v1/defects/{defect_id}/attachments",
+      "method": "GET"
     },
     {
       "path": "/api/v1/defects/{defect_id}/attachments",
       "method": "POST"
     },
     {
-      "path": "/api/v1/defects/{defect_id}/attachments",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/defects/{defect_id}/attachments/{attachment_id}",
-      "method": "GET"
-    },
-    {
       "path": "/api/v1/defects/{defect_id}/attachments/{attachment_id}",
       "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}/attachments/{attachment_id}",
+      "method": "GET"
     },
     {
       "path": "/api/v1/defects/{defect_id}/comments",
@@ -315,11 +315,11 @@
     },
     {
       "path": "/api/v1/dsh-tasks",
-      "method": "POST"
+      "method": "GET"
     },
     {
       "path": "/api/v1/dsh-tasks",
-      "method": "GET"
+      "method": "POST"
     },
     {
       "path": "/api/v1/dsh-tasks/health",
@@ -359,11 +359,11 @@
     },
     {
       "path": "/api/v1/environments/{env_id}",
-      "method": "PUT"
+      "method": "DELETE"
     },
     {
       "path": "/api/v1/environments/{env_id}",
-      "method": "DELETE"
+      "method": "PUT"
     },
     {
       "path": "/api/v1/environments/{env_id}/variables",
@@ -375,11 +375,11 @@
     },
     {
       "path": "/api/v1/environments/{env_id}/variables/{var_id}",
-      "method": "PUT"
+      "method": "DELETE"
     },
     {
       "path": "/api/v1/environments/{env_id}/variables/{var_id}",
-      "method": "DELETE"
+      "method": "PUT"
     },
     {
       "path": "/api/v1/integrations",
@@ -395,15 +395,15 @@
     },
     {
       "path": "/api/v1/integrations/{integration_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/integrations/{integration_id}",
       "method": "GET"
     },
     {
       "path": "/api/v1/integrations/{integration_id}",
       "method": "PUT"
-    },
-    {
-      "path": "/api/v1/integrations/{integration_id}",
-      "method": "DELETE"
     },
     {
       "path": "/api/v1/integrations/{integration_id}/sync-logs",
@@ -531,11 +531,11 @@
     },
     {
       "path": "/api/v1/knowledge/iterations",
-      "method": "POST"
+      "method": "GET"
     },
     {
       "path": "/api/v1/knowledge/iterations",
-      "method": "GET"
+      "method": "POST"
     },
     {
       "path": "/api/v1/knowledge/iterations/{iteration_id}",
@@ -615,19 +615,19 @@
     },
     {
       "path": "/api/v1/lanhu-evidence/jobs",
-      "method": "POST"
+      "method": "GET"
     },
     {
       "path": "/api/v1/lanhu-evidence/jobs",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/lanhu-evidence/jobs/{job_id}",
-      "method": "GET"
+      "method": "POST"
     },
     {
       "path": "/api/v1/lanhu-evidence/jobs/{job_id}",
       "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/lanhu-evidence/jobs/{job_id}",
+      "method": "GET"
     },
     {
       "path": "/api/v1/lanhu-evidence/jobs/{job_id}/assets",
@@ -671,11 +671,11 @@
     },
     {
       "path": "/api/v1/notify/channels/{ch_id}",
-      "method": "PUT"
+      "method": "DELETE"
     },
     {
       "path": "/api/v1/notify/channels/{ch_id}",
-      "method": "DELETE"
+      "method": "PUT"
     },
     {
       "path": "/api/v1/notify/test",
@@ -763,11 +763,11 @@
     },
     {
       "path": "/api/v1/organizations/{organization_id}",
-      "method": "PUT"
+      "method": "DELETE"
     },
     {
       "path": "/api/v1/organizations/{organization_id}",
-      "method": "DELETE"
+      "method": "PUT"
     },
     {
       "path": "/api/v1/organizations/{organization_id}/members",
@@ -819,6 +819,10 @@
     },
     {
       "path": "/api/v1/projects/{project_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/projects/{project_id}",
       "method": "GET"
     },
     {
@@ -826,16 +830,12 @@
       "method": "PUT"
     },
     {
-      "path": "/api/v1/projects/{project_id}",
-      "method": "DELETE"
+      "path": "/api/v1/projects/{project_id}/invites",
+      "method": "GET"
     },
     {
       "path": "/api/v1/projects/{project_id}/invites",
       "method": "POST"
-    },
-    {
-      "path": "/api/v1/projects/{project_id}/invites",
-      "method": "GET"
     },
     {
       "path": "/api/v1/projects/{project_id}/invites/{invite_id}/disable",
@@ -843,11 +843,11 @@
     },
     {
       "path": "/api/v1/projects/{project_id}/members",
-      "method": "POST"
+      "method": "GET"
     },
     {
       "path": "/api/v1/projects/{project_id}/members",
-      "method": "GET"
+      "method": "POST"
     },
     {
       "path": "/api/v1/projects/{project_id}/members/{user_id}",
@@ -871,15 +871,15 @@
     },
     {
       "path": "/api/v1/release-bundles/{bundle_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/release-bundles/{bundle_id}",
       "method": "GET"
     },
     {
       "path": "/api/v1/release-bundles/{bundle_id}",
       "method": "PUT"
-    },
-    {
-      "path": "/api/v1/release-bundles/{bundle_id}",
-      "method": "DELETE"
     },
     {
       "path": "/api/v1/release-bundles/{bundle_id}/coverage",
@@ -919,15 +919,15 @@
     },
     {
       "path": "/api/v1/report-templates/{template_id}",
-      "method": "PUT"
-    },
-    {
-      "path": "/api/v1/report-templates/{template_id}",
       "method": "DELETE"
     },
     {
       "path": "/api/v1/report-templates/{template_id}",
       "method": "GET"
+    },
+    {
+      "path": "/api/v1/report-templates/{template_id}",
+      "method": "PUT"
     },
     {
       "path": "/api/v1/reports",
@@ -943,11 +943,11 @@
     },
     {
       "path": "/api/v1/reports/{report_id}",
-      "method": "GET"
+      "method": "DELETE"
     },
     {
       "path": "/api/v1/reports/{report_id}",
-      "method": "DELETE"
+      "method": "GET"
     },
     {
       "path": "/api/v1/reports/{report_id}/export",
@@ -1055,11 +1055,11 @@
     },
     {
       "path": "/api/v1/requirements/{document_id}",
-      "method": "GET"
+      "method": "DELETE"
     },
     {
       "path": "/api/v1/requirements/{document_id}",
-      "method": "DELETE"
+      "method": "GET"
     },
     {
       "path": "/api/v1/requirements/{document_id}/cases",
@@ -1135,15 +1135,15 @@
     },
     {
       "path": "/api/v1/schedules/{schedule_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/schedules/{schedule_id}",
       "method": "GET"
     },
     {
       "path": "/api/v1/schedules/{schedule_id}",
       "method": "PUT"
-    },
-    {
-      "path": "/api/v1/schedules/{schedule_id}",
-      "method": "DELETE"
     },
     {
       "path": "/api/v1/schedules/{schedule_id}/runs",
@@ -1191,15 +1191,15 @@
     },
     {
       "path": "/api/v1/system/roles/{role_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/system/roles/{role_id}",
       "method": "GET"
     },
     {
       "path": "/api/v1/system/roles/{role_id}",
       "method": "PUT"
-    },
-    {
-      "path": "/api/v1/system/roles/{role_id}",
-      "method": "DELETE"
     },
     {
       "path": "/api/v1/system/users",
@@ -1211,15 +1211,15 @@
     },
     {
       "path": "/api/v1/system/users/{user_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/system/users/{user_id}",
       "method": "GET"
     },
     {
       "path": "/api/v1/system/users/{user_id}",
       "method": "PUT"
-    },
-    {
-      "path": "/api/v1/system/users/{user_id}",
-      "method": "DELETE"
     },
     {
       "path": "/api/v1/test-cases",
@@ -1231,11 +1231,11 @@
     },
     {
       "path": "/api/v1/test-cases/batch",
-      "method": "PUT"
+      "method": "DELETE"
     },
     {
       "path": "/api/v1/test-cases/batch",
-      "method": "DELETE"
+      "method": "PUT"
     },
     {
       "path": "/api/v1/test-cases/domains",
@@ -1283,15 +1283,15 @@
     },
     {
       "path": "/api/v1/test-cases/{case_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/test-cases/{case_id}",
       "method": "GET"
     },
     {
       "path": "/api/v1/test-cases/{case_id}",
       "method": "PUT"
-    },
-    {
-      "path": "/api/v1/test-cases/{case_id}",
-      "method": "DELETE"
     },
     {
       "path": "/api/v1/test-cases/{case_id}/execute",
@@ -1323,15 +1323,15 @@
     },
     {
       "path": "/api/v1/test-plans/{plan_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/test-plans/{plan_id}",
       "method": "GET"
     },
     {
       "path": "/api/v1/test-plans/{plan_id}",
       "method": "PUT"
-    },
-    {
-      "path": "/api/v1/test-plans/{plan_id}",
-      "method": "DELETE"
     },
     {
       "path": "/api/v1/test-plans/{plan_id}/auto-execute",
@@ -1343,11 +1343,11 @@
     },
     {
       "path": "/api/v1/test-plans/{plan_id}/cases",
-      "method": "POST"
+      "method": "DELETE"
     },
     {
       "path": "/api/v1/test-plans/{plan_id}/cases",
-      "method": "DELETE"
+      "method": "POST"
     },
     {
       "path": "/api/v1/test-plans/{plan_id}/cases/assign",
@@ -1391,11 +1391,11 @@
     },
     {
       "path": "/api/v1/tokens/{token_id}",
-      "method": "PUT"
+      "method": "DELETE"
     },
     {
       "path": "/api/v1/tokens/{token_id}",
-      "method": "DELETE"
+      "method": "PUT"
     },
     {
       "path": "/api/v1/trace/case/{case_id}",
@@ -1463,6 +1463,10 @@
     },
     {
       "path": "/api/v1/ui-tests/scripts/{script_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/ui-tests/scripts/{script_id}",
       "method": "GET"
     },
     {
@@ -1470,7 +1474,7 @@
       "method": "PUT"
     },
     {
-      "path": "/api/v1/ui-tests/scripts/{script_id}",
+      "path": "/api/v1/ui-tests/{job_id}",
       "method": "DELETE"
     },
     {
@@ -1480,10 +1484,6 @@
     {
       "path": "/api/v1/ui-tests/{job_id}",
       "method": "PUT"
-    },
-    {
-      "path": "/api/v1/ui-tests/{job_id}",
-      "method": "DELETE"
     },
     {
       "path": "/api/v1/ui-tests/{job_id}/runs",
@@ -1503,15 +1503,15 @@
     },
     {
       "path": "/api/v1/version-missions/{mission_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/version-missions/{mission_id}",
       "method": "GET"
     },
     {
       "path": "/api/v1/version-missions/{mission_id}",
       "method": "PUT"
-    },
-    {
-      "path": "/api/v1/version-missions/{mission_id}",
-      "method": "DELETE"
     },
     {
       "path": "/api/v1/version-missions/{mission_id}/generate/api-openapi",
@@ -1527,11 +1527,11 @@
     },
     {
       "path": "/api/v1/version-missions/{mission_id}/logs",
-      "method": "POST"
+      "method": "GET"
     },
     {
       "path": "/api/v1/version-missions/{mission_id}/logs",
-      "method": "GET"
+      "method": "POST"
     },
     {
       "path": "/api/v1/version-missions/{mission_id}/quality-gate",
@@ -1555,11 +1555,11 @@
     },
     {
       "path": "/api/v1/wiki/diff/tasks",
-      "method": "POST"
+      "method": "GET"
     },
     {
       "path": "/api/v1/wiki/diff/tasks",
-      "method": "GET"
+      "method": "POST"
     },
     {
       "path": "/api/v1/wiki/diff/tasks/{task_id}",
@@ -1567,11 +1567,15 @@
     },
     {
       "path": "/api/v1/wiki/external-connections",
-      "method": "POST"
+      "method": "GET"
     },
     {
       "path": "/api/v1/wiki/external-connections",
-      "method": "GET"
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/wiki/external-connections/{conn_id}",
+      "method": "DELETE"
     },
     {
       "path": "/api/v1/wiki/external-connections/{conn_id}",
@@ -1580,10 +1584,6 @@
     {
       "path": "/api/v1/wiki/external-connections/{conn_id}",
       "method": "PUT"
-    },
-    {
-      "path": "/api/v1/wiki/external-connections/{conn_id}",
-      "method": "DELETE"
     },
     {
       "path": "/api/v1/wiki/external-connections/{conn_id}/files/content",
@@ -1738,6 +1738,10 @@
       "method": "POST"
     },
     {
+      "path": "/api/v2/build-observations/{build_observation_id}/diff",
+      "method": "GET"
+    },
+    {
       "path": "/api/v2/campaigns",
       "method": "POST"
     },
@@ -1747,6 +1751,14 @@
     },
     {
       "path": "/api/v2/campaigns/{campaign_id}/run",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/change-sets/{change_set_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/change-sets/{change_set_id}/impact",
       "method": "POST"
     },
     {
@@ -1854,6 +1866,18 @@
       "method": "GET"
     },
     {
+      "path": "/api/v2/impact-runs/{impact_run_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/impact-runs/{impact_run_id}/scenarios/{scenario_id}/explanation",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/impact-runs/{impact_run_id}/selections",
+      "method": "POST"
+    },
+    {
       "path": "/api/v2/intents/{intent_id}/review",
       "method": "POST"
     },
@@ -1863,11 +1887,11 @@
     },
     {
       "path": "/api/v2/missions",
-      "method": "POST"
+      "method": "GET"
     },
     {
       "path": "/api/v2/missions",
-      "method": "GET"
+      "method": "POST"
     },
     {
       "path": "/api/v2/missions/{mission_id}",
@@ -1902,6 +1926,14 @@
       "method": "GET"
     },
     {
+      "path": "/api/v2/missions/{mission_id}/changes/detect",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/missions/{mission_id}/changes/detect-risk",
+      "method": "POST"
+    },
+    {
       "path": "/api/v2/missions/{mission_id}/contract",
       "method": "GET"
     },
@@ -1916,6 +1948,18 @@
     {
       "path": "/api/v2/missions/{mission_id}/intents",
       "method": "GET"
+    },
+    {
+      "path": "/api/v2/missions/{mission_id}/lineage",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/missions/{mission_id}/lineage/backfill",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/missions/{mission_id}/lineage/edges",
+      "method": "POST"
     },
     {
       "path": "/api/v2/missions/{mission_id}/quality-gates/evaluate",
@@ -1943,11 +1987,11 @@
     },
     {
       "path": "/api/v2/missions/{mission_id}/sources",
-      "method": "POST"
+      "method": "GET"
     },
     {
       "path": "/api/v2/missions/{mission_id}/sources",
-      "method": "GET"
+      "method": "POST"
     },
     {
       "path": "/api/v2/missions/{mission_id}/sources/{source_id}/fragments",
@@ -1974,6 +2018,50 @@
       "method": "POST"
     },
     {
+      "path": "/api/v2/production/data/inspect",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/production/entity-graphs/extract",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/production/evidence/{journey_id}/analyze-gaps",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/production/journeys",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/production/journeys/{journey_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/production/observation-sessions",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/production/observation-sessions/{session_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/production/observation-sessions/{session_id}/stop",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/production/templates",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/production/templates/{template_id}/materialize",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/production/templates/{template_id}/validate",
+      "method": "POST"
+    },
+    {
       "path": "/api/v2/quality-gate-results/{result_id}",
       "method": "GET"
     },
@@ -1982,12 +2070,24 @@
       "method": "POST"
     },
     {
-      "path": "/api/v2/run-profiles",
+      "path": "/api/v2/regression-selections/{selection_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/regression-selections/{selection_id}/campaign",
       "method": "POST"
+    },
+    {
+      "path": "/api/v2/regression-selections/{selection_id}/guard",
+      "method": "GET"
     },
     {
       "path": "/api/v2/run-profiles",
       "method": "GET"
+    },
+    {
+      "path": "/api/v2/run-profiles",
+      "method": "POST"
     },
     {
       "path": "/api/v2/runs/{run_id}",
@@ -1999,11 +2099,11 @@
     },
     {
       "path": "/api/v2/runs/{run_id}/audit",
-      "method": "POST"
+      "method": "GET"
     },
     {
       "path": "/api/v2/runs/{run_id}/audit",
-      "method": "GET"
+      "method": "POST"
     },
     {
       "path": "/api/v2/runs/{run_id}/cancel",
@@ -2051,11 +2151,11 @@
     },
     {
       "path": "/api/v2/scenarios/{scenario_id}/adapters",
-      "method": "POST"
+      "method": "GET"
     },
     {
       "path": "/api/v2/scenarios/{scenario_id}/adapters",
-      "method": "GET"
+      "method": "POST"
     },
     {
       "path": "/api/v2/scenarios/{scenario_id}/functional-projection",
@@ -2071,11 +2171,11 @@
     },
     {
       "path": "/api/v2/scenarios/{scenario_id}/manual-sessions/{session_id}/steps",
-      "method": "POST"
+      "method": "GET"
     },
     {
       "path": "/api/v2/scenarios/{scenario_id}/manual-sessions/{session_id}/steps",
-      "method": "GET"
+      "method": "POST"
     },
     {
       "path": "/api/v2/scenarios/{scenario_id}/manual-sessions/{session_id}/steps/{step_id}/complete",
@@ -2115,11 +2215,19 @@
     },
     {
       "path": "/api/v2/triggers",
-      "method": "POST"
+      "method": "GET"
     },
     {
       "path": "/api/v2/triggers",
-      "method": "GET"
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/triggers/{trigger_id}/fire",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/triggers/{trigger_id}/webhook",
+      "method": "POST"
     },
     {
       "path": "/api/v2/workers",
@@ -2152,62 +2260,6 @@
     {
       "path": "/health",
       "method": "GET"
-    },
-    {
-      "path": "/api/v2/build-observations/{build_observation_id}/diff",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/triggers/{trigger_id}/fire",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/triggers/{trigger_id}/webhook",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/production/data/inspect",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/production/entity-graphs/extract",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/production/evidence/{journey_id}/analyze-gaps",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/production/journeys",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/production/journeys/{journey_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/production/observation-sessions",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/production/observation-sessions/{session_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/production/observation-sessions/{session_id}/stop",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/production/templates",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/production/templates/{template_id}/materialize",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/production/templates/{template_id}/validate",
-      "method": "POST"
     }
   ]
 }
