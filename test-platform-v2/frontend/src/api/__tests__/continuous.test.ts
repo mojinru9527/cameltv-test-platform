@@ -56,6 +56,12 @@ describe('continuous API functions', () => {
     expect(mockGet).toHaveBeenCalledWith('/campaigns/1', expect.objectContaining({}))
   })
 
+  it('fetchMissionCampaigns GETs /missions/:id/campaigns', async () => {
+    mockGet.mockResolvedValue({ items: [] })
+    await fetchMissionCampaigns(7)
+    expect(mockGet).toHaveBeenCalledWith('/missions/7/campaigns', expect.objectContaining({}))
+  })
+
   it('runCampaign POSTs /campaigns/:id/run', async () => {
     mockPost.mockResolvedValue({ id: 1 })
     await runCampaign(1)
