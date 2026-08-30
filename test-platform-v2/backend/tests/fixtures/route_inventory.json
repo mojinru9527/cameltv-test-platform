@@ -1,5 +1,5 @@
 {
-  "count": 565,
+  "count": 580,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -2259,6 +2259,66 @@
     },
     {
       "path": "/health",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/runs/{run_id}/triage",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/runs/{run_id}/hypotheses",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/hypotheses/{hypothesis_id}/review",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/healing-proposals/{proposal_id}/apply",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/flaky",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_id}/stability",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/ai-suggestions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/ai-suggestions/{suggestion_id}/review",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/missions/{mission_id}/scenario-gaps",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/scenario-gaps/{gap_id}/convert",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/feedback",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/feedback",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/model-evaluations",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/model-evaluations",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/model-evaluations/regression-check",
       "method": "GET"
     }
   ]

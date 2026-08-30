@@ -59,6 +59,10 @@ const MissionAcceptancePage = lazy(() => import('@/pages/missions/acceptance'))
 const MissionChangesPage = lazy(() => import('@/pages/missions/changes'))
 const MissionImpactPage = lazy(() => import('@/pages/missions/impact'))
 const MissionTracePage = lazy(() => import('@/pages/missions/trace'))
+const MissionGapsPage = lazy(() => import('@/pages/missions/gaps'))
+const AiSuggestionsPage = lazy(() => import('@/pages/ai-suggestions'))
+const FlakyPage = lazy(() => import('@/pages/flaky'))
+const AiEvaluationsPage = lazy(() => import('@/pages/admin/ai-evaluations'))
 const RegressionSelectionPage = lazy(() => import('@/pages/regression-selections'))
 const CampaignDetailPage = lazy(() => import('@/pages/campaigns/CampaignDetail'))
 const HealingReviewPage = lazy(() => import('@/pages/healing'))
@@ -307,7 +311,42 @@ export const router = createBrowserRouter([
           { path: 'changes', element: <PageLoader><MissionChangesPage /></PageLoader> },
           { path: 'impact', element: <PageLoader><MissionImpactPage /></PageLoader> },
           { path: 'trace', element: <PageLoader><MissionTracePage /></PageLoader> },
+          { path: 'gaps', element: <PageLoader><MissionGapsPage /></PageLoader> },
         ],
+      },
+      // ── AITDE V3.8: AI QA Closed Loop（AI Suggestions / Flaky / 模型评估）──
+      {
+        path: 'ai-suggestions',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><AiSuggestionsPage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="AI 建议收件箱需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
+      },
+      {
+        path: 'flaky',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><FlakyPage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="Flaky 分析需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
+      },
+      {
+        path: 'admin/ai-evaluations',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><AiEvaluationsPage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="AI 模型评估需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
       },
       // ── AITDE V3.5: Campaign 详情（V35-013）──
       {
