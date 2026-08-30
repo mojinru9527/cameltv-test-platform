@@ -1081,7 +1081,6 @@ _CN_EN_KEYWORDS: dict[str, list[str]] = {
     "公告": ["announcement"], "聊天室": ["chat"], "消息": ["message"], "评论": ["comment"],
     "视频": ["video"], "详情": ["detail"], "列表": ["list"], "数据": ["data"],
     "上传": ["upload"], "分析": ["analysis"], "排名": ["rank", "standings"], "赛程": ["schedule"],
-    "回放": ["replay"], "公告": ["announcement"],
 }
 
 

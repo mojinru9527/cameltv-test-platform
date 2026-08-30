@@ -16,7 +16,6 @@ import inspect
 import logging
 
 logger = logging.getLogger(__name__)
-import json
 import re
 import sys
 from pathlib import Path

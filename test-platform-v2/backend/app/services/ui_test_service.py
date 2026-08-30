@@ -203,7 +203,7 @@ def delete_job(db: Session, job_id: int, project_id: int) -> bool:
 def _sync_schedule(db: Session, job, project_id: int) -> None:
     """B112-3：UI job 定时开关与 cron 联动 TestSchedule（job_type=ui）。"""
     from app.models.test_schedule import TestSchedule
-    from app.core.scheduler import add_schedule_job, toggle_schedule_job
+    from app.core.scheduler import add_schedule_job
 
     sched = db.scalar(
         select(TestSchedule).where(

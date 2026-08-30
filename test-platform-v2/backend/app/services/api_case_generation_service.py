@@ -84,7 +84,7 @@ def generate_cases_from_real_sample(endpoint: dict, real_sample: dict) -> list[d
     _resp_assertions = _response_structure_assertions(real_sample)
     cases.append(_mk(
         "正常请求（真实业务参数原样）", "positive", "positive", "场景法",
-        dict(body), f"接口返回 2xx；响应结构与真实调用一致。",
+        dict(body), "接口返回 2xx；响应结构与真实调用一致。",
         assertions=[
             {"type": "status_code", "expected": 200, "operator": "gte"},
             {"type": "status_code", "expected": 300, "operator": "lt"},

@@ -41,7 +41,6 @@ from app.core.task_queue import (
 from app.models.ai_provider import AiProvider
 from app.models.dsh_task import DshTask
 from app.services.ai_config_service import (
-    AIProviderUnconfiguredError,
     EffectiveAiConfig,
     ai_config_service,
 )

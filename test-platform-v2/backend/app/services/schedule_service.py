@@ -360,7 +360,6 @@ def trigger_schedule(db: Session, schedule_id: int, project_id: int) -> dict:
     """
     from datetime import datetime, timezone
 
-    from app.core.scheduler import _execute_schedule
 
     s = db.scalar(
         select(TestSchedule).where(

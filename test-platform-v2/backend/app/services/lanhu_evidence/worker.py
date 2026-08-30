@@ -10,12 +10,12 @@ import logging
 import threading
 from datetime import datetime, timedelta
 
-from sqlalchemy import func, select, update
+from sqlalchemy import func, update
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.db import SessionLocal
-from app.core.task_queue import QueueSpec, atomic_claim, utcnow
+from app.core.task_queue import QueueSpec, atomic_claim
 from app.models.lanhu_evidence import LanhuEvidenceJob
 
 

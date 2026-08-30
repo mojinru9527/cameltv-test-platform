@@ -32,16 +32,13 @@ from app.modules.aitde.common.enums import (
     ObservationSessionStatus,
     PiiClassification,
     PolicyDecision,
-    TemplateValidationStatus,
 )
 from app.modules.aitde.data import repository as data_repository
 from app.modules.aitde.production import repository as repo
 from app.modules.aitde.production import policies
 from app.modules.aitde.production.policies import (
     ProductionDbGuard,
-    ReadOnlyBrowserPolicy,
     production_db_guard,
-    readonly_browser_policy,
 )
 
 

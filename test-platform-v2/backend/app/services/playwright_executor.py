@@ -15,7 +15,6 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 
@@ -77,7 +76,7 @@ def _claim_pending_run(db: Session, run_id: int) -> bool:
     Batch 181（FIX-173-P2-06）：走 app.core.task_queue 统一原子认领原语
     （条件 UPDATE + rowcount），行为与原先一致。
     """
-    from app.core.task_queue import QueueSpec, atomic_claim_by_id, utcnow
+    from app.core.task_queue import QueueSpec, atomic_claim_by_id
     from app.models.ui_test import UiTestRun
 
     _UI_RUN_QUEUE = QueueSpec(

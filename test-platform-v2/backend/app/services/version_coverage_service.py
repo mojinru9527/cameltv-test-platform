@@ -7,7 +7,6 @@
 """
 from __future__ import annotations
 
-import json
 from typing import Any
 
 from sqlalchemy import select
@@ -206,7 +205,7 @@ def compute_bundle_coverage(db: Session, bundle_id: int, project_id: int) -> dic
         mid = getattr(mod, "id", None)
         mkey = _module_key(mod.name)
 
-        def _slot(ctype: str) -> dict[str, int]:
+        def _slot(ctype: str, mid=mid, mkey=mkey) -> dict[str, int]:
             return case_index.get((mid, mkey, ctype), {})
 
         entry: dict[str, Any] = {
