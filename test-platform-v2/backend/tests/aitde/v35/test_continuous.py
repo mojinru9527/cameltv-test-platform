@@ -147,3 +147,69 @@ def test_create_and_list_trigger(db):
     assert trig["trigger_type"] == TriggerType.FINGERPRINT.value
     items = service.list_triggers(db, 1)
     assert [t["id"] for t in items] == [trig["id"]]
+
+
+# ── V35-009 Schedule Adapter (legacy schedule 不破坏) ─────────────────────────
+
+
+def _fake_schedule(sid=1, enabled=True, cron="0 2 * * *", plan_id=9):
+    class S:
+        pass
+
+    s = S()
+    s.id = sid
+    s.enabled = enabled
+    s.cron_expression = cron
+    s.job_type = "plan"
+    s.job_id = None
+    s.plan_id = plan_id
+    s.environment_id = 3
+    return s
+
+
+def test_schedule_adapter_creates_trigger(db):
+    from app.modules.aitde.continuous.adapters import schedule_adapter
+
+    trig = schedule_adapter.to_trigger(db, _fake_schedule(), project_id=1)
+    assert trig["trigger_type"] == TriggerType.SCHEDULE.value
+    assert trig["status"] == "ACTIVE"
+
+
+def test_schedule_adapter_idempotent(db):
+    from app.modules.aitde.continuous.adapters import schedule_adapter
+
+    t1 = schedule_adapter.to_trigger(db, _fake_schedule(), project_id=1)
+    t2 = schedule_adapter.to_trigger(db, _fake_schedule(), project_id=1)
+    # Same legacy schedule -> same trigger (no duplicate).
+    assert t1["id"] == t2["id"]
+
+
+def test_schedule_adapter_disabled_maps_status(db):
+    from app.modules.aitde.continuous.adapters import schedule_adapter
+
+    trig = schedule_adapter.to_trigger(db, _fake_schedule(enabled=False), project_id=1)
+    assert trig["status"] == "DISABLED"
+
+
+# ── V35-010 TestPlan Adapter (旧 plan 可读) ──────────────────────────────────
+
+
+def test_testplan_adapter_creates_campaign(db):
+    from app.modules.aitde.continuous.adapters import test_plan_adapter
+
+    plan_id = 55
+    campaign = test_plan_adapter.to_campaign(db, _fake_plan(plan_id), project_id=1)
+    assert campaign["created_by_type"] == "LEGACY"
+    assert campaign["mission_id"] == plan_id
+    assert campaign["campaign_type"] == CampaignType.CUSTOM.value
+
+
+def _fake_plan(pid=55):
+    class P:
+        pass
+
+    p = P()
+    p.id = pid
+    p.project_id = 1
+    p.name = "回归计划"
+    return p
