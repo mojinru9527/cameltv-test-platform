@@ -352,8 +352,10 @@ def _extract_temporal_workflow_id(row: Any) -> str | None:
         req = _json.loads(row.request_json or "{}")
         if isinstance(req, dict) and req.get("temporal_workflow_id"):
             return str(req["temporal_workflow_id"])
-    except (ValueError, TypeError):
-        pass
+    except (ValueError, TypeError) as exc:  # noqa: BLE001 — malformed metadata falls back
+        logger.warning(
+            "[approval] request_json 不是有效 JSON（fallback 到 run_id 查找）: %s", exc
+        )
     if row.run_id:
         wf = repository.get_workflow_run_by_run_id(row.run_id)
         if wf is not None:
