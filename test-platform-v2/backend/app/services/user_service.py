@@ -75,7 +75,9 @@ def create_user(db: Session, data: dict) -> dict:
 
     _sync_roles(db, user.id, data.get("role_codes", []))
     db.commit()
-    return get_user(db, user.id)
+    created = get_user(db, user.id)
+    assert created is not None
+    return created
 
 
 def update_user(db: Session, user_id: int, data: dict) -> dict | None:
