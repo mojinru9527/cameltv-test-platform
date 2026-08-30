@@ -56,6 +56,7 @@ const MissionActionPlanPage = lazy(() => import('@/pages/missions/action-plan'))
 const HybridRunPage = lazy(() => import('@/pages/missions/hybrid-run'))
 const MissionBuildsPage = lazy(() => import('@/pages/missions/builds'))
 const MissionAcceptancePage = lazy(() => import('@/pages/missions/acceptance'))
+const CampaignDetailPage = lazy(() => import('@/pages/campaigns/CampaignDetail'))
 const HealingReviewPage = lazy(() => import('@/pages/healing'))
 const DataSourcesPage = lazy(() => import('@/pages/data-sources'))
 const FixturesPage = lazy(() => import('@/pages/fixtures'))
@@ -295,6 +296,18 @@ export const router = createBrowserRouter([
           { path: 'builds', element: <PageLoader><MissionBuildsPage /></PageLoader> },
           { path: 'acceptance', element: <PageLoader><MissionAcceptancePage /></PageLoader> },
         ],
+      },
+      // ── AITDE V3.5: Campaign 详情（V35-013）──
+      {
+        path: 'campaigns/:id',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><CampaignDetailPage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="Campaign 详情需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
       },
       // ── AITDE V3.3: Browser + Hybrid + Assisted Manual（V33-012..016）──
       {
