@@ -337,6 +337,11 @@ export const RUNTIME_STATUS_LABELS: Record<string, { label: string; color: strin
   RUNNING: { label: '执行中', color: 'bg-status-info-muted text-status-info' },
   FINISHED: { label: '已完成', color: 'bg-status-success-muted text-status-success' },
   CANCELLED: { label: '已取消', color: 'bg-muted text-muted-foreground' },
+  // V3.4 Durable Runtime states — distinct from business failure.
+  WAITING_WORKER: { label: '等待Worker', color: 'bg-status-warning-muted text-status-warning' },
+  WAITING_APPROVAL: { label: '等待审批', color: 'bg-status-warning-muted text-status-warning' },
+  RETRYING: { label: '重试中', color: 'bg-status-info-muted text-status-info' },
+  RESUMING: { label: '恢复中', color: 'bg-status-info-muted text-status-info' },
 }
 
 export const AUDIT_OUTCOME_LABELS: Record<string, { label: string; color: string }> = {

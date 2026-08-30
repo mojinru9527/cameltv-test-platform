@@ -45,8 +45,9 @@ def menu_tree(db: Session, codes: list[str]) -> list[MenuOut]:
 
     # (v331-gap B1) AITDE V3 未开启时隐藏智能测试任务入口（与 /api/v2 的
     # require_aitde_v3 门控同源；前端路由另有 AITDE_V3_ENABLED 兜底）。
+    # (V3.4) Durable Runtime 同属 AITDE V3，关闭时一并隐藏。
     if not settings.aitde_v3_enabled:
-        visible = [p for p in visible if p.code != "menu:missions"]
+        visible = [p for p in visible if p.code not in {"menu:missions", "menu:runtime"}]
 
     # Build flat list first
     nodes: dict[int, MenuOut] = {}

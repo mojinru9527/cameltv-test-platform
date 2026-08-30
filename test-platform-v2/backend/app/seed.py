@@ -59,6 +59,9 @@ _MENUS = [
     # (v331-gap B1) AITDE V3.0 智能测试任务入口（V30-103）；AITDE_V3 关闭时由
     # menu_service 按 flag 隐藏，前端路由同样有 AITDE_V3_ENABLED 兜底。
     ("menu:missions", "智能测试任务", "", "/missions", "SparklesOutlined", 24),
+    # (V3.4 Durable Runtime) Worker / Workflow / Policy / Secret / Approval 管理入口；
+    # AITDE_V3 关闭时由 menu_service 隐藏；页内按权限分 Tab。
+    ("menu:runtime", "Durable Runtime", "", "/admin/workers", "ClusterOutlined", 25),
 ]
 
 # 操作权限点（按模块分组）：(code, name, type)
@@ -192,6 +195,20 @@ _ACTIONS = [
     # AI 配置中心（Batch A）
     ("ai_config:view", "查看 AI 配置", "button"),
     ("ai_config:manage", "管理 AI 配置", "button"),
+    # ── AITDE V3.4 Durable Runtime（Temporal + Network Worker + Security Plane）──
+    ("workers:list", "查看运行时 Worker", "button"),
+    ("workers:register", "注册/心跳 Worker", "button"),
+    ("workers:manage", "管理 Worker（drain/disable）", "button"),
+    ("workflow:list", "查看 Durable Run", "button"),
+    ("workflow:detail", "查看 Run 详情", "button"),
+    ("workflow:resume", "恢复 Durable Run", "button"),
+    ("policy:evaluate", "政策网关判定", "button"),
+    ("policy:list", "查看 Policy Profile", "button"),
+    ("policy:manage", "管理 Policy Profile", "button"),
+    ("secret:list", "查看 SecretRef metadata", "button"),
+    ("secret:manage", "管理 SecretRef metadata", "button"),
+    ("approval:list", "查看审批请求", "button"),
+    ("approval:resolve", "批准/拒绝审批", "button"),
 ]
 
 # 测试人员可见的菜单子集
@@ -241,6 +258,8 @@ _TESTER_ACTIONS = {
     "menu:ai_config", "ai_config:view",
     # 蓝湖证据包（采集可发起；导入/审核留管理员）
     "lanhu_evidence:view", "lanhu_evidence:run",
+    # (V3.4 Durable Runtime) Worker / Workflow 只读 + 恢复；Policy/Secret/Approval 管理员专属
+    "workers:list", "workflow:list", "workflow:detail", "workflow:resume",
 }
 
 # 运营只读角色（C31-3）：仅查看，无任何写操作
@@ -276,6 +295,8 @@ _TESTER_MENUS = {
     "menu:myproject",
     # (v331-gap B1) 智能测试任务入口
     "menu:missions",
+    # (V3.4 Durable Runtime) Worker / Workflow 只读入口（Policy/Secret/Approval 在页内按权限显示）
+    "menu:runtime",
 }
 
 

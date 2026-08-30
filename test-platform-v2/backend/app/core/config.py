@@ -277,6 +277,21 @@ class Settings(BaseSettings):
     lanhu_evidence_import_to_knowledge: bool = True
     lanhu_evidence_import_to_wiki: bool = True
 
+    # ── AITDE V3.4 Durable Runtime — Temporal (V34-001/002) ──
+    # 总开关：关闭时 TemporalWorkflowGateway 保持可导入但返回 "disabled"；
+    # 开启后才连接 Temporal 并执行 ScenarioExecutionWorkflow。
+    temporal_enabled: bool = False
+    temporal_grpc_endpoint: str = "127.0.0.1:7233"  # Temporal server address
+    temporal_namespace: str = "default"
+    temporal_task_queue: str = "worker-test"        # 默认队列（V3.4 §1 worker-test）
+    temporal_tls_enabled: bool = False              # 生产/跨网段建议开启
+    temporal_insecure_channel: bool = True          # mTLS 时置 False
+    temporal_tls_cert_path: str = ""                # worker 客户端证书（machine identity）
+    temporal_tls_key_path: str = ""
+    temporal_tls_ca_path: str = ""
+    temporal_start_to_close_timeout_seconds: int = 3600
+    temporal_activity_retry_attempts: int = 3       # Activity 级重试次数（幂等保证下使用）
+
     @property
     def cors_origins(self) -> list[str]:
         return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]

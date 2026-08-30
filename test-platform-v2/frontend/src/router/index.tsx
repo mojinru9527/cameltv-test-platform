@@ -62,6 +62,7 @@ const ExecutionCenterPage = lazy(() => import('@/pages/executions'))
 const RunDetailPage = lazy(() => import('@/pages/executions/run/[runId]'))
 const ReplayPage = lazy(() => import('@/pages/executions/replay'))
 const MissionExecutionsPage = lazy(() => import('@/pages/executions/mission'))
+const RuntimeAdminPage = lazy(() => import('@/pages/runtime'))
 const themeLabEnabled = isThemeLabEnabled(import.meta.env.DEV, import.meta.env.VITE_ENABLE_THEME_LAB)
 
 function PageLoader({ children }: { children: ReactNode }) {
@@ -378,6 +379,14 @@ export const router = createBrowserRouter([
           <PageLoader><FixtureDetailPage /></PageLoader>
         ) : (
           <Unavailable title="AITDE V3 未开放" description="Fixture 查看需启用 AITDE V3 功能开关后开放。" />
+        ),
+      },
+      {
+        path: 'admin/workers',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><RuntimeAdminPage /></PageLoader>
+        ) : (
+          <Unavailable title="AITDE V3 未开放" description="Durable Runtime 需启用 AITDE V3 功能开关后开放。" />
         ),
       },
       {

@@ -27,3 +27,6 @@ fastembed>=0.3            # onnx TextEmbedding（bge-small-zh-v1.5），CPU 可�
 numpy>=1.26               # 向量存储（float32 blob）+ 暴力余弦
 # AI 配置中心：Fernet 加密 AI 提供方 Key（lock 已含 cryptography==49.0.0，此处补直接依赖声明）
 cryptography>=42.0
+# ── AITDE V3.4 Durable Runtime：Temporal client + in-memory test WorkflowEnvironment ──
+# 生产由 Control Plane worker 拉取任务；test/CI 用 temporalio.testing.WorkflowEnvironment 跑真实编排。
+temporalio>=1.32
