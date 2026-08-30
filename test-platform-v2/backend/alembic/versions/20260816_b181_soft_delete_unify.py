@@ -63,8 +63,28 @@ def upgrade() -> None:
         )
 
 
+def _is_deleted_indexes(bind, table: str) -> list[str]:
+    """Indexes that reference the is_deleted column on ``table``."""
+    if not _has_table(bind, table):
+        return []
+    names = []
+    for idx in sa.inspect(bind).get_indexes(table):
+        if not idx.get("name"):
+            continue
+        # column_names may be a list; SQLite/PostgreSQL both expose it.
+        if "is_deleted" in (idx.get("column_names") or []):
+            names.append(idx["name"])
+    return names
+
+
 def downgrade() -> None:
     bind = op.get_bind()
     for table in ("knowledge_source", "knowledge_chunk"):
-        if _has_table(bind, table) and _has_col(bind, table, "is_deleted"):
-            op.drop_column(table, "is_deleted")
+        if not (_has_table(bind, table) and _has_col(bind, table, "is_deleted")):
+            continue
+        # SQLite refuses ``DROP COLUMN`` while any index still references the
+        # column, so drop the is_deleted index(es) first (see
+        # knowledge_para_fields.downgrade for the established pattern).
+        for index_name in _is_deleted_indexes(bind, table):
+            op.drop_index(index_name, table_name=table)
+        op.drop_column(table, "is_deleted")
