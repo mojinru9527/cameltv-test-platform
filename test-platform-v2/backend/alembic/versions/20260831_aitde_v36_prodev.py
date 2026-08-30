@@ -1,6 +1,6 @@
 """aitde v3.6 production evidence & real-world data template tables
 
-Revision ID: 20260831_aitde_v36_production_evidence
+Revision ID: 20260831_aitde_v36_prodev
 Revises: 20260830_aitde_v35_continuous
 Create Date: 2026-08-31 09:00:00
 
@@ -14,7 +14,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision: str = "20260831_aitde_v36_production_evidence"
+revision: str = "20260831_aitde_v36_prodev"
 down_revision: Union[str, None] = "20260830_aitde_v35_continuous"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
