@@ -390,7 +390,7 @@ def trigger_regression_for_bundle(
             }
             result = ui_test_service.create_job(db, job_data, current.user.id, pid)
             if result:
-                ui_test_service.trigger_job(db, result["id"], pid, current.user.id)
+                ui_test_service.trigger_job(db, result["id"], pid)
                 triggered_jobs.append({"job_id": result["id"], "module": script.module, "spec": script.name})
         except Exception as e:
             logger.warning(f"Failed to trigger regression for module {script.module}: {e}")

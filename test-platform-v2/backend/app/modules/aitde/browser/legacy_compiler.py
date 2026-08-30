@@ -34,7 +34,7 @@ class LegacyPlaywrightCompilerAdapter:
             )
         from app.services.case_compiler_service import compile_to_playwright
 
-        return compile_to_playwright(db, case, base_url)
+        return compile_to_playwright(db, case, base_url=base_url)
 
     @staticmethod
     def assert_deterministic_path(source_type: str | None) -> None:
