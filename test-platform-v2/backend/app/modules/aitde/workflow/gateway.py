@@ -238,6 +238,7 @@ def get_activities():
 def _ensure_enabled() -> None:
     code, detail = temporal_gateway.unavailable()
     if code is not None:
+        assert detail is not None
         raise APIException(code=400, msg=detail, http_status=503)
 
 
