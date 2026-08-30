@@ -34,7 +34,7 @@ def _set_auth_cookie(response: Response, token: str) -> None:
         max_age=settings.access_token_expire_minutes * 60,
         httponly=True,
         secure=settings.cookie_secure,
-        samesite=settings.cookie_samesite,
+        samesite=settings.cookie_samesite,  # type: ignore[arg-type]
         domain=settings.cookie_domain or None,
         path=settings.cookie_path,
     )
