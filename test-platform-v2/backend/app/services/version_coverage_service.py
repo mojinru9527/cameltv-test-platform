@@ -92,7 +92,7 @@ def compute_bundle_coverage(db: Session, bundle_id: int, project_id: int) -> dic
         from app.core.exceptions import not_found
         raise not_found("发布包")
 
-    module_rows = list(db.scalars(
+    module_rows: list[Any] = list(db.scalars(
         select(RequirementModule).where(
             RequirementModule.release_bundle_id == bundle_id,
             RequirementModule.node_type == "module",
