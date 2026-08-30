@@ -118,15 +118,32 @@ def start_scenario_execution(
     scenario_input: dict[str, Any],
     run_id: int | None = None,
     mission_id: int | None = None,
+    network_zone: str | None = None,
+    required_capabilities: list[str] | None = None,
 ) -> dict[str, Any]:
-    """Persist a WorkflowRun row (idempotent by temporal_workflow_id) and start it."""
+    """Persist a WorkflowRun row (idempotent by temporal_workflow_id) and start it.
+
+    When ``network_zone`` + ``required_capabilities`` are supplied, the run is
+    routed to a TaskQueue by the Capability Router (V34-006); otherwise the
+    configured default queue is used.
+    """
     existing = repository.get_workflow_run_by_temporal_id(db, workflow_id)
     if existing is not None:
         return workflow_run_to_dict(existing)
 
+    task_queue = None
+    if network_zone is not None:
+        from app.modules.aitde.workflow.router import task_queue_router
+
+        task_queue = task_queue_router.select_queue(
+            db,
+            network_zone=network_zone,
+            required_capabilities=required_capabilities or [],
+        )
+
     async def _start() -> dict[str, Any]:
         return await temporal_gateway.start_scenario_execution(
-            workflow_id, run_id, scenario_input
+            workflow_id, run_id, scenario_input, task_queue=task_queue
         )
 
     import asyncio

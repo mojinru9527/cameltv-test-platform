@@ -90,11 +90,16 @@ class TemporalWorkflowGateway:
         workflow_id: str,
         run_id: int | None,
         scenario_input: dict[str, Any],
+        task_queue: str | None = None,
     ) -> dict[str, Any]:
         """Start a ScenarioExecutionWorkflow. Duplicate start is idempotent:
         an already-running workflow id returns the existing handle."""
         client = await self._get_client()
-        task_queue = settings.temporal_task_queue
+        import asyncio
+
+        # Resolve the queue by (zone, capabilities) when the caller routes the
+        # run; otherwise fall back to the configured default queue.
+        resolved_queue = task_queue or settings.temporal_task_queue
         from temporalio.client import WorkflowAlreadyStartedError
 
         try:
@@ -102,11 +107,14 @@ class TemporalWorkflowGateway:
                 ScenarioExecutionWorkflow.run,
                 scenario_input,
                 id=workflow_id,
-                task_queue=task_queue,
+                task_queue=resolved_queue,
             )
         except WorkflowAlreadyStartedError:
             handle = client.get_workflow_handle(workflow_id)
-        result = await handle.result()
+        try:
+            result = await asyncio.wait_for(handle.result(), timeout=30)
+        except Exception as exc:  # noqa: BLE001 — surface workflow/activity failure
+            result = {"error": str(exc)}
         return {
             "workflow_id": workflow_id,
             "temporal_run_id": handle.first_execution_run_id,

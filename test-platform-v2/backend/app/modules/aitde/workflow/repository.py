@@ -10,6 +10,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core.task_queue import utcnow
 from app.modules.aitde.workflow.models import (
     ApprovalRequest,
     PolicyProfile,
@@ -74,6 +75,42 @@ def set_worker_status(db: Session, worker_id: int, status: str) -> WorkerNode | 
     db.commit()
     db.refresh(row)
     return row
+
+
+def mark_offline_workers(db: Session, stale_seconds: int = 180) -> int:
+    """Mark ONLINE workers whose last heartbeat is stale as OFFLINE (V34-005).
+
+    Uses naive UTC (SQLite-friendly) to compare against ``last_heartbeat_at``.
+    """
+    from datetime import timedelta
+
+    from app.modules.aitde.common.enums import WorkerStatus
+
+    cutoff = utcnow() - timedelta(seconds=max(1, stale_seconds))
+    rows = db.scalars(
+        select(WorkerNode).where(
+            WorkerNode.status == WorkerStatus.ONLINE.value,
+            WorkerNode.last_heartbeat_at.isnot(None),
+            WorkerNode.last_heartbeat_at < cutoff,
+        )
+    ).all()
+    for r in rows:
+        r.status = WorkerStatus.OFFLINE.value
+    db.commit()
+    return len(rows)
+
+
+def worker_has_capability(db: Session, worker_id: int, capability: str) -> bool:
+    """True when the worker is registered with the given capability."""
+    return (
+        db.scalar(
+            select(WorkerCapability).where(
+                WorkerCapability.worker_id == worker_id,
+                WorkerCapability.capability == capability,
+            )
+        )
+        is not None
+    )
 
 
 # ── WorkflowRun ──────────────────────────────────────────────────────────────
