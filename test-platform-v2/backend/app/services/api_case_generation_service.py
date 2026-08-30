@@ -1775,7 +1775,7 @@ def _describe_preconditions(method: str, path: str, endpoint: dict) -> str:
             if isinstance(h, dict) and h.get("required") and h.get("name")
         ]
         if req_headers:
-            parts.append("需携带 Header：" + "、".join(req_headers))
+            parts.append("需携带 Header：" + "、".join(x for x in req_headers if x is not None))
         for loc in ("query", "path"):
             params = schema.get(loc) or []
             req_params = [
@@ -1783,7 +1783,7 @@ def _describe_preconditions(method: str, path: str, endpoint: dict) -> str:
                 if isinstance(p, dict) and p.get("required") and p.get("name")
             ]
             if req_params:
-                parts.append(f"{loc} 必填参数：" + "、".join(req_params))
+                parts.append(f"{loc} 必填参数：" + "、".join(x for x in req_params if x is not None))
     summary = (endpoint.get("summary") or "").strip()
     if summary:
         parts.append(f"接口说明：{summary}")
