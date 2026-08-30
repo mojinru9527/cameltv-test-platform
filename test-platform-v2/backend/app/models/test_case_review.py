@@ -23,4 +23,4 @@ class TestCaseReviewTransition(Base):
     reviewer_name: Mapped[str] = mapped_column(String(100), default="")
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
 
-    case: Mapped["TestCase"] = relationship(back_populates="review_transitions")  # noqa: F821
+    case: Mapped["TestCase"] = relationship(back_populates="review_transitions")  # noqa: F821  # type: ignore[name-defined]
