@@ -5,7 +5,7 @@ Quality Gate evaluation. Mounted under ``/api/v2`` and feature-gated (plan §7).
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.v2.deps import require_aitde_v3
@@ -18,7 +18,9 @@ from app.modules.aitde.continuous.schemas import (
     GateEvaluateIn,
     GateOverrideIn,
     RunProfileIn,
+    TriggerFireIn,
     TriggerIn,
+    WebhookIn,
 )
 from app.schemas.common import R
 
@@ -43,6 +45,27 @@ def list_builds(
 ):
     items = repository.list_build_observations(db, mission_id)
     return R.ok({"items": [service.build_observation_to_dict(b) for b in items]})
+
+
+@router.get("/build-observations/{build_observation_id}/diff", response_model=R[dict])
+def build_diff(
+    build_observation_id: int,
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    """Deterministic Build Diff between this observation's fingerprint and its previous one."""
+    observation = repository.get_build_observation(db, build_observation_id, 0)
+    if observation is None:
+        from app.core.exceptions import APIException
+
+        raise APIException(code=404, msg="BuildObservation 不存在", http_status=404)
+    return R.ok(
+        service.build_diff(
+            db,
+            previous_fingerprint_id=observation.previous_fingerprint_id,
+            current_fingerprint_id=observation.fingerprint_id,
+        )
+    )
 
 
 @router.post("/campaigns", response_model=R[dict])
@@ -120,6 +143,46 @@ def list_triggers(
     db: Session = Depends(get_db),
 ):
     return R.ok({"items": service.list_triggers(db, current.project_id or 0)})
+
+
+@router.post("/triggers/{trigger_id}/fire", response_model=R[dict])
+def fire_trigger(
+    trigger_id: int,
+    payload: TriggerFireIn,
+    current: CurrentUser = Depends(require_permission("execution:create")),
+    db: Session = Depends(get_db),
+):
+    """manual/poll fire — drive fingerprint→build→campaign→gate once (idempotent)."""
+    return R.ok(
+        service.fire_trigger(
+            db,
+            current.project_id or 0,
+            trigger_id,
+            components=payload.components,
+            build_label=payload.build_label,
+            source_type=payload.source_type,
+        )
+    )
+
+
+@router.post("/triggers/{trigger_id}/webhook", response_model=R[dict])
+def webhook_trigger(
+    trigger_id: int,
+    payload: WebhookIn,
+    current: CurrentUser = Depends(require_permission("execution:create")),
+    db: Session = Depends(get_db),
+):
+    """Webhook delivery — same pipeline; a second call for an unchanged build is idempotent."""
+    return R.ok(
+        service.fire_trigger(
+            db,
+            current.project_id or 0,
+            trigger_id,
+            components=payload.components,
+            build_label=payload.build_label,
+            source_type=payload.source_type,
+        )
+    )
 
 
 @router.get("/missions/{mission_id}/acceptance", response_model=R[dict])

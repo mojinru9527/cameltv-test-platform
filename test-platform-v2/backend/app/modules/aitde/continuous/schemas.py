@@ -51,7 +51,24 @@ class CampaignCreateIn(BaseModel):
     name: str = Field(default="", max_length=128)
     campaign_type: CampaignType = CampaignType.IMPACTED
     project_id: int = 0
+    build_observation_id: int | None = None
     scenarios: list[dict] = Field(default_factory=list)
+
+
+class TriggerFireIn(BaseModel):
+    """Fire a trigger (manual/poll). Components become the environment fingerprint (V35-008/addition)."""
+
+    components: dict = Field(default_factory=dict)
+    build_label: str | None = Field(default=None, max_length=128)
+    source_type: FingerprintSourceType = FingerprintSourceType.AUTO
+
+
+class WebhookIn(BaseModel):
+    """Webhook delivery payload for a trigger — captured as a fingerprint (V35-008/addition)."""
+
+    components: dict = Field(default_factory=dict)
+    build_label: str | None = Field(default=None, max_length=128)
+    source_type: FingerprintSourceType = FingerprintSourceType.WEBHOOK
 
 
 class CampaignOut(BaseModel):

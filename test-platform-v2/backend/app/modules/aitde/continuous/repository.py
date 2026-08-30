@@ -36,6 +36,16 @@ def get_fingerprint_by_hash(
     )
 
 
+def get_fingerprint_by_id(
+    db: Session, fingerprint_id: int
+) -> EnvironmentFingerprint | None:
+    return db.scalar(
+        select(EnvironmentFingerprint)
+        .where(EnvironmentFingerprint.id == fingerprint_id)
+        .limit(1)
+    )
+
+
 def create_fingerprint(db: Session, data: dict[str, Any]) -> EnvironmentFingerprint:
     row = EnvironmentFingerprint(**data)
     db.add(row)
@@ -154,6 +164,31 @@ def list_campaigns(
             select(ExecutionCampaign)
             .where(ExecutionCampaign.mission_id == mission_id)
             .order_by(ExecutionCampaign.id.desc())
+            .limit(limit)
+        ).all()
+    )
+
+
+def find_campaign_for_build(
+    db: Session, build_observation_id: int
+) -> ExecutionCampaign | None:
+    """The most recent campaign bound to a BuildObservation (idempotency for firing)."""
+    return db.scalar(
+        select(ExecutionCampaign)
+        .where(ExecutionCampaign.build_observation_id == build_observation_id)
+        .order_by(ExecutionCampaign.id.desc())
+        .limit(1)
+    )
+
+
+def list_build_observations_for_environment(
+    db: Session, environment_id: int, limit: int = 50
+) -> list[BuildObservation]:
+    return list(
+        db.scalars(
+            select(BuildObservation)
+            .where(BuildObservation.environment_id == environment_id)
+            .order_by(BuildObservation.id.desc())
             .limit(limit)
         ).all()
     )
