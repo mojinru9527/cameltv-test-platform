@@ -12,12 +12,10 @@ import logging
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
-from app.models.requirement_module import RequirementModule
 from app.schemas.common import Page, R
 from app.schemas.release_bundle import (
     ReleaseBundleCreate,
@@ -319,12 +317,7 @@ def get_regression_scope(
     test_summaries = []
     for mod_name in changed_modules:
         try:
-            mod_id = db.scalar(
-                select(RequirementModule.id).where(
-                    RequirementModule.name == mod_name,
-                    RequirementModule.project_id == pid,
-                )
-            )
+            mod_id = release_bundle_service.get_module_id_by_name(db, mod_name, pid)
             if mod_id is None:
                 continue
             summary = get_module_test_summary(db, module_id=mod_id, project_id=pid)

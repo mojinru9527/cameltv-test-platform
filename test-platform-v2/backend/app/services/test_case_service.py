@@ -10,6 +10,7 @@ from app.models.test_case_category import TestCaseDomain, TestCaseModule
 from app.core.execution_status import canonical_exec_status
 from app.services.test_case_taxonomy import (
     canonical_case_location,
+    classify_case_surface,
     taxonomy_location_matches,
 )
 
