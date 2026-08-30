@@ -653,7 +653,7 @@ def _assert_json_schema(rule: dict, data: Any) -> dict:
 
 def _validate_json_schema(data: dict, schema: dict, path: str = "$") -> list[str]:
     """轻量 JSON Schema 验证器。"""
-    errors = []
+    errors: list[str] = []
     stype = schema.get("type", "")
     if stype and stype != "object":
         return errors  # 仅验证顶层 object

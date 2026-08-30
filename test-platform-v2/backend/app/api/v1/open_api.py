@@ -268,9 +268,9 @@ def ci_get_ui_run(
         raise APIException(code=403, msg="无权访问此运行记录")
 
     import json as _json
-    result = {}
+    result: dict[str, Any] = {}
     try:
-        result: dict[str, Any] = _json.loads(run.result) if run.result else {}
+        result = _json.loads(run.result) if run.result else {}
     except (_json.JSONDecodeError, TypeError):
         logger.warning("执行结果 JSON 解析失败，按空结果处理: run_id=%s", run.id)
 
