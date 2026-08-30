@@ -56,6 +56,10 @@ const MissionActionPlanPage = lazy(() => import('@/pages/missions/action-plan'))
 const HybridRunPage = lazy(() => import('@/pages/missions/hybrid-run'))
 const MissionBuildsPage = lazy(() => import('@/pages/missions/builds'))
 const MissionAcceptancePage = lazy(() => import('@/pages/missions/acceptance'))
+const MissionChangesPage = lazy(() => import('@/pages/missions/changes'))
+const MissionImpactPage = lazy(() => import('@/pages/missions/impact'))
+const MissionTracePage = lazy(() => import('@/pages/missions/trace'))
+const RegressionSelectionPage = lazy(() => import('@/pages/regression-selections'))
 const CampaignDetailPage = lazy(() => import('@/pages/campaigns/CampaignDetail'))
 const HealingReviewPage = lazy(() => import('@/pages/healing'))
 const DataSourcesPage = lazy(() => import('@/pages/data-sources'))
@@ -300,6 +304,9 @@ export const router = createBrowserRouter([
           { path: 'executions', element: <PageLoader><MissionExecutionsPage /></PageLoader> },
           { path: 'builds', element: <PageLoader><MissionBuildsPage /></PageLoader> },
           { path: 'acceptance', element: <PageLoader><MissionAcceptancePage /></PageLoader> },
+          { path: 'changes', element: <PageLoader><MissionChangesPage /></PageLoader> },
+          { path: 'impact', element: <PageLoader><MissionImpactPage /></PageLoader> },
+          { path: 'trace', element: <PageLoader><MissionTracePage /></PageLoader> },
         ],
       },
       // ── AITDE V3.5: Campaign 详情（V35-013）──
@@ -311,6 +318,18 @@ export const router = createBrowserRouter([
           <Unavailable
             title="AITDE V3 未开放"
             description="Campaign 详情需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
+      },
+      // ── AITDE V3.7: Regression Selection 详情（V37-013）──
+      {
+        path: 'regression-selections/:id',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><RegressionSelectionPage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="回归选择详情需启用 AITDE V3 功能开关后开放。"
           />
         ),
       },

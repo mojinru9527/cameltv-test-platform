@@ -4,6 +4,7 @@ Aggregates the V3 domain routers under the ``/api/v2`` prefix. Business routers
 are feature-gated behind ``settings.aitde_v3_enabled``; the health probe stays
 always available so operators can confirm the v2 surface is mounted.
 """
+
 from __future__ import annotations
 
 from fastapi import APIRouter
@@ -12,6 +13,7 @@ from app.api.v2.deps import require_aitde_v3  # noqa: F401  (re-export convenien
 from app.core.config import settings
 
 router = APIRouter(prefix="/api/v2")
+
 
 # ── Health probe (always available, feature-gate independent) ──
 @router.get("/health", tags=["aitde"], summary="AITDE v2 health check")
@@ -67,6 +69,7 @@ from app.api.v2.healing_proposals import router as healing_proposals_router  # n
 from app.api.v2.workflows import router as workflows_router  # noqa: E402
 from app.api.v2.continuous import router as continuous_router  # noqa: E402
 from app.api.v2.production import router as production_router  # noqa: E402
+from app.api.v2.smart_regression import router as smart_regression_router  # noqa: E402
 
 router.include_router(missions_router)
 router.include_router(mission_sources_router)
@@ -101,6 +104,7 @@ router.include_router(healing_proposals_router)
 router.include_router(workflows_router)
 router.include_router(continuous_router)
 router.include_router(production_router)
+router.include_router(smart_regression_router)
 
 # Further domain routers are added with their epics:
 # mission_contracts.py (EPIC-05), mission_scenarios.py (EPIC-06),

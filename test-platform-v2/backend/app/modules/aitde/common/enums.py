@@ -736,3 +736,118 @@ class GapProposalKind(str, Enum):
     AMBIGUITY = "AMBIGUITY"
     SCOPE_CHANGE = "SCOPE_CHANGE"
     SCENARIO_GAP = "SCENARIO_GAP"
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# AITDE V3.7 — Impact Analysis + Smart Regression shared enums (V37).
+# ChangeSet / Lineage / Impact / Regression Selection vocabulary per the V3.7
+# plan §§2-10. String-valued, stable across SQLite/PostgreSQL.
+# ────────────────────────────────────────────────────────────────────────────
+
+
+class ChangeSetType(str, Enum):
+    """ChangeSet 来源类型（V37-002 各种 Diff Provider）。"""
+
+    PRD = "PRD"
+    OPENAPI = "OPENAPI"
+    DB_SCHEMA = "DB_SCHEMA"
+    UI_DISCOVERY = "UI_DISCOVERY"
+    ENVIRONMENT = "ENVIRONMENT"
+    HISTORICAL_RISK = "HISTORICAL_RISK"
+
+
+class ChangeSetStatus(str, Enum):
+    """ChangeSet 生命周期状态（V37-003..007）。"""
+
+    DETECTED = "DETECTED"
+    ANALYZED = "ANALYZED"
+    SUPERSEDED = "SUPERSEDED"
+
+
+class ChangeItemKind(str, Enum):
+    """单个差异项的变更类型（V37-003..007）。"""
+
+    ADDED = "ADDED"
+    CHANGED = "CHANGED"
+    DELETED = "DELETED"
+
+
+class LineageNodeType(str, Enum):
+    """Lineage 节点类型（V37-001；plan §3）。"""
+
+    SOURCE_ARTIFACT = "SOURCE_ARTIFACT"
+    SOURCE_FRAGMENT = "SOURCE_FRAGMENT"
+    SCOPE_ITEM = "SCOPE_ITEM"
+    TEST_INTENT = "TEST_INTENT"
+    CONTRACT_RULE = "CONTRACT_RULE"
+    SCENARIO = "SCENARIO"
+    SCENARIO_VERSION = "SCENARIO_VERSION"
+    ORACLE = "ORACLE"
+    API_ENDPOINT = "API_ENDPOINT"
+    PAGE = "PAGE"
+    DATA_ENTITY = "DATA_ENTITY"
+    OBSERVED_JOURNEY = "OBSERVED_JOURNEY"
+    EXECUTION_RUN = "EXECUTION_RUN"
+    DEFECT = "DEFECT"
+
+
+class LineageEdgeType(str, Enum):
+    """Lineage 边类型（V37-001；plan §3）。"""
+
+    DERIVES_FROM = "DERIVES_FROM"
+    APPLIES_TO = "APPLIES_TO"
+    IMPLEMENTS = "IMPLEMENTS"
+    VERIFIES = "VERIFIES"
+    BINDS = "BINDS"
+    MAPPED_TO = "MAPPED_TO"
+    OBSERVED_AS = "OBSERVED_AS"
+    FAILED_IN = "FAILED_IN"
+    DEFECT_OF = "DEFECT_OF"
+    CONTRACTED_FOR = "CONTRACTED_FOR"
+
+
+class RiskHint(str, Enum):
+    """风险提示来源（V37-007 HistoricalRisk + 权重）。"""
+
+    P0_RULE = "P0_RULE"
+    CONTRACT_RULE = "CONTRACT_RULE"
+    LAST_BUSINESS_FAIL = "LAST_BUSINESS_FAIL"
+    HISTORICAL_DEFECT = "HISTORICAL_DEFECT"
+    RECENT_CHANGE = "RECENT_CHANGE"
+    PROD_REAL_WORLD = "PROD_REAL_WORLD"
+    UNKNOWN_CHANGE = "UNKNOWN_CHANGE"
+    NONE = "NONE"
+
+
+class ImpactRunStatus(str, Enum):
+    """ImpactAnalysisRun 生命周期状态（V37-008）。"""
+
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class ImpactDecision(str, Enum):
+    """ImpactResult 决策（V37-008）。"""
+
+    INCLUDE = "INCLUDE"
+    EXCLUDE = "EXCLUDE"
+    FALLBACK = "FALLBACK"
+
+
+class SelectionType(str, Enum):
+    """RegressionSelection 类型（V37-009/010）。"""
+
+    SMART = "SMART"
+    FULL = "FULL"
+    SMOKE = "SMOKE"
+    CUSTOM = "CUSTOM"
+
+
+class SelectionDecision(str, Enum):
+    """RegressionSelection 中单个 Scenario 的入组决策（V37-009）。"""
+
+    SELECTED = "SELECTED"
+    EXCLUDED = "EXCLUDED"
+    FALLBACK = "FALLBACK"
