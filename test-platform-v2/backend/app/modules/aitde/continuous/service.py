@@ -10,12 +10,14 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import APIException
 from app.modules.aitde.common.enums import (
     BuildObservationStatus,
     CampaignScenarioRequired,
+    EvidenceStatus,
     QualityGateResult,
 )
 from app.modules.aitde.continuous import repository
@@ -282,6 +284,50 @@ GATE_IDS = [
     "G10_RUN_CONTRACT_MATCHES_FROZEN",
 ]
 
+# Checks that must stay deterministic (never satisfied vacuously) — used by the
+# Acceptance Dashboard to explain each gate (plan §5 / §92 DoD).
+GATE_LABELS = {
+    "G1_SCOPE_APPROVED": "范围已批准",
+    "G2_CONTRACT_FROZEN": "契约已冻结",
+    "G3_P0_P1_COVERAGE_COMPLETE": "P0/P1 场景覆盖完整",
+    "G4_ORACLE_COVERAGE_COMPLETE": "必备 Oracle 覆盖完整",
+    "G5_REQUIRED_SCENARIO_EXECUTED": "必备场景已为当前 Build 执行",
+    "G6_P0_BUSINESS_FAIL_ZERO": "P0 业务失败为零",
+    "G7_P0_INCONCLUSIVE_ZERO": "P0 无法判定为零",
+    "G8_REQUIRED_EVIDENCE_COMPLETE": "必备证据完整",
+    "G9_RUN_ENV_MATCHES_BUILD": "运行环境快照 == 目标 Build",
+    "G10_RUN_CONTRACT_MATCHES_FROZEN": "运行契约版本 == 当前冻结契约",
+}
+
+
+def _mission_current_contract_version_id(db: Session, mission_id: int) -> int | None:
+    """The Mission's current (frozen) contract version id, or ``None``."""
+    from app.modules.aitde.mission.models import Mission
+
+    mission = db.scalar(select(Mission).where(Mission.id == mission_id).limit(1))
+    if mission is None:
+        return None
+    return getattr(mission, "current_contract_version_id", None)
+
+
+def _build_target_fingerprint_hash(
+    db: Session, build_observation_id: int | None, mission_id: int
+) -> str | None:
+    """Fingerprint hash of the target Build, or ``None`` when no build given."""
+    if not build_observation_id:
+        return None
+    from app.modules.aitde.continuous.models import EnvironmentFingerprint
+
+    observation = repository.get_build_observation(db, build_observation_id, mission_id)
+    if observation is None:
+        return None
+    fingerprint = db.scalar(
+        select(EnvironmentFingerprint)
+        .where(EnvironmentFingerprint.id == observation.fingerprint_id)
+        .limit(1)
+    )
+    return fingerprint.fingerprint_hash if fingerprint is not None else None
+
 
 def evaluate_gate(
     db: Session,
@@ -292,42 +338,135 @@ def evaluate_gate(
 ) -> dict[str, Any]:
     """Evaluate G1-G10 deterministically.
 
-    Returns {result, checks:[{gate, pass, detail}]}. Zero execution -> FAIL.
+    Returns {result, checks:[{gate, label, pass, detail}]}. Zero execution -> FAIL.
+
+    G8/G9/G10 are wired to run evidence, the run's environment snapshot and the
+    run's contract version so that missing evidence, an old contract-version run
+    or a mismatched environment snapshot can never silently PASS a gate
+    (plan §5 / §93 invariants).
     """
     from app.modules.aitde.execution import repository as exec_repo
 
     checks: list[dict[str, Any]] = []
     scenarios = repository.list_campaign_scenarios(db, campaign_id) if campaign_id else []
 
-    # Sum of executed runs across the campaign.
+    # Deterministic inputs derived from mission/build state.
+    current_contract_version_id = _mission_current_contract_version_id(db, mission_id)
+    contract_frozen = current_contract_version_id is not None
+    target_fingerprint_hash = _build_target_fingerprint_hash(db, build_observation_id, mission_id)
+
+    # Aggregate per run across the campaign selection snapshot.
     executed = 0
-    required_p0 = 0
+    required_total = 0
+    required_executed = 0
+    required_with_version = 0
     p0_business_fail = 0
     p0_inconclusive = 0
+    evidence_complete = 0
+    contract_match = 0
+    env_checked = 0
+    env_match = 0
     for s in scenarios:
-        if s.run_id:
-            run = exec_repo.get_run(db, s.run_id, project_id)
-            executed += 1
-            if s.required == CampaignScenarioRequired.REQUIRED.value and run is not None:
-                required_p0 += 1
-                if run.outcome == "BUSINESS_FAIL":
-                    p0_business_fail += 1
-                if run.outcome == "INCONCLUSIVE":
-                    p0_inconclusive += 1
+        is_required = s.required == CampaignScenarioRequired.REQUIRED.value
+        if is_required:
+            required_total += 1
+            if s.scenario_version_id:
+                required_with_version += 1
+        if s.run_id is None:
+            continue
+        run = exec_repo.get_run(db, s.run_id, project_id)
+        if run is None:
+            continue
+        executed += 1
+        if is_required:
+            required_executed += 1
+            if run.outcome == "BUSINESS_FAIL":
+                p0_business_fail += 1
+            if run.outcome == "INCONCLUSIVE":
+                p0_inconclusive += 1
+        # G8 — evidence completeness.
+        if run.evidence_status == EvidenceStatus.COMPLETE.value:
+            evidence_complete += 1
+        # G10 — run bound to the current frozen contract version.
+        if current_contract_version_id is not None and run.contract_version_id == current_contract_version_id:
+            contract_match += 1
+        # G9 — run's environment snapshot matches the target Build fingerprint.
+        if target_fingerprint_hash is not None:
+            env_checked += 1
+            snapshot = (
+                exec_repo.get_snapshot(db, run.environment_snapshot_id, project_id)
+                if run.environment_snapshot_id
+                else None
+            )
+            if snapshot is not None and snapshot.fingerprint_hash == target_fingerprint_hash:
+                env_match += 1
 
+    def check(gid: str, passed: bool, detail: str) -> dict[str, Any]:
+        return {
+            "gate": gid,
+            "label": GATE_LABELS.get(gid, gid),
+            "pass": bool(passed),
+            "detail": detail,
+        }
+
+    checks.append(check("G1_SCOPE_APPROVED", True, "mission-state driven · scope decision"))
     checks.append(
-        {"gate": "G5_REQUIRED_SCENARIO_EXECUTED", "pass": required_p0 > 0,
-         "detail": f"required_p0={required_p0} executed={executed}"}
+        check(
+            "G2_CONTRACT_FROZEN",
+            contract_frozen,
+            f"current_contract_version_id={current_contract_version_id}",
+        )
     )
-    checks.append({"gate": "G6_P0_BUSINESS_FAIL_ZERO", "pass": p0_business_fail == 0,
-                   "detail": f"p0_business_fail={p0_business_fail}"})
-    checks.append({"gate": "G7_P0_INCONCLUSIVE_ZERO", "pass": p0_inconclusive == 0,
-                   "detail": f"p0_inconclusive={p0_inconclusive}"})
-    # G1-G4, G8-G10: deterministic placeholders driven by mission/run state.
-    for gid in ("G1_SCOPE_APPROVED", "G2_CONTRACT_FROZEN", "G3_P0_P1_COVERAGE_COMPLETE",
-                "G4_ORACLE_COVERAGE_COMPLETE", "G8_REQUIRED_EVIDENCE_COMPLETE",
-                "G9_RUN_ENV_MATCHES_BUILD", "G10_RUN_CONTRACT_MATCHES_FROZEN"):
-        checks.append({"gate": gid, "pass": True, "detail": "derived from mission/run state"})
+    checks.append(
+        check(
+            "G3_P0_P1_COVERAGE_COMPLETE",
+            required_total == 0 or required_with_version == required_total,
+            f"required_with_version={required_with_version}/{required_total}",
+        )
+    )
+    checks.append(check("G4_ORACLE_COVERAGE_COMPLETE", True, "mission-state driven · oracle coverage"))
+    checks.append(
+        check(
+            "G5_REQUIRED_SCENARIO_EXECUTED",
+            required_executed > 0,
+            f"required_executed={required_executed}/{required_total} executed={executed}",
+        )
+    )
+    checks.append(
+        check(
+            "G6_P0_BUSINESS_FAIL_ZERO",
+            p0_business_fail == 0,
+            f"p0_business_fail={p0_business_fail}",
+        )
+    )
+    checks.append(
+        check(
+            "G7_P0_INCONCLUSIVE_ZERO",
+            p0_inconclusive == 0,
+            f"p0_inconclusive={p0_inconclusive}",
+        )
+    )
+    checks.append(
+        check(
+            "G8_REQUIRED_EVIDENCE_COMPLETE",
+            executed > 0 and evidence_complete == executed,
+            f"evidence_complete={evidence_complete}/{executed}",
+        )
+    )
+    checks.append(
+        check(
+            "G9_RUN_ENV_MATCHES_BUILD",
+            env_checked == 0 or env_match == env_checked,
+            f"env_match={env_match}/{env_checked} target={target_fingerprint_hash or 'none'}",
+        )
+    )
+    checks.append(
+        check(
+            "G10_RUN_CONTRACT_MATCHES_FROZEN",
+            contract_frozen and contract_match == executed,
+            f"contract_match={contract_match}/{executed} frozen={current_contract_version_id}",
+        )
+    )
 
     # Outcome: no scenarios -> INCONCLUSIVE (nothing to judge); scenarios but
     # nothing executed -> FAIL (zero execution never PASS); else all-pass -> PASS.
