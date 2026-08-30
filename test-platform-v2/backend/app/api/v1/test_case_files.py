@@ -75,7 +75,7 @@ def import_xmind(
         max_bytes = 10 * 1024 * 1024
         if cl > max_bytes:
             raise APIException(
-                f"上传文件超过限制 (max: 10 MB, got: {cl / (1024*1024):.1f} MB)",
+                msg=f"上传文件超过限制 (max: 10 MB, got: {cl / (1024*1024):.1f} MB)",
                 code=413,
             )
 
@@ -152,7 +152,7 @@ def import_excel(
         max_bytes = 10 * 1024 * 1024
         if cl > max_bytes:
             raise APIException(
-                f"上传文件超过限制 (max: 10 MB, got: {cl / (1024*1024):.1f} MB)",
+                msg=f"上传文件超过限制 (max: 10 MB, got: {cl / (1024*1024):.1f} MB)",
                 code=413,
             )
 
