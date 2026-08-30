@@ -1,5 +1,5 @@
 {
-  "count": 524,
+  "count": 538,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -1738,6 +1738,18 @@
       "method": "POST"
     },
     {
+      "path": "/api/v2/campaigns",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/campaigns/{campaign_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/campaigns/{campaign_id}/run",
+      "method": "POST"
+    },
+    {
       "path": "/api/v2/contracts/{contract_id}/change-proposals",
       "method": "POST"
     },
@@ -1783,6 +1795,10 @@
     },
     {
       "path": "/api/v2/data-sources/{data_source_id}/test",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/environments/{environment_id}/fingerprints/capture",
       "method": "POST"
     },
     {
@@ -1862,6 +1878,10 @@
       "method": "PATCH"
     },
     {
+      "path": "/api/v2/missions/{mission_id}/acceptance",
+      "method": "GET"
+    },
+    {
       "path": "/api/v2/missions/{mission_id}/ambiguities",
       "method": "GET"
     },
@@ -1872,6 +1892,14 @@
     {
       "path": "/api/v2/missions/{mission_id}/archive",
       "method": "POST"
+    },
+    {
+      "path": "/api/v2/missions/{mission_id}/builds",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/missions/{mission_id}/campaigns",
+      "method": "GET"
     },
     {
       "path": "/api/v2/missions/{mission_id}/contract",
@@ -1888,6 +1916,10 @@
     {
       "path": "/api/v2/missions/{mission_id}/intents",
       "method": "GET"
+    },
+    {
+      "path": "/api/v2/missions/{mission_id}/quality-gates/evaluate",
+      "method": "POST"
     },
     {
       "path": "/api/v2/missions/{mission_id}/scenarios",
@@ -1940,6 +1972,22 @@
     {
       "path": "/api/v2/policy/evaluate",
       "method": "POST"
+    },
+    {
+      "path": "/api/v2/quality-gate-results/{result_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/quality-gate-results/{result_id}/override",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/run-profiles",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/run-profiles",
+      "method": "GET"
     },
     {
       "path": "/api/v2/runs/{run_id}",
@@ -2063,6 +2111,14 @@
     },
     {
       "path": "/api/v2/sources/{source_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/triggers",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/triggers",
       "method": "GET"
     },
     {

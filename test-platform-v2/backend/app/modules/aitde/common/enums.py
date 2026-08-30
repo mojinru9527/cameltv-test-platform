@@ -579,3 +579,70 @@ class RuntimeResourceType(str, Enum):
     DATA = "DATA"
     CLEANUP = "CLEANUP"
     ACTIVITY = "ACTIVITY"
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# AITDE V3.5 — Continuous Acceptance shared enums (V35). Fingerprint source,
+# build observation, campaign/run-profile, trigger, and Quality Gate vocabulary
+# per the V3.5 plan §§2-5.
+# ────────────────────────────────────────────────────────────────────────────
+
+
+class FingerprintSourceType(str, Enum):
+    """指纹来源（V35-001）。"""
+
+    AUTO = "AUTO"
+    MANUAL = "MANUAL"
+    WEBHOOK = "WEBHOOK"
+
+
+class BuildObservationStatus(str, Enum):
+    """BuildObservation 状态（V35-002）。"""
+
+    NEW = "NEW"
+    PLANNED = "PLANNED"
+    RUNNING = "RUNNING"
+    EVALUATED = "EVALUATED"
+    IGNORED = "IGNORED"
+
+
+class CampaignType(str, Enum):
+    """ExecutionCampaign 类型（V35-003）。"""
+
+    IMPACTED = "IMPACTED"
+    FULL = "FULL"
+    SMOKE = "SMOKE"
+    CUSTOM = "CUSTOM"
+
+
+class RunProfileType(str, Enum):
+    """RunProfile 类型（V35-004）。"""
+
+    SMOKE = "SMOKE"
+    FULL = "FULL"
+    CUSTOM = "CUSTOM"
+
+
+class ContinuousTriggerType(str, Enum):
+    """Continuous Acceptance Trigger 类型（V35-008）. Uses a distinct name to avoid
+    colliding with the V31 execution ``TriggerType`` (MANUAL/LEGACY_BRIDGE/SYSTEM)."""
+
+    MANUAL = "MANUAL"
+    SCHEDULE = "SCHEDULE"
+    FINGERPRINT = "FINGERPRINT"
+    WEBHOOK = "WEBHOOK"
+
+
+class QualityGateResult(str, Enum):
+    """Quality Gate 结果（V35-007）。"""
+
+    PASS = "PASS"
+    FAIL = "FAIL"
+    INCONCLUSIVE = "INCONCLUSIVE"
+
+
+class CampaignScenarioRequired(str, Enum):
+    """CampaignScenario 是否强制（V35-003）. P0 默认 mandatory."""
+
+    REQUIRED = "REQUIRED"
+    OPTIONAL = "OPTIONAL"

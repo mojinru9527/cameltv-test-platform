@@ -16,3 +16,4 @@ from app.modules.aitde.scenario import models as scenario_models  # noqa: F401
 from app.modules.aitde.ai_ops import models as ai_ops_models  # noqa: F401
 from app.modules.aitde.execution import models as execution_models  # noqa: F401
 from app.modules.aitde.workflow import models as workflow_models  # noqa: F401
+from app.modules.aitde.continuous import models as continuous_models  # noqa: F401

@@ -54,6 +54,8 @@ const MissionManualPage = lazy(() => import('@/pages/missions/manual'))
 const ObservatePage = lazy(() => import('@/pages/missions/observe'))
 const MissionActionPlanPage = lazy(() => import('@/pages/missions/action-plan'))
 const HybridRunPage = lazy(() => import('@/pages/missions/hybrid-run'))
+const MissionBuildsPage = lazy(() => import('@/pages/missions/builds'))
+const MissionAcceptancePage = lazy(() => import('@/pages/missions/acceptance'))
 const HealingReviewPage = lazy(() => import('@/pages/healing'))
 const DataSourcesPage = lazy(() => import('@/pages/data-sources'))
 const FixturesPage = lazy(() => import('@/pages/fixtures'))
@@ -290,6 +292,8 @@ export const router = createBrowserRouter([
           { path: 'scenarios', element: <PageLoader><MissionScenariosPage /></PageLoader> },
           { path: 'data', element: <PageLoader><MissionDataPage /></PageLoader> },
           { path: 'executions', element: <PageLoader><MissionExecutionsPage /></PageLoader> },
+          { path: 'builds', element: <PageLoader><MissionBuildsPage /></PageLoader> },
+          { path: 'acceptance', element: <PageLoader><MissionAcceptancePage /></PageLoader> },
         ],
       },
       // ── AITDE V3.3: Browser + Hybrid + Assisted Manual（V33-012..016）──
