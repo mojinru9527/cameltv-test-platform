@@ -60,7 +60,7 @@ def _org_names(db: Session, org_ids: set[int]) -> dict[int, str]:
     rows = db.execute(
         select(Organization.id, Organization.name).where(Organization.id.in_(org_ids))
     ).all()
-    return dict(rows)
+    return dict((r[0], r[1]) for r in rows)
 
 
 def is_member(db: Session, user_id: int, project_id: int) -> bool:
