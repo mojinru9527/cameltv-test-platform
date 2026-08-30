@@ -21,6 +21,7 @@ import re
 import shutil
 import time
 from pathlib import Path
+from typing import Callable
 
 from app.core.config import settings
 
@@ -41,7 +42,7 @@ def _storage_root() -> Path:
     return _session_root().parent
 
 
-def _older_than(cutoff: float) -> bool:
+def _older_than(cutoff: float) -> Callable[[Path], bool]:
     return lambda path: path.stat().st_mtime < cutoff
 
 
