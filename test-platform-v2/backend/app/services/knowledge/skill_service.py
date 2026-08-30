@@ -264,8 +264,8 @@ async def apply_skill_in_new_session(
             result = run_agent_in_new_session(
                 project_id=project_id,
                 agent_type="knowledge_skill",
-                input_prompt=prompt,
-                metadata={
+                user_input=prompt,
+                params={
                     "skill_name": skill_name,
                     "params": filled_params,
                 },
