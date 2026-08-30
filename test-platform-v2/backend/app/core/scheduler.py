@@ -318,6 +318,7 @@ def reap_stale_schedule_runs(db=None) -> int:
     own_session = db is None
     if own_session:
         db = SessionLocal()
+    assert db is not None
     try:
         stale_after = timedelta(seconds=max(int(getattr(settings, "schedule_stale_seconds", 1200)), 60))
         now = datetime.utcnow()

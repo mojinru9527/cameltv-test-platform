@@ -90,7 +90,8 @@ def organizations_for_user(db: Session, user_id: int, is_superadmin: bool = Fals
             ).all()
         )
         role_of = dict(
-            db.execute(
+            (r[0], r[1])
+            for r in db.execute(
                 select(OrganizationMember.organization_id, OrganizationMember.role_id).where(
                     OrganizationMember.user_id == user_id,
                     OrganizationMember.organization_id.in_([o.id for o in orgs]),
@@ -100,15 +101,17 @@ def organizations_for_user(db: Session, user_id: int, is_superadmin: bool = Fals
     if not orgs:
         return []
 
-    member_counts = dict(
-        db.execute(
+    member_counts: dict[int, int] = dict(
+        (r[0], r[1])
+        for r in db.execute(
             select(OrganizationMember.organization_id, func.count())
             .where(OrganizationMember.organization_id.in_([o.id for o in orgs]))
             .group_by(OrganizationMember.organization_id)
         ).all()
     )
-    project_counts = dict(
-        db.execute(
+    project_counts: dict[int, int] = dict(
+        (r[0], r[1])
+        for r in db.execute(
             select(Project.organization_id, func.count())
             .where(
                 Project.organization_id.in_([o.id for o in orgs]),

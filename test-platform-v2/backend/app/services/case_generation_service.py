@@ -116,7 +116,7 @@ def generate_ui_drafts(
     if mission.requirement_doc_id:
         stmt = stmt.where(TestCase.source_doc_id == mission.requirement_doc_id)
     cases = db.scalars(stmt.order_by(TestCase.priority, TestCase.id).limit(max_cases)).all()
-    spec_text = _build_playwright_spec(mission, cases)
+    spec_text = _build_playwright_spec(mission, list(cases))
     spec_rel = f"generated/{_slug(mission.mission_key)}.spec.ts"
     spec_abs = PLAYWRIGHT_SPECS_DIR / spec_rel
     if write_specs:
@@ -314,7 +314,7 @@ def _build_playwright_spec(mission: VersionMission, cases: list[TestCase]) -> st
 
 def _sample_body(op: dict[str, Any]) -> str:
     content = ((op.get("requestBody") or {}).get("content") or {})
-    app_json = content.get("application/json") or next(iter(content.values()), {})
+    app_json: Any = content.get("application/json") or next(iter(content.values()), {})
     schema = app_json.get("schema") if isinstance(app_json, dict) else {}
     if not isinstance(schema, dict):
         return ""

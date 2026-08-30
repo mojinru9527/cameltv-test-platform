@@ -92,7 +92,7 @@ def sanitize_body_bytes(data: bytes, content_type: str) -> bytes:
 
 def sanitize(
     data: bytes, content_type: str, headers: dict[str, str] | None = None
-) -> tuple[bytes, SanitizationStatus]:
+) -> tuple[bytes, str]:
     """Return (safe_bytes, status). Raises SanitizeError on unparseable body."""
     try:
         body = sanitize_body_bytes(data, content_type)

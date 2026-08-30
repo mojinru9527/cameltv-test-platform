@@ -103,6 +103,7 @@ class ScenarioExecutionWorkflow:
                     decision = result.get("decision") if isinstance(result, dict) else None
                     if decision == "REQUIRE_APPROVAL":
                         await workflow.wait_condition(lambda: self._approval is not None)
+                        assert self._approval is not None
                         if self._approval.get("approved") is not True:
                             history.append(
                                 {

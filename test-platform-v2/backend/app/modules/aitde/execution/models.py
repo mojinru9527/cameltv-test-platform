@@ -31,7 +31,6 @@ from app.modules.aitde.common.enums import (
     EvidenceStatus,
     EvidenceType,
     LegacyExecutionType,
-    Outcome,
     RunStatus,
     SanitizationStatus,
     StepStatus,

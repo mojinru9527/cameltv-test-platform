@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
-from app.services.test_case_service import canonical_case_type, case_type_values
+from app.services.test_case_service import case_type_values
 
 CASE_TYPES: tuple[str, ...] = ("manual", "api", "ui")
 

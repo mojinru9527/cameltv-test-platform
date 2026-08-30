@@ -50,6 +50,6 @@ def artifact_confidence_from_output(output: dict[str, Any] | None, fallback: flo
             if isinstance(item, dict) and isinstance(item.get("confidence"), (int, float))
         ]
         if values:
-            return _clamp01(sum(float(v) for v in values) / len(values))
+            return _clamp01(sum(float(v) for v in values if v is not None) / len(values))
 
     return _clamp01(fallback)

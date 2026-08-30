@@ -1,5 +1,8 @@
 # Ruff configuration for CamelTv test platform backend
-target-version = "py311"
+# line-length aligned to the project's 120-char standard (see [tool.ruff] in pyproject.toml);
+# keeps ruff from misreporting E501 on the existing 120-char-formatted codebase.
+target-version = "py312"
+line-length = 120
 
 [lint]
 select = [

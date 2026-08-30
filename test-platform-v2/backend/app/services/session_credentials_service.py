@@ -148,6 +148,7 @@ def _load_env_config(db, environment_id: int, project_id: int) -> dict[str, str]
     if not _unset(field_map_raw):
         cfg["field_map"] = field_map_raw  # type: ignore[assignment]
     if not _unset(content_type_raw):
+        assert content_type_raw is not None
         cfg["content_type"] = content_type_raw.strip().lower()  # type: ignore[assignment]
     return cfg
 

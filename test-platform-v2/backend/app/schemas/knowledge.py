@@ -209,7 +209,7 @@ class KnowledgeEntityOut(BaseModel):
     description: str
     source_id: int | None = None
     source_title: str = ""
-    source_type: str = "" 
+    source_type: str = ""
     business_ref_type: str
     business_ref_id: int | None = None
     confidence: float

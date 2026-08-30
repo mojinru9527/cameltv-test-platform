@@ -10,7 +10,7 @@ from app.models.defect import Defect
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
 from app.services import statistics_service
-from app.services.test_case_service import canonical_case_type, case_type_values
+from app.services.test_case_service import canonical_case_type
 
 # ── 用例类型 → 展示标签 + 卡片颜色 ──
 CASE_TYPE_META = {

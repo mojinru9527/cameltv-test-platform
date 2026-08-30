@@ -102,6 +102,16 @@ def list_requirement_modules(db: Session, bundle_id: int) -> list[RequirementMod
     ).all())
 
 
+def get_module_id_by_name(db: Session, name: str, project_id: int) -> int | None:
+    """按模块名 + 项目解析 RequirementModule.id（收敛路由层查询到 service）。"""
+    return db.scalar(
+        select(RequirementModule.id).where(
+            RequirementModule.name == name,
+            RequirementModule.project_id == project_id,
+        )
+    )
+
+
 def list_active_ui_scripts(
     db: Session, project_id: int, module_names: set[str]
 ) -> list[UiTestScript]:

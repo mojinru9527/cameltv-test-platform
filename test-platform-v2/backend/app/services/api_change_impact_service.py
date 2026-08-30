@@ -87,6 +87,7 @@ def _spec_diff(old_endpoints: list[dict], new_endpoints: list[dict]) -> list[dic
                 }
             )
         else:
+            assert old_ep is not None and new_ep is not None
             old_shape = _endpoint_shape(old_ep)
             new_shape = _endpoint_shape(new_ep)
             if old_shape == new_shape:

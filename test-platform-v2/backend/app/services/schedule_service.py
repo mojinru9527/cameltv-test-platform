@@ -267,7 +267,7 @@ def update_schedule(
             s.job_id = None
         changed = True
     # Batch 162/C161-2：更新执行环境（plan 类）；显式传 null 表示清空
-    _fields_set = getattr(data, "model_fields_set", set()) or set()
+    _fields_set: set[str] = getattr(data, "model_fields_set", set()) or set()
     if "environment_id" in _fields_set or data.job_type is not None:
         target_type = data.job_type or s.job_type
         if target_type == "plan":
@@ -360,7 +360,6 @@ def trigger_schedule(db: Session, schedule_id: int, project_id: int) -> dict:
     """
     from datetime import datetime, timezone
 
-    from app.core.scheduler import _execute_schedule
 
     s = db.scalar(
         select(TestSchedule).where(

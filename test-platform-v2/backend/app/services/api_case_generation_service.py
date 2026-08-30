@@ -84,7 +84,7 @@ def generate_cases_from_real_sample(endpoint: dict, real_sample: dict) -> list[d
     _resp_assertions = _response_structure_assertions(real_sample)
     cases.append(_mk(
         "正常请求（真实业务参数原样）", "positive", "positive", "场景法",
-        dict(body), f"接口返回 2xx；响应结构与真实调用一致。",
+        dict(body), "接口返回 2xx；响应结构与真实调用一致。",
         assertions=[
             {"type": "status_code", "expected": 200, "operator": "gte"},
             {"type": "status_code", "expected": 300, "operator": "lt"},
@@ -129,14 +129,16 @@ def generate_cases_from_real_sample(endpoint: dict, real_sample: dict) -> list[d
         # 边界：0 / 负数 / 最小 / 超长
         if ptype == "integer":
             for label, bad in (("0", 0), ("负数", -1), ("超上限", 10**9)):
-                v = dict(body); v[field] = bad
+                v = dict(body)
+                v[field] = bad
                 cases.append(_mk(
                     f"{field} 边界值 {label}（语义：{semantics}）", "boundary", "boundary", "边界值分析",
                     v, f"{field} 为 {label} 时按业务校验返回 2xx 或 4xx（视后端规则），不得 5xx。",
                 ))
         elif ptype == "string":
-            for label, bad in (("空字符串", ""), ("超长", "x" * 256), ("特殊字符", "@#$%^&*()")):
-                v = dict(body); v[field] = bad
+            for label, bad_val in (("空字符串", ""), ("超长", "x" * 256), ("特殊字符", "@#$%^&*()")):
+                v = dict(body)
+                v[field] = bad_val
                 cases.append(_mk(
                     f"{field} 边界值 {label}（语义：{semantics}）", "boundary", "boundary", "边界值分析",
                     v, f"{field} 为 {label} 时按业务校验返回 2xx 或 4xx，不得 5xx。",
@@ -144,19 +146,22 @@ def generate_cases_from_real_sample(endpoint: dict, real_sample: dict) -> list[d
 
         # 类型错误
         wrong = {"integer": "not_a_number", "string": 12345, "boolean": "not_bool", "array": "not_array", "object": "not_object"}.get(ptype, "__invalid__")
-        v = dict(body); v[field] = wrong
+        v = dict(body)
+        v[field] = wrong
         cases.append(_mk(
             f"{field} 类型错误（{ptype} → {type(wrong).__name__}）", "type", "negative", "错误推测",
             v, f"{field} 类型不符时应返回 4xx 参数校验错误。",
         ))
 
         # 缺失 / null
-        v = dict(body); v.pop(field, None)
+        v = dict(body)
+        v.pop(field, None)
         cases.append(_mk(
             f"{field} 缺失", "required_missing", "negative", "等价类划分",
             v, f"{field} 缺失时按必填规则返回 2xx 或 4xx，不得 5xx。",
         ))
-        v = dict(body); v[field] = None
+        v = dict(body)
+        v[field] = None
         cases.append(_mk(
             f"{field} 为 null", "required_null", "negative", "等价类划分",
             v, f"{field} 为 null 时应返回 2xx 或 4xx，不得 5xx。",
@@ -164,18 +169,23 @@ def generate_cases_from_real_sample(endpoint: dict, real_sample: dict) -> list[d
 
     # 2) 关键组合场景（真实样本语义）
     if "page" in body and "size" in body:
-        v = dict(body); v["page"] = 1; v["size"] = max(1, body["size"] - 1) if isinstance(body["size"], int) else 1
+        v = dict(body)
+        v["page"] = 1
+        v["size"] = max(1, body["size"] - 1) if isinstance(body["size"], int) else 1
         cases.append(_mk(
             "分页边界：page=1 且 size 减一（首页最小页）", "boundary", "boundary", "边界值分析",
             v, "首页请求返回记录数 ≤ size；分页字段生效。",
         ))
-        v = dict(body); v["page"] = 999999; v["size"] = body["size"]
+        v = dict(body)
+        v["page"] = 999999
+        v["size"] = body["size"]
         cases.append(_mk(
             "分页边界：page 超总页数", "boundary", "boundary", "边界值分析",
             v, "超出总页数时返回空 records（或 4xx），不得 5xx。",
         ))
     if "queryList" in body and isinstance(body["queryList"], list):
-        v = dict(body); v["queryList"] = []
+        v = dict(body)
+        v["queryList"] = []
         cases.append(_mk(
             "过滤条件为空数组（返回全量数据）", "combo", "positive", "组合覆盖",
             v, "queryList 为空时返回默认全量数据，结构正确。",
@@ -187,12 +197,14 @@ def generate_cases_from_real_sample(endpoint: dict, real_sample: dict) -> list[d
             v, "多条件组合过滤生效，返回记录满足全部条件。",
         ))
     if "sorts" in body and isinstance(body["sorts"], list):
-        v = dict(body); v["sorts"] = [{"key": "updateTime", "sort": "asc"}]
+        v = dict(body)
+        v["sorts"] = [{"key": "updateTime", "sort": "asc"}]
         cases.append(_mk(
             "排序规则变更（updateTime asc）", "combo", "positive", "组合覆盖",
             v, "排序按 updateTime 升序返回。",
         ))
-        v = dict(body); v["sorts"] = [{"key": "updateTime", "sort": "invalid"}]
+        v = dict(body)
+        v["sorts"] = [{"key": "updateTime", "sort": "invalid"}]
         cases.append(_mk(
             "排序方向非法值", "enum", "negative", "等价类划分",
             v, "sort 非 desc/asc 时返回 4xx 或按默认规则处理，不得 5xx。",
@@ -1763,7 +1775,7 @@ def _describe_preconditions(method: str, path: str, endpoint: dict) -> str:
             if isinstance(h, dict) and h.get("required") and h.get("name")
         ]
         if req_headers:
-            parts.append("需携带 Header：" + "、".join(req_headers))
+            parts.append("需携带 Header：" + "、".join(x for x in req_headers if x is not None))
         for loc in ("query", "path"):
             params = schema.get(loc) or []
             req_params = [
@@ -1771,7 +1783,7 @@ def _describe_preconditions(method: str, path: str, endpoint: dict) -> str:
                 if isinstance(p, dict) and p.get("required") and p.get("name")
             ]
             if req_params:
-                parts.append(f"{loc} 必填参数：" + "、".join(req_params))
+                parts.append(f"{loc} 必填参数：" + "、".join(x for x in req_params if x is not None))
     summary = (endpoint.get("summary") or "").strip()
     if summary:
         parts.append(f"接口说明：{summary}")
