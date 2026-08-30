@@ -218,14 +218,16 @@ def get_requirement_cases(db: Session, doc_id: int, project_id: int) -> dict | N
         return None
 
     # Parse previously imported indices
+    imported_func_set: set[int] = set()
+    imported_api_set: set[int] = set()
     try:
         imported_func_set = set(json.loads(row.imported_func_indices or "[]"))
     except json.JSONDecodeError:
-        imported_func_set: set[int] = set()
+        pass
     try:
         imported_api_set = set(json.loads(row.imported_api_indices or "[]"))
     except json.JSONDecodeError:
-        imported_api_set: set[int] = set()
+        pass
 
     # Build structured result with indices (same format as generate endpoint)
     func_cases: list[dict] = []
@@ -873,7 +875,7 @@ def import_cases(
                 requested_func_indices.add(case_index)
 
         # batch-167 Phase 3a: 为 P0/P1 有步骤功能用例生成 UI 自动化变体（幂等）
-        ui_case_ids: list[int] = []
+        ui_case_ids = []
         ui_created = 0
         if create_ui_cases:
             # batch-168 D4：补生成 UI 变体时覆盖该文档「全部已导入」功能用例
