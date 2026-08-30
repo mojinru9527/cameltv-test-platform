@@ -1,5 +1,5 @@
 {
-  "count": 541,
+  "count": 552,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -2164,7 +2164,50 @@
     {
       "path": "/api/v2/triggers/{trigger_id}/webhook",
       "method": "POST"
+    },
+    {
+      "path": "/api/v2/production/data/inspect",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/production/entity-graphs/extract",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/production/evidence/{journey_id}/analyze-gaps",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/production/journeys",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/production/journeys/{journey_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/production/observation-sessions",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/production/observation-sessions/{session_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/production/observation-sessions/{session_id}/stop",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/production/templates",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/production/templates/{template_id}/materialize",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/production/templates/{template_id}/validate",
+      "method": "POST"
     }
-
   ]
 }
