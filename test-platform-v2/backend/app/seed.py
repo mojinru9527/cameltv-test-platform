@@ -392,6 +392,7 @@ def run_seed() -> None:
             )
             db.add(admin_user)
             db.flush()
+        assert admin_user is not None
 
         # 5.5/5.6) 测试/只读演示账号（Batch 109：SEED_DEMO_USERS=false 时不创建，
         # 生产外放后避免部署时重建验收账号；角色本身仍保留）
