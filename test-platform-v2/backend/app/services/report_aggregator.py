@@ -77,7 +77,7 @@ def _api_summary(db: Session, project_id: int, cutoff: datetime) -> dict:
         )
     ).all()
 
-    error_categories = _categorize_api_errors(failed_items)
+    error_categories = _categorize_api_errors(list(failed_items))
 
     return {
         "total_tasks": total_tasks,
