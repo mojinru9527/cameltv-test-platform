@@ -66,6 +66,11 @@ const RunDetailPage = lazy(() => import('@/pages/executions/run/[runId]'))
 const ReplayPage = lazy(() => import('@/pages/executions/replay'))
 const MissionExecutionsPage = lazy(() => import('@/pages/executions/mission'))
 const RuntimeAdminPage = lazy(() => import('@/pages/runtime'))
+const ProductionEvidencePage = lazy(() => import('@/pages/production'))
+const ProductionJourneysPage = lazy(() => import('@/pages/production/journeys'))
+const ProductionTemplatesPage = lazy(() => import('@/pages/production/templates'))
+const ProductionMaskingPage = lazy(() => import('@/pages/production/masking'))
+const MissionProductionEvidencePage = lazy(() => import('@/pages/production/missionEvidence'))
 const themeLabEnabled = isThemeLabEnabled(import.meta.env.DEV, import.meta.env.VITE_ENABLE_THEME_LAB)
 
 function PageLoader({ children }: { children: ReactNode }) {
@@ -306,6 +311,62 @@ export const router = createBrowserRouter([
           <Unavailable
             title="AITDE V3 未开放"
             description="Campaign 详情需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
+      },
+      // ── AITDE V3.6: Production Evidence & Real-World Data Template（V36-013/014）──
+      {
+        path: 'production/evidence',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><ProductionEvidencePage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="生产证据需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
+      },
+      {
+        path: 'production/journeys',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><ProductionJourneysPage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="Production Journey 需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
+      },
+      {
+        path: 'production/templates',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><ProductionTemplatesPage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="生产模板需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
+      },
+      {
+        path: 'admin/masking',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><ProductionMaskingPage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="脱敏配置需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
+      },
+      {
+        path: 'missions/:id/production-evidence',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><MissionProductionEvidencePage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="Mission 生产证据需启用 AITDE V3 功能开关后开放。"
           />
         ),
       },

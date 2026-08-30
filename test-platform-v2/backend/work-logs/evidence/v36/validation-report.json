@@ -1,0 +1,56 @@
+{
+  "generated_at": "2026-08-30T18:12:51.005311",
+  "version": "AITDE V3.6",
+  "checks": [
+    {
+      "id": "V93-1",
+      "name": "INSERT/UPDATE/DDL 被拒绝",
+      "ok": true,
+      "detail": "INSERT INTO t VALUES (1),UPDATE t SET x=1,DELETE FROM t"
+    },
+    {
+      "id": "V93-2",
+      "name": "CTE/注释/多语句仍被拒绝",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "V93-3",
+      "name": "支付/下单/退款 Browser Action 被阻断",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "V93-4",
+      "name": "1000 XHR 后敏感字段泄露=0",
+      "ok": true,
+      "detail": "leak=0"
+    },
+    {
+      "id": "V93-5",
+      "name": "PII Mask 后不可恢复原值",
+      "ok": true,
+      "detail": "reversible=0"
+    },
+    {
+      "id": "V93-6",
+      "name": "确定性 Token 保关系(相同→相同, 不同→不同)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "V93-7",
+      "name": "PROD_RO Worker 禁写能力",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "V93-8",
+      "name": "PII Classifier 正确分类",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "pass": 8,
+  "fail": 0
+}

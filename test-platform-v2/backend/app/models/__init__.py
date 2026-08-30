@@ -33,6 +33,17 @@ from app.models.project import Project, ProjectMember
 from app.models.project_invite import ProjectInvite
 from app.models.notification import NotificationChannel, NotificationLog
 from app.models.organization import Organization, OrganizationMember
+from app.models.production_evidence import (
+    EntityGraphSnapshot,
+    MaskingProfile,
+    MaskingRule,
+    ObservedJourney,
+    ObservedJourneyStep,
+    ProdDataTemplate,
+    ProductionObservationSession,
+    ProductionQueryAudit,
+    TemplateMaterialization,
+)
 from app.models.quality_gate import QualityGateConfig
 from app.models.report_template import ReportTemplate
 from app.models.release_bundle import ReleaseBundle
@@ -89,6 +100,15 @@ __all__ = [
     "NotificationLog",
     "Organization",
     "OrganizationMember",
+    "ProductionObservationSession",
+    "ObservedJourney",
+    "ObservedJourneyStep",
+    "ProductionQueryAudit",
+    "MaskingProfile",
+    "MaskingRule",
+    "EntityGraphSnapshot",
+    "ProdDataTemplate",
+    "TemplateMaterialization",
     "QualityGateConfig",
     "ReportTemplate",
     "TestCase",

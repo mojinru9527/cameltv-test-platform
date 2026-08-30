@@ -646,3 +646,93 @@ class CampaignScenarioRequired(str, Enum):
 
     REQUIRED = "REQUIRED"
     OPTIONAL = "OPTIONAL"
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# AITDE V3.6 — Production Evidence & Real-World Data Template shared enums
+# (V36). Observation session / journey / masking / template / gap proposal
+# vocabulary per the V3.6 plan §§2-12. Production 默认只读。
+# ────────────────────────────────────────────────────────────────────────────
+
+
+class ObservationMode(str, Enum):
+    """生产观察会话模式（V36-002）。"""
+
+    OBSERVE = "OBSERVE"
+    READONLY_EXPLORE = "READONLY_EXPLORE"
+
+
+class ObservationSessionStatus(str, Enum):
+    """观察会话生命周期状态（V36-002，可恢复）。"""
+
+    ACTIVE = "ACTIVE"
+    FINISHED = "FINISHED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+
+
+class JourneyEventType(str, Enum):
+    """ObservedJourneyStep 事件类型（V36-002/004）。"""
+
+    NAVIGATE = "NAVIGATE"
+    XHR = "XHR"
+    SEMANTIC = "SEMANTIC"
+    SCROLL = "SCROLL"
+
+
+class MaskingStrategy(str, Enum):
+    """脱敏策略（V36-008）。"""
+
+    REDACT = "REDACT"
+    HASH = "HASH"
+    TOKENIZE = "TOKENIZE"
+    FAKE = "FAKE"
+    PRESERVE = "PRESERVE"
+
+
+class PiiClassification(str, Enum):
+    """PII 分类（V36-007）。"""
+
+    EMAIL = "EMAIL"
+    PHONE = "PHONE"
+    PERSON_NAME = "PERSON_NAME"
+    ID_NUMBER = "ID_NUMBER"
+    ADDRESS = "ADDRESS"
+    BANK_ACCOUNT = "BANK_ACCOUNT"
+    TOKEN = "TOKEN"
+    DEVICE_ID = "DEVICE_ID"
+    IP = "IP"
+    FREE_TEXT = "FREE_TEXT"
+
+
+class TemplateValidationStatus(str, Enum):
+    """Prod 模板校验状态（V36-010/011）。"""
+
+    PENDING = "PENDING"
+    VALID = "VALID"
+    INVALID = "INVALID"
+
+
+class MaterializationStatus(str, Enum):
+    """模板物化状态（V36-011）。"""
+
+    PENDING = "PENDING"
+    MATERIALIZING = "MATERIALIZING"
+    READY = "READY"
+    FAILED = "FAILED"
+
+
+class ProdDbOperationType(str, Enum):
+    """生产 DB 探索操作类型（V36-005/006）。"""
+
+    SELECT = "SELECT"
+    EXPLAIN = "EXPLAIN"
+
+
+class GapProposalKind(str, Enum):
+    """Evidence Gap Proposal 类型（V36-012）。"""
+
+    SOURCE_ARTIFACT = "SOURCE_ARTIFACT"
+    AMBIGUITY = "AMBIGUITY"
+    SCOPE_CHANGE = "SCOPE_CHANGE"
+    SCENARIO_GAP = "SCENARIO_GAP"
