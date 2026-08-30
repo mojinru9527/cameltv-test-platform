@@ -1,0 +1,41 @@
+# TEMPORARY drill overlay (V34-007 / §93-599 invalid cert reject).
+# Adds server-side mutual TLS to the `temporal` service via auto-setup env vars,
+# plus a cert mount. Used ONLY for the mTLS reject drill; remove after.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.mtls-test.yml up -d temporal
+services:
+  temporal:
+    environment:
+      - TEMPORAL_TLS_REQUIRE_CLIENT_AUTH=true
+      # internode (single-node cluster)
+      - TEMPORAL_TLS_SERVER_CERT=/etc/temporal/certs/temporal.crt
+      - TEMPORAL_TLS_SERVER_KEY=/etc/temporal/certs/temporal.key
+      - TEMPORAL_TLS_SERVER_CA_CERT=/etc/temporal/certs/ca.crt
+      - TEMPORAL_TLS_INTERNODE_SERVER_NAME=temporal
+      # frontend (external SDK clients)
+      - TEMPORAL_TLS_FRONTEND_CERT=/etc/temporal/certs/temporal.crt
+      - TEMPORAL_TLS_FRONTEND_KEY=/etc/temporal/certs/temporal.key
+      - TEMPORAL_TLS_CLIENT1_CA_CERT=/etc/temporal/certs/ca.crt
+      - TEMPORAL_TLS_FRONTEND_SERVER_NAME=temporal
+    volumes:
+      - ./certs:/etc/temporal/certs:ro
+    # healthcheck uses `temporal operator cluster health`; under mTLS it needs
+    # a client cert, so give it the worker mTLS material + --tls.
+    healthcheck:
+      test:
+        - CMD
+        - temporal
+        - operator
+        - cluster
+        - health
+        - --tls
+        - --tls-ca-path
+        - /etc/temporal/certs/ca.crt
+        - --tls-cert-path
+        - /etc/temporal/certs/worker.crt
+        - --tls-key-path
+        - /etc/temporal/certs/worker.key
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s

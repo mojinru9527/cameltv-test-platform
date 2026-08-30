@@ -1,54 +1,113 @@
-# AITDE V3.4 Durable Runtime — Temporal Server 本地部署（test 环境）
+# AITDE V3.4 Durable Runtime — Temporal Server 本地/测试环境部署（test 环境）
 #
-# 手动起 Temporal（独立于主 app compose，避免污染主部署）：
-#   docker compose -f docker-compose.yml up -d
-# 关闭：
-#   docker compose -f docker-compose.yml down
+# 用法：
+#   docker compose -f docker-compose.yml up -d          # 起 Temporal Server + PostgreSQL
+#   docker compose -f docker-compose.yml down           # 关
+#   docker compose -f docker-compose.yml down -v        # 关 + 清持久化
 #
-# 依赖真实基础设施（V34-001）：
-#   - namespace / persistence / visibility：`temporalio/auto-setup` 自动建表
-#     （SQLite 持久化 + SQLite visibility，够本地/单机 test；生产切 Postgres+ES）
-#   - mTLS：默认关闭；开启见 scripts/gen-certs.sh + README「mTLS」段
+# 说明（V34-001）：`temporalio/auto-setup` 的 config_template 只支持
+# cassandra/mysql8/postgres12 持久化。本机 test 用 PostgreSQL 持久化 + PostgreSQL
+# visibility 与主部署同构；生产可切 Elasticsearch visibility（改 config/docker.yaml）。
+#
+# config/docker.yaml 由 scripts/init-config.sh 生成（postgres12）；schema（temporal +
+# temporal_visibility 两张库）由 temporal-setup 一次性服务创建。config 目录已含
+# config_template.yaml + dynamicconfig + docker.yaml（见 scripts/init-config.sh）。
 #
 # 注意：此处是 Temporal *Server*（控制面推进器）；真正的执行 Worker 是
 # backend 侧的 `run_worker`（app/modules/aitde/workflow/gateway.py），需在
 # 有 backend 镜像的机器上启动（见 scripts/start-worker.sh）。
 services:
+  temporal-postgres:
+    image: postgres:16-alpine
+    container_name: aitde-temporal-pg
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-temporal}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-temporal}
+      POSTGRES_DB: ${POSTGRES_DB:-temporal}
+      POSTGRES_INITDB_ARGS: --encoding=UTF8
+    volumes:
+      - temporal-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-temporal}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  temporal-setup:
+    image: temporalio/auto-setup:1.25.2
+    container_name: aitde-temporal-setup
+    entrypoint: ["sh"]
+    command: ["/tmp/setup-temporal-schema.sh"]
+    depends_on:
+      temporal-postgres:
+        condition: service_healthy
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_SEEDS=temporal-postgres
+      - POSTGRES_USER=${POSTGRES_USER:-temporal}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-temporal}
+      - POSTGRES_PWD=${POSTGRES_PASSWORD:-temporal}
+      - DBNAME=${POSTGRES_DB:-temporal}
+    volumes:
+      - ./scripts/setup-temporal-schema.sh:/tmp/setup-temporal-schema.sh:ro
+      # 仅覆盖 docker.yaml（保留镜像自带 config_template/dynamicconfig）；:ro 使
+      # temporal-sql-tool 走独立 schema 路径（不回退 Cassandra/server）。
+      - ./config/docker.yaml:/etc/temporal/config/docker.yaml:ro
+    restart: "no"
+
   temporal:
     image: temporalio/auto-setup:1.25.2
     container_name: aitde-temporal
-    command:
-      - auto-setup
+    user: "0:0"
+    command: ["start"]
+    depends_on:
+      temporal-postgres:
+        condition: service_healthy
+      temporal-setup:
+        condition: service_completed_successfully
     environment:
-      - DB=sqlite
-      - NAMESPACE=${TEMPORAL_NAMESPACE:-default}
-      - TEMPORAL_COMPOSE_SCHEMA=1
-      # Web UI
-      - ENABLE_UI=true
-      - TEMPORAL_ADDRESS=${TEMPORAL_GRPC_ENDPOINT:-127.0.0.1:7233}
-      - UI_PORT=8080
-      - TEMPORAL_UI_PORT=8080
-      - TEMPORAL_WEB_PORT=8080
-      # mTLS（默认 OFF；开启见 gen-certs.sh）
-      - TLS_ENABLED=${TEMPORAL_TLS_ENABLED:-false}
-      - TLS_CA_FILE=${TEMPORAL_TLS_CA_PATH:-}
-      - TLS_CERT_FILE=${TEMPORAL_TLS_CERT_PATH:-}
-      - TLS_KEY_FILE=${TEMPORAL_TLS_KEY_PATH:-}
-      # 持久化 / visibility（SQLite 本地，单机）
-      - SQLITE_PLUGIN_DIR=/etc/temporal/plugins
+      - ENVIRONMENT=docker
+      - BIND_ON_IP=0.0.0.0
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_SEEDS=temporal-postgres
+      - POSTGRES_USER=${POSTGRES_USER:-temporal}
+      - POSTGRES_PWD=${POSTGRES_PASSWORD:-temporal}
+      - DBNAME=${POSTGRES_DB:-temporal}
     ports:
       - "${TEMPORAL_GRPC_PORT:-7233}:7233"   # gRPC (SDK client)
       - "${TEMPORAL_UI_PORT:-8080}:8080"     # Temporal Web UI
     volumes:
       - temporal-data:/data
+      - ./config:/etc/temporal/config
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "temporal", "operator", "cluster", "health"]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 30s
+      start_period: 40s
+
+  # 在 server 起来后创建默认 namespace（幂等）
+  temporal-namespace:
+    image: temporalio/auto-setup:1.25.2
+    container_name: aitde-temporal-namespace
+    depends_on:
+      temporal:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - >
+        until temporal --address temporal:7233 operator cluster health 2>/dev/null; do sleep 2; done;
+        temporal --address temporal:7233 operator namespace describe ${TEMPORAL_NAMESPACE:-default} >/dev/null 2>&1 ||
+        temporal --address temporal:7233 operator namespace create --retention 24h ${TEMPORAL_NAMESPACE:-default};
+        echo "namespace ready"
+    restart: "no"
 
 volumes:
   temporal-data:
+    driver: local
+  temporal-pg-data:
     driver: local
