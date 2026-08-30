@@ -289,9 +289,11 @@ def compute_summary(db: Session, mission_id: int, project_id: int) -> dict:
             select(TestPlanCase.id).where(TestPlanCase.plan_id == mission.test_plan_id)
         ).all()
         if plan_case_ids:
-            executions = db.scalars(
-                select(TestExecution).where(TestExecution.plan_case_id.in_(plan_case_ids))
-            ).all()
+            executions = list(
+                db.scalars(
+                    select(TestExecution).where(TestExecution.plan_case_id.in_(plan_case_ids))
+                ).all()
+            )
 
     executed = len(executions)
     passed = sum(1 for e in executions if e.status == "passed")

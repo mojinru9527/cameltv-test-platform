@@ -103,12 +103,14 @@ def _ui_summary(db: Session, project_id: int, cutoff: datetime) -> dict:
 
     runs: list[UiTestRun] = []
     if job_ids:
-        runs = db.scalars(
-            select(UiTestRun).where(
-                UiTestRun.job_id.in_(job_ids),
-                UiTestRun.started_at >= cutoff,
-            )
-        ).all()
+        runs = list(
+            db.scalars(
+                select(UiTestRun).where(
+                    UiTestRun.job_id.in_(job_ids),
+                    UiTestRun.started_at >= cutoff,
+                )
+            ).all()
+        )
 
     total_runs = len(runs)
     import json as _json
