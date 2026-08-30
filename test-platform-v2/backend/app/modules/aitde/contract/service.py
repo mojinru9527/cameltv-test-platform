@@ -119,7 +119,7 @@ def get_current(db: Session, mission_id: int) -> dict:
 
 
 def list_versions(db: Session, contract_id: int) -> list[dict]:
-    return [_version_to_dict(v) for v in repository.list_versions(db, contract_id)]
+    return [d for d in (_version_to_dict(v) for v in repository.list_versions(db, contract_id)) if d is not None]
 
 
 def freeze(
