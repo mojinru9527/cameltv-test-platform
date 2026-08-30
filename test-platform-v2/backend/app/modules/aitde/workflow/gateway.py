@@ -93,12 +93,13 @@ class TemporalWorkflowGateway:
         task_queue: str | None = None,
     ) -> dict[str, Any]:
         """Start a ScenarioExecutionWorkflow. Duplicate start is idempotent:
-        an already-running workflow id returns the existing handle."""
-        client = await self._get_client()
-        import asyncio
+        an already-running workflow id returns the existing handle.
 
-        # Resolve the queue by (zone, capabilities) when the caller routes the
-        # run; otherwise fall back to the configured default queue.
+        Non-blocking: it returns as soon as the workflow is scheduled, so the
+        Durable Run records its live state (WAITING_*) instead of an immediate
+        FINISHED. The caller can poll ``describe_workflow`` / query the workflow.
+        """
+        client = await self._get_client()
         resolved_queue = task_queue or settings.temporal_task_queue
         from temporalio.client import WorkflowAlreadyStartedError
 
@@ -111,14 +112,10 @@ class TemporalWorkflowGateway:
             )
         except WorkflowAlreadyStartedError:
             handle = client.get_workflow_handle(workflow_id)
-        try:
-            result = await asyncio.wait_for(handle.result(), timeout=30)
-        except Exception as exc:  # noqa: BLE001 — surface workflow/activity failure
-            result = {"error": str(exc)}
         return {
             "workflow_id": workflow_id,
             "temporal_run_id": handle.first_execution_run_id,
-            "result": result,
+            "status": "SCHEDULED",
         }
 
     async def signal_workflow(self, workflow_id: str, signal_name: str, args: Any) -> None:

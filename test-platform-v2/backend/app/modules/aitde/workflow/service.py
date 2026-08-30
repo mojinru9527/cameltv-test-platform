@@ -152,7 +152,9 @@ def start_scenario_execution(
     import asyncio
 
     gateway_result = asyncio.run(_start())
-    # Record after successful Temporal start (keeps the row truthful).
+    # Record after successful Temporal start. Non-blocking start → the run is
+    # SCHEDULED/RUNNING until the workflow completes; never FINISHED immediately
+    # (so WAITING_*/RETRYING/RESUMING surface to the tester).
     row = repository.create_workflow_run(
         db,
         {
@@ -163,9 +165,9 @@ def start_scenario_execution(
             "temporal_namespace": settings.temporal_namespace,
             "temporal_workflow_id": workflow_id,
             "temporal_run_id": gateway_result.get("temporal_run_id"),
-            "status": WorkflowStatus.FINISHED.value,
+            "status": WorkflowStatus.SCHEDULED.value,
             "started_at": datetime.now(),
-            "closed_at": datetime.now(),
+            "closed_at": None,
         },
     )
     return workflow_run_to_dict(row)
