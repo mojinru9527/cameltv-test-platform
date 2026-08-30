@@ -136,9 +136,9 @@ def generate_cases_from_real_sample(endpoint: dict, real_sample: dict) -> list[d
                     v, f"{field} 为 {label} 时按业务校验返回 2xx 或 4xx（视后端规则），不得 5xx。",
                 ))
         elif ptype == "string":
-            for label, bad in (("空字符串", ""), ("超长", "x" * 256), ("特殊字符", "@#$%^&*()")):
+            for label, bad_val in (("空字符串", ""), ("超长", "x" * 256), ("特殊字符", "@#$%^&*()")):
                 v = dict(body)
-                v[field] = bad
+                v[field] = bad_val
                 cases.append(_mk(
                     f"{field} 边界值 {label}（语义：{semantics}）", "boundary", "boundary", "边界值分析",
                     v, f"{field} 为 {label} 时按业务校验返回 2xx 或 4xx，不得 5xx。",
