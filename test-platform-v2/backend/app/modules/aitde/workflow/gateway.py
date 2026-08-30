@@ -195,6 +195,8 @@ def get_activities():
         activities.classify_outcome,
         activities.cleanup_fixture,
         activities.build_replay,
+        activities.run_legacy_api_task,
+        activities.run_legacy_ui_task,
     ]
 
 

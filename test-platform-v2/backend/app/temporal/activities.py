@@ -164,3 +164,55 @@ async def cleanup_fixture(payload: dict[str, Any]) -> dict[str, Any]:
 @activity.defn
 async def build_replay(payload: dict[str, Any]) -> dict[str, Any]:
     return _run_inner("build_replay", payload)
+
+
+# ── V34-013/014: Legacy runner Temporal bridges ──────────────────────────────
+
+
+@activity.defn
+async def run_legacy_api_task(payload: dict[str, Any]) -> dict[str, Any]:
+    """Run the legacy API execution path and bridge it into the unified model.
+
+    Payload: {task_id, project_id, case_id?, environment_id, worker_id, ...}.
+    Shadow-equivalence is preserved by running the exact legacy path and then
+    bridging (``legacy_bridge.bridge_api_item``) so the unified run carries the
+    real request/response + assertions.
+    """
+    from app.core.db import SessionLocal
+
+    db = SessionLocal()
+    try:
+        from app.services.api_task_worker import execute_task
+
+        task_id = int(payload["task_id"])
+        project_id = int(payload.get("project_id") or 0)
+        worker_id = payload.get("worker_id") or "temporal"
+        execute_task(task_id, project_id, worker_id)  # runs + bridges internally
+        return {"task_id": task_id, "bridged": True}
+    finally:
+        db.commit()
+        db.close()
+
+
+@activity.defn
+async def run_legacy_ui_task(payload: dict[str, Any]) -> dict[str, Any]:
+    """Run the legacy Playwright UI path and bridge it into the unified model.
+
+    Payload: {run_id, job_id, project_id}. Trace/evidence remain because the
+    legacy runner writes real screenshot/video/trace bytes and the bridge
+    registers them as EvidenceArtifact.
+    """
+    from app.core.db import SessionLocal
+
+    db = SessionLocal()
+    try:
+        from app.services.playwright_executor import run_playwright_test
+
+        run_id = int(payload["run_id"])
+        job_id = int(payload.get("job_id") or 0)
+        project_id = int(payload.get("project_id") or 0)
+        result = run_playwright_test(db, run_id, job_id, project_id)
+        return {"run_id": run_id, **result}
+    finally:
+        db.commit()
+        db.close()

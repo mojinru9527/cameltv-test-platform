@@ -8,6 +8,11 @@ from sqlalchemy.pool import StaticPool
 
 from app.core.db import Base
 from app.modules.aitde.workflow import models  # noqa: F401  registers workflow tables
+from app.modules.aitde.mission import models as mission_models  # noqa: F401
+from app.modules.aitde.scenario import models as scenario_models  # noqa: F401
+from app.modules.aitde.contract import models as contract_models  # noqa: F401
+from app.modules.aitde.execution import models as execution_models  # noqa: F401
+from app.modules.aitde.data import models as data_models  # noqa: F401
 
 
 @pytest.fixture()
@@ -25,3 +30,9 @@ def db():
     finally:
         session.close()
         engine.dispose()
+
+
+@pytest.fixture()
+def db_with_v34(db):
+    """Alias of ``db`` for tests that exercise the full AITDE model set."""
+    return db
