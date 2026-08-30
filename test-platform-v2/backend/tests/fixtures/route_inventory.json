@@ -1,5 +1,5 @@
 {
-  "count": 538,
+  "count": 541,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -2152,6 +2152,19 @@
     {
       "path": "/health",
       "method": "GET"
+    },
+    {
+      "path": "/api/v2/build-observations/{build_observation_id}/diff",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/triggers/{trigger_id}/fire",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/triggers/{trigger_id}/webhook",
+      "method": "POST"
     }
+
   ]
 }

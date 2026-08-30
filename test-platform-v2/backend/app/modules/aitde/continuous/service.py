@@ -8,6 +8,7 @@ the pure, testable service operations (V35-001..007).
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -17,7 +18,9 @@ from app.core.exceptions import APIException
 from app.modules.aitde.common.enums import (
     BuildObservationStatus,
     CampaignScenarioRequired,
+    CampaignType,
     EvidenceStatus,
+    FingerprintSourceType,
     QualityGateResult,
 )
 from app.modules.aitde.continuous import repository
@@ -142,15 +145,16 @@ def plan_campaign_selection(
         )
         if version is None:
             continue
+        risk_level = version.risk_level or ""
         required = CampaignScenarioRequired.OPTIONAL.value
-        if s.risk_level in ("P0", "P1"):
+        if risk_level in ("P0", "P1"):
             required = CampaignScenarioRequired.REQUIRED.value
         selected.append(
             {
                 "scenario_id": s.id,
                 "scenario_version_id": version.id,
                 "required": required,
-                "selection_reason": {"planner": "v1", "risk_level": s.risk_level},
+                "selection_reason": {"planner": "v1", "risk_level": risk_level},
             }
         )
     return selected
@@ -171,7 +175,7 @@ def create_campaign(
             "name": data.name,
             "campaign_type": data.campaign_type.value,
             "environment_id": data.environment_id,
-            "build_observation_id": None,
+            "build_observation_id": data.build_observation_id,
             "status": "DRAFT",
             "created_by_type": "AUTO",
         },
@@ -555,4 +559,153 @@ def trigger_to_dict(row: Any) -> dict[str, Any]:
         "status": row.status,
         "last_fired_at": row.last_fired_at,
         "created_at": row.created_at,
+    }
+
+
+def _json_dict(raw: str) -> dict[str, Any]:
+    try:
+        value = json.loads(raw or "{}")
+        return value if isinstance(value, dict) else {}
+    except (ValueError, TypeError):
+        return {}
+
+
+# ── V35 orchestration wiring (trigger fire / webhook / build diff) ──────────
+# These close the §93 "待外部基础设施" orchestration gaps so the Continuous
+# Acceptance loop can be driven end-to-end (trigger → build → campaign → gate)
+# with idempotent campaign creation and a deterministic build diff.
+
+
+def fire_trigger(
+    db: Session,
+    project_id: int,
+    trigger_id: int,
+    *,
+    components: dict[str, Any] | None = None,
+    build_label: str | None = None,
+    source_type: FingerprintSourceType = FingerprintSourceType.AUTO,
+) -> dict[str, Any]:
+    """Drive the Continuous Acceptance pipeline once (manual/poll/webhook).
+
+    capture fingerprint → observe build (dedup) → create/return the campaign for
+    that build (idempotent — never starts a duplicate campaign for the same build)
+    → evaluate the gate. Returns whether the campaign already existed.
+    """
+    trigger = repository.get_trigger(db, trigger_id, project_id)
+    if trigger is None:
+        raise APIException(code=404, msg="Trigger 不存在", http_status=404)
+    if trigger.status != "ACTIVE":
+        raise APIException(code=409, msg="Trigger 已禁用", http_status=409)
+
+    config = _json_dict(trigger.config_json)
+    environment_id = int(config.get("environment_id") or 0)
+    mission_id = trigger.mission_id or int(config.get("mission_id") or 0)
+    if not environment_id or not mission_id:
+        raise APIException(code=400, msg="Trigger 缺少 environment/mission 配置", http_status=400)
+
+    fingerprint = capture_fingerprint(
+        db,
+        environment_id,
+        FingerprintCaptureIn(
+            components=components or {},
+            build_label=build_label,
+            source_type=source_type,
+        ),
+    )
+    observation = observe_build(db, environment_id, mission_id, fingerprint["id"])
+
+    # Idempotency: the same BuildObservation never starts a second campaign.
+    existing = repository.find_campaign_for_build(db, observation["id"])
+    duplicate_campaign = existing is not None
+    if existing is not None:
+        campaign = get_campaign(db, existing.id, project_id)
+    else:
+        selection = plan_campaign_selection(db, mission_id, project_id)
+        campaign = create_campaign(
+            db,
+            CampaignCreateIn(
+                project_id=project_id,
+                mission_id=mission_id,
+                environment_id=environment_id,
+                name=f"build-{observation['id']}-auto",
+                campaign_type=CampaignType.IMPACTED,
+                build_observation_id=observation["id"],
+                scenarios=selection,
+            ),
+        )
+
+    repository.update_trigger(db, trigger, {"last_fired_at": datetime.now()})
+    gate = evaluate_gate(db, project_id, mission_id, campaign["id"], observation["id"])
+    return {
+        "fingerprint": fingerprint,
+        "build_observation": observation,
+        "campaign": campaign,
+        "gate": gate,
+        "duplicate_campaign": duplicate_campaign,
+    }
+
+
+def build_diff(
+    db: Session,
+    previous_fingerprint_id: int | None,
+    current_fingerprint_id: int,
+) -> dict[str, Any]:
+    """Deterministic change summary between two environment fingerprints.
+
+    Compares service versions + the stable build factors (openapi/db/config/
+    static/frontend/build_label) and returns the changed areas. This is the
+    deterministic Build Diff used to sanity-check the impact selection (§93 500).
+    """
+    if previous_fingerprint_id is None:
+        return {
+            "previous_fingerprint_id": None,
+            "current_fingerprint_id": current_fingerprint_id,
+            "service_changes": {},
+            "changed_areas": ["initial_build"],
+            "changed": True,
+        }
+
+    prev = repository.get_fingerprint_by_id(db, previous_fingerprint_id)
+    curr = repository.get_fingerprint_by_id(db, current_fingerprint_id)
+    if prev is None or curr is None:
+        return {
+            "previous_fingerprint_id": previous_fingerprint_id,
+            "current_fingerprint_id": current_fingerprint_id,
+            "service_changes": {},
+            "changed_areas": ["fingerprint_missing"],
+            "changed": prev is None and curr is None,
+        }
+
+    prev_c = _json_dict(prev.components_json)
+    curr_c = _json_dict(curr.components_json)
+    prev_sv = prev_c.get("service_versions") or {}
+    curr_sv = curr_c.get("service_versions") or {}
+    service_changes: dict[str, dict[str, Any]] = {}
+    for key in set(prev_sv) | set(curr_sv):
+        old = prev_sv.get(key)
+        new = curr_sv.get(key)
+        if old != new:
+            service_changes[key] = {"from": old, "to": new}
+
+    changed_areas: list[str] = []
+    if service_changes:
+        changed_areas.append("service_versions")
+    for factor in (
+        "openapi_hash",
+        "db_schema_version",
+        "config_hash",
+        "static_asset_hash",
+        "frontend_version",
+    ):
+        if prev_c.get(factor) != curr_c.get(factor):
+            changed_areas.append(factor)
+    if (prev_c.get("build_label") or "") != (curr_c.get("build_label") or ""):
+        changed_areas.append("build_label")
+
+    return {
+        "previous_fingerprint_id": previous_fingerprint_id,
+        "current_fingerprint_id": current_fingerprint_id,
+        "service_changes": service_changes,
+        "changed_areas": changed_areas,
+        "changed": bool(changed_areas or service_changes),
     }
