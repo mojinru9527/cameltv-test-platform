@@ -191,12 +191,12 @@ def diff(
                     "title": target_rules[key].get("title"),
                 }
             )
-    return ContractDiffRead(  # type: ignore[arg-type]
+    return ContractDiffRead(
         base_version=base_no,
         target_version=target_no,
-        added=added,
-        removed=removed,
-        changed=changed,
+        added=added,  # type: ignore[arg-type]
+        removed=removed,  # type: ignore[arg-type]
+        changed=changed,  # type: ignore[arg-type]
     )
 
 
