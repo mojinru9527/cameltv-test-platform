@@ -1335,7 +1335,7 @@ def generate_api_cases_from_linked_endpoints(
         select(ApiService).where(ApiService.id.in_({e.service_id for e in endpoint_rows.values() if e.service_id}))
     ).all()} if endpoint_rows else {}
     service_names = {
-        eid: (svc_rows.get(ep.service_id).display_name or svc_rows.get(ep.service_id).name if ep.service_id in svc_rows else "")
+        eid: (svc_rows[ep.service_id].display_name or svc_rows[ep.service_id].name if ep.service_id in svc_rows else "")
         for eid, ep in endpoint_rows.items()
     }
 
