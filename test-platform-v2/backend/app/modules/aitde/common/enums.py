@@ -472,3 +472,110 @@ class UiAssetBindingStatus(str, Enum):
     UNBOUND = "UNBOUND"
     BOUND = "BOUND"
     STALE = "STALE"
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# AITDE V3.4 — Durable Runtime + Network Worker + Security Plane shared enums
+# (V34). Worker registry, capability routing, policy decision and approval
+# vocabulary per the V3.4 plan §§3-6.
+# ────────────────────────────────────────────────────────────────────────────
+
+
+class WorkerStatus(str, Enum):
+    """Worker 生命周期状态（V34-003 注册/心跳）。"""
+
+    ONLINE = "ONLINE"
+    OFFLINE = "OFFLINE"
+    DRAINING = "DRAINING"
+    DISABLED = "DISABLED"
+
+
+class NetworkZone(str, Enum):
+    """Worker 网络分区。Production 业务仅 V3.6 才开放 PROD_RO。"""
+
+    OFFICE = "OFFICE"
+    TEST = "TEST"
+    PROD_RO = "PROD_RO"
+
+
+class Capability(str, Enum):
+    """Worker Capability（V34-004 可路由能力）。"""
+
+    HTTP = "HTTP"
+    BROWSER = "BROWSER"
+    MYSQL = "MYSQL"
+    POSTGRES = "POSTGRES"
+    LOG = "LOG"
+    KAFKA = "KAFKA"
+
+
+class WorkflowType(str, Enum):
+    """V3.4 编排工作流类型。"""
+
+    SCENARIO_EXECUTION = "SCENARIO_EXECUTION"
+    MISSION_DESIGN = "MISSION_DESIGN"
+
+
+class WorkflowStatus(str, Enum):
+    """Durable Run 的 Tester 可见状态（V3.4 §10 前端状态）。"""
+
+    WAITING_WORKER = "WAITING_WORKER"
+    WAITING_APPROVAL = "WAITING_APPROVAL"
+    RETRYING = "RETRYING"
+    RESUMING = "RESUMING"
+    SCHEDULED = "SCHEDULED"
+    RUNNING = "RUNNING"
+    FINISHED = "FINISHED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+
+
+class IdempotencyStatus(str, Enum):
+    """Runtime 幂等键状态（V34-012）。"""
+
+    PENDING = "PENDING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class PolicyDecision(str, Enum):
+    """Policy 网关判定（V34-010）。"""
+
+    ALLOW = "ALLOW"
+    DENY = "DENY"
+    REQUIRE_APPROVAL = "REQUIRE_APPROVAL"
+
+
+class ApprovalStatus(str, Enum):
+    """审批请求状态（V34-011）。"""
+
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    EXPIRED = "EXPIRED"
+
+
+class SecretRefStatus(str, Enum):
+    """SecretRef metadata 状态（V34-008；永不返回 secret value）。"""
+
+    ACTIVE = "ACTIVE"
+    ROTATED = "ROTATED"
+    REVOKED = "REVOKED"
+
+
+class PolicyType(str, Enum):
+    """Policy Profile 类型。"""
+
+    NETWORK_ZONE = "NETWORK_ZONE"
+    CAPABILITY = "CAPABILITY"
+    SECRET_SCOPE = "SECRET_SCOPE"
+    DRIVER_ACTION = "DRIVER_ACTION"
+
+
+class RuntimeResourceType(str, Enum):
+    """幂等键资源类型（V34-012）。"""
+
+    RUN = "RUN"
+    DATA = "DATA"
+    CLEANUP = "CLEANUP"
+    ACTIVITY = "ACTIVITY"

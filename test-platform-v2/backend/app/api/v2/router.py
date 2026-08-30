@@ -64,6 +64,7 @@ from app.api.v2.browser_interactions import (  # noqa: E402
     router as browser_sessions_router,
 )
 from app.api.v2.healing_proposals import router as healing_proposals_router  # noqa: E402
+from app.api.v2.workflows import router as workflows_router  # noqa: E402
 
 router.include_router(missions_router)
 router.include_router(mission_sources_router)
@@ -95,6 +96,7 @@ router.include_router(browser_sessions_router)
 router.include_router(manual_router)
 router.include_router(hybrid_router)
 router.include_router(healing_proposals_router)
+router.include_router(workflows_router)
 
 # Further domain routers are added with their epics:
 # mission_contracts.py (EPIC-05), mission_scenarios.py (EPIC-06),
