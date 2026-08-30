@@ -42,13 +42,16 @@ class PolicyGateway:
             "grant",
         }
 
-        # Production is strictly read-only (plan invariant "Production 默认只读").
+        # No bypass allowed: an "internal" driver takes the exact same path as a
+        # user drive — Production stays read-only, dangerous DB writes still
+        # require approval. V34-010 "internal driver 无绕过".
         if zone == "PROD_RO":
             if is_write:
                 return PolicyDecision.DENY.value, "PROD_RO zone is read-only"
             return PolicyDecision.ALLOW.value, "read-only driver allowed"
 
-        # Dangerous DB drivers require approval even in TEST (plan §6).
+        # Dangerous DB drivers require approval even in TEST (plan §6), and this
+        # applies to internal drivers too (no bypass).
         if driver == "database" and action in {"fixture_update", "db_exec"}:
             return (
                 PolicyDecision.REQUIRE_APPROVAL.value,
@@ -79,6 +82,31 @@ class IdempotencyService:
         """Return ``(row, first)`` — ``first`` True when this is the first delivery."""
         key_hash = hashlib.sha256(f"{scope}:{key}".encode()).hexdigest()
         return repository.acquire_idempotency_key(db, scope, key_hash, resource_type)
+
+    def expire(self, db: Session, stale_seconds: int = 86400) -> int:
+        """Mark stale PENDING idempotency keys as FAILED (V34-012 TTL).
+
+        A key that has not been completed within its window is no longer a valid
+        dedup guard, so a re-delivered activity may proceed rather than being
+        silently swallowed.
+        """
+        from app.modules.aitde.common.enums import IdempotencyStatus
+        from datetime import datetime, timedelta
+        from sqlalchemy import select
+
+        cutoff = (
+            datetime.now().replace(tzinfo=None) - timedelta(seconds=max(1, stale_seconds))
+        )
+        rows = db.scalars(
+            select(repository.RuntimeIdempotencyKey).where(
+                repository.RuntimeIdempotencyKey.status == IdempotencyStatus.PENDING.value,
+                repository.RuntimeIdempotencyKey.created_at < cutoff,
+            )
+        ).all()
+        for r in rows:
+            r.status = IdempotencyStatus.FAILED.value
+        db.commit()
+        return len(rows)
 
 
 idempotency_service = IdempotencyService()

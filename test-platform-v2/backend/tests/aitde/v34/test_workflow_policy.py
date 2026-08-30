@@ -74,3 +74,46 @@ def test_idempotency_unique_scope(db):
     _, first_b = svc.acquire(db, "cleanup", "key", "CLEANUP")
     assert first_a is True
     assert first_b is True
+
+
+def test_internal_driver_no_bypass_prod_ro(db):
+    """An internal driver still cannot write to PROD_RO (V34-010)."""
+    req = PolicyDecisionIn(
+        actor="worker",
+        network_zone=NetworkZone.PROD_RO,
+        driver="database",
+        action="db_exec",
+        target={"schema": "prod"},
+    )
+    decision, _ = policy_gateway.evaluate(db, req)
+    assert decision == PolicyDecision.DENY.value
+
+
+def test_internal_driver_no_bypass_requires_approval(db):
+    """An internal database write in TEST still requires approval (no bypass)."""
+    req = PolicyDecisionIn(
+        actor="worker",
+        network_zone=NetworkZone.TEST,
+        driver="database",
+        action="fixture_update",
+        target={"schema": "member_test"},
+    )
+    decision, _ = policy_gateway.evaluate(db, req)
+    assert decision == PolicyDecision.REQUIRE_APPROVAL.value
+
+
+def test_idempotency_expiry_marks_stale_pending(db):
+    from app.modules.aitde.workflow import repository
+    from datetime import datetime, timedelta
+
+    svc = IdempotencyService()
+    row, _ = svc.acquire(db, "run", "expired-key", "ACTIVITY")
+    # Backdate the key so it's stale.
+    row.created_at = datetime.now().replace(tzinfo=None) - timedelta(days=2)
+    db.commit()
+
+    expired = svc.expire(db, stale_seconds=86400)
+    assert expired == 1
+    assert repository.RuntimeIdempotencyKey.__table__ is not None  # model registered
+    refreshed = db.get(type(row), row.id)
+    assert refreshed.status == "FAILED"
