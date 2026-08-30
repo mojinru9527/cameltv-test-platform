@@ -23,9 +23,9 @@ from app.modules.aitde.common.enums import (
     BuildObservationStatus,
     CampaignScenarioRequired,
     CampaignType,
+    ContinuousTriggerType,
     FingerprintSourceType,
     QualityGateResult,
-    TriggerType,
 )
 
 
@@ -127,7 +127,7 @@ class Trigger(Base):
     project_id: Mapped[int] = mapped_column(Integer, default=0, index=True)
     mission_id: Mapped[int | None] = mapped_column(Integer, default=None, index=True)
     trigger_type: Mapped[str] = mapped_column(
-        String(16), default=TriggerType.MANUAL.value, index=True
+        String(16), default=ContinuousTriggerType.MANUAL.value, index=True
     )
     config_json: Mapped[str] = mapped_column(Text, default="{}")
     status: Mapped[str] = mapped_column(String(16), default="ACTIVE", index=True)

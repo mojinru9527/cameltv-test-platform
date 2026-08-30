@@ -1,4 +1,4 @@
-"""AITDE V3.5 Continuous Acceptance tests (V35-001..007)."""
+﻿"""AITDE V3.5 Continuous Acceptance tests (V35-001..007)."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from app.modules.aitde.continuous.schemas import (
     RunProfileIn,
     TriggerIn,
 )
-from app.modules.aitde.common.enums import TriggerType
+from app.modules.aitde.common.enums import ContinuousTriggerType
 
 
 def _components(**kw):
@@ -24,7 +24,7 @@ def _components(**kw):
     return base
 
 
-# ── V35-001 EnvironmentFingerprint ──────────────────────────────────────────
+# 鈹€鈹€ V35-001 EnvironmentFingerprint 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 
 def test_capture_fingerprint_dedupes(db):
@@ -51,7 +51,7 @@ def test_capture_fingerprint_change_creates_new(db):
     assert len(repository.list_fingerprints(db, 1)) == 2
 
 
-# ── V35-002 BuildObservation ─────────────────────────────────────────────────
+# 鈹€鈹€ V35-002 BuildObservation 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 
 def test_observe_build_no_duplicate(db):
@@ -74,7 +74,7 @@ def test_observe_build_change_creates_new(db):
     assert obs2["previous_fingerprint_id"] == fp1["id"]
 
 
-# ── V35-003 ExecutionCampaign (immutable snapshot) ───────────────────────────
+# 鈹€鈹€ V35-003 ExecutionCampaign (immutable snapshot) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 
 def test_create_campaign_snapshot(db):
@@ -104,7 +104,7 @@ def test_campaign_run_immutable_after_start(db):
     assert updated.status == "RUNNING"
 
 
-# ── V35-004 RunProfile project isolation ─────────────────────────────────────
+# 鈹€鈹€ V35-004 RunProfile project isolation 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 
 def test_run_profile_project_isolation(db):
@@ -116,7 +116,7 @@ def test_run_profile_project_isolation(db):
     assert [p["id"] for p in list2] == [b["id"]]
 
 
-# ── V35-007 QualityGate (zero execution -> FAIL) ─────────────────────────────
+# 鈹€鈹€ V35-007 QualityGate (zero execution -> FAIL) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 
 def test_gate_zero_execution_fail(db):
@@ -139,17 +139,17 @@ def test_gate_no_scenarios_inconclusive(db):
     assert gate["result"] == QualityGateResult.INCONCLUSIVE.value
 
 
-# ── V35-008 Trigger ──────────────────────────────────────────────────────────
+# 鈹€鈹€ V35-008 Trigger 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 
 def test_create_and_list_trigger(db):
-    trig = service.create_trigger(db, TriggerIn(project_id=1, trigger_type=TriggerType.FINGERPRINT, config={"interval_min": 5}))
-    assert trig["trigger_type"] == TriggerType.FINGERPRINT.value
+    trig = service.create_trigger(db, TriggerIn(project_id=1, trigger_type=ContinuousTriggerType.FINGERPRINT, config={"interval_min": 5}))
+    assert trig["trigger_type"] == ContinuousTriggerType.FINGERPRINT.value
     items = service.list_triggers(db, 1)
     assert [t["id"] for t in items] == [trig["id"]]
 
 
-# ── V35-009 Schedule Adapter (legacy schedule 不破坏) ─────────────────────────
+# 鈹€鈹€ V35-009 Schedule Adapter (legacy schedule 涓嶇牬鍧? 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 
 def _fake_schedule(sid=1, enabled=True, cron="0 2 * * *", plan_id=9):
@@ -171,7 +171,7 @@ def test_schedule_adapter_creates_trigger(db):
     from app.modules.aitde.continuous.adapters import schedule_adapter
 
     trig = schedule_adapter.to_trigger(db, _fake_schedule(), project_id=1)
-    assert trig["trigger_type"] == TriggerType.SCHEDULE.value
+    assert trig["trigger_type"] == ContinuousTriggerType.SCHEDULE.value
     assert trig["status"] == "ACTIVE"
 
 
@@ -191,7 +191,7 @@ def test_schedule_adapter_disabled_maps_status(db):
     assert trig["status"] == "DISABLED"
 
 
-# ── V35-010 TestPlan Adapter (旧 plan 可读) ──────────────────────────────────
+# 鈹€鈹€ V35-010 TestPlan Adapter (鏃?plan 鍙) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 
 def test_testplan_adapter_creates_campaign(db):
@@ -211,5 +211,6 @@ def _fake_plan(pid=55):
     p = P()
     p.id = pid
     p.project_id = 1
-    p.name = "回归计划"
+    p.name = "鍥炲綊璁″垝"
     return p
+

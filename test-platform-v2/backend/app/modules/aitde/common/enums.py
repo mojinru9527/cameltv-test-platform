@@ -623,8 +623,9 @@ class RunProfileType(str, Enum):
     CUSTOM = "CUSTOM"
 
 
-class TriggerType(str, Enum):
-    """Trigger 类型（V35-008）。"""
+class ContinuousTriggerType(str, Enum):
+    """Continuous Acceptance Trigger 类型（V35-008）. Uses a distinct name to avoid
+    colliding with the V31 execution ``TriggerType`` (MANUAL/LEGACY_BRIDGE/SYSTEM)."""
 
     MANUAL = "MANUAL"
     SCHEDULE = "SCHEDULE"

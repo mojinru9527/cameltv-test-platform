@@ -7,8 +7,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.modules.aitde.common.enums import (
     CampaignType,
+    ContinuousTriggerType,
     FingerprintSourceType,
-    TriggerType,
 )
 
 
@@ -94,7 +94,7 @@ class RunProfileOut(BaseModel):
 class TriggerIn(BaseModel):
     project_id: int = 0
     mission_id: int | None = None
-    trigger_type: TriggerType = TriggerType.MANUAL
+    trigger_type: ContinuousTriggerType = ContinuousTriggerType.MANUAL
     config: dict = Field(default_factory=dict)
 
 

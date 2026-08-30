@@ -16,7 +16,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.modules.aitde.common.enums import CampaignType, TriggerType
+from app.modules.aitde.common.enums import CampaignType, ContinuousTriggerType
 from app.modules.aitde.continuous import repository
 
 
@@ -42,7 +42,7 @@ class LegacyScheduleAdapter:
             {
                 "project_id": project_id,
                 "mission_id": None,
-                "trigger_type": TriggerType.SCHEDULE.value,
+                "trigger_type": ContinuousTriggerType.SCHEDULE.value,
                 "config_json": json.dumps(config),
                 "status": "ACTIVE" if schedule.enabled else "DISABLED",
             },
