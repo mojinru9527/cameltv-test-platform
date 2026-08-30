@@ -143,7 +143,7 @@ def _ui_summary(db: Session, project_id: int, cutoff: datetime) -> dict:
         })
 
     # UI 失败分类
-    ui_errors = {}
+    ui_errors: dict[str, int] = {}
     for r in runs:
         if r.status == "failed" and r.error_message:
             cat = _classify_ui_error(r.error_message)

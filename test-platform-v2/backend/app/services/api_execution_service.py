@@ -641,7 +641,7 @@ def _assert_json_schema(rule: dict, data: Any) -> dict:
             "message": "json_schema 断言需要 object 类型的响应体 ✗",
         }
 
-    errors = _validate_json_schema(data, schema)
+    errors: list[str] = _validate_json_schema(data, schema)
     passed = len(errors) == 0
     return {
         "type": "json_schema",

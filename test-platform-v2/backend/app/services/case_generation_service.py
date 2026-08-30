@@ -314,7 +314,7 @@ def _build_playwright_spec(mission: VersionMission, cases: list[TestCase]) -> st
 
 def _sample_body(op: dict[str, Any]) -> str:
     content = ((op.get("requestBody") or {}).get("content") or {})
-    app_json = content.get("application/json") or next(iter(content.values()), {})
+    app_json: Any = content.get("application/json") or next(iter(content.values()), {})
     schema = app_json.get("schema") if isinstance(app_json, dict) else {}
     if not isinstance(schema, dict):
         return ""
