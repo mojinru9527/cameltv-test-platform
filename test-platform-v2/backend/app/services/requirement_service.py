@@ -1343,7 +1343,7 @@ def generate_api_cases_from_linked_endpoints(
     upserted = 0
     inserted = 0
     linked_ids = set(_parse_indices(doc.linked_api_endpoint_ids or "[]"))
-    seen_identity: set[tuple[str, str, str]] = set()
+    seen_identity: set[tuple[str, str, str, str]] = set()
 
     def _persist(case: dict, endpoint_dict: dict, module_name: str, source: str = "fp") -> None:
         nonlocal generated, upserted, inserted
