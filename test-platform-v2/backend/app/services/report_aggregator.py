@@ -101,7 +101,7 @@ def _ui_summary(db: Session, project_id: int, cutoff: datetime) -> dict:
     ).all()
     job_ids = [j.id for j in jobs]
 
-    runs = []
+    runs: list[UiTestRun] = []
     if job_ids:
         runs = db.scalars(
             select(UiTestRun).where(

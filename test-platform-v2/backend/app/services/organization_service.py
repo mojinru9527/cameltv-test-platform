@@ -100,14 +100,14 @@ def organizations_for_user(db: Session, user_id: int, is_superadmin: bool = Fals
     if not orgs:
         return []
 
-    member_counts = dict(
+    member_counts: dict[int, int] = dict(
         db.execute(
             select(OrganizationMember.organization_id, func.count())
             .where(OrganizationMember.organization_id.in_([o.id for o in orgs]))
             .group_by(OrganizationMember.organization_id)
         ).all()
     )
-    project_counts = dict(
+    project_counts: dict[int, int] = dict(
         db.execute(
             select(Project.organization_id, func.count())
             .where(
