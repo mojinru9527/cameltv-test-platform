@@ -1,0 +1,23 @@
+{
+  "name": "cameltv-aitde-default",
+  "policy_type": "DRIVER_ACTION",
+  "version": "1.0",
+  "status": "ACTIVE",
+  "document": {
+    "description": "AITDE V3.4 default driver-action policy. Enforced backend-side by app/modules/aitde/workflow/policy.py (PolicyGateway). OPA is an optional drop-in; keep this JSON in sync with the OPA/Rego rule set below.",
+    "network_zone_production": {
+      "readonly": true,
+      "write": "DENY"
+    },
+    "network_zone_office": {
+      "write": "DENY"
+    },
+    "dangerous_drivers": {
+      "database": {
+        "actions": ["fixture_update", "db_exec", "create", "update", "delete", "insert", "grant"],
+        "test_zone": "REQUIRE_APPROVAL",
+        "production_zone": "DENY"
+      }
+    }
+  }
+}
