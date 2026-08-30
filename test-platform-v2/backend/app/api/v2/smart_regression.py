@@ -6,6 +6,8 @@ smart-campaign freeze. Mounted under ``/api/v2`` and feature-gated.
 
 from __future__ import annotations
 
+from typing import NoReturn
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -26,7 +28,7 @@ router = APIRouter(
 )
 
 
-def _issue_404(msg: str) -> None:
+def _issue_404(msg: str) -> NoReturn:
     from app.core.exceptions import APIException
 
     raise APIException(code=404, msg=msg, http_status=404)
