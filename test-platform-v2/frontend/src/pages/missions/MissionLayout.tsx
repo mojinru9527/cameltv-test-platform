@@ -17,6 +17,9 @@ const TABS = [
   { key: 'executions', label: '执行', path: 'executions' },
   { key: 'builds', label: 'Build', path: 'builds' },
   { key: 'acceptance', label: '验收', path: 'acceptance' },
+  { key: 'changes', label: '变化检测', path: 'changes' },
+  { key: 'impact', label: '影响分析', path: 'impact' },
+  { key: 'trace', label: 'Lineage', path: 'trace' },
 ]
 
 export default function MissionLayout() {
