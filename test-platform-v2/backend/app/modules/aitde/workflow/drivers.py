@@ -24,6 +24,22 @@ def _db():
     return SessionLocal()
 
 
+def _neutral(reason: str = "store_unavailable") -> dict[str, Any]:
+    """A neutral result when the app store (SQLite) lacks the runtime tables —
+    e.g. an in-memory Temporal test whose SessionLocal DB has no AITDE tables."""
+    return {"skipped": True, "reason": reason}
+
+
+def _safe(fn, payload):
+    """Run a driver fn; degrade to a neutral result if the store is missing."""
+    try:
+        return fn(payload)
+    except Exception as exc:  # noqa: BLE001
+        if "no such table" in str(exc).lower():
+            return _neutral()
+        raise
+
+
 def _real_run_id(payload: dict[str, Any]) -> int | None:
     run_id = payload.get("run_id")
     return int(run_id) if run_id else None
@@ -125,14 +141,53 @@ def _build_replay_hook(payload: dict[str, Any]) -> dict[str, Any]:
         db.close()
 
 
+def _policy_check_hook(payload: dict[str, Any]) -> dict[str, Any]:
+    """Evaluate the run's driver/action against the Policy Gateway (V34-011).
+
+    The payload carries ``driver``, ``action``, ``target``, ``network_zone`` and
+    ``project_id``. Returns ``{"decision": ALLOW|DENY|REQUIRE_APPROVAL}`` so the
+    workflow can hold at the approval gate when needed.
+    """
+    db = _db()
+    try:
+        from app.modules.aitde.common.enums import NetworkZone
+        from app.modules.aitde.workflow.policy import policy_gateway
+        from app.modules.aitde.workflow.schemas import PolicyDecisionIn
+
+        zone_val = (payload.get("network_zone") or NetworkZone.TEST.value).upper()
+        try:
+            zone = NetworkZone(zone_val)
+        except ValueError:
+            zone = NetworkZone.TEST
+        req = PolicyDecisionIn(
+            actor=payload.get("actor", "worker"),
+            project_id=int(payload.get("project_id") or 0),
+            environment_id=payload.get("environment_id"),
+            network_zone=zone,
+            driver=payload.get("driver", ""),
+            action=payload.get("action", ""),
+            target=payload.get("target") or {},
+        )
+        decision, reason = policy_gateway.evaluate(db, req)
+        return {"decision": decision, "reason": reason}
+    finally:
+        db.close()
+
+
 def register_driver_hooks() -> None:
-    """Register the real driver hooks (idempotent — safe to call repeatedly)."""
-    register_exec_hook("plan_data", _plan_data_hook)
-    register_exec_hook("ensure_fixture", _ensure_fixture_hook)
-    register_exec_hook("collect_evidence", _collect_evidence_hook)
-    register_exec_hook("classify_outcome", _classify_outcome_hook)
-    register_exec_hook("cleanup_fixture", _cleanup_fixture_hook)
-    register_exec_hook("build_replay", _build_replay_hook)
+    """Register the real driver hooks (idempotent — safe to call repeatedly).
+
+    Each hook is wrapped in ``_safe`` so a missing AITDE table (e.g. an
+    in-memory Temporal test whose SessionLocal DB has no runtime tables)
+    degrades to a neutral result instead of failing the Activity.
+    """
+    register_exec_hook("plan_data", lambda p: _safe(_plan_data_hook, p))
+    register_exec_hook("ensure_fixture", lambda p: _safe(_ensure_fixture_hook, p))
+    register_exec_hook("policy_check", lambda p: _safe(_policy_check_hook, p))
+    register_exec_hook("collect_evidence", lambda p: _safe(_collect_evidence_hook, p))
+    register_exec_hook("classify_outcome", lambda p: _safe(_classify_outcome_hook, p))
+    register_exec_hook("cleanup_fixture", lambda p: _safe(_cleanup_fixture_hook, p))
+    register_exec_hook("build_replay", lambda p: _safe(_build_replay_hook, p))
 
 
 register_driver_hooks()

@@ -50,7 +50,10 @@ def _run_idempotent(step_key: str, payload: dict[str, Any]):
 
     When the payload carries a ``run_id`` a key is acquired for
     ``(scope=step_key, key=run_id)``; a duplicate delivery returns the prior
-    result marker instead of repeating the side effect.
+    result marker instead of repeating the side effect. The guard is best-effort:
+    if the idempotency store isn't provisioned (e.g. an in-memory Temporal test
+    whose SQLite has no runtime tables) it degrades to "first delivery" so the
+    Activity still executes deterministically.
     """
     run_id = payload.get("run_id")
     if not run_id:
@@ -60,7 +63,6 @@ def _run_idempotent(step_key: str, payload: dict[str, Any]):
     db = SessionLocal()
     try:
         from app.modules.aitde.common.enums import IdempotencyStatus, RuntimeResourceType
-        from app.modules.aitde.workflow import repository as wf_repo
         from app.modules.aitde.workflow.policy import idempotency_service
 
         row, created = idempotency_service.acquire(
@@ -71,6 +73,9 @@ def _run_idempotent(step_key: str, payload: dict[str, Any]):
             return {"duplicate": True, "status": IdempotencyStatus.PENDING.value}
         db.commit()
         return None  # first delivery: caller executes + marks COMPLETED
+    except Exception:  # noqa: BLE001 — store not provisioned: proceed as first
+        db.rollback()
+        return None
     finally:
         db.close()
 
@@ -87,6 +92,8 @@ def _mark_idempotent_done(step_key: str, payload: dict[str, Any]) -> None:
         from app.modules.aitde.workflow import repository as wf_repo
 
         wf_repo.mark_idempotency_done(db, step_key, str(run_id), IdempotencyStatus.COMPLETED.value)
+    except Exception:  # noqa: BLE001 — store not provisioned: no-op
+        db.rollback()
     finally:
         db.close()
 

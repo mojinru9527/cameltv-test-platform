@@ -8,10 +8,13 @@ reached only through the gateway.
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime
 from typing import Any
 
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.core.config import settings
 from app.core.exceptions import APIException
@@ -326,7 +329,43 @@ def resolve_approval(
         raise APIException(code=404, msg="Approval 不存在", http_status=404)
     status = ApprovalStatus.APPROVED.value if approved else ApprovalStatus.REJECTED.value
     updated = repository.resolve_approval(db, row, status, approved_by)
+
+    # V34-011: signal the waiting workflow so it resumes or aborts the dangerous
+    # step. The temporal_workflow_id is carried in request_json (set at creation);
+    # resolve by run_id lookup as a fallback.
+    temporal_workflow_id = _extract_temporal_workflow_id(row)
+    if temporal_workflow_id:
+        _signal_approval(temporal_workflow_id, {"approved": approved, "reason": status})
+
     return approval_to_dict(updated)
+
+
+def _extract_temporal_workflow_id(row: Any) -> str | None:
+    try:
+        import json as _json
+
+        req = _json.loads(row.request_json or "{}")
+        if isinstance(req, dict) and req.get("temporal_workflow_id"):
+            return str(req["temporal_workflow_id"])
+    except (ValueError, TypeError):
+        pass
+    if row.run_id:
+        wf = repository.get_workflow_run_by_run_id(row.run_id)
+        if wf is not None:
+            return wf.temporal_workflow_id
+    return None
+
+
+def _signal_approval(temporal_workflow_id: str, payload: dict[str, Any]) -> None:
+    import asyncio
+
+    async def _signal() -> None:
+        await temporal_gateway.signal_workflow(temporal_workflow_id, "approve", payload)
+
+    try:
+        asyncio.run(_signal())
+    except Exception as exc:  # noqa: BLE001 — approval persistence already done
+        logger.warning("[temporal] approval signal failed: %s", exc)
 
 
 def approval_to_dict(row: Any) -> dict[str, Any]:

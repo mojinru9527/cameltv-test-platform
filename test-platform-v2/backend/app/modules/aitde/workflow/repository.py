@@ -140,6 +140,11 @@ def get_workflow_run_by_temporal_id(
     )
 
 
+def get_workflow_run_by_run_id(db: Session, run_id: int) -> WorkflowRun | None:
+    """Return the WorkflowRun bound to a unified execution run id (or None)."""
+    return db.scalar(select(WorkflowRun).where(WorkflowRun.run_id == run_id))
+
+
 def list_workflow_runs(
     db: Session, project_id: int, page: int = 1, page_size: int = 20
 ) -> tuple[list[WorkflowRun], int]:

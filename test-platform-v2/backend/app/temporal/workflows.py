@@ -9,6 +9,10 @@ The workflow module is deliberately import-light: it imports only ``temporalio``
 and references its Activities by *name* (the worker binds the implementations).
 This keeps the workflow deterministic and sandbox-clean — the Data/API/Browser/
 Assertion/Evidence driver wiring lives entirely in the Activities module.
+
+V34-011 Approval: when ``policy_check`` returns ``REQUIRE_APPROVAL`` the workflow
+waits on an ``approve`` Signal. A ``rejected`` decision aborts the dangerous
+step before it runs; ``approved`` lets the chain continue.
 """
 from __future__ import annotations
 
@@ -43,6 +47,28 @@ _CHAIN: list[str] = [
 class ScenarioExecutionWorkflow:
     """Durable execution of one frozen Scenario (V3.4 plan §2)."""
 
+    def __init__(self) -> None:
+        self._approval: dict[str, Any] | None = None
+        self._history: list[dict[str, Any]] = []
+
+    @workflow.signal
+    async def approve(self, decision: dict[str, Any]) -> None:
+        """Receive an approve/reject signal for a REQUIRE_APPROVAL gate."""
+        self._approval = decision
+
+    @workflow.query
+    def get_approval(self) -> dict[str, Any] | None:
+        """Query the current approval decision (for the UI)."""
+        return self._approval
+
+    @workflow.query
+    def get_history(self) -> list[dict[str, Any]]:
+        """Query the run's step history (for the Retry/Resume UI)."""
+        return self._history
+
+    def _reset_history(self) -> None:
+        self._history = []
+
     @workflow.run
     async def run(self, scenario_input: dict[str, Any]) -> dict[str, Any]:
         """Create a chain of Activities with a shared retry policy.
@@ -56,6 +82,7 @@ class ScenarioExecutionWorkflow:
             maximum_attempts=3,
         )
 
+        self._reset_history()
         history: list[dict[str, Any]] = []
         try:
             for activity_name in _CHAIN:
@@ -68,6 +95,25 @@ class ScenarioExecutionWorkflow:
                     retry_policy=retry,
                 )
                 history.append({"step": activity_name, "result": result})
+
+                # V34-011: hold at the policy gate until an approval signal. A
+                # rejected decision aborts the dangerous step, but the workflow
+                # completes (records the block) so cleanup + replay still run.
+                if activity_name == "policy_check":
+                    decision = result.get("decision") if isinstance(result, dict) else None
+                    if decision == "REQUIRE_APPROVAL":
+                        await workflow.wait_condition(lambda: self._approval is not None)
+                        if self._approval.get("approved") is not True:
+                            history.append(
+                                {
+                                    "step": "approval_gate",
+                                    "result": {
+                                        "decision": "BLOCKED",
+                                        "reason": self._approval.get("reason", ""),
+                                    },
+                                }
+                            )
+                            break
         finally:
             # Compensation path: cleanup always runs, even on failure.
             await workflow.execute_activity(
