@@ -1,6 +1,6 @@
 """aitde v3.8 ai qa closed loop tables (failure hypothesis / flaky / suggestion / gap / feedback / evaluation / strategy)
 
-Revision ID: 20260902_aitde_v38_ai_closed_loop
+Revision ID: 20260902_aitde_v38_aiclosed
 Revises: 20260901_aitde_v37_smartreg
 Create Date: 2026-09-02 09:00:00
 
@@ -14,7 +14,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision: str = "20260902_aitde_v38_ai_closed_loop"
+revision: str = "20260902_aitde_v38_aiclosed"
 down_revision: Union[str, None] = "20260901_aitde_v37_smartreg"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
