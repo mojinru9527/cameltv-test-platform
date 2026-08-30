@@ -47,9 +47,6 @@ export function ObservedJourneyTimeline({ journeys, loading = false, onDetail }:
       .finally(() => {
         if (!signal.aborted) setDetailLoading(false)
       })
-    // The hook re-runs the latest closure, so `onDetail` is always fresh even though
-    // it is omitted here to prevent a re-fetch on every parent render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expandedId])
 
   const toggle = (id: number) => {

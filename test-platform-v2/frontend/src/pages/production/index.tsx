@@ -77,7 +77,6 @@ export default function ProductionEvidencePage() {
       .finally(() => {
         if (!signal.aborted) setGapsLoading(false)
       })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedJourneyId, currentProjectId])
 
   const handleJourneyDetail = (detail: JourneyDetail) => {
