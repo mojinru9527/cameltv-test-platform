@@ -54,9 +54,10 @@ def test_scenario_execution_workflow_completes():
         "collect_evidence",
         "classify_outcome",
     ]
-    # The replay activity echoes its payload; confirm the build_replay step ran.
-    assert result["replay"]["step"] == "build_replay"
-    assert "run" in result["replay"]["echo"]
+    # The replay activity ran (build_replay hook registered). With no run_id the
+    # guard returns a neutral "no_run_id" result (real replay is run-scoped).
+    assert result["replay"]["reason"] == "no_run_id"
+    assert result["replay"]["manifest"] is None
 
 def test_cleanup_activity_registered_in_chain():
     """Cleanup is part of the workflow's compensation path (it is an Activity)."""

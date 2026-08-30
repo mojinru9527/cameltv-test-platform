@@ -169,6 +169,25 @@ def acquire_idempotency_key(
     return row, True
 
 
+def mark_idempotency_done(db: Session, scope: str, key: str, status: str) -> None:
+    """Mark the idempotency key (by scope+key_hash of ``key``) COMPLETED/FAILED.
+
+    Failure to find the key is a no-op (a duplicate delivery that lost the
+    race already recorded its own status).
+    """
+    import hashlib
+
+    key_hash = hashlib.sha256(f"{scope}:{key}".encode()).hexdigest()
+    row = db.scalar(
+        select(RuntimeIdempotencyKey).where(
+            RuntimeIdempotencyKey.scope == scope, RuntimeIdempotencyKey.key_hash == key_hash
+        )
+    )
+    if row is not None:
+        row.status = status
+        db.commit()
+
+
 # ── Policy / SecretRef / Approval ────────────────────────────────────────────
 
 

@@ -1,14 +1,15 @@
 """AITDE V3.4 Execution Activities (V34-004).
 
 Temporal Activity wrappers for the ScenarioExecutionWorkflow. Each Activity is
-declared with a start/schedule timeout and retry policy in the workflow; the
-``idempotency_key`` argument lets the IdempotencyService deduplicate a
-re-delivered Activity so a crash/replay never repeats a business side effect.
+declared with a start/schedule timeout and retry policy in the workflow; replayed
+deliveries are deduplicated by the IdempotencyService so a crash/replay never
+repeats a business side effect.
 
-PR34-01 keeps these as pass-through/lightweight adapters to the existing V3
-runtime; later PRs wire the Data/API/Browser/Assertion/Evidence drivers into the
-``fn`` hooks. Activities must remain deterministic (no `random`, no time-based
-branching) so Temporal can replay them.
+Activities run OUTSIDE the workflow sandbox, so they may open a DB session and
+delegate to the existing V3.2 data runtime, V3.3 command/action executor and the
+execution evidence/outcome services. The activity payload carries the ``run_id``
++ ``scenario_version_id`` when real execution is requested; absent a ``run_id``
+the activity falls back to a deterministic echo (used by the skeleton test).
 """
 from __future__ import annotations
 
@@ -37,12 +38,70 @@ def register_exec_hook(step_key: str, fn: Callable[[dict[str, Any]], dict[str, A
     _EXEC_HOOKS[step_key] = fn
 
 
+def _echo(payload: dict[str, Any]) -> dict[str, Any]:
+    return {"echo": payload}
+
+
+# ── idempotency guard (V34-012) ──────────────────────────────────────────────
+
+
+def _run_idempotent(step_key: str, payload: dict[str, Any]):
+    """Return (executed_result) with a DB-scoped idempotency key.
+
+    When the payload carries a ``run_id`` a key is acquired for
+    ``(scope=step_key, key=run_id)``; a duplicate delivery returns the prior
+    result marker instead of repeating the side effect.
+    """
+    run_id = payload.get("run_id")
+    if not run_id:
+        return None
+    from app.core.db import SessionLocal
+
+    db = SessionLocal()
+    try:
+        from app.modules.aitde.common.enums import IdempotencyStatus, RuntimeResourceType
+        from app.modules.aitde.workflow import repository as wf_repo
+        from app.modules.aitde.workflow.policy import idempotency_service
+
+        row, created = idempotency_service.acquire(
+            db, step_key, str(run_id), RuntimeResourceType.ACTIVITY.value
+        )
+        if not created:
+            # Duplicate delivery — skip the business side effect.
+            return {"duplicate": True, "status": IdempotencyStatus.PENDING.value}
+        db.commit()
+        return None  # first delivery: caller executes + marks COMPLETED
+    finally:
+        db.close()
+
+
+def _mark_idempotent_done(step_key: str, payload: dict[str, Any]) -> None:
+    run_id = payload.get("run_id")
+    if not run_id:
+        return
+    from app.core.db import SessionLocal
+
+    db = SessionLocal()
+    try:
+        from app.modules.aitde.common.enums import IdempotencyStatus
+        from app.modules.aitde.workflow import repository as wf_repo
+
+        wf_repo.mark_idempotency_done(db, step_key, str(run_id), IdempotencyStatus.COMPLETED.value)
+    finally:
+        db.close()
+
+
 def _run_inner(step_key: str, payload: dict[str, Any]) -> dict[str, Any]:
     hook = _EXEC_HOOKS.get(step_key)
-    if hook is not None:
-        return hook(payload)
-    # Default: echo the payload so a skeleton workflow completes deterministically.
-    return {"step": step_key, "echo": payload}
+    dup = _run_idempotent(step_key, payload)
+    if dup is not None:
+        return dup
+    try:
+        if hook is not None:
+            return hook(payload)
+        return {"step": step_key, **_echo(payload)}
+    finally:
+        _mark_idempotent_done(step_key, payload)
 
 
 @activity.defn

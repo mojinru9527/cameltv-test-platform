@@ -172,6 +172,9 @@ async def run_worker(workflows: list | None = None) -> None:
 def get_activities():
     from app.temporal import activities
 
+    # Side-effect: register the real driver hooks (V34-004) once.
+    from app.modules.aitde.workflow import drivers  # noqa: F401
+
     return [
         activities.capture_environment_snapshot,
         activities.plan_data,
