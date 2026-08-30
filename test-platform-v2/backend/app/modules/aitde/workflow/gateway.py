@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from pathlib import Path
 from typing import Any
 
 from app.core.config import settings
@@ -20,6 +21,17 @@ from app.core.exceptions import APIException
 from app.temporal.workflows import ScenarioExecutionWorkflow
 
 logger = logging.getLogger(__name__)
+
+
+def _read_file_or_none(path: str | None) -> bytes | None:
+    """Read a cert/key file to bytes; None when unset or unreadable (mTLS optional)."""
+    if not path:
+        return None
+    try:
+        return Path(path).read_bytes()
+    except OSError:
+        logger.warning("[temporal] TLS material unreadable: %s", path)
+        return None
 
 
 class TemporalWorkflowGateway:
@@ -55,26 +67,31 @@ class TemporalWorkflowGateway:
         if self._connected and self._client is not None:
             return self._client
         from temporalio.client import Client
+        from temporalio.service import TLSConfig
 
         connect_kwargs: dict[str, Any] = {
             "namespace": settings.temporal_namespace,
         }
         if settings.temporal_tls_enabled:
-            connect_kwargs["tls"] = True
-            connect_kwargs["api_key"] = None  # mTLS uses client cert below
+            # mTLS: load the configured CA + client cert/private key. The cert
+            # paths are produced by the gen-certs runbook and never committed.
+            tls = TLSConfig(
+                server_root_ca_cert=_read_file_or_none(settings.temporal_tls_ca_path),
+                client_cert=_read_file_or_none(settings.temporal_tls_cert_path),
+                client_private_key=_read_file_or_none(settings.temporal_tls_key_path),
+            )
+            connect_kwargs["tls"] = tls
         else:
             connect_kwargs["tls"] = False
-        # Python temporalio does not take a "channel" flag directly; insecure
-        # channel is the default when tls is False. mTLS client certs are passed
-        # through the Temporal server's TLS configuration rather than the SDK.
         self._client = await Client.connect(
             settings.temporal_grpc_endpoint, **connect_kwargs
         )
         self._connected = True
         logger.info(
-            "[temporal] connected to %s namespace=%s",
+            "[temporal] connected to %s namespace=%s tls=%s",
             settings.temporal_grpc_endpoint,
             settings.temporal_namespace,
+            settings.temporal_tls_enabled,
         )
         return self._client
 
@@ -149,29 +166,49 @@ class TemporalWorkflowGateway:
 temporal_gateway = TemporalWorkflowGateway()
 
 
-async def run_worker(workflows: list | None = None) -> None:
+async def run_worker(
+    workflows: list | None = None, task_queue: str | None = None
+) -> None:
     """Run the ScenarioExecutionWorkflow worker until interrupted.
 
-    Used by a dev / test runbook and by the chaos/recovery drill. In CI the
-    in-memory WorkflowEnvironment registers this worker instead.
+    Used by a dev / test runbook (``scripts/start-worker.sh``) and by the
+    chaos/recovery drill. In CI the in-memory WorkflowEnvironment registers this
+    worker instead.
     """
     _ensure_enabled()
     from temporalio.worker import Worker
 
     client = await temporal_gateway._get_client()  # noqa: SLF001
+    queue = task_queue or settings.temporal_task_queue
     worker = Worker(
         client,
-        task_queue=settings.temporal_task_queue,
+        task_queue=queue,
         workflows=workflows or [ScenarioExecutionWorkflow],
         activities=list(get_activities()),
     )
-    logger.info("[temporal] worker polling queue=%s", settings.temporal_task_queue)
+    logger.info("[temporal] worker polling queue=%s", queue)
     async with worker:
         stop = asyncio.Event()
         try:
             await stop.wait()
         finally:
             await temporal_gateway.close()
+
+
+def main(args: list[str] | None = None) -> int:
+    """CLI entry: ``python -m app.modules.aitde.workflow.gateway [--task-queue Q]``."""
+    import sys
+
+    argv = list(args if args is not None else sys.argv[1:])
+    queue = settings.temporal_task_queue
+    for i, tok in enumerate(argv):
+        if tok == "--task-queue" and i + 1 < len(argv):
+            queue = argv[i + 1]
+    try:
+        asyncio.run(run_worker(task_queue=queue))
+    except KeyboardInterrupt:
+        return 0
+    return 0
 
 
 def get_activities():
@@ -201,3 +238,7 @@ def _ensure_enabled() -> None:
     code, detail = temporal_gateway.unavailable()
     if code is not None:
         raise APIException(code=400, msg=detail, http_status=503)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
