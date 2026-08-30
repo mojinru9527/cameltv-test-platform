@@ -1,0 +1,9 @@
+# AITDE V3.4 Durable Runtime 部署资产 — 敏感产物忽略
+certs/
+*.crt
+*.key
+*.pem
+*.csr
+*.srl
+temporal.ext
+.env
