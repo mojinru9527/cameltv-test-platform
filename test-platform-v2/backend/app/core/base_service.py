@@ -47,7 +47,7 @@ def paginate(
 
     # Page
     paged = stmt.offset(offset).limit(page_size)
-    rows = (db.scalars(paged).all() if scalar else db.execute(paged).all())  # type: ignore[union-attr]
+    rows = list(db.scalars(paged).all() if scalar else db.execute(paged).all())  # type: ignore[union-attr]
 
     return rows, total
 
