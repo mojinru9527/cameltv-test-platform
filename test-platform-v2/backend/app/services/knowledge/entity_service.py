@@ -518,6 +518,7 @@ def evolve_graph_in_new_session(project_id: int, db: Session | None = None) -> d
     own_session = db is None
     if own_session:
         db = SessionLocal()
+    assert db is not None
     merged = 0
     confidence_updates = 0
     new_relations = 0
