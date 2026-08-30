@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -45,7 +46,7 @@ def _run_to_dict(r: UiTestRun, job: UiTestJob | None = None) -> dict:
         result = json.loads(r.result) if r.result else {}
     except (json.JSONDecodeError, TypeError):
         result = {}
-    screenshots = []
+    screenshots: list[Any] = []
     try:
         screenshots = json.loads(r.screenshots) if r.screenshots else []
     except (json.JSONDecodeError, TypeError):

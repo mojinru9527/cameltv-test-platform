@@ -4,7 +4,7 @@ from __future__ import annotations
 import hashlib
 import logging
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, Header, Request
 from sqlalchemy.orm import Session
@@ -270,7 +270,7 @@ def ci_get_ui_run(
     import json as _json
     result = {}
     try:
-        result = _json.loads(run.result) if run.result else {}
+        result: dict[str, Any] = _json.loads(run.result) if run.result else {}
     except (_json.JSONDecodeError, TypeError):
         logger.warning("执行结果 JSON 解析失败，按空结果处理: run_id=%s", run.id)
 

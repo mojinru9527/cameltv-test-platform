@@ -14,6 +14,7 @@ import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -647,7 +648,7 @@ def _complete_run(
 
 def _collect_artifacts(base_dir: Path, pattern: str) -> list[str]:
     """收集产物路径（仅从指定目录，不扫描共享目录）。"""
-    items = []
+    items: list[Any] = []
     try:
         if not base_dir.exists():
             return items
