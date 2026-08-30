@@ -687,9 +687,9 @@ def get_category_tree(db: Session, project_id: int) -> list[dict]:
             domain_modules[domain][module] = domain_modules[domain].get(module, 0) + cnt
 
     for domain in sorted(domain_modules):
-        modules = domain_modules[domain]
-        total = sum(modules.values())
-        mod_list = [{"module": m, "count": c} for m, c in sorted(modules.items())]
+        domain_mods = domain_modules[domain]
+        total = sum(domain_mods.values())
+        mod_list = [{"module": m, "count": c} for m, c in sorted(domain_mods.items())]
         result.append({"domain": domain, "count": total, "modules": mod_list})
 
     _domain_order = {"用户端": 0, "运营后台": 1, "接口测试": 2}
