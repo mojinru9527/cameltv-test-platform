@@ -338,14 +338,14 @@ def resolve_approval(
     # V34-011: signal the waiting workflow so it resumes or aborts the dangerous
     # step. The temporal_workflow_id is carried in request_json (set at creation);
     # resolve by run_id lookup as a fallback.
-    temporal_workflow_id = _extract_temporal_workflow_id(row)
+    temporal_workflow_id = _extract_temporal_workflow_id(db, row)
     if temporal_workflow_id:
         _signal_approval(temporal_workflow_id, {"approved": approved, "reason": status})
 
     return approval_to_dict(updated)
 
 
-def _extract_temporal_workflow_id(row: Any) -> str | None:
+def _extract_temporal_workflow_id(db: Session, row: Any) -> str | None:
     try:
         import json as _json
 
@@ -357,7 +357,7 @@ def _extract_temporal_workflow_id(row: Any) -> str | None:
             "[approval] request_json 不是有效 JSON（fallback 到 run_id 查找）: %s", exc
         )
     if row.run_id:
-        wf = repository.get_workflow_run_by_run_id(row.run_id)
+        wf = repository.get_workflow_run_by_run_id(db, row.run_id)
         if wf is not None:
             return wf.temporal_workflow_id
     return None
