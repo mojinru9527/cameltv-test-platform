@@ -399,6 +399,7 @@ def trigger_regression_for_bundle(
     # 查找匹配的 UI 脚本
     scripts = release_bundle_service.list_active_ui_scripts(db, pid, module_names)
 
+    assert target_environment is not None
     triggered_jobs: list[dict] = []
     for script in scripts:
         try:
