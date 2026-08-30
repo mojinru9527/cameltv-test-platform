@@ -270,8 +270,11 @@ def list_policy_profiles(db: Session, project_id: int) -> list[dict[str, Any]]:
 
 def create_secret_ref(db: Session, data: SecretRefIn) -> dict[str, Any]:
     # V34-008 invariant: the API never receives or returns a secret value — only
-    # the metadata that lets the worker resolver fetch it at runtime.
-    if "value" in data.scope or "secret" in data.scope:
+    # the metadata that lets the worker resolver fetch it at runtime. Reject any
+    # scope key that could carry a secret value (defense-in-depth allowlist).
+    _REJECT_SCOPE_KEYS = {"value", "secret", "token", "password", "passwd", "api_key", "apikey", "key", "credential"}
+    lower_scope = {str(k).lower() for k in (data.scope or {})}
+    if lower_scope & _REJECT_SCOPE_KEYS:
         raise APIException(code=400, msg="Secret value 禁止进入 Control Plane", http_status=400)
     row = repository.create_secret_ref(
         db,
