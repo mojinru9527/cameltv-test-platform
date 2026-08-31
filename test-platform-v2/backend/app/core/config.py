@@ -33,6 +33,13 @@ class Settings(BaseSettings):
     test_plan_write_stage: str = "ACTIVE"
     # V40-007: legacy Dataset write cutoff (ACTIVE | READONLY).
     dataset_write_stage: str = "ACTIVE"
+    # V40-013 encryption posture knobs (operator-set; verified by
+    # EncryptionVerificationService, no secret values here).
+    db_encryption_enabled: bool = False
+    object_storage_encryption_enabled: bool = False
+    use_external_secret_store: bool = False
+    https_only: bool = False
+    db_connection_tls: bool = False
 
     # ── Security (sensitive — no hardcoded defaults) ──
     secret_key: str = ""

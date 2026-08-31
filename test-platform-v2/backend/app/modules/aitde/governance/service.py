@@ -25,6 +25,7 @@ from app.modules.aitde.governance.models import (
     ModelUsageLedger,
     RetentionPolicy,
 )
+from app.models.rbac import Permission, RolePermission, UserRole
 
 
 def _loads(raw: str) -> list[str]:
@@ -338,3 +339,137 @@ class PlatformReadinessEvaluator:
             )
         failed = [c["metric"] for c in checks if not c["pass"]]
         return {"pass": not failed, "failed": failed, "checks": checks}
+
+
+class RbacPolicyService:
+    """V40-010: resource/action authorization matrix, cross-project isolated.
+
+    A user's roles are scoped per ``sys_user_role.project_id`` (or ``0`` for a
+    global role). ``is_authorized`` therefore only considers roles granted in the
+    *target* project, so a role granted in project A never leaks into project B.
+    """
+
+    _RESOURCES = ("mission", "contract", "scenario", "run", "evidence",
+                  "prod_evidence", "data_source", "worker", "policy",
+                  "secret_ref", "governance")
+    _ACTIONS = ("list", "detail", "create", "update", "delete")
+
+    @staticmethod
+    def is_authorized(db: Session, user_id: int, project_id: int, permission_code: str) -> bool:
+        role_ids = set(
+            db.scalars(
+                select(UserRole.role_id).where(
+                    UserRole.user_id == user_id,
+                    (UserRole.project_id == project_id) | (UserRole.project_id == 0),
+                )
+            )
+        )
+        if not role_ids:
+            return False
+        perm = db.scalar(
+            select(Permission).where(Permission.code == permission_code)
+        )
+        if perm is None:
+            return False
+        granted = db.scalar(
+            select(RolePermission).where(
+                RolePermission.role_id.in_(list(role_ids)),
+                RolePermission.permission_id == perm.id,
+            )
+        )
+        return granted is not None
+
+    @staticmethod
+    def cross_project_report(
+        db: Session,
+        user_id: int,
+        granted_project: int,
+        denied_projects: list[int],
+        permission_code: str,
+    ) -> dict:
+        """Verify grant in one project and deny in all others (full matrix")."""
+        granted = RbacPolicyService.is_authorized(db, user_id, granted_project, permission_code)
+        denials = {
+            p: RbacPolicyService.is_authorized(db, user_id, p, permission_code)
+            for p in denied_projects
+        }
+        leaks = [p for p, ok in denials.items() if ok]
+        return {
+            "permission": permission_code,
+            "granted_project": granted_project,
+            "granted": granted,
+            "cross_project_leak": leaks,
+            "pass": granted and not leaks,
+        }
+
+    @staticmethod
+    def matrix(db: Session) -> list[dict]:
+        """List the resource/action permission matrix actually defined."""
+        perms = db.scalars(select(Permission))
+        return [{"code": p.code, "name": p.name, "type": p.type} for p in perms]
+
+
+class EncryptionVerificationService:
+    """V40-013: config/ops audit of at-rest and transport encryption posture."""
+
+    _CHECKS = (
+        ("postgres_volume_encryption", "at_rest", "db_encryption_enabled"),
+        ("object_storage_encryption", "at_rest", "object_storage_encryption_enabled"),
+        ("external_secret_store", "at_rest", "use_external_secret_store"),
+        ("https_tls", "transport", "https_only"),
+        ("db_tls", "transport", "db_connection_tls"),
+    )
+
+    @staticmethod
+    def verify(db: Session | None = None) -> dict:
+        """Return a checklist; each item must be PASS for the posture to be green."""
+        from app.core.config import settings
+
+        checks: list[dict] = []
+        for label, category, attr in EncryptionVerificationService._CHECKS:
+            value = bool(getattr(settings, attr, False))
+            checks.append(
+                {
+                    "label": label,
+                    "category": category,
+                    "configured": value,
+                    "pass": value,
+                }
+            )
+        return {"pass": all(c["pass"] for c in checks), "checks": checks}
+
+
+class AcceptanceReportService:
+    """V40-020: formal Acceptance Report — never lists a bare pass rate."""
+
+    _REQUIRED = (
+        "mission", "contract_version", "scope_summary", "scenario_coverage",
+        "build_fingerprint", "p0_p1_outcomes", "quality_gate", "false_pass_audit",
+        "known_inconclusive", "defects", "evidence_links", "overrides", "approval",
+    )
+
+    @staticmethod
+    def build(inputs: dict) -> dict:
+        """Validate + compose the report; missing source/Replay traceability fails."""
+        missing = [k for k in AcceptanceReportService._REQUIRED if k not in inputs]
+        if missing:
+            return {"valid": False, "missing": missing, "report": None}
+        return {
+            "valid": True,
+            "missing": [],
+            "report": {
+                "mission": inputs["mission"],
+                "contract_version": inputs["contract_version"],
+                "scope_summary": inputs["scope_summary"],
+                "scenario_coverage": inputs["scenario_coverage"],
+                "build_fingerprint": inputs["build_fingerprint"],
+                "p0_p1_outcomes": inputs["p0_p1_outcomes"],
+                "quality_gate": inputs["quality_gate"],
+                "false_pass_audit": inputs["false_pass_audit"],
+                "known_inconclusive": inputs["known_inconclusive"],
+                "defects": inputs["defects"],
+                "evidence_links": inputs["evidence_links"],
+                "overrides": inputs["overrides"],
+                "approval": inputs["approval"],
+            },
+        }

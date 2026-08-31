@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from app.modules.aitde.governance.service import (
+    AcceptanceReportService,
     CostLedgerService,
     DrTestService,
+    EncryptionVerificationService,
     ModelPolicyService,
     PlatformReadinessEvaluator,
+    RbacPolicyService,
     RetentionService,
 )
 
@@ -79,3 +82,83 @@ def test_platform_readiness_gate_missing_metric_fails():
     assert res["pass"] is False
     missing = [c["metric"] for c in res["checks"] if c.get("reason") == "missing"]
     assert len(missing) > 0
+
+
+# ── V40-010 RBAC cross-project matrix ──────────────────────────────────────
+
+
+def _grant_permission(db, user_id, project_id, code):
+    from app.models.rbac import Permission, Role, RolePermission, UserRole
+
+    role = Role(code=f"role-{project_id}-{user_id}", name="tester", data_scope="project")
+    db.add(role)
+    db.flush()
+    perm = Permission(code=code, name=code, type="api")
+    db.add(perm)
+    db.flush()
+    db.add(RolePermission(role_id=role.id, permission_id=perm.id))
+    db.add(UserRole(user_id=user_id, role_id=role.id, project_id=project_id))
+    db.commit()
+    return role
+
+
+def test_rbac_cross_project_isolation(db):
+    _grant_permission(db, user_id=1, project_id=10, code="mission:detail")
+    assert RbacPolicyService.is_authorized(db, 1, 10, "mission:detail") is True
+    # Role granted in project 10 must NOT authorize in project 20 (cross-project).
+    assert RbacPolicyService.is_authorized(db, 1, 20, "mission:detail") is False
+    assert RbacPolicyService.is_authorized(db, 1, 10, "mission:delete") is False
+    assert RbacPolicyService.is_authorized(db, 2, 10, "mission:detail") is False
+
+
+def test_rbac_cross_project_report_detects_leak(db):
+    _grant_permission(db, user_id=1, project_id=10, code="mission:detail")
+    report = RbacPolicyService.cross_project_report(db, 1, 10, [20, 30], "mission:detail")
+    assert report["granted"] is True
+    assert report["cross_project_leak"] == []
+    assert report["pass"] is True
+
+
+# ── V40-013 Encryption posture ──────────────────────────────────────────────
+
+
+def test_encryption_verification_fails_when_disabled(monkeypatch):
+    from app.core.config import settings
+
+    for attr in ("db_encryption_enabled", "object_storage_encryption_enabled",
+                 "use_external_secret_store", "https_only", "db_connection_tls"):
+        monkeypatch.setattr(settings, attr, False)
+    res = EncryptionVerificationService.verify()
+    assert res["pass"] is False
+
+
+def test_encryption_verification_passes_when_enabled(monkeypatch):
+    from app.core.config import settings
+
+    for attr in ("db_encryption_enabled", "object_storage_encryption_enabled",
+                 "use_external_secret_store", "https_only", "db_connection_tls"):
+        monkeypatch.setattr(settings, attr, True)
+    res = EncryptionVerificationService.verify()
+    assert res["pass"] is True
+    assert len(res["checks"]) >= 5
+
+
+# ── V40-020 Acceptance Report ───────────────────────────────────────────────
+
+
+def test_acceptance_report_requires_traceability():
+    inputs = {
+        "mission": "m1", "contract_version": "v1", "scope_summary": {}, "scenario_coverage": {},
+        "build_fingerprint": {"id": "b1"}, "p0_p1_outcomes": [], "quality_gate": {}, "false_pass_audit": [],
+        "known_inconclusive": [], "defects": [], "evidence_links": [], "overrides": [], "approval": {},
+    }
+    res = AcceptanceReportService.build(inputs)
+    assert res["valid"] is True
+    assert res["report"]["build_fingerprint"] == {"id": "b1"}
+
+
+def test_acceptance_report_rejects_missing_sections():
+    res = AcceptanceReportService.build({"mission": "m1"})
+    assert res["valid"] is False
+    assert "contract_version" in res["missing"]
+    assert "evidence_links" in res["missing"]
