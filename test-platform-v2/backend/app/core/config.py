@@ -40,6 +40,14 @@ class Settings(BaseSettings):
     use_external_secret_store: bool = False
     https_only: bool = False
     db_connection_tls: bool = False
+    # V40-009 SSO scaffolding (real IdP handshake is external; values are config
+    # only, never secrets committed).
+    sso_enabled: bool = False
+    sso_provider: str = ""  # oidc | saml
+    sso_issuer: str = ""
+    sso_client_id: str = ""
+    sso_client_secret: str = ""
+    sso_group_mapping: str = "{}"  # external_group -> local_role
 
     # ── Security (sensitive — no hardcoded defaults) ──
     secret_key: str = ""

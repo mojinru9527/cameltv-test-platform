@@ -473,3 +473,70 @@ class AcceptanceReportService:
                 "approval": inputs["approval"],
             },
         }
+
+
+class SsoService:
+    """V40-009: SSO configuration + external-group -> local-role mapping.
+
+    The real OIDC/SAML authorization-code handshake against an enterprise IdP is
+    external/BLOCKED; this service is the config + group-mapping scaffolding a
+    correct implementation sits on.
+    """
+
+    @staticmethod
+    def describe() -> dict:
+        from app.core.config import settings
+
+        return {
+            "enabled": settings.sso_enabled,
+            "provider": settings.sso_provider,
+            "issuer": settings.sso_issuer,
+            "client_id": settings.sso_client_id,
+            "configured": bool(settings.sso_issuer and settings.sso_client_id),
+        }
+
+    @staticmethod
+    def resolve_role(group: str) -> dict:
+        from app.core.config import settings
+
+        mapping = {}
+        try:
+            raw = json.loads(settings.sso_group_mapping or "{}")
+            if isinstance(raw, dict):
+                mapping = raw
+        except (ValueError, TypeError):
+            mapping = {}
+        role = mapping.get(group)
+        return {"group": group, "role": role, "mapped": role is not None}
+
+
+class BackupVerificationService:
+    """V40-016: HA/backup readiness checklist (real restore drills are external)."""
+
+    @staticmethod
+    def describe() -> dict:
+        from app.core.config import settings
+
+        checks = [
+            {"label": "postgres_backup", "configured": settings.storage_retention_enabled},
+            {
+                "label": "object_storage_replication",
+                "configured": bool(settings.object_storage_s3_bucket),
+            },
+            {"label": "temporal_persistence", "configured": settings.temporal_enabled},
+            {"label": "secret_provider_available", "configured": settings.use_external_secret_store},
+        ]
+        return {"pass": all(c["configured"] for c in checks), "checks": checks}
+
+    @staticmethod
+    def record_restore_drill(db: Session, project_id: int, environment: str, status: str, rto: int, rpo: int) -> dict:
+        """Record a real restore/HA drill run (delegates to the DR ledger)."""
+        return DrTestService.record(
+            db,
+            project_id,
+            test_type="OBJECT_STORE_RESTORE",
+            environment=environment,
+            status=status,
+            rto_seconds=rto,
+            rpo_seconds=rpo,
+        )

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from app.modules.aitde.governance.service import (
     AcceptanceReportService,
+    BackupVerificationService,
     CostLedgerService,
     DrTestService,
     EncryptionVerificationService,
@@ -11,6 +12,7 @@ from app.modules.aitde.governance.service import (
     PlatformReadinessEvaluator,
     RbacPolicyService,
     RetentionService,
+    SsoService,
 )
 
 
@@ -162,3 +164,44 @@ def test_acceptance_report_rejects_missing_sections():
     assert res["valid"] is False
     assert "contract_version" in res["missing"]
     assert "evidence_links" in res["missing"]
+
+
+# ── V40-009 SSO scaffold ────────────────────────────────────────────────────
+
+
+def test_sso_describe_and_group_mapping(monkeypatch):
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "sso_enabled", True)
+    monkeypatch.setattr(settings, "sso_provider", "oidc")
+    monkeypatch.setattr(settings, "sso_issuer", "https://idp.example")
+    monkeypatch.setattr(settings, "sso_client_id", "cameltv")
+    monkeypatch.setattr(settings, "sso_group_mapping", '{"qa-lead": "qa_lead"}')
+    desc = SsoService.describe()
+    assert desc["enabled"] is True
+    assert desc["configured"] is True
+    assert SsoService.resolve_role("qa-lead")["role"] == "qa_lead"
+    assert SsoService.resolve_role("unknown")["mapped"] is False
+
+
+# ── V40-016 HA/Backup readiness ─────────────────────────────────────────────
+
+
+def test_backup_readiness_checklist(monkeypatch):
+    from app.core.config import settings
+
+    for attr, val in (
+        ("storage_retention_enabled", True),
+        ("object_storage_s3_bucket", "b"),
+        ("temporal_enabled", True),
+        ("use_external_secret_store", True),
+    ):
+        monkeypatch.setattr(settings, attr, val)
+    assert BackupVerificationService.describe()["pass"] is True
+
+
+def test_backup_restore_drill_records_dr_run(db):
+    row = BackupVerificationService.record_restore_drill(db, 1, "test", "PASS", rto=90, rpo=45)
+    assert row["status"] == "PASS"
+    assert row["test_type"] == "OBJECT_STORE_RESTORE"
+    assert row["rto_seconds"] == 90
