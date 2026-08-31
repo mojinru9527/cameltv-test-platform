@@ -24,7 +24,22 @@ def _has_column(inspector, table: str, column: str) -> bool:
     return column in {c["name"] for c in inspector.get_columns(table)}
 
 
+def _widen_version_table() -> None:
+    """Widen ``alembic_version.version_num`` so the 37-41 char V3.9 revision ids fit.
+
+    Alembic defaults the version column to ``VARCHAR(32)``; this V3.9 migration
+    runs on PostgreSQL where the next revision id (37-41 chars) would otherwise be
+    truncated. SQLite does not enforce varchar length (TEXT affinity), so it is
+    left untouched there.
+    """
+    bind = op.get_bind()
+    if getattr(bind.dialect, "name", "") == "sqlite":
+        return
+    op.execute(sa.text("ALTER TABLE alembic_version ALTER COLUMN version_num TYPE varchar(128)"))
+
+
 def upgrade() -> None:
+    _widen_version_table()
     inspector = sa.inspect(op.get_bind())
     for col, ddl in (
         ("provision_step_id", sa.Column("provision_step_id", sa.Integer, nullable=True)),
