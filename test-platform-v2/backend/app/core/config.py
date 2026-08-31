@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     # (V40-003). "ACTIVE" keeps writes (create/update/delete) enabled; "READONLY"
     # blocks v1 writes and expects callers to use the canonical v2 Mission API.
     version_mission_write_stage: str = "ACTIVE"
+    # V40-006: legacy TestPlan write cutoff (ACTIVE | READONLY).
+    test_plan_write_stage: str = "ACTIVE"
+    # V40-007: legacy Dataset write cutoff (ACTIVE | READONLY).
+    dataset_write_stage: str = "ACTIVE"
 
     # ── Security (sensitive — no hardcoded defaults) ──
     secret_key: str = ""

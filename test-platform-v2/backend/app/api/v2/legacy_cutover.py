@@ -245,3 +245,23 @@ def promote_case_migration(
     if data is None:
         _issue_404("migration 不存在")
     return R.ok(data)
+
+
+# ── Legacy cutover compatibility read (V40-006/007) ───────────────────────
+
+
+@router.get("/legacy/resolve", response_model=R[dict])
+def resolve_legacy(
+    surface: str,
+    legacy_id: int,
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    """Keep legacy history readable and link it to the canonical successor."""
+    try:
+        data = service.LegacyCutoverCompatService.resolve(
+            db, current.project_id or 0, surface, legacy_id
+        )
+    except ValueError as exc:
+        raise APIException(code=400, msg=str(exc), http_status=400)
+    return R.ok(data)

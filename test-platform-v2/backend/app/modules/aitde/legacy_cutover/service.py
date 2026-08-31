@@ -382,17 +382,26 @@ class CompatibilityPolicy:
     """
 
     _WRITABLE_STAGES = {"ACTIVE"}
+    # surface -> config setting attribute (V40-003/006/007).
+    _SURFACE_SETTING = {
+        "version-mission": "version_mission_write_stage",
+        "test-plan": "test_plan_write_stage",
+        "dataset": "dataset_write_stage",
+    }
 
     @staticmethod
-    def v1_write_stage() -> str:
+    def v1_write_stage(surface: str = "version-mission") -> str:
         from app.core.config import settings
 
-        stage = getattr(settings, "version_mission_write_stage", "ACTIVE") or "ACTIVE"
+        setting = CompatibilityPolicy._SURFACE_SETTING.get(surface)
+        if setting is None:
+            raise ValueError(f"unknown legacy surface: {surface}")
+        stage = getattr(settings, setting, "ACTIVE") or "ACTIVE"
         return str(stage).upper()
 
     @staticmethod
     def enforce_v1_write(surface: str) -> None:
-        stage = CompatibilityPolicy.v1_write_stage()
+        stage = CompatibilityPolicy.v1_write_stage(surface)
         if stage in CompatibilityPolicy._WRITABLE_STAGES:
             return
         from app.core.exceptions import APIException
@@ -405,6 +414,60 @@ class CompatibilityPolicy:
             ),
             http_status=410,
         )
+
+
+class LegacyCutoverCompatService:
+    """V40-006/007: keep legacy history readable and linked to its canonical form.
+
+    ``resolve`` returns the legacy object plus its canonical mapping (from
+    ``legacy_object_mappings``, or the existing ``legacy_dataset_links`` for the
+    static data source) so the cutover never loses a reference — history stays
+    browsable and every consumer can find the successor.
+    """
+
+    @staticmethod
+    def resolve(db: Session, project_id: int, surface: str, legacy_id: int) -> dict | None:
+        from app.modules.aitde.data.models import LegacyDatasetLink
+
+        legacy_type = {
+            "test-plan": LegacyObjectType.TEST_PLAN.value,
+            "dataset": LegacyObjectType.DATASET.value,
+            "version-mission": LegacyObjectType.VERSION_MISSION.value,
+        }.get(surface)
+        if legacy_type is None:
+            raise ValueError(f"unknown legacy surface: {surface}")
+
+        if surface == "dataset":
+            link = db.scalar(
+                select(LegacyDatasetLink).where(
+                    LegacyDatasetLink.legacy_dataset_id == legacy_id
+                )
+            )
+            if link is None:
+                return {"surface": surface, "legacy_id": legacy_id, "canonical": None}
+            return {
+                "surface": surface,
+                "legacy_id": legacy_id,
+                "canonical_type": "DATA_SOURCE",
+                "canonical_id": link.data_source_id,
+                "migration_status": MigrationStatus.VERIFIED.value,
+            }
+
+        mapping = db.scalar(
+            select(LegacyObjectMapping).where(
+                LegacyObjectMapping.legacy_type == legacy_type,
+                LegacyObjectMapping.legacy_id == legacy_id,
+            )
+        )
+        if mapping is None:
+            return {"surface": surface, "legacy_id": legacy_id, "canonical": None}
+        return {
+            "surface": surface,
+            "legacy_id": legacy_id,
+            "canonical_type": mapping.canonical_type,
+            "canonical_id": mapping.canonical_id,
+            "migration_status": mapping.migration_status,
+        }
 
 
 class TestCaseProjectionPolicy:

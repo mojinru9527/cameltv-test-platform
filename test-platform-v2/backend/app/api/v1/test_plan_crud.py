@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
+from app.modules.aitde.legacy_cutover.service import CompatibilityPolicy
 from app.schemas.common import Page, R
 from app.schemas.test_plan import (
     PlanCaseAdd,
@@ -80,6 +81,7 @@ def create_plan(
     current: CurrentUser = Depends(require_permission("testplan:create")),
     db: Session = Depends(get_db),
 ):
+    CompatibilityPolicy.enforce_v1_write("test-plan")
     data = body.model_dump()
     row = test_plan_service.create_plan(db, data, creator_id=current.user.id, project_id=current.project_id or 0)
     _audit(req, current, db, "plan:create", f"#{row['id']} {row['name']}")
@@ -111,6 +113,7 @@ def update_plan(
     current: CurrentUser = Depends(require_permission("testplan:update")),
     db: Session = Depends(get_db),
 ):
+    CompatibilityPolicy.enforce_v1_write("test-plan")
     row = test_plan_service.update_plan(db, plan_id, body.model_dump(exclude_none=True), project_id=current.project_id or 0)
     if not row:
         return R(code=404, msg="计划不存在")
@@ -125,6 +128,7 @@ def delete_plan(
     current: CurrentUser = Depends(require_permission("testplan:delete")),
     db: Session = Depends(get_db),
 ):
+    CompatibilityPolicy.enforce_v1_write("test-plan")
     ok = test_plan_service.delete_plan(db, plan_id, project_id=current.project_id or 0)
     if not ok:
         return R(code=404, msg="计划不存在或无权操作")
