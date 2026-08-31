@@ -12,6 +12,7 @@ import app.models  # noqa: F401  registers all models
 import app.modules.aitde.legacy_cutover.models  # noqa: F401
 import app.modules.aitde.scenario.models  # noqa: F401  # test_scenarios for V40-005 promote
 import app.modules.aitde.data.models  # noqa: F401  # legacy_dataset_links for V40-007
+import app.modules.aitde.governance.models  # noqa: F401  # V40-009..020 enterprise tables
 
 
 @pytest.fixture()
