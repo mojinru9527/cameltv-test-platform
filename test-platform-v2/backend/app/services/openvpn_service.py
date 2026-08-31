@@ -193,7 +193,7 @@ def _resolve_system_addresses(hostname: str, port: int) -> list[str]:
         ]
     except OSError:
         return []
-    return list(dict.fromkeys(addresses))
+    return list(dict.fromkeys(str(a) for a in addresses))
 
 
 def _resolve_via_doh(hostname: str) -> list[str]:
@@ -221,7 +221,7 @@ def _resolve_via_doh(hostname: str) -> list[str]:
             continue
         if not _is_fake_proxy_ip(address):
             addresses.append(address)
-    return list(dict.fromkeys(addresses))
+    return list(dict.fromkeys(str(a) for a in addresses))
 
 
 def _is_fake_proxy_ip(address: str) -> bool:

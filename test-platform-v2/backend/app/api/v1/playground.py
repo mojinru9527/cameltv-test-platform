@@ -54,7 +54,7 @@ def compile_endpoint(
     """Compile a test case source (Gherkin/Markdown/plain) into a Playwright .spec.ts."""
     source = req.source
     if req.case_id:
-        case = get_case_by_case_id(db, req.case_id, current.project_id)
+        case = get_case_by_case_id(db, int(req.case_id), current.project_id)
         if not case:
             from app.core.exceptions import not_found
             raise not_found(f"功能用例 {req.case_id}")

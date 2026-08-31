@@ -35,7 +35,7 @@ export default function LoginPage() {
           <div className="flex flex-col items-center gap-1">
             <p className="text-xs text-muted-foreground">
               还没有账号？
-              <Link to="/register" className="ml-1 text-primary hover:underline">
+              <Link to="/register" className="ml-1 text-primary font-medium underline underline-offset-2">
                 免费注册
               </Link>
             </p>

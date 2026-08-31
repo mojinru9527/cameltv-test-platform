@@ -26,3 +26,22 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
+
+# V39-003 — Backend mypy 分级基线（observability，非阻断）。
+#
+# 现状：`mypy app/ --ignore-missing-imports` 在 app/ 全包基线为 112 错误（50 文件），
+# 其中 attr-defined(50)/assignment(19)/union-attr(18) 多来自 SQLAlchemy 2.0 Mapped[] +
+# `from __future__ import annotations` 的同名遮蔽（ORM 硬墙），arg-type(22) 多为
+# int|None 收窄。离线安全清理已到边际（见 docs/aitde/validation/ V3.9_mypy_exemption_list.md）。
+#
+# 决策（与 AGENTS.md §4.3 一致）：mypy 作为「扩展工作流」观测门禁（pr-check.yml 非阻断），
+# 不参与硬门禁（硬门禁为 ruff F821）。为保证「豁免可追踪、错误不被静默吞掉」，
+# 这里**不**对任何模块启用 disable_error_code 来隐藏错误；请在 V3.9_mypy_exemption_list.md
+# 中逐条登记豁免并给出追踪。
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+show_error_codes = true
+error_summary = true
+warn_unused_ignores = false
+

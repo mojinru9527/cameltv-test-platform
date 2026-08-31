@@ -448,7 +448,7 @@ def diff_historical_risk(signals: list[dict]) -> list[dict]:
         key = str(scenario_id)
         cur = cache.get(key)
         if cur is None or weight_order.get(hint, 0) > weight_order.get(
-            cur.get("risk_hint"), 0
+            cur.get("risk_hint") or "", 0
         ):
             cache[key] = {
                 "scenario_id": scenario_id,
