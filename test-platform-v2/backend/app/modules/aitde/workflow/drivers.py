@@ -75,6 +75,8 @@ def _ensure_fixture_hook(payload: dict[str, Any]) -> dict[str, Any]:
         from app.modules.aitde.data.run_data_integration import to_run_data_context
 
         return to_run_data_context(db, run_id)
+    except Exception:  # noqa: BLE001 — a missing run is a non-critical context; degrade
+        return {"context": {}, "reason": "run_not_found", "idempotent": True}
     finally:
         db.close()
 

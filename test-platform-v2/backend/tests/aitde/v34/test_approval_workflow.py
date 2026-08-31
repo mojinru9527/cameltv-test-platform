@@ -48,8 +48,13 @@ def _run_approval_workflow(payload, *, decision, wait_until_signal=False):
 
 
 def _policy_payload(**overrides):
+    # A unique run_id keeps the activity idempotency keys fresh per execution; a hard
+    # coded run_id would let a prior run's keys make the activities return a
+    # ``duplicate`` skip, so policy_check never reports REQUIRE_APPROVAL on re-runs.
+    import uuid
+
     data = {
-        "run_id": 1,
+        "run_id": int(uuid.uuid4().int % 10_000_000_000),
         "project_id": 1,
         "scenario_id": 1,
         "network_zone": "TEST",
