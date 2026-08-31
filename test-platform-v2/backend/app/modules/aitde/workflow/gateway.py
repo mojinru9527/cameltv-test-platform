@@ -119,7 +119,7 @@ class TemporalWorkflowGateway:
         """
         client = await self._get_client()
         resolved_queue = task_queue or settings.temporal_task_queue
-        from temporalio.client import WorkflowAlreadyStartedError
+        from temporalio.exceptions import WorkflowAlreadyStartedError
 
         try:
             handle = await client.start_workflow(
