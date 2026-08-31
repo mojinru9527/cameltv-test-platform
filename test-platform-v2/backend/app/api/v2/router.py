@@ -71,6 +71,7 @@ from app.api.v2.continuous import router as continuous_router  # noqa: E402
 from app.api.v2.production import router as production_router  # noqa: E402
 from app.api.v2.smart_regression import router as smart_regression_router  # noqa: E402
 from app.api.v2.ai_closed_loop import router as ai_closed_loop_router  # noqa: E402
+from app.api.v2.legacy_cutover import router as legacy_cutover_router  # noqa: E402
 
 router.include_router(missions_router)
 router.include_router(mission_sources_router)
@@ -107,6 +108,7 @@ router.include_router(continuous_router)
 router.include_router(production_router)
 router.include_router(smart_regression_router)
 router.include_router(ai_closed_loop_router)
+router.include_router(legacy_cutover_router)
 
 # Further domain routers are added with their epics:
 # mission_contracts.py (EPIC-05), mission_scenarios.py (EPIC-06),
