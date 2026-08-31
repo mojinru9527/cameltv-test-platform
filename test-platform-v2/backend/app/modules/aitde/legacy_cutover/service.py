@@ -364,3 +364,39 @@ class LegacyCutoverService:
             "started_at": row.started_at,
             "finished_at": row.finished_at,
         }
+
+
+class CompatibilityPolicy:
+    """V40-003/008: per-surface v1 write / deprecation gating.
+
+    Centralized so any legacy v1 endpoint/page can be retired from one policy
+    point. ``v1_write_stage()`` reads the setting without a hard dependency on
+    ``app.core.config`` at import time; ``enforce_v1_write`` raises a 410 Gone
+    once the surface is cut over so the caller is redirected to the canonical v2
+    API instead of writing to the legacy fact table.
+    """
+
+    _WRITABLE_STAGES = {"ACTIVE"}
+
+    @staticmethod
+    def v1_write_stage() -> str:
+        from app.core.config import settings
+
+        stage = getattr(settings, "version_mission_write_stage", "ACTIVE") or "ACTIVE"
+        return str(stage).upper()
+
+    @staticmethod
+    def enforce_v1_write(surface: str) -> None:
+        stage = CompatibilityPolicy.v1_write_stage()
+        if stage in CompatibilityPolicy._WRITABLE_STAGES:
+            return
+        from app.core.exceptions import APIException
+
+        raise APIException(
+            code=410,
+            msg=(
+                f"{surface} is in stage {stage}: legacy v1 writes are cut off; "
+                "create/change it through the canonical v2 API"
+            ),
+            http_status=410,
+        )

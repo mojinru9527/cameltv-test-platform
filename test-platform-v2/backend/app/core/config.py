@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     # 开启：新 Domain 主链（Mission/Source/Scope/Contract/Scenario）进入可试用。
     aitde_v3_enabled: bool = False
 
+    # V4.0 legacy cutover stage for the v1 ``/version-missions`` fact table
+    # (V40-003). "ACTIVE" keeps writes (create/update/delete) enabled; "READONLY"
+    # blocks v1 writes and expects callers to use the canonical v2 Mission API.
+    version_mission_write_stage: str = "ACTIVE"
+
     # ── Security (sensitive — no hardcoded defaults) ──
     secret_key: str = ""
     algorithm: str = "HS256"
