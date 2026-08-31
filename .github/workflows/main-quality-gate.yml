@@ -147,6 +147,11 @@ jobs:
           BATCH48_PG_INTEGRATION_URL: postgresql+psycopg2://cameltv:cameltv_test@localhost:5432/cameltv_test
         run: python -m pytest -q tests/test_batch48_postgresql_concurrency.py
 
+      - name: AITDE Domain Invariants + Reality Gate
+        if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+        working-directory: test-platform-v2/backend
+        run: python -m pytest -q tests/aitde/v39 tests/aitde/reality
+
       - name: Backend Full Test Suite
         if: ${{ needs.detect_changes.outputs.backend == 'true' }}
         working-directory: test-platform-v2/backend
@@ -218,3 +223,163 @@ jobs:
         if: ${{ needs.detect_changes.outputs.frontend == 'true' }}
         working-directory: test-platform-v2/frontend
         run: npm run build
+
+  aitde-migration-postgres:
+    name: AITDE PostgreSQL Migration Drill
+    needs: detect_changes
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cameltv
+          POSTGRES_PASSWORD: cameltv_test
+          POSTGRES_DB: cameltv_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DETECT_RESULT: ${{ needs.detect_changes.result }}
+      DOMAIN_REQUIRED: ${{ needs.detect_changes.outputs.backend }}
+      SCOPE_REASON: ${{ needs.detect_changes.outputs.reason }}
+    steps:
+      - name: Enforce backend gate result
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$DETECT_RESULT" != "success" ]]; then
+            echo "::error::CI scope detection failed: $DETECT_RESULT"
+            exit 1
+          fi
+          if [[ "$DOMAIN_REQUIRED" != "true" ]]; then
+            echo "AITDE migration drill skipped: $SCOPE_REASON" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+      - name: Checkout
+        if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: test-platform-v2/backend/requirements.txt
+
+      - name: Install Dependencies
+        if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+        working-directory: test-platform-v2/backend
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: PostgreSQL previous-head <-> current-head reversibility drill
+        if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+        working-directory: test-platform-v2/backend
+        env:
+          DATABASE_URL: postgresql://cameltv:cameltv_test@localhost:5432/cameltv_test
+        run: python -m pytest -q tests/aitde/v39/test_migration_drill_reversible.py
+
+  aitde-data-integration:
+    name: AITDE Data Runtime Integration
+    needs: detect_changes
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DETECT_RESULT: ${{ needs.detect_changes.result }}
+      DOMAIN_REQUIRED: ${{ needs.detect_changes.outputs.backend }}
+      SCOPE_REASON: ${{ needs.detect_changes.outputs.reason }}
+    steps:
+      - name: Enforce backend gate result
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$DETECT_RESULT" != "success" ]]; then
+            echo "::error::CI scope detection failed: $DETECT_RESULT"
+            exit 1
+          fi
+          [[ "$DOMAIN_REQUIRED" == "true" ]] || { echo "data-integration skipped: $SCOPE_REASON" | tee -a "$GITHUB_STEP_SUMMARY"; exit 0; }
+
+      - name: Checkout
+        if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: test-platform-v2/backend/requirements.txt
+
+      - name: Install Dependencies
+        if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+        working-directory: test-platform-v2/backend
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Real DB driver / executor + data runtime integration
+        if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+        working-directory: test-platform-v2/backend
+        run: python -m pytest -q tests/aitde/reality/test_db_driver.py tests/aitde/reality/test_db_executor.py tests/aitde/reality/test_existing_executor.py tests/aitde/reality/test_api_executor.py tests/aitde/reality/test_data_plan_executor.py tests/aitde/v32
+
+  aitde-security-redteam:
+    name: AITDE Security Red-Team (SecretRef / Evidence / Sanitizer)
+    needs: detect_changes
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DETECT_RESULT: ${{ needs.detect_changes.result }}
+      DOMAIN_REQUIRED: ${{ needs.detect_changes.outputs.backend }}
+      SCOPE_REASON: ${{ needs.detect_changes.outputs.reason }}
+    steps:
+      - name: Enforce backend gate result
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$DETECT_RESULT" != "success" ]]; then
+            echo "::error::CI scope detection failed: $DETECT_RESULT"
+            exit 1
+          fi
+          [[ "$DOMAIN_REQUIRED" == "true" ]] || { echo "security-redteam skipped: $SCOPE_REASON" | tee -a "$GITHUB_STEP_SUMMARY"; exit 0; }
+
+      - name: Checkout
+        if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: test-platform-v2/backend/requirements.txt
+
+      - name: Install Dependencies
+        if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+        working-directory: test-platform-v2/backend
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Secret-ref-only / evidence integrity / snapshot sanitizer
+        if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+        working-directory: test-platform-v2/backend
+        run: python -m pytest -q tests/aitde/v31/test_evidence_sanitizer.py tests/aitde/v34/test_secret_redaction.py tests/aitde/reality/test_evidence_integrity.py tests/aitde/v31/test_environment_snapshot.py tests/aitde/v32/test_db_snapshot.py

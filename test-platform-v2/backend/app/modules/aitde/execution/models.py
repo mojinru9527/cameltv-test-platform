@@ -28,9 +28,12 @@ from app.modules.aitde.common.enums import (
     AdapterStatus,
     AdapterType,
     AssertionResult,
+    AssertionTrustStatus,
+    EvidenceIntegrityStatus,
     EvidenceStatus,
     EvidenceType,
     LegacyExecutionType,
+    OracleSourceType,
     RunStatus,
     SanitizationStatus,
     StepStatus,
@@ -85,6 +88,8 @@ class EnvironmentSnapshot(Base):
     fingerprint_hash: Mapped[str] = mapped_column(String(64), default="", index=True)
     captured_at: Mapped[datetime] = mapped_column(default=datetime.now)
     created_by_type: Mapped[str] = mapped_column(String(16), default="AUTO")
+    # V3.9-R3 (FINGER-001): how confident the snapshot was actually observed.
+    confidence: Mapped[str] = mapped_column(String(16), default="LOW", index=True)
 
 
 class ExecutionRun(Base):
@@ -142,6 +147,8 @@ class ExecutionStep(Base):
     error_message: Mapped[str | None] = mapped_column(Text, default=None)
     input_snapshot_json: Mapped[str | None] = mapped_column(Text, default=None)
     output_snapshot_json: Mapped[str | None] = mapped_column(Text, default=None)
+    # V3.9-R1 (TRUST-003): real EvidenceArtifact ids produced by this step.
+    evidence_refs_json: Mapped[str] = mapped_column(Text, default="[]")
     trace_id: Mapped[str | None] = mapped_column(String(128), default=None)
     span_id: Mapped[str | None] = mapped_column(String(128), default=None)
     started_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
@@ -157,6 +164,16 @@ class AssertionResult(Base):
     run_id: Mapped[int] = mapped_column(Integer, index=True)
     step_id: Mapped[int | None] = mapped_column(Integer, default=None)
     oracle_id: Mapped[int] = mapped_column(Integer, index=True)
+    # V3.9-R1 (TRUST-001): the real TestOracle id. ``oracle_id`` is retained as
+    # legacy-compat; new Runtime writes ``test_oracle_id`` only.
+    test_oracle_id: Mapped[int | None] = mapped_column(Integer, default=None, index=True)
+    oracle_source_type: Mapped[str] = mapped_column(
+        String(32), default=OracleSourceType.LEGACY_EXECUTION.value, index=True
+    )
+    trust_status: Mapped[str] = mapped_column(
+        String(32), default=AssertionTrustStatus.LEGACY_UNVERIFIED.value, index=True
+    )
+    binding_id: Mapped[int | None] = mapped_column(Integer, default=None)
     oracle_snapshot_json: Mapped[str] = mapped_column(Text, default="{}")
     expected_json: Mapped[str] = mapped_column(Text, default="{}")
     actual_json: Mapped[str] = mapped_column(Text, default="{}")
@@ -190,6 +207,13 @@ class EvidenceArtifact(Base):
     )
     sensitivity: Mapped[str] = mapped_column(String(16), default="normal")
     retention_class: Mapped[str] = mapped_column(String(32), default="standard")
+    # V3.9-R1 (TRUST-004): physical integrity of the stored object.
+    integrity_status: Mapped[str] = mapped_column(
+        String(16), default=EvidenceIntegrityStatus.PENDING.value, index=True
+    )
+    storage_verified_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
+    sanitizer_version: Mapped[str | None] = mapped_column(String(32), default=None)
+    storage_etag: Mapped[str | None] = mapped_column(String(128), default=None)
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
 
 

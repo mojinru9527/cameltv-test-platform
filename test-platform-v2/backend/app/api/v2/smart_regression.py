@@ -51,6 +51,8 @@ def detect_changes(
             payload.current or {},
             payload.source_from_ref,
             payload.source_to_ref,
+            source_type=payload.source_type,
+            trusted=payload.trusted,
         )
     )
 
@@ -186,9 +188,14 @@ def guard_selection(
     selection = service.RegressionSelector.get(db, selection_id)
     if selection is None:
         _issue_404("Selection 不存在")
+    # REG-002: pass the real unmapped / low-confidence changes into the guard so
+    # an unknown P0/P1-like change forces a FULL fallback (never a silent pass).
+    unknown = service.list_unmapped_or_low_confidence_changes(
+        db, current.project_id or 0, selection["mission_id"]
+    )
     return R.ok(
         service.CoverageGuard.guard(
-            db, current.project_id or 0, selection["mission_id"], selection_id, []
+            db, current.project_id or 0, selection["mission_id"], selection_id, unknown
         )
     )
 

@@ -86,6 +86,10 @@ export interface Assertion {
   reason_code: string
   evidence_refs_json: Record<string, unknown> | null
   evaluated_at?: string | null
+  /** V3.9 Trust — may be absent depending on API serialization. */ 
+  oracle_source_type?: string | null
+  /** V3.9 Trust — may be absent depending on API serialization. */ 
+  trust_status?: string | null
 }
 
 export interface Evidence {
@@ -103,6 +107,8 @@ export interface Evidence {
   sensitivity: string
   retention_class: string
   created_at: string | null
+  /** V3.9 Trust — backends integrity status (VERIFIED/MISSING/CORRUPT/PENDING); may be absent. */
+  integrity_status?: string | null
 }
 
 export interface MissionRunsParams {

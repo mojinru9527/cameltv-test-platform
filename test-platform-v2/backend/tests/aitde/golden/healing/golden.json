@@ -1,0 +1,22 @@
+[
+  {
+    "input": "定位器失效：按钮 id=submit 在 DOM 中不可见。",
+    "expected": {"strategy": "LOCATOR", "suggestion": "data-testid", "confidence": 0.8},
+    "must_include": ["data-testid"],
+    "must_not_include": ["proposed"],
+    "risk_level": "P2",
+    "reviewer": "healing-team",
+    "version": 1,
+    "candidate": {"strategy": "LOCATOR", "suggestion": "data-testid", "confidence": 0.8}
+  },
+  {
+    "input": "定位器失效：弹窗加载延迟导致元素不存在。",
+    "expected": {"strategy": "WAIT", "suggestion": "retry", "confidence": 0.6},
+    "must_include": ["retry"],
+    "must_not_include": ["proposed"],
+    "risk_level": "P2",
+    "reviewer": "healing-team",
+    "version": 1,
+    "candidate": {"strategy": "WAIT", "suggestion": "retry", "confidence": 0.6}
+  }
+]

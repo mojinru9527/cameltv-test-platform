@@ -6,7 +6,7 @@ import pytest
 from app.core.exceptions import APIException
 from app.modules.aitde.common.enums import Outcome
 from app.modules.aitde.data import run_data_integration as rdi
-from app.modules.aitde.execution.models import ExecutionRun
+from app.modules.aitde.execution.models import EvidenceArtifact, ExecutionRun
 
 
 def _run(db, scenario_version_id=1, outcome=None):
@@ -43,14 +43,26 @@ def test_set_run_data_fail_only_when_no_business_outcome(db):
 
 def test_record_data_evidence(db):
     run = _run(db)
-    artifact = rdi.record_data_evidence(
-        db, run.id, "DATA_PLAN", project_id=1, content_hash="abc", storage_uri="obj/dp"
-    )
-    assert artifact.evidence_type == "DATA_PLAN"
-    assert artifact.content_hash == "abc"
+    # V3.9-R2 (DATA-004): a fake empty row (no storage_uri/hash) must be rejected.
     with pytest.raises(APIException) as exc:
-        rdi.record_data_evidence(db, run.id, "NOT_REAL")
+        rdi.record_data_evidence(db, run.id, "DATA_PLAN", project_id=1, content_hash="", storage_uri="")
     assert exc.value.http_status == 400
+    with pytest.raises(APIException) as exc2:
+        rdi.record_data_evidence(db, run.id, "NOT_REAL")
+    assert exc2.value.http_status == 400
+
+
+def test_store_data_evidence_creates_real_artifact(db):
+    run = _run(db)
+    artifact = rdi.store_data_evidence(
+        db, run.id, "DATA_PLAN", project_id=1, data=b'{"plan": "x"}'
+    )
+    # A real evidence artifact: stored + sanitized + hash-valid + integrity VERIFIED.
+    artifact = db.get(EvidenceArtifact, artifact.id)
+    assert artifact.storage_uri
+    assert artifact.content_hash
+    assert artifact.sanitization_status == "SANITIZED"
+    assert artifact.integrity_status == "VERIFIED"
 
 
 def test_cleanup_health_preserves_business_outcome(db):

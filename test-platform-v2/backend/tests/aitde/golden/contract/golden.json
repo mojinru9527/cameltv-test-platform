@@ -1,0 +1,22 @@
+[
+  {
+    "input": "契约变更：/renew 接口 response 新增必填字段 order_id。",
+    "expected": {"api": "POST /renew", "breaking": true, "risk_level": "P1"},
+    "must_include": ["POST /renew", "breaking"],
+    "must_not_include": ["false"],
+    "risk_level": "P1",
+    "reviewer": "contract-team",
+    "version": 1,
+    "candidate": {"api": "POST /renew", "breaking": true, "risk_level": "P1"}
+  },
+  {
+    "input": "契约变更：新增可选查询参数 cache=false，不影响既有字段。",
+    "expected": {"api": "GET /memberships", "breaking": false, "risk_level": "P3"},
+    "must_include": ["breaking", "false"],
+    "must_not_include": ["required"],
+    "risk_level": "P3",
+    "reviewer": "contract-team",
+    "version": 1,
+    "candidate": {"api": "GET /memberships", "breaking": false, "risk_level": "P3"}
+  }
+]

@@ -38,7 +38,7 @@ def _req_plan(db, scenario_version_id):
     return service.generate_data_plan(db, scenario_version_id, None, 1, DataPlanGenerateRequest())
 
 
-def test_provision_db_fixture_approved_plan(db):
+def test_provision_db_fixture_approved_plan(db, patched_db_driver):
     version = _scenario_version(db, given={"user.status": "normal"})
     _db_fixture_source(db)
     plan = _req_plan(db, version.id)
@@ -53,6 +53,9 @@ def test_provision_db_fixture_approved_plan(db):
     assert len(entities) >= 1
     assert entities[0].created_by_fixture is True
     assert entities[0].cleanup_action_json is not None
+    # V3.9-R2: the entity was really created + verified, not a recipe.
+    assert entities[0].verification_status == "VERIFIED"
+    assert entities[0].physical_status == "PHYSICAL_CREATED"
 
 
 def test_provision_high_risk_plan_needs_approval(db):
@@ -71,7 +74,7 @@ def test_provision_missing_plan_404(db):
     assert exc.value.http_status == 404
 
 
-def test_provision_uses_explicit_source_id(db):
+def test_provision_uses_explicit_source_id(db, patched_db_driver):
     version = _scenario_version(db, given={"user.status": "normal"})
     src = _db_fixture_source(db)
     plan = _req_plan(db, version.id)

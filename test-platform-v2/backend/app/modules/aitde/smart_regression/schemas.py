@@ -18,6 +18,10 @@ class DetectIn(BaseModel):
     current: dict = Field(default_factory=dict)
     source_from_ref: str | None = None
     source_to_ref: str | None = None
+    # V3.9-R4 (REG-001): caller-supplied baseline/current is a MANUAL source and is
+    # NOT trusted for an automatic Gate — real providers load their own snapshots.
+    source_type: str = Field(default="MANUAL", description="MANUAL | PROVIDER")
+    trusted: bool = Field(default=False, description="only false for manual/debug input")
 
 
 class RiskSignalIn(BaseModel):

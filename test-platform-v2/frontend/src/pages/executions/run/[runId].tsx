@@ -22,6 +22,7 @@ import {
 import OutcomeBadge from '@/components/executions/OutcomeBadge'
 import RuntimeStatusBadge from '@/components/executions/RuntimeStatusBadge'
 import LegacyExecutionBadge from '@/components/executions/LegacyExecutionBadge'
+import { TrustLevelBadge } from '@/components/trust/TrustLevelBadge'
 import ExecutionTimeline from '@/components/executions/ExecutionTimeline'
 import AssertionSummary from '@/components/executions/AssertionSummary'
 import RequiredOracleList from '@/components/executions/RequiredOracleList'
@@ -158,6 +159,9 @@ export default function RunDetailPage() {
           <h1 className="text-xl font-semibold tracking-[-0.02em]">Run #{run.id}</h1>
           <OutcomeBadge outcome={run.outcome} />
           <RuntimeStatusBadge status={run.runtime_status} />
+          {run.outcome === 'PASS' && (
+            <TrustLevelBadge assertions={assertions} />
+          )}
           <LegacyExecutionBadge
             legacy={run.trigger_type === 'LEGACY' || run.trigger_type === 'MIGRATED'}
           />
