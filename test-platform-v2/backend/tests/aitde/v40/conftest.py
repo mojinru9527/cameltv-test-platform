@@ -10,6 +10,7 @@ from sqlalchemy.pool import StaticPool
 from app.core.db import Base
 import app.models  # noqa: F401  registers all models
 import app.modules.aitde.legacy_cutover.models  # noqa: F401
+import app.modules.aitde.scenario.models  # noqa: F401  # test_scenarios for V40-005 promote
 
 
 @pytest.fixture()

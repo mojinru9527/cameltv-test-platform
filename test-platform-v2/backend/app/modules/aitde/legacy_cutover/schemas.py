@@ -81,3 +81,17 @@ class CutoverBatchOut(BaseModel):
     failed_count: int
     started_at: datetime | None
     finished_at: datetime | None
+
+
+class CaseMigrationDraftIn(BaseModel):
+    """Attach an extracted draft payload to a high-value case migration (V40-005)."""
+
+    mission_id: int = Field(..., gt=0)
+    contract_version_id: int = Field(default=0)
+    draft: dict = Field(default_factory=dict)
+
+
+class CaseMigrationReviewIn(BaseModel):
+    """Tester verdict on a high-value case migration draft (V40-005)."""
+
+    verdict: str = Field(..., description="ACCEPTED | REJECTED")

@@ -17,6 +17,7 @@ from app.core.db import Base
 from app.modules.aitde.legacy_cutover.enums import (
     CutoverBatchStatus,
     EndpointStage,
+    LegacyCaseMigrationStatus,
     LegacyObjectType,
     MigrationStatus,
     UsageConsumerType,
@@ -60,6 +61,40 @@ class LegacyUsageRecord(Base):
     last_seen_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.now, index=True
     )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+
+
+class LegacyCaseMigration(Base):
+    """V40-005: a review-gated migration of a high-value legacy TestCase to a Scenario.
+
+    The draft payload (``draft_json``) carries the extracted Given/When/Then /
+    expected content. A draft must be supplied by the author / AI interface before
+    review (``DRAFT_PENDING`` -> ``AWAITING_REVIEW``); the migration only becomes a
+    real Scenario via :meth:`LegacyCutoverService.promote_case_migration` after a
+    tester ``ACCEPTED`` verdict — never automatically.
+    """
+
+    __tablename__ = "legacy_case_migrations"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(Integer, default=0, index=True)
+    source_case_id: Mapped[int] = mapped_column(Integer, index=True)
+    source_case_key: Mapped[str] = mapped_column(String(128), default="", index=True)
+    source_priority: Mapped[str] = mapped_column(String(4), default="P2", index=True)
+    destination_mission_id: Mapped[int | None] = mapped_column(
+        Integer, default=None, index=True
+    )
+    contract_version_id: Mapped[int] = mapped_column(Integer, default=0)
+    draft_json: Mapped[str] = mapped_column(Text, default="{}")
+    status: Mapped[str] = mapped_column(
+        String(24), default=LegacyCaseMigrationStatus.DRAFT_PENDING.value, index=True
+    )
+    review_verdict: Mapped[str | None] = mapped_column(String(16), default=None)
+    reviewed_by: Mapped[int | None] = mapped_column(Integer, default=None)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
+    scenario_id: Mapped[int | None] = mapped_column(Integer, default=None, index=True)
+    scenario_version_id: Mapped[int | None] = mapped_column(Integer, default=None)
+    error: Mapped[str | None] = mapped_column(Text, default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
 
 

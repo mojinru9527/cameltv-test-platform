@@ -14,8 +14,11 @@ from sqlalchemy.orm import Session
 
 from app.api.v2.deps import require_aitde_v3
 from app.core.deps import CurrentUser, get_db, require_permission
+from app.core.exceptions import APIException
 from app.modules.aitde.legacy_cutover import service
 from app.modules.aitde.legacy_cutover.schemas import (
+    CaseMigrationDraftIn,
+    CaseMigrationReviewIn,
     CutoverBatchIn,
     MappingUpsertIn,
     UsageRecordIn,
@@ -158,4 +161,87 @@ def run_batch(
         data = service.LegacyCutoverService.run_batch(db, batch_id)
     except ValueError as exc:
         _issue_404(str(exc))
+    return R.ok(data)
+
+
+# ── High-value Legacy Case Migration (V40-005) ────────────────────────────
+
+
+@router.post("/legacy/case-migrations/enqueue", response_model=R[list[dict]])
+def enqueue_case_migrations(
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    return R.ok(
+        service.LegacyCaseMigrationService.enqueue_high_value(
+            db, current.project_id or 0
+        )
+    )
+
+
+@router.get("/legacy/case-migrations", response_model=R[list[dict]])
+def list_case_migrations(
+    status: str | None = None,
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    return R.ok(
+        service.LegacyCaseMigrationService.list(
+            db, current.project_id or 0, status=status
+        )
+    )
+
+
+@router.post("/legacy/case-migrations/{migration_id}/draft", response_model=R[dict])
+def submit_migration_draft(
+    migration_id: int,
+    payload: CaseMigrationDraftIn,
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    try:
+        data = service.LegacyCaseMigrationService.submit_draft(
+            db,
+            migration_id,
+            payload.mission_id,
+            payload.contract_version_id,
+            payload.draft,
+        )
+    except ValueError as exc:
+        raise APIException(code=400, msg=str(exc), http_status=400)
+    if data is None:
+        _issue_404("migration 不存在")
+    return R.ok(data)
+
+
+@router.post("/legacy/case-migrations/{migration_id}/review", response_model=R[dict])
+def review_case_migration(
+    migration_id: int,
+    payload: CaseMigrationReviewIn,
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    try:
+        data = service.LegacyCaseMigrationService.submit_review(
+            db, migration_id, payload.verdict, current.user.id
+        )
+    except ValueError as exc:
+        raise APIException(code=400, msg=str(exc), http_status=400)
+    if data is None:
+        _issue_404("migration 不存在")
+    return R.ok(data)
+
+
+@router.post("/legacy/case-migrations/{migration_id}/promote", response_model=R[dict])
+def promote_case_migration(
+    migration_id: int,
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    try:
+        data = service.LegacyCaseMigrationService.promote(db, migration_id)
+    except ValueError as exc:
+        raise APIException(code=409, msg=str(exc), http_status=409)
+    if data is None:
+        _issue_404("migration 不存在")
     return R.ok(data)

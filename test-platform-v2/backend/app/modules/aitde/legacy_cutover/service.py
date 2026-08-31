@@ -18,15 +18,20 @@ from sqlalchemy.orm import Session
 from app.modules.aitde.legacy_cutover.enums import (
     CutoverBatchStatus,
     EndpointStage,
+    LegacyCaseMigrationStatus,
     LegacyObjectType,
     MigrationStatus,
+    MigrationReviewVerdict,
     UsageConsumerType,
 )
 from app.modules.aitde.legacy_cutover.models import (
     CutoverBatch,
+    LegacyCaseMigration,
     LegacyObjectMapping,
     LegacyUsageRecord,
 )
+from app.models.test_case import TestCase
+from app.modules.aitde.scenario.models import TestScenario, TestScenarioVersion
 
 _DEPRECATION_STAGES = {s.value for s in EndpointStage}
 _CONSUMER_TYPES = {s.value for s in UsageConsumerType}
@@ -462,3 +467,203 @@ class TestCaseProjectionPolicy:
             ),
             http_status=409,
         )
+
+
+class LegacyCaseMigrationService:
+    """V40-005: review-gated high-value legacy TestCase -> Scenario migration.
+
+    The migration never silently publishes. It flows ``DRAFT_PENDING`` ->
+    ``AWAITING_REVIEW`` (requires an extracted draft payload from the AI or the
+    reviewer) -> ``ACCEPTED``/``REJECTED`` (tester verdict) and only then
+    ``MIGRATED`` via :meth:`promote`, which creates a real :class:`TestScenario` +
+    version and records the legacy -> canonical mapping. Promote is fail-closed:
+    without a destination ``mission_id`` it raises instead of producing an
+    orphan/garbage scenario.
+    """
+
+    @staticmethod
+    def _out(row: LegacyCaseMigration) -> dict:
+        return {
+            "id": row.id,
+            "source_case_id": row.source_case_id,
+            "source_case_key": row.source_case_key,
+            "source_priority": row.source_priority,
+            "destination_mission_id": row.destination_mission_id,
+            "status": row.status,
+            "review_verdict": row.review_verdict,
+            "reviewed_by": row.reviewed_by,
+            "scenario_id": row.scenario_id,
+            "scenario_version_id": row.scenario_version_id,
+            "error": row.error,
+        }
+
+    @staticmethod
+    def enqueue_high_value(
+        db: Session,
+        project_id: int,
+        mission_id: int | None = None,
+        priorities: tuple[str, ...] = ("P0", "P1"),
+        limit: int = 200,
+    ) -> list[dict]:
+        seen = set(db.scalars(select(LegacyCaseMigration.source_case_id)))
+        cases = db.scalars(
+            select(TestCase)
+            .where(
+                TestCase.project_id == project_id,
+                TestCase.is_deleted.is_(False),
+                TestCase.priority.in_(list(priorities)),
+            )
+            .order_by(TestCase.id)
+            .limit(limit)
+        )
+        out: list[dict] = []
+        for case in cases:
+            if case.id in seen:
+                continue
+            row = LegacyCaseMigration(
+                project_id=project_id,
+                source_case_id=case.id,
+                source_case_key=case.case_id or f"TC-{case.id}",
+                source_priority=case.priority or "P2",
+                destination_mission_id=mission_id,
+                status=LegacyCaseMigrationStatus.DRAFT_PENDING.value,
+                draft_json="{}",
+            )
+            db.add(row)
+            db.flush()
+            out.append(LegacyCaseMigrationService._out(row))
+        db.commit()
+        return out
+
+    @staticmethod
+    def submit_draft(
+        db: Session,
+        migration_id: int,
+        mission_id: int,
+        contract_version_id: int = 0,
+        draft: dict | None = None,
+    ) -> dict | None:
+        """Attach an extracted draft payload; only then the migration may be reviewed.
+
+        ``draft`` must be provided by the AI-extraction interface or a reviewer —
+        this service never fabricates Given/When/Then content.
+        """
+        row = db.get(LegacyCaseMigration, migration_id)
+        if row is None:
+            return None
+        if draft is None or not draft:
+            raise ValueError("draft payload required (AI extraction or manual review)")
+        if mission_id <= 0:
+            raise ValueError("destination_mission_id must be a positive mission id")
+        row.destination_mission_id = mission_id
+        row.contract_version_id = contract_version_id
+        row.draft_json = _dumps(draft)
+        row.status = LegacyCaseMigrationStatus.AWAITING_REVIEW.value
+        db.commit()
+        db.refresh(row)
+        return LegacyCaseMigrationService._out(row)
+
+    @staticmethod
+    def submit_review(
+        db: Session, migration_id: int, verdict: str, reviewer_id: int
+    ) -> dict | None:
+        row = db.get(LegacyCaseMigration, migration_id)
+        if row is None:
+            return None
+        if row.status != LegacyCaseMigrationStatus.AWAITING_REVIEW.value:
+            raise ValueError(f"cannot review migration in state {row.status}")
+        if verdict not in (
+            MigrationReviewVerdict.ACCEPTED.value,
+            MigrationReviewVerdict.REJECTED.value,
+        ):
+            raise ValueError(f"invalid verdict: {verdict}")
+        row.review_verdict = verdict
+        row.reviewed_by = reviewer_id
+        row.reviewed_at = datetime.now()
+        row.status = (
+            LegacyCaseMigrationStatus.ACCEPTED.value
+            if verdict == MigrationReviewVerdict.ACCEPTED.value
+            else LegacyCaseMigrationStatus.REJECTED.value
+        )
+        db.commit()
+        db.refresh(row)
+        return LegacyCaseMigrationService._out(row)
+
+    @staticmethod
+    def promote(db: Session, migration_id: int) -> dict | None:
+        """Create the real Scenario only after the migration was review-accepted."""
+        row = db.get(LegacyCaseMigration, migration_id)
+        if row is None:
+            return None
+        if row.status != LegacyCaseMigrationStatus.ACCEPTED.value:
+            raise ValueError(f"cannot promote migration in state {row.status}")
+        if not row.destination_mission_id or row.destination_mission_id <= 0:
+            raise ValueError("mission_id required before promote")
+        if not row.draft_json or row.draft_json == "{}":
+            raise ValueError("draft payload missing before promote")
+
+        try:
+            draft = json.loads(row.draft_json)
+        except (ValueError, TypeError):
+            raise ValueError("invalid draft_json before promote") from None
+
+        scenario_key = row.source_case_key or f"MIG-{migration_id}-SCEN-001"
+        scenario = TestScenario(
+            project_id=row.project_id,
+            mission_id=row.destination_mission_id,
+            scenario_key=scenario_key,
+            current_version_no=1,
+            status="ACTIVE",
+        )
+        db.add(scenario)
+        db.flush()
+        version = TestScenarioVersion(
+            scenario_id=scenario.id,
+            version_no=1,
+            contract_version_id=row.contract_version_id,
+            title=draft.get("title") or row.source_case_key,
+            business_goal=draft.get("goal") or "",
+            priority=row.source_priority,
+            given_model_json=json.dumps(draft.get("given", {}), ensure_ascii=False),
+            when_model_json=json.dumps(draft.get("when", {}), ensure_ascii=False),
+            expected_state_json=json.dumps(draft.get("expected", {}), ensure_ascii=False),
+            source_refs_json=json.dumps(
+                [{"type": "TEST_CASE", "id": row.source_case_id}], ensure_ascii=False
+            ),
+            review_status="APPROVED",
+            created_by_type="MIGRATION",
+            created_by=row.reviewed_by or 0,
+            approved_by=row.reviewed_by,
+            approved_at=row.reviewed_at,
+        )
+        db.add(version)
+        db.flush()
+
+        mapping = LegacyObjectMapping(
+            project_id=row.project_id,
+            legacy_type=LegacyObjectType.TEST_CASE.value,
+            legacy_id=row.source_case_id,
+            canonical_type="TEST_SCENARIO",
+            canonical_id=scenario.id,
+            migration_status=MigrationStatus.VERIFIED.value,
+            verified_at=datetime.now(),
+        )
+        db.add(mapping)
+
+        row.scenario_id = scenario.id
+        row.scenario_version_id = version.id
+        row.status = LegacyCaseMigrationStatus.MIGRATED.value
+        row.error = None
+        db.commit()
+        db.refresh(row)
+        return LegacyCaseMigrationService._out(row)
+
+    @staticmethod
+    def list(db: Session, project_id: int, status: str | None = None) -> list[dict]:
+        stmt = select(LegacyCaseMigration).where(
+            LegacyCaseMigration.project_id == project_id
+        )
+        if status:
+            stmt = stmt.where(LegacyCaseMigration.status == status)
+        stmt = stmt.order_by(LegacyCaseMigration.id.desc())
+        return [LegacyCaseMigrationService._out(r) for r in db.scalars(stmt)]

@@ -59,3 +59,21 @@ class UsageConsumerType(str, Enum):
     INTERNAL = "INTERNAL"
     EXTERNAL = "EXTERNAL"
     UNKNOWN = "UNKNOWN"
+
+
+class LegacyCaseMigrationStatus(str, Enum):
+    """V40-005 lifecycle of a high-value legacy TestCase -> Scenario migration."""
+
+    DRAFT_PENDING = "DRAFT_PENDING"      # no draft payload yet (AI/reviewer must supply)
+    AWAITING_REVIEW = "AWAITING_REVIEW"  # draft present, awaiting tester review
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
+    MIGRATED = "MIGRATED"
+    FAILED = "FAILED"
+
+
+class MigrationReviewVerdict(str, Enum):
+    """V40-005 tester verdict on a migration draft."""
+
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
