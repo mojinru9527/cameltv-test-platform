@@ -103,7 +103,9 @@ export function PasswordChangeBoundary({ children }: { children: ReactNode }) {
 
 function PlatformHomeEntry() {
   const user = useAuthStore((state) => state.user)
-  return user ? <Navigate to="/workbench" replace /> : null
+  // V40-019: mission-first default navigation when AITDE V3 is enabled.
+  if (!user) return null
+  return <Navigate to={AITDE_V3_ENABLED ? '/missions' : '/workbench'} replace />
 }
 
 function ForcedPasswordChangePage() {
