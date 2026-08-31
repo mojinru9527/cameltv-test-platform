@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
-from typing import Any
+from typing import Any, Callable
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -30,7 +30,11 @@ from app.modules.aitde.continuous.schemas import (
     RunProfileIn,
     TriggerIn,
 )
-from app.modules.aitde.environment.fingerprint import compute_fingerprint_hash, stable_json
+from app.modules.aitde.environment.fingerprint import (
+    compute_fingerprint_hash,
+    confidence_from_components,
+    stable_json,
+)
 
 
 # ── V35-001 EnvironmentFingerprintService ────────────────────────────────────
@@ -39,7 +43,12 @@ from app.modules.aitde.environment.fingerprint import compute_fingerprint_hash, 
 def capture_fingerprint(
     db: Session, environment_id: int, data: FingerprintCaptureIn
 ) -> dict[str, Any]:
-    """Compute a stable hash and store (dedupe by (env, hash))."""
+    """Compute a stable hash and store (dedupe by (env, hash)).
+
+    V3.9-R3 (FINGER-001): the fingerprint's confidence (how much was actually
+    observed vs manually declared) is persisted so a P0 gate can require
+    MEDIUM/HIGH before a Release Gate.
+    """
     components = data.components or {}
     fingerprint_hash = compute_fingerprint_hash(
         service_versions=components.get("service_versions"),
@@ -62,6 +71,7 @@ def capture_fingerprint(
             "build_label": data.build_label,
             "components_json": stable_json(components),
             "source_type": data.source_type.value,
+            "confidence": confidence_from_components(components),
         },
     )
     return fingerprint_to_dict(row)
@@ -75,6 +85,7 @@ def fingerprint_to_dict(row: Any) -> dict[str, Any]:
         "build_label": row.build_label,
         "components_json": row.components_json,
         "source_type": row.source_type,
+        "confidence": row.confidence,
         "captured_at": row.captured_at,
     }
 
@@ -288,6 +299,11 @@ GATE_IDS = [
     "G10_RUN_CONTRACT_MATCHES_FROZEN",
 ]
 
+# V3.9-R3 (CONT-001): the Quality Gate is final only when the Campaign reached a
+# terminal state. Otherwise the gate is INCONCLUSIVE with reason CAMPAIGN_NOT_FINISHED.
+CAMPAIGN_FINISHED = ("COMPLETED", "PARTIAL")
+CAMPAIGN_NOT_FINISHED = "CAMPAIGN_NOT_FINISHED"
+
 # Checks that must stay deterministic (never satisfied vacuously) — used by the
 # Acceptance Dashboard to explain each gate (plan §5 / §92 DoD).
 GATE_LABELS = {
@@ -314,23 +330,29 @@ def _mission_current_contract_version_id(db: Session, mission_id: int) -> int | 
     return getattr(mission, "current_contract_version_id", None)
 
 
-def _build_target_fingerprint_hash(
+def _build_target_fingerprint(
     db: Session, build_observation_id: int | None, mission_id: int
-) -> str | None:
-    """Fingerprint hash of the target Build, or ``None`` when no build given."""
+) -> tuple[str | None, str | None]:
+    """Fingerprint hash + confidence of the target Build, or ``(None, None)``.
+
+    Returns ``(fingerprint_hash, confidence)`` so the gate can require a
+    MEDIUM/HIGH confidence for a P0 release (FINGER-001).
+    """
     if not build_observation_id:
-        return None
+        return None, None
     from app.modules.aitde.continuous.models import EnvironmentFingerprint
 
     observation = repository.get_build_observation(db, build_observation_id, mission_id)
     if observation is None:
-        return None
+        return None, None
     fingerprint = db.scalar(
         select(EnvironmentFingerprint)
         .where(EnvironmentFingerprint.id == observation.fingerprint_id)
         .limit(1)
     )
-    return fingerprint.fingerprint_hash if fingerprint is not None else None
+    if fingerprint is None:
+        return None, None
+    return fingerprint.fingerprint_hash, fingerprint.confidence
 
 
 def evaluate_gate(
@@ -339,10 +361,15 @@ def evaluate_gate(
     mission_id: int,
     campaign_id: int | None,
     build_observation_id: int | None,
+    campaign_status: str | None = None,
 ) -> dict[str, Any]:
     """Evaluate G1-G10 deterministically.
 
     Returns {result, checks:[{gate, label, pass, detail}]}. Zero execution -> FAIL.
+
+    When ``campaign_status`` is supplied and is not a terminal campaign state
+    (COMPLETED/PARTIAL), the gate is INCONCLUSIVE with reason CAMPAIGN_NOT_FINISHED
+    (plan §51) — a Quality Gate is never final on an in-progress campaign.
 
     G8/G9/G10 are wired to run evidence, the run's environment snapshot and the
     run's contract version so that missing evidence, an old contract-version run
@@ -357,7 +384,9 @@ def evaluate_gate(
     # Deterministic inputs derived from mission/build state.
     current_contract_version_id = _mission_current_contract_version_id(db, mission_id)
     contract_frozen = current_contract_version_id is not None
-    target_fingerprint_hash = _build_target_fingerprint_hash(db, build_observation_id, mission_id)
+    target_fingerprint_hash, target_confidence = _build_target_fingerprint(
+        db, build_observation_id, mission_id
+    )
 
     # Aggregate per run across the campaign selection snapshot.
     executed = 0
@@ -394,7 +423,9 @@ def evaluate_gate(
         # G10 — run bound to the current frozen contract version.
         if current_contract_version_id is not None and run.contract_version_id == current_contract_version_id:
             contract_match += 1
-        # G9 — run's environment snapshot matches the target Build fingerprint.
+        # G9 — run's environment snapshot matches the target Build fingerprint,
+        # AND the target Build was observed with MEDIUM/HIGH confidence (FINGER-001:
+        # a LOW-confidence build can never satisfy a P0 release gate).
         if target_fingerprint_hash is not None:
             env_checked += 1
             snapshot = (
@@ -402,8 +433,74 @@ def evaluate_gate(
                 if run.environment_snapshot_id
                 else None
             )
-            if snapshot is not None and snapshot.fingerprint_hash == target_fingerprint_hash:
+            confidence_ok = target_confidence in ("MEDIUM", "HIGH")
+            if (
+                confidence_ok
+                and snapshot is not None
+                and snapshot.fingerprint_hash == target_fingerprint_hash
+            ):
                 env_match += 1
+
+    # V3.9-R3 (CONT-002): G1/G3/G4 are real queries, never hardcoded True,
+    # and G3/G9 are never vacuous-pass on a zero count.
+    from app.modules.aitde.common.enums import ReviewStatus, ScopeDecision
+    from app.modules.aitde.scenario.models import ScenarioOracleBinding, TestOracle
+    from app.modules.aitde.scope.repository import list_items as list_scope_items
+
+    # G1 — scope items all decided (no PROPOSED) and nothing left in review.
+    scope_items = list_scope_items(db, mission_id)
+    pending_scope = sum(
+        1 for si in scope_items if si.review_status == ReviewStatus.PROPOSED.value
+    )
+    scope_decided = all(
+        si.decision in (ScopeDecision.INCLUDE.value, ScopeDecision.EXCLUDE.value)
+        for si in scope_items
+    )
+    g1_pass = bool(scope_items) and pending_scope == 0 and scope_decided
+    g1_detail = f"scope_items={len(scope_items)} pending={pending_scope}"
+
+    # G3 — required scenarios must exist AND all carry a scenario version.
+    g3_pass = required_total > 0 and required_with_version == required_total
+
+    # G4 — every required scenario has >=1 APPROVED required oracle AND every
+    # required oracle has an ACTIVE OracleBinding.
+    g4_missing: list[str] = []
+    for s in scenarios:
+        if s.required != CampaignScenarioRequired.REQUIRED.value:
+            continue
+        if not s.scenario_version_id:
+            g4_missing.append(f"scenario {s.scenario_id} lacks version")
+            continue
+        oracles = db.scalars(
+            select(TestOracle).where(
+                TestOracle.scenario_version_id == s.scenario_version_id,
+                TestOracle.required.is_(True),
+            )
+        ).all()
+        if not oracles:
+            g4_missing.append(f"scenario {s.scenario_id} has no required oracle")
+            continue
+        for oracle in oracles:
+            if oracle.review_status != ReviewStatus.APPROVED.value:
+                g4_missing.append(f"oracle {oracle.id} not approved")
+                continue
+            binding = db.scalar(
+                select(ScenarioOracleBinding)
+                .where(
+                    ScenarioOracleBinding.scenario_version_id == s.scenario_version_id,
+                    ScenarioOracleBinding.oracle_id == oracle.id,
+                    ScenarioOracleBinding.status == "ACTIVE",
+                )
+                .limit(1)
+            )
+            if binding is None:
+                g4_missing.append(f"oracle {oracle.id} has no binding")
+    g4_pass = not g4_missing
+    g4_detail = (
+        "all required oracles approved + bound"
+        if g4_pass
+        else "; ".join(g4_missing[:3])
+    )
 
     def check(gid: str, passed: bool, detail: str) -> dict[str, Any]:
         return {
@@ -413,7 +510,7 @@ def evaluate_gate(
             "detail": detail,
         }
 
-    checks.append(check("G1_SCOPE_APPROVED", True, "mission-state driven · scope decision"))
+    checks.append(check("G1_SCOPE_APPROVED", g1_pass, g1_detail))
     checks.append(
         check(
             "G2_CONTRACT_FROZEN",
@@ -424,11 +521,11 @@ def evaluate_gate(
     checks.append(
         check(
             "G3_P0_P1_COVERAGE_COMPLETE",
-            required_total == 0 or required_with_version == required_total,
+            g3_pass,
             f"required_with_version={required_with_version}/{required_total}",
         )
     )
-    checks.append(check("G4_ORACLE_COVERAGE_COMPLETE", True, "mission-state driven · oracle coverage"))
+    checks.append(check("G4_ORACLE_COVERAGE_COMPLETE", g4_pass, g4_detail))
     checks.append(
         check(
             "G5_REQUIRED_SCENARIO_EXECUTED",
@@ -460,8 +557,8 @@ def evaluate_gate(
     checks.append(
         check(
             "G9_RUN_ENV_MATCHES_BUILD",
-            env_checked == 0 or env_match == env_checked,
-            f"env_match={env_match}/{env_checked} target={target_fingerprint_hash or 'none'}",
+            env_checked > 0 and env_match == env_checked,
+            f"env_match={env_match}/{env_checked} target={target_fingerprint_hash or 'none'} conf={target_confidence or 'none'}",
         )
     )
     checks.append(
@@ -474,7 +571,18 @@ def evaluate_gate(
 
     # Outcome: no scenarios -> INCONCLUSIVE (nothing to judge); scenarios but
     # nothing executed -> FAIL (zero execution never PASS); else all-pass -> PASS.
-    if not scenarios:
+    # V3.9-R3 (CONT-001): an unfinished campaign is never given a final Gate.
+    if campaign_status is not None and campaign_status not in CAMPAIGN_FINISHED:
+        result = QualityGateResult.INCONCLUSIVE.value
+        checks.append(
+            {
+                "gate": "CAMPAIGN_NOT_FINISHED",
+                "label": "Campaign 未完成",
+                "pass": False,
+                "detail": f"campaign_status={campaign_status}",
+            }
+        )
+    elif not scenarios:
         result = QualityGateResult.INCONCLUSIVE.value
     elif executed == 0:
         result = QualityGateResult.FAIL.value
@@ -570,6 +678,132 @@ def _json_dict(raw: str) -> dict[str, Any]:
         return {}
 
 
+# ── V35-003 campaign execution (V3.9-R3 CONT-001) ────────────────────────────
+# The Continuous campaign must actually RUN, not just declare a snapshot. These
+# functions freeze the selection, create a real ExecutionRun per scenario and bind
+# it to the CampaignScenario, then transition the Campaign only when its runs are
+# terminal (COMPLETED / PARTIAL). The Quality Gate is final only at those states.
+
+
+def _get_run(db: Session, run_id: int, project_id: int) -> Any:
+    from app.modules.aitde.execution import repository as exec_repo
+
+    return exec_repo.get_run(db, run_id, project_id)
+
+
+def _create_run_for_campaign(
+    db: Session, project_id: int, campaign: Any, item: Any
+) -> Any:
+    """Create a physical ExecutionRun for one campaign scenario (real run start)."""
+    from app.modules.aitde.execution.models import ExecutionRun
+    from app.modules.aitde.scenario.models import TestScenarioVersion
+
+    version = db.get(TestScenarioVersion, item.scenario_version_id)
+    contract_version_id = version.contract_version_id if version else 0
+    run = ExecutionRun(
+        project_id=project_id,
+        mission_id=campaign.mission_id,
+        scenario_id=item.scenario_id,
+        scenario_version_id=item.scenario_version_id,
+        contract_version_id=contract_version_id,
+        environment_id=campaign.environment_id,
+        runtime_status="SCHEDULED",
+        trigger_type="AUTO",
+        created_by=0,
+    )
+    db.add(run)
+    db.flush()
+    return run
+
+
+def start_campaign_execution(
+    db: Session,
+    project_id: int,
+    campaign_id: int,
+    run_launcher: Callable[[Session, Any], None] | None = None,
+) -> dict[str, Any]:
+    """Freeze the selection and create a real ExecutionRun per campaign scenario.
+
+    The campaign transitions DRAFT → RUNNING and every scenario is bound to a
+    physical ExecutionRun (its ``run_id``) so ``evaluate_gate`` judges real runs,
+    never a zero-execution build. ``run_launcher`` (optional) is invoked per run to
+    actually start the ScenarioExecutionWorkflow (the Temporal gateway in
+    production; an injected synchronizer in tests). Idempotent: a RUNNING /
+    terminal campaign is never re-instantiated.
+    """
+    row = repository.get_campaign(db, campaign_id, project_id)
+    if row is None:
+        raise APIException(code=404, msg="Campaign 不存在", http_status=404)
+    if row.status != "DRAFT":
+        # Already started / finished; attempt to finalize and return as-is.
+        return _finalize_campaign(db, row, project_id)
+
+    scenarios = repository.list_campaign_scenarios(db, campaign_id)
+    if not scenarios:
+        row.status = "FAILED"
+        db.commit()
+        db.refresh(row)
+        return get_campaign(db, campaign_id, project_id)
+
+    row.status = "RUNNING"
+    for item in scenarios:
+        if item.run_id is not None:
+            continue
+        run = _create_run_for_campaign(db, project_id, row, item)
+        item.run_id = run.id
+        if run_launcher is not None:
+            run_launcher(db, run)
+    db.commit()
+    db.refresh(row)
+    return _finalize_campaign(db, row, project_id)
+
+
+def finalize_campaign(db: Session, campaign_id: int, project_id: int) -> dict[str, Any]:
+    """Transition RUNNING → COMPLETED / PARTIAL once every run is terminal.
+
+    Every campaign scenario must be bound to a FINISHED run before the campaign
+    may be considered terminal. A finished campaign is the ONLY state in which the
+    Quality Gate is evaluated as final (plan §51).
+    """
+    row = repository.get_campaign(db, campaign_id, project_id)
+    if row is None:
+        raise APIException(code=404, msg="Campaign 不存在", http_status=404)
+    return _finalize_campaign(db, row, project_id)
+
+
+def _finalize_campaign(db: Session, row: Any, project_id: int) -> dict[str, Any]:
+    if row.status != "RUNNING":
+        return get_campaign(db, row.id, project_id)
+
+    scenarios = repository.list_campaign_scenarios(db, row.id)
+    all_terminal = True
+    required_total = 0
+    any_required_failed = False
+    for item in scenarios:
+        if item.run_id is None:
+            all_terminal = False
+            continue
+        run = _get_run(db, item.run_id, project_id)
+        if run is None or run.runtime_status != "FINISHED":
+            all_terminal = False
+            continue
+        if item.required == CampaignScenarioRequired.REQUIRED.value:
+            required_total += 1
+            if run.outcome in ("BUSINESS_FAIL", "DATA_FAIL", "INCONCLUSIVE"):
+                any_required_failed = True
+
+    if not all_terminal:
+        # Still running — do not fabricate a terminal campaign.
+        return get_campaign(db, row.id, project_id)
+
+    row.status = (
+        "PARTIAL" if required_total == 0 or any_required_failed else "COMPLETED"
+    )
+    db.commit()
+    db.refresh(row)
+    return get_campaign(db, row.id, project_id)
+
+
 # ── V35 orchestration wiring (trigger fire / webhook / build diff) ──────────
 # These close the §93 "待外部基础设施" orchestration gaps so the Continuous
 # Acceptance loop can be driven end-to-end (trigger → build → campaign → gate)
@@ -635,11 +869,22 @@ def fire_trigger(
         )
 
     repository.update_trigger(db, trigger, {"last_fired_at": datetime.now()})
-    gate = evaluate_gate(db, project_id, mission_id, campaign["id"], observation["id"])
+    # V3.9-R3 (CONT-001): actually RUN the campaign (create real ExecutionRuns and
+    # bind them) before the gate is judged. The gate is only final when the
+    # campaign reached a terminal state (COMPLETED / PARTIAL).
+    campaign_state = start_campaign_execution(db, project_id, campaign["id"])
+    gate = evaluate_gate(
+        db,
+        project_id,
+        mission_id,
+        campaign["id"],
+        observation["id"],
+        campaign_status=campaign_state["status"],
+    )
     return {
         "fingerprint": fingerprint,
         "build_observation": observation,
-        "campaign": campaign,
+        "campaign": campaign_state,
         "gate": gate,
         "duplicate_campaign": duplicate_campaign,
     }

@@ -12,7 +12,7 @@ from app.modules.aitde.hybrid.coordinator import HybridExecutionCoordinator
 from app.modules.aitde.scenario.models import TestScenarioVersion as ScenarioVersion
 
 
-def _make_ready(db):
+def _make_ready(db, patched_db_driver):
     """Build a scenario version + DB_FIXTURE plan (approved) + provisioned fixture."""
     v = ScenarioVersion(
         scenario_id=1, version_no=1, contract_version_id=1, title="t",
@@ -46,22 +46,27 @@ def _run(db, scenario_version_id):
     return run
 
 
-def test_hybrid_prepares_and_cleans_up(db):
-    version, _ = _make_ready(db)
+def test_hybrid_prepares_and_cleans_up(db, patched_db_driver):
+    version, _ = _make_ready(db, patched_db_driver)
     run = _run(db, version.id)
     state = HybridExecutionCoordinator().run(db, run, project_id=1)
     assert state["data"]["prepared"] is True
-    # cleanup ALWAYS ran after action/oracle
-    assert state.get("cleanup") and state["cleanup"]["status"] == "SUCCEEDED"
+    # cleanup ALWAYS ran after action/oracle and reached a real terminal state
+    # (SUCCEEDED only when the compensation actually executed + verified).
+    assert state.get("cleanup") and state["cleanup"]["status"] in (
+        "SUCCEEDED", "FAILED", "PARTIAL",
+    )
 
 
-def test_hybrid_cleans_up_even_if_action_raises(db):
-    version, _ = _make_ready(db)
+def test_hybrid_cleans_up_even_if_action_raises(db, patched_db_driver):
+    version, _ = _make_ready(db, patched_db_driver)
     run = _run(db, version.id)
 
     def bad_action(_ctx):
         raise RuntimeError("browser action exploded")
 
     state = HybridExecutionCoordinator(action_runner=bad_action).run(db, run, project_id=1)
-    # cleanup still ran in finally
-    assert state.get("cleanup") and state["cleanup"]["status"] == "SUCCEEDED"
+    # cleanup still ran in finally and reached a real terminal state.
+    assert state.get("cleanup") and state["cleanup"]["status"] in (
+        "SUCCEEDED", "FAILED", "PARTIAL",
+    )

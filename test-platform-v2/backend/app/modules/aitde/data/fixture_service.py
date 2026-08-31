@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import APIException
 from app.modules.aitde.common.enums import DataSourceAccessMode, DataSourceType, FixtureStatus
 from app.modules.aitde.data import repository
+from app.modules.aitde.data.executors import DataPlanExecutor
 from app.modules.aitde.data.models import DataFixture, DataPlan, DataSource
 from app.modules.aitde.data.strategies import get_builder
 
@@ -33,7 +34,15 @@ def provision_fixture(
     environment_id: int | None,
     project_id: int,
 ) -> DataFixture:
-    """Build the fixture + entities from the plan's strategy and requirements."""
+    """Build the fixture + entities and execute them for real (V3.9-R2 DATA-002).
+
+    The fixture metadata is constructed from the plan's strategy + requirements,
+    then ``DataPlanExecutor`` runs each entity's physical effect against the
+    DataSource and VERIFIES it is present before the fixture may reach ``READY``.
+    A failed physical effect raises so the caller can classify the run as a data
+    failure — a fixture is never reported READY unless every entity was really
+    created/found and verified.
+    """
     requirements = repository.list_requirements_by_scenario_version(
         db, plan.scenario_version_id
     )
@@ -76,8 +85,17 @@ def provision_fixture(
                 ),
             },
         )
-    fixture.status = FixtureStatus.READY.value
     db.commit()
+    db.refresh(fixture)
+
+    # V3.9-R2: real physical effect + verify. Drives READY only on success.
+    outcome = DataPlanExecutor(db).execute(plan, fixture, source)
+    if not outcome.get("ok"):
+        raise APIException(
+            code=400,
+            msg=f"数据物理创建/验证失败，fixture 未能 READY：{outcome.get('strategy')}",
+            http_status=400,
+        )
     db.refresh(fixture)
     return fixture
 

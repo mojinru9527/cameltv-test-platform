@@ -7,6 +7,8 @@ preserving an already-evaluated business outcome and recording cleanup health.
 """
 from __future__ import annotations
 
+import json
+import logging
 from typing import Any
 
 from sqlalchemy import func, select
@@ -14,12 +16,40 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import APIException
 from app.modules.aitde.common.enums import (
+    EvidenceIntegrityStatus,
     EvidenceType,
     Outcome,
+    SanitizationStatus,
     StepStatus,
     StepType,
 )
 from app.modules.aitde.execution.models import EvidenceArtifact, ExecutionRun, ExecutionStep
+
+logger = logging.getLogger(__name__)
+
+
+def _plan_evidence_payload(db: Session, plan: Any) -> str:
+    """Serialize a DataPlan into an evidence payload (strategy + steps)."""
+    if plan is None:
+        return "{}"
+    from app.modules.aitde.data.models import DataPlanStep
+
+    steps = db.scalars(
+        select(DataPlanStep)
+        .where(DataPlanStep.data_plan_id == plan.id)
+        .order_by(DataPlanStep.sequence)
+    ).all()
+    return json.dumps(
+        {
+            "strategy": plan.strategy,
+            "plan_hash": plan.plan_hash,
+            "steps": [
+                {"step_type": s.step_type, "command": json.loads(s.command_json or "{}")}
+                for s in steps
+            ],
+        },
+        ensure_ascii=False,
+    )
 
 # Ordered V3.2 data runtime timeline (V32-014).
 DATA_TIMELINE = [
@@ -65,19 +95,55 @@ def record_data_evidence(
     storage_uri: str = "",
     content_hash: str = "",
 ) -> EvidenceArtifact:
+    """Legacy import path. V3.9-R2 (DATA-004): a data-evidence row MUST point at a
+    real stored object (non-empty storage_uri + valid content_hash); an empty fake
+    row is rejected so ``COMPLETE`` can never be satisfied by a phantom artifact."""
     if evidence_type not in _VALID_EVIDENCE:
         raise APIException(code=400, msg=f"非法证据类型：{evidence_type}", http_status=400)
+    if not storage_uri or not content_hash:
+        raise APIException(
+            code=400,
+            msg="数据证据必须指向已存储对象（storage_uri + content_hash 均非空）",
+            http_status=400,
+        )
     artifact = EvidenceArtifact(
         project_id=project_id,
         run_id=run_id,
         evidence_type=evidence_type,
         storage_uri=storage_uri,
         content_hash=content_hash,
+        integrity_status=EvidenceIntegrityStatus.VERIFIED.value,
+        sanitization_status=SanitizationStatus.SANITIZED.value,
     )
     db.add(artifact)
     db.commit()
     db.refresh(artifact)
     return artifact
+
+
+def store_data_evidence(
+    db: Session,
+    run_id: int,
+    evidence_type: str,
+    *,
+    project_id: int = 0,
+    data: bytes,
+    content_type: str = "application/json",
+) -> EvidenceArtifact:
+    """Route data evidence through EvidenceService.store_artifact (sanitize →
+    object storage → content hash → integrity VERIFIED). Never a fake row."""
+    if evidence_type not in _VALID_EVIDENCE:
+        raise APIException(code=400, msg=f"非法证据类型：{evidence_type}", http_status=400)
+    from app.modules.aitde.evidence.service import store_artifact
+
+    return store_artifact(
+        db,
+        project_id=project_id,
+        run_id=run_id,
+        evidence_type=evidence_type,
+        data=data,
+        content_type=content_type,
+    )
 
 
 def set_run_data_fail(db: Session, run_id: int) -> ExecutionRun:
@@ -209,16 +275,23 @@ def prepare_run_data(db: Session, run: ExecutionRun, project_id: int) -> dict[st
 
         add_run_data_timeline(db, run.id)
         fixture_plan = next((p for p in plans if p.id == fixture.data_plan_id), None)
-        record_data_evidence(
-            db, run.id, EvidenceType.DATA_PLAN.value,
-            project_id=project_id,
-            content_hash=fixture_plan.plan_hash if fixture_plan else "",
-        )
-        record_data_evidence(
-            db, run.id, EvidenceType.FIXTURE_MANIFEST.value,
-            project_id=project_id,
-            content_hash=fixture.manifest_json or "",
-        )
+        plan_content = _plan_evidence_payload(db, fixture_plan)
+        # DATA-004: data evidence must be real stored artifacts (never a fake row).
+        # A storage failure degrades evidence (never a business failure).
+        try:
+            store_data_evidence(
+                db, run.id, EvidenceType.DATA_PLAN.value, project_id=project_id,
+                data=plan_content.encode("utf-8"),
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("data_plan evidence store failed run=%s: %s", run.id, exc)
+        try:
+            store_data_evidence(
+                db, run.id, EvidenceType.FIXTURE_MANIFEST.value, project_id=project_id,
+                data=(fixture.manifest_json or "{}").encode("utf-8"),
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("fixture_manifest evidence store failed run=%s: %s", run.id, exc)
         return {"prepared": True, "fixture_id": fixture.id}
     except Exception as exc:  # noqa: BLE001 — data failure is never a business failure
         set_run_data_fail(db, run.id)

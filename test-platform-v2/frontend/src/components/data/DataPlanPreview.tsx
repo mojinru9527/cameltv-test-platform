@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/card'
 import { Check, ShieldCheck, Lock } from '@/lib/icons'
 import { DataPlanRiskBadge } from './DataPlanRiskBadge'
+import { SuccessStageBadge } from '@/components/trust/SuccessStageBadge'
 import {
   DATA_PLAN_STATUS_LABELS,
   DATA_PLAN_STEP_TYPE_LABELS,
@@ -42,7 +43,8 @@ export function DataPlanPreview({ plan, onApprove, approving }: DataPlanPreviewP
           策略 {DATA_PLAN_STRATEGY_LABELS[plan.strategy] ?? plan.strategy} · 版本 {plan.scenario_version_id}
           {plan.environment_id ? ` · 环境 ${plan.environment_id}` : ''}
         </CardDescription>
-        <CardAction>
+        <CardAction className="flex flex-col items-end gap-1.5">
+          <SuccessStageBadge plan={plan} />
           <Badge variant="secondary" className={statusMeta?.color}>
             {statusMeta?.label ?? plan.status}
           </Badge>

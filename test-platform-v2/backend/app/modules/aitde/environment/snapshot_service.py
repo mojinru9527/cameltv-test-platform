@@ -12,7 +12,10 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import APIException
-from app.modules.aitde.environment.fingerprint import compute_fingerprint_hash
+from app.modules.aitde.environment.fingerprint import (
+    compute_fingerprint_hash,
+    confidence_from_components,
+)
 from app.modules.aitde.execution import repository
 from app.modules.aitde.execution.models import EnvironmentSnapshot
 
@@ -52,6 +55,7 @@ def capture_snapshot(
             "manual_note": data.get("manual_note"),
             "fingerprint_hash": fingerprint_hash,
             "created_by_type": "AUTO" if not data.get("build_label") else "MANUAL",
+            "confidence": confidence_from_components(data),
         },
         environment_id=environment_id,
         mission_id=mission_id,

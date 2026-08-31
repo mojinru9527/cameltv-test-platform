@@ -28,8 +28,29 @@ class DatabaseDriverUnavailable(Exception):
     """Raised when the dialect/credentials needed to connect are unavailable."""
 
 
+class DatabaseQueryError(Exception):
+    """Raised when a query is rejectable: not allowlisted, unsafe, or failed.
+
+    Carries a stable ``code`` so callers never parse free text (no credential /
+    SQL detail leak): ``TABLE_NOT_ALLOWLISTED`` / ``ONLY_SELECT`` /
+    ``ONLY_WRITE`` / ``QUERY_FAILED``.
+    """
+
+    def __init__(self, code: str, detail: str = "") -> None:
+        super().__init__(f"{code}: {detail}" if detail else code)
+        self.code = code
+        self.detail = detail
+
+
 class DatabaseDriver:
-    """Base typed database driver."""
+    """Base typed database driver.
+
+    V3.9-R2 (DATA-001): adds real execution primitives on top of ``ping``. The
+    driver only ever executes a *validated* DataPlanStep SQL (never raw LLM SQL):
+    statement type is allowlisted (SELECT vs INSERT/UPDATE/DELETE), the target
+    table must be in the DataSource ``table_allowlist``, rows are capped, and
+    failures are reported by credential-free category.
+    """
 
     source_type: str = ""
 
@@ -59,11 +80,91 @@ class DatabaseDriver:
         # imported lazily so the package imports even without a DB driver installed
         from sqlalchemy import create_engine
 
+        if url.startswith("sqlite"):
+            return create_engine(url, pool_pre_ping=False)
         return create_engine(
             url,
             pool_pre_ping=False,
             connect_args={"connect_timeout": int(timeout)},
         )
+
+    def _table_allowlist(self) -> list[str]:
+        return list(self.config.get("table_allowlist") or [])
+
+    def _assert_table(self, table: str) -> None:
+        allow = self._table_allowlist()
+        if allow and str(table) not in allow:
+            raise DatabaseQueryError("TABLE_NOT_ALLOWLISTED", str(table))
+
+    def execute_select(
+        self,
+        sql: str,
+        params: dict[str, Any] | None = None,
+        *,
+        table: str | None = None,
+        row_limit: int = 100,
+        timeout: float = 5.0,
+    ) -> list[dict[str, Any]]:
+        """Run an allowlisted, parameterized SELECT capped to ``row_limit`` rows.
+
+        Rejects any statement that is not a bare SELECT (so a CTE/multi-statement
+        write trick can never slip through as a read), enforces the DataSource
+        ``table_allowlist``, and returns rows as sanitised dicts.
+        """
+        from sqlalchemy import text
+
+        stmt = str(sql).strip()
+        if not stmt.lower().startswith("select"):
+            raise DatabaseQueryError("ONLY_SELECT", stmt[:40])
+        if table:
+            self._assert_table(table)
+        engine = self._make_engine(self.build_url(), timeout)
+        try:
+            with engine.connect() as conn:
+                result = conn.execute(text(stmt), params or {})
+                columns = list(result.keys())
+                rows = result.fetchmany(max(1, int(row_limit)))
+                return [dict(zip(columns, row)) for row in rows]
+        except DatabaseQueryError:
+            raise
+        except Exception as exc:  # noqa: BLE001  never leak credentials / SQL
+            raise DatabaseQueryError("QUERY_FAILED", sanitize_failure(exc)) from exc
+        finally:
+            engine.dispose()
+
+    def execute_dml(
+        self,
+        sql: str,
+        params: dict[str, Any] | None = None,
+        *,
+        table: str | None = None,
+        timeout: float = 5.0,
+    ) -> dict[str, Any]:
+        """Run an allowlisted INSERT/UPDATE/DELETE inside an auto-commit txn.
+
+        Only a bare single DML statement is accepted; the target table must be
+        allowlisted. Returns ``{"rowcount": n}``. The caller (DataPlanExecutor)
+        is responsible for the enclosing lifecycle (BEGIN / capture BEFORE /
+        SELECT VERIFY / COMMIT / ROLLBACK) — this is the low-level primitive.
+        """
+        from sqlalchemy import text
+
+        stmt = str(sql).strip()
+        if not any(stmt.lower().startswith(k) for k in ("insert", "update", "delete")):
+            raise DatabaseQueryError("ONLY_WRITE", stmt[:40])
+        if table:
+            self._assert_table(table)
+        engine = self._make_engine(self.build_url(), timeout)
+        try:
+            with engine.begin() as conn:
+                result = conn.execute(text(stmt), params or {})
+                return {"rowcount": int(result.rowcount or 0)}
+        except DatabaseQueryError:
+            raise
+        except Exception as exc:  # noqa: BLE001  never leak credentials / SQL
+            raise DatabaseQueryError("QUERY_FAILED", sanitize_failure(exc)) from exc
+        finally:
+            engine.dispose()
 
     @staticmethod
     def _redact(value: str) -> str:

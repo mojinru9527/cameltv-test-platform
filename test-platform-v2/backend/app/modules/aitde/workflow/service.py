@@ -20,6 +20,7 @@ from app.core.config import settings
 from app.core.exceptions import APIException
 from app.modules.aitde.common.enums import (
     ApprovalStatus,
+    PolicyDecision,
     WorkflowStatus,
     WorkflowType,
     WorkerStatus,
@@ -326,6 +327,44 @@ def list_approvals(db: Session, project_id: int) -> list[dict[str, Any]]:
     ]
 
 
+def create_approval(
+    db: Session,
+    project_id: int,
+    action_type: str,
+    *,
+    mission_id: int | None = None,
+    run_id: int | None = None,
+    payload: dict[str, Any] | None = None,
+    temporal_workflow_id: str | None = None,
+    requested_by: int = 0,
+    policy_decision: str | None = None,
+) -> dict[str, Any]:
+    """Persist a REQUIRE_APPROVAL request so the workflow can wait on it.
+
+    V34-011 / V3.9-R3 (TEMP-002): this wires the repository ``create_approval``
+    (previously dead) into the service layer. The ``temporal_workflow_id`` is
+    stored in ``request_json`` so a later approve/reject can signal the waiting
+    workflow. The approval is never closed here — it stays PENDING until resolved.
+    """
+    request_json = dict(payload or {})
+    if temporal_workflow_id:
+        request_json["temporal_workflow_id"] = temporal_workflow_id
+    row = repository.create_approval(
+        db,
+        {
+            "project_id": project_id,
+            "mission_id": mission_id,
+            "run_id": run_id,
+            "action_type": action_type,
+            "request_json": json.dumps(request_json, ensure_ascii=False),
+            "policy_decision": policy_decision or PolicyDecision.REQUIRE_APPROVAL.value,
+            "status": ApprovalStatus.PENDING.value,
+            "requested_by": requested_by,
+        },
+    )
+    return approval_to_dict(row)
+
+
 def resolve_approval(
     db: Session, approval_id: int, project_id: int, approved: bool, approved_by: int
 ) -> dict[str, Any]:
@@ -363,6 +402,20 @@ def _extract_temporal_workflow_id(db: Session, row: Any) -> str | None:
     return None
 
 
+def _is_workflow_already_completed(exc: Exception) -> bool:
+    """True when the workflow already finished (an approval signal is then moot).
+
+    V3.9-R3 (TEMP-002): signaling an approval onto a workflow that already
+    completed is a benign race, not a failure — it must not be surfaced as a
+    broken approval nor swallowed as an unrelated error.
+    """
+    name = type(exc).__name__
+    message = str(exc)
+    if "AlreadyCompleted" in name or "already completed" in message.lower():
+        return True
+    return False
+
+
 def _signal_approval(temporal_workflow_id: str, payload: dict[str, Any]) -> None:
     import asyncio
 
@@ -372,7 +425,13 @@ def _signal_approval(temporal_workflow_id: str, payload: dict[str, Any]) -> None
     try:
         asyncio.run(_signal())
     except Exception as exc:  # noqa: BLE001 — approval persistence already done
-        logger.warning("[temporal] approval signal failed: %s", exc)
+        if _is_workflow_already_completed(exc):
+            logger.info(
+                "[temporal] workflow already completed; approval signal skipped: %s",
+                temporal_workflow_id,
+            )
+        else:
+            logger.warning("[temporal] approval signal failed: %s", exc)
 
 
 def approval_to_dict(row: Any) -> dict[str, Any]:

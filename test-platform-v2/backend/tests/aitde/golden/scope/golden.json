@@ -1,0 +1,22 @@
+[
+  {
+    "input": "需求：会员续费后状态应变为 ACTIVE，且余额扣减正确。",
+    "expected": {"scope_key": "membership-renew", "decision": "INCLUDE", "risk_level": "P1"},
+    "must_include": ["INCLUDE"],
+    "must_not_include": ["PROPOSED", "EXCLUDE"],
+    "risk_level": "P1",
+    "reviewer": "qa-team",
+    "version": 1,
+    "candidate": {"scope_key": "membership-renew", "decision": "INCLUDE", "risk_level": "P1"}
+  },
+  {
+    "input": "需求：只读查询历史账单，无写入副作用。",
+    "expected": {"scope_key": "billing-history", "decision": "INCLUDE", "risk_level": "P2"},
+    "must_include": ["INCLUDE", "billing-history"],
+    "must_not_include": ["PROPOSED"],
+    "risk_level": "P2",
+    "reviewer": "qa-team",
+    "version": 1,
+    "candidate": {"scope_key": "billing-history", "decision": "INCLUDE", "risk_level": "P2"}
+  }
+]

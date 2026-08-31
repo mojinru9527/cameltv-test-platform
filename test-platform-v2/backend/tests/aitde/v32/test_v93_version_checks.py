@@ -12,7 +12,8 @@ import json
 import pytest
 
 from app.core.exceptions import APIException
-from app.modules.aitde.data import cleanup_service, lease_service
+from app.modules.aitde.common.enums import FixtureStatus
+from app.modules.aitde.data import cleanup_service, lease_service, repository
 from app.modules.aitde.data.models import DataSource
 from app.modules.aitde.data.service import probe_data_source_connection
 from app.modules.aitde.data.strategies.db_fixture_builder import DbFixtureBuilder
@@ -79,13 +80,16 @@ def test_v93_non_allowlist_mutation_rejected(db):
 
 
 def test_v93_cleanup_idempotent_three_times(db, ready_fixture):
-    """Repeated cleanup returns a consistent SUCCEEDED (idempotent)."""
+    """V3.9-R2 (DATA-003): repeated cleanup on an unreachable source consistently
+    does NOT fake SUCCEEDED; only a truly verified CLEANED fixture returns the
+    idempotent no-op."""
     fixture = ready_fixture["fixture"]
     results = [cleanup_service.cleanup_fixture(db, fixture.id) for _ in range(3)]
-    assert all(r["status"] == "SUCCEEDED" for r in results)
-    # after the first, subsequent calls are idempotent no-ops
-    assert results[1]["idempotent"] is True
-    assert results[2]["idempotent"] is True
+    # No reachable DB -> never a fake SUCCEEDED; cleanup still runs to a terminal state.
+    assert all(r["status"] in ("SUCCEEDED", "FAILED", "PARTIAL") for r in results)
+    assert results[0]["status"] != "SUCCEEDED"
+    refreshed = repository.get_fixture(db, fixture.id)
+    assert refreshed.status != FixtureStatus.CLEANED.value
 
 
 def test_v93_db_password_never_in_result(db):

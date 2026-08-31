@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from app.modules.aitde.common.enums import Outcome
+from app.modules.aitde.common.enums import AssertionTrustStatus, Outcome
 
 
 @dataclass
@@ -74,3 +74,31 @@ def classify(input_: DecisionInput) -> str:
 
     # 8. All else is INCONCLUSIVE (never a silent PASS).
     return Outcome.INCONCLUSIVE.value
+
+
+def compute_run_trust(assertions: list) -> str:
+    """TRUST-007: the trust level of a Run's assertions.
+
+    A run is ``TRUSTED`` only when every AssertionResult is bound to a real
+    TestOracle (``oracle_source_type == TEST_ORACLE`` / trust_status ``TRUSTED``).
+    Any legacy (v1.x CommandPlan assert / historical) or invalid assertion degrades
+    the run to ``LEGACY_UNVERIFIED`` so a ``PASS`` can never silently claim a
+    Trusted Release Gate. A run with no assertions is ``LEGACY_UNVERIFIED``.
+    """
+    if not assertions:
+        return AssertionTrustStatus.LEGACY_UNVERIFIED.value
+    if any(
+        getattr(a, "trust_status", None) == AssertionTrustStatus.INVALID.value
+        for a in assertions
+    ):
+        return AssertionTrustStatus.INVALID.value
+    all_trusted = all(
+        getattr(a, "oracle_source_type", None) == "TEST_ORACLE"
+        and getattr(a, "trust_status", None) == AssertionTrustStatus.TRUSTED.value
+        for a in assertions
+    )
+    return (
+        AssertionTrustStatus.TRUSTED.value
+        if all_trusted
+        else AssertionTrustStatus.LEGACY_UNVERIFIED.value
+    )

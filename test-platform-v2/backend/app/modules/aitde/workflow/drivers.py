@@ -13,7 +13,6 @@ from __future__ import annotations
 import json
 import logging
 import re
-from datetime import datetime
 from typing import Any
 
 from app.temporal.activities import register_exec_hook
@@ -76,6 +75,8 @@ def _ensure_fixture_hook(payload: dict[str, Any]) -> dict[str, Any]:
         from app.modules.aitde.data.run_data_integration import to_run_data_context
 
         return to_run_data_context(db, run_id)
+    except Exception:  # noqa: BLE001 — a missing run is a non-critical context; degrade
+        return {"context": {}, "reason": "run_not_found", "idempotent": True}
     finally:
         db.close()
 
@@ -229,12 +230,40 @@ def _load_plan(db, run_id: int, project_id: int):
     return plan, version.id, run
 
 
+class _SecretRefMeta:
+    """Adapter so a plain dict ``secret_ref`` can be fed to WorkerSecretResolver."""
+
+    def __init__(self, data: dict[str, Any] | None) -> None:
+        data = data or {}
+        self.status = str(data.get("status") or "ACTIVE")
+        self.provider = str(data.get("provider") or "env").lower()
+        self.external_ref = data.get("external_ref") or ""
+        self.scope_json = json.dumps(data.get("scope") or {}, ensure_ascii=False)
+
+
+def _resolve_secret_value(plan: dict[str, Any]) -> str:
+    """SEC-001: resolve a SecretRef at worker runtime.
+
+    A CommandPlan may only carry a ``secret_ref`` (metadata); raw ``token`` /
+    ``password`` / ``auth_token`` fields are forbidden. If no ref is present the
+    value is empty — the caller NEVER falls back to a raw payload token field.
+    """
+    ref = plan.get("secret_ref") or (plan.get("auth") or {}).get("secret_ref")
+    if not ref:
+        return ""
+    from app.modules.aitde.workflow.secret_resolver import worker_secret_resolver
+
+    value = worker_secret_resolver.resolve(_SecretRefMeta(ref))
+    return str(value or "")
+
+
 def _resolve_token(payload: dict[str, Any], plan: dict[str, Any]) -> str:
-    token = payload.get("auth_token")
-    if token:
-        return token
-    auth = plan.get("auth") or {}
-    return auth.get("token") or ""
+    """DEPRECATED (SEC-001). Kept only as a shim to avoid breaking callers.
+
+    Returns the resolved SecretRef value instead of any raw payload token. The
+    old ``payload["auth_token"]`` / ``plan["auth"]["token"]`` writes are removed.
+    """
+    return _resolve_secret_value(plan)
 
 
 def _sub_token(value: Any, token: str) -> str:
@@ -287,19 +316,38 @@ def _compare_actual(actual: Any, op: str, expected: Any) -> bool:
 def _http():
     import httpx
 
-    return httpx.Client(trust_env=False, verify=False, timeout=25)
+    # SEC-002: never disable TLS verification in the formal runtime. An enterprise
+    # in-house CA is loaded via a client CA bundle (see _http_ca); INSECURE_DEV_ONLY
+    # is a dev-only policy and is guarded from the Trusted Release Gate.
+    return httpx.Client(trust_env=False, verify=True, timeout=25)
 
 
 def _resolve_command_plan_hook(payload: dict[str, Any]) -> dict[str, Any]:
     run_id = _real_run_id(payload)
     if run_id is None:
-        return {"plan": None, "reason": "no_run_id"}
+        return {"plan": None, "reason": "no_run_id", "trust_level": "LEGACY_UNVERIFIED"}
     db = _db()
     try:
+        from app.modules.aitde.common.enums import AssertionTrustStatus
+        from app.modules.aitde.workflow.oracle_engine import parse_command_plan
+
         plan, plan_version_id, _run = _load_plan(db, run_id, payload.get("project_id") or 0)
         if plan is None:
-            return {"plan": None, "reason": "no_plan"}
-        return {"plan": plan, "steps": plan.get("steps") or [], "command_plan_version_id": plan_version_id}
+            return {"plan": None, "reason": "no_plan", "trust_level": "LEGACY_UNVERIFIED"}
+        descriptor = parse_command_plan(plan)
+        return {
+            "plan": plan,
+            "steps": plan.get("steps") or [],
+            "commands": plan.get("commands") or [],
+            "command_plan_version_id": plan_version_id,
+            "schema_version": descriptor["schema_version"],
+            "is_v2": descriptor["is_v2"],
+            "trust_level": (
+                AssertionTrustStatus.TRUSTED.value
+                if descriptor["is_v2"]
+                else AssertionTrustStatus.LEGACY_UNVERIFIED.value
+            ),
+        }
     finally:
         db.close()
 
@@ -310,51 +358,115 @@ def _execute_commands_hook(payload: dict[str, Any]) -> dict[str, Any]:
         return {"echo": True, "reason": "no_run_id"}
     db = _db()
     try:
+        from app.modules.aitde.evidence.service import store_artifact
+        from app.modules.aitde.evidence.snapshot_sanitizer import snapshot_sanitizer
         from app.modules.aitde.execution.models import ExecutionStep
+        from app.modules.aitde.workflow.oracle_engine import parse_command_plan
 
         plan, plan_version_id, _run = _load_plan(db, run_id, payload.get("project_id") or 0)
         if not plan:
             return {"echo": True, "reason": "no_plan"}
-        token = _resolve_token(payload, plan)
-        base_url = _sub_token(plan.get("base_url") or "", token).rstrip("/")
+        project_id = payload.get("project_id") or 0
+        secret = _resolve_secret_value(plan)
+        base_url = str(plan.get("base_url") or "").rstrip("/")
+        descriptor = parse_command_plan(plan)
+        commands = descriptor["commands"] if descriptor["is_v2"] else descriptor["legacy_steps"]
+
         results: list[dict[str, Any]] = []
         seq = 0
-        for step in plan.get("steps") or []:
+        for cmd in commands:
             seq += 1
-            url = base_url + str(step.get("path") or "")
-            method = (step.get("method") or "GET").upper()
-            headers = {k: _sub_token(v, token) for k, v in (step.get("headers") or {}).items()}
-            params = step.get("params") or {}
-            body = step.get("body")
+            if descriptor["is_v2"]:
+                input_block = cmd.get("input") or {}
+                step_key = str(cmd.get("id") or "api")
+                method = str(input_block.get("method") or "GET").upper()
+                path = str(input_block.get("path") or "")
+                headers = input_block.get("headers") or {}
+                params = input_block.get("params") or {}
+                body = input_block.get("body")
+            else:
+                step_key = str(cmd.get("name") or "api")
+                method = str(cmd.get("method") or "GET").upper()
+                path = str(cmd.get("path") or "")
+                headers = cmd.get("headers") or {}
+                params = cmd.get("params") or {}
+                body = cmd.get("body")
+
+            url = base_url + path
+            # Substitute a resolved secret into headers BEFORE sanitizing so the
+            # token never persists in the step snapshot / evidence.
+            substituted_headers = {k: _sub_token(v, secret) for k, v in headers.items()}
+
+            status = None
+            resp_json: Any = None
+            error: str | None = None
             try:
                 client = _http()
                 try:
-                    resp = client.request(method, url, params=params, json=body if body is not None else None, headers=headers)
+                    resp = client.request(
+                        method, url, params=params,
+                        json=body if body is not None else None,
+                        headers=substituted_headers,
+                    )
                     status = resp.status_code
+                    try:
+                        resp_json = resp.json()
+                    except Exception:
+                        resp_json = resp.text[:2000]
                 finally:
                     client.close()
-                try:
-                    resp_json = resp.json()
-                except Exception:
-                    resp_json = resp.text[:2000]
-                st_row = ExecutionStep(
-                    run_id=run_id, sequence=seq,
-                    step_key=str(step.get("name") or "api"), step_type="API",
-                    status="SUCCEEDED" if status < 400 else "FAILED",
-                    input_snapshot_json=json.dumps(
-                        {"url": url, "method": method, "headers": headers, "params": params, "body": body},
-                        ensure_ascii=False,
-                    ),
-                    output_snapshot_json=json.dumps(
-                        {"status": status, "body": resp_json}, ensure_ascii=False
-                    ),
-                )
-                db.add(st_row)
-                db.commit()
-                results.append({"name": step.get("name"), "method": method, "http_status": status, "ok": status < 400})
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 db.rollback()
-                results.append({"name": step.get("name"), "method": method, "error": repr(exc)[:120]})
+                error = repr(exc)[:120]
+
+            req_snapshot = snapshot_sanitizer.sanitize_http_snapshot(
+                method=method, url=url, headers=substituted_headers,
+                params=params, body=body,
+            )
+            resp_snapshot = snapshot_sanitizer.sanitize_response_snapshot(
+                status=status if status is not None else 0, body=resp_json,
+            )
+            if error:
+                resp_snapshot["error"] = error
+
+            # Persist a sanitized step first so it survives even if storage fails;
+            # evidence is then attached (TRUST-003/004) and any storage failure
+            # degrades the run's evidence_status (never a fake 0-byte row).
+            st_row = ExecutionStep(
+                run_id=run_id, sequence=seq, step_key=step_key, step_type="API",
+                status="FAILED" if error or (status is not None and status >= 400) else "SUCCEEDED",
+                error_message=error,
+                input_snapshot_json=snapshot_sanitizer.dump(req_snapshot),
+                output_snapshot_json=snapshot_sanitizer.dump(resp_snapshot),
+                evidence_refs_json="[]",
+            )
+            db.add(st_row)
+            db.commit()
+            db.refresh(st_row)
+
+            ev_refs: list[int] = []
+            if error is None and status is not None:
+                for etype, snap in (("REQUEST", req_snapshot), ("RESPONSE", resp_snapshot)):
+                    try:
+                        artifact = store_artifact(
+                            db, project_id=project_id, run_id=run_id,
+                            evidence_type=etype, step_id=st_row.id,
+                            data=json.dumps(snap, ensure_ascii=False).encode("utf-8"),
+                            content_type="application/json",
+                        )
+                        ev_refs.append(artifact.id)
+                    except Exception as exc:  # noqa: BLE001
+                        logger.warning("evidence store failed for run=%s step=%s: %s", run_id, step_key, exc)
+                st_row.evidence_refs_json = json.dumps(ev_refs)
+                db.commit()
+
+            results.append({
+                "name": step_key, "method": method, "http_status": status,
+                "ok": bool(error is None and status is not None and status < 400),
+                "error": error,
+                "evidence_refs": json.loads(st_row.evidence_refs_json or "[]"),
+                "sanitized": True,
+            })
         return {"steps": results, "command_plan_version_id": plan_version_id}
     finally:
         db.close()
@@ -363,80 +475,23 @@ def _execute_commands_hook(payload: dict[str, Any]) -> dict[str, Any]:
 def _evaluate_oracles_hook(payload: dict[str, Any]) -> dict[str, Any]:
     run_id = _real_run_id(payload)
     if run_id is None:
-        return {"assertions": [], "reason": "no_run_id"}
+        return {"assertions": [], "reason": "no_run_id", "trust_level": "LEGACY_UNVERIFIED"}
     db = _db()
     try:
         from app.modules.aitde.execution import repository as exec_repo
-        from app.modules.aitde.execution.models import AssertionResult, EvidenceArtifact
+        from app.modules.aitde.workflow.oracle_engine import evaluate_oracles
 
-        plan, _plan_version_id, _run = _load_plan(db, run_id, payload.get("project_id") or 0)
-        if not plan:
-            return {"assertions": [], "reason": "no_plan"}
-        # read persisted responses (written by execute_commands)
-        resp_map: dict[str, dict[str, Any]] = {}
-        for s in exec_repo.list_steps(db, run_id, payload.get("project_id") or 0):
-            try:
-                resp_map[s.step_key] = json.loads(s.output_snapshot_json or "{}")
-            except (ValueError, TypeError):
-                resp_map[s.step_key] = {}
-
-        assertions: list[dict[str, Any]] = []
-        for step in plan.get("steps") or []:
-            step_key = str(step.get("name") or "api")
-            snap = resp_map.get(step_key) or {}
-            status = snap.get("status")
-            body = snap.get("body")
-            for assert_def in step.get("asserts") or []:
-                actual = None
-                reason = ""
-                passed = False
-                kind = assert_def.get("kind")
-                if kind == "status":
-                    actual = status
-                    reason = "http_status"
-                    passed = status == assert_def.get("expected")
-                elif kind == "json":
-                    actual = _json_path(body, assert_def.get("path"))
-                    reason = "jsonpath"
-                    passed = _compare_actual(actual, assert_def.get("op") or "equals", assert_def.get("expected"))
-                assertions.append(
-                    {
-                        "step": step_key, "kind": kind, "path": assert_def.get("path"),
-                        "expected": assert_def.get("expected"), "actual": actual,
-                        "result": "PASS" if passed else "FAIL", "reason": reason,
-                    }
-                )
-
-        # persist AssertionResult rows (required oracles) + sanitized REQUEST/RESPONSE evidence.
-        oracle_seq = 0
-        for a in assertions:
-            oracle_seq += 1
-            db.add(
-                AssertionResult(
-                    run_id=run_id, oracle_id=oracle_seq,
-                    oracle_snapshot_json=json.dumps({"kind": a["kind"], "path": a["path"]}),
-                    expected_json=json.dumps(a["expected"], ensure_ascii=False),
-                    actual_json=json.dumps(a["actual"], ensure_ascii=False),
-                    result=a["result"], reason_code=a["reason"],
-                    evidence_refs_json=json.dumps([]), evaluated_at=datetime.now(),
-                )
-            )
-        # REQUEST + RESPONSE evidence, sanitized (API run -> PASS needs both).
-        project_id = payload.get("project_id") or 0
-        for etype in ("REQUEST", "RESPONSE"):
-            db.add(
-                EvidenceArtifact(
-                    project_id=project_id, run_id=run_id, evidence_type=etype,
-                    storage_provider="driver", storage_uri="api-driver", content_hash="",
-                    content_type="application/json", size_bytes=0,
-                    sanitization_status="SANITIZED", sensitivity="normal",
-                )
-            )
-        db.commit()
+        run = exec_repo.get_run(db, run_id, payload.get("project_id") or 0)
+        if run is None:
+            return {"assertions": [], "reason": "run_not_found", "trust_level": "LEGACY_UNVERIFIED"}
+        result = evaluate_oracles(db, run, payload.get("project_id") or 0)
         return {
-            "assertions": assertions,
-            "pass": sum(1 for a in assertions if a["result"] == "PASS"),
-            "fail": sum(1 for a in assertions if a["result"] == "FAIL"),
+            "assertions": result["assertions"],
+            "pass": result["pass"],
+            "fail": result["fail"],
+            "not_evaluated": result.get("not_evaluated", 0),
+            "oracle_total": result.get("oracle_total", 0),
+            "trust_level": result.get("trust_level", "LEGACY_UNVERIFIED"),
         }
     finally:
         db.close()

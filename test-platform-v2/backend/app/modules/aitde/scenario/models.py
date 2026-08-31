@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.db import Base
 from app.models.base import TimestampMixin
 from app.modules.aitde.common.enums import (
+    OracleBindingType,
     ReviewStatus,
     ScenarioReviewStatus,
     RiskLevel,
@@ -80,3 +81,37 @@ class TestOracle(Base):
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
     reviewed_by: Mapped[int | None] = mapped_column(Integer, default=None)
     reviewed_at: Mapped[datetime | None] = mapped_column(default=None)
+
+
+class ScenarioOracleBinding(Base):
+    """OracleBinding (V3.9-R1 / TRUST-001).
+
+    ``scenario_oracle_bindings`` answers ONLY “where to read the Actual” for a given
+    TestOracle on a given adapter. The Expected never lives here; it stays in
+    ``TestOracle.expected_value_json``. This is the single point that binds a real
+    TestOracle to an observation selector so the Runtime can never apply a second,
+    plan-side Expected.
+    """
+
+    __tablename__ = "scenario_oracle_bindings"
+    __table_args__ = (
+        UniqueConstraint(
+            "scenario_version_id", "oracle_id", "binding_type",
+            name="uq_scenario_oracle_binding",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(Integer, default=0, index=True)
+    scenario_adapter_id: Mapped[int] = mapped_column(Integer, index=True)
+    scenario_version_id: Mapped[int] = mapped_column(Integer, index=True)
+    oracle_id: Mapped[int] = mapped_column(Integer, index=True)
+    binding_type: Mapped[str] = mapped_column(
+        String(16), default=OracleBindingType.API_JSONPATH.value, index=True
+    )
+    source_step_key: Mapped[str] = mapped_column(String(128), default="")
+    observation_selector_json: Mapped[str] = mapped_column(Text, default="{}")
+    status: Mapped[str] = mapped_column(String(16), default="ACTIVE", index=True)
+    binding_version: Mapped[str] = mapped_column(String(16), default="1.0")
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    validated_at: Mapped[datetime | None] = mapped_column(default=None)

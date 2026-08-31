@@ -45,6 +45,7 @@ from app.modules.aitde.scenario.models import (
 from app.modules.aitde.scope.models import ScopeItem, TestIntent
 from app.modules.aitde.smart_regression import diff as diff_mod
 from app.modules.aitde.smart_regression import repository as repo
+from app.modules.aitde.smart_regression.providers import change_provider_registry
 from app.modules.aitde.smart_regression.models import (
     ChangeItem,
     ChangeSet,
@@ -524,18 +525,26 @@ class ChangeSetService:
         current: dict,
         source_from_ref: str | None = None,
         source_to_ref: str | None = None,
+        source_type: str = "MANUAL",
+        trusted: bool = False,
     ) -> dict:
         change_type = (change_type or "").upper()
-        provider = ChangeSetService._DIFF.get(change_type)
-        if provider is None:
-            raise ValueError(f"unknown change_type: {change_type}")
-
-        if change_type == ChangeSetType.HISTORICAL_RISK.value:
-            items = provider(
-                current.get("signals") if isinstance(current, dict) else current
+        # V3.9-R4 (REG-001): the automatic path loads snapshots via the
+        # ChangeProvider registry; MANUAL caller-supplied payload is debug-only.
+        if source_type == "PROVIDER":
+            items = change_provider_registry.load_and_diff(
+                change_type, db, mission_id, source_from_ref, source_to_ref
             )
         else:
-            items = provider(baseline or {}, current or {})
+            provider = ChangeSetService._DIFF.get(change_type)
+            if provider is None:
+                raise ValueError(f"unknown change_type: {change_type}")
+            if change_type == ChangeSetType.HISTORICAL_RISK.value:
+                items = provider(
+                    current.get("signals") if isinstance(current, dict) else current
+                )
+            else:
+                items = provider(baseline or {}, current or {})
 
         content_hash = _content_hash(change_type, items)
         existing = repo.latest_change_set_for_mission(db, mission_id, change_type)
@@ -1008,6 +1017,55 @@ class RegressionSelector:
 # ────────────────────────────────────────────────────────────────────────────
 # CoverageGuard — V37-010
 # ────────────────────────────────────────────────────────────────────────────
+
+
+def list_unmapped_or_low_confidence_changes(
+    db: Session, project_id: int, mission_id: int, change_set_id: int | None = None
+) -> list[dict]:
+    """Return the change items with no lineage path (unmapped / low-confidence).
+
+    V3.9-R4 (REG-002): feeds the real unknown changes into CoverageGuard so an
+    unmapped P0/P1-like change forces a FULL fallback instead of a silent pass
+    (previously the API hardcoded ``[]``).
+    """
+    from app.modules.aitde.smart_regression.models import ChangeSet
+
+    if change_set_id is None:
+        latest = db.scalar(
+            select(ChangeSet)
+            .where(ChangeSet.mission_id == mission_id)
+            .order_by(ChangeSet.id.desc())
+            .limit(1)
+        )
+        if latest is None:
+            return []
+        change_set_id = latest.id
+    items = repo.list_change_items(db, change_set_id)
+    unknown: list[dict] = []
+    for item in items:
+        paths = ImpactAnalyzer._paths_for_item(db, project_id, mission_id, item)
+        if not paths:
+            unknown.append(
+                {
+                    "entity_type": item.entity_type,
+                    "entity_key": item.entity_key,
+                    "risk_hint": item.risk_hint,
+                }
+            )
+            continue
+        for p in paths:
+            scenario_id, _scenario_version_id = ImpactAnalyzer._resolve_scenario(db, p)
+            if scenario_id is None:
+                unknown.append(
+                    {
+                        "entity_type": item.entity_type,
+                        "entity_key": item.entity_key,
+                        "risk_hint": item.risk_hint,
+                        "path": p["path"],
+                    }
+                )
+                break
+    return unknown
 
 
 class CoverageGuard:

@@ -10,6 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import PageHeader from '@/components/PageHeader'
+import { CampaignProgress } from '@/components/trust/CampaignProgress'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
 import { fetchCampaign, type Campaign } from '@/api/continuous'
@@ -85,8 +86,11 @@ export default function CampaignDetailPage() {
             {' · '}创建：{campaign.created_at ? new Date(campaign.created_at).toLocaleString() : '-'}
           </div>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          选中场景 {scenarios.length} 个（不可变快照，run start 后锁定）。
+        <CardContent className="space-y-3 text-sm text-muted-foreground">
+          <p>
+            选中场景 {scenarios.length} 个（不可变快照，run start 后锁定）。
+          </p>
+          <CampaignProgress campaign={campaign} />
         </CardContent>
       </Card>
 

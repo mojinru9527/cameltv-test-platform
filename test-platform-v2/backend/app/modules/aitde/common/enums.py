@@ -980,3 +980,69 @@ class AutoRetryDecision(str, Enum):
     RETRY = "RETRY"
     NO_RETRY = "NO_RETRY"
     INVALID = "INVALID"
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# AITDE V3.9-R1 — Reality Gate Trust Chain shared enums.
+# OracleBinding 类型、Assertion/Oracle 来源与信任状态、Evidence 物理完整性状态。
+# These are the single source of truth introduced by the V3.9 Reality Gate
+# correction plan so a ``PASS`` / ``COMPLETE`` can always be traced to a real
+# TestOracle + physically-verified EvidenceArtifact.
+# ────────────────────────────────────────────────────────────────────────────
+
+
+class OracleBindingType(str, Enum):
+    """OracleBinding 绑定类型：回答 “Actual 去哪里拿”。
+
+    Expected 永远来自 ``TestOracle.expected_value_json``；Binding 只描述 observation
+    的取数路径（HTTP status / JSONPath / UI / DB column / event / log）。
+    """
+
+    API_STATUS = "API_STATUS"
+    API_JSONPATH = "API_JSONPATH"
+    UI_TEXT = "UI_TEXT"
+    UI_VISIBLE = "UI_VISIBLE"
+    UI_ATTRIBUTE = "UI_ATTRIBUTE"
+    DB_COLUMN = "DB_COLUMN"
+    EVENT_FIELD = "EVENT_FIELD"
+    LOG_PATTERN = "LOG_PATTERN"
+
+
+class OracleSourceType(str, Enum):
+    """AssertionResult / Oracle 的来源类型。
+
+    TEST_ORACLE                -> 真实 TestOracle（唯一“标准答案”，TRUSTED）
+    LEGACY_COMMAND_ASSERT      -> 旧 CommandPlan steps[].asserts（可执行但不可信）
+    LEGACY_EXECUTION           -> 历史 execution 自报（不可信）
+    """
+
+    TEST_ORACLE = "TEST_ORACLE"
+    LEGACY_COMMAND_ASSERT = "LEGACY_COMMAND_ASSERT"
+    LEGACY_EXECUTION = "LEGACY_EXECUTION"
+
+
+class AssertionTrustStatus(str, Enum):
+    """一条 Assertion 在 Release Gate 中能获得的信任级别。
+
+    TRUSTED            -> 绑定真实 TestOracle，可进入 Trusted Release Gate
+    LEGACY_UNVERIFIED  -> 来自 v1.x CommandPlan assert / 历史数据，不得阻塞或判决 Trusted PASS
+    INVALID            -> 引用不存在的 oracle / 已冻结但被篡改
+    """
+
+    TRUSTED = "TRUSTED"
+    LEGACY_UNVERIFIED = "LEGACY_UNVERIFIED"
+    INVALID = "INVALID"
+
+
+class EvidenceIntegrityStatus(str, Enum):
+    """EvidenceArtifact 物理完整性状态（TRUST-004）。
+
+    只有 storage_uri 非空 + content_hash 为合法 sha256 + size_bytes > 0 +
+    sanitization_status == SANITIZED + integrity_status == VERIFIED 的 artifact
+    才可用于 Required Evidence。任何一步失败不得标记 COMPLETE。
+    """
+
+    PENDING = "PENDING"
+    VERIFIED = "VERIFIED"
+    MISSING = "MISSING"
+    CORRUPT = "CORRUPT"

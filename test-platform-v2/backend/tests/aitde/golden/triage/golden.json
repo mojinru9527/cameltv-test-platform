@@ -1,0 +1,32 @@
+[
+  {
+    "input": "失败：/renew 返回 500，响应体为空。",
+    "expected": {"class": "BACKEND_5XX", "transient": true, "confidence": 0.85},
+    "must_include": ["BACKEND_5XX", "transient"],
+    "must_not_include": ["BUSINESS_FAIL", "AUTOMATION_FAIL"],
+    "risk_level": "P1",
+    "reviewer": "triage-team",
+    "version": 1,
+    "candidate": {"class": "BACKEND_5XX", "transient": true, "confidence": 0.85}
+  },
+  {
+    "input": "失败：/memberships 返回 200 但响应字段缺失，业务断言失败。",
+    "expected": {"class": "BUSINESS_FAIL", "transient": false, "confidence": 0.9},
+    "must_include": ["BUSINESS_FAIL"],
+    "must_not_include": ["BACKEND_5XX"],
+    "risk_level": "P0",
+    "reviewer": "triage-team",
+    "version": 1,
+    "candidate": {"class": "BUSINESS_FAIL", "transient": false, "confidence": 0.9}
+  },
+  {
+    "input": "失败：超时导致偶发 AUTOMATION_FAIL。",
+    "expected": {"class": "AUTOMATION_FAIL", "transient": true, "confidence": 0.7},
+    "must_include": ["AUTOMATION_FAIL", "transient"],
+    "must_not_include": ["BUSINESS_FAIL"],
+    "risk_level": "P2",
+    "reviewer": "triage-team",
+    "version": 1,
+    "candidate": {"class": "AUTOMATION_FAIL", "transient": true, "confidence": 0.7}
+  }
+]

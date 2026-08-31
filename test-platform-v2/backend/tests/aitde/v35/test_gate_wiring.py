@@ -21,9 +21,12 @@ from app.modules.aitde.continuous.models import (
 from app.modules.aitde.execution.models import EnvironmentSnapshot, ExecutionRun
 from app.modules.aitde.mission.models import Mission
 from app.modules.aitde.scenario.models import (
+    ScenarioOracleBinding,
+    TestOracle,
     TestScenario as ScenarioModel,
     TestScenarioVersion as ScenarioVersionModel,
 )
+from app.modules.aitde.scope.models import ScopeItem
 
 
 def _seed(
@@ -35,6 +38,9 @@ def _seed(
     build_fingerprint_hash: str = "fp-target",
     mission_current_contract_version_id: int | None = 100,
     outcome: str = "PASS",
+    scope_items: bool = True,
+    oracle_binding: bool = True,
+    run_id: int | None = 900,
 ) -> tuple[int, int]:
     """Seed a full G1-G10 graph: mission + contract, scenario, run, build."""
     db.add(
@@ -44,6 +50,13 @@ def _seed(
         )
     )
     db.add(ScenarioModel(id=1, project_id=1, mission_id=7, scenario_key="s1"))
+    if scope_items:
+        db.add(
+            ScopeItem(
+                mission_id=7, scope_key="s1", decision="INCLUDE",
+                review_status="APPROVED",
+            )
+        )
     db.add(
         ScenarioVersionModel(
             id=10, scenario_id=1, version_no=1, contract_version_id=100,
@@ -51,24 +64,39 @@ def _seed(
         )
     )
     db.add(
+        TestOracle(
+            id=11, scenario_version_id=10, oracle_key="o1", oracle_type="API",
+            expected_value_json='"OK"', required=True, review_status="APPROVED",
+        )
+    )
+    if oracle_binding:
+        db.add(
+            ScenarioOracleBinding(
+                scenario_adapter_id=1, scenario_version_id=10, oracle_id=11,
+                binding_type="API_JSONPATH", source_step_key="s1",
+                observation_selector_json='{"jsonpath":"$.status"}', status="ACTIVE",
+            )
+        )
+    db.add(
         EnvironmentSnapshot(
             id=50, environment_id=1, mission_id=7,
             fingerprint_hash=snapshot_fingerprint_hash,
         )
     )
-    db.add(
-        ExecutionRun(
-            id=900, project_id=1, mission_id=7, scenario_id=1,
-            scenario_version_id=10, contract_version_id=run_contract_version_id,
-            environment_id=1, environment_snapshot_id=50,
-            runtime_status="FINISHED", outcome=outcome,
-            evidence_status=evidence_status, trigger_type="MANUAL",
+    if run_id is not None:
+        db.add(
+            ExecutionRun(
+                id=run_id, project_id=1, mission_id=7, scenario_id=1,
+                scenario_version_id=10, contract_version_id=run_contract_version_id,
+                environment_id=1, environment_snapshot_id=50,
+                runtime_status="FINISHED", outcome=outcome,
+                evidence_status=evidence_status, trigger_type="MANUAL",
+            )
         )
-    )
     db.add(
         EnvironmentFingerprint(
             id=200, environment_id=1, fingerprint_hash=build_fingerprint_hash,
-            source_type="AUTO",
+            source_type="AUTO", confidence="HIGH",
         )
     )
     db.add(
@@ -89,7 +117,7 @@ def _seed(
     db.add(
         CampaignScenario(
             id=500, campaign_id=400, scenario_id=1, scenario_version_id=10,
-            required="REQUIRED", run_id=900,
+            required="REQUIRED", run_id=run_id,
         )
     )
     db.commit()
@@ -145,3 +173,31 @@ def test_gate_checks_explainable(db):
     # Every check must expose a human label + a detail summary (DoD §92).
     assert all(c["label"] for c in checks)
     assert all(c["detail"] for c in checks)
+
+
+def test_gate_g1_needs_decided_scope_not_vacuous(db):
+    # No scope items at all -> G1 must be False (never a bare "Scope Approved ✓").
+    campaign_id, build_id = _seed(db, scope_items=False)
+    gate = service.evaluate_gate(db, 1, 7, campaign_id, build_id)
+    checks = {c["gate"]: c for c in json.loads(gate["checks_json"])}
+    assert checks["G1_SCOPE_APPROVED"]["pass"] is False
+
+
+def test_gate_g3_g9_never_vacuous_pass(db):
+    # A required scenario with no run (executed=0) must FAIL, and G9 must not
+    # pass when env_checked == 0.
+    campaign_id, build_id = _seed(db, run_id=None)
+    gate = service.evaluate_gate(db, 1, 7, campaign_id, build_id)
+    assert gate["result"] == QualityGateResult.FAIL.value
+    checks = {c["gate"]: c for c in json.loads(gate["checks_json"])}
+    assert checks["G5_REQUIRED_SCENARIO_EXECUTED"]["pass"] is False
+    assert checks["G9_RUN_ENV_MATCHES_BUILD"]["pass"] is False
+
+
+def test_gate_g4_requires_oracle_binding_not_vacuous(db):
+    # A required oracle with NO ACTIVE OracleBinding must be G4 False (real query,
+    # never a hardcoded "oracle coverage ✓").
+    campaign_id, build_id = _seed(db, oracle_binding=False)
+    gate = service.evaluate_gate(db, 1, 7, campaign_id, build_id)
+    checks = {c["gate"]: c for c in json.loads(gate["checks_json"])}
+    assert checks["G4_ORACLE_COVERAGE_COMPLETE"]["pass"] is False

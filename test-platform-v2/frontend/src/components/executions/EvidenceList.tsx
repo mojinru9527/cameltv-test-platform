@@ -2,6 +2,7 @@ import { Badge } from '@/ui'
 import { EVIDENCE_TYPE_LABELS } from '@/api/executions'
 import type { Evidence } from '@/api/executions'
 import { formatBytes } from './format'
+import { EvidenceIntegrityBadge } from '@/components/trust/EvidenceIntegrityBadge'
 
 export default function EvidenceList({ evidence }: { evidence: Evidence[] }) {
   if (evidence.length === 0) {
@@ -23,6 +24,9 @@ export default function EvidenceList({ evidence }: { evidence: Evidence[] }) {
             <span>· {e.storage_provider}</span>
             <span>· {e.content_type}</span>
             <Badge variant="outline">{e.sanitization_status}</Badge>
+          </div>
+          <div className="mt-2">
+            <EvidenceIntegrityBadge evidence={e} />
           </div>
         </li>
       ))}

@@ -10,10 +10,11 @@ take precedence over an AI recommendation.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 from datetime import datetime
-from typing import Any
+from typing import Any, Callable
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -70,6 +71,29 @@ def _loads(raw: str, default: Any) -> Any:
         return json.loads(raw)
     except (TypeError, ValueError):
         return default
+
+
+def _snapshot_summary(raw: str | None) -> dict | None:
+    """Return a lean summary of an ExecutionStep snapshot (never raw private data).
+
+    The step snapshots are already sanitized by the driver; we additionally cap
+    long string values so the model prompt stays compact. The outer ``_sanitize``
+    drops any residual secret/PII keys."""
+    raw = raw or ""
+    if not raw:
+        return None
+    data = _loads(raw, None)
+    if data is None:
+        return {"text": str(raw)[:200]}
+    if isinstance(data, dict):
+        out: dict[str, Any] = {}
+        for key, value in data.items():
+            if isinstance(value, str) and len(value) > 300:
+                out[key] = value[:300]
+            else:
+                out[key] = value
+        return out
+    return {"value": str(data)[:300]}
 
 
 # Oracle / contract / expected fields that HealingPolicy must never let through &
@@ -142,24 +166,124 @@ def _sanitize(value: Any) -> Any:
 class FailureEvidencePackBuilder:
     """Build a minimal, already-sanitized context pack from a run's evidence.
 
-    Secrets / PII never enter the model: risky keys are dropped before the pack is
-    returned, and no formal Outcome change is ever produced.
+    V3.9-R5 (AI-001): the pack is now a real proof summary (ordered step timeline,
+    required-oracle pass/fail summary, sanitized request/response excerpts, evidence
+    artifact integrity, environment snapshot, fixture/cleanup state) rather than
+    bare run metadata. Secrets / PII never enter the model: risky keys are dropped
+    before the pack is returned, and no formal Outcome change is ever produced.
     """
 
     @staticmethod
     def build(db: Session, run_id: int) -> dict:
+        from app.modules.aitde.execution import repository as exec_repo
+        from app.modules.aitde.execution.models import EnvironmentSnapshot
+
         run = db.get(ExecutionRun, run_id)
         if run is None:
             raise ValueError(f"run {run_id} not found")
+        project_id = run.project_id
+
+        # Ordered step timeline with sanitized request/response summaries.
+        step_timeline = []
+        for s in exec_repo.list_steps(db, run_id, project_id):
+            step_timeline.append(
+                {
+                    "sequence": s.sequence,
+                    "step_key": s.step_key,
+                    "step_type": s.step_type,
+                    "status": s.status,
+                    "error_type": s.error_type,
+                    "error_message": _sanitize(s.error_message),
+                    "input": _snapshot_summary(s.input_snapshot_json),
+                    "output": _snapshot_summary(s.output_snapshot_json),
+                    "evidence_refs": _loads(s.evidence_refs_json, []),
+                }
+            )
+
+        # Required + evaluated oracle summary (pass/fail/not_evaluated).
+        oracle_summary = {"defined": 0, "pass": 0, "fail": 0, "not_evaluated": 0}
+        assertions = []
+        for a in exec_repo.list_assertions(db, run_id, project_id):
+            oracle_summary["defined"] += 1
+            if a.result == "PASS":
+                oracle_summary["pass"] += 1
+            elif a.result == "FAIL":
+                oracle_summary["fail"] += 1
+            elif a.result == "NOT_EVALUATED":
+                oracle_summary["not_evaluated"] += 1
+            assertions.append(
+                {
+                    "test_oracle_id": a.test_oracle_id,
+                    "oracle_source_type": a.oracle_source_type,
+                    "trust_status": a.trust_status,
+                    "result": a.result,
+                    "reason_code": a.reason_code,
+                    "evidence_refs": _loads(a.evidence_refs_json, []),
+                }
+            )
+
+        # Evidence artifact physical integrity (never raw bytes).
+        evidence = [
+            {
+                "id": e.id,
+                "evidence_type": e.evidence_type,
+                "storage_provider": e.storage_provider,
+                "content_hash_len": len(e.content_hash or ""),
+                "size_bytes": e.size_bytes,
+                "sanitization_status": e.sanitization_status,
+                "integrity_status": e.integrity_status,
+            }
+            for e in exec_repo.list_evidence(db, run_id, project_id)
+        ]
+
+        env_snapshot = None
+        if run.environment_snapshot_id:
+            env = db.get(EnvironmentSnapshot, run.environment_snapshot_id)
+            if env:
+                env_snapshot = {
+                    "build_label": env.build_label,
+                    "openapi_hash": env.openapi_hash,
+                    "db_schema_version": env.db_schema_version,
+                    "fingerprint_hash": env.fingerprint_hash,
+                }
+
+        # Fixture / cleanup state (best-effort; absent when no V3.2 data ran).
+        from app.modules.aitde.data.models import DataFixture
+
+        fixture_state = None
+        with contextlib.suppress(Exception):
+            fixture = (
+                db.query(DataFixture)
+                .filter(DataFixture.run_id == run_id)
+                .order_by(DataFixture.id.desc())
+                .first()
+            )
+            if fixture:
+                fixture_state = {
+                    "id": fixture.id,
+                    "strategy": fixture.strategy,
+                    "status": fixture.status,
+                    "namespace": fixture.namespace,
+                    "cleanup_status": fixture.cleanup_status,
+                }
+
         pack = {
             "run_id": run.id,
             "project_id": run.project_id,
             "mission_id": run.mission_id,
             "scenario_id": run.scenario_id,
             "scenario_version_id": run.scenario_version_id,
+            "contract_version_id": run.contract_version_id,
+            "environment_id": run.environment_id,
+            "environment_snapshot": env_snapshot,
+            "fixture_state": fixture_state,
             "outcome": run.outcome,
             "runtime_status": run.runtime_status,
-            "environment_id": run.environment_id,
+            "duration_ms": run.duration_ms,
+            "step_timeline": step_timeline,
+            "oracle_summary": oracle_summary,
+            "assertions": assertions,
+            "evidence": evidence,
             "sanitized": True,
         }
         # Sanitize any caller-supplied context; drop secret/PII keys.
@@ -169,6 +293,64 @@ class FailureEvidencePackBuilder:
 # ────────────────────────────────────────────────────────────────────────────
 # FailureTriageAgent — V38-002 / HypothesisReviewService — V38-003
 # ────────────────────────────────────────────────────────────────────────────
+
+
+class FailureTriageRuleEngine:
+    """V3.9-R5 (AI-002): deterministic rule-based triage fallback.
+
+    Classifies an Outcome into a FailureClassification (+ confidence + suggested
+    checks) without any model. Used when no IntelligenceProvider is configured;
+    a real LLM-backed agent runs first and falls back to this engine.
+    """
+
+    @staticmethod
+    def classify(outcome: str | None) -> FailureClassification:
+        mapping: dict[str, FailureClassification] = {
+            Outcome.BUSINESS_FAIL.value: FailureClassification.BUSINESS_LOGIC_SUSPECTED,
+            Outcome.AUTOMATION_FAIL.value: FailureClassification.AUTOMATION_ISSUE_SUSPECTED,
+            Outcome.DATA_FAIL.value: FailureClassification.DATA_ISSUE_SUSPECTED,
+            Outcome.ENV_FAIL.value: FailureClassification.ENV_ISSUE_SUSPECTED,
+            Outcome.ASSERTION_ERROR.value: FailureClassification.AUTOMATION_ISSUE_SUSPECTED,
+            Outcome.BLOCKED.value: FailureClassification.ENV_ISSUE_SUSPECTED,
+            Outcome.INCONCLUSIVE.value: FailureClassification.UNKNOWN,
+        }
+        return mapping.get((outcome or "").upper(), FailureClassification.UNKNOWN)
+
+    @staticmethod
+    def confidence(classification: FailureClassification) -> float:
+        return {
+            FailureClassification.BUSINESS_LOGIC_SUSPECTED: 0.87,
+            FailureClassification.AUTOMATION_ISSUE_SUSPECTED: 0.78,
+            FailureClassification.DATA_ISSUE_SUSPECTED: 0.74,
+            FailureClassification.ENV_ISSUE_SUSPECTED: 0.7,
+            FailureClassification.FLAKY_SUSPECTED: 0.65,
+            FailureClassification.UNKNOWN: 0.4,
+        }.get(classification, 0.4)
+
+    @staticmethod
+    def suggested_checks(classification: FailureClassification) -> list[str]:
+        return {
+            FailureClassification.BUSINESS_LOGIC_SUSPECTED: [
+                "verify expected value against contract",
+                "confirm the assertion is a required oracle",
+            ],
+            FailureClassification.AUTOMATION_ISSUE_SUSPECTED: [
+                "inspect locator / wait strategy",
+                "re-check browser synchronization",
+            ],
+            FailureClassification.DATA_ISSUE_SUSPECTED: [
+                "confirm fixture freshness",
+                "validate preconditions",
+            ],
+            FailureClassification.ENV_ISSUE_SUSPECTED: [
+                "confirm environment / network reachability",
+            ],
+            FailureClassification.FLAKY_SUSPECTED: [
+                "re-run to confirm transient",
+                "inspect sample set for intermittent error",
+            ],
+            FailureClassification.UNKNOWN: ["request manual review"],
+        }.get(classification, ["request manual review"])
 
 
 class FailureTriageAgent:
@@ -194,6 +376,11 @@ class FailureTriageAgent:
         # Outcome is read, never written.
         classification = FailureTriageAgent._classify(run.outcome)
         pack = FailureEvidencePackBuilder.build(db, run_id)
+        # V3.9-R5 (AI-001/002): evidence refs are real EvidenceArtifact ids from the
+        # pack, never the whole run — so a hypothesis is traceable to actual proof.
+        evidence_refs = [{"type": "evidence", "id": e["id"]} for e in pack.get("evidence", [])]
+        if not evidence_refs:
+            evidence_refs = [{"type": "run", "id": run.id}]
         summary = (
             f"run {run.id} outcome {run.outcome} classified as {classification.value} "
             f"over sanitized evidence {len(pack)} fields"
@@ -205,7 +392,7 @@ class FailureTriageAgent:
                 "hypothesis_type": classification.value,
                 "summary": summary,
                 "confidence": FailureTriageAgent._confidence(classification),
-                "evidence_refs_json": _dumps([{"type": "run", "id": run.id}]),
+                "evidence_refs_json": _dumps(evidence_refs),
                 "suggested_checks_json": _dumps(
                     FailureTriageAgent._suggested_checks(classification)
                 ),
@@ -226,58 +413,16 @@ class FailureTriageAgent:
 
     @staticmethod
     def _classify(outcome: str | None) -> FailureClassification:
-        mapping: dict[str, FailureClassification] = {
-            Outcome.BUSINESS_FAIL.value: (
-                FailureClassification.BUSINESS_LOGIC_SUSPECTED
-            ),
-            Outcome.AUTOMATION_FAIL.value: (
-                FailureClassification.AUTOMATION_ISSUE_SUSPECTED
-            ),
-            Outcome.DATA_FAIL.value: FailureClassification.DATA_ISSUE_SUSPECTED,
-            Outcome.ENV_FAIL.value: FailureClassification.ENV_ISSUE_SUSPECTED,
-            Outcome.ASSERTION_ERROR.value: (
-                FailureClassification.AUTOMATION_ISSUE_SUSPECTED
-            ),
-            Outcome.BLOCKED.value: FailureClassification.ENV_ISSUE_SUSPECTED,
-            Outcome.INCONCLUSIVE.value: FailureClassification.UNKNOWN,
-        }
-        return mapping.get((outcome or "").upper(), FailureClassification.UNKNOWN)
+        # V3.9-R5 (AI-002): rule-engine fallback (no model).
+        return FailureTriageRuleEngine.classify(outcome)
 
     @staticmethod
     def _confidence(classification: FailureClassification) -> float:
-        return {
-            FailureClassification.BUSINESS_LOGIC_SUSPECTED: 0.87,
-            FailureClassification.AUTOMATION_ISSUE_SUSPECTED: 0.78,
-            FailureClassification.DATA_ISSUE_SUSPECTED: 0.74,
-            FailureClassification.ENV_ISSUE_SUSPECTED: 0.7,
-            FailureClassification.FLAKY_SUSPECTED: 0.65,
-            FailureClassification.UNKNOWN: 0.4,
-        }.get(classification, 0.4)
+        return FailureTriageRuleEngine.confidence(classification)
 
     @staticmethod
     def _suggested_checks(classification: FailureClassification) -> list[str]:
-        return {
-            FailureClassification.BUSINESS_LOGIC_SUSPECTED: [
-                "verify expected value against contract",
-                "confirm the assertion is a required oracle",
-            ],
-            FailureClassification.AUTOMATION_ISSUE_SUSPECTED: [
-                "inspect locator / wait strategy",
-                "re-check browser synchronization",
-            ],
-            FailureClassification.DATA_ISSUE_SUSPECTED: [
-                "confirm fixture freshness",
-                "validate preconditions",
-            ],
-            FailureClassification.ENV_ISSUE_SUSPECTED: [
-                "confirm environment / network reachability",
-            ],
-            FailureClassification.FLAKY_SUSPECTED: [
-                "re-run to confirm transient",
-                "inspect sample set for intermittent error",
-            ],
-            FailureClassification.UNKNOWN: ["request manual review"],
-        }.get(classification, ["request manual review"])
+        return FailureTriageRuleEngine.suggested_checks(classification)
 
     @staticmethod
     def _hypothesis_dict(h: FailureHypothesis, run: ExecutionRun | None) -> dict:
@@ -933,6 +1078,11 @@ class PromptEvaluationService:
 
     @staticmethod
     def evaluate(db: Session, values: dict) -> dict:
+        # V3.9-R5 (AI-003): an externally-computed evaluation is an UNTRUSTED
+        # import — it is recorded (for observability) but never marks a golden
+        # release gate as passed. Trusted scores come only from ``run_suite``.
+        metrics = dict(values.get("metrics", {}))
+        metrics.setdefault("_trusted", False)
         row = repo.create_model_evaluation(
             db,
             {
@@ -940,12 +1090,149 @@ class PromptEvaluationService:
                 "model_ref": values["model_ref"],
                 "prompt_versions_json": _dumps(values.get("prompt_versions", [])),
                 "status": values.get("status", ModelEvaluationStatus.COMPLETED.value),
-                "metrics_json": _dumps(values.get("metrics", {})),
+                "metrics_json": _dumps(metrics),
                 "artifact_uri": values.get("artifact_uri"),
             },
         )
         db.flush()
         return PromptEvaluationService._dict(row)
+
+    @staticmethod
+    def import_external_evaluation(db: Session, values: dict) -> dict:
+        """Rename of the raw external import path (plan §70). Always untrusted."""
+        return PromptEvaluationService.evaluate(db, values)
+
+    @staticmethod
+    def _score_sample(sample: dict, output: Any) -> dict:
+        """Score one golden sample against its expected / must_include constraints."""
+        import json as _json
+
+        reasons: list[str] = []
+        text = _json.dumps(output, ensure_ascii=False) if not isinstance(output, str) else output
+        ok = True
+        for needle in list(sample.get("must_include") or []):
+            if str(needle) not in text:
+                ok = False
+                reasons.append(f"missing must_include:{needle}")
+        for forbidden in list(sample.get("must_not_include") or []):
+            if str(forbidden) in text:
+                ok = False
+                reasons.append(f"present must_not_include:{forbidden}")
+        expected = sample.get("expected")
+        if ok and isinstance(expected, dict) and isinstance(output, dict):
+            for k, v in expected.items():
+                if output.get(k) != v:
+                    ok = False
+                    reasons.append(f"expected[{k}]!={v!r} got={output.get(k)!r}")
+        return {"sample": sample, "ok": ok, "reasons": reasons}
+
+    @staticmethod
+    def run_suite(
+        db: Session,
+        evaluation_suite: str,
+        model_ref: str,
+        samples: list[dict],
+        evaluator: Callable[[dict], Any] | None = None,
+        prompt_versions: list[str] | None = None,
+    ) -> dict:
+        """Run a golden suite: evaluate each sample, score it, persist a TRUSTED run.
+
+        The default ``evaluator`` returns a sample's ``candidate`` (a deterministic
+        harness); a real runner injects the model/prompt invocation. The metrics
+        carry ``_trusted=True`` so only this path can drive a golden release gate.
+        """
+        evaluator = evaluator or (lambda s: s.get("candidate"))
+        results = []
+        for sample in samples:
+            output = evaluator(sample)
+            results.append(PromptEvaluationService._score_sample(sample, output))
+        metrics = PromptEvaluationService.score_suite(results)
+        metrics["_trusted"] = True
+        metrics["_source"] = "golden_suite"
+        row = repo.create_model_evaluation(
+            db,
+            {
+                "evaluation_suite": evaluation_suite,
+                "model_ref": model_ref,
+                "prompt_versions_json": _dumps(prompt_versions or []),
+                "status": ModelEvaluationStatus.COMPLETED.value,
+                "metrics_json": _dumps(metrics),
+                "artifact_uri": None,
+            },
+        )
+        db.flush()
+        out = PromptEvaluationService._dict(row)
+        out["results"] = results
+        return out
+
+    @staticmethod
+    def score_suite(results: list[dict]) -> dict:
+        """Aggregate per-sample scores into ``{n, correct, accuracy}``."""
+        n = len(results)
+        correct = sum(1 for r in results if r.get("ok"))
+        accuracy = (correct / n) if n else 0.0
+        return {
+            "n": n,
+            "correct": correct,
+            "accuracy": round(float(accuracy), 4),
+        }
+
+    @staticmethod
+    def compare_baseline(db: Session, evaluation_suite: str, baseline_suite: str) -> dict:
+        """Compare the latest trusted score for a suite against a stored baseline."""
+        latest = PromptEvaluationService._latest_trusted(db, evaluation_suite)
+        baseline = PromptEvaluationService._latest_trusted(db, baseline_suite)
+        if latest is None or baseline is None:
+            return {
+                "ok": False,
+                "status": "BLOCKED",
+                "reason": "INSUFFICIENT_SAMPLES",
+                "current": None,
+                "baseline": None,
+            }
+        cur_acc = float(_loads(latest.metrics_json, {}).get("accuracy", 0.0))
+        base_acc = float(_loads(baseline.metrics_json, {}).get("accuracy", 0.0))
+        regressed = cur_acc < base_acc
+        return {
+            "ok": not regressed,
+            "status": "REGRESSED" if regressed else "CLEAN",
+            "reason": "below_baseline" if regressed else "at_or_above_baseline",
+            "current": cur_acc,
+            "baseline": base_acc,
+            "delta": round(cur_acc - base_acc, 4),
+        }
+
+    @staticmethod
+    def release_decision(db: Session, evaluation_suite: str) -> dict:
+        """Golden release gate: only a TRUSTED run_suite score can PASS."""
+        latest = PromptEvaluationService._latest_trusted(db, evaluation_suite)
+        if latest is None:
+            return {
+                "ok": False,
+                "status": "BLOCKED",
+                "passed": False,
+                "reason": "INSUFFICIENT_SAMPLES",
+                "score": None,
+            }
+        score = float(_loads(latest.metrics_json, {}).get("accuracy", 0.0))
+        passed = score >= PromptEvaluationService.REGRESSION_THRESHOLD
+        return {
+            "ok": passed,
+            "status": "PASS" if passed else "FAIL",
+            "passed": passed,
+            "score": score,
+            "threshold": PromptEvaluationService.REGRESSION_THRESHOLD,
+            "reason": "passed" if passed else "below golden threshold — block release",
+        }
+
+    @staticmethod
+    def _latest_trusted(db: Session, evaluation_suite: str) -> ModelEvaluationRun | None:
+        for e in sorted(repo.list_model_evaluations(db), key=lambda r: r.id, reverse=True):
+            if e.evaluation_suite != evaluation_suite:
+                continue
+            if bool(_loads(e.metrics_json, {}).get("_trusted", False)):
+                return e
+        return None
 
     @staticmethod
     def list(db: Session) -> list[dict]:
@@ -962,7 +1249,14 @@ class PromptEvaluationService:
             if e.evaluation_suite == evaluation_suite
         ]
         if len(runs) < 2:
-            return {"ok": True, "reason": "insufficient samples", "passed": True}
+            # V3.9-R5 (AI-004): insufficient samples is BLOCKED, not a pass.
+            return {
+                "ok": False,
+                "status": "BLOCKED",
+                "passed": False,
+                "reason": "INSUFFICIENT_SAMPLES",
+                "score": None,
+            }
         latest = max(runs, key=lambda e: e.id)
         score = float(_loads(latest.metrics_json, {}).get("accuracy", 0.0))
         passed = score >= PromptEvaluationService.REGRESSION_THRESHOLD

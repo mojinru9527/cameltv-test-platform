@@ -2,6 +2,7 @@ import { Badge } from '@/ui'
 import { EVIDENCE_TYPE_LABELS } from '@/api/executions'
 import type { Evidence } from '@/api/executions'
 import { formatBytes } from './format'
+import { EvidenceIntegrityBadge } from '@/components/trust/EvidenceIntegrityBadge'
 
 export default function ReplayEvidenceViewer({ evidence }: { evidence: Evidence | null }) {
   if (!evidence) {
@@ -47,6 +48,8 @@ export default function ReplayEvidenceViewer({ evidence }: { evidence: Evidence 
           <dd>{evidence.sensitivity}</dd>
         </div>
       </dl>
+
+      <EvidenceIntegrityBadge evidence={evidence} />
 
       <p className="break-all rounded-lg border p-2 font-mono text-xs">{evidence.storage_uri}</p>
 

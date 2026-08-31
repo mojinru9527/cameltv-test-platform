@@ -6,11 +6,13 @@ so a broken store can never masquerade as proof.
 """
 from __future__ import annotations
 
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import APIException
 from app.integrations.object_storage import StorageError, get_storage
-from app.modules.aitde.common.enums import SanitizationStatus
+from app.modules.aitde.common.enums import EvidenceIntegrityStatus, SanitizationStatus
 from app.modules.aitde.evidence.sanitizer import sanitize
 from app.modules.aitde.execution import repository
 from app.modules.aitde.execution.models import EvidenceArtifact
@@ -50,6 +52,14 @@ def store_artifact(
             code=503, msg=f"证据存储失败：{exc}", http_status=503
         ) from exc
 
+    # V3.9-R1 (TRUST-004): verify the object is physically present after PUT.
+    integrity_status = EvidenceIntegrityStatus.MISSING.value
+    try:
+        if storage.exists(uri):
+            integrity_status = EvidenceIntegrityStatus.VERIFIED.value
+    except Exception:  # noqa: BLE001 — a failed HEAD must not claim VERIFIED
+        integrity_status = EvidenceIntegrityStatus.PENDING.value
+
     row = repository.create_evidence(
         db,
         {
@@ -65,6 +75,10 @@ def store_artifact(
             "sanitization_status": sanitization_status,
             "sensitivity": sensitivity,
             "retention_class": retention_class,
+            "integrity_status": integrity_status,
+            "storage_verified_at": datetime.now() if integrity_status == EvidenceIntegrityStatus.VERIFIED.value else None,
+            "sanitizer_version": "evidence.sanitizer",
+            "storage_etag": None,
         },
     )
     return row

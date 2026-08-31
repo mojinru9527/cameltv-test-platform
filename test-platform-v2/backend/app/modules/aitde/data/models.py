@@ -172,6 +172,14 @@ class FixtureEntity(Base):
     before_snapshot_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
     after_snapshot_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
     cleanup_action_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # V3.9-R2 (DATA-003): physical execution facts — did the runtime really create /
+    # find / verify the entity, and was the cleanup executed + verified.
+    provision_step_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    physical_status: Mapped[str] = mapped_column(String(16), default="PENDING", index=True)
+    verification_status: Mapped[str] = mapped_column(String(16), default="PENDING", index=True)
+    verified_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    cleanup_status: Mapped[str] = mapped_column(String(16), default="", index=True)
+    cleanup_verified_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
 
 class FixtureLease(Base):

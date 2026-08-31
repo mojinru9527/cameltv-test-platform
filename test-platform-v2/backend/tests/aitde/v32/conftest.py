@@ -1,8 +1,11 @@
 """Shared AITDE V3.2 unit-test fixtures (in-memory SQLite)."""
 from __future__ import annotations
 
+import os
+import tempfile
+
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -14,6 +17,17 @@ import app.modules.aitde.scenario.models  # noqa: F401  registers scenario table
 import app.modules.aitde.mission.models  # noqa: F401  registers mission tables
 import app.modules.aitde.contract.models  # noqa: F401  registers contract tables
 import app.modules.aitde.execution.models  # noqa: F401  registers execution tables
+
+from app.modules.aitde.drivers.database.base import DatabaseDriver
+
+
+class UserSqliteDriver(DatabaseDriver):
+    """Real sqlite DataSource driver backing DB_FIXTURE provisioning in tests."""
+
+    source_type = "SQLITE"
+
+    def build_url(self) -> str:
+        return f"sqlite:///{self.config['db_path']}"
 
 
 @pytest.fixture()
@@ -34,7 +48,32 @@ def db():
 
 
 @pytest.fixture()
-def ready_fixture(db):
+def patched_db_driver(monkeypatch):
+    """Patch build_data_driver to a REAL sqlite source so provisioning executes.
+
+    V3.9-R2 (DATA-002) makes provisioning a real physical effect + verify; these
+    legacy V32 fixtures must therefore back the DataSource with a real DB rather
+    than rely on the recipe-only behaviour the reality gate removes.
+    """
+    fd, path = tempfile.mkstemp(suffix=".db")
+    os.close(fd)
+    engine = create_engine(f"sqlite:///{path}")
+    with engine.begin() as conn:
+        conn.execute(text("CREATE TABLE user (id INTEGER PRIMARY KEY, status TEXT)"))
+    engine.dispose()
+    driver = UserSqliteDriver({"db_path": path, "table_allowlist": ["user"]}, "ref")
+    monkeypatch.setattr(
+        "app.modules.aitde.data.executors.data_plan_executor.build_data_driver",
+        lambda s: driver,
+    )
+    try:
+        yield driver
+    finally:
+        os.remove(path)
+
+
+@pytest.fixture()
+def ready_fixture(db, patched_db_driver):
     """A READY fixture produced from a scenario version + readonly source."""
     import json as _json
 
