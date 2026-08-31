@@ -400,3 +400,65 @@ class CompatibilityPolicy:
             ),
             http_status=410,
         )
+
+
+class TestCaseProjectionPolicy:
+    """V40-004: a scenario-bound TestCase is a read-only functional projection.
+
+    A TestCase becomes scenario-bound once a ``legacy_object_mappings`` row maps
+    it (legacy_type=TEST_CASE) to the canonical Scenario. When bound, the
+    business-expected fields are read-only: mutating them directly would create a
+    second source of truth, so the write is rejected and the caller is routed to
+    the ChangeProposal path (plan §5).
+    """
+
+    BUSINESS_EXPECTED_FIELDS = frozenset({"expected_result", "steps", "api_assertions"})
+    _SCENARIO_CANONICAL = frozenset({"TEST_SCENARIO", "SCENARIO"})
+    _BOUND_STATUSES = frozenset({MigrationStatus.MAPPED.value, MigrationStatus.VERIFIED.value})
+
+    @staticmethod
+    def scenario_binding(db: Session, project_id: int, test_case_id: int) -> dict | None:
+        """Return the scenario projection binding for a TestCase (or None)."""
+        mapping = db.scalar(
+            select(LegacyObjectMapping).where(
+                LegacyObjectMapping.legacy_type == LegacyObjectType.TEST_CASE.value,
+                LegacyObjectMapping.legacy_id == test_case_id,
+                LegacyObjectMapping.migration_status.in_(
+                    list(TestCaseProjectionPolicy._BOUND_STATUSES)
+                ),
+            )
+        )
+        if mapping is None:
+            return None
+        if mapping.canonical_type not in TestCaseProjectionPolicy._SCENARIO_CANONICAL:
+            return None
+        return {
+            "mapping_id": mapping.id,
+            "canonical_type": mapping.canonical_type,
+            "canonical_id": mapping.canonical_id,
+            "migration_status": mapping.migration_status,
+        }
+
+    @staticmethod
+    def enforce_business_expected_write(
+        db: Session, project_id: int, test_case_id: int, updates: dict
+    ) -> None:
+        binding = TestCaseProjectionPolicy.scenario_binding(db, project_id, test_case_id)
+        if binding is None:
+            return
+        changed = [
+            f for f in TestCaseProjectionPolicy.BUSINESS_EXPECTED_FIELDS
+            if f in updates and updates.get(f) is not None
+        ]
+        if not changed:
+            return
+        from app.core.exceptions import APIException
+
+        raise APIException(
+            code=409,
+            msg=(
+                "该用例已绑定 Scenario（read-only projection）；业务期望字段 "
+                f"{', '.join(sorted(changed))} 不可直接修改，请通过 ChangeProposal 流程变更"
+            ),
+            http_status=409,
+        )
