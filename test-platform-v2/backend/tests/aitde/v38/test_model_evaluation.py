@@ -72,6 +72,23 @@ def test_regression_check_below_threshold_blocks(db):
     assert check["score"] == 0.85
 
 
+def test_regression_check_insufficient_samples_is_blocked(db):
+    # V3.9-R5 (AI-004): <2 runs must be BLOCKED, never passed.
+    service.PromptEvaluationService.evaluate(
+        db,
+        {
+            "evaluation_suite": "golden",
+            "model_ref": "only-run",
+            "metrics": {"accuracy": 0.99},
+        },
+    )
+    check = service.PromptEvaluationService.check_regression(db, "golden")
+    assert check["passed"] is False
+    assert check["ok"] is False
+    assert check["status"] == "BLOCKED"
+    assert check["reason"] == "INSUFFICIENT_SAMPLES"
+
+
 def test_auto_retry_never_retries_business_fail(db):
     _run(db, "BUSINESS_FAIL", 1)
     decision = service.AutoRetryPolicy.decide(db, 1)

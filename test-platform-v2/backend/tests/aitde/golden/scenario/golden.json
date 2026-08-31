@@ -1,0 +1,22 @@
+[
+  {
+    "input": "场景：过期会员调用 /renew 后应返回 ACTIVE 状态。",
+    "expected": {"scenario_key": "SC-renew-expired", "required": true, "risk_level": "P0"},
+    "must_include": ["renew", "required"],
+    "must_not_include": ["optional"],
+    "risk_level": "P0",
+    "reviewer": "scenario-team",
+    "version": 1,
+    "candidate": {"scenario_key": "SC-renew-expired", "required": true, "risk_level": "P0"}
+  },
+  {
+    "input": "场景：未登录用户访问订单详情应返回 401。",
+    "expected": {"scenario_key": "SC-order-unauth", "required": true, "risk_level": "P1"},
+    "must_include": ["401", "required"],
+    "must_not_include": ["optional"],
+    "risk_level": "P1",
+    "reviewer": "scenario-team",
+    "version": 1,
+    "candidate": {"scenario_key": "SC-order-unauth", "required": true, "risk_level": "P1"}
+  }
+]

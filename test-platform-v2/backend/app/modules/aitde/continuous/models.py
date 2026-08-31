@@ -45,6 +45,9 @@ class EnvironmentFingerprint(Base):
     source_type: Mapped[str] = mapped_column(
         String(16), default=FingerprintSourceType.AUTO.value, index=True
     )
+    # V3.9-R3 (FINGER-001): how confident we are this fingerprint was OBSERVED
+    # (probed) vs manually declared. A P0 release gate requires MEDIUM/HIGH.
+    confidence: Mapped[str] = mapped_column(String(16), default="LOW", index=True)
     captured_at: Mapped[datetime] = mapped_column(default=datetime.now, index=True)
 
 

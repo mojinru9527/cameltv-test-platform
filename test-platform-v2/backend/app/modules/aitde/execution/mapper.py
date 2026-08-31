@@ -106,6 +106,12 @@ def assertion_to_dict(row: AssertionResult) -> dict[str, Any]:
         "result": row.result,
         "reason_code": row.reason_code,
         "evidence_refs_json": row.evidence_refs_json,
+        # V3.9-R1 (TRUST-007): expose oracle provenance/trust so the frontend
+        # TrustLevelBadge can show VERIFIED vs LEGACY_UNVERIFIED correctly.
+        "test_oracle_id": row.test_oracle_id,
+        "oracle_source_type": row.oracle_source_type,
+        "trust_status": row.trust_status,
+        "binding_id": row.binding_id,
         "evaluated_at": row.evaluated_at.isoformat() if row.evaluated_at else None,
     }
 
@@ -125,6 +131,16 @@ def evidence_to_dict(row: EvidenceArtifact) -> dict[str, Any]:
         "sanitization_status": row.sanitization_status,
         "sensitivity": row.sensitivity,
         "retention_class": row.retention_class,
+        # V3.9-R1 (TRUST-004): physical integrity so the EvidenceIntegrityBadge can
+        # show Stored/Sanitized/Hash/Object verification state.
+        "integrity_status": row.integrity_status,
+        "storage_verified_at": row.storage_verified_at.isoformat() if row.storage_verified_at else None,
+        "sanitizer_version": row.sanitizer_version,
+        "storage_etag": row.storage_etag,
+        # Computed verdicts for the frontend badge (no guessing needed).
+        "object_exists": bool(row.storage_uri),
+        "stored_verified": row.integrity_status == "VERIFIED",
+        "hash_verified": bool(row.content_hash) and row.integrity_status == "VERIFIED",
         "created_at": row.created_at.isoformat() if row.created_at else None,
     }
 

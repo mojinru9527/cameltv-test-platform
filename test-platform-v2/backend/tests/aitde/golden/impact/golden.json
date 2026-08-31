@@ -1,0 +1,22 @@
+[
+  {
+    "input": "变更：OPENAPI 影响面分析，输入为 membership 相关端点变更。",
+    "expected": {"impacted": ["SC-renew-expired"], "risk_level": "P0"},
+    "must_include": ["SC-renew-expired", "P0"],
+    "must_not_include": ["SC-billing-history"],
+    "risk_level": "P0",
+    "reviewer": "impact-team",
+    "version": 1,
+    "candidate": {"impacted": ["SC-renew-expired"], "risk_level": "P0"}
+  },
+  {
+    "input": "变更：DB_SCHEMA 新增 billing 表列，影响面分析。",
+    "expected": {"impacted": ["SC-billing-history"], "risk_level": "P1"},
+    "must_include": ["SC-billing-history"],
+    "must_not_include": ["SC-renew-expired"],
+    "risk_level": "P1",
+    "reviewer": "impact-team",
+    "version": 1,
+    "candidate": {"impacted": ["SC-billing-history"], "risk_level": "P1"}
+  }
+]

@@ -1,6 +1,7 @@
 import { Badge } from '@/ui'
 import type { Assertion } from '@/api/executions'
 import { ASSERTION_RESULT_LABELS } from './constants'
+import { OracleSourceBadge } from '@/components/trust/OracleSourceBadge'
 
 function oracleName(a: Assertion): string {
   const snap = a.oracle_snapshot_json
@@ -27,6 +28,7 @@ export default function RequiredOracleList({ assertions }: { assertions: Asserti
               </Badge>
               <span className="font-medium">{oracleName(a)}</span>
               <span className="font-mono text-xs text-muted-foreground">#{a.oracle_id}</span>
+              <OracleSourceBadge assertion={a} />
             </div>
             {a.reason_code && (
               <p className="mt-1 text-xs text-muted-foreground">reason: {a.reason_code}</p>

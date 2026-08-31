@@ -410,7 +410,9 @@ def test_batch48_is_the_only_head_and_target_models_are_registered() -> None:
     heads = ScriptDirectory.from_config(config).get_heads()
     current_head = _current_head()
     assert heads == [current_head]
-    assert len(current_head) <= 32
+    # V3.9 widened ``alembic_version.version_num`` to VARCHAR(128); the current
+    # head revision id is 41 chars, so the historical 32-char assumption is gone.
+    assert len(current_head) <= 128
 
     import app.models  # noqa: F401
     from app.core.db import Base
