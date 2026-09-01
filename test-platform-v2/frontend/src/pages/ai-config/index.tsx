@@ -30,6 +30,26 @@ const TYPE_LABELS: Record<string, string> = {
   deepseek_official: 'DeepSeek 官方',
 }
 
+// 主流大模型官方一键模板：key 与官方 base_url + 默认模型绑定。
+interface OfficialTemplate {
+  key: string
+  name: string
+  provider_type: string
+  base_url: string
+  models: string[]
+  default_model: string
+}
+const OFFICIAL_TEMPLATES: OfficialTemplate[] = [
+  { key: 'deepseek', name: 'DeepSeek 官方', provider_type: 'deepseek_official', base_url: 'https://api.deepseek.com', models: ['deepseek-v4-pro', 'deepseek-v4-flash'], default_model: 'deepseek-v4-pro' },
+  { key: 'glm', name: 'GLM（智谱）', provider_type: 'openai_compatible', base_url: 'https://open.bigmodel.cn/api/paas/v4', models: ['glm-4-plus', 'glm-4-flash'], default_model: 'glm-4-plus' },
+  { key: 'openai', name: 'GPT（OpenAI）', provider_type: 'openai_compatible', base_url: 'https://api.openai.com/v1', models: ['gpt-4o', 'gpt-4o-mini'], default_model: 'gpt-4o' },
+  { key: 'qwen', name: '通义千问（Qwen）', provider_type: 'openai_compatible', base_url: 'https://dashscope.aliyuncs.com/compatible-mode/v1', models: ['qwen-max', 'qwen-plus', 'qwen-turbo'], default_model: 'qwen-max' },
+]
+
+function dedupeModels(list: string[]): string[] {
+  return Array.from(new Set(list.map((m) => m.trim()).filter(Boolean)))
+}
+
 interface FormState {
   id: number | null
   name: string
@@ -114,7 +134,7 @@ export default function AiConfigPage() {
       toast.error('请填写提供方名称')
       return
     }
-    const models = form.modelsText.split(/[,，]/).map((m) => m.trim()).filter(Boolean)
+    const models = dedupeModels(form.modelsText.split(/[,，]/))
     if (models.length === 0) {
       toast.error('至少填写一个模型')
       return
@@ -186,7 +206,7 @@ export default function AiConfigPage() {
         api_base_url: form.api_base_url.trim(),
         api_key: form.api_key.trim(),
       })
-      const models = res?.models ?? []
+      const models = dedupeModels(res?.models ?? [])
       if (models.length === 0) {
         toast.error('未发现可用模型')
       } else {
@@ -202,6 +222,18 @@ export default function AiConfigPage() {
     } finally {
       setDiscovering(false)
     }
+  }
+
+  const handleTemplate = (tpl: OfficialTemplate) => {
+    setForm({
+      ...form,
+      provider_type: tpl.provider_type,
+      api_base_url: tpl.base_url,
+      modelsText: tpl.models.join(', '),
+      default_model: tpl.default_model,
+    })
+    if (form.id === null) setForm((f) => ({ ...f, name: tpl.name }))
+    toast.success(`已填入「${tpl.name}」模板，填 API Key 后保存即可`)
   }
 
   return (
@@ -243,6 +275,16 @@ export default function AiConfigPage() {
           )}
         </div>
       )}
+
+      <div className="rounded-lg border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+        <p className="font-medium text-foreground">AITDE 使用指引</p>
+        <ul className="mt-1 list-disc space-y-0.5 pl-4">
+          <li>① 需开启 AITDE v3 功能开关（配置项 <code className="rounded bg-background px-1">aitde_v3_enabled=true</code>，默认关闭）；开启后 AITDE 主链与 AI 能力才可用。</li>
+          <li>② 此处配置的「大模型 + API Key」即 AITDE / AI 用例生成按项目生效的模型；保存 Key 后平台加密存储、列表仅显示掩码。</li>
+          <li>③ 配置按项目隔离：本项目生效配置不跨项目使用（验证隔离见后端测试）。</li>
+          <li>④ 官方一键模板已绑定官方 base_url + 默认模型，请填入对应官方 Key，避免 key 与模型错配。</li>
+        </ul>
+      </div>
 
       <Card>
         <CardContent className="p-0">
@@ -335,6 +377,20 @@ export default function AiConfigPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-4">
+            <div>
+              <Label>官方一键模板（点击填入 base_url + 模型，关联官方 Key）</Label>
+              <div className="mt-1 grid grid-cols-2 gap-2">
+                {OFFICIAL_TEMPLATES.map((tpl) => (
+                  <Button
+                    key={tpl.key} type="button" variant="secondary" className="justify-start"
+                    onClick={() => handleTemplate(tpl)}
+                    title={`${tpl.base_url} · ${tpl.default_model}`}
+                  >
+                    {tpl.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
             <div>
               <Label htmlFor="provider-name">名称</Label>
               <Input
