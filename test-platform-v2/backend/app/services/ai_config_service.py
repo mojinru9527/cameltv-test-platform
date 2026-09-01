@@ -17,6 +17,8 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.exceptions import APIException
 from app.models.ai_provider import AiProvider
+from app.services import ai_errors
+from app.services.ai_errors import ai_health_registry
 
 _DEEPSEEK_OFFICIAL_URL = "https://api.deepseek.com"
 
@@ -120,10 +122,20 @@ class AiConfigService:
         ]
 
     def resolve_out(self, db: Session, project_id: int) -> dict:
+        """当前项目生效 AI 配置 + **真实健康态**。
+
+        P0-2/P2-6：`configured` 只表示「填过提供方」，不代表 Key 可用。
+        生产曾出现 Key 401 但全平台仍显示「已配置 / AI 可用」的误导状态。
+        这里额外返回 `health`（来自最近一次真实调用或连通性测试）：
+          - status=ok       最近一次调用成功
+          - status=error    最近一次调用失败（含可执行 message 与 kind）
+          - status=unknown  本进程尚未验证过（前端应显示"未验证"而非"可用"）
+        """
+        health = ai_health_registry.get(project_id).to_dict()
         try:
             cfg = self.resolve(db, project_id)
         except AIProviderUnconfiguredError:
-            return {"configured": False, "provider": None}
+            return {"configured": False, "provider": None, "health": health}
         return {
             "configured": True,
             "provider": {
@@ -131,6 +143,7 @@ class AiConfigService:
                 "name": cfg.provider_name,
                 "model": cfg.model,
             },
+            "health": health,
         }
 
     # ── 写 ──
@@ -235,13 +248,26 @@ class AiConfigService:
                 timeout=30.0,
             )
             resp.raise_for_status()
+            ai_health_registry.record_success(project_id, row.id)
             return {
                 "ok": True,
                 "latency_ms": round((time.perf_counter() - t0) * 1000, 1),
                 "model": cfg.model,
             }
         except Exception as exc:  # noqa: BLE001 - 连通性测试需吞掉具体异常转为可读信息
-            return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+            # P2-7：不再把 `HTTPStatusError: ... https://developer.mozilla.org/...`
+            # 原样回给前端 toast，改为可执行的中文提示 + 可展开的原始摘要。
+            health = ai_health_registry.record_failure(
+                project_id, exc, row.id, cfg.provider_name
+            )
+            return {
+                "ok": False,
+                "kind": health.kind,
+                "error": ai_errors.humanize_ai_error(exc, cfg.provider_name),
+                "detail": ai_errors.humanize_ai_error(
+                    exc, cfg.provider_name, include_detail=True
+                ),
+            }
 
     def discover_models(self, api_base_url: str = "", api_key: str = "") -> dict:
         """调用提供方公开的 GET /models 发现可用模型清单（OpenAI 兼容）。
@@ -261,7 +287,11 @@ class AiConfigService:
                 timeout=15.0,
             )
             if resp.status_code == 401:
-                return {"ok": False, "error": "API Key 无效（401）——请确认密钥"}
+                return {
+                    "ok": False,
+                    "kind": ai_errors.UNAUTHORIZED,
+                    "error": ai_errors.humanize_ai_error("401 Unauthorized"),
+                }
             resp.raise_for_status()
             data = resp.json()
             items = data.get("data") if isinstance(data, dict) else None
@@ -275,7 +305,11 @@ class AiConfigService:
                 return {"ok": False, "error": "提供方 /models 未返回模型，请手动填写"}
             return {"ok": True, "models": ids, "count": len(ids)}
         except Exception as exc:  # noqa: BLE001 - 发现失败转为可读提示
-            return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+            return {
+                "ok": False,
+                "kind": ai_errors.classify_ai_error(exc),
+                "error": ai_errors.humanize_ai_error(exc),
+            }
 
 
 def _models_list(models_json: str) -> list[str]:

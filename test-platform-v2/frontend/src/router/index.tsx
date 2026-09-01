@@ -6,7 +6,8 @@ import NotFound from '@/pages/NotFound'
 import Unavailable from '@/pages/Unavailable'
 import RequireAuth from './guard'
 import { isThemeLabEnabled } from './themeLabAvailability'
-import { AITDE_V3_ENABLED } from '@/config/aitde'
+import AitdeGate from '@/components/AitdeGate'
+import { useAitdeV3State } from '@/config/aitde'
 import client from '@/api/client'
 import { logoutApi } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
@@ -105,8 +106,11 @@ export function PasswordChangeBoundary({ children }: { children: ReactNode }) {
 function PlatformHomeEntry() {
   const user = useAuthStore((state) => state.user)
   // V40-019: mission-first default navigation when AITDE V3 is enabled.
+  // P0-1：开关改为运行时跟随后端；解析未完成前先不跳转，避免误落到 /workbench。
+  const aitdeState = useAitdeV3State()
   if (!user) return null
-  return <Navigate to={AITDE_V3_ENABLED ? '/missions' : '/workbench'} replace />
+  if (aitdeState === 'loading') return null
+  return <Navigate to={aitdeState === 'enabled' ? '/missions' : '/workbench'} replace />
 }
 
 function ForcedPasswordChangePage() {
@@ -270,35 +274,26 @@ export const router = createBrowserRouter([
       // ── AITDE V3: Mission 主链（V30-102）──
       {
         path: 'missions',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><MissionListPage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="测试任务（Mission）入口需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="测试任务（Mission）入口">
+            <PageLoader><MissionListPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       {
         path: 'missions/new',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><MissionCreatePage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="测试任务（Mission）入口需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="测试任务（Mission）入口">
+            <PageLoader><MissionCreatePage /></PageLoader>
+          </AitdeGate>
         ),
       },
       {
         path: 'missions/:id',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><MissionLayout /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="测试任务（Mission）入口需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="测试任务（Mission）入口">
+            <PageLoader><MissionLayout /></PageLoader>
+          </AitdeGate>
         ),
         children: [
           { index: true, element: <Navigate to="overview" replace /> },
@@ -320,138 +315,102 @@ export const router = createBrowserRouter([
       // ── AITDE V3.8: AI QA Closed Loop（AI Suggestions / Flaky / 模型评估）──
       {
         path: 'ai-suggestions',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><AiSuggestionsPage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="AI 建议收件箱需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="AI 建议收件箱">
+            <PageLoader><AiSuggestionsPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       {
         path: 'flaky',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><FlakyPage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="Flaky 分析需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="Flaky 分析">
+            <PageLoader><FlakyPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       {
         path: 'admin/ai-evaluations',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><AiEvaluationsPage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="AI 模型评估需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="AI 模型评估">
+            <PageLoader><AiEvaluationsPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       {
         path: 'admin/governance',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><GovernanceAdminPage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="AITDE 治理控制台需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="AITDE 治理控制台">
+            <PageLoader><GovernanceAdminPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       // ── AITDE V3.5: Campaign 详情（V35-013）──
       {
         path: 'campaigns/:id',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><CampaignDetailPage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="Campaign 详情需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="Campaign 详情">
+            <PageLoader><CampaignDetailPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       // ── AITDE V3.7: Regression Selection 详情（V37-013）──
       {
         path: 'regression-selections/:id',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><RegressionSelectionPage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="回归选择详情需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="回归选择详情">
+            <PageLoader><RegressionSelectionPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       // ── AITDE V3.6: Production Evidence & Real-World Data Template（V36-013/014）──
       {
         path: 'production/evidence',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><ProductionEvidencePage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="生产证据需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="生产证据">
+            <PageLoader><ProductionEvidencePage /></PageLoader>
+          </AitdeGate>
         ),
       },
       {
         path: 'production/journeys',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><ProductionJourneysPage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="Production Journey 需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="Production Journey">
+            <PageLoader><ProductionJourneysPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       {
         path: 'production/templates',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><ProductionTemplatesPage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="生产模板需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="生产模板">
+            <PageLoader><ProductionTemplatesPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       {
         path: 'admin/masking',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><ProductionMaskingPage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="脱敏配置需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="脱敏配置">
+            <PageLoader><ProductionMaskingPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       {
         path: 'missions/:id/production-evidence',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><MissionProductionEvidencePage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="Mission 生产证据需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="Mission 生产证据">
+            <PageLoader><MissionProductionEvidencePage /></PageLoader>
+          </AitdeGate>
         ),
       },
       // ── AITDE V3.3: Browser + Hybrid + Assisted Manual（V33-012..016）──
       {
         path: 'missions/:missionId/scenarios/:scenarioId',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><ScenarioLayout /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="场景执行（Browser / Hybrid / Assisted Manual）需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="场景执行（Browser / Hybrid / Assisted Manual）">
+            <PageLoader><ScenarioLayout /></PageLoader>
+          </AitdeGate>
         ),
         children: [
           { index: true, element: <Navigate to="manual" replace /> },
@@ -463,80 +422,68 @@ export const router = createBrowserRouter([
       },
       {
         path: 'healing',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><HealingReviewPage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="愈合评审需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="愈合评审">
+            <PageLoader><HealingReviewPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       // ── AITDE V3.1: Unified Execution + Proof Replay（V31-xxx）──
       {
         path: 'executions',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><ExecutionCenterPage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="执行中心需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="执行中心">
+            <PageLoader><ExecutionCenterPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       {
         path: 'executions/:runId',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><RunDetailPage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="执行详情需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="执行详情">
+            <PageLoader><RunDetailPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       {
         path: 'executions/:runId/replay',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><ReplayPage /></PageLoader>
-        ) : (
-          <Unavailable
-            title="AITDE V3 未开放"
-            description="执行回放需启用 AITDE V3 功能开关后开放。"
-          />
+        element: (
+          <AitdeGate feature="执行回放">
+            <PageLoader><ReplayPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       // ── AITDE V3.2: Data + DB Runtime（V32-016..V32-018）──
       {
         path: 'data-sources',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><DataSourcesPage /></PageLoader>
-        ) : (
-          <Unavailable title="AITDE V3 未开放" description="数据源管理需启用 AITDE V3 功能开关后开放。" />
+        element: (
+          <AitdeGate feature="数据源管理">
+            <PageLoader><DataSourcesPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       {
         path: 'fixtures',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><FixturesPage /></PageLoader>
-        ) : (
-          <Unavailable title="AITDE V3 未开放" description="Fixture 查看需启用 AITDE V3 功能开关后开放。" />
+        element: (
+          <AitdeGate feature="Fixture 查看">
+            <PageLoader><FixturesPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       {
         path: 'fixtures/:fixtureId',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><FixtureDetailPage /></PageLoader>
-        ) : (
-          <Unavailable title="AITDE V3 未开放" description="Fixture 查看需启用 AITDE V3 功能开关后开放。" />
+        element: (
+          <AitdeGate feature="Fixture 查看">
+            <PageLoader><FixtureDetailPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       {
         path: 'admin/workers',
-        element: AITDE_V3_ENABLED ? (
-          <PageLoader><RuntimeAdminPage /></PageLoader>
-        ) : (
-          <Unavailable title="AITDE V3 未开放" description="Durable Runtime 需启用 AITDE V3 功能开关后开放。" />
+        element: (
+          <AitdeGate feature="Durable Runtime">
+            <PageLoader><RuntimeAdminPage /></PageLoader>
+          </AitdeGate>
         ),
       },
       {

@@ -440,8 +440,15 @@ export default function RequirementDocTable({
                           <Button
                             size="sm"
                             variant="secondary"
-                            title="用 DSH 场景向导生成功能用例"
-                            onClick={() => onNavigate(`/dsh-tasks?scene=functional&hint=${encodeURIComponent(r.title || '')}`)}
+                            title="用 DSH 场景向导生成功能用例（自动带入该需求正文）"
+                            onClick={() =>
+                              // P1-5：此前只传 hint=<文档标题>，DSH 向导里「需求文本」
+                              // 仅有一行标题、正文全部丢失，AI 无法产出有效用例。
+                              // 改为传 docId，由 DSH 页拉取该文档解析后的正文预填。
+                              onNavigate(
+                                `/dsh-tasks?scene=functional&docId=${r.id}&hint=${encodeURIComponent(r.title || '')}`,
+                              )
+                            }
                           >
                             <Sparkles className="size-3.5" />
                             用 DSH 生成

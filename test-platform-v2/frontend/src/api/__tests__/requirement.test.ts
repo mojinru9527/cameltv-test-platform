@@ -77,7 +77,9 @@ describe('Requirement API functions', () => {
     await expect(getExtraction(7)).resolves.toBeNull()
     expect(mockGet).toHaveBeenCalledWith(
       '/requirements/7/extraction',
-      { signal: undefined },
+      // P1-3：首次无拆分结果是预期路径，必须抑制全局错误 toast，否则后端
+      // envelope 的 msg「功能拆分结果」会被当成错误文案直接弹给用户。
+      { signal: undefined, suppressErrorToast: true },
     )
   })
 
