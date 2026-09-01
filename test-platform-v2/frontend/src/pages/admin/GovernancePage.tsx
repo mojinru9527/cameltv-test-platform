@@ -7,6 +7,23 @@ interface Posture {
   [key: string]: unknown
 }
 
+const DEFAULT_METRICS = JSON.stringify(
+  {
+    p0_false_pass_rate: 0.005,
+    false_fail_rate: 0.01,
+    evidence_completeness: 0.995,
+    replay_audit_consistency: 0.995,
+    fixture_cleanup_success: 0.995,
+    prod_unauthorized_write: 0,
+    secret_leakage: 0,
+    pii_leakage: 0,
+    contract_unauthorized_mutation: 0,
+    mission_workflow_adoption: 0.85,
+  },
+  null,
+  2,
+)
+
 function PostureCard({ title, ok, detail }: { title: string; ok: boolean | null; detail: string }) {
   return (
     <div className="rounded-xl border bg-card p-4 text-card-foreground">
@@ -31,6 +48,9 @@ export default function GovernancePage() {
   const [sso, setSso] = useState<Posture | null>(null)
   const [cost, setCost] = useState<Posture | null>(null)
   const [dr, setDr] = useState<unknown[]>([])
+  const [metricsInput, setMetricsInput] = useState(DEFAULT_METRICS)
+  const [readiness, setReadiness] = useState<Posture | null>(null)
+  const [readinessError, setReadinessError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -69,6 +89,18 @@ export default function GovernancePage() {
     }
   }, [])
 
+  const evaluateReadiness = async () => {
+    setReadinessError(null)
+    try {
+      const metrics = JSON.parse(metricsInput) as Record<string, number>
+      const res = await governanceApi.readiness(metrics)
+      setReadiness(res as unknown as Posture)
+    } catch (e) {
+      setReadiness(null)
+      setReadinessError(e instanceof Error ? e.message : String(e))
+    }
+  }
+
   if (!AITDE_V3_ENABLED) {
     return (
       <div className="rounded-xl border bg-card p-6 text-card-foreground">
@@ -106,6 +138,46 @@ export default function GovernancePage() {
         <PostureCard title="SSO" ok={ssoConfigured} detail={`OIDC/SAML ${ssoConfigured ? '已配置' : '未配置'}（真实 IdP 外部）`} />
         <PostureCard title="成本记账" ok={null} detail={`累计模型成本 ≈ ${costTotal.toFixed(2)}`} />
         <PostureCard title="DR 演练" ok={dr.length > 0} detail={`已记录 ${dr.length} 次 drill`} />
+      </div>
+
+      <div className="rounded-xl border bg-card p-4 text-card-foreground">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">Platform Readiness Gate</h3>
+          <button
+            type="button"
+            onClick={() => void evaluateReadiness()}
+            className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            运行评估
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          按 V40-018 阈值评估（P0 False Pass &lt;1%、False Fail &lt;3%、Evidence Completeness &gt;99%、Prod Unauthorized Write=0 等）。指标由真实运行采集后填入；这里供校验器评估，不假定通过。
+        </p>
+        <textarea
+          aria-label="readiness metrics json"
+          value={metricsInput}
+          onChange={(e) => setMetricsInput(e.target.value)}
+          rows={8}
+          className="mt-3 w-full rounded-md border bg-background p-2 font-mono text-xs"
+        />
+        {readinessError && <p className="mt-2 text-xs text-destructive">{readinessError}</p>}
+        {readiness && (
+          <div className="mt-3">
+            <span
+              className={
+                (readiness as { pass?: boolean }).pass
+                  ? 'rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700'
+                  : 'rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700'
+              }
+            >
+              {readiness.pass ? 'PASS' : 'FAIL'}
+            </span>
+            <span className="ml-2 text-xs text-muted-foreground">
+              failed: {((readiness as { failed?: string[] }).failed ?? []).join(', ') || '无'}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   )
