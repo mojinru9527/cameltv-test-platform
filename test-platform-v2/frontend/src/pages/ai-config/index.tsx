@@ -19,12 +19,56 @@ import {
   updateAiProvider,
   deleteAiProvider,
   testAiProviderConnection,
+  fetchAiResolve,
+  discoverAiModels,
   type AiProviderItem,
+  type AiResolveResult,
 } from '@/api/aiConfig'
 
 const TYPE_LABELS: Record<string, string> = {
   openai_compatible: 'OpenAI 兼容',
   deepseek_official: 'DeepSeek 官方',
+}
+
+// 主流大模型官方一键模板：预置该厂商全量官方模型 + 官方 base_url + 默认模型；填入对应官方 Key 后可在
+// 表单「自动发现」按厂商 /models 拉取最新全量模型清单（模板模型是稳定基线，发现结果为动态全量）。
+interface OfficialTemplate {
+  key: string
+  name: string
+  provider_type: string
+  base_url: string
+  models: string[]
+  default_model: string
+}
+const OFFICIAL_TEMPLATES: OfficialTemplate[] = [
+  {
+    key: 'deepseek', name: 'DeepSeek 官方', provider_type: 'deepseek_official',
+    base_url: 'https://api.deepseek.com',
+    models: ['deepseek-v4-pro', 'deepseek-v4-flash', 'deepseek-v4-flash-preview', 'deepseek-chat', 'deepseek-reasoner'],
+    default_model: 'deepseek-v4-pro',
+  },
+  {
+    key: 'glm', name: 'GLM（智谱）', provider_type: 'openai_compatible',
+    base_url: 'https://open.bigmodel.cn/api/paas/v4',
+    models: ['glm-4-plus', 'glm-4', 'glm-4-flash', 'glm-4-air', 'glm-4-airx', 'glm-4-0520', 'glm-4v-plus', 'glm-4v-flash'],
+    default_model: 'glm-4-plus',
+  },
+  {
+    key: 'openai', name: 'GPT（OpenAI）', provider_type: 'openai_compatible',
+    base_url: 'https://api.openai.com/v1',
+    models: ['gpt-5', 'gpt-5-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4o', 'gpt-4o-mini', 'gpt-4.5', 'gpt-4.5-preview'],
+    default_model: 'gpt-4o',
+  },
+  {
+    key: 'qwen', name: '通义千问（Qwen）', provider_type: 'openai_compatible',
+    base_url: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    models: ['qwen-max', 'qwen-max-latest', 'qwen-plus', 'qwen-plus-latest', 'qwen-turbo', 'qwen-turbo-latest', 'qwen-long', 'qwen3-max', 'qwen3-plus'],
+    default_model: 'qwen-max',
+  },
+]
+
+function dedupeModels(list: string[]): string[] {
+  return Array.from(new Set(list.map((m) => m.trim()).filter(Boolean)))
 }
 
 interface FormState {
@@ -71,11 +115,13 @@ export default function AiConfigPage() {
   const canManage = hasPerm('ai_config:manage')
 
   const [providers, setProviders] = useState<AiProviderItem[]>([])
+  const [resolved, setResolved] = useState<AiResolveResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [formOpen, setFormOpen] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [testingId, setTestingId] = useState<number | null>(null)
+  const [discovering, setDiscovering] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<AiProviderItem | null>(null)
   const [deleting, setDeleting] = useState(false)
 
@@ -85,6 +131,9 @@ export default function AiConfigPage() {
       .then((items) => { if (!signal?.aborted) setProviders(items) })
       .catch(() => { if (!signal?.aborted) toast.error('加载 AI 配置失败') })
       .finally(() => { if (!signal?.aborted) setLoading(false) })
+    fetchAiResolve(signal)
+      .then((r) => { if (!signal?.aborted) setResolved(r) })
+      .catch(() => { if (!signal?.aborted) setResolved(null) })
   }, [])
 
   useAbortableEffect((signal) => {
@@ -106,7 +155,7 @@ export default function AiConfigPage() {
       toast.error('请填写提供方名称')
       return
     }
-    const models = form.modelsText.split(/[,，]/).map((m) => m.trim()).filter(Boolean)
+    const models = dedupeModels(form.modelsText.split(/[,，]/))
     if (models.length === 0) {
       toast.error('至少填写一个模型')
       return
@@ -167,11 +216,53 @@ export default function AiConfigPage() {
     }
   }
 
+  const handleDiscoverModels = async () => {
+    if (!form.api_base_url.trim()) {
+      toast.error('请先填写 API 地址')
+      return
+    }
+    setDiscovering(true)
+    try {
+      const res = await discoverAiModels({
+        api_base_url: form.api_base_url.trim(),
+        api_key: form.api_key.trim(),
+      })
+      // 合并厂商 /models 返回的全量模型 + 当前已填模型（去重），不丢失已知官方模型。
+      const merged = dedupeModels([...dedupeModels(form.modelsText.split(/[,，]/)), ...(res?.models ?? [])])
+      if (merged.length === 0) {
+        toast.error('未发现可用模型')
+      } else {
+        setForm({
+          ...form,
+          modelsText: merged.join(', '),
+          default_model: form.default_model.trim() || merged[0],
+        })
+        toast.success(`已拉取厂商全量模型（共 ${merged.length} 个）`)
+      }
+    } catch (e: any) {
+      toast.error(e?.message || '模型发现失败')
+    } finally {
+      setDiscovering(false)
+    }
+  }
+
+  const handleTemplate = (tpl: OfficialTemplate) => {
+    setForm({
+      ...form,
+      provider_type: tpl.provider_type,
+      api_base_url: tpl.base_url,
+      modelsText: tpl.models.join(', '),
+      default_model: tpl.default_model,
+    })
+    if (form.id === null) setForm((f) => ({ ...f, name: tpl.name }))
+    toast.success(`已填入「${tpl.name}」模板，填 API Key 后保存即可`)
+  }
+
   return (
     <div className="space-y-4">
       <PageHeader
-        title="AI 配置"
-        description="项目级 AI 提供方配置，平台内所有 AI 功能（用例生成/知识中心/DSH 任务等）按项目解析使用。"
+        title="AI 配置（AITDE 大模型）"
+        description="接入 AITDE / AI 用例生成等能力需在此配置「大模型 + API Key」。此处配置的提供方为项目生效模型，AITDE 按项目解析使用；Key 加密存储、列表仅显示掩码。"
       >
         {canManage && (
           <Button onClick={openCreate}>
@@ -184,6 +275,38 @@ export default function AiConfigPage() {
           刷新
         </Button>
       </PageHeader>
+
+      {resolved && (
+        <div className="rounded-lg border bg-card px-4 py-3 text-sm text-card-foreground">
+          <div className="flex items-center gap-2">
+            <Zap className="size-4 text-primary" />
+            <span className="font-medium">AITDE 当前生效模型</span>
+            {resolved.configured && resolved.provider ? (
+              <span className="ml-1">
+                <Badge className="bg-status-success-muted text-status-success">{resolved.provider.model}</Badge>
+                <span className="ml-2 text-xs text-muted-foreground">提供方：{resolved.provider.name}</span>
+              </span>
+            ) : (
+              <Badge variant="outline">未配置</Badge>
+            )}
+          </div>
+          {!resolved.configured && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              尚未配置生效的大模型与 Key。点击「新建提供方」填写 API 地址、模型与 API Key 并置为默认，AITDE 即可调用。
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className="rounded-lg border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+        <p className="font-medium text-foreground">AITDE 使用指引</p>
+        <ul className="mt-1 list-disc space-y-0.5 pl-4">
+          <li>① 需开启 AITDE v3 功能开关（配置项 <code className="rounded bg-background px-1">aitde_v3_enabled=true</code>，默认关闭）；开启后 AITDE 主链与 AI 能力才可用。</li>
+          <li>② 此处配置的「大模型 + API Key」即 AITDE / AI 用例生成按项目生效的模型；保存 Key 后平台加密存储、列表仅显示掩码。</li>
+          <li>③ 配置按项目隔离：本项目生效配置不跨项目使用（验证隔离见后端测试）。</li>
+          <li>④ 官方一键模板已绑定官方 base_url + 默认模型，请填入对应官方 Key，避免 key 与模型错配。</li>
+        </ul>
+      </div>
 
       <Card>
         <CardContent className="p-0">
@@ -277,6 +400,23 @@ export default function AiConfigPage() {
           </DialogHeader>
           <div className="space-y-3 py-4">
             <div>
+              <Label>官方一键模板（预置该厂商全量官方模型 + base_url，填入对应官方 Key）</Label>
+              <div className="mt-1 grid grid-cols-2 gap-2">
+                {OFFICIAL_TEMPLATES.map((tpl) => (
+                  <Button
+                    key={tpl.key} type="button" variant="secondary" className="justify-start"
+                    onClick={() => handleTemplate(tpl)}
+                    title={`${tpl.base_url} · 默认 ${tpl.default_model}`}
+                  >
+                    {tpl.name}
+                  </Button>
+                ))}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                选模板后填入该厂商官方 Key，点「自动发现」可拉取该厂商当前全部官方模型。
+              </p>
+            </div>
+            <div>
               <Label htmlFor="provider-name">名称</Label>
               <Input
                 id="provider-name" className="mt-1" value={form.name} placeholder="如：DeepSeek 官方"
@@ -315,11 +455,20 @@ export default function AiConfigPage() {
             </div>
             <div>
               <Label htmlFor="provider-models">模型清单（逗号分隔）</Label>
-              <Input
-                id="provider-models" className="mt-1" value={form.modelsText}
-                placeholder="deepseek-v4-pro, deepseek-v4-flash"
-                onChange={(e) => setForm({ ...form, modelsText: e.target.value })}
-              />
+              <div className="mt-1 flex gap-2">
+                <Input
+                  id="provider-models" className="flex-1" value={form.modelsText}
+                  placeholder="deepseek-v4-pro, deepseek-v4-flash"
+                  onChange={(e) => setForm({ ...form, modelsText: e.target.value })}
+                />
+                <Button
+                  type="button" variant="secondary" onClick={() => void handleDiscoverModels()} disabled={discovering}
+                  title="根据 API 地址 + Key 自动拉取模型清单"
+                >
+                  {discovering ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+                  自动发现
+                </Button>
+              </div>
             </div>
             <div>
               <Label htmlFor="provider-default-model">默认模型</Label>

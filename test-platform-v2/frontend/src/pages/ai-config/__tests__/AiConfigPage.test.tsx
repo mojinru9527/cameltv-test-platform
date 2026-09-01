@@ -16,6 +16,8 @@ const mocks = vi.hoisted(() => ({
   updateAiProvider: vi.fn(),
   deleteAiProvider: vi.fn(),
   testAiProviderConnection: vi.fn(),
+  fetchAiResolve: vi.fn(),
+  discoverAiModels: vi.fn(),
   toastSuccess: vi.fn(),
   toastError: vi.fn(),
 }))
@@ -31,7 +33,8 @@ vi.mock('@/api/aiConfig', () => ({
   updateAiProvider: (...args: unknown[]) => mocks.updateAiProvider(...args),
   deleteAiProvider: (...args: unknown[]) => mocks.deleteAiProvider(...args),
   testAiProviderConnection: (...args: unknown[]) => mocks.testAiProviderConnection(...args),
-  fetchAiResolve: vi.fn(),
+  fetchAiResolve: (...args: unknown[]) => mocks.fetchAiResolve(...args),
+  discoverAiModels: (...args: unknown[]) => mocks.discoverAiModels(...args),
 }))
 
 vi.mock('sonner', () => ({
@@ -58,6 +61,8 @@ describe('AI 配置页', () => {
     vi.clearAllMocks()
     mocks.canManage = true
     mocks.fetchAiProviders.mockResolvedValue([])
+    mocks.fetchAiResolve.mockResolvedValue({ configured: false, provider: null })
+    mocks.discoverAiModels.mockResolvedValue({ models: [] })
   })
 
   it('空列表显示未配置引导', async () => {

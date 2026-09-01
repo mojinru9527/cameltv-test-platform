@@ -75,3 +75,45 @@ def test_list_masks_key(db_session):
     items = ai_config_service.list_providers(db_session, 1)
     assert items[0]["api_key"] == "sk****cdef"
     assert "api_key_encrypted" not in items[0]
+
+
+def test_project_isolation(db_session):
+    """多项目模型隔离验证：项目 A 的配置不泄漏给项目 B."""
+    _add_provider(db_session, project_id=1, name="项目A提供方")
+    cfg_a = ai_config_service.resolve_out(db_session, 1)
+    assert cfg_a["configured"] is True
+    assert cfg_a["provider"]["id"] > 0
+    # 未配置任何提供方的项目 B：不得解析到项目 A 的配置。
+    cfg_b = ai_config_service.resolve_out(db_session, 2)
+    assert cfg_b["configured"] is False
+    assert cfg_b["provider"] is None
+    # 项目 B 显式配置后只解析到自己的提供方。
+    _add_provider(db_session, project_id=2, name="项目B提供方")
+    cfg_b2 = ai_config_service.resolve_out(db_session, 2)
+    assert cfg_b2["configured"] is True
+    assert cfg_b2["provider"]["name"] == "项目B提供方"
+
+
+def test_discover_models_dedup(monkeypatch):
+    """模型发现结果去重：/models 重复返回同 id 时只保留一个."""
+    import httpx
+
+    class _Resp:
+        status_code = 200
+        @staticmethod
+        def raise_for_status():
+            return None
+        @staticmethod
+        def json():
+            return {"data": [
+                {"id": "deepseek-v4-pro"},
+                {"id": "deepseek-v4-flash"},
+                {"id": "deepseek-v4-pro"},  # 重复
+                {"id": None},              # 无 id 过滤
+            ]}
+
+    monkeypatch.setattr(httpx, "get", lambda *a, **k: _Resp())
+    res = ai_config_service.discover_models("https://api.deepseek.com", "sk-xxx")
+    assert res["ok"] is True
+    assert res["models"] == ["deepseek-v4-pro", "deepseek-v4-flash"]
+    assert res["count"] == 2
