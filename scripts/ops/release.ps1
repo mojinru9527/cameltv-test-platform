@@ -119,16 +119,9 @@ function Invoke-Release {
     $gitSha = (git -C $repoRoot rev-parse HEAD).Trim()
     Write-Host "==> Git SHA: $gitSha" -ForegroundColor Cyan
 
-    # 1. 构建镜像
-    Write-Host "==> 构建前端 cameltv-tp-frontend:$Tag (ICP=$IcpNumber)" -ForegroundColor Cyan
-    Push-Location "$repoRoot\test-platform-v2\frontend"
-    try { docker build --build-arg "VITE_ICP_NUMBER=$IcpNumber" -t "cameltv-tp-frontend:$Tag" . 2>&1 | Select-Object -Last 2 } finally { Pop-Location }
-    if ($LASTEXITCODE -ne 0) { throw "前端构建失败" }
-
-    Write-Host "==> 构建后端 cameltv-tp-backend:$Tag" -ForegroundColor Cyan
-    Push-Location $repoRoot
-    try { docker build -t "cameltv-tp-backend:$Tag" -f test-platform-v2/backend/Dockerfile . 2>&1 | Select-Object -Last 2 } finally { Pop-Location }
-    if ($LASTEXITCODE -ne 0) { throw "后端构建失败" }
+    # 1. 构建镜像（buildx export 会构建，无需先 docker build 一次）
+    Write-Host "==> 导出前端 cameltv-tp-frontend:$Tag (ICP=$IcpNumber)" -ForegroundColor Cyan
+    Write-Host "==> 导出后端 cameltv-tp-backend:$Tag" -ForegroundColor Cyan
 
     # 2. 自动提取 digest
     $feDigest = Get-Digest "cameltv-tp-frontend:$Tag"
@@ -159,7 +152,7 @@ function Invoke-Release {
     $deploymentId = $submit.deployment_id
     Write-Host "==> 登记成功 id=$deploymentId（状态 DRAFT）" -ForegroundColor Green
 
-    # 4. 导出 + 上传 tar
+    # 4. 导出 + 上传镜像
     Write-Host "==> 导出并上传镜像" -ForegroundColor Cyan
     New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
     # containerd 存储（io.containerd.snapshotter.v1）下 docker save 可能产出
@@ -167,11 +160,22 @@ function Invoke-Release {
     # "unrecognized image format"，2026-08-25 演练实测），改用 buildx
     # type=docker 导出（含 manifest.json 的经典 docker 归档，服务器可 load）。
     # 经 cmd /c 透传以规避 PS5.1 脚本模式对 --output 的原生参数重引号问题（见 Invoke-BuildxExport）。
+    # 注意：buildx 导出必须串行——同一 builder 并发构建会导致层 digest 冲突
+    # （"unexpected digest ... copied"，2026-09-01 实测），先后端后前端。
     Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-backend:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Dest "$OutputDir\$Tag-backend.tar"
     Invoke-BuildxExport -Cwd "$repoRoot\test-platform-v2\frontend" -Image "cameltv-tp-frontend:$Tag" -BuildArg "VITE_ICP_NUMBER=$IcpNumber" -Dest "$OutputDir\$Tag-frontend.tar"
     ssh -i $KeyPath -o BatchMode=yes "${UserName}@${HostName}" "mkdir -p $ReleaseDir" 2>&1 | Out-Null
-    scp -i $KeyPath -o BatchMode=yes "$OutputDir\$Tag-backend.tar" "${UserName}@${HostName}:$ReleaseDir/"
-    scp -i $KeyPath -o BatchMode=yes "$OutputDir\$Tag-frontend.tar" "${UserName}@${HostName}:$ReleaseDir/"
+    # 并行上传前后端（两个独立文件，无冲突；单连接带宽受限，并行可缩短总时长）
+    $upJobs = @(
+        Start-Job -ScriptBlock { param($k, $f1, $f2) scp -i $k -o BatchMode=yes $f1 "$f2" } -ArgumentList $KeyPath, "$OutputDir\$Tag-backend.tar", "${UserName}@${HostName}:$ReleaseDir/",
+        Start-Job -ScriptBlock { param($k, $f1, $f2) scp -i $k -o BatchMode=yes $f1 "$f2" } -ArgumentList $KeyPath, "$OutputDir\$Tag-frontend.tar", "${UserName}@${HostName}:$ReleaseDir/"
+    )
+    $upJobs | Wait-Job | Out-Null
+    foreach ($jb in $upJobs) {
+        $out = Receive-Job $jb 2>&1 | Out-String
+        if ($jb.State -ne "Completed") { Remove-Job $jb -Force; throw "上传失败: $out" }
+        Remove-Job $jb
+    }
 
     # 5. 发布（可选）
     if ($Publish) {

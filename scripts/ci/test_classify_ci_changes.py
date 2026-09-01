@@ -34,6 +34,7 @@ class ClassifyPathsTests(unittest.TestCase):
         cases = [
             ("docs", ["docs/adr/0014.md", "work-logs/batch.md"], False, False),
             ("git governance", ["scripts/git/verify.ps1", ".claude/skills/team/SKILL.md"], False, False),
+            ("ops tooling", ["scripts/ops/release.ps1"], False, False),
             ("backend", ["test-platform-v2/backend/app/main.py"], True, False),
             ("backend submodule pointer", ["lanhu-mcp"], True, False),
             ("backend submodule config", [".gitmodules"], True, False),
