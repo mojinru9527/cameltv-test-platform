@@ -39,12 +39,20 @@ function CommandDialog({
   children,
   className,
   showCloseButton = false,
+  /**
+   * 是否启用 cmdk 内置按 item value 的模糊过滤。
+   * 调用方自行完成过滤（如按 keywords 别名匹配）时必须传 false，
+   * 否则 cmdk 会在结果之上再按 label 过滤一遍，把别名命中的项重新滤掉
+   * （V4.0 复盘 P2-10：搜「Mission」命中「智能测试任务」后被二次过滤成空）。
+   */
+  shouldFilter,
   ...props
 }: React.ComponentProps<typeof Dialog> & {
   title?: string
   description?: string
   className?: string
   showCloseButton?: boolean
+  shouldFilter?: boolean
 }) {
   return (
     <Dialog {...props}>
@@ -59,7 +67,9 @@ function CommandDialog({
         )}
         showCloseButton={showCloseButton}
       >
-        <Command className="size-full">{children}</Command>
+        <Command className="size-full" shouldFilter={shouldFilter}>
+          {children}
+        </Command>
       </DialogContent>
     </Dialog>
   )

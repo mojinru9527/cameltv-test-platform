@@ -29,7 +29,9 @@ from pathlib import Path
 import httpx
 
 from app.core.config import settings
+from app.services import ai_errors
 from app.services.ai_config_service import AIProviderUnconfiguredError, ai_config_service
+from app.services.ai_errors import ai_health_registry
 from app.services.external.lanhu_provider import _extract_lanhu_content  # 蓝湖提取已抽到 provider，委托调用
 
 
@@ -729,14 +731,34 @@ def _salvage_json_parts(text: str) -> dict | None:
 
 # ── AI API Call ──────────────────────────────────────────────
 
+def _dump_failed_ai_response(raw: str, prefix: str) -> None:
+    """把无法解析的原始响应落到服务端临时目录，仅记日志。
+
+    P1-4：路径**不得**出现在用户可见错误里——用户无权访问服务器文件系统，
+    暴露路径既无用又是信息泄露。
+    """
+    if not raw:
+        return
+    import tempfile
+    import time
+
+    dump_path = Path(tempfile.gettempdir()) / f"{prefix}_{int(time.time())}.json"
+    try:
+        dump_path.write_text(raw, encoding="utf-8")
+        logger.warning("[ai_service] raw response dumped to %s", dump_path)
+    except OSError as exc:  # 落盘失败不影响主流程
+        logger.warning("[ai_service] failed to dump raw response: %s", exc)
+
+
 async def _call_ai_api(db, project_id: int, system_prompt: str, user_message: str,
                        label: str = "", max_tokens: int | None = None) -> dict:
     """Make a single AI API call and return the parsed result."""
     try:
         cfg = ai_config_service.resolve(db, project_id)
     except AIProviderUnconfiguredError as exc:
+        ai_health_registry.record_failure(project_id, exc)
         return {"result": None, "raw": "", "finish_reason": "error", "truncated": False,
-                "error": str(exc)}
+                "error": str(exc), "error_kind": ai_errors.UNCONFIGURED}
 
     effective_max_tokens = max_tokens if max_tokens is not None else settings.ai_max_tokens
 
@@ -771,20 +793,32 @@ async def _call_ai_api(db, project_id: int, system_prompt: str, user_message: st
 
             try:
                 result = _parse_ai_response(raw)
+                ai_health_registry.record_success(project_id, getattr(cfg, "provider_id", None))
                 return {"result": result, "raw": raw, "finish_reason": finish_reason,
-                        "truncated": truncated, "error": None}
+                        "truncated": truncated, "error": None, "error_kind": None}
             except ValueError as parse_err:
                 if truncated:
                     salvaged = _salvage_json_parts(raw)
                     if salvaged is not None:
                         logger.warning("[ai_service] Salvaged partial data from truncated %s response", label)
+                        ai_health_registry.record_success(project_id, getattr(cfg, "provider_id", None))
                         return {"result": salvaged, "raw": raw, "finish_reason": finish_reason,
-                                "truncated": True, "error": None}
+                                "truncated": True, "error": None, "error_kind": None}
+                # 真正的解析失败：提供方连得上，只是内容不合法。
                 return {"result": None, "raw": raw, "finish_reason": finish_reason,
-                        "truncated": truncated, "error": str(parse_err)}
+                        "truncated": truncated, "error": str(parse_err),
+                        "error_kind": ai_errors.BAD_RESPONSE}
     except Exception as e:
+        # 传输/鉴权/限流等失败——**不得**再被上层当作「JSON 格式异常」。
+        # 用 getattr 取提供方标识：健康态登记是旁路观测，不应因配置对象形状
+        # （测试替身 / 未来字段调整）而反过来把主流程打挂。
+        provider_id = getattr(cfg, "provider_id", None)
+        provider_name = getattr(cfg, "provider_name", "") or ""
+        kind = ai_errors.classify_ai_error(e)
+        logger.warning("[ai_service] %s call failed (kind=%s): %s", label or "ai", kind, e)
+        ai_health_registry.record_failure(project_id, e, provider_id, provider_name)
         return {"result": None, "raw": "", "finish_reason": "error", "truncated": False,
-                "error": str(e)}
+                "error": ai_errors.humanize_ai_error(e, provider_name), "error_kind": kind}
 
 
 def _merge_split_results(func_result: dict | None, api_result: dict | None,
@@ -1197,15 +1231,13 @@ async def extract_features(db, project_id: int, content: str, file_type: str = "
             if changelog_info:
                 fallback["changelog"] = changelog_info
             return fallback
-        import tempfile
-        import time
-        dump_path = Path(tempfile.gettempdir()) / f"ai_extraction_failed_{int(time.time())}.json"
-        if raw:
-            dump_path.write_text(raw, encoding="utf-8")
+        error_kind = resp.get("error_kind") or ai_errors.classify_ai_error(error_detail)
+        if error_kind != ai_errors.BAD_RESPONSE:
+            raise ValueError(error_detail)
+        _dump_failed_ai_response(raw, "ai_extraction_failed")
         raise ValueError(
-            f"AI 功能拆分 JSON 格式异常，无法解析。\n"
-            f"错误: {error_detail}\n"
-            f"原始响应已保存至: {dump_path}"
+            "AI 功能拆分返回内容不是合法 JSON，无法解析。已记录原始响应到服务端日志，"
+            "可重试或在「AI 配置」更换模型后重试。"
         )
 
     result = resp["result"]
@@ -1408,18 +1440,17 @@ async def generate_test_cases(db, project_id: int, content: str, file_type: str 
         if func_resp["truncated"]:
             warnings.append("功能用例生成被截断，结果可能不完整")
         if func_resp["result"] is None:
-            import tempfile
-            import time
-            raw = func_resp["raw"]
-            dump_path = Path(tempfile.gettempdir()) / f"ai_response_failed_{int(time.time())}.json"
-            if raw:
-                dump_path.write_text(raw, encoding="utf-8")
             error_detail = func_resp.get("error", "未知错误")
+            error_kind = func_resp.get("error_kind") or ai_errors.classify_ai_error(error_detail)
+            raw = func_resp["raw"]
+            # 传输/鉴权/限流类失败直接透传可执行提示，不得伪装成 JSON 解析错误。
+            if error_kind != ai_errors.BAD_RESPONSE:
+                raise ValueError(error_detail)
+            # 真·解析失败：原始响应落到服务端日志目录，**不把路径写进用户可见消息**。
+            _dump_failed_ai_response(raw, "ai_response_failed")
             raise ValueError(
-                f"AI 返回的 JSON 格式异常，无法解析。\n"
-                f"错误: {error_detail}\n"
-                f"原始响应已保存至: {dump_path}\n"
-                f"请检查该文件中的 JSON 语法错误。"
+                "AI 返回内容不是合法 JSON，无法解析。已记录原始响应到服务端日志，"
+                "可重试或在「AI 配置」更换模型后重试。"
             )
         result = func_resp["result"]
     if "api_cases" not in result:

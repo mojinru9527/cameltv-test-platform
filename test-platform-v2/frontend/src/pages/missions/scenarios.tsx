@@ -30,13 +30,14 @@ import {
   type FunctionalProjection,
 } from '@/api/scenarios'
 import { fetchCurrentContract } from '@/api/contract'
-import { AITDE_V3_ENABLED } from '@/config/aitde'
+import { useAitdeV3Enabled } from '@/config/aitde'
 import { Sparkles, Check, X, FileText, Play } from '@/lib/icons'
 
 export default function MissionScenariosPage() {
   const { id } = useParams()
   const missionId = Number(id)
   const navigate = useNavigate()
+  const aitdeEnabled = useAitdeV3Enabled()
   useDocumentTitle('场景')
 
   const [rows, setRows] = useState<ScenarioRow[]>([])
@@ -163,7 +164,7 @@ export default function MissionScenariosPage() {
                       <TableCell>{r.oracle_count}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          {AITDE_V3_ENABLED && (
+                          {aitdeEnabled && (
                             <Button
                               variant="ghost"
                               size="sm"

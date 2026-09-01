@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router'
-import { AITDE_V3_ENABLED } from '@/config/aitde'
+import { useAitdeV3Enabled } from '@/config/aitde'
 
 // V40-019: legacy v1 surfaces being converged into the AITDE Mission chain. If the
 // user lands on one of these, surface a read-only / redirect notice pointing to the
@@ -22,7 +22,8 @@ const LEGACY_PREFIXES = [
 
 export function LegacyNoticeBanner() {
   const { pathname } = useLocation()
-  if (!AITDE_V3_ENABLED) return null
+  const aitdeEnabled = useAitdeV3Enabled()
+  if (!aitdeEnabled) return null
   if (!LEGACY_PREFIXES.some((p) => pathname.startsWith(p))) return null
 
   return (

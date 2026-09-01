@@ -264,7 +264,11 @@ export default function Workbench() {
                     </CardHeader>
                     <CardContent>
                       <p id="project-overview-summary" className="mb-3 text-sm text-muted-foreground">
-                        共 {sumTotal} 条用例，执行通过 {sumPass} 条，执行失败 {sumFail} 条。
+                        {/* P3-14：execution_pass / execution_fail 统计的是**执行次数**（同一条用例可被多次执行），
+                            此前文案写作「执行失败 N 条」，与「共 M 条用例」并列，出现失败数远超用例总数的
+                            自相矛盾展示（生产实测 10614 条用例 vs 34208 条失败）。改为明确区分两种口径。 */}
+                        共 {sumTotal} 条用例；累计执行 {sumPass + sumFail} 次，其中通过 {sumPass} 次、失败 {sumFail} 次。
+                        <span className="ml-1 text-xs">（执行次数按每次运行累计，同一用例多次执行会重复计入）</span>
                       </p>
                       <div className="flex flex-col lg:flex-row">
                         {/* 柱状图主体 */}
@@ -322,9 +326,9 @@ export default function Workbench() {
                         <thead>
                           <tr>
                             <th>用例类型</th>
-                            <th>用例总数</th>
-                            <th>执行通过</th>
-                            <th>执行失败</th>
+                            <th>用例总数（条）</th>
+                            <th>执行通过（次）</th>
+                            <th>执行失败（次）</th>
                             <th>通过率</th>
                           </tr>
                         </thead>

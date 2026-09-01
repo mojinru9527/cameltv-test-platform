@@ -246,8 +246,19 @@ export default function RequirementPage() {
       setActiveDocId(docId)
       setModalMode('generate')
       setShowAiModal(true)
-    } catch {
-      toast.error('AI 生成失败，请稍后重试')
+    } catch (e: unknown) {
+      // P1-4：异步任务的真实失败原因（如「API Key 无效或已过期（401）——请到
+      // 「AI 配置」更新密钥」）此前被整段丢弃，只留一句「请稍后重试」，
+      // 用户无从判断该重试还是该换 Key。这里透传后端 error 并给出跳转入口。
+      const detail = e instanceof Error ? e.message.trim() : ''
+      const isAuthIssue = /API Key|401|未配置|密钥/.test(detail)
+      toast.error(detail || 'AI 生成失败，请稍后重试', {
+        duration: 10_000,
+        description: isAuthIssue ? undefined : '可稍后重试；若持续失败请检查「AI 配置」',
+        action: isAuthIssue
+          ? { label: '去 AI 配置', onClick: () => navigate('/ai-config') }
+          : undefined,
+      })
     } finally {
       setGenerating(false)
       setGeneratingDocId(null)

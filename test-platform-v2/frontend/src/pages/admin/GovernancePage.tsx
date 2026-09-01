@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { governanceApi } from '@/api/governance'
-import { AITDE_V3_ENABLED } from '@/config/aitde'
 import { Loader2 } from '@/lib/icons'
 
 interface Posture {
@@ -101,14 +100,8 @@ export default function GovernancePage() {
     }
   }
 
-  if (!AITDE_V3_ENABLED) {
-    return (
-      <div className="rounded-xl border bg-card p-6 text-card-foreground">
-        <h2 className="text-base font-semibold">AITDE V4.0 治理</h2>
-        <p className="mt-2 text-sm text-muted-foreground">需启用 AITDE V3 功能开关后开放。</p>
-      </div>
-    )
-  }
+  // P0-1：路由层已由 <AitdeGate> 统一门控（运行时跟随后端 /api/v2/health），
+  // 页面内不再重复判断构建期常量，避免出现两套开关来源与两套占位文案。
 
   if (loading) {
     return (

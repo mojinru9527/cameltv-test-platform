@@ -19,10 +19,12 @@ interface SceneWizardProps {
   scene: SceneDef
   providers: AiProviderItem[]
   initialInput?: string
+  /** 深链带入需求正文的加载态（P1-5）。 */
+  prefilling?: boolean
   onSubmitted: () => void
 }
 
-export default function SceneWizard({ open, onOpenChange, scene, providers, initialInput, onSubmitted }: SceneWizardProps) {
+export default function SceneWizard({ open, onOpenChange, scene, providers, initialInput, prefilling, onSubmitted }: SceneWizardProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [input, setInput] = useState('')
   const [images, setImages] = useState<AttachImage[]>([])
@@ -52,6 +54,28 @@ export default function SceneWizard({ open, onOpenChange, scene, providers, init
     setModel(p ? p.default_model || (p.models?.[0] ?? '') : '')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, scene.id])
+
+  // P2-11：providers 是异步加载的。深链（?scene=...）会在 providers 到达**之前**
+  // 打开向导，上面的重置 effect 只依赖 [open, scene.id]，因此 providerId 会永远停在
+  // 空串——表现为「AI 提供方」显示 placeholder、「下一步」始终置灰且无任何说明，
+  // 即使项目早已配置了默认提供方。这里在 providers 到达后补一次预选。
+  useEffect(() => {
+    if (!open || providerId || providers.length === 0) return
+    const p = providers.find((x) => x.is_default) ?? providers[0]
+    setProviderId(String(p.id))
+    setModel(p.default_model || (p.models?.[0] ?? ''))
+  }, [open, providerId, providers])
+
+  // P1-5：需求正文是异步拉取的，`initialInput` 会在向导打开后才变化。
+  // 仅在用户尚未编辑（当前值为空或等于旧的预填值）时同步，避免覆盖用户输入。
+  const [lastPrefill, setLastPrefill] = useState('')
+  useEffect(() => {
+    if (!open) return
+    const next = initialInput ?? ''
+    if (!next || next === lastPrefill) return
+    setInput((cur) => (cur.trim() === '' || cur === lastPrefill ? next : cur))
+    setLastPrefill(next)
+  }, [open, initialInput, lastPrefill])
 
   const currentProvider = useMemo(
     () => providers.find((p) => String(p.id) === providerId) ?? null,
@@ -133,6 +157,12 @@ export default function SceneWizard({ open, onOpenChange, scene, providers, init
         {step === 1 && (
           <div className="space-y-2 py-2">
             <Label htmlFor="scene-wizard-input">{scene.inputLabel}</Label>
+            {prefilling && (
+              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Loader2 className="size-3 animate-spin" />
+                正在带入需求正文…
+              </p>
+            )}
             <Textarea
               id="scene-wizard-input"
               value={input}
@@ -249,6 +279,16 @@ export default function SceneWizard({ open, onOpenChange, scene, providers, init
         )}
 
         <DialogFooter>
+          {/* P2-11：置灰必须给出原因，否则用户只看到点不动的「下一步」。
+              无 providers 时步骤内已有醒目的「去配置」提示，此处不重复。 */}
+          {step === 1 && !readyToConfigure && (
+            <span className="mr-auto text-xs text-muted-foreground">
+              请先填写{scene.inputLabel}
+            </span>
+          )}
+          {step === 2 && !configReady && hasProviders && (
+            <span className="mr-auto text-xs text-muted-foreground">请先选择 AI 提供方</span>
+          )}
           <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={submitting}>
             取消
           </Button>

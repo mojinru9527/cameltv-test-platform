@@ -84,7 +84,39 @@ export async function getExtraction(
   documentId: number,
   signal?: AbortSignal,
 ): Promise<FeatureExtractionResult | null> {
-  return api.get(`/requirements/${documentId}/extraction`, { signal })
+  // 「首次尚无拆分结果」是预期路径，不应弹全局错误 toast。
+  // 生产曾把 envelope 的 msg「功能拆分结果」当作错误直接弹给用户（P1-3）。
+  return api.get(`/requirements/${documentId}/extraction`, {
+    signal,
+    suppressErrorToast: true,
+  })
+}
+
+/**
+ * 读取 envelope 业务错误码。
+ *
+ * P1-3 缺陷根因：原实现写作
+ *   `(error as { code?: number }).code ?? error.response?.data?.code`
+ * 而 axios 错误对象**恒带**字符串 `code`（如 `'ERR_BAD_REQUEST'`），`??` 因此
+ * 提前短路，永远读不到 envelope 的 404 —— 降级到 `extractFeatures` 的分支从未
+ * 生效，「功能拆分」按钮在后端返回 HTTP 404 时完全失效。
+ *
+ * 这里只接受**数值型**业务码，并同时兼容两种后端形态：
+ *   - HTTP 200 + envelope code=404（拦截器抛出的 businessError.code）
+ *   - HTTP 404 + body {"code":404}（axios error.response.data.code）
+ *   - 兜底取 HTTP status，避免后端未带 envelope 时再次失效
+ */
+export function readEnvelopeCode(error: unknown): number | undefined {
+  if (typeof error !== 'object' || error === null) return undefined
+
+  const direct = (error as { code?: unknown }).code
+  if (typeof direct === 'number') return direct
+
+  const fromBody = (error as { response?: { data?: { code?: unknown } } }).response?.data?.code
+  if (typeof fromBody === 'number') return fromBody
+
+  const status = (error as { response?: { status?: unknown } }).response?.status
+  return typeof status === 'number' ? status : undefined
 }
 
 export async function getOrCreateExtraction(
@@ -95,18 +127,7 @@ export async function getOrCreateExtraction(
     const existing = await getExtraction(documentId, signal)
     return existing === null ? extractFeatures(documentId, signal) : existing
   } catch (error) {
-    // 本仓约定：查不到返回 HTTP 200 + envelope code=404（Batch 160：拦截器已把 code 附到 Error 上）
-    const code = (
-      typeof error === 'object' && error !== null
-        ? (error as { code?: number }).code
-        : undefined
-    ) ?? (
-      typeof error === 'object' && error !== null && 'response' in error
-        ? (error as { response?: { data?: { code?: number } } }).response?.data?.code
-        : undefined
-    )
-
-    if (code === 404) {
+    if (readEnvelopeCode(error) === 404) {
       return extractFeatures(documentId, signal)
     }
     throw error

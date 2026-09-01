@@ -7,6 +7,10 @@ import type { MenuItem } from '@/types'
  */
 export const PRIMARY_MENU_CODES: ReadonlySet<string> = new Set([
   'menu:workbench',
+  // V4.0 AITDE 主链（Mission→Contract→Scenario→Run）是本版本的核心入口。
+  // P2-9：此前它落在 fail-safe 的「更多功能」折叠组，且排在 11 项的第 10 位，
+  // 黑盒测试中需展开折叠组才能发现，旗舰功能可发现性不合格。
+  'menu:missions',
   'menu:requirement',
   'menu:knowledge',
   'menu:testcase',

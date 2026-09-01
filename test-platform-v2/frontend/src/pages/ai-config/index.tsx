@@ -125,16 +125,20 @@ export default function AiConfigPage() {
   const [deleteTarget, setDeleteTarget] = useState<AiProviderItem | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  const loadResolved = useCallback((signal?: AbortSignal) => {
+    fetchAiResolve(signal)
+      .then((r) => { if (!signal?.aborted) setResolved(r) })
+      .catch(() => { if (!signal?.aborted) setResolved(null) })
+  }, [])
+
   const load = useCallback((signal?: AbortSignal) => {
     setLoading(true)
     fetchAiProviders(signal)
       .then((items) => { if (!signal?.aborted) setProviders(items) })
       .catch(() => { if (!signal?.aborted) toast.error('加载 AI 配置失败') })
       .finally(() => { if (!signal?.aborted) setLoading(false) })
-    fetchAiResolve(signal)
-      .then((r) => { if (!signal?.aborted) setResolved(r) })
-      .catch(() => { if (!signal?.aborted) setResolved(null) })
-  }, [])
+    loadResolved(signal)
+  }, [loadResolved])
 
   useAbortableEffect((signal) => {
     load(signal)
@@ -192,8 +196,27 @@ export default function AiConfigPage() {
     setTestingId(id)
     try {
       const res = await testAiProviderConnection(id)
-      if (res.ok) toast.success(`连通正常 (${res.latency_ms ?? '-'} ms) · ${res.model ?? ''}`)
-      else toast.error(res.error || '连接失败')
+      if (res.ok) {
+        toast.success(`连通正常 (${res.latency_ms ?? '-'} ms) · ${res.model ?? ''}`)
+      } else {
+        // P2-7：后端已返回可执行中文提示；Key 类问题额外给出「立即更新」入口。
+        const needsKey = res.kind === 'unauthorized' || res.kind === 'forbidden'
+        toast.error(res.error || '连接失败', {
+          duration: 10_000,
+          description: res.detail && res.detail !== res.error ? res.detail : undefined,
+          action: needsKey
+            ? {
+                label: '更新密钥',
+                onClick: () => {
+                  const target = providers.find((p) => p.id === id)
+                  if (target) openEdit(target)
+                },
+              }
+            : undefined,
+        })
+      }
+      // 连通性结果会写入后端健康态，刷新生效模型卡片的状态徽标。
+      loadResolved()
     } catch (e: any) {
       toast.error(e?.message || '连接失败')
     } finally {
@@ -278,13 +301,23 @@ export default function AiConfigPage() {
 
       {resolved && (
         <div className="rounded-lg border bg-card px-4 py-3 text-sm text-card-foreground">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Zap className="size-4 text-primary" />
             <span className="font-medium">AITDE 当前生效模型</span>
             {resolved.configured && resolved.provider ? (
-              <span className="ml-1">
+              <span className="ml-1 flex flex-wrap items-center gap-2">
                 <Badge className="bg-status-success-muted text-status-success">{resolved.provider.model}</Badge>
-                <span className="ml-2 text-xs text-muted-foreground">提供方：{resolved.provider.name}</span>
+                <span className="text-xs text-muted-foreground">提供方：{resolved.provider.name}</span>
+                {/* P0-2/P2-6：已配置 ≠ 可用。展示最近一次真实调用/连通性结果。 */}
+                {resolved.health?.status === 'error' && (
+                  <Badge className="bg-status-danger-muted text-status-danger">不可用</Badge>
+                )}
+                {resolved.health?.status === 'ok' && (
+                  <Badge className="bg-status-success-muted text-status-success">连通正常</Badge>
+                )}
+                {(!resolved.health || resolved.health.status === 'unknown') && (
+                  <Badge variant="outline">未验证</Badge>
+                )}
               </span>
             ) : (
               <Badge variant="outline">未配置</Badge>
@@ -295,16 +328,40 @@ export default function AiConfigPage() {
               尚未配置生效的大模型与 Key。点击「新建提供方」填写 API 地址、模型与 API Key 并置为默认，AITDE 即可调用。
             </p>
           )}
+          {resolved.configured && resolved.health?.status === 'error' && (
+            <p className="mt-1.5 text-xs text-status-danger">
+              {resolved.health.message}
+              {resolved.health.checked_at && (
+                <span className="ml-1 text-muted-foreground">（检测于 {resolved.health.checked_at}）</span>
+              )}
+            </p>
+          )}
+          {resolved.configured && (!resolved.health || resolved.health.status === 'unknown') && (
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              尚未验证该 Key 是否可用。点击提供方行末的「测试连通性」可立即确认，避免配置看起来正常但调用时才失败。
+            </p>
+          )}
         </div>
       )}
 
       <div className="rounded-lg border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
         <p className="font-medium text-foreground">AITDE 使用指引</p>
         <ul className="mt-1 list-disc space-y-0.5 pl-4">
-          <li>① 需开启 AITDE v3 功能开关（配置项 <code className="rounded bg-background px-1">aitde_v3_enabled=true</code>，默认关闭）；开启后 AITDE 主链与 AI 能力才可用。</li>
+          {/* P2-8：原文案写「aitde_v3_enabled 默认关闭」，但真正卡住入口的是**前端构建变量**，
+              用户照此排查无解。现改为说明开关以后端为准、前端自动跟随。 */}
+          <li>
+            ① AITDE 主链入口由<strong className="text-foreground">后端</strong>开关
+            <code className="rounded bg-background px-1">AITDE_V3_ENABLED</code> 控制；
+            前端运行时读取 <code className="rounded bg-background px-1">GET /api/v2/health</code> 自动跟随，
+            改后端配置并重启即可，<strong className="text-foreground">无需重新构建前端</strong>。
+          </li>
           <li>② 此处配置的「大模型 + API Key」即 AITDE / AI 用例生成按项目生效的模型；保存 Key 后平台加密存储、列表仅显示掩码。</li>
-          <li>③ 配置按项目隔离：本项目生效配置不跨项目使用（验证隔离见后端测试）。</li>
-          <li>④ 官方一键模板已绑定官方 base_url + 默认模型，请填入对应官方 Key，避免 key 与模型错配。</li>
+          <li>
+            ③ 保存后请点「测试连通性」确认 Key 可用——
+            <strong className="text-foreground">填写成功不等于调用成功</strong>，Key 过期时所有 AI 功能都会失败。
+          </li>
+          <li>④ 配置按项目隔离：本项目生效配置不跨项目使用（验证隔离见后端测试）。</li>
+          <li>⑤ 官方一键模板已绑定官方 base_url + 默认模型，请填入对应官方 Key，避免 key 与模型错配。</li>
         </ul>
       </div>
 
@@ -359,21 +416,29 @@ export default function AiConfigPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
+                        {/* P3-13：纯图标按钮必须带 aria-label，仅有 title 对读屏与自动化都不可达。 */}
                         <Button
                           variant="ghost" size="sm" className="h-8 px-2"
                           onClick={() => handleTestConnection(p.id)} disabled={testingId === p.id}
                           title="测试连通性"
+                          aria-label={`测试连通性：${p.name}`}
                         >
                           {testingId === p.id ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
                         </Button>
                         {canManage && (
                           <>
-                            <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => openEdit(p)} title="编辑">
+                            <Button
+                              variant="ghost" size="sm" className="h-8 px-2"
+                              onClick={() => openEdit(p)}
+                              title="编辑"
+                              aria-label={`编辑 AI 提供方：${p.name}`}
+                            >
                               <Pencil className="size-4" />
                             </Button>
                             <Button
                               variant="ghost" size="sm" className="h-8 px-2 text-status-danger hover:text-status-danger hover:bg-status-danger-muted"
                               disabled={p.is_default} title={p.is_default ? '默认提供方不可删除' : '删除'}
+                              aria-label={p.is_default ? `默认提供方不可删除：${p.name}` : `删除 AI 提供方：${p.name}`}
                               onClick={() => setDeleteTarget(p)}
                             >
                               <Trash2 className="size-4" />

@@ -33,6 +33,7 @@ import {
   type DshTaskArtifact,
 } from '@/api/dshTasks'
 import { fetchAiResolve, fetchAiProviders, type AiResolveResult, type AiProviderItem } from '@/api/aiConfig'
+import { fetchRequirement } from '@/api/requirement'
 import { SCENES, SCENE_BY_ID, sceneLabel, type SceneDef } from './scenes'
 import SceneWizard from './components/SceneWizard'
 import DshImageAttach, { attachFiles, clipPasteImages, type AttachImage } from './components/DshImageAttach'
@@ -93,8 +94,10 @@ export default function DshTasksPage() {
   // B1：AI 提供方池（场景向导配置项）+ 向导选中场景
   const [providers, setProviders] = useState<AiProviderItem[]>([])
   const [wizardScene, setWizardScene] = useState<SceneDef | null>(null)
-  // B3：深链预填输入（?scene=xxx&hint=yyy）
+  // B3：深链预填输入（?scene=xxx&hint=yyy&docId=zzz）
   const [wizardInput, setWizardInput] = useState('')
+  // P1-5：从需求文档深链进入时，正文异步拉取中的加载态
+  const [wizardPrefilling, setWizardPrefilling] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
 
   const load = useCallback((signal?: AbortSignal) => {
@@ -139,6 +142,7 @@ export default function DshTasksPage() {
   }, [load, loadHealth, loadModelPool, loadAiResolve, loadProviders])
 
   // B3 全量深链：?scene=<sceneId>&hint=<文本> → 自动打开对应场景向导并预填输入（一次，随后清 URL）
+  // P1-5：额外支持 ?docId=<需求文档 id> —— 从需求文档页发起时带入**正文**而非仅标题。
   useEffect(() => {
     const sceneId = searchParams.get('scene')
     if (!sceneId) return
@@ -147,9 +151,35 @@ export default function DshTasksPage() {
       setSearchParams({}, { replace: true })
       return
     }
-    setWizardInput(searchParams.get('hint') || '')
+    const hint = searchParams.get('hint') || ''
+    const docId = Number(searchParams.get('docId') || '')
+    setWizardInput(hint)
     setWizardScene(scene)
     setSearchParams({}, { replace: true })
+
+    if (!Number.isFinite(docId) || docId <= 0) return
+    let cancelled = false
+    setWizardPrefilling(true)
+    fetchRequirement(docId)
+      .then((doc) => {
+        if (cancelled) return
+        const body = (doc.content || '').trim()
+        if (!body) {
+          toast.warning('该需求文档暂无可用正文，已仅带入标题，请手动粘贴需求内容')
+          return
+        }
+        // 标题 + 正文：标题提供上下文，正文提供实际需求。
+        setWizardInput(hint ? `${hint}\n\n${body}` : body)
+      })
+      .catch(() => {
+        if (!cancelled) toast.warning('未能带入需求正文，请手动粘贴需求内容')
+      })
+      .finally(() => {
+        if (!cancelled) setWizardPrefilling(false)
+      })
+    return () => {
+      cancelled = true
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -618,6 +648,7 @@ export default function DshTasksPage() {
           scene={wizardScene}
           providers={providers}
           initialInput={wizardInput}
+          prefilling={wizardPrefilling}
           onSubmitted={load}
         />
       )}
