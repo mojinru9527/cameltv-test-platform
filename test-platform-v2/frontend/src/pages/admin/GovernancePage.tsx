@@ -32,9 +32,9 @@ function PostureCard({ title, ok, detail }: { title: string; ok: boolean | null;
         {ok === null ? (
           <span className="text-xs text-muted-foreground">…</span>
         ) : ok ? (
-          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">PASS</span>
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">PASS</span>
         ) : (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">需关注</span>
+          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">需关注</span>
         )}
       </div>
       <p className="mt-2 text-xs text-muted-foreground">{detail}</p>
@@ -167,8 +167,8 @@ export default function GovernancePage() {
             <span
               className={
                 (readiness as { pass?: boolean }).pass
-                  ? 'rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700'
-                  : 'rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700'
+                  ? 'rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary'
+                  : 'rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-destructive'
               }
             >
               {readiness.pass ? 'PASS' : 'FAIL'}
