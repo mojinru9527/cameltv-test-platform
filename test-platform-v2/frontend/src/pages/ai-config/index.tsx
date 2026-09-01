@@ -30,7 +30,8 @@ const TYPE_LABELS: Record<string, string> = {
   deepseek_official: 'DeepSeek 官方',
 }
 
-// 主流大模型官方一键模板：key 与官方 base_url + 默认模型绑定。
+// 主流大模型官方一键模板：预置该厂商全量官方模型 + 官方 base_url + 默认模型；填入对应官方 Key 后可在
+// 表单「自动发现」按厂商 /models 拉取最新全量模型清单（模板模型是稳定基线，发现结果为动态全量）。
 interface OfficialTemplate {
   key: string
   name: string
@@ -40,10 +41,30 @@ interface OfficialTemplate {
   default_model: string
 }
 const OFFICIAL_TEMPLATES: OfficialTemplate[] = [
-  { key: 'deepseek', name: 'DeepSeek 官方', provider_type: 'deepseek_official', base_url: 'https://api.deepseek.com', models: ['deepseek-v4-pro', 'deepseek-v4-flash'], default_model: 'deepseek-v4-pro' },
-  { key: 'glm', name: 'GLM（智谱）', provider_type: 'openai_compatible', base_url: 'https://open.bigmodel.cn/api/paas/v4', models: ['glm-4-plus', 'glm-4-flash'], default_model: 'glm-4-plus' },
-  { key: 'openai', name: 'GPT（OpenAI）', provider_type: 'openai_compatible', base_url: 'https://api.openai.com/v1', models: ['gpt-4o', 'gpt-4o-mini'], default_model: 'gpt-4o' },
-  { key: 'qwen', name: '通义千问（Qwen）', provider_type: 'openai_compatible', base_url: 'https://dashscope.aliyuncs.com/compatible-mode/v1', models: ['qwen-max', 'qwen-plus', 'qwen-turbo'], default_model: 'qwen-max' },
+  {
+    key: 'deepseek', name: 'DeepSeek 官方', provider_type: 'deepseek_official',
+    base_url: 'https://api.deepseek.com',
+    models: ['deepseek-v4-pro', 'deepseek-v4-flash', 'deepseek-v4-flash-preview', 'deepseek-chat', 'deepseek-reasoner'],
+    default_model: 'deepseek-v4-pro',
+  },
+  {
+    key: 'glm', name: 'GLM（智谱）', provider_type: 'openai_compatible',
+    base_url: 'https://open.bigmodel.cn/api/paas/v4',
+    models: ['glm-4-plus', 'glm-4', 'glm-4-flash', 'glm-4-air', 'glm-4-airx', 'glm-4-0520', 'glm-4v-plus', 'glm-4v-flash'],
+    default_model: 'glm-4-plus',
+  },
+  {
+    key: 'openai', name: 'GPT（OpenAI）', provider_type: 'openai_compatible',
+    base_url: 'https://api.openai.com/v1',
+    models: ['gpt-5', 'gpt-5-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4o', 'gpt-4o-mini', 'gpt-4.5', 'gpt-4.5-preview'],
+    default_model: 'gpt-4o',
+  },
+  {
+    key: 'qwen', name: '通义千问（Qwen）', provider_type: 'openai_compatible',
+    base_url: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    models: ['qwen-max', 'qwen-max-latest', 'qwen-plus', 'qwen-plus-latest', 'qwen-turbo', 'qwen-turbo-latest', 'qwen-long', 'qwen3-max', 'qwen3-plus'],
+    default_model: 'qwen-max',
+  },
 ]
 
 function dedupeModels(list: string[]): string[] {
@@ -206,16 +227,17 @@ export default function AiConfigPage() {
         api_base_url: form.api_base_url.trim(),
         api_key: form.api_key.trim(),
       })
-      const models = dedupeModels(res?.models ?? [])
-      if (models.length === 0) {
+      // 合并厂商 /models 返回的全量模型 + 当前已填模型（去重），不丢失已知官方模型。
+      const merged = dedupeModels([...dedupeModels(form.modelsText.split(/[,，]/)), ...(res?.models ?? [])])
+      if (merged.length === 0) {
         toast.error('未发现可用模型')
       } else {
         setForm({
           ...form,
-          modelsText: models.join(', '),
-          default_model: form.default_model.trim() || models[0],
+          modelsText: merged.join(', '),
+          default_model: form.default_model.trim() || merged[0],
         })
-        toast.success(`已拉取 ${models.length} 个模型`)
+        toast.success(`已拉取厂商全量模型（共 ${merged.length} 个）`)
       }
     } catch (e: any) {
       toast.error(e?.message || '模型发现失败')
@@ -378,18 +400,21 @@ export default function AiConfigPage() {
           </DialogHeader>
           <div className="space-y-3 py-4">
             <div>
-              <Label>官方一键模板（点击填入 base_url + 模型，关联官方 Key）</Label>
+              <Label>官方一键模板（预置该厂商全量官方模型 + base_url，填入对应官方 Key）</Label>
               <div className="mt-1 grid grid-cols-2 gap-2">
                 {OFFICIAL_TEMPLATES.map((tpl) => (
                   <Button
                     key={tpl.key} type="button" variant="secondary" className="justify-start"
                     onClick={() => handleTemplate(tpl)}
-                    title={`${tpl.base_url} · ${tpl.default_model}`}
+                    title={`${tpl.base_url} · 默认 ${tpl.default_model}`}
                   >
                     {tpl.name}
                   </Button>
                 ))}
               </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                选模板后填入该厂商官方 Key，点「自动发现」可拉取该厂商当前全部官方模型。
+              </p>
             </div>
             <div>
               <Label htmlFor="provider-name">名称</Label>
