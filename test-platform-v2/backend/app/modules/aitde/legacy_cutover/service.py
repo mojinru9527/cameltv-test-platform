@@ -48,6 +48,60 @@ def _is_valid(value: str | None, allowed: set[str]) -> bool:
     return value is None or value in allowed
 
 
+def extract_ai_draft(project_id: int, case: TestCase) -> dict:
+    """V40-005: reverse-extract Given/When/Then/Expected JSON from a legacy TestCase.
+
+    Uses the app's configured AI provider (``ai_config_service.resolve``); if no
+    provider is configured it returns ``{ok: False, reason: ai_not_configured}``
+    rather than fabricating a draft. Patchable in tests.
+    """
+    from app.services.ai_config_service import AIProviderUnconfiguredError, ai_config_service
+    from app.core.db import SessionLocal
+
+    db = SessionLocal()
+    try:
+        try:
+            cfg = ai_config_service.resolve(db, project_id)
+        except AIProviderUnconfiguredError:
+            return {"ok": False, "reason": "ai_not_configured"}
+    finally:
+        db.close()
+
+    system = (
+        "你是测试用例结构化专家。把给定旧用例转成 Given/When/Then/Expected 的 JSON："
+        '{"given":{...},"when":{...},"expected":{...},"title":"..","goal":".."}。'
+        "只输出 JSON，不要额外文字。"
+    )
+    user = (
+        f"标题：{case.title}\n优先级：{case.priority}\n"
+        f"前置：{case.preconditions}\n步骤：{case.steps}\n预期：{case.expected_result}"
+    )
+
+    payload = {
+        "model": cfg.model,
+        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+        "max_tokens": 1024,
+        "response_format": {"type": "json_object"},
+    }
+    try:
+        import httpx
+
+        resp = httpx.post(
+            f"{cfg.api_base_url.rstrip('/')}/chat/completions",
+            headers={"Authorization": f"Bearer {cfg.api_key}"},
+            json=payload,
+            timeout=60.0,
+        )
+        resp.raise_for_status()
+        content = resp.json()["choices"][0]["message"]["content"]
+        draft = json.loads(content)
+        if not isinstance(draft, dict):
+            return {"ok": False, "reason": "invalid_ai_response"}
+        return {"ok": True, "draft": draft}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "reason": "ai_error", "detail": str(exc)}
+
+
 class LegacyUsageInventoryService:
     """V40-001: persist observed legacy v1 endpoint/page/job usage."""
 
@@ -625,6 +679,41 @@ class LegacyCaseMigrationService:
         db.commit()
         db.refresh(row)
         return LegacyCaseMigrationService._out(row)
+
+    @staticmethod
+    def generate_ai_draft(db: Session, migration_id: int) -> dict:
+        """V40-005: AI reverse-extract Given/When/Then/Expected from the source case.
+
+        Calls :func:`extract_ai_draft` (patchable in tests). If no AI provider is
+        configured the migration stays ``DRAFT_PENDING`` and an honest
+        ``ai_not_configured`` state is returned — never a fabricated draft.
+        """
+        row = db.get(LegacyCaseMigration, migration_id)
+        if row is None:
+            return {"ok": False, "reason": "not_found"}
+        if row.draft_json and row.draft_json != "{}":
+            return {"ok": False, "reason": "draft_already_present", "migration": LegacyCaseMigrationService._out(row)}
+
+        case = db.get(TestCase, row.source_case_id)
+        if case is None:
+            return {"ok": False, "reason": "source_case_missing"}
+
+        extracted = extract_ai_draft(row.project_id or 0, case)
+        if not extracted.get("ok"):
+            return extracted
+
+        draft = extracted["draft"]
+        if not row.destination_mission_id or row.destination_mission_id <= 0:
+            return {"ok": False, "reason": "mission_id_required", "draft": draft}
+
+        data = LegacyCaseMigrationService.submit_draft(
+            db,
+            migration_id,
+            row.destination_mission_id,
+            row.contract_version_id or 0,
+            draft,
+        )
+        return {"ok": True, "migration": data}
 
     @staticmethod
     def submit_review(

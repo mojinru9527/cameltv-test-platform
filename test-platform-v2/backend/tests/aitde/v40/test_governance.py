@@ -189,6 +189,36 @@ def test_acceptance_report_rejects_missing_sections():
     assert "evidence_links" in res["missing"]
 
 
+def test_acceptance_report_generate_aggregates_real_rows(db):
+    from app.modules.aitde.contract.models import TestContract, TestContractVersion
+    from app.modules.aitde.execution.models import ExecutionRun
+    from app.modules.aitde.mission.models import Mission
+    from app.modules.aitde.scenario.models import TestScenario
+
+    mission = Mission(project_id=1, mission_key="M-REPORT-1", status="ACTIVE")
+    db.add(mission)
+    db.flush()
+    scen = TestScenario(project_id=1, mission_id=mission.id, scenario_key="S-1", status="ACTIVE")
+    db.add(scen)
+    db.flush()
+    contract = TestContract(mission_id=mission.id, name="c")
+    db.add(contract)
+    db.flush()
+    db.add(TestContractVersion(contract_id=contract.id, version_no=1))
+    db.add(ExecutionRun(project_id=1, mission_id=mission.id, scenario_id=scen.id, scenario_version_id=1, adapter_id=0, contract_version_id=0, outcome="PASS", runtime_status="COMPLETED"))
+    db.add(ExecutionRun(project_id=1, mission_id=mission.id, scenario_id=scen.id, scenario_version_id=1, adapter_id=0, contract_version_id=0, outcome="BUSINESS_FAIL", runtime_status="COMPLETED"))
+    db.commit()
+
+    res = AcceptanceReportService.generate(db, mission.id)
+    assert res["valid"] is True
+    report = res["report"]
+    assert report["scenario_coverage"]["scenarios"] == 1
+    assert report["scenario_coverage"]["runs"] == 2
+    assert report["p0_p1_outcomes"] == {"PASS": 1, "BUSINESS_FAIL": 1}
+    assert len(report["evidence_links"]) == 2
+    assert report["contract_version"]["version_no"] == 1
+
+
 # ── V40-009 SSO scaffold ────────────────────────────────────────────────────
 
 

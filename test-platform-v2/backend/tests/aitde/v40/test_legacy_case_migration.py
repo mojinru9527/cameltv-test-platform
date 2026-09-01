@@ -6,7 +6,8 @@ import pytest
 from sqlalchemy import select
 
 from app.models.test_case import TestCase as CaseModel
-from app.modules.aitde.legacy_cutover.models import LegacyObjectMapping
+from app.modules.aitde.legacy_cutover import service as cutover_service
+from app.modules.aitde.legacy_cutover.models import LegacyCaseMigration, LegacyObjectMapping
 from app.modules.aitde.legacy_cutover.service import LegacyCaseMigrationService as Svc
 from app.modules.aitde.scenario.models import TestScenario as ScenarioModel
 from app.modules.aitde.scenario.models import TestScenarioVersion as ScenarioVersionModel
@@ -93,9 +94,42 @@ def test_reject_blocks_promote(db):
 
 
 def test_promote_requires_accepted_and_mission(db):
-    case = _add_case(db, priority="P0", key="TC-P0-4")
+    _add_case(db, priority="P0", key="TC-P0-4")
     mig_id = Svc.enqueue_high_value(db, 1)[0]["id"]
     # Not accepted yet -> cannot promote.
     with pytest.raises(ValueError):
         Svc.promote(db, mig_id)
-    assert case.id > 0
+
+
+def test_generate_ai_draft_extracts_and_awaits_review(db, monkeypatch):
+    _add_case(db, priority="P0", key="TC-AI-1")
+    mig_id = Svc.enqueue_high_value(db, 1, mission_id=9)[0]["id"]
+    draft = {
+        "given": {"user": "prepared"},
+        "when": {"action": "login"},
+        "expected": {"status": 200},
+        "title": "登录成功",
+        "goal": "校验登录主流程",
+    }
+    monkeypatch.setattr(
+        cutover_service, "extract_ai_draft", lambda project_id, case: {"ok": True, "draft": draft}
+    )
+    res = Svc.generate_ai_draft(db, mig_id)
+    assert res["ok"] is True
+    assert res["migration"]["status"] == "AWAITING_REVIEW"
+
+
+def test_generate_ai_draft_ai_not_configured_stays_pending(db, monkeypatch):
+    _add_case(db, priority="P1", key="TC-AI-2")
+    mig_id = Svc.enqueue_high_value(db, 1, mission_id=9)[0]["id"]
+    monkeypatch.setattr(
+        cutover_service, "extract_ai_draft",
+        lambda project_id, case: {"ok": False, "reason": "ai_not_configured"},
+    )
+    res = Svc.generate_ai_draft(db, mig_id)
+    assert res["ok"] is False
+    assert res["reason"] == "ai_not_configured"
+    # Honest: stays DRAFT_PENDING, no fabricated draft.
+    row = db.get(LegacyCaseMigration, mig_id)
+    assert row.status == "DRAFT_PENDING"
+    assert row.draft_json == "{}"
