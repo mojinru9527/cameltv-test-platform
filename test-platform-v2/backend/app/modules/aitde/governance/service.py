@@ -366,6 +366,18 @@ class RbacPolicyService:
         )
         if not role_ids:
             return False
+        # A role holding the ``*`` wildcard (super-admin) authorizes everything —
+        # keep parity with the platform's ``has_permission`` (''*'' in permissions).
+        wildcard = db.scalar(
+            select(Permission).where(Permission.code == "*")
+        )
+        if wildcard is not None and db.scalar(
+            select(RolePermission).where(
+                RolePermission.role_id.in_(list(role_ids)),
+                RolePermission.permission_id == wildcard.id,
+            )
+        ) is not None:
+            return True
         perm = db.scalar(
             select(Permission).where(Permission.code == permission_code)
         )

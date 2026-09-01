@@ -121,6 +121,29 @@ def test_rbac_cross_project_report_detects_leak(db):
     assert report["pass"] is True
 
 
+def _grant_wildcard(db, user_id, project_id):
+    from app.models.rbac import Permission, Role, RolePermission, UserRole
+
+    role = Role(code=f"role-super-{user_id}", name="super", data_scope="project")
+    db.add(role)
+    db.flush()
+    perm = Permission(code="*", name="*", type="api")
+    db.add(perm)
+    db.flush()
+    db.add(RolePermission(role_id=role.id, permission_id=perm.id))
+    db.add(UserRole(user_id=user_id, role_id=role.id, project_id=project_id))
+    db.commit()
+
+
+def test_rbac_wildcard_authorizes_everything(db):
+    _grant_wildcard(db, user_id=3, project_id=10)
+    # A super-admin role with the ``*`` permission authorizes any code in that project.
+    assert RbacPolicyService.is_authorized(db, 3, 10, "mission:detail") is True
+    assert RbacPolicyService.is_authorized(db, 3, 10, "contract:delete") is True
+    # But the wildcard still does not leak across projects.
+    assert RbacPolicyService.is_authorized(db, 3, 20, "mission:detail") is False
+
+
 # ── V40-013 Encryption posture ──────────────────────────────────────────────
 
 
