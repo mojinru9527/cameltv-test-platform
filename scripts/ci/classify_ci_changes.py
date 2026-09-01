@@ -14,6 +14,7 @@ NEUTRAL_PREFIXES = (
     "docs/",
     "scripts/ci/",
     "scripts/git/",
+    "scripts/ops/",
     "work-logs/",
     "产品需求/",
     # CI 工作流与部署定义属于治理/流程层：不触发前后端全量回归，
