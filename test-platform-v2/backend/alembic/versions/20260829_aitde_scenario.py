@@ -74,7 +74,7 @@ def upgrade() -> None:
         sa.Column("expected_value_json", sa.Text, nullable=False, server_default=sa.text("'{}'")),
         sa.Column("source_type", sa.String(32), nullable=False, server_default=sa.text("'REQUIREMENT_EXPLICIT'")),
         sa.Column("source_refs_json", sa.Text, nullable=False, server_default=sa.text("'[]'")),
-        sa.Column("required", sa.Boolean, nullable=False, server_default=sa.text("1")),
+        sa.Column("required", sa.Boolean, nullable=False, server_default=sa.text("true")),
         sa.Column("confidence", sa.Float, nullable=False, server_default=sa.text("1")),
         sa.Column("review_status", sa.String(16), nullable=False, server_default=sa.text("'PROPOSED'")),
         sa.Column("created_by_type", sa.String(16), nullable=False, server_default=sa.text("'SYSTEM'")),

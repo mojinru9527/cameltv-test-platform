@@ -65,7 +65,7 @@ def upgrade() -> None:
         sa.Column("mission_id", sa.Integer, nullable=False, index=True),
         sa.Column("artifact_id", sa.Integer, nullable=False, index=True),
         sa.Column("role", sa.String(32), nullable=False, server_default=sa.text("'REQUIREMENT'")),
-        sa.Column("is_primary", sa.Boolean, nullable=False, server_default=sa.text("0")),
+        sa.Column("is_primary", sa.Boolean, nullable=False, server_default=sa.text("false")),
         sa.Column("created_by", sa.Integer, nullable=False, server_default=sa.text("0")),
         sa.Column("created_at", sa.DateTime, nullable=True),
         sa.UniqueConstraint("mission_id", "artifact_id", name="uq_mission_source_link"),
