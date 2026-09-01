@@ -54,6 +54,8 @@ services:
       - AI_MODEL=${AI_MODEL:-deepseek-chat}
       - AI_MAX_TOKENS=${AI_MAX_TOKENS:-8192}
       - AI_TEMPERATURE=${AI_TEMPERATURE:-0.3}
+      # ── AITDE v3 (Mission/Source/Scope/Contract/Scenario ...) ──
+      - AITDE_V3_ENABLED=${AITDE_V3_ENABLED:-false}
       # ── 蓝湖自动登录 ──
       - LANHU_COOKIE=${LANHU_COOKIE:-}
       - LANHU_USERNAME=${LANHU_USERNAME:-}
