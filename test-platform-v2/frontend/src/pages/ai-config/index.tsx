@@ -19,7 +19,10 @@ import {
   updateAiProvider,
   deleteAiProvider,
   testAiProviderConnection,
+  fetchAiResolve,
+  discoverAiModels,
   type AiProviderItem,
+  type AiResolveResult,
 } from '@/api/aiConfig'
 
 const TYPE_LABELS: Record<string, string> = {
@@ -71,11 +74,13 @@ export default function AiConfigPage() {
   const canManage = hasPerm('ai_config:manage')
 
   const [providers, setProviders] = useState<AiProviderItem[]>([])
+  const [resolved, setResolved] = useState<AiResolveResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [formOpen, setFormOpen] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [testingId, setTestingId] = useState<number | null>(null)
+  const [discovering, setDiscovering] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<AiProviderItem | null>(null)
   const [deleting, setDeleting] = useState(false)
 
@@ -85,6 +90,9 @@ export default function AiConfigPage() {
       .then((items) => { if (!signal?.aborted) setProviders(items) })
       .catch(() => { if (!signal?.aborted) toast.error('加载 AI 配置失败') })
       .finally(() => { if (!signal?.aborted) setLoading(false) })
+    fetchAiResolve(signal)
+      .then((r) => { if (!signal?.aborted) setResolved(r) })
+      .catch(() => { if (!signal?.aborted) setResolved(null) })
   }, [])
 
   useAbortableEffect((signal) => {
@@ -167,11 +175,40 @@ export default function AiConfigPage() {
     }
   }
 
+  const handleDiscoverModels = async () => {
+    if (!form.api_base_url.trim()) {
+      toast.error('请先填写 API 地址')
+      return
+    }
+    setDiscovering(true)
+    try {
+      const res = await discoverAiModels({
+        api_base_url: form.api_base_url.trim(),
+        api_key: form.api_key.trim(),
+      })
+      const models = res?.models ?? []
+      if (models.length === 0) {
+        toast.error('未发现可用模型')
+      } else {
+        setForm({
+          ...form,
+          modelsText: models.join(', '),
+          default_model: form.default_model.trim() || models[0],
+        })
+        toast.success(`已拉取 ${models.length} 个模型`)
+      }
+    } catch (e: any) {
+      toast.error(e?.message || '模型发现失败')
+    } finally {
+      setDiscovering(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <PageHeader
-        title="AI 配置"
-        description="项目级 AI 提供方配置，平台内所有 AI 功能（用例生成/知识中心/DSH 任务等）按项目解析使用。"
+        title="AI 配置（AITDE 大模型）"
+        description="接入 AITDE / AI 用例生成等能力需在此配置「大模型 + API Key」。此处配置的提供方为项目生效模型，AITDE 按项目解析使用；Key 加密存储、列表仅显示掩码。"
       >
         {canManage && (
           <Button onClick={openCreate}>
@@ -184,6 +221,28 @@ export default function AiConfigPage() {
           刷新
         </Button>
       </PageHeader>
+
+      {resolved && (
+        <div className="rounded-lg border bg-card px-4 py-3 text-sm text-card-foreground">
+          <div className="flex items-center gap-2">
+            <Zap className="size-4 text-primary" />
+            <span className="font-medium">AITDE 当前生效模型</span>
+            {resolved.configured && resolved.provider ? (
+              <span className="ml-1">
+                <Badge className="bg-status-success-muted text-status-success">{resolved.provider.model}</Badge>
+                <span className="ml-2 text-xs text-muted-foreground">提供方：{resolved.provider.name}</span>
+              </span>
+            ) : (
+              <Badge variant="outline">未配置</Badge>
+            )}
+          </div>
+          {!resolved.configured && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              尚未配置生效的大模型与 Key。点击「新建提供方」填写 API 地址、模型与 API Key 并置为默认，AITDE 即可调用。
+            </p>
+          )}
+        </div>
+      )}
 
       <Card>
         <CardContent className="p-0">
@@ -315,11 +374,20 @@ export default function AiConfigPage() {
             </div>
             <div>
               <Label htmlFor="provider-models">模型清单（逗号分隔）</Label>
-              <Input
-                id="provider-models" className="mt-1" value={form.modelsText}
-                placeholder="deepseek-v4-pro, deepseek-v4-flash"
-                onChange={(e) => setForm({ ...form, modelsText: e.target.value })}
-              />
+              <div className="mt-1 flex gap-2">
+                <Input
+                  id="provider-models" className="flex-1" value={form.modelsText}
+                  placeholder="deepseek-v4-pro, deepseek-v4-flash"
+                  onChange={(e) => setForm({ ...form, modelsText: e.target.value })}
+                />
+                <Button
+                  type="button" variant="secondary" onClick={() => void handleDiscoverModels()} disabled={discovering}
+                  title="根据 API 地址 + Key 自动拉取模型清单"
+                >
+                  {discovering ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+                  自动发现
+                </Button>
+              </div>
             </div>
             <div>
               <Label htmlFor="provider-default-model">默认模型</Label>
