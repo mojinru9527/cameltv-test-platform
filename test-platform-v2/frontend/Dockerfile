@@ -7,6 +7,11 @@ COPY . .
 # ICP 备案号（可选）：构建时注入，非空时页面底部展示并链接 beian.miit.gov.cn
 ARG VITE_ICP_NUMBER
 ENV VITE_ICP_NUMBER=${VITE_ICP_NUMBER:-}
+# AITDE 开关（可选覆盖）：留空 = 运行时跟随后端 GET /api/v2/health（推荐）。
+# 仅在需要强制开/关时设为 true/false；显式 false 会覆盖后端开关。
+# 历史缺陷：该 ARG 缺失导致前端恒为关闭，V4.0 全部 Mission 路由在生产不可达。
+ARG VITE_AITDE_V3_ENABLED
+ENV VITE_AITDE_V3_ENABLED=${VITE_AITDE_V3_ENABLED:-}
 RUN npm run build
 
 # 运行阶段：Nginx 托管静态站点 + 反代 /api

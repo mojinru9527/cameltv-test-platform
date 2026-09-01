@@ -144,6 +144,9 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_ICP_NUMBER: ${VITE_ICP_NUMBER:-}
+        # 留空 = 前端运行时跟随后端 AITDE_V3_ENABLED（GET /api/v2/health）。
+        # 仅在需要强制开/关时显式设置 true/false；显式 false 会覆盖后端开关。
+        VITE_AITDE_V3_ENABLED: ${VITE_AITDE_V3_ENABLED:-}
     depends_on:
       backend:
         condition: service_healthy
