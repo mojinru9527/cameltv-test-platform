@@ -120,12 +120,34 @@ def humanize_ai_error(
     return msg
 
 
-_PATH_RE = re.compile(r"(?:[A-Za-z]:\\|/)(?:[\w.\-]+[/\\])+[\w.\-]+")
+_URL_RE = re.compile(r"\b[a-zA-Z][a-zA-Z0-9+.-]*://[^\s'\"<>]+")
+# 仅匹配**本地文件系统**路径：Windows 盘符路径，或以常见系统根目录开头的绝对路径。
+# 不使用「任意 /a/b/c」这类宽松写法——那会把 URL 的 path 一并吃掉，
+# 反而抹去排查所需的端点信息（本地验证实测 https://api.deepseek.com/... 被误脱敏）。
+_LOCAL_PATH_RE = re.compile(
+    r"(?:[A-Za-z]:\\[^\s'\"<>|*?]+"
+    r"|/(?:tmp|var|home|root|app|opt|usr|srv|data|mnt|Users)(?:/[^\s'\"<>]+)*)"
+)
 
 
 def _strip_local_paths(text: str) -> str:
-    """移除服务器本地路径，避免把 /tmp/... 之类内部信息透给终端用户。"""
-    return _PATH_RE.sub("<服务端日志>", text or "")
+    """移除服务器本地路径，避免把 /tmp/... 之类内部信息透给终端用户。
+
+    URL 先占位保护再还原——端点地址对用户排查有价值，且不属于内部路径泄露。
+    """
+    if not text:
+        return ""
+    urls: list[str] = []
+
+    def _stash(m: re.Match[str]) -> str:
+        urls.append(m.group(0))
+        return f"\x00URL{len(urls) - 1}\x00"
+
+    protected = _URL_RE.sub(_stash, text)
+    cleaned = _LOCAL_PATH_RE.sub("<服务端日志>", protected)
+    for i, url in enumerate(urls):
+        cleaned = cleaned.replace(f"\x00URL{i}\x00", url)
+    return cleaned
 
 
 # ── 健康态登记 ──

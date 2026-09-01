@@ -84,6 +84,22 @@ def test_humanize_strips_server_local_paths() -> None:
     assert "<服务端日志>" in detailed
 
 
+def test_humanize_keeps_endpoint_url_intact() -> None:
+    """脱敏不得误伤 URL —— 端点地址是排查所需信息，且不属于内部路径泄露。
+
+    本地验证曾出现 `https://api.deepseek.com/chat/completions` 被吃成
+    `https:/<服务端日志>`，诊断价值归零。
+    """
+    raw = (
+        "Client error '401 Unauthorized' for url "
+        "'https://api.deepseek.com/chat/completions'. dump: /tmp/ai_x.json"
+    )
+    detailed = ai_errors.humanize_ai_error(raw, include_detail=True)
+    assert "https://api.deepseek.com/chat/completions" in detailed
+    assert "/tmp/ai_x.json" not in detailed
+    assert "<服务端日志>" in detailed
+
+
 def test_humanize_without_detail_has_no_raw_error() -> None:
     msg = ai_errors.humanize_ai_error("Client error '429 Too Many Requests'")
     assert "原始错误" not in msg

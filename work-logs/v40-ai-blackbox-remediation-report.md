@@ -98,11 +98,11 @@ export function readEnvelopeCode(error: unknown): number | undefined
 |---|---|
 | 后端 `ruff check app/ --select F821` | ✅ All checks passed |
 | 后端新增文件 `ruff check ai_errors.py` | ✅ All checks passed |
-| 后端全量 `pytest tests/` | ✅ **2337 passed, 9 skipped, 1 xfailed, 0 failed** |
+| 后端全量 `pytest tests/` | ✅ **2338 passed, 9 skipped, 1 xfailed, 0 failed** |
 | 前端 `npm run typecheck` | ✅ 0 错误 |
 | 前端 `npm run lint`（`--max-warnings=0`） | ✅ 0 |
 | 前端全量 `npm test` | ✅ **130 文件 / 607 用例全通过** |
-| 前端 `npm run build` | ✅ built in 9.67s |
+| 前端 `npm run build` | ✅ 通过 |
 | `scan-common-bugs` | 2 HARD 均在 `requirement_service.py`（**未改动**，既有基线） |
 | E501 | 我新增的行 **0 处**超长（28 项均为未触碰区域基线） |
 
@@ -120,6 +120,27 @@ export function readEnvelopeCode(error: unknown): number | undefined
 | 命令面板搜「AI」 | 返回 **11 条**（此前 0 结果） |
 | 后端切 `AITDE_V3_ENABLED=false` 重启 | 前端**自动跟随**，渲染新占位页「AITDE 未开放」+ 可执行指引；菜单同步隐藏（10→9） |
 | 生产构建产物 | `dist` 主 bundle 含 `/api/v2/health` 与 `aitde_v3_enabled`；旧硬编码占位串已消失 |
+
+### 端到端真实浏览器验证（第二轮：P1-3 / P0-2 / P2-6 / P2-7 / P3-13）
+
+> 证据：`work-logs/evidence/v40-ai-blackbox-16.0.0/fix-verification.json`、
+> `fix-verification-sanitize.json`、`screenshots-fixverify/`
+
+| 缺陷 | 断言 | 结果 |
+|---|---|---|
+| **P1-3** | 点「功能拆分」后必须继续发出 `POST /requirements/{id}/extract` | ✅ 实测请求序列：`GET .../extraction`(**404**) → **`POST .../extract`(200)** —— 旧实现永远走不到第二步 |
+| **P1-3** | 不再弹无意义 toast「功能拆分结果」 | ✅ toast 为空；拆分真实产出 modules |
+| **P2-7** | 提示不含原始 Python 异常类名 / MDN 链接 | ✅ `hasRawPythonClassName=false` |
+| **P2-7** | 给出可执行中文提示 + 「更新密钥」动作 | ✅ 「AI 提供方 API Key 无效或已过期（401）——请到「AI 配置」更新密钥（提供方：…）」 |
+| **P0-2/P2-6** | 刚保存未验证时显示「未验证」，不谎称「连通正常」 | ✅ `showsUnverified=true` / `falselyClaimsHealthy=false` |
+| **P0-2/P2-6** | 连通失败后显示「不可用」+ 具体原因 | ✅ `resolve` 返回 `health.status=error`、`kind=unauthorized` |
+| **P3-13** | 图标按钮有 aria-label | ✅ `测试连通性：本地验证-无效Key` |
+
+> **本轮自查发现并修复的新问题**：脱敏正则过于宽泛，把端点 URL
+> `https://api.deepseek.com/chat/completions` 一并抹成 `https:/<服务端日志>`，
+> 使 detail 失去诊断价值。已改为「先占位保护 URL、再脱敏本地路径」，
+> 并新增用例 `test_humanize_keeps_endpoint_url_intact` 固化；
+> 复验确认 URL 完整保留、`/tmp/...` 仍被抹除。
 
 ---
 
