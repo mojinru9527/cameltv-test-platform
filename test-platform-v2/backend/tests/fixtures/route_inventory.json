@@ -1,5 +1,5 @@
 {
-  "count": 580,
+  "count": 605,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -1706,6 +1706,14 @@
       "method": "GET"
     },
     {
+      "path": "/api/v2/ai-suggestions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/ai-suggestions/{suggestion_id}/review",
+      "method": "POST"
+    },
+    {
       "path": "/api/v2/ambiguities/{ambiguity_id}/resolve",
       "method": "POST"
     },
@@ -1822,6 +1830,14 @@
       "method": "GET"
     },
     {
+      "path": "/api/v2/feedback",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/feedback",
+      "method": "POST"
+    },
+    {
       "path": "/api/v2/fixtures",
       "method": "POST"
     },
@@ -1850,8 +1866,56 @@
       "method": "POST"
     },
     {
+      "path": "/api/v2/flaky",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/governance/acceptance-report",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/governance/backup",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/governance/cost",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/governance/dr",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/governance/encryption",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/governance/models/check",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/governance/rbac/cross-project",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/governance/readiness",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/governance/retention/evaluate",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/governance/sso",
+      "method": "GET"
+    },
+    {
       "path": "/api/v2/healing-proposals",
       "method": "GET"
+    },
+    {
+      "path": "/api/v2/healing-proposals/{proposal_id}/apply",
+      "method": "POST"
     },
     {
       "path": "/api/v2/healing-proposals/{proposal_id}/approve",
@@ -1864,6 +1928,10 @@
     {
       "path": "/api/v2/health",
       "method": "GET"
+    },
+    {
+      "path": "/api/v2/hypotheses/{hypothesis_id}/review",
+      "method": "POST"
     },
     {
       "path": "/api/v2/impact-runs/{impact_run_id}",
@@ -1884,6 +1952,66 @@
     {
       "path": "/api/v2/legacy-executions/{legacy_type}/{legacy_id}/link",
       "method": "POST"
+    },
+    {
+      "path": "/api/v2/legacy/case-migrations",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/legacy/case-migrations/enqueue",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/legacy/case-migrations/{migration_id}/draft",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/legacy/case-migrations/{migration_id}/promote",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/legacy/case-migrations/{migration_id}/review",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/legacy/cutover-batches",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/legacy/cutover-batches/{batch_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/legacy/cutover-batches/{batch_id}/run",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/legacy/mappings",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/legacy/mappings",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/legacy/mappings/{mapping_id}/verify",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/legacy/resolve",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/legacy/usage",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/legacy/usage/record",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/legacy/usage/unknown",
+      "method": "GET"
     },
     {
       "path": "/api/v2/missions",
@@ -1966,6 +2094,10 @@
       "method": "POST"
     },
     {
+      "path": "/api/v2/missions/{mission_id}/scenario-gaps",
+      "method": "GET"
+    },
+    {
       "path": "/api/v2/missions/{mission_id}/scenarios",
       "method": "GET"
     },
@@ -2000,6 +2132,18 @@
     {
       "path": "/api/v2/missions/{mission_id}/sources/{source_id}/parse",
       "method": "POST"
+    },
+    {
+      "path": "/api/v2/model-evaluations",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/model-evaluations",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/model-evaluations/regression-check",
+      "method": "GET"
     },
     {
       "path": "/api/v2/oracles/{oracle_id}/review",
@@ -2118,6 +2262,10 @@
       "method": "POST"
     },
     {
+      "path": "/api/v2/runs/{run_id}/hypotheses",
+      "method": "GET"
+    },
+    {
       "path": "/api/v2/runs/{run_id}/replay",
       "method": "GET"
     },
@@ -2132,6 +2280,14 @@
     {
       "path": "/api/v2/runs/{run_id}/steps",
       "method": "GET"
+    },
+    {
+      "path": "/api/v2/runs/{run_id}/triage",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/scenario-gaps/{gap_id}/convert",
+      "method": "POST"
     },
     {
       "path": "/api/v2/scenarios/adapters/{adapter_id}",
@@ -2188,6 +2344,10 @@
     {
       "path": "/api/v2/scenarios/{scenario_id}/runs",
       "method": "POST"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_id}/stability",
+      "method": "GET"
     },
     {
       "path": "/api/v2/scenarios/{scenario_version_id}/data-plans",
@@ -2259,66 +2419,6 @@
     },
     {
       "path": "/health",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/runs/{run_id}/triage",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/runs/{run_id}/hypotheses",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/hypotheses/{hypothesis_id}/review",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/healing-proposals/{proposal_id}/apply",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/flaky",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}/stability",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/ai-suggestions",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/ai-suggestions/{suggestion_id}/review",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/scenario-gaps",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/scenario-gaps/{gap_id}/convert",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/feedback",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/feedback",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/model-evaluations",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/model-evaluations",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/model-evaluations/regression-check",
       "method": "GET"
     }
   ]

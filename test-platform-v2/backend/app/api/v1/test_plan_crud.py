@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
+from app.modules.aitde.legacy_cutover.service import CompatibilityPolicy
 from app.schemas.common import Page, R
 from app.schemas.test_plan import (
     PlanCaseAdd,
@@ -80,6 +81,7 @@ def create_plan(
     current: CurrentUser = Depends(require_permission("testplan:create")),
     db: Session = Depends(get_db),
 ):
+    CompatibilityPolicy.enforce_v1_write("test-plan")
     data = body.model_dump()
     row = test_plan_service.create_plan(db, data, creator_id=current.user.id, project_id=current.project_id or 0)
     _audit(req, current, db, "plan:create", f"#{row['id']} {row['name']}")
@@ -111,6 +113,7 @@ def update_plan(
     current: CurrentUser = Depends(require_permission("testplan:update")),
     db: Session = Depends(get_db),
 ):
+    CompatibilityPolicy.enforce_v1_write("test-plan")
     row = test_plan_service.update_plan(db, plan_id, body.model_dump(exclude_none=True), project_id=current.project_id or 0)
     if not row:
         return R(code=404, msg="计划不存在")
@@ -125,6 +128,7 @@ def delete_plan(
     current: CurrentUser = Depends(require_permission("testplan:delete")),
     db: Session = Depends(get_db),
 ):
+    CompatibilityPolicy.enforce_v1_write("test-plan")
     ok = test_plan_service.delete_plan(db, plan_id, project_id=current.project_id or 0)
     if not ok:
         return R(code=404, msg="计划不存在或无权操作")
@@ -144,6 +148,7 @@ def add_cases_to_plan(
     current: CurrentUser = Depends(require_permission("testplan:update")),
     db: Session = Depends(get_db),
 ):
+    CompatibilityPolicy.enforce_v1_write("test-plan")
     added = test_plan_service.add_cases(db, plan_id, body.case_ids, project_id=current.project_id or 0)
     _audit(req, current, db, "plan:add_cases", f"plan #{plan_id}", f"added {added} cases")
     return R.ok({"added": added})
@@ -157,6 +162,7 @@ def remove_cases_from_plan(
     current: CurrentUser = Depends(require_permission("testplan:update")),
     db: Session = Depends(get_db),
 ):
+    CompatibilityPolicy.enforce_v1_write("test-plan")
     removed = test_plan_service.remove_cases(db, plan_id, body.case_ids, project_id=current.project_id or 0)
     _audit(req, current, db, "plan:remove_cases", f"plan #{plan_id}", f"removed {removed} cases")
     return R.ok({"removed": removed})
@@ -170,6 +176,7 @@ def update_case_sort(
     current: CurrentUser = Depends(require_permission("testplan:update")),
     db: Session = Depends(get_db),
 ):
+    CompatibilityPolicy.enforce_v1_write("test-plan")
     ok = test_plan_service.update_case_sort(db, pcase_id, body.sort_order, project_id=current.project_id or 0)
     if not ok:
         return R(code=404, msg="关联不存在或无权操作")
@@ -206,6 +213,7 @@ def batch_assign_cases(
     db: Session = Depends(get_db),
 ):
     """批量指派计划中的用例给执行人。"""
+    CompatibilityPolicy.enforce_v1_write("test-plan")
     if not body.pcase_ids:
         return R(code=1, msg="pcase_ids 不能为空")
     count = test_plan_service.batch_assign(
