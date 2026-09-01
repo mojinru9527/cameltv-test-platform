@@ -42,3 +42,9 @@ export async function testAiProviderConnection(id: number): Promise<{ ok: boolea
 export async function fetchAiResolve(signal?: AbortSignal): Promise<AiResolveResult> {
   return api.get('/ai-config/resolve', { signal })
 }
+
+export async function discoverAiModels(
+  body: { api_base_url: string; api_key: string },
+): Promise<{ models: string[] }> {
+  return api.post('/ai-config/providers/discover-models', body)
+}

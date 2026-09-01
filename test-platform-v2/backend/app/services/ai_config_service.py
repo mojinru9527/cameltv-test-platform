@@ -269,6 +269,8 @@ class AiConfigService:
                 return {"ok": False, "error": "提供方返回格式不含模型清单（/models），请手动填写"}
             ids = [m.get("id") for m in items if isinstance(m, dict) and m.get("id")]
             ids = [i for i in ids if i]
+            # 去重并保持返回顺序（不同提供方 /models 可能重复返回同 id）。
+            ids = list(dict.fromkeys(ids))
             if not ids:
                 return {"ok": False, "error": "提供方 /models 未返回模型，请手动填写"}
             return {"ok": True, "models": ids, "count": len(ids)}
