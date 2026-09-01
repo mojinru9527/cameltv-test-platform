@@ -13,6 +13,7 @@ from app.schemas.dataset import (
     DatasetUpdate, DatasetUploadResponse,
 )
 from app.services import dataset_service
+from app.modules.aitde.legacy_cutover.service import CompatibilityPolicy
 
 router = APIRouter(prefix="/datasets", tags=["测试数据集"])
 
@@ -54,6 +55,7 @@ def create_dataset(
     current: CurrentUser = Depends(require_permission("dataset:create")),
     db: Session = Depends(get_db),
 ):
+    CompatibilityPolicy.enforce_v1_write("dataset")
     try:
         row = dataset_service.create_dataset(db, current.project_id or 0, body.model_dump())
         preview = dataset_service.preview_dataset(body.raw_content, body.source_type)
@@ -73,6 +75,7 @@ def update_dataset(
     current: CurrentUser = Depends(require_permission("dataset:update")),
     db: Session = Depends(get_db),
 ):
+    CompatibilityPolicy.enforce_v1_write("dataset")
     row = dataset_service.update_dataset(
         db,
         dataset_id,
@@ -91,6 +94,7 @@ def delete_dataset(
     current: CurrentUser = Depends(require_permission("dataset:delete")),
     db: Session = Depends(get_db),
 ):
+    CompatibilityPolicy.enforce_v1_write("dataset")
     ok = dataset_service.delete_dataset(db, dataset_id, project_id=current.project_id or 0)
     if not ok:
         return R(code=404, msg="数据集不存在或无权操作")
@@ -108,6 +112,7 @@ def upload_dataset(
     db: Session = Depends(get_db),
 ):
     """Upload a CSV or JSON file as a new dataset."""
+    CompatibilityPolicy.enforce_v1_write("dataset")
     if not file.filename:
         return R(code=1, msg="请上传文件")
 

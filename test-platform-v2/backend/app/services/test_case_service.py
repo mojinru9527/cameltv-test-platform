@@ -253,6 +253,14 @@ def update_case(db: Session, case_id: int, data: dict, changed_by: int = 0) -> d
     if not row:
         return None
 
+    # V40-004: a scenario-bound TestCase is a read-only projection — block direct
+    # business-expected writes and route the author to the ChangeProposal flow.
+    from app.modules.aitde.legacy_cutover.service import TestCaseProjectionPolicy
+
+    TestCaseProjectionPolicy.enforce_business_expected_write(
+        db, row.project_id or 0, case_id, data
+    )
+
     # Auto-version: save snapshot before modifying
     changed_fields = [k for k, v in data.items() if v is not None]
     if changed_fields:

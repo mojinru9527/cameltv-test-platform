@@ -25,6 +25,30 @@ class Settings(BaseSettings):
     # 开启：新 Domain 主链（Mission/Source/Scope/Contract/Scenario）进入可试用。
     aitde_v3_enabled: bool = False
 
+    # V4.0 legacy cutover stage for the v1 ``/version-missions`` fact table
+    # (V40-003). "ACTIVE" keeps writes (create/update/delete) enabled; "READONLY"
+    # blocks v1 writes and expects callers to use the canonical v2 Mission API.
+    version_mission_write_stage: str = "ACTIVE"
+    # V40-006: legacy TestPlan write cutoff (ACTIVE | READONLY).
+    test_plan_write_stage: str = "ACTIVE"
+    # V40-007: legacy Dataset write cutoff (ACTIVE | READONLY).
+    dataset_write_stage: str = "ACTIVE"
+    # V40-013 encryption posture knobs (operator-set; verified by
+    # EncryptionVerificationService, no secret values here).
+    db_encryption_enabled: bool = False
+    object_storage_encryption_enabled: bool = False
+    use_external_secret_store: bool = False
+    https_only: bool = False
+    db_connection_tls: bool = False
+    # V40-009 SSO scaffolding (real IdP handshake is external; values are config
+    # only, never secrets committed).
+    sso_enabled: bool = False
+    sso_provider: str = ""  # oidc | saml
+    sso_issuer: str = ""
+    sso_client_id: str = ""
+    sso_client_secret: str = ""
+    sso_group_mapping: str = "{}"  # external_group -> local_role
+
     # ── Security (sensitive — no hardcoded defaults) ──
     secret_key: str = ""
     algorithm: str = "HS256"

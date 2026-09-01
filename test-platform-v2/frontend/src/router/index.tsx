@@ -63,6 +63,7 @@ const MissionGapsPage = lazy(() => import('@/pages/missions/gaps'))
 const AiSuggestionsPage = lazy(() => import('@/pages/ai-suggestions'))
 const FlakyPage = lazy(() => import('@/pages/flaky'))
 const AiEvaluationsPage = lazy(() => import('@/pages/admin/ai-evaluations'))
+const GovernanceAdminPage = lazy(() => import('@/pages/admin/GovernancePage'))
 const RegressionSelectionPage = lazy(() => import('@/pages/regression-selections'))
 const CampaignDetailPage = lazy(() => import('@/pages/campaigns/CampaignDetail'))
 const HealingReviewPage = lazy(() => import('@/pages/healing'))
@@ -103,7 +104,9 @@ export function PasswordChangeBoundary({ children }: { children: ReactNode }) {
 
 function PlatformHomeEntry() {
   const user = useAuthStore((state) => state.user)
-  return user ? <Navigate to="/workbench" replace /> : null
+  // V40-019: mission-first default navigation when AITDE V3 is enabled.
+  if (!user) return null
+  return <Navigate to={AITDE_V3_ENABLED ? '/missions' : '/workbench'} replace />
 }
 
 function ForcedPasswordChangePage() {
@@ -345,6 +348,17 @@ export const router = createBrowserRouter([
           <Unavailable
             title="AITDE V3 未开放"
             description="AI 模型评估需启用 AITDE V3 功能开关后开放。"
+          />
+        ),
+      },
+      {
+        path: 'admin/governance',
+        element: AITDE_V3_ENABLED ? (
+          <PageLoader><GovernanceAdminPage /></PageLoader>
+        ) : (
+          <Unavailable
+            title="AITDE V3 未开放"
+            description="AITDE 治理控制台需启用 AITDE V3 功能开关后开放。"
           />
         ),
       },

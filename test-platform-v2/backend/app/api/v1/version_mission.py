@@ -18,6 +18,7 @@ from app.schemas.version_mission import (
     VersionMissionOut,
     VersionMissionUpdate,
 )
+from app.modules.aitde.legacy_cutover.service import CompatibilityPolicy
 from app.services import case_generation_service, version_mission_service
 from app.services.audit_service import write_audit
 
@@ -66,6 +67,7 @@ def create_mission(
     current: CurrentUser = Depends(require_permission("mission:create")),
     db: Session = Depends(get_db),
 ):
+    CompatibilityPolicy.enforce_v1_write("version-mission")
     data = version_mission_service.create_mission(
         db,
         body.model_dump(),
@@ -96,6 +98,7 @@ def update_mission(
     current: CurrentUser = Depends(require_permission("mission:update")),
     db: Session = Depends(get_db),
 ):
+    CompatibilityPolicy.enforce_v1_write("version-mission")
     data = version_mission_service.update_mission(
         db,
         mission_id,
@@ -115,6 +118,7 @@ def delete_mission(
     current: CurrentUser = Depends(require_permission("mission:delete")),
     db: Session = Depends(get_db),
 ):
+    CompatibilityPolicy.enforce_v1_write("version-mission")
     ok = version_mission_service.delete_mission(db, mission_id, current.project_id or 0)
     if not ok:
         raise not_found("版本测试任务")

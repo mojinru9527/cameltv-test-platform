@@ -200,6 +200,11 @@ from app.middleware.csp import CSPMiddleware  # noqa: E402
 
 app.add_middleware(CSPMiddleware)
 
+# V40-008: v1 deprecation headers (+ best-effort usage telemetry)
+from app.middleware.v1_deprecation import V1DeprecationMiddleware  # noqa: E402
+
+app.add_middleware(V1DeprecationMiddleware)
+
 app.add_exception_handler(APIException, api_exception_handler)
 
 app.include_router(api_router)

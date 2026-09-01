@@ -25,6 +25,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge, Button } from '@/ui'
 import CommandPalette from '@/components/CommandPalette'
 import IcpFooter from '@/components/IcpFooter'
+import { LegacyNoticeBanner } from '@/components/legacy/LegacyNoticeBanner'
 import LoginGateDialog from '@/components/auth/LoginGateDialog'
 import GuestPlatformHome from './GuestPlatformHome'
 import GuestModulePreview from './GuestModulePreview'
@@ -459,6 +460,7 @@ export default function MainLayout() {
               canCreateProject={hasPerm('project:self_create') || hasPerm('project:create') || hasPerm('*')}
               onOpenProjects={() => navigate('/my-projects')}
             >
+              <LegacyNoticeBanner />
               <Outlet />
             </ProjectAccessBoundary>
           ) : location.pathname === '/' ? (
