@@ -18,8 +18,7 @@ const RegisterPage = lazy(() => import('@/pages/register'))
 const MyProjectsPage = lazy(() => import('@/pages/my-projects'))
 const SystemPage = lazy(() => import('@/pages/system'))
 const TestCasePage = lazy(() => import('@/pages/testcase'))
-const TestPlanPage = lazy(() => import('@/pages/testplan'))
-const PlanDetail = lazy(() => import('@/pages/testplan/PlanDetail'))
+// (batch-212) /testplan 独立页已下架：页面组件不再挂载（文件保留待 batch-215 清理）
 const ReportPage = lazy(() => import('@/pages/report'))
 const SchedulePage = lazy(() => import('@/pages/schedule'))
 const Workbench = lazy(() => import('@/pages/workbench'))
@@ -242,8 +241,9 @@ export const router = createBrowserRouter([
       { path: 'requirement', element: <PageLoader><RequirementPage /></PageLoader> },
       { path: 'requirement/:id/review', element: <PageLoader><RequirementReviewPage /></PageLoader> },
       { path: 'testcase', element: <PageLoader><TestCasePage /></PageLoader> },
-      { path: 'testplan', element: <PageLoader><TestPlanPage /></PageLoader> },
-      { path: 'testplan/:id', element: <PageLoader><PlanDetail /></PageLoader> },
+      // (batch-212 入口收敛) 旧测试计划独立入口删除，URL 不 404：重定向到用例服务（数据只读经 API 引用）。
+      { path: 'testplan', element: <Navigate to="/testcase" replace /> },
+      { path: 'testplan/:id', element: <Navigate to="/testcase" replace /> },
       // (P2a) 思维导图已并入用例服务「脑图视图」Tab，旧书签重定向
       { path: 'mindmap', element: <Navigate to="/testcase?tab=mindmap" replace /> },
       { path: 'apitest', element: <PageLoader><ApiTestPage /></PageLoader> },
@@ -259,8 +259,8 @@ export const router = createBrowserRouter([
       { path: 'dataset', element: <PageLoader><DatasetPage /></PageLoader> },
       { path: 'integration', element: <PageLoader><IntegrationPage /></PageLoader> },
       { path: 'knowledge', element: <PageLoader><KnowledgePage /></PageLoader> },
-      // (P2b) Playground 已并入用例服务 Tab，旧书签重定向
-      { path: 'playground', element: <Navigate to="/testcase?tab=playground" replace /> },
+      // (batch-212) Playground Tab 已下架：独立路径重定向到用例服务列表（不再带 tab=playground）。
+      { path: 'playground', element: <Navigate to="/testcase" replace /> },
       { path: 'dsh-tasks', element: <PageLoader><DshTasksPage /></PageLoader> },
       { path: 'ai-config', element: <PageLoader><AiConfigPage /></PageLoader> },
       { path: 'version-mission', element: <Navigate to="/release-bundles" replace /> },

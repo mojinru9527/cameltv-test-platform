@@ -61,9 +61,9 @@ import {
   TestTube2,
   CheckCircle2,
 } from '@/lib/icons'
-import { NavigationMenuItems } from './NavigationMenuItems'
-import { MoreMenusGroup } from './MoreMenusGroup'
-import { splitMenusByFrequency } from './nav-config'
+import { MainNavRows } from './MainNavRows'
+import { AssetsMoreGroup } from './AssetsMoreGroup'
+import { buildNavigation } from './nav-config'
 
 // Theme lookup helper — delegates to themes.ts registry
 const getTheme = (id: ColorTheme) => getThemeDefinition(id)
@@ -167,14 +167,9 @@ export default function MainLayout() {
 
   const userInitials = (user?.nickname || user?.username || 'U')[0].toUpperCase()
 
-  // (c165-3) 导航按使用频率分层：9 个高频平铺，其余一级菜单收进「更多功能」折叠组
-  // （fail-safe：未在 PRIMARY_MENU_CODES 中的 code 一律落入 more）。
-  // 原 knowledge/system 特例分组随之移除（system 过滤以 'system' 对比 'menu:system'
-  // 形式的 code，从未命中，属死逻辑）。
-  const { primary: primaryMenus, more: moreMenus } = useMemo(
-    () => splitMenusByFrequency(menus),
-    [menus],
-  )
+  // (batch-212 入口收敛) 角色友好导航模型：顶层 5 行 + 资产与更多分桶
+  // （事实源 docs/platform-refactor/01 §3.1 + 02 白名单；菜单数据仍按角色权限由后端过滤）。
+  const navigation = useMemo(() => buildNavigation(menus), [menus])
 
   return (
     <SidebarProvider defaultOpen>
@@ -217,21 +212,21 @@ export default function MainLayout() {
               </Button>
             </div>
           )}
-          {/* ── 高频导航（c165-3 频率分层）── */}
+          {/* ── 主链路一级入口（batch-212：工作台 / 版本验收 / 结果与缺陷 / 知识中心）── */}
           <SidebarGroup>
             <SidebarGroupLabel>导航菜单</SidebarGroupLabel>
             <SidebarMenu>
-              <NavigationMenuItems
-                items={primaryMenus}
+              <MainNavRows
+                rows={navigation.mainRows}
                 pathname={location.pathname}
                 onNavigate={navigateMenu}
               />
             </SidebarMenu>
           </SidebarGroup>
 
-          {/* ── 低频入口：「更多功能」折叠组（默认收起）── */}
-          <MoreMenusGroup
-            items={moreMenus}
+          {/* ── 第 5 个一级入口：「资产与更多」折叠容器（资产/更多/专家/系统分桶）── */}
+          <AssetsMoreGroup
+            sections={navigation.assetSections}
             pathname={location.pathname}
             onNavigate={navigateMenu}
           />

@@ -26,7 +26,7 @@ const CORE_PAGES: PageSpec[] = [
   { id: 'environment', path: '/environment', heading: '环境与变量管理' },
   { id: 'defect', path: '/defect', heading: '缺陷管理' },
   { id: 'testcase', path: '/testcase', heading: '用例服务' },
-  { id: 'testplan', path: '/testplan', heading: '测试计划' },
+  // (batch-212) '/testplan' 已重定向 /testcase
   { id: 'report', path: '/report', heading: '报告中心' },
   { id: 'trace', path: '/trace', heading: '质量追溯' },
   { id: 'requirement', path: '/requirement', heading: '需求文档' },
@@ -53,7 +53,7 @@ const API_RESPONSES: Record<string, unknown> = {
     { id: 2, code: 'menu:trace', name: '质量追溯', path: '/trace', icon: 'NodeIndexOutlined', sort: 2 },
     { id: 3, code: 'menu:requirement', name: '需求文档', path: '/requirement', icon: 'FileTextOutlined', sort: 3 },
     { id: 4, code: 'menu:testcase', name: '用例服务', path: '/testcase', icon: 'ProfileOutlined', sort: 4 },
-    { id: 5, code: 'menu:testplan', name: '测试计划', path: '/testplan', icon: 'ScheduleOutlined', sort: 5 },
+    // (batch-212) menu:testplan 已下架
     { id: 6, code: 'menu:report', name: '报告中心', path: '/report', icon: 'BarChartOutlined', sort: 6 },
   ],
   '/environments': [],

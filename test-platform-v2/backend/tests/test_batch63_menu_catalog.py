@@ -174,3 +174,18 @@ def test_c1653_menu_tree_hides_knowledge_children(db_session):
     for child in _C1653_KNOWLEDGE_CHILDREN:
         assert child not in flat
     assert "menu:workbench" in flat
+
+
+def test_batch212_testplan_menu_removed_from_seed():
+    """(batch-212 入口收敛) 旧测试计划独立入口已删除：菜单种子移除（tester 角色清单同步移除），
+    HIDDEN_MENU_CODES 拦截存量库旧权限行，前端路由 /testplan* 重定向 /testcase。
+    数据只读保留：testplan:* 操作权限仍在，报告/追溯/apitest 继续只读引用。"""
+    from app.services.menu_service import HIDDEN_MENU_CODES
+
+    codes = [entry[0] for entry in _MENUS]
+    assert "menu:testplan" not in codes
+    assert "menu:testplan" not in _TESTER_MENUS
+    assert "menu:testplan" in HIDDEN_MENU_CODES
+    # 承接资产：用例服务仍在菜单与 tester 角色中（用例/接口/UI 保留为资产）
+    assert "menu:testcase" in codes
+    assert "menu:testcase" in _TESTER_MENUS

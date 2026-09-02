@@ -1,0 +1,20 @@
+batch-212 小白走查（playwright chromium headless，1440x900，tester/admin 真实登录）
+BASE: http://localhost:5247 (vite dev) -> proxy http://127.0.0.1:8080 (fastapi, 本地 sqlite seed, AITDE_V3_ENABLED=true)
+date: 2026-09-02  executor: codex
+
+PASS - tester 顶层含 5 入口（工作台/版本验收/结果与缺陷/知识中心/资产与更多） :: 导航菜单 | 工作台 | 版本验收 | 版本发布包 | 智能测试任务 | 结果与缺陷 | 报告中心 | 缺陷管理 | 知识中心 | 资产与更多 | 12
+PASS - tester 无 测试计划 / 系统管理 顶层入口
+PASS - 版本验收 组含 智能测试任务/版本发布包
+PASS - 结果与缺陷 组含 报告中心/缺陷管理
+PASS - 资产与更多展开后：资产桶含 用例服务/接口测试/UI 自动化
+PASS - 资产与更多展开后：专家桶含 DSH 任务/AI 配置/Durable Runtime
+PASS - tester 知识中心只读 3 Tab（项目知识/平台研发/检索） :: 项目知识 平台研发 检索
+PASS - tester 知识中心无 图谱/AI 审核台/概览 :: 项目知识 平台研发 检索
+PASS - /testplan 不 404 并重定向 /testcase :: http://localhost:5247/testcase
+PASS - /playground 不 404 并重定向 /testcase（无 tab=playground） :: http://localhost:5247/testcase
+PASS - 用例服务无 Playground Tab :: 用例列表 | 脑图视图
+PASS - 命令面板搜「计划」无 测试计划
+PASS - admin 资产与更多含 系统 桶（系统管理）与 专家 桶
+PASS - admin 知识中心可见维护 Tab（图谱/AI 审核台/来源管理/概览） :: 项目知识 平台研发 检索 概览 知识源 AI 审核台 图谱 实体 迭代 Wiki 知识库 知识差异对比 Skills
+
+TOTAL 14, PASS 14, FAIL 0

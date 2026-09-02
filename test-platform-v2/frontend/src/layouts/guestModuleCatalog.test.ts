@@ -10,7 +10,7 @@ const PUBLIC_MODULE_PATHS = [
   '/knowledge',
   // (P2a) '/mindmap' 已并入用例服务「脑图视图」Tab，访客目录不再单列
   '/testcase',
-  '/testplan',
+  // (batch-212) '/testplan' 测试计划独立入口已删除：访客目录不再单列
   '/apitest',
   '/uitest',
   // (P2b) '/playground' 已并入用例服务 Tab，访客目录不再单列

@@ -7,7 +7,6 @@ import { useAitdeV3Enabled } from '@/config/aitde'
 // Uses only semantic tokens (theme governance: no fixed Tailwind palettes).
 const LEGACY_PREFIXES = [
   '/testcase',
-  '/testplan',
   '/dataset',
   '/version-mission',
   '/release-bundles',

@@ -44,11 +44,6 @@
       "count": 4
     }
   },
-  "src/pages/agent-workbench/index.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 5
-    }
-  },
   "src/pages/apitest/components/ApiCaseTab.test.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 1
@@ -114,27 +109,7 @@
       "count": 2
     }
   },
-  "src/pages/knowledge/index.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
-  "src/pages/mindmap/index.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
   "src/pages/notify/index.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 2
-    }
-  },
-  "src/pages/perftest/index.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 3
-    }
-  },
-  "src/pages/project/index.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 2
     }
