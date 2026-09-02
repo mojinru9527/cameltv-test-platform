@@ -24,6 +24,7 @@ import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge, Button } from '@/ui'
 import CommandPalette from '@/components/CommandPalette'
+import AskAiButton from '@/components/foolproof/AskAiButton'
 import IcpFooter from '@/components/IcpFooter'
 import { LegacyNoticeBanner } from '@/components/legacy/LegacyNoticeBanner'
 import LoginGateDialog from '@/components/auth/LoginGateDialog'
@@ -303,6 +304,7 @@ export default function MainLayout() {
           </div>
 
           <div className="flex shrink-0 items-center gap-0 sm:gap-2">
+            <AskAiButton className="!min-h-11" />
             {/* Theme dropdown — redesigned as card picker */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

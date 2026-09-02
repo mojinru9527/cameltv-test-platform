@@ -80,6 +80,7 @@
 |------|------|---------|--------------------------|
 | B1(batch-211) | ✅ 已合入 main | 基线方案落盘（定位/ABCD 白名单/术语/傻瓜化规范/路线图，PR #391） | 无（文档批） |
 | B2(batch-212) | ✅ 已合入 main | 入口收敛：tester 默认 5 一级入口（工作台/版本验收/结果与缺陷/知识中心/资产与更多，后者按 资产/更多/专家/系统 分桶）；C 级下架（用例服务 Playground Tab、知识中心专家 Tab 收维护权限、README special/perftest 宣称）；旧测试计划独立入口删除（menu:testplan 下架，/testplan、/testplan/:id 重定向 /testcase 不 404）；命令面板/访客目录/权限三处对账 | 移交：知识中心普通视图 3 Tab 命名与「版本记录/复用建议」Tab 随 B11 定稿；/testplan、playground 页面文件与 special/perftest 冻结代码随 batch-215 清理；TestPlan 数据只读归档随 batch-224；R211-3（B15 后终审+黑盒验收+交付文档）保持 Open |
-| B3(batch-213) | 🟦 进行中 | 首页我的待办：工作台改「我的待办」（待审/在跑/失败/待放行聚合）+ `/api/v1/dashboard/todo`；登录首页 `/` → `/workbench`；QA 硬门禁绿（frontend typecheck/build/lint/vitest 612 + backend ruff F821 + pytest），Leader APPROVED | 开发/QA 就绪，待总确认后 push → Draft PR → checks 绿 → squash 合入 main；移交：待放行完整验收状态机随 B9；VersionTask 统一事实源随 B6 |
+| B3(batch-213) | ✅ 已合入 main (PR #393) | 首页我的待办：工作台改「我的待办」（待审/在跑/失败/待放行聚合）+ `/api/v1/dashboard/todo`；登录首页 `/` → `/workbench`；后端全量回归 2362 passed + 1 个非本批基线失败，前端 612 vitest | 移交：待放行完整验收状态机随 B9；VersionTask 统一事实源随 B6 |
 
+| B4(batch-214) | 🟦 进行中 | 傻瓜化组件层：PageIntro/TermTip/EmptyStateGuide/StepWizard/AskAi MVP + 全局「问我」入口 + 我的待办页 Intro/TermTip/StepWizard 演示；前端 lint/typecheck/build/vitest 617 绿 | 移交：全站列表页空态教学分批补齐；AskAi 真 LLM 随 B11/DSH；StepWizard 完整数据流随 B6/B7 |
 > 状态图例：🟦 进行中 / ✅ 已合入 main / ⏳ 未完成移交 / ❌ 阻塞
