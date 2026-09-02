@@ -17,7 +17,6 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuthStore } from '@/stores/auth'
 import CaseDrawer from './CaseDrawer'
 import MindmapPanel from './mindmap'
-import PlaygroundPanel from './playground'
 import VersionDialog from './VersionDialog'
 import CaseFilterBar from './components/CaseFilterBar'
 import CaseBatchToolbar from './components/CaseBatchToolbar'
@@ -42,12 +41,12 @@ export default function TestCasePage() {
   const canBatchSelect = canUpdate || canDelete
   // filter state (default to manual - api cases managed in apitest module)
   const [actTab, setActTab] = useState('manual')
-  // 视图切换（P2a/P2b）：用例列表 / 脑图视图 / Playground，
-  // ?tab=mindmap|playground 可直达（旧 /mindmap、/playground 路由重定向至此）
-  type ViewTab = 'list' | 'mindmap' | 'playground'
+  // 视图切换（P2a）：用例列表 / 脑图视图，?tab=mindmap 可直达（旧 /mindmap 路由重定向至此）。
+  // (batch-212) Playground Tab 已下架：?tab=playground 一律回落列表视图（旧书签不 404）。
+  type ViewTab = 'list' | 'mindmap'
   const [searchParams, setSearchParams] = useSearchParams()
   const tabParam = searchParams.get('tab')
-  const viewTab: ViewTab = tabParam === 'mindmap' || tabParam === 'playground' ? tabParam : 'list'
+  const viewTab: ViewTab = tabParam === 'mindmap' ? tabParam : 'list'
   const setViewTab = (next: ViewTab) => {
     setSearchParams(next === 'list' ? {} : { tab: next }, { replace: true })
   }
@@ -374,9 +373,9 @@ export default function TestCasePage() {
       glass
     >
       <div className="space-y-4">
-      {/* 视图切换（P2a/P2b）：用例列表 / 脑图视图 / Playground */}
+      {/* 视图切换（P2a）：用例列表 / 脑图视图；Playground Tab 已下架（batch-212） */}
       <div className="flex items-center gap-2" role="tablist" aria-label="用例视图切换">
-        {([['list', '用例列表'], ['mindmap', '脑图视图'], ['playground', 'Playground']] as const).map(([k, label]) => (
+        {([['list', '用例列表'], ['mindmap', '脑图视图']] as const).map(([k, label]) => (
           <button
             key={k}
             type="button"
@@ -395,7 +394,7 @@ export default function TestCasePage() {
         ))}
       </div>
 
-      {viewTab === 'mindmap' ? <MindmapPanel /> : viewTab === 'playground' ? <PlaygroundPanel /> : (
+      {viewTab === 'mindmap' ? <MindmapPanel /> : (
       <>
       {/* Top Tabs */}
       <div className="flex items-center gap-2">

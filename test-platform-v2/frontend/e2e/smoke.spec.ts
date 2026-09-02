@@ -20,7 +20,7 @@ const HAS_AUTH = Boolean(ADMIN.username && ADMIN.password)
 const PAGES = [
   { path: '/workbench', title: '工作台' },
   { path: '/testcase', title: '用例库' },
-  { path: '/testplan', title: '测试计划' },
+  // (batch-212) '/testplan' 已重定向 /testcase，独立页不再断言
   { path: '/requirement', title: '需求管理' },
   { path: '/apitest', title: 'API 测试' },
   { path: '/report', title: '测试报告' },

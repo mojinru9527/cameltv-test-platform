@@ -17,6 +17,8 @@ from app.schemas.system import MenuOut
 # (c165-3) menu:knowledge:* 四个子项：与知识中心页内 Tab 完全同源（/knowledge?tab=xxx），
 # 导航频率分层后不再单列；权限行保留在库，?tab= 深链与旧书签不受影响。
 HIDDEN_MENU_CODES = {
+    # (batch-212) menu:testplan：旧测试计划独立入口删除，存量库旧权限行继续过滤。
+    "menu:testplan",
     "menu:special", "menu:perftest", "menu:project", "menu:organization",
     "menu:agent-workbench", "menu:mindmap", "menu:playground", "menu:trace",
     "menu:knowledge:project", "menu:knowledge:platform",

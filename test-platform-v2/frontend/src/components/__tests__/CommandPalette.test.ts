@@ -11,7 +11,6 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
     for (const expected of [
       '/workbench',
       '/testcase',
-      '/testplan',
       '/requirement',
       '/report',
       '/schedule',
@@ -44,10 +43,12 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
     expect(paths).toContain('/testcase?tab=mindmap')
   })
 
-  it('P2b：Playground 并入用例服务 Tab，旧独立路径不再出现', () => {
+  it('batch-212：测试计划/Playground 独立入口已下架，命令面板不再收录', () => {
     const paths = ALL_COMMAND_ROUTES.map((route) => route.path)
+    expect(paths).not.toContain('/testplan')
     expect(paths).not.toContain('/playground')
-    expect(paths).toContain('/testcase?tab=playground')
+    expect(paths).not.toContain('/testcase?tab=playground')
+    expect(paths).not.toContain('/testcase?tab=playground')
   })
 
   it('P2c：质量追溯并入报告中心 Tab，旧独立路径不再出现', () => {
