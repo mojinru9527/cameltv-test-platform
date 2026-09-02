@@ -33,7 +33,10 @@ _MENUS = [
     # 不再生成菜单；menu_service.HIDDEN_MENU_CODES 继续拦截存量库中的旧权限行。
     # ("menu:mindmap", "思维导图", "", "/mindmap", "ShareAltOutlined", 6),
     ("menu:testcase", "用例服务", "", "/testcase", "ProfileOutlined", 7),
-    ("menu:testplan", "测试计划", "", "/testplan", "ScheduleOutlined", 8),
+    # (batch-212 入口收敛) 旧测试计划独立入口已删除（02 白名单 §3 C4：入口删除、数据只读归档）：
+    # 不再生成菜单；menu_service.HIDDEN_MENU_CODES 继续拦截存量库中的旧权限行；
+    # 报告中心/质量追溯/apitest 等仍只读引用 test-plan API；URL /testplan* 前端重定向 /testcase。
+    # ("menu:testplan", "测试计划", "", "/testplan", "ScheduleOutlined", 8),
     ("menu:apitest", "接口测试", "", "/apitest", "ApiOutlined", 9),
     ("menu:uitest", "UI 自动化", "", "/uitest", "RobotOutlined", 10),
     # (P2b 入口收敛) Playground 已并入用例服务 Tab（/playground → /testcase?tab=playground 重定向），
@@ -286,7 +289,7 @@ _VIEWER_ACTIONS = {
 }
 
 _TESTER_MENUS = {
-    "menu:workbench", "menu:requirement", "menu:versionmission", "menu:testcase", "menu:testplan",
+    "menu:workbench", "menu:requirement", "menu:versionmission", "menu:testcase",  # (batch-212) menu:testplan 已删独立入口
     "menu:apitest", "menu:uitest", "menu:schedule", "menu:report",  # (batch-165) menu:special 已隐藏
     "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge",
     "menu:notify", "menu:environment",  # (batch-165) menu:perftest 已隐藏
