@@ -56,6 +56,12 @@ const ICONS: Record<string, LucideIcon> = {
 }
 
 /** 侧边栏菜单项列表（含子项渲染）。由 MainLayout 与 MoreMenusGroup 共用。 */
+
+/** 后端菜单 icon 字符串 → lucide 组件（batch-212 供顶层/分桶导航共用）。 */
+export function menuIcon(icon: string): LucideIcon {
+  return ICONS[icon] ?? LayoutDashboard
+}
+
 export function NavigationMenuItems({
   items,
   pathname,
