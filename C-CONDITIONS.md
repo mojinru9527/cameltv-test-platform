@@ -73,9 +73,16 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ### batch-223 — B13 跨版本对比+指标（2026-09-05）—— 新增
 
+### batch-224 — B14 D级收敛（2026-09-05）—— 新增
+
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C223-1 | B14 D 级收敛必须把 TestPlan 数据只读归档、Dataset/Fixtures 合并、环境/报告/缺陷/任务入口收敛为单一事实源（VersionTask），不得双写；旧数据可读。解除条件=B14 合入 + 双写清零 + 旧页面降级视图。 | P2 | 2026-09-05 |
+| C224-1 | B15 新业务接入（basketball-service/camel-mimo 试点）必须走 VersionTask 主链路 4 步接入向导，产出业务基线；不得绕过主链路另造接入容器。解除条件=B15 合入 + 试点业务基线。 | P2 | 2026-09-05 |
+
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| ~~C223-1~~ | ~~B14 D 级收敛必须把 TestPlan 数据只读归档、Dataset/Fixtures 合并、入口收敛为单一事实源（VersionTask），不得双写。~~ → **Closed**：B14 `archive_test_plan`（TestPlan→archived + 绑 VersionTask）、`unified_assets_view`（single_fact_source=version_task）、`merged_data_assets`；PR #404。（前端降级视图/存量迁移随发布） | P2 | 2026-09-05 |
 
 
 | ID | 内容 | 优先级 | 创建日期 |

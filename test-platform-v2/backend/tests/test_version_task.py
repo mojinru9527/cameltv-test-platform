@@ -371,3 +371,29 @@ def test_api_metrics_and_compare(client, auth_headers):
     cmp = client.get("/api/v1/version-tasks/compare?version_a=1.0&version_b=2.0", headers=h)
     assert cmp.status_code == 200
     assert "a" in cmp.json()["data"]
+
+
+# ────────────────────────────── B14: D 级收敛（归档/资产视图/数据合并） ──────────────────────────────
+
+def test_convergence_archive_and_views(db_session):
+    from app.models.test_plan import TestPlan
+    from app.services import convergence_service
+    plan = TestPlan(project_id=1, name="旧测试计划", status="active")
+    db_session.add(plan)
+    db_session.commit()
+    task = version_task_service.create_task(db_session, project_id=1, title="t", version="1.0")
+    res = convergence_service.archive_test_plan(db_session, plan.id, task.id)
+    assert res["status"] == "archived"
+    assert res["converged_to_task"] == task.id
+    view = convergence_service.unified_assets_view(db_session, 1)
+    assert view["single_fact_source"] == "version_task"
+    assert any(p["archived"] for p in view["test_plans"])
+    data = convergence_service.merged_data_assets(db_session, 1)
+    assert "data_assets" in data
+
+
+def test_api_convergence(client, auth_headers):
+    h = auth_headers
+    r = client.get("/api/v1/convergence/assets", headers=h)
+    assert r.status_code == 200
+    assert r.json()["data"]["single_fact_source"] == "version_task"
