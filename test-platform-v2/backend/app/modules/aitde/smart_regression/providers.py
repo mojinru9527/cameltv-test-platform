@@ -32,12 +32,16 @@ class ChangeProvider(Protocol):
 def _default_loader(
     db: Session, mission_id: int, source_ref: str | None, change_type: str
 ) -> dict[str, Any]:
-    """Default snapshot loader for registered providers.
+    """Store-backed snapshot loader (Batch 208, C4).
 
-    ``inline:<json>`` refs carry an explicit snapshot (debug/tester-supplied);
-    anything else is unresolved and raises — an unresolvable ref must never
-    silently produce an empty snapshot that vacuously diffs to "no change". The
-    production runner injects a store/URL-backed loader here.
+    Supported refs:
+    - ``inline:<json>`` — debug/tester-supplied snapshot;
+    - ``env_snapshot:<id>`` — EnvironmentSnapshot.service_versions mapped to
+      the ENVIRONMENT diff shape ({service: {value, sensitivity}});
+    - ``data_source:<id>:<kind>`` — DataSource.config_json as the snapshot
+      payload (kind in OPENAPI/DB_SCHEMA/PRD/UI_DISCOVERY).
+    Anything else raises — an unresolvable ref must never silently produce an
+    empty snapshot that vacuously diffs to "no change".
     """
     if source_ref and source_ref.startswith("inline:"):
         try:
@@ -45,14 +49,46 @@ def _default_loader(
         except (ValueError, TypeError):
             return {}
         return loaded if isinstance(loaded, dict) else {}
-    # Batch 207: the production snapshot-store loader for OPENAPI / DB_SCHEMA /
-    # PRD / UI_DISCOVERY is a Leader C-condition (C4) — no snapshot store is
-    # defined on main yet. Unresolvable refs must NEVER silently produce an
-    # empty snapshot that vacuously diffs to "no change".
+    if source_ref and source_ref.startswith("env_snapshot:"):
+        from app.modules.aitde.execution.models import EnvironmentSnapshot
+
+        try:
+            snapshot_id = int(source_ref[len("env_snapshot:"):])
+        except ValueError as exc:
+            raise ValueError(f"invalid env_snapshot ref: {source_ref!r}") from exc
+        row = db.get(EnvironmentSnapshot, snapshot_id)
+        if row is None:
+            raise ValueError(f"env_snapshot not found: {snapshot_id}")
+        versions = json.loads(row.service_versions_json or "{}")
+        if not isinstance(versions, dict):
+            return {}
+        return {
+            str(k): {"value": str(v), "sensitivity": "public"}
+            for k, v in versions.items()
+        }
+    if source_ref and source_ref.startswith("data_source:"):
+        parts = source_ref.split(":")
+        if len(parts) != 3:
+            raise ValueError(
+                f"invalid data_source ref (expected data_source:<id>:<kind>): {source_ref!r}"
+            )
+        from app.modules.aitde.data.models import DataSource
+
+        kind = parts[2].upper()
+        if kind not in {"OPENAPI", "DB_SCHEMA", "PRD", "UI_DISCOVERY"}:
+            raise ValueError(f"unsupported data_source kind: {kind}")
+        try:
+            data_id = int(parts[1])
+        except ValueError as exc:
+            raise ValueError(f"invalid data_source id: {parts[1]!r}") from exc
+        row = db.get(DataSource, data_id)
+        if row is None:
+            raise ValueError(f"data_source not found: {data_id}")
+        cfg = json.loads(row.config_json or "{}")
+        return cfg if isinstance(cfg, dict) else {"_raw": cfg}
     raise ValueError(
         f"unresolved source_ref for {change_type}: {source_ref!r} — "
-        "supported: inline:<json> (debug). Production snapshot store loader is "
-        "Leader C-condition C4; automatic change-set detection needs it."
+        "supported: inline:<json> | env_snapshot:<id> | data_source:<id>:<kind>"
     )
 
 
