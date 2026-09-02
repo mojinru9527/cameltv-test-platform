@@ -1,7 +1,7 @@
 """Batch 207 — smart-regression loader error must be actionable.
 
 An unresolvable snapshot ref raises a clear error naming the supported refs
-and the Leader C-condition (never a silent empty snapshot).
+and the supported ref formats (never a silent empty snapshot).
 """
 from __future__ import annotations
 
@@ -18,4 +18,4 @@ def test_unresolved_loader_error_is_actionable(db):
     text = str(exc.value)
     assert "unresolved source_ref" in text
     assert "inline" in text
-    assert "C4" in text
+    assert "env_snapshot" in text

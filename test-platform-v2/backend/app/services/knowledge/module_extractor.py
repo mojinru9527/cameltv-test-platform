@@ -129,12 +129,73 @@ def _extract_folder_name(page_path: str) -> str:
 
 # ── Main Extractor ──
 
+def ai_boundary_suggestions_sync(
+    db: Session,
+    project_id: int,
+    folder_pages: list[tuple[str, int]],
+    model_ref: str | None = None,
+) -> list[dict]:
+    """Batch 208 (C7): AI-assisted module boundary suggestions (opt-in).
+
+    Sends the folder -> page-count inventory to the configured model and
+    returns ``[{folder, merge_into, reason}]``. When AI is not configured or
+    the call fails it returns [] and never changes deterministic behaviour.
+    """
+    from app.services import ai_client
+
+    if not ai_client.is_configured(db, project_id):
+        return []
+    inventory = [
+        {"folder": folder, "page_count": count}
+        for folder, count in folder_pages
+    ]
+    system = (
+        "你是需求模块边界分析师。根据设计稿文件夹清单判断哪些文件夹其实是同一"
+        "业务模块被拆散。只输出 JSON：{\"suggestions\": [{\"folder\": \"原始目录\", "
+        "\"merge_into\": \"应合并到的模块名\", \"reason\": \"一句话理由\"}]}。"
+        "没有把握就不要建议，不臆造。"
+    )
+    try:
+        payload = ai_client.chat_completions(
+            db,
+            project_id,
+            system_prompt=system,
+            user_message=json.dumps(
+                {"folders": inventory, "model_ref": model_ref},
+                ensure_ascii=False,
+            ),
+            max_tokens=2048,
+            json_mode=True,
+        )
+    except (ai_client.AiClientUnavailableError, ai_client.AiClientResponseError):
+        return []
+    items = payload.get("suggestions") if isinstance(payload, dict) else None
+    if not isinstance(items, list):
+        return []
+    out = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        folder = str(item.get("folder") or "").strip()
+        target = str(item.get("merge_into") or "").strip()
+        if folder and target:
+            out.append(
+                {
+                    "folder": folder,
+                    "merge_into": target,
+                    "reason": str(item.get("reason") or "")[:200],
+                }
+            )
+    return out
+
+
 def extract_module_tree(
     db: Session,
     *,
     evidence_job_id: int,
     project_id: int,
     document_id: int | None = None,
+    boundary_suggestions: list[dict] | None = None,
 ) -> ExtractionResult:
     """Extract hierarchical module tree from Lanhu evidence pages.
 
@@ -275,6 +336,22 @@ def extract_module_tree(
 
         module.pages = list(top_pages.values())
         result.modules.append(module)
+
+    # ── AI boundary suggestions (Batch 208, C7, opt-in) ──
+    if boundary_suggestions:
+        by_folder = {m.lanhu_folder or m.name: m for m in result.modules}
+        for suggestion in boundary_suggestions:
+            folder = str(suggestion.get("folder") or "")
+            target = str(suggestion.get("merge_into") or "").strip()
+            module = by_folder.get(folder)
+            if not module or not target or module.name == target:
+                continue
+            if any(m.name == target for m in result.modules if m is not module):
+                continue
+            module.name = target
+            result.warnings.append(
+                f"AI boundary: folder {folder} -> {target}"
+            )
 
     # ── Stats ──
     result.stats = {
