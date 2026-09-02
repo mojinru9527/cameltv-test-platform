@@ -151,3 +151,39 @@ export async function listRuns(taskId: number): Promise<VersionTaskRun[]> {
 export async function createDefectDraft(taskId: number, runId: number, failureIndex: number): Promise<{ defect_id: number; status: string }> {
   return (await v1.post(`/version-tasks/${taskId}/runs/${runId}/defect/${failureIndex}`)) as unknown as { defect_id: number; status: string }
 }
+
+
+export interface ReleasePackage {
+  task_id: number
+  title: string
+  version: string
+  status: string
+  verdict: string
+  coverage: Record<string, number>
+  pass_rate: number
+  total_checks: number
+  risk: string[]
+  defects: { id: number; defect_id: number }[]
+  release_bundle_id: number | null
+  summary: string
+}
+
+export async function buildReleasePackage(taskId: number): Promise<ReleasePackage> {
+  return (await v1.get(`/version-tasks/${taskId}/release-package`)) as unknown as ReleasePackage
+}
+
+export async function releaseTask(
+  taskId: number,
+  verdict: string,
+  releaseBundleId?: number,
+  risk: string[] = [],
+  summary?: string,
+): Promise<ReleasePackage> {
+  return (await v1.post(`/version-tasks/${taskId}/release`, {
+    verdict, release_bundle_id: releaseBundleId ?? null, risk, summary,
+  })) as unknown as ReleasePackage
+}
+
+export async function notifyRelease(taskId: number): Promise<{ sent: boolean }> {
+  return (await v1.post(`/version-tasks/${taskId}/notify`)) as unknown as { sent: boolean }
+}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router'
-import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, PageShell, Progress } from '@/ui'
-import { createDefectDraft, getVersionTask, listRuns, startRun, type VersionTask, type VersionTaskRun } from '@/api/versionTask'
+import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, PageShell, Progress } from '@/ui'
+import { buildReleasePackage, createDefectDraft, getVersionTask, listRuns, notifyRelease, releaseTask, startRun, type ReleasePackage, type VersionTask, type VersionTaskRun } from '@/api/versionTask'
 import { toast } from 'sonner'
 
 /** B8 版本任务执行与证据：一键运行 → 进度 → 证据回放 → 失败分类转缺陷草稿。 */
@@ -51,6 +51,31 @@ export default function VersionTaskRunPage() {
   }
 
   const latest = runs[0]
+  const [pkg, setPkg] = useState<ReleasePackage | null>(null)
+  const [bundleId, setBundleId] = useState('')
+
+  async function loadPackage() {
+    try { setPkg(await buildReleasePackage(id)) } catch { /* 未执行时忽略 */ }
+  }
+  useEffect(() => {
+    void loadPackage()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
+
+  async function handleRelease(verdict: string) {
+    try {
+      const risk = window.prompt('风险点（逗号分隔，可留空）') ?? ''
+      const p = await releaseTask(id, verdict, bundleId ? Number(bundleId) : undefined, risk.split(',').map((x) => x.trim()).filter(Boolean))
+      setPkg(p)
+      toast.success(`已${verdict === 'pass' ? '放行' : verdict === 'blocked' ? '打回' : '有条件放行'}`)
+    } catch (e) {
+      toast.error((e as Error).message || '放行失败')
+    }
+  }
+
+  async function handleNotify() {
+    try { await notifyRelease(id); toast.success('通知已发送') } catch (e) { toast.error((e as Error).message || '通知失败') }
+  }
 
   return (
     <PageShell title={task ? `版本验收 · ${task.title}` : '版本验收'}>
@@ -105,6 +130,32 @@ export default function VersionTaskRunPage() {
               )}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle>放行结论</CardTitle>
+          <CardDescription>基于覆盖/通过率/风险生成可分享放行证据包</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {pkg && (
+            <div className="space-y-2 text-sm">
+              <div className="flex gap-3">
+                <Badge variant="secondary">通过率 {pkg.pass_rate}%</Badge>
+                <Badge variant="secondary">总校验 {pkg.total_checks}</Badge>
+                <Badge variant={pkg.verdict === 'blocked' ? 'destructive' : 'outline'}>结论 {pkg.verdict || '—'}</Badge>
+              </div>
+              {pkg.risk.length > 0 && <p className="text-xs text-muted-foreground">风险：{pkg.risk.join('、')}</p>}
+            </div>
+          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <Input className="w-32" placeholder="发布包 ID" value={bundleId} onChange={(e) => setBundleId(e.target.value)} />
+            <Button variant="primary" onClick={() => handleRelease('pass')}>放行</Button>
+            <Button variant="secondary" onClick={() => handleRelease('conditional')}>有条件放行</Button>
+            <Button variant="danger" onClick={() => handleRelease('blocked')}>打回</Button>
+            <Button variant="ghost" onClick={handleNotify}>发送通知</Button>
+          </div>
         </CardContent>
       </Card>
     </PageShell>

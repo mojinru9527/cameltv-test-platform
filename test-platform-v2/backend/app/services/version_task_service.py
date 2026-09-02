@@ -14,6 +14,7 @@ from app.models.version_task import VersionTask, VersionTaskDefect, VersionTaskE
 from app.models.version_task_plan import VersionTaskPlanItem
 from app.models.version_task_run import VersionTaskRun
 from app.models.defect import Defect
+from app.models.notification import NotificationLog
 from app.core.exceptions import APIException, not_found
 
 logger = logging.getLogger("version_task")
@@ -395,3 +396,71 @@ def create_defect_draft(db: Session, run_id: int, failure_index: int, creator_id
     db.add(link)
     db.commit()
     return defect
+
+
+RELEASE_VERDICTS = {"pass", "blocked", "conditional"}
+
+
+def build_release_package(db: Session, task_id: int) -> dict:
+    """基于 VersionTask 的覆盖/结论/风险/缺陷生成可分享的放行证据包（B9）。"""
+    task = get_task(db, task_id)
+    coverage = json.loads(task.coverage or "{}")
+    total = sum(int(coverage.get(k, 0)) for k in ("pass", "fail", "skip", "blocked")) or 1
+    passed = int(coverage.get("pass", 0))
+    pass_rate = round(passed * 100 / total, 1)
+    risk = json.loads(task.risk or "[]")
+    defects = [{"id": d.id, "defect_id": d.defect_id} for d in task.defects]
+    return {
+        "task_id": task.id,
+        "title": task.title,
+        "version": task.version,
+        "status": task.status,
+        "verdict": task.verdict,
+        "coverage": coverage,
+        "pass_rate": pass_rate,
+        "total_checks": total,
+        "risk": risk if isinstance(risk, list) else [risk],
+        "defects": defects,
+        "release_bundle_id": task.release_bundle_id,
+        "summary": task.summary,
+    }
+
+
+def release_task(
+    db: Session,
+    task_id: int,
+    verdict: str,
+    release_bundle_id: int | None = None,
+    risk: list | None = None,
+    summary: str | None = None,
+) -> dict:
+    """B9 放行：设置 verdict/绑定发布包/生成放行证据包，状态机 verdict→released。"""
+    task = get_task(db, task_id)
+    if verdict not in RELEASE_VERDICTS:
+        raise APIException(code=1, msg=f"非法放行结论：{verdict}")
+    if task.status not in ("executed", "verdict"):
+        raise APIException(code=1, msg=f"当前状态 {task.status} 不可放行")
+    task.verdict = verdict
+    if release_bundle_id is not None:
+        task.release_bundle_id = release_bundle_id
+    if risk is not None:
+        task.risk = json.dumps(risk, ensure_ascii=False)
+    if summary is not None:
+        task.summary = summary
+    task.status = "released"
+    db.commit()
+    db.refresh(task)
+    return build_release_package(db, task_id)
+
+
+def notify_release(db: Session, task_id: int, message: str) -> None:
+    """B9 通知：放行/打回后写一条系统通知。"""
+    task = get_task(db, task_id)
+    log = NotificationLog(
+        project_id=task.project_id,
+        event="version_release",
+        status="sent",
+        error=message or f"{task.title} 已放行：{task.verdict}",
+    )
+    db.add(log)
+    db.commit()

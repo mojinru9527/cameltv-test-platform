@@ -196,3 +196,12 @@ class VersionTaskRunOut(BaseModel):
             except (TypeError, ValueError):
                 return []
         return []
+
+
+class ReleaseRequest(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    verdict: str = Field(..., max_length=20)  # pass / blocked / conditional
+    release_bundle_id: int | None = None
+    risk: list[str] = Field(default_factory=list)
+    summary: str | None = None

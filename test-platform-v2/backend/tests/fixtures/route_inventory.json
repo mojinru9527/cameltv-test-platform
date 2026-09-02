@@ -1,5 +1,5 @@
 {
-  "count": 624,
+  "count": 627,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -2496,6 +2496,18 @@
     {
       "method": "POST",
       "path": "/api/v1/version-tasks/{task_id}/runs/{run_id}/defect/{failure_index}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/version-tasks/{task_id}/release-package"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/version-tasks/{task_id}/release"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/version-tasks/{task_id}/notify"
     }
   ]
 }

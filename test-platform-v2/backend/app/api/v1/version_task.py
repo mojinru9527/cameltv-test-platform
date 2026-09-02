@@ -17,6 +17,7 @@ from app.schemas.version_task import (
     PlanItemCreate,
     PlanItemOut,
     PlanItemReview,
+    ReleaseRequest,
     VersionTaskRunOut,
     VersionTaskCreate,
     VersionTaskListItem,
@@ -256,3 +257,42 @@ def create_defect_draft(
     )
     _audit(req, current, db, "version_task:defect_draft", f"{task_id}/{run_id}", f"defect:{defect.id}")
     return R.ok({"defect_id": defect.id, "status": defect.status})
+
+
+# ── B9: 放行（覆盖/通过率/风险）+ 绑定发布包 + 报告/通知 ──
+@router.get("/{task_id}/release-package", response_model=R[dict], summary="放行证据包预览")
+def release_package(
+    task_id: int,
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    return R.ok(version_task_service.build_release_package(db, task_id))
+
+
+@router.post("/{task_id}/release", response_model=R[dict], summary="放行/打回并绑定发布包")
+def release_task(
+    task_id: int,
+    data: ReleaseRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("mission:update")),
+    db: Session = Depends(get_db),
+):
+    package = version_task_service.release_task(
+        db, task_id, verdict=data.verdict,
+        release_bundle_id=data.release_bundle_id,
+        risk=data.risk, summary=data.summary,
+    )
+    _audit(req, current, db, "version_task:release", f"{task_id}", f"{data.verdict}")
+    return R.ok(package)
+
+
+@router.post("/{task_id}/notify", response_model=R[dict], summary="发送放行/打回通知")
+def notify_release(
+    task_id: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("mission:update")),
+    db: Session = Depends(get_db),
+):
+    version_task_service.notify_release(db, task_id, "版本放行通知")
+    _audit(req, current, db, "version_task:notify", f"{task_id}")
+    return R.ok({"sent": True})
