@@ -299,8 +299,9 @@ class FailureTriageRuleEngine:
     """V3.9-R5 (AI-002): deterministic rule-based triage fallback.
 
     Classifies an Outcome into a FailureClassification (+ confidence + suggested
-    checks) without any model. Used when no IntelligenceProvider is configured;
-    a real LLM-backed agent runs first and falls back to this engine.
+    checks) without any model. Batch 207: triage is rule-based by design; the
+    LLM-backed agent slot is reserved (see Leader C-condition) and never
+    pretended to run.
     """
 
     @staticmethod
@@ -405,6 +406,31 @@ class FailureTriageAgent:
         return FailureTriageAgent._hypothesis_dict(row, run)
 
     @staticmethod
+    def auto_triage_if_needed(db: Session, run_id: int) -> dict | None:
+        """Best-effort, idempotent auto-triage for a finished failing run.
+
+        Batch 207 wiring: called from run-finish hooks. Only failing outcomes
+        are triaged; a run that already has a hypothesis is skipped; this
+        hook never mutates the run's Outcome.
+        """
+        run = db.get(ExecutionRun, run_id)
+        if run is None or not run.outcome:
+            return None
+        failing = {
+            Outcome.BUSINESS_FAIL.value,
+            Outcome.AUTOMATION_FAIL.value,
+            Outcome.DATA_FAIL.value,
+            Outcome.ENV_FAIL.value,
+            Outcome.ASSERTION_ERROR.value,
+            Outcome.BLOCKED.value,
+        }
+        if (run.outcome or "").upper() not in failing:
+            return None
+        if repo.list_hypotheses_for_run(db, run_id):
+            return None
+        return FailureTriageAgent.triage(db, run_id)
+
+    @staticmethod
     def list_hypotheses(db: Session, run_id: int) -> list[dict]:
         return [
             FailureTriageAgent._hypothesis_dict(h, None)
@@ -470,6 +496,29 @@ class HypothesisReviewService:
         row.status = (status or "").upper()
         row.reviewed_by = reviewed_by
         db.flush()
+        if row.status == FailureHypothesisStatus.CONFIRMED.value:
+            # Batch 207: a confirmed hypothesis feeds the tester inbox as a
+            # TRIAGE suggestion (producer for the previously-empty inbox).
+            _run = db.get(ExecutionRun, row.run_id)
+            try:
+                with db.begin_nested():
+                    SuggestionInboxService.create(
+                        db,
+                        project_id=_run.project_id if _run else 0,
+                        suggestion_type=SuggestionType.TRIAGE.value,
+                        target_type="execution_run",
+                        target_id=row.run_id,
+                        payload={
+                            "hypothesis_id": row.id,
+                            "hypothesis_type": row.hypothesis_type,
+                            "summary": row.summary,
+                        },
+                        confidence=row.confidence or 0.5,
+                        mission_id=_run.mission_id if _run else None,
+                    )
+            except Exception:  # noqa: BLE001 - inbox must not break review
+                pass
+            db.flush()
         return FailureTriageAgent._hypothesis_dict(row, None)
 
 
@@ -1138,7 +1187,7 @@ class PromptEvaluationService:
         """Run a golden suite: evaluate each sample, score it, persist a TRUSTED run.
 
         The default ``evaluator`` returns a sample's ``candidate`` (a deterministic
-        harness); a real runner injects the model/prompt invocation. The metrics
+        harness); Batch 207 note: the evaluation runner is NOT implemented yet
         carry ``_trusted=True`` so only this path can drive a golden release gate.
         """
         evaluator = evaluator or (lambda s: s.get("candidate"))

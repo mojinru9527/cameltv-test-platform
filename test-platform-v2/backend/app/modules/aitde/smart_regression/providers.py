@@ -45,7 +45,15 @@ def _default_loader(
         except (ValueError, TypeError):
             return {}
         return loaded if isinstance(loaded, dict) else {}
-    raise ValueError(f"unresolved source_ref for {change_type}: {source_ref!r}")
+    # Batch 207: the production snapshot-store loader for OPENAPI / DB_SCHEMA /
+    # PRD / UI_DISCOVERY is a Leader C-condition (C4) — no snapshot store is
+    # defined on main yet. Unresolvable refs must NEVER silently produce an
+    # empty snapshot that vacuously diffs to "no change".
+    raise ValueError(
+        f"unresolved source_ref for {change_type}: {source_ref!r} — "
+        "supported: inline:<json> (debug). Production snapshot store loader is "
+        "Leader C-condition C4; automatic change-set detection needs it."
+    )
 
 
 class SnapshotDiffProvider:

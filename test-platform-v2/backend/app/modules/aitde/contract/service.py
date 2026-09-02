@@ -22,7 +22,6 @@ from app.modules.aitde.contract.schemas import (
 from app.modules.aitde.intelligence.provider import (
     ContractContext,
     IntelligenceProvider,
-    LegacyAIServiceProvider,
 )
 from app.modules.aitde.mission import service as mission_service
 from app.modules.aitde.scope import service as scope_svc
@@ -92,11 +91,27 @@ def generate(
         scope_items=_approved_scope_items(db, mission_id),
         intents=_approved_intents(db, mission_id),
     )
-    prov = provider or LegacyAIServiceProvider()
-    snapshot: ContractSnapshot = prov.build_contract(context)
+    from app.modules.aitde.intelligence.runner import run_intelligence
+
+    if provider is not None:
+        snapshot: ContractSnapshot = provider.build_contract(context)
+        actor = provider.created_by_type
+    else:
+        snapshot, _op_id, actor = run_intelligence(
+            db,
+            project_id,
+            mission_id,
+            "contract:build",
+            lambda prov: prov.build_contract(context),
+        )
 
     version = repository.create_version(
-        db, contract.id, next_no, snapshot.model_dump(), user_id
+        db,
+        contract.id,
+        next_no,
+        snapshot.model_dump(),
+        user_id,
+        created_by_type=actor,
     )
     contract.current_version_no = next_no
     db.commit()

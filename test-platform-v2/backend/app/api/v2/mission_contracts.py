@@ -38,6 +38,11 @@ def generate_contract(
     result = service.generate(
         db, mission_id, current.project_id or 0, current.user.id, payload
     )
+    from app.modules.aitde.intelligence.runner import latest_operation_id
+
+    result["operation_id"] = latest_operation_id(
+        db, mission_id, current.project_id or 0, "contract:build"
+    )
     return R.ok(result)
 
 
@@ -107,3 +112,4 @@ def contract_diff(
     db: Session = Depends(get_db),
 ):
     return R.ok(service.diff(db, contract_id, base, target).model_dump())
+
