@@ -18,10 +18,10 @@
 | 4 | PromptEvaluation runner（C3） | ✅ | ✅ | ✅ | ⏳ | ⏳ | |
 | 5 | Smart-Regression store loader（C4） | ✅ | ✅ | ✅ | ⏳ | ⏳ | |
 | 6 | module_extractor AI 边界（C7） | ✅ | ✅ | ✅ | ⏳ | ⏳ | |
-| 7 | QA 硬门禁 + 报告 | ✅ | ✅ | 🔄 | ⏳ | ⏳ | **当前位置** |
+| 7 | QA 硬门禁 + 报告 | ✅ | ✅ | ✅ | ✅ | ✅ | 已合入 #385 |
 
 ## 📍 当前位置
-Batch 208 — S1-S6 完成；进行中 S7 QA。
+Batch 208 — 已合入 main（PR #385, a5b09e7c）。
 
 ## ⚠️ 阻塞与风险
 | 阻塞项 | 严重度 | 描述 | 需要谁 |
