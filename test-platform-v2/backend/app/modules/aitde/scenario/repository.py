@@ -92,6 +92,7 @@ def create_version(
     contract_version_id: int,
     candidate: ScenarioCandidate,
     created_by: int,
+    created_by_type: str = "AI",
 ) -> TestScenarioVersion:
     version = TestScenarioVersion(
         scenario_id=scenario.id,
@@ -110,16 +111,19 @@ def create_version(
         review_status=ScenarioReviewStatus.PROPOSED.value,
         content_hash=content_hash(candidate),
         created_by=created_by,
-        created_by_type="AI",
+        created_by_type=created_by_type,
     )
     db.add(version)
     db.flush()
-    replace_oracles(db, version.id, candidate.oracles)
+    replace_oracles(db, version.id, candidate.oracles, created_by_type=created_by_type)
     return version
 
 
 def replace_oracles(
-    db: Session, scenario_version_id: int, candidates: list[OracleCandidate]
+    db: Session,
+    scenario_version_id: int,
+    candidates: list[OracleCandidate],
+    created_by_type: str = "AI",
 ) -> list[TestOracle]:
     for old in db.scalars(
         select(TestOracle).where(TestOracle.scenario_version_id == scenario_version_id)
@@ -142,7 +146,7 @@ def replace_oracles(
                 ),
                 required=cand.required,
                 confidence=cand.confidence,
-                created_by_type="AI",
+                created_by_type=created_by_type,
             )
         )
     db.add_all(rows)

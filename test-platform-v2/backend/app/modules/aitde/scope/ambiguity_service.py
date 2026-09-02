@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import APIException
 from app.modules.aitde.intelligence.provider import (
     IntelligenceProvider,
-    LegacyAIServiceProvider,
     ScopeIntentContext,
 )
 from app.modules.aitde.mission import service as mission_service
@@ -46,15 +45,26 @@ def analyze(
     context = ScopeIntentContext(
         mission_id=mission_id, scope_items=_scope_items_context(db, mission_id)
     )
-    prov = provider or LegacyAIServiceProvider()
-    amb_output = prov.detect_ambiguities(context)
-    intent_output = prov.design_intents(context)
+    from app.modules.aitde.intelligence.runner import run_intelligence
+
+    if provider is not None:
+        amb_output = provider.detect_ambiguities(context)
+        intent_output = provider.design_intents(context)
+        actor = provider.created_by_type
+    else:
+        (amb_output, intent_output), _op_id, actor = run_intelligence(
+            db,
+            project_id,
+            mission_id,
+            "ambiguity:intent:analyze",
+            lambda prov: (prov.detect_ambiguities(context), prov.design_intents(context)),
+        )
 
     ambiguities = repo.replace_ambiguities(
-        db, mission_id, amb_output, actor="AI", user_id=user_id
+        db, mission_id, amb_output, actor=actor, user_id=user_id
     )
     intents = repo.replace_intents(
-        db, mission_id, intent_output, actor="AI", user_id=user_id
+        db, mission_id, intent_output, actor=actor, user_id=user_id
     )
     db.commit()
     return {

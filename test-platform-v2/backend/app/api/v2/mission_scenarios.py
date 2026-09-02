@@ -45,6 +45,16 @@ def generate_scenarios(
     result = service.generate(
         db, contract_version_id, current.project_id or 0, current.user.id
     )
+    from app.modules.aitde.contract.models import TestContract, TestContractVersion
+    from app.modules.aitde.intelligence.runner import latest_operation_id
+
+    _version = db.get(TestContractVersion, contract_version_id)
+    _mission_id = (
+        db.get(TestContract, _version.contract_id).mission_id if _version else 0
+    )
+    result["operation_id"] = latest_operation_id(
+        db, _mission_id, current.project_id or 0, "scenario:design"
+    )
     return R.ok(result)
 
 
@@ -101,3 +111,4 @@ def review_oracle(
     db: Session = Depends(get_db),
 ):
     return R.ok(service.review_oracle(db, oracle_id, current.user.id, payload))
+

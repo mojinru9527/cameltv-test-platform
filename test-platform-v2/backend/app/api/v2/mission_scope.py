@@ -31,7 +31,12 @@ def analyze_scope(
     items = service.analyze_scope(
         db, mission_id, current.project_id or 0, current.user.id
     )
-    return R.ok({"operation_id": None, "status": "COMPLETED", "items": len(items)})
+    from app.modules.aitde.intelligence.runner import latest_operation_id
+
+    op_id = latest_operation_id(
+        db, mission_id, current.project_id or 0, "scope:analyze"
+    )
+    return R.ok({"operation_id": op_id, "status": "COMPLETED", "items": len(items)})
 
 
 @router.get("", response_model=R[dict])
@@ -70,3 +75,4 @@ def complete_scope(
 ):
     summary = service.complete_policy(db, mission_id)
     return R.ok(summary.model_dump())
+

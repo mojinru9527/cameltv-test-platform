@@ -12,7 +12,6 @@ from app.modules.aitde.contract import repository as contract_repo
 from app.modules.aitde.contract.models import TestContract
 from app.modules.aitde.intelligence.provider import (
     IntelligenceProvider,
-    LegacyAIServiceProvider,
     ScenarioContext,
 )
 from app.modules.aitde.scenario import repository
@@ -58,8 +57,19 @@ def generate(
         rules=rules,
         outcomes=outcomes,
     )
-    prov = provider or LegacyAIServiceProvider()
-    output: ScenarioDesignOutput = prov.design_scenarios(context)
+    from app.modules.aitde.intelligence.runner import run_intelligence
+
+    if provider is not None:
+        output: ScenarioDesignOutput = provider.design_scenarios(context)
+        actor = provider.created_by_type
+    else:
+        output, _op_id, actor = run_intelligence(
+            db,
+            project_id,
+            contract.mission_id,
+            "scenario:design",
+            lambda prov: prov.design_scenarios(context),
+        )
 
     created = 0
     skipped = 0
@@ -83,7 +93,9 @@ def generate(
         if current:
             scenario.current_version_no = current.version_no + 1
 
-        repository.create_version(db, scenario, contract_version_id, cand, user_id)
+        repository.create_version(
+            db, scenario, contract_version_id, cand, user_id, created_by_type=actor
+        )
         created += 1
     db.commit()
     return {
