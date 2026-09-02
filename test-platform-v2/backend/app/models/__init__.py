@@ -65,6 +65,7 @@ from app.models.user import User
 from app.models.version_mission import AgentWorkLog, GeneratedArtifact, VersionMission
 from app.models.version_task import VersionTask, VersionTaskDefect, VersionTaskExecution
 from app.models.version_task_plan import VersionTaskPlanItem
+from app.models.version_task_run import VersionTaskRun
 from app.models.wiki import (
     ExternalWikiConnection,
     WikiDiffItem,
@@ -147,7 +148,9 @@ __all__ = [
     "VersionTaskDefect",
 
     "VersionTaskExecution",
+
     "VersionTaskPlanItem",
+    "VersionTaskRun",
     "AgentWorkLog",
     "GeneratedArtifact",
     "KnowledgeSource",
@@ -176,6 +179,7 @@ __all__ = [
     "LanhuEvidenceAsset",
     "LanhuOcrBlock",
 ]
+
 
 
 

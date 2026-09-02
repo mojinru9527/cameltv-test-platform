@@ -179,3 +179,67 @@ def test_api_plan_generate_and_review(client, auth_headers):
 
     rl = client.get(f"/api/v1/version-tasks/{tid}/plan", headers=h)
     assert rl.status_code == 200
+
+
+# ────────────────────────────── B8: 一键运行 + 证据 + 失败分类→缺陷草稿 ──────────────────────────────
+
+def test_start_run_and_coverage_writeback(db_session):
+    task = version_task_service.create_task(db_session, project_id=1, title="t", version="1.0")
+    items = version_task_service.generate_plan(
+        db_session, task.id,
+        [{"item_type": "functional", "title": "登录", "confidence": 80},
+         {"item_type": "api", "title": "POST /login", "confidence": 60}],
+    )
+    for it in items:
+        version_task_service.review_plan_item(db_session, it.id, "adopt")
+
+    run = version_task_service.start_run(db_session, task.id)
+    assert run.status in ("done", "failed")
+    assert run.progress == 100
+    assert run.passed + run.failed + run.skipped + run.blocked == run.total >= 1
+    # coverage 回写（C217-1）
+    refreshed = version_task_service.get_task(db_session, task.id)
+    cov = refreshed.coverage
+    assert "pass" in cov and "fail" in cov
+    assert refreshed.status == "executed"
+
+
+def test_defect_draft_from_failure(db_session):
+    task = version_task_service.create_task(db_session, project_id=1, title="t", version="1.0")
+    items = version_task_service.generate_plan(
+        db_session, task.id, [{"item_type": "functional", "title": "登录", "confidence": 80}]
+    )
+    for it in items:
+        version_task_service.review_plan_item(db_session, it.id, "adopt")
+    run = version_task_service.start_run(db_session, task.id)
+    assert run.failed == 1  # 末条固定失败
+    defect = version_task_service.create_defect_draft(db_session, run.id, 0, creator_id=1)
+    assert defect.status == "open"
+    task = version_task_service.get_task(db_session, task.id)
+    assert len(task.defects) >= 1
+
+
+def test_api_run_and_defect(client, auth_headers):
+    h = auth_headers
+    r = client.post("/api/v1/version-tasks", json={"title": "t", "version": "1.0"}, headers=h)
+    tid = r.json()["data"]["id"]
+    rp = client.post(
+        f"/api/v1/version-tasks/{tid}/plan/generate",
+        json=[{"item_type": "functional", "title": "登录", "confidence": 80}],
+        headers=h,
+    )
+    pid = rp.json()["data"][0]["id"]
+    client.post(f"/api/v1/version-tasks/{tid}/plan/{pid}/review", json={"action": "adopt"}, headers=h)
+
+    rr = client.post(f"/api/v1/version-tasks/{tid}/run", headers=h)
+    assert rr.status_code == 200, rr.text
+    run = rr.json()["data"]
+    assert run["failed"] >= 1
+
+    rl = client.get(f"/api/v1/version-tasks/{tid}/runs", headers=h)
+    assert rl.status_code == 200
+    assert len(rl.json()["data"]) >= 1
+
+    rd = client.post(f"/api/v1/version-tasks/{tid}/runs/{run['id']}/defect/0", headers=h)
+    assert rd.status_code == 200, rd.text
+    assert rd.json()["data"]["status"] == "open"

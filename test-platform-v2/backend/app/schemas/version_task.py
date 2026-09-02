@@ -166,3 +166,33 @@ class PlanItemOut(BaseModel):
     question: str = ""
     answer: str = ""
     order_index: int = 0
+
+
+class VersionTaskRunOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    task_id: int = 0
+    status: str = "pending"
+    progress: int = 0
+    total: int = 0
+    passed: int = 0
+    failed: int = 0
+    skipped: int = 0
+    blocked: int = 0
+    evidence: list[dict[str, Any]] = Field(default_factory=list)
+    failures: list[dict[str, Any]] = Field(default_factory=list)
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+
+    @field_validator("evidence", "failures", mode="before")
+    @classmethod
+    def _json_list(cls, v: Any) -> list[dict[str, Any]]:
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            try:
+                return json.loads(v) if v.strip() else []
+            except (TypeError, ValueError):
+                return []
+        return []

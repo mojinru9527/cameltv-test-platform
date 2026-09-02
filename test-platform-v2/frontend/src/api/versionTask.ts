@@ -124,3 +124,30 @@ export async function reviewPlanItem(
 export async function getPlan(taskId: number): Promise<PlanItem[]> {
   return (await v1.get(`/version-tasks/${taskId}/plan`)) as unknown as PlanItem[]
 }
+
+
+export interface VersionTaskRun {
+  id: number
+  task_id: number
+  status: string
+  progress: number
+  total: number
+  passed: number
+  failed: number
+  skipped: number
+  blocked: number
+  evidence: { type: string; ref: string; url: string; ts: string; status: string }[]
+  failures: { item_id: number; title: string; kind: string; evidence: string; message: string }[]
+}
+
+export async function startRun(taskId: number): Promise<VersionTaskRun> {
+  return (await v1.post(`/version-tasks/${taskId}/run`)) as unknown as VersionTaskRun
+}
+
+export async function listRuns(taskId: number): Promise<VersionTaskRun[]> {
+  return (await v1.get(`/version-tasks/${taskId}/runs`)) as unknown as VersionTaskRun[]
+}
+
+export async function createDefectDraft(taskId: number, runId: number, failureIndex: number): Promise<{ defect_id: number; status: string }> {
+  return (await v1.post(`/version-tasks/${taskId}/runs/${runId}/defect/${failureIndex}`)) as unknown as { defect_id: number; status: string }
+}
