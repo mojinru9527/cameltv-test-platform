@@ -12,16 +12,16 @@
 | # | Slice | 方案 | 编码 | 自测 | 审批 | 合入 | 备注 |
 |---|-------|:----:|:----:|:----:|:----:|:----:|------|
 | 0 | 部门工件 | ✅ | ✅ | ✅ | ⏳ | ⏳ | docs |
-| 1 | 共享 LLM client（C5/C6） | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | **当前位置** |
-| 2 | 四栈传输收敛（C5） | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 3 | 门控统一 helper（C6） | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 4 | PromptEvaluation runner（C3） | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 5 | Smart-Regression store loader（C4） | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 6 | module_extractor AI 边界（C7） | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 7 | QA 硬门禁 + 报告 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | |
+| 1 | 共享 LLM client（C5/C6） | ✅ | ✅ | ✅ | ⏳ | ⏳ | |
+| 2 | 四栈传输收敛（C5） | ✅ | ✅ | ✅ | ⏳ | ⏳ | |
+| 3 | 门控统一 helper（C6） | ✅ | ✅ | ✅ | ⏳ | ⏳ | is_configured + ADR-0023 |
+| 4 | PromptEvaluation runner（C3） | ✅ | ✅ | ✅ | ⏳ | ⏳ | |
+| 5 | Smart-Regression store loader（C4） | ✅ | ✅ | ✅ | ⏳ | ⏳ | |
+| 6 | module_extractor AI 边界（C7） | ✅ | ✅ | ✅ | ⏳ | ⏳ | |
+| 7 | QA 硬门禁 + 报告 | ✅ | ✅ | 🔄 | ⏳ | ⏳ | **当前位置** |
 
 ## 📍 当前位置
-Batch 208 — S0 完成；进行中 S1 共享 LLM client。
+Batch 208 — S1-S6 完成；进行中 S7 QA。
 
 ## ⚠️ 阻塞与风险
 | 阻塞项 | 严重度 | 描述 | 需要谁 |
