@@ -60,8 +60,6 @@
         ".gitignore",
         ".gitmodules",
         ".mcp.json",
-        ".pr-body-batch20.md",
-        ".pr-body-batch22.md",
         "AGENTS.md",
         "C-CONDITIONS.md",
         "CLAUDE.md",

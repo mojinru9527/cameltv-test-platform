@@ -9,7 +9,6 @@ const rawColorAllowlist = new Set([
   'hooks/use-chart-colors.ts',
   'lib/themes.ts',
   'pages/knowledge/components/GraphTab.tsx',
-  'pages/knowledge/components/SphereTab.tsx',
   // Obsidian-only visual shells are intentionally isolated behind the theme adapter.
   'ui/components/MetricStrip.tsx',
   'ui/patterns/ObsidianListPage.tsx',
@@ -174,3 +173,4 @@ describe('Batch 54 production UI governance', () => {
     ).toEqual([])
   })
 })
+
