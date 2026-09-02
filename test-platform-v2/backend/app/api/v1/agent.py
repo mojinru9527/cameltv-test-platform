@@ -31,9 +31,23 @@ from app.schemas.knowledge import AgentQueueItemOut, QueueStats
 router = APIRouter(prefix="/agents", tags=["Agent 工作台"])
 
 
-def _agent_unavailable_reason() -> str:
+def _agent_unavailable_reason(
+    db: Session | None = None, project_id: int = 0
+) -> str:
+    """Batch 209 (C6b): project-level AI gate when a DB context exists.
+
+    ``settings.ai_enabled`` remains the global kill-switch. With a project
+    context the per-project provider (ai_client.is_configured) is the source
+    of truth; without one we fall back to the env key.
+    """
     if not settings.ai_enabled:
         return "AI 服务未启用"
+    if db is not None and project_id > 0:
+        from app.services import ai_client
+
+        if ai_client.is_configured(db, project_id):
+            return ""
+        return "当前项目未配置可用的 AI 提供方"
     if not settings.ai_api_key:
         return "AI_API_KEY 未配置"
     return ""
@@ -113,7 +127,9 @@ def trigger_agent(
     if agent_type not in AGENT_META:
         return R(code=400, msg=f"未知 Agent 类型: {agent_type}。支持: {', '.join(AGENT_META.keys())}")
 
-    unavailable_reason = _agent_unavailable_reason()
+    unavailable_reason = _agent_unavailable_reason(
+        db, current.project_id or 0
+    )
     if unavailable_reason:
         raise APIException(code=503, http_status=503, msg=unavailable_reason)
     if agent_type == "dsh_execution":
@@ -156,6 +172,7 @@ def trigger_agent(
 @router.get("/types", response_model=R[list[dict]], summary="获取可用 Agent 类型列表")
 def list_agent_types(
     current: CurrentUser = Depends(require_permission("agent:view")),
+    db: Session = Depends(get_db),
 ):
     """返回所有可用的 Agent 类型及其元数据（label / description / artifact_type）。"""
     return R.ok([
@@ -164,8 +181,8 @@ def list_agent_types(
             "label": v["label"],
             "description": v["description"],
             "artifact_type": v["artifact_type"],
-            "available": not _agent_unavailable_reason() if k != "dsh_execution" else not _dsh_unavailable_reason(),
-            "unavailable_reason": _agent_unavailable_reason() if k != "dsh_execution" else _dsh_unavailable_reason(),
+            "available": not _agent_unavailable_reason(db, current.project_id or 0) if k != "dsh_execution" else not _dsh_unavailable_reason(),
+            "unavailable_reason": _agent_unavailable_reason(db, current.project_id or 0) if k != "dsh_execution" else _dsh_unavailable_reason(),
         }
         for k, v in AGENT_META.items()
     ])

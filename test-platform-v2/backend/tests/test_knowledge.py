@@ -1284,6 +1284,13 @@ class TestAgentOrchestrator:
 
 
 class TestAgentApi:
+    @pytest.fixture(autouse=True)
+    def _project_ai_on(self, monkeypatch):
+        """Batch 209 (C6b): default project AI gate satisfied."""
+        from app.services import ai_client
+
+        monkeypatch.setattr(ai_client, "is_configured", lambda db, pid: True)
+
     """Agent API 端点——触发 / 列表 / 详情 / 类型。"""
 
     def test_get_agent_types(self, kclient):
@@ -1298,6 +1305,9 @@ class TestAgentApi:
 
         monkeypatch.setattr(agent_api.settings, "ai_enabled", True)
         monkeypatch.setattr(agent_api.settings, "ai_api_key", "")
+        from app.services import ai_client
+
+        monkeypatch.setattr(ai_client, "is_configured", lambda db, pid: False)
 
         resp = kclient.get("/api/v1/agents/types")
 
@@ -1305,12 +1315,12 @@ class TestAgentApi:
         types = resp.json()["data"]
         assert all(item["available"] is False for item in types)
         # Batch 172: dsh_execution 有独立可用性语义（默认 DSH_ENABLED=false → DSH 服务未启用），
-        # 其余类型缺 AI 凭据时报告 AI_API_KEY 未配置。
+        # 其余类型缺项目 AI 配置时报告未配置。
         for item in types:
             if item["type"] == "dsh_execution":
                 assert item["unavailable_reason"] == "DSH 服务未启用"
             else:
-                assert item["unavailable_reason"] == "AI_API_KEY 未配置"
+                assert item["unavailable_reason"] == "当前项目未配置可用的 AI 提供方"
 
     def test_trigger_rejected_before_enqueue_without_ai_key(self, kclient, kdb, monkeypatch):
         from app.api.v1 import agent as agent_api
@@ -1318,6 +1328,9 @@ class TestAgentApi:
 
         monkeypatch.setattr(agent_api.settings, "ai_enabled", True)
         monkeypatch.setattr(agent_api.settings, "ai_api_key", "")
+        from app.services import ai_client
+
+        monkeypatch.setattr(ai_client, "is_configured", lambda db, pid: False)
 
         before = kdb.query(AgentQueueItem).count()
         resp = kclient.post(
@@ -1326,7 +1339,7 @@ class TestAgentApi:
         )
 
         assert resp.status_code == 503
-        assert resp.json()["msg"] == "AI_API_KEY 未配置"
+        assert resp.json()["msg"] == "当前项目未配置可用的 AI 提供方"
         assert kdb.query(AgentQueueItem).count() == before
 
     def test_trigger_without_permission(self, kclient):

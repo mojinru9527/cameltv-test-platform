@@ -19,6 +19,14 @@ from sqlalchemy.pool import StaticPool
 # 自包含夹具 —— 通过依赖覆盖注入不同权限集
 # ═══════════════════════════════════════════════════════
 
+@pytest.fixture(autouse=True)
+def _agent_project_ai_on(monkeypatch):
+    """Batch 209 (C6b): project-level AI gate satisfied by default."""
+    from app.services import ai_client
+
+    monkeypatch.setattr(ai_client, "is_configured", lambda db, pid: True)
+
+
 @pytest.fixture()
 def agent_db():
     """每个测试独立的 in-memory SQLite，含项目 + 成员种子数据."""
@@ -297,6 +305,9 @@ class TestAgentRunWrite:
 
         monkeypatch.setattr(agent_api.settings, "ai_enabled", True)
         monkeypatch.setattr(agent_api.settings, "ai_api_key", "")
+        from app.services import ai_client
+
+        monkeypatch.setattr(ai_client, "is_configured", lambda db, pid: False)
         enqueue = MagicMock()
         monkeypatch.setattr(agent_api, "enqueue", enqueue)
 
@@ -310,7 +321,7 @@ class TestAgentRunWrite:
             assert resp.status_code == 503
             assert resp.json() == {
                 "code": 503,
-                "msg": "AI_API_KEY 未配置",
+                "msg": "当前项目未配置可用的 AI 提供方",
                 "data": None,
             }
             enqueue.assert_not_called()
