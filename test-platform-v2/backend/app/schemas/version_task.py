@@ -131,3 +131,38 @@ class VersionTaskListItem(BaseModel):
     requirement_doc_id: int | None = None
     qa_owner_id: int = 0
     created_at: datetime | None = None
+
+
+class PlanItemCreate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    item_type: str = Field(default="functional", max_length=30)
+    title: str = Field(..., min_length=1, max_length=300)
+    description: str = ""
+    confidence: int = Field(default=0, ge=0, le=100)
+    question: str = ""
+
+
+class PlanItemReview(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    action: str = Field(...)  # adopt / modify / remove / ask / confirm
+    title: str | None = Field(None, max_length=300)
+    description: str | None = None
+    confidence: int | None = Field(None, ge=0, le=100)
+    question: str | None = None
+    answer: str | None = None
+
+
+class PlanItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    item_type: str = "functional"
+    title: str = ""
+    description: str = ""
+    confidence: int = 0
+    status: str = "draft"
+    question: str = ""
+    answer: str = ""
+    order_index: int = 0

@@ -6,11 +6,16 @@
 """
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
 from app.models.base import TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.version_task_plan import VersionTaskPlanItem
 
 
 class VersionTask(Base, TimestampMixin):
@@ -68,6 +73,9 @@ class VersionTask(Base, TimestampMixin):
     )
     defects: Mapped[list["VersionTaskDefect"]] = relationship(
         back_populates="task", cascade="all, delete-orphan", order_by="VersionTaskDefect.id"
+    )
+    plan_items: Mapped[list["VersionTaskPlanItem"]] = relationship(
+        back_populates="task", cascade="all, delete-orphan", order_by="VersionTaskPlanItem.order_index"
     )
 
 

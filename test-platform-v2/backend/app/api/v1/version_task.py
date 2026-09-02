@@ -13,6 +13,9 @@ from app.schemas.common import Page, R
 from app.schemas.version_task import (
     DefectLinkIn,
     ExecutionLinkIn,
+    PlanItemCreate,
+    PlanItemOut,
+    PlanItemReview,
     VersionTaskCreate,
     VersionTaskListItem,
     VersionTaskOut,
@@ -159,3 +162,43 @@ def add_defect(
 ):
     link = version_task_service.add_defect(db, task_id, data.defect_id)
     return R.ok({"id": link.id, "task_id": link.task_id})
+
+
+# ── B7: AI 验收方案生成 + 审核面板 ──
+@router.get("/{task_id}/plan", response_model=R[list[PlanItemOut]], summary="版本验收方案条目列表")
+def get_plan(
+    task_id: int,
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    items = version_task_service.get_plan(db, task_id)
+    return R.ok([PlanItemOut.model_validate(i) for i in items])
+
+
+@router.post("/{task_id}/plan/generate", response_model=R[list[PlanItemOut]], summary="生成/写入 AI 验收方案条目")
+def generate_plan(
+    task_id: int,
+    data: list[PlanItemCreate],
+    req: Request,
+    current: CurrentUser = Depends(require_permission("mission:generate")),
+    db: Session = Depends(get_db),
+):
+    items = version_task_service.generate_plan(db, task_id, [i.model_dump() for i in data])
+    _audit(req, current, db, "version_task:plan_generate", f"{task_id}", f"{len(items)}")
+    return R.ok([PlanItemOut.model_validate(i) for i in items])
+
+
+@router.post("/{task_id}/plan/{item_id}/review", response_model=R[PlanItemOut], summary="审核方案条目")
+def review_plan_item(
+    task_id: int,
+    item_id: int,
+    data: PlanItemReview,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("mission:update")),
+    db: Session = Depends(get_db),
+):
+    item = version_task_service.review_plan_item(
+        db, item_id, action=data.action, patch=data.model_dump(exclude_unset=True)
+    )
+    _audit(req, current, db, "version_task:plan_review", f"{task_id}/{item_id}", f"{data.action}")
+    return R.ok(PlanItemOut.model_validate(item))

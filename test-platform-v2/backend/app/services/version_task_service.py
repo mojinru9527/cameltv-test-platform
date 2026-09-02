@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.models.release_bundle import ReleaseBundle
 from app.models.version_mission import VersionMission
 from app.models.version_task import VersionTask, VersionTaskDefect, VersionTaskExecution
+from app.models.version_task_plan import VersionTaskPlanItem
 from app.core.exceptions import APIException, not_found
 
 logger = logging.getLogger("version_task")
@@ -203,3 +204,61 @@ def compat_mission_list(db: Session, project_id: int, page: int = 1, page_size: 
         release = db.get(ReleaseBundle, r.test_plan_id) if r.test_plan_id else None
         items.append(_mission_to_task_dict(r, release))
     return items, total
+
+
+PLAN_ACTIONS = {"adopt", "modify", "remove", "ask", "confirm"}
+
+
+def get_plan(db: Session, task_id: int) -> list[VersionTaskPlanItem]:
+    task = get_task(db, task_id)
+    return sorted(task.plan_items, key=lambda x: (x.order_index, x.id))
+
+
+def generate_plan(db: Session, task_id: int, items: list[dict]) -> list[VersionTaskPlanItem]:
+    """把 AI 生成的验收方案条目写入 VersionTask（B7）。返回全部方案条目。"""
+    task = get_task(db, task_id)
+    start = max((i.order_index for i in task.plan_items), default=0)
+    for idx, it in enumerate(items):
+        item = VersionTaskPlanItem(
+            task_id=task.id,
+            item_type=it.get("item_type", "functional"),
+            title=it.get("title", ""),
+            description=it.get("description", ""),
+            confidence=int(it.get("confidence", 0)),
+            status="draft",
+            question=it.get("question", ""),
+            order_index=start + idx + 1,
+        )
+        db.add(item)
+    db.commit()
+    return get_plan(db, task_id)
+
+
+def review_plan_item(db: Session, plan_item_id: int, action: str, patch: dict | None = None) -> VersionTaskPlanItem:
+    """人工审核方案条目：采纳 / 修改 / 删除 / 追问 / 确认（B7 审核面板）。"""
+    item = db.get(VersionTaskPlanItem, plan_item_id)
+    if item is None:
+        raise not_found("验收方案条目不存在")
+    if action not in PLAN_ACTIONS:
+        raise APIException(code=1, msg=f"非法审核动作：{action}")
+    patch = patch or {}
+    if action == "adopt":
+        item.status = "adopted"
+    elif action == "confirm":
+        item.status = "adopted"
+    elif action == "modify":
+        item.status = "modified"
+        item.title = patch.get("title", item.title)
+        item.description = patch.get("description", item.description)
+        if "confidence" in patch:
+            item.confidence = int(patch.get("confidence", item.confidence))
+    elif action == "remove":
+        item.status = "removed"
+    elif action == "ask":
+        item.status = "asked"
+        item.question = patch.get("question", item.question)
+    if "answer" in patch:
+        item.answer = patch.get("answer", item.answer)
+    db.commit()
+    db.refresh(item)
+    return item
