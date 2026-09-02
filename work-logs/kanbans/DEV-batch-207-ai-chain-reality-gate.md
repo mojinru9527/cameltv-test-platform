@@ -13,19 +13,19 @@
 | # | Slice | 方案 | 编码 | 自测 | 审批 | 合入 | 备注 |
 |---|-------|:----:|:----:|:----:|:----:|:----:|------|
 | 0 | 部门工件（PRD/PM/Design/看板） | ✅ | ✅ | ✅ | ⏳ | ⏳ | docs-only 切片 |
-| 1 | 同步 LLM client + AI provider + 工厂 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | **当前位置** |
-| 2 | 4 service 接线 + ai_ops 生产者 + operation_id | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 3 | 确定性占位诚实化 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | 语义变更需测试更新 |
-| 4 | ActionPlanner 接线 + promote/binding + fail-fast | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 5 | V38 闭环诚实化 + 自动 triage + suggestion | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 6 | Smart Regression loader + 文档/注释修正 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 7 | QA 硬门禁 + 报告 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | |
+| 1 | 同步 LLM client + AI provider + 工厂 | ✅ | ✅ | ✅ | ⏳ | ⏳ | |
+| 2 | 4 service 接线 + ai_ops 生产者 + operation_id | ✅ | ✅ | ✅ | ⏳ | ⏳ | |
+| 3 | 确定性占位诚实化 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 语义变更已随 S1 测试更新 |
+| 4 | ActionPlanner 接线 + promote/binding + fail-fast | ✅ | ✅ | ✅ | ⏳ | ⏳ | |
+| 5 | V38 闭环诚实化 + 自动 triage + suggestion | ✅ | ✅ | ✅ | ⏳ | ⏳ | |
+| 6 | Smart Regression loader + 文档/注释修正 | ✅ | ✅ | ✅ | ⏳ | ⏳ | loader=C4 移交 + 报错可操作化 |
+| 7 | QA 硬门禁 + 报告 | ✅ | ✅ | 🔄 | ⏳ | ⏳ | **当前位置** |
 
 ## 📍 当前位置
 ```
 Batch 207 — S0 工件完成
 ├── ✅ 已完成: PRD/PM/Design/看板
-├── 🔄 进行中: S1 同步 LLM client + AI provider + 工厂
+├── 🔄 进行中: S7 QA 收尾（报告+一次总确认）
 ├── ⏳ 待审批: 一次总确认（推送+PR+合入）——QA 首轮证据后
 └── ⏳ 下一步: S1 编码（TDD）
 ```
