@@ -296,3 +296,22 @@ def notify_release(
     version_task_service.notify_release(db, task_id, "版本放行通知")
     _audit(req, current, db, "version_task:notify", f"{task_id}")
     return R.ok({"sent": True})
+
+
+# ── B11: 版本沉淀 / 复用建议 ──
+@router.get("/knowledge/reuse", response_model=R[list[dict]], summary="建任务时自动带出的上版复用建议")
+def reuse_suggestions(
+    limit: int = 5,
+    current: CurrentUser = Depends(require_permission("mission:list")),
+    db: Session = Depends(get_db),
+):
+    return R.ok(version_task_service.get_reuse_suggestions(db, current.project_id or 0, limit=limit))
+
+
+@router.get("/{task_id}/knowledge", response_model=R[dict], summary="版本知识记录")
+def knowledge_record(
+    task_id: int,
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    return R.ok(version_task_service.get_knowledge_record(db, task_id))

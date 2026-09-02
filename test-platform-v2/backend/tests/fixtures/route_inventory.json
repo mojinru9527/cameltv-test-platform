@@ -1,5 +1,5 @@
 {
-  "count": 627,
+  "count": 629,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -2508,6 +2508,14 @@
     {
       "method": "POST",
       "path": "/api/v1/version-tasks/{task_id}/notify"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/version-tasks/knowledge/reuse"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/version-tasks/{task_id}/knowledge"
     }
   ]
 }
