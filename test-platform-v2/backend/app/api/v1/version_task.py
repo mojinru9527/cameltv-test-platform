@@ -315,3 +315,26 @@ def knowledge_record(
     db: Session = Depends(get_db),
 ):
     return R.ok(version_task_service.get_knowledge_record(db, task_id))
+
+
+# ── B12: 智能回归推荐集 + 缺陷同步 ──
+@router.get("/{task_id}/regression-set", response_model=R[list[dict]], summary="建任务即给的推荐回归集（影响面）")
+def regression_set(
+    task_id: int,
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    return R.ok(version_task_service.recommend_regression_set(db, task_id))
+
+
+@router.post("/{task_id}/defects/{defect_id}/sync", response_model=R[dict], summary="缺陷一键同步通知/缺陷库")
+def sync_defect(
+    task_id: int,
+    defect_id: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("defect:update")),
+    db: Session = Depends(get_db),
+):
+    result = version_task_service.sync_defect_notification(db, task_id, defect_id)
+    _audit(req, current, db, "version_task:defect_sync", f"{task_id}/{defect_id}")
+    return R.ok(result)

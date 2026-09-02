@@ -311,3 +311,35 @@ def test_api_reuse_suggestions(client, auth_headers):
     r = client.get("/api/v1/version-tasks/knowledge/reuse", headers=h)
     assert r.status_code == 200
     assert isinstance(r.json()["data"], list)
+
+
+# ────────────────────────────── B12: 推荐回归集 + 缺陷同步 ──────────────────────────────
+
+def test_recommend_regression_set(db_session):
+    task = version_task_service.create_task(
+        db_session, project_id=1, title="t", version="1.0", scope={"modules": ["登录", "支付"]}
+    )
+    items = version_task_service.generate_plan(db_session, task.id, [{"item_type": "functional", "title": "登录主流程", "confidence": 80}])
+    for it in items:
+        version_task_service.review_plan_item(db_session, it.id, "adopt")
+    recs = version_task_service.recommend_regression_set(db_session, task.id)
+    titles = [r["title"] for r in recs]
+    assert "登录主流程" in titles
+    assert "登录 回归" in titles
+    assert "支付 回归" in titles
+
+
+def test_sync_defect_notification(db_session):
+    task = version_task_service.create_task(db_session, project_id=1, title="t", version="1.0")
+    result = version_task_service.sync_defect_notification(db_session, task.id, 99)
+    assert result["synced"] is True
+    assert result["defect_id"] == 99
+
+
+def test_api_regression_set(client, auth_headers):
+    h = auth_headers
+    r = client.post("/api/v1/version-tasks", json={"title": "t", "version": "1.0", "scope": {"modules": ["登录"]}}, headers=h)
+    tid = r.json()["data"]["id"]
+    rr = client.get(f"/api/v1/version-tasks/{tid}/regression-set", headers=h)
+    assert rr.status_code == 200
+    assert isinstance(rr.json()["data"], list)

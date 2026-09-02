@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router'
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, PageShell, Progress } from '@/ui'
-import { buildReleasePackage, createDefectDraft, getVersionTask, listRuns, notifyRelease, releaseTask, startRun, type ReleasePackage, type VersionTask, type VersionTaskRun } from '@/api/versionTask'
+import { buildReleasePackage, createDefectDraft, getRegressionSet, getVersionTask, listRuns, notifyRelease, releaseTask, startRun, syncDefect, type RegressionItem, type ReleasePackage, type VersionTask, type VersionTaskRun } from '@/api/versionTask'
 import { toast } from 'sonner'
 
 /** B8 版本任务执行与证据：一键运行 → 进度 → 证据回放 → 失败分类转缺陷草稿。 */
@@ -53,6 +53,10 @@ export default function VersionTaskRunPage() {
   const latest = runs[0]
   const [pkg, setPkg] = useState<ReleasePackage | null>(null)
   const [bundleId, setBundleId] = useState('')
+  const [regression, setRegression] = useState<RegressionItem[]>([])
+  useEffect(() => {
+    getRegressionSet(id).then(setRegression).catch(() => {})
+  }, [id])
 
   async function loadPackage() {
     try { setPkg(await buildReleasePackage(id)) } catch { /* 未执行时忽略 */ }
@@ -109,6 +113,7 @@ export default function VersionTaskRunPage() {
                         <Badge variant="destructive">{f.kind}</Badge>
                         <span>{f.title}</span>
                         <Button size="sm" variant="secondary" className="ml-auto" onClick={() => handleDefect(latest, idx)}>转缺陷草稿</Button>
+                        <Button size="sm" variant="ghost" onClick={() => { void syncDefect(id, 0).then(() => toast.success('已同步缺陷库')).catch((e) => toast.error((e as Error).message)) }}>同步缺陷库</Button>
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">{f.message} · 证据 {f.evidence}</p>
                     </div>
@@ -156,6 +161,24 @@ export default function VersionTaskRunPage() {
             <Button variant="danger" onClick={() => handleRelease('blocked')}>打回</Button>
             <Button variant="ghost" onClick={handleNotify}>发送通知</Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle>推荐回归集</CardTitle>
+          <CardDescription>基于变更模块 / 方案条目 / 上版复用的影响面推荐</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-1">
+          {regression.length === 0 && <p className="text-sm text-muted-foreground">暂无推荐回归集。</p>}
+          {regression.map((it, idx) => (
+            <div key={idx} className="flex items-center gap-2 rounded border p-2 text-sm">
+              <Badge variant={it.priority === 'P0' ? 'destructive' : 'secondary'}>{it.priority}</Badge>
+              <span className="text-xs text-muted-foreground">{it.kind}</span>
+              <span>{it.title}</span>
+              <span className="ml-auto text-xs text-muted-foreground">{it.source}</span>
+            </div>
+          ))}
         </CardContent>
       </Card>
     </PageShell>
