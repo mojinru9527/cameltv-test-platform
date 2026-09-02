@@ -19,13 +19,13 @@
 | 4 | ActionPlanner 接线 + promote/binding + fail-fast | ✅ | ✅ | ✅ | ⏳ | ⏳ | |
 | 5 | V38 闭环诚实化 + 自动 triage + suggestion | ✅ | ✅ | ✅ | ⏳ | ⏳ | |
 | 6 | Smart Regression loader + 文档/注释修正 | ✅ | ✅ | ✅ | ⏳ | ⏳ | loader=C4 移交 + 报错可操作化 |
-| 7 | QA 硬门禁 + 报告 | ✅ | ✅ | 🔄 | ⏳ | ⏳ | **当前位置** |
+| 7 | QA 硬门禁 + 报告 | ✅ | ✅ | ✅ | ✅ | ✅ | 已合入 #383 |
 
 ## 📍 当前位置
 ```
 Batch 207 — S0 工件完成
 ├── ✅ 已完成: PRD/PM/Design/看板
-├── 🔄 进行中: S7 QA 收尾（报告+一次总确认）
+├── ✅ 完成: Batch 207 已合入 main（PR #383, 7b6ed47c）
 ├── ⏳ 待审批: 一次总确认（推送+PR+合入）——QA 首轮证据后
 └── ⏳ 下一步: S1 编码（TDD）
 ```
