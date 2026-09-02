@@ -327,8 +327,11 @@ def materialize_bindings_for_plan(db: Session, plan_version_id: int) -> dict:
     except (TypeError, ValueError):
         plan = {}
     observations: list[dict[str, str]] = []
+    commands_info: list[dict[str, str]] = []
     for cmd in plan.get("commands") or []:
         command_id = str(cmd.get("id") or "")
+        driver = str(cmd.get("driver") or "api").lower()
+        commands_info.append({"command_id": command_id, "driver": driver})
         for obs in cmd.get("observations") or []:
             observations.append(
                 {
@@ -360,6 +363,20 @@ def materialize_bindings_for_plan(db: Session, plan_version_id: int) -> dict:
             ):
                 best = obs
                 break
+        if best is None and not observations and len(commands_info) == 1:
+            # Batch 210 (C2b): conservative fallback — a plan with exactly one
+            # api/data command and no observations can bind DB/EVENT/LOG oracles
+            # to that command by their default binding type.
+            single = commands_info[0]
+            if single["driver"] in {"api", "data"}:
+                fallback_type = _binding_type_for_observation("", oracle.oracle_type)
+                if fallback_type:
+                    best = {
+                        "command_id": single["command_id"],
+                        "key": "",
+                        "type": "",
+                    }
+                    binding_type = fallback_type
         if best is None:
             continue
         binding_type = _binding_type_for_observation(best["type"], oracle.oracle_type)

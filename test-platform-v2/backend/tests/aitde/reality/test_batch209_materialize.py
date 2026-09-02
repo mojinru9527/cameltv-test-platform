@@ -112,3 +112,70 @@ def test_unmatched_oracle_stays_unbound(db):
     out = scenario_repo.materialize_bindings_for_plan(db, plan.id)
     assert out["created"] == 0
     assert db.query(_Binding).filter_by(oracle_id=oracle.id).count() == 0
+
+# ── Batch 210 (C2b) ──
+
+def _plan_no_observations(db, scenario_version_id: int, n_commands: int):
+    from app.modules.aitde.command.models import CommandPlanVersion
+
+    commands = [
+        {
+            "id": f"cmd-{i}",
+            "driver": "api",
+            "action": "request",
+            "input": {"method": "POST", "path": f"/svc/{i}"},
+        }
+        for i in range(n_commands)
+    ]
+    plan = CommandPlanVersion(
+        command_plan_id=1,
+        version_no=1,
+        scenario_version_id=scenario_version_id,
+        contract_version_id=0,
+        schema_version="2.0",
+        status="DRAFT",
+        plan_json=json.dumps({"schema_version": "2.0", "commands": commands}),
+        generated_by_type="PLANNER",
+    )
+    db.add(plan)
+    db.flush()
+    return plan
+
+
+def _db_oracle(db, scenario_version_id: int, key: str):
+    row = _Oracle(
+        scenario_version_id=scenario_version_id,
+        oracle_key=key,
+        oracle_type="DB",
+        target_json=json.dumps({"column": "status"}),
+        operator="eq",
+        expected_value_json='"ok"',
+        required=True,
+        review_status=ReviewStatus.APPROVED.value,
+    )
+    db.add(row)
+    db.flush()
+    return row
+
+
+def test_single_command_fallback_binds_db_column(db):
+    plan = _plan_no_observations(db, 11, 1)
+    oracle = _db_oracle(db, 11, "db.state")
+    db.commit()
+
+    out = scenario_repo.materialize_bindings_for_plan(db, plan.id)
+    assert out["created"] == 1
+    binding = db.query(_Binding).filter_by(oracle_id=oracle.id).first()
+    assert binding is not None
+    assert binding.binding_type == "DB_COLUMN"
+    assert binding.source_step_key == "cmd-0"
+
+
+def test_multiple_commands_no_fallback(db):
+    plan = _plan_no_observations(db, 12, 2)
+    oracle = _db_oracle(db, 12, "db.state")
+    db.commit()
+
+    out = scenario_repo.materialize_bindings_for_plan(db, plan.id)
+    assert out["created"] == 0
+    assert db.query(_Binding).filter_by(oracle_id=oracle.id).count() == 0

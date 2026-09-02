@@ -367,6 +367,16 @@ def _resolve_command_plan_hook(payload: dict[str, Any]) -> dict[str, Any]:
 _BROWSER_RUNNER = None
 
 
+def browser_capability_available() -> bool:
+    """Batch 210 (C1b observability): is a Playwright runtime importable?"""
+    try:
+        import playwright  # noqa: F401
+
+        return True
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def register_browser_runner(runner) -> None:
     """Register a browser IR runner callback for scenario runs (C1)."""
     global _BROWSER_RUNNER
@@ -418,18 +428,24 @@ def _execute_commands_hook(payload: dict[str, Any]) -> dict[str, Any]:
 
                 if driver == "browser":
                     if _BROWSER_RUNNER is None:
+                        capability = browser_capability_available()
+                        reason = (
+                            "no_browser_runner_registered"
+                            if capability
+                            else "no_browser_runtime"
+                        )
                         blocked = ExecutionStep(
                             run_id=run_id,
                             sequence=seq,
                             step_key=step_key,
                             step_type="BROWSER",
                             status="FAILED",
-                            error_message="no_browser_runtime",
+                            error_message=f"{reason}:capability={capability}",
                             input_snapshot_json=snapshot_sanitizer.dump(
                                 {"driver": "browser", "input": input_block}
                             ),
                             output_snapshot_json=snapshot_sanitizer.dump(
-                                {"reason": "no_browser_runtime"}
+                                {"reason": reason, "browser_capability": capability}
                             ),
                             evidence_refs_json="[]",
                         )
@@ -441,7 +457,8 @@ def _execute_commands_hook(payload: dict[str, Any]) -> dict[str, Any]:
                                 "name": step_key,
                                 "driver": "browser",
                                 "ok": False,
-                                "error": "no_browser_runtime",
+                                "error": reason,
+                                "browser_capability": capability,
                                 "evidence_refs": [],
                                 "sanitized": True,
                             }
