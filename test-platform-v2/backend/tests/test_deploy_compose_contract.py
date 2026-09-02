@@ -1,6 +1,18 @@
 """Security and persistence contracts for the v2 Docker Compose deployment."""
 from __future__ import annotations
 
+from pathlib import Path
+
+import pytest
+
+_LANHU_MCP_SERVER = (
+    Path(__file__).resolve().parents[3] / "lanhu-mcp" / "lanhu_mcp_server.py"
+)
+pytestmark = pytest.mark.skipif(
+    not _LANHU_MCP_SERVER.exists(),
+    reason="lanhu-mcp submodule not initialized (run: git submodule update --init)",
+)
+
 import json
 import re
 from pathlib import Path
