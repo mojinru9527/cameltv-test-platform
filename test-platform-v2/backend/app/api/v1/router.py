@@ -22,6 +22,7 @@ from app.api.v1 import lanhu_evidence_jobs, lanhu_evidence_assets, lanhu_evidenc
 from app.api.v1 import version_task
 from app.api.v1 import metrics
 from app.api.v1 import convergence
+from app.api.v1 import onboarding
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(auth.router)
@@ -80,5 +81,6 @@ api_router.include_router(playground.router)
 api_router.include_router(version_task.router)
 api_router.include_router(metrics.router)
 api_router.include_router(convergence.router)
+api_router.include_router(onboarding.router)
 api_router.include_router(template.router)
 
