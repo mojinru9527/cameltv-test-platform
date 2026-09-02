@@ -343,3 +343,31 @@ def test_api_regression_set(client, auth_headers):
     rr = client.get(f"/api/v1/version-tasks/{tid}/regression-set", headers=h)
     assert rr.status_code == 200
     assert isinstance(rr.json()["data"], list)
+
+
+# ────────────────────────────── B13: 运营指标 + 跨版本对比 ──────────────────────────────
+
+def test_operations_metrics_and_compare(db_session):
+    for v in ("1.0", "2.0"):
+        task = version_task_service.create_task(db_session, project_id=1, title=f"t{v}", version=v)
+        items = version_task_service.generate_plan(db_session, task.id, [{"item_type": "functional", "title": "登录"}])
+        for it in items:
+            version_task_service.review_plan_item(db_session, it.id, "adopt")
+        version_task_service.start_run(db_session, task.id)
+        version_task_service.release_task(db_session, task.id, verdict="pass", release_bundle_id=1)
+    metrics = version_task_service.get_operations_metrics(db_session, project_id=1)
+    assert metrics["released_count"] == 2
+    assert metrics["total_tasks"] == 2
+    compare = version_task_service.compare_versions(db_session, 1, "1.0", "2.0")
+    assert compare["a"]["exists"] is True
+    assert compare["b"]["exists"] is True
+
+
+def test_api_metrics_and_compare(client, auth_headers):
+    h = auth_headers
+    mo = client.get("/api/v1/metrics/operations", headers=h)
+    assert mo.status_code == 200
+    assert "released_count" in mo.json()["data"]
+    cmp = client.get("/api/v1/version-tasks/compare?version_a=1.0&version_b=2.0", headers=h)
+    assert cmp.status_code == 200
+    assert "a" in cmp.json()["data"]

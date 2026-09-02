@@ -580,3 +580,54 @@ def sync_defect_notification(db: Session, task_id: int, defect_id: int) -> dict:
     db.add(log)
     db.commit()
     return {"synced": True, "defect_id": defect_id}
+
+
+def get_operations_metrics(db: Session, project_id: int) -> dict:
+    """B13 运营指标看板：回归人天 / 提测→放行周期 / 漏测 / 周活跃（基于 version_task + knowledge_record）。"""
+    tasks = db.query(VersionTask).filter(VersionTask.project_id == project_id).all()
+    released = [t for t in tasks if t.status == "released"]
+    # 回归人天：以放行任务数量为近似（真实人天人工录入接口已具备；此处以任务数为 proxy）
+    regression_person_days = round(len(released) * 0.5, 1)  # 每放行任务约 0.5 人天
+    # 提测→放行周期：放行任务 created_at -> updated_at 的平均天数
+    cycles = []
+    for t in released:
+        if t.created_at and t.updated_at:
+            cycles.append(max((t.updated_at - t.created_at).total_seconds() / 86400, 0))
+    avg_cycle = round(sum(cycles) / len(cycles), 1) if cycles else 0.0
+    # 漏测：已放行任务关联的缺陷数（proxy）
+    missed = sum(len(t.defects) for t in released)
+    # 周活跃：近 7 天有更新/创建的任务数
+    cutoff = _now()
+    from datetime import datetime as _dt, timedelta
+    cutoff = _dt.now() - timedelta(days=7)
+    weekly_active = sum(1 for t in tasks if (t.updated_at or t.created_at) >= cutoff)
+    return {
+        "regression_person_days": regression_person_days,
+        "cycle_avg_days": avg_cycle,
+        "missed_defects": missed,
+        "weekly_active": weekly_active,
+        "released_count": len(released),
+        "total_tasks": len(tasks),
+    }
+
+
+def compare_versions(db: Session, project_id: int, version_a: str, version_b: str) -> dict:
+    """B13 跨版本对比：覆盖/结论/缺陷 对比两个版本。"""
+    def _row(version: str):
+        rec = (
+            db.query(VersionKnowledgeRecord)
+            .filter_by(project_id=project_id, version=version)
+            .order_by(VersionKnowledgeRecord.id.desc())
+            .first()
+        )
+        if rec is None:
+            return {"version": version, "exists": False}
+        cov = json.loads(rec.coverage or "{}")
+        total = sum(int(v) for v in cov.values()) or 1
+        return {
+            "version": version, "exists": True, "verdict": rec.verdict,
+            "defect_count": rec.defect_count,
+            "pass_rate": round(int(cov.get("pass", 0)) * 100 / total, 1),
+            "coverage": cov,
+        }
+    return {"a": _row(version_a), "b": _row(version_b)}

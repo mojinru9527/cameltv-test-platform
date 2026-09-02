@@ -1,5 +1,5 @@
 {
-  "count": 631,
+  "count": 633,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -2524,6 +2524,14 @@
     {
       "method": "POST",
       "path": "/api/v1/version-tasks/{task_id}/defects/{defect_id}/sync"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/metrics/operations"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/version-tasks/compare"
     }
   ]
 }

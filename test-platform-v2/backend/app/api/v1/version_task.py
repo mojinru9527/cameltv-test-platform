@@ -107,6 +107,17 @@ def create_task(
     return R.ok(VersionTaskOut.model_validate(task))
 
 
+
+# ── B13: 跨版本对比 ──
+@router.get("/compare", response_model=R[dict], summary="跨版本对比")
+def compare_versions(
+    version_a: str = Query(...),
+    version_b: str = Query(...),
+    current: CurrentUser = Depends(require_permission("mission:list")),
+    db: Session = Depends(get_db),
+):
+    return R.ok(version_task_service.compare_versions(db, current.project_id or 0, version_a, version_b))
+
 @router.get("/{task_id}", response_model=R[VersionTaskOut], summary="版本验收任务详情")
 def get_task(
     task_id: int,
