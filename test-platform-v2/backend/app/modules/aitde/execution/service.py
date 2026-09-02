@@ -14,6 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import APIException
+from app.core.config import settings
 from app.modules.aitde.common.enums import (
     EvidenceStatus,
     Outcome,
@@ -71,6 +72,52 @@ def _validate_run_binding(
         )
 
 
+def _build_scenario_input(row: ExecutionRun) -> dict[str, Any]:
+    """Build the ScenarioExecutionWorkflow ``scenario_input`` payload.
+
+    V4.0 生产黑盒复盘 AITDE-UX-003：run 创建后从未提交 Temporal，Workflow 永不启动。
+    The workflow's activities run against DB by these identifiers; the model/snapshot
+    are loaded inside the activities from ``scenario_version_id`` / ``environment_snapshot_id``.
+    """
+    return {
+        "run_id": row.id,
+        "project_id": row.project_id,
+        "mission_id": row.mission_id,
+        "scenario_id": row.scenario_id,
+        "scenario_version_id": row.scenario_version_id,
+        "contract_version_id": row.contract_version_id,
+        "environment_id": row.environment_id,
+        "environment_snapshot_id": row.environment_snapshot_id,
+        "trigger_type": row.trigger_type,
+        "worker_id": "temporal",
+    }
+
+
+def _submit_to_temporal(db: Session, project_id: int, row: ExecutionRun) -> None:
+    """Submit the run to Temporal (Durable Runtime) so a Worker executes it.
+
+    AITDE-UX-003: previously ``start_scenario_execution`` had no caller; runs
+    stayed QUEUED forever with a live Worker polling an empty queue.
+    """
+    from app.modules.aitde.workflow import service as workflow_service
+
+    try:
+        workflow_service.start_scenario_execution(
+            db,
+            project_id=project_id,
+            workflow_id=f"scenario-run-{row.id}",
+            scenario_input=_build_scenario_input(row),
+            run_id=row.id,
+            mission_id=row.mission_id,
+            network_zone=None,
+            required_capabilities=None,
+        )
+    except Exception as exc:  # noqa: BLE001 - 提交失败不应把已创建的 run 置为失败
+        # 记录到 run 的原始错误，避免静默；run 仍保持 QUEUED，可由 retry 重试。
+        logger = __import__("logging").getLogger(__name__)
+        logger.warning("[execution] submit scenario-run-%s to Temporal failed: %s", row.id, exc)
+
+
 def create_run(
     db: Session,
     data: dict[str, Any],
@@ -96,7 +143,7 @@ def create_run(
     _validate_run_binding(db, project_id, scenario_id, scenario_version_id, contract_version_id)
 
     trigger_type = data.get("trigger_type") or TriggerType.MANUAL.value
-    return repository.create_run(
+    row = repository.create_run(
         db,
         {
             "project_id": project_id,
@@ -113,6 +160,12 @@ def create_run(
         },
         user_id,
     )
+
+    # AITDE-UX-003：Temporal 启用时提交 Workflow，否则 Run 永久 QUEUED（Worker 空转）。
+    if settings.temporal_enabled and row.id:
+        _submit_to_temporal(db, project_id, row)
+
+    return row
 
 
 def get_run(db: Session, run_id: int, project_id: int) -> ExecutionRun:
@@ -211,7 +264,7 @@ def cancel_run(db: Session, run_id: int, project_id: int) -> ExecutionRun:
 def retry_run(db: Session, run_id: int, project_id: int, user_id: int) -> ExecutionRun:
     """Create a child run (parent_run_id set, retry_no = parent.retry_no + 1)."""
     parent = get_run(db, run_id, project_id)
-    return repository.create_run(
+    child = repository.create_run(
         db,
         {
             "project_id": parent.project_id,
@@ -230,6 +283,10 @@ def retry_run(db: Session, run_id: int, project_id: int, user_id: int) -> Execut
         },
         user_id,
     )
+    # AITDE-UX-003：retry 的子 run 同样提交 Temporal，否则仍永久 QUEUED。
+    if settings.temporal_enabled and child.id:
+        _submit_to_temporal(db, project_id, child)
+    return child
 
 
 def compute_outcome(assertions: list, evidence_sanitized_ok: bool) -> str:
