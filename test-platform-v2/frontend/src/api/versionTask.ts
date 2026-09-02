@@ -203,3 +203,22 @@ export async function getRegressionSet(taskId: number): Promise<RegressionItem[]
 export async function syncDefect(taskId: number, defectId: number): Promise<{ synced: boolean; defect_id: number }> {
   return (await v1.post(`/version-tasks/${taskId}/defects/${defectId}/sync`)) as unknown as { synced: boolean; defect_id: number }
 }
+
+
+export interface OperationsMetrics {
+  regression_person_days: number
+  cycle_avg_days: number
+  missed_defects: number
+  weekly_active: number
+  released_count: number
+  total_tasks: number
+}
+
+export async function getOperationsMetrics(): Promise<OperationsMetrics> {
+  return (await v1.get('/metrics/operations')) as unknown as OperationsMetrics
+}
+
+export async function compareVersions(versionA: string, versionB: string): Promise<{ a: Record<string, unknown>; b: Record<string, unknown> }> {
+  const p2 = new URLSearchParams({ version_a: versionA, version_b: versionB })
+  return (await v1.get(`/version-tasks/compare?${p2.toString()}`)) as unknown as { a: Record<string, unknown>; b: Record<string, unknown> }
+}
