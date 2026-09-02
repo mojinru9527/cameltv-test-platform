@@ -287,3 +287,27 @@ def test_release_service_illegal_verdict(db_session):
     task = version_task_service.create_task(db_session, project_id=1, title="t", version="1.0")
     with pytest.raises(APIException):
         version_task_service.release_task(db_session, task.id, verdict="noop")
+
+
+# ────────────────────────────── B11: 版本沉淀 + 复用建议 ──────────────────────────────
+
+def test_release_auto_records_knowledge(db_session):
+    task = version_task_service.create_task(db_session, project_id=1, title="t", version="1.0")
+    items = version_task_service.generate_plan(db_session, task.id, [{"item_type": "functional", "title": "登录"}])
+    for it in items:
+        version_task_service.review_plan_item(db_session, it.id, "adopt")
+    version_task_service.start_run(db_session, task.id)
+    version_task_service.release_task(db_session, task.id, verdict="pass", release_bundle_id=2)
+    rec = version_task_service.record_version_knowledge(db_session, task.id)
+    assert rec.version == "1.0"
+    assert rec.verdict == "pass"
+    suggestions = version_task_service.get_reuse_suggestions(db_session, project_id=1)
+    assert len(suggestions) >= 1
+    assert "登录" in " ".join(suggestions[0]["reuse"])
+
+
+def test_api_reuse_suggestions(client, auth_headers):
+    h = auth_headers
+    r = client.get("/api/v1/version-tasks/knowledge/reuse", headers=h)
+    assert r.status_code == 200
+    assert isinstance(r.json()["data"], list)

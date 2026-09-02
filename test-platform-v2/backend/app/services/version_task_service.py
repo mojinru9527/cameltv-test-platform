@@ -15,6 +15,7 @@ from app.models.version_task_plan import VersionTaskPlanItem
 from app.models.version_task_run import VersionTaskRun
 from app.models.defect import Defect
 from app.models.notification import NotificationLog
+from app.models.version_knowledge import VersionKnowledgeRecord
 from app.core.exceptions import APIException, not_found
 
 logger = logging.getLogger("version_task")
@@ -450,6 +451,7 @@ def release_task(
     task.status = "released"
     db.commit()
     db.refresh(task)
+    record_version_knowledge(db, task_id)
     return build_release_package(db, task_id)
 
 
@@ -464,3 +466,67 @@ def notify_release(db: Session, task_id: int, message: str) -> None:
     )
     db.add(log)
     db.commit()
+
+
+def record_version_knowledge(db: Session, task_id: int) -> VersionKnowledgeRecord:
+    """B11 版本沉淀：放行后记录「这版怎么测的」（需求→方案→结果→缺陷→放行结论）。"""
+    task = get_task(db, task_id)
+    existing = db.query(VersionKnowledgeRecord).filter_by(task_id=task.id).first()
+    if existing:
+        return existing
+    coverage = json.loads(task.coverage or "{}")
+    risk = json.loads(task.risk or "[]")
+    plan = [{"item_type": i.item_type, "title": i.title, "confidence": i.confidence, "status": i.status}
+            for i in get_plan(db, task.id)]
+    record = VersionKnowledgeRecord(
+        project_id=task.project_id,
+        task_id=task.id,
+        version=task.version,
+        title=task.title,
+        summary=task.summary or f"{task.title} 经验收（{task.verdict}）",
+        coverage=json.dumps(coverage, ensure_ascii=False),
+        verdict=task.verdict,
+        risk=json.dumps(risk if isinstance(risk, list) else [risk], ensure_ascii=False),
+        plan_summary=json.dumps(plan, ensure_ascii=False),
+        defect_count=len(task.defects),
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return record
+
+
+def get_reuse_suggestions(db: Session, project_id: int, limit: int = 5) -> list[dict]:
+    """B11 复用建议：上一版知识记录 → 下版建任务自动带出。"""
+    rows = (
+        db.query(VersionKnowledgeRecord)
+        .filter(VersionKnowledgeRecord.project_id == project_id)
+        .order_by(VersionKnowledgeRecord.id.desc())
+        .limit(limit)
+        .all()
+    )
+    out = []
+    for r in rows:
+        coverage = json.loads(r.coverage or "{}")
+        plan = json.loads(r.plan_summary or "[]")
+        out.append({
+            "id": r.id, "version": r.version, "title": r.title,
+            "verdict": r.verdict, "defect_count": r.defect_count,
+            "pass_rate": round(
+                int(coverage.get("pass", 0)) * 100 / max(sum(int(v) for v in coverage.values()), 1), 1
+            ),
+            "reuse": [i["title"] for i in plan if i.get("status") in ("adopted", "modified")][:10],
+        })
+    return out
+
+
+def get_knowledge_record(db: Session, task_id: int) -> dict:
+    """B11 读取版本知识记录（无则空）。"""
+    rec = db.query(VersionKnowledgeRecord).filter_by(task_id=task_id).first()
+    if rec is None:
+        return {}
+    return {
+        "id": rec.id, "version": rec.version, "title": rec.title,
+        "verdict": rec.verdict, "defect_count": rec.defect_count,
+        "coverage": json.loads(rec.coverage or "{}"),
+    }
