@@ -94,18 +94,31 @@ def test_execute_dispatches_api_browser_assertion(db, monkeypatch):
     run = _graph(db)
     monkeypatch.setattr(drivers, "_db", lambda: db)
     monkeypatch.setattr(drivers, "_http", lambda *a, **k: _FakeHttpClient())
+    monkeypatch.setattr(drivers, "browser_capability_available", lambda: False)
     out = drivers._execute_commands_hook({"run_id": run.id, "project_id": 1})
     by_name = {s["name"]: s for s in out["steps"]}
     assert by_name["api-1"]["http_status"] == 200
     assert by_name["api-1"]["ok"] is True
     assert by_name["ui-1"]["ok"] is False
     assert by_name["ui-1"]["error"] == "no_browser_runtime"
+    assert by_name["ui-1"]["browser_capability"] is False
     assert by_name["assert-1"]["skipped"] == "assertion_evaluate"
     # a BLOCKED browser ExecutionStep was persisted (no fake HTTP)
     blocked = db.query(ExecutionStep).filter_by(step_key="ui-1").first()
     assert blocked is not None
     assert blocked.status == "FAILED"
     assert blocked.step_type == "BROWSER"
+
+
+def test_execute_browser_capability_true_without_runner(db, monkeypatch):
+    run = _graph(db)
+    monkeypatch.setattr(drivers, "_db", lambda: db)
+    monkeypatch.setattr(drivers, "_http", lambda *a, **k: _FakeHttpClient())
+    monkeypatch.setattr(drivers, "browser_capability_available", lambda: True)
+    out = drivers._execute_commands_hook({"run_id": run.id, "project_id": 1})
+    by_name = {s["name"]: s for s in out["steps"]}
+    assert by_name["ui-1"]["error"] == "no_browser_runner_registered"
+    assert by_name["ui-1"]["browser_capability"] is True
 
 
 def test_execute_browser_runner_callback(db, monkeypatch):
