@@ -62,14 +62,35 @@ def generate(
     output: ScenarioDesignOutput = prov.design_scenarios(context)
 
     created = 0
+    skipped = 0
     for cand in output.items:
         scenario = repository.create_or_get_scenario(
             db, project_id, contract.mission_id, cand.scenario_key
         )
+        content_hash = repository.content_hash(cand)
+
+        # V4.0 生产黑盒复盘 P1-NEW：同一契约下内容未变时复用已有版本，
+        # 避免「重新生成」堆积同内容新版本；否则走版本递增。
+        existing = repository.find_version_by_hash(
+            db, scenario.id, contract_version_id, content_hash
+        )
+        if existing:
+            skipped += 1
+            continue
+
+        # 幂等未命中但仍存在旧版本：递增版本号，避免 (scenario_id, version_no) 唯一冲突。
+        current = repository.current_version(db, scenario.id)
+        if current:
+            scenario.current_version_no = current.version_no + 1
+
         repository.create_version(db, scenario, contract_version_id, cand, user_id)
         created += 1
     db.commit()
-    return {"contract_version_id": contract_version_id, "scenario_count": created}
+    return {
+        "contract_version_id": contract_version_id,
+        "scenario_count": created,
+        "skipped": skipped,
+    }
 
 
 def list_scenarios(db: Session, mission_id: int, project_id: int) -> list[dict]:

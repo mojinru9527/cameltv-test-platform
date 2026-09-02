@@ -108,6 +108,29 @@ def test_generate_requires_frozen_contract(db):
     assert exc.value.http_status in (404, 409)
 
 
+def test_generate_twice_no_unique_violation(db):
+    """V4.0 生产黑盒复盘 P1-NEW：同一契约重复生成场景不得再撞
+    `uq_scenario_version_no` 唯一约束（此前必 500，见生产 traceback）。"""
+    m = _ready(db)
+    res = _to_frozen_contract(db, m.id)
+
+    first = scenario_service.generate(db, res["version_id"], 1, 9)
+    assert first["scenario_count"] >= 1
+    assert first.get("skipped", 0) == 0
+
+    # 核心回归：同契约重复生成（内容未变，确定性 fallback provider）必须幂等——
+    # 命中 content_hash 复用，不再插相同 (scenario_id, version_no)，不得抛异常。
+    second = scenario_service.generate(db, res["version_id"], 1, 9)
+    assert second["scenario_count"] == 0, "内容未变时不应新建版本"
+    assert second["skipped"] == first["scenario_count"], "已存在同内容版本应全部跳过"
+
+    # 版本号稳定为 1，无重复、无漂移
+    lst = scenario_service.list_scenarios(db, m.id, 1)
+    assert len(lst) >= 1
+    for s in lst:
+        assert s["version_no"] == 1
+
+
 def test_generate_and_list_and_projection(db):
     m = _ready(db)
     res = _to_frozen_contract(db, m.id)
