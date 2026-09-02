@@ -1,5 +1,5 @@
 {
-  "count": 608,
+  "count": 617,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -2432,6 +2432,42 @@
     {
       "path": "/api/v1/dashboard/todo",
       "method": "GET"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/version-tasks"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/version-tasks"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/version-tasks/compat/missions"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/version-tasks/compat/missions/{mission_id}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/version-tasks/{task_id}"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/version-tasks/{task_id}"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/version-tasks/{task_id}/defects"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/version-tasks/{task_id}/executions"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/version-tasks/{task_id}/transition"
     }
   ]
 }
