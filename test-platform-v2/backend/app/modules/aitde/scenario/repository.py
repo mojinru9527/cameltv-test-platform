@@ -65,6 +65,27 @@ def create_or_get_scenario(
     return row
 
 
+def find_version_by_hash(
+    db: Session, scenario_id: int, contract_version_id: int, content_hash: str
+) -> TestScenarioVersion | None:
+    """按内容哈希查找同一契约版本下已生成的场景版本。
+
+    V4.0 生产黑盒复盘 P1-NEW：场景「重新生成」此前无条件 INSERT 相同
+    `(scenario_id, version_no)`，撞唯一约束 `uq_scenario_version_no` 导致 500。
+    若同一契约、同一内容哈希的版本已存在，说明内容未变，应复用而非另建版本
+    （避免每次点「生成场景」都堆积一个同内容的新版本）。
+    """
+    return db.scalar(
+        select(TestScenarioVersion)
+        .where(
+            TestScenarioVersion.scenario_id == scenario_id,
+            TestScenarioVersion.contract_version_id == contract_version_id,
+            TestScenarioVersion.content_hash == content_hash,
+        )
+        .limit(1)
+    )
+
+
 def create_version(
     db: Session,
     scenario: TestScenario,
