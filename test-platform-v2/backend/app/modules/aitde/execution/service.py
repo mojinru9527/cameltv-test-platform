@@ -72,6 +72,65 @@ def _validate_run_binding(
         )
 
 
+def _validate_oracle_readiness(
+    db: Session, scenario_version_id: int
+) -> None:
+    """Batch 207 fail-fast: a trusted run must be executable.
+
+    When a scenario version has REQUIRED + APPROVED oracles (promoted by a
+    tester), the run needs a CommandPlan version and an ACTIVE oracle binding
+    for every such oracle. Missing pieces raise a clear 400 instead of
+    silently producing NOT_EVALUATED / INCONCLUSIVE.
+    """
+    from sqlalchemy import select
+
+    from app.modules.aitde.command.models import CommandPlanVersion
+    from app.modules.aitde.common.enums import ReviewStatus
+    from app.modules.aitde.scenario.models import ScenarioOracleBinding, TestOracle
+
+    oracles = list(
+        db.scalars(
+            select(TestOracle).where(
+                TestOracle.scenario_version_id == scenario_version_id,
+                TestOracle.required.is_(True),
+                TestOracle.review_status == ReviewStatus.APPROVED.value,
+            )
+        ).all()
+    )
+    if not oracles:
+        return  # no trusted oracle yet — nothing to bind/execute
+
+    plan = db.scalar(
+        select(CommandPlanVersion)
+        .where(CommandPlanVersion.scenario_version_id == scenario_version_id)
+        .order_by(CommandPlanVersion.id.desc())
+        .limit(1)
+    )
+    if plan is None:
+        raise APIException(
+            code=400,
+            msg="PLAN_MISSING: 该场景存在受信 Required Oracle，但还没有 CommandPlan，请先生成 Action Plan",
+            http_status=400,
+        )
+    unbound = []
+    for oracle in oracles:
+        binding = db.scalar(
+            select(ScenarioOracleBinding).where(
+                ScenarioOracleBinding.scenario_version_id == scenario_version_id,
+                ScenarioOracleBinding.oracle_id == oracle.id,
+                ScenarioOracleBinding.status == "ACTIVE",
+            )
+        )
+        if binding is None:
+            unbound.append(oracle.oracle_key)
+    if unbound:
+        raise APIException(
+            code=400,
+            msg=f"ORACLE_NOT_BOUND: {','.join(unbound)}",
+            http_status=400,
+        )
+
+
 def _build_scenario_input(row: ExecutionRun) -> dict[str, Any]:
     """Build the ScenarioExecutionWorkflow ``scenario_input`` payload.
 
@@ -141,6 +200,7 @@ def create_run(
         )
 
     _validate_run_binding(db, project_id, scenario_id, scenario_version_id, contract_version_id)
+    _validate_oracle_readiness(db, scenario_version_id)
 
     trigger_type = data.get("trigger_type") or TriggerType.MANUAL.value
     row = repository.create_run(

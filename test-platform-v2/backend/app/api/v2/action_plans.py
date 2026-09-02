@@ -32,7 +32,13 @@ plans_router = APIRouter(
 class ActionPlanGenerateRequest(BaseModel):
     scenario_version_id: int
     contract_version_id: int
-    plan: dict = Field(..., description="Command IR document")
+    plan: dict | None = Field(
+        default=None,
+        description=(
+            "Command IR document. Omit to let the server derive a DRAFT "
+            "from the scenario (ActionPlanner)."
+        ),
+    )
     schema_version: str = "1.0"
     model_ref: str | None = None
     prompt_version: str | None = None
@@ -46,15 +52,26 @@ def generate_action_plan(
     db: Session = Depends(get_db),
 ):
     # V33-002: key the plan by scenario_id as the scenario_adapter proxy (adapter
-    # binding is V33-003+). Generation here validates IR + versions a DRAFT.
+    # binding is V33-003+). Batch 207: when no plan is supplied the server
+    # derives a DRAFT from the scenario (ActionPlanner) so the client never has
+    # to hand-write Command IR.
     plan = service.get_or_create_plan(db, scenario_id)
+    if payload.plan is None:
+        ir = service.plan_from_scenario(
+            db, payload.scenario_version_id, route="/"
+        )
+        generated_by_type = "PLANNER"
+    else:
+        ir = payload.plan
+        generated_by_type = "CLIENT"
     version = service.create_version(
         db,
         plan,
         scenario_version_id=payload.scenario_version_id,
         contract_version_id=payload.contract_version_id,
-        plan_json=payload.plan,
+        plan_json=ir,
         schema_version=payload.schema_version,
+        generated_by_type=generated_by_type,
         model_ref=payload.model_ref,
         prompt_version=payload.prompt_version,
     )

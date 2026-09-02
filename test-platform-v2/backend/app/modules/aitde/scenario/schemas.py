@@ -51,6 +51,22 @@ class OracleReviewRequest(BaseModel):
     action: Literal["approve", "reject"] = "approve"
     required: bool | None = None
     comment: str | None = None
+    promote: bool = False
+    """Batch 207: explicit human trust promotion.
+
+    AI_INFERRED oracles can never be approved silently (V3.9 invariant); a
+    tester who reviewed the oracle may set ``promote=True`` to re-source it
+    as TESTER_APPROVED and mark it APPROVED.
+    """
+
+
+class OracleBindingCreate(BaseModel):
+    scenario_version_id: int
+    oracle_id: int
+    binding_type: str
+    source_step_key: str = ""
+    observation_selector: dict[str, Any] = Field(default_factory=dict)
+    scenario_adapter_id: int = 0
 
 
 class FeatureStep(BaseModel):

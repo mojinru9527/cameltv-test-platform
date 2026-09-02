@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.modules.aitde.common.enums import ReviewStatus, ScenarioReviewStatus
 from app.modules.aitde.scenario.models import (
+    ScenarioOracleBinding,
     TestOracle,
     TestScenario,
     TestScenarioVersion,
@@ -192,6 +193,58 @@ def list_oracles(db: Session, scenario_version_id: int) -> list[TestOracle]:
     return list(rows)
 
 
+def upsert_oracle_binding(
+    db: Session,
+    *,
+    scenario_version_id: int,
+    oracle_id: int,
+    binding_type: str,
+    source_step_key: str = "",
+    observation_selector_json: str = "{}",
+    scenario_adapter_id: int = 0,
+) -> ScenarioOracleBinding:
+    """Create or re-activate an oracle binding (Batch 207 producer).
+
+    The unique key is (scenario_version_id, oracle_id, binding_type); an    existing row is updated in place (idempotent).
+    """
+    from datetime import datetime
+
+    row = db.scalar(
+        select(ScenarioOracleBinding).where(
+            ScenarioOracleBinding.scenario_version_id == scenario_version_id,
+            ScenarioOracleBinding.oracle_id == oracle_id,
+            ScenarioOracleBinding.binding_type == binding_type,
+        )
+    )
+    if row is None:
+        row = ScenarioOracleBinding(
+            scenario_version_id=scenario_version_id,
+            oracle_id=oracle_id,
+            binding_type=binding_type,
+            status="ACTIVE",
+        )
+        db.add(row)
+    row.scenario_adapter_id = scenario_adapter_id
+    row.source_step_key = source_step_key
+    row.observation_selector_json = observation_selector_json
+    row.status = "ACTIVE"
+    row.validated_at = datetime.now()
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def list_oracle_bindings(
+    db: Session, scenario_version_id: int | None = None
+) -> list[ScenarioOracleBinding]:
+    stmt = select(ScenarioOracleBinding).order_by(ScenarioOracleBinding.id.asc())
+    if scenario_version_id is not None:
+        stmt = stmt.where(
+            ScenarioOracleBinding.scenario_version_id == scenario_version_id
+        )
+    return list(db.scalars(stmt).all())
+
+
 def review_scenario(
     db: Session,
     version: TestScenarioVersion,
@@ -209,11 +262,23 @@ def review_scenario(
 
 
 def review_oracle(
-    db: Session, oracle: TestOracle, action: str, user_id: int, required: bool | None
+    db: Session,
+    oracle: TestOracle,
+    action: str,
+    user_id: int,
+    required: bool | None,
+    promote: bool = False,
 ) -> TestOracle:
-    # Oracle Guard: AI_INFERRED cannot directly become an approved REQUIRED oracle.
+    # Oracle Guard: AI_INFERRED cannot directly become an approved REQUIRED
+    # oracle UNLESS a human explicitly promotes it (promote=True), which
+    # re-sources the oracle as TESTER_APPROVED (Batch 207). The V3.9
+    # invariant "AI never silently owns an Outcome" is preserved.
     if oracle.source_type == "AI_INFERRED" and action == ReviewStatus.APPROVED.value:
-        oracle.review_status = ReviewStatus.PROPOSED.value
+        if promote:
+            oracle.source_type = "TESTER_APPROVED"
+            oracle.review_status = ReviewStatus.APPROVED.value
+        else:
+            oracle.review_status = ReviewStatus.PROPOSED.value
     else:
         oracle.review_status = (
             ReviewStatus.APPROVED.value
