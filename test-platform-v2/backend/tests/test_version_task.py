@@ -397,3 +397,30 @@ def test_api_convergence(client, auth_headers):
     r = client.get("/api/v1/convergence/assets", headers=h)
     assert r.status_code == 200
     assert r.json()["data"]["single_fact_source"] == "version_task"
+
+
+# ────────────────────────────── B15: 新业务接入向导 + 基线 ──────────────────────────────
+
+def test_business_onboarding_baseline(db_session):
+    from app.services import onboarding_service
+    ob = onboarding_service.create_onboarding(db_session, 1, name="basketball", service_key="basketball-service", api_spec_url="http://x/swagger.json")
+    assert ob.step == 1
+    # step 2 接基线（推进）
+    onboarding_service.complete_step(db_session, ob.id, 2)
+    # step 3 生成方案（创建 VersionTask + plan）
+    onboarding_service.complete_step(db_session, ob.id, 3)
+    assert ob.version_task_id is not None
+    # step 4 跑基线 → active + baseline
+    ob = onboarding_service.complete_step(db_session, ob.id, 4)
+    assert ob.status == "active"
+    assert "run_id" in ob.baseline
+
+
+def test_api_onboarding(client, auth_headers):
+    h = auth_headers
+    r = client.post("/api/v1/onboarding/businesses", json={"name": "camel-mimo", "service_key": "camel-mimo"}, headers=h)
+    assert r.status_code == 200, r.text
+    oid = r.json()["data"]["id"]
+    rr = client.post(f"/api/v1/onboarding/businesses/{oid}/steps/3", headers=h)
+    assert rr.status_code == 200
+    assert rr.json()["data"]["step"] == 3

@@ -67,6 +67,7 @@ from app.models.version_task import VersionTask, VersionTaskDefect, VersionTaskE
 from app.models.version_task_plan import VersionTaskPlanItem
 from app.models.version_task_run import VersionTaskRun
 from app.models.version_knowledge import VersionKnowledgeRecord
+from app.models.business_onboarding import BusinessOnboarding
 from app.models.wiki import (
     ExternalWikiConnection,
     WikiDiffItem,
@@ -153,7 +154,9 @@ __all__ = [
     "VersionTaskPlanItem",
 
     "VersionTaskRun",
+
     "VersionKnowledgeRecord",
+    "BusinessOnboarding",
     "AgentWorkLog",
     "GeneratedArtifact",
     "KnowledgeSource",
@@ -182,6 +185,7 @@ __all__ = [
     "LanhuEvidenceAsset",
     "LanhuOcrBlock",
 ]
+
 
 
 

@@ -44,6 +44,7 @@ const MissionListPage = lazy(() => import('@/pages/missions'))
 const VersionTasksPage = lazy(() => import('@/pages/version-tasks'))
 const VersionTaskRunPage = lazy(() => import('@/pages/version-tasks/[taskId]'))
 const MetricsPage = lazy(() => import('@/pages/metrics'))
+const OnboardingPage = lazy(() => import('@/pages/onboarding'))
 const MissionCreatePage = lazy(() => import('@/pages/missions/CreateMissionPage'))
 const MissionLayout = lazy(() => import('@/pages/missions/MissionLayout'))
 const MissionOverviewPage = lazy(() => import('@/pages/missions/overview'))
@@ -270,6 +271,7 @@ export const router = createBrowserRouter([
       { path: 'version-tasks', element: <PageLoader><VersionTasksPage /></PageLoader> },
       { path: 'version-tasks/:taskId', element: <PageLoader><VersionTaskRunPage /></PageLoader> },
       { path: 'metrics', element: <PageLoader><MetricsPage /></PageLoader> },
+      { path: 'onboarding', element: <PageLoader><OnboardingPage /></PageLoader> },
       { path: 'release-bundles', element: <PageLoader><ReleaseBundlesPage /></PageLoader> },
       { path: 'release-bundles/:id', element: <PageLoader><BundleDetailPage /></PageLoader> },
       { path: 'release-bundles/:id/panorama', element: <PageLoader><VersionPanoramaPage /></PageLoader> },
