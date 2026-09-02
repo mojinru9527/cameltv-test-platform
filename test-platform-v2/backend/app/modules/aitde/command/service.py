@@ -59,6 +59,17 @@ def plan_from_scenario(
     return ActionPlanner().plan_and_validate(when_model, oracles, route=route)
 
 
+def _materialize_bindings(db: Session, plan_version_id: int) -> None:
+    """Batch 209 (C2): best-effort auto-binding on approve/activate."""
+    try:
+        from app.modules.aitde.scenario.repository import materialize_bindings_for_plan
+
+        materialize_bindings_for_plan(db, plan_version_id)
+        db.commit()
+    except Exception:  # noqa: BLE001 - never block plan lifecycle
+        db.rollback()
+
+
 def get_or_create_plan(db: Session, scenario_adapter_id: int) -> CommandPlan:
     plan = db.scalar(
         select(CommandPlan).where(CommandPlan.scenario_adapter_id == scenario_adapter_id)
@@ -138,6 +149,7 @@ def approve_version(db: Session, version_id: int, user_id: int) -> CommandPlanVe
     v.approved_at = _utcnow()
     db.commit()
     db.refresh(v)
+    _materialize_bindings(db, v.id)
     return v
 
 
@@ -161,6 +173,7 @@ def activate_version(db: Session, version_id: int, user_id: int) -> CommandPlanV
         plan.current_version_no = v.version_no
     db.commit()
     db.refresh(v)
+    _materialize_bindings(db, v.id)
     return v
 
 

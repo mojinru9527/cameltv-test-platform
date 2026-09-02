@@ -261,6 +261,133 @@ def review_scenario(
     return version
 
 
+
+def _binding_type_for_observation(observation_type: str, oracle_type: str) -> str | None:
+    """Map a plan observation type to an OracleBindingType (C2)."""
+    obs = (observation_type or "").upper()
+    mapping = {
+        "HTTP_STATUS": "API_STATUS",
+        "STATUS": "API_STATUS",
+        "HTTP_RESPONSE": "API_JSONPATH",
+        "RESPONSE": "API_JSONPATH",
+        "JSON": "API_JSONPATH",
+        "UI_TEXT": "UI_TEXT",
+        "TEXT": "UI_TEXT",
+        "UI_VISIBLE": "UI_VISIBLE",
+        "VISIBLE": "UI_VISIBLE",
+        "UI_ATTRIBUTE": "UI_ATTRIBUTE",
+        "ATTRIBUTE": "UI_ATTRIBUTE",
+        "DB_COLUMN": "DB_COLUMN",
+        "COLUMN": "DB_COLUMN",
+        "EVENT_FIELD": "EVENT_FIELD",
+        "LOG_PATTERN": "LOG_PATTERN",
+    }
+    if obs in mapping:
+        return mapping[obs]
+    oracle_map = {
+        "API": "API_JSONPATH",
+        "DB": "DB_COLUMN",
+        "UI": "UI_TEXT",
+        "EVENT": "EVENT_FIELD",
+        "LOG": "LOG_PATTERN",
+    }
+    return oracle_map.get((oracle_type or "").upper())
+
+
+def _observation_selector(oracle: TestOracle, binding_type: str) -> str:
+    target = {}
+    try:
+        target = json.loads(oracle.target_json or "{}")
+    except (TypeError, ValueError):
+        target = {}
+    if binding_type == "API_JSONPATH":
+        path = target.get("jsonpath") or target.get("path") or "$"
+        return json.dumps({"jsonpath": path}, ensure_ascii=False)
+    if binding_type == "DB_COLUMN":
+        column = target.get("column") or ""
+        return json.dumps({"column": column}, ensure_ascii=False) if column else "{}"
+    return json.dumps({}, ensure_ascii=False)
+
+
+def materialize_bindings_for_plan(db: Session, plan_version_id: int) -> dict:
+    """Batch 209 (C2): auto-materialize ACTIVE oracle bindings for a plan.
+
+    For every APPROVED oracle of the plan's scenario version, find the command
+    observation whose key matches the oracle_key (or whose command id equals
+    it), derive the binding type from the observation type and upsert an ACTIVE
+    binding idempotently. Unmatched oracles stay unbound (run fail-fast guards).
+    """
+    from app.modules.aitde.command.models import CommandPlanVersion
+
+    version = db.get(CommandPlanVersion, plan_version_id)
+    if version is None:
+        return {"created": 0, "matched": 0}
+    try:
+        plan = json.loads(version.plan_json or "{}")
+    except (TypeError, ValueError):
+        plan = {}
+    observations: list[dict[str, str]] = []
+    for cmd in plan.get("commands") or []:
+        command_id = str(cmd.get("id") or "")
+        for obs in cmd.get("observations") or []:
+            observations.append(
+                {
+                    "command_id": command_id,
+                    "key": str(obs.get("key") or ""),
+                    "type": str(obs.get("type") or "").upper(),
+                }
+            )
+    oracles = list(
+        db.scalars(
+            select(TestOracle).where(
+                TestOracle.scenario_version_id == version.scenario_version_id
+            )
+        ).all()
+    )
+    created = 0
+    matched = 0
+    for oracle in oracles:
+        if oracle.review_status != ReviewStatus.APPROVED.value:
+            continue
+        best = None
+        for obs in observations:
+            key = obs["key"]
+            if (
+                key == oracle.oracle_key
+                or key.endswith(oracle.oracle_key)
+                or oracle.oracle_key.endswith(key)
+                or obs["command_id"] == oracle.oracle_key
+            ):
+                best = obs
+                break
+        if best is None:
+            continue
+        binding_type = _binding_type_for_observation(best["type"], oracle.oracle_type)
+        if binding_type is None:
+            continue
+        existing = db.scalar(
+            select(ScenarioOracleBinding).where(
+                ScenarioOracleBinding.scenario_version_id == version.scenario_version_id,
+                ScenarioOracleBinding.oracle_id == oracle.id,
+                ScenarioOracleBinding.binding_type == binding_type,
+            )
+        )
+        if existing is not None and existing.status == "ACTIVE":
+            matched += 1
+            continue
+        upsert_oracle_binding(
+            db,
+            scenario_version_id=version.scenario_version_id,
+            oracle_id=oracle.id,
+            binding_type=binding_type,
+            source_step_key=best["command_id"],
+            observation_selector_json=_observation_selector(oracle, binding_type),
+            scenario_adapter_id=0,
+        )
+        created += 1
+    return {"created": created, "matched": matched}
+
+
 def review_oracle(
     db: Session,
     oracle: TestOracle,
@@ -292,3 +419,4 @@ def review_oracle(
     db.commit()
     db.refresh(oracle)
     return oracle
+
