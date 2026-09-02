@@ -63,6 +63,7 @@ from app.models.test_schedule import TestSchedule, TestScheduleRun
 from app.models.ui_test import UiTestJob, UiTestRun, UiTestScript
 from app.models.user import User
 from app.models.version_mission import AgentWorkLog, GeneratedArtifact, VersionMission
+from app.models.version_task import VersionTask, VersionTaskDefect, VersionTaskExecution
 from app.models.wiki import (
     ExternalWikiConnection,
     WikiDiffItem,
@@ -139,7 +140,11 @@ __all__ = [
     "IntegrationConfig",
     "InviteCode",
     "SyncLog",
+
     "VersionMission",
+    "VersionTask",
+    "VersionTaskDefect",
+    "VersionTaskExecution",
     "AgentWorkLog",
     "GeneratedArtifact",
     "KnowledgeSource",
@@ -168,3 +173,5 @@ __all__ = [
     "LanhuEvidenceAsset",
     "LanhuOcrBlock",
 ]
+
+
