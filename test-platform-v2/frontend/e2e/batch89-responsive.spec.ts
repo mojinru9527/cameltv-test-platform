@@ -22,7 +22,7 @@ const EVIDENCE_DIR = path.resolve(SPEC_DIR, '../../work-logs/evidence/batch-89/r
 const PAGES = [
   { name: 'workbench', path: '/workbench' },
   { name: 'testcase', path: '/testcase' },
-  { name: 'testplan', path: '/testplan' },
+  // (batch-212) '/testplan' 已重定向 /testcase
   { name: 'report', path: '/report' },
   { name: 'defect', path: '/defect' },
   { name: 'schedule', path: '/schedule' },

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useSearchParams } from 'react-router'
 import PageHeader from '@/components/PageHeader'
@@ -12,7 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { LayoutDashboard, Database, FileCheck, Search, GitBranch, Layers, Calendar, BookOpen, GitCompare, FolderOpen, Sparkles, Zap, Lightbulb } from '@/lib/icons'
+import { LayoutDashboard, Database, FileCheck, Search, GitBranch, Layers, Calendar, BookOpen, GitCompare, FolderOpen, Sparkles, Zap } from '@/lib/icons'
+import type { LucideIcon } from '@/lib/icons'
 import OverviewTab from './components/OverviewTab'
 import SourceListTab from './components/SourceListTab'
 import ArtifactReviewTab from './components/ArtifactReviewTab'
@@ -27,6 +28,37 @@ import PlatformTab from './components/PlatformTab'
 import SkillsTab from './components/SkillsTab'
 import CaptureDialog from './components/CaptureDialog'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useAuthStore } from '@/stores/auth'
+
+
+/**
+ * (batch-212 入口收敛) 知识中心 Tab 目录：普通用户视图只留 项目知识/平台研发/检索 3 Tab；
+ * 其余为维护/专家 Tab（来源管理/AI 审核台/图谱/实体/迭代/Wiki 知识库/知识差异对比/Skills/概览），
+ * 需知识维护权限才可见（02 白名单 §3「知识中心普通用户多余 Tab 收维护入口」）。
+ */
+type KnowledgeTabDef = { value: string; label: string; icon: LucideIcon }
+
+const KNOWLEDGE_TAB_DEFS: KnowledgeTabDef[] = [
+  { value: 'project', label: '项目知识', icon: FolderOpen },
+  { value: 'platform', label: '平台研发', icon: Sparkles },
+  { value: 'search', label: '检索', icon: Search },
+  { value: 'overview', label: '概览', icon: LayoutDashboard },
+  { value: 'sources', label: '知识源', icon: Database },
+  { value: 'artifacts', label: 'AI 审核台', icon: FileCheck },
+  { value: 'graph', label: '图谱', icon: GitBranch },
+  { value: 'entities', label: '实体', icon: Layers },
+  { value: 'iterations', label: '迭代', icon: Calendar },
+  { value: 'wiki', label: 'Wiki 知识库', icon: BookOpen },
+  { value: 'wikidiff', label: '知识差异对比', icon: GitCompare },
+  { value: 'skills', label: 'Skills', icon: Zap },
+]
+
+const NORMAL_KNOWLEDGE_TABS = new Set(['project', 'platform', 'search'])
+
+function visibleKnowledgeTabs(canMaintain: boolean): KnowledgeTabDef[] {
+  if (canMaintain) return KNOWLEDGE_TAB_DEFS
+  return KNOWLEDGE_TAB_DEFS.filter((def) => NORMAL_KNOWLEDGE_TABS.has(def.value))
+}
 
 /**
  * 知识中心 — PARA 视角（项目知识 / 平台研发） + RAG 技术视图。
@@ -34,7 +66,19 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 export default function KnowledgePage() {
   useDocumentTitle('知识中心')
   const [searchParams, setSearchParams] = useSearchParams()
-  const tab = searchParams.get('tab') || 'overview'
+  // (batch-212 入口收敛) 普通用户默认只读 3 Tab；维护 Tab 需知识维护权限（专家/管理员）。
+  const hasPerm = useAuthStore((s) => s.hasPerm)
+  const canMaintainKnowledge =
+    hasPerm('*') || hasPerm('knowledge:manage') || hasPerm('knowledge:approve') ||
+    hasPerm('wiki:manage') || hasPerm('wiki:approve')
+  const allowedTabs = useMemo(
+    () => visibleKnowledgeTabs(canMaintainKnowledge),
+    [canMaintainKnowledge],
+  )
+  const requestedTab = searchParams.get('tab') || (canMaintainKnowledge ? 'overview' : 'project')
+  const tab = allowedTabs.some((def) => def.value === requestedTab)
+    ? requestedTab
+    : allowedTabs[0].value
 
   // ── 常驻搜索栏状态 ──
   const [searchQuery, setSearchQuery] = useState('')
@@ -96,55 +140,13 @@ export default function KnowledgePage() {
           className="!h-auto w-full flex-wrap items-start justify-start gap-y-1"
           aria-label="知识中心功能页签"
         >
-          <TabsTrigger value="overview">
-            <LayoutDashboard className="size-4 mr-1" />
-            概览
+          {allowedTabs.map((def) => (
+          <TabsTrigger key={def.value} value={def.value}>
+            <def.icon className="size-4 mr-1" />
+            {def.label}
           </TabsTrigger>
-          <TabsTrigger value="project">
-            <FolderOpen className="size-4 mr-1" />
-            项目知识
-          </TabsTrigger>
-          <TabsTrigger value="platform">
-            <Sparkles className="size-4 mr-1" />
-            平台研发
-          </TabsTrigger>
-          <TabsTrigger value="search">
-            <Search className="size-4 mr-1" />
-            检索
-          </TabsTrigger>
-          <TabsTrigger value="sources">
-            <Database className="size-4 mr-1" />
-            知识源
-          </TabsTrigger>
-          <TabsTrigger value="artifacts">
-            <FileCheck className="size-4 mr-1" />
-            AI 审核台
-          </TabsTrigger>
-          <TabsTrigger value="graph">
-            <GitBranch className="size-4 mr-1" />
-            图谱
-          </TabsTrigger>
-          <TabsTrigger value="entities">
-            <Layers className="size-4 mr-1" />
-            实体
-          </TabsTrigger>
-          <TabsTrigger value="iterations">
-            <Calendar className="size-4 mr-1" />
-            迭代
-          </TabsTrigger>
-          <TabsTrigger value="wiki">
-            <BookOpen className="size-4 mr-1" />
-            Wiki 知识库
-          </TabsTrigger>
-          <TabsTrigger value="wikidiff">
-            <GitCompare className="size-4 mr-1" />
-            知识差异对比
-          </TabsTrigger>
-          <TabsTrigger value="skills">
-            <Zap className="size-4 mr-1" />
-            Skills
-          </TabsTrigger>
-        </TabsList>
+        ))}
+</TabsList>
         </div>
 
         <TabsContent value="project" className={cn('mt-4', tab !== 'project' && 'hidden')} forceMount={visitedTabs.has('project') ? true : undefined}>

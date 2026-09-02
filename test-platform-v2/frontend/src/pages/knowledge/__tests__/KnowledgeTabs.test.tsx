@@ -2,9 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router'
 
-// 仓库未安装 @testing-library/jest-dom（package.json 无此依赖，现有测试也不使用其 matcher），
-// 这里用 expect.extend 提供语义对齐的最小实现，jsdom 无样式表，可见性按
-// Radix hidden 属性 + Tailwind hidden class（修复方案的控制机制）沿祖先链判定。
+// 仓库未安装 @testing-library/jest-dom，这里用 expect.extend 提供语义对齐的最小实现。
 expect.extend({
   toBeVisible(received: Element) {
     let node: Element | null = received
@@ -44,9 +42,16 @@ vi.mock('@/pages/knowledge/components/WikiDiffTab', () => ({ default: () => <div
 vi.mock('@/pages/knowledge/components/SkillsTab', () => ({ default: () => <div data-testid="tab-skills">Skills 内容</div> }))
 vi.mock('@/pages/knowledge/components/CaptureDialog', () => ({ default: () => null }))
 
+// (batch-212) 权限 stub：普通用户（false）只读 3 Tab；维护者（true）可见全部。
+const authStub = vi.hoisted(() => ({ hasPerm: () => false }))
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: (selector: (state: { hasPerm: (code: string) => boolean }) => unknown) =>
+    selector({ hasPerm: (code: string) => authStub.hasPerm(code) }),
+}))
+
 const { default: KnowledgePage } = await import('@/pages/knowledge')
 
-function renderPage(initialPath = '/knowledge?tab=overview') {
+function renderPage(initialPath = '/knowledge') {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
       <KnowledgePage />
@@ -54,36 +59,60 @@ function renderPage(initialPath = '/knowledge?tab=overview') {
   )
 }
 
-// Radix Tabs 1.1.x 的 tab 切换在 onMouseDown 触发（fireEvent.click 无效），
-// 与仓库既有范式一致（见 requirement/__tests__/AiResultModal.test.tsx）
+// Radix Tabs 1.1.x 的 tab 切换在 onMouseDown 触发
 function clickTab(name: string | RegExp) {
   const tab = screen.getByRole('tab', { name })
   fireEvent.mouseDown(tab, { button: 0 })
   fireEvent.click(tab)
 }
 
-describe('知识中心 tab 切换', () => {
-  beforeEach(() => vi.clearAllMocks())
-
-  it('初始只显示概览 tab 内容', () => {
-    renderPage()
-    expect(screen.getByTestId('tab-overview')).toBeVisible()
-    expect(screen.queryByTestId('tab-project')).not.toBeInTheDocument()
+describe('知识中心 tab 收敛（batch-212）', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    authStub.hasPerm = () => false
   })
 
-  it('切到项目知识后，概览内容隐藏（不拼接）', async () => {
+  it('普通用户只读 3 Tab：项目知识/平台研发/检索，默认项目知识', () => {
+    renderPage()
+    expect(screen.getByTestId('tab-project')).toBeVisible()
+    expect(screen.getByRole('tab', { name: /项目知识/ })).toBeTruthy()
+    expect(screen.getByRole('tab', { name: /平台研发/ })).toBeTruthy()
+    expect(screen.getByRole('tab', { name: /检索/ })).toBeTruthy()
+    // 专家/维护 Tab 不再出现
+    expect(screen.queryByRole('tab', { name: /概览/ })).toBeNull()
+    expect(screen.queryByRole('tab', { name: /AI 审核台/ })).toBeNull()
+    expect(screen.queryByRole('tab', { name: /图谱/ })).toBeNull()
+    expect(screen.queryByRole('tab', { name: /知识源/ })).toBeNull()
+    expect(screen.queryByTestId('tab-overview')).not.toBeInTheDocument()
+  })
+
+  it('普通用户深链到维护 Tab（?tab=graph）自动回落项目知识，不 404', () => {
+    renderPage('/knowledge?tab=graph')
+    expect(screen.getByTestId('tab-project')).toBeVisible()
+    expect(screen.queryByTestId('tab-graph')).not.toBeInTheDocument()
+  })
+
+  it('普通用户切到检索 Tab 正常显示', async () => {
+    renderPage()
+    clickTab(/检索/)
+    await waitFor(() => expect(screen.getByTestId('tab-search')).toBeVisible())
+    expect(screen.getByTestId('tab-project')).not.toBeVisible()
+  })
+
+  it('维护者/管理员可见全部 Tab，默认概览', () => {
+    authStub.hasPerm = () => true
+    renderPage()
+    expect(screen.getByTestId('tab-overview')).toBeVisible()
+    for (const name of [/项目知识/, /平台研发/, /检索/, /AI 审核台/, /图谱/, /知识源/, /实体/, /迭代/, /Wiki 知识库/, /知识差异对比/, /Skills/]) {
+      expect(screen.getByRole('tab', { name })).toBeTruthy()
+    }
+  })
+
+  it('维护者切到项目知识后概览隐藏（状态保留但不可见）', async () => {
+    authStub.hasPerm = () => true
     renderPage()
     clickTab(/项目知识/)
     await waitFor(() => expect(screen.getByTestId('tab-project')).toBeVisible())
     expect(screen.getByTestId('tab-overview')).not.toBeVisible()
-  })
-
-  it('切回概览后，项目知识内容隐藏（状态保留但不可见）', async () => {
-    renderPage()
-    clickTab(/项目知识/)
-    await waitFor(() => expect(screen.getByTestId('tab-project')).toBeVisible())
-    clickTab(/概览/)
-    await waitFor(() => expect(screen.getByTestId('tab-overview')).toBeVisible())
-    expect(screen.getByTestId('tab-project')).not.toBeVisible()
   })
 })

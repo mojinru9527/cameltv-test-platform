@@ -28,16 +28,16 @@ test-platform-v2/
 | 模块 | 路由 | 成熟度 | 当前事实 |
 |------|------|--------|----------|
 | 登录、项目、组织、系统管理 | `/login` `/register` `/change-password` `/my-projects` `/organizations` `/project` `/system` | 🟡 | Cookie 主会话、首次强制改密、组织/项目上下文和 RBAC 已实现；高风险系统写操作仍以自动化权限矩阵为准 |
-| 工作台、用例、计划、报告、缺陷、定时、追溯 | `/workbench` `/testcase` `/testplan` `/report` `/defect` `/schedule` `/trace` | 🟡 | 本地真实 CRUD/状态流/审计主链及生产只读路由矩阵已验证；外部回写与破坏性流程不在生产只读验收范围 |
+| 工作台、用例、报告、缺陷、定时、追溯（报告页内 Tab） | `/workbench` `/testcase` `/report` `/defect` `/schedule` | 🟡 | 本地真实 CRUD/状态流/审计主链及生产只读路由矩阵已验证；外部回写与破坏性流程不在生产只读验收范围 |
 | 需求、脑图、知识、Agent、Playground、发布包 | `/requirement` `/mindmap` `/knowledge` `/agent-workbench` `/playground` `/release-bundles` | 🟡 / ⛔ | 本地持久化链和动态详情存在；真实 LLM、蓝湖、Wiki 等依赖缺授权凭据时必须 fail closed，不能据本地回归宣称外部链路通过 |
 | DSH 任务执行（Batch 172 / Batch 191 团队模式） | `/dsh-tasks` | 🟡 | 提交自然语言任务由 DeepSeek Harness 执行，状态/输出/会话目录可追溯，Agent 工作台含执行型 Agent；Batch 191 起支持团队模式（`mode=team`：DSH 船长自组织多成员团队，详情实时展示团队进度树）；默认 `DSH_ENABLED=false` 时不可用并明确提示 |
 | API 测试 | `/apitest` | 🟡 | OpenAPI/Swagger 预览与导入、httpx 真实执行、任务和快照已实现；五入口一致性、生产保护、当前 Test5 六服务契约与业务回归仍待验收 |
 | UI 自动化 | `/uitest` | 🟡 | 本地 Runner 可启动真实 Playwright 并持久化结果/产物；这不等于 `tests/automation/ui/` 的体育 Test5/生产业务 E2E 已通过 |
-| 音视频专项 | `/special` | 🟡 | 已有真实媒体样本与 ffprobe 指标链；外部真实流、设备和完整发布矩阵仍未覆盖 |
 | 环境、数据集、通知、集成 | `/environment` `/dataset` `/notify` `/integration` | 🟡 / ⛔ | 本地数据模型和错误路径可用；SMTP/Webhook/Jira/TAPD/ELK 等真实链路缺非生产端点与凭据时保持阻塞 |
-| 性能监控 | `/perftest` | ⛔ | 页面和服务可受控降级，设备发现有超时上限；缺授权真机和采集窗口时不能把采集链标为通过 |
 | 蓝湖证据 | `/lanhu-evidence` `/lanhu-evidence/:id` | 🟡 / ⛔ | 列表、详情与恢复状态已实现；真实采集/OCR 取决于 Provider、登录态与外部页面授权 |
 | 运维发布控制 | `/operations-release`（只读） | 🟡 / ⛔ | 只读展示受控发布存储中的发布事实和事件；store 未配置时显示产品化未启用态，不提供发布、审批或回滚按钮 |
+
+> (batch-212) 音视频专项 `/special` 与性能监控 `/perftest` 已从菜单与文档宣称下架（缺授权设备，代码冻结为 API-only，详见 `docs/platform-refactor/02-function-abc-whitelist.md` §3）；Playground 独立 Tab 亦已下架。
 
 ## 技术栈
 

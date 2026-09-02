@@ -12,7 +12,6 @@ import {
 import {
   LayoutDashboard,
   FileText,
-  FolderOpen,
   Clock,
   Bug,
   BarChart3,
@@ -49,8 +48,10 @@ export interface CommandRoute {
 }
 
 // Route registry — all searchable pages（与 router/seed 菜单对账）
+// (batch-212 入口收敛) 有对应菜单的条目标记 menuBacked，随 /system/menus 可见性联动；
+// 测试计划/Playground 入口已下架；无菜单的 AITDE 专家页保持 requiresAitde。
 export const ALL_COMMAND_ROUTES: CommandRoute[] = [
-  { label: '工作台', path: '/workbench', icon: LayoutDashboard, group: '页面', keywords: ['dashboard', '首页', '看板'] },
+  { label: '工作台', menuBacked: true, path: '/workbench', icon: LayoutDashboard, group: '页面', keywords: ['dashboard', '首页', '看板'] },
   // ── V4.0 AITDE 主链（P2-10：补齐命令面板收录 + 别名）──
   {
     label: '智能测试任务',
@@ -58,6 +59,7 @@ export const ALL_COMMAND_ROUTES: CommandRoute[] = [
     icon: Sparkles,
     group: 'AITDE',
     requiresAitde: true,
+    menuBacked: true,
     keywords: ['mission', '任务', 'aitde', '契约', 'contract', '场景', 'scenario', '主链', 'v4'],
   },
   {
@@ -116,30 +118,28 @@ export const ALL_COMMAND_ROUTES: CommandRoute[] = [
     requiresAitde: true,
     keywords: ['worker', 'runtime', 'temporal', '运行时'],
   },
-  { label: '用例服务', path: '/testcase', icon: FileText, group: '页面', keywords: ['case', '用例'] },
-  { label: '测试计划', path: '/testplan', icon: FolderOpen, group: '页面', keywords: ['plan', '计划'] },
-  { label: '需求文档', path: '/requirement', icon: GitBranch, group: '页面', keywords: ['prd', '需求', 'ai 拆分', '生成用例'] },
-  { label: '报告中心', path: '/report', icon: BarChart3, group: '页面', keywords: ['report', '报告'] },
-  { label: '定时任务', path: '/schedule', icon: Clock, group: '页面', keywords: ['cron', '定时'] },
-  { label: '缺陷管理', path: '/defect', icon: Bug, group: '页面', keywords: ['bug', '缺陷'] },
+  { label: '用例服务', menuBacked: true, path: '/testcase', icon: FileText, group: '页面', keywords: ['case', '用例'] },
+  { label: '需求文档', menuBacked: true, path: '/requirement', icon: GitBranch, group: '页面', keywords: ['prd', '需求', 'ai 拆分', '生成用例'] },
+  { label: '报告中心', menuBacked: true, path: '/report', icon: BarChart3, group: '页面', keywords: ['report', '报告'] },
+  { label: '定时任务', menuBacked: true, path: '/schedule', icon: Clock, group: '页面', keywords: ['cron', '定时'] },
+  { label: '缺陷管理', menuBacked: true, path: '/defect', icon: Bug, group: '页面', keywords: ['bug', '缺陷'] },
   // (P2c) 质量追溯并入报告中心 Tab，入口指向带参路径
   { label: '质量追溯', path: '/report?tab=trace', icon: Share2, group: '页面', keywords: ['trace', '追溯'] },
   // (P2a) 思维导图并入用例服务「脑图视图」Tab，入口指向带参路径
   { label: '思维导图', path: '/testcase?tab=mindmap', icon: Share2, group: '页面', keywords: ['mindmap', '脑图'] },
-  { label: '版本发布包', path: '/release-bundles', icon: GitBranch, group: '页面', keywords: ['release', '发布'] },
-  { label: '知识中心', path: '/knowledge', icon: Sparkles, group: '页面', keywords: ['knowledge', '知识', 'wiki', 'rag'] },
-  { label: '测试数据集', path: '/dataset', icon: Database, group: '页面', keywords: ['dataset', '数据集'] },
-  // (P2b) Playground 并入用例服务 Tab，入口指向带参路径
-  { label: 'Playground', path: '/testcase?tab=playground', icon: Terminal, group: '页面' },
+  { label: '版本发布包', menuBacked: true, path: '/release-bundles', icon: GitBranch, group: '页面', keywords: ['release', '发布'] },
+  { label: '知识中心', menuBacked: true, path: '/knowledge', icon: Sparkles, group: '页面', keywords: ['knowledge', '知识', 'wiki', 'rag'] },
+  { label: '测试数据集', menuBacked: true, path: '/dataset', icon: Database, group: '页面', keywords: ['dataset', '数据集'] },
+  // (batch-212) Playground Tab 已下架：命令面板不再收录。
   { label: '集成配置', path: '/integration', icon: Link2, group: '页面', menuBacked: true },
-  { label: '目标环境', path: '/environment', icon: Globe, group: '页面', keywords: ['env', '环境'] },
+  { label: '目标环境', menuBacked: true, path: '/environment', icon: Globe, group: '页面', keywords: ['env', '环境'] },
   { label: '通知配置', path: '/notify', icon: Bell, group: '页面', menuBacked: true },
-  { label: '我的项目', path: '/my-projects', icon: Settings, group: '页面', keywords: ['project', '项目'] },
-  { label: '系统管理', path: '/system', icon: Settings, group: '页面', keywords: ['system', '用户', '角色', '权限'] },
-  { label: '接口测试', path: '/apitest', icon: FileText, group: '页面', keywords: ['api', '接口'] },
-  { label: 'UI 自动化', path: '/uitest', icon: FileText, group: '页面', keywords: ['ui', 'playwright', '自动化'] },
-  { label: 'DSH 任务', path: '/dsh-tasks', icon: Terminal, group: '页面', keywords: ['dsh', 'agent', 'ai', '智能体', '生成用例'] },
-  { label: 'AI 配置', path: '/ai-config', icon: Sparkles, group: '页面', keywords: ['ai', '模型', 'key', '大模型', 'llm'] },
+  { label: '我的项目', menuBacked: true, path: '/my-projects', icon: Settings, group: '页面', keywords: ['project', '项目'] },
+  { label: '系统管理', menuBacked: true, path: '/system', icon: Settings, group: '页面', keywords: ['system', '用户', '角色', '权限'] },
+  { label: '接口测试', menuBacked: true, path: '/apitest', icon: FileText, group: '页面', keywords: ['api', '接口'] },
+  { label: 'UI 自动化', menuBacked: true, path: '/uitest', icon: FileText, group: '页面', keywords: ['ui', 'playwright', '自动化'] },
+  { label: 'DSH 任务', menuBacked: true, path: '/dsh-tasks', icon: Terminal, group: '页面', keywords: ['dsh', 'agent', 'ai', '智能体', '生成用例'] },
+  { label: 'AI 配置', menuBacked: true, path: '/ai-config', icon: Sparkles, group: '页面', keywords: ['ai', '模型', 'key', '大模型', 'llm'] },
   // (P1b) Agent 工作台已收敛进 DSH 任务，路由重定向 /dsh-tasks，入口不再单列
 ]
 
