@@ -248,6 +248,9 @@ proxy: {
 ---
 
 ## 5. 测试平台 · CLI 工具 `tp`
+> ⚠️ **已退役（batch-98/100）**：V1 CLI `tp` 及 5.1–5.10 所列工具（config/api_tester/mock_server/api_diff/data_factory/log_aggregator/report_dashboard/project_init 等）已随 V1 整体退役从代码移除。本节仅作历史参考，实际命令见 `test-platform-v2` 后端 FastAPI（`scripts`、`gen:api`）与前端。
+> **batch-215**：清理死代码时确认上述工具目录均已不存在（`test-platform/tools/` 已删除），保留本节以便追溯。
+
 
 > `tp` 是统一命令行入口，通过 `pip install -e .` 注册。  
 > 所有需要 `--env` 的命令：`test` = 测试环境，`prod` = 正式环境。

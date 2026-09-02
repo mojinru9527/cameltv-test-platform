@@ -34,11 +34,6 @@
       "count": 2
     }
   },
-  "src/hooks/usePaginatedList.ts": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
   "src/layouts/MainLayout.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 4
@@ -92,11 +87,6 @@
   "src/pages/knowledge/components/SearchTab.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 1
-    }
-  },
-  "src/pages/knowledge/components/SphereTab.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 3
     }
   },
   "src/pages/knowledge/components/WikiDiffDetailDrawer.tsx": {
@@ -162,11 +152,6 @@
   "src/pages/requirement/AiResultModal.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 2
-    }
-  },
-  "src/pages/requirement/ExtractionModal.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
     }
   },
   "src/pages/requirement/ReviewPage.tsx": {

@@ -103,3 +103,15 @@ skills-lock.json
 # fix_chatgpt_loopback.bat re-adds the ChatGPT/Codex loopback exemption; it
 # hardcodes a per-machine UWP package name and must never be committed.
 fix_chatgpt_loopback.bat
+
+# Root scratch / agent/verification leftovers (batch-215 root hygiene)
+_tmp_*
+_tmp_*/
+_verify_*.png
+_review_tools/
+.agent-teams/
+.dsh-vision-router/
+browser-screenshots/
+.workbuddy/
+.claude/scheduled_tasks.lock
+
