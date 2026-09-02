@@ -4,6 +4,7 @@ from __future__ import annotations
 import pytest
 
 from app.core.exceptions import APIException
+from app.core.config import settings
 from app.modules.aitde.common.enums import EvidenceStatus, RunStatus
 from app.modules.aitde.execution import service
 from app.modules.aitde.environment import snapshot_service
@@ -86,3 +87,58 @@ def test_retry_creates_child_run(db, scenario_graph):
     assert child.parent_run_id == parent.id
     assert child.retry_no == 1
     assert child.runtime_status == RunStatus.QUEUED.value
+
+
+# ── AITDE-UX-003：run 创建后提交 Temporal（此前无调用方，run 永久 QUEUED）──
+
+
+def test_create_run_submits_to_temporal_when_enabled(db, scenario_graph, monkeypatch):
+    """temporal_enabled=true 时 create_run 必须提交 Workflow（一次）。"""
+    submitted = []
+    monkeypatch.setattr(settings, "temporal_enabled", True)
+    monkeypatch.setattr(
+        service, "_submit_to_temporal", lambda db, pid, row: submitted.append(row.id)
+    )
+    snap = _make_snapshot(db, scenario_graph["mission"].id)
+    run = service.create_run(db, _run_payload(scenario_graph, snap.id), project_id=1, user_id=9)
+    assert submitted == [run.id]
+
+
+def test_create_run_does_not_submit_when_disabled(db, scenario_graph, monkeypatch):
+    """temporal_enabled=false 时不提交（保持行为不变）。"""
+    submitted = []
+    monkeypatch.setattr(settings, "temporal_enabled", False)
+    monkeypatch.setattr(
+        service, "_submit_to_temporal", lambda db, pid, row: submitted.append(row.id)
+    )
+    snap = _make_snapshot(db, scenario_graph["mission"].id)
+    service.create_run(db, _run_payload(scenario_graph, snap.id), project_id=1, user_id=9)
+    assert submitted == []
+
+
+def test_retry_submits_new_workflow_when_enabled(db, scenario_graph, monkeypatch):
+    """retry 的子 run 也要提交新 workflow（不同 run_id → 不同 workflow_id）。"""
+    submitted = []
+    monkeypatch.setattr(settings, "temporal_enabled", True)
+    monkeypatch.setattr(
+        service, "_submit_to_temporal", lambda db, pid, row: submitted.append(row.id)
+    )
+    snap = _make_snapshot(db, scenario_graph["mission"].id)
+    parent = service.create_run(db, _run_payload(scenario_graph, snap.id), project_id=1, user_id=9)
+    submitted.clear()
+    child = service.retry_run(db, parent.id, project_id=1, user_id=9)
+    assert submitted == [child.id]
+
+
+def test_build_scenario_input_carries_identifiers(db, scenario_graph):
+    """scenario_input 必须携带 workflow 所需的 run 标识（activities 据此从 DB 取模型/快照）。"""
+    snap = _make_snapshot(db, scenario_graph["mission"].id)
+    run = service.create_run(db, _run_payload(scenario_graph, snap.id), project_id=1, user_id=9)
+    inp = service._build_scenario_input(run)
+    assert inp["run_id"] == run.id
+    assert inp["project_id"] == run.project_id
+    assert inp["mission_id"] == run.mission_id
+    assert inp["scenario_id"] == run.scenario_id
+    assert inp["scenario_version_id"] == run.scenario_version_id
+    assert inp["contract_version_id"] == run.contract_version_id
+    assert inp["environment_snapshot_id"] == run.environment_snapshot_id
