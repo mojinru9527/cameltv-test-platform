@@ -1,5 +1,5 @@
 {
-  "count": 636,
+  "count": 639,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -2544,6 +2544,18 @@
     {
       "method": "POST",
       "path": "/api/v1/convergence/test-plan/{test_plan_id}/archive"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/onboarding/businesses"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/onboarding/businesses"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/onboarding/businesses/{onboarding_id}/steps/{step}"
     }
   ]
 }

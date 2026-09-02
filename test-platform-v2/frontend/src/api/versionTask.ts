@@ -222,3 +222,28 @@ export async function compareVersions(versionA: string, versionB: string): Promi
   const p2 = new URLSearchParams({ version_a: versionA, version_b: versionB })
   return (await v1.get(`/version-tasks/compare?${p2.toString()}`)) as unknown as { a: Record<string, unknown>; b: Record<string, unknown> }
 }
+
+
+export interface Onboarding {
+  id: number
+  name: string
+  service_key: string
+  status: string
+  step: number
+  version_task_id: number | null
+  api_spec_url: string
+  base_url: string
+  baseline: string
+}
+
+export async function createOnboarding(body: { name: string; service_key: string; api_spec_url?: string; base_url?: string }): Promise<Onboarding> {
+  return (await v1.post('/onboarding/businesses', body)) as unknown as Onboarding
+}
+
+export async function listOnboardings(): Promise<Onboarding[]> {
+  return (await v1.get('/onboarding/businesses')) as unknown as Onboarding[]
+}
+
+export async function advanceOnboarding(id: number, step: number): Promise<Onboarding> {
+  return (await v1.post(`/onboarding/businesses/${id}/steps/${step}`)) as unknown as Onboarding
+}
