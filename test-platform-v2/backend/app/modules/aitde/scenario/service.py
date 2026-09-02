@@ -12,13 +12,13 @@ from app.modules.aitde.contract import repository as contract_repo
 from app.modules.aitde.contract.models import TestContract
 from app.modules.aitde.intelligence.provider import (
     IntelligenceProvider,
-    LegacyAIServiceProvider,
     ScenarioContext,
 )
 from app.modules.aitde.scenario import repository
 from app.modules.aitde.scenario.models import TestOracle
 from app.modules.aitde.scenario.schemas import (
     FunctionalProjectionRead,
+    OracleBindingCreate,
     OracleReviewRequest,
     ScenarioDesignOutput,
     ScenarioReviewRequest,
@@ -58,8 +58,19 @@ def generate(
         rules=rules,
         outcomes=outcomes,
     )
-    prov = provider or LegacyAIServiceProvider()
-    output: ScenarioDesignOutput = prov.design_scenarios(context)
+    from app.modules.aitde.intelligence.runner import run_intelligence
+
+    if provider is not None:
+        output: ScenarioDesignOutput = provider.design_scenarios(context)
+        actor = provider.created_by_type
+    else:
+        output, _op_id, actor = run_intelligence(
+            db,
+            project_id,
+            contract.mission_id,
+            "scenario:design",
+            lambda prov: prov.design_scenarios(context),
+        )
 
     created = 0
     skipped = 0
@@ -83,7 +94,9 @@ def generate(
         if current:
             scenario.current_version_no = current.version_no + 1
 
-        repository.create_version(db, scenario, contract_version_id, cand, user_id)
+        repository.create_version(
+            db, scenario, contract_version_id, cand, user_id, created_by_type=actor
+        )
         created += 1
     db.commit()
     return {
@@ -165,8 +178,62 @@ def review_oracle(
     oracle = db.get(TestOracle, oracle_id)
     if not oracle:
         raise APIException(code=404, msg="Oracle 不存在", http_status=404)
-    repository.review_oracle(db, oracle, req.action, user_id, req.required)
+    repository.review_oracle(
+        db, oracle, req.action, user_id, req.required, promote=req.promote
+    )
     return {"oracle_id": oracle.id, "review_status": oracle.review_status}
+
+
+def create_oracle_binding(
+    db: Session, scenario_id: int, project_id: int, req: OracleBindingCreate
+) -> dict:
+    scenario = repository.get_scenario(db, scenario_id, project_id)
+    if not scenario:
+        raise APIException(code=404, msg="Scenario 不存在", http_status=404)
+    version = repository.current_version(db, scenario.id)
+    if not version or version.id != req.scenario_version_id:
+        raise APIException(
+            code=400, msg="Binding 场景版本不匹配", http_status=400
+        )
+    oracle = db.get(TestOracle, req.oracle_id)
+    if not oracle or oracle.scenario_version_id != req.scenario_version_id:
+        raise APIException(code=404, msg="Oracle 不存在", http_status=404)
+    row = repository.upsert_oracle_binding(
+        db,
+        scenario_version_id=req.scenario_version_id,
+        oracle_id=req.oracle_id,
+        binding_type=req.binding_type,
+        source_step_key=req.source_step_key,
+        observation_selector_json=json.dumps(
+            req.observation_selector or {}, ensure_ascii=False
+        ),
+        scenario_adapter_id=req.scenario_adapter_id,
+    )
+    return _binding_to_dict(row)
+
+
+def list_oracle_bindings(db: Session, scenario_id: int, project_id: int) -> list[dict]:
+    scenario = repository.get_scenario(db, scenario_id, project_id)
+    if not scenario:
+        raise APIException(code=404, msg="Scenario 不存在", http_status=404)
+    version = repository.current_version(db, scenario.id)
+    rows = repository.list_oracle_bindings(db, version.id if version else None)
+    return [_binding_to_dict(r) for r in rows]
+
+
+def _binding_to_dict(row) -> dict:
+    import json as _json
+
+    return {
+        "id": row.id,
+        "scenario_adapter_id": row.scenario_adapter_id,
+        "scenario_version_id": row.scenario_version_id,
+        "oracle_id": row.oracle_id,
+        "binding_type": row.binding_type,
+        "source_step_key": row.source_step_key,
+        "observation_selector": _json.loads(row.observation_selector_json or "{}"),
+        "status": row.status,
+    }
 
 
 def functional_projection(

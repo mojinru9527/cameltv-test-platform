@@ -52,6 +52,7 @@ def create_version(
     version_no: int,
     snapshot: dict,
     created_by: int,
+    created_by_type: str = "AI",
 ) -> TestContractVersion:
     version = TestContractVersion(
         contract_id=contract_id,
@@ -60,7 +61,7 @@ def create_version(
         content_hash=snapshot_hash(snapshot),
         snapshot_json=json.dumps(snapshot, ensure_ascii=False),
         created_by=created_by,
-        created_by_type="AI",
+        created_by_type=created_by_type,
     )
     db.add(version)
     db.flush()

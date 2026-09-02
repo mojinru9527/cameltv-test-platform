@@ -116,6 +116,14 @@ def _classify_outcome_hook(payload: dict[str, Any]) -> dict[str, Any]:
             EvidenceStatus.COMPLETE.value if evidence_ok else EvidenceStatus.INCOMPLETE.value
         )
         db.commit()
+        # Batch 207: keep the QA closed loop wired on the runtime path too.
+        from app.modules.aitde.ai_closed_loop.service import FailureTriageAgent
+
+        try:
+            FailureTriageAgent.auto_triage_if_needed(db, run.id)
+            db.commit()
+        except Exception:  # noqa: BLE001 - triage never breaks classify
+            db.rollback()
         return {"outcome": outcome, "evidence_complete": evidence_ok}
     finally:
         db.close()

@@ -43,6 +43,11 @@ def analyze(
     db: Session = Depends(get_db),
 ):
     counts = service.analyze(db, mission_id, current.project_id or 0, current.user.id)
+    from app.modules.aitde.intelligence.runner import latest_operation_id
+
+    counts["operation_id"] = latest_operation_id(
+        db, mission_id, current.project_id or 0, "ambiguity:intent:analyze"
+    )
     return R.ok(counts)
 
 
@@ -90,3 +95,4 @@ def review_intent(
         db, intent_id, current.project_id or 0, current.user.id, payload
     )
     return R.ok(intent_to_dict(row))
+

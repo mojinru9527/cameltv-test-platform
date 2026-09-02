@@ -9,6 +9,7 @@ from app.api.v2.deps import require_aitde_v3
 from app.core.deps import CurrentUser, get_db, require_permission
 from app.modules.aitde.scenario import service
 from app.modules.aitde.scenario.schemas import (
+    OracleBindingCreate,
     OracleReviewRequest,
     ScenarioReviewRequest,
 )
@@ -44,6 +45,16 @@ def generate_scenarios(
 ):
     result = service.generate(
         db, contract_version_id, current.project_id or 0, current.user.id
+    )
+    from app.modules.aitde.contract.models import TestContract, TestContractVersion
+    from app.modules.aitde.intelligence.runner import latest_operation_id
+
+    _version = db.get(TestContractVersion, contract_version_id)
+    _mission_id = (
+        db.get(TestContract, _version.contract_id).mission_id if _version else 0
+    )
+    result["operation_id"] = latest_operation_id(
+        db, _mission_id, current.project_id or 0, "scenario:design"
     )
     return R.ok(result)
 
@@ -93,6 +104,31 @@ def functional_projection(
     )
 
 
+@scenario_router.post("/oracle-bindings", response_model=R[dict])
+def create_oracle_binding(
+    scenario_id: int,
+    payload: OracleBindingCreate,
+    current: CurrentUser = Depends(require_permission("mission:update")),
+    db: Session = Depends(get_db),
+):
+    return R.ok(
+        service.create_oracle_binding(
+            db, scenario_id, current.project_id or 0, payload
+        )
+    )
+
+
+@scenario_router.get("/oracle-bindings", response_model=R[list])
+def list_oracle_bindings(
+    scenario_id: int,
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    return R.ok(
+        service.list_oracle_bindings(db, scenario_id, current.project_id or 0)
+    )
+
+
 @oracle_router.post("/review", response_model=R[dict])
 def review_oracle(
     oracle_id: int,
@@ -101,3 +137,4 @@ def review_oracle(
     db: Session = Depends(get_db),
 ):
     return R.ok(service.review_oracle(db, oracle_id, current.user.id, payload))
+

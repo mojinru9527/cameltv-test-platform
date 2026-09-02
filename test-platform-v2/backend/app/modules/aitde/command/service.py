@@ -29,6 +29,36 @@ def _canonical_hash(plan_json: dict[str, Any]) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
+def plan_from_scenario(
+    db: Session, scenario_version_id: int, route: str = "/"
+) -> dict[str, Any]:
+    """Deterministically build a Command IR DRAFT from a scenario version.
+
+    Batch 207: the scenario -> command generation step is server-side again;
+    the ActionPlanner compiles the scenario's ``when_model`` + frozen oracles
+    into a schema-valid Command IR. Callers may override ``route`` when the
+    adapter knows the target page.
+    """
+    from sqlalchemy import select
+
+    from app.modules.aitde.command.planner import ActionPlanner
+    from app.modules.aitde.scenario.models import TestOracle, TestScenarioVersion
+
+    version = db.get(TestScenarioVersion, scenario_version_id)
+    if version is None:
+        raise APIException(code=404, msg="Scenario 版本不存在", http_status=404)
+    when_model = json.loads(version.when_model_json or "{}")
+    oracles = [
+        {"oracle_key": o.oracle_key}
+        for o in db.scalars(
+            select(TestOracle).where(
+                TestOracle.scenario_version_id == scenario_version_id
+            )
+        ).all()
+    ]
+    return ActionPlanner().plan_and_validate(when_model, oracles, route=route)
+
+
 def get_or_create_plan(db: Session, scenario_adapter_id: int) -> CommandPlan:
     plan = db.scalar(
         select(CommandPlan).where(CommandPlan.scenario_adapter_id == scenario_adapter_id)

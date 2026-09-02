@@ -494,7 +494,8 @@ async def diff_bundle(
     # Phase A: rule engine
     result = _rule_diff(db, current_pages, parent_modules, parent_bundle_id)
 
-    # Phase B: AI fallback (async, currently stub)
+    # Phase B: AI fallback (async LLM assisted; runs only when the rule
+    # diff is uncertain and the project has AI configured)
     if result.diff_confidence < 0.9:
         result = await _ai_diff(db, project_id, current_pages, parent_modules, result)
 

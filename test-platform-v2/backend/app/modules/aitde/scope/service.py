@@ -11,10 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import APIException
 from app.modules.aitde.common.enums import ParseStatus, ReviewStatus, ScopeDecision
-from app.modules.aitde.intelligence.provider import (
-    IntelligenceProvider,
-    LegacyAIServiceProvider,
-)
+from app.modules.aitde.intelligence.provider import IntelligenceProvider
 from app.modules.aitde.mission import service as mission_service
 from app.modules.aitde.scope import repository
 from app.modules.aitde.scope.models import ScopeItem
@@ -50,17 +47,24 @@ def analyze_scope(
     mission_service.get_mission(db, mission_id, project_id)
     fragments = _context_from_parsed_sources(db, mission_id, project_id)
 
-    prov = provider or LegacyAIServiceProvider()
     from app.modules.aitde.intelligence.provider import ScopeContext
+    from app.modules.aitde.intelligence.runner import run_intelligence
 
-    output: ScopeAnalysisOutput = prov.analyze_scope(
-        ScopeContext(mission_id=mission_id, fragments=fragments)
-    )
+    context = ScopeContext(mission_id=mission_id, fragments=fragments)
+    if provider is not None:
+        output: ScopeAnalysisOutput = provider.analyze_scope(context)
+        actor = provider.created_by_type
+    else:
+        output, _op_id, actor = run_intelligence(
+            db,
+            project_id,
+            mission_id,
+            "scope:analyze",
+            lambda prov: prov.analyze_scope(context),
+        )
 
     # Validation already enforced by ScopeAnalysisOutput's strict schemas.
-    items = repository.replace_items(
-        db, mission_id, output, actor="AI", user_id=user_id
-    )
+    items = repository.replace_items(db, mission_id, output, actor=actor, user_id=user_id)
     db.commit()
     db.refresh(items[0]) if items else None
     _audit(db, project_id, user_id, mission_id, "scope:analyze", f"{len(items)} items")

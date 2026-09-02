@@ -1,5 +1,5 @@
 {
-  "count": 605,
+  "count": 607,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -2335,6 +2335,14 @@
     },
     {
       "path": "/api/v2/scenarios/{scenario_id}/manual-sessions/{session_id}/steps/{step_id}/complete",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_id}/oracle-bindings",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/scenarios/{scenario_id}/oracle-bindings",
       "method": "POST"
     },
     {
