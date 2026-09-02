@@ -63,9 +63,16 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ### batch-218 — B8 版本任务执行与证据（2026-09-05）—— 新增
 
+### batch-219 — B9 版本任务放行与证据包（2026-09-05）—— 新增
+
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C218-1 | B9 放行页必须基于 VersionTask 的 `verdict`/`coverage` 生成放行证据包并绑定 `release_bundle_id`，版本任务状态机走 `verdict→released`；不得在 VersionTask 之外再造放行容器。解除条件=B9 合入 + verdict/coverage 生成证据包 + 绑定 release_bundle。 | P2 | 2026-09-05 |
+| C219-1 | B10 真实走查必须基于 VersionTask 闭环（建任务→审方案→执行→放行→知识）验证黑盒可用；若发现卡点，优先在 VersionTask 主链路修复，不在其外并行造页。解除条件=B10 走查完成 + 走查记录。 | P2 | 2026-09-05 |
+
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| ~~C218-1~~ | ~~B9 放行页必须基于 VersionTask 的 `verdict`/`coverage` 生成放行证据包并绑定 `release_bundle_id`，状态机走 `verdict→released`；不得再造放行容器。~~ → **Closed**：B9 `build_release_package`/`release_task` 基于 VersionTask coverage/verdict 生成证据包并绑定 release_bundle_id，状态→released；PR #399。 | P2 | 2026-09-05 |
 
 
 | ID | 内容 | 优先级 | 创建日期 |

@@ -243,3 +243,47 @@ def test_api_run_and_defect(client, auth_headers):
     rd = client.post(f"/api/v1/version-tasks/{tid}/runs/{run['id']}/defect/0", headers=h)
     assert rd.status_code == 200, rd.text
     assert rd.json()["data"]["status"] == "open"
+
+
+# ────────────────────────────── B9: 放行证据包 + 绑定发布包 + 通知 ──────────────────────────────
+
+def test_release_package_build(client, auth_headers):
+    h = auth_headers
+    r = client.post("/api/v1/version-tasks", json={"title": "t", "version": "1.0"}, headers=h)
+    tid = r.json()["data"]["id"]
+    rp = client.post(
+        f"/api/v1/version-tasks/{tid}/plan/generate",
+        json=[{"item_type": "functional", "title": "登录", "confidence": 80}],
+        headers=h,
+    )
+    pid = rp.json()["data"][0]["id"]
+    client.post(f"/api/v1/version-tasks/{tid}/plan/{pid}/review", json={"action": "adopt"}, headers=h)
+    client.post(f"/api/v1/version-tasks/{tid}/run", headers=h)
+
+    # 放行前预览
+    prev = client.get(f"/api/v1/version-tasks/{tid}/release-package", headers=h)
+    assert prev.status_code == 200
+    assert "pass_rate" in prev.json()["data"]
+
+    # 放行（绑定发布包）
+    rel = client.post(
+        f"/api/v1/version-tasks/{tid}/release",
+        json={"verdict": "conditional", "release_bundle_id": 3, "risk": ["登录超时"], "summary": "有条件放行"},
+        headers=h,
+    )
+    assert rel.status_code == 200, rel.text
+    data = rel.json()["data"]
+    assert data["verdict"] == "conditional"
+    assert data["release_bundle_id"] == 3
+    assert data["total_checks"] >= 1
+
+    # 通知
+    nt = client.post(f"/api/v1/version-tasks/{tid}/notify", headers=h)
+    assert nt.status_code == 200
+    assert nt.json()["data"]["sent"] is True
+
+
+def test_release_service_illegal_verdict(db_session):
+    task = version_task_service.create_task(db_session, project_id=1, title="t", version="1.0")
+    with pytest.raises(APIException):
+        version_task_service.release_task(db_session, task.id, verdict="noop")
