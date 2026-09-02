@@ -1,5 +1,5 @@
 {
-  "count": 617,
+  "count": 620,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -2468,6 +2468,18 @@
     {
       "method": "POST",
       "path": "/api/v1/version-tasks/{task_id}/transition"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/version-tasks/{task_id}/plan"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/version-tasks/{task_id}/plan/generate"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/version-tasks/{task_id}/plan/{item_id}/review"
     }
   ]
 }

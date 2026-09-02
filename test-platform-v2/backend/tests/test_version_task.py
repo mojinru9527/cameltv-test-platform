@@ -123,3 +123,59 @@ def test_api_illegal_transition(client, auth_headers):
     rr = client.post(f"/api/v1/version-tasks/{tid}/transition", json={"status": "released"}, headers=h)
     assert rr.status_code == 200 and rr.json().get("code") != 0
 
+
+
+# ────────────────────────────── B7: 验收方案生成 + 审核面板 ──────────────────────────────
+
+def test_plan_generate_and_review(db_session):
+    task = version_task_service.create_task(db_session, project_id=1, title="t", version="1.0")
+    items = version_task_service.generate_plan(
+        db_session, task.id,
+        [
+            {"item_type": "functional", "title": "登录", "confidence": 80},
+            {"item_type": "api", "title": "POST /login", "confidence": 60, "question": "鉴权方式？"},
+        ],
+    )
+    assert len(items) == 2
+
+    adopted = version_task_service.review_plan_item(db_session, items[0].id, "adopt")
+    assert adopted.status == "adopted"
+    modified = version_task_service.review_plan_item(
+        db_session, items[1].id, "modify", patch={"title": "POST /login(新版)", "confidence": 90}
+    )
+    assert modified.status == "modified"
+    assert modified.title == "POST /login(新版)"
+    assert modified.confidence == 90
+
+    asked = version_task_service.review_plan_item(
+        db_session, items[1].id, "ask", patch={"question": "token 过期策略?"}
+    )
+    assert asked.status == "asked"
+
+    removed = version_task_service.review_plan_item(db_session, items[0].id, "remove")
+    assert removed.status == "removed"
+
+
+def test_api_plan_generate_and_review(client, auth_headers):
+    h = auth_headers
+    r = client.post("/api/v1/version-tasks", json={"title": "t", "version": "1.0"}, headers=h)
+    tid = r.json()["data"]["id"]
+    rp = client.post(
+        f"/api/v1/version-tasks/{tid}/plan/generate",
+        json=[{"item_type": "functional", "title": "登录", "confidence": 85}],
+        headers=h,
+    )
+    assert rp.status_code == 200, rp.text
+    assert len(rp.json()["data"]) == 1
+    item_id = rp.json()["data"][0]["id"]
+
+    rr = client.post(
+        f"/api/v1/version-tasks/{tid}/plan/{item_id}/review",
+        json={"action": "adopt"},
+        headers=h,
+    )
+    assert rr.status_code == 200
+    assert rr.json()["data"]["status"] == "adopted"
+
+    rl = client.get(f"/api/v1/version-tasks/{tid}/plan", headers=h)
+    assert rl.status_code == 200
