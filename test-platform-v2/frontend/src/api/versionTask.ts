@@ -187,3 +187,19 @@ export async function releaseTask(
 export async function notifyRelease(taskId: number): Promise<{ sent: boolean }> {
   return (await v1.post(`/version-tasks/${taskId}/notify`)) as unknown as { sent: boolean }
 }
+
+
+export interface RegressionItem {
+  kind: string
+  title: string
+  source: string
+  priority: string
+}
+
+export async function getRegressionSet(taskId: number): Promise<RegressionItem[]> {
+  return (await v1.get(`/version-tasks/${taskId}/regression-set`)) as unknown as RegressionItem[]
+}
+
+export async function syncDefect(taskId: number, defectId: number): Promise<{ synced: boolean; defect_id: number }> {
+  return (await v1.post(`/version-tasks/${taskId}/defects/${defectId}/sync`)) as unknown as { synced: boolean; defect_id: number }
+}

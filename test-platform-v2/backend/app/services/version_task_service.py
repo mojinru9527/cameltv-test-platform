@@ -530,3 +530,53 @@ def get_knowledge_record(db: Session, task_id: int) -> dict:
         "verdict": rec.verdict, "defect_count": rec.defect_count,
         "coverage": json.loads(rec.coverage or "{}"),
     }
+
+
+def recommend_regression_set(db: Session, task_id: int) -> list[dict]:
+    """B12 建任务即给推荐回归集：采纳方案条目 + 变更模块 + 上版复用建议（影响面）。"""
+    task = get_task(db, task_id)
+    plan = get_plan(db, task_id)
+    adopted = [i for i in plan if i.status in ("adopted", "modified")]
+    scope = json.loads(task.scope or "{}")
+    modules = scope.get("modules", []) if isinstance(scope, dict) else []
+    # 复用建议（上版采纳/修改条目）
+    reuse = []
+    for rec in get_reuse_suggestions(db, task.project_id, limit=3):
+        reuse.extend(rec.get("reuse", []))
+    out = []
+    for i in adopted:
+        out.append(
+            {"kind": i.item_type, "title": i.title, "source": "方案条目",
+             "priority": "P0" if i.confidence >= 70 else "P1"}
+        )
+    for m in modules:
+        out.append(
+            {"kind": "module", "title": f"{m} 回归", "source": "变更模块", "priority": "P0"}
+        )
+    for r in reuse[:5]:
+        out.append({"kind": "reuse", "title": r, "source": "上版复用", "priority": "P1"})
+    # 去重
+    seen = set()
+    dedup = []
+    for item in out:
+        key = item["title"]
+        if key in seen:
+            continue
+        seen.add(key)
+        dedup.append(item)
+    return dedup
+
+
+def sync_defect_notification(db: Session, task_id: int, defect_id: int) -> dict:
+    """B12 缺陷一键同步到通知/缺陷库（写 NotificationLog + 返回已同步状态）。"""
+    task = get_task(db, task_id)
+    linked = db.query(VersionTaskDefect).filter_by(task_id=task.id, defect_id=defect_id).first()
+    if linked is None:
+        # 若未关联则补一个
+        link = VersionTaskDefect(task_id=task.id, defect_id=defect_id)
+        db.add(link)
+        db.commit()
+    log = NotificationLog(project_id=task.project_id, event="defect_sync", status="sent", error=f"defect:{defect_id}")
+    db.add(log)
+    db.commit()
+    return {"synced": True, "defect_id": defect_id}
