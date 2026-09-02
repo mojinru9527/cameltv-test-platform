@@ -14,6 +14,7 @@ import pytest
 
 from app.core import config
 from app.modules.aitde.intelligence import llm_sync
+from app.services import ai_client
 from app.modules.aitde.intelligence.provider import (
     AiIntelligenceProvider,
     ContractContext,
@@ -84,7 +85,7 @@ def test_call_llm_json_retries_transient_then_succeeds(monkeypatch):
             raise httpx.TimeoutException("slow")
         return ok
 
-    monkeypatch.setattr(llm_sync.httpx, "post", _flaky_post)
+    monkeypatch.setattr(ai_client.httpx, "post", _flaky_post)
     result = call_llm_json(
         db=None, project_id=1, system_prompt="s", user_payload={"a": 1}
     )
@@ -93,7 +94,7 @@ def test_call_llm_json_retries_transient_then_succeeds(monkeypatch):
 
 def test_call_llm_json_invalid_json_raises_response_error(monkeypatch):
     monkeypatch.setattr(
-        llm_sync.httpx, "post", lambda *a, **k: _FakeResponse("not-json")
+        ai_client.httpx, "post", lambda *a, **k: _FakeResponse("not-json")
     )
     with pytest.raises(IntelligenceLLMResponseError):
         call_llm_json(db=None, project_id=1, system_prompt="s", user_payload={})
@@ -101,7 +102,7 @@ def test_call_llm_json_invalid_json_raises_response_error(monkeypatch):
 
 def test_call_llm_json_http_4xx_raises_llm_error(monkeypatch):
     monkeypatch.setattr(
-        llm_sync.httpx,
+        ai_client.httpx,
         "post",
         lambda *a, **k: _FakeResponse("{}", status_code=400),
     )

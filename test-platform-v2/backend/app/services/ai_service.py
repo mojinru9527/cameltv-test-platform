@@ -26,7 +26,6 @@ def _is_lanhu_session_error(exc: Exception) -> bool:
 logger = logging.getLogger(__name__)
 from pathlib import Path
 
-import httpx
 
 from app.core.config import settings
 from app.services import ai_errors
@@ -763,51 +762,40 @@ async def _call_ai_api(db, project_id: int, system_prompt: str, user_message: st
     effective_max_tokens = max_tokens if max_tokens is not None else settings.ai_max_tokens
 
     try:
-        async with httpx.AsyncClient(timeout=180.0) as client:
-            resp = await client.post(
-                f"{cfg.api_base_url.rstrip('/')}/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {cfg.api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": cfg.model,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_message},
-                    ],
-                    "max_tokens": effective_max_tokens,
-                    "temperature": settings.ai_temperature,
-                    "response_format": {"type": "json_object"},
-                },
-            )
-            resp.raise_for_status()
-            data = resp.json()
-            choice = data["choices"][0]
-            raw = choice["message"]["content"]
-            finish_reason = choice.get("finish_reason", "unknown")
-            truncated = finish_reason == "length"
+        from app.services.ai_client import achat_completions_full
 
+        summary = await achat_completions_full(
+            db,
+            project_id,
+            system_prompt=system_prompt,
+            user_message=user_message,
+            max_tokens=effective_max_tokens,
+            json_mode=True,
+        )
+        raw = summary["content"]
+        finish_reason = summary["finish_reason"]
+        truncated = summary["truncated"]
+
+        if truncated:
+            logger.warning("[ai_service] WARNING: %s response truncated (finish_reason=length, raw_length=%d chars)", label, len(raw))
+
+        try:
+            result = _parse_ai_response(raw)
+            ai_health_registry.record_success(project_id, getattr(cfg, "provider_id", None))
+            return {"result": result, "raw": raw, "finish_reason": finish_reason,
+                    "truncated": truncated, "error": None, "error_kind": None}
+        except ValueError as parse_err:
             if truncated:
-                logger.warning("[ai_service] WARNING: %s response truncated (finish_reason=length, raw_length=%d chars)", label, len(raw))
-
-            try:
-                result = _parse_ai_response(raw)
-                ai_health_registry.record_success(project_id, getattr(cfg, "provider_id", None))
-                return {"result": result, "raw": raw, "finish_reason": finish_reason,
-                        "truncated": truncated, "error": None, "error_kind": None}
-            except ValueError as parse_err:
-                if truncated:
-                    salvaged = _salvage_json_parts(raw)
-                    if salvaged is not None:
-                        logger.warning("[ai_service] Salvaged partial data from truncated %s response", label)
-                        ai_health_registry.record_success(project_id, getattr(cfg, "provider_id", None))
-                        return {"result": salvaged, "raw": raw, "finish_reason": finish_reason,
-                                "truncated": True, "error": None, "error_kind": None}
-                # 真正的解析失败：提供方连得上，只是内容不合法。
-                return {"result": None, "raw": raw, "finish_reason": finish_reason,
-                        "truncated": truncated, "error": str(parse_err),
-                        "error_kind": ai_errors.BAD_RESPONSE}
+                salvaged = _salvage_json_parts(raw)
+                if salvaged is not None:
+                    logger.warning("[ai_service] Salvaged partial data from truncated %s response", label)
+                    ai_health_registry.record_success(project_id, getattr(cfg, "provider_id", None))
+                    return {"result": salvaged, "raw": raw, "finish_reason": finish_reason,
+                            "truncated": True, "error": None, "error_kind": None}
+            # 真正的解析失败：提供方连得上，只是内容不合法。
+            return {"result": None, "raw": raw, "finish_reason": finish_reason,
+                    "truncated": truncated, "error": str(parse_err),
+                    "error_kind": ai_errors.BAD_RESPONSE}
     except Exception as e:
         # 传输/鉴权/限流等失败——**不得**再被上层当作「JSON 格式异常」。
         # 用 getattr 取提供方标识：健康态登记是旁路观测，不应因配置对象形状

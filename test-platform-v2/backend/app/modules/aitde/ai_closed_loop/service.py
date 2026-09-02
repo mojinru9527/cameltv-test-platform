@@ -1187,8 +1187,8 @@ class PromptEvaluationService:
         """Run a golden suite: evaluate each sample, score it, persist a TRUSTED run.
 
         The default ``evaluator`` returns a sample's ``candidate`` (a deterministic
-        harness); Batch 207 note: the evaluation runner is NOT implemented yet
-        carry ``_trusted=True`` so only this path can drive a golden release gate.
+        harness); ``run_golden`` provides the real LLM evaluator. Runs persist with
+        ``_trusted=True`` so only this path can drive a golden release gate.
         """
         evaluator = evaluator or (lambda s: s.get("candidate"))
         results = []
@@ -1212,6 +1212,80 @@ class PromptEvaluationService:
         db.flush()
         out = PromptEvaluationService._dict(row)
         out["results"] = results
+        return out
+
+    @staticmethod
+    def run_golden(
+        db: Session,
+        project_id: int,
+        evaluation_suite: str,
+        model_ref: str,
+        samples: list[dict],
+        system_prompt: str | None = None,
+        prompt_versions: list[str] | None = None,
+    ) -> dict:
+        """Batch 208 (C3): real LLM golden evaluation runner.
+
+        Each sample is sent to the configured model (shared ai_client), scored
+        against must_include / expected constraints and persisted as a TRUSTED
+        ModelEvaluationRun. If AI is unconfigured or any call fails the suite is
+        BLOCKED and nothing trusted is written (never a silent pass).
+        """
+        from app.services import ai_client
+
+        if not ai_client.is_configured(db, project_id):
+            return {
+                "ok": False,
+                "status": "BLOCKED",
+                "reason": "AI_NOT_CONFIGURED",
+                "score": None,
+            }
+
+        sys_prompt = system_prompt or (
+            "你是测试用例评审专家。严格按样例约束输出结果 JSON，只输出 JSON。"
+        )
+        def _llm_evaluator(sample: dict):
+            input_text = str(
+                sample.get("input")
+                or _dumps(sample.get("prompt", {}))
+                or _dumps(sample)
+            )
+            return ai_client.chat_completions(
+                db,
+                project_id,
+                system_prompt=sys_prompt,
+                user_message=input_text,
+                max_tokens=4096,
+                json_mode=True,
+            )
+
+        try:
+            out = PromptEvaluationService.run_suite(
+                db,
+                evaluation_suite,
+                model_ref,
+                samples,
+                evaluator=_llm_evaluator,
+                prompt_versions=prompt_versions,
+            )
+        except (ai_client.AiClientUnavailableError, ai_client.AiClientResponseError) as exc:
+            return {
+                "ok": False,
+                "status": "BLOCKED",
+                "reason": "AI_CALL_FAILED",
+                "detail": str(exc)[:300],
+                "score": None,
+            }
+        metrics = out.get("metrics") or {}
+        score = float(metrics.get("accuracy", 0.0))
+        passed = score >= PromptEvaluationService.REGRESSION_THRESHOLD
+        out["decision"] = {
+            "ok": passed,
+            "status": "PASS" if passed else "FAIL",
+            "passed": passed,
+            "score": score,
+            "threshold": PromptEvaluationService.REGRESSION_THRESHOLD,
+        }
         return out
 
     @staticmethod
