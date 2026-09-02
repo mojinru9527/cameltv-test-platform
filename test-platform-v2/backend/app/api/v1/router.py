@@ -20,6 +20,7 @@ from app.api.v1 import release_bundles_core, release_bundles_diff
 from app.api.v1 import requirement_modules_core, requirement_modules_extract, requirement_modules_interactions, requirement_modules_links
 from app.api.v1 import lanhu_evidence_jobs, lanhu_evidence_assets, lanhu_evidence_review
 from app.api.v1 import version_task
+from app.api.v1 import metrics
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(auth.router)
@@ -76,5 +77,6 @@ api_router.include_router(lanhu_evidence_assets.router)
 api_router.include_router(lanhu_evidence_review.router)
 api_router.include_router(playground.router)
 api_router.include_router(version_task.router)
+api_router.include_router(metrics.router)
 api_router.include_router(template.router)
 
