@@ -199,11 +199,6 @@
       "count": 3
     }
   },
-  "src/pages/workbench/index.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
   "src/theme-lab/SpatialGlassPrototype.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 3
