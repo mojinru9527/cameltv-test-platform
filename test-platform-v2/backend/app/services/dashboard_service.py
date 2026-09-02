@@ -10,6 +10,10 @@ from app.models.defect import Defect
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
 from app.services import statistics_service
+from app.models.ai_task import AiTask
+from app.models.release_bundle import ReleaseBundle
+from app.models.requirement import RequirementDocument
+from app.models.requirement_review import RequirementReview
 from app.services.test_case_service import canonical_case_type
 
 # ── 用例类型 → 展示标签 + 卡片颜色 ──
@@ -256,3 +260,128 @@ def get_cross_project_stats(
         "per_project": per_project,
         "trends": {"pass_rate": pass_rate_trend, "defects": defect_trend},
     }
+
+
+
+# ── Batch 213 (B3): 首页「我的待办」聚合 ──
+
+def _todo_bucket(items: list[dict], count: int) -> dict:
+    return {"count": count, "items": items}
+
+
+def get_todo_items(db: Session, project_id: int) -> dict:
+    """首页「我的待办」聚合：待审/在跑/失败/待放行。
+
+    - project_id > 0：仅统计该项目；== 0：不按项目过滤（兼顾超级管理员全量视角）。
+    - 各桶 max 5 条 items，count 为总数；空桶返回 count=0、items=[]。
+    """
+    project_cond = lambda col: (col == project_id) if project_id > 0 else True  # noqa: E731
+
+    # 待审：AI 生成候选用例待审（RequirementReview.status=pending）
+    review_q = (
+        select(RequirementReview, RequirementDocument.title)
+        .join(RequirementDocument, RequirementReview.requirement_id == RequirementDocument.id)
+        .where(RequirementReview.status == "pending", project_cond(RequirementDocument.project_id))
+    )
+    review_rows = db.execute(review_q.order_by(RequirementReview.id.desc()).limit(5)).all()
+    reviews_items = [
+        {
+            "id": f"review-{req.id}",
+            "title": title or f"需求 #{req.requirement_id}",
+            "subtitle": f"{req.case_type} 用例 待审",
+            "link": f"/requirement/{req.requirement_id}/review",
+        }
+        for req, title in review_rows
+    ]
+    reviews_count = db.scalar(
+        select(func.count(RequirementReview.id))
+        .join(RequirementDocument, RequirementReview.requirement_id == RequirementDocument.id)
+        .where(RequirementReview.status == "pending", project_cond(RequirementDocument.project_id))
+    ) or 0
+
+    # 在跑：后台 AI 任务 running
+    running_rows = db.execute(
+        select(AiTask)
+        .where(AiTask.status == "running", project_cond(AiTask.project_id))
+        .order_by(AiTask.id.desc()).limit(5)
+    ).scalars().all()
+    running_items = [
+        {
+            "id": task.id,
+            "title": f"{task.task_type} 任务",
+            "subtitle": f"进度 {task.progress}%",
+            "link": "/report",
+        }
+        for task in running_rows
+    ]
+    running_count = db.scalar(
+        select(func.count(AiTask.id)).where(AiTask.status == "running", project_cond(AiTask.project_id))
+    ) or 0
+
+    # 失败：AI 任务 failed + 未关闭缺陷
+    failed_task_rows = db.execute(
+        select(AiTask)
+        .where(AiTask.status == "failed", project_cond(AiTask.project_id))
+        .order_by(AiTask.id.desc()).limit(5)
+    ).scalars().all()
+    defect_rows = db.execute(
+        select(Defect)
+        .where(Defect.status.notin_(["closed", "rejected"]), project_cond(Defect.project_id))
+        .order_by(Defect.id.desc()).limit(5)
+    ).scalars().all()
+    failures_items: list[dict] = []
+    for task in failed_task_rows:
+        failures_items.append({
+            "id": f"task-{task.id}",
+            "title": f"{task.task_type} 任务失败",
+            "subtitle": task.error or "执行失败",
+            "link": "/report",
+        })
+    for d in defect_rows:
+        failures_items.append({
+            "id": f"defect-{d.id}",
+            "title": d.title or f"缺陷 #{d.id}",
+            "subtitle": f"严重级 {d.severity}",
+            "link": f"/defect/{d.id}",
+        })
+    failures_items = failures_items[:5]
+    failed_task_count = db.scalar(
+        select(func.count(AiTask.id)).where(AiTask.status == "failed", project_cond(AiTask.project_id))
+    ) or 0
+    defect_count = db.scalar(
+        select(func.count(Defect.id)).where(
+            Defect.status.notin_(["closed", "rejected"]),
+            project_cond(Defect.project_id),
+        )
+    ) or 0
+    failures_count = failed_task_count + defect_count
+
+    # 待放行：当前版本发布包（active）
+    release_rows = db.execute(
+        select(ReleaseBundle)
+        .where(ReleaseBundle.status == "active", project_cond(ReleaseBundle.project_id))
+        .order_by(ReleaseBundle.id.desc()).limit(5)
+    ).scalars().all()
+    release_items = [
+        {
+            "id": f"release-{b.id}",
+            "title": b.name or f"发布包 #{b.id}",
+            "subtitle": (b.client_version or "") + ((" / " + b.admin_version) if b.admin_version else ""),
+            "link": f"/release-bundles/{b.id}",
+        }
+        for b in release_rows
+    ]
+    release_count = db.scalar(
+        select(func.count(ReleaseBundle.id)).where(
+            ReleaseBundle.status == "active",
+            project_cond(ReleaseBundle.project_id),
+        )
+    ) or 0
+
+    return {
+        "reviews": _todo_bucket(reviews_items, reviews_count),
+        "running": _todo_bucket(running_items, running_count),
+        "failures": _todo_bucket(failures_items, failures_count),
+        "releases": _todo_bucket(release_items, release_count),
+    }
+

@@ -1,693 +1,155 @@
-import { Button, ObsidianWorkbench, useUiTheme } from '@/ui'
-import { BarChart3, Bug, Calendar, FileCheck, PieChart, RotateCcw, Percent, Building2, TrendingUp, AlertTriangle } from '@/lib/icons'
+import { Link } from 'react-router'
+import { useMemo } from 'react'
+import { ClipboardCheck, Gauge, AlertCircle, FileCheck, ArrowRight, Inbox } from '@/lib/icons'
 import PageHeader from '@/components/PageHeader'
-import StatCard from '@/components/StatCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useMemo, useState } from 'react'
-import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import type { WorkbenchMetric } from '@/ui'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart as RechartsPieChart,
-  Pie,
-  Cell,
-  LabelList,
-  LineChart,
-  Line,
-} from 'recharts'
-import { format, subDays } from 'date-fns'
-import { fetchDashboardStats, fetchCrossProjectStats } from '@/api/dashboard'
-import { useAuthStore } from '@/stores/auth'
-import { useChartColors } from '@/hooks/use-chart-colors'
-import { useApi } from '@/hooks/useApi'
+import { Badge } from '@/components/ui/badge'
 import { AsyncState } from '@/components/state'
-import type { CaseTypePriority, CrossProjectStats, DashboardStats } from '@/types'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useApi } from '@/hooks/useApi'
+import { fetchDashboardTodo } from '@/api/dashboard'
+import type { DashboardTodo, TodoBucket } from '@/types'
 
-type PresetKey = '7d' | '30d' | 'custom'
+interface TodoPanelProps {
+  title: string
+  description: string
+  icon: React.ReactNode
+  accent?: 'primary' | 'danger' | 'muted'
+  bucket: TodoBucket
+  emptyText: string
+  viewAll: string
+}
 
-// ── 帮助函数 ──
+function accentClass(accent: TodoPanelProps['accent']): string {
+  if (accent === 'danger') return 'text-destructive'
+  if (accent === 'muted') return 'text-muted-foreground'
+  return 'text-primary'
+}
 
-function getDateRange(key: PresetKey, custom: [string, string] | null): { start: string; end: string } {
-  const today = new Date()
-  if (key === '7d') {
-    const start = format(subDays(today, 7), 'yyyy-MM-dd')
-    const end = format(today, 'yyyy-MM-dd')
-    return { start, end }
-  }
-  if (key === '30d') {
-    const start = format(subDays(today, 30), 'yyyy-MM-dd')
-    const end = format(today, 'yyyy-MM-dd')
-    return { start, end }
-  }
-  if (custom && custom[0] && custom[1]) {
-    return { start: custom[0], end: custom[1] }
-  }
-  const start = format(subDays(today, 7), 'yyyy-MM-dd')
-  const end = format(today, 'yyyy-MM-dd')
-  return { start, end }
+function TodoPanel({ title, description, icon, accent, bucket, emptyText, viewAll }: TodoPanelProps) {
+  return (
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-sm">
+          {icon}
+          <span className={accentClass(accent)}>{title}</span>
+          <span className="text-xs font-normal text-muted-foreground">{description}</span>
+          <Badge variant="secondary" className="ml-auto">{bucket.count}</Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-1">
+        {bucket.items.length === 0 ? (
+          <div className="flex items-center gap-2 rounded-md border border-dashed px-3 py-4 text-xs text-muted-foreground">
+            <Inbox className="size-4 shrink-0" />
+            <span>{emptyText}</span>
+          </div>
+        ) : (
+          <>
+            {bucket.items.map((item) => (
+              <Link
+                key={item.id}
+                to={item.link}
+                className="group flex min-h-[40px] items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate font-medium text-foreground">{item.title}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{item.subtitle}</span>
+                </span>
+                <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            ))}
+            <Link to={viewAll} className="inline-flex items-center gap-1 px-2 pt-1 text-xs text-primary hover:underline">
+              查看全部
+            </Link>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  )
 }
 
 export default function Workbench() {
-  useDocumentTitle('工作台')
-  const { uiTheme } = useUiTheme()
-  const user = useAuthStore((s) => s.user)
-  const projects = useAuthStore((s) => s.projects)
-  const currentProjectId = useAuthStore((s) => s.currentProjectId)
-  const current = projects.find((p) => p.id === currentProjectId)
-
-  const today = format(new Date(), 'yyyy-MM-dd')
-  const sevenDaysAgo = format(subDays(new Date(), 7), 'yyyy-MM-dd')
-  const [preset, setPreset] = useState<PresetKey>('7d')
-  const [rangeValue, setRangeValue] = useState<[string, string]>([sevenDaysAgo, today])
-  const [tab, setTab] = useState<'project' | 'cross'>('project')
-  const chartColors = useChartColors()
-
-  // ── Data fetching with useApi ──
-  const dateRange = useMemo(() => getDateRange(preset, rangeValue), [preset, rangeValue])
-
-  const { data: stats, isLoading, isRefetching, isError, error, refetch } = useApi<DashboardStats>(
-    (signal) => fetchDashboardStats({ start_date: dateRange.start, end_date: dateRange.end }, signal),
-    [dateRange.start, dateRange.end]
+  useDocumentTitle('我的待办')
+  const { data, isLoading, isError, error, refetch } = useApi<DashboardTodo>(
+    (signal) => fetchDashboardTodo(signal),
   )
 
-  const priorityColor = (p: string) =>
-    p === 'P0' ? chartColors.p0 : p === 'P1' ? chartColors.p1 : p === 'P2' ? chartColors.p2 : chartColors.p3
+  const panels = useMemo(() => {
+    if (!data) return []
+    return [
+      {
+        key: 'reviews',
+        title: '待审',
+        icon: <ClipboardCheck className="size-4 text-primary" />,
+        description: 'AI 生成用例待审核',
+        accent: 'primary' as const,
+        bucket: data.reviews,
+        emptyText: '暂无待审核用例',
+        viewAll: '/requirement',
+      },
+      {
+        key: 'running',
+        title: '在跑',
+        icon: <Gauge className="size-4 text-muted-foreground" />,
+        description: '后台 AI 任务进行中',
+        accent: 'muted' as const,
+        bucket: data.running,
+        emptyText: '暂无进行中任务',
+        viewAll: '/report',
+      },
+      {
+        key: 'failures',
+        title: '失败 / 需关注',
+        icon: <AlertCircle className="size-4 text-destructive" />,
+        description: '执行失败与未关闭缺陷',
+        accent: 'danger' as const,
+        bucket: data.failures,
+        emptyText: '暂无失败项',
+        viewAll: '/defect',
+      },
+      {
+        key: 'releases',
+        title: '待放行',
+        icon: <FileCheck className="size-4 text-primary" />,
+        description: '当前版本发布包',
+        accent: 'primary' as const,
+        bucket: data.releases,
+        emptyText: '暂无待放行版本',
+        viewAll: '/release-bundles',
+      },
+    ]
+  }, [data])
 
-  const handlePresetChange = (val: PresetKey) => {
-    setPreset(val)
-    const now = new Date()
-    if (val === '7d') {
-      setRangeValue([format(subDays(now, 7), 'yyyy-MM-dd'), format(now, 'yyyy-MM-dd')])
-    } else if (val === '30d') {
-      setRangeValue([format(subDays(now, 30), 'yyyy-MM-dd'), format(now, 'yyyy-MM-dd')])
-    }
-  }
-
-  // ── Derived chart data (computed from stats, safe even when undefined) ──
-  const s = stats
-  const caseTypes = s?.case_type_stats || []
-  const priorityData = s?.priority_distribution || []
-
-  const barData = caseTypes.map((ct) => ({
-    name: ct.label,
-    caseType: ct.case_type,
-    用例总数: ct.count,
-    执行通过: ct.execution_pass,
-    执行失败: ct.execution_fail,
-    通过率: `${ct.pass_rate}%`,
-    失败率: `${ct.fail_rate}%`,
-  }))
-
-  // ── Custom Tooltip for bar chart ──
-  function BarTooltip({ active, payload, label }: any) {
-    if (!active || !payload?.length) return null
-    const entry = barData.find((d) => d.name === label)
-    return (
-      <div className="bg-background rounded-lg border px-3.5 py-2.5 shadow-md text-sm">
-        <div className="font-semibold mb-1.5">{label}</div>
-        {payload.map((p: any) => (
-          <div key={p.dataKey} className="flex items-center gap-1.5 text-[13px] text-foreground">
-            <span
-              className="size-2.5 shrink-0 rounded-sm"
-              style={{ backgroundColor: p.color }}
-              aria-hidden="true"
-            />
-            <span>{p.dataKey}：{p.value}</span>
-          </div>
-        ))}
-        {entry && (
-          <div className="mt-1 text-xs text-muted-foreground">
-            通过率 {entry.通过率} ｜ 失败率 {entry.失败率}
+  return (
+    <div className="space-y-4">
+      <PageHeader title="我的待办" description="今天要审什么、什么在跑、什么失败、哪个版本待放行" />
+      <AsyncState
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={data}
+        onRetry={refetch}
+        loadingText="正在加载我的待办"
+        skeletonType="card"
+        loadingRows={4}
+      >
+        {() => (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {panels.map((p) => (
+              <TodoPanel
+                key={p.key}
+                title={p.title}
+                description={p.description}
+                icon={p.icon}
+                accent={p.accent}
+                bucket={p.bucket}
+                emptyText={p.emptyText}
+                viewAll={p.viewAll}
+              />
+            ))}
           </div>
         )}
-      </div>
-    )
-  }
-
-  // ── Pie custom tooltip ──
-  function PieTooltip({ active, payload, total }: any) {
-    if (!active || !payload?.length) return null
-    const d = payload[0]
-    const t = total ?? 0
-    const pct = t > 0 ? ((d.value / t) * 100).toFixed(1) : '0'
-    return (
-      <div className="bg-background rounded-lg border px-3 py-2 shadow-md text-sm">
-        <span
-          className="inline-block size-2.5 rounded-sm mr-2"
-          style={{ background: d.payload.fill }}
-        />
-        {d.name}：{d.value}（{pct}%）
-      </div>
-    )
-  }
-
-  // ── 黑曜流界指标 ──
-  const obsidianMetrics: WorkbenchMetric[] = stats ? [
-    { label: '用例总数', value: String(stats.total_cases ?? 0), note: `通过率 ${stats.pass_rate ?? 0}%`, tone: 'positive' as const },
-    { label: 'API 用例', value: String(stats.api_cases ?? 0), note: '接口测试资产', tone: 'active' as const },
-    { label: '测试计划', value: String(stats.total_plans ?? 0), note: stats.total_plans > 0 ? '已编排' : '待创建', tone: 'neutral' as const },
-    { label: '通过率', value: `${stats.pass_rate ?? 0}%`, note: '用例口径（与追溯一致）', tone: stats.pass_rate >= 80 ? 'positive' as const : 'risk' as const },
-  ] : []
-
-  // ── 项目概览内容 ──
-  const renderProjectOverview = () => (
-    <AsyncState
-      isLoading={isLoading}
-      isError={isError}
-      error={error}
-      data={stats}
-      onRetry={refetch}
-      skeletonType="card"
-      loadingText="加载仪表盘数据..."
-      emptyTitle="暂无仪表盘数据"
-    >
-  {(_s) => {
-    const _caseTypes = _s.case_type_stats || []
-    const _priorityData = _s.priority_distribution || []
-
-    return (
-            <>
-              {/* ─── 摘要指标 ─── */}
-              {uiTheme !== 'obsidian-flow' && (
-                <div
-                  className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4"
-                  data-testid="workbench-summary-cards"
-                >
-                  <StatCard icon={FileCheck} label="用例总数" value={_s.total_cases} variant="glass" />
-                  <StatCard icon={BarChart3} label="测试计划" value={_s.total_plans} variant="glass" />
-                  <StatCard icon={Percent} label="通过率" value={`${_s.pass_rate}%`} variant="glass" />
-                  <StatCard icon={Bug} label="接口用例" value={_s.api_cases} variant="glass" />
-                </div>
-              )}
-
-              {/* ─── 时间范围筛选 ─── */}
-              <Card size="sm" className="mb-4">
-                <CardContent>
-                  <div className="flex items-center gap-4 flex-wrap">
-                    <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-                      <Calendar className="size-4" />
-                      时间范围：
-                    </span>
-                    <div className="inline-flex items-center rounded-lg border border-input bg-muted p-0.5">
-                      {(['7d', '30d', 'custom'] as PresetKey[]).map((key) => {
-                        const label = key === '7d' ? '近 7 天' : key === '30d' ? '近 30 天' : '自定义'
-                        return (
-                          <Button
-                            key={key}
-                            variant={preset === key ? 'primary' : 'ghost'}
-                            size="sm"
-                            className="h-7"
-                            onClick={() => handlePresetChange(key)}
-                          >
-                            {label}
-                          </Button>
-                        )
-                      })}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="date"
-                        value={rangeValue[0]}
-                        onChange={(e) => {
-                          setPreset('custom')
-                          setRangeValue([e.target.value, rangeValue[1]])
-                        }}
-                        aria-label="开始日期"
-                        className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
-                      />
-                      <span className="text-sm text-muted-foreground">至</span>
-                      <input
-                        type="date"
-                        aria-label="结束日期"
-                        value={rangeValue[1]}
-                        onChange={(e) => {
-                          setPreset('custom')
-                          setRangeValue([rangeValue[0], e.target.value])
-                        }}
-                        className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* ─── 项目概览（柱状图） ─── */}
-              {_caseTypes.length > 0 && (() => {
-                const sumTotal = _caseTypes.reduce((sum, ct) => sum + ct.count, 0)
-                const sumPass = _caseTypes.reduce((sum, ct) => sum + ct.execution_pass, 0)
-                const sumFail = _caseTypes.reduce((sum, ct) => sum + ct.execution_fail, 0)
-
-                return (
-                  <Card
-                    size="sm"
-                    className="mb-4"
-                    role="figure"
-                    aria-labelledby="project-overview-title"
-                    aria-describedby="project-overview-summary"
-                  >
-                    <CardHeader>
-                      <CardTitle id="project-overview-title" className="flex flex-wrap items-center gap-1.5">
-                        <BarChart3 className="size-4" />
-                        项目概览
-                        <span className="text-xs text-muted-foreground font-normal ml-2">
-                          按用例类型分类统计 · 柱状图
-                        </span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p id="project-overview-summary" className="mb-3 text-sm text-muted-foreground">
-                        {/* P3-14：execution_pass / execution_fail 统计的是**执行次数**（同一条用例可被多次执行），
-                            此前文案写作「执行失败 N 条」，与「共 M 条用例」并列，出现失败数远超用例总数的
-                            自相矛盾展示（生产实测 10614 条用例 vs 34208 条失败）。改为明确区分两种口径。 */}
-                        共 {sumTotal} 条用例；累计执行 {sumPass + sumFail} 次，其中通过 {sumPass} 次、失败 {sumFail} 次。
-                        <span className="ml-1 text-xs">（执行次数按每次运行累计，同一用例多次执行会重复计入）</span>
-                      </p>
-                      <div className="flex flex-col lg:flex-row">
-                        {/* 柱状图主体 */}
-                        <div className="min-w-0 flex-1">
-                          <ResponsiveContainer width="100%" height={320}>
-                            <BarChart
-                              data={barData}
-                              margin={{ top: 20, right: 8, left: 0, bottom: 8 }}
-                              barCategoryGap="30%"
-                            >
-                              <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridColor} />
-                              <XAxis dataKey="name" tick={{ fontSize: 13 }} />
-                              <YAxis tick={{ fontSize: 12 }} />
-                              <RechartsTooltip content={<BarTooltip />} />
-                              <Legend content={() => null} />
-                              <Bar dataKey="用例总数" fill={chartColors.barTotal} radius={[4, 4, 0, 0]} maxBarSize={48}>
-                                <LabelList dataKey="用例总数" position="top" style={{ fontSize: 12, fontWeight: 600, fill: 'var(--foreground)' }} />
-                              </Bar>
-                              <Bar dataKey="执行通过" fill={chartColors.barPass} radius={[4, 4, 0, 0]} maxBarSize={48}>
-                                <LabelList dataKey="执行通过" position="top" style={{ fontSize: 12, fontWeight: 600, fill: 'var(--foreground)' }} />
-                              </Bar>
-                              <Bar dataKey="执行失败" fill={chartColors.barFail} radius={[4, 4, 0, 0]} maxBarSize={48}>
-                                <LabelList dataKey="执行失败" position="top" style={{ fontSize: 12, fontWeight: 600, fill: 'var(--foreground)' }} />
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </div>
-
-                        {/* 侧边图例（带汇总值） */}
-                        <div className="flex w-full shrink-0 items-center justify-center lg:w-[140px]">
-                          <div className="m-2 w-full rounded-lg border bg-muted/50 p-3 lg:p-4">
-                            <div className="text-xs font-semibold mb-2.5">图例</div>
-                            <div className="grid grid-cols-3 gap-2 lg:block">
-                              {([
-                                { label: '用例总数', color: chartColors.barTotal, value: sumTotal },
-                                { label: '执行通过', color: chartColors.barPass, value: sumPass },
-                                { label: '执行失败', color: chartColors.barFail, value: sumFail },
-                              ]).map((item) => (
-                              <div key={item.label} className="flex min-w-0 items-center text-xs lg:mb-2">
-                                <span
-                                  className="inline-block size-3 rounded-sm mr-2 shrink-0"
-                                  style={{ background: item.color }}
-                                />
-                                <span className="text-muted-foreground mr-1.5">{item.label}</span>
-                                <span className="font-semibold text-[13px] text-foreground">
-                                  {item.value}
-                                </span>
-                              </div>
-                            ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <table className="sr-only" aria-label="项目概览数据">
-                        <thead>
-                          <tr>
-                            <th>用例类型</th>
-                            <th>用例总数（条）</th>
-                            <th>执行通过（次）</th>
-                            <th>执行失败（次）</th>
-                            <th>通过率</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {barData.map((item) => (
-                            <tr key={item.caseType}>
-                              <th>{item.name}</th>
-                              <td>{item.用例总数}</td>
-                              <td>{item.执行通过}</td>
-                              <td>{item.执行失败}</td>
-                              <td>{item.通过率}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </CardContent>
-                  </Card>
-                )
-              })()}
-
-              {/* ─── P0-P3 优先级分布（饼图） ─── */}
-              {_priorityData.length > 0 && (
-                <Card
-                  size="sm"
-                  role="figure"
-                  aria-labelledby="priority-distribution-title"
-                  aria-describedby="priority-distribution-summary"
-                >
-                  <CardHeader>
-                    <CardTitle id="priority-distribution-title" className="flex flex-wrap items-center gap-1.5">
-                      <PieChart className="size-4" />
-                      用例优先级分布
-                      <span className="text-xs text-muted-foreground font-normal ml-2">
-                        P0-P3 按用例类型统计 · 饼图
-                      </span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p id="priority-distribution-summary" className="mb-3 text-sm text-muted-foreground">
-                      按用例类型展示 P0 至 P3 的数量与占比，具体数值可在图表数据表中读取。
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {_priorityData.map((pd: CaseTypePriority) => {
-                        const pieData = [
-                          { name: 'P0', value: pd.p0 },
-                          { name: 'P1', value: pd.p1 },
-                          { name: 'P2', value: pd.p2 },
-                          { name: 'P3', value: pd.p3 },
-                        ].filter((d) => d.value > 0)
-
-                        if (pieData.length === 0) {
-                          return (
-                            <div key={pd.case_type} className="flex flex-col items-center justify-center py-10 text-center">
-                              <span className="text-sm text-foreground">{pd.label}</span>
-                              <span className="mt-2 text-muted-foreground text-sm">暂无数据</span>
-                            </div>
-                          )
-                        }
-
-                        return (
-                          <div key={pd.case_type}>
-                            {/* 类型标题 */}
-                            <div className="text-center mb-1">
-                              <span className="text-sm font-semibold text-foreground">
-                                {pd.label}
-                              </span>
-                              <span className="text-xs text-muted-foreground ml-1.5">
-                                （{pd.total} 个）
-                              </span>
-                            </div>
-
-                            {/* 饼图 */}
-                            <ResponsiveContainer width="100%" height={240}>
-                              <RechartsPieChart>
-                                <Pie
-                                  data={pieData}
-                                  dataKey="value"
-                                  nameKey="name"
-                                  cx="50%"
-                                  cy="50%"
-                                  innerRadius={45}
-                                  outerRadius={85}
-                                  paddingAngle={2}
-                                  label={({ name, value }) => `${name}: ${value}`}
-                                  labelLine={{ stroke: chartColors.labelLineColor, strokeWidth: 1 }}
-                                >
-                                  {pieData.map((entry) => (
-                                    <Cell key={entry.name} fill={priorityColor(entry.name)} />
-                                  ))}
-                                </Pie>
-                                <RechartsTooltip
-                                  content={({ active, payload }) => (
-                                    <PieTooltip active={active} payload={payload} total={pd.total} />
-                                  )}
-                                />
-                              </RechartsPieChart>
-                            </ResponsiveContainer>
-
-                            {/* 每个饼图自己的图例 */}
-                            <div className="bg-muted/50 rounded-md p-2.5 border mt-1">
-                              {([
-                                { key: 'P0' as const, val: pd.p0 },
-                                { key: 'P1' as const, val: pd.p1 },
-                                { key: 'P2' as const, val: pd.p2 },
-                                { key: 'P3' as const, val: pd.p3 },
-                              ]).map(({ key, val }) => {
-                                const pct = pd.total > 0 ? ((val / pd.total) * 100).toFixed(1) : '0'
-                                return (
-                                  <div
-                                    key={key}
-                                    className="flex items-center justify-between mb-1 text-xs last:mb-0"
-                                  >
-                                    <span className="text-muted-foreground flex items-center gap-1.5">
-                                      <span
-                                        className="inline-block size-2.5 rounded-sm"
-                                        style={{ background: priorityColor(key) }}
-                                      />
-                                      {key}
-                                    </span>
-                                    <span>
-                                      <span className="font-semibold text-foreground">
-                                        {val}
-                                      </span>
-                                      <span className="text-muted-foreground ml-1 text-xs">（{pct}%）</span>
-                                    </span>
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                    <table className="sr-only" aria-label="用例优先级分布数据">
-                      <thead>
-                        <tr>
-                          <th>用例类型</th>
-                          <th>P0</th>
-                          <th>P1</th>
-                          <th>P2</th>
-                          <th>P3</th>
-                          <th>合计</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {_priorityData.map((item) => (
-                          <tr key={item.case_type}>
-                            <th>{item.label}</th>
-                            <td>{item.p0}</td>
-                            <td>{item.p1}</td>
-                            <td>{item.p2}</td>
-                            <td>{item.p3}</td>
-                            <td>{item.total}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </CardContent>
-                </Card>
-              )}
-            </>
-          )
-        }}
       </AsyncState>
-  )
-
-  // ── 主渲染 ──
-  const tabsContent = (
-    <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="mb-4">
-      <TabsList>
-        <TabsTrigger value="project">项目概览</TabsTrigger>
-        <TabsTrigger value="cross">多项目概览</TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="project">{renderProjectOverview()}</TabsContent>
-
-      <TabsContent value="cross">
-        <CrossProjectDashboard dateRange={dateRange} />
-      </TabsContent>
-    </Tabs>
-  )
-
-  // ── 黑曜流界模式：用 ObsidianWorkbench 包裹 ──
-  if (uiTheme === 'obsidian-flow') {
-    return (
-      <ObsidianWorkbench
-        title="工作台"
-        breadcrumbs={`${current?.name || '项目空间'} / 质量工作台`}
-        description="把测试从页面集合，变成一条可操作的质量链。"
-        metrics={obsidianMetrics}
-        loading={isLoading}
-        onRefresh={() => refetch()}
-        statusLine={[
-          { label: `最后同步 ${format(new Date(), 'HH:mm')}`, live: false },
-          { label: current?.name || '未选择项目', live: false },
-        ]}
-      >
-        {tabsContent}
-      </ObsidianWorkbench>
-    )
-  }
-
-  return (
-    <div>
-      <PageHeader title="工作台" icon={BarChart3}>
-        <span className="text-sm text-muted-foreground">
-          {user?.nickname || user?.username} / {current?.name || '未选择项目'}
-        </span>
-        <Button size="sm" variant="secondary" onClick={refetch} disabled={isLoading || isRefetching}>
-          <RotateCcw className="size-4" />
-          刷新
-        </Button>
-      </PageHeader>
-      {tabsContent}
     </div>
-  )
-}
-
-// ── Cross-Project Dashboard (V2.5) ──
-
-function CrossProjectDashboard({ dateRange }: { dateRange: { start: string; end: string } }) {
-  const chartColors = useChartColors()
-
-  const { data: crossStats, isLoading, isError, error, refetch } = useApi<CrossProjectStats>(
-    (signal) => fetchCrossProjectStats({ start_date: dateRange.start, end_date: dateRange.end }, signal),
-    [dateRange.start, dateRange.end]
-  )
-
-  return (
-    <AsyncState
-      isLoading={isLoading}
-      isError={isError}
-      error={error}
-      data={crossStats}
-      onRetry={refetch}
-      skeletonType="card"
-      loadingText="加载跨项目数据..."
-      emptyTitle="暂无跨项目数据"
-    >
-      {(stats) => (
-        <div className="space-y-4">
-          {/* Aggregate Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <StatCard icon={Building2} label="项目总数" value={stats.aggregate.total_projects} variant="glass" />
-            <StatCard icon={FileCheck} label="用例总数" value={stats.aggregate.total_cases} variant="glass" />
-            <StatCard icon={BarChart3} label="测试计划" value={stats.aggregate.total_plans} variant="glass" />
-            <StatCard icon={Percent} label="整体通过率" value={`${stats.aggregate.overall_pass_rate}%`} variant="glass" />
-            <StatCard icon={Bug} label="接口用例" value={stats.aggregate.total_api_cases} variant="glass" />
-            <StatCard icon={AlertTriangle} label="缺陷总数" value={stats.aggregate.total_defects} variant="glass" />
-          </div>
-
-          {/* Per-Project Cards */}
-          {stats.per_project.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {stats.per_project.map((proj) => (
-                <Card key={proj.project_id} size="sm">
-                  <CardHeader>
-                    <CardTitle className="text-sm">{proj.project_name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="text-muted-foreground">用例: <span className="font-semibold text-foreground">{proj.total_cases}</span></div>
-                      <div className="text-muted-foreground">计划: <span className="font-semibold text-foreground">{proj.total_plans}</span></div>
-                      <div className="text-muted-foreground">通过率: <span className="font-semibold text-status-success">{proj.pass_rate}%</span></div>
-                      <div className="text-muted-foreground">缺陷: <span className="font-semibold text-status-danger">{proj.defect_count}</span></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-
-          {/* Trends Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card
-              size="sm"
-              role="figure"
-              aria-labelledby="cross-pass-rate-title"
-              aria-describedby="cross-pass-rate-summary"
-            >
-              <CardHeader>
-                <CardTitle id="cross-pass-rate-title" className="text-sm flex items-center gap-1.5">
-                  <TrendingUp className="size-4" />
-                  整体通过率趋势（近 7 天）
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p id="cross-pass-rate-summary" className="sr-only">
-                  按日期展示整体测试通过率百分比。
-                </p>
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={stats.trends.pass_rate}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridColor} />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
-                    <RechartsTooltip formatter={(value: any) => [`${value}%`, '通过率']} />
-                    <Line type="monotone" dataKey="pass_rate" stroke={chartColors.barPass} strokeWidth={2} dot={{ r: 3 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-                <table className="sr-only" aria-label="整体通过率趋势数据">
-                  <thead>
-                    <tr><th>日期</th><th>通过率</th><th>执行数</th></tr>
-                  </thead>
-                  <tbody>
-                    {stats.trends.pass_rate.map((point) => (
-                      <tr key={point.date}>
-                        <th>{point.date}</th>
-                        <td>{point.pass_rate ?? 0}%</td>
-                        <td>{point.total_execs ?? 0}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
-
-            <Card
-              size="sm"
-              role="figure"
-              aria-labelledby="cross-defect-title"
-              aria-describedby="cross-defect-summary"
-            >
-              <CardHeader>
-                <CardTitle id="cross-defect-title" className="text-sm flex items-center gap-1.5">
-                  <Bug className="size-4" />
-                  缺陷趋势（近 7 天）
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p id="cross-defect-summary" className="sr-only">
-                  按日期展示新增缺陷数量。
-                </p>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={stats.trends.defects}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridColor} />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                    <RechartsTooltip formatter={(value: any) => [value, '新增缺陷']} />
-                    <Bar dataKey="count" fill={chartColors.barFail} radius={[4, 4, 0, 0]} maxBarSize={40} />
-                  </BarChart>
-                </ResponsiveContainer>
-                <table className="sr-only" aria-label="缺陷趋势数据">
-                  <thead>
-                    <tr><th>日期</th><th>新增缺陷</th></tr>
-                  </thead>
-                  <tbody>
-                    {stats.trends.defects.map((point) => (
-                      <tr key={point.date}>
-                        <th>{point.date}</th>
-                        <td>{point.count ?? 0}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
-    </AsyncState>
   )
 }

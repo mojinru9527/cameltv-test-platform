@@ -1,5 +1,5 @@
 {
-  "count": 607,
+  "count": 608,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -2427,6 +2427,10 @@
     },
     {
       "path": "/health",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/dashboard/todo",
       "method": "GET"
     }
   ]
