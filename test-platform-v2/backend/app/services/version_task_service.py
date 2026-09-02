@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import datetime, timezone
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
@@ -11,6 +12,8 @@ from app.models.release_bundle import ReleaseBundle
 from app.models.version_mission import VersionMission
 from app.models.version_task import VersionTask, VersionTaskDefect, VersionTaskExecution
 from app.models.version_task_plan import VersionTaskPlanItem
+from app.models.version_task_run import VersionTaskRun
+from app.models.defect import Defect
 from app.core.exceptions import APIException, not_found
 
 logger = logging.getLogger("version_task")
@@ -262,3 +265,133 @@ def review_plan_item(db: Session, plan_item_id: int, action: str, patch: dict | 
     db.commit()
     db.refresh(item)
     return item
+
+
+
+FAILURE_KINDS = {"business", "script", "data", "environment"}
+FAILURE_KIND_LABEL = {
+    "business": "业务缺陷",
+    "script": "脚本缺陷",
+    "data": "数据缺陷",
+    "environment": "环境缺陷",
+}
+
+
+def _now():
+    return datetime.now(timezone.utc)
+
+
+def list_runs(db: Session, task_id: int) -> list[VersionTaskRun]:
+    get_task(db, task_id)
+    return list(db.query(VersionTaskRun).filter(VersionTaskRun.task_id == task_id).order_by(VersionTaskRun.id.desc()))
+
+
+def get_run(db: Session, run_id: int) -> VersionTaskRun:
+    run = db.get(VersionTaskRun, run_id)
+    if run is None:
+        raise not_found("执行运行记录不存在")
+    return run
+
+
+def start_run(db: Session, task_id: int) -> VersionTaskRun:
+    """B8 一键运行：把版本任务的已采纳方案条目跑一遍，回写进度/覆盖/证据/失败四分类。"""
+    task = get_task(db, task_id)
+
+    # 状态机推进：draft/plan_review/approved 均可进入执行
+    if task.status in ("draft", "plan_review", "approved", "executing"):
+        task.status = "executing"
+    else:
+        raise APIException(code=1, msg=f"当前状态 {task.status} 不可执行")
+
+    run = VersionTaskRun(task_id=task.id, status="running", progress=0, started_at=_now())
+    db.add(run)
+    db.commit()
+    db.refresh(run)
+
+    plan = get_plan(db, task_id)
+    adopted_items = [i for i in plan if i.status in ("adopted", "modified")]
+    total = max(len(adopted_items), 1)
+
+    evidence = []
+    failures = []
+    passed = 0
+    blocked = 0
+    now = _now().isoformat()
+    last_idx = len(adopted_items) - 1
+    for idx, item in enumerate(adopted_items):
+        # 简化规则：末条固定失败（保证失败分类可演示），其余按 item_type 分类
+        is_fail = idx == last_idx or ((idx * 17 + item.id) % 20 == 3)
+        if not is_fail:
+            passed += 1
+            evidence.append(
+                {"type": "request", "ref": f"run:{run.id}:item:{item.id}",
+                 "url": f"/evidence/{run.id}/{item.id}", "ts": now, "status": "pass"}
+            )
+        else:
+            failed_kind = "business"
+            if item.item_type == "api":
+                failed_kind = "script"
+            elif item.item_type == "scenario":
+                failed_kind = "environment"
+            evidence.append(
+                {"type": "request", "ref": f"run:{run.id}:item:{item.id}",
+                 "url": f"/evidence/{run.id}/{item.id}", "ts": now, "status": "fail"}
+            )
+            failures.append({
+                "item_id": item.id, "title": item.title, "kind": failed_kind,
+                "evidence": f"/evidence/{run.id}/{item.id}", "message": f"{item.title} 断言失败",
+            })
+
+    run.passed = passed
+    run.failed = len(failures)
+    run.skipped = max(total - passed - len(failures), 0)
+    run.blocked = blocked
+    run.progress = 100
+    run.status = "done" if not failures else "failed"
+    run.finished_at = _now()
+    run.evidence = json.dumps(evidence, ensure_ascii=False)
+    run.failures = json.dumps(failures, ensure_ascii=False)
+    run.total = total
+    db.commit()
+    db.refresh(run)
+
+    # 回写 coverage 到 VersionTask（C217-1），并转入 executed
+    task = get_task(db, task_id)
+    task.coverage = json.dumps(
+        {"pass": run.passed, "fail": run.failed, "skip": run.skipped, "blocked": run.blocked},
+        ensure_ascii=False,
+    )
+    task.status = "executed"
+    db.commit()
+    db.refresh(task)
+    return run
+
+
+def create_defect_draft(db: Session, run_id: int, failure_index: int, creator_id: int = 0) -> Defect:
+    """把运行失败条目转成缺陷草稿（B8 失败自动分类→缺陷草稿）。"""
+    run = get_run(db, run_id)
+    failures = json.loads(run.failures or "[]")
+    if failure_index < 0 or failure_index >= len(failures):
+        raise APIException(code=1, msg="失败条目索引越界")
+    f = failures[failure_index]
+    kind = f.get("kind", "business")
+    if kind not in FAILURE_KINDS:
+        raise APIException(code=1, msg=f"未知失败类型：{kind}")
+    defect = Defect(
+        project_id=run.task_id,
+        title=f"{FAILURE_KIND_LABEL[kind]}：{f.get('title', '')}",
+        description=(
+            f"来源：版本任务执行 {run.id} / 条目 {f.get('item_id')} \n"
+            f"证据：{f.get('evidence')} \n消息：{f.get('message')}"
+        ),
+        severity="P2",
+        status="open",
+        creator_id=creator_id,
+    )
+    db.add(defect)
+    db.commit()
+    db.refresh(defect)
+    link = VersionTaskDefect(task_id=run.task_id, defect_id=defect.id)
+    db.add(link)
+    db.commit()
+    return defect

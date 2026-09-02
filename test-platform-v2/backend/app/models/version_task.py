@@ -16,6 +16,7 @@ from app.models.base import TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.version_task_plan import VersionTaskPlanItem
+    from app.models.version_task_run import VersionTaskRun
 
 
 class VersionTask(Base, TimestampMixin):
@@ -76,6 +77,9 @@ class VersionTask(Base, TimestampMixin):
     )
     plan_items: Mapped[list["VersionTaskPlanItem"]] = relationship(
         back_populates="task", cascade="all, delete-orphan", order_by="VersionTaskPlanItem.order_index"
+    )
+    runs: Mapped[list["VersionTaskRun"]] = relationship(
+        back_populates="task", cascade="all, delete-orphan", order_by="VersionTaskRun.id"
     )
 
 

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
+from app.core.exceptions import not_found
 from app.schemas.common import Page, R
 from app.schemas.version_task import (
     DefectLinkIn,
@@ -16,6 +17,7 @@ from app.schemas.version_task import (
     PlanItemCreate,
     PlanItemOut,
     PlanItemReview,
+    VersionTaskRunOut,
     VersionTaskCreate,
     VersionTaskListItem,
     VersionTaskOut,
@@ -202,3 +204,55 @@ def review_plan_item(
     )
     _audit(req, current, db, "version_task:plan_review", f"{task_id}/{item_id}", f"{data.action}")
     return R.ok(PlanItemOut.model_validate(item))
+
+
+# ── B8: 一键运行 + 进度 + 证据回放 + 失败分类→缺陷草稿 ──
+@router.post("/{task_id}/run", response_model=R[VersionTaskRunOut], summary="一键运行版本任务")
+def start_run(
+    task_id: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("mission:generate")),
+    db: Session = Depends(get_db),
+):
+    run = version_task_service.start_run(db, task_id)
+    _audit(req, current, db, "version_task:run", f"{task_id}", f"run:{run.id}")
+    return R.ok(VersionTaskRunOut.model_validate(run))
+
+
+@router.get("/{task_id}/runs", response_model=R[list[VersionTaskRunOut]], summary="版本任务运行记录列表")
+def list_runs(
+    task_id: int,
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    runs = version_task_service.list_runs(db, task_id)
+    return R.ok([VersionTaskRunOut.model_validate(r) for r in runs])
+
+
+@router.get("/{task_id}/runs/{run_id}", response_model=R[VersionTaskRunOut], summary="运行记录详情（含证据回放）")
+def get_run(
+    task_id: int,
+    run_id: int,
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    run = version_task_service.get_run(db, run_id)
+    if run.task_id != task_id:
+        raise not_found("运行记录不属于该任务")
+    return R.ok(VersionTaskRunOut.model_validate(run))
+
+
+@router.post("/{task_id}/runs/{run_id}/defect/{failure_index}", response_model=R[dict], summary="失败条目转缺陷草稿")
+def create_defect_draft(
+    task_id: int,
+    run_id: int,
+    failure_index: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("defect:create")),
+    db: Session = Depends(get_db),
+):
+    defect = version_task_service.create_defect_draft(
+        db, run_id, failure_index, creator_id=current.user.id if current.user else 0
+    )
+    _audit(req, current, db, "version_task:defect_draft", f"{task_id}/{run_id}", f"defect:{defect.id}")
+    return R.ok({"defect_id": defect.id, "status": defect.status})
