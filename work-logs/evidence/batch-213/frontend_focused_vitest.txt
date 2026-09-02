@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 F:/CamelTv-worktrees/codex-batch-213-home-todo/test-platform-v2/frontend
+
+
+ Test Files  2 passed (2)
+      Tests  13 passed (13)
+   Start at  23:44:52
+   Duration  1.75s (transform 337ms, setup 0ms, import 761ms, tests 171ms, environment 1.35s)
+

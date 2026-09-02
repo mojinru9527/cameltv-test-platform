@@ -1,0 +1,22 @@
+{
+  "code": 0,
+  "msg": "ok",
+  "data": {
+    "reviews": {
+      "count": 0,
+      "items": []
+    },
+    "running": {
+      "count": 0,
+      "items": []
+    },
+    "failures": {
+      "count": 0,
+      "items": []
+    },
+    "releases": {
+      "count": 0,
+      "items": []
+    }
+  }
+}

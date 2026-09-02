@@ -104,12 +104,12 @@ export function PasswordChangeBoundary({ children }: { children: ReactNode }) {
 
 function PlatformHomeEntry() {
   const user = useAuthStore((state) => state.user)
-  // V40-019: mission-first default navigation when AITDE V3 is enabled.
-  // P0-1：开关改为运行时跟随后端；解析未完成前先不跳转，避免误落到 /workbench。
+  // Batch 213 (B3): 「我的待办」为登录第一眼首页。AITDE 引擎不再抢首页，
+  // 但仍可通过「版本验收」菜单 /missions 直达。解析未完成前先不跳转，避免误落到旧页。
   const aitdeState = useAitdeV3State()
   if (!user) return null
   if (aitdeState === 'loading') return null
-  return <Navigate to={aitdeState === 'enabled' ? '/missions' : '/workbench'} replace />
+  return <Navigate to="/workbench" replace />
 }
 
 function ForcedPasswordChangePage() {
@@ -496,3 +496,4 @@ export const router = createBrowserRouter([
     ],
   },
 ])
+

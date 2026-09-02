@@ -100,6 +100,26 @@ export interface DashboardStats {
   time_range: { start: string | null; end: string | null } | null
 }
 
+export interface DashboardTodo {
+  reviews: TodoBucket
+  running: TodoBucket
+  failures: TodoBucket
+  releases: TodoBucket
+}
+
+export interface TodoBucket {
+  count: number
+  items: TodoItem[]
+}
+
+export interface TodoItem {
+  id: string
+  title: string
+  subtitle: string
+  link: string
+}
+
+
 // ========== 需求文档 ==========
 
 export interface RequirementDocumentBrief {

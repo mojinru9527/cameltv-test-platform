@@ -1,0 +1,62 @@
+{
+  "code": 0,
+  "msg": "ok",
+  "data": {
+    "reviews": {
+      "count": 2,
+      "items": [
+        {
+          "id": "review-2",
+          "title": "登录需求",
+          "subtitle": "api 用例 待审",
+          "link": "/requirement/1001/review"
+        },
+        {
+          "id": "review-1",
+          "title": "登录需求",
+          "subtitle": "func 用例 待审",
+          "link": "/requirement/1001/review"
+        }
+      ]
+    },
+    "running": {
+      "count": 1,
+      "items": [
+        {
+          "id": "live-run-1",
+          "title": "generate 任务",
+          "subtitle": "进度 40%",
+          "link": "/report"
+        }
+      ]
+    },
+    "failures": {
+      "count": 2,
+      "items": [
+        {
+          "id": "task-live-fail-1",
+          "title": "extract 任务失败",
+          "subtitle": "timeout",
+          "link": "/report"
+        },
+        {
+          "id": "defect-5001",
+          "title": "login failed",
+          "subtitle": "严重级 P1",
+          "link": "/defect/5001"
+        }
+      ]
+    },
+    "releases": {
+      "count": 1,
+      "items": [
+        {
+          "id": "release-6001",
+          "title": "v16.0.0",
+          "subtitle": "16.0.0 / 8.0.0",
+          "link": "/release-bundles/6001"
+        }
+      ]
+    }
+  }
+}

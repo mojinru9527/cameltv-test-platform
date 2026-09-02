@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import CurrentUser, get_current_user, get_db
 from app.schemas.common import R
-from app.schemas.dashboard import DashboardStats
+from app.schemas.dashboard import DashboardStats, DashboardTodo
 from app.services import dashboard_service
 
 router = APIRouter(prefix="/dashboard", tags=["工作台"])
@@ -95,3 +95,20 @@ def get_test_summary(
     from app.services.report_aggregator import get_aggregated_summary
     summary = get_aggregated_summary(db, current.project_id or 0, days=days)
     return R.ok(summary)
+
+
+@router.get("/todo", response_model=R[DashboardTodo], summary="首页我的待办聚合")
+def get_dashboard_todo(
+    current: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """获取当前项目「我的待办」：待审/在跑/失败/待放行 四桶聚合。
+
+    - project_id=0（如超级管理员）时按全量聚合；否则仅当前项目。
+    - 各桶含 count + 最多 5 条可直达条目。
+    """
+    todo = dashboard_service.get_todo_items(
+        db,
+        project_id=current.project_id or 0,
+    )
+    return R.ok(DashboardTodo(**todo))

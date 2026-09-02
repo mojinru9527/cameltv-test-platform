@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-02 (Batch 212 处理记录：R211-1/2 随 batch-212 PR 关闭、R211-3 保持 Open 至 B15；无新增 C 条件；C205-1/3/4、C204-1/2/3、C203-1 等保持 Open)
+**最后更新**: 2026-09-02 (Batch 213 处理记录：无新增 C 条件；R211-1/2 已闭、R211-3 保持 Open 至 B15；C205-1/3/4、C204-1/2/3、C203-1 等保持 Open)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -30,6 +30,17 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | R211-1（batch-211 verdict） | B2 入口收敛按 02 白名单 + 03 术语执行：tester 默认 ≤5 入口；C 级入口下架（Playground Tab/special+perftest 宣称/知识专家 Tab）；旧测试计划独立入口删除（URL 处置由 Product 定：重定向 /testcase）；用例/接口/UI 保留资产 | ✅ Closed（batch-212 PR：backend seed.py/menu_service.py + frontend nav-config/MainLayout/router/CommandPalette/README；QA 走查 14/14） |
 | R211-2（batch-211 verdict） | 每批（B2–B15）QA 报告必须含「代码实现逻辑审计」与「真实数据 mock / 防假成功」证据 | ✅ Closed（batch-212 QA 报告 §代码实现逻辑审计 + §逐条件，真实 tester/admin 登录走查） |
 | R211-3（batch-211 verdict） | B15 合入后另开新会话：审计 B1–B15 全部出口标准 + 浏览器黑盒验收 + 输出交付/使用/实现文档 | ⏳ Open（保持至 B15 后终审会话） |
+
+---
+
+## Batch 213 — 首页我的待办（B3，2026-09-02）处理记录
+
+> 本批无新增 C 条件。B3 为平台重构路线图批次，继续执行 batch-211 的路线图条件：
+> R211-2（每批 QA 含「代码实现逻辑审计」+「真实数据 mock / 防假成功」）在本批 QA 报告中满足。
+
+| 来源 | 内容 | 状态（证据） |
+|------|------|-------------|
+| R211-2（batch-211 verdict） | 每批（B2–B15）QA 报告必须含「代码实现逻辑审计」与「真实数据 mock / 防假成功」证据 | ✅ Closed（batch-213 QA 报告 §代码实现逻辑审计；后端 pytest 使用 in-memory 真实 SQLite + 种子数据，非假成功） |
 
 ---
 

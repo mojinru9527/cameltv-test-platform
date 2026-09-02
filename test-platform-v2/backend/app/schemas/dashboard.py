@@ -85,3 +85,27 @@ class CrossProjectStats(BaseModel):
     aggregate: CrossProjectAggregate = CrossProjectAggregate()
     per_project: list[CrossProjectCard] = []
     trends: CrossProjectTrends = CrossProjectTrends()
+
+
+# ── Batch 213 (B3): 我的待办 dashboard ──
+
+class TodoItem(BaseModel):
+    """单个待办条目。"""
+    id: str = ""
+    title: str = ""
+    subtitle: str = ""
+    link: str = ""
+
+
+class TodoBucket(BaseModel):
+    """一个待办桶（待审/在跑/失败/待放行）。"""
+    count: int = 0
+    items: list[TodoItem] = []
+
+
+class DashboardTodo(BaseModel):
+    """首页「我的待办」聚合。"""
+    reviews: TodoBucket = TodoBucket()    # 待审（AI 生成候选用例）
+    running: TodoBucket = TodoBucket()    # 在跑（后台 AI 任务）
+    failures: TodoBucket = TodoBucket()   # 失败/需关注（AI 任务失败 + 未关闭缺陷）
+    releases: TodoBucket = TodoBucket()   # 待放行（当前版本发布包）
