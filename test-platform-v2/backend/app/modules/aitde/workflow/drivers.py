@@ -360,6 +360,19 @@ def _resolve_command_plan_hook(payload: dict[str, Any]) -> dict[str, Any]:
         db.close()
 
 
+
+# Batch 209 (C1): a browser Command IR runner may be injected by a real
+# Playwright worker (future). Without it, browser commands are BLOCKED
+# explicitly instead of being mis-routed as HTTP requests.
+_BROWSER_RUNNER = None
+
+
+def register_browser_runner(runner) -> None:
+    """Register a browser IR runner callback for scenario runs (C1)."""
+    global _BROWSER_RUNNER
+    _BROWSER_RUNNER = runner
+
+
 def _execute_commands_hook(payload: dict[str, Any]) -> dict[str, Any]:
     run_id = _real_run_id(payload)
     if run_id is None:
@@ -385,8 +398,84 @@ def _execute_commands_hook(payload: dict[str, Any]) -> dict[str, Any]:
         for cmd in commands:
             seq += 1
             if descriptor["is_v2"]:
-                input_block = cmd.get("input") or {}
+                driver = str(cmd.get("driver") or "api").lower()
                 step_key = str(cmd.get("id") or "api")
+                input_block = cmd.get("input") or {}
+
+                if driver == "assertion":
+                    # Oracle evaluation is a separate stage; never run assertions
+                    # as HTTP here.
+                    results.append(
+                        {
+                            "name": step_key,
+                            "driver": "assertion",
+                            "skipped": "assertion_evaluate",
+                            "ok": True,
+                            "sanitized": True,
+                        }
+                    )
+                    continue
+
+                if driver == "browser":
+                    if _BROWSER_RUNNER is None:
+                        blocked = ExecutionStep(
+                            run_id=run_id,
+                            sequence=seq,
+                            step_key=step_key,
+                            step_type="BROWSER",
+                            status="FAILED",
+                            error_message="no_browser_runtime",
+                            input_snapshot_json=snapshot_sanitizer.dump(
+                                {"driver": "browser", "input": input_block}
+                            ),
+                            output_snapshot_json=snapshot_sanitizer.dump(
+                                {"reason": "no_browser_runtime"}
+                            ),
+                            evidence_refs_json="[]",
+                        )
+                        db.add(blocked)
+                        db.commit()
+                        db.refresh(blocked)
+                        results.append(
+                            {
+                                "name": step_key,
+                                "driver": "browser",
+                                "ok": False,
+                                "error": "no_browser_runtime",
+                                "evidence_refs": [],
+                                "sanitized": True,
+                            }
+                        )
+                        continue
+                    try:
+                        runner_out = _BROWSER_RUNNER(
+                            {"run_id": run_id, "command": cmd, "project_id": project_id},
+                            db,
+                            seq,
+                        )
+                        results.append(
+                            {
+                                "name": step_key,
+                                "driver": "browser",
+                                **(runner_out or {}),
+                                "ok": bool((runner_out or {}).get("ok", False)),
+                                "sanitized": True,
+                            }
+                        )
+                    except Exception as exc:  # noqa: BLE001
+                        db.rollback()
+                        results.append(
+                            {
+                                "name": step_key,
+                                "driver": "browser",
+                                "ok": False,
+                                "error": f"browser_runner_error:{exc}"[:200],
+                                "sanitized": True,
+                            }
+                        )
+                    continue
+
+                # default v2 driver == api
                 method = str(input_block.get("method") or "GET").upper()
                 path = str(input_block.get("path") or "")
                 headers = input_block.get("headers") or {}
@@ -401,8 +490,6 @@ def _execute_commands_hook(payload: dict[str, Any]) -> dict[str, Any]:
                 body = cmd.get("body")
 
             url = base_url + path
-            # Substitute a resolved secret into headers BEFORE sanitizing so the
-            # token never persists in the step snapshot / evidence.
             substituted_headers = {k: _sub_token(v, secret) for k, v in headers.items()}
 
             status = None
@@ -437,9 +524,6 @@ def _execute_commands_hook(payload: dict[str, Any]) -> dict[str, Any]:
             if error:
                 resp_snapshot["error"] = error
 
-            # Persist a sanitized step first so it survives even if storage fails;
-            # evidence is then attached (TRUST-003/004) and any storage failure
-            # degrades the run's evidence_status (never a fake 0-byte row).
             st_row = ExecutionStep(
                 run_id=run_id, sequence=seq, step_key=step_key, step_type="API",
                 status="FAILED" if error or (status is not None and status >= 400) else "SUCCEEDED",
