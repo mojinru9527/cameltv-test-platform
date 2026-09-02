@@ -61,9 +61,16 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ### batch-217 — B7 版本验收建任务向导（2026-09-05）—— 新增
 
+### batch-218 — B8 版本任务执行与证据（2026-09-05）—— 新增
+
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C217-1 | B8 执行与证据回放必须把执行记录挂到 VersionTask 的 `version_task_execution` 关联表并回写 `coverage`（pass/fail/skip/blocked 计数），保持单一事实源；不得在 VersionTask 之外再造执行容器。解除条件=B8 合入 + version_task_execution 关联与 coverage 回写落地。 | P2 | 2026-09-05 |
+| C218-1 | B9 放行页必须基于 VersionTask 的 `verdict`/`coverage` 生成放行证据包并绑定 `release_bundle_id`，版本任务状态机走 `verdict→released`；不得在 VersionTask 之外再造放行容器。解除条件=B9 合入 + verdict/coverage 生成证据包 + 绑定 release_bundle。 | P2 | 2026-09-05 |
+
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| ~~C217-1~~ | ~~B8 执行与证据回放必须把执行记录挂到 VersionTask 并回写 `coverage`，保持单一事实源；不得在 VersionTask 之外再造执行容器。~~ → **Closed**：B8 引入 `version_task_run` 子表（task_id FK 归属 VersionTask）承载进度/覆盖/证据/失败分类并回写 `task.coverage`（start_run 单测断言 pass/fail/skip/blocked）；通用 `version_task_execution` 关联保留给引擎级执行引用（B14 统合）；PR #398。 | P2 | 2026-09-05 |
 
 
 | ID | 内容 | 优先级 | 创建日期 |

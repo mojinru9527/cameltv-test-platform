@@ -42,6 +42,7 @@ const LanhuEvidencePage = lazy(() => import('@/pages/lanhu-evidence'))
 const LanhuEvidenceJobDetail = lazy(() => import('@/pages/lanhu-evidence/JobDetail'))
 const MissionListPage = lazy(() => import('@/pages/missions'))
 const VersionTasksPage = lazy(() => import('@/pages/version-tasks'))
+const VersionTaskRunPage = lazy(() => import('@/pages/version-tasks/[taskId]'))
 const MissionCreatePage = lazy(() => import('@/pages/missions/CreateMissionPage'))
 const MissionLayout = lazy(() => import('@/pages/missions/MissionLayout'))
 const MissionOverviewPage = lazy(() => import('@/pages/missions/overview'))
@@ -266,6 +267,7 @@ export const router = createBrowserRouter([
       { path: 'ai-config', element: <PageLoader><AiConfigPage /></PageLoader> },
       { path: 'version-mission', element: <Navigate to="/release-bundles" replace /> },
       { path: 'version-tasks', element: <PageLoader><VersionTasksPage /></PageLoader> },
+      { path: 'version-tasks/:taskId', element: <PageLoader><VersionTaskRunPage /></PageLoader> },
       { path: 'release-bundles', element: <PageLoader><ReleaseBundlesPage /></PageLoader> },
       { path: 'release-bundles/:id', element: <PageLoader><BundleDetailPage /></PageLoader> },
       { path: 'release-bundles/:id/panorama', element: <PageLoader><VersionPanoramaPage /></PageLoader> },
