@@ -59,9 +59,16 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ### batch-216 — B6 VersionTask 统一事实源（2026-09-05）—— 新增
 
+### batch-217 — B7 版本验收建任务向导（2026-09-05）—— 新增
+
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C216-1 | B7 建任务向导必须消费 `/api/v1/version-tasks` 状态机（draft→plan_review→approved），不得另造任务容器；如需扩展字段先走单头 migration。解除条件=B7 合入 + 前端向导绑定 version_task API。 | P2 | 2026-09-05 |
+| C217-1 | B8 执行与证据回放必须把执行记录挂到 VersionTask 的 `version_task_execution` 关联表并回写 `coverage`（pass/fail/skip/blocked 计数），保持单一事实源；不得在 VersionTask 之外再造执行容器。解除条件=B8 合入 + version_task_execution 关联与 coverage 回写落地。 | P2 | 2026-09-05 |
+
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| ~~C216-1~~ | ~~B7 建任务向导必须消费 `/api/v1/version-tasks` 状态机，不得另造任务容器；如需扩展字段先走单头 migration。~~ → **Closed**：B7 新增 `src/pages/version-tasks/index.tsx` 调用 `createVersionTask`/`generatePlan`/`transitionVersionTask`（draft→plan_review），未另造容器；VersionTask 状态机由 B6 service 驱动；PR #397。 | P2 | 2026-09-05 |
 
 ### batch-215 — B5 死代码清理（2026-09-03）—— 新增
 
