@@ -299,7 +299,7 @@ def finish_run(db: Session, run_id: int, project_id: int, outcome_str: str) -> E
     now = _utcnow()
     started = row.started_at
     duration_ms = int((now - started).total_seconds() * 1000) if started else None
-    return repository.update_run(
+    updated = repository.update_run(
         db,
         row,
         {
@@ -309,6 +309,15 @@ def finish_run(db: Session, run_id: int, project_id: int, outcome_str: str) -> E
             "duration_ms": duration_ms,
         },
     )
+    # Batch 207: auto-triage failing runs so the closed loop is a loop.
+    from app.modules.aitde.ai_closed_loop.service import FailureTriageAgent
+
+    try:
+        FailureTriageAgent.auto_triage_if_needed(db, updated.id)
+        db.commit()
+    except Exception:  # noqa: BLE001 - triage never breaks finishing a run
+        db.rollback()
+    return updated
 
 
 def cancel_run(db: Session, run_id: int, project_id: int) -> ExecutionRun:
