@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 
 import pytest
 
@@ -447,6 +448,7 @@ def test_api_convergence(client, auth_headers):
 
 def test_business_onboarding_baseline(db_session, monkeypatch):
     from app.models.api_asset import ApiEndpoint
+    from app.models.requirement import RequirementDocument
     from app.services import onboarding_service, openapi_import_service, version_task_exec_service
 
     spec = {
@@ -500,12 +502,21 @@ def test_business_onboarding_baseline(db_session, monkeypatch):
         1,
         name="basketball",
         service_key="basketball-service",
+        version="16.0.0",
+        requirement_text="验证篮球比赛详情、比分和异常状态。",
         api_spec_url="http://x/swagger.json",
         base_url="http://basketball.test",
     )
     assert ob.step == 1
+    assert ob.version == "16.0.0"
+    assert ob.requirement_text == "验证篮球比赛详情、比分和异常状态。"
     onboarding_service.complete_step(db_session, ob.id, 2)
     assert db_session.query(ApiEndpoint).filter_by(project_id=1).count() == 1
+    task = version_task_service.get_task(db_session, ob.version_task_id)
+    requirement = db_session.get(RequirementDocument, task.requirement_doc_id)
+    assert task.version == "16.0.0"
+    assert requirement is not None
+    assert requirement.content == "验证篮球比赛详情、比分和异常状态。"
     onboarding_service.complete_step(db_session, ob.id, 3)
     assert ob.version_task_id is not None
     ob = onboarding_service.complete_step(db_session, ob.id, 4)
@@ -625,14 +636,94 @@ def test_api_onboarding(client, auth_headers, monkeypatch):
         json={
             "name": "camel-mimo",
             "service_key": "camel-mimo",
+            "version": "16.0.0",
+            "requirement_text": "验证体育 16.0.0 比赛与文章链路。",
             "api_spec_url": "http://x/openapi.json",
+            "base_url": "http://sports.test",
         },
         headers=h,
     )
     assert r.status_code == 200, r.text
+    assert r.json()["data"]["version"] == "16.0.0"
+    assert r.json()["data"]["requirement_text"] == "验证体育 16.0.0 比赛与文章链路。"
     oid = r.json()["data"]["id"]
     # F-08: step2 接基线（创建版本任务）必须先于 step3
     assert client.post(f"/api/v1/onboarding/businesses/{oid}/steps/2", headers=h).json()["data"]["step"] == 2
     rr = client.post(f"/api/v1/onboarding/businesses/{oid}/steps/3", headers=h)
     assert rr.status_code == 200
     assert rr.json()["data"]["step"] == 3
+
+
+def test_onboarding_readiness_separates_baseline_and_durable_runtime(db_session, monkeypatch):
+    from app.core.config import settings
+    from app.modules.aitde.common.enums import WorkerStatus
+    from app.modules.aitde.workflow.models import WorkerNode
+    from app.services import ai_config_service, onboarding_service
+
+    monkeypatch.setattr(
+        ai_config_service.ai_config_service,
+        "resolve_out",
+        lambda _db, _project_id: {
+            "configured": True,
+            "provider": {"id": 7, "name": "sports-ai", "model": "json-model"},
+            "health": {"status": "ok", "kind": "", "message": "最近一次调用成功"},
+        },
+    )
+    monkeypatch.setattr(settings, "temporal_enabled", False)
+    db_session.add(
+        WorkerNode(
+            worker_key="worker-test",
+            name="测试执行器",
+            status=WorkerStatus.ONLINE.value,
+            last_heartbeat_at=datetime.now(),
+        )
+    )
+    db_session.commit()
+
+    readiness = onboarding_service.get_readiness(db_session, project_id=1)
+
+    assert readiness["baseline_ready"] is True
+    assert readiness["durable_ready"] is False
+    assert readiness["services"]["ai_provider"]["status"] == "ready"
+    assert readiness["services"]["temporal"]["status"] == "blocked"
+    assert readiness["services"]["runtime_worker"]["status"] == "ready"
+    assert readiness["services"]["runtime_worker"]["managed_by"] == "platform"
+
+
+def test_onboarding_readiness_does_not_treat_unverified_ai_as_ready(db_session, monkeypatch):
+    from app.services import ai_config_service, onboarding_service
+
+    monkeypatch.setattr(
+        ai_config_service.ai_config_service,
+        "resolve_out",
+        lambda _db, _project_id: {
+            "configured": True,
+            "provider": {"id": 8, "name": "sports-ai", "model": "json-model"},
+            "health": {"status": "unknown", "kind": "", "message": "尚未验证"},
+        },
+    )
+
+    readiness = onboarding_service.get_readiness(db_session, project_id=1)
+
+    assert readiness["baseline_ready"] is False
+    assert readiness["services"]["ai_provider"]["status"] == "unknown"
+
+
+def test_api_onboarding_readiness(client, auth_headers, monkeypatch):
+    from app.services import onboarding_service
+
+    monkeypatch.setattr(
+        onboarding_service,
+        "get_readiness",
+        lambda _db, project_id: {
+            "baseline_ready": False,
+            "durable_ready": False,
+            "services": {},
+            "project_id": project_id,
+        },
+    )
+
+    response = client.get("/api/v1/onboarding/readiness", headers=auth_headers)
+
+    assert response.status_code == 200
+    assert response.json()["data"]["project_id"] == 1
