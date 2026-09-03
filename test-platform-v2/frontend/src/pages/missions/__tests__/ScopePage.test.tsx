@@ -1,16 +1,17 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import MissionScopePage from '../scope'
 
 const mocks = vi.hoisted(() => ({
   fetchMissionScope: vi.fn(),
+  reviewMissionScope: vi.fn(),
 }))
 
 vi.mock('@/api/scope', () => ({
   analyzeMissionScope: vi.fn(),
   fetchMissionScope: (...args: unknown[]) => mocks.fetchMissionScope(...args),
-  reviewMissionScope: vi.fn(),
+  reviewMissionScope: (...args: unknown[]) => mocks.reviewMissionScope(...args),
   DECISION_LABELS: {
     INCLUDE: { label: '纳入', color: '' },
   },
@@ -24,6 +25,8 @@ vi.mock('@/api/scope', () => ({
 describe('MissionScopePage', () => {
   beforeEach(() => {
     mocks.fetchMissionScope.mockReset()
+    mocks.reviewMissionScope.mockReset()
+    mocks.reviewMissionScope.mockResolvedValue({})
     mocks.fetchMissionScope.mockResolvedValue({
       items: [
         {
@@ -68,5 +71,21 @@ describe('MissionScopePage', () => {
     await waitFor(() => expect(mocks.fetchMissionScope).toHaveBeenCalledTimes(1))
     expect(mocks.fetchMissionScope.mock.calls[0][0]).toBe(3)
     expect(mocks.fetchMissionScope.mock.calls[0][1]).toBeInstanceOf(AbortSignal)
+  })
+
+  it('refreshes the scope exactly once after a successful review', async () => {
+    render(
+      <MemoryRouter initialEntries={['/missions/3/scope']}>
+        <Routes>
+          <Route path="/missions/:id/scope" element={<MissionScopePage />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await screen.findByText('比分结算')
+    fireEvent.click(screen.getByRole('button', { name: '批准 比分结算' }))
+
+    await waitFor(() => expect(mocks.reviewMissionScope).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(mocks.fetchMissionScope).toHaveBeenCalledTimes(2))
   })
 })
