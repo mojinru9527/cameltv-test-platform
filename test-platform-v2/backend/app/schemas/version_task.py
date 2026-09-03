@@ -19,6 +19,17 @@ def _json_to_dict(v: Any) -> dict[str, Any]:
     return {}
 
 
+def _json_to_str_list(v: Any) -> list[str]:
+    if isinstance(v, str):
+        try:
+            v = json.loads(v) if v.strip() else []
+        except (TypeError, ValueError):
+            return []
+    if isinstance(v, list):
+        return [str(item) for item in v if str(item).strip()]
+    return []
+
+
 class VersionTaskCreate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -103,7 +114,7 @@ class VersionTaskOut(BaseModel):
     coverage: dict[str, Any] = Field(default_factory=dict)
     summary: str = ""
     scope: dict[str, Any] = Field(default_factory=dict)
-    risk: dict[str, Any] = Field(default_factory=dict)
+    risk: list[str] = Field(default_factory=list)
     created_by: int = 0
     qa_owner_id: int = 0
     executions: list[VersionTaskExecutionOut] = Field(default_factory=list)
@@ -111,10 +122,15 @@ class VersionTaskOut(BaseModel):
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
-    @field_validator("coverage", "scope", "risk", mode="before")
+    @field_validator("coverage", "scope", mode="before")
     @classmethod
     def _parse_json(cls, v: Any) -> dict[str, Any]:
         return _json_to_dict(v)
+
+    @field_validator("risk", mode="before")
+    @classmethod
+    def _parse_risk(cls, v: Any) -> list[str]:
+        return _json_to_str_list(v)
 
 
 class VersionTaskListItem(BaseModel):

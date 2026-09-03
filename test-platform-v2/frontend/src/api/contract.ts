@@ -47,8 +47,8 @@ export function generateContract(
   return aitdeV2.post(`/missions/${missionId}/contracts/generate`, payload)
 }
 
-export function fetchCurrentContract(missionId: number): Promise<CurrentContract> {
-  return aitdeV2.get(`/missions/${missionId}/contract`)
+export function fetchCurrentContract(missionId: number, signal?: AbortSignal): Promise<CurrentContract> {
+  return aitdeV2.get(`/missions/${missionId}/contract`, { signal })
 }
 
 export function fetchContractVersions(contractId: number): Promise<ContractVersion[]> {

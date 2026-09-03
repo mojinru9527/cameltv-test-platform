@@ -342,7 +342,7 @@ def start_run(db: Session, task_id: int) -> VersionTaskRun:
 
     plan = get_plan(db, task_id)
     adopted_items = [i for i in plan if i.status in ("adopted", "modified")]
-    total = max(len(adopted_items), 1)
+    total = len(adopted_items)
 
     from app.services import version_task_exec_service
 
@@ -370,8 +370,16 @@ def start_run(db: Session, task_id: int) -> VersionTaskRun:
                 "message": failure.get("message", f"{item.title} 未通过"),
                 "http_status": result.get("http_status"),
             })
+        elif status == "not_run":
+            # 无可执行目标是验收阻塞，不是可忽略的跳过。
+            blocked += 1
+            failures.append({
+                "item_id": item.id, "title": item.title, "kind": "environment",
+                "evidence": "",
+                "message": f"{item.title} 未执行：{result.get('reason', '无可执行目标')}",
+                "http_status": None,
+            })
         else:
-            # not_run：无可执行目标，绝不臆造 PASS/FAIL —— 记 阻塞/未执行
             skipped += 1
             failures.append({
                 "item_id": item.id, "title": item.title, "kind": "environment",
@@ -385,9 +393,11 @@ def start_run(db: Session, task_id: int) -> VersionTaskRun:
             ev["ref"] = f"run:{run.id}:item:{item.id}"
             evidence.append(ev)
 
-    if failed > 0:
+    if not adopted_items or blocked > 0:
+        run_status = "blocked"
+    elif failed > 0:
         run_status = "failed"
-    elif passed > 0 or skipped == 0:
+    elif passed > 0:
         run_status = "done"
     else:
         run_status = "blocked"
@@ -427,8 +437,9 @@ def create_defect_draft(db: Session, run_id: int, failure_index: int, creator_id
     kind = f.get("kind", "business")
     if kind not in FAILURE_KINDS:
         raise APIException(code=1, msg=f"未知失败类型：{kind}")
+    task = get_task(db, run.task_id)
     defect = Defect(
-        project_id=run.task_id,
+        project_id=task.project_id,
         title=f"{FAILURE_KIND_LABEL[kind]}：{f.get('title', '')}",
         description=(
             f"来源：版本任务执行 {run.id} / 条目 {f.get('item_id')} \n"
@@ -454,9 +465,9 @@ def build_release_package(db: Session, task_id: int) -> dict:
     """基于 VersionTask 的覆盖/结论/风险/缺陷生成可分享的放行证据包（B9）。"""
     task = get_task(db, task_id)
     coverage = json.loads(task.coverage or "{}")
-    total = sum(int(coverage.get(k, 0)) for k in ("pass", "fail", "skip", "blocked")) or 1
+    total = sum(int(coverage.get(k, 0)) for k in ("pass", "fail", "skip", "blocked"))
     passed = int(coverage.get("pass", 0))
-    pass_rate = round(passed * 100 / total, 1)
+    pass_rate = round(passed * 100 / total, 1) if total else 0.0
     risk = json.loads(task.risk or "[]")
     defects = [{"id": d.id, "defect_id": d.defect_id} for d in task.defects]
     return {
@@ -468,7 +479,7 @@ def build_release_package(db: Session, task_id: int) -> dict:
         "coverage": coverage,
         "pass_rate": pass_rate,
         "total_checks": total,
-        "risk": risk if isinstance(risk, list) else [risk],
+        "risk": risk if isinstance(risk, list) else [],
         "defects": defects,
         "release_bundle_id": task.release_bundle_id,
         "summary": task.summary,
@@ -489,6 +500,13 @@ def release_task(
         raise APIException(code=1, msg=f"非法放行结论：{verdict}")
     if task.status not in ("executed", "verdict"):
         raise APIException(code=1, msg=f"当前状态 {task.status} 不可放行")
+    if verdict == "pass":
+        coverage = _to_int_dict(task.coverage)
+        incomplete = sum(int(coverage.get(k, 0)) for k in ("fail", "skip", "blocked"))
+        if incomplete > 0:
+            raise APIException(code=1, msg="仍存在未通过或未执行的检查，不可选择放行")
+        if int(coverage.get("pass", 0)) <= 0:
+            raise APIException(code=1, msg="没有真实通过的检查，不可选择放行")
     task.verdict = verdict
     if release_bundle_id is not None:
         task.release_bundle_id = release_bundle_id

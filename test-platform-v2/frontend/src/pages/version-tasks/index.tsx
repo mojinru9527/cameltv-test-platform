@@ -1,5 +1,7 @@
-import { useState } from 'react'
-import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, PageShell, Progress, Textarea } from '@/ui'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
+import { ArrowRight } from 'lucide-react'
+import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, PageShell, Progress, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from '@/ui'
 import {
   createVersionTask,
   generatePlanAi,
@@ -9,19 +11,37 @@ import {
   type PlanItem,
   type VersionTask,
 } from '@/api/versionTask'
+import { fetchRequirements } from '@/api/requirement'
+import type { RequirementDocumentBrief } from '@/types'
 import { toast } from 'sonner'
 
 type Step = 1 | 2 | 3
 
 /** B7 建任务向导：拖入需求 → 可审方案 → 逐条确认（无引擎术语）。 */
 export default function VersionTasksPage() {
+  const navigate = useNavigate()
   const [step, setStep] = useState<Step>(1)
   const [title, setTitle] = useState('')
   const [version, setVersion] = useState('')
   const [modules, setModules] = useState('')
+  const [requirementId, setRequirementId] = useState('__none__')
+  const [requirements, setRequirements] = useState<RequirementDocumentBrief[]>([])
+  const [requirementsError, setRequirementsError] = useState('')
   const [task, setTask] = useState<VersionTask | null>(null)
   const [plan, setPlan] = useState<PlanItem[]>([])
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchRequirements({ page: 1, page_size: 100 })
+      .then((result) => {
+        if (!cancelled) setRequirements(result.items)
+      })
+      .catch((error: Error) => {
+        if (!cancelled) setRequirementsError(error.message || '需求文档加载失败')
+      })
+    return () => { cancelled = true }
+  }, [])
 
   async function handleCreate() {
     if (!title.trim() || !version.trim()) {
@@ -31,7 +51,12 @@ export default function VersionTasksPage() {
     setLoading(true)
     try {
       const scopeModules = modules.split(',').map((m) => m.trim()).filter(Boolean)
-      const created = await createVersionTask({ title: title.trim(), version: version.trim(), scope: { modules: scopeModules } })
+      const created = await createVersionTask({
+        title: title.trim(),
+        version: version.trim(),
+        requirement_doc_id: requirementId === '__none__' ? null : Number(requirementId),
+        scope: { modules: scopeModules },
+      })
       setTask(created)
       toast.success('版本验收任务已创建')
       setStep(2)
@@ -115,6 +140,21 @@ export default function VersionTasksPage() {
                 <Label>变更模块（逗号分隔）</Label>
                 <Textarea value={modules} onChange={(e) => setModules(e.target.value)} placeholder="登录, 支付, 订单" />
               </div>
+              <div className="space-y-1">
+                <Label htmlFor="version-task-requirement">关联需求文档</Label>
+                <Select value={requirementId} onValueChange={setRequirementId}>
+                  <SelectTrigger id="version-task-requirement" aria-label="关联需求文档">
+                    <SelectValue placeholder="选择需求文档" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">不关联需求文档</SelectItem>
+                    {requirements.map((doc) => (
+                      <SelectItem key={doc.id} value={String(doc.id)}>{doc.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {requirementsError && <p className="text-xs text-destructive">{requirementsError}</p>}
+              </div>
               <Button variant="primary" onClick={handleCreate} disabled={loading}>创建任务</Button>
             </div>
           )}
@@ -155,7 +195,10 @@ export default function VersionTasksPage() {
           {step === 3 && task && (
             <div className="space-y-3">
               <p className="text-sm">方案已确认，任务状态：<Badge variant="default">{task.status}</Badge>（待评审）。</p>
-              <p className="text-sm text-muted-foreground">下一步（B8+）将在此任务上执行并查看证据。</p>
+              <Button variant="primary" onClick={() => navigate(`/version-tasks/${task.id}`)}>
+                进入执行与证据
+                <ArrowRight className="size-4" />
+              </Button>
             </div>
           )}
         </CardContent>

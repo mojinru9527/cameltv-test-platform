@@ -99,3 +99,44 @@ def test_attach_to_missing_mission_raises_not_found(db):
             9,
         )
     assert exc.value.http_status == 404
+
+
+def test_source_list_endpoints_return_array_envelopes(
+    client, db_session, admin_user, auth_headers, monkeypatch,
+):
+    """List endpoints must serialize their list payloads instead of raising HTTP 500."""
+    from app.core import config
+
+    monkeypatch.setattr(config.settings, "aitde_v3_enabled", True)
+    mission = mission_service.create_mission(
+        db_session,
+        {"title": "体育平台 16.0.0"},
+        project_id=1,
+        user_id=admin_user.id,
+    )
+    source = source_service.attach_source(
+        db_session,
+        SourceArtifactCreate(
+            source_type="MANUAL_NOTE",
+            name="体育需求",
+            content="篮球与足球数据必须按体育项目隔离。",
+        ),
+        mission.id,
+        1,
+        admin_user.id,
+    )
+
+    sources_response = client.get(
+        f"/api/v2/missions/{mission.id}/sources", headers=auth_headers
+    )
+    fragments_response = client.get(
+        f"/api/v2/missions/{mission.id}/sources/{source.id}/fragments",
+        headers=auth_headers,
+    )
+
+    assert sources_response.status_code == 200
+    assert sources_response.json()["code"] == 0
+    assert [item["id"] for item in sources_response.json()["data"]] == [source.id]
+    assert fragments_response.status_code == 200
+    assert fragments_response.json()["code"] == 0
+    assert fragments_response.json()["data"][0]["text"] == "篮球与足球数据必须按体育项目隔离。"

@@ -51,6 +51,7 @@ export default function MissionContractPage() {
   const [ambiguities, setAmbiguities] = useState<Ambiguity[]>([])
   const [contract, setContract] = useState<CurrentContract | null>(null)
   const [loading, setLoading] = useState(true)
+  const [reloadVersion, setReloadVersion] = useState(0)
   const [analyzing, setAnalyzing] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [freezeOpen, setFreezeOpen] = useState(false)
@@ -59,24 +60,26 @@ export default function MissionContractPage() {
 
   const reload = () => {
     setStaleConflict(false)
-    setLoading(true)
+    setReloadVersion((current) => current + 1)
   }
 
   useAbortableEffect((signal) => {
     if (!missionId) return
     setLoading(true)
     Promise.all([
-      fetchMissionAmbiguities(missionId).catch(() => [] as Ambiguity[]),
-      fetchCurrentContract(missionId).catch(() => null),
+      fetchMissionAmbiguities(missionId, signal).catch(() => [] as Ambiguity[]),
+      fetchCurrentContract(missionId, signal).catch(() => null),
     ])
       .then(([ams, con]) => {
-        setAmbiguities(ams)
-        setContract(con)
+        if (!signal.aborted) {
+          setAmbiguities(ams)
+          setContract(con)
+        }
       })
       .finally(() => {
         if (!signal.aborted) setLoading(false)
       })
-  }, [missionId, loading])
+  }, [missionId, reloadVersion])
 
   const doAnalyze = async () => {
     if (analyzing) return

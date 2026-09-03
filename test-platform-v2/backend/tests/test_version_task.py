@@ -1,12 +1,26 @@
 """Batch 216 / B6 — VersionTask 唯一事实源 + 状态机 + API + 旧数据兼容映射。"""
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from app.models.version_mission import VersionMission
 from app.models.version_task import VersionTask, VersionTaskDefect, VersionTaskExecution
 from app.services import version_task_service
 from app.core.exceptions import APIException
+
+
+def _successful_execution(*_args, **_kwargs):
+    return {
+        "status": "pass",
+        "reason": None,
+        "evidence": [{"type": "RESPONSE", "ref": "test", "status": "pass"}],
+        "failure": None,
+        "http_status": 200,
+        "asserts": [{"type": "status", "expected": 200, "ok": True}],
+        "error": None,
+    }
 
 
 # ────────────────────────────── 模型 / Service ──────────────────────────────
@@ -315,7 +329,10 @@ def test_release_service_illegal_verdict(db_session):
 
 # ────────────────────────────── B11: 版本沉淀 + 复用建议 ──────────────────────────────
 
-def test_release_auto_records_knowledge(db_session):
+def test_release_auto_records_knowledge(db_session, monkeypatch):
+    from app.services import version_task_exec_service
+
+    monkeypatch.setattr(version_task_exec_service, "execute_item", _successful_execution)
     task = version_task_service.create_task(db_session, project_id=1, title="t", version="1.0")
     items = version_task_service.generate_plan(db_session, task.id, [{"item_type": "functional", "title": "登录"}])
     for it in items:
@@ -371,7 +388,10 @@ def test_api_regression_set(client, auth_headers):
 
 # ────────────────────────────── B13: 运营指标 + 跨版本对比 ──────────────────────────────
 
-def test_operations_metrics_and_compare(db_session):
+def test_operations_metrics_and_compare(db_session, monkeypatch):
+    from app.services import version_task_exec_service
+
+    monkeypatch.setattr(version_task_exec_service, "execute_item", _successful_execution)
     for v in ("1.0", "2.0"):
         task = version_task_service.create_task(db_session, project_id=1, title=f"t{v}", version=v)
         items = version_task_service.generate_plan(db_session, task.id, [{"item_type": "functional", "title": "登录"}])
@@ -426,26 +446,189 @@ def test_api_convergence(client, auth_headers):
 # ────────────────────────────── B15: 新业务接入向导 + 基线 ──────────────────────────────
 
 def test_business_onboarding_baseline(db_session, monkeypatch):
-    from app.services import onboarding_service
-    # 无项目级 AI 提供方时，step3 的 AI 方案生成在单测中桩掉（ONBOARDING 流程测试）
-    monkeypatch.setattr(version_task_service, "ai_generate_plan", lambda db, task_id, pid: [])
-    ob = onboarding_service.create_onboarding(db_session, 1, name="basketball", service_key="basketball-service", api_spec_url="http://x/swagger.json")
+    from app.models.api_asset import ApiEndpoint
+    from app.services import onboarding_service, openapi_import_service, version_task_exec_service
+
+    spec = {
+        "openapi": "3.0.0",
+        "info": {"title": "Basketball", "version": "16.0.0"},
+        "paths": {
+            "/box-score": {
+                "get": {
+                    "summary": "篮球 Box Score",
+                    "responses": {"200": {"description": "ok"}},
+                }
+            }
+        },
+    }
+    monkeypatch.setattr(
+        openapi_import_service, "resolve_openapi_spec", lambda _url: spec, raising=False
+    )
+
+    def _plan(db, task_id, _project_id):
+        return version_task_service.generate_plan(
+            db,
+            task_id,
+            [{
+                "item_type": "api",
+                "title": "篮球 Box Score",
+                "confidence": 95,
+                "exec_meta": {
+                    "method": "GET",
+                    "path": "/box-score",
+                    "assert": [{"type": "status", "expected": 200}],
+                },
+            }],
+        )
+
+    monkeypatch.setattr(version_task_service, "ai_generate_plan", _plan)
+    monkeypatch.setattr(
+        version_task_exec_service,
+        "execute_item",
+        lambda *_args, **_kwargs: {
+            "status": "pass",
+            "reason": None,
+            "evidence": [{"type": "RESPONSE", "status": "pass"}],
+            "failure": None,
+            "http_status": 200,
+            "asserts": [{"type": "status", "expected": 200, "ok": True}],
+            "error": None,
+        },
+    )
+    ob = onboarding_service.create_onboarding(
+        db_session,
+        1,
+        name="basketball",
+        service_key="basketball-service",
+        api_spec_url="http://x/swagger.json",
+        base_url="http://basketball.test",
+    )
     assert ob.step == 1
-    # step 2 接基线（推进）
     onboarding_service.complete_step(db_session, ob.id, 2)
-    # step 3 生成方案（走 AI 桩 → 创建 VersionTask）
+    assert db_session.query(ApiEndpoint).filter_by(project_id=1).count() == 1
     onboarding_service.complete_step(db_session, ob.id, 3)
     assert ob.version_task_id is not None
-    # step 4 跑基线 → active + baseline
     ob = onboarding_service.complete_step(db_session, ob.id, 4)
     assert ob.status == "active"
-    assert "run_id" in ob.baseline
+    baseline = json.loads(ob.baseline)
+    assert baseline == {
+        "task_id": ob.version_task_id,
+        "run_id": baseline["run_id"],
+        "status": "done",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "blocked": 0,
+    }
+
+
+def test_business_onboarding_requires_real_openapi_import(db_session):
+    from app.services import onboarding_service
+
+    ob = onboarding_service.create_onboarding(
+        db_session, 1, name="football", service_key="football-service"
+    )
+
+    with pytest.raises(APIException, match="OpenAPI"):
+        onboarding_service.complete_step(db_session, ob.id, 2)
+    assert ob.version_task_id is None
+    assert ob.step == 1
+
+    with pytest.raises(APIException, match="按顺序"):
+        onboarding_service.complete_step(db_session, ob.id, 3)
+
+
+def test_business_onboarding_rejects_steps_after_completion(db_session):
+    from app.services import onboarding_service
+
+    ob = onboarding_service.create_onboarding(
+        db_session, 1, name="sports", service_key="sports-service"
+    )
+    ob.step = 4
+    db_session.commit()
+
+    with pytest.raises(APIException, match="已完成"):
+        onboarding_service.complete_step(db_session, ob.id, 5)
+
+
+def test_business_onboarding_blocked_run_is_not_activated(db_session, monkeypatch):
+    from app.services import onboarding_service, openapi_import_service
+
+    monkeypatch.setattr(
+        openapi_import_service,
+        "resolve_openapi_spec",
+        lambda _url: {
+            "openapi": "3.0.0",
+            "info": {"version": "16.0.0"},
+            "paths": {"/scores": {"get": {"responses": {"200": {"description": "ok"}}}}},
+        },
+        raising=False,
+    )
+
+    def _plan(db, task_id, _project_id):
+        return version_task_service.generate_plan(
+            db,
+            task_id,
+            [{"item_type": "functional", "title": "足球比分", "confidence": 80}],
+        )
+
+    monkeypatch.setattr(version_task_service, "ai_generate_plan", _plan)
+    ob = onboarding_service.create_onboarding(
+        db_session,
+        1,
+        name="football",
+        service_key="football-service",
+        api_spec_url="http://x/openapi.json",
+    )
+    onboarding_service.complete_step(db_session, ob.id, 2)
+    onboarding_service.complete_step(db_session, ob.id, 3)
+
+    ob = onboarding_service.complete_step(db_session, ob.id, 4)
+
+    baseline = json.loads(ob.baseline)
+    assert ob.status == "blocked"
+    assert baseline["status"] == "blocked"
+    assert baseline["passed"] == 0
+    assert baseline["blocked"] == 1
 
 
 def test_api_onboarding(client, auth_headers, monkeypatch):
-    monkeypatch.setattr(version_task_service, "ai_generate_plan", lambda db, task_id, pid: [])
+    from app.services import openapi_import_service
+
+    monkeypatch.setattr(
+        openapi_import_service,
+        "resolve_openapi_spec",
+        lambda _url: {
+            "openapi": "3.0.0",
+            "info": {"version": "16.0.0"},
+            "paths": {"/health": {"get": {"responses": {"200": {"description": "ok"}}}}},
+        },
+        raising=False,
+    )
+    monkeypatch.setattr(
+        version_task_service,
+        "ai_generate_plan",
+        lambda db, task_id, _pid: version_task_service.generate_plan(
+            db,
+            task_id,
+            [{
+                "item_type": "api",
+                "title": "健康检查",
+                "confidence": 90,
+                "exec_meta": {"method": "GET", "path": "/health"},
+            }],
+        ),
+    )
     h = auth_headers
-    r = client.post("/api/v1/onboarding/businesses", json={"name": "camel-mimo", "service_key": "camel-mimo"}, headers=h)
+    r = client.post(
+        "/api/v1/onboarding/businesses",
+        json={
+            "name": "camel-mimo",
+            "service_key": "camel-mimo",
+            "api_spec_url": "http://x/openapi.json",
+        },
+        headers=h,
+    )
     assert r.status_code == 200, r.text
     oid = r.json()["data"]["id"]
     # F-08: step2 接基线（创建版本任务）必须先于 step3

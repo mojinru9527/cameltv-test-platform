@@ -4,6 +4,22 @@ import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitl
 import { buildReleasePackage, createDefectDraft, getRegressionSet, getVersionTask, listRuns, notifyRelease, releaseTask, startRun, syncDefect, type RegressionItem, type ReleasePackage, type VersionTask, type VersionTaskRun } from '@/api/versionTask'
 import { toast } from 'sonner'
 
+const TASK_STATUS_LABEL: Record<string, string> = {
+  draft: '草稿',
+  plan_review: '待评审',
+  approved: '已批准',
+  executing: '执行中',
+  executed: '已执行',
+  verdict: '待结论',
+  released: '已结束',
+  blocked: '已阻塞',
+  cancelled: '已取消',
+}
+
+export function isPassVerdictAllowed(run?: VersionTaskRun): boolean {
+  return Boolean(run && run.passed > 0 && run.failed === 0 && run.skipped === 0 && run.blocked === 0)
+}
+
 /** B8 版本任务执行与证据：一键运行 → 进度 → 证据回放 → 失败分类转缺陷草稿。 */
 export default function VersionTaskRunPage() {
   const { taskId } = useParams()
@@ -11,6 +27,7 @@ export default function VersionTaskRunPage() {
   const [task, setTask] = useState<VersionTask | null>(null)
   const [runs, setRuns] = useState<VersionTaskRun[]>([])
   const [loading, setLoading] = useState(false)
+  const [defectIds, setDefectIds] = useState<Record<string, number>>({})
 
   async function refresh() {
     if (!Number.isFinite(id)) return
@@ -24,8 +41,18 @@ export default function VersionTaskRunPage() {
   }
 
   useEffect(() => {
-    void refresh()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let cancelled = false
+    Promise.all([getVersionTask(id), listRuns(id)])
+      .then(([nextTask, nextRuns]) => {
+        if (!cancelled) {
+          setTask(nextTask)
+          setRuns(nextRuns)
+        }
+      })
+      .catch((error: Error) => {
+        if (!cancelled) toast.error(error.message || '加载失败')
+      })
+    return () => { cancelled = true }
   }, [id])
 
   async function handleRun() {
@@ -44,9 +71,21 @@ export default function VersionTaskRunPage() {
   async function handleDefect(run: VersionTaskRun, idx: number) {
     try {
       const d = await createDefectDraft(id, run.id, idx)
+      setDefectIds((current) => ({ ...current, [`${run.id}:${idx}`]: d.defect_id }))
       toast.success(`已转缺陷草稿 #${d.defect_id}`)
     } catch (e) {
       toast.error((e as Error).message || '转缺陷失败')
+    }
+  }
+
+  async function handleSync(run: VersionTaskRun, idx: number) {
+    const defectId = defectIds[`${run.id}:${idx}`]
+    if (!defectId) return
+    try {
+      await syncDefect(id, defectId)
+      toast.success(`缺陷 #${defectId} 已同步`)
+    } catch (e) {
+      toast.error((e as Error).message || '同步失败')
     }
   }
 
@@ -55,15 +94,15 @@ export default function VersionTaskRunPage() {
   const [bundleId, setBundleId] = useState('')
   const [regression, setRegression] = useState<RegressionItem[]>([])
   useEffect(() => {
-    getRegressionSet(id).then(setRegression).catch(() => {})
+    let cancelled = false
+    getRegressionSet(id).then((items) => { if (!cancelled) setRegression(items) }).catch(() => {})
+    return () => { cancelled = true }
   }, [id])
 
-  async function loadPackage() {
-    try { setPkg(await buildReleasePackage(id)) } catch { /* 未执行时忽略 */ }
-  }
   useEffect(() => {
-    void loadPackage()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let cancelled = false
+    buildReleasePackage(id).then((next) => { if (!cancelled) setPkg(next) }).catch(() => {})
+    return () => { cancelled = true }
   }, [id])
 
   async function handleRelease(verdict: string) {
@@ -86,7 +125,7 @@ export default function VersionTaskRunPage() {
       <Card>
         <CardHeader>
           <CardTitle>执行与证据</CardTitle>
-          <CardDescription>{task ? `${task.version} · 状态 ${task.status}` : ''}</CardDescription>
+          <CardDescription>{task ? `${task.version} · 状态 ${TASK_STATUS_LABEL[task.status] || task.status}` : ''}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-2">
@@ -113,7 +152,7 @@ export default function VersionTaskRunPage() {
                         <Badge variant="destructive">{f.kind}</Badge>
                         <span>{f.title}</span>
                         <Button size="sm" variant="secondary" className="ml-auto" onClick={() => handleDefect(latest, idx)}>转缺陷草稿</Button>
-                        <Button size="sm" variant="ghost" onClick={() => { void syncDefect(id, 0).then(() => toast.success('已同步缺陷库')).catch((e) => toast.error((e as Error).message)) }}>同步缺陷库</Button>
+                        <Button size="sm" variant="ghost" disabled={!defectIds[`${latest.id}:${idx}`]} onClick={() => handleSync(latest, idx)}>同步缺陷库</Button>
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">{f.message} · 证据 {f.evidence}</p>
                     </div>
@@ -156,11 +195,14 @@ export default function VersionTaskRunPage() {
           )}
           <div className="flex flex-wrap items-center gap-2">
             <Input className="w-32" placeholder="发布包 ID" value={bundleId} onChange={(e) => setBundleId(e.target.value)} />
-            <Button variant="primary" onClick={() => handleRelease('pass')}>放行</Button>
+            <Button variant="primary" disabled={!isPassVerdictAllowed(latest)} onClick={() => handleRelease('pass')}>放行</Button>
             <Button variant="secondary" onClick={() => handleRelease('conditional')}>有条件放行</Button>
             <Button variant="danger" onClick={() => handleRelease('blocked')}>打回</Button>
             <Button variant="ghost" onClick={handleNotify}>发送通知</Button>
           </div>
+          {latest && !isPassVerdictAllowed(latest) && (
+            <p className="text-xs text-muted-foreground">存在失败、跳过或阻塞检查时不能直接放行，可选择有条件放行或打回。</p>
+          )}
         </CardContent>
       </Card>
 
