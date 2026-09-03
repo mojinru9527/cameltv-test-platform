@@ -106,7 +106,7 @@ async def _wait_for_next_heartbeat(
     try:
         await asyncio.wait_for(stop_event.wait(), timeout=seconds)
     except TimeoutError:
-        pass
+        return
 
 
 async def _run_loop(
@@ -153,7 +153,7 @@ async def _run_from_environment() -> None:
         try:
             loop.add_signal_handler(signal_name, stop_event.set)
         except NotImplementedError:
-            pass
+            logger.debug("Signal handlers are not supported by this event loop")
     await run_heartbeat_loop(config, stop_event)
 
 
