@@ -10,7 +10,7 @@
 | **关联 PRD** | [work-logs/batch-217-version-task-wizard-prd-summary.md](../batch-217-version-task-wizard-prd-summary.md) |
 | **总预估工时** | ~5h |
 | **已用批次** | 1 |
-| **看板创建** | 2026-09-05 |
+| **看板创建** | 2026-09-03 |
 
 ## 🎯 交付切片进度
 | # | Slice | 方案 | 编码 | 自测 | 审批 | 合入 | 备注 |
@@ -31,7 +31,7 @@ Batch 217 — 版本验收向导
 ```
 
 ## 📜 批次记录
-### Batch 217 (2026-09-05)
+### Batch 217 (2026-09-03)
 - **产出**: version_task_plan_item 模型/迁移 + 生成/审核 service + 3 API + 前端向导页 + 8 后端测试
 - **审批**: 待合入
 - **耗时**: ~5h

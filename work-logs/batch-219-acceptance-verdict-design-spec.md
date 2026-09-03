@@ -1,5 +1,5 @@
 # Batch 219 — Design Spec
-> **Design (🎨)** | Date: 2026-09-05 | Status: 就绪 | Executor: Codex | 完整批次
+> **Design (🎨)** | Date: 2026-09-03 | Status: 就绪 | Executor: Codex | 完整批次
 
 ## 0. 技术体系确认
 `@/ui` 语义组件；Badge variant（default/destructive/outline/secondary/ghost）或 tone（success/warning/danger/info/neutral）。语义 token（batch54）禁止固定色板。

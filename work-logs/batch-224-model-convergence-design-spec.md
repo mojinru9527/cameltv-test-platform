@@ -1,5 +1,5 @@
 # Batch 224 — Design Spec
-> **Design (🎨)** | Date: 2026-09-05 | Status: 就绪 | Executor: Codex | 完整批次
+> **Design (🎨)** | Date: 2026-09-03 | Status: 就绪 | Executor: Codex | 完整批次
 
 ## 0. 技术体系
 后端 FastAPI + SQLAlchemy；无前端改动。

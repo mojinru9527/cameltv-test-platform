@@ -1,5 +1,5 @@
 # Batch 216 — VersionTask 统一事实源（B6）
-> **Product (🟦)** | Date: 2026-09-05 | Status: Draft | Executor: Codex | 完整批次
+> **Product (🟦)** | Date: 2026-09-03 | Status: Draft | Executor: Codex | 完整批次
 
 ## 0. 关联
 - 路线图: `docs/superpowers/plans/2026-09-02-platform-refactor-rollout.md` §2 B6(batch-216) 完整·后端+DB

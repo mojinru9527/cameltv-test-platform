@@ -10,8 +10,8 @@
 | **关联 PRD** | [work-logs/batch-216-version-task-model-prd-summary.md](../batch-216-version-task-model-prd-summary.md) |
 | **总预估工时** | ~4h |
 | **已用批次** | 1 |
-| **看板创建** | 2026-09-05 |
-| **最后更新** | 2026-09-05 |
+| **看板创建** | 2026-09-03 |
+| **最后更新** | 2026-09-03 |
 
 ## 🎯 交付切片进度
 | # | Slice | 方案 | 编码 | 自测 | 审批 | 合入 | 备注 |
@@ -32,7 +32,7 @@ Batch 216 — VersionTask 统一事实源
 ```
 
 ## 📜 批次记录
-### Batch 216 (2026-09-05)
+### Batch 216 (2026-09-03)
 - **产出**: version_task 模型/迁移/Schema/Service/API + 6 测试 + route_inventory 617 条
 - **审批**: 待合入
 - **耗时**: ~4h

@@ -1,5 +1,5 @@
 # Batch 220 — QA 报告：主链路真实走查（B10）
-> **QA (🔍)** | Date: 2026-09-05 | Verdict: **PASS** | Executor: Codex | 轻量批次
+> **QA (🔍)** | Date: 2026-09-03 | Verdict: **PASS** | Executor: Codex | 轻量批次
 
 ## 测试总览
 | 条件数 | 通过 | 失败 | 阻塞 |

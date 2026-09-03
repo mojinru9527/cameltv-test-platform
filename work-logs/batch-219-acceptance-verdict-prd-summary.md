@@ -1,5 +1,5 @@
 # Batch 219 — 版本任务放行与证据包（B9）
-> **Product (🟦)** | Date: 2026-09-05 | Status: Draft | Executor: Codex | 完整批次
+> **Product (🟦)** | Date: 2026-09-03 | Status: Draft | Executor: Codex | 完整批次
 
 ## 0. 关联
 - 路线图 §2 B9(batch-219) 完整·前后端：放行页（覆盖/通过率/风险）+ 绑定 release_bundle + 报告/通知；产出可分享放行证据包。

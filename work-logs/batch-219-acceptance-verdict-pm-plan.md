@@ -1,5 +1,5 @@
 # Batch 219 — PM Plan
-> **PM (🟨)** | Date: 2026-09-05 | Executor: Codex | 完整批次
+> **PM (🟨)** | Date: 2026-09-03 | Executor: Codex | 完整批次
 
 ## 规格摘要
 **原始需求**: B9 放行页（覆盖/通过率/风险）+ 绑定 release_bundle + 报告/通知；产出可分享放行证据包。
