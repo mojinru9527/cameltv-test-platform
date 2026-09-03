@@ -1,0 +1,225 @@
+{
+  "missionId": 3,
+  "startedAt": "2026-09-03T04:59:19.381Z",
+  "calls": [
+    {
+      "method": "GET",
+      "target": "/api/v2/missions/3",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/missions/3/contract",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/missions/3/scenarios",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/scenarios/1",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/scenarios/2",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/missions/3/executions?page_size=100",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/campaigns",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/campaigns/3/run",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/campaigns/3",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/missions/3/quality-gates/evaluate",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/missions/3/acceptance",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/ai-operations?mission_id=3",
+      "status": 200,
+      "code": 0
+    }
+  ],
+  "issues": [],
+  "mission": {
+    "id": 3,
+    "project_id": 1,
+    "mission_key": "M-1-0003",
+    "mission_type": "VERSION",
+    "title": "体育平台 16.0.0 AITDE 全链路验收",
+    "version_label": "16.0.0",
+    "status": "CONTRACT_FROZEN",
+    "owner_id": 1,
+    "qa_owner_id": null,
+    "default_environment_id": null,
+    "current_contract_version_id": 2,
+    "acceptance_status": "NOT_EVALUATED",
+    "legacy_version_mission_id": null,
+    "created_by": 1,
+    "created_at": "2026-09-03T12:45:23.426284",
+    "updated_at": "2026-09-03T12:45:54.152821",
+    "archived_at": null
+  },
+  "contract": {
+    "contract_id": 2,
+    "name": "Test Contract",
+    "version_no": 1,
+    "version": {
+      "id": 2,
+      "contract_id": 2,
+      "version_no": 1,
+      "status": "FROZEN",
+      "content_hash": "4846f8ec63da2faa97d0840e23a8a7b6",
+      "created_at": "2026-09-03T12:45:53.817493",
+      "approved_at": "2026-09-03T12:45:54.149816"
+    }
+  },
+  "scenarioCount": 2,
+  "campaign": {
+    "created": {
+      "id": 3,
+      "project_id": 1,
+      "mission_id": 3,
+      "name": "体育 16.0.0 AI 验收 Campaign",
+      "campaign_type": "FULL",
+      "environment_id": 1,
+      "build_observation_id": null,
+      "status": "DRAFT",
+      "created_by_type": "AUTO",
+      "created_at": "2026-09-03T12:59:20.884944"
+    },
+    "started": {
+      "id": 3,
+      "project_id": 1,
+      "mission_id": 3,
+      "name": "体育 16.0.0 AI 验收 Campaign",
+      "campaign_type": "FULL",
+      "environment_id": 1,
+      "build_observation_id": null,
+      "status": "RUNNING",
+      "created_by_type": "AUTO",
+      "created_at": "2026-09-03T12:59:20.884944"
+    },
+    "detail": {
+      "id": 3,
+      "project_id": 1,
+      "mission_id": 3,
+      "name": "体育 16.0.0 AI 验收 Campaign",
+      "campaign_type": "FULL",
+      "environment_id": 1,
+      "build_observation_id": null,
+      "status": "RUNNING",
+      "created_by_type": "AUTO",
+      "created_at": "2026-09-03T12:59:20.884944",
+      "scenarios": [
+        {
+          "id": 5,
+          "campaign_id": 3,
+          "scenario_id": 1,
+          "scenario_version_id": 1,
+          "selection_reason_json": "{\"source\": \"sports-v16-ai-e2e\", \"risk_level\": \"P2\"}",
+          "required": "OPTIONAL",
+          "run_id": null
+        },
+        {
+          "id": 6,
+          "campaign_id": 3,
+          "scenario_id": 2,
+          "scenario_version_id": 2,
+          "selection_reason_json": "{\"source\": \"sports-v16-ai-e2e\", \"risk_level\": \"P2\"}",
+          "required": "OPTIONAL",
+          "run_id": null
+        }
+      ]
+    }
+  },
+  "gate": {
+    "id": 3,
+    "mission_id": 3,
+    "campaign_id": 3,
+    "build_observation_id": null,
+    "policy_id": 1,
+    "result": "FAIL",
+    "checks_json": "[{\"gate\": \"G1_SCOPE_APPROVED\", \"label\": \"\\u8303\\u56f4\\u5df2\\u6279\\u51c6\", \"pass\": true, \"detail\": \"scope_items=2 pending=0\"}, {\"gate\": \"G2_CONTRACT_FROZEN\", \"label\": \"\\u5951\\u7ea6\\u5df2\\u51bb\\u7ed3\", \"pass\": true, \"detail\": \"current_contract_version_id=2\"}, {\"gate\": \"G3_P0_P1_COVERAGE_COMPLETE\", \"label\": \"P0/P1 \\u573a\\u666f\\u8986\\u76d6\\u5b8c\\u6574\", \"pass\": false, \"detail\": \"required_with_version=0/0\"}, {\"gate\": \"G4_ORACLE_COVERAGE_COMPLETE\", \"label\": \"\\u5fc5\\u5907 Oracle \\u8986\\u76d6\\u5b8c\\u6574\", \"pass\": true, \"detail\": \"all required oracles approved + bound\"}, {\"gate\": \"G5_REQUIRED_SCENARIO_EXECUTED\", \"label\": \"\\u5fc5\\u5907\\u573a\\u666f\\u5df2\\u4e3a\\u5f53\\u524d Build \\u6267\\u884c\", \"pass\": false, \"detail\": \"required_executed=0/0 executed=0 | zero execution -> FAIL\"}, {\"gate\": \"G6_P0_BUSINESS_FAIL_ZERO\", \"label\": \"P0 \\u4e1a\\u52a1\\u5931\\u8d25\\u4e3a\\u96f6\", \"pass\": true, \"detail\": \"p0_business_fail=0\"}, {\"gate\": \"G7_P0_INCONCLUSIVE_ZERO\", \"label\": \"P0 \\u65e0\\u6cd5\\u5224\\u5b9a\\u4e3a\\u96f6\", \"pass\": true, \"detail\": \"p0_inconclusive=0\"}, {\"gate\": \"G8_REQUIRED_EVIDENCE_COMPLETE\", \"label\": \"\\u5fc5\\u5907\\u8bc1\\u636e\\u5b8c\\u6574\", \"pass\": false, \"detail\": \"evidence_complete=0/0\"}, {\"gate\": \"G9_RUN_ENV_MATCHES_BUILD\", \"label\": \"\\u8fd0\\u884c\\u73af\\u5883\\u5feb\\u7167 == \\u76ee\\u6807 Build\", \"pass\": false, \"detail\": \"env_match=0/0 target=none conf=none\"}, {\"gate\": \"G10_RUN_CONTRACT_MATCHES_FROZEN\", \"label\": \"\\u8fd0\\u884c\\u5951\\u7ea6\\u7248\\u672c == \\u5f53\\u524d\\u51bb\\u7ed3\\u5951\\u7ea6\", \"pass\": true, \"detail\": \"contract_match=0/0 frozen=2\"}]",
+    "evaluated_at": "2026-09-03T12:59:20.926320",
+    "override_status": null,
+    "override_by": null,
+    "override_reason": null
+  },
+  "acceptance": {
+    "items": [
+      {
+        "id": 3,
+        "mission_id": 3,
+        "campaign_id": 3,
+        "build_observation_id": null,
+        "policy_id": 1,
+        "result": "FAIL",
+        "checks_json": "[{\"gate\": \"G1_SCOPE_APPROVED\", \"label\": \"\\u8303\\u56f4\\u5df2\\u6279\\u51c6\", \"pass\": true, \"detail\": \"scope_items=2 pending=0\"}, {\"gate\": \"G2_CONTRACT_FROZEN\", \"label\": \"\\u5951\\u7ea6\\u5df2\\u51bb\\u7ed3\", \"pass\": true, \"detail\": \"current_contract_version_id=2\"}, {\"gate\": \"G3_P0_P1_COVERAGE_COMPLETE\", \"label\": \"P0/P1 \\u573a\\u666f\\u8986\\u76d6\\u5b8c\\u6574\", \"pass\": false, \"detail\": \"required_with_version=0/0\"}, {\"gate\": \"G4_ORACLE_COVERAGE_COMPLETE\", \"label\": \"\\u5fc5\\u5907 Oracle \\u8986\\u76d6\\u5b8c\\u6574\", \"pass\": true, \"detail\": \"all required oracles approved + bound\"}, {\"gate\": \"G5_REQUIRED_SCENARIO_EXECUTED\", \"label\": \"\\u5fc5\\u5907\\u573a\\u666f\\u5df2\\u4e3a\\u5f53\\u524d Build \\u6267\\u884c\", \"pass\": false, \"detail\": \"required_executed=0/0 executed=0 | zero execution -> FAIL\"}, {\"gate\": \"G6_P0_BUSINESS_FAIL_ZERO\", \"label\": \"P0 \\u4e1a\\u52a1\\u5931\\u8d25\\u4e3a\\u96f6\", \"pass\": true, \"detail\": \"p0_business_fail=0\"}, {\"gate\": \"G7_P0_INCONCLUSIVE_ZERO\", \"label\": \"P0 \\u65e0\\u6cd5\\u5224\\u5b9a\\u4e3a\\u96f6\", \"pass\": true, \"detail\": \"p0_inconclusive=0\"}, {\"gate\": \"G8_REQUIRED_EVIDENCE_COMPLETE\", \"label\": \"\\u5fc5\\u5907\\u8bc1\\u636e\\u5b8c\\u6574\", \"pass\": false, \"detail\": \"evidence_complete=0/0\"}, {\"gate\": \"G9_RUN_ENV_MATCHES_BUILD\", \"label\": \"\\u8fd0\\u884c\\u73af\\u5883\\u5feb\\u7167 == \\u76ee\\u6807 Build\", \"pass\": false, \"detail\": \"env_match=0/0 target=none conf=none\"}, {\"gate\": \"G10_RUN_CONTRACT_MATCHES_FROZEN\", \"label\": \"\\u8fd0\\u884c\\u5951\\u7ea6\\u7248\\u672c == \\u5f53\\u524d\\u51bb\\u7ed3\\u5951\\u7ea6\", \"pass\": true, \"detail\": \"contract_match=0/0 frozen=2\"}]",
+        "evaluated_at": "2026-09-03T12:59:20.926320",
+        "override_status": null,
+        "override_by": null,
+        "override_reason": null
+      }
+    ]
+  },
+  "aiOperations": [
+    {
+      "id": 6,
+      "operation_type": "scenario:design",
+      "status": "FAILED",
+      "error_code": "AI_CALL_FAILED",
+      "error_message": "AI API returned HTTP 400"
+    },
+    {
+      "id": 5,
+      "operation_type": "contract:build",
+      "status": "FAILED",
+      "error_code": "AI_CALL_FAILED",
+      "error_message": "contract_builder_v1: expected at least one rule"
+    },
+    {
+      "id": 4,
+      "operation_type": "scope:analyze",
+      "status": "FAILED",
+      "error_code": "AI_CALL_FAILED",
+      "error_message": "AI response is not valid JSON"
+    }
+  ],
+  "finishedAt": "2026-09-03T04:59:30.888Z"
+}

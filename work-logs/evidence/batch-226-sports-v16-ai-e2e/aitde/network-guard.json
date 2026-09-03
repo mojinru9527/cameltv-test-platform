@@ -1,0 +1,24 @@
+{
+  "requests": {
+    "GET /api/v2/missions/3/sources": 1,
+    "GET /api/v2/missions/3/ambiguities": 1,
+    "GET /api/v2/missions/3/contract": 1
+  },
+  "responses": [
+    {
+      "url": "http://127.0.0.1:5566/api/v2/missions/3/sources",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5566/api/v2/missions/3/ambiguities",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5566/api/v2/missions/3/contract",
+      "status": 200
+    }
+  ],
+  "issues": [],
+  "sourceListRequests": 1,
+  "serverErrors": []
+}

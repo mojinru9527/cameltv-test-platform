@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "workflow": "agent-team",
+  "executor": "codex",
+  "branch": "feature/batch-226-sports-v16-ai-e2e",
+  "base": "origin/main",
+  "base_sha": "cacfaeec3e832374d918664bd32b6da059d55f57",
+  "frontend": "http://127.0.0.1:5566",
+  "backend": "http://127.0.0.1:8899",
+  "database_kind": "isolated local SQLite",
+  "credentials_recorded": false
+}

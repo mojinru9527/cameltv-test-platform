@@ -1,0 +1,61 @@
+{
+  "pages": [
+    {
+      "route": "/workbench",
+      "status": 200,
+      "title": "我的待办 | CamelTv 测试平台"
+    },
+    {
+      "route": "/version-tasks",
+      "status": 200,
+      "title": "CamelTv 测试平台"
+    },
+    {
+      "route": "/report",
+      "status": 200,
+      "title": "报告中心 | CamelTv 测试平台"
+    },
+    {
+      "route": "/knowledge",
+      "status": 200,
+      "title": "知识中心 | CamelTv 测试平台"
+    },
+    {
+      "route": "/onboarding",
+      "status": 200,
+      "title": "CamelTv 测试平台"
+    }
+  ],
+  "issues": [],
+  "responses500": [],
+  "topRows": [
+    "工作台",
+    "版本验收",
+    "结果与缺陷",
+    "知识中心",
+    "资产与更多"
+  ],
+  "b14": {
+    "singleFactSource": "version_task",
+    "stableRead": true,
+    "versionTaskCount": 3,
+    "archivedPlanCount": 0,
+    "dataAssetCount": 0
+  },
+  "b15": {
+    "advanceCode": 1,
+    "advanceMessage": "请填写 OpenAPI Spec URL 后再接入基线",
+    "status": "onboarding",
+    "step": 1,
+    "active": false
+  },
+  "tablet": {
+    "body": false,
+    "main": false
+  },
+  "mobile": {
+    "body": false,
+    "main": false
+  },
+  "finishedAt": "2026-09-03T05:05:01.879Z"
+}
