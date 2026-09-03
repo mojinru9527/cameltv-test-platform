@@ -253,7 +253,14 @@ export default function OnboardingPage() {
                   <span className="font-medium text-foreground">{ob.name}</span>
                   <span className="text-muted-hc">版本 {ob.version}</span>
                 </div>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-hc">{ob.requirement_text}</p>
+                <details>
+                  <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium text-primary hover:underline">
+                    查看已保存需求（{ob.requirement_text.length} 字）
+                  </summary>
+                  <p className="max-h-56 overflow-y-auto whitespace-pre-wrap border-y border-border py-3 text-sm leading-relaxed text-muted-hc">
+                    {ob.requirement_text}
+                  </p>
+                </details>
               </div>
             )}
           </section>

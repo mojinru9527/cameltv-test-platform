@@ -4,9 +4,12 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.business_onboarding import BusinessOnboarding
+from app.models.requirement import RequirementDocument
+from app.models.version_task import VersionTask
 from app.services import openapi_import_service, version_task_service
 from app.core.exceptions import APIException, not_found
 
@@ -45,6 +48,24 @@ def complete_step(db: Session, onboarding_id: int, step: int) -> BusinessOnboard
     if step == 2:
         if not ob.api_spec_url.strip():
             raise APIException(code=1, msg="请填写 OpenAPI Spec URL 后再接入基线")
+        task_version = ob.version or ob.service_key
+        task = db.scalar(
+            select(VersionTask).where(
+                VersionTask.project_id == ob.project_id,
+                VersionTask.version == task_version,
+            )
+        )
+        task_requirement = (
+            db.get(RequirementDocument, task.requirement_doc_id)
+            if task is not None and task.requirement_doc_id
+            else None
+        )
+        if task_requirement and task_requirement.content.strip() != ob.requirement_text.strip():
+            raise APIException(
+                code=1,
+                msg=f"当前项目已有 {task_version} 版本任务，且绑定了不同的需求内容",
+            )
+
         spec = openapi_import_service.resolve_openapi_spec(ob.api_spec_url)
         if not spec:
             raise APIException(code=1, msg="OpenAPI 文档读取或解析失败")
@@ -69,33 +90,55 @@ def complete_step(db: Session, onboarding_id: int, step: int) -> BusinessOnboard
             }
             for endpoint in preview["endpoints"]
         ]
-        from app.services import requirement_service
+        scope = {
+            "modules": ["核心流程", "接口契约", "异常链路"],
+            "base_url": ob.base_url,
+            "api_spec_url": ob.api_spec_url,
+            "openapi_import_batch_id": imported["batch_id"],
+            "openapi_endpoint_count": imported["total_count"],
+            "openapi_endpoints": endpoint_contract,
+        }
+        if task is not None:
+            if task_requirement is None:
+                from app.services import requirement_service
 
-        requirement = requirement_service.create_requirement(
-            db,
-            project_id=ob.project_id,
-            title=f"{ob.name} {ob.version} 接入需求".strip(),
-            file_type="manual",
-            source_ref="onboarding",
-            content=ob.requirement_text,
-            commit=False,
-        )
-        task = version_task_service.create_task(
-            db,
-            project_id=ob.project_id,
-            title=f"{ob.name} {ob.version} 业务基线".strip(),
-            version=ob.version or ob.service_key,
-            source="onboarding",
-            requirement_doc_id=requirement["id"],
-            scope={
-                "modules": ["核心流程", "接口契约", "异常链路"],
-                "base_url": ob.base_url,
-                "api_spec_url": ob.api_spec_url,
-                "openapi_import_batch_id": imported["batch_id"],
-                "openapi_endpoint_count": imported["total_count"],
-                "openapi_endpoints": endpoint_contract,
-            },
-        )
+                created = requirement_service.create_requirement(
+                    db,
+                    project_id=ob.project_id,
+                    title=f"{ob.name} {ob.version} 接入需求".strip(),
+                    file_type="manual",
+                    source_ref="onboarding",
+                    content=ob.requirement_text,
+                    commit=False,
+                )
+                task.requirement_doc_id = created["id"]
+            try:
+                existing_scope = json.loads(task.scope or "{}")
+            except (TypeError, ValueError):
+                existing_scope = {}
+            existing_scope.update({key: value for key, value in scope.items() if key != "modules"})
+            task.scope = json.dumps(existing_scope, ensure_ascii=False)
+        else:
+            from app.services import requirement_service
+
+            requirement = requirement_service.create_requirement(
+                db,
+                project_id=ob.project_id,
+                title=f"{ob.name} {ob.version} 接入需求".strip(),
+                file_type="manual",
+                source_ref="onboarding",
+                content=ob.requirement_text,
+                commit=False,
+            )
+            task = version_task_service.create_task(
+                db,
+                project_id=ob.project_id,
+                title=f"{ob.name} {ob.version} 业务基线".strip(),
+                version=task_version,
+                source="onboarding",
+                requirement_doc_id=requirement["id"],
+                scope=scope,
+            )
         ob.version_task_id = task.id
     if step == 3:
         # 生成方案：走项目级 AI（F-01），不再硬编码占位
@@ -141,7 +184,6 @@ def list_onboardings(db: Session, project_id: int) -> list[BusinessOnboarding]:
 
 def get_readiness(db: Session, project_id: int) -> dict:
     """汇总已有事实；不发外部探测，也不在请求内启动基础设施。"""
-    from app.core.config import settings
     from app.modules.aitde.common.enums import WorkerStatus
     from app.modules.aitde.workflow import repository
     from app.modules.aitde.workflow.gateway import temporal_gateway

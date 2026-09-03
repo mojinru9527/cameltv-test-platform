@@ -533,6 +533,107 @@ def test_business_onboarding_baseline(db_session, monkeypatch):
     }
 
 
+def test_business_onboarding_reuses_matching_version_task(db_session, monkeypatch):
+    from app.models.requirement import RequirementDocument
+    from app.models.version_task import VersionTask
+    from app.services import onboarding_service, openapi_import_service, requirement_service
+
+    requirement_text = "验证体育 16.0.0 比赛与文章链路。"
+    requirement = requirement_service.create_requirement(
+        db_session,
+        project_id=1,
+        title="体育平台 16.0.0 接入需求",
+        file_type="manual",
+        source_ref="onboarding",
+        content=requirement_text,
+    )
+    existing_task = version_task_service.create_task(
+        db_session,
+        project_id=1,
+        title="体育平台 16.0.0 业务基线",
+        version="16.0.0",
+        source="onboarding",
+        requirement_doc_id=requirement["id"],
+        scope={"modules": ["已有范围"]},
+    )
+    monkeypatch.setattr(
+        openapi_import_service,
+        "resolve_openapi_spec",
+        lambda _url: {
+            "openapi": "3.0.0",
+            "info": {"version": "16.0.0"},
+            "paths": {"/scores": {"get": {"responses": {"200": {"description": "ok"}}}}},
+        },
+    )
+
+    ob = onboarding_service.create_onboarding(
+        db_session,
+        1,
+        name="体育平台",
+        service_key="sports-service",
+        version="16.0.0",
+        requirement_text=requirement_text,
+        api_spec_url="http://x/openapi.json",
+        base_url="http://sports.test",
+    )
+
+    ob = onboarding_service.complete_step(db_session, ob.id, 2)
+
+    assert ob.version_task_id == existing_task.id
+    assert db_session.query(VersionTask).filter_by(project_id=1, version="16.0.0").count() == 1
+    assert db_session.query(RequirementDocument).filter_by(project_id=1).count() == 1
+    scope = json.loads(existing_task.scope)
+    assert scope["modules"] == ["已有范围"]
+    assert scope["base_url"] == "http://sports.test"
+    assert scope["api_spec_url"] == "http://x/openapi.json"
+
+
+def test_business_onboarding_rejects_different_requirement_for_existing_version(db_session, monkeypatch):
+    from app.models.api_asset import ApiImportBatch
+    from app.models.requirement import RequirementDocument
+    from app.services import onboarding_service, openapi_import_service, requirement_service
+
+    requirement = requirement_service.create_requirement(
+        db_session,
+        project_id=1,
+        title="已有需求",
+        file_type="manual",
+        source_ref="manual",
+        content="已有的 16.0.0 需求",
+    )
+    existing_task = version_task_service.create_task(
+        db_session,
+        project_id=1,
+        title="已有版本任务",
+        version="16.0.0",
+        requirement_doc_id=requirement["id"],
+    )
+    monkeypatch.setattr(
+        openapi_import_service,
+        "resolve_openapi_spec",
+        lambda _url: pytest.fail("conflicting requirements must be rejected before OpenAPI access"),
+    )
+    ob = onboarding_service.create_onboarding(
+        db_session,
+        1,
+        name="体育平台",
+        service_key="sports-service",
+        version="16.0.0",
+        requirement_text="另一份 16.0.0 需求",
+        api_spec_url="http://x/openapi.json",
+        base_url="http://sports.test",
+    )
+
+    with pytest.raises(APIException, match="绑定了不同的需求内容"):
+        onboarding_service.complete_step(db_session, ob.id, 2)
+
+    db_session.refresh(existing_task)
+    assert existing_task.requirement_doc_id == requirement["id"]
+    assert db_session.query(RequirementDocument).filter_by(project_id=1).count() == 1
+    assert db_session.query(ApiImportBatch).filter_by(project_id=1).count() == 0
+    assert ob.step == 1
+
+
 def test_business_onboarding_requires_real_openapi_import(db_session):
     from app.services import onboarding_service
 

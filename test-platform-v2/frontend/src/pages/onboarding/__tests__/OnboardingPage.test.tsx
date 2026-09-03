@@ -104,6 +104,7 @@ describe('AI 全链路接入页', () => {
       api_spec_url: 'https://sports.test/openapi.json',
       base_url: 'https://sports.test',
     }))
+    expect(screen.getByText('查看已保存需求（9 字）')).toBeTruthy()
   })
 
   it('自动检查失败时提供原位重试', async () => {

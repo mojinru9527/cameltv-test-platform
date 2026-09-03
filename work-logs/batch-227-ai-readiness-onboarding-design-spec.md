@@ -13,7 +13,7 @@
 
 ## 2. 组件与文案
 
-- 复用 `@/ui` 的 PageShell、Card、Input、Textarea、Label、Button、Badge。
+- 复用 `@/ui` 的 PageShell、Input、Textarea、Label、Button、Badge；页面分区保持无卡片嵌套。
 - 状态图标使用 Lucide：`CircleCheck`、`CircleAlert`、`Loader2`、`Settings`；颜色只用语义 token。
 - 字段必须有 `label htmlFor`，placeholder 只放示例，不承担标签职责。
 - 主按钮用明确动宾文案：“保存并开始接入”“导入接口基线”“生成 AI 验收方案”“运行真实基线”。
@@ -45,3 +45,10 @@
 ## 6. 设计签核标准
 
 六字段能快速扫读；普通用户不会误认为要启动 Temporal；管理入口可达；暗色主题和三视口均无文字截断、横向溢出或状态色失真。
+
+## 7. 设计走查结论
+
+- 初轮真实需求保存后整段展示 2040 字，手机端会把平台状态推到很远；已改为默认收起的“查看已保存需求”。
+- 1440x900、768x1024、390x844 三视口均为 `scrollWidth == clientWidth`，无横向溢出。
+- 成功 toast 消失后重新采集最终截图，状态文案、操作入口与正文无重叠。
+- 结论：通过。证据见 `work-logs/evidence/batch-227-ai-readiness-onboarding/`。
