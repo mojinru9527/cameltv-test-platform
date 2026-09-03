@@ -1,0 +1,104 @@
+{
+  "issues": [],
+  "calls": [
+    {
+      "target": "/api/v1/version-tasks/3",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "target": "/api/v1/version-tasks/3/plan",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "target": "/api/v1/version-tasks/3/runs",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "target": "/api/v1/version-tasks/3/release-package",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "target": "/api/v1/version-tasks/3/knowledge",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "target": "/api/v1/version-tasks/knowledge/reuse?limit=10",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "target": "/api/v1/version-tasks/3/regression-set",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "target": "/api/v1/version-tasks/compare?version_a=16.0.0&version_b=16.0.1",
+      "status": 200,
+      "code": 0
+    },
+    {
+      "target": "/api/v1/metrics/operations",
+      "status": 200,
+      "code": 0
+    }
+  ],
+  "summary": {
+    "task": {
+      "id": 3,
+      "version": "16.0.0",
+      "status": "released",
+      "verdict": "blocked"
+    },
+    "plan": {
+      "total": 30,
+      "adopted": 30,
+      "executable": 0
+    },
+    "run": {
+      "id": 3,
+      "status": "blocked",
+      "total": 30,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "blocked": 30,
+      "evidenceCount": 0,
+      "failureCount": 30
+    },
+    "releasePackage": {
+      "verdict": "blocked",
+      "totalChecks": 30,
+      "passRate": 0,
+      "defectCount": 1
+    },
+    "knowledge": {
+      "verdict": "blocked",
+      "coverage": {
+        "pass": 0,
+        "fail": 0,
+        "skip": 0,
+        "blocked": 30
+      }
+    },
+    "reuseCount": 2,
+    "regressionCount": 42,
+    "comparison": {
+      "a": true,
+      "b": false
+    },
+    "metrics": {
+      "regression_person_days": 0,
+      "regression_person_days_recorded": false,
+      "cycle_avg_days": 0,
+      "missed_defects": 2,
+      "weekly_active": 3,
+      "released_count": 2,
+      "total_tasks": 3
+    }
+  }
+}

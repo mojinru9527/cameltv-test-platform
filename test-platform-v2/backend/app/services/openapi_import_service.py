@@ -23,6 +23,30 @@ def _source_label(source_type: str) -> str:
     return _SOURCE_LABEL_MAP.get(source_type, "openapi")
 
 
+def resolve_openapi_spec(source_ref: str) -> dict | None:
+    """Fetch and parse one OpenAPI JSON/YAML document from an HTTP(S) URL."""
+    from urllib.parse import urlparse
+
+    import httpx
+    import yaml
+
+    parsed = urlparse(source_ref.strip())
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return None
+    try:
+        with httpx.Client(trust_env=False, follow_redirects=True, timeout=30) as client:
+            response = client.get(source_ref)
+            response.raise_for_status()
+        raw = response.text
+        try:
+            spec = response.json()
+        except ValueError:
+            spec = yaml.safe_load(raw)
+    except (httpx.HTTPError, ValueError, TypeError, yaml.YAMLError):
+        return None
+    return spec if isinstance(spec, dict) else None
+
+
 def preview_openapi_import(
     spec: dict,
     *,

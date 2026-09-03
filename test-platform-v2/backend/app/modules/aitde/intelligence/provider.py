@@ -416,13 +416,27 @@ class AiIntelligenceProvider:
                 "intents": context.intents,
             },
         )
+        raw_rules = payload.get("rules")
+        raw_outcomes = payload.get("required_outcomes")
+        if not isinstance(raw_rules, list) or not raw_rules:
+            from app.modules.aitde.intelligence.llm_sync import IntelligenceLLMResponseError
+
+            raise IntelligenceLLMResponseError(
+                "contract_builder_v1: expected at least one rule"
+            )
+        if not isinstance(raw_outcomes, list):
+            from app.modules.aitde.intelligence.llm_sync import IntelligenceLLMResponseError
+
+            raise IntelligenceLLMResponseError(
+                "contract_builder_v1: missing required_outcomes"
+            )
         rules = [
             self._validate(ContractRule, raw, "contract_builder_v1")
-            for raw in payload.get("rules") or []
+            for raw in raw_rules
         ]
         outcomes = [
             self._validate(ContractOutcome, raw, "contract_builder_v1")
-            for raw in payload.get("required_outcomes") or []
+            for raw in raw_outcomes
         ]
         return ContractSnapshot(
             schema_version="1.0",
@@ -443,10 +457,12 @@ class AiIntelligenceProvider:
             },
         )
         raw_items = payload.get("items")
-        if not isinstance(raw_items, list):
+        if not isinstance(raw_items, list) or not raw_items:
             from app.modules.aitde.intelligence.llm_sync import IntelligenceLLMResponseError
 
-            raise IntelligenceLLMResponseError("scenario_design_v1: missing items")
+            raise IntelligenceLLMResponseError(
+                "scenario_design_v1: expected at least one item"
+            )
         items: list[ScenarioCandidate] = []
         for raw in raw_items:
             cand = self._validate(ScenarioCandidate, raw, "scenario_design_v1")

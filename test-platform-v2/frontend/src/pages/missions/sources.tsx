@@ -51,6 +51,7 @@ export default function MissionSourcesPage() {
 
   const [sources, setSources] = useState<SourceArtifact[]>([])
   const [loading, setLoading] = useState(true)
+  const [reloadVersion, setReloadVersion] = useState(0)
   const [attachOpen, setAttachOpen] = useState(false)
   const [fragOpen, setFragOpen] = useState(false)
   const [activeSource, setActiveSource] = useState<SourceArtifact | null>(null)
@@ -67,15 +68,17 @@ export default function MissionSourcesPage() {
   useAbortableEffect((signal) => {
     if (!missionId) return
     setLoading(true)
-    fetchMissionSources(missionId)
-      .then(setSources)
+    fetchMissionSources(missionId, signal)
+      .then((rows) => {
+        if (!signal.aborted) setSources(rows)
+      })
       .catch((err) => {
         if (!(err?.code === 'ERR_CANCELED')) toast.error(err.message || '加载失败')
       })
       .finally(() => {
         if (!signal.aborted) setLoading(false)
       })
-  }, [missionId, loading])
+  }, [missionId, reloadVersion])
 
   const openFragments = async (source: SourceArtifact) => {
     setActiveSource(source)
@@ -94,7 +97,7 @@ export default function MissionSourcesPage() {
     try {
       await parseMissionSource(missionId, source.id)
       toast.success('解析完成')
-      setLoading(true)
+      setReloadVersion((current) => current + 1)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '解析失败')
     } finally {
@@ -118,7 +121,7 @@ export default function MissionSourcesPage() {
       setAttachContent('')
       setAttachUri('')
       setAttachDocId('')
-      setLoading(true)
+      setReloadVersion((current) => current + 1)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '添加失败')
     }

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "business": "CamelTv 体育平台",
+  "version": "16.0.0",
+  "source_name": "体育平台-16.0.0-需求规格说明书.md",
+  "sha256": "C039115C51A5BAD50B354AE1FB708FA985AF406FA03AA5AE864B6D1CD7F74466",
+  "bytes": 4315,
+  "lines": 72,
+  "usage": "只读输入；需求正文经页面导入本地隔离数据库",
+  "contains_credentials": false
+}

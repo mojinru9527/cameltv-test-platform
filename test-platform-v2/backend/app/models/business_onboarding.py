@@ -20,7 +20,7 @@ class BusinessOnboarding(Base, TimestampMixin):
     service_key: Mapped[str] = mapped_column(String(120), default="", index=True)
     api_spec_url: Mapped[str] = mapped_column(Text, default="")
     base_url: Mapped[str] = mapped_column(Text, default="")
-    # draft | onboarding | active | archived
+    # draft | onboarding | active | blocked | archived
     status: Mapped[str] = mapped_column(String(20), default="draft", index=True)
     step: Mapped[int] = mapped_column(default=1)  # 1 登记 / 2 接基线 / 3 生成方案 / 4 跑基线
     version_task_id: Mapped[int | None] = mapped_column(index=True, default=None)

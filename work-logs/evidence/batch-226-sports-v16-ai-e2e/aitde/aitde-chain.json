@@ -1,0 +1,432 @@
+{
+  "startedAt": "2026-09-03T04:45:20.427Z",
+  "target": "http://localhost:5566",
+  "stage": "run",
+  "calls": [
+    {
+      "method": "GET",
+      "target": "/api/v1/ai-config/resolve",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 74
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/health",
+      "status": 200,
+      "elapsedMs": 25
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/missions",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 13
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/missions/3/sources",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 13
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/missions/3/sources/3/parse",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 15
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/missions/3/sources/3/fragments",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 10
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/missions/3/scope/analyze",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 26152
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/missions/3/scope",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 16
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/missions/3/scope/reviews",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 329
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/missions/3/scope/complete",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 249
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/missions/3/contracts/generate",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 3608
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/missions/3/contract",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 10
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/contracts/2/freeze",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 323
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/contracts/2/scenarios/generate",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 934
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/missions/3/scenarios",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 13
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/scenarios/1",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 321
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/scenarios/1/review",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 264
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/oracles/1/review",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 63
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/scenarios/2",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 262
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/scenarios/2/review",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 57
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/oracles/2/review",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 264
+    },
+    {
+      "method": "GET",
+      "target": "/api/v1/environments",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 60
+    },
+    {
+      "method": "POST",
+      "target": "/api/v1/environments",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 268
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/environments/1/snapshots?mission_id=3",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 47
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/environments/1/fingerprints/capture",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 272
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/scenarios/1/adapters",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 48
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/scenarios/1/runs",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 288
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/runs/1/steps",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 39
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/runs/1/assertions",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 286
+    },
+    {
+      "method": "GET",
+      "target": "/api/v2/runs/1/evidence",
+      "status": 200,
+      "code": 0,
+      "elapsedMs": 30
+    },
+    {
+      "method": "POST",
+      "target": "/api/v2/runs/1/finish",
+      "status": 400,
+      "code": 400,
+      "elapsedMs": 297
+    }
+  ],
+  "timingsMs": {
+    "scopeAnalysis": 26152,
+    "contractGeneration": 3608,
+    "scenarioGeneration": 934
+  },
+  "issues": [
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:5566/src/api/dashboard.ts",
+      "text": "net::ERR_ABORTED"
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:5566/src/components/foolproof/PageIntro.tsx",
+      "text": "net::ERR_ABORTED"
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:5566/src/components/PageHeader.tsx",
+      "text": "net::ERR_ABORTED"
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:5566/src/hooks/useApi.ts",
+      "text": "net::ERR_ABORTED"
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:5566/src/components/ui/badge.tsx",
+      "text": "net::ERR_ABORTED"
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:5566/src/components/state/index.ts",
+      "text": "net::ERR_ABORTED"
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:5566/src/components/foolproof/TermTip.tsx",
+      "text": "net::ERR_ABORTED"
+    },
+    {
+      "type": "console",
+      "text": "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+    }
+  ],
+  "aiProvider": {
+    "configured": true
+  },
+  "health": {
+    "status": "ok",
+    "aitde_v3_enabled": true
+  },
+  "mission": {
+    "id": 3,
+    "project_id": 1,
+    "mission_key": "M-1-0003",
+    "mission_type": "VERSION",
+    "title": "体育平台 16.0.0 AITDE 全链路验收",
+    "version_label": "16.0.0",
+    "status": "DRAFT",
+    "owner_id": 1,
+    "qa_owner_id": null,
+    "default_environment_id": null,
+    "current_contract_version_id": null,
+    "acceptance_status": "NOT_EVALUATED",
+    "legacy_version_mission_id": null,
+    "created_by": 1,
+    "created_at": "2026-09-03T12:45:23.426284",
+    "updated_at": "2026-09-03T12:45:23.426284",
+    "archived_at": null
+  },
+  "source": {
+    "id": 3,
+    "project_id": 1,
+    "source_type": "REQUIREMENT",
+    "provider": "batch-226-sports-v16",
+    "name": "需求文档 #1",
+    "uri": "",
+    "content_hash": "",
+    "version_label": "",
+    "sensitivity": "normal",
+    "parse_status": "PENDING",
+    "metadata_json": "{\"requirement_doc_id\": 1}",
+    "created_by": 1,
+    "created_at": "2026-09-03T12:45:23.438967",
+    "updated_at": "2026-09-03T12:45:23.438967",
+    "fragment_count": 0,
+    "parsed": {
+      "artifact_id": 3,
+      "parse_status": "PARSED",
+      "fragment_count": 2,
+      "operation_id": null,
+      "meta": {
+        "fragment_keys": [
+          "REQ-0001",
+          "REQ-0002"
+        ]
+      }
+    },
+    "fragmentCount": 2,
+    "fragmentChars": 2037
+  },
+  "scopeAnalysis": {
+    "operation_id": 4,
+    "status": "COMPLETED",
+    "items": 2
+  },
+  "scope": {
+    "generated": 2,
+    "review": {
+      "total": 2,
+      "approved": 2,
+      "rejected": 0,
+      "proposed": 0,
+      "review_progress": 1,
+      "include_count": 2,
+      "exclude_count": 0
+    },
+    "complete": {
+      "total": 2,
+      "approved": 2,
+      "rejected": 0,
+      "proposed": 0,
+      "review_progress": 1,
+      "include_count": 2,
+      "exclude_count": 0
+    },
+    "relevant": {
+      "basketball": true,
+      "football": true,
+      "isolation": true
+    }
+  },
+  "contract": {
+    "generated": {
+      "contract_id": 2,
+      "version_no": 1,
+      "version_id": 2,
+      "operation_id": 5
+    },
+    "current": {
+      "contract_id": 2,
+      "name": "Test Contract",
+      "version_no": 1,
+      "version": {
+        "id": 2,
+        "contract_id": 2,
+        "version_no": 1,
+        "status": "DRAFT",
+        "content_hash": "4846f8ec63da2faa97d0840e23a8a7b6",
+        "created_at": "2026-09-03T12:45:53.817493",
+        "approved_at": null
+      }
+    },
+    "frozen": {
+      "version_no": 1,
+      "status": "FROZEN",
+      "contract_id": 2
+    }
+  },
+  "scenarios": {
+    "generated": {
+      "contract_version_id": 2,
+      "scenario_count": 2,
+      "skipped": 0,
+      "operation_id": 6
+    },
+    "count": 2,
+    "oracleCount": 2,
+    "oracleApproved": 2,
+    "relevant": {
+      "basketball": false,
+      "football": false,
+      "boxScore": false,
+      "isolation": false
+    }
+  },
+  "environment": {
+    "id": 1,
+    "snapshot": {
+      "id": 1,
+      "environment_id": 1,
+      "mission_id": 3,
+      "build_label": "sports-16.0.0-b226",
+      "frontend_version": "16.0.0",
+      "service_versions_json": "{\"sports-platform\": \"16.0.0\", \"test-platform\": \"2.1.0\"}",
+      "openapi_hash": "local-openapi-8899",
+      "db_schema_version": "alembic-current",
+      "config_hash": "batch-226-local",
+      "static_asset_hash": null,
+      "manual_note": "Batch 226 isolated local runtime",
+      "fingerprint_hash": "cd9540cb201fc5af2775c40002ab94038f7ed6b593f10d4d7f52fd230e007ebf",
+      "captured_at": "2026-09-03T12:45:56.706350",
+      "created_by_type": "MANUAL"
+    },
+    "fingerprint": {
+      "id": 1,
+      "environment_id": 1,
+      "fingerprint_hash": "cd9540cb201fc5af2775c40002ab94038f7ed6b593f10d4d7f52fd230e007ebf",
+      "build_label": "sports-16.0.0-b226",
+      "components_json": "{\"config_hash\":\"batch-226-local\",\"db_schema_version\":\"alembic-current\",\"frontend_version\":\"16.0.0\",\"openapi_hash\":\"local-openapi-8899\",\"service_versions\":{\"sports-platform\":\"16.0.0\",\"test-platform\":\"2.1.0\"}}",
+      "source_type": "MANUAL",
+      "confidence": "HIGH",
+      "captured_at": "2026-09-03T12:45:56.977990"
+    }
+  },
+  "failure": "Error: finish run failed: HTTP 400, code=400, msg=非法运行状态迁移：QUEUED → FINISHED\n    at must (F:\\CamelTv\\.agents\\skills\\playwright-skill\\.temp-execution-1788410720185.js:84:13)\n    at F:\\CamelTv\\.agents\\skills\\playwright-skill\\.temp-execution-1788410720185.js:270:22",
+  "finishedAt": "2026-09-03T04:45:58.014Z"
+}

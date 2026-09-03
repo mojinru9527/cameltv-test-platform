@@ -47,7 +47,7 @@ def attach_source(
     return R.ok(artifact_to_dict(artifact))
 
 
-@router.get("", response_model=R[dict])
+@router.get("", response_model=R[list])
 def list_sources(
     mission_id: int,
     current: CurrentUser = Depends(require_permission("mission:detail")),
@@ -70,7 +70,7 @@ def parse_source(
     return R.ok(result.model_dump())
 
 
-@router.get("/{source_id}/fragments", response_model=R[dict])
+@router.get("/{source_id}/fragments", response_model=R[list])
 def source_fragments(
     mission_id: int,
     source_id: int,

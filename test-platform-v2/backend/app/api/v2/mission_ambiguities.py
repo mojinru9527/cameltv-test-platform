@@ -51,7 +51,7 @@ def analyze(
     return R.ok(counts)
 
 
-@router.get("", response_model=R[dict])
+@router.get("", response_model=R[list])
 def list_ambiguities(
     mission_id: int,
     current: CurrentUser = Depends(require_permission("mission:detail")),
@@ -74,7 +74,7 @@ def resolve_ambiguity(
     return R.ok(ambiguity_to_dict(row))
 
 
-@intents_router.get("", response_model=R[dict])
+@intents_router.get("", response_model=R[list])
 def list_intents(
     mission_id: int,
     current: CurrentUser = Depends(require_permission("mission:detail")),
@@ -95,4 +95,3 @@ def review_intent(
         db, intent_id, current.project_id or 0, current.user.id, payload
     )
     return R.ok(intent_to_dict(row))
-

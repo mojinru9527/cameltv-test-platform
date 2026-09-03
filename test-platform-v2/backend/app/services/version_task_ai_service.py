@@ -11,11 +11,9 @@ from __future__ import annotations
 import json
 import logging
 
-from app.services.ai_config_service import (
-    AIProviderUnconfiguredError,
-    EffectiveAiConfig,
-    ai_config_service,
-)
+from app.core.exceptions import APIException
+from app.services import ai_client
+from app.services.ai_config_service import ai_config_service
 
 logger = logging.getLogger("version_task_ai")
 
@@ -30,7 +28,7 @@ _SYSTEM_PROMPT = """你是一位资深的版本验收测试方案设计师。
   或 {"url":"https://host/path","method":"GET","assert":[...]}。
 - 禁止臆造不存在的接口/字段；没有依据就不要填 exec_meta。
 
-只输出 JSON 数组，不要用 markdown 代码块包裹，不要输出其他文字。
+只输出 JSON 对象 {"items": [...]}，不要用 markdown 代码块包裹，不要输出其他文字。
 """
 
 
@@ -41,39 +39,22 @@ def _build_user_message(task: dict) -> str:
     modules = (task.get("scope") or {}).get("modules") or []
     if modules:
         parts.append("变更模块：" + "、".join(str(m) for m in modules))
+    endpoints = (task.get("scope") or {}).get("openapi_endpoints") or []
+    if endpoints:
+        lines = [
+            f"{endpoint.get('method', 'GET')} {endpoint.get('path', '')} {endpoint.get('summary', '')}".strip()
+            for endpoint in endpoints[:200]
+            if isinstance(endpoint, dict)
+        ]
+        if lines:
+            parts.append("已导入 OpenAPI 接口契约：\n" + "\n".join(lines))
     context = task.get("context") or ""
     if context:
         parts.append("需求/文档上下文：\n" + str(context)[:6000])
     return "\n".join(parts)
 
 
-def _call_llm_sync(cfg: EffectiveAiConfig, system_prompt: str, user_message: str, max_tokens: int = 4096) -> list[dict]:
-    """单次同步 DeepSeek / OpenAI 兼容 chat/completions 调用，返回解析后的 JSON（list）。"""
-    import httpx
-
-    payload = {
-        "model": cfg.model,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_message},
-        ],
-        "max_tokens": max_tokens,
-        "temperature": 0.2,
-        "response_format": {"type": "json_object"},
-    }
-    headers = {
-        "Authorization": f"Bearer {cfg.api_key}",
-        "Content-Type": "application/json",
-    }
-    with httpx.Client(timeout=120.0) as client:
-        resp = client.post(
-            f"{cfg.api_base_url.rstrip('/')}/chat/completions", json=payload, headers=headers
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        raw = data["choices"][0]["message"]["content"]
-
-    # 优先 json.loads（含顶层数组），失败再走 ai_service 的健壮修复
+def _parse_items(raw: str) -> list[dict]:
     try:
         parsed = json.loads(raw)
     except (ValueError, TypeError):
@@ -82,7 +63,7 @@ def _call_llm_sync(cfg: EffectiveAiConfig, system_prompt: str, user_message: str
 
             parsed = _parse_ai_response(raw)
         except Exception:  # noqa: BLE001 - 解析兜底
-            parsed = json.loads(raw)
+            return []
 
     # _parse_ai_response 会把 JSON 当作对象解析；方案数组可能是 raw["items"] 或直接是数组
     if isinstance(parsed, list):
@@ -97,6 +78,26 @@ def _call_llm_sync(cfg: EffectiveAiConfig, system_prompt: str, user_message: str
             if isinstance(val, list):
                 return val
     return []
+
+
+def _call_llm_sync(db, project_id: int, system_prompt: str, user_message: str, max_tokens: int = 4096) -> list[dict]:
+    """使用统一 AI 客户端，并对空内容/格式波动做一次有限重试。"""
+    for attempt in range(2):
+        summary = ai_client.chat_completions_full(
+            db,
+            project_id,
+            system_prompt=system_prompt,
+            user_message=user_message,
+            max_tokens=max_tokens,
+            temperature=0.2,
+            json_mode=True,
+        )
+        raw = str(summary.get("content") or "").strip()
+        items = _parse_items(raw) if raw else []
+        if items:
+            return items
+        logger.warning("AI 验收方案返回空或无法解析，准备重试（%d/2）", attempt + 1)
+    raise ai_client.AiClientResponseError("AI 验收方案连续两次无法解析")
 
 
 def _coerce_item(it: dict) -> dict:
@@ -117,9 +118,14 @@ def _coerce_item(it: dict) -> dict:
 def generate_plan_items(db, task, project_id: int) -> list[dict]:
     """由版本任务上下文生成 AI 验收方案条目（F-01）。无 AI 配置时抛错误。"""
     user_msg = _build_user_message(task)
-    cfg = ai_config_service.resolve(db, project_id)  # 无配置抛 AIProviderUnconfiguredError
-    items = _call_llm_sync(cfg, _SYSTEM_PROMPT, user_msg)
+    ai_config_service.resolve(db, project_id)  # 无配置保持既有的项目整备提示
+    try:
+        items = _call_llm_sync(db, project_id, _SYSTEM_PROMPT, user_msg)
+    except ai_client.AiClientUnavailableError as exc:
+        raise APIException(code=503, msg="AI 服务暂不可用，请稍后重试") from exc
+    except ai_client.AiClientResponseError as exc:
+        raise APIException(code=500, msg="AI 返回内容无法解析，请重试") from exc
     coerced = [_coerce_item(it) for it in items if isinstance(it, dict) and it.get("title")]
     if not coerced:
-        raise RuntimeError("AI 未返回有效方案条目")
+        raise APIException(code=500, msg="AI 未返回有效方案条目，请重试")
     return coerced
