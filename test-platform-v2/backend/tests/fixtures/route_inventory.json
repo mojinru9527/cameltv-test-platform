@@ -1,5 +1,5 @@
 {
-  "count": 641,
+  "count": 642,
   "routes": [
     {
       "path": "/api/v1/knowledge/version-records",
@@ -2560,6 +2560,10 @@
     {
       "method": "GET",
       "path": "/api/v1/onboarding/businesses"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/onboarding/readiness"
     },
     {
       "method": "POST",

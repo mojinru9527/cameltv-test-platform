@@ -16,8 +16,10 @@ router = APIRouter(prefix="/onboarding", tags=["新业务接入"])
 class OnboardingCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     service_key: str = Field(..., min_length=1, max_length=120)
-    api_spec_url: str = ""
-    base_url: str = ""
+    version: str = Field(..., min_length=1, max_length=64)
+    requirement_text: str = Field(..., min_length=1, max_length=20000)
+    api_spec_url: str = Field(..., min_length=1, max_length=1000)
+    base_url: str = Field(..., min_length=1, max_length=1000)
 
 
 def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str, detail: str = ""):
@@ -32,6 +34,7 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
 def _out(ob) -> dict:
     return {
         "id": ob.id, "name": ob.name, "service_key": ob.service_key,
+        "version": ob.version, "requirement_text": ob.requirement_text,
         "status": ob.status, "step": ob.step, "version_task_id": ob.version_task_id,
         "api_spec_url": ob.api_spec_url, "base_url": ob.base_url,
         "baseline": ob.baseline,
@@ -47,6 +50,7 @@ def create(
 ):
     ob = onboarding_service.create_onboarding(
         db, current.project_id or 0, name=data.name, service_key=data.service_key,
+        version=data.version, requirement_text=data.requirement_text,
         api_spec_url=data.api_spec_url, base_url=data.base_url,
     )
     _audit(req, current, db, "onboarding:create", f"{ob.id}", ob.name)
@@ -59,6 +63,14 @@ def list_all(
     db: Session = Depends(get_db),
 ):
     return R.ok([_out(ob) for ob in onboarding_service.list_onboardings(db, current.project_id or 0)])
+
+
+@router.get("/readiness", response_model=R[dict], summary="AI 全链路就绪检查")
+def readiness(
+    current: CurrentUser = Depends(require_permission("mission:list")),
+    db: Session = Depends(get_db),
+):
+    return R.ok(onboarding_service.get_readiness(db, current.project_id or 0))
 
 
 @router.post("/businesses/{onboarding_id}/steps/{step}", response_model=R[dict], summary="推进接入步骤")
