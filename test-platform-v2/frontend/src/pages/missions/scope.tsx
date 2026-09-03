@@ -35,19 +35,20 @@ export default function MissionScopePage() {
   const [items, setItems] = useState<ScopeItem[]>([])
   const [summary, setSummary] = useState<ScopeSummary | null>(null)
   const [loading, setLoading] = useState(true)
+  const [reloadVersion, setReloadVersion] = useState(0)
   const [analyzing, setAnalyzing] = useState(false)
   const [pendingKey, setPendingKey] = useState<string | null>(null)
   const [staleConflict, setStaleConflict] = useState(false)
 
   const reload = () => {
     setStaleConflict(false)
-    setLoading(true)
+    setReloadVersion((version) => version + 1)
   }
 
   useAbortableEffect((signal) => {
     if (!missionId) return
     setLoading(true)
-    fetchMissionScope(missionId)
+    fetchMissionScope(missionId, signal)
       .then((res) => {
         setItems(res.items)
         setSummary(res.summary)
@@ -58,7 +59,7 @@ export default function MissionScopePage() {
       .finally(() => {
         if (!signal.aborted) setLoading(false)
       })
-  }, [missionId, loading])
+  }, [missionId, reloadVersion])
 
   const doAnalyze = async () => {
     if (analyzing) return

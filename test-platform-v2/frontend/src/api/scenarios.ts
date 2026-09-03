@@ -53,8 +53,8 @@ export function generateScenarios(contractVersionId: number): Promise<{ contract
   return aitdeV2.post(`/contracts/${contractVersionId}/scenarios/generate`)
 }
 
-export function fetchMissionScenarios(missionId: number): Promise<ScenarioRow[]> {
-  return aitdeV2.get(`/missions/${missionId}/scenarios`)
+export function fetchMissionScenarios(missionId: number, signal?: AbortSignal): Promise<ScenarioRow[]> {
+  return aitdeV2.get(`/missions/${missionId}/scenarios`, { signal })
 }
 
 export function fetchScenario(scenarioId: number): Promise<ScenarioDetail> {
