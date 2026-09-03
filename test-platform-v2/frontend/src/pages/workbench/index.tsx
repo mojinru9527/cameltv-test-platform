@@ -1,14 +1,12 @@
 import { Link } from 'react-router'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { ClipboardCheck, Gauge, AlertCircle, FileCheck, ArrowRight, Inbox } from '@/lib/icons'
 import PageHeader from '@/components/PageHeader'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog'
 import { AsyncState } from '@/components/state'
 import PageIntro from '@/components/foolproof/PageIntro'
 import TermTip from '@/components/foolproof/TermTip'
-import StepWizard from '@/components/foolproof/StepWizard'
 import { Button } from '@/ui'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useApi } from '@/hooks/useApi'
@@ -75,7 +73,6 @@ function TodoPanel({ title, description, icon, accent, bucket, emptyText, viewAl
 
 export default function Workbench() {
   useDocumentTitle('我的待办')
-  const [wizardOpen, setWizardOpen] = useState(false)
   const { data, isLoading, isError, error, refetch } = useApi<DashboardTodo>(
     (signal) => fetchDashboardTodo(signal),
   )
@@ -137,7 +134,7 @@ export default function Workbench() {
       />
       <div className="flex flex-wrap items-center gap-2">
         <TermTip term="run" />
-        <Button size="sm" onClick={() => setWizardOpen(true)}>创建版本任务</Button>
+        <Link to="/version-tasks"><Button size="sm" variant="primary">创建版本任务</Button></Link>
       </div>
       <AsyncState
         isLoading={isLoading}
@@ -166,27 +163,6 @@ export default function Workbench() {
           </div>
         )}
       </AsyncState>
-      <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>新建版本任务（演示）</DialogTitle>
-            <DialogDescription>三步：放东西 → AI 出方案 → 确认。</DialogDescription>
-          </DialogHeader>
-          <StepWizard
-            steps={[
-              { title: '放东西', description: '把需求文档/版本包放进来（简化示例）。', content: <div className="rounded bg-muted/50 p-3 text-xs text-muted-hc">示例：拖入 v16.0.0 需求文档 + 选择测试环境。</div> },
-              { title: 'AI 出方案', description: 'AI 生成功能/接口/自动化场景，逐条确认。', content: <div className="rounded bg-muted/50 p-3 text-xs text-muted-hc">示例：AI 生成 12 个验证点，待审。</div> },
-              { title: '确认', description: '采纳/修改/删除后启动跑版本任务。', content: <div className="rounded bg-muted/50 p-3 text-xs text-muted-hc">示例：确认后进入「版本验收」执行。</div> },
-            ]}
-            onFinish={() => setWizardOpen(false)}
-          />
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="secondary" size="sm">关闭</Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

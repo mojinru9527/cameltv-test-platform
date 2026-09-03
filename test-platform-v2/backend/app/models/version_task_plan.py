@@ -30,5 +30,8 @@ class VersionTaskPlanItem(Base, TimestampMixin):
     question: Mapped[str] = mapped_column(Text, default="")  # 待确认问题
     answer: Mapped[str] = mapped_column(Text, default="")  # 追问答复/备注
     order_index: Mapped[int] = mapped_column(default=0)
+    # 可执行元数据（B8）：{} 或空表示暂不可自动执行；携带 method/path/url/assert 时
+    # start_run 走真实 HTTP 执行并落真实证据（不再臆造 PASS/FAIL）。
+    exec_meta: Mapped[str] = mapped_column(Text, default="{}")
 
     task: Mapped[VersionTask] = relationship(back_populates="plan_items")

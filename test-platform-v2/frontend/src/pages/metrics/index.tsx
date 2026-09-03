@@ -35,7 +35,9 @@ export default function MetricsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-semibold">{c.value}</div>
-              <div className="text-xs text-muted-foreground">{c.unit}</div>
+              <div className="text-xs text-muted-foreground">
+                {c.label === '回归人天' && m && !m.regression_person_days_recorded ? '未录入（人工记录）' : c.unit}
+              </div>
             </CardContent>
           </Card>
         ))}
