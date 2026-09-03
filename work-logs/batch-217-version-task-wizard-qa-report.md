@@ -1,5 +1,5 @@
 # Batch 217 — QA 报告：版本验收建任务向导（B7）
-> **QA (🔍)** | Date: 2026-09-05 | Verdict: **PASS** | Executor: Codex | 完整批次
+> **QA (🔍)** | Date: 2026-09-03 | Verdict: **PASS** | Executor: Codex | 完整批次
 
 ## 测试总览
 | 条件数 | 通过 | 失败 | 阻塞 |

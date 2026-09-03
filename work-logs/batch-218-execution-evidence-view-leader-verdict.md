@@ -1,5 +1,5 @@
 # Batch 218 — Leader Verdict：版本任务执行与证据（B8）
-> **Leader (🎯)** | Date: 2026-09-05 | Decision: **APPROVED** | Executor: Codex | 完整批次
+> **Leader (🎯)** | Date: 2026-09-03 | Decision: **APPROVED** | Executor: Codex | 完整批次
 
 ## 评审摘要
 | 维度 | 评分 | 备注 |

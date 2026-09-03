@@ -1,5 +1,5 @@
 # Batch 218 — 版本任务执行与证据（B8）
-> **Product (🟦)** | Date: 2026-09-05 | Status: Draft | Executor: Codex | 完整批次
+> **Product (🟦)** | Date: 2026-09-03 | Status: Draft | Executor: Codex | 完整批次
 
 ## 0. 关联
 - 路线图: `docs/superpowers/plans/2026-09-02-platform-refactor-rollout.md` §2 B8(batch-218) 完整·前后端

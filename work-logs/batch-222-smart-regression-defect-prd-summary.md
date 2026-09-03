@@ -1,5 +1,5 @@
 # Batch 222 — 智能回归 + 缺陷闭环（B12）
-> **Product (🟦)** | Date: 2026-09-05 | Status: Draft | Executor: Codex | 完整批次
+> **Product (🟦)** | Date: 2026-09-03 | Status: Draft | Executor: Codex | 完整批次
 
 ## 0. 关联
 - 路线图 §2 B12(batch-222) 完整·前后端：影响面默认接入；缺陷一键同步通知/缺陷库。

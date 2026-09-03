@@ -1,5 +1,5 @@
 # Batch 216 — PM Plan
-> **PM (🟨)** | Date: 2026-09-05 | Executor: Codex | 完整批次
+> **PM (🟨)** | Date: 2026-09-03 | Executor: Codex | 完整批次
 
 ## 规格摘要
 **原始需求**: B6 VersionTask 统一事实源（后端+DB）。
