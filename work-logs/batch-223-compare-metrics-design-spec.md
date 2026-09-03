@@ -1,5 +1,5 @@
 # Batch 223 — Design Spec
-> **Design (🎨)** | Date: 2026-09-05 | Status: 就绪 | Executor: Codex | 完整批次
+> **Design (🎨)** | Date: 2026-09-03 | Status: 就绪 | Executor: Codex | 完整批次
 
 ## 0. 技术体系
 前端 `@/ui` 语义组件；后端派生指标。

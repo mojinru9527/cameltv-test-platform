@@ -1,5 +1,5 @@
 # Batch 223 — 跨版本对比 + 运营指标（B13）
-> **Product (🟦)** | Date: 2026-09-05 | Status: Draft | Executor: Codex | 完整批次
+> **Product (🟦)** | Date: 2026-09-03 | Status: Draft | Executor: Codex | 完整批次
 
 ## 0. 关联
 - 路线图 §2 B13(batch-223) 完整·前后端+DB：跨版本对比页 + 运营指标看板（回归人天/提测→放行周期/漏测/周活跃）。

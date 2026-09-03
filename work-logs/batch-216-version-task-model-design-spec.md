@@ -1,5 +1,5 @@
 # Batch 216 — Design Spec
-> **Design (🎨)** | Date: 2026-09-05 | Status: 就绪 | Executor: Codex | 完整批次
+> **Design (🎨)** | Date: 2026-09-03 | Status: 就绪 | Executor: Codex | 完整批次
 
 ## 0. 技术体系确认
 后端栈 FastAPI + SQLAlchemy + Alembic。本批**纯后端+DB**（无前端组件改动）。数据模型遵循 `app/models/base.py` 的 `TimestampMixin`（created_at/updated_at）。

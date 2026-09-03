@@ -1,5 +1,5 @@
 # Batch 220 — 主链路真实走查（B10）
-> **Product (🟦)** | Date: 2026-09-05 | Status: Draft | Executor: Codex | **轻量批次**
+> **Product (🟦)** | Date: 2026-09-03 | Status: Draft | Executor: Codex | **轻量批次**
 > `mode: light` | 豁免理由：本批为「验收 + 修复 + 纯文档」——不改新行为/新接口/新配置（仅新增测试证据与《主链路用户手册》），符合 SKILL.md/pipeline-modes 轻量档。
 
 ## 1. 问题陈述

@@ -1,5 +1,5 @@
 # Batch 218 — Design Spec
-> **Design (🎨)** | Date: 2026-09-05 | Status: 就绪 | Executor: Codex | 完整批次
+> **Design (🎨)** | Date: 2026-09-03 | Status: 就绪 | Executor: Codex | 完整批次
 
 ## 0. 技术体系确认
 前端 `@/ui` 语义组件；后端 FastAPI + SQLAlchemy。语义 token（batch54）约束：不用固定色板。Badge 使用 `variant`（default/destructive/outline/secondary/ghost）或 `tone`（success/warning/danger/info/neutral）。

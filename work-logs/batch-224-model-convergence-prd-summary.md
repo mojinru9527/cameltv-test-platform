@@ -1,5 +1,5 @@
 # Batch 224 — D 级收敛（B14）
-> **Product (🟦)** | Date: 2026-09-05 | Status: Draft | Executor: Codex | 完整批次
+> **Product (🟦)** | Date: 2026-09-03 | Status: Draft | Executor: Codex | 完整批次
 
 ## 0. 关联
 - 路线图 §2 B14(batch-224) 完整·后端+DB：TestPlan 数据归档、Dataset/Fixtures 合并、环境/报告/缺陷/任务入口收敛为单一事实源。

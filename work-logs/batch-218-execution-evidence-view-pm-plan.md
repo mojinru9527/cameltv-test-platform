@@ -1,5 +1,5 @@
 # Batch 218 — PM Plan
-> **PM (🟨)** | Date: 2026-09-05 | Executor: Codex | 完整批次
+> **PM (🟨)** | Date: 2026-09-03 | Executor: Codex | 完整批次
 
 ## 规格摘要
 **原始需求**: B8 一键运行 + 进度 + 证据回放 + 失败四分类→缺陷草稿。

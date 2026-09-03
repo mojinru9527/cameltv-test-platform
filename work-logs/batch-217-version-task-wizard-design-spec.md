@@ -1,5 +1,5 @@
 # Batch 217 — Design Spec
-> **Design (🎨)** | Date: 2026-09-05 | Status: 就绪 | Executor: Codex | 完整批次
+> **Design (🎨)** | Date: 2026-09-03 | Status: 就绪 | Executor: Codex | 完整批次
 
 ## 0. 技术体系确认
 前端 shadcn/ui + Radix + Tailwind + CVA；语义 UI 入口 `@/ui`（PageShell/Card/Badge/Progress/Button/Input/Label/Textarea）。遵守 `cameltv-ui-conventions` 与 batch54 语义 token 守卫（禁止固定色板）。

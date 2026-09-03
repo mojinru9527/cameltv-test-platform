@@ -1,5 +1,5 @@
 # Batch 217 — 版本验收建任务向导（B7）
-> **Product (🟦)** | Date: 2026-09-05 | Status: Draft | Executor: Codex | 完整批次
+> **Product (🟦)** | Date: 2026-09-03 | Status: Draft | Executor: Codex | 完整批次
 
 ## 0. 关联
 - 路线图: `docs/superpowers/plans/2026-09-02-platform-refactor-rollout.md` §2 B7(batch-217) 完整·前后端

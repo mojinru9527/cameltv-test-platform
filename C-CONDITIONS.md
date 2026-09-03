@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-05 (Batch 227：登记 PR 门禁与体育 16.0.0 真实外部环境解除条件；日期与仓库最新既有 verdict 对齐)
+**最后更新**: 2026-09-03 (Batch 227：登记 PR 门禁与体育 16.0.0 真实外部环境解除条件；日期与仓库最新既有 verdict 对齐)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -63,74 +63,74 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|--------|---------|
 | C227-1 | Draft PR required checks 全绿并通过最终 `audit-ai-pr.ps1 -RequireSuccessfulChecks` 后，Leader 才可 APPROVED 并合入 main。 | P1 | 2026-09-03 |
 
-### batch-216 — B6 VersionTask 统一事实源（2026-09-05）—— 新增
+### batch-216 — B6 VersionTask 统一事实源（2026-09-03）—— 新增
 
-### batch-217 — B7 版本验收建任务向导（2026-09-05）—— 新增
+### batch-217 — B7 版本验收建任务向导（2026-09-03）—— 新增
 
-### batch-218 — B8 版本任务执行与证据（2026-09-05）—— 新增
+### batch-218 — B8 版本任务执行与证据（2026-09-03）—— 新增
 
-### batch-219 — B9 版本任务放行与证据包（2026-09-05）—— 新增
+### batch-219 — B9 版本任务放行与证据包（2026-09-03）—— 新增
 
-### batch-220 — B10 主链路真实走查（2026-09-05）—— 新增
+### batch-220 — B10 主链路真实走查（2026-09-03）—— 新增
 
-### batch-221 — B11 知识管线（2026-09-05）—— 新增
+### batch-221 — B11 知识管线（2026-09-03）—— 新增
 
-### batch-222 — B12 智能回归+缺陷闭环（2026-09-05）—— 新增
+### batch-222 — B12 智能回归+缺陷闭环（2026-09-03）—— 新增
 
-### batch-223 — B13 跨版本对比+指标（2026-09-05）—— 新增
+### batch-223 — B13 跨版本对比+指标（2026-09-03）—— 新增
 
-### batch-224 — B14 D级收敛（2026-09-05）—— 新增
+### batch-224 — B14 D级收敛（2026-09-03）—— 新增
 
-### batch-225 — B15 新业务接入（2026-09-05）—— 新增
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C225-1 | B1-B15 汇总后需执行「最终验收」（路线图 §4）：审计 B1-B15 全部内容 + 黑盒浏览器走查（登录→我的待办→版本验收→执行→缺陷→放行→知识复用→资产库可达）+ 交付文档（功能使用文档/代码实现文档）。解除条件=最终验收完成 + 交付文档。 | P1 | 2026-09-05 |
-
+### batch-225 — B15 新业务接入（2026-09-03）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| ~~C224-1~~ | ~~B15 新业务接入必须走 VersionTask 主链路 4 步接入向导，产出业务基线；不得另造接入容器。~~ → **Closed**：B15 `BusinessOnboarding` 4 步（登记→接基线→生成方案→跑基线）走 version_task_service（create_task/generate_plan/start_run），产出 baseline；PR #405。 | P2 | 2026-09-05 |
+| C225-1 | B1-B15 汇总后需执行「最终验收」（路线图 §4）：审计 B1-B15 全部内容 + 黑盒浏览器走查（登录→我的待办→版本验收→执行→缺陷→放行→知识复用→资产库可达）+ 交付文档（功能使用文档/代码实现文档）。解除条件=最终验收完成 + 交付文档。 | P1 | 2026-09-03 |
 
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| ~~C223-1~~ | ~~B14 D 级收敛必须把 TestPlan 数据只读归档、Dataset/Fixtures 合并、入口收敛为单一事实源（VersionTask），不得双写。~~ → **Closed**：B14 `archive_test_plan`（TestPlan→archived + 绑 VersionTask）、`unified_assets_view`（single_fact_source=version_task）、`merged_data_assets`；PR #404。（前端降级视图/存量迁移随发布） | P2 | 2026-09-05 |
+| ~~C224-1~~ | ~~B15 新业务接入必须走 VersionTask 主链路 4 步接入向导，产出业务基线；不得另造接入容器。~~ → **Closed**：B15 `BusinessOnboarding` 4 步（登记→接基线→生成方案→跑基线）走 version_task_service（create_task/generate_plan/start_run），产出 baseline；PR #405。 | P2 | 2026-09-03 |
 
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| ~~C222-1~~ | ~~B13 对比+指标必须把指标挂到 VersionTask 完结记录（version_knowledge_record）并复用 B12 推荐集；不得另造指标容器。~~ → **Closed**：B13 `get_operations_metrics` 基于 version_task/version_knowledge_record 聚合，`compare_versions` 跨版本对比；PR #403。 | P2 | 2026-09-05 |
+| ~~C223-1~~ | ~~B14 D 级收敛必须把 TestPlan 数据只读归档、Dataset/Fixtures 合并、入口收敛为单一事实源（VersionTask），不得双写。~~ → **Closed**：B14 `archive_test_plan`（TestPlan→archived + 绑 VersionTask）、`unified_assets_view`（single_fact_source=version_task）、`merged_data_assets`；PR #404。（前端降级视图/存量迁移随发布） | P2 | 2026-09-03 |
 
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| ~~C221-1~~ | ~~B12 智能回归+缺陷闭环必须复用 VersionTask 失败分类/复用建议，缺陷一键同步；不得再造成回归容器。~~ → **Closed**：B12 `recommend_regression_set` 基于方案/模块/复用推荐，`sync_defect_notification` 缺陷一键同步（NotificationLog + link）；PR #402。 | P2 | 2026-09-05 |
+| ~~C222-1~~ | ~~B13 对比+指标必须把指标挂到 VersionTask 完结记录（version_knowledge_record）并复用 B12 推荐集；不得另造指标容器。~~ → **Closed**：B13 `get_operations_metrics` 基于 version_task/version_knowledge_record 聚合，`compare_versions` 跨版本对比；PR #403。 | P2 | 2026-09-03 |
 
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| ~~C220-1~~ | ~~B11 知识管线必须消费 VersionTask 完结数据（版本沉淀为知识记录），不得另造知识容器。~~ → **Closed**：B11 `record_version_knowledge` 在 release 自动沉淀 version_knowledge_record，`get_reuse_suggestions` 建任务带出上版复用建议；PR #401。（AI 任务探索新知识留 DSH 后续） | P2 | 2026-09-05 |
+| ~~C221-1~~ | ~~B12 智能回归+缺陷闭环必须复用 VersionTask 失败分类/复用建议，缺陷一键同步；不得再造成回归容器。~~ → **Closed**：B12 `recommend_regression_set` 基于方案/模块/复用推荐，`sync_defect_notification` 缺陷一键同步（NotificationLog + link）；PR #402。 | P2 | 2026-09-03 |
 
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| ~~C219-1~~ | ~~B10 真实走查必须基于 VersionTask 闭环验证黑盒可用；若发现卡点，优先在 VersionTask 主链路修复。~~ → **Closed**：B10 API/service 级主链路走查 2 测试绿（建任务→方案→审→运行→放行→证据包），无卡点；《主链路用户手册》落盘；PR #400。 | P2 | 2026-09-05 |
+| ~~C220-1~~ | ~~B11 知识管线必须消费 VersionTask 完结数据（版本沉淀为知识记录），不得另造知识容器。~~ → **Closed**：B11 `record_version_knowledge` 在 release 自动沉淀 version_knowledge_record，`get_reuse_suggestions` 建任务带出上版复用建议；PR #401。（AI 任务探索新知识留 DSH 后续） | P2 | 2026-09-03 |
 
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| ~~C218-1~~ | ~~B9 放行页必须基于 VersionTask 的 `verdict`/`coverage` 生成放行证据包并绑定 `release_bundle_id`，状态机走 `verdict→released`；不得再造放行容器。~~ → **Closed**：B9 `build_release_package`/`release_task` 基于 VersionTask coverage/verdict 生成证据包并绑定 release_bundle_id，状态→released；PR #399。 | P2 | 2026-09-05 |
+| ~~C219-1~~ | ~~B10 真实走查必须基于 VersionTask 闭环验证黑盒可用；若发现卡点，优先在 VersionTask 主链路修复。~~ → **Closed**：B10 API/service 级主链路走查 2 测试绿（建任务→方案→审→运行→放行→证据包），无卡点；《主链路用户手册》落盘；PR #400。 | P2 | 2026-09-03 |
 
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| ~~C217-1~~ | ~~B8 执行与证据回放必须把执行记录挂到 VersionTask 并回写 `coverage`，保持单一事实源；不得在 VersionTask 之外再造执行容器。~~ → **Closed**：B8 引入 `version_task_run` 子表（task_id FK 归属 VersionTask）承载进度/覆盖/证据/失败分类并回写 `task.coverage`（start_run 单测断言 pass/fail/skip/blocked）；通用 `version_task_execution` 关联保留给引擎级执行引用（B14 统合）；PR #398。 | P2 | 2026-09-05 |
+| ~~C218-1~~ | ~~B9 放行页必须基于 VersionTask 的 `verdict`/`coverage` 生成放行证据包并绑定 `release_bundle_id`，状态机走 `verdict→released`；不得再造放行容器。~~ → **Closed**：B9 `build_release_package`/`release_task` 基于 VersionTask coverage/verdict 生成证据包并绑定 release_bundle_id，状态→released；PR #399。 | P2 | 2026-09-03 |
 
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| ~~C216-1~~ | ~~B7 建任务向导必须消费 `/api/v1/version-tasks` 状态机，不得另造任务容器；如需扩展字段先走单头 migration。~~ → **Closed**：B7 新增 `src/pages/version-tasks/index.tsx` 调用 `createVersionTask`/`generatePlan`/`transitionVersionTask`（draft→plan_review），未另造容器；VersionTask 状态机由 B6 service 驱动；PR #397。 | P2 | 2026-09-05 |
+| ~~C217-1~~ | ~~B8 执行与证据回放必须把执行记录挂到 VersionTask 并回写 `coverage`，保持单一事实源；不得在 VersionTask 之外再造执行容器。~~ → **Closed**：B8 引入 `version_task_run` 子表（task_id FK 归属 VersionTask）承载进度/覆盖/证据/失败分类并回写 `task.coverage`（start_run 单测断言 pass/fail/skip/blocked）；通用 `version_task_execution` 关联保留给引擎级执行引用（B14 统合）；PR #398。 | P2 | 2026-09-03 |
+
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| ~~C216-1~~ | ~~B7 建任务向导必须消费 `/api/v1/version-tasks` 状态机，不得另造任务容器；如需扩展字段先走单头 migration。~~ → **Closed**：B7 新增 `src/pages/version-tasks/index.tsx` 调用 `createVersionTask`/`generatePlan`/`transitionVersionTask`（draft→plan_review），未另造容器；VersionTask 状态机由 B6 service 驱动；PR #397。 | P2 | 2026-09-03 |
 
 ### batch-215 — B5 死代码清理（2026-09-03）—— 新增
 

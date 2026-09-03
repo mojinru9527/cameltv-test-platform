@@ -1,5 +1,5 @@
 # Batch 220 — Leader Verdict：主链路真实走查（B10）
-> **Leader (🎯)** | Date: 2026-09-05 | Decision: **APPROVED** | Executor: Codex | 轻量批次
+> **Leader (🎯)** | Date: 2026-09-03 | Decision: **APPROVED** | Executor: Codex | 轻量批次
 
 ## 评审摘要
 | 维度 | 评分 | 备注 |

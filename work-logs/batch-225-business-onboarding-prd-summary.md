@@ -1,5 +1,5 @@
 # Batch 225 — 新业务接入（B15）
-> **Product (🟦)** | Date: 2026-09-05 | Status: Draft | Executor: Codex | 完整批次
+> **Product (🟦)** | Date: 2026-09-03 | Status: Draft | Executor: Codex | 完整批次
 
 ## 0. 关联
 - 路线图 §2 B15(batch-225) 完整·前后端+DB：4 步接入向导 + 业务基线（试点 basketball-service/camel-mimo）。

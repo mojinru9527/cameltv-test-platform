@@ -10,7 +10,7 @@
 | **关联 PRD** | [work-logs/batch-218-execution-evidence-view-prd-summary.md](../batch-218-execution-evidence-view-prd-summary.md) |
 | **总预估工时** | ~5h |
 | **已用批次** | 1 |
-| **看板创建** | 2026-09-05 |
+| **看板创建** | 2026-09-03 |
 
 ## 🎯 交付切片进度
 | # | Slice | 方案 | 编码 | 自测 | 审批 | 合入 | 备注 |
@@ -31,7 +31,7 @@ Batch 218 — 执行与证据
 ```
 
 ## 📜 批次记录
-### Batch 218 (2026-09-05)
+### Batch 218 (2026-09-03)
 - **产出**: version_task_run 模型/迁移 + run/coverage/失败四分类/缺陷草稿 + 4 API + 前端详情页 + 3 后端测试
 - **审批**: 待合入
 - **耗时**: ~5h

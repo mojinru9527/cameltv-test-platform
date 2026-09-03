@@ -1,5 +1,5 @@
 # Batch 221 — 知识管线（B11）
-> **Product (🟦)** | Date: 2026-09-05 | Status: Draft | Executor: Codex | 完整批次
+> **Product (🟦)** | Date: 2026-09-03 | Status: Draft | Executor: Codex | 完整批次
 
 ## 0. 关联
 - 路线图 §2 B11(batch-221) 完整·后端+DB：版本沉淀 + AI 任务探索新知识 双输入；复用建议自动带出。
