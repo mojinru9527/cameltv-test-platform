@@ -55,6 +55,16 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
 # 概览
 # ═══════════════════════════════════════════════════════
 
+@router.get("/version-records", response_model=R[list[dict]], summary="版本知识记录（B11 版本记录/复用建议 Tab）")
+def list_version_records(
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    from app.services import version_task_service
+
+    return R.ok(version_task_service.list_version_knowledge(db, current.project_id or 0))
+
+
 @router.get("/overview", response_model=R[KnowledgeOverviewOut], summary="知识中心概览")
 def overview(
     current: CurrentUser = Depends(require_permission("knowledge:view")),

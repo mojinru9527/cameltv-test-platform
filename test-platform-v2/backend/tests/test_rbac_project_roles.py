@@ -49,7 +49,7 @@ FORBIDDEN_TESTER_CODES = {
     "ai_artifact:import",
     "lanhu_evidence:import", "lanhu_evidence:review",
     "integration:sync_prod", "apitest:execute_prod", "uitest:trigger_prod",
-    "report:delete", "defect:delete", "mission:delete", "mission:generate",
+    "report:delete", "defect:delete", "mission:delete",
 }
 
 

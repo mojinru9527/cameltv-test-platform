@@ -30,6 +30,24 @@ export async function fetchKnowledgeOverview(signal?: AbortSignal): Promise<Know
   return api.get('/knowledge/overview')
 }
 
+export interface VersionKnowledgeRecord {
+  id: number
+  task_id: number
+  version: string
+  title: string
+  summary: string
+  coverage: { pass?: number; fail?: number; skip?: number; blocked?: number }
+  verdict: string
+  risk: unknown
+  plan_summary: unknown
+  defect_count: number
+  created_at: string | null
+}
+
+export async function fetchVersionKnowledge(signal?: AbortSignal): Promise<VersionKnowledgeRecord[]> {
+  return api.get('/knowledge/version-records', signal ? { signal } : undefined)
+}
+
 export async function fetchKnowledgeSources(params: {
   source_type?: string
   para_category?: string

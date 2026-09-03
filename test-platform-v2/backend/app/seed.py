@@ -20,6 +20,11 @@ _MENUS = [
     # ("menu:trace", "质量追溯", "", "/trace", "NodeIndexOutlined", 2),
     ("menu:requirement", "需求文档", "", "/requirement", "FileTextOutlined", 3),
     ("menu:versionmission", "版本发布包", "", "/release-bundles", "GitBranchOutlined", 4),
+    # (B6-F03) 版本验收主链路唯一事实源入口（batch-216+）；testplan 数据只读归档后独立入口
+    ("menu:versiontask", "版本验收任务", "", "/version-tasks", "CheckCircleOutlined", 4),
+    # (B13/B15-F05) 运营指标 / 新业务接入 入口
+    ("menu:metrics", "运营指标", "", "/metrics", "BarChartOutlined", 26),
+    ("menu:onboarding", "新业务接入", "", "/onboarding", "RocketOutlined", 27),
     # ── 知识中心 ──
     ("menu:knowledge", "知识中心", "", "/knowledge", "BrainCircuitOutlined", 5),
     # (c165-3 入口收敛) 知识中心四个子项与页内 Tab 完全同源（/knowledge?tab=xxx），
@@ -237,9 +242,9 @@ _TESTER_ACTIONS = {
     "dataset:list", "dataset:create", "dataset:update", "dataset:delete",
     # 用例评审
     "review:submit", "review:approve",
-    # 版本测试任务（删除与 AI 生成留管理员）
+    # 版本测试任务（删除留管理员；AI 方案生成为主链路必要能力，授予 tester——F-04）
     "mission:list", "mission:detail", "mission:create", "mission:update",
-    "mission:log",
+    "mission:generate", "mission:log",
     # (v331-remediation-2 B2 / V30-085) AI Debug Drawer（只读调试信息）
     "mission:ai_view_debug",
     # 数据源（AITDE V3.2；只读+创建/编辑）
@@ -298,6 +303,8 @@ _TESTER_MENUS = {
     "menu:myproject",
     # (v331-gap B1) 智能测试任务入口
     "menu:missions",
+    # (B6-F03) 版本验收主链路 / 运营指标 / 新业务接入
+    "menu:versiontask", "menu:metrics", "menu:onboarding",
     # (V3.4 Durable Runtime) Worker / Workflow 只读入口（Policy/Secret/Approval 在页内按权限显示）
     "menu:runtime",
 }
