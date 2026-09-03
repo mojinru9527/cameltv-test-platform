@@ -14,7 +14,7 @@
 # 用法: bash scripts/start-worker.sh [zone] [capabilities...]
 #    例: bash scripts/start-worker.sh TEST HTTP,BROWSER
 set -euo pipefail
-cd "$(dirname "$0")/../../../.."
+cd "$(dirname "$0")/../../../backend"
 
 ZONE=${1:-TEST}
 CAPS=${2:-HTTP,BROWSER}

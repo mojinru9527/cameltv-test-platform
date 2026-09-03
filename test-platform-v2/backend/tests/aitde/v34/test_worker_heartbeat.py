@@ -131,6 +131,7 @@ def test_worker_launcher_manages_heartbeat_and_gateway_processes():
     platform_root = Path(__file__).resolve().parents[4]
     script = (platform_root / "deploy" / "aitde-runtime" / "scripts" / "start-worker.sh").read_text(encoding="utf-8")
 
+    assert 'cd "$(dirname "$0")/../../../backend"' in script
     assert "app.modules.aitde.workflow.worker_heartbeat" in script
     assert "app.modules.aitde.workflow.gateway" in script
     assert "wait -n" in script
