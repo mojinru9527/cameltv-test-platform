@@ -1,0 +1,24 @@
+{
+  "source": "FastAPI app.openapi()",
+  "create_endpoint": {
+    "method": "POST",
+    "path": "/api/v1/onboarding/businesses",
+    "operation_id": "create_api_v1_onboarding_businesses_post",
+    "required_fields": [
+      "name",
+      "service_key",
+      "version",
+      "requirement_text",
+      "api_spec_url",
+      "base_url"
+    ]
+  },
+  "readiness_endpoint": {
+    "method": "GET",
+    "path": "/api/v1/onboarding/readiness",
+    "operation_id": "readiness_api_v1_onboarding_readiness_get",
+    "authenticated": true,
+    "live_browser_http_status": 200
+  },
+  "verdict": "PASS"
+}

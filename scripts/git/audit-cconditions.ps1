@@ -57,9 +57,9 @@ $trackerIds = New-Object System.Collections.Generic.HashSet[string]
 
 $idPattern = '(?:TPv2-B\d+-)?(?:C|G|CP)\d+[-_][A-Za-z]?\d+(?:[-_][A-Za-z]?\d+)*'
 # 区间简写（batch-18/e verdict 用 "C1-C3"/"C5-C8" 表示连续条件区间，非真实条件 ID）
-$proseRangeTokens = @('C1-C3', 'C5-C8')
+$proseRangeTokens = @('C1-C3', 'C1-C7', 'C5-C8', 'G1-G5')
 $allowedNext = [System.Collections.Generic.HashSet[char]]::new()
-foreach ($c in @(':', '：', '|', '*', '（', '(', ' ', '、', ',', '，', ';', '；')) {
+foreach ($c in @(':', '：', '|', '*', '~', '（', '(', ' ', '、', ',', '，', ';', '；')) {
     [void]$allowedNext.Add([char]$c)
 }
 function ConvertTo-NormalizedId([string]$value) {

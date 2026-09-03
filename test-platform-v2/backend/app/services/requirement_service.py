@@ -222,11 +222,11 @@ def get_requirement_cases(db: Session, doc_id: int, project_id: int) -> dict | N
     imported_api_set: set[int] = set()
     try:
         imported_func_set = set(json.loads(row.imported_func_indices or "[]"))
-    except json.JSONDecodeError:
+    except json.JSONDecodeError:  # Corrupt legacy indices mean no cases were imported.
         pass
     try:
         imported_api_set = set(json.loads(row.imported_api_indices or "[]"))
-    except json.JSONDecodeError:
+    except json.JSONDecodeError:  # Corrupt legacy indices mean no cases were imported.
         pass
 
     # Build structured result with indices (same format as generate endpoint)

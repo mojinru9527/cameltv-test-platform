@@ -233,6 +233,8 @@ export interface Onboarding {
   id: number
   name: string
   service_key: string
+  version: string
+  requirement_text: string
   status: string
   step: number
   version_task_id: number | null
@@ -241,12 +243,43 @@ export interface Onboarding {
   baseline: string
 }
 
-export async function createOnboarding(body: { name: string; service_key: string; api_spec_url?: string; base_url?: string }): Promise<Onboarding> {
+export interface OnboardingServiceReadiness {
+  status: 'ready' | 'unknown' | 'blocked'
+  message: string
+  managed_by: 'platform' | 'project_admin'
+  provider?: { id: number; name: string; model: string } | null
+  online_count?: number
+}
+
+export interface OnboardingReadiness {
+  project_id: number
+  checked_at: string
+  baseline_ready: boolean
+  durable_ready: boolean
+  services: {
+    ai_provider: OnboardingServiceReadiness
+    temporal: OnboardingServiceReadiness
+    runtime_worker: OnboardingServiceReadiness
+  }
+}
+
+export async function createOnboarding(body: {
+  name: string
+  service_key: string
+  version: string
+  requirement_text: string
+  api_spec_url: string
+  base_url: string
+}): Promise<Onboarding> {
   return (await v1.post('/onboarding/businesses', body)) as unknown as Onboarding
 }
 
 export async function listOnboardings(signal?: AbortSignal): Promise<Onboarding[]> {
   return (await v1.get('/onboarding/businesses', { signal })) as unknown as Onboarding[]
+}
+
+export async function getOnboardingReadiness(signal?: AbortSignal): Promise<OnboardingReadiness> {
+  return (await v1.get('/onboarding/readiness', { signal })) as unknown as OnboardingReadiness
 }
 
 export async function advanceOnboarding(id: number, step: number): Promise<Onboarding> {

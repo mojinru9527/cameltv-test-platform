@@ -18,6 +18,8 @@ class BusinessOnboarding(Base, TimestampMixin):
     project_id: Mapped[int] = mapped_column(default=0, index=True)
     name: Mapped[str] = mapped_column(String(200), default="")
     service_key: Mapped[str] = mapped_column(String(120), default="", index=True)
+    version: Mapped[str] = mapped_column(String(64), default="")
+    requirement_text: Mapped[str] = mapped_column(Text, default="")
     api_spec_url: Mapped[str] = mapped_column(Text, default="")
     base_url: Mapped[str] = mapped_column(Text, default="")
     # draft | onboarding | active | blocked | archived

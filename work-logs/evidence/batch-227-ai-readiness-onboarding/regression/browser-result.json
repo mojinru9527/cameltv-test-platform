@@ -1,0 +1,44 @@
+{
+  "target": "http://127.0.0.1:5577",
+  "input": {
+    "business_name": "体育平台",
+    "service_key": "sports-service",
+    "version": "16.0.0",
+    "requirement_path": "F:\\CamelTv\\work-logs\\evidence\\v40-ai-blackbox-16.0.0\\体育平台-16.0.0-需求规格说明书.md",
+    "requirement_chars": 2040,
+    "openapi_url": "http://127.0.0.1:8900/openapi.json",
+    "base_url": "http://127.0.0.1:8900"
+  },
+  "checks": {
+    "desktop_before_submit": {
+      "viewport": 1434,
+      "scroll": 1434
+    },
+    "responsive": [
+      {
+        "name": "tablet-768x1024",
+        "viewport": 762,
+        "scroll": 762
+      },
+      {
+        "name": "mobile-390x844",
+        "viewport": 384,
+        "scroll": 384
+      }
+    ],
+    "six_required_fields": true,
+    "platform_managed_copy": true,
+    "sports_16_saved": true,
+    "openapi_imported": true,
+    "ai_fail_closed": true
+  },
+  "request_counts": {
+    "readiness": 1,
+    "list": 3,
+    "create": 1,
+    "advance": 1
+  },
+  "console_errors": [],
+  "page_errors": [],
+  "verdict": "PASS"
+}

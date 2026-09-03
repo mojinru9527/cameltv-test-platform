@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-03 (Batch 214 处理记录：无新增 C 条件；B3 已合入 main，R211-2 于 batch-213 QA 满足；R211-3 保持 Open 至 B15)
+**最后更新**: 2026-09-05 (Batch 227：登记 PR 门禁与体育 16.0.0 真实外部环境解除条件；日期与仓库最新既有 verdict 对齐)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -56,6 +56,12 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ---
 
 ## Open (待处理)
+
+### batch-227 — AI 全链路就绪向导（2026-09-03）—— 新增
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C227-1 | Draft PR required checks 全绿并通过最终 `audit-ai-pr.ps1 -RequireSuccessfulChecks` 后，Leader 才可 APPROVED 并合入 main。 | P1 | 2026-09-03 |
 
 ### batch-216 — B6 VersionTask 统一事实源（2026-09-05）—— 新增
 
@@ -435,6 +441,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 解除条件 |
 |----|------|--------|---------|
+| C227-2 | 体育 16.0.0 真实业务 AI 全链路验收 | P1 | 提供健康 AI Provider、平台可访问的真实体育 OpenAPI 与被测地址；目标环境需要鉴权时由管理员配置凭据或 Runner；需要 AITDE 耐久执行时另需 Temporal 与在线 Worker/Runner，然后复用同一需求重跑并生成业务通过证据。 |
 | CP-C2 | iOS 真机采集端到端验证 | P0 | 设备已就绪（用户 2026-08-07 声明）；**探测：宿主无 Apple Mobile Device Service/usbmuxd，tidevice usbmux 拒绝连接（WinError 10061）**；解除条件：安装 Apple 驱动/服务（iTunes 或 usbmuxd）并连接已信任 iPhone 后重试 | P0 | 用户已连接 iPhone（Apple 驱动已装，tidevice 可识别）；**阻塞：solox 缺 iOS 26.5 DeviceSupport（GitHub 404），平台 iOS 采集不可用**；解除条件：solox 支持该版本或提供受支持 iOS 设备 |
 | C84-1 | iOS 真机采集验收（tidevice 链） | P1 | 同 CP-C2（宿主 usbmux 服务缺失，tidevice 无法枚举设备） | P1 | 同 CP-C2（solox 支持后执行） |
 | C74-2 | Test5 无契约服务契约补拉 | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供；**探测 2026-08-07：VPN 未连通（camel-admintest5/网关/elelive 全部超时 000），konfi 密码仍待提供** | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供（2026-08-05：运营后台测试环境 camel-admintest5.elelive.cn，账号 ll）；2026-08-05 VPN 实测网关服务未就绪（路由空/health 503），konfi 密码待提供 |
@@ -1060,8 +1067,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 2. Product 开工前必须 `Read C-CONDITIONS.md`，在 PRD 的「非目标」段中明确哪些 Open 条件纳入本次、哪些豁免及理由
 3. PR 合入后，Dev 负责将本次满足的 C 条件从 Open → Closed
 4. 每月 1 日 Leader 审查所有 Open 条件，超过 60 天无进展的需升级优先级或明确废弃
-
-
 
 
 
