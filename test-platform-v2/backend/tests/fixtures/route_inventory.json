@@ -1,6 +1,14 @@
 {
-  "count": 639,
+  "count": 641,
   "routes": [
+    {
+      "path": "/api/v1/knowledge/version-records",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/plan/generate-ai",
+      "method": "POST"
+    },
     {
       "path": "/api/v1/agents/queue",
       "method": "GET"
