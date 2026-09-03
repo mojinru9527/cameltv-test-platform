@@ -13,7 +13,7 @@ export interface WorkerNode {
   tags_json: Record<string, unknown> | string
   last_heartbeat_at: string | null
   registered_at: string | null
-  capabilities?: string[]
+  capabilities: string[]
 }
 
 export interface WorkerDetail extends WorkerNode {

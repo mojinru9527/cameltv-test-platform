@@ -67,6 +67,24 @@ def list_worker_capabilities(db: Session, worker_id: int) -> list[WorkerCapabili
     )
 
 
+def list_worker_capabilities_by_worker_ids(
+    db: Session,
+    worker_ids: list[int],
+) -> dict[int, list[str]]:
+    capabilities_by_worker = {worker_id: [] for worker_id in worker_ids}
+    if not worker_ids:
+        return capabilities_by_worker
+
+    rows = db.execute(
+        select(WorkerCapability.worker_id, WorkerCapability.capability)
+        .where(WorkerCapability.worker_id.in_(worker_ids))
+        .order_by(WorkerCapability.worker_id.asc(), WorkerCapability.capability.asc())
+    ).all()
+    for worker_id, capability in rows:
+        capabilities_by_worker[worker_id].append(capability)
+    return capabilities_by_worker
+
+
 def set_worker_status(db: Session, worker_id: int, status: str) -> WorkerNode | None:
     row = get_worker(db, worker_id)
     if row is None:

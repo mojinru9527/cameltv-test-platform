@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from sqlalchemy import event
+
 from app.modules.aitde.common.enums import Capability, NetworkZone, WorkerStatus
 from app.modules.aitde.workflow import repository, service
 from app.modules.aitde.workflow.schemas import WorkerHeartbeatIn
@@ -39,6 +41,44 @@ def test_worker_capabilities_attached(db):
     service.register_worker(db, _heartbeat())
     item = service.get_worker(db, 1)
     assert set(item["capabilities"]) == {Capability.HTTP.value, Capability.BROWSER.value}
+
+
+def test_list_workers_includes_capabilities_with_one_bulk_query(db):
+    service.register_worker(
+        db,
+        _heartbeat(key="worker-http", capabilities=[Capability.HTTP]),
+    )
+    service.register_worker(
+        db,
+        _heartbeat(key="worker-browser", capabilities=[Capability.BROWSER]),
+    )
+
+    statements: list[str] = []
+
+    def capture_statement(_conn, _cursor, statement, _parameters, _context, _executemany):
+        statements.append(statement)
+
+    engine = db.get_bind()
+    event.listen(engine, "before_cursor_execute", capture_statement)
+    try:
+        items = service.list_workers(db)
+    finally:
+        event.remove(engine, "before_cursor_execute", capture_statement)
+
+    capabilities_by_key = {
+        item["worker_key"]: set(item["capabilities"])
+        for item in items
+    }
+    assert capabilities_by_key == {
+        "worker-http": {Capability.HTTP.value},
+        "worker-browser": {Capability.BROWSER.value},
+    }
+    capability_queries = [
+        statement
+        for statement in statements
+        if "worker_capabilities" in statement.lower()
+    ]
+    assert len(capability_queries) == 1
 
 
 def test_set_worker_status_disable(db):
