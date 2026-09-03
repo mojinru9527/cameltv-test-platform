@@ -117,3 +117,30 @@ def test_resolve_missing_ambiguity_raises_not_found(db):
             db, 9999, 1, 9, AmbiguityResolveRequest(selected_option_key="allow")
         )
     assert exc.value.http_status == 404
+
+
+def test_ambiguity_and_intent_list_endpoints_return_array_envelopes(
+    client, db_session, admin_user, auth_headers, monkeypatch,
+):
+    """Empty collection responses must serialize as arrays instead of HTTP 500."""
+    from app.core import config
+
+    monkeypatch.setattr(config.settings, "aitde_v3_enabled", True)
+    mission = mission_service.create_mission(
+        db_session,
+        {"title": "体育平台 16.0.0"},
+        project_id=1,
+        user_id=admin_user.id,
+    )
+
+    ambiguities_response = client.get(
+        f"/api/v2/missions/{mission.id}/ambiguities", headers=auth_headers
+    )
+    intents_response = client.get(
+        f"/api/v2/missions/{mission.id}/intents", headers=auth_headers
+    )
+
+    assert ambiguities_response.status_code == 200
+    assert ambiguities_response.json()["data"] == []
+    assert intents_response.status_code == 200
+    assert intents_response.json()["data"] == []

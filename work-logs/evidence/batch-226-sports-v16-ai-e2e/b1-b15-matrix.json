@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "batch": "226-sports-v16-ai-e2e",
+  "evaluated_at": "2026-09-03",
+  "baseline": {
+    "branch": "feature/batch-226-sports-v16-ai-e2e",
+    "origin_main_sha": "cacfaeec3e832374d918664bd32b6da059d55f57",
+    "business": "CamelTv 体育平台",
+    "version": "16.0.0"
+  },
+  "summary": {
+    "pass": 12,
+    "blocked": 3,
+    "fail": 0,
+    "overall": "BLOCKED",
+    "reason": "B8/B10 缺少真实可执行体育方案，B15 缺少真实体育 OpenAPI；AITDE 另受 AI Provider 与 Temporal Worker 阻塞。"
+  },
+  "items": [
+    {
+      "batch": "B1",
+      "status": "PASS",
+      "criterion": "定位、ABCD 边界和路线图可追溯",
+      "evidence": ["docs/platform-refactor/01-platform-positioning-and-mainline.md", "docs/platform-refactor/02-function-abc-whitelist.md", "docs/superpowers/plans/2026-09-02-platform-refactor-rollout.md"]
+    },
+    {
+      "batch": "B2",
+      "status": "PASS",
+      "criterion": "tester 默认入口收敛为 5 项",
+      "observed": ["工作台", "版本验收", "结果与缺陷", "知识中心", "资产与更多"],
+      "evidence": ["blackbox/final-blackbox.json", "blackbox/tester-workbench-desktop.png"]
+    },
+    {
+      "batch": "B3",
+      "status": "PASS",
+      "criterion": "工作台可达并展示测试待办",
+      "observed": "GET /workbench = 200，无控制台错误",
+      "evidence": ["blackbox/final-blackbox.json", "blackbox/tester-workbench-desktop.png"]
+    },
+    {
+      "batch": "B4",
+      "status": "PASS",
+      "criterion": "业务化文案、步骤引导、加载/空态和响应式可用",
+      "observed": "桌面、768x1024、390x844 均无横向溢出",
+      "evidence": ["blackbox/version-task-3-tablet.png", "blackbox/version-task-3-mobile.png"]
+    },
+    {
+      "batch": "B5",
+      "status": "PASS",
+      "criterion": "旧独立测试计划入口不再进入主链路",
+      "observed": "五个一级入口无旧 TestPlan；资产入口仍可达",
+      "evidence": ["blackbox/final-blackbox.json", "screenshots/recon-testcase.png"]
+    },
+    {
+      "batch": "B6",
+      "status": "PASS",
+      "criterion": "VersionTask 为版本验收事实源",
+      "observed": "任务 3 关联需求文档，任务/方案/运行/缺陷/结论均由 VersionTask API 读取",
+      "evidence": ["version-task/version-chain-audit.json"]
+    },
+    {
+      "batch": "B7",
+      "status": "PASS",
+      "criterion": "需求到 AI 方案及逐条审核链路可用",
+      "observed": "体育 16.0.0 生成 30 条方案并全部审核；方案内容非前端固定模板",
+      "evidence": ["screenshots/version-task-ui-ai-plan.png", "version-task/version-chain-audit.json"]
+    },
+    {
+      "batch": "B8",
+      "status": "BLOCKED",
+      "criterion": "真实执行与证据回放",
+      "observed": "30 条方案均无 exec_meta，运行结果为 30 blocked、0 pass、0 fake pass",
+      "release_condition": "AI 基于真实体育 OpenAPI/页面目标生成 exec_meta，并由可用 Runner 产出请求、响应或截图证据",
+      "evidence": ["version-task/version-chain-audit.json", "screenshots/version-task-ui-blocked-verdict.png"]
+    },
+    {
+      "batch": "B9",
+      "status": "PASS",
+      "criterion": "放行门禁和证据包反映真实运行状态",
+      "observed": "证据包 30 checks、0% pass、1 defect；放行按钮禁用，blocked 结论可落库",
+      "evidence": ["version-task/version-chain-audit.json", "screenshots/version-task-release-result.png"]
+    },
+    {
+      "batch": "B10",
+      "status": "BLOCKED",
+      "criterion": "黑盒用户无指导跑通并放行真实版本",
+      "observed": "可无指导完成到结论，但真实执行未发生，因此不能选择 pass 放行",
+      "release_condition": "解除 B8 后用体育 16.0.0 重跑，全部必需检查真实通过并完成 pass 放行",
+      "evidence": ["blackbox/final-blackbox.json", "version-task/version-chain-audit.json"]
+    },
+    {
+      "batch": "B11",
+      "status": "PASS",
+      "criterion": "版本知识沉淀并可供后续版本复用",
+      "observed": "blocked 结论如实沉淀，复用建议 2 条",
+      "evidence": ["version-task/version-chain-audit.json", "blackbox/tester-knowledge-desktop.png"]
+    },
+    {
+      "batch": "B12",
+      "status": "PASS",
+      "criterion": "智能回归与缺陷闭环",
+      "observed": "推荐回归 42 条；缺陷草稿创建后使用真实 defect_id 同步",
+      "evidence": ["version-task/version-chain-audit.json", "screenshots/version-task-after-run.png"]
+    },
+    {
+      "batch": "B13",
+      "status": "PASS",
+      "criterion": "跨版本对比和运营指标不伪造数据",
+      "observed": "对比与指标 API 可达；未录入回归人天时显式返回 recorded=false",
+      "evidence": ["version-task/version-chain-audit.json", "screenshots/recon-metrics.png"]
+    },
+    {
+      "batch": "B14",
+      "status": "PASS",
+      "criterion": "单一事实源且无读取双写",
+      "observed": "single_fact_source=version_task，连续两次读取一致；fresh DB 无旧 TestPlan",
+      "evidence": ["blackbox/final-blackbox.json"]
+    },
+    {
+      "batch": "B15",
+      "status": "BLOCKED",
+      "criterion": "新业务 4 步接入并产出真实基线",
+      "observed": "缺 OpenAPI 时推进被拒绝，step 保持 1、状态 onboarding、未假激活",
+      "release_condition": "提供可访问的体育 16.0.0 OpenAPI URL 和被测服务地址，完成导入、AI 方案、真实执行并获得 active 基线",
+      "evidence": ["blackbox/final-blackbox.json", "blackbox/tester-onboarding-desktop.png"]
+    }
+  ],
+  "aitde": {
+    "status": "BLOCKED",
+    "observed": {
+      "source_fragments": 2,
+      "fragment_chars": 2037,
+      "scope_approved": 2,
+      "contract_frozen": true,
+      "scenarios": 2,
+      "oracles_approved": 2,
+      "quality_gate": "FAIL",
+      "failed_gates": ["G3", "G5", "G8", "G9"],
+      "ai_operations": ["scope: invalid JSON", "contract: empty rules", "scenario: HTTP 400"],
+      "execution": "QUEUED; no local Temporal Worker"
+    },
+    "release_condition": "修复项目 AI Provider 请求/响应契约并启动 Temporal Worker，再从真实 AI 产物重跑到可追溯执行证据。",
+    "evidence": ["aitde/aitde-chain.json", "aitde/aitde-continuation.json", "aitde/network-guard.json"]
+  }
+}

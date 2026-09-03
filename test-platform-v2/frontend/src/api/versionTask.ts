@@ -60,7 +60,7 @@ export interface VersionTask {
   scope: Record<string, unknown>
   summary: string
   coverage: Record<string, unknown>
-  risk: Record<string, unknown>
+  risk: string[]
   qa_owner_id: number
   created_at?: string
   updated_at?: string
@@ -245,8 +245,8 @@ export async function createOnboarding(body: { name: string; service_key: string
   return (await v1.post('/onboarding/businesses', body)) as unknown as Onboarding
 }
 
-export async function listOnboardings(): Promise<Onboarding[]> {
-  return (await v1.get('/onboarding/businesses')) as unknown as Onboarding[]
+export async function listOnboardings(signal?: AbortSignal): Promise<Onboarding[]> {
+  return (await v1.get('/onboarding/businesses', { signal })) as unknown as Onboarding[]
 }
 
 export async function advanceOnboarding(id: number, step: number): Promise<Onboarding> {

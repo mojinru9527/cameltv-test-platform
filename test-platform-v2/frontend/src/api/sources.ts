@@ -41,8 +41,8 @@ export interface SourceAttachInput {
   role?: string
 }
 
-export function fetchMissionSources(missionId: number): Promise<SourceArtifact[]> {
-  return aitdeV2.get(`/missions/${missionId}/sources`)
+export function fetchMissionSources(missionId: number, signal?: AbortSignal): Promise<SourceArtifact[]> {
+  return aitdeV2.get(`/missions/${missionId}/sources`, { signal })
 }
 
 export function attachMissionSource(

@@ -288,6 +288,46 @@ def test_missing_items_raises_response_error():
         prov.analyze_scope(ScopeContext(mission_id=1, fragments=[]))
 
 
+def test_empty_contract_rules_raise_response_error():
+    client = _fake_client(
+        {
+            "test contract builder": {
+                "scope_revision": "h",
+                "rules": [],
+                "required_outcomes": [],
+            }
+        }
+    )
+    prov = AiIntelligenceProvider(db=None, project_id=1, client=client)
+
+    with pytest.raises(IntelligenceLLMResponseError, match="at least one rule"):
+        prov.build_contract(
+            ContractContext(mission_id=7, scope_items=[_SCOPE_ITEM], intents=[])
+        )
+
+
+def test_empty_scenario_items_raise_response_error():
+    client = _fake_client({"test scenario designer": {"items": []}})
+    prov = AiIntelligenceProvider(db=None, project_id=1, client=client)
+
+    with pytest.raises(IntelligenceLLMResponseError, match="at least one item"):
+        prov.design_scenarios(
+            ScenarioContext(
+                mission_id=7,
+                contract_version_id=5,
+                rules=[
+                    {
+                        "rule_key": "r1",
+                        "title": "规则",
+                        "statement": "必须成立",
+                        "risk_level": "P2",
+                    }
+                ],
+                outcomes=[],
+            )
+        )
+
+
 def test_factory_disabled_when_settings_off(monkeypatch):
     monkeypatch.setattr(config.settings, "ai_enabled", False)
     assert isinstance(build_intelligence_provider(None, 1), DeterministicScopeProvider)

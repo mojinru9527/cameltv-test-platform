@@ -39,8 +39,8 @@ export function analyzeMissionAmbiguities(
   return aitdeV2.post(`/missions/${missionId}/ambiguities/analyze`)
 }
 
-export function fetchMissionAmbiguities(missionId: number): Promise<Ambiguity[]> {
-  return aitdeV2.get(`/missions/${missionId}/ambiguities`)
+export function fetchMissionAmbiguities(missionId: number, signal?: AbortSignal): Promise<Ambiguity[]> {
+  return aitdeV2.get(`/missions/${missionId}/ambiguities`, { signal })
 }
 
 export function resolveAmbiguity(
