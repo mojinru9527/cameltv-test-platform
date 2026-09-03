@@ -33,23 +33,33 @@ def get_onboarding(db: Session, onboarding_id: int) -> BusinessOnboarding:
 
 
 def complete_step(db: Session, onboarding_id: int, step: int) -> BusinessOnboarding:
-    """Step 2-4：接基线 / 生成方案 / 跑基线。"""
+    """Step 2-4：接基线 / 生成方案 / 跑基线（F-08：接入真基线、AI 方案、真实执行）。"""
     ob = get_onboarding(db, onboarding_id)
     if step < ob.step:
         raise APIException(code=1, msg="步骤已推进")
     ob.step = step
-    if step == 3:
-        # 生成版本验收任务 + 方案条目（业务基线）
+    if step == 2:
+        # 接基线：创建版本验收任务（业务基线壳），把 base_url / api_spec 写入 scope
         task = version_task_service.create_task(
-            db, project_id=ob.project_id, title=f"{ob.name} 业务基线", version=ob.service_key, source="onboarding"
+            db,
+            project_id=ob.project_id,
+            title=f"{ob.name} 业务基线",
+            version=ob.service_key,
+            source="onboarding",
+            scope={
+                "modules": ["核心流程", "接口契约", "异常链路"],
+                "base_url": ob.base_url,
+                "api_spec_url": ob.api_spec_url,
+            },
         )
         ob.version_task_id = task.id
-        items = []
-        for scope in ["核心流程", "接口契约", "异常链路"]:
-            items.append({"item_type": "functional", "title": f"{ob.name}-{scope}", "confidence": 75})
-        version_task_service.generate_plan(db, task.id, items)
+    if step == 3:
+        # 生成方案：走项目级 AI（F-01），不再硬编码占位
+        if not ob.version_task_id:
+            raise APIException(code=1, msg="请先完成基线接入（第 2 步）")
+        version_task_service.ai_generate_plan(db, ob.version_task_id, ob.project_id)
     if step == 4:
-        # 跑基线
+        # 跑基线：真实执行（F-02）
         if not ob.version_task_id:
             raise APIException(code=1, msg="请先完成方案生成（第 3 步）")
         run = version_task_service.start_run(db, ob.version_task_id)

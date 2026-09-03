@@ -26,6 +26,7 @@ import WikiDiffTab from './components/WikiDiffTab'
 import ProjectTab from './components/ProjectTab'
 import PlatformTab from './components/PlatformTab'
 import SkillsTab from './components/SkillsTab'
+import VersionKnowledgeTab from './components/VersionKnowledgeTab'
 import CaptureDialog from './components/CaptureDialog'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuthStore } from '@/stores/auth'
@@ -41,6 +42,8 @@ type KnowledgeTabDef = { value: string; label: string; icon: LucideIcon }
 const KNOWLEDGE_TAB_DEFS: KnowledgeTabDef[] = [
   { value: 'project', label: '项目知识', icon: FolderOpen },
   { value: 'platform', label: '平台研发', icon: Sparkles },
+  { value: 'versionrecords', label: '版本记录', icon: Calendar },
+  { value: 'reuse', label: '复用建议', icon: Layers },
   { value: 'search', label: '检索', icon: Search },
   { value: 'overview', label: '概览', icon: LayoutDashboard },
   { value: 'sources', label: '知识源', icon: Database },
@@ -53,7 +56,7 @@ const KNOWLEDGE_TAB_DEFS: KnowledgeTabDef[] = [
   { value: 'skills', label: 'Skills', icon: Zap },
 ]
 
-const NORMAL_KNOWLEDGE_TABS = new Set(['project', 'platform', 'search'])
+const NORMAL_KNOWLEDGE_TABS = new Set(['project', 'platform', 'versionrecords', 'reuse', 'search'])
 
 function visibleKnowledgeTabs(canMaintain: boolean): KnowledgeTabDef[] {
   if (canMaintain) return KNOWLEDGE_TAB_DEFS
@@ -154,6 +157,12 @@ export default function KnowledgePage() {
         </TabsContent>
         <TabsContent value="platform" className={cn('mt-4', tab !== 'platform' && 'hidden')} forceMount={visitedTabs.has('platform') ? true : undefined}>
           <PlatformTab />
+        </TabsContent>
+        <TabsContent value="versionrecords" className={cn('mt-4', tab !== 'versionrecords' && 'hidden')} forceMount={visitedTabs.has('versionrecords') ? true : undefined}>
+          <VersionKnowledgeTab mode="records" />
+        </TabsContent>
+        <TabsContent value="reuse" className={cn('mt-4', tab !== 'reuse' && 'hidden')} forceMount={visitedTabs.has('reuse') ? true : undefined}>
+          <VersionKnowledgeTab mode="reuse" />
         </TabsContent>
         <TabsContent value="overview" className={cn('mt-4', tab !== 'overview' && 'hidden')} forceMount={visitedTabs.has('overview') ? true : undefined}>
           <OverviewTab />

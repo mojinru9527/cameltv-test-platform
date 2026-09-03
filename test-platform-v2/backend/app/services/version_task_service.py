@@ -15,6 +15,7 @@ from app.models.version_task_plan import VersionTaskPlanItem
 from app.models.version_task_run import VersionTaskRun
 from app.models.defect import Defect
 from app.models.notification import NotificationLog
+from app.models.requirement import RequirementDocument
 from app.models.version_knowledge import VersionKnowledgeRecord
 from app.core.exceptions import APIException, not_found
 
@@ -233,10 +234,39 @@ def generate_plan(db: Session, task_id: int, items: list[dict]) -> list[VersionT
             status="draft",
             question=it.get("question", ""),
             order_index=start + idx + 1,
+            exec_meta=json.dumps(it.get("exec_meta") or {}, ensure_ascii=False),
         )
         db.add(item)
     db.commit()
     return get_plan(db, task_id)
+
+
+def ai_generate_plan(db: Session, task_id: int, project_id: int) -> list[VersionTaskPlanItem]:
+    """F-01：由项目级 AI 方案生成服务产出**可执行**验收方案条目并写入。"""
+    from app.services import version_task_ai_service
+
+    task = get_task(db, task_id)
+    ctx = _task_ai_context(db, task)
+    items = version_task_ai_service.generate_plan_items(db, ctx, project_id)
+    return generate_plan(db, task_id, items)
+
+
+def _task_ai_context(db: Session, task: VersionTask) -> dict:
+    """组装 AI 方案生成所需的任务上下文（标题/版本/模块 + 可选需求文档正文）。"""
+    context = ""
+    if task.requirement_doc_id:
+        try:
+            doc = db.get(RequirementDocument, task.requirement_doc_id)
+            if doc and getattr(doc, "content", ""):
+                context = str(getattr(doc, "content", ""))[:6000]
+        except Exception:  # noqa: BLE001 - 需求正文缺失不影响方案生成
+            context = ""
+    return {
+        "title": task.title,
+        "version": task.version,
+        "scope": _to_int_dict(task.scope),
+        "context": context,
+    }
 
 
 def review_plan_item(db: Session, plan_item_id: int, action: str, patch: dict | None = None) -> VersionTaskPlanItem:
@@ -314,42 +344,60 @@ def start_run(db: Session, task_id: int) -> VersionTaskRun:
     adopted_items = [i for i in plan if i.status in ("adopted", "modified")]
     total = max(len(adopted_items), 1)
 
+    from app.services import version_task_exec_service
+
+    base_url = version_task_exec_service.resolve_base_url(db, task)
+
     evidence = []
     failures = []
     passed = 0
+    failed = 0
+    skipped = 0
     blocked = 0
     now = _now().isoformat()
-    last_idx = len(adopted_items) - 1
     for idx, item in enumerate(adopted_items):
-        # 简化规则：末条固定失败（保证失败分类可演示），其余按 item_type 分类
-        is_fail = idx == last_idx or ((idx * 17 + item.id) % 20 == 3)
-        if not is_fail:
+        result = version_task_exec_service.execute_item(db, item, base_url)
+        status = result["status"]
+        if status == "pass":
             passed += 1
-            evidence.append(
-                {"type": "request", "ref": f"run:{run.id}:item:{item.id}",
-                 "url": f"/evidence/{run.id}/{item.id}", "ts": now, "status": "pass"}
-            )
-        else:
-            failed_kind = "business"
-            if item.item_type == "api":
-                failed_kind = "script"
-            elif item.item_type == "scenario":
-                failed_kind = "environment"
-            evidence.append(
-                {"type": "request", "ref": f"run:{run.id}:item:{item.id}",
-                 "url": f"/evidence/{run.id}/{item.id}", "ts": now, "status": "fail"}
-            )
+        elif status == "fail":
+            failed += 1
+            failure = result.get("failure") or {}
             failures.append({
-                "item_id": item.id, "title": item.title, "kind": failed_kind,
-                "evidence": f"/evidence/{run.id}/{item.id}", "message": f"{item.title} 断言失败",
+                "item_id": item.id, "title": item.title,
+                "kind": failure.get("kind", "business"),
+                "evidence": f"/evidence/{run.id}/{item.id}",
+                "message": failure.get("message", f"{item.title} 未通过"),
+                "http_status": result.get("http_status"),
             })
+        else:
+            # not_run：无可执行目标，绝不臆造 PASS/FAIL —— 记 阻塞/未执行
+            skipped += 1
+            failures.append({
+                "item_id": item.id, "title": item.title, "kind": "environment",
+                "evidence": "",
+                "message": f"{item.title} 未执行：{result.get('reason', '无可执行目标')}",
+                "http_status": None,
+            })
+        for ev in result.get("evidence") or []:
+            ev = dict(ev)
+            ev["ts"] = now
+            ev["ref"] = f"run:{run.id}:item:{item.id}"
+            evidence.append(ev)
+
+    if failed > 0:
+        run_status = "failed"
+    elif passed > 0 or skipped == 0:
+        run_status = "done"
+    else:
+        run_status = "blocked"
 
     run.passed = passed
-    run.failed = len(failures)
-    run.skipped = max(total - passed - len(failures), 0)
+    run.failed = failed
+    run.skipped = skipped
     run.blocked = blocked
     run.progress = 100
-    run.status = "done" if not failures else "failed"
+    run.status = run_status
     run.finished_at = _now()
     run.evidence = json.dumps(evidence, ensure_ascii=False)
     run.failures = json.dumps(failures, ensure_ascii=False)
@@ -586,8 +634,12 @@ def get_operations_metrics(db: Session, project_id: int) -> dict:
     """B13 运营指标看板：回归人天 / 提测→放行周期 / 漏测 / 周活跃（基于 version_task + knowledge_record）。"""
     tasks = db.query(VersionTask).filter(VersionTask.project_id == project_id).all()
     released = [t for t in tasks if t.status == "released"]
-    # 回归人天：以放行任务数量为近似（真实人天人工录入接口已具备；此处以任务数为 proxy）
-    regression_person_days = round(len(released) * 0.5, 1)  # 每放行任务约 0.5 人天
+    # F-06：回归人天不再用「放行数量×0.5」臆造。真实人天需人工/任务录入；
+    # 仅当存在真实记录字段时才取值，否则返回 recorded=False，由前端提示「人工录入」。
+    recorded_days = sum(
+        float(getattr(t, "regression_days", 0) or 0) for t in released
+    )
+    regression_person_days = round(recorded_days, 1)
     # 提测→放行周期：放行任务 created_at -> updated_at 的平均天数
     cycles = []
     for t in released:
@@ -603,6 +655,7 @@ def get_operations_metrics(db: Session, project_id: int) -> dict:
     weekly_active = sum(1 for t in tasks if (t.updated_at or t.created_at) >= cutoff)
     return {
         "regression_person_days": regression_person_days,
+        "regression_person_days_recorded": bool(recorded_days),
         "cycle_avg_days": avg_cycle,
         "missed_defects": missed,
         "weekly_active": weekly_active,
@@ -612,7 +665,11 @@ def get_operations_metrics(db: Session, project_id: int) -> dict:
 
 
 def compare_versions(db: Session, project_id: int, version_a: str, version_b: str) -> dict:
-    """B13 跨版本对比：覆盖/结论/缺陷 对比两个版本。"""
+    """B13 跨版本对比：覆盖/结论/缺陷 对比两个版本。
+
+    优先读 B11 知识记录；未沉淀时回退到真实 ``VersionTask`` 的 coverage/verdict/defects
+    （F-07），避免「无知识记录 → 不可比」。
+    """
     def _row(version: str):
         rec = (
             db.query(VersionKnowledgeRecord)
@@ -620,14 +677,57 @@ def compare_versions(db: Session, project_id: int, version_a: str, version_b: st
             .order_by(VersionKnowledgeRecord.id.desc())
             .first()
         )
-        if rec is None:
+        if rec is not None:
+            cov = json.loads(rec.coverage or "{}")
+            total = sum(int(v) for v in cov.values()) or 1
+            return {
+                "version": version, "exists": True, "verdict": rec.verdict,
+                "defect_count": rec.defect_count,
+                "pass_rate": round(int(cov.get("pass", 0)) * 100 / total, 1),
+                "coverage": cov, "source": "knowledge_record",
+            }
+        # F-07 回退：真实 VersionTask（取该版本最近一条）
+        task = (
+            db.query(VersionTask)
+            .filter_by(project_id=project_id, version=version)
+            .order_by(VersionTask.id.desc())
+            .first()
+        )
+        if task is None:
             return {"version": version, "exists": False}
-        cov = json.loads(rec.coverage or "{}")
+        cov = _to_int_dict(task.coverage)
         total = sum(int(v) for v in cov.values()) or 1
         return {
-            "version": version, "exists": True, "verdict": rec.verdict,
-            "defect_count": rec.defect_count,
+            "version": version, "exists": True, "verdict": task.verdict or "",
+            "defect_count": len(task.defects),
             "pass_rate": round(int(cov.get("pass", 0)) * 100 / total, 1),
-            "coverage": cov,
+            "coverage": cov, "source": "version_task",
         }
     return {"a": _row(version_a), "b": _row(version_b)}
+
+
+def list_version_knowledge(db: Session, project_id: int, limit: int = 50) -> list[dict]:
+    """B11 版本知识记录（版本记录 / 复用建议 Tab 数据源）。"""
+    rows = (
+        db.query(VersionKnowledgeRecord)
+        .filter(VersionKnowledgeRecord.project_id == project_id)
+        .order_by(VersionKnowledgeRecord.id.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "id": r.id,
+            "task_id": r.task_id,
+            "version": r.version,
+            "title": r.title,
+            "summary": r.summary,
+            "coverage": _to_int_dict(r.coverage),
+            "verdict": r.verdict,
+            "risk": _to_int_dict(r.risk),
+            "plan_summary": _to_int_dict(r.plan_summary),
+            "defect_count": r.defect_count,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in rows
+    ]

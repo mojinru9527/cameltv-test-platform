@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, PageShell, Progress, Textarea } from '@/ui'
 import {
   createVersionTask,
-  generatePlan,
+  generatePlanAi,
   getPlan,
   reviewPlanItem,
   transitionVersionTask,
@@ -46,14 +46,10 @@ export default function VersionTasksPage() {
     if (!task) return
     setLoading(true)
     try {
-      const scopeModules = ((task.scope?.modules as string[]) || []).length > 0 ? (task.scope?.modules as string[]) : ['核心流程']
-      const generated = scopeModules.flatMap((m, i) => [
-        { item_type: 'functional', title: `${m} 主流程`, description: `验证 ${m} 正常链路`, confidence: 80 - i * 5 },
-        { item_type: 'api', title: `${m} 接口契约`, description: `校验 ${m} 相关接口返回`, confidence: 70 - i * 5 },
-      ])
-      const items = await generatePlan(task.id, generated)
+      const items = await generatePlanAi(task.id)
       setPlan(items)
-      toast.success('已生成验收方案，请逐条审核')
+      if (items.length === 0) toast.error('AI 未返回有效方案，请检查项目 AI 配置')
+      else toast.success('已生成验收方案，请逐条审核')
     } catch (e) {
       toast.error((e as Error).message || '生成失败')
     } finally {

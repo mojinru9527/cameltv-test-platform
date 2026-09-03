@@ -141,6 +141,7 @@ class PlanItemCreate(BaseModel):
     description: str = ""
     confidence: int = Field(default=0, ge=0, le=100)
     question: str = ""
+    exec_meta: dict[str, Any] = Field(default_factory=dict)
 
 
 class PlanItemReview(BaseModel):
@@ -166,6 +167,17 @@ class PlanItemOut(BaseModel):
     question: str = ""
     answer: str = ""
     order_index: int = 0
+    exec_meta: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("exec_meta", mode="before")
+    @classmethod
+    def parse_exec_meta(cls, v: Any) -> dict[str, Any]:
+        if isinstance(v, str):
+            try:
+                return json.loads(v or "{}")
+            except (TypeError, ValueError):
+                return {}
+        return v or {}
 
 
 class VersionTaskRunOut(BaseModel):

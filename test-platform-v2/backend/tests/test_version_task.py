@@ -183,43 +183,67 @@ def test_api_plan_generate_and_review(client, auth_headers):
 
 # ────────────────────────────── B8: 一键运行 + 证据 + 失败分类→缺陷草稿 ──────────────────────────────
 
-def test_start_run_and_coverage_writeback(db_session):
+def test_start_run_and_coverage_writeback(db_session, monkeypatch):
     task = version_task_service.create_task(db_session, project_id=1, title="t", version="1.0")
     items = version_task_service.generate_plan(
         db_session, task.id,
         [{"item_type": "functional", "title": "登录", "confidence": 80},
-         {"item_type": "api", "title": "POST /login", "confidence": 60}],
+         {"item_type": "api", "title": "POST /login", "confidence": 60, "exec_meta": {"method": "POST", "url": "http://127.0.0.1:9/login"}}],
     )
     for it in items:
         version_task_service.review_plan_item(db_session, it.id, "adopt")
+
+    # F-02：真实执行（monkeypatch execute_item 模拟真实 HTTP 判定），不再臆造
+    import app.services.version_task_exec_service as exec_svc
+
+    def fake_execute(db, item, base_url):
+        if item.item_type == "api":
+            return {"status": "fail", "evidence": [], "failure": {"kind": "business", "message": "断言失败"}, "http_status": 500}
+        return {"status": "pass", "evidence": [{"type": "RESPONSE", "status": "pass"}], "failure": None, "http_status": 200}
+
+    monkeypatch.setattr(exec_svc, "execute_item", fake_execute)
 
     run = version_task_service.start_run(db_session, task.id)
     assert run.status in ("done", "failed")
     assert run.progress == 100
     assert run.passed + run.failed + run.skipped + run.blocked == run.total >= 1
+    assert run.passed == 1 and run.failed == 1
     # coverage 回写（C217-1）
     refreshed = version_task_service.get_task(db_session, task.id)
     cov = refreshed.coverage
-    assert "pass" in cov and "fail" in cov
+    assert "pass" in cov and "fail" in cov and "skip" in cov
     assert refreshed.status == "executed"
 
 
-def test_defect_draft_from_failure(db_session):
+def test_defect_draft_from_failure(db_session, monkeypatch):
     task = version_task_service.create_task(db_session, project_id=1, title="t", version="1.0")
     items = version_task_service.generate_plan(
         db_session, task.id, [{"item_type": "functional", "title": "登录", "confidence": 80}]
     )
     for it in items:
         version_task_service.review_plan_item(db_session, it.id, "adopt")
+
+    import app.services.version_task_exec_service as exec_svc
+
+    monkeypatch.setattr(
+        exec_svc, "execute_item",
+        lambda db, item, base_url: {"status": "fail", "evidence": [], "failure": {"kind": "business", "message": "登录失败"}, "http_status": 500},
+    )
     run = version_task_service.start_run(db_session, task.id)
-    assert run.failed == 1  # 末条固定失败
+    assert run.failed == 1  # 真实失败（非臆造）
     defect = version_task_service.create_defect_draft(db_session, run.id, 0, creator_id=1)
     assert defect.status == "open"
     task = version_task_service.get_task(db_session, task.id)
     assert len(task.defects) >= 1
 
 
-def test_api_run_and_defect(client, auth_headers):
+def test_api_run_and_defect(client, auth_headers, monkeypatch):
+    import app.services.version_task_exec_service as exec_svc
+
+    monkeypatch.setattr(
+        exec_svc, "execute_item",
+        lambda db, item, base_url: {"status": "fail", "evidence": [], "failure": {"kind": "business", "message": "boom"}, "http_status": 500},
+    )
     h = auth_headers
     r = client.post("/api/v1/version-tasks", json={"title": "t", "version": "1.0"}, headers=h)
     tid = r.json()["data"]["id"]
@@ -401,13 +425,15 @@ def test_api_convergence(client, auth_headers):
 
 # ────────────────────────────── B15: 新业务接入向导 + 基线 ──────────────────────────────
 
-def test_business_onboarding_baseline(db_session):
+def test_business_onboarding_baseline(db_session, monkeypatch):
     from app.services import onboarding_service
+    # 无项目级 AI 提供方时，step3 的 AI 方案生成在单测中桩掉（ONBOARDING 流程测试）
+    monkeypatch.setattr(version_task_service, "ai_generate_plan", lambda db, task_id, pid: [])
     ob = onboarding_service.create_onboarding(db_session, 1, name="basketball", service_key="basketball-service", api_spec_url="http://x/swagger.json")
     assert ob.step == 1
     # step 2 接基线（推进）
     onboarding_service.complete_step(db_session, ob.id, 2)
-    # step 3 生成方案（创建 VersionTask + plan）
+    # step 3 生成方案（走 AI 桩 → 创建 VersionTask）
     onboarding_service.complete_step(db_session, ob.id, 3)
     assert ob.version_task_id is not None
     # step 4 跑基线 → active + baseline
@@ -416,11 +442,14 @@ def test_business_onboarding_baseline(db_session):
     assert "run_id" in ob.baseline
 
 
-def test_api_onboarding(client, auth_headers):
+def test_api_onboarding(client, auth_headers, monkeypatch):
+    monkeypatch.setattr(version_task_service, "ai_generate_plan", lambda db, task_id, pid: [])
     h = auth_headers
     r = client.post("/api/v1/onboarding/businesses", json={"name": "camel-mimo", "service_key": "camel-mimo"}, headers=h)
     assert r.status_code == 200, r.text
     oid = r.json()["data"]["id"]
+    # F-08: step2 接基线（创建版本任务）必须先于 step3
+    assert client.post(f"/api/v1/onboarding/businesses/{oid}/steps/2", headers=h).json()["data"]["step"] == 2
     rr = client.post(f"/api/v1/onboarding/businesses/{oid}/steps/3", headers=h)
     assert rr.status_code == 200
     assert rr.json()["data"]["step"] == 3

@@ -112,6 +112,10 @@ export async function generatePlan(
   return (await v1.post(`/version-tasks/${id}/plan/generate`, items)) as unknown as PlanItem[]
 }
 
+export async function generatePlanAi(id: number): Promise<PlanItem[]> {
+  return (await v1.post(`/version-tasks/${id}/plan/generate-ai`)) as unknown as PlanItem[]
+}
+
 export async function reviewPlanItem(
   taskId: number,
   itemId: number,
@@ -207,6 +211,7 @@ export async function syncDefect(taskId: number, defectId: number): Promise<{ sy
 
 export interface OperationsMetrics {
   regression_person_days: number
+  regression_person_days_recorded: boolean
   cycle_avg_days: number
   missed_defects: number
   weekly_active: number

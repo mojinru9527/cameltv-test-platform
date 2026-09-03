@@ -202,6 +202,18 @@ def generate_plan(
     return R.ok([PlanItemOut.model_validate(i) for i in items])
 
 
+@router.post("/{task_id}/plan/generate-ai", response_model=R[list[PlanItemOut]], summary="AI 生成验收方案（F-01）")
+def ai_generate_plan(
+    task_id: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("mission:generate")),
+    db: Session = Depends(get_db),
+):
+    items = version_task_service.ai_generate_plan(db, task_id, current.project_id or 0)
+    _audit(req, current, db, "version_task:plan_ai_generate", f"{task_id}", f"{len(items)}")
+    return R.ok([PlanItemOut.model_validate(i) for i in items])
+
+
 @router.post("/{task_id}/plan/{item_id}/review", response_model=R[PlanItemOut], summary="审核方案条目")
 def review_plan_item(
     task_id: int,
