@@ -23,7 +23,8 @@ Render `/missions/3/scope`, resolve `fetchMissionScope` with one item, wait for 
 
 - [ ] **Step 2: Run the test and verify the failure**
 
-Run: `npm test -- --run src/pages/missions/__tests__/ScopePage.test.tsx`  
+Run: `npm test -- --run src/pages/missions/__tests__/ScopePage.test.tsx`
+
 Expected: FAIL because the current loading dependency reissues the request and the API receives no signal.
 
 - [ ] **Step 3: Implement an explicit reload version**
@@ -32,7 +33,8 @@ Replace the `loading` dependency with `reloadVersion`, increment it from `reload
 
 - [ ] **Step 4: Verify the focused test**
 
-Run: `npm test -- --run src/pages/missions/__tests__/ScopePage.test.tsx`  
+Run: `npm test -- --run src/pages/missions/__tests__/ScopePage.test.tsx`
+
 Expected: PASS with one request on mount.
 
 ### Task 2: Mission Scenario Request Stability
@@ -48,7 +50,8 @@ Render `/missions/3/scenarios`, resolve one scenario, and assert `fetchMissionSc
 
 - [ ] **Step 2: Run the test and verify the failure**
 
-Run: `npm test -- --run src/pages/missions/__tests__/ScenariosPage.test.tsx`  
+Run: `npm test -- --run src/pages/missions/__tests__/ScenariosPage.test.tsx`
+
 Expected: FAIL because `loading=false` retriggers the effect and no signal reaches the API.
 
 - [ ] **Step 3: Implement the same reload contract**
@@ -57,7 +60,8 @@ Add `reloadVersion`, change the effect dependencies to `[missionId, reloadVersio
 
 - [ ] **Step 4: Verify both mission pages together**
 
-Run: `npm test -- --run src/pages/missions/__tests__/ScopePage.test.tsx src/pages/missions/__tests__/ScenariosPage.test.tsx`  
+Run: `npm test -- --run src/pages/missions/__tests__/ScopePage.test.tsx src/pages/missions/__tests__/ScenariosPage.test.tsx`
+
 Expected: PASS; two files, no repeated request timeout.
 
 ### Task 3: Worker Capability List Contract
@@ -74,7 +78,8 @@ Register two Workers with different capabilities, attach a SQLAlchemy statement 
 
 - [ ] **Step 2: Run the registry tests and verify the failure**
 
-Run: `python -m pytest tests/aitde/v34/test_worker_registry.py -q`  
+Run: `python -m pytest tests/aitde/v34/test_worker_registry.py -q`
+
 Expected: FAIL because list items have no `capabilities` field.
 
 - [ ] **Step 3: Add one bulk repository query**
@@ -83,7 +88,8 @@ Implement `list_worker_capabilities_by_worker_ids(db, worker_ids) -> dict[int, l
 
 - [ ] **Step 4: Verify the registry contract**
 
-Run: `python -m pytest tests/aitde/v34/test_worker_registry.py -q`  
+Run: `python -m pytest tests/aitde/v34/test_worker_registry.py -q`
+
 Expected: PASS and exactly one capability SELECT for list serialization.
 
 ### Task 4: Managed Worker Heartbeat Loop
@@ -101,7 +107,8 @@ Test payload normalization, immediate first send, retry after a simulated `httpx
 
 - [ ] **Step 2: Run the focused heartbeat tests and verify the failure**
 
-Run: `python -m pytest tests/aitde/v34/test_worker_heartbeat.py -q`  
+Run: `python -m pytest tests/aitde/v34/test_worker_heartbeat.py -q`
+
 Expected: FAIL because the module does not exist.
 
 - [ ] **Step 3: Implement the minimal async loop**
@@ -114,8 +121,10 @@ Update `start-worker.sh` to start the heartbeat module and gateway as child proc
 
 - [ ] **Step 5: Verify lifecycle tests and script syntax/static contract**
 
-Run: `python -m pytest tests/aitde/v34/test_worker_heartbeat.py -q`  
-Expected: PASS.  
+Run: `python -m pytest tests/aitde/v34/test_worker_heartbeat.py -q`
+
+Expected: PASS.
+
 Run: `python -m pytest tests/test_deploy_contract.py -q` if the existing deploy contract suite covers this path; otherwise record Windows Bash runtime unavailability and validate the launcher in CI/Linux.
 
 ### Task 5: Runtime and Onboarding Feedback
@@ -134,7 +143,8 @@ Assert an offline Worker renders its real capabilities, recovery explanation and
 
 - [ ] **Step 2: Run the focused tests and verify the failures**
 
-Run: `npm test -- --run src/pages/runtime src/pages/onboarding/__tests__/OnboardingPage.test.tsx`  
+Run: `npm test -- --run src/pages/runtime src/pages/onboarding/__tests__/OnboardingPage.test.tsx`
+
 Expected: FAIL on missing recovery/retry text and old durable status wording.
 
 - [ ] **Step 3: Implement the four-state UI**
@@ -143,7 +153,8 @@ Add a PageHeader refresh button and `loadError` state, show an offline guidance 
 
 - [ ] **Step 4: Verify focused frontend tests**
 
-Run: `npm test -- --run src/pages/missions/__tests__/ScopePage.test.tsx src/pages/missions/__tests__/ScenariosPage.test.tsx src/pages/runtime src/pages/onboarding/__tests__/OnboardingPage.test.tsx`  
+Run: `npm test -- --run src/pages/missions/__tests__/ScopePage.test.tsx src/pages/missions/__tests__/ScenariosPage.test.tsx src/pages/runtime src/pages/onboarding/__tests__/OnboardingPage.test.tsx`
+
 Expected: PASS.
 
 ### Task 6: Gates, Browser Evidence, and Local Commits
@@ -156,8 +167,10 @@ Expected: PASS.
 
 - [ ] **Step 1: Run scoped and full gates**
 
-Frontend: `npm ci`, focused Vitest, `npm test -- --reporter=dot`, `npm run typecheck`, `npm run lint`, `npm run build`.  
-Backend: focused Pytest, `python -c "import app.main"`, `python -m ruff check app --select F821`, Alembic single-head/revision tests, then full `python -m pytest -q`.  
+Frontend: `npm ci`, focused Vitest, `npm test -- --reporter=dot`, `npm run typecheck`, `npm run lint`, `npm run build`.
+
+Backend: focused Pytest, `python -c "import app.main"`, `python -m ruff check app --select F821`, Alembic single-head/revision tests, then full `python -m pytest -q`.
+
 Repository: `pwsh scripts/git/scan-common-bugs.ps1`, `pwsh scripts/git/dev-gate.ps1 -RepositoryPath (Get-Location).Path`, and `pwsh scripts/git/audit-cconditions.ps1 -RequireLatestBatch`.
 
 - [ ] **Step 2: Run browser regression on isolated ports**
