@@ -175,6 +175,45 @@ def test_capability_router_browser_requires_browser_worker(db):
         )
 
 
+def test_capability_router_loads_worker_capabilities_once(db):
+    import pytest
+
+    from app.core.exceptions import APIException
+    from app.modules.aitde.workflow.router import task_queue_router
+
+    service.register_worker(
+        db,
+        _heartbeat(key="worker-http-a", capabilities=[Capability.HTTP]),
+    )
+    service.register_worker(
+        db,
+        _heartbeat(key="worker-http-b", capabilities=[Capability.HTTP]),
+    )
+    statements: list[str] = []
+
+    def capture_statement(_conn, _cursor, statement, _parameters, _context, _executemany):
+        statements.append(statement)
+
+    engine = db.get_bind()
+    event.listen(engine, "before_cursor_execute", capture_statement)
+    try:
+        with pytest.raises(APIException):
+            task_queue_router.select_queue(
+                db,
+                network_zone=NetworkZone.TEST.value,
+                required_capabilities=[Capability.BROWSER.value],
+            )
+    finally:
+        event.remove(engine, "before_cursor_execute", capture_statement)
+
+    capability_queries = [
+        statement
+        for statement in statements
+        if "worker_capabilities" in statement.lower()
+    ]
+    assert len(capability_queries) == 1
+
+
 def test_capability_router_zone_queue(db):
     from app.modules.aitde.workflow.router import task_queue_router
 
