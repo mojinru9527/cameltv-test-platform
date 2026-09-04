@@ -315,10 +315,10 @@ export default function MainLayout() {
                   aria-label={`切换主题，当前${activeTheme.label}`}
                 >
                   <Palette className="size-4 text-primary" />
-                  <span className="hidden sm:inline text-sm font-medium">
+                  <span className="hidden text-sm font-medium lg:inline">
                     {activeTheme.label}
                   </span>
-                  <ChevronDown className="hidden size-3 opacity-50 sm:block" />
+                  <ChevronDown className="hidden size-3 opacity-50 lg:block" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-72 p-3">
@@ -407,8 +407,8 @@ export default function MainLayout() {
                     <Avatar className="size-6">
                       <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
                     </Avatar>
-                    <span className="hidden text-sm sm:inline">{user?.nickname || user?.username}</span>
-                    <ChevronDown className="hidden size-3 opacity-50 sm:block" />
+                    <span className="hidden text-sm lg:inline">{user?.nickname || user?.username}</span>
+                    <ChevronDown className="hidden size-3 opacity-50 lg:block" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">

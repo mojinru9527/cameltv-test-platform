@@ -8,10 +8,12 @@ from __future__ import annotations
 
 import ast
 import json
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import forbidden
 from app.models.api_token import ApiToken
 
 
@@ -36,6 +38,17 @@ def verify_token_hash(db: Session, token_hash: str) -> ApiToken | None:
     return db.scalar(
         select(ApiToken).where(ApiToken.token_hash == token_hash, ApiToken.enabled)
     )
+
+
+def require_scope(token: ApiToken, scope: str) -> None:
+    """Reject a valid API Token that lacks the requested least-privilege scope."""
+    if scope not in parse_scopes(token.scopes):
+        raise forbidden(f"API Token 缺少作用域：{scope}")
+
+
+def mark_used(token: ApiToken) -> None:
+    """Record successful machine-token use in the caller's transaction."""
+    token.last_used_at = datetime.now(timezone.utc)
 
 
 def get_token(db: Session, token_id: int, project_id: int) -> ApiToken | None:

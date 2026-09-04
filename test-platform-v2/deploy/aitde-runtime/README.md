@@ -67,10 +67,24 @@ TEMPORAL_TASK_QUEUE=worker-test
 
 ### 1.3 启动执行 Worker（持续心跳 + 拉取 TaskQueue）
 
+先在测试平台前端获取最小权限凭据：
+
+1. 登录测试平台并选择 Worker 所属项目。
+2. 打开「Durable Runtime → Worker」，点击「生成 Worker Token」。
+3. 系统管理会自动打开「API Token」并预选「Worker 执行节点」用途；填写名称后创建。
+4. 在只展示一次的成功窗口中复制 Worker 启动配置。关闭后平台无法再次显示明文。
+
+`WORKER_KEY` 是节点的稳定服务标识，默认由主机名生成，也可以显式设置；它不是登录凭据。
+真正用于注册鉴权的是 `API_TOKEN`，且必须具有 `workers:register` 作用域。不要把 Token 写入
+仓库、镜像、命令历史或工单；生产应通过 Secret 管理注入。
+
 ```bash
-# 在仓库根目录执行；需要时先设置 BACKEND_URL/API_TOKEN。
+# 在仓库根目录执行；先从一次性成功窗口设置 BACKEND_URL/API_TOKEN。
 bash test-platform-v2/deploy/aitde-runtime/scripts/start-worker.sh TEST HTTP,BROWSER
 ```
+
+启动器会在拉起任何子进程前检查 `API_TOKEN`；缺失时退出码为 2，并指向前端生成入口，
+不会进入持续 401 的重试循环。
 
 启动器同时托管心跳进程和 Temporal Worker。心跳会立即发送，之后默认每 60 秒发送；
 一次 Control Plane 网络失败只记录告警并继续重试。任一子进程异常退出或启动器收到
@@ -102,6 +116,16 @@ python -m app.modules.aitde.workflow.gateway --task-queue worker-test
 - `docker-compose.yml` 的 `TEMPORAL_GRPC_PORT`/`UI_PORT` 按需映射；生产默认可不暴露 UI
 - 持久化/visibility：默认即 postgres12；如需 Elasticsearch visibility，改 `config/docker.yaml`
 - **SECRET/ALWAYS 隔离**：不把数据库、证书、密钥写入镜像或仓库；certs/ 已 gitignore
+
+### 2.1 Token 轮换与撤销
+
+1. 在 Runtime 的 Worker 接入入口创建新 Token。
+2. 把新 Token 写入 Secret 管理并重启 Worker。
+3. 在 Runtime 确认该节点恢复 ONLINE，且最后心跳持续更新。
+4. 回到「系统管理 → API Token」，停用旧 Token；观察一个心跳周期确认新 Token 生效。
+5. 确认无回退需求后删除旧 Token。停用或删除后，旧 Token 的下一次 heartbeat 会立即被拒绝。
+
+不要先停用旧 Token 再创建新 Token，否则会人为制造 Worker 离线窗口。
 
 ## 3. mTLS（互信 client-auth，V34-007）
 

@@ -33,6 +33,7 @@ from app.modules.aitde.workflow.schemas import (
     SecretRefIn,
     WorkerHeartbeatIn,
 )
+from app.services import token_service
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,17 @@ def register_worker(db: Session, data: WorkerHeartbeatIn) -> dict[str, Any]:
     db.commit()
     db.refresh(row)
     return worker_to_dict(row, [cap.value for cap in data.capabilities])
+
+
+def register_worker_with_token(
+    db: Session,
+    data: WorkerHeartbeatIn,
+    api_token: Any,
+) -> dict[str, Any]:
+    """Register a Worker with the dedicated machine-token scope."""
+    token_service.require_scope(api_token, "workers:register")
+    token_service.mark_used(api_token)
+    return register_worker(db, data)
 
 
 def list_workers(db: Session) -> list[dict[str, Any]]:

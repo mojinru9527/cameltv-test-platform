@@ -9,6 +9,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
+from app.api.v1.open_api import verify_api_token
 from app.api.v2.deps import require_aitde_v3
 from app.core.deps import CurrentUser, get_db, require_permission
 from app.modules.aitde.workflow import service
@@ -31,10 +32,10 @@ router = APIRouter(tags=["AITDE - Durable Runtime"], dependencies=[Depends(requi
 @router.post("/workers/heartbeat", response_model=R[dict])
 def worker_heartbeat(
     payload: WorkerHeartbeatIn,
-    current: CurrentUser = Depends(require_permission("workers:register")),
+    api_token: object = Depends(verify_api_token),
     db: Session = Depends(get_db),
 ):
-    data = service.register_worker(db, payload)
+    data = service.register_worker_with_token(db, payload, api_token)
     return R.ok(data)
 
 
