@@ -65,23 +65,30 @@ TEMPORAL_NAMESPACE=default
 TEMPORAL_TASK_QUEUE=worker-test
 ```
 
-### 1.3 启动执行 Worker（拉取 TaskQueue）
+### 1.3 启动执行 Worker（持续心跳 + 拉取 TaskQueue）
+
+```bash
+# 在仓库根目录执行；需要时先设置 BACKEND_URL/API_TOKEN。
+bash test-platform-v2/deploy/aitde-runtime/scripts/start-worker.sh TEST HTTP,BROWSER
+```
+
+启动器同时托管心跳进程和 Temporal Worker。心跳会立即发送，之后默认每 60 秒发送；
+一次 Control Plane 网络失败只记录告警并继续重试。任一子进程异常退出或启动器收到
+INT/TERM 时，另一个子进程也会被清理，再由 systemd/Compose 的重启策略拉起整个单元。
+
+直接运行下面的 gateway 命令只适合调试 Temporal 拉取，不会注册 Control Plane 心跳，
+因此不会让 Durable Runtime 页面保持 ONLINE：
 
 ```bash
 cd test-platform-v2/backend
 python -m app.modules.aitde.workflow.gateway --task-queue worker-test
 ```
 
-若 Worker 不在库侧，用 `scripts/start-worker.sh`（含注册/心跳到 Control Plane）：
-
-```bash
-bash test-platform-v2/deploy/aitde-runtime/scripts/start-worker.sh TEST HTTP,BROWSER
-```
-
 ### 1.4 验证
 
 - [x] Web UI（http://localhost:8081）有 namespace / workflow 列表
 - [x] Control Plane `GET /api/v2/workers` 能看到注册的 worker（ONLINE）
+- [ ] Worker 连续运行超过 180 秒后仍为 ONLINE，最后心跳持续更新
 - [x] 启动一个 ScenarioExecutionWorkflow，worker 拉取并执行，Run 状态推进
 
 ## 2. 生产云服务器 —— 复制到单机
@@ -89,6 +96,9 @@ bash test-platform-v2/deploy/aitde-runtime/scripts/start-worker.sh TEST HTTP,BRO
 流程同 §1，但把回调地址/镜像/持久化按生产调：
 
 - `TEMPORAL_GRPC_ENDPOINT` 指向生产可访问的地址（内网/公网，按需 mTLS）
+- `BACKEND_URL` 指向生产 Control Plane 的 `/api/v2`，并通过 Secret 注入具有
+  `workers:register` 权限的 `API_TOKEN`；不要写入仓库或镜像
+- `WORKER_HEARTBEAT_SECONDS` 默认 60，必须小于控制面 180 秒离线阈值
 - `docker-compose.yml` 的 `TEMPORAL_GRPC_PORT`/`UI_PORT` 按需映射；生产默认可不暴露 UI
 - 持久化/visibility：默认即 postgres12；如需 Elasticsearch visibility，改 `config/docker.yaml`
 - **SECRET/ALWAYS 隔离**：不把数据库、证书、密钥写入镜像或仓库；certs/ 已 gitignore

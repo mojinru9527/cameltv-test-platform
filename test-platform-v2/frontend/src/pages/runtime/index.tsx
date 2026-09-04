@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { Button } from '@/ui'
 import PageHeader from '@/components/PageHeader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
@@ -21,6 +22,7 @@ import {
 import { WorkerHealthTable } from './components/WorkerHealthTable'
 import { WorkflowProgress } from './components/WorkflowProgress'
 import { ApprovalGateCard } from './components/ApprovalGateCard'
+import { RefreshCw } from '@/lib/icons'
 
 type Tab = 'workers' | 'workflows' | 'approvals' | 'policies' | 'secrets'
 
@@ -33,9 +35,11 @@ export default function RuntimeAdminPage() {
   const [workflows, setWorkflows] = useState<WorkflowRun[]>([])
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
 
   useAbortableEffect((signal) => {
     setLoading(true)
+    setLoadError('')
     Promise.all([
       fetchWorkers(signal),
       fetchWorkflows({ page: 1, page_size: 50, signal }),
@@ -44,12 +48,15 @@ export default function RuntimeAdminPage() {
       fetchPolicyProfiles(signal),
     ])
       .then(([w, wf, ap]) => {
+        if (signal.aborted) return
         setWorkers(w.items)
         setWorkflows(wf.items)
         setApprovals(ap.items)
       })
       .catch((err) => {
-        if (!(err?.code === 'ERR_CANCELED')) return
+        if (err?.code !== 'ERR_CANCELED' && !signal.aborted) {
+          setLoadError(err instanceof Error ? err.message : 'Runtime 状态加载失败')
+        }
       })
       .finally(() => {
         if (!signal.aborted) setLoading(false)
@@ -59,32 +66,60 @@ export default function RuntimeAdminPage() {
   const reload = () => setRefreshKey((k) => k + 1)
 
   const onDrain = async (id: number) => {
-    await drainWorker(id)
-    toast.success('已排空 Worker')
-    reload()
+    try {
+      await drainWorker(id)
+      toast.success('已排空 Worker')
+      reload()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '排空 Worker 失败')
+    }
   }
   const onDisable = async (id: number) => {
-    await disableWorker(id)
-    toast.success('已禁用 Worker')
-    reload()
+    try {
+      await disableWorker(id)
+      toast.success('已禁用 Worker')
+      reload()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '禁用 Worker 失败')
+    }
   }
   const onApprove = async (id: number) => {
-    await approveApproval(id)
-    toast.success('已批准审批')
-    reload()
+    try {
+      await approveApproval(id)
+      toast.success('已批准审批')
+      reload()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '批准失败')
+    }
   }
   const onReject = async (id: number) => {
-    await rejectApproval(id)
-    toast.success('已拒绝审批')
-    reload()
+    try {
+      await rejectApproval(id)
+      toast.success('已拒绝审批')
+      reload()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '拒绝失败')
+    }
   }
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
       <PageHeader
         title="Durable Runtime"
-        description="Temporal + Network Worker + Security Plane（V3.4）"
+        description="查看平台托管的 Temporal、Worker 与安全控制状态"
       />
+      {loadError && (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border py-4" role="alert">
+          <div>
+            <p className="text-sm font-medium text-destructive">Runtime 状态加载失败</p>
+            <p className="mt-1 text-sm text-muted-hc">{loadError}</p>
+          </div>
+          <Button variant="secondary" className="min-h-11" onClick={reload}>
+            <RefreshCw className="size-4" aria-hidden="true" />
+            重新检查
+          </Button>
+        </div>
+      )}
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
         <TabsList>
           <TabsTrigger value="workers">Worker</TabsTrigger>
@@ -95,11 +130,19 @@ export default function RuntimeAdminPage() {
         </TabsList>
 
         <TabsContent value="workers" className="space-y-4">
-          <WorkerHealthTable workers={workers} loading={loading} onDrain={onDrain} onDisable={onDisable} />
+          {tab === 'workers' && !loadError && (
+            <WorkerHealthTable
+              workers={workers}
+              loading={loading}
+              onDrain={onDrain}
+              onDisable={onDisable}
+              onRefresh={reload}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="workflows" className="space-y-4">
-          {loading ? (
+          {tab === 'workflows' && (loading ? (
             <p className="text-sm text-muted-foreground">加载中…</p>
           ) : workflows.length === 0 ? (
             <p className="text-sm text-muted-foreground">暂无 Workflow</p>
@@ -115,11 +158,11 @@ export default function RuntimeAdminPage() {
                 </div>
               ))}
             </div>
-          )}
+          ))}
         </TabsContent>
 
         <TabsContent value="approvals" className="space-y-4">
-          {loading ? (
+          {tab === 'approvals' && (loading ? (
             <p className="text-sm text-muted-foreground">加载中…</p>
           ) : approvals.length === 0 ? (
             <p className="text-sm text-muted-foreground">暂无审批</p>
@@ -129,15 +172,19 @@ export default function RuntimeAdminPage() {
                 <ApprovalGateCard key={ap.id} approval={ap} onApprove={onApprove} onReject={onReject} />
               ))}
             </div>
-          )}
+          ))}
         </TabsContent>
 
         <TabsContent value="policies" className="space-y-4">
-          <p className="text-sm text-muted-foreground">Policy Profile 列表（见 API /policy-profiles）</p>
+          {tab === 'policies' && (
+            <p className="text-sm text-muted-foreground">Policy Profile 列表（见 API /policy-profiles）</p>
+          )}
         </TabsContent>
 
         <TabsContent value="secrets" className="space-y-4">
-          <p className="text-sm text-muted-foreground">SecretRef metadata 列表（见 API /secret-refs）</p>
+          {tab === 'secrets' && (
+            <p className="text-sm text-muted-foreground">SecretRef metadata 列表（见 API /secret-refs）</p>
+          )}
         </TabsContent>
       </Tabs>
     </div>

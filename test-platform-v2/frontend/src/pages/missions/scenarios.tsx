@@ -42,18 +42,19 @@ export default function MissionScenariosPage() {
 
   const [rows, setRows] = useState<ScenarioRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [reloadVersion, setReloadVersion] = useState(0)
   const [generating, setGenerating] = useState(false)
   const [activeRow, setActiveRow] = useState<ScenarioRow | null>(null)
   const [detail, setDetail] = useState<ScenarioDetail | null>(null)
   const [projection, setProjection] = useState<FunctionalProjection | null>(null)
   const [viewOpen, setViewOpen] = useState(false)
 
-  const reload = () => setLoading(true)
+  const reload = () => setReloadVersion((version) => version + 1)
 
   useAbortableEffect((signal) => {
     if (!missionId) return
     setLoading(true)
-    fetchMissionScenarios(missionId)
+    fetchMissionScenarios(missionId, signal)
       .then(setRows)
       .catch((err) => {
         if (!(err?.code === 'ERR_CANCELED')) toast.error(err.message || '加载失败')
@@ -61,7 +62,7 @@ export default function MissionScenariosPage() {
       .finally(() => {
         if (!signal.aborted) setLoading(false)
       })
-  }, [missionId, loading])
+  }, [missionId, reloadVersion])
 
   const doGenerate = async () => {
     if (generating) return

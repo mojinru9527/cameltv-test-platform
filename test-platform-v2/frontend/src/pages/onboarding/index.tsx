@@ -301,8 +301,8 @@ export default function OnboardingPage() {
                   <Badge tone={readiness.baseline_ready ? 'success' : 'danger'}>
                     {readiness.baseline_ready ? '业务接入基线已就绪' : '业务接入基线尚未就绪'}
                   </Badge>
-                  <Badge tone={readiness.durable_ready ? 'success' : 'danger'}>
-                    {readiness.durable_ready ? '耐久运行已就绪' : '耐久运行尚未就绪'}
+                  <Badge tone={readiness.durable_ready ? 'success' : 'warning'}>
+                    {readiness.durable_ready ? '耐久执行已就绪' : '可选耐久执行尚未就绪'}
                   </Badge>
                 </div>
                 <div className="mt-2">
@@ -311,7 +311,7 @@ export default function OnboardingPage() {
                   <ReadinessRow name="Runtime Worker" item={readiness.services.runtime_worker} platformManaged href="/admin/workers" />
                 </div>
                 <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-                  导入并运行业务基线不依赖 Temporal；AITDE 的可恢复耐久执行需要 Temporal 和在线 Worker。
+                  耐久能力未就绪不影响当前业务接入和同步基线；只有可恢复的 AITDE 执行才需要 Temporal 和在线 Worker。
                 </p>
               </>
             ) : null}

@@ -43,8 +43,9 @@ export function analyzeMissionScope(
 
 export function fetchMissionScope(
   missionId: number,
+  signal?: AbortSignal,
 ): Promise<{ items: ScopeItem[]; summary: ScopeSummary }> {
-  return aitdeV2.get(`/missions/${missionId}/scope`)
+  return aitdeV2.get(`/missions/${missionId}/scope`, { signal })
 }
 
 export function reviewMissionScope(
