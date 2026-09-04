@@ -13,8 +13,8 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.api_token import ApiToken
 from app.core.exceptions import forbidden
+from app.models.api_token import ApiToken
 
 
 def parse_scopes(value: object) -> list[str]:

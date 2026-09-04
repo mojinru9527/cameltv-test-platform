@@ -28,8 +28,8 @@ export function scopesForTokenPurpose(purpose: TokenPurpose): string[] {
 export function buildWorkerSetup(token: string, origin: string): string {
   const backendUrl = `${origin.replace(/\/+$/, '')}/api/v2`
   return [
-    `BACKEND_URL=${backendUrl}`,
-    `API_TOKEN=${token}`,
+    `export BACKEND_URL=${backendUrl}`,
+    `export API_TOKEN=${token}`,
     'bash test-platform-v2/deploy/aitde-runtime/scripts/start-worker.sh TEST HTTP,BROWSER',
   ].join('\n')
 }

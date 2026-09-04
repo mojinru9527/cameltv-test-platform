@@ -10,8 +10,8 @@ describe('token purposes', () => {
   it('builds copyable Worker configuration without altering the token', () => {
     const setup = buildWorkerSetup('tpat_test_only', 'https://control.example/')
 
-    expect(setup).toContain('BACKEND_URL=https://control.example/api/v2')
-    expect(setup).toContain('API_TOKEN=tpat_test_only')
+    expect(setup).toContain('export BACKEND_URL=https://control.example/api/v2')
+    expect(setup).toContain('export API_TOKEN=tpat_test_only')
     expect(setup).toContain('start-worker.sh TEST HTTP,BROWSER')
   })
 })

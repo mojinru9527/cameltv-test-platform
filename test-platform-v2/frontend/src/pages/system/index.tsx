@@ -56,33 +56,33 @@ export default function SystemPage() {
     <div>
       <PageHeader title="系统管理" className="mb-4" />
       <Tabs value={activeTab} onValueChange={changeTab}>
-        <TabsList>
+        <TabsList className="w-full flex-wrap justify-start group-data-[orientation=horizontal]/tabs:h-auto lg:w-fit lg:flex-nowrap lg:group-data-[orientation=horizontal]/tabs:h-8">
           {showUsers && (
-            <TabsTrigger value="users">
+            <TabsTrigger value="users" className="h-11 flex-none lg:h-[calc(100%-1px)] lg:flex-1">
               <Users className="size-4" />
               用户管理
             </TabsTrigger>
           )}
           {showRoles && (
-            <TabsTrigger value="roles">
+            <TabsTrigger value="roles" className="h-11 flex-none lg:h-[calc(100%-1px)] lg:flex-1">
               <Shield className="size-4" />
               角色管理
             </TabsTrigger>
           )}
           {showAudit && (
-            <TabsTrigger value="audit">
+            <TabsTrigger value="audit" className="h-11 flex-none lg:h-[calc(100%-1px)] lg:flex-1">
               <FileText className="size-4" />
               审计日志
             </TabsTrigger>
           )}
           {showTokens && (
-            <TabsTrigger value="tokens">
+            <TabsTrigger value="tokens" className="h-11 flex-none lg:h-[calc(100%-1px)] lg:flex-1">
               <KeyRound className="size-4" />
               API Token
             </TabsTrigger>
           )}
           {showInvites && (
-            <TabsTrigger value="invites">
+            <TabsTrigger value="invites" className="h-11 flex-none lg:h-[calc(100%-1px)] lg:flex-1">
               <KeyRound className="size-4" />
               邀请码
             </TabsTrigger>

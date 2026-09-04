@@ -24,5 +24,7 @@ describe('SystemPage deep links', () => {
     )
 
     expect(screen.getByText('Token 管理内容')).toBeTruthy()
+    expect(screen.getByRole('tablist').className).toContain('flex-wrap')
+    expect(screen.getByRole('tab', { name: 'API Token' }).className).toContain('h-11')
   })
 })

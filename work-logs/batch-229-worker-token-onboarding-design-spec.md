@@ -67,3 +67,13 @@ Durable Runtime / Worker
 ## 7. 设计签核
 
 结论：通过。实现必须以 TDD 固定鉴权、深链、权限态、一次展示和空 Token fail-fast。
+
+## 8. 设计 QA 补充验收
+
+| 发现 | 修复锚点 | 验收结果 |
+|------|----------|----------|
+| 复制出的 Bash 配置仅赋值但未导出，子进程无法继承环境变量 | `test-platform-v2/frontend/src/pages/system/tokenPurposes.ts:31` | 改为 `export BACKEND_URL` 与 `export API_TOKEN`；单元测试及真实浏览器复制结果通过 |
+| 系统管理多标签在 390px/768px 视口发生裁切和内容重叠 | `test-platform-v2/frontend/src/pages/system/index.tsx:59` | 标签列表允许换行并保持 44px 触控目标；两种视口截图与盒模型检查通过 |
+| 768px 全局页头的项目名与操作文字互相遮挡 | `test-platform-v2/frontend/src/layouts/MainLayout.tsx:281`、`test-platform-v2/frontend/src/components/foolproof/AskAiButton.tsx:38` | `lg` 以下保留图标与无障碍名称、隐藏可见文字；768px 截图无重叠 |
+
+补充签核：上述 P1/P2 设计问题均已关闭；桌面、平板和移动端关键路径通过，未发现新的阻断项。
