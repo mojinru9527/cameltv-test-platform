@@ -120,6 +120,19 @@ def test_offline_detection(db):
     assert repository.get_worker(db, 1).status == WorkerStatus.OFFLINE.value
 
 
+def test_list_workers_marks_stale_heartbeat_offline(db):
+    from app.core.task_queue import utcnow
+
+    service.register_worker(db, _heartbeat())
+    row = repository.get_worker(db, 1)
+    row.last_heartbeat_at = utcnow() - timedelta(minutes=10)
+    db.commit()
+
+    items = service.list_workers(db)
+
+    assert items[0]["status"] == WorkerStatus.OFFLINE.value
+
+
 def test_fresh_heartbeat_stays_online(db):
     service.register_worker(db, _heartbeat())
     # last_heartbeat_at is set at registration (now), so nothing goes offline.
@@ -167,6 +180,26 @@ def test_capability_router_ignores_offline(db):
 
     service.register_worker(db, _heartbeat(capabilities=[Capability.HTTP]))
     service.set_worker_status(db, 1, "OFFLINE")
+    with pytest.raises(APIException):
+        task_queue_router.select_queue(
+            db,
+            network_zone=NetworkZone.TEST.value,
+            required_capabilities=[Capability.HTTP.value],
+        )
+
+
+def test_capability_router_rejects_stale_online_worker(db):
+    import pytest
+
+    from app.core.exceptions import APIException
+    from app.core.task_queue import utcnow
+    from app.modules.aitde.workflow.router import task_queue_router
+
+    service.register_worker(db, _heartbeat(capabilities=[Capability.HTTP]))
+    row = repository.get_worker(db, 1)
+    row.last_heartbeat_at = utcnow() - timedelta(minutes=10)
+    db.commit()
+
     with pytest.raises(APIException):
         task_queue_router.select_queue(
             db,

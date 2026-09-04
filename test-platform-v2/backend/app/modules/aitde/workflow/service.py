@@ -77,6 +77,7 @@ def register_worker(db: Session, data: WorkerHeartbeatIn) -> dict[str, Any]:
 
 
 def list_workers(db: Session) -> list[dict[str, Any]]:
+    repository.mark_offline_workers(db)
     items = repository.list_workers(db)
     capabilities = repository.list_worker_capabilities_by_worker_ids(
         db,
