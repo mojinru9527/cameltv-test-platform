@@ -1,6 +1,6 @@
 # Batch 228 — Leader Verdict
 
-> Leader | Date: 2026-09-03 | Decision: 有条件通过（待用户总确认、required checks 与最终 PR 审计）
+> Leader | Date: 2026-09-04 | Decision: 有条件通过（待用户总确认、required checks 与最终 PR 审计）
 
 ## 评审摘要
 
@@ -8,7 +8,7 @@
 |------|------|------|
 | 实现质量 | 通过 | 请求循环、能力契约、常驻心跳和状态反馈均有定向测试 |
 | 风险控制 | 通过 | 不从网页远程启动进程；`PROD_RO` 保护不变；不宣称本地等于生产恢复 |
-| 覆盖 | 通过 | 后端 2414、前端 622、定向 26、迁移 8、路由守卫 4、12 张截图与 Network 计数 |
+| 覆盖 | 通过 | 后端 2421、前端 622、定向 33、迁移 8、路由守卫 4、12 张截图与 Network 计数 |
 
 ## 关键决策
 
@@ -17,11 +17,15 @@
 3. Worker 心跳作为与 Temporal Worker 同生命周期的受管进程，默认 60 秒，严格小于 180 秒离线阈值。
 4. Worker 列表直接返回真实 capability，并用一次批量 SQL 避免前端详情 N+1。
 5. Scope/Scenario 刷新使用独立版本号，`loading` 只表达 UI 状态，不再承担 effect 触发职责。
+6. 列表与 TaskQueue 路由都先淘汰过期 Worker；DRAINING/DISABLED 是管理员终态，不被普通心跳覆盖。
+7. SQLite 内保持 naive UTC，API 响应补 UTC 时区标记，避免浏览器按本地时间误读。
 
 ## 抽检通过
 
 - `worker_heartbeat.py:43-45/112-145`：心跳间隔约束、失败重试、停止清理。
 - `repository.py:70-85` 与 `service.py:71-90`：capability 批量读取和统一响应契约。
+- `repository.py:29-49/101-121` 与 `router.py:44-57`：管理员状态保护、过期淘汰和路由批量能力查询。
+- `service.py:109-125`：心跳响应明确标记 UTC；浏览器复验显示 Asia/Shanghai 本地时间。
 - `scope.tsx:48-62`、`scenarios.tsx:54-65`：AbortSignal 与独立 reload 依赖。
 - `WorkerHealthTable.tsx:43-67/90-103`：离线原因、真实能力和恢复操作。
 - `work-logs/evidence/batch-228-runtime-ui-stability/`：双端全量、门禁、请求次数与三视口证据。
@@ -40,6 +44,7 @@
 
 - 本批不新增重复 C 条件；继续执行 C227-1 的 PR required checks/最终审计门禁。
 - C227-2 中真实 AI、业务 OpenAPI/被测环境与生产 Worker/Runner 的解除条件不因本地代码通过而关闭。
+- Worker 注册 Token 在页面和 Runbook 中仍不可发现；真实进程无 Token 启动返回 401，必须作为下一批 P1 从最新 `main` 修复。
 
 ## 知识审计
 
@@ -54,12 +59,14 @@
 | Worker 只在启动时注册会在离线阈值后产生假离线 | 增加持续心跳、失败重试与生命周期测试 | `worker_heartbeat.py`、`test_worker_heartbeat.py` |
 | Runbook 入口与 Python 包目录未形成可执行契约 | 启动器显式进入 backend，并在启动器测试中固定路径 | `start-worker.sh`、`test_worker_heartbeat.py` |
 | 列表漏字段易诱导前端逐行补请求 | 后端一次批量查询并加 SQL 次数断言 | `repository.py`、`test_worker_registry.py` |
+| 过期状态、管理员状态和时区在真实页面复验中暴露 | 增加状态机、淘汰、UTC 响应回归并更新三视口证据 | `repository.py`、`service.py`、`router.py`、Runtime 截图 |
+| 注册 Token 对黑盒管理员不可发现 | 明确登记下一批 P1，不把本地数据库夹具冒充 Worker 上线能力 | QA/Leader/浏览器证据 |
 | 本批不需要修改 Agent Team 技能模板 | 不改技能，无 CHANGELOG 变更 | 本判决记录 |
 
 ## 复盘卡
 
 | 计划耗时 | 缺陷(P0/P1/P2/P3) | 返工次数 | 根因分类 | 下次避免 |
 |----------|-------------------|----------|----------|----------|
-| 计划 4.5h / 实际约 1.2h | 0/4/2/0 | 2 | 技术债 + 生命周期契约缺口 | Runtime 验收从 Runbook 入口启动，并同时覆盖模块导入、持续心跳时间窗、列表契约与浏览器恢复路径 |
+| 计划 4.5h / 实际约 2.0h | 0/7/4/1 | 4 | 技术债 + 生命周期/时间契约缺口 | Runtime 验收从 Runbook 入口启动，并同时覆盖鉴权获取、模块导入、持续心跳、状态机、UTC 响应、列表契约与浏览器恢复路径 |
 
 **技能使用**：Agent Team 定义六部门与门禁；Bug Guard 促使清除 2 个异常吞噬硬伤；UI 规范决定离线恢复态；Playwright CLI 提供真实请求和三视口证据。
