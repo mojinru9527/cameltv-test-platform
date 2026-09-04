@@ -137,3 +137,16 @@ def test_worker_launcher_manages_heartbeat_and_gateway_processes():
     assert "wait -n" in script
     assert "trap" in script
     assert "curl -sS -X POST" not in script
+
+
+def test_worker_launcher_rejects_an_empty_api_token_before_starting_children():
+    platform_root = Path(__file__).resolve().parents[4]
+    script = (platform_root / "deploy" / "aitde-runtime" / "scripts" / "start-worker.sh").read_text(encoding="utf-8")
+
+    guard = 'if [ -z "$API_TOKEN" ]'
+    heartbeat_start = "python -m app.modules.aitde.workflow.worker_heartbeat &"
+    gateway_start = 'python -m app.modules.aitde.workflow.gateway --task-queue "$TEMPORAL_TASK_QUEUE" &'
+    assert guard in script
+    assert script.index(guard) < script.index(heartbeat_start)
+    assert script.index(guard) < script.index(gateway_start)
+    assert "/system?tab=tokens&purpose=worker" in script
