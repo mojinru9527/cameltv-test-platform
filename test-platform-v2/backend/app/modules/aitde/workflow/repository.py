@@ -11,6 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.task_queue import utcnow
+from app.modules.aitde.common.enums import WorkerStatus
 from app.modules.aitde.workflow.models import (
     ApprovalRequest,
     PolicyProfile,
@@ -39,7 +40,11 @@ def upsert_worker_heartbeat(
         row.machine_identity = data.get("machine_identity", row.machine_identity)
         row.tags_json = data.get("tags_json", row.tags_json)
         row.last_heartbeat_at = data.get("last_heartbeat_at", row.last_heartbeat_at)
-        row.status = data.get("status", row.status)
+        if row.status not in {
+            WorkerStatus.DRAINING.value,
+            WorkerStatus.DISABLED.value,
+        }:
+            row.status = data.get("status", row.status)
     db.commit()
     db.refresh(row)
     return row
@@ -101,8 +106,6 @@ def mark_offline_workers(db: Session, stale_seconds: int = 180) -> int:
     Uses naive UTC (SQLite-friendly) to compare against ``last_heartbeat_at``.
     """
     from datetime import timedelta
-
-    from app.modules.aitde.common.enums import WorkerStatus
 
     cutoff = utcnow() - timedelta(seconds=max(1, stale_seconds))
     rows = db.scalars(

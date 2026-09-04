@@ -96,6 +96,24 @@ def test_set_worker_status_disable(db):
     assert updated["status"] == "DISABLED"
 
 
+def test_admin_worker_states_survive_later_heartbeats(db):
+    service.register_worker(db, _heartbeat())
+
+    for status in (WorkerStatus.DRAINING.value, WorkerStatus.DISABLED.value):
+        service.set_worker_status(db, 1, status)
+        heartbeat = service.register_worker(db, _heartbeat(version="2.0"))
+        assert heartbeat["status"] == status
+
+
+def test_offline_worker_returns_online_on_heartbeat(db):
+    service.register_worker(db, _heartbeat())
+    service.set_worker_status(db, 1, WorkerStatus.OFFLINE.value)
+
+    heartbeat = service.register_worker(db, _heartbeat(version="2.0"))
+
+    assert heartbeat["status"] == WorkerStatus.ONLINE.value
+
+
 def test_get_worker_404(db):
     import pytest
 
