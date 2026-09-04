@@ -11,6 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.task_queue import utcnow
+from app.modules.aitde.common.enums import WorkerStatus
 from app.modules.aitde.workflow.models import (
     ApprovalRequest,
     PolicyProfile,
@@ -39,7 +40,11 @@ def upsert_worker_heartbeat(
         row.machine_identity = data.get("machine_identity", row.machine_identity)
         row.tags_json = data.get("tags_json", row.tags_json)
         row.last_heartbeat_at = data.get("last_heartbeat_at", row.last_heartbeat_at)
-        row.status = data.get("status", row.status)
+        if row.status not in {
+            WorkerStatus.DRAINING.value,
+            WorkerStatus.DISABLED.value,
+        }:
+            row.status = data.get("status", row.status)
     db.commit()
     db.refresh(row)
     return row
@@ -67,6 +72,24 @@ def list_worker_capabilities(db: Session, worker_id: int) -> list[WorkerCapabili
     )
 
 
+def list_worker_capabilities_by_worker_ids(
+    db: Session,
+    worker_ids: list[int],
+) -> dict[int, list[str]]:
+    capabilities_by_worker = {worker_id: [] for worker_id in worker_ids}
+    if not worker_ids:
+        return capabilities_by_worker
+
+    rows = db.execute(
+        select(WorkerCapability.worker_id, WorkerCapability.capability)
+        .where(WorkerCapability.worker_id.in_(worker_ids))
+        .order_by(WorkerCapability.worker_id.asc(), WorkerCapability.capability.asc())
+    ).all()
+    for worker_id, capability in rows:
+        capabilities_by_worker[worker_id].append(capability)
+    return capabilities_by_worker
+
+
 def set_worker_status(db: Session, worker_id: int, status: str) -> WorkerNode | None:
     row = get_worker(db, worker_id)
     if row is None:
@@ -83,8 +106,6 @@ def mark_offline_workers(db: Session, stale_seconds: int = 180) -> int:
     Uses naive UTC (SQLite-friendly) to compare against ``last_heartbeat_at``.
     """
     from datetime import timedelta
-
-    from app.modules.aitde.common.enums import WorkerStatus
 
     cutoff = utcnow() - timedelta(seconds=max(1, stale_seconds))
     rows = db.scalars(

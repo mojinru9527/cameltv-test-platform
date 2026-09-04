@@ -42,13 +42,18 @@ class TaskQueueRouter:
                 code=400, msg=f"未知网络分区：{network_zone}", http_status=422
             )
 
+        repository.mark_offline_workers(db)
         workers = repository.list_workers(db)
+        capabilities = repository.list_worker_capabilities_by_worker_ids(
+            db,
+            [worker.id for worker in workers],
+        )
         for w in workers:
             if w.network_zone != network_zone:
                 continue
             if w.status != WorkerStatus.ONLINE.value:
                 continue
-            caps = {c.capability for c in repository.list_worker_capabilities(db, w.id)}
+            caps = set(capabilities[w.id])
             if set(required_capabilities) <= caps:
                 return zone_queue
 

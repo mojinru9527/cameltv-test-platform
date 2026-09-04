@@ -9,15 +9,14 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy.orm import Session
 
-logger = logging.getLogger(__name__)
-
 from app.core.config import settings
 from app.core.exceptions import APIException
+from app.core.task_queue import utcnow
 from app.modules.aitde.common.enums import (
     ApprovalStatus,
     PolicyDecision,
@@ -35,6 +34,8 @@ from app.modules.aitde.workflow.schemas import (
     WorkerHeartbeatIn,
 )
 
+logger = logging.getLogger(__name__)
+
 
 # ── Worker ───────────────────────────────────────────────────────────────────
 
@@ -51,7 +52,7 @@ def register_worker(db: Session, data: WorkerHeartbeatIn) -> dict[str, Any]:
             "version": data.version,
             "machine_identity": data.machine_identity,
             "tags_json": json.dumps(data.tags),
-            "last_heartbeat_at": datetime.now(),
+            "last_heartbeat_at": utcnow(),
         },
     )
     # Replace capabilities for the worker to reflect the current set.
@@ -71,33 +72,47 @@ def register_worker(db: Session, data: WorkerHeartbeatIn) -> dict[str, Any]:
             )
     db.commit()
     db.refresh(row)
-    return worker_to_dict(row)
+    return worker_to_dict(row, [cap.value for cap in data.capabilities])
 
 
 def list_workers(db: Session) -> list[dict[str, Any]]:
+    repository.mark_offline_workers(db)
     items = repository.list_workers(db)
-    return [worker_to_dict(w) for w in items]
+    capabilities = repository.list_worker_capabilities_by_worker_ids(
+        db,
+        [worker.id for worker in items],
+    )
+    return [worker_to_dict(worker, capabilities[worker.id]) for worker in items]
 
 
 def get_worker(db: Session, worker_id: int) -> dict[str, Any]:
     row = repository.get_worker(db, worker_id)
     if row is None:
         raise APIException(code=404, msg="Worker 不存在", http_status=404)
-    data = worker_to_dict(row)
-    data["capabilities"] = [
+    capabilities = [
         c.capability for c in repository.list_worker_capabilities(db, worker_id)
     ]
-    return data
+    return worker_to_dict(row, capabilities)
 
 
 def set_worker_status(db: Session, worker_id: int, status: str) -> dict[str, Any]:
     row = repository.set_worker_status(db, worker_id, status)
     if row is None:
         raise APIException(code=404, msg="Worker 不存在", http_status=404)
-    return worker_to_dict(row)
+    capabilities = [
+        cap.capability for cap in repository.list_worker_capabilities(db, worker_id)
+    ]
+    return worker_to_dict(row, capabilities)
 
 
-def worker_to_dict(row: Any) -> dict[str, Any]:
+def worker_to_dict(row: Any, capabilities: list[str] | None = None) -> dict[str, Any]:
+    last_heartbeat_at = row.last_heartbeat_at
+    if last_heartbeat_at is not None:
+        if last_heartbeat_at.tzinfo is None:
+            last_heartbeat_at = last_heartbeat_at.replace(tzinfo=timezone.utc)
+        else:
+            last_heartbeat_at = last_heartbeat_at.astimezone(timezone.utc)
+
     return {
         "id": row.id,
         "worker_key": row.worker_key,
@@ -107,8 +122,9 @@ def worker_to_dict(row: Any) -> dict[str, Any]:
         "version": row.version,
         "machine_identity": row.machine_identity,
         "tags_json": row.tags_json,
-        "last_heartbeat_at": row.last_heartbeat_at,
+        "last_heartbeat_at": last_heartbeat_at,
         "registered_at": row.registered_at,
+        "capabilities": capabilities or [],
     }
 
 

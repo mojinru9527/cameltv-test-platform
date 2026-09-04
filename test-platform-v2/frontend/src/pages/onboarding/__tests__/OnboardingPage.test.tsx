@@ -65,7 +65,8 @@ describe('AI 全链路接入页', () => {
 
     await screen.findByText('平台自动检查')
     expect(screen.getByText('业务接入基线已就绪')).toBeTruthy()
-    expect(screen.getByText('耐久运行尚未就绪')).toBeTruthy()
+    expect(screen.getByText('可选耐久执行尚未就绪')).toBeTruthy()
+    expect(screen.getByText(/不影响当前业务接入和同步基线/)).toBeTruthy()
     expect(screen.getAllByText('由平台常驻管理，无需每次手动启动')).toHaveLength(2)
     expect(mocks.getOnboardingReadiness).toHaveBeenCalledTimes(1)
     expect(mocks.listOnboardings).toHaveBeenCalledTimes(1)
