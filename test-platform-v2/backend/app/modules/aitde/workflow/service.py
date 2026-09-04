@@ -14,6 +14,8 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.core.task_queue import utcnow
+
 logger = logging.getLogger(__name__)
 
 from app.core.config import settings
@@ -51,7 +53,7 @@ def register_worker(db: Session, data: WorkerHeartbeatIn) -> dict[str, Any]:
             "version": data.version,
             "machine_identity": data.machine_identity,
             "tags_json": json.dumps(data.tags),
-            "last_heartbeat_at": datetime.now(),
+            "last_heartbeat_at": utcnow(),
         },
     )
     # Replace capabilities for the worker to reflect the current set.

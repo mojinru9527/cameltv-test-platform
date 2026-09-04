@@ -3,6 +3,10 @@ from __future__ import annotations
 
 import json
 
+import httpx
+
+from app.services import api_execution_service
+
 
 def _create_api_case(client, auth_headers, *, endpoint="/api/ping", headers="{}", title="B148TMP-API用例", assertions='[{"type": "status_code", "op": "eq", "expected": 200}]'):
     resp = client.post("/api/v1/test-cases", json={
@@ -118,8 +122,15 @@ class TestExecutionPrecheck:
 class TestExecutionErrorFields:
     """P0-02：执行记录失败根因独立字段 + 历史 JSON 回填。"""
 
-    def test_execute_all_records_error_fields(self, client, auth_headers):
-        # 127.0.0.1 被 SSRF 拦截 → TARGET_POLICY 错误，确定性且快速
+    def test_execute_all_records_error_fields(self, client, auth_headers, monkeypatch):
+        def fail_request(*_args, **_kwargs):
+            raise httpx.ConnectError("deterministic connection failure")
+
+        monkeypatch.setattr(
+            api_execution_service,
+            "_request_with_target_policy",
+            fail_request,
+        )
         case_id = _create_api_case(client, auth_headers, endpoint="/x")
         env = _create_environment(client, auth_headers, base_url="http://127.0.0.1:1")
         plan = _create_plan_with_case(client, auth_headers, case_id, "B148TMP-失败字段")
@@ -138,7 +149,7 @@ class TestExecutionErrorFields:
         assert execs["total"] == 1
         item = execs["items"][0]
         assert item["status"] == "failed"
-        assert item["error_type"] in ("TARGET_POLICY", "NETWORK_ERROR")
+        assert item["error_type"] == "NETWORK_ERROR"
         assert item["status_code"] == 0
         assert item["error_message"]
 

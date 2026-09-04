@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from sqlalchemy import event
 
@@ -35,6 +35,15 @@ def test_register_worker_upsert(db):
     assert data2["id"] == data["id"]
     workers = repository.list_workers(db)
     assert len(workers) == 1
+
+
+def test_register_worker_records_naive_utc_heartbeat(db, monkeypatch):
+    fixed_utc = datetime(2026, 9, 3, 12, 0, 0)
+    monkeypatch.setattr(service, "utcnow", lambda: fixed_utc)
+
+    service.register_worker(db, _heartbeat())
+
+    assert repository.get_worker(db, 1).last_heartbeat_at == fixed_utc
 
 
 def test_worker_capabilities_attached(db):
