@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import event
 
@@ -44,6 +44,16 @@ def test_register_worker_records_naive_utc_heartbeat(db, monkeypatch):
     service.register_worker(db, _heartbeat())
 
     assert repository.get_worker(db, 1).last_heartbeat_at == fixed_utc
+
+
+def test_worker_response_marks_naive_heartbeat_as_utc(db, monkeypatch):
+    fixed_utc = datetime(2026, 9, 3, 12, 0, 0)
+    monkeypatch.setattr(service, "utcnow", lambda: fixed_utc)
+
+    data = service.register_worker(db, _heartbeat())
+
+    assert data["last_heartbeat_at"].tzinfo is timezone.utc
+    assert data["last_heartbeat_at"].replace(tzinfo=None) == fixed_utc
 
 
 def test_worker_capabilities_attached(db):

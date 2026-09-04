@@ -9,17 +9,14 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.core.task_queue import utcnow
-
-logger = logging.getLogger(__name__)
-
 from app.core.config import settings
 from app.core.exceptions import APIException
+from app.core.task_queue import utcnow
 from app.modules.aitde.common.enums import (
     ApprovalStatus,
     PolicyDecision,
@@ -36,6 +33,8 @@ from app.modules.aitde.workflow.schemas import (
     SecretRefIn,
     WorkerHeartbeatIn,
 )
+
+logger = logging.getLogger(__name__)
 
 
 # ── Worker ───────────────────────────────────────────────────────────────────
@@ -107,6 +106,13 @@ def set_worker_status(db: Session, worker_id: int, status: str) -> dict[str, Any
 
 
 def worker_to_dict(row: Any, capabilities: list[str] | None = None) -> dict[str, Any]:
+    last_heartbeat_at = row.last_heartbeat_at
+    if last_heartbeat_at is not None:
+        if last_heartbeat_at.tzinfo is None:
+            last_heartbeat_at = last_heartbeat_at.replace(tzinfo=timezone.utc)
+        else:
+            last_heartbeat_at = last_heartbeat_at.astimezone(timezone.utc)
+
     return {
         "id": row.id,
         "worker_key": row.worker_key,
@@ -116,7 +122,7 @@ def worker_to_dict(row: Any, capabilities: list[str] | None = None) -> dict[str,
         "version": row.version,
         "machine_identity": row.machine_identity,
         "tags_json": row.tags_json,
-        "last_heartbeat_at": row.last_heartbeat_at,
+        "last_heartbeat_at": last_heartbeat_at,
         "registered_at": row.registered_at,
         "capabilities": capabilities or [],
     }
