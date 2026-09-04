@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { Button } from '@/ui'
 import PageHeader from '@/components/PageHeader'
@@ -22,7 +23,9 @@ import {
 import { WorkerHealthTable } from './components/WorkerHealthTable'
 import { WorkflowProgress } from './components/WorkflowProgress'
 import { ApprovalGateCard } from './components/ApprovalGateCard'
-import { RefreshCw } from '@/lib/icons'
+import { KeyRound, RefreshCw } from '@/lib/icons'
+import { Button as LinkButton } from '@/components/ui/button'
+import { useAuthStore } from '@/stores/auth'
 
 type Tab = 'workers' | 'workflows' | 'approvals' | 'policies' | 'secrets'
 
@@ -36,6 +39,7 @@ export default function RuntimeAdminPage() {
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
+  const canManageTokens = useAuthStore((state) => state.hasPerm('token:manage'))
 
   useAbortableEffect((signal) => {
     setLoading(true)
@@ -130,6 +134,26 @@ export default function RuntimeAdminPage() {
         </TabsList>
 
         <TabsContent value="workers" className="space-y-4">
+          {tab === 'workers' && (
+            <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border py-4">
+              <div className="flex min-w-0 items-start gap-2">
+                <KeyRound className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <div>
+                  <p className="text-sm font-medium">接入 Worker</p>
+                  <p className="mt-1 text-sm text-muted-hc">
+                    {canManageTokens
+                      ? '生成最小权限凭据后，按一次性启动配置连接执行节点。'
+                      : '请联系拥有 API Token 管理权限的管理员生成 Worker Token。'}
+                  </p>
+                </div>
+              </div>
+              {canManageTokens && (
+                <LinkButton asChild className="min-h-11">
+                  <Link to="/system?tab=tokens&purpose=worker">生成 Worker Token</Link>
+                </LinkButton>
+              )}
+            </div>
+          )}
           {tab === 'workers' && !loadError && (
             <WorkerHealthTable
               workers={workers}

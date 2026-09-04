@@ -35,7 +35,7 @@ export function AskAiButton({ className }: AskAiButtonProps) {
           aria-label="问我这页怎么用"
         >
           <MessageSquare className="size-4" />
-          <span className="hidden sm:inline">问我</span>
+          <span className="hidden lg:inline">问我</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
@@ -67,4 +67,3 @@ export function AskAiButton({ className }: AskAiButtonProps) {
 }
 
 export default AskAiButton
-

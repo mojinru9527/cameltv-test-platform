@@ -26,6 +26,11 @@ WORKER_HEARTBEAT_SECONDS=${WORKER_HEARTBEAT_SECONDS:-60}
 
 export ZONE CAPS BACKEND_URL WORKER_KEY API_TOKEN WORKER_HEARTBEAT_SECONDS
 
+if [ -z "$API_TOKEN" ]; then
+  echo "[worker] API_TOKEN is required. Generate a Worker Token in Durable Runtime, or open /system?tab=tokens&purpose=worker." >&2
+  exit 2
+fi
+
 echo "[worker] key=$WORKER_KEY zone=$ZONE caps=$CAPS queue=$TEMPORAL_TASK_QUEUE heartbeat=${WORKER_HEARTBEAT_SECONDS}s"
 
 heartbeat_pid=""

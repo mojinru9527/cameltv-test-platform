@@ -1,11 +1,25 @@
 import client from './client'
 
 // ── API Token（C63-1 / batch-70）──
-export function fetchTokens(signal?: AbortSignal) {
+export interface ApiTokenItem {
+  id: number
+  name: string
+  token_prefix: string
+  scopes: string[] | string
+  enabled: boolean
+  last_used_at: string | null
+  created_at: string | null
+}
+
+export interface CreatedApiToken extends ApiTokenItem {
+  token: string
+}
+
+export async function fetchTokens(signal?: AbortSignal): Promise<ApiTokenItem[]> {
   return client.get('/tokens', { signal })
 }
 
-export function createToken(body: { name: string; scopes?: string[] }) {
+export async function createToken(body: { name: string; scopes?: string[] }): Promise<CreatedApiToken> {
   return client.post('/tokens', body)
 }
 
