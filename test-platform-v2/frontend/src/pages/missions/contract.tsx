@@ -204,7 +204,7 @@ export default function MissionContractPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">歧义（Ambiguitity）</CardTitle>
+          <CardTitle className="text-base">歧义（Ambiguity）</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2" aria-busy={loading}>
           {ambiguities.length === 0 ? (

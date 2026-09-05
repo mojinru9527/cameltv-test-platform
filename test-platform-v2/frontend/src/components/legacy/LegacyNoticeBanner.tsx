@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router'
+import { Link, useLocation, useMatches } from 'react-router'
 import { useAitdeV3Enabled } from '@/config/aitde'
 
 // V40-019: legacy v1 surfaces being converged into the AITDE Mission chain. If the
@@ -21,8 +21,13 @@ const LEGACY_PREFIXES = [
 
 export function LegacyNoticeBanner() {
   const { pathname } = useLocation()
+  const matches = useMatches()
   const aitdeEnabled = useAitdeV3Enabled()
   if (!aitdeEnabled) return null
+  // 404 splat 叶子（router/index.tsx 的 `path: '*'`）不是历史入口。/defects 这类未知路径
+  // 会因前缀匹配命中 '/defect'，让 404 页叠加收敛横幅（DEF-20260905-009）。
+  // useMatches() 给出当前 URL 的完整匹配分支，与横幅在树中的挂载位置无关。
+  if (matches[matches.length - 1]?.params?.['*'] !== undefined) return null
   if (!LEGACY_PREFIXES.some((p) => pathname.startsWith(p))) return null
 
   return (
