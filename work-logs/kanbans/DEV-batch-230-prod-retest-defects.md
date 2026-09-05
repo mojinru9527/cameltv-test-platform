@@ -34,8 +34,8 @@
 | 1 | S1 契约快照可读 + 非空校验 | DEF-20260905-001 | P1 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `892df035`；后端回传已解析 `snapshot` 对象 + 空规则冻结拦截（HTTP 400，非 409）+ 前端 `ContractSnapshotView` 渲染规则/产出 + 契约页错误态 |
 | 2 | S2 版本任务列表可达 | DEF-20260905-002 | P1 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `1ea77b47`；路由拆三条 + 新列表页 + `VersionTaskListItem` 补 `coverage`/`updated_at` + `statusLabels.ts` 字典集中 + 侧栏两处子项 Link 化（改法未互换） |
 | 3 | S3 一键运行阻塞可见 | DEF-20260905-003 | P1 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `ae4f37c2` + `8f33ee80`；合成 `kind="plan"` 失败项（D1）+ `task.status` 去无条件化 + 前端按 `run.status` 三分支 + 运行状态徽标 + kind 中文/tone 分级 |
-| 4 | S4 AI 自动发现假成功 | DEF-20260905-004 | P2 | ⏳ ⬅️ | ⏳ | ⏳ | ⏳ | ⏳ | **当前起点**；`discoverAiModels` 类型补 `ok/error/kind/count`（**不声明 `detail`**），前端 `res.ok === false` 早退 + 成功文案改用 `res.count` |
-| 5 | S5 缺陷搜索支持编号 | DEF-20260905-005 | P2 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | `or_(title, defect_id)`，`project_id` 隔离在 OR 之外 |
+| 4 | S4 AI 自动发现假成功 | DEF-20260905-004 | P2 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `54f35c9a`；`discoverAiModels` 类型补 `ok/error/kind/count`（**未声明 `detail`**）+ `handleDiscoverModels` 在 `res.ok === false` 早退弹错误（不给 action，避免嵌套抽屉）+ 成功文案改用 `res.count` 与合并总数区分 |
+| 5 | S5 缺陷搜索支持编号 | DEF-20260905-005 | P2 | ⏳ ⬅️ | ⏳ | ⏳ | ⏳ | ⏳ | **当前起点**；`or_(title.contains, defect_id.contains)`，⚠️ §6 条件 5：`project_id` 过滤必须在 `or_` **之外**，且必须有「keyword 命中另一项目 defect_id 返回空」的跨项目隔离测试 |
 | 6 | S6 范围评审审计操作人 | DEF-20260905-006 | P2 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | `scope/service.py::_audit` 硬编码 `username=""` 修正 + 同类点排查 |
 | 7 | S7 拼写 + 404 横幅边界 | DEF-20260905-007、-009 | P3 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 依赖 S1（同文件 `missions/contract.tsx`） |
 | — | DEF-20260905-008 | （已撤回） | — | ❌ | ❌ | ❌ | ❌ | ❌ | 前端本已有 `toast.success('契约已生成')`；误报，取证方法缺陷已写入 PRD §1.1 |
@@ -47,15 +47,16 @@
 ## 📍 当前位置
 
 ```
-Batch 230 — S4 AI 自动发现假成功
+Batch 230 — S5 缺陷搜索支持编号
 ├── 已完成: Product PRD（550a5ce5）、PM Plan（b6af5c98）、Dev 看板 + 复测证据纳管（00a30b66）、
-│           Design Spec（185c0d82，含 5 项决议 + 11 条走查发现）、看板定位（819de4b5、6f5181b6）
+│           Design Spec（185c0d82，含 5 项决议 + 11 条走查发现）、看板定位（819de4b5、6f5181b6、c0b6683e）
 │           Dev S1 契约快照可读 + 非空校验（892df035，11 文件）
 │           Dev S2 版本任务列表可达 + 侧栏子项链接化（1ea77b47，12 文件）
 │           Dev S3 一键运行阻塞可见（ae4f37c2 代码 + 8f33ee80 窄屏 flex-wrap）
+│           Dev S4 AI 自动发现假成功（54f35c9a，3 文件）
 ├── 🔄 进行中: 无
-├── ⏳ 待审批: S1、S2、S3（等 QA 硬门禁复核 + Leader 终判）
-└── ⏳ 下一步: Dev 进入 S4 编码（Task 4.1 起）
+├── ⏳ 待审批: S1、S2、S3、S4（等 QA 硬门禁复核 + Leader 终判）
+└── ⏳ 下一步: Dev 进入 S5 编码（Task 5.1 起）
               Design 已决议 PM 下放的两项：
               D1 = S3 blocked 原因**复用 failures**（新增 kind:"plan"），不加顶层 reason 字段、不做 Alembic 迁移 → ✅ S3 已落地
               D2 = S7 横幅选 **(b) useMatches() splat 抑制**，不改前缀匹配（已对全量路由表验证无真实路由越界命中）
@@ -65,11 +66,11 @@ Batch 230 — S4 AI 自动发现假成功
               §6 放行条件执行情况：
                 条件 2（空契约拦截必须用 400 而非 409）✅ S1 已满足
                 条件 4（侧栏两处改法不得互换）✅ S2 已满足，并有 NavSubItemLinks.test.tsx 锁定
-                其余条件继续约束 S4–S7
+                条件 5（project_id 过滤在 or_ 之外 + 跨项目隔离测试）⏳ 约束 S5，本切片唯一正确性风险点
+                条件 6（S7 四条路径实测）⏳ 约束 S7；条件 1、3、7 已随 S1/S3 落地
               ⚠️ 徽标一律走 StatusBadge / Badge tone，禁止手写裸色阶与 dark: 变体（§0 Token 架构）
-              ⚠️ S4 关键约束：`discoverAiModels` **不得声明 `detail` 字段**——后端 discover 分支
-                 （ai_config_service.py:272-312）从不返回 detail，只有 test-connection 返回；
-                 声明后端永不发送的字段＝假契约，正是本缺陷的成因类型
+              ✅ S4 关键约束已兑现：`discoverAiModels` 未声明 `detail`（后端 discover 分支从不返回），
+                 失败早退不落入合并分支，成功文案用 `res.count` 而非 `merged.length`
               ✅ S3 回归面已清：全量后端 pytest 2435 passed / 49 skipped / 1 xfailed（exit 0，581s），
                  coverage 回写（C217-1）、releaseTask / buildReleasePackage / transitionVersionTask
                  与 onboarding 基线全部通过；onboarding 只读 run.status 不读 task.status，未受影响
@@ -128,6 +129,16 @@ Batch 230 — S4 AI 自动发现假成功
 - **自测**: 后端 `test_version_task` 38 passed、`test_mainline_walkthrough` 5 passed、**全量 `pytest -q` = 2435 passed / 49 skipped / 1 xfailed（exit 0，581s）**、`ruff F821` 通过、`import app.main` OK；前端 `typecheck`/`build` exit 0、**全量 `vitest run` = 144 files / 655 tests passed（exit 0）**、定向 `version-tasks` 3 files 16 passed、`eslint` 4 个改动文件 exit 0；`scan-common-bugs.ps1` HARD 0 且 S3 文件零命中
 - **测试环境注意**: 全量 vitest 首轮出现 6 个**无关文件**（theme-lab / DebugTab / ReviewPage / UiRunDetail）超时失败，单独复跑 4 文件全绿（857ms vs 6500ms），`--maxWorkers=3` 重跑全量 655 全绿 → 判定为 worker 资源争用抖动，非回归。QA 复现时建议同样限并发
 - **耗时**: 1.9h
+- **审批**: 自测通过，待 QA 复核 + Leader 终判
+
+### Batch 230 / Dev — S4 AI 自动发现假成功 (2026-09-05)
+- **产出**: 提交 `54f35c9a`（3 文件，+80 / −3）
+- **TDD**: 先写两条失败用例（`ok=false` 早退 / 成功用 `count` 报数）确认红（2 failed / 4 passed），再改实现转绿（6 passed）
+- **实现**: `api/aiConfig.ts::discoverAiModels` 返回类型补 `ok/models?/count?/error?/kind?`——后端 `ai_config_service.py:272-312` 业务失败仍走 HTTP 200 且返回 `{ok:false, error}`，旧类型只声明 `{models}` 使调用方无从判定失败；`pages/ai-config/index.tsx::handleDiscoverModels` 在 `res.ok === false` 时 `toast.error(res.error || '模型发现失败', {duration: 10_000})` 后 **`return`**，不再落入合并分支（失败时 `res.models` 为 `undefined`，与模板既有模型合并出非空清单 → 弹绿色成功提示，即 DEF-20260905-004 的假成功）；成功文案由「已拉取厂商全量模型（共 ${merged.length} 个）」改为「已拉取 ${res.count} 个模型，合并后共 ${merged.length} 个」，把「实际拉取数」与「合并后总数」分开
+- **§6/Design 约束兑现**: ①**未声明 `detail`**（discover 分支从不返回，声明后端永不发送的字段＝假契约，正是本缺陷成因类型，已在类型里写注释留痕）；②**不给 action 按钮**（`:207-215` 的「更新密钥」是打开*已存在*提供方的编辑抽屉，而 discover 发生在新建/编辑抽屉内部，再开一次会嵌套），测试用 `toHaveBeenCalledWith(msg, {duration: 10_000})` 精确锁定参数形态；③`:255-257` 的 `merged.length === 0 → toast.error('未发现可用模型')` 按 Spec 保留不动（`ok===true` 后后端保证 `count ≥ 1`，该分支实际不可达，删除属无关清理）；④后端不改（`R.ok(...)` 无条件包裹业务失败是全仓系统性模式，PRD 已列非目标）
+- **走查确认**: `discoverAiModels` 是唯一消费端（全仓 grep 仅 `pages/ai-config/index.tsx:249`），类型收紧无其它波及面
+- **自测**: `npx vitest run src/pages/ai-config` = 6 passed（exit 0）；`npm run typecheck` exit 0；`npm run build` ✓ 9.67s exit 0；`npx eslint` 3 个改动文件 exit 0；`scan-common-bugs.ps1` HARD 0 / WARN 330（与 S3 基线一致，S4 文件零命中）。**未跑后端测试**：本切片零后端改动。**未跑全量 vitest**：定向套件已覆盖唯一消费端，全量留到 S7 结束后统一跑（`--maxWorkers=3`），避免与后端 pytest 争用 worker 造成 S3 那类超时抖动
+- **耗时**: 0.5h
 - **审批**: 自测通过，待 QA 复核 + Leader 终判
 
 ---
