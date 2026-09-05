@@ -74,6 +74,17 @@ export async function fetchAiResolve(signal?: AbortSignal): Promise<AiResolveRes
 
 export async function discoverAiModels(
   body: { api_base_url: string; api_key: string },
-): Promise<{ models: string[] }> {
+): Promise<{
+  /** 业务失败仍走 HTTP 200，调用方必须判定本字段，否则会把失败当空清单合并 */
+  ok: boolean
+  models?: string[]
+  /** 后端实际拉取到的模型数；与「合并既有模型后的总数」是两个数，不得混用 */
+  count?: number
+  /** 可执行的中文提示（同 testAiProviderConnection 的脱敏口径） */
+  error?: string
+  /** 错误类别，供 UI 判定是否属于 Key 问题 */
+  kind?: string
+  // 刻意不声明 detail：discover 分支从不返回它，声明后端永不发送的字段就是假契约。
+}> {
   return api.post('/ai-config/providers/discover-models', body)
 }
