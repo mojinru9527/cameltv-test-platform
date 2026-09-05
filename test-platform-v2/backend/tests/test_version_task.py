@@ -828,3 +828,36 @@ def test_api_onboarding_readiness(client, auth_headers, monkeypatch):
 
     assert response.status_code == 200
     assert response.json()["data"]["project_id"] == 1
+
+
+# ────────────────────────────── Batch 230 S2 / DEF-20260905-002 ──────────────────────────────
+# 版本验收任务列表页需要「覆盖」与「更新时间」两列，此前 VersionTaskListItem
+# 不回传这两个字段 → 列表页无数据源。coverage 是 Text 列存的 JSON 串，必须经
+# _json_to_dict 解析，历史脏数据也不能让列表接口 500。
+
+def test_api_list_exposes_coverage_and_updated_at(client, auth_headers, db_session):
+    task = version_task_service.create_task(
+        db_session, project_id=1, title="体育 16.0.0 验收", version="16.0.0"
+    )
+    task.coverage = json.dumps({"pass": 3, "fail": 1, "skip": 0, "blocked": 0})
+    db_session.commit()
+
+    resp = client.get("/api/v1/version-tasks", headers=auth_headers)
+    assert resp.status_code == 200, resp.text
+
+    item = next(i for i in resp.json()["data"]["items"] if i["id"] == task.id)
+    assert item["coverage"] == {"pass": 3, "fail": 1, "skip": 0, "blocked": 0}
+    assert item["updated_at"] is not None
+
+
+def test_list_item_tolerates_malformed_coverage():
+    from app.schemas.version_task import VersionTaskListItem
+
+    parsed = VersionTaskListItem.model_validate(
+        {"id": 1, "title": "t", "version": "1.0", "coverage": "{not json"}
+    )
+    assert parsed.coverage == {}
+
+    default = VersionTaskListItem.model_validate({"id": 2, "title": "t", "version": "1.0"})
+    assert default.coverage == {}
+    assert default.updated_at is None

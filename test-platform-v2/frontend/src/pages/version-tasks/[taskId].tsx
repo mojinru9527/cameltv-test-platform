@@ -3,18 +3,7 @@ import { useParams } from 'react-router'
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, PageShell, Progress } from '@/ui'
 import { buildReleasePackage, createDefectDraft, getRegressionSet, getVersionTask, listRuns, notifyRelease, releaseTask, startRun, syncDefect, type RegressionItem, type ReleasePackage, type VersionTask, type VersionTaskRun } from '@/api/versionTask'
 import { toast } from 'sonner'
-
-const TASK_STATUS_LABEL: Record<string, string> = {
-  draft: '草稿',
-  plan_review: '待评审',
-  approved: '已批准',
-  executing: '执行中',
-  executed: '已执行',
-  verdict: '待结论',
-  released: '已结束',
-  blocked: '已阻塞',
-  cancelled: '已取消',
-}
+import { TASK_STATUS_LABEL } from './statusLabels'
 
 export function isPassVerdictAllowed(run?: VersionTaskRun): boolean {
   return Boolean(run && run.passed > 0 && run.failed === 0 && run.skipped === 0 && run.blocked === 0)

@@ -78,14 +78,26 @@ export interface PlanItem {
   order_index: number
 }
 
+export interface VersionTaskPage {
+  total: number
+  page: number
+  page_size: number
+  items: VersionTask[]
+}
+
 export async function listVersionTasks(
   status = '',
   keyword = '',
-): Promise<{ total: number; items: VersionTask[] }> {
+  signal?: AbortSignal,
+  page = 1,
+  pageSize = 20,
+): Promise<VersionTaskPage> {
   const p = new URLSearchParams()
   if (status) p.set('status', status)
   if (keyword) p.set('keyword', keyword)
-  return (await v1.get(`/version-tasks?${p.toString()}`)) as unknown as { total: number; items: VersionTask[] }
+  p.set('page', String(page))
+  p.set('page_size', String(pageSize))
+  return (await v1.get(`/version-tasks?${p.toString()}`, { signal })) as unknown as VersionTaskPage
 }
 
 export async function getVersionTask(id: number): Promise<VersionTask> {
