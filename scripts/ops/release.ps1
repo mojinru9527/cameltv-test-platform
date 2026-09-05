@@ -77,12 +77,27 @@ function Invoke-Api([string]$method, [string]$path, $body = $null) {
     }
 }
 
-function Get-Digest([string]$image) {
-    $id = docker image inspect $image --format "{{index .RepoDigests 0}}" 2>$null
-    if ($id -and $id -match "sha256:([0-9a-f]{64})") { return $Matches[1] }
-    $id2 = docker image inspect $image --format "{{.Id}}" 2>$null
-    if ($id2 -match "sha256:([0-9a-f]{64})") { return $Matches[1] }
-    throw "无法获取镜像 $image digest"
+function Get-BuildxDigest([string]$MetadataPath) {
+    if (-not (Test-Path -LiteralPath $MetadataPath -PathType Leaf)) {
+        throw "Buildx 元数据不存在: $MetadataPath"
+    }
+
+    try {
+        $metadata = Get-Content -LiteralPath $MetadataPath -Raw | ConvertFrom-Json -ErrorAction Stop
+    } catch {
+        throw "无法读取 Buildx 元数据 $MetadataPath：$($_.Exception.Message)"
+    }
+
+    foreach ($key in @("containerimage.config.digest", "containerimage.digest")) {
+        $property = $metadata.PSObject.Properties |
+            Where-Object { $_.Name -eq $key } |
+            Select-Object -First 1
+        if ($null -eq $property) { continue }
+        $digest = [string]$property.Value
+        if ($digest -match "^sha256:([0-9a-f]{64})$") { return $Matches[1] }
+    }
+
+    throw "Buildx 元数据未包含有效 digest: $MetadataPath"
 }
 
 function Invoke-BuildxExport {
@@ -99,13 +114,18 @@ function Invoke-BuildxExport {
         [string]$Image,
         [string]$Dockerfile,
         [string]$BuildArg,
-        [string]$Dest
+        [string]$Dest,
+        [string]$MetadataPath
     )
+    if (Test-Path -LiteralPath $MetadataPath) {
+        Remove-Item -LiteralPath $MetadataPath -Force
+    }
     Push-Location $Cwd
     try {
         $cmd = "docker buildx build --builder desktop-linux -t `"$Image`""
         if ($Dockerfile) { $cmd += " -f `"$Dockerfile`"" }
         if ($BuildArg)   { $cmd += " --build-arg `"$BuildArg`"" }
+        $cmd += " --metadata-file=`"$MetadataPath`""
         $cmd += " --output=type=docker,dest=`"$Dest`" ."
         Write-Host "  buildx export: $cmd" -ForegroundColor DarkGray
         cmd /c $cmd 2>&1 | Select-Object -Last 2
@@ -119,13 +139,19 @@ function Invoke-Release {
     $gitSha = (git -C $repoRoot rev-parse HEAD).Trim()
     Write-Host "==> Git SHA: $gitSha" -ForegroundColor Cyan
 
-    # 1. 构建镜像（buildx export 会构建，无需先 docker build 一次）
-    Write-Host "==> 导出前端 cameltv-tp-frontend:$Tag (ICP=$IcpNumber)" -ForegroundColor Cyan
+    # 1. 构建并导出镜像（buildx export 会构建，无需先 docker build 一次）
+    New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
+    $beMetadataPath = Join-Path $OutputDir "$Tag-backend.metadata.json"
+    $feMetadataPath = Join-Path $OutputDir "$Tag-frontend.metadata.json"
+    # buildx 导出必须串行——同一 builder 并发构建会导致层 digest 冲突。
     Write-Host "==> 导出后端 cameltv-tp-backend:$Tag" -ForegroundColor Cyan
+    Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-backend:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Dest "$OutputDir\$Tag-backend.tar" -MetadataPath $beMetadataPath
+    Write-Host "==> 导出前端 cameltv-tp-frontend:$Tag (ICP=$IcpNumber)" -ForegroundColor Cyan
+    Invoke-BuildxExport -Cwd "$repoRoot\test-platform-v2\frontend" -Image "cameltv-tp-frontend:$Tag" -BuildArg "VITE_ICP_NUMBER=$IcpNumber" -Dest "$OutputDir\$Tag-frontend.tar" -MetadataPath $feMetadataPath
 
-    # 2. 自动提取 digest
-    $feDigest = Get-Digest "cameltv-tp-frontend:$Tag"
-    $beDigest = Get-Digest "cameltv-tp-backend:$Tag"
+    # 2. 从本次构建元数据提取 digest；失败时不会创建 DRAFT 发布记录。
+    $beDigest = Get-BuildxDigest $beMetadataPath
+    $feDigest = Get-BuildxDigest $feMetadataPath
     Write-Host "==> 前端 digest: $feDigest" -ForegroundColor Green
     Write-Host "==> 后端 digest: $beDigest" -ForegroundColor Green
 
@@ -152,18 +178,8 @@ function Invoke-Release {
     $deploymentId = $submit.deployment_id
     Write-Host "==> 登记成功 id=$deploymentId（状态 DRAFT）" -ForegroundColor Green
 
-    # 4. 导出 + 上传镜像
-    Write-Host "==> 导出并上传镜像" -ForegroundColor Cyan
-    New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
-    # containerd 存储（io.containerd.snapshotter.v1）下 docker save 可能产出
-    # 残缺 OCI tar（缺 index.json/manifest.json → 服务器 load 报
-    # "unrecognized image format"，2026-08-25 演练实测），改用 buildx
-    # type=docker 导出（含 manifest.json 的经典 docker 归档，服务器可 load）。
-    # 经 cmd /c 透传以规避 PS5.1 脚本模式对 --output 的原生参数重引号问题（见 Invoke-BuildxExport）。
-    # 注意：buildx 导出必须串行——同一 builder 并发构建会导致层 digest 冲突
-    # （"unexpected digest ... copied"，2026-09-01 实测），先后端后前端。
-    Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-backend:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Dest "$OutputDir\$Tag-backend.tar"
-    Invoke-BuildxExport -Cwd "$repoRoot\test-platform-v2\frontend" -Image "cameltv-tp-frontend:$Tag" -BuildArg "VITE_ICP_NUMBER=$IcpNumber" -Dest "$OutputDir\$Tag-frontend.tar"
+    # 4. 上传镜像
+    Write-Host "==> 上传镜像" -ForegroundColor Cyan
     ssh -i $KeyPath -o BatchMode=yes "${UserName}@${HostName}" "mkdir -p $ReleaseDir" 2>&1 | Out-Null
     # 并行上传前后端（两个独立文件，无冲突；单连接带宽受限，并行可缩短总时长）
     $upJobs = @(
