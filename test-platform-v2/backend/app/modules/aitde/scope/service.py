@@ -145,10 +145,9 @@ def _audit(
         from app.models.user import User
         from app.services.audit_service import write_audit
 
-        # 审计的「操作人」是给人读的显示名，也要能被 list_audit 的 keyword 检索到，
-        # 故在此按 user_id 反查（D5：不改服务签名）。nickname 优先、username 兜底。
+        # 审计日志统一记录稳定的登录名，避免昵称与其他审计来源口径不一致。
         user = db.get(User, user_id) if user_id else None
-        username = (user.nickname or user.username) if user else ""
+        username = user.username if user else ""
 
         write_audit(
             db,

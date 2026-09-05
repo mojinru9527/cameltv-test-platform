@@ -50,7 +50,7 @@ export function generateContract(
 }
 
 /**
- * 契约尚未生成时后端返回 404（`service.get_current`），这是合法空态而非错误：
+ * 契约尚未生成时后端返回 HTTP 200 + 业务码 404，这是合法空态而非传输错误：
  * 解析为 `null` 让页面显示「尚未生成 Test Contract」。其余失败照常 reject，
  * 由页面渲染 ErrorState，不得静默降级为空数据。
  */

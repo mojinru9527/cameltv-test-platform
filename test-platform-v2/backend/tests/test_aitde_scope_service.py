@@ -139,7 +139,7 @@ def _review_first_item(db, mission_id: int, user_id: int = 9):
     )
 
 
-def test_scope_analyze_audit_records_operator_name(db):
+def test_scope_analyze_audit_records_login_username(db):
     _mk_user(db, user_id=9, username="zhangsan", nickname="张三")
     m = _mission(db)
     _with_parsed_source(db, m.id)
@@ -148,11 +148,11 @@ def test_scope_analyze_audit_records_operator_name(db):
 
     rows = _audit_rows(db, "scope:analyze")
     assert len(rows) == 1
-    assert rows[0].username == "张三"
+    assert rows[0].username == "zhangsan"
     assert rows[0].user_id == 9
 
 
-def test_scope_review_audit_records_operator_name(db):
+def test_scope_review_audit_records_login_username(db):
     _mk_user(db, user_id=9, username="zhangsan", nickname="张三")
     m = _mission(db)
     _with_parsed_source(db, m.id)
@@ -162,7 +162,7 @@ def test_scope_review_audit_records_operator_name(db):
 
     rows = _audit_rows(db, "scope:review")
     assert len(rows) == 1
-    assert rows[0].username == "张三"
+    assert rows[0].username == "zhangsan"
 
 
 def test_audit_falls_back_to_username_when_nickname_empty(db):

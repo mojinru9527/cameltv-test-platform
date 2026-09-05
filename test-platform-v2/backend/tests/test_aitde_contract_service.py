@@ -153,6 +153,33 @@ def test_get_current_returns_parsed_snapshot(db):
     assert snapshot["rules"][0]["title"]
 
 
+def test_get_current_endpoint_treats_missing_contract_as_business_empty_state(
+    client, db_session, admin_user, auth_headers, monkeypatch,
+):
+    """首次进入契约页是正常空态，不应产生浏览器资源 404。"""
+    from app.core import config
+
+    monkeypatch.setattr(config.settings, "aitde_v3_enabled", True)
+    mission = mission_service.create_mission(
+        db_session,
+        {"title": "尚未生成契约"},
+        project_id=1,
+        user_id=admin_user.id,
+    )
+
+    response = client.get(
+        f"/api/v2/missions/{mission.id}/contract",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "code": 404,
+        "msg": "Contract 尚未生成",
+        "data": None,
+    }
+
+
 def test_list_versions_returns_parsed_snapshot(db):
     m = _ready(db)
     _complete_scope_and_intent(db, m.id)

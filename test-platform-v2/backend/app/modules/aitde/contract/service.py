@@ -123,7 +123,7 @@ def generate(
 def get_current(db: Session, mission_id: int) -> dict:
     contract = repository.get_identity(db, mission_id)
     if not contract:
-        raise APIException(code=404, msg="Contract 尚未生成", http_status=404)
+        raise APIException(code=404, msg="Contract 尚未生成", http_status=200)
     version = repository.latest_version(db, contract.id)
     return {
         "contract_id": contract.id,
