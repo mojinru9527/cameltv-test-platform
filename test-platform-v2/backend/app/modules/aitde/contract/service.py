@@ -154,6 +154,19 @@ def freeze(
     if not version:
         raise APIException(code=404, msg="契约版本不存在", http_status=404)
 
+    # 空壳契约不可冻结：全部 Scope 判为 EXCLUDE 时 review_progress 仍为 1.0，
+    # `_freeze_precondition` 会放行，而采纳项为 0 → 快照零规则。冻结后 Mission
+    # 会带着「已有标准答案」的假状态推进到场景阶段。
+    # 必须是 400 而非 409：前端把 409 绑定为乐观锁冲突（lib/conflict.ts），
+    # 会渲染「请刷新」的错误指引，而刷新不会让空契约变非空。
+    snapshot = _parse_snapshot(version.snapshot_json) or {}
+    if not snapshot.get("rules"):
+        raise APIException(
+            code=400,
+            msg="CONTRACT_FREEZE_EMPTY: 契约快照无有效规则（rules 为空），不可冻结；请先完成 Scope 评审后重新生成",
+            http_status=400,
+        )
+
     version = repository.freeze_version(db, version, user_id)
     mission.current_contract_version_id = version.id
     mission.status = "CONTRACT_FROZEN"
@@ -227,6 +240,22 @@ def create_change_proposal(
     return {"id": proposal.id, "status": proposal.status}
 
 
+def _parse_snapshot(raw: str | None) -> dict | None:
+    """Decode a stored contract snapshot; ``None`` when absent or malformed.
+
+    ``snapshot_json`` is a Text column written from ``ContractSnapshot.model_dump()``,
+    so rows predating the current schema can still be malformed. Validating here
+    keeps the wire shape stable — the versions endpoint's ``response_model`` can
+    never fail on historical data.
+    """
+    if not raw:
+        return None
+    try:
+        return ContractSnapshot.model_validate(json.loads(raw)).model_dump(mode="json")
+    except (TypeError, ValueError):
+        return None
+
+
 def _version_to_dict(v: TestContractVersion | None) -> dict | None:
     if v is None:
         return None
@@ -236,6 +265,7 @@ def _version_to_dict(v: TestContractVersion | None) -> dict | None:
         "version_no": v.version_no,
         "status": v.status,
         "content_hash": v.content_hash,
+        "snapshot": _parse_snapshot(v.snapshot_json),
         "created_at": v.created_at.isoformat() if v.created_at else None,
         "approved_at": v.approved_at.isoformat() if v.approved_at else None,
     }
