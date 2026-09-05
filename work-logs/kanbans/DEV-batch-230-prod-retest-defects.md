@@ -33,8 +33,8 @@
 |---|-------|------|:------:|:----:|:----:|:----:|:----:|:----:|------|
 | 1 | S1 契约快照可读 + 非空校验 | DEF-20260905-001 | P1 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `892df035`；后端回传已解析 `snapshot` 对象 + 空规则冻结拦截（HTTP 400，非 409）+ 前端 `ContractSnapshotView` 渲染规则/产出 + 契约页错误态 |
 | 2 | S2 版本任务列表可达 | DEF-20260905-002 | P1 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `1ea77b47`；路由拆三条 + 新列表页 + `VersionTaskListItem` 补 `coverage`/`updated_at` + `statusLabels.ts` 字典集中 + 侧栏两处子项 Link 化（改法未互换） |
-| 3 | S3 一键运行阻塞可见 | DEF-20260905-003 | P1 | ⏳ ⬅️ | ⏳ | ⏳ | ⏳ | ⏳ | **当前起点**；依赖 S2（同域文件已就绪）；`blocked` 原因复用 `failures`（`kind:"plan"`）+ 前端阻断提示 |
-| 4 | S4 AI 自动发现假成功 | DEF-20260905-004 | P2 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | `discoverAiModels` 类型补 `ok/error`，前端按 `ok` 分支 |
+| 3 | S3 一键运行阻塞可见 | DEF-20260905-003 | P1 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `ae4f37c2` + `8f33ee80`；合成 `kind="plan"` 失败项（D1）+ `task.status` 去无条件化 + 前端按 `run.status` 三分支 + 运行状态徽标 + kind 中文/tone 分级 |
+| 4 | S4 AI 自动发现假成功 | DEF-20260905-004 | P2 | ⏳ ⬅️ | ⏳ | ⏳ | ⏳ | ⏳ | **当前起点**；`discoverAiModels` 类型补 `ok/error/kind/count`（**不声明 `detail`**），前端 `res.ok === false` 早退 + 成功文案改用 `res.count` |
 | 5 | S5 缺陷搜索支持编号 | DEF-20260905-005 | P2 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | `or_(title, defect_id)`，`project_id` 隔离在 OR 之外 |
 | 6 | S6 范围评审审计操作人 | DEF-20260905-006 | P2 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | `scope/service.py::_audit` 硬编码 `username=""` 修正 + 同类点排查 |
 | 7 | S7 拼写 + 404 横幅边界 | DEF-20260905-007、-009 | P3 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 依赖 S1（同文件 `missions/contract.tsx`） |
@@ -47,16 +47,17 @@
 ## 📍 当前位置
 
 ```
-Batch 230 — S3 一键运行阻塞可见
+Batch 230 — S4 AI 自动发现假成功
 ├── 已完成: Product PRD（550a5ce5）、PM Plan（b6af5c98）、Dev 看板 + 复测证据纳管（00a30b66）、
-│           Design Spec（185c0d82，含 5 项决议 + 11 条走查发现）、看板定位（819de4b5）
+│           Design Spec（185c0d82，含 5 项决议 + 11 条走查发现）、看板定位（819de4b5、6f5181b6）
 │           Dev S1 契约快照可读 + 非空校验（892df035，11 文件）
 │           Dev S2 版本任务列表可达 + 侧栏子项链接化（1ea77b47，12 文件）
+│           Dev S3 一键运行阻塞可见（ae4f37c2 代码 + 8f33ee80 窄屏 flex-wrap）
 ├── 🔄 进行中: 无
-├── ⏳ 待审批: S1、S2（等 QA 硬门禁复核 + Leader 终判）
-└── ⏳ 下一步: Dev 进入 S3 编码（Task 3.1 起）
+├── ⏳ 待审批: S1、S2、S3（等 QA 硬门禁复核 + Leader 终判）
+└── ⏳ 下一步: Dev 进入 S4 编码（Task 4.1 起）
               Design 已决议 PM 下放的两项：
-              D1 = S3 blocked 原因**复用 failures**（新增 kind:"plan"），不加顶层 reason 字段、不做 Alembic 迁移
+              D1 = S3 blocked 原因**复用 failures**（新增 kind:"plan"），不加顶层 reason 字段、不做 Alembic 迁移 → ✅ S3 已落地
               D2 = S7 横幅选 **(b) useMatches() splat 抑制**，不改前缀匹配（已对全量路由表验证无真实路由越界命中）
               另决议 D3（/version-tasks 变列表页、向导迁 /new）→ S2 已落地、
               D4（回传已解析 snapshot 对象）→ S1 已落地、
@@ -64,11 +65,14 @@ Batch 230 — S3 一键运行阻塞可见
               §6 放行条件执行情况：
                 条件 2（空契约拦截必须用 400 而非 409）✅ S1 已满足
                 条件 4（侧栏两处改法不得互换）✅ S2 已满足，并有 NavSubItemLinks.test.tsx 锁定
-                其余条件继续约束 S3–S7
+                其余条件继续约束 S4–S7
               ⚠️ 徽标一律走 StatusBadge / Badge tone，禁止手写裸色阶与 dark: 变体（§0 Token 架构）
-              ⚠️ S3 回归面：`task.status` 由无条件 `executed` 改为按 run_status 条件化，
-                 必须跑版本任务全量 pytest 并记录退出码（coverage 回写 C217-1、
-                 releaseTask / buildReleasePackage / transitionVersionTask 的合法输入集合）
+              ⚠️ S4 关键约束：`discoverAiModels` **不得声明 `detail` 字段**——后端 discover 分支
+                 （ai_config_service.py:272-312）从不返回 detail，只有 test-connection 返回；
+                 声明后端永不发送的字段＝假契约，正是本缺陷的成因类型
+              ✅ S3 回归面已清：全量后端 pytest 2435 passed / 49 skipped / 1 xfailed（exit 0，581s），
+                 coverage 回写（C217-1）、releaseTask / buildReleasePackage / transitionVersionTask
+                 与 onboarding 基线全部通过；onboarding 只读 run.status 不读 task.status，未受影响
 ```
 
 > **KB 检索记录**：编码前对 `platform_knowledge` / `defect_case` 检索契约冻结、版本任务、
@@ -114,6 +118,18 @@ Batch 230 — S3 一键运行阻塞可见
 - **耗时**: 2.1h
 - **审批**: 自测通过，待 QA 复核 + Leader 终判
 
+### Batch 230 / Dev — S3 一键运行阻塞可见 (2026-09-05)
+- **产出**: 提交 `ae4f37c2`（代码，6 文件）+ `8f33ee80`（窄屏 `flex-wrap`，Design Spec §3）
+- **实现**: 后端合成 `kind="plan"` 失败项承载阻塞原因（D1）；计数算术不动（`total`/`blocked` 保持 0，伪造 `blocked=1` 会造成 `blocked > total`）；`task.status` 去无条件化 → `"executed" if run_status in ("done","failed") else "blocked"`。前端 `handleRun` 按 `run.status` 三分支（禁止无条件 success）；顶栏补运行状态徽标；覆盖在 `total=0` 时显 `—`；失败分类走中文 + tone 分级（只有 `business` 染红）；含 `plan`/`environment` 时标题改「未通过 / 阻塞明细」；证据状态换 `StatusBadge`（顺带纠正 `skipped` 被染红与裸英文）；`api/versionTask.ts` 补 `failures[].http_status`、`evidence[].status` 收窄为 `StatusVariant`
+- **⚠️ Design Spec 未覆盖、Dev 编码中发现并闭合的两处可达回归（QA 须复核、Leader 须终判）**:
+  1. `FAILURE_KINDS` / `FAILURE_KIND_LABEL` 缺 `plan` → 合成项在前端同样渲染「转缺陷草稿」按钮，点击会在 `create_defect_draft` 抛「未知失败类型：plan」（label 缺失还会 `KeyError`）。已补 `plan`
+  2. `release_task` 准入集合只有 `executed`/`verdict` → `task.status=blocked` 后「打回／有条件放行」（前端始终可点）会报「当前状态 blocked 不可放行」，而被阻塞恰恰是最需要打回的场景。已补 `blocked`；`verdict=="pass"` 仍由 coverage 校验独立拦截，放宽准入不会让未跑通的任务被放行（已加测试锁定）
+- **Dev 文案细化（须披露）**: Design Spec 给的 blocked 文案是固定串「没有可执行的方案条目」，但 `run.status=blocked` 另有两类成因（条目 `not_run` 累计、全 skipped），固定串会误报。改为按 `failures` 是否含 `kind="plan"` 分流，环境侧报「N 项未能执行」，两侧均有测试
+- **自测**: 后端 `test_version_task` 38 passed、`test_mainline_walkthrough` 5 passed、**全量 `pytest -q` = 2435 passed / 49 skipped / 1 xfailed（exit 0，581s）**、`ruff F821` 通过、`import app.main` OK；前端 `typecheck`/`build` exit 0、**全量 `vitest run` = 144 files / 655 tests passed（exit 0）**、定向 `version-tasks` 3 files 16 passed、`eslint` 4 个改动文件 exit 0；`scan-common-bugs.ps1` HARD 0 且 S3 文件零命中
+- **测试环境注意**: 全量 vitest 首轮出现 6 个**无关文件**（theme-lab / DebugTab / ReviewPage / UiRunDetail）超时失败，单独复跑 4 文件全绿（857ms vs 6500ms），`--maxWorkers=3` 重跑全量 655 全绿 → 判定为 worker 资源争用抖动，非回归。QA 复现时建议同样限并发
+- **耗时**: 1.9h
+- **审批**: 自测通过，待 QA 复核 + Leader 终判
+
 ---
 
 ## ⚠️ 阻塞与风险
@@ -122,7 +138,7 @@ Batch 230 — S3 一键运行阻塞可见
 |--------|:------:|------|--------|----------|
 | S1 契约内容仍为空壳的能力前提 | P2 | 本批只让「已生成的快照」可读 + 拦截「空规则冻结」；确定性 provider 能否对真实范围项产出非空规则取决于 `scope_key` 是否落地，若无 AI Key 仍可能生成 0 条规则——此时新校验会正确拦截并给出提示，属于预期行为而非新缺陷 | QA 复测时须区分 | 2026-09-05 |
 | S2 与 DEF-20260904-001 的边界 | P2 | 侧栏 `href` 修复同时消除 DEF-20260904-001（5 个锚点 `href=null`）的一部分；QA 报告须写明本批只覆盖「侧栏子菜单不可达」，004-001 其余锚点留待后续批次 | QA | 2026-09-05 |
-| S3 状态机回归 | P2 | `task.status` 从无条件 `executed` 改为按条件 `blocked`，可能影响既有已执行任务的展示与放行判定；须跑版本任务相关全量回归 | Dev + QA | 2026-09-05 |
+| S3 状态机回归 | ✅ 已清 | `task.status` 从无条件 `executed` 改为按条件 `blocked`；Dev 已跑全量后端 `pytest -q` = 2435 passed / 49 skipped / 1 xfailed（exit 0），onboarding 只读 `run.status` 未受影响。**遗留关注点**：Dev 自主闭合的两处（`FAILURE_KINDS` 补 `plan`、`release_task` 准入补 `blocked`）超出 Design Spec 范围，QA 须在真实界面复核「转缺陷草稿」与「打回」两条路径 | QA | 2026-09-05 |
 | S6 审计字段回填 | P3 | 历史审计记录 `username` 为空，本批只修正写入侧，不做数据回填（PRD 非目标已记录） | — | 2026-09-05 |
 
 ---
