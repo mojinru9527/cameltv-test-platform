@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router'
-import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, PageShell, Progress } from '@/ui'
+import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, PageShell, Progress, StatusBadge } from '@/ui'
 import { buildReleasePackage, createDefectDraft, getRegressionSet, getVersionTask, listRuns, notifyRelease, releaseTask, startRun, syncDefect, type RegressionItem, type ReleasePackage, type VersionTask, type VersionTaskRun } from '@/api/versionTask'
 import { toast } from 'sonner'
-import { TASK_STATUS_LABEL } from './statusLabels'
+import { FAILURE_KIND_LABEL, FAILURE_KIND_TONE, RUN_STATUS_TO_VARIANT, TASK_STATUS_LABEL } from './statusLabels'
 
 export function isPassVerdictAllowed(run?: VersionTaskRun): boolean {
   return Boolean(run && run.passed > 0 && run.failed === 0 && run.skipped === 0 && run.blocked === 0)
@@ -48,7 +48,18 @@ export default function VersionTaskRunPage() {
     setLoading(true)
     try {
       const run = await startRun(id)
-      toast.success(`运行完成：${run.passed} 通过 / ${run.failed} 失败`)
+      if (run.status === 'done') {
+        toast.success(`运行完成：${run.passed} 通过 / ${run.failed} 失败`)
+      } else if (run.status === 'blocked') {
+        // 两类阻塞成因文案必须区分：「没东西可跑」与「跑了但跑不动」互相误导。
+        toast.error(
+          run.failures.some((f) => f.kind === 'plan')
+            ? '运行被阻塞：没有可执行的方案条目'
+            : `运行被阻塞：${run.blocked + run.skipped} 项未能执行`,
+        )
+      } else {
+        toast.error(`运行完成：${run.passed} 通过 / ${run.failed} 失败`)
+      }
       await refresh()
     } catch (e) {
       toast.error((e as Error).message || '运行失败')
@@ -119,31 +130,40 @@ export default function VersionTaskRunPage() {
         <CardContent className="space-y-4">
           <div className="flex items-center gap-2">
             <Button variant="primary" onClick={handleRun} disabled={loading}>一键运行</Button>
-            <Badge variant="secondary">覆盖 {latest ? `${latest.passed}/${latest.total}` : '—'}</Badge>
+            <Badge tone="neutral">覆盖 {latest && latest.total > 0 ? `${latest.passed}/${latest.total}` : '—'}</Badge>
+            {latest && <StatusBadge variant={RUN_STATUS_TO_VARIANT[latest.status] ?? 'pending'} />}
           </div>
 
           {latest && (
             <div className="space-y-3">
               <Progress value={latest.progress} className="h-2" />
               <div className="flex gap-3 text-sm">
-                <Badge variant="secondary">通过 {latest.passed}</Badge>
-                <Badge variant="destructive">失败 {latest.failed}</Badge>
-                <Badge variant="secondary">跳过 {latest.skipped}</Badge>
-                <Badge variant="secondary">阻塞 {latest.blocked}</Badge>
+                <Badge tone="success">通过 {latest.passed}</Badge>
+                <Badge tone="danger">失败 {latest.failed}</Badge>
+                <Badge tone="neutral">跳过 {latest.skipped}</Badge>
+                <Badge tone="warning">阻塞 {latest.blocked}</Badge>
               </div>
 
               {latest.failures.length > 0 && (
                 <div className="space-y-1">
-                  <h3 className="text-sm font-medium">失败分类</h3>
+                  <h3 className="text-sm font-medium">
+                    {latest.failures.some((f) => f.kind === 'plan' || f.kind === 'environment')
+                      ? '未通过 / 阻塞明细'
+                      : '失败分类'}
+                  </h3>
                   {latest.failures.map((f, idx) => (
                     <div key={idx} className="rounded border p-2 text-sm">
                       <div className="flex items-center gap-2">
-                        <Badge variant="destructive">{f.kind}</Badge>
+                        <Badge tone={FAILURE_KIND_TONE[f.kind] ?? 'neutral'}>
+                          {FAILURE_KIND_LABEL[f.kind] ?? f.kind}
+                        </Badge>
                         <span>{f.title}</span>
                         <Button size="sm" variant="secondary" className="ml-auto" onClick={() => handleDefect(latest, idx)}>转缺陷草稿</Button>
                         <Button size="sm" variant="ghost" disabled={!defectIds[`${latest.id}:${idx}`]} onClick={() => handleSync(latest, idx)}>同步缺陷库</Button>
                       </div>
-                      <p className="mt-1 text-xs text-muted-foreground">{f.message} · 证据 {f.evidence}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {f.evidence ? `${f.message} · 证据 ${f.evidence}` : f.message}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -154,7 +174,7 @@ export default function VersionTaskRunPage() {
                   <h3 className="text-sm font-medium">证据回放</h3>
                   {latest.evidence.slice(0, 8).map((e, idx) => (
                     <div key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Badge variant={e.status === 'pass' ? 'secondary' : 'destructive'}>{e.status}</Badge>
+                      <StatusBadge variant={e.status} />
                       <span>{e.ref}</span>
                       <span className="ml-auto">查看 {e.url}</span>
                     </div>
