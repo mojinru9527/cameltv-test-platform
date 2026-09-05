@@ -72,7 +72,7 @@ export default function MissionActionPlanPage() {
     ])
       .then(([mission, scenario, contract, planVersions]) => {
         setScenarioVersionId(scenario.scenario_version_id)
-        setContractVersionId(contract.version?.id ?? mission.current_contract_version_id)
+        setContractVersionId(contract?.version?.id ?? mission.current_contract_version_id)
         setVersions(planVersions)
       })
       .catch((err) => {

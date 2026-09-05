@@ -13,6 +13,7 @@ from app.modules.aitde.contract.models import TestContract
 from app.modules.aitde.contract.schemas import (
     ContractFreezeRequest,
     ContractGenerateRequest,
+    ContractVersionRead,
 )
 from app.schemas.common import R
 
@@ -56,7 +57,7 @@ def get_current_contract(
     return R.ok(result)
 
 
-@contracts_router.get("/versions", response_model=R[dict])
+@contracts_router.get("/versions", response_model=R[list[ContractVersionRead]])
 def list_versions(
     contract_id: int,
     current: CurrentUser = Depends(require_permission("mission:detail")),

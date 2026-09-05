@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -78,6 +79,11 @@ export function NavigationMenuItems({
     if (isMobile) setOpenMobile(false)
   }
 
+  // 子项已 Link 化：导航交给 <Link>，这里只保留移动端收起抽屉的副作用。
+  const closeMobile = () => {
+    if (isMobile) setOpenMobile(false)
+  }
+
   return items.map((m) => {
     const Icon = ICONS[m.icon] ?? LayoutDashboard
     const isActive = pathname === m.path || (m.path !== '/' && pathname.startsWith(m.path))
@@ -105,12 +111,14 @@ export function NavigationMenuItems({
               return (
                 <SidebarMenuSubItem key={child.path || child.code}>
                   <SidebarMenuSubButton
-                    onClick={() => goTo(child.path, child.name)}
+                    asChild
                     isActive={childActive}
                     aria-current={childActive ? 'page' : undefined}
                   >
-                    <ChildIcon className="size-3.5" aria-hidden="true" />
-                    <span>{child.name}</span>
+                    <Link to={child.path || '/'} onClick={closeMobile}>
+                      <ChildIcon className="size-3.5" aria-hidden="true" />
+                      <span>{child.name}</span>
+                    </Link>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               )

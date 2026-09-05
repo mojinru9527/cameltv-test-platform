@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -60,12 +61,14 @@ export function MainNavRows({
                 return (
                   <SidebarMenuSubItem key={child.code || child.path}>
                     <SidebarMenuSubButton
-                      onClick={() => onNavigate(child.path, child.name)}
+                      asChild
                       isActive={active}
                       aria-current={active ? 'page' : undefined}
                     >
-                      <ChildIcon className="size-3.5" aria-hidden="true" />
-                      <span>{child.name}</span>
+                      <Link to={child.path || '/'}>
+                        <ChildIcon className="size-3.5" aria-hidden="true" />
+                        <span>{child.name}</span>
+                      </Link>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                 )

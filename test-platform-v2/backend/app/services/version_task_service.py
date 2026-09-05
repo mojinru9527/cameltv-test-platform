@@ -300,12 +300,13 @@ def review_plan_item(db: Session, plan_item_id: int, action: str, patch: dict | 
 
 
 
-FAILURE_KINDS = {"business", "script", "data", "environment"}
+FAILURE_KINDS = {"business", "script", "data", "environment", "plan"}
 FAILURE_KIND_LABEL = {
     "business": "业务缺陷",
     "script": "脚本缺陷",
     "data": "数据缺陷",
     "environment": "环境缺陷",
+    "plan": "方案无可执行项",
 }
 
 
@@ -393,6 +394,19 @@ def start_run(db: Session, task_id: int) -> VersionTaskRun:
             ev["ref"] = f"run:{run.id}:item:{item.id}"
             evidence.append(ev)
 
+    if not adopted_items:
+        # 整个运行没有标的，与「某个条目被环境阻塞」是两回事，故用独立 kind。
+        # 计数不伪造：total/blocked 保持 0，阻塞事实由 run.status + 本条承载。
+        failures.append({
+            "item_id": 0,
+            "title": "整体运行",
+            "kind": "plan",
+            "evidence": "",
+            "message": "本任务方案中没有已采纳/已修订的条目（adopted/modified），因此没有可执行目标；"
+                       "请先在建任务向导中采纳至少一条方案条目。",
+            "http_status": None,
+        })
+
     if not adopted_items or blocked > 0:
         run_status = "blocked"
     elif failed > 0:
@@ -415,13 +429,13 @@ def start_run(db: Session, task_id: int) -> VersionTaskRun:
     db.commit()
     db.refresh(run)
 
-    # 回写 coverage 到 VersionTask（C217-1），并转入 executed
+    # 回写 coverage 到 VersionTask（C217-1）；run 没跑出结论时任务不得显示「已执行」
     task = get_task(db, task_id)
     task.coverage = json.dumps(
         {"pass": run.passed, "fail": run.failed, "skip": run.skipped, "blocked": run.blocked},
         ensure_ascii=False,
     )
-    task.status = "executed"
+    task.status = "executed" if run_status in ("done", "failed") else "blocked"
     db.commit()
     db.refresh(task)
     return run
@@ -498,7 +512,9 @@ def release_task(
     task = get_task(db, task_id)
     if verdict not in RELEASE_VERDICTS:
         raise APIException(code=1, msg=f"非法放行结论：{verdict}")
-    if task.status not in ("executed", "verdict"):
+    # blocked 也在准入集合内：被阻塞恰恰是最需要「打回」的场景，
+    # 而前端 打回/有条件放行 按钮始终可点。verdict=="pass" 仍由下方 coverage 校验独立拦截。
+    if task.status not in ("executed", "verdict", "blocked"):
         raise APIException(code=1, msg=f"当前状态 {task.status} 不可放行")
     if verdict == "pass":
         coverage = _to_int_dict(task.coverage)

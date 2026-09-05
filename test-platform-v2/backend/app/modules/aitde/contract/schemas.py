@@ -49,7 +49,7 @@ class ContractVersionRead(BaseModel):
     version_no: int
     status: str
     content_hash: str
-    snapshot_json: str
+    snapshot: ContractSnapshot | None = None
     created_at: str | None = None
     approved_at: str | None = None
 

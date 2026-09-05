@@ -250,6 +250,13 @@ export default function AiConfigPage() {
         api_base_url: form.api_base_url.trim(),
         api_key: form.api_key.trim(),
       })
+      // 业务失败仍走 HTTP 200。若不早退，res.models 为 undefined 会与既有模板模型合并出
+      // 非空清单，从而弹出绿色成功提示——这就是 DEF-20260905-004 的「假成功」。
+      if (res.ok === false) {
+        // 不给「更新密钥」action：发现发生在抽屉内部，再开一次编辑抽屉会嵌套。
+        toast.error(res.error || '模型发现失败', { duration: 10_000 })
+        return
+      }
       // 合并厂商 /models 返回的全量模型 + 当前已填模型（去重），不丢失已知官方模型。
       const merged = dedupeModels([...dedupeModels(form.modelsText.split(/[,，]/)), ...(res?.models ?? [])])
       if (merged.length === 0) {
@@ -260,7 +267,7 @@ export default function AiConfigPage() {
           modelsText: merged.join(', '),
           default_model: form.default_model.trim() || merged[0],
         })
-        toast.success(`已拉取厂商全量模型（共 ${merged.length} 个）`)
+        toast.success(`已拉取 ${res.count ?? merged.length} 个模型，合并后共 ${merged.length} 个`)
       }
     } catch (e: any) {
       toast.error(e?.message || '模型发现失败')

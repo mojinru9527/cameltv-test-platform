@@ -143,10 +143,17 @@ class VersionTaskListItem(BaseModel):
     source: str = "manual"
     status: str = "draft"
     verdict: str = ""
+    coverage: dict[str, Any] = Field(default_factory=dict)
     release_bundle_id: int | None = None
     requirement_doc_id: int | None = None
     qa_owner_id: int = 0
     created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+    @field_validator("coverage", mode="before")
+    @classmethod
+    def _parse_coverage(cls, v: Any) -> dict[str, Any]:
+        return _json_to_dict(v)
 
 
 class PlanItemCreate(BaseModel):

@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-04 (Batch 228：仅同步最新 Leader Verdict 复核日期；无条件状态变更)
+**最后更新**: 2026-09-05 (Batch 230：新增生产操作审计身份条件 C230-1)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -56,6 +56,12 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ---
 
 ## Open (待处理)
+
+### batch-230 — 生产复测缺陷修复（2026-09-05）—— 新增
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C230-1 | 为 `production_operation:allowed` 与 `apitest:execute_prod` 审计写入透传认证用户的 `user_id` 和稳定登录名 `username`；必须补权限隔离、审计持久化及真实浏览器证据，禁止继续生成无操作人的生产操作记录。 | P1 | 2026-09-05 |
 
 ### batch-227 — AI 全链路就绪向导（2026-09-03）—— 新增
 
@@ -1055,10 +1061,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ---## 统计
 
-- **Open / 非关闭**: 41（rows=90, deferred=14；含 P0 blocking；口径见 `audit-cconditions.ps1` stats 输出）
+- **Open / 非关闭**: 61（rows=145, deferred=15；含 P0 blocking；口径见 `audit-cconditions.ps1` stats 输出）
 - **In Progress**: 0
-- **Closed**: 187（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
-- **Total**: 248（tracker 条件 ID 计数；另有 13 条历史补录不计入）
+- **Closed**: 192（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
+- **Total**: 302（tracker 条件 ID 计数；另有历史补录不计入）
 
 ## 维护约定
 
@@ -1067,8 +1073,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 2. Product 开工前必须 `Read C-CONDITIONS.md`，在 PRD 的「非目标」段中明确哪些 Open 条件纳入本次、哪些豁免及理由
 3. PR 合入后，Dev 负责将本次满足的 C 条件从 Open → Closed
 4. 每月 1 日 Leader 审查所有 Open 条件，超过 60 天无进展的需升级优先级或明确废弃
-
-
 
 
 

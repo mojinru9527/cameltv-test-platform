@@ -66,7 +66,7 @@ def list_defects(
     severity: str | None = Query(None),
     status: str | None = Query(None),
     assignee_id: int | None = Query(None),
-    keyword: str = Query(""),
+    keyword: str = Query("", description="模糊匹配标题或缺陷编号（DEF-YYYYMMDD-NNN）"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     current: CurrentUser = Depends(require_permission("defect:list")),

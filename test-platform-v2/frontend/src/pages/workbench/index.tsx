@@ -134,7 +134,7 @@ export default function Workbench() {
       />
       <div className="flex flex-wrap items-center gap-2">
         <TermTip term="run" />
-        <Link to="/version-tasks"><Button size="sm" variant="primary">创建版本任务</Button></Link>
+        <Link to="/version-tasks/new"><Button size="sm" variant="primary">创建版本任务</Button></Link>
       </div>
       <AsyncState
         isLoading={isLoading}
