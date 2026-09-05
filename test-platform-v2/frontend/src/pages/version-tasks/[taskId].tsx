@@ -128,7 +128,7 @@ export default function VersionTaskRunPage() {
           <CardDescription>{task ? `${task.version} · 状态 ${TASK_STATUS_LABEL[task.status] || task.status}` : ''}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant="primary" onClick={handleRun} disabled={loading}>一键运行</Button>
             <Badge tone="neutral">覆盖 {latest && latest.total > 0 ? `${latest.passed}/${latest.total}` : '—'}</Badge>
             {latest && <StatusBadge variant={RUN_STATUS_TO_VARIANT[latest.status] ?? 'pending'} />}
@@ -137,7 +137,7 @@ export default function VersionTaskRunPage() {
           {latest && (
             <div className="space-y-3">
               <Progress value={latest.progress} className="h-2" />
-              <div className="flex gap-3 text-sm">
+              <div className="flex flex-wrap gap-3 text-sm">
                 <Badge tone="success">通过 {latest.passed}</Badge>
                 <Badge tone="danger">失败 {latest.failed}</Badge>
                 <Badge tone="neutral">跳过 {latest.skipped}</Badge>
@@ -153,7 +153,7 @@ export default function VersionTaskRunPage() {
                   </h3>
                   {latest.failures.map((f, idx) => (
                     <div key={idx} className="rounded border p-2 text-sm">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Badge tone={FAILURE_KIND_TONE[f.kind] ?? 'neutral'}>
                           {FAILURE_KIND_LABEL[f.kind] ?? f.kind}
                         </Badge>
