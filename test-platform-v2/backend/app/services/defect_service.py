@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.base_service import batch_field_map, batch_user_names, paginate
@@ -85,7 +85,12 @@ def list_defects(
     if assignee_id is not None:
         base = base.where(Defect.assignee_id == assignee_id)
     if keyword:
-        base = base.where(Defect.title.contains(keyword))
+        # OR 只包住 title/defect_id。project_id 与上面的 severity/status/assignee 靠
+        # .where() 累加保持 AND；把隔离条件塞进 or_ 会让编号检索跨项目泄漏数据。
+        # 不含 external_id（禅道/Jira 编号）：它不作为编号在列表展示，纳入只会扩大匹配面。
+        base = base.where(
+            or_(Defect.title.contains(keyword), Defect.defect_id.contains(keyword))
+        )
 
     rows, total = paginate(db, base.order_by(Defect.created_at.desc()), page=page, page_size=page_size)
 

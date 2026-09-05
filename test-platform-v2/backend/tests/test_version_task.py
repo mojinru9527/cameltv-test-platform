@@ -828,3 +828,126 @@ def test_api_onboarding_readiness(client, auth_headers, monkeypatch):
 
     assert response.status_code == 200
     assert response.json()["data"]["project_id"] == 1
+
+
+# ────────────────────────────── Batch 230 S2 / DEF-20260905-002 ──────────────────────────────
+# 版本验收任务列表页需要「覆盖」与「更新时间」两列，此前 VersionTaskListItem
+# 不回传这两个字段 → 列表页无数据源。coverage 是 Text 列存的 JSON 串，必须经
+# _json_to_dict 解析，历史脏数据也不能让列表接口 500。
+
+def test_api_list_exposes_coverage_and_updated_at(client, auth_headers, db_session):
+    task = version_task_service.create_task(
+        db_session, project_id=1, title="体育 16.0.0 验收", version="16.0.0"
+    )
+    task.coverage = json.dumps({"pass": 3, "fail": 1, "skip": 0, "blocked": 0})
+    db_session.commit()
+
+    resp = client.get("/api/v1/version-tasks", headers=auth_headers)
+    assert resp.status_code == 200, resp.text
+
+    item = next(i for i in resp.json()["data"]["items"] if i["id"] == task.id)
+    assert item["coverage"] == {"pass": 3, "fail": 1, "skip": 0, "blocked": 0}
+    assert item["updated_at"] is not None
+
+
+def test_list_item_tolerates_malformed_coverage():
+    from app.schemas.version_task import VersionTaskListItem
+
+    parsed = VersionTaskListItem.model_validate(
+        {"id": 1, "title": "t", "version": "1.0", "coverage": "{not json"}
+    )
+    assert parsed.coverage == {}
+
+    default = VersionTaskListItem.model_validate({"id": 2, "title": "t", "version": "1.0"})
+    assert default.coverage == {}
+    assert default.updated_at is None
+
+
+# ────────────────────────────── Batch 230 S3 / DEF-20260905-003 ──────────────────────────────
+# 生产复测：方案里没有任何已采纳条目时，一键运行既跑不出标的，又把 task.status
+# 无条件写成 executed，前端于是提示「运行完成：0 通过 / 0 失败」并显示「已执行」。
+# 修复取 D1：阻塞原因复用 failures（新增 kind="plan"），不加顶层 reason 字段、不做迁移；
+# 计数算术不动（total=0、blocked=0 是事实正确，伪造 blocked=1 会造成 blocked > total）。
+
+def test_start_run_without_adopted_items_reports_plan_blockage(db_session, monkeypatch):
+    import app.services.version_task_exec_service as exec_svc
+
+    def _boom(*_args, **_kwargs):
+        raise AssertionError("零采纳项时不应执行任何条目")
+
+    monkeypatch.setattr(exec_svc, "execute_item", _boom)
+
+    task = version_task_service.create_task(db_session, project_id=1, title="t", version="16.0.0")
+    version_task_service.generate_plan(
+        db_session, task.id, [{"item_type": "functional", "title": "登录", "confidence": 80}]
+    )
+    # 故意不采纳任何条目
+
+    run = version_task_service.start_run(db_session, task.id)
+
+    assert run.status == "blocked"
+    assert run.total == 0
+    assert run.blocked == 0
+    assert run.passed == 0 and run.failed == 0 and run.skipped == 0
+
+    failures = json.loads(run.failures or "[]")
+    assert len(failures) == 1
+    assert failures[0]["kind"] == "plan"
+    assert failures[0]["item_id"] == 0
+    assert failures[0]["http_status"] is None
+    assert "采纳" in failures[0]["message"]
+
+    # 任务不得再被标成「已执行」
+    assert version_task_service.get_task(db_session, task.id).status == "blocked"
+
+
+def test_start_run_marks_task_executed_when_run_done(db_session, monkeypatch):
+    import app.services.version_task_exec_service as exec_svc
+
+    monkeypatch.setattr(
+        exec_svc, "execute_item", lambda db, item, base_url: _successful_execution()
+    )
+    task = version_task_service.create_task(db_session, project_id=1, title="t", version="1.0")
+    items = version_task_service.generate_plan(
+        db_session, task.id, [{"item_type": "functional", "title": "登录", "confidence": 80}]
+    )
+    for it in items:
+        version_task_service.review_plan_item(db_session, it.id, "adopt")
+
+    run = version_task_service.start_run(db_session, task.id)
+
+    assert run.status == "done"
+    assert version_task_service.get_task(db_session, task.id).status == "executed"
+
+
+def test_plan_failure_can_be_converted_to_defect_draft(db_session):
+    """合成的 plan 失败项也带「转缺陷草稿」按钮，不能被 FAILURE_KINDS 拒掉。"""
+    task = version_task_service.create_task(db_session, project_id=1, title="t", version="1.0")
+    version_task_service.generate_plan(
+        db_session, task.id, [{"item_type": "functional", "title": "登录", "confidence": 80}]
+    )
+    run = version_task_service.start_run(db_session, task.id)
+    assert json.loads(run.failures)[0]["kind"] == "plan"
+
+    defect = version_task_service.create_defect_draft(db_session, run.id, 0, creator_id=1)
+
+    assert defect.status == "open"
+    assert "方案无可执行项" in defect.title
+
+
+def test_blocked_run_task_can_be_rejected_but_not_released(db_session):
+    """task.status=blocked 后仍可下「打回/有条件放行」结论；放行(pass)必须继续被拒。"""
+    task = version_task_service.create_task(db_session, project_id=1, title="t", version="1.0")
+    version_task_service.generate_plan(
+        db_session, task.id, [{"item_type": "functional", "title": "登录", "confidence": 80}]
+    )
+    version_task_service.start_run(db_session, task.id)
+    assert version_task_service.get_task(db_session, task.id).status == "blocked"
+
+    with pytest.raises(APIException) as exc:
+        version_task_service.release_task(db_session, task.id, "pass")
+    assert "不可选择放行" in exc.value.msg
+
+    pkg = version_task_service.release_task(db_session, task.id, "blocked")
+    assert pkg["verdict"] == "blocked"
+    assert pkg["status"] == "released"

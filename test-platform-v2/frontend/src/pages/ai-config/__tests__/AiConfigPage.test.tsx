@@ -62,8 +62,18 @@ describe('AI 配置页', () => {
     mocks.canManage = true
     mocks.fetchAiProviders.mockResolvedValue([])
     mocks.fetchAiResolve.mockResolvedValue({ configured: false, provider: null })
-    mocks.discoverAiModels.mockResolvedValue({ models: [] })
+    mocks.discoverAiModels.mockResolvedValue({ ok: true, models: [], count: 0 })
   })
+
+  /** 自动发现按钮在新建/编辑抽屉内部，必须先打开抽屉。 */
+  async function openCreateDrawer() {
+    render(<AiConfigPage />)
+    await waitFor(() =>
+      expect(screen.getByText(/当前项目未配置 AI 提供方/)).toBeInTheDocument(),
+    )
+    fireEvent.click(screen.getByRole('button', { name: /新建提供方/ }))
+    await waitFor(() => expect(screen.getByLabelText('API 地址')).toBeInTheDocument())
+  }
 
   it('空列表显示未配置引导', async () => {
     render(<AiConfigPage />)
@@ -97,5 +107,54 @@ describe('AI 配置页', () => {
     await waitFor(() => expect(screen.getByText('DeepSeek 生产')).toBeInTheDocument())
     fireEvent.click(screen.getByTitle('测试连通性'))
     await waitFor(() => expect(mocks.toastSuccess).toHaveBeenCalled())
+  })
+
+  // ── Batch 230 S4 / DEF-20260905-004 ──
+  // 表单已填模型时，发现失败仍会与既有模型合并出非空清单，旧代码据此弹绿色成功提示。
+  it('自动发现返回 ok=false 时报错且不合并既有清单', async () => {
+    mocks.discoverAiModels.mockResolvedValue({
+      ok: false,
+      kind: 'unauthorized',
+      error: 'API Key 无效或已过期',
+    })
+    await openCreateDrawer()
+    fireEvent.change(screen.getByLabelText('API 地址'), {
+      target: { value: 'https://api.deepseek.com' },
+    })
+    fireEvent.change(screen.getByLabelText('模型清单（逗号分隔）'), {
+      target: { value: 'deepseek-v4-pro, deepseek-chat' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /自动发现/ }))
+
+    // 精确匹配调用参数：发现失败发生在未保存的表单内，不得给「更新密钥」action（会嵌套打开抽屉）。
+    await waitFor(() =>
+      expect(mocks.toastError).toHaveBeenCalledWith('API Key 无效或已过期', { duration: 10_000 }),
+    )
+    expect(mocks.toastSuccess).not.toHaveBeenCalled()
+    expect((screen.getByLabelText('模型清单（逗号分隔）') as HTMLInputElement).value).toBe(
+      'deepseek-v4-pro, deepseek-chat',
+    )
+  })
+
+  it('自动发现成功时用后端 count 报数并合并既有模型', async () => {
+    mocks.discoverAiModels.mockResolvedValue({ ok: true, models: ['m1', 'm2'], count: 2 })
+    await openCreateDrawer()
+    fireEvent.change(screen.getByLabelText('API 地址'), {
+      target: { value: 'https://api.deepseek.com' },
+    })
+    fireEvent.change(screen.getByLabelText('模型清单（逗号分隔）'), {
+      target: { value: 'existing' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /自动发现/ }))
+
+    await waitFor(() =>
+      expect(mocks.toastSuccess).toHaveBeenCalledWith('已拉取 2 个模型，合并后共 3 个'),
+    )
+    expect(mocks.toastError).not.toHaveBeenCalled()
+    expect((screen.getByLabelText('模型清单（逗号分隔）') as HTMLInputElement).value).toBe(
+      'existing, m1, m2',
+    )
   })
 })

@@ -35,6 +35,9 @@ v2.interceptors.response.use(
     return resp.data
   },
   (err) => {
+    if (axios.isCancel(err) || err.code === 'ERR_CANCELED') {
+      return Promise.reject(err)
+    }
     const status = err.response?.status
     const msg =
       err.response?.data?.msg || err.response?.data?.detail || err.message || '网络错误'

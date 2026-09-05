@@ -41,6 +41,7 @@ const ThemeLabPage = lazy(() => import('@/theme-lab/ThemeLab').then(m => ({ defa
 const LanhuEvidencePage = lazy(() => import('@/pages/lanhu-evidence'))
 const LanhuEvidenceJobDetail = lazy(() => import('@/pages/lanhu-evidence/JobDetail'))
 const MissionListPage = lazy(() => import('@/pages/missions'))
+const VersionTaskListPage = lazy(() => import('@/pages/version-tasks/list'))
 const VersionTasksPage = lazy(() => import('@/pages/version-tasks'))
 const VersionTaskRunPage = lazy(() => import('@/pages/version-tasks/[taskId]'))
 const MetricsPage = lazy(() => import('@/pages/metrics'))
@@ -268,7 +269,10 @@ export const router = createBrowserRouter([
       { path: 'dsh-tasks', element: <PageLoader><DshTasksPage /></PageLoader> },
       { path: 'ai-config', element: <PageLoader><AiConfigPage /></PageLoader> },
       { path: 'version-mission', element: <Navigate to="/release-bundles" replace /> },
-      { path: 'version-tasks', element: <PageLoader><VersionTasksPage /></PageLoader> },
+      // DEF-20260905-002：列表页与建任务向导拆为独立路由，
+      // `/version-tasks` 不再是向导（否则任务创建后没有可回访的列表入口）。
+      { path: 'version-tasks', element: <PageLoader><VersionTaskListPage /></PageLoader> },
+      { path: 'version-tasks/new', element: <PageLoader><VersionTasksPage /></PageLoader> },
       { path: 'version-tasks/:taskId', element: <PageLoader><VersionTaskRunPage /></PageLoader> },
       { path: 'metrics', element: <PageLoader><MetricsPage /></PageLoader> },
       { path: 'onboarding', element: <PageLoader><OnboardingPage /></PageLoader> },

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { toast } from 'sonner'
+import type { StatusVariant } from '@/ui'
 import { useAuthStore } from '@/stores/auth'
 
 interface Envelope<T> {
@@ -78,14 +79,26 @@ export interface PlanItem {
   order_index: number
 }
 
+export interface VersionTaskPage {
+  total: number
+  page: number
+  page_size: number
+  items: VersionTask[]
+}
+
 export async function listVersionTasks(
   status = '',
   keyword = '',
-): Promise<{ total: number; items: VersionTask[] }> {
+  signal?: AbortSignal,
+  page = 1,
+  pageSize = 20,
+): Promise<VersionTaskPage> {
   const p = new URLSearchParams()
   if (status) p.set('status', status)
   if (keyword) p.set('keyword', keyword)
-  return (await v1.get(`/version-tasks?${p.toString()}`)) as unknown as { total: number; items: VersionTask[] }
+  p.set('page', String(page))
+  p.set('page_size', String(pageSize))
+  return (await v1.get(`/version-tasks?${p.toString()}`, { signal })) as unknown as VersionTaskPage
 }
 
 export async function getVersionTask(id: number): Promise<VersionTask> {
@@ -140,8 +153,17 @@ export interface VersionTaskRun {
   failed: number
   skipped: number
   blocked: number
-  evidence: { type: string; ref: string; url: string; ts: string; status: string }[]
-  failures: { item_id: number; title: string; kind: string; evidence: string; message: string }[]
+  evidence: { type: string; ref: string; url: string; ts: string; status: StatusVariant }[]
+  failures: {
+    item_id: number
+    title: string
+    /** 已知分类之外的取值仍要能渲染，故保留 `(string & {})` 让字典 fallback 成立。 */
+    kind: 'business' | 'environment' | 'plan' | (string & {})
+    evidence: string
+    message: string
+    /** 业务失败带 HTTP 状态码；环境/方案侧阻塞为 null。 */
+    http_status?: number | null
+  }[]
 }
 
 export async function startRun(taskId: number): Promise<VersionTaskRun> {

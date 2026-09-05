@@ -14,6 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
   Skeleton,
+  StatusBadge,
+  type SeverityVariant,
 } from '@/ui'
 import {
   Dialog,
@@ -23,6 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { ErrorState } from '@/components/state'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
 import {
@@ -42,6 +45,11 @@ import {
 import { Sparkles, Lock } from '@/lib/icons'
 import { isConflictError } from '@/lib/conflict'
 import { StaleConflictBanner } from './StaleConflictBanner'
+import { ContractSnapshotView } from './ContractSnapshotView'
+
+function toSeverity(value: string): SeverityVariant {
+  return value === 'P0' || value === 'P1' || value === 'P2' ? value : 'P3'
+}
 
 export default function MissionContractPage() {
   const { id } = useParams()
@@ -51,6 +59,7 @@ export default function MissionContractPage() {
   const [ambiguities, setAmbiguities] = useState<Ambiguity[]>([])
   const [contract, setContract] = useState<CurrentContract | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<Error | null>(null)
   const [reloadVersion, setReloadVersion] = useState(0)
   const [analyzing, setAnalyzing] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -67,14 +76,18 @@ export default function MissionContractPage() {
     if (!missionId) return
     setLoading(true)
     Promise.all([
-      fetchMissionAmbiguities(missionId, signal).catch(() => [] as Ambiguity[]),
-      fetchCurrentContract(missionId, signal).catch(() => null),
+      fetchMissionAmbiguities(missionId, signal),
+      fetchCurrentContract(missionId, signal),
     ])
       .then(([ams, con]) => {
-        if (!signal.aborted) {
-          setAmbiguities(ams)
-          setContract(con)
-        }
+        if (signal.aborted) return
+        setAmbiguities(ams)
+        setContract(con)
+        setLoadError(null)
+      })
+      .catch((err: unknown) => {
+        if (signal.aborted) return
+        setLoadError(err instanceof Error ? err : new Error(String(err)))
       })
       .finally(() => {
         if (!signal.aborted) setLoading(false)
@@ -150,13 +163,32 @@ export default function MissionContractPage() {
       <div className="space-y-3">
         <Skeleton className="h-28 w-full" />
         <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-56 w-full" />
       </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        title="契约页加载失败"
+        description="未能读取歧义或契约内容。"
+        error={loadError}
+        onRetry={reload}
+      />
     )
   }
 
   const versionStatus = contract?.version
     ? CONTRACT_STATUS_LABELS[contract.version.status]
     : undefined
+
+  // 空壳契约（含快照解析失败）不可冻结，否则后端 400 前用户无从得知原因
+  const ruleCount = contract?.version?.snapshot?.rules.length ?? 0
+  const freezeBlockedReason =
+    contract && ruleCount === 0
+      ? '契约快照无有效规则，请先完成 Scope 评审后重新生成'
+      : ''
 
   return (
     <div className="space-y-4">
@@ -172,7 +204,7 @@ export default function MissionContractPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">歧义（Ambiguitity）</CardTitle>
+          <CardTitle className="text-base">歧义（Ambiguity）</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2" aria-busy={loading}>
           {ambiguities.length === 0 ? (
@@ -185,7 +217,7 @@ export default function MissionContractPage() {
               return (
                 <div key={a.id} className="rounded-lg border p-3">
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary">{a.severity}</Badge>
+                    <StatusBadge variant={toSeverity(a.severity)} />
                     <p className="font-medium">{a.title}</p>
                     <Badge variant="secondary" className={st?.color}>
                       {st?.label ?? a.status}
@@ -235,14 +267,17 @@ export default function MissionContractPage() {
                   </span>
                 )}
               </div>
+              <ContractSnapshotView snapshot={contract.version?.snapshot} />
               <div className="flex gap-2">
                 <Button variant="secondary" disabled={generating} onClick={doGenerate}>
                   <Sparkles className="size-4" /> {generating ? '生成中…' : '重新生成'}
                 </Button>
                 {contract.version?.status === 'DRAFT' && (
-                  <Button onClick={() => setFreezeOpen(true)}>
-                    <Lock className="size-4" /> 冻结契约
-                  </Button>
+                  <span title={freezeBlockedReason || undefined}>
+                    <Button disabled={!!freezeBlockedReason} onClick={() => setFreezeOpen(true)}>
+                      <Lock className="size-4" /> 冻结契约
+                    </Button>
+                  </span>
                 )}
               </div>
             </div>

@@ -69,7 +69,7 @@ export default function DefectFilterBar({
         value={keyword}
         onChange={(v) => onKeywordChange(v)}
         onSearch={onRefresh}
-        placeholder="搜索缺陷标题"
+        placeholder="搜索标题或缺陷编号"
         inputClassName="w-[220px]"
         clearable
       />

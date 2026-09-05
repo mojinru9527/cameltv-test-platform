@@ -70,7 +70,7 @@ export default function MissionScenariosPage() {
     try {
       // generate requires a FROZEN contract version id
       const contract = await fetchCurrentContract(missionId)
-      if (!contract.version || contract.version.status !== 'FROZEN') {
+      if (!contract?.version || contract.version.status !== 'FROZEN') {
         toast.error('需先冻结 Contract 才能生成场景')
         return
       }

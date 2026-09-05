@@ -142,12 +142,17 @@ def _audit(
     detail: str,
 ) -> None:
     try:
+        from app.models.user import User
         from app.services.audit_service import write_audit
+
+        # 审计日志统一记录稳定的登录名，避免昵称与其他审计来源口径不一致。
+        user = db.get(User, user_id) if user_id else None
+        username = user.username if user else ""
 
         write_audit(
             db,
             user_id=user_id,
-            username="",
+            username=username,
             project_id=project_id,
             action=action,
             target=f"mission:{mission_id}",
