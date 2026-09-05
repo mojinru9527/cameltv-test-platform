@@ -31,9 +31,9 @@
 
 | # | Slice | 缺陷 | 优先级 | 方案 | 编码 | 自测 | 审批 | 合入 | 备注 |
 |---|-------|------|:------:|:----:|:----:|:----:|:----:|:----:|------|
-| 1 | S1 契约快照可读 + 非空校验 | DEF-20260905-001 | P1 | ⏳ ⬅️ | ⏳ | ⏳ | ⏳ | ⏳ | **当前起点**；后端 `_version_to_dict` 补 `snapshot_json` + `freeze` 空规则拦截 + 前端渲染规则/产出 |
-| 2 | S2 版本任务列表可达 | DEF-20260905-002 | P1 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 侧栏 `SidebarMenuSubButton` 补 `asChild`+`Link`；新建列表视图消费 `listVersionTasks` |
-| 3 | S3 一键运行阻塞可见 | DEF-20260905-003 | P1 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 依赖 S2（同域文件）；`blocked` 原因回传 + 前端阻断提示 |
+| 1 | S1 契约快照可读 + 非空校验 | DEF-20260905-001 | P1 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `892df035`；后端回传已解析 `snapshot` 对象 + 空规则冻结拦截（HTTP 400，非 409）+ 前端 `ContractSnapshotView` 渲染规则/产出 + 契约页错误态 |
+| 2 | S2 版本任务列表可达 | DEF-20260905-002 | P1 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `1ea77b47`；路由拆三条 + 新列表页 + `VersionTaskListItem` 补 `coverage`/`updated_at` + `statusLabels.ts` 字典集中 + 侧栏两处子项 Link 化（改法未互换） |
+| 3 | S3 一键运行阻塞可见 | DEF-20260905-003 | P1 | ⏳ ⬅️ | ⏳ | ⏳ | ⏳ | ⏳ | **当前起点**；依赖 S2（同域文件已就绪）；`blocked` 原因复用 `failures`（`kind:"plan"`）+ 前端阻断提示 |
 | 4 | S4 AI 自动发现假成功 | DEF-20260905-004 | P2 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | `discoverAiModels` 类型补 `ok/error`，前端按 `ok` 分支 |
 | 5 | S5 缺陷搜索支持编号 | DEF-20260905-005 | P2 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | `or_(title, defect_id)`，`project_id` 隔离在 OR 之外 |
 | 6 | S6 范围评审审计操作人 | DEF-20260905-006 | P2 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | `scope/service.py::_audit` 硬编码 `username=""` 修正 + 同类点排查 |
@@ -47,21 +47,33 @@
 ## 📍 当前位置
 
 ```
-Batch 230 — S1 契约快照可读 + 非空校验
+Batch 230 — S3 一键运行阻塞可见
 ├── 已完成: Product PRD（550a5ce5）、PM Plan（b6af5c98）、Dev 看板 + 复测证据纳管（00a30b66）、
-│           Design Spec（185c0d82，含 5 项决议 + 11 条走查发现）
+│           Design Spec（185c0d82，含 5 项决议 + 11 条走查发现）、看板定位（819de4b5）
+│           Dev S1 契约快照可读 + 非空校验（892df035，11 文件）
+│           Dev S2 版本任务列表可达 + 侧栏子项链接化（1ea77b47，12 文件）
 ├── 🔄 进行中: 无
-├── ⏳ 待审批: 无
-└── ⏳ 下一步: Dev 进入 S1 编码（Task 1.1 起）
+├── ⏳ 待审批: S1、S2（等 QA 硬门禁复核 + Leader 终判）
+└── ⏳ 下一步: Dev 进入 S3 编码（Task 3.1 起）
               Design 已决议 PM 下放的两项：
               D1 = S3 blocked 原因**复用 failures**（新增 kind:"plan"），不加顶层 reason 字段、不做 Alembic 迁移
               D2 = S7 横幅选 **(b) useMatches() splat 抑制**，不改前缀匹配（已对全量路由表验证无真实路由越界命中）
-              另决议 D3（/version-tasks 变列表页、向导迁 /new）、D4（回传已解析 snapshot 对象）、
-              D5（_audit 内部按 user_id 反查 nickname，不改服务签名）
-              ⚠️ Dev 须遵守 §6 的 7 条放行条件，其中条件 2（空契约拦截必须用 400 而非 409）
-                 与条件 4（侧栏两处改法不得互换）最容易做错
+              另决议 D3（/version-tasks 变列表页、向导迁 /new）→ S2 已落地、
+              D4（回传已解析 snapshot 对象）→ S1 已落地、
+              D5（_audit 内部按 user_id 反查 nickname，不改服务签名）→ S6 待落地
+              §6 放行条件执行情况：
+                条件 2（空契约拦截必须用 400 而非 409）✅ S1 已满足
+                条件 4（侧栏两处改法不得互换）✅ S2 已满足，并有 NavSubItemLinks.test.tsx 锁定
+                其余条件继续约束 S3–S7
               ⚠️ 徽标一律走 StatusBadge / Badge tone，禁止手写裸色阶与 dark: 变体（§0 Token 架构）
+              ⚠️ S3 回归面：`task.status` 由无条件 `executed` 改为按 run_status 条件化，
+                 必须跑版本任务全量 pytest 并记录退出码（coverage 回写 C217-1、
+                 releaseTask / buildReleasePackage / transitionVersionTask 的合法输入集合）
 ```
+
+> **KB 检索记录**：编码前对 `platform_knowledge` / `defect_case` 检索契约冻结、版本任务、
+> 侧栏导航相关条目均无命中。替代核查方法 = 直接读源码定位根因（file:line 写进 Design Spec）
+> + `scan-common-bugs.ps1`（HARD 0）+ 既有后端/前端全量测试套件兜底。
 
 ---
 
@@ -80,6 +92,27 @@ Batch 230 — S1 契约快照可读 + 非空校验
 ### Batch 230 / Dev — 看板创建 (2026-09-05)
 - **产出**: `work-logs/kanbans/DEV-batch-230-prod-retest-defects.md`（本文件）
 - **耗时**: 0.2h
+
+### Batch 230 / Design — Design Spec (2026-09-05)
+- **产出**: `work-logs/batch-230-prod-retest-defects-design-spec.md`（提交 `185c0d82`）
+- **要点**: 5 项决议（D1–D5）+ 11 条走查发现（file:line 锚点）；§0 明确 Badge `tone` / StatusBadge `variant` 的 Token 架构；§6 给出 7 条放行条件
+- **审批**: 自审通过，待 Leader 终判
+
+### Batch 230 / Dev — S1 契约快照可读 + 非空校验 (2026-09-05)
+- **产出**: 提交 `892df035`（11 文件）
+- **实现**: `contract/schemas.py` 回传已解析 `snapshot: ContractSnapshot | None`（D4）；`contract/service.py` freeze 前置校验，空规则抛 `APIException(code=400, msg="CONTRACT_FREEZE_EMPTY: ...", http_status=400)`（§6 条件 2：必须 400 而非 409）；`api/v2/mission_contracts.py` 补 `response_model=R[list[ContractVersionRead]]`；前端新增 `pages/missions/ContractSnapshotView.tsx` 渲染规则/产出，`contract.tsx` 补 ErrorState 与冻结阻断提示
+- **自测**: 后端 `pytest -q` 全绿（exit 0）、`ruff check app --select F821` All checks passed、`import app.main` OK；前端 `npm run typecheck` exit 0、`npm run build` 成功、`npx vitest run` 全绿（exit 0）；`scan-common-bugs.ps1` HARD 0
+- **耗时**: 1.6h
+- **审批**: 自测通过，待 QA 复核 + Leader 终判
+
+### Batch 230 / Dev — S2 版本任务列表可达 (2026-09-05)
+- **产出**: 提交 `1ea77b47`（12 文件，+607 / −22）
+- **实现**: 路由拆三条（`version-tasks` 列表 / `version-tasks/new` 向导 / `version-tasks/:taskId` 详情，D3）；新增 `pages/version-tasks/list.tsx` 与 `statusLabels.ts` 字典集中（消除裸英文状态标签的历史返工点）；后端 `schemas/version_task.py::VersionTaskListItem` 补 `coverage`（`_json_to_dict` 容错）与 `updated_at`；`api/versionTask.ts::listVersionTasks` 改回 `VersionTaskPage` 并支持分页
+- **Dev 自主增项（须在 QA 报告披露）**: 列表页加了分页控件——后端默认 `page_size=20` 且原实现丢弃 `total`，不分页会静默截断成「新缺陷」
+- **侧栏两处改法（§6 条件 4，未互换）**: `MainNavRows.tsx` 删除 onClick（`navigateMenu` 只是纯 `navigate`，保留会双跳）；`NavigationMenuItems.tsx` 保留 `closeMobile`（移动端需收起抽屉）；由新增 `layouts/__tests__/NavSubItemLinks.test.tsx`（3 测试）锁定，含暴露 SidebarProvider 内部抽屉状态的 `MobileDrawerProbe`
+- **自测**: 后端全量 `pytest -q` = 2431 passed / 49 skipped / 1 xfailed（exit 0）、`ruff F821` 通过、`pytest tests/test_version_task.py -q` = 34 passed；前端 `typecheck` exit 0、`build` ✓ 10.50s、全量 `vitest run` = 143 files / 647 tests passed（exit 0）、定向 `version-tasks + layouts` = 12 files / 67 passed、`eslint` 10 个改动文件 exit 0；`scan-common-bugs.ps1` HARD 0（WARN 330 均不在本批改动文件内）
+- **耗时**: 2.1h
+- **审批**: 自测通过，待 QA 复核 + Leader 终判
 
 ---
 
@@ -100,7 +133,7 @@ Batch 230 — S1 契约快照可读 + 非空校验
 |------|------|:----:|
 | PRD Summary | [batch-230-prod-retest-defects-prd-summary.md](../batch-230-prod-retest-defects-prd-summary.md) | ✅ |
 | PM Plan | [batch-230-prod-retest-defects-pm-plan.md](../batch-230-prod-retest-defects-pm-plan.md) | ✅ |
-| Design Spec | [batch-230-prod-retest-defects-design-spec.md](../batch-230-prod-retest-defects-design-spec.md) | ⏳ |
+| Design Spec | [batch-230-prod-retest-defects-design-spec.md](../batch-230-prod-retest-defects-design-spec.md) | ✅ |
 | QA Report | [batch-230-prod-retest-defects-qa-report.md](../batch-230-prod-retest-defects-qa-report.md) | ⏳ |
 | Leader Verdict | [batch-230-prod-retest-defects-leader-verdict.md](../batch-230-prod-retest-defects-leader-verdict.md) | ⏳ |
 | 复测台账（缺陷来源） | [evidence/sports-e2e-20260904/复测结论-20260905.md](../evidence/sports-e2e-20260904/复测结论-20260905.md) | ✅ |
