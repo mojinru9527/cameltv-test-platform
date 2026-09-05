@@ -48,6 +48,10 @@ jobs:
           print(f"Validated {len(files)} workflow YAML file(s)")
           PY
 
+      - name: Validate production release script
+        shell: pwsh
+        run: pwsh -NoLogo -NoProfile -File scripts/ops/tests/test-release.ps1
+
       - name: Run deploy/release-control tests
         shell: bash
         env:
