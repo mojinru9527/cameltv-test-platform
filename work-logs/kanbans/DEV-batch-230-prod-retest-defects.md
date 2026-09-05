@@ -48,14 +48,19 @@
 
 ```
 Batch 230 — S1 契约快照可读 + 非空校验
-├── 已完成: Product PRD（550a5ce5）、PM Plan（b6af5c98）、Dev 看板（本文件）
-├── 🔄 进行中: 无（等待 Design 规范先行）
+├── 已完成: Product PRD（550a5ce5）、PM Plan（b6af5c98）、Dev 看板 + 复测证据纳管（00a30b66）、
+│           Design Spec（185c0d82，含 5 项决议 + 11 条走查发现）
+├── 🔄 进行中: 无
 ├── ⏳ 待审批: 无
-└── ⏳ 下一步: Design 出具 batch-230-prod-retest-defects-design-spec.md
-              必须先决议两项 PM 已显式下放的问题：
-              (1) S3 blocked 原因承载方式（新增顶层 reason 字段 vs 复用 failures）
-              (2) S7 横幅边界修法（(a) 路径段边界前缀匹配 vs (b) useMatches() splat 抑制）
-              Design 完成后再进入 Dev S1 Task 1.1
+└── ⏳ 下一步: Dev 进入 S1 编码（Task 1.1 起）
+              Design 已决议 PM 下放的两项：
+              D1 = S3 blocked 原因**复用 failures**（新增 kind:"plan"），不加顶层 reason 字段、不做 Alembic 迁移
+              D2 = S7 横幅选 **(b) useMatches() splat 抑制**，不改前缀匹配（已对全量路由表验证无真实路由越界命中）
+              另决议 D3（/version-tasks 变列表页、向导迁 /new）、D4（回传已解析 snapshot 对象）、
+              D5（_audit 内部按 user_id 反查 nickname，不改服务签名）
+              ⚠️ Dev 须遵守 §6 的 7 条放行条件，其中条件 2（空契约拦截必须用 400 而非 409）
+                 与条件 4（侧栏两处改法不得互换）最容易做错
+              ⚠️ 徽标一律走 StatusBadge / Badge tone，禁止手写裸色阶与 dark: 变体（§0 Token 架构）
 ```
 
 ---
