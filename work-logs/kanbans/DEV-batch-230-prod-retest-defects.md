@@ -35,9 +35,9 @@
 | 2 | S2 版本任务列表可达 | DEF-20260905-002 | P1 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `1ea77b47`；路由拆三条 + 新列表页 + `VersionTaskListItem` 补 `coverage`/`updated_at` + `statusLabels.ts` 字典集中 + 侧栏两处子项 Link 化（改法未互换） |
 | 3 | S3 一键运行阻塞可见 | DEF-20260905-003 | P1 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `ae4f37c2` + `8f33ee80`；合成 `kind="plan"` 失败项（D1）+ `task.status` 去无条件化 + 前端按 `run.status` 三分支 + 运行状态徽标 + kind 中文/tone 分级 |
 | 4 | S4 AI 自动发现假成功 | DEF-20260905-004 | P2 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `54f35c9a`；`discoverAiModels` 类型补 `ok/error/kind/count`（**未声明 `detail`**）+ `handleDiscoverModels` 在 `res.ok === false` 早退弹错误（不给 action，避免嵌套抽屉）+ 成功文案改用 `res.count` 与合并总数区分 |
-| 5 | S5 缺陷搜索支持编号 | DEF-20260905-005 | P2 | ⏳ ⬅️ | ⏳ | ⏳ | ⏳ | ⏳ | **当前起点**；`or_(title.contains, defect_id.contains)`，⚠️ §6 条件 5：`project_id` 过滤必须在 `or_` **之外**，且必须有「keyword 命中另一项目 defect_id 返回空」的跨项目隔离测试 |
-| 6 | S6 范围评审审计操作人 | DEF-20260905-006 | P2 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | `scope/service.py::_audit` 硬编码 `username=""` 修正 + 同类点排查 |
-| 7 | S7 拼写 + 404 横幅边界 | DEF-20260905-007、-009 | P3 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 依赖 S1（同文件 `missions/contract.tsx`） |
+| 5 | S5 缺陷搜索支持编号 | DEF-20260905-005 | P2 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `7ac734b7`；`or_(title.contains, defect_id.contains)` + 检索框占位改「搜索标题或缺陷编号」+ Query 描述同步；✅ §6 条件 5 已满足：`project_id`/`severity`/`status`/`assignee` 全部留在 `or_` **之外**靠 `.where()` 累加 AND，并由 `test_keyword_is_isolated_per_project` 双向锁定 |
+| 6 | S6 范围评审审计操作人 | DEF-20260905-006 | P2 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `b983c0c9`；`_audit` 内部按 `user_id` 反查 `nickname or username`（D5，不改服务签名）；同类点排查用脚本遍历全仓 37 处 `write_audit`，零剩余 `username=""` 硬编码 |
+| 7 | S7 拼写 + 404 横幅边界 | DEF-20260905-007、-009 | P3 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `05016cb2`；「歧义（Ambiguity）」拼写修正 + `LegacyNoticeBanner` 用 `useMatches()` 抑制 splat 叶子（D2）；✅ §6 条件 6 四条路径已在真实浏览器实测通过 |
 | — | DEF-20260905-008 | （已撤回） | — | ❌ | ❌ | ❌ | ❌ | ❌ | 前端本已有 `toast.success('契约已生成')`；误报，取证方法缺陷已写入 PRD §1.1 |
 
 > 状态图例：⏳ 待开始 | 🔄 进行中 | ✅ 已完成 | ❌ 已取消 | 🔒 阻塞中
@@ -47,33 +47,47 @@
 ## 📍 当前位置
 
 ```
-Batch 230 — S5 缺陷搜索支持编号
+Batch 230 — Dev 七切片全部完成，移交 QA
 ├── 已完成: Product PRD（550a5ce5）、PM Plan（b6af5c98）、Dev 看板 + 复测证据纳管（00a30b66）、
-│           Design Spec（185c0d82，含 5 项决议 + 11 条走查发现）、看板定位（819de4b5、6f5181b6、c0b6683e）
+│           Design Spec（185c0d82，含 5 项决议 + 11 条走查发现）、看板定位（819de4b5、6f5181b6、c0b6683e、0c550ed9）
 │           Dev S1 契约快照可读 + 非空校验（892df035，11 文件）
 │           Dev S2 版本任务列表可达 + 侧栏子项链接化（1ea77b47，12 文件）
 │           Dev S3 一键运行阻塞可见（ae4f37c2 代码 + 8f33ee80 窄屏 flex-wrap）
 │           Dev S4 AI 自动发现假成功（54f35c9a，3 文件）
-├── 🔄 进行中: 无
-├── ⏳ 待审批: S1、S2、S3、S4（等 QA 硬门禁复核 + Leader 终判）
-└── ⏳ 下一步: Dev 进入 S5 编码（Task 5.1 起）
-              Design 已决议 PM 下放的两项：
-              D1 = S3 blocked 原因**复用 failures**（新增 kind:"plan"），不加顶层 reason 字段、不做 Alembic 迁移 → ✅ S3 已落地
-              D2 = S7 横幅选 **(b) useMatches() splat 抑制**，不改前缀匹配（已对全量路由表验证无真实路由越界命中）
-              另决议 D3（/version-tasks 变列表页、向导迁 /new）→ S2 已落地、
-              D4（回传已解析 snapshot 对象）→ S1 已落地、
-              D5（_audit 内部按 user_id 反查 nickname，不改服务签名）→ S6 待落地
-              §6 放行条件执行情况：
-                条件 2（空契约拦截必须用 400 而非 409）✅ S1 已满足
-                条件 4（侧栏两处改法不得互换）✅ S2 已满足，并有 NavSubItemLinks.test.tsx 锁定
-                条件 5（project_id 过滤在 or_ 之外 + 跨项目隔离测试）⏳ 约束 S5，本切片唯一正确性风险点
-                条件 6（S7 四条路径实测）⏳ 约束 S7；条件 1、3、7 已随 S1/S3 落地
+│           Dev S5 缺陷搜索支持编号（7ac734b7，5 文件）
+│           Dev S6 范围评审审计操作人（b983c0c9，2 文件）
+│           Dev S7 拼写 + 404 横幅边界（05016cb2，4 文件）
+├── 🔄 进行中: 无（Dev 收口）
+├── ⏳ 待审批: S1–S7（等 QA 硬门禁复核 + Leader 终判）
+└── ⏳ 下一步: QA 出具 batch-230-prod-retest-defects-qa-report.md（硬门禁 + 复盘卡）
+              Design 五项决议落地情况：
+              D1 = S3 blocked 原因**复用 failures**（新增 kind:"plan"）→ ✅ S3 已落地
+              D2 = S7 横幅选 **(b) useMatches() splat 抑制**，不改前缀匹配 → ✅ S7 已落地
+              D3 = /version-tasks 变列表页、向导迁 /new → ✅ S2 已落地
+              D4 = 回传已解析 snapshot 对象 → ✅ S1 已落地
+              D5 = _audit 内部按 user_id 反查 nickname，不改服务签名 → ✅ S6 已落地
+              §6 放行条件执行情况（7 条全部满足）：
+                条件 1（S1 Error 态）✅  条件 2（空契约拦截用 400 非 409）✅
+                条件 3（FAILURE_KIND_LABEL 中文 + tone 分级，无裸色阶）✅
+                条件 4（侧栏两处改法不得互换）✅ 有 NavSubItemLinks.test.tsx 锁定
+                条件 5（project_id 在 or_ 之外 + 跨项目隔离测试）✅ S5 已满足
+                条件 6（S7 四条路径实测）✅ 已在真实浏览器逐条验证（/defects 隐藏、
+                        /defect 显示、/knowledge 显示、/nonexistent 隐藏）
+                条件 7（snapshot 响应形状同步 OpenAPI）✅ S1 已把 versions 端点
+                        response_model 收紧为 R[list[ContractVersionRead]]，
+                        字段由 snapshot_json:str 改为 snapshot:ContractSnapshot|None
               ⚠️ 徽标一律走 StatusBadge / Badge tone，禁止手写裸色阶与 dark: 变体（§0 Token 架构）
               ✅ S4 关键约束已兑现：`discoverAiModels` 未声明 `detail`（后端 discover 分支从不返回），
                  失败早退不落入合并分支，成功文案用 `res.count` 而非 `merged.length`
-              ✅ S3 回归面已清：全量后端 pytest 2435 passed / 49 skipped / 1 xfailed（exit 0，581s），
-                 coverage 回写（C217-1）、releaseTask / buildReleasePackage / transitionVersionTask
-                 与 onboarding 基线全部通过；onboarding 只读 run.status 不读 task.status，未受影响
+              ⚠️ QA 须复核的 Dev 自主增项（均超出 Design Spec 范围，已在批次记录披露）：
+                 ① S2 列表页分页控件 ② S3 `FAILURE_KINDS` 补 `plan` + `release_task` 准入补 `blocked`
+                 ③ S3 blocked 文案按 failures 分流 ④ S5 期间发现并修的 `SearchInput` aria-label
+                    硬编码（无障碍名盖掉调用方 placeholder，WCAG 2.5.3）
+              ⚠️ Design Spec 行号漂移（不影响结论，QA 报告须披露）：
+                 `missions/contract.tsx` 歧义标题实际在 :207（Spec 写 :175）、
+                 `router/index.tsx` splat 叶子实际在 :507（Spec 写 :503）
+              ✅ 回归面：S3 时全量后端 pytest 2435 passed；S5 后 2439 passed（= 2435 + 4 条 S5 新测试），
+                 但该轮**早于 S6 改动**（pytest 在采集期即导入模块），故 Dev 收口另跑一轮覆盖 S6 的全量
 ```
 
 > **KB 检索记录**：编码前对 `platform_knowledge` / `defect_case` 检索契约冻结、版本任务、
@@ -139,6 +153,52 @@ Batch 230 — S5 缺陷搜索支持编号
 - **走查确认**: `discoverAiModels` 是唯一消费端（全仓 grep 仅 `pages/ai-config/index.tsx:249`），类型收紧无其它波及面
 - **自测**: `npx vitest run src/pages/ai-config` = 6 passed（exit 0）；`npm run typecheck` exit 0；`npm run build` ✓ 9.67s exit 0；`npx eslint` 3 个改动文件 exit 0；`scan-common-bugs.ps1` HARD 0 / WARN 330（与 S3 基线一致，S4 文件零命中）。**未跑后端测试**：本切片零后端改动。**未跑全量 vitest**：定向套件已覆盖唯一消费端，全量留到 S7 结束后统一跑（`--maxWorkers=3`），避免与后端 pytest 争用 worker 造成 S3 那类超时抖动
 - **耗时**: 0.5h
+- **审批**: 自测通过，待 QA 复核 + Leader 终判
+
+### Batch 230 / Dev — S5 缺陷搜索支持编号 (2026-09-05)
+- **产出**: 提交 `7ac734b7`（5 文件）
+- **TDD**: 先写 4 条用例确认红（3 failed / 1 passed，通过的 `test_keyword_still_matches_title` 正是「标题检索不回归」的基线），再改实现转绿
+- **实现**: `services/defect_service.py` 关键字谓词由 `Defect.title.contains(keyword)` 改为 `or_(Defect.title.contains, Defect.defect_id.contains)`；`api/v1/defect.py:69` 的 Query 描述同步为「模糊匹配标题或缺陷编号（DEF-YYYYMMDD-NNN）」；前端 `DefectFilterBar.tsx:72` 占位由「搜索缺陷标题」改为「搜索标题或缺陷编号」
+- **✅ §6 条件 5（本切片唯一正确性风险点）**: `or_()` **只包住** title/defect_id 两个谓词；`project_id` 与同级的 `severity`/`status`/`assignee_id` 全部靠 `.where()` 累加保持 AND——把隔离条件塞进 `or_` 会让编号检索跨项目泄漏数据。新增 `tests/test_defect_search.py`（4 测试），其中 `test_keyword_is_isolated_per_project` 用**双向强形式**锁定：两个项目都有 `DEF-20260905-*`，项目 1 搜前缀只见自己那行；搜项目 2 的 `DEF-20260905-002` 返回 `total=0, items=[]`。弱形式（只测「别人的编号搜不到」）抓不住 `project_id` 被拉进 `or_` 的情况
+- **刻意不纳入 `external_id`**: 禅道/Jira 编号不在列表作为编号展示，纳入只会扩大匹配面（新建缺陷弹窗里「外部ID」是独立字段，真实界面已目视确认）
+- **真实浏览器取证（PM 计划要求）**: 登录 admin → 项目「CamelTv 体育平台」→ 新建缺陷「S5验证契约快照空壳」→ 生成 `DEF-20260905-001`；搜编号 `DEF-20260905-001` 命中 1 条（`共 1 条`）、搜标题关键词 `契约快照` 命中同 1 条（不回归）、搜前缀 `DEF-2026` 命中 1 条。证据 `work-logs/evidence/batch-230-prod-retest-defects/s5-search-by-defect-id.png`
+- **⚠️ 跨项目隔离未在 UI 观察（诚实记录）**: 本地库只有 1 个项目 1 条缺陷（`select project_id,count(*) from defect group by project_id` = `[(1,1)]`），泄漏在真实界面无从观察；条件 5 要求的是「有跨项目隔离**测试**」，已由上述单测满足
+- **Dev 自主增项（超出 Design §S5 范围，须 QA 复核）**: 取证时发现**自己的修复对辅助技术不可见**——`components/SearchInput.tsx` 硬编码 `aria-label="搜索"`，会盖掉调用方 placeholder，读屏/语音输入用户听不到「能搜什么」（WCAG 2.5.3 Label in Name）。改为 `aria-label={placeholder}`，让无障碍名跟随可见提示；全仓仅 3 个消费端，同步修正依赖旧行为的 `pages/version-tasks/__tests__/list.test.tsx`（`getByLabelText('搜索')` → `'搜索标题或版本'`）。HMR 后实测 `searchAriaLabel === searchPlaceholder === "搜索标题或缺陷编号"`
+- **自测**: 后端定向 4 文件 33 passed（含 `test_defect_search.py` 4 条新测试）、`ruff check app --select F821` All checks passed、`import app.main` OK；前端 `npx vitest run src/pages/defect` 7 passed、`npm run typecheck` exit 0、`npm run build` ✓ 9.30s
+- **耗时**: 1.1h
+- **审批**: 自测通过，待 QA 复核 + Leader 终判
+
+### Batch 230 / Dev — S6 范围评审审计操作人 (2026-09-05)
+- **产出**: 提交 `b983c0c9`（2 文件）
+- **TDD**: 先写 4 条用例确认红（3 failed / 5 passed），再改实现转绿（10 passed，含既有 `test_batch60_audit_durability.py`）
+- **实现（D5）**: `modules/aitde/scope/service.py::_audit` 原硬编码 `username=""`，改为在函数内部按 `user_id` 反查 `User` 并取 `nickname or username`——**不改任何服务函数签名**。选 nickname 优先的理由：`models/user.py:18` 的 `nickname` 才是给人读的显示名；同时 `list_audit` 是对 `AuditLog.username` 做 LIKE，username 为空还会连带让「按操作人检索审计」失效
+- **两处调用点均覆盖**: `:70`（`scope:analyze`）与 `:111`（`scope:review`）。注意 `analyze_scope` 在 `:68` 先 `db.commit()` 再 `_audit`，审计行只 flush 不 commit——沿用既有语义，本批不改事务边界
+- **既有耐久性守卫不得破坏**: `_audit` 外层的 `except Exception: pass` 是 Batch 60 加的（审计失败不能拖垮主流程）。新增 `test_audit_tolerates_unknown_user` 锁定：查不到用户时**仍要写下审计行**（`username=""`），而不是整行丢失
+- **同类点排查（用脚本而非目测）**: 内联 Python 以「平衡括号扫描」遍历全仓 **37 处** `write_audit(` 调用块，报告缺 `username` 入参者 = 恰好 `services/api_execution_service.py:1409`（`apitest:execute_prod`）与 `services/production_operation_guard.py:65`（`production_operation:allowed`），两处**同时缺 `user_id`**。结论：零剩余 `username=""` 硬编码点；这两处需要把用户身份透传进服务层＝独立批次工作量，且严重度高于本缺陷（生产操作可追溯性是合规项）→ 与 Design §S6 走查发现一致，移交 Leader 开 C 条件
+- **自测**: `pytest tests/test_aitde_scope_service.py tests/test_batch60_audit_durability.py -q` = 10 passed、`ruff check app --select F821` 通过、`import app.main` OK。**本切片零前端改动**
+- **耗时**: 0.7h
+- **审批**: 自测通过，待 QA 复核 + Leader 终判
+
+### Batch 230 / Dev — S7 拼写 + 404 横幅边界 (2026-09-05)
+- **产出**: 提交 `05016cb2`（4 文件）
+- **实现**: ①`pages/missions/contract.tsx:207` 卡片标题「歧义（Ambiguitity）」→「歧义（Ambiguity）」（DEF-20260905-007）；②`components/legacy/LegacyNoticeBanner.tsx` 增加 splat 抑制（DEF-20260905-009，D2 方案 b）：`useMatches()` 取当前 URL 的**完整匹配分支**，末位 match 的 `params['*'] !== undefined` 即判定命中 404 splat 叶子并 `return null`
+- **为什么用 `useMatches()` 而不是路径串比较**: 横幅挂在 `MainLayout.tsx:460`，而 splat 叶子在 `router/index.tsx:507`（`{ path: '*', element: <NotFound /> }`）——react-router v7 的 `useMatches()` 返回完整分支（含 `<Outlet/>` 叶子），与调用组件在树中的位置无关，因此不需要把路由信息透传下来。判定用 `params['*'] !== undefined` 而非 pathname 比对，避免把「未知路径」和「真实前缀」混为一谈
+- **缺陷本体**: `/defects` 这类未知路径会因前缀匹配命中 `LEGACY_PREFIXES` 里的 `/defect`，让 404 页叠加「V4.0 旧版入口收敛中」横幅。`LEGACY_PREFIXES`（`:8-20`，11 项）按 D2 **保持不变**——改前缀段边界会波及全部历史入口
+- **⚠️ TDD 顺序倒置与补偿验证（诚实记录）**: 本切片测试写在实现之后。为证明测试**真的能判别**该缺陷，临时把守卫改成 `if (false && matches...)` 复跑 → **1 failed / 4 passed**，且失败的正是 `/defects`（`/nonexistent` 本就被前缀检查挡住，说明测试精确命中前缀冲突这一成因，而非泛泛断言「404 不显示横幅」），随后恢复守卫 → 5 passed
+- **✅ §6 条件 6 真实浏览器四路径实测**（单测无法覆盖真实路由表，Design 明确要求实测）:
+
+  | 路径 | 预期 | 实测 |
+  |------|------|------|
+  | `/defects` | 隐藏横幅 | ✅ 干净 404（`404` / `页面不存在` / `返回工作台`），无横幅 |
+  | `/defect` | 显示横幅 | ✅ 「V4.0：旧版入口收敛中」+「前往 Mission 工作台 →」 |
+  | `/knowledge` | 显示横幅 | ✅ `{bannerVisible: true, notFoundPage: false}` |
+  | `/nonexistent` | 隐藏横幅 | ✅ `{bannerVisible: false, notFoundPage: true}` |
+
+  `/defects` 与 `/defect` 这一对恰好把成因隔离出来：前者是 splat 命中、后者是真实前缀命中。证据 `s7-defects-404-no-banner.png`、`s7-defect-banner-shown.png`
+- **顺带取到的其它切片证据**: `/workbench` 快照独立佐证 S2 的侧栏子项是真实 `link` 节点（`/version-tasks`、`/version-tasks/new`）
+- **本地环境前提**: 横幅受 `aitde_v3_enabled` 门控（默认 False，前端 `resolveAitdeV3()` 从 `/api/v2/health` 读），故在 gitignored 的 `backend/.env` 追加 `AITDE_V3_ENABLED=true` 与 `ADMIN_PASSWORD=admin123` 才能渲染；该文件不入库
+- **自测**: `npx vitest run src/components/legacy` 5 passed（含上述红验证）、`npm run typecheck` exit 0；`SearchInput` 改动后定向复跑 version-tasks / defect / report / legacy = **10 files / 32 tests passed**
+- **耗时**: 0.9h
 - **审批**: 自测通过，待 QA 复核 + Leader 终判
 
 ---

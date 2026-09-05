@@ -32,7 +32,9 @@ export default function SearchInput({
     <div className="flex items-center gap-1">
       <div className="relative">
         <Input
-          aria-label="搜索"
+          // 无障碍名跟随可见提示：硬编码「搜索」会盖掉调用方的 placeholder，
+          // 读屏/语音输入用户就听不到「能搜什么」（WCAG 2.5.3 Label in Name）。
+          aria-label={placeholder}
           placeholder={placeholder}
           className={cn(inputClassName)}
           value={value}

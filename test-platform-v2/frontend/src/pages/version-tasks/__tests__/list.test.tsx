@@ -106,7 +106,7 @@ describe('VersionTaskListPage（DEF-20260905-002 列表可达）', () => {
     await screen.findByText('暂无版本验收任务')
     expect(mocks.listVersionTasks).toHaveBeenCalledTimes(1)
 
-    const input = screen.getByLabelText('搜索')
+    const input = screen.getByLabelText('搜索标题或版本')
     fireEvent.change(input, { target: { value: 'a' } })
     fireEvent.change(input, { target: { value: 'ab' } })
     fireEvent.change(input, { target: { value: 'abc' } })
