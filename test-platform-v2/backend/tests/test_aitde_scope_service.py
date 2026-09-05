@@ -100,3 +100,88 @@ def test_complete_policy_empty_raises(db):
     with pytest.raises(APIException) as exc:
         scope_service.complete_policy(db, m.id)
     assert exc.value.http_status == 400
+
+
+# ────────────────── Batch 230 S6 / DEF-20260905-006 ──────────────────
+
+
+def _mk_user(db, *, user_id: int, username: str, nickname: str = ""):
+    from app.models.user import User
+
+    db.add(User(id=user_id, username=username, password="x", nickname=nickname))
+    db.commit()
+
+
+def _audit_rows(db, action: str):
+    from sqlalchemy import select
+
+    from app.models.audit import AuditLog
+
+    return list(db.scalars(select(AuditLog).where(AuditLog.action == action)).all())
+
+
+def _review_first_item(db, mission_id: int, user_id: int = 9):
+    rows, _summary = scope_service.list_scope(db, mission_id)
+    scope_service.review_scope(
+        db,
+        mission_id,
+        1,
+        user_id,
+        ScopeBulkReviewRequest(
+            items=[
+                ScopeReviewItem(
+                    scope_key=rows[0].scope_key,
+                    decision=ScopeDecision.INCLUDE,
+                    action="approve",
+                )
+            ]
+        ),
+    )
+
+
+def test_scope_analyze_audit_records_operator_name(db):
+    _mk_user(db, user_id=9, username="zhangsan", nickname="张三")
+    m = _mission(db)
+    _with_parsed_source(db, m.id)
+
+    scope_service.analyze_scope(db, m.id, 1, 9)
+
+    rows = _audit_rows(db, "scope:analyze")
+    assert len(rows) == 1
+    assert rows[0].username == "张三"
+    assert rows[0].user_id == 9
+
+
+def test_scope_review_audit_records_operator_name(db):
+    _mk_user(db, user_id=9, username="zhangsan", nickname="张三")
+    m = _mission(db)
+    _with_parsed_source(db, m.id)
+    scope_service.analyze_scope(db, m.id, 1, 9)
+
+    _review_first_item(db, m.id)
+
+    rows = _audit_rows(db, "scope:review")
+    assert len(rows) == 1
+    assert rows[0].username == "张三"
+
+
+def test_audit_falls_back_to_username_when_nickname_empty(db):
+    _mk_user(db, user_id=9, username="zhangsan", nickname="")
+    m = _mission(db)
+    _with_parsed_source(db, m.id)
+
+    scope_service.analyze_scope(db, m.id, 1, 9)
+
+    assert _audit_rows(db, "scope:analyze")[0].username == "zhangsan"
+
+
+def test_audit_tolerates_unknown_user(db):
+    """既有 `except: pass` 耐久性守卫不得被破坏：查不到用户仍要写下审计行。"""
+    m = _mission(db)
+    _with_parsed_source(db, m.id)
+
+    scope_service.analyze_scope(db, m.id, 1, 9)
+
+    rows = _audit_rows(db, "scope:analyze")
+    assert len(rows) == 1
+    assert rows[0].username == ""
