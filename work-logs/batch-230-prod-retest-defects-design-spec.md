@@ -108,7 +108,7 @@ React Router v8 按段类型排序（静态 > 动态），`new` 不会被 `:task
 
 派生决议 **D4-2**：`modules/aitde/contract/schemas.py:46-54` 的 `ContractVersionRead` 声明了 `snapshot_json: str`，但**全仓（含前端）零引用**——是死 schema。本批把它改成与真实响应一致（`snapshot: ContractSnapshot | None = None`）并挂到版本列表端点作 `response_model`，消除「schema 说有、响应说无」的漂移。**不新增第二个 wire 字段**（不同时回传 `snapshot` 和 `snapshot_json`）。
 
-### D5 — S6 操作人解析位置：**在 `_audit` 内部按 `user_id` 反查，不改任何服务函数签名**
+### D5 — S6 操作人解析位置：**在 `_audit` 内部按 `user_id` 反查稳定登录名，不改任何服务函数签名**
 
 `modules/aitde/scope/service.py:136-157` 的 `_audit` 在 `:150` 硬编码 `username=""`。两条修法：
 
@@ -117,7 +117,7 @@ React Router v8 按段类型排序（静态 > 动态），`new` 不会被 `:task
 | 透传 username | 改 `_audit` + `analyze_scope`(`:70`) + `review_scope`(`:111-113`) 三个签名 → 连带 `api/v2/mission_scope.py:31-32,64-65` 与既有测试 |
 | **内部反查（选定）** | 只改 `_audit` 函数体；`_audit` 已持有 `db` 与 `user_id`，一次 `db.get(User, user_id)` |
 
-选定内部反查。调用频率极低（仅范围分析/评审两个动作），且 `_audit` 既有 `except Exception: pass`（`:156-157`）会让反查失败自动降级为今天的 `username=""`——**不引入新失败模式**。
+选定内部反查并记录 `User.username`。调用频率极低（仅范围分析/评审两个动作），且 `_audit` 既有 `except Exception: pass`（`:156-157`）会让反查失败自动降级为今天的 `username=""`——**不引入新失败模式**。
 
 ---
 
@@ -403,7 +403,7 @@ if keyword:
 from app.models.user import User  # 模块顶部既有导入区
 
 user = db.get(User, user_id) if user_id else None
-username = (user.nickname or user.username) if user else ""
+username = user.username if user else ""
 write_audit(
     db,
     user_id=user_id,
@@ -415,14 +415,14 @@ write_audit(
 )
 ```
 
-**命名口径决议**：用 `nickname or username`。仓库现存两种口径且势均力敌——
+**命名口径最终决议**：用稳定登录名 `username`。初版设计曾选择 `nickname or username`；QA 通过跨模块列表对比和真实浏览器复测发现，同一管理员会在不同审计来源显示为“超级管理员”和 `admin`，不利于检索与追责，因此收紧为不可由用户随时修改的登录名。
 
 | 口径 | 模块 |
 |------|------|
 | `cu.user.username or ""` | `api/v1/defect.py:25`、`integration.py:30`、`notify.py:20`、`project.py:33`、`report.py:24`、`auth.py` 多处 |
 | `(cu.user.nickname or cu.user.username)` | `convergence.py:18`、`knowledge_artifacts.py:48`、`knowledge_core.py:47`、`knowledge_graph.py:51`、`onboarding.py:28`、`release_bundles_core.py:40` |
 
-选 nickname 优先：审计列表的「操作人」是给人读的显示名，`nickname`（`models/user.py:18`）正是显示名；且采纳该口径的 6 个模块均为较新模块。
+选择 `username`：审计字段的首要目标是稳定身份识别，而非展示友好度；这也与缺陷、集成、通知、项目、报告和认证等审计来源保持一致。测试必须覆盖“用户同时有昵称”时仍写入登录名，并覆盖未知用户时沿用既有空串降级行为。
 
 ⚠️ **口径统一属 DEF-20260904-015（未修复，本批不覆盖）**。本批只让范围评审审计**有**操作人，不统一全仓口径。QA 报告须显式记录这一点，避免被读成 -015 已修。
 

@@ -16,7 +16,7 @@
 | **复测台账（证据源）** | [work-logs/evidence/sports-e2e-20260904/复测结论-20260905.md](../evidence/sports-e2e-20260904/复测结论-20260905.md) |
 | **批次模式** | 完整批次（新增 `snapshot` 响应字段 / 新增版本任务列表视图 / 新增冻结与运行校验） |
 | **分支** | `feature/batch-230-prod-retest-defects`（base `origin/main` = `9c721bc6`） |
-| **worktree** | `F:/CamelTv-worktrees/claude-batch-230-prod-retest-defects`（executor=claude, workflow=agent-team） |
+| **worktree** | `F:/CamelTv-worktrees/codex-batch-230-prod-retest-defects`（executor=codex, workflow=agent-team） |
 | **端口** | frontend 5231 / backend 8231 |
 | **总预估工时** | 9.5h |
 | **已用批次** | 1 批（7 个 Slice） |
@@ -36,7 +36,7 @@
 | 3 | S3 一键运行阻塞可见 | DEF-20260905-003 | P1 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `ae4f37c2` + `8f33ee80`；合成 `kind="plan"` 失败项（D1）+ `task.status` 去无条件化 + 前端按 `run.status` 三分支 + 运行状态徽标 + kind 中文/tone 分级 |
 | 4 | S4 AI 自动发现假成功 | DEF-20260905-004 | P2 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `54f35c9a`；`discoverAiModels` 类型补 `ok/error/kind/count`（**未声明 `detail`**）+ `handleDiscoverModels` 在 `res.ok === false` 早退弹错误（不给 action，避免嵌套抽屉）+ 成功文案改用 `res.count` 与合并总数区分 |
 | 5 | S5 缺陷搜索支持编号 | DEF-20260905-005 | P2 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `7ac734b7`；`or_(title.contains, defect_id.contains)` + 检索框占位改「搜索标题或缺陷编号」+ Query 描述同步；✅ §6 条件 5 已满足：`project_id`/`severity`/`status`/`assignee` 全部留在 `or_` **之外**靠 `.where()` 累加 AND，并由 `test_keyword_is_isolated_per_project` 双向锁定 |
-| 6 | S6 范围评审审计操作人 | DEF-20260905-006 | P2 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `b983c0c9`；`_audit` 内部按 `user_id` 反查 `nickname or username`（D5，不改服务签名）；同类点排查用脚本遍历全仓 37 处 `write_audit`，零剩余 `username=""` 硬编码 |
+| 6 | S6 范围评审审计操作人 | DEF-20260905-006 | P2 | ✅ | ✅ | ✅ | ⏳ | ⏳ | `b983c0c9` 初修非空；QA 在 `a1d5a780` 收紧为稳定登录名 `username`，真实浏览器 analyze/review 均显示 `admin` |
 | 7 | S7 拼写 + 404 横幅边界 | DEF-20260905-007、-009 | P3 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 提交 `05016cb2`；「歧义（Ambiguity）」拼写修正 + `LegacyNoticeBanner` 用 `useMatches()` 抑制 splat 叶子（D2）；✅ §6 条件 6 四条路径已在真实浏览器实测通过 |
 | — | DEF-20260905-008 | （已撤回） | — | ❌ | ❌ | ❌ | ❌ | ❌ | 前端本已有 `toast.success('契约已生成')`；误报，取证方法缺陷已写入 PRD §1.1 |
 
@@ -47,7 +47,7 @@
 ## 📍 当前位置
 
 ```
-Batch 230 — Dev 七切片全部完成，移交 QA
+Batch 230 — QA 本地验收 PASS，等待一次总确认
 ├── 已完成: Product PRD（550a5ce5）、PM Plan（b6af5c98）、Dev 看板 + 复测证据纳管（00a30b66）、
 │           Design Spec（185c0d82，含 5 项决议 + 11 条走查发现）、看板定位（819de4b5、6f5181b6、c0b6683e、0c550ed9）
 │           Dev S1 契约快照可读 + 非空校验（892df035，11 文件）
@@ -57,15 +57,18 @@ Batch 230 — Dev 七切片全部完成，移交 QA
 │           Dev S5 缺陷搜索支持编号（7ac734b7，5 文件）
 │           Dev S6 范围评审审计操作人（b983c0c9，2 文件）
 │           Dev S7 拼写 + 404 横幅边界（05016cb2，4 文件）
-├── 🔄 进行中: 无（Dev 收口）
-├── ⏳ 待审批: S1–S7（等 QA 硬门禁复核 + Leader 终判）
-└── ⏳ 下一步: QA 出具 batch-230-prod-retest-defects-qa-report.md（硬门禁 + 复盘卡）
+├── 已完成: QA 返工 `a1d5a780`（审计登录名 + Contract HTTP 200 业务空态）
+│           QA 新发现 `0c169c29`（取消请求不再弹 canceled toast）
+│           后端全量 2444 passed；前端全量 146 files / 664 tests；三视口浏览器复测通过
+├── 🔄 进行中: Leader 有条件通过；尚未取得本批一次总确认
+├── ⏳ 待审批: required checks + 最终 PR audit 后 Leader APPROVED
+└── ⏳ 下一步: 询问一次总确认，确认后 push → Draft PR → required checks → 最终审计 → squash merge
               Design 五项决议落地情况：
               D1 = S3 blocked 原因**复用 failures**（新增 kind:"plan"）→ ✅ S3 已落地
               D2 = S7 横幅选 **(b) useMatches() splat 抑制**，不改前缀匹配 → ✅ S7 已落地
               D3 = /version-tasks 变列表页、向导迁 /new → ✅ S2 已落地
               D4 = 回传已解析 snapshot 对象 → ✅ S1 已落地
-              D5 = _audit 内部按 user_id 反查 nickname，不改服务签名 → ✅ S6 已落地
+              D5 = _audit 内部按 user_id 反查稳定登录名 username，不改服务签名 → ✅ S6 已落地
               §6 放行条件执行情况（7 条全部满足）：
                 条件 1（S1 Error 态）✅  条件 2（空契约拦截用 400 非 409）✅
                 条件 3（FAILURE_KIND_LABEL 中文 + tone 分级，无裸色阶）✅
@@ -171,9 +174,9 @@ Batch 230 — Dev 七切片全部完成，移交 QA
 ### Batch 230 / Dev — S6 范围评审审计操作人 (2026-09-05)
 - **产出**: 提交 `b983c0c9`（2 文件）
 - **TDD**: 先写 4 条用例确认红（3 failed / 5 passed），再改实现转绿（10 passed，含既有 `test_batch60_audit_durability.py`）
-- **实现（D5）**: `modules/aitde/scope/service.py::_audit` 原硬编码 `username=""`，改为在函数内部按 `user_id` 反查 `User` 并取 `nickname or username`——**不改任何服务函数签名**。选 nickname 优先的理由：`models/user.py:18` 的 `nickname` 才是给人读的显示名；同时 `list_audit` 是对 `AuditLog.username` 做 LIKE，username 为空还会连带让「按操作人检索审计」失效
+- **实现（D5，QA 收紧）**: `modules/aitde/scope/service.py::_audit` 原硬编码 `username=""`，先在 `b983c0c9` 改为按 `user_id` 反查用户，QA 再于 `a1d5a780` 固定写入稳定登录名 `User.username`——**不改任何服务函数签名**。这样同一管理员在不同审计来源保持可检索、可追责的一致身份；即使用户设置了昵称也不会改变历史口径
 - **两处调用点均覆盖**: `:70`（`scope:analyze`）与 `:111`（`scope:review`）。注意 `analyze_scope` 在 `:68` 先 `db.commit()` 再 `_audit`，审计行只 flush 不 commit——沿用既有语义，本批不改事务边界
-- **既有耐久性守卫不得破坏**: `_audit` 外层的 `except Exception: pass` 是 Batch 60 加的（审计失败不能拖垮主流程）。新增 `test_audit_tolerates_unknown_user` 锁定：查不到用户时**仍要写下审计行**（`username=""`），而不是整行丢失
+- **既有耐久性守卫不得破坏**: `_audit` 外层的 `except Exception: pass` 是 Batch 60 加的（审计失败不能拖垮主流程）。测试锁定两项行为：用户有昵称时仍记录登录名；查不到用户时**仍要写下审计行**（`username=""`），而不是整行丢失
 - **同类点排查（用脚本而非目测）**: 内联 Python 以「平衡括号扫描」遍历全仓 **37 处** `write_audit(` 调用块，报告缺 `username` 入参者 = 恰好 `services/api_execution_service.py:1409`（`apitest:execute_prod`）与 `services/production_operation_guard.py:65`（`production_operation:allowed`），两处**同时缺 `user_id`**。结论：零剩余 `username=""` 硬编码点；这两处需要把用户身份透传进服务层＝独立批次工作量，且严重度高于本缺陷（生产操作可追溯性是合规项）→ 与 Design §S6 走查发现一致，移交 Leader 开 C 条件
 - **自测**: `pytest tests/test_aitde_scope_service.py tests/test_batch60_audit_durability.py -q` = 10 passed、`ruff check app --select F821` 通过、`import app.main` OK。**本切片零前端改动**
 - **耗时**: 0.7h
@@ -201,6 +204,19 @@ Batch 230 — Dev 七切片全部完成，移交 QA
 - **耗时**: 0.9h
 - **审批**: 自测通过，待 QA 复核 + Leader 终判
 
+### Batch 230 / QA — 全量验收与返工 (2026-09-05)
+- **产出**: `work-logs/batch-230-prod-retest-defects-qa-report.md` + `work-logs/evidence/batch-230-prod-retest-defects/README.md`
+- **QA 返工**: `a1d5a780` 修复 Scope 操作人口径与 Contract 初始空态 HTTP 404 噪声；`0c169c29` 修复直接导航产生的 `canceled` toast
+- **自动化**: 后端 2444 passed / 49 skipped / 1 xfailed；前端 146 files / 664 tests；typecheck/lint/build/F821/import/migrations/route guards 全通过
+- **浏览器**: Mission 2 全程前端创建并完成 Source→Scope analyze/review；Contract 空态 HTTP 200、无 toast、控制台 0 error/0 warning；1440/768/390 三视口无溢出
+- **门禁**: Dev Gate `PASS_WITH_WARN`（0 HARD / 330 历史 WARN）；C audit 0 errors / 0 warnings
+- **结论**: PASS，等待用户一次总确认后进入 Draft PR 流程
+
+### Batch 230 / Leader — 交付前初审 (2026-09-05)
+- **产出**: `work-logs/batch-230-prod-retest-defects-leader-verdict.md`
+- **结论**: 有条件通过；本地质量与浏览器证据满足，未在总确认和 required checks 前写 APPROVED
+- **新增条件**: `C230-1` 跟踪两个生产操作审计路径缺操作人身份
+
 ---
 
 ## ⚠️ 阻塞与风险
@@ -211,6 +227,7 @@ Batch 230 — Dev 七切片全部完成，移交 QA
 | S2 与 DEF-20260904-001 的边界 | P2 | 侧栏 `href` 修复同时消除 DEF-20260904-001（5 个锚点 `href=null`）的一部分；QA 报告须写明本批只覆盖「侧栏子菜单不可达」，004-001 其余锚点留待后续批次 | QA | 2026-09-05 |
 | S3 状态机回归 | ✅ 已清 | `task.status` 从无条件 `executed` 改为按条件 `blocked`；Dev 已跑全量后端 `pytest -q` = 2435 passed / 49 skipped / 1 xfailed（exit 0），onboarding 只读 `run.status` 未受影响。**遗留关注点**：Dev 自主闭合的两处（`FAILURE_KINDS` 补 `plan`、`release_task` 准入补 `blocked`）超出 Design Spec 范围，QA 须在真实界面复核「转缺陷草稿」与「打回」两条路径 | QA | 2026-09-05 |
 | S6 审计字段回填 | P3 | 历史审计记录 `username` 为空，本批只修正写入侧，不做数据回填（PRD 非目标已记录） | — | 2026-09-05 |
+| 生产操作审计身份 | P1 | `production_operation:allowed` 与 `apitest:execute_prod` 仍缺认证操作人透传；已登记 `C230-1`，不在本批临时扩域 | 后续独立批次 | 2026-09-05 |
 
 ---
 
@@ -221,8 +238,8 @@ Batch 230 — Dev 七切片全部完成，移交 QA
 | PRD Summary | [batch-230-prod-retest-defects-prd-summary.md](../batch-230-prod-retest-defects-prd-summary.md) | ✅ |
 | PM Plan | [batch-230-prod-retest-defects-pm-plan.md](../batch-230-prod-retest-defects-pm-plan.md) | ✅ |
 | Design Spec | [batch-230-prod-retest-defects-design-spec.md](../batch-230-prod-retest-defects-design-spec.md) | ✅ |
-| QA Report | [batch-230-prod-retest-defects-qa-report.md](../batch-230-prod-retest-defects-qa-report.md) | ⏳ |
-| Leader Verdict | [batch-230-prod-retest-defects-leader-verdict.md](../batch-230-prod-retest-defects-leader-verdict.md) | ⏳ |
+| QA Report | [batch-230-prod-retest-defects-qa-report.md](../batch-230-prod-retest-defects-qa-report.md) | ✅ |
+| Leader Verdict | [batch-230-prod-retest-defects-leader-verdict.md](../batch-230-prod-retest-defects-leader-verdict.md) | 🔄 有条件通过 |
 | 复测台账（缺陷来源） | [evidence/sports-e2e-20260904/复测结论-20260905.md](../evidence/sports-e2e-20260904/复测结论-20260905.md) | ✅ |
 | 待提供清单 | [evidence/sports-e2e-20260904/待提供清单-20260904.md](../evidence/sports-e2e-20260904/待提供清单-20260904.md) | ✅ |
 | C 条件台账 | [C-CONDITIONS.md](../../C-CONDITIONS.md) | 🔄 |
