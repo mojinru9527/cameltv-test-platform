@@ -1,0 +1,104 @@
+{
+  "ok": true,
+  "checks": [
+    {
+      "viewport": "desktop",
+      "page": "environment",
+      "overflow": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440
+      },
+      "screenshotBytes": 107652
+    },
+    {
+      "viewport": "desktop",
+      "page": "changes",
+      "overflow": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440
+      },
+      "screenshotBytes": 73191
+    },
+    {
+      "viewport": "desktop",
+      "page": "apitest",
+      "overflow": {
+        "scrollWidth": 1434,
+        "clientWidth": 1434
+      },
+      "screenshotBytes": 179446
+    },
+    {
+      "viewport": "tablet",
+      "page": "environment",
+      "overflow": {
+        "scrollWidth": 768,
+        "clientWidth": 768
+      },
+      "screenshotBytes": 105746
+    },
+    {
+      "viewport": "tablet",
+      "page": "changes",
+      "overflow": {
+        "scrollWidth": 768,
+        "clientWidth": 768
+      },
+      "screenshotBytes": 67449
+    },
+    {
+      "viewport": "tablet",
+      "page": "apitest",
+      "overflow": {
+        "scrollWidth": 762,
+        "clientWidth": 762
+      },
+      "screenshotBytes": 143334
+    },
+    {
+      "viewport": "mobile",
+      "page": "environment",
+      "overflow": {
+        "scrollWidth": 384,
+        "clientWidth": 384
+      },
+      "screenshotBytes": 63974
+    },
+    {
+      "viewport": "mobile",
+      "page": "changes",
+      "overflow": {
+        "scrollWidth": 390,
+        "clientWidth": 390
+      },
+      "screenshotBytes": 42179
+    },
+    {
+      "viewport": "mobile",
+      "page": "apitest",
+      "overflow": {
+        "scrollWidth": 384,
+        "clientWidth": 384
+      },
+      "screenshotBytes": 85095
+    },
+    {
+      "page": "api-task",
+      "accessibleName": "查看任务Batch 231 accessible detail详情",
+      "taskLayout": {
+        "sectionsSeparated": true,
+        "overlaps": [],
+        "rowWidth": 356,
+        "scrollWidth": 356
+      },
+      "pageScroll": {
+        "main": 0,
+        "document": 0,
+        "body": 0
+      }
+    }
+  ],
+  "failedResponses": [],
+  "consoleErrors": [],
+  "zeroChangeSetRequests": []
+}
