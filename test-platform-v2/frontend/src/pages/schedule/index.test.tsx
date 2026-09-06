@@ -1,11 +1,13 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuthStore } from '@/stores/auth'
+import { toast } from 'sonner'
 
 const api = vi.hoisted(() => ({
   fetchSchedules: vi.fn(),
   fetchPlans: vi.fn(),
   createSchedule: vi.fn(),
+  triggerSchedule: vi.fn(),
 }))
 
 vi.mock('@/api/schedule', () => ({
@@ -13,7 +15,7 @@ vi.mock('@/api/schedule', () => ({
   createSchedule: (...args: unknown[]) => api.createSchedule(...args),
   deleteSchedule: vi.fn(),
   fetchScheduleRuns: vi.fn(),
-  triggerSchedule: vi.fn(),
+  triggerSchedule: (...args: unknown[]) => api.triggerSchedule(...args),
   updateSchedule: vi.fn(),
 }))
 
@@ -97,5 +99,24 @@ describe('定时任务权限与空状态', () => {
     expect(await within(dialog).findByText('请选择计划')).toBeTruthy()
     expect(within(dialog).queryByText('Required')).toBeNull()
     await waitFor(() => expect(api.createSchedule).not.toHaveBeenCalled())
+  })
+
+  it('已有运行中任务时提示复用的运行编号而不是触发成功', async () => {
+    useAuthStore.setState({ permissions: ['schedule:list', 'schedule:trigger'] })
+    api.triggerSchedule.mockResolvedValue({
+      triggered: false,
+      reason: 'already_running',
+      run_id: 215,
+      status: 'running',
+    })
+    const warning = vi.spyOn(toast, 'warning').mockImplementation(() => 'toast-id')
+    const success = vi.spyOn(toast, 'success').mockImplementation(() => 'toast-id')
+    render(<SchedulePage />)
+
+    fireEvent.click(await screen.findByRole('button', { name: '触发' }))
+
+    await waitFor(() => expect(api.triggerSchedule).toHaveBeenCalledWith(1))
+    expect(warning).toHaveBeenCalledWith('任务已在运行中，本次未新建执行（运行 #215）')
+    expect(success).not.toHaveBeenCalledWith('已触发执行')
   })
 })
