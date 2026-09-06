@@ -212,7 +212,7 @@ export default function SchedulePage() {
   const doTrigger = async (id: number) => {
     const result = await triggerSchedule(id)
     if (!result.triggered && result.reason === 'already_running') {
-      const runRef = result.run_id ? `（运行 #${result.run_id}）` : ''
+      const runRef = result.run_id ? `（运行 ${result.run_id}）` : ''
       toast.warning(`任务已在运行中，本次未新建执行${runRef}`)
     } else if (!result.triggered) {
       toast.warning('本次未触发新的执行，请查看调度状态')

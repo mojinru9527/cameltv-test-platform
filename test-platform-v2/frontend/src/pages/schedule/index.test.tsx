@@ -116,7 +116,7 @@ describe('定时任务权限与空状态', () => {
     fireEvent.click(await screen.findByRole('button', { name: '触发' }))
 
     await waitFor(() => expect(api.triggerSchedule).toHaveBeenCalledWith(1))
-    expect(warning).toHaveBeenCalledWith('任务已在运行中，本次未新建执行（运行 #215）')
+    expect(warning).toHaveBeenCalledWith('任务已在运行中，本次未新建执行（运行 215）')
     expect(success).not.toHaveBeenCalledWith('已触发执行')
   })
 })
