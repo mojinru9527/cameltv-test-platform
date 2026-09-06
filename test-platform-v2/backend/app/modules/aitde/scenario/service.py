@@ -118,6 +118,7 @@ def list_scenarios(db: Session, mission_id: int, project_id: int) -> list[dict]:
         result.append(
             {
                 "id": s.id,
+                "scenario_version_id": vers.id,
                 "scenario_key": s.scenario_key,
                 "title": vers.title,
                 "priority": vers.priority,

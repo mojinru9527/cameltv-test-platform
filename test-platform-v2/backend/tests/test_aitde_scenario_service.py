@@ -140,6 +140,7 @@ def test_generate_and_list_and_projection(db):
     lst = scenario_service.list_scenarios(db, m.id, 1)
     assert len(lst) >= 1
     detail = scenario_service.get_scenario(db, lst[0]["id"], 1)
+    assert lst[0]["scenario_version_id"] == detail["scenario_version_id"]
     assert "oracles" in detail
     assert len(detail["oracles"]) >= 1
 

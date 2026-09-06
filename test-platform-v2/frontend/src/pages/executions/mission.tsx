@@ -48,6 +48,13 @@ import { Plus, FlaskConical, AlertTriangle } from '@/lib/icons'
 
 const PAGE_SIZE = 20
 
+export function resolveScenarioVersionId(
+  scenarios: ScenarioRow[],
+  scenarioId: number,
+): number | null {
+  return scenarios.find((scenario) => scenario.id === scenarioId)?.scenario_version_id ?? null
+}
+
 export default function MissionExecutionsPage() {
   const { id } = useParams()
   const missionId = Number(id)
@@ -138,12 +145,17 @@ export default function MissionExecutionsPage() {
       toast.error('请先冻结契约再创建执行')
       return
     }
+    const scenarioVersionId = resolveScenarioVersionId(scenarios, scenarioId)
+    if (!scenarioVersionId) {
+      toast.error('场景版本无效，请刷新后重试')
+      return
+    }
     setSubmitting(true)
     try {
       const snapshot = await captureSnapshot(environmentId, missionId, {})
       await createRun(scenarioId, {
         mission_id: missionId,
-        scenario_version_id: scenarioId,
+        scenario_version_id: scenarioVersionId,
         contract_version_id: contractVersionId,
         environment_id: environmentId,
         environment_snapshot_id: snapshot?.id ?? null,

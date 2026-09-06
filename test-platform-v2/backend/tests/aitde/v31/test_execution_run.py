@@ -7,6 +7,7 @@ from app.core.exceptions import APIException
 from app.core.config import settings
 from app.modules.aitde.common.enums import EvidenceStatus, RunStatus
 from app.modules.aitde.execution import service
+from app.modules.aitde.execution.schemas import RunCreate
 from app.modules.aitde.environment import snapshot_service
 
 
@@ -27,6 +28,20 @@ def _run_payload(scenario_graph, snapshot_id):
         "environment_id": 1,
         "environment_snapshot_id": snapshot_id,
     }
+
+
+def test_create_run_request_body_does_not_repeat_path_scenario_id():
+    payload = RunCreate.model_validate(
+        {
+            "mission_id": 1,
+            "scenario_version_id": 11,
+            "contract_version_id": 21,
+            "environment_id": 31,
+            "environment_snapshot_id": 41,
+        }
+    )
+
+    assert payload.scenario_version_id == 11
 
 
 def test_create_run_binds_versions(db, scenario_graph):
