@@ -867,7 +867,7 @@ def test_list_item_tolerates_malformed_coverage():
 # 生产复测：方案里没有任何已采纳条目时，一键运行既跑不出标的，又把 task.status
 # 无条件写成 executed，前端于是提示「运行完成：0 通过 / 0 失败」并显示「已执行」。
 # 修复取 D1：阻塞原因复用 failures（新增 kind="plan"），不加顶层 reason 字段、不做迁移；
-# 计数算术不动（total=0、blocked=0 是事实正确，伪造 blocked=1 会造成 blocked > total）。
+# 无采纳条目时将方案前置条件计为一条 blocked 检查，保持统计恒等式并避免「阻塞 0」。
 
 def test_start_run_without_adopted_items_reports_plan_blockage(db_session, monkeypatch):
     import app.services.version_task_exec_service as exec_svc
@@ -886,8 +886,8 @@ def test_start_run_without_adopted_items_reports_plan_blockage(db_session, monke
     run = version_task_service.start_run(db_session, task.id)
 
     assert run.status == "blocked"
-    assert run.total == 0
-    assert run.blocked == 0
+    assert run.total == 1
+    assert run.blocked == 1
     assert run.passed == 0 and run.failed == 0 and run.skipped == 0
 
     failures = json.loads(run.failures or "[]")

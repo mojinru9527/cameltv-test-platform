@@ -395,8 +395,11 @@ def start_run(db: Session, task_id: int) -> VersionTaskRun:
             evidence.append(ev)
 
     if not adopted_items:
-        # 整个运行没有标的，与「某个条目被环境阻塞」是两回事，故用独立 kind。
-        # 计数不伪造：total/blocked 保持 0，阻塞事实由 run.status + 本条承载。
+        # Treat the plan precondition as one explicit blocked check. This keeps
+        # total == passed + failed + skipped + blocked and prevents a misleading
+        # "blocked 0" summary for a run that did not execute.
+        total = 1
+        blocked = 1
         failures.append({
             "item_id": 0,
             "title": "整体运行",

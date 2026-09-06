@@ -455,16 +455,14 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
         report = _load_playwright_json_report(artifact_dir, stdout_text)
 
         if exit_code != 0 and report is None:
-            # A non-zero exit is a normal test failure when a valid JSON report
-            # exists. Without one, Playwright itself failed before reporting.
             return _fail_run(
                 db, run,
                 f"Playwright 执行失败 (exit={exit_code}): {(stderr_text or '')[:2000]}",
                 job,
             )
 
-        # 8. Parse the isolated JSON report; successful no-report runs retain
-        # the historical zero-test result instead of becoming executor errors.
+        # 8. Parse the isolated JSON report. A process-level failure or an empty
+        # test set can never produce a passing run, even if a JSON report exists.
         suites = (report or {}).get("suites", [])
 
         # Recursively flatten nested suites → specs (Playwright JSON can nest suites arbitrarily)
@@ -512,14 +510,24 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
         if html_report.exists():
             run.html_report_path = str(html_report).replace("\\", "/")
 
+        completion_error: str | None = None
+        if exit_code != 0:
+            detail = (stderr_text or stdout_text or "").strip()[:2000]
+            completion_error = f"Playwright 执行失败 (exit={exit_code})"
+            if detail:
+                completion_error += f": {detail}"
+        elif total == 0:
+            completion_error = "Playwright 没有发现可执行测试（total=0），本次运行未执行任何验证"
+
         return _complete_run(
             db, job, run,
-            status="passed" if fail_count == 0 else "failed",
+            status="passed" if fail_count == 0 and completion_error is None else "failed",
             total=total, passed=passed, failed=fail_count, skipped=skipped,
             duration=duration_sec,
             screenshots=screenshots,
             videos=videos,
             traces=traces,
+            error=completion_error,
         )
 
     except Exception as e:
