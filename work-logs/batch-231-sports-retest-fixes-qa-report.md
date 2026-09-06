@@ -6,11 +6,12 @@
 
 | Area | Result |
 |---|---|
-| Backend | 2483 passed / 49 skipped / 1 xfailed / 0 failed; focused suites passed |
+| Backend | 2487 passed / 49 skipped / 1 xfailed / 0 failed; focused suites passed |
 | Frontend | 153 files / 686 tests passed; focused responsive suite 6 passed |
 | Static and build | Ruff F821, typecheck, lint, and production build passed |
-| Migration | 8 migration checks passed; empty isolated DB upgraded through `20260913_b231_traceability_truth` |
+| Migration | 11 migration/single-head checks passed; empty isolated DB upgraded through `20260913_b231_traceability_truth` |
 | Repository gate | `PASS_WITH_WARN`: 0 HARD / 332 historical repository WARN; G1/G2 passed |
+| Managed Worker | 11 focused tests passed; production profile guards, rendered Compose, and Bash syntax passed |
 | Browser | Ten screenshots across 1440x900, 768x1024, 390x844; zero HTTP/console errors and zero `/change-sets/0` calls |
 | Live failure closure | DSH submission and Worker-backed Run creation rejected before persistence |
 
@@ -21,9 +22,13 @@ This report uses Batch 231's newly executed tests and browser evidence. The prod
 | Command / check | Exit | Result |
 |---|---:|---|
 | Backend related-domain focused suites | 0 | 51 passed |
-| Migration focused checks | 0 | 8 passed |
+| Migration and single-head focused checks | 0 | 11 passed |
 | Version-task focused suites | 0 | 63 passed |
-| `python -m pytest -q` | 0 | 2483 passed, 49 skipped, 1 xfailed |
+| Managed Worker deploy + heartbeat suites | 0 | 11 passed |
+| Production runtime profile PowerShell guards | 0 | Missing token, disabled Temporal, and invalid heartbeat interval fail closed |
+| Production `docker compose ... config --quiet` | 0 | Worker profile renders without service, port, or container-name conflicts |
+| Git Bash `bash -n .../start-worker.sh` | 0 | Launcher syntax passed |
+| `python -m pytest -q` | 0 | 2487 passed, 49 skipped, 1 xfailed, 62 warnings |
 | `python -m ruff check app --select F821` | 0 | All checks passed |
 | `npm test` | 0 | 153 files, 686 tests passed |
 | `npm run typecheck` | 0 | Passed |
@@ -31,6 +36,15 @@ This report uses Batch 231's newly executed tests and browser evidence. The prod
 | `npm run build` | 0 | Production build completed |
 | `pwsh scripts/git/dev-gate.ps1 ...` | 1 | `PASS_WITH_WARN`; 0 HARD / 332 repository-baseline WARN; F821/typecheck/lint/4 route guards passed |
 | Visible Chromium acceptance | 0 | 9 page/viewport checks plus mobile task-control check passed |
+
+The first full-backend rerun displayed an all-green summary but was captured by the
+tool wrapper with exit 1, so it was not accepted as evidence. The standalone rerun
+explicitly printed `PYTEST_EXIT_CODE=0`; that rerun is the result recorded above.
+
+Docker Compose configuration is validated, but the backend image could not be
+built locally because the Docker Desktop daemon is not running. Image build and
+container-level Worker health remain required CI/release evidence rather than a
+local PASS claim.
 
 The first frontend full-test attempt ran concurrently with the production build and lost one Vitest worker to resource contention (152/153 files completed, no assertion failure). It was discarded. The standalone rerun above is the accepted result.
 
@@ -43,7 +57,7 @@ The first frontend full-test attempt ran concurrently with the production build 
 | AC-03 Mission Gate | PASS | Build and Campaign are required and project/Mission matched; empty evidence is NOT_EVALUATED/BLOCKED |
 | AC-04 scenario execution/errors | PASS | Route owns scenario ID, current persisted version is sent, structured 422 details render as text |
 | AC-05 version task plan/run truth | PASS | Plan review remains reachable; blocked counts/reasons and action availability are truthful |
-| AC-06 AI/DSH/Worker | PASS locally | Shared provider health fails closed; deterministic fallback exposes provenance/confidence; live local DSH/Worker probes persist nothing |
+| AC-06 AI/DSH/Worker | PASS locally | Shared provider health fails closed; deterministic fallback exposes provenance/confidence; live local DSH/Worker probes persist nothing; Compose owns Worker restart and both managed processes |
 | AC-07 schedule duplicate trigger | PASS | `already_running` states no new run and includes the existing Run ID |
 | AC-08 SMART fallback | PASS | Unsafe SMART atomically persists effective FULL, all current scenario versions, and no exclusions |
 | AC-09 review/source traceability | PASS | Canonical review statuses and positive persisted source refs flow through generated artifacts |
@@ -71,7 +85,7 @@ The first frontend full-test attempt ran concurrently with the production build 
 ## External Production Boundary
 
 - DeepSeek account balance remains an operator-owned prerequisite; a real successful AI/DSH production call cannot be claimed until it is restored.
-- The production `aitde-worker` remains an operations-owned prerequisite; a real successful Durable Run cannot be claimed until its heartbeat is restored.
+- The branch makes `aitde-worker` a Compose-managed `restart: unless-stopped` service, but production still needs a valid Worker Token, a reachable Temporal endpoint, deployment, and a successful post-release heartbeat/Run smoke test.
 - No production deployment was authorized or performed. The latest production state therefore remains the original retest baseline until this branch is merged and released.
 - Local code correctly fails closed for both unavailable states and cannot create misleading queued work.
 

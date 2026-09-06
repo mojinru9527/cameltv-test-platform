@@ -7,12 +7,13 @@
 | ID | Scope | Type | Baseline / Increment | Evidence | Result |
 |---|---|---|---|---|---|
 | E231-01 | Production sports-platform retest | External baseline | Baseline | `F:/CamelTv/_review_tools/sports-retest-20260906/复测结论-20260906.md` | 15 findings accepted into AC-01..AC-13 |
-| E231-02 | Backend execution, tenancy, Gate, AI/DSH/Worker, SMART and lineage | Regression | Increment | QA report command matrix | PASS: 2483 passed, 49 skipped, 1 xfailed |
+| E231-02 | Backend execution, tenancy, Gate, AI/DSH/Worker, SMART and lineage | Regression | Increment | QA report command matrix | PASS: 2487 passed, 49 skipped, 1 xfailed, explicit exit 0 |
 | E231-03 | Frontend workflows and responsive fixes | Regression / build | Increment | QA report command matrix | PASS: 153 files, 686 tests; typecheck/build/lint pass |
-| E231-04 | Execution-truth and traceability migrations | Migration | Increment | QA report command matrix | PASS: 8 migration checks; empty DB upgraded to the new head |
+| E231-04 | Execution-truth and traceability migrations | Migration | Increment | QA report command matrix | PASS: 11 migration/single-head checks; empty DB upgraded to the new head |
 | E231-05 | Repository development gate | Gate | Increment | QA report command matrix | PASS_WITH_WARN: 0 HARD, 332 reviewed repository-baseline WARN |
 | E231-06 | Environment, Mission changes, API assets and task controls | Visible-browser screenshots / manifest | Increment | `browser/results.json`, ten PNG screenshots | PASS: 1440x900, 768x1024, 390x844; no HTTP/console error or root overflow |
 | E231-07 | DSH and Durable Worker fail-closed behavior | Live local HTTP contract | Increment | `runtime-fail-closed.json` | PASS: rejected before task/Run persistence |
+| E231-08 | Managed Worker lifecycle | Deploy contract / profile guards / Compose render / shell syntax | Increment | QA report command matrix | PASS locally; Docker image build unavailable because Docker Desktop is stopped |
 
 ## Browser Manifest
 

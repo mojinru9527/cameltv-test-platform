@@ -6,10 +6,10 @@
 
 | Dimension | Result | Notes |
 |---|---|---|
-| Implementation | Pass | All reported P0/P1/P2-P3 defects are covered by scoped fixes and regressions |
+| Implementation | Pass | All reported P0/P1/P2-P3 defects and the managed Worker lifecycle are covered by scoped fixes and regressions |
 | Truthfulness | Pass | Empty/non-executed states, tenant boundaries, Gate evidence, provider/Worker readiness, schedule triggers, SMART fallback, and lineage fail closed |
 | User workflow | Pass locally | Three viewport browser run completed with zero HTTP/console errors and no hidden ChangeSet 0 request |
-| Regression | Pass | Backend 2483; frontend 686; build/type/lint/F821/migration/route guards passed |
+| Regression | Pass with release evidence pending | Backend 2487; frontend 686; build/type/lint/F821/migration/route guards and Worker contracts passed; container image build awaits an available Docker daemon |
 | Production readiness | Blocked externally | DeepSeek balance and production Worker recovery are outside this code batch; no release was authorized |
 
 ## Approved Decisions
@@ -21,6 +21,7 @@
 5. Unsafe SMART selection is persisted as effective FULL rather than returning a response that disagrees with stored rows.
 6. Contract-version lineage uses `CONTRACT_VERSION`; nonexistent rule identities are not manufactured.
 7. Mobile interface navigation owns its horizontal scrolling, and task rows stack before content can overlap.
+8. Production Compose owns the Durable Worker lifecycle with `restart: unless-stopped`; the launcher treats heartbeat and Temporal polling as one restartable unit.
 
 ## Spot Checks
 
@@ -29,6 +30,8 @@
 - Browser manifest records `failedResponses=[]`, `consoleErrors=[]`, `zeroChangeSetRequests=[]`.
 - Mobile task geometry records separated sections, no pairwise overlaps, equal row/client width, and zero page scroll offset.
 - Full backend and frontend regressions completed without test failure; the concurrent resource-loss attempt was discarded and rerun standalone.
+- Managed Worker deployment/heartbeat tests passed (11), production profile guards and rendered Compose passed, and the launcher passed Bash syntax validation.
+- Docker Desktop is not running on the verification host, so the backend image build and real container health probe remain release-stage evidence.
 
 ## Verdict
 
@@ -44,6 +47,7 @@ Only after these conditions may Leader change the decision to APPROVED, mark the
 
 - Restore DeepSeek balance, then rerun one real AI generation and one DSH task in production.
 - Restore the production `aitde-worker`, then rerun one real Mission scenario through Temporal to terminal outcome and evidence.
+- Provision its valid Worker Token and reachable Temporal endpoint once; after deployment, Compose will restart the Worker after process or host recovery unless an operator intentionally stops it.
 - Release the merged main through the production release window, then repeat the original sports-platform acceptance paths against the released SHA.
 
 ## Knowledge Audit
