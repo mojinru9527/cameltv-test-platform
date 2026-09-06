@@ -14,6 +14,10 @@ from app.modules.aitde.sources import service as source_service
 from app.modules.aitde.sources.schemas import SourceArtifactCreate
 from app.modules.aitde.scope import service as scope_service
 from app.modules.aitde.scope import ambiguity_service as ambiguity_service
+from app.modules.aitde.intelligence.provider import DeterministicScopeProvider
+from app.modules.aitde.intelligence import provider as intelligence_provider
+from app.modules.aitde.intelligence.llm_sync import IntelligenceLLMError
+from app.services.ai_errors import ai_health_registry
 from app.modules.aitde.common.enums import ScopeDecision
 from app.modules.aitde.scope.ambiguity_schemas import (
     AmbiguityResolveRequest,
@@ -61,6 +65,50 @@ def test_analyze_creates_intents_without_fake_ambiguities(db):
     assert counts["intent_count"] >= 1
     assert len(ambiguity_service.list_ambiguities(db, m.id)) == 0
     assert len(ambiguity_service.list_intents(db, m.id)) >= 1
+
+
+def test_analyze_reports_deterministic_provenance_and_reduced_confidence(db):
+    m = _ready_mission(db)
+
+    result = ambiguity_service.analyze(
+        db, m.id, 1, 9, provider=DeterministicScopeProvider()
+    )
+
+    assert result["generation"] == {
+        "mode": "DETERMINISTIC",
+        "degraded": True,
+        "fallback_used": False,
+        "confidence": 0.5,
+        "reason": "未使用外部 AI，结果由确定性规则生成，必须人工复核",
+    }
+
+
+def test_ai_failure_fallback_updates_health_and_provenance(db, monkeypatch):
+    class FailingProvider:
+        mode = "ai"
+        created_by_type = "AI"
+
+        def detect_ambiguities(self, _context):
+            raise IntelligenceLLMError("QUOTA: 402 Insufficient Balance")
+
+        def design_intents(self, _context):
+            raise AssertionError("first AI call should stop the tuple")
+
+    m = _ready_mission(db)
+    ai_health_registry.reset()
+    monkeypatch.setattr(
+        intelligence_provider,
+        "build_intelligence_provider",
+        lambda _db, _project_id: FailingProvider(),
+    )
+    try:
+        result = ambiguity_service.analyze(db, m.id, 1, 9)
+
+        assert result["generation"]["fallback_used"] is True
+        assert result["generation"]["mode"] == "DETERMINISTIC"
+        assert ai_health_registry.get(1).kind == "quota"
+    finally:
+        ai_health_registry.reset()
 
 
 def _exclude_one_scope(db, m):

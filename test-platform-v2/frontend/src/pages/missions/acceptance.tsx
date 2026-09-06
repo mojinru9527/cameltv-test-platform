@@ -32,7 +32,24 @@ interface GateCheck {
   gate: string
   label?: string
   pass: boolean
+  status?: 'PASS' | 'FAIL' | 'NOT_EVALUATED' | 'BLOCKED' | string
   detail: string
+}
+
+type GateContext = Pick<GateResult, 'campaign_id' | 'build_observation_id'>
+
+export function resolveGateCheckStatus(check: GateCheck, result: GateContext): string {
+  if (check.status) return check.status
+  if (!result.campaign_id || !result.build_observation_id) return 'NOT_EVALUATED'
+  if (/=0\/0(?:\s|$)/.test(check.detail)) return 'NOT_EVALUATED'
+  return check.pass ? 'PASS' : 'FAIL'
+}
+
+const CHECK_STATUS_META: Record<string, { label: string; className: string }> = {
+  PASS: { label: 'PASS', className: 'bg-status-success-muted text-status-success' },
+  FAIL: { label: 'FAIL', className: 'bg-status-danger-muted text-status-danger' },
+  NOT_EVALUATED: { label: '未评估', className: 'bg-muted text-muted-foreground' },
+  BLOCKED: { label: '已阻塞', className: 'bg-status-warning-muted text-status-warning' },
 }
 
 /** Parse the backend checks_json (string or already-parsed list). */
@@ -56,8 +73,8 @@ export default function MissionAcceptancePage() {
   const [results, setResults] = useState<GateResult[]>([])
   const [builds, setBuilds] = useState<BuildObservation[]>([])
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
-  const [selectedBuild, setSelectedBuild] = useState<string>('')
-  const [selectedCampaign, setSelectedCampaign] = useState<string>('')
+  const [selectedBuild, setSelectedBuild] = useState<string>('__none__')
+  const [selectedCampaign, setSelectedCampaign] = useState<string>('__none__')
   const [loading, setLoading] = useState(true)
   const [evaluating, setEvaluating] = useState(false)
 
@@ -90,8 +107,8 @@ export default function MissionAcceptancePage() {
     setEvaluating(true)
     try {
       await evaluateGate(missionId, {
-        campaign_id: selectedCampaign ? Number(selectedCampaign) : null,
-        build_observation_id: selectedBuild ? Number(selectedBuild) : null,
+        campaign_id: Number(selectedCampaign),
+        build_observation_id: Number(selectedBuild),
       })
       load()
     } finally {
@@ -120,7 +137,7 @@ export default function MissionAcceptancePage() {
             <SelectValue placeholder="选择 Build" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">全部 Build</SelectItem>
+            <SelectItem value="__none__">选择 Build</SelectItem>
             {builds.map((b) => (
               <SelectItem key={b.id} value={String(b.id)}>
                 Build #{b.id} · fp {b.fingerprint_id}
@@ -133,7 +150,7 @@ export default function MissionAcceptancePage() {
             <SelectValue placeholder="选择 Campaign" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">全部 Campaign</SelectItem>
+            <SelectItem value="__none__">选择 Campaign</SelectItem>
             {campaigns.map((c) => (
               <SelectItem key={c.id} value={String(c.id)}>
                 {c.name || `Campaign #${c.id}`}
@@ -141,10 +158,17 @@ export default function MissionAcceptancePage() {
             ))}
           </SelectContent>
         </Select>
-        <Button size="sm" onClick={onEvaluate} disabled={evaluating}>
+        <Button
+          size="sm"
+          onClick={onEvaluate}
+          disabled={evaluating || selectedBuild === '__none__' || selectedCampaign === '__none__'}
+        >
           {evaluating ? '评估中…' : '评估 Gate'}
         </Button>
       </div>
+      {(selectedBuild === '__none__' || selectedCampaign === '__none__') && (
+        <p className="text-xs text-muted-foreground">请选择 Build 和 Campaign 后再评估。</p>
+      )}
       {results.length === 0 ? (
         <p className="text-sm text-muted-foreground">暂无验收结果。选择 Build/Campaign 后点击「评估 Gate」生成。</p>
       ) : (
@@ -152,7 +176,7 @@ export default function MissionAcceptancePage() {
           {results.map((r) => {
             const meta = GATE_RESULT_LABELS[r.result]
             const checks = parseChecks(r.checks_json)
-            const passed = checks.filter((c) => c.pass).length
+            const passed = checks.filter((c) => resolveGateCheckStatus(c, r) === 'PASS').length
             return (
               <Card key={r.id}>
                 <CardHeader>
@@ -174,18 +198,20 @@ export default function MissionAcceptancePage() {
                 </CardHeader>
                 <CardContent className="space-y-1.5">
                   {checks.length ? (
-                    checks.map((c) => (
-                      <div key={c.gate} className="flex items-start justify-between gap-2 text-sm">
+                    checks.map((c) => {
+                      const status = resolveGateCheckStatus(c, r)
+                      const statusMeta = CHECK_STATUS_META[status] ?? CHECK_STATUS_META.FAIL
+                      return <div key={c.gate} className="flex items-start justify-between gap-2 text-sm">
                         <div className="flex items-center gap-2">
-                          <Badge tone="neutral" className={c.pass ? 'bg-status-success-muted text-status-success' : 'bg-status-danger-muted text-status-danger'}>
-                            {c.pass ? 'PASS' : 'FAIL'}
+                          <Badge tone="neutral" className={statusMeta.className}>
+                            {statusMeta.label}
                           </Badge>
                           <span className="font-mono text-xs">{c.gate}</span>
                           <span className="font-medium">{c.label ?? ''}</span>
                         </div>
                         <span className="max-w-[46ch] text-right text-xs text-muted-foreground">{c.detail}</span>
                       </div>
-                    ))
+                    })
                   ) : (
                     <div className="text-sm text-muted-foreground">无 Gate 明细。</div>
                   )}

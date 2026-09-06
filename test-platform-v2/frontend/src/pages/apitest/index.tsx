@@ -39,20 +39,20 @@ export default function ApiTestPage() {
       </PageHeader>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="assets">
+        <TabsList className="no-scrollbar max-w-full justify-start overflow-x-auto">
+          <TabsTrigger value="assets" className="flex-none">
             <FolderTree className="size-4 mr-1" />
             接口资产
           </TabsTrigger>
-          <TabsTrigger value="quick">
+          <TabsTrigger value="quick" className="flex-none">
             <FlaskConical className="size-4 mr-1" />
             快速调试
           </TabsTrigger>
-          <TabsTrigger value="cases">
+          <TabsTrigger value="cases" className="flex-none">
             <FileText className="size-4 mr-1" />
             接口用例
           </TabsTrigger>
-          <TabsTrigger value="tasks">
+          <TabsTrigger value="tasks" className="flex-none">
             <ClipboardCheck className="size-4 mr-1" />
             执行任务
           </TabsTrigger>

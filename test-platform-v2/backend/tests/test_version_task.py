@@ -867,7 +867,7 @@ def test_list_item_tolerates_malformed_coverage():
 # 生产复测：方案里没有任何已采纳条目时，一键运行既跑不出标的，又把 task.status
 # 无条件写成 executed，前端于是提示「运行完成：0 通过 / 0 失败」并显示「已执行」。
 # 修复取 D1：阻塞原因复用 failures（新增 kind="plan"），不加顶层 reason 字段、不做迁移；
-# 计数算术不动（total=0、blocked=0 是事实正确，伪造 blocked=1 会造成 blocked > total）。
+# 无采纳条目时将方案前置条件计为一条 blocked 检查，保持统计恒等式并避免「阻塞 0」。
 
 def test_start_run_without_adopted_items_reports_plan_blockage(db_session, monkeypatch):
     import app.services.version_task_exec_service as exec_svc
@@ -886,8 +886,8 @@ def test_start_run_without_adopted_items_reports_plan_blockage(db_session, monke
     run = version_task_service.start_run(db_session, task.id)
 
     assert run.status == "blocked"
-    assert run.total == 0
-    assert run.blocked == 0
+    assert run.total == 1
+    assert run.blocked == 1
     assert run.passed == 0 and run.failed == 0 and run.skipped == 0
 
     failures = json.loads(run.failures or "[]")
@@ -951,3 +951,84 @@ def test_blocked_run_task_can_be_rejected_but_not_released(db_session):
     pkg = version_task_service.release_task(db_session, task.id, "blocked")
     assert pkg["verdict"] == "blocked"
     assert pkg["status"] == "released"
+
+
+# Batch 231 S2: every task-scoped route must enforce X-Project-Id, including
+# nested plan/run mutations. A 404 envelope avoids revealing resource ownership.
+@pytest.mark.parametrize(
+    ("method", "suffix", "body"),
+    [
+        ("get", "", None),
+        ("patch", "", {"title": "cross-project overwrite"}),
+        ("post", "/transition", {"status": "cancelled"}),
+        ("post", "/executions", {"execution_type": "runner", "execution_id": 1}),
+        ("post", "/defects", {"defect_id": 1}),
+        ("get", "/plan", None),
+        ("post", "/plan/generate", [{"title": "leaked plan"}]),
+        ("post", "/plan/generate-ai", None),
+        ("post", "/plan/{item_id}/review", {"action": "adopt"}),
+        ("post", "/run", None),
+        ("get", "/runs", None),
+        ("get", "/runs/{run_id}", None),
+        ("post", "/runs/{run_id}/defect/0", None),
+        ("get", "/release-package", None),
+        ("post", "/release", {"verdict": "blocked"}),
+        ("post", "/notify", None),
+        ("get", "/knowledge", None),
+        ("get", "/regression-set", None),
+        ("post", "/defects/999/sync", None),
+    ],
+)
+def test_api_task_routes_hide_cross_project_resources(
+    client, auth_headers, db_session, method, suffix, body,
+):
+    from app.models.version_task_plan import VersionTaskPlanItem
+    from app.models.version_task_run import VersionTaskRun
+
+    task = version_task_service.create_task(
+        db_session, project_id=13, title="project 13 only", version="1.0"
+    )
+    item = VersionTaskPlanItem(task_id=task.id, title="private item", status="draft")
+    run = VersionTaskRun(
+        task_id=task.id, status="blocked", total=1, blocked=1,
+        failures='[{"kind":"plan","message":"private"}]',
+    )
+    db_session.add_all([item, run])
+    db_session.commit()
+
+    url = f"/api/v1/version-tasks/{task.id}{suffix}"
+    url = url.format(item_id=item.id, run_id=run.id)
+    request_kwargs = {"headers": auth_headers}
+    if body is not None:
+        request_kwargs["json"] = body
+    response = getattr(client, method)(url, **request_kwargs)
+
+    assert response.status_code == 404, response.text
+    assert response.json()["code"] == 404, response.text
+    db_session.refresh(task)
+    db_session.refresh(item)
+    assert task.title == "project 13 only"
+    assert item.status == "draft"
+
+
+def test_api_compat_mission_detail_hides_cross_project_resource(
+    client, auth_headers, db_session,
+):
+    from app.models.version_mission import VersionMission
+
+    mission = VersionMission(
+        project_id=13,
+        mission_key="private-13",
+        title="project 13 mission",
+        version="1.0",
+    )
+    db_session.add(mission)
+    db_session.commit()
+
+    response = client.get(
+        f"/api/v1/version-tasks/compat/missions/{mission.id}",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 404
+    assert response.json()["code"] == 404

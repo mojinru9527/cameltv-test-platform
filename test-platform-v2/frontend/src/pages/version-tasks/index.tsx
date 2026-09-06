@@ -30,6 +30,7 @@ export default function VersionTasksPage() {
   const [task, setTask] = useState<VersionTask | null>(null)
   const [plan, setPlan] = useState<PlanItem[]>([])
   const [loading, setLoading] = useState(false)
+  const hasAcceptedPlan = plan.some((item) => ['adopted', 'modified'].includes(item.status))
 
   useEffect(() => {
     let cancelled = false
@@ -129,16 +130,16 @@ export default function VersionTasksPage() {
           {step === 1 && (
             <div className="space-y-3">
               <div className="space-y-1">
-                <Label>任务标题</Label>
-                <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="如：v2.6 提测验收" />
+                <Label htmlFor="version-task-title">任务标题</Label>
+                <Input id="version-task-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="如：v2.6 提测验收" />
               </div>
               <div className="space-y-1">
-                <Label>版本号</Label>
-                <Input value={version} onChange={(e) => setVersion(e.target.value)} placeholder="如：2.6.0" />
+                <Label htmlFor="version-task-version">版本号</Label>
+                <Input id="version-task-version" value={version} onChange={(e) => setVersion(e.target.value)} placeholder="如：2.6.0" />
               </div>
               <div className="space-y-1">
-                <Label>变更模块（逗号分隔）</Label>
-                <Textarea value={modules} onChange={(e) => setModules(e.target.value)} placeholder="登录, 支付, 订单" />
+                <Label htmlFor="version-task-modules">变更模块（逗号分隔）</Label>
+                <Textarea id="version-task-modules" value={modules} onChange={(e) => setModules(e.target.value)} placeholder="登录, 支付, 订单" />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="version-task-requirement">关联需求文档</Label>
@@ -188,7 +189,10 @@ export default function VersionTasksPage() {
                   </div>
                 ))}
               </div>
-              <Button variant="primary" onClick={handleConfirm} disabled={loading || plan.length === 0}>确认并进入待审</Button>
+              <Button variant="primary" onClick={handleConfirm} disabled={loading || !hasAcceptedPlan}>确认并进入待审</Button>
+              {plan.length > 0 && !hasAcceptedPlan && (
+                <p className="text-xs text-muted-foreground">请先采纳或修订至少一条方案。</p>
+              )}
             </div>
           )}
 

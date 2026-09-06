@@ -33,9 +33,21 @@ export interface Intent {
   updated_at: string | null
 }
 
+export interface AmbiguityAnalysisResult {
+  ambiguity_count: number
+  intent_count: number
+  generation: {
+    mode: 'AI' | 'DETERMINISTIC' | string
+    degraded: boolean
+    fallback_used: boolean
+    confidence: number
+    reason: string | null
+  }
+}
+
 export function analyzeMissionAmbiguities(
   missionId: number,
-): Promise<{ ambiguity_count: number; intent_count: number }> {
+): Promise<AmbiguityAnalysisResult> {
   return aitdeV2.post(`/missions/${missionId}/ambiguities/analyze`)
 }
 

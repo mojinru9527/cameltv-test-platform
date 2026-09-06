@@ -378,6 +378,29 @@ def evaluate_gate(
     """
     from app.modules.aitde.execution import repository as exec_repo
 
+    if not campaign_id or not build_observation_id:
+        raise APIException(
+            code=400,
+            msg="评估 Gate 前必须选择有效的 Build 和 Campaign",
+            http_status=400,
+        )
+    campaign = repository.get_campaign(db, campaign_id, project_id)
+    if campaign is None or campaign.mission_id != mission_id:
+        raise APIException(code=404, msg="Campaign 不存在", http_status=404)
+    build_observation = repository.get_build_observation(
+        db, build_observation_id, mission_id
+    )
+    if build_observation is None:
+        raise APIException(code=404, msg="Build 不存在", http_status=404)
+    if campaign.build_observation_id != build_observation_id:
+        raise APIException(
+            code=400,
+            msg="所选 Build 与 Campaign 不匹配",
+            http_status=400,
+        )
+    if campaign_status is None:
+        campaign_status = campaign.status
+
     checks: list[dict[str, Any]] = []
     scenarios = repository.list_campaign_scenarios(db, campaign_id) if campaign_id else []
 
@@ -502,11 +525,18 @@ def evaluate_gate(
         else "; ".join(g4_missing[:3])
     )
 
-    def check(gid: str, passed: bool, detail: str) -> dict[str, Any]:
+    def check(
+        gid: str,
+        passed: bool,
+        detail: str,
+        status: str | None = None,
+    ) -> dict[str, Any]:
+        effective_status = status or ("PASS" if passed else "FAIL")
         return {
             "gate": gid,
             "label": GATE_LABELS.get(gid, gid),
-            "pass": bool(passed),
+            "status": effective_status,
+            "pass": effective_status == "PASS",
             "detail": detail,
         }
 
@@ -523,14 +553,23 @@ def evaluate_gate(
             "G3_P0_P1_COVERAGE_COMPLETE",
             g3_pass,
             f"required_with_version={required_with_version}/{required_total}",
+            "NOT_EVALUATED" if required_total == 0 else None,
         )
     )
-    checks.append(check("G4_ORACLE_COVERAGE_COMPLETE", g4_pass, g4_detail))
+    checks.append(
+        check(
+            "G4_ORACLE_COVERAGE_COMPLETE",
+            g4_pass,
+            g4_detail,
+            "NOT_EVALUATED" if required_total == 0 else None,
+        )
+    )
     checks.append(
         check(
             "G5_REQUIRED_SCENARIO_EXECUTED",
             required_executed > 0,
             f"required_executed={required_executed}/{required_total} executed={executed}",
+            "NOT_EVALUATED" if required_total == 0 or executed == 0 else None,
         )
     )
     checks.append(
@@ -538,6 +577,7 @@ def evaluate_gate(
             "G6_P0_BUSINESS_FAIL_ZERO",
             p0_business_fail == 0,
             f"p0_business_fail={p0_business_fail}",
+            "NOT_EVALUATED" if executed == 0 else None,
         )
     )
     checks.append(
@@ -545,6 +585,7 @@ def evaluate_gate(
             "G7_P0_INCONCLUSIVE_ZERO",
             p0_inconclusive == 0,
             f"p0_inconclusive={p0_inconclusive}",
+            "NOT_EVALUATED" if executed == 0 else None,
         )
     )
     checks.append(
@@ -552,6 +593,7 @@ def evaluate_gate(
             "G8_REQUIRED_EVIDENCE_COMPLETE",
             executed > 0 and evidence_complete == executed,
             f"evidence_complete={evidence_complete}/{executed}",
+            "NOT_EVALUATED" if executed == 0 else None,
         )
     )
     checks.append(
@@ -559,13 +601,15 @@ def evaluate_gate(
             "G9_RUN_ENV_MATCHES_BUILD",
             env_checked > 0 and env_match == env_checked,
             f"env_match={env_match}/{env_checked} target={target_fingerprint_hash or 'none'} conf={target_confidence or 'none'}",
+            "NOT_EVALUATED" if executed == 0 else None,
         )
     )
     checks.append(
         check(
             "G10_RUN_CONTRACT_MATCHES_FROZEN",
-            contract_frozen and contract_match == executed,
+            contract_frozen and executed > 0 and contract_match == executed,
             f"contract_match={contract_match}/{executed} frozen={current_contract_version_id}",
+            "NOT_EVALUATED" if executed == 0 else None,
         )
     )
 
@@ -578,6 +622,7 @@ def evaluate_gate(
             {
                 "gate": "CAMPAIGN_NOT_FINISHED",
                 "label": "Campaign 未完成",
+                "status": "BLOCKED",
                 "pass": False,
                 "detail": f"campaign_status={campaign_status}",
             }
@@ -585,11 +630,7 @@ def evaluate_gate(
     elif not scenarios:
         result = QualityGateResult.INCONCLUSIVE.value
     elif executed == 0:
-        result = QualityGateResult.FAIL.value
-        for c in checks:
-            if c["gate"].startswith("G5"):
-                c["pass"] = False
-                c["detail"] += " | zero execution -> FAIL"
+        result = QualityGateResult.INCONCLUSIVE.value
     else:
         all_pass = all(c["pass"] for c in checks)
         result = QualityGateResult.PASS.value if all_pass else QualityGateResult.FAIL.value

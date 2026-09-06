@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth'
+import { normalizeApiErrorMessage } from './errorMessage'
 
 /** AITDE v2 client — shares the platform's auth cookie + X-Project-Id header. */
 interface Envelope<T> {
@@ -39,8 +40,7 @@ v2.interceptors.response.use(
       return Promise.reject(err)
     }
     const status = err.response?.status
-    const msg =
-      err.response?.data?.msg || err.response?.data?.detail || err.message || '网络错误'
+    const msg = normalizeApiErrorMessage(err.response?.data, err.message)
     err.message = msg
     if (status === 401) {
       useAuthStore.getState().logout()

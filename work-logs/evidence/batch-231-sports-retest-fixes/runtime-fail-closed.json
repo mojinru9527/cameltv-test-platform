@@ -1,0 +1,28 @@
+{
+  "environment": "isolated Batch 231 local QA database",
+  "dsh": {
+    "health_available": false,
+    "health_reason": "DSH 服务未启用",
+    "tasks_before": 0,
+    "submit_http_status": 200,
+    "submit_envelope_code": 503,
+    "submit_message": "DSH 不可用: DSH 服务未启用",
+    "tasks_after": 0,
+    "persistence_unchanged": true
+  },
+  "durable_worker": {
+    "temporal_enabled": true,
+    "online_workers": 0,
+    "runs_before": 0,
+    "create_http_status": 503,
+    "create_envelope_code": 503,
+    "create_message": "Durable Worker 当前离线，未创建执行；请恢复 Worker 心跳后重试",
+    "runs_after": 0,
+    "persistence_unchanged": true
+  },
+  "production_boundary": {
+    "deepseek_quota_retest": "blocked pending authorized account recharge",
+    "durable_worker_success_retest": "blocked pending operations recovery",
+    "production_changed": false
+  }
+}

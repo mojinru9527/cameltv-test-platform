@@ -56,6 +56,16 @@ services:
       - AI_TEMPERATURE=${AI_TEMPERATURE:-0.3}
       # ── AITDE v3 (Mission/Source/Scope/Contract/Scenario ...) ──
       - AITDE_V3_ENABLED=${AITDE_V3_ENABLED:-false}
+      # ── AITDE Durable Runtime / Temporal ──
+      - TEMPORAL_ENABLED=${TEMPORAL_ENABLED:-false}
+      - TEMPORAL_GRPC_ENDPOINT=${TEMPORAL_GRPC_ENDPOINT:-127.0.0.1:7233}
+      - TEMPORAL_NAMESPACE=${TEMPORAL_NAMESPACE:-default}
+      - TEMPORAL_TASK_QUEUE=${TEMPORAL_TASK_QUEUE:-worker-test}
+      - TEMPORAL_TLS_ENABLED=${TEMPORAL_TLS_ENABLED:-false}
+      - TEMPORAL_INSECURE_CHANNEL=${TEMPORAL_INSECURE_CHANNEL:-true}
+      - TEMPORAL_TLS_CA_PATH=${TEMPORAL_TLS_CA_PATH:-}
+      - TEMPORAL_TLS_CERT_PATH=${TEMPORAL_TLS_CERT_PATH:-}
+      - TEMPORAL_TLS_KEY_PATH=${TEMPORAL_TLS_KEY_PATH:-}
       # ── 蓝湖自动登录 ──
       - LANHU_COOKIE=${LANHU_COOKIE:-}
       - LANHU_USERNAME=${LANHU_USERNAME:-}
@@ -123,6 +133,50 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+
+  aitde-worker:
+    profiles: ["aitde-worker"]
+    extends:
+      service: backend
+    command:
+      - /usr/local/bin/start-aitde-worker
+      - ${AITDE_WORKER_ZONE:-PROD_RO}
+      - ${AITDE_WORKER_CAPABILITIES:-HTTP,BROWSER}
+    environment:
+      - BACKEND_APP_DIR=/app
+      - BACKEND_URL=http://backend:8000/api/v2
+      - API_TOKEN=${AITDE_WORKER_API_TOKEN:-}
+      - WORKER_KEY=${AITDE_WORKER_KEY:-aitde-worker}
+      - WORKER_NAME=${AITDE_WORKER_NAME:-aitde-worker}
+      - WORKER_VERSION=${AITDE_WORKER_VERSION:-1.0}
+      - MACHINE_IDENTITY=${AITDE_WORKER_MACHINE_IDENTITY:-aitde-worker}
+      - WORKER_HEARTBEAT_SECONDS=${AITDE_WORKER_HEARTBEAT_SECONDS:-60}
+      - TEMPORAL_ENABLED=${TEMPORAL_ENABLED:-false}
+      - TEMPORAL_GRPC_ENDPOINT=${TEMPORAL_GRPC_ENDPOINT:-127.0.0.1:7233}
+      - TEMPORAL_NAMESPACE=${TEMPORAL_NAMESPACE:-default}
+      - TEMPORAL_TASK_QUEUE=${TEMPORAL_TASK_QUEUE:-worker-test}
+      - TEMPORAL_TLS_ENABLED=${TEMPORAL_TLS_ENABLED:-false}
+      - TEMPORAL_INSECURE_CHANNEL=${TEMPORAL_INSECURE_CHANNEL:-true}
+      - TEMPORAL_TLS_CA_PATH=${TEMPORAL_TLS_CA_PATH:-}
+      - TEMPORAL_TLS_CERT_PATH=${TEMPORAL_TLS_CERT_PATH:-}
+      - TEMPORAL_TLS_KEY_PATH=${TEMPORAL_TLS_KEY_PATH:-}
+    depends_on:
+      backend:
+        condition: service_healthy
+    init: true
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          test -s /tmp/aitde-worker/heartbeat.pid &&
+          kill -0 "$$(cat /tmp/aitde-worker/heartbeat.pid)" &&
+          test -s /tmp/aitde-worker/gateway.pid &&
+          kill -0 "$$(cat /tmp/aitde-worker/gateway.pid)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   volume-permissions:
     build:

@@ -252,13 +252,29 @@ def review_scenario(
     user_id: int,
     comment: str | None,
 ) -> TestScenarioVersion:
-    version.review_status = action
-    if action == ScenarioReviewStatus.APPROVED.value:
+    canonical_status = {
+        "approve": ScenarioReviewStatus.APPROVED.value,
+        "reject": ScenarioReviewStatus.REJECTED.value,
+        "request_change": ScenarioReviewStatus.REQUEST_CHANGE.value,
+    }[action]
+    version.review_status = canonical_status
+    if canonical_status == ScenarioReviewStatus.APPROVED.value:
         version.approved_by = user_id
         version.approved_at = datetime.now()
     db.commit()
     db.refresh(version)
     return version
+
+
+def canonical_review_status(value: str) -> str:
+    return {
+        "approve": ScenarioReviewStatus.APPROVED.value,
+        "approved": ScenarioReviewStatus.APPROVED.value,
+        "reject": ScenarioReviewStatus.REJECTED.value,
+        "rejected": ScenarioReviewStatus.REJECTED.value,
+        "request_change": ScenarioReviewStatus.REQUEST_CHANGE.value,
+        "proposed": ScenarioReviewStatus.PROPOSED.value,
+    }.get((value or "").lower(), value)
 
 
 
@@ -436,4 +452,3 @@ def review_oracle(
     db.commit()
     db.refresh(oracle)
     return oracle
-

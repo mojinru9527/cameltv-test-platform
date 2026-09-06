@@ -15,15 +15,26 @@ from app.schemas.common import Page, R
 from app.schemas.dsh import DshHealthOut, DshTaskCancelResponse, DshTaskCreate, DshTaskOut
 from app.services.dsh import dsh_attachment_service, dsh_task_service
 from app.services.dsh.dsh_runner import runtime_available
+from app.services.ai_errors import ai_health_registry
 
 router = APIRouter(prefix="/dsh-tasks", tags=["DSH 任务"])
+
+
+def _availability(project_id: int) -> tuple[bool, str]:
+    ok, reason = runtime_available()
+    if not ok:
+        return False, reason
+    health = ai_health_registry.get(project_id)
+    if health.status == "error":
+        return False, health.message or "AI 提供方最近一次验证失败"
+    return True, ""
 
 
 @router.get("/health", response_model=R[DshHealthOut], summary="DSH 运行可用性")
 def dsh_health(
     current: CurrentUser = Depends(require_permission("agent:view")),
 ):
-    ok, reason = runtime_available()
+    ok, reason = _availability(current.project_id or 0)
     return R.ok(DshHealthOut(available=ok, reason=reason))
 
 
@@ -63,7 +74,7 @@ def create_dsh_task(
     current: CurrentUser = Depends(require_permission("agent:run")),
     db: Session = Depends(get_db),
 ):
-    ok, reason = runtime_available()
+    ok, reason = _availability(current.project_id or 0)
     if not ok:
         return R(code=503, msg=f"DSH 不可用: {reason}")
     # DSH 测试 Agent 框架（阶段 3）：模型池准入——配置了池则只允许池内模型

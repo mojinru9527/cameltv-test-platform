@@ -105,25 +105,35 @@ export default function TaskTab() {
           </div>
         ) : (
           tasks.map(task => (
-            <div key={task.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
-              <div className="shrink-0">
-                {task.status === 'success' ? <CheckCircle2 className="size-5 text-status-success" />
-                  : task.status === 'failed' ? <XCircle className="size-5 text-status-danger" />
-                  : task.status === 'running' ? <Loader2 className="size-5 text-status-info animate-spin" />
-                  : task.status === 'cancelled' ? <XCircle className="size-5 text-status-warning" />
-                  : <Clock className="size-5 text-muted-foreground" />}
+            <div
+              key={task.id}
+              data-testid={`api-task-row-${task.id}`}
+              className="flex flex-col gap-3 px-4 py-3 hover:bg-muted/50 sm:flex-row sm:items-center"
+            >
+              <div className="flex min-w-0 items-center gap-3 sm:flex-1">
+                <div className="shrink-0">
+                  {task.status === 'success' ? <CheckCircle2 className="size-5 text-status-success" />
+                    : task.status === 'failed' ? <XCircle className="size-5 text-status-danger" />
+                    : task.status === 'running' ? <Loader2 className="size-5 text-status-info animate-spin" />
+                    : task.status === 'cancelled' ? <XCircle className="size-5 text-status-warning" />
+                    : <Clock className="size-5 text-muted-foreground" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium" title={task.name}>{task.name}</p>
+                  <p className="truncate text-xs text-muted-foreground" title={`${task.task_id} · ${task.trigger_type}`}>
+                    {task.task_id} · {task.trigger_type}
+                  </p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{task.name}</p>
-                <p className="text-xs text-muted-foreground">{task.task_id} · {task.trigger_type}</p>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
+              <div
+                data-testid="api-task-row-meta"
+                className="flex w-full flex-wrap items-center gap-x-3 gap-y-2 pl-8 text-xs sm:w-auto sm:flex-nowrap sm:pl-0"
+              >
                 <span className="text-status-success">{task.passed} 通过</span>
                 <span className="text-status-danger">{task.failed} 失败</span>
                 {task.skipped > 0 && <span className="text-muted-foreground">{task.skipped} 跳过</span>}
-              </div>
-              <Badge className={statusBadgeClass(task.status)}>{execStatusLabel(task.status)}</Badge>
-              <div className="flex items-center gap-1 shrink-0">
+                <Badge className={statusBadgeClass(task.status)}>{execStatusLabel(task.status)}</Badge>
+                <div className="ml-auto flex shrink-0 items-center gap-1">
                 <Button
                   size="icon-sm"
                   variant="ghost"
@@ -180,6 +190,7 @@ export default function TaskTab() {
                     </AlertDialogContent>
                   </AlertDialog>
                 )}
+                </div>
               </div>
             </div>
           ))

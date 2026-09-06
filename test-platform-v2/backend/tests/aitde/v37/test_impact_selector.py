@@ -10,6 +10,7 @@ from app.modules.aitde.common.enums import (
 from app.modules.aitde.continuous.models import CampaignScenario, ExecutionCampaign
 from app.modules.aitde.scenario.models import TestScenario, TestScenarioVersion
 from app.modules.aitde.smart_regression import service
+from app.modules.aitde.smart_regression import repository as smart_repo
 
 
 def _mission(db, project_id=1, mission_id=7):
@@ -96,6 +97,15 @@ def test_coverage_guard_fallback_empty_and_unknown(db):
     )
     assert guard_fb["ok"] is False
     assert guard_fb["fallback_to"] == SelectionType.FULL.value
+    assert guard_fb["selected_count"] == 3
+
+    persisted = service.RegressionSelector.get(db, selection["id"])
+    assert persisted["selection_type"] == SelectionType.FULL.value
+    assert {item["scenario_id"] for item in persisted["selected"]} == {1, 2, 3}
+    assert persisted["excluded"] == []
+    materialized = smart_repo.list_selection_items(db, selection["id"])
+    assert {item.scenario_id for item in materialized} == {1, 2, 3}
+    assert all(item.decision == "FALLBACK" for item in materialized)
 
 
 def test_campaign_factory_creates_campaign(db):

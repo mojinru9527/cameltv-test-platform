@@ -62,8 +62,8 @@ function makeRun(overrides: Partial<VersionTaskRun> = {}): VersionTaskRun {
   }
 }
 
-function renderPage(runs: VersionTaskRun[] = []) {
-  mocks.getVersionTask.mockResolvedValue(makeTask())
+function renderPage(runs: VersionTaskRun[] = [], taskOverrides: Partial<VersionTask> = {}) {
+  mocks.getVersionTask.mockResolvedValue(makeTask(taskOverrides))
   mocks.listRuns.mockResolvedValue(runs)
   mocks.getRegressionSet.mockResolvedValue([])
   mocks.buildReleasePackage.mockResolvedValue(null)
@@ -82,6 +82,18 @@ beforeEach(() => {
 })
 
 describe('一键运行的结果提示（DEF-20260905-003）', () => {
+  it.each(['blocked', 'executed', 'released', 'cancelled'])(
+    '任务状态为 %s 时禁用一键运行',
+    async (status) => {
+      renderPage([], { status })
+
+      const button = await screen.findByRole('button', { name: '一键运行' })
+      expect((button as HTMLButtonElement).disabled).toBe(true)
+      fireEvent.click(button)
+      expect(mocks.startRun).not.toHaveBeenCalled()
+    },
+  )
+
   it('零采纳项被阻塞时提示阻塞原因，不得报「运行完成」', async () => {
     mocks.startRun.mockResolvedValue(
       makeRun({

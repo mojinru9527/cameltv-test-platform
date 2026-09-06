@@ -24,6 +24,7 @@ from app.models.dsh_task import DshTask
 from app.models.project import Project, ProjectMember
 from app.models.user import User
 from app.services.ai_config_service import ai_config_service
+from app.services.ai_errors import ai_health_registry
 from app.services.dsh import dsh_task_service
 from app.services.dsh.dsh_runner import DshRunResult
 
@@ -163,6 +164,55 @@ def test_execute_failure(dsh_db, monkeypatch):
         assert "boom" in claimed.error
     finally:
         db.close()
+
+
+def test_execute_quota_failure_updates_project_ai_health(dsh_db, monkeypatch):
+    ai_health_registry.reset()
+    monkeypatch.setattr(
+        "app.services.dsh.dsh_runner.run_dsh_task",
+        _fake_run(exit_code=1, error="QUOTA: 402 Insufficient Balance"),
+    )
+    db = dsh_db()
+    try:
+        row = dsh_task_service.submit_task(
+            db, project_id=1, task="run tests", operator_id=1
+        )
+        claimed = dsh_task_service.claim_next_task(db)
+        dsh_task_service.execute_task(db, claimed)
+
+        health = ai_health_registry.get(row.project_id)
+        assert health.status == "error"
+        assert health.kind == "quota"
+        assert health.provider_id == 1
+    finally:
+        ai_health_registry.reset()
+        db.close()
+
+
+def test_health_and_create_fail_closed_after_verified_quota_error(
+    dsh_client, dsh_available
+):
+    ai_health_registry.reset()
+    ai_health_registry.record_failure(
+        1,
+        "QUOTA: 402 Insufficient Balance",
+        provider_id=1,
+        provider_name="test-provider",
+    )
+    try:
+        health = dsh_client.get("/api/v1/dsh-tasks/health")
+        assert health.status_code == 200
+        assert health.json()["data"]["available"] is False
+        assert "余额" in health.json()["data"]["reason"]
+
+        created = dsh_client.post(
+            "/api/v1/dsh-tasks", json={"task": "must not queue"}
+        )
+        assert created.status_code == 200
+        assert created.json()["code"] == 503
+        assert "余额" in created.json()["msg"]
+    finally:
+        ai_health_registry.reset()
 
 
 def test_cancel_only_pending(dsh_db):

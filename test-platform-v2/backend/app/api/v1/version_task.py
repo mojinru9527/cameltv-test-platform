@@ -30,6 +30,10 @@ from app.services import audit_service, version_task_service
 router = APIRouter(prefix="/version-tasks", tags=["版本验收任务"])
 
 
+def _require_task(db: Session, current: CurrentUser, task_id: int):
+    return version_task_service.get_task(db, task_id, current.project_id or 0)
+
+
 def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str, detail: str = "") -> None:
     audit_service.write_audit(
         db,
@@ -61,7 +65,11 @@ def compat_mission_detail(
     current: CurrentUser = Depends(require_permission("mission:detail")),
     db: Session = Depends(get_db),
 ):
-    return R.ok(version_task_service.compat_mission_view(db, mission_id))
+    return R.ok(
+        version_task_service.compat_mission_view(
+            db, mission_id, current.project_id or 0
+        )
+    )
 
 
 # ── CRUD ──
@@ -124,7 +132,7 @@ def get_task(
     current: CurrentUser = Depends(require_permission("mission:detail")),
     db: Session = Depends(get_db),
 ):
-    task = version_task_service.get_task(db, task_id)
+    task = _require_task(db, current, task_id)
     return R.ok(VersionTaskOut.model_validate(task))
 
 
@@ -136,6 +144,7 @@ def update_task(
     current: CurrentUser = Depends(require_permission("mission:update")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     task = version_task_service.update_task(db, task_id, data.model_dump(exclude_unset=True))
     _audit(req, current, db, "version_task:update", f"{task_id}")
     return R.ok(VersionTaskOut.model_validate(task))
@@ -149,6 +158,7 @@ def transition(
     current: CurrentUser = Depends(require_permission("mission:update")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     task = version_task_service.transition_task(
         db, task_id, data.status, verdict=data.verdict, summary=data.summary
     )
@@ -163,6 +173,7 @@ def add_execution(
     current: CurrentUser = Depends(require_permission("mission:update")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     link = version_task_service.add_execution(db, task_id, data.execution_type, data.execution_id, data.ref)
     return R.ok({"id": link.id, "task_id": link.task_id})
 
@@ -174,6 +185,7 @@ def add_defect(
     current: CurrentUser = Depends(require_permission("mission:update")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     link = version_task_service.add_defect(db, task_id, data.defect_id)
     return R.ok({"id": link.id, "task_id": link.task_id})
 
@@ -185,6 +197,7 @@ def get_plan(
     current: CurrentUser = Depends(require_permission("mission:detail")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     items = version_task_service.get_plan(db, task_id)
     return R.ok([PlanItemOut.model_validate(i) for i in items])
 
@@ -197,6 +210,7 @@ def generate_plan(
     current: CurrentUser = Depends(require_permission("mission:generate")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     items = version_task_service.generate_plan(db, task_id, [i.model_dump() for i in data])
     _audit(req, current, db, "version_task:plan_generate", f"{task_id}", f"{len(items)}")
     return R.ok([PlanItemOut.model_validate(i) for i in items])
@@ -209,6 +223,7 @@ def ai_generate_plan(
     current: CurrentUser = Depends(require_permission("mission:generate")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     items = version_task_service.ai_generate_plan(db, task_id, current.project_id or 0)
     _audit(req, current, db, "version_task:plan_ai_generate", f"{task_id}", f"{len(items)}")
     return R.ok([PlanItemOut.model_validate(i) for i in items])
@@ -223,8 +238,13 @@ def review_plan_item(
     current: CurrentUser = Depends(require_permission("mission:update")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     item = version_task_service.review_plan_item(
-        db, item_id, action=data.action, patch=data.model_dump(exclude_unset=True)
+        db,
+        item_id,
+        action=data.action,
+        patch=data.model_dump(exclude_unset=True),
+        task_id=task_id,
     )
     _audit(req, current, db, "version_task:plan_review", f"{task_id}/{item_id}", f"{data.action}")
     return R.ok(PlanItemOut.model_validate(item))
@@ -238,6 +258,7 @@ def start_run(
     current: CurrentUser = Depends(require_permission("mission:generate")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     run = version_task_service.start_run(db, task_id)
     _audit(req, current, db, "version_task:run", f"{task_id}", f"run:{run.id}")
     return R.ok(VersionTaskRunOut.model_validate(run))
@@ -249,6 +270,7 @@ def list_runs(
     current: CurrentUser = Depends(require_permission("mission:detail")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     runs = version_task_service.list_runs(db, task_id)
     return R.ok([VersionTaskRunOut.model_validate(r) for r in runs])
 
@@ -260,6 +282,7 @@ def get_run(
     current: CurrentUser = Depends(require_permission("mission:detail")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     run = version_task_service.get_run(db, run_id)
     if run.task_id != task_id:
         raise not_found("运行记录不属于该任务")
@@ -275,6 +298,10 @@ def create_defect_draft(
     current: CurrentUser = Depends(require_permission("defect:create")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
+    run = version_task_service.get_run(db, run_id)
+    if run.task_id != task_id:
+        raise not_found("运行记录不属于该任务")
     defect = version_task_service.create_defect_draft(
         db, run_id, failure_index, creator_id=current.user.id if current.user else 0
     )
@@ -289,6 +316,7 @@ def release_package(
     current: CurrentUser = Depends(require_permission("mission:detail")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     return R.ok(version_task_service.build_release_package(db, task_id))
 
 
@@ -300,6 +328,7 @@ def release_task(
     current: CurrentUser = Depends(require_permission("mission:update")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     package = version_task_service.release_task(
         db, task_id, verdict=data.verdict,
         release_bundle_id=data.release_bundle_id,
@@ -316,6 +345,7 @@ def notify_release(
     current: CurrentUser = Depends(require_permission("mission:update")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     version_task_service.notify_release(db, task_id, "版本放行通知")
     _audit(req, current, db, "version_task:notify", f"{task_id}")
     return R.ok({"sent": True})
@@ -337,6 +367,7 @@ def knowledge_record(
     current: CurrentUser = Depends(require_permission("mission:detail")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     return R.ok(version_task_service.get_knowledge_record(db, task_id))
 
 
@@ -347,6 +378,7 @@ def regression_set(
     current: CurrentUser = Depends(require_permission("mission:detail")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     return R.ok(version_task_service.recommend_regression_set(db, task_id))
 
 
@@ -358,6 +390,7 @@ def sync_defect(
     current: CurrentUser = Depends(require_permission("defect:update")),
     db: Session = Depends(get_db),
 ):
+    _require_task(db, current, task_id)
     result = version_task_service.sync_defect_notification(db, task_id, defect_id)
     _audit(req, current, db, "version_task:defect_sync", f"{task_id}/{defect_id}")
     return R.ok(result)

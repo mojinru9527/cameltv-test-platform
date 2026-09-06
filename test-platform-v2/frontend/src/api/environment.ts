@@ -13,6 +13,7 @@ export async function fetchEnvironments(signal?: AbortSignal): Promise<Environme
 
 export async function createEnvironment(body: {
   name: string; env_type?: string; base_url?: string; description?: string
+  access_type?: string; execution_mode?: string; runner_key?: string
 }): Promise<Environment> {
   clearApiCache(BASE)
   return api.post(BASE, body)
@@ -20,6 +21,7 @@ export async function createEnvironment(body: {
 
 export async function updateEnvironment(id: number, body: {
   name?: string; env_type?: string; base_url?: string; description?: string
+  access_type?: string; execution_mode?: string; runner_key?: string
 }): Promise<Environment> {
   clearApiCache(BASE)
   return api.put(`${BASE}/${id}`, body)

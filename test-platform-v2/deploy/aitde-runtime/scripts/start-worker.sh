@@ -14,7 +14,8 @@
 # 用法: bash scripts/start-worker.sh [zone] [capabilities...]
 #    例: bash scripts/start-worker.sh TEST HTTP,BROWSER
 set -euo pipefail
-cd "$(dirname "$0")/../../../backend"
+BACKEND_APP_DIR=${BACKEND_APP_DIR:-"$(dirname "$0")/../../../backend"}
+cd "$BACKEND_APP_DIR"
 
 ZONE=${1:-TEST}
 CAPS=${2:-HTTP,BROWSER}
@@ -23,6 +24,7 @@ TEMPORAL_TASK_QUEUE=${TEMPORAL_TASK_QUEUE:-worker-test}
 WORKER_KEY=${WORKER_KEY:-"worker-$(hostname)"}
 API_TOKEN=${API_TOKEN:-}
 WORKER_HEARTBEAT_SECONDS=${WORKER_HEARTBEAT_SECONDS:-60}
+WORKER_RUNTIME_DIR=${WORKER_RUNTIME_DIR:-/tmp/aitde-worker}
 
 export ZONE CAPS BACKEND_URL WORKER_KEY API_TOKEN WORKER_HEARTBEAT_SECONDS
 
@@ -48,6 +50,7 @@ cleanup() {
       wait "$pid" 2>/dev/null || true
     fi
   done
+  rm -f "$WORKER_RUNTIME_DIR/heartbeat.pid" "$WORKER_RUNTIME_DIR/gateway.pid"
 }
 
 trap cleanup EXIT
@@ -55,14 +58,17 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 
 # ── 1) 持续心跳（立即发送；瞬时失败按间隔重试）──
+mkdir -p "$WORKER_RUNTIME_DIR"
 python -m app.modules.aitde.workflow.worker_heartbeat &
 heartbeat_pid=$!
+printf '%s\n' "$heartbeat_pid" > "$WORKER_RUNTIME_DIR/heartbeat.pid"
 
 # ── 2) 加入 Temporal TaskQueue 拉取任务（长驻；Temporal 负责重试/恢复）──
 echo "[worker] joining Temporal queue=$TEMPORAL_TASK_QUEUE (Ctrl-C to stop)"
 # 需 backend 环境：settings.temporal_enabled=true + TEMPORAL_GRPC_ENDPOINT 可达。
 python -m app.modules.aitde.workflow.gateway --task-queue "$TEMPORAL_TASK_QUEUE" &
 worker_pid=$!
+printf '%s\n' "$worker_pid" > "$WORKER_RUNTIME_DIR/gateway.pid"
 
 # 任一受管进程退出都终止整个 Worker 单元，交给 systemd/Compose 重启。
 set +e

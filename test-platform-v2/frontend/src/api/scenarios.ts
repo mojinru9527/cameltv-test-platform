@@ -2,6 +2,7 @@ import { aitdeV2 } from './missions'
 
 export interface ScenarioRow {
   id: number
+  scenario_version_id: number
   scenario_key: string
   title: string
   priority: string
