@@ -32,3 +32,10 @@
 
 - Validate 1440x900, 768x1024, and 390x844.
 - No root horizontal overflow, overlapping filters, clipped status labels, inaccessible icon buttons, unhandled console errors, or hidden HTTP 404s.
+
+## Managed Worker Runtime
+
+- `aitde-worker` is a Compose-managed service built from the same immutable backend image as the Control Plane.
+- The production runtime profile explicitly enables the Worker profile and supplies the Temporal endpoint, queue, stable Worker identity, capabilities, heartbeat interval, and a least-privilege `workers:register` token.
+- The Worker waits for a healthy backend before starting. The launcher owns both continuous heartbeat and Temporal polling; if either child exits, the service exits so Compose can restart the whole unit with `restart: unless-stopped`.
+- The Worker Token remains in the ignored production environment file. It is never committed, copied into the image, or printed by the launcher.

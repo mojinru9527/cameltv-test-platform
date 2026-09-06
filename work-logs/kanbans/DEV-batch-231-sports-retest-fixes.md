@@ -5,7 +5,7 @@ branch: "fix/batch-231-sports-retest-fixes"
 executor: "codex"
 workflow: "agent-team"
 mode: "full"
-status: "READY_FOR_CONFIRMATION"
+status: "IN_PROGRESS"
 updated: "2026-09-06"
 ---
 
@@ -22,12 +22,13 @@ updated: "2026-09-06"
 | S6 Schedule trigger | DONE | Red: page regression failed on missing warning. Green: 4 page tests and frontend typecheck pass. `already_running` now reports that no run was created and includes the existing Run ID. |
 | S7 Provenance/SMART/Lineage | DONE | Red: 5 focused failures. Green: 51 related-domain tests plus 8 migration checks pass; F821 passes. Review statuses are canonical, source refs keep positive persisted IDs, unsafe SMART selections atomically materialize FULL, and lineage uses `CONTRACT_VERSION`. |
 | S8 UI hardening | DONE | Red: 3 focused failures. Green: 6 frontend tests and typecheck pass. Removed `/change-sets/0`, exposed four environment execution fields, and stopped mobile service tabs from shrinking. Existing API task eye-button accessible-name regression also passes. |
+| S9 Managed Worker lifecycle | IN_PROGRESS | User added automatic restart and always-online requirement before delivery. Previous completion confirmation and QA closeout are invalidated; adding Compose/profile contracts and rerunning affected gates. |
 | QA responsive rework | DONE | Visible 390px review found task-row collision and page shift missed by root-overflow checks. TDD added responsive task rows, tab-owned scrolling, geometry/scroll assertions, and a clean after-fix screenshot. |
 | QA focused/full/browser | DONE | Backend 2483 passed; frontend 153 files/686 tests passed; build/type/lint/F821/migrations passed; 10 screenshots at 1440/768/390 with zero HTTP/console errors. Live DSH and offline-Worker probes persisted no task/Run. |
-| Leader verdict | CONDITIONAL | Local evidence passes. Awaiting user total confirmation, required PR checks, and final successful AI PR audit before APPROVED/merge. Production release remains separate. |
+| Leader verdict | REOPENED | S9 scope added after the prior local closeout. Leader must review refreshed QA evidence before a new delivery confirmation. |
 
 ## External Preconditions
 
 - DeepSeek account balance must be restored by an authorized operator before real AI/DSH production success can be retested.
-- Production `aitde-worker` must be restored by operations before queued Mission runs can complete.
+- Production activation requires a one-time valid Worker Token and reachable Temporal endpoint; after activation Compose owns restart and the Worker owns continuous heartbeat.
 - No production deployment is authorized in this batch.

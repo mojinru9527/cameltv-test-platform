@@ -32,6 +32,7 @@ The production report proves three release-blocking defects: a Playwright run wi
 6. DSH and AI surfaces reflect provider health. A deterministic fallback is explicitly labeled with reduced-confidence provenance. Offline workers prevent or visibly block submission.
 7. Duplicate schedule triggers, Coverage Guard fallback, scenario review status, source references, and lineage all report their effective state truthfully.
 8. Environment detail, ChangeSet loading, mobile API filters, and icon accessibility match the production workflows in the report.
+9. The Durable Runtime Worker is a managed production service: it starts with the production Compose profile, continuously renews its registration, and restarts automatically after process, Docker, or host recovery.
 
 ## 3. Acceptance Criteria
 
@@ -50,9 +51,10 @@ The production report proves three release-blocking defects: a Playwright run wi
 | AC-11 | Changes page makes no `/change-sets/0` request; environment detail shows Base URL, access type, execution mode, and runner key. |
 | AC-12 | At 390x844 API filters do not overlap, and task detail icon controls have accessible names. |
 | AC-13 | Focused tests, full backend/frontend regressions, static/build gates, three responsive browser viewports, and a production-like end-to-end rerun pass with no false-green evidence. |
+| AC-14 | Production Compose defines an opt-in `aitde-worker` service that waits for backend health, uses the managed heartbeat launcher, requires an operator-provisioned Worker Token, and has `restart: unless-stopped`; the production profile documents all required Temporal and Worker settings. |
 
 ## 4. Boundaries
 
 - Buying DeepSeek balance is an external account action, not a code fix. The platform must fail closed and explain the quota condition.
-- Restarting or deploying the production Durable Worker is an operational action and is not authorized by this batch. Local validation will prove offline-worker gating; production execution retest remains blocked until operations restores the worker.
+- Executing a production deployment remains an operational action and is not authorized by this batch. This batch makes the Worker lifecycle reproducible and restart-safe; production activation still requires a one-time real Worker Token and Temporal endpoint configuration.
 - Production deployment is not included. Delivery ends at merge to `main` after the repository-required confirmation and checks.
