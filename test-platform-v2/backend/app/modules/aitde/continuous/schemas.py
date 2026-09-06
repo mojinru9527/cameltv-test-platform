@@ -130,8 +130,8 @@ class TriggerOut(BaseModel):
 
 class GateEvaluateIn(BaseModel):
     project_id: int = 0
-    build_observation_id: int | None = None
-    campaign_id: int | None = None
+    build_observation_id: int = Field(..., ge=1)
+    campaign_id: int = Field(..., ge=1)
 
 
 class GateResultOut(BaseModel):

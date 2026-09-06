@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import pytest
+
+from app.core.exceptions import APIException
+
 from app.modules.aitde.common.enums import (
     BuildObservationStatus,
     CampaignType,
     FingerprintSourceType,
-    QualityGateResult,
 )
 from app.modules.aitde.continuous import repository, service
 from app.modules.aitde.continuous.schemas import (
@@ -119,7 +122,7 @@ def test_run_profile_project_isolation(db):
 # 鈹€鈹€ V35-007 QualityGate (zero execution -> FAIL) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 
-def test_gate_zero_execution_fail(db):
+def test_gate_without_build_is_rejected(db):
     campaign = service.create_campaign(
         db,
         CampaignCreateIn(
@@ -127,16 +130,13 @@ def test_gate_zero_execution_fail(db):
             scenarios=[{"scenario_id": 1, "scenario_version_id": 10, "required": "REQUIRED"}],
         ),
     )
-    gate = service.evaluate_gate(db, 1, 7, campaign["id"], None)
-    # 0 execution with scenarios -> FAIL (never PASS).
-    assert gate["result"] == QualityGateResult.FAIL.value
-    assert "G5_REQUIRED_SCENARIO_EXECUTED" in gate["checks_json"]
+    with pytest.raises(APIException, match="Build.*Campaign"):
+        service.evaluate_gate(db, 1, 7, campaign["id"], None)
 
 
-def test_gate_no_scenarios_inconclusive(db):
-    gate = service.evaluate_gate(db, 1, 7, None, None)
-    # no campaign/scenarios -> INCONCLUSIVE (not PASS).
-    assert gate["result"] == QualityGateResult.INCONCLUSIVE.value
+def test_gate_without_campaign_is_rejected(db):
+    with pytest.raises(APIException, match="Build.*Campaign"):
+        service.evaluate_gate(db, 1, 7, None, None)
 
 
 # 鈹€鈹€ V35-008 Trigger 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
@@ -213,4 +213,3 @@ def _fake_plan(pid=55):
     p.project_id = 1
     p.name = "鍥炲綊璁″垝"
     return p
-

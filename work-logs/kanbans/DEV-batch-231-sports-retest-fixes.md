@@ -16,7 +16,7 @@ updated: "2026-09-06"
 | Product / PM / Design | DONE | PRD, PM plan, design spec, and implementation plan created. KB search found no directly applicable record. |
 | S1 Execution truth | DONE | Red: 4 expected failures. Green: `pytest tests/test_playwright_executor.py tests/test_version_task.py -q` = 70 passed. Zero tests and non-zero exits fail; empty version plan is 1/1 blocked. |
 | S2 Tenant isolation/history | DONE | 20 cross-project API cases pass; migration repairs latest historical 0/0 to blocked 1/1 and is idempotent; backend 68 and frontend wizard/run 14 tests pass. |
-| S3 Mission Gate | TODO | Build+Campaign requirement; no 0/0 PASS. |
+| S3 Mission Gate | DONE | Backend 45 and frontend 12 focused tests pass. Build+Campaign are mandatory and matched; checks persist PASS/FAIL/NOT_EVALUATED/BLOCKED; zero execution is INCONCLUSIVE. |
 | S4 Scenario execution | TODO | 422 contract, real version ID, structured errors. |
 | S5 AI/DSH/Worker | TODO | Quota-aware readiness, fallback label, offline-worker gate. |
 | S6 Schedule trigger | TODO | already_running feedback. |
