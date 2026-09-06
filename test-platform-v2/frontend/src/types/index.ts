@@ -569,6 +569,9 @@ export interface Environment {
   base_url: string
   description: string
   is_production?: boolean
+  access_type?: 'public' | 'internal' | string
+  execution_mode?: 'on_platform' | 'runner' | string
+  runner_key?: string
   created_at: string | null
   updated_at: string | null
 }

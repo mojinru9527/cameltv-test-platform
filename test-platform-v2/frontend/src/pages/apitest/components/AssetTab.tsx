@@ -406,9 +406,9 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
             data-testid="service-tabs-viewport"
           >
             <TabsList className="h-auto max-w-full justify-start w-max">
-              <TabsTrigger value="_all">全部服务 ({total})</TabsTrigger>
+              <TabsTrigger value="_all" className="flex-none">全部服务 ({total})</TabsTrigger>
               {services.map(s => (
-                <TabsTrigger key={s.id} value={s.id.toString()}>
+                <TabsTrigger key={s.id} value={s.id.toString()} className="flex-none">
                   {s.display_name || s.name}
                 </TabsTrigger>
               ))}
