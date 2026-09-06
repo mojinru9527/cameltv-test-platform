@@ -103,8 +103,13 @@ def list_tasks(
     return list(rows), total
 
 
-def get_task(db: Session, task_id: int) -> VersionTask:
-    task = db.get(VersionTask, task_id)
+def get_task(
+    db: Session, task_id: int, project_id: int | None = None
+) -> VersionTask:
+    query = select(VersionTask).where(VersionTask.id == task_id)
+    if project_id is not None:
+        query = query.where(VersionTask.project_id == project_id)
+    task = db.scalar(query)
     if task is None:
         raise not_found("版本验收任务不存在")
     return task
@@ -188,9 +193,14 @@ def _mission_to_task_dict(mission: VersionMission, release: ReleaseBundle | None
     }
 
 
-def compat_mission_view(db: Session, mission_id: int) -> dict:
+def compat_mission_view(
+    db: Session, mission_id: int, project_id: int | None = None
+) -> dict:
     """VersionMission -> VersionTask 只读视图（兼容映射，绝无双写）。"""
-    mission = db.get(VersionMission, mission_id)
+    query = select(VersionMission).where(VersionMission.id == mission_id)
+    if project_id is not None:
+        query = query.where(VersionMission.project_id == project_id)
+    mission = db.scalar(query)
     if mission is None:
         raise not_found("旧智能测试任务不存在")
     release = db.get(ReleaseBundle, mission.test_plan_id) if mission.test_plan_id else None
@@ -269,10 +279,17 @@ def _task_ai_context(db: Session, task: VersionTask) -> dict:
     }
 
 
-def review_plan_item(db: Session, plan_item_id: int, action: str, patch: dict | None = None) -> VersionTaskPlanItem:
+def review_plan_item(
+    db: Session,
+    plan_item_id: int,
+    action: str,
+    patch: dict | None = None,
+    *,
+    task_id: int | None = None,
+) -> VersionTaskPlanItem:
     """人工审核方案条目：采纳 / 修改 / 删除 / 追问 / 确认（B7 审核面板）。"""
     item = db.get(VersionTaskPlanItem, plan_item_id)
-    if item is None:
+    if item is None or (task_id is not None and item.task_id != task_id):
         raise not_found("验收方案条目不存在")
     if action not in PLAN_ACTIONS:
         raise APIException(code=1, msg=f"非法审核动作：{action}")
