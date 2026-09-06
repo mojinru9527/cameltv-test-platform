@@ -11,4 +11,3 @@
 9. Run focused suites after every slice, then full backend/frontend/static/migration/repository gates.
 10. Start local services on ports 8391/5391 and perform a fresh production-like workflow at desktop, tablet, and mobile sizes. Preserve network, console, screenshot, and result evidence.
 11. Produce QA report and conditional Leader verdict, then request the repository-mandated one-time push/PR/merge confirmation.
-

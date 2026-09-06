@@ -56,4 +56,3 @@ The production report proves three release-blocking defects: a Playwright run wi
 - Buying DeepSeek balance is an external account action, not a code fix. The platform must fail closed and explain the quota condition.
 - Restarting or deploying the production Durable Worker is an operational action and is not authorized by this batch. Local validation will prove offline-worker gating; production execution retest remains blocked until operations restores the worker.
 - Production deployment is not included. Delivery ends at merge to `main` after the repository-required confirmation and checks.
-

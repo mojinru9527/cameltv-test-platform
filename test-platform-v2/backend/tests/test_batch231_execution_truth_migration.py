@@ -105,4 +105,3 @@ def test_migration_is_idempotent(monkeypatch):
         monkeypatch.setattr(migration.op, "get_bind", lambda: connection)
         migration.upgrade()
         migration.upgrade()
-

@@ -78,4 +78,3 @@ def upgrade() -> None:
 def downgrade() -> None:
     # Data truth repair is intentionally irreversible.
     pass
-

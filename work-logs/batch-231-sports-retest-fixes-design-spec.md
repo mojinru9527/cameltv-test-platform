@@ -32,4 +32,3 @@
 
 - Validate 1440x900, 768x1024, and 390x844.
 - No root horizontal overflow, overlapping filters, clipped status labels, inaccessible icon buttons, unhandled console errors, or hidden HTTP 404s.
-

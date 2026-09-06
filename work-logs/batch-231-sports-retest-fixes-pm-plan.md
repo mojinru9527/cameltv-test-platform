@@ -31,4 +31,3 @@
 | Source refs lack a persistent rule table | Use real artifact/fragment references and honest CONTRACT_VERSION lineage rather than manufacturing rule IDs. |
 | External provider and worker remain unavailable | Test failure paths locally and state the production operational prerequisites explicitly. |
 | Large batch creates regression risk | Keep eight reviewable commits and run both focused and full gates. |
-
