@@ -18,7 +18,7 @@ updated: "2026-09-06"
 | S2 Tenant isolation/history | DONE | 20 cross-project API cases pass; migration repairs latest historical 0/0 to blocked 1/1 and is idempotent; backend 68 and frontend wizard/run 14 tests pass. |
 | S3 Mission Gate | DONE | Backend 45 and frontend 12 focused tests pass. Build+Campaign are mandatory and matched; checks persist PASS/FAIL/NOT_EVALUATED/BLOCKED; zero execution is INCONCLUSIVE. |
 | S4 Scenario execution | DONE | Red: backend 2 and frontend 3 failures. Green: backend 15, frontend 29 tests, and frontend typecheck pass. Run body no longer repeats path scenario ID; the UI sends the persisted current version ID; both API clients normalize structured errors. |
-| S5 AI/DSH/Worker | TODO | Quota-aware readiness, fallback label, offline-worker gate. |
+| S5 AI/DSH/Worker | DONE | Red: backend 7 and frontend 2 expected failures. Green: backend 84 and frontend 14 tests; F821 and typecheck pass. DSH failures update shared AI health, verified quota failure blocks submission, deterministic Mission output carries visible provenance/confidence, and offline Durable Worker rejects Run creation before persistence. |
 | S6 Schedule trigger | TODO | already_running feedback. |
 | S7 Provenance/SMART/Lineage | TODO | canonical review, refs, FULL materialization, node type. |
 | S8 UI hardening | TODO | changes 0 request, environment details, mobile filters, eye button name. |

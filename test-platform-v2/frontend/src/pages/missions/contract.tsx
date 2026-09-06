@@ -66,6 +66,7 @@ export default function MissionContractPage() {
   const [freezeOpen, setFreezeOpen] = useState(false)
   const [freezing, setFreezing] = useState(false)
   const [staleConflict, setStaleConflict] = useState(false)
+  const [analysisNotice, setAnalysisNotice] = useState<string | null>(null)
 
   const reload = () => {
     setStaleConflict(false)
@@ -98,8 +99,15 @@ export default function MissionContractPage() {
     if (analyzing) return
     setAnalyzing(true)
     try {
-      await analyzeMissionAmbiguities(missionId)
-      toast.success('歧义/意图分析完成')
+      const result = await analyzeMissionAmbiguities(missionId)
+      if (result.generation.degraded) {
+        const reason = result.generation.reason || '结果由确定性规则生成，必须人工复核'
+        setAnalysisNotice(`${reason}（置信度 ${Math.round(result.generation.confidence * 100)}%）`)
+        toast.warning('歧义/意图分析已降级完成，请人工复核')
+      } else {
+        setAnalysisNotice(null)
+        toast.success('歧义/意图分析完成')
+      }
       reload()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '分析失败')
@@ -193,6 +201,11 @@ export default function MissionContractPage() {
   return (
     <div className="space-y-4">
       {staleConflict && <StaleConflictBanner onReload={reload} />}
+      {analysisNotice && (
+        <div className="rounded-md border border-status-warning-border bg-status-warning-muted px-3 py-2 text-sm text-status-warning" role="status">
+          {analysisNotice}
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           Contract = 标准答案。冻结前需解决全部 P0/P1 歧义并完成 Scope 评审。

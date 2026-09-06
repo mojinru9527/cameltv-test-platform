@@ -2,13 +2,19 @@
 from __future__ import annotations
 
 import pytest
+from sqlalchemy import func, select
 
 from app.core.exceptions import APIException
 from app.core.config import settings
 from app.modules.aitde.common.enums import EvidenceStatus, RunStatus
 from app.modules.aitde.execution import service
+from app.modules.aitde.execution.models import ExecutionRun
 from app.modules.aitde.execution.schemas import RunCreate
 from app.modules.aitde.environment import snapshot_service
+
+
+def repository_count_runs(db) -> int:
+    return db.scalar(select(func.count(ExecutionRun.id))) or 0
 
 
 def _make_snapshot(db, mission_id, **overrides):
@@ -111,6 +117,7 @@ def test_create_run_submits_to_temporal_when_enabled(db, scenario_graph, monkeyp
     """temporal_enabled=true 时 create_run 必须提交 Workflow（一次）。"""
     submitted = []
     monkeypatch.setattr(settings, "temporal_enabled", True)
+    monkeypatch.setattr(service, "_has_online_worker", lambda _db: True)
     monkeypatch.setattr(
         service, "_submit_to_temporal", lambda db, pid, row: submitted.append(row.id)
     )
@@ -135,6 +142,7 @@ def test_retry_submits_new_workflow_when_enabled(db, scenario_graph, monkeypatch
     """retry 的子 run 也要提交新 workflow（不同 run_id → 不同 workflow_id）。"""
     submitted = []
     monkeypatch.setattr(settings, "temporal_enabled", True)
+    monkeypatch.setattr(service, "_has_online_worker", lambda _db: True)
     monkeypatch.setattr(
         service, "_submit_to_temporal", lambda db, pid, row: submitted.append(row.id)
     )
@@ -143,6 +151,24 @@ def test_retry_submits_new_workflow_when_enabled(db, scenario_graph, monkeypatch
     submitted.clear()
     child = service.retry_run(db, parent.id, project_id=1, user_id=9)
     assert submitted == [child.id]
+
+
+def test_create_run_rejects_when_durable_worker_is_offline(db, scenario_graph, monkeypatch):
+    monkeypatch.setattr(settings, "temporal_enabled", True)
+    monkeypatch.setattr(service, "_has_online_worker", lambda _db: False)
+    snap = _make_snapshot(db, scenario_graph["mission"].id)
+
+    with pytest.raises(APIException) as exc:
+        service.create_run(
+            db,
+            _run_payload(scenario_graph, snap.id),
+            project_id=1,
+            user_id=9,
+        )
+
+    assert exc.value.http_status == 503
+    assert "Worker" in exc.value.msg
+    assert repository_count_runs(db) == 0
 
 
 def test_build_scenario_input_carries_identifiers(db, scenario_graph):
