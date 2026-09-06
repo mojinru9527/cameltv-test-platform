@@ -121,6 +121,18 @@ def _parse_source_refs(raw: str) -> list[tuple[str, int]]:
     for entry in data:
         if not isinstance(entry, dict):
             continue
+        artifact_id = entry.get("artifact_id")
+        fragment_id = entry.get("fragment_id")
+        for node_type, node_id in (
+            (LineageNodeType.SOURCE_ARTIFACT.value, artifact_id),
+            (LineageNodeType.SOURCE_FRAGMENT.value, fragment_id),
+        ):
+            try:
+                parsed_id = int(node_id)
+            except (TypeError, ValueError):
+                continue
+            if parsed_id > 0:
+                refs.append((node_type, parsed_id))
         candidate = (
             entry.get("type") or entry.get("node_type") or entry.get("entity_type")
         )
@@ -133,7 +145,9 @@ def _parse_source_refs(raw: str) -> list[tuple[str, int]]:
         if candidate is None:
             continue
         try:
-            refs.append((str(candidate).upper(), int(id_val)))
+            parsed_id = int(id_val)
+            if parsed_id > 0:
+                refs.append((str(candidate).upper(), parsed_id))
         except (TypeError, ValueError):
             continue
     return refs
@@ -153,6 +167,7 @@ class LineageService:
         LineageNodeType.SCOPE_ITEM.value: ScopeItem,
         LineageNodeType.TEST_INTENT.value: TestIntent,
         LineageNodeType.CONTRACT_RULE.value: TestContractVersion,
+        LineageNodeType.CONTRACT_VERSION.value: TestContractVersion,
         LineageNodeType.SCENARIO.value: TestScenario,
         LineageNodeType.SCENARIO_VERSION.value: TestScenarioVersion,
         LineageNodeType.ORACLE.value: TestOracle,
@@ -411,7 +426,7 @@ class LineageBackfillService:
                             db,
                             project_id,
                             mission_id,
-                            LineageNodeType.CONTRACT_RULE.value,
+                            LineageNodeType.CONTRACT_VERSION.value,
                             ver.contract_version_id,
                             LineageNodeType.SCENARIO_VERSION.value,
                             ver.id,
@@ -1085,7 +1100,10 @@ class CoverageGuard:
         selected = json.loads(row.selected_json or "[]")
         mission_scenarios = list(
             db.scalars(
-                select(TestScenario).where(TestScenario.mission_id == mission_id)
+                select(TestScenario).where(
+                    TestScenario.mission_id == mission_id,
+                    TestScenario.project_id == project_id,
+                )
             ).all()
         )
 
@@ -1107,7 +1125,31 @@ class CoverageGuard:
             fallback_to = SelectionType.FULL.value
 
         if fallback_to:
+            selected = []
+            for scenario in mission_scenarios:
+                version_id = ImpactAnalyzer._latest_version_id(db, scenario.id)
+                if version_id is None:
+                    continue
+                selected.append(
+                    {
+                        "scenario_id": scenario.id,
+                        "scenario_version_id": version_id,
+                        "decision": SelectionDecision.FALLBACK.value,
+                        "reason": reason,
+                    }
+                )
+            row.selection_type = SelectionType.FULL.value
+            row.selected_json = _dumps(selected)
+            row.excluded_json = "[]"
             row.fallback_reason = reason
+            row.content_hash = _sha(
+                f"{row.selection_type}|{row.selected_json}|{row.excluded_json}"
+            )
+            repo.replace_selection_items(
+                db,
+                row.id,
+                [dict(item, source="COVERAGE_GUARD") for item in selected],
+            )
             db.flush()
             db.refresh(row)
 

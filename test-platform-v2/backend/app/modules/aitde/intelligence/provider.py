@@ -61,6 +61,11 @@ _SOURCE_TYPE_AI_INFERRED = "AI_INFERRED"
 _SOURCE_TYPE_RULE_BASELINE = "RULE_BASELINE"
 
 
+def _source_refs(item: dict) -> list[SourceRef]:
+    """Validate and preserve persisted provenance; deterministic output may not invent it."""
+    return [SourceRef.model_validate(ref) for ref in item.get("source_refs") or []]
+
+
 def _load_prompt(name: str) -> str:
     """Read a prompt template shipped next to this module."""
     return (_PROMPTS_DIR / f"{name}.txt").read_text(encoding="utf-8")
@@ -180,7 +185,7 @@ class DeterministicScopeProvider:
                         Option(key="out", label="本版本不测"),
                     ],
                     confidence=confidence,
-                    source_refs=[SourceRef(artifact_id=0, fragment_id=0)],
+                    source_refs=_source_refs(si),
                 )
             )
         return AmbiguityDetectionOutput(
@@ -200,7 +205,7 @@ class DeterministicScopeProvider:
                             f"{si.get('name', si['scope_key'])} 正确执行"
                         ],
                         risk_level=RiskLevel(si.get("risk_level", "P2")),
-                        source_refs=[SourceRef(artifact_id=0, fragment_id=0)],
+                        source_refs=_source_refs(si),
                     )
                 )
         return IntentDetectionOutput(
@@ -216,7 +221,7 @@ class DeterministicScopeProvider:
                 statement=si.get("reason", ""),
                 risk_level=RiskLevel(si.get("risk_level", "P2")),
                 source_type=_SOURCE_TYPE_RULE_BASELINE,
-                source_refs=[SourceRef(artifact_id=0, fragment_id=0)],
+                source_refs=_source_refs(si),
             )
             for si in context.scope_items
         ]
@@ -225,7 +230,7 @@ class DeterministicScopeProvider:
                 outcome_key=f"outcome-{it['intent_key']}",
                 statement=it.get("business_goal", ""),
                 source_type=_SOURCE_TYPE_RULE_BASELINE,
-                source_refs=[SourceRef(artifact_id=0, fragment_id=0)],
+                source_refs=_source_refs(it),
             )
             for it in context.intents
         ]
@@ -249,7 +254,7 @@ class DeterministicScopeProvider:
                 operator="eq",
                 expected_value={"ok": True},
                 source_type=_SOURCE_TYPE_RULE_BASELINE,
-                source_refs=[SourceRef(artifact_id=0, fragment_id=0)],
+                source_refs=_source_refs(rule),
                 required=False,
                 confidence=0.7,
             )
@@ -263,7 +268,7 @@ class DeterministicScopeProvider:
                     given={"state": "precondition"},
                     when={"action": rule["rule_key"]},
                     expected_state=rule,
-                    source_refs=[SourceRef(artifact_id=0, fragment_id=0)],
+                    source_refs=_source_refs(rule),
                     oracles=[oracle],
                 )
             )

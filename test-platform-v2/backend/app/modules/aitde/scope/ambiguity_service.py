@@ -1,6 +1,8 @@
 """Ambiguity / Intent service (V30-042..V30-044, V30-047)."""
 from __future__ import annotations
 
+import json
+
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import APIException
@@ -29,6 +31,7 @@ def _scope_items_context(db: Session, mission_id: int) -> list[dict]:
             "ai_confidence": r.ai_confidence,
             "reason": r.reason,
             "review_status": r.review_status,
+            "source_refs": json.loads(r.source_refs_json or "[]"),
         }
         for r in rows
     ]

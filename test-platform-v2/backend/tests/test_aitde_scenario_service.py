@@ -26,6 +26,7 @@ from app.modules.aitde.contract.schemas import (
     ContractGenerateRequest,
 )
 from app.modules.aitde.scenario import service as scenario_service
+from app.modules.aitde.scenario.schemas import ScenarioReviewRequest
 from app.modules.aitde.common.enums import ScopeDecision
 
 
@@ -147,6 +148,30 @@ def test_generate_and_list_and_projection(db):
     projection = scenario_service.functional_projection(db, lst[0]["id"], 1)
     assert projection.priority in ("P0", "P1", "P2", "P3")
     assert len(projection.steps) >= 1
+
+
+def test_scenario_review_status_is_canonical_and_legacy_reads_are_repaired(db):
+    m = _ready(db)
+    res = _to_frozen_contract(db, m.id)
+    scenario_service.generate(db, res["version_id"], 1, 9)
+    listed = scenario_service.list_scenarios(db, m.id, 1)
+    scenario_id = listed[0]["id"]
+
+    reviewed = scenario_service.review_scenario(
+        db, scenario_id, 1, 9, ScenarioReviewRequest(action="approve")
+    )
+    assert reviewed["review_status"] == "APPROVED"
+
+    version = scenario_service.repository.current_version(db, scenario_id)
+    version.review_status = "request_change"
+    db.commit()
+
+    assert scenario_service.get_scenario(db, scenario_id, 1)["review_status"] == (
+        "REQUEST_CHANGE"
+    )
+    assert scenario_service.list_scenarios(db, m.id, 1)[0]["review_status"] == (
+        "REQUEST_CHANGE"
+    )
 
 
 def test_generate_requires_frozen_contract_draft(db):

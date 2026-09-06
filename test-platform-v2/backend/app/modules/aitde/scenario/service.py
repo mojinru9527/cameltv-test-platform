@@ -123,7 +123,9 @@ def list_scenarios(db: Session, mission_id: int, project_id: int) -> list[dict]:
                 "title": vers.title,
                 "priority": vers.priority,
                 "risk_level": vers.risk_level,
-                "review_status": vers.review_status,
+                "review_status": scenario_repo.canonical_review_status(
+                    vers.review_status
+                ),
                 "version_no": vers.version_no,
                 "oracle_count": len(oracles),
             }
@@ -151,7 +153,7 @@ def get_scenario(db: Session, scenario_id: int, project_id: int) -> dict:
         "given_model": json.loads(version.given_model_json or "{}"),
         "when_model": json.loads(version.when_model_json or "{}"),
         "expected_state": json.loads(version.expected_state_json or "{}"),
-        "review_status": version.review_status,
+        "review_status": repository.canonical_review_status(version.review_status),
         "oracles": [_oracle_to_dict(o) for o in oracles],
     }
 
