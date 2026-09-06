@@ -1,10 +1,9 @@
 import { useParams } from 'react-router'
 import { useState } from 'react'
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Skeleton } from '@/ui'
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui'
 import PageHeader from '@/components/PageHeader'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import useAbortableEffect from '@/hooks/useAbortableEffect'
-import { CHANGE_KIND_LABELS, detectChanges, fetchChangeSet, type ChangeSet } from '@/api/smartRegression'
+import { CHANGE_KIND_LABELS, detectChanges, type ChangeSet } from '@/api/smartRegression'
 
 const CHANGE_TYPES = ['PRD', 'OPENAPI', 'DB_SCHEMA', 'UI_DISCOVERY', 'ENVIRONMENT', 'HISTORICAL_RISK']
 
@@ -15,22 +14,7 @@ export default function MissionChangesPage() {
   useDocumentTitle('变化检测')
   const [changeType, setChangeType] = useState('PRD')
   const [changeSet, setChangeSet] = useState<ChangeSet | null>(null)
-  const [loading, setLoading] = useState(false)
   const [detecting, setDetecting] = useState(false)
-
-  const load = (signal?: AbortSignal) => {
-    if (!missionId) return
-    setLoading(true)
-    fetchChangeSet(0, signal)
-      .catch(() => undefined)
-      .finally(() => {
-        if (!signal?.aborted) setLoading(false)
-      })
-  }
-
-  useAbortableEffect((signal) => {
-    load(signal)
-  }, [missionId])
 
   const onDetect = async (baseline: Record<string, unknown>, current: Record<string, unknown>) => {
     setDetecting(true)
@@ -40,15 +24,6 @@ export default function MissionChangesPage() {
     } finally {
       setDetecting(false)
     }
-  }
-
-  if (loading && !changeSet) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-32 w-full" />
-      </div>
-    )
   }
 
   return (

@@ -53,11 +53,17 @@ def run_intelligence(
     try:
         result = fn(prov, *args, **kwargs)
     except (IntelligenceLLMError, IntelligenceLLMResponseError) as exc:
+        from app.services.ai_errors import ai_health_registry
+
+        ai_health_registry.record_failure(project_id, exc)
         ai_ops_service.mark_failed(
             db, op, code="AI_CALL_FAILED", message=str(exc)[:500]
         )
         fallback = DeterministicScopeProvider()
         return fn(fallback, *args, **kwargs), op.id, fallback.created_by_type
+    from app.services.ai_errors import ai_health_registry
+
+    ai_health_registry.record_success(project_id)
     ai_ops_service.mark_succeeded(db, op, result_ref={})
     return result, op.id, prov.created_by_type
 

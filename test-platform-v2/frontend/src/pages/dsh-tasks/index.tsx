@@ -280,7 +280,8 @@ export default function DshTasksPage() {
   }
 
   const unavailable = Boolean(health && !health.available)
-  const sceneDisabled = !canRun || unavailable || Boolean(aiResolve && !aiResolve.configured)
+  const aiUnavailable = aiResolve?.health?.status === 'error'
+  const sceneDisabled = !canRun || unavailable || Boolean(aiResolve && !aiResolve.configured) || aiUnavailable
 
   const handleSceneClick = (scene: SceneDef) => {
     if (sceneDisabled) return
@@ -303,7 +304,7 @@ export default function DshTasksPage() {
             {health?.reason || 'DSH 服务未启用'}
           </div>
         ) : (
-          <Badge className="bg-status-success-muted text-status-success">DSH 可用</Badge>
+          <Badge className="bg-status-success-muted text-status-success">DSH 运行时可用</Badge>
         )}
         {aiResolve && !aiResolve.configured ? (
           <div className="flex items-center gap-2 text-xs text-status-warning bg-status-warning-muted border border-status-warning-border rounded-md px-3 py-1.5">
@@ -311,15 +312,25 @@ export default function DshTasksPage() {
             当前项目未配置 AI 提供方，
             <Link to="/ai-config" className="underline">去配置</Link>
           </div>
-        ) : aiResolve?.configured && aiResolve.provider ? (
+        ) : aiResolve?.configured && aiResolve.provider && aiUnavailable ? (
+          <div className="flex items-center gap-2 text-xs text-status-danger bg-status-danger-muted border border-status-danger-border rounded-md px-3 py-1.5">
+            <AlertCircle className="size-4" />
+            <span>AI 不可用：{aiResolve.health?.message || '最近一次验证失败'}</span>
+            <Link to="/ai-config" className="underline">去检查</Link>
+          </div>
+        ) : aiResolve?.configured && aiResolve.provider && aiResolve.health?.status === 'ok' ? (
           <Badge className="bg-status-success-muted text-status-success">
-            AI: {aiResolve.provider.name} / {aiResolve.provider.model}
+            AI 可用: {aiResolve.provider.name} / {aiResolve.provider.model}
+          </Badge>
+        ) : aiResolve?.configured && aiResolve.provider ? (
+          <Badge variant="outline">
+            AI 未验证: {aiResolve.provider.name} / {aiResolve.provider.model}
           </Badge>
         ) : null}
         <Button
           onClick={() => setCreateOpen(true)}
-          disabled={!canRun || unavailable || Boolean(aiResolve && !aiResolve.configured)}
-          title={aiResolve && !aiResolve.configured ? '当前项目未配置 AI 提供方，请先到 AI 配置页设置' : undefined}
+          disabled={sceneDisabled}
+          title={aiUnavailable ? aiResolve?.health?.message : aiResolve && !aiResolve.configured ? '当前项目未配置 AI 提供方，请先到 AI 配置页设置' : undefined}
         >
           <Play className="size-4 mr-1" />
           新建任务
@@ -343,7 +354,7 @@ export default function DshTasksPage() {
                   type="button"
                   onClick={() => handleSceneClick(scene)}
                   disabled={disabled}
-                  title={disabled ? (aiResolve && !aiResolve.configured ? '当前项目未配置 AI 提供方，请先到 AI 配置页设置' : 'DSH 服务不可用或无权限') : undefined}
+                  title={disabled ? (aiUnavailable ? aiResolve?.health?.message : aiResolve && !aiResolve.configured ? '当前项目未配置 AI 提供方，请先到 AI 配置页设置' : 'DSH 服务不可用或无权限') : undefined}
                   className={cn(
                     'flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-colors',
                     disabled

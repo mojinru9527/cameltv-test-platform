@@ -160,7 +160,11 @@ class TestPlaywrightExecutorPopen:
         mock_proc.pid = 99998
         mock_proc.returncode = 0
         mock_proc.communicate.side_effect = lambda: (
-            output_reader_started.set() or '{"suites":[]}',
+            output_reader_started.set() or json.dumps({
+                "suites": [{"specs": [{"tests": [{
+                    "results": [{"status": "passed", "duration": 1}],
+                }]}]}],
+            }),
             "",
         )
 
@@ -193,7 +197,14 @@ class TestPlaywrightExecutorPopen:
         mock_proc = MagicMock(spec=subprocess.Popen)
         mock_proc.pid = 99999
         mock_proc.poll.return_value = 0
-        mock_proc.communicate.return_value = ('{"suites":[]}', "")
+        mock_proc.communicate.return_value = (
+            json.dumps({
+                "suites": [{"specs": [{"tests": [{
+                    "results": [{"status": "passed", "duration": 1}],
+                }]}]}],
+            }),
+            "",
+        )
         mock_proc.returncode = 0
 
         with patch("subprocess.Popen", MagicMock(return_value=mock_proc)):
@@ -478,7 +489,95 @@ class TestPlaywrightJsonReportFile:
         assert result["result"]["total"] == 2
         assert result["result"]["pass_"] == 1
         assert result["result"]["fail"] == 1
-        assert result["error_message"] == ""
+        assert "exit=1" in result["error_message"]
+
+    @pytest.mark.parametrize(
+        ("exit_code", "stderr", "expected_message"),
+        [
+            (0, "Error: No tests found.", "没有发现可执行测试"),
+            (1, "Error: No tests found.", "exit=1"),
+        ],
+    )
+    def test_zero_test_report_can_never_pass(
+        self, db_session, ui_job_factory, ui_run_factory, monkeypatch, tmp_path,
+        exit_code, stderr, expected_message,
+    ):
+        from app.services import playwright_executor
+
+        playwright_dir = tmp_path / "playwright"
+        storage_dir = tmp_path / "ui-runs"
+        spec_path = playwright_dir / "specs" / "empty.spec.ts"
+        spec_path.parent.mkdir(parents=True)
+        spec_path.write_text("// mock spec", encoding="utf-8")
+        job = ui_job_factory(test_spec="specs/empty.spec.ts")
+        run = ui_run_factory(job_id=job.id)
+        artifact_dir = storage_dir / str(run.id)
+        artifact_dir.mkdir(parents=True)
+        (artifact_dir / "report.json").write_text(
+            json.dumps(self._report()), encoding="utf-8",
+        )
+
+        mock_proc = MagicMock(spec=subprocess.Popen)
+        mock_proc.pid = 99999
+        mock_proc.poll.return_value = exit_code
+        mock_proc.communicate.return_value = ("", stderr)
+        mock_proc.returncode = exit_code
+        monkeypatch.setattr(playwright_executor, "PLAYWRIGHT_DIR", playwright_dir)
+        monkeypatch.setattr(playwright_executor, "STORAGE_DIR", storage_dir)
+        monkeypatch.setattr(playwright_executor, "_resolve_cmd", lambda _: "npx")
+        monkeypatch.setattr(
+            playwright_executor.subprocess,
+            "Popen",
+            MagicMock(return_value=mock_proc),
+        )
+
+        result = playwright_executor.run_playwright_test(
+            db_session, run.id, job.id, job.project_id,
+        )
+
+        assert result["status"] in {"fail", "failed"}
+        assert expected_message in result["error_message"]
+        db_session.refresh(run)
+        assert run.status == "failed"
+
+    def test_nonzero_exit_can_never_pass_even_when_report_only_contains_passes(
+        self, db_session, ui_job_factory, ui_run_factory, monkeypatch, tmp_path,
+    ):
+        from app.services import playwright_executor
+
+        playwright_dir = tmp_path / "playwright"
+        storage_dir = tmp_path / "ui-runs"
+        spec_path = playwright_dir / "specs" / "partial.spec.ts"
+        spec_path.parent.mkdir(parents=True)
+        spec_path.write_text("// mock spec", encoding="utf-8")
+        job = ui_job_factory(test_spec="specs/partial.spec.ts")
+        run = ui_run_factory(job_id=job.id)
+        artifact_dir = storage_dir / str(run.id)
+        artifact_dir.mkdir(parents=True)
+        (artifact_dir / "report.json").write_text(
+            json.dumps(self._report("passed")), encoding="utf-8",
+        )
+
+        mock_proc = MagicMock(spec=subprocess.Popen)
+        mock_proc.pid = 99999
+        mock_proc.poll.return_value = 1
+        mock_proc.communicate.return_value = ("", "reporter teardown failed")
+        mock_proc.returncode = 1
+        monkeypatch.setattr(playwright_executor, "PLAYWRIGHT_DIR", playwright_dir)
+        monkeypatch.setattr(playwright_executor, "STORAGE_DIR", storage_dir)
+        monkeypatch.setattr(playwright_executor, "_resolve_cmd", lambda _: "npx")
+        monkeypatch.setattr(
+            playwright_executor.subprocess,
+            "Popen",
+            MagicMock(return_value=mock_proc),
+        )
+
+        result = playwright_executor.run_playwright_test(
+            db_session, run.id, job.id, job.project_id,
+        )
+
+        assert result["status"] in {"fail", "failed"}
+        assert "exit=1" in result["error_message"]
 
 
 class TestPlaywrightExecutorHelperFunctions:
@@ -784,7 +883,14 @@ class TestGeneratedSpecRestore:
         mock_proc = MagicMock(spec=subprocess.Popen)
         mock_proc.pid = 99997
         mock_proc.poll.return_value = 0
-        mock_proc.communicate.return_value = ('{"suites":[]}', "")
+        mock_proc.communicate.return_value = (
+            json.dumps({
+                "suites": [{"specs": [{"tests": [{
+                    "results": [{"status": "passed", "duration": 1}],
+                }]}]}],
+            }),
+            "",
+        )
         mock_proc.returncode = 0
 
         restored_path = PLAYWRIGHT_DIR / f"generated/{spec_name}"

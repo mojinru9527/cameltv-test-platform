@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import MissionContractPage from '../contract'
@@ -6,10 +6,11 @@ import MissionContractPage from '../contract'
 const mocks = vi.hoisted(() => ({
   fetchMissionAmbiguities: vi.fn(),
   fetchCurrentContract: vi.fn(),
+  analyzeMissionAmbiguities: vi.fn(),
 }))
 
 vi.mock('@/api/ambiguities', () => ({
-  analyzeMissionAmbiguities: vi.fn(),
+  analyzeMissionAmbiguities: mocks.analyzeMissionAmbiguities,
   fetchMissionAmbiguities: mocks.fetchMissionAmbiguities,
   resolveAmbiguity: vi.fn(),
   AMBIGUITY_STATUS_LABELS: {},
@@ -64,6 +65,7 @@ describe('MissionContractPage', () => {
   beforeEach(() => {
     mocks.fetchMissionAmbiguities.mockReset()
     mocks.fetchCurrentContract.mockReset()
+    mocks.analyzeMissionAmbiguities.mockReset()
     mocks.fetchMissionAmbiguities.mockResolvedValue([])
     mocks.fetchCurrentContract.mockResolvedValue({
       contract_id: 2,
@@ -79,6 +81,17 @@ describe('MissionContractPage', () => {
         approved_at: null,
       },
     })
+    mocks.analyzeMissionAmbiguities.mockResolvedValue({
+      ambiguity_count: 0,
+      intent_count: 1,
+      generation: {
+        mode: 'AI',
+        degraded: false,
+        fallback_used: false,
+        confidence: 1,
+        reason: null,
+      },
+    })
   })
 
   it('loads contract and ambiguity collections once on mount', async () => {
@@ -91,6 +104,26 @@ describe('MissionContractPage', () => {
     })
     expect(mocks.fetchMissionAmbiguities.mock.calls[0][0]).toBe(3)
     expect(mocks.fetchCurrentContract.mock.calls[0][0]).toBe(3)
+  })
+
+  it('keeps deterministic fallback provenance visible for manual review', async () => {
+    mocks.analyzeMissionAmbiguities.mockResolvedValue({
+      ambiguity_count: 0,
+      intent_count: 1,
+      generation: {
+        mode: 'DETERMINISTIC',
+        degraded: true,
+        fallback_used: true,
+        confidence: 0.5,
+        reason: 'AI 调用失败，已改用确定性规则，结果必须人工复核',
+      },
+    })
+    renderPage()
+
+    fireEvent.click(await screen.findByRole('button', { name: /分析歧义\/意图/ }))
+
+    expect(await screen.findByText(/AI 调用失败，已改用确定性规则/)).toBeTruthy()
+    expect(screen.getByText(/置信度 50%/)).toBeTruthy()
   })
 
   // --- Batch 230 S1 / DEF-20260905-001 ---

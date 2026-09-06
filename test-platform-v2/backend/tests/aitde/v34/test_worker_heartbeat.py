@@ -131,7 +131,10 @@ def test_worker_launcher_manages_heartbeat_and_gateway_processes():
     platform_root = Path(__file__).resolve().parents[4]
     script = (platform_root / "deploy" / "aitde-runtime" / "scripts" / "start-worker.sh").read_text(encoding="utf-8")
 
-    assert 'cd "$(dirname "$0")/../../../backend"' in script
+    assert 'BACKEND_APP_DIR=${BACKEND_APP_DIR:-"$(dirname "$0")/../../../backend"}' in script
+    assert 'cd "$BACKEND_APP_DIR"' in script
+    assert 'printf \'%s\\n\' "$heartbeat_pid" > "$WORKER_RUNTIME_DIR/heartbeat.pid"' in script
+    assert 'printf \'%s\\n\' "$worker_pid" > "$WORKER_RUNTIME_DIR/gateway.pid"' in script
     assert "app.modules.aitde.workflow.worker_heartbeat" in script
     assert "app.modules.aitde.workflow.gateway" in script
     assert "wait -n" in script

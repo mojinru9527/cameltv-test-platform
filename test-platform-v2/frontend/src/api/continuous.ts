@@ -149,7 +149,7 @@ export function fetchMissionAcceptance(missionId: number, signal?: AbortSignal):
 
 export function evaluateGate(
   missionId: number,
-  payload: { project_id?: number; campaign_id?: number | null; build_observation_id?: number | null },
+  payload: { project_id?: number; campaign_id: number; build_observation_id: number },
 ): Promise<GateResult> {
   return aitdeV2.post(`/missions/${missionId}/quality-gates/evaluate`, payload)
 }

@@ -129,4 +129,13 @@ describe('接口资产服务与模块层级', () => {
     await waitFor(() => expect((previous as HTMLButtonElement).disabled).toBe(false))
     expect(screen.queryByRole('button', { name: '向右查看更多服务' })).toBeNull()
   })
+
+  it('移动端服务筛选项保持独立宽度，不会互相压缩叠字', async () => {
+    render(<MemoryRouter><AssetTab onOpenImport={vi.fn()} refreshKey={0} /></MemoryRouter>)
+
+    const serviceTab = await screen.findByRole('tab', { name: /服务 A/ })
+    const allTab = screen.getByRole('tab', { name: /全部服务/ })
+    expect(serviceTab.className).toContain('flex-none')
+    expect(allTab.className).toContain('flex-none')
+  })
 })

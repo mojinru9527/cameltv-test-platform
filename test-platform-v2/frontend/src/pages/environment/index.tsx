@@ -53,6 +53,16 @@ const ENV_TYPE_MAP: Record<string, { label: string; tone: BadgeTone }> = {
   prod: { label: '生产', tone: 'danger' },
 }
 
+const ACCESS_TYPE_LABELS: Record<string, string> = {
+  public: '公网',
+  internal: '内网',
+}
+
+const EXECUTION_MODE_LABELS: Record<string, string> = {
+  on_platform: '平台执行',
+  runner: '专属 Runner',
+}
+
 export default function EnvironmentPage() {
   useDocumentTitle('目标环境')
   // ── Environments (useApi — P1-8) ──
@@ -131,9 +141,8 @@ export default function EnvironmentPage() {
   const openEnvEdit = (env: Environment) => {
     setEditEnv(env)
     // Batch 206：新字段用防御性读取（旧环境缺省 public/on_platform）
-    const ext = env as Environment & { access_type?: string; execution_mode?: string; runner_key?: string }
     setEnvForm({ name: env.name, env_type: env.env_type, base_url: env.base_url, description: env.description,
-                 access_type: ext.access_type ?? 'public', execution_mode: ext.execution_mode ?? 'on_platform', runner_key: ext.runner_key ?? '' })
+                 access_type: env.access_type ?? 'public', execution_mode: env.execution_mode ?? 'on_platform', runner_key: env.runner_key ?? '' })
     setEnvDialog(true)
   }
 
@@ -290,7 +299,7 @@ export default function EnvironmentPage() {
                       <Globe className="size-5 text-muted-foreground" />
                       <div>
                         <CardTitle className="text-lg">{selectedEnv.name}</CardTitle>
-                        <CardDescription>{selectedEnv.description || selectedEnv.base_url || '未设置描述'}</CardDescription>
+                        <CardDescription>{selectedEnv.description || '未设置描述'}</CardDescription>
                       </div>
                     </div>
                     <div className="flex gap-1">
@@ -308,6 +317,24 @@ export default function EnvironmentPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
+                  <dl className="mb-5 grid gap-x-6 gap-y-3 border-b pb-5 text-sm sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="min-w-0">
+                      <dt className="text-xs text-muted-foreground">Base URL</dt>
+                      <dd className="mt-1 break-all font-mono">{selectedEnv.base_url || '未配置'}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">访问类型</dt>
+                      <dd className="mt-1">{ACCESS_TYPE_LABELS[selectedEnv.access_type ?? 'public'] ?? selectedEnv.access_type}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">执行模式</dt>
+                      <dd className="mt-1">{EXECUTION_MODE_LABELS[selectedEnv.execution_mode ?? 'on_platform'] ?? selectedEnv.execution_mode}</dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-xs text-muted-foreground">Runner Key</dt>
+                      <dd className="mt-1 break-all font-mono">{selectedEnv.runner_key || '未配置'}</dd>
+                    </div>
+                  </dl>
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold">变量列表</h3>
                     {canManage && (

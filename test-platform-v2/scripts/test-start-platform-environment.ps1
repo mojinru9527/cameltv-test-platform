@@ -84,4 +84,48 @@ Assert-Throws `
     "manifest reconciliation must reject a foreign listener"
 Assert-Equal 1111 $foreignManifest.pids.backend "a rejected foreign listener must not alter the manifest"
 
-Write-Host "PASS: runtime listener PID forwarding, manifest reconciliation, and worktree ownership guards."
+$productionWorkerProfile = @{
+    PLATFORM_TARGET = "production"
+    PLATFORM_FRONTEND_URL = "https://swiftbugs.cn"
+    COMPOSE_PROJECT_NAME = "cameltv-tp-production"
+    COMPOSE_PROFILES = "aitde-worker"
+    FRONTEND_PORT = "80"
+    BACKEND_PORT = "8000"
+    ENVIRONMENT = "production"
+    DATABASE_URL = "postgresql://cameltv:secret@postgres:5432/cameltv_production"
+    AUTO_CREATE_TABLES = "false"
+    COOKIE_SECURE = "true"
+    ALLOWED_ORIGINS = "https://swiftbugs.cn"
+    CSRF_ALLOWED_ORIGINS = "https://swiftbugs.cn"
+    POSTGRES_DB = "cameltv_production"
+    AITDE_V3_ENABLED = "true"
+    TEMPORAL_ENABLED = "true"
+    TEMPORAL_GRPC_ENDPOINT = "aitde-temporal:7233"
+    AITDE_WORKER_API_TOKEN = "worker-token"
+    AITDE_WORKER_KEY = "aitde-worker"
+    AITDE_WORKER_HEARTBEAT_SECONDS = "60"
+}
+Assert-RuntimeProfile -Profile $productionWorkerProfile -RequestedTarget "production"
+
+$missingWorkerToken = $productionWorkerProfile.Clone()
+$missingWorkerToken["AITDE_WORKER_API_TOKEN"] = ""
+Assert-Throws `
+    { Assert-RuntimeProfile -Profile $missingWorkerToken -RequestedTarget "production" } `
+    "requires non-empty AITDE_WORKER_API_TOKEN" `
+    "the managed Worker must fail before Compose when its token is missing"
+
+$disabledTemporal = $productionWorkerProfile.Clone()
+$disabledTemporal["TEMPORAL_ENABLED"] = "false"
+Assert-Throws `
+    { Assert-RuntimeProfile -Profile $disabledTemporal -RequestedTarget "production" } `
+    "requires AITDE_V3_ENABLED=true and TEMPORAL_ENABLED=true" `
+    "the managed Worker must fail before Compose when Temporal is disabled"
+
+$staleHeartbeat = $productionWorkerProfile.Clone()
+$staleHeartbeat["AITDE_WORKER_HEARTBEAT_SECONDS"] = "180"
+Assert-Throws `
+    { Assert-RuntimeProfile -Profile $staleHeartbeat -RequestedTarget "production" } `
+    "at least 1 and less than 180" `
+    "the managed Worker heartbeat must stay inside the offline threshold"
+
+Write-Host "PASS: runtime ownership and managed Worker production profile guards."

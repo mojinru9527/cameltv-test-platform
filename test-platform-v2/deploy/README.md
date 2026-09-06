@@ -58,6 +58,10 @@ production 在基础设施就绪后使用不同 `COMPOSE_PROJECT_NAME`、端口�
 | `ALLOWED_ORIGINS` | 无 | 最终 HTTPS 入口的精确来源 |
 | `ELK_BASE_URL` | (空) | Kibana 地址，用于 traceId 链路 |
 | `ELK_INDEX` | `*` | ELK 索引 pattern |
+| `COMPOSE_PROFILES` | (空) | 生产设为 `aitde-worker` 后由 Compose 管理 Durable Worker |
+| `AITDE_WORKER_API_TOKEN` | 无 | Worker 专用 `workers:register` Token，生产启用 Worker 时必填 |
+| `TEMPORAL_GRPC_ENDPOINT` | `127.0.0.1:7233` | Worker 和后端共同使用的 Temporal gRPC 地址 |
+| `AITDE_WORKER_HEARTBEAT_SECONDS` | `60` | Worker 心跳间隔，必须小于 180 秒 |
 
 ## 常用命令
 
@@ -69,6 +73,12 @@ docker compose --project-name cameltv-tp-production \
 # 查看日志
 docker compose --project-name cameltv-tp-production \
   --env-file ../config/runtime/production.env logs -f backend
+
+# 查看常驻 Worker（production.env 含 COMPOSE_PROFILES=aitde-worker）
+docker compose --project-name cameltv-tp-production \
+  --env-file ../config/runtime/production.env ps aitde-worker
+docker compose --project-name cameltv-tp-production \
+  --env-file ../config/runtime/production.env logs -f aitde-worker
 
 # 重启
 docker compose --project-name cameltv-tp-production \
@@ -106,6 +116,12 @@ Python 依赖安装在 `/opt/venv`，最终进程以固定 UID/GID `10001:10001`
 的 `cameltv` 用户运行，不依赖或访问 `/root/.local`。镜像构建阶段会把
 `/app`、`/data`、`/ms-playwright`、`/app/storage` 和运行用户缓存目录
 设置为可读写。
+
+同一镜像还包含 `/usr/local/bin/start-aitde-worker`。生产 profile 启用
+`aitde-worker` 后，启动器同时管理 Temporal 轮询和每 60 秒一次的控制面心跳；
+任一子进程退出会结束容器，Compose 的 `restart: unless-stopped` 随即重启整个
+Worker。服务器或 Docker 重启后无需人工再次启动；主动执行 `docker compose stop`
+或 `down` 仍会按运维意图保持停止。
 
 这些依赖会显著增大 backend 镜像。未完成完整构建时应按“数百 MB 的浏览器
 与系统库增量”评估，最终压缩/展开体积必须以实际 `docker image inspect`

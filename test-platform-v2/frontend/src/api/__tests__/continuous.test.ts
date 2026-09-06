@@ -76,8 +76,11 @@ describe('continuous API functions', () => {
 
   it('evaluateGate POSTs /missions/:id/quality-gates/evaluate', async () => {
     mockPost.mockResolvedValue({ id: 1 })
-    await evaluateGate(7, { campaign_id: 3 })
-    expect(mockPost).toHaveBeenCalledWith('/missions/7/quality-gates/evaluate', { campaign_id: 3 })
+    await evaluateGate(7, { campaign_id: 3, build_observation_id: 8 })
+    expect(mockPost).toHaveBeenCalledWith('/missions/7/quality-gates/evaluate', {
+      campaign_id: 3,
+      build_observation_id: 8,
+    })
   })
 
   it('fetchRunProfiles GETs /run-profiles', async () => {

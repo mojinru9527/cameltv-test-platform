@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const fetchApiExecutionTasks = vi.fn()
@@ -82,5 +82,18 @@ describe('API execution task controls', () => {
 
     const copyButton = screen.getByRole('button', { name: '复制 curl' })
     expect(copyButton.getAttribute('aria-label')).toBe('复制 curl')
+  })
+
+  it('stacks task content into non-overlapping rows on narrow screens', async () => {
+    render(<TaskTab />)
+
+    const row = await screen.findByTestId('api-task-row-9')
+    expect(row.className).toContain('flex-col')
+    expect(row.className).toContain('sm:flex-row')
+
+    const meta = within(row).getByTestId('api-task-row-meta')
+    expect(meta.className).toContain('w-full')
+    expect(meta.className).toContain('flex-wrap')
+    expect(meta.className).toContain('sm:w-auto')
   })
 })

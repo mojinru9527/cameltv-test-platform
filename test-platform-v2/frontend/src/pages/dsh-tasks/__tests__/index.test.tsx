@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Radix Select 在 jsdom 需要 scrollIntoView（jsdom 未实现，打开下拉时崩溃）
 if (!Element.prototype.scrollIntoView) {
@@ -14,6 +14,8 @@ const mockCreateDshTask = vi.fn()
 const mockCancelDshTask = vi.fn()
 const mockFetchDshModelPool = vi.fn()
 const mockFetchDshTaskArtifacts = vi.fn().mockResolvedValue([])
+const mockFetchAiResolve = vi.fn()
+const mockFetchAiProviders = vi.fn()
 
 vi.mock('@/hooks/useDocumentTitle', () => ({ useDocumentTitle: vi.fn() }))
 vi.mock('@/api/dshTasks', () => ({
@@ -25,6 +27,10 @@ vi.mock('@/api/dshTasks', () => ({
   fetchDshModelPool: (...args: unknown[]) => mockFetchDshModelPool(...args),
   fetchDshTaskArtifacts: (...args: unknown[]) => mockFetchDshTaskArtifacts(...args),
 }))
+vi.mock('@/api/aiConfig', () => ({
+  fetchAiResolve: (...args: unknown[]) => mockFetchAiResolve(...args),
+  fetchAiProviders: (...args: unknown[]) => mockFetchAiProviders(...args),
+}))
 vi.mock('@/stores/auth', () => ({
   // QA 打回 P2：useAuthStore 是 selector 式 hook，mock 必须应用 selector（仓库既有范式）
   useAuthStore: (selector: (state: { hasPerm: (p: string) => boolean }) => unknown) =>
@@ -33,6 +39,15 @@ vi.mock('@/stores/auth', () => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import DshTasksPage from '../index'
+
+beforeEach(() => {
+  mockFetchAiResolve.mockResolvedValue({
+    configured: true,
+    provider: { id: 1, name: 'DeepSeek 官方', model: 'deepseek-v4-flash' },
+    health: { status: 'ok', kind: '', message: '', provider_id: 1, checked_at: '2026-09-06' },
+  })
+  mockFetchAiProviders.mockResolvedValue([])
+})
 
 afterEach(() => {
   cleanup()
@@ -74,6 +89,29 @@ function taskFixture(overrides: Record<string, any> = {}): Record<string, any> {
 }
 
 describe('DSH 任务页（Batch 191 团队模式）', () => {
+  it('verified quota failure is shown as unavailable and blocks new tasks', async () => {
+    mockFetchDshTasks.mockResolvedValue({ items: [], total: 0, page: 1, page_size: 50 })
+    mockFetchDshHealth.mockResolvedValue({ available: true, reason: '' })
+    mockFetchAiResolve.mockResolvedValue({
+      configured: true,
+      provider: { id: 1, name: 'DeepSeek 官方', model: 'deepseek-v4-flash' },
+      health: {
+        status: 'error',
+        kind: 'quota',
+        message: 'AI 提供方余额或配额不足，请充值后重试',
+        provider_id: 1,
+        checked_at: '2026-09-06',
+      },
+    })
+    mockDefaultPool()
+
+    render(<MemoryRouter><DshTasksPage /></MemoryRouter>)
+
+    expect(await screen.findByText(/AI 不可用/)).toBeTruthy()
+    expect(screen.getByText(/余额或配额不足/)).toBeTruthy()
+    expect((screen.getByRole('button', { name: /新建任务/ }) as HTMLButtonElement).disabled).toBe(true)
+  })
+
   it('列表渲染 mode 徽标：团队/标准', async () => {
     mockFetchDshTasks.mockResolvedValue({ items: [
       taskFixture({ id: 1, mode: 'team' }),

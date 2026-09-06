@@ -10,6 +10,9 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
+from app.core.exceptions import APIException
 from app.modules.aitde.common.enums import QualityGateResult
 from app.modules.aitde.continuous import service
 from app.modules.aitde.continuous.models import (
@@ -109,7 +112,7 @@ def _seed(
     db.add(
         ExecutionCampaign(
             id=400, project_id=1, mission_id=7, environment_id=1,
-            campaign_type="FULL", build_observation_id=300, status="RUNNING",
+            campaign_type="FULL", build_observation_id=300, status="COMPLETED",
             created_by_type="AUTO",
         )
     )
@@ -188,7 +191,7 @@ def test_gate_g3_g9_never_vacuous_pass(db):
     # pass when env_checked == 0.
     campaign_id, build_id = _seed(db, run_id=None)
     gate = service.evaluate_gate(db, 1, 7, campaign_id, build_id)
-    assert gate["result"] == QualityGateResult.FAIL.value
+    assert gate["result"] == QualityGateResult.INCONCLUSIVE.value
     checks = {c["gate"]: c for c in json.loads(gate["checks_json"])}
     assert checks["G5_REQUIRED_SCENARIO_EXECUTED"]["pass"] is False
     assert checks["G9_RUN_ENV_MATCHES_BUILD"]["pass"] is False
@@ -201,3 +204,50 @@ def test_gate_g4_requires_oracle_binding_not_vacuous(db):
     gate = service.evaluate_gate(db, 1, 7, campaign_id, build_id)
     checks = {c["gate"]: c for c in json.loads(gate["checks_json"])}
     assert checks["G4_ORACLE_COVERAGE_COMPLETE"]["pass"] is False
+
+
+def test_gate_requires_build_and_campaign(db):
+    _seed(db)
+
+    with pytest.raises(APIException, match="Build.*Campaign"):
+        service.evaluate_gate(db, 1, 7, None, None)
+
+
+def test_gate_rejects_campaign_from_another_project_or_mission(db):
+    campaign_id, build_id = _seed(db)
+
+    with pytest.raises(APIException, match="Campaign"):
+        service.evaluate_gate(db, 2, 7, campaign_id, build_id)
+    with pytest.raises(APIException, match="Campaign"):
+        service.evaluate_gate(db, 1, 8, campaign_id, build_id)
+
+
+def test_gate_rejects_build_not_bound_to_campaign(db):
+    campaign_id, _ = _seed(db)
+    db.add(
+        BuildObservation(
+            id=301, mission_id=7, environment_id=1, fingerprint_id=200, status="NEW"
+        )
+    )
+    db.commit()
+
+    with pytest.raises(APIException, match="Build"):
+        service.evaluate_gate(db, 1, 7, campaign_id, 301)
+
+
+def test_zero_execution_checks_are_not_evaluated_and_never_pass(db):
+    campaign_id, build_id = _seed(db, run_id=None)
+    gate = service.evaluate_gate(db, 1, 7, campaign_id, build_id)
+    checks = {c["gate"]: c for c in json.loads(gate["checks_json"])}
+
+    for gate_id in (
+        "G5_REQUIRED_SCENARIO_EXECUTED",
+        "G6_P0_BUSINESS_FAIL_ZERO",
+        "G7_P0_INCONCLUSIVE_ZERO",
+        "G8_REQUIRED_EVIDENCE_COMPLETE",
+        "G9_RUN_ENV_MATCHES_BUILD",
+        "G10_RUN_CONTRACT_MATCHES_FROZEN",
+    ):
+        assert checks[gate_id]["status"] == "NOT_EVALUATED"
+        assert checks[gate_id]["pass"] is False
+    assert gate["result"] == QualityGateResult.INCONCLUSIVE.value

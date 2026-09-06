@@ -61,6 +61,8 @@ COPY test-platform-v2/backend/app ./app
 COPY test-platform-v2/backend/alembic ./alembic
 COPY test-platform-v2/backend/alembic.ini .
 COPY test-platform-v2/backend/tests/playwright ./tests/playwright
+COPY test-platform-v2/deploy/aitde-runtime/scripts/start-worker.sh /usr/local/bin/start-aitde-worker
+RUN chmod 0555 /usr/local/bin/start-aitde-worker
 
 # lanhu-mcp 是 Git 子模块，云构建（Railway/Vercel/CI）默认不拉取子模块内容。
 # 在构建期直接从子模块 remote 拉取，保证无本地子模块也能构建（长期验证路径）。

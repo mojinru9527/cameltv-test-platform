@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from app.modules.aitde.common.enums import LineageEdgeType, LineageNodeType
+from app.modules.aitde.contract.models import TestContract, TestContractVersion
 from app.modules.aitde.scenario.models import (
     TestOracle,
     TestScenario,
@@ -120,6 +121,13 @@ def test_backfill_builds_and_is_idempotent(db):
     db.add_all([frag, scope])
     db.flush()
 
+    contract = TestContract(mission_id=7)
+    db.add(contract)
+    db.flush()
+    contract_version = TestContractVersion(contract_id=contract.id, version_no=1)
+    db.add(contract_version)
+    db.flush()
+
     scenario = TestScenario(project_id=1, mission_id=7, scenario_key="SC1")
     db.add(scenario)
     db.flush()
@@ -127,7 +135,7 @@ def test_backfill_builds_and_is_idempotent(db):
         scenario_id=scenario.id,
         version_no=1,
         risk_level="P0",
-        contract_version_id=0,
+        contract_version_id=contract_version.id,
         source_refs_json="[]",
     )
     db.add(version)
@@ -149,3 +157,17 @@ def test_backfill_builds_and_is_idempotent(db):
         LineageNodeType.SCENARIO_VERSION.value,
         LineageNodeType.ORACLE.value,
     ) in types
+    assert (
+        LineageNodeType.CONTRACT_VERSION.value,
+        LineageNodeType.SCENARIO_VERSION.value,
+    ) in types
+    assert not any(e["from_type"] == "CONTRACT_RULE" for e in edges)
+
+
+def test_source_ref_parser_uses_positive_persisted_fragment_ids():
+    assert service._parse_source_refs(
+        '[{"artifact_id":41,"fragment_id":73},{"artifact_id":0,"fragment_id":0}]'
+    ) == [
+        (LineageNodeType.SOURCE_ARTIFACT.value, 41),
+        (LineageNodeType.SOURCE_FRAGMENT.value, 73),
+    ]

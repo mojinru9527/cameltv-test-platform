@@ -1,6 +1,8 @@
 """Ambiguity / Intent service (V30-042..V30-044, V30-047)."""
 from __future__ import annotations
 
+import json
+
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import APIException
@@ -29,6 +31,7 @@ def _scope_items_context(db: Session, mission_id: int) -> list[dict]:
             "ai_confidence": r.ai_confidence,
             "reason": r.reason,
             "review_status": r.review_status,
+            "source_refs": json.loads(r.source_refs_json or "[]"),
         }
         for r in rows
     ]
@@ -47,12 +50,13 @@ def analyze(
     )
     from app.modules.aitde.intelligence.runner import run_intelligence
 
+    operation_id = None
     if provider is not None:
         amb_output = provider.detect_ambiguities(context)
         intent_output = provider.design_intents(context)
         actor = provider.created_by_type
     else:
-        (amb_output, intent_output), _op_id, actor = run_intelligence(
+        (amb_output, intent_output), operation_id, actor = run_intelligence(
             db,
             project_id,
             mission_id,
@@ -67,9 +71,24 @@ def analyze(
         db, mission_id, intent_output, actor=actor, user_id=user_id
     )
     db.commit()
+    degraded = actor != "AI"
+    fallback_used = degraded and operation_id is not None
+    if fallback_used:
+        reason = "AI 调用失败，已改用确定性规则，结果必须人工复核"
+    elif degraded:
+        reason = "未使用外部 AI，结果由确定性规则生成，必须人工复核"
+    else:
+        reason = None
     return {
         "ambiguity_count": len(ambiguities),
         "intent_count": len(intents),
+        "generation": {
+            "mode": actor,
+            "degraded": degraded,
+            "fallback_used": fallback_used,
+            "confidence": 0.5 if degraded else 1.0,
+            "reason": reason,
+        },
     }
 
 

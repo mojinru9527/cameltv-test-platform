@@ -86,7 +86,6 @@ class EnvironmentSnapshotOut(BaseModel):
 
 class RunCreate(BaseModel):
     mission_id: int
-    scenario_id: int
     scenario_version_id: int
     contract_version_id: int
     adapter_id: int | None = None

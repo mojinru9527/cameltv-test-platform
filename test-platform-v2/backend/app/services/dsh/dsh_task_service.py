@@ -44,6 +44,7 @@ from app.services.ai_config_service import (
     EffectiveAiConfig,
     ai_config_service,
 )
+from app.services.ai_errors import ai_health_registry
 
 logger = logging.getLogger(__name__)
 
@@ -217,6 +218,20 @@ def _friendly_error(error: str, provider_name: str = "") -> str:
     return text
 
 
+def _record_provider_health(task: DshTask, provider, result) -> None:
+    provider_id = getattr(provider, "provider_id", None)
+    provider_name = getattr(provider, "provider_name", "")
+    if result.exit_code == 0:
+        ai_health_registry.record_success(task.project_id, provider_id)
+    else:
+        ai_health_registry.record_failure(
+            task.project_id,
+            result.error or f"DSH exited with code {result.exit_code}",
+            provider_id,
+            provider_name,
+        )
+
+
 def execute_task(db, task: DshTask, runner=None) -> None:
     """执行已认领任务并写回结果/错误。runner 可注入用于测试。
 
@@ -257,6 +272,7 @@ def execute_task(db, task: DshTask, runner=None) -> None:
         finally:
             _beat_stop.set()
             _beat.join(timeout=5)
+        _record_provider_health(task, provider, result)
         task.status = "success" if result.exit_code == 0 else "failed"
         task.output_text = (result.final_response or "")[:20000]
         task.error = (
@@ -515,6 +531,8 @@ def _execute_team(db, task: DshTask, params: dict, runner, provider: "EffectiveA
         result = DshRunResult(final_response="", exit_code=1, error="团队执行线程异常终止（未知原因）")
     else:
         result = result_box.get()
+
+    _record_provider_health(task, provider, result)
 
     # 终态：用 result.workspace 精确路径再读一次 team.json（无扫描歧义）
     # Batch 191 冒烟修复：glob 递归（**/team.json）覆盖船长删除团队后的归档路径。

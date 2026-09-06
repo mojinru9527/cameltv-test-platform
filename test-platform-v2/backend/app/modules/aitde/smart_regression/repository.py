@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.modules.aitde.smart_regression.models import (
@@ -193,6 +193,17 @@ def create_selection_item(
     db.add(row)
     db.flush()
     return row
+
+
+def replace_selection_items(
+    db: Session, selection_id: int, items: list[dict]
+) -> list[RegressionSelectionItem]:
+    db.execute(
+        delete(RegressionSelectionItem).where(
+            RegressionSelectionItem.selection_id == selection_id
+        )
+    )
+    return [create_selection_item(db, selection_id, item) for item in items]
 
 
 def count_edges_to(db: Session, project_id: int, to_type: str, to_id: int) -> int:

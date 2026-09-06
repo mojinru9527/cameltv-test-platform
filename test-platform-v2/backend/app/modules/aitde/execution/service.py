@@ -32,6 +32,26 @@ def _utcnow() -> datetime:
     """Naive UTC timestamp matching the naive DateTime columns."""
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
+
+def _has_online_worker(db: Session) -> bool:
+    from app.modules.aitde.common.enums import WorkerStatus
+    from app.modules.aitde.workflow import repository as workflow_repository
+
+    workflow_repository.mark_offline_workers(db)
+    return any(
+        worker.status == WorkerStatus.ONLINE.value
+        for worker in workflow_repository.list_workers(db)
+    )
+
+
+def _require_online_worker(db: Session) -> None:
+    if settings.temporal_enabled and not _has_online_worker(db):
+        raise APIException(
+            code=503,
+            msg="Durable Worker 当前离线，未创建执行；请恢复 Worker 心跳后重试",
+            http_status=503,
+        )
+
 # Legal runtime_status (scheduler) transitions. Outcome is decided by the
 # classifier, not via this table.
 ALLOWED_RUN_TRANSITIONS: dict[str, set[str]] = {
@@ -201,6 +221,7 @@ def create_run(
 
     _validate_run_binding(db, project_id, scenario_id, scenario_version_id, contract_version_id)
     _validate_oracle_readiness(db, scenario_version_id)
+    _require_online_worker(db)
 
     trigger_type = data.get("trigger_type") or TriggerType.MANUAL.value
     row = repository.create_run(
@@ -333,6 +354,7 @@ def cancel_run(db: Session, run_id: int, project_id: int) -> ExecutionRun:
 def retry_run(db: Session, run_id: int, project_id: int, user_id: int) -> ExecutionRun:
     """Create a child run (parent_run_id set, retry_no = parent.retry_no + 1)."""
     parent = get_run(db, run_id, project_id)
+    _require_online_worker(db)
     child = repository.create_run(
         db,
         {

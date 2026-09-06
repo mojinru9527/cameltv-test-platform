@@ -18,8 +18,8 @@ from app.modules.aitde.common.enums import (
 
 
 class SourceRef(BaseModel):
-    artifact_id: int
-    fragment_id: int | None = None
+    artifact_id: int = Field(gt=0)
+    fragment_id: int | None = Field(default=None, gt=0)
     location: str | None = None
 
 

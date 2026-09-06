@@ -32,7 +32,14 @@ export async function deleteSchedule(id: number) {
   return api.delete(`/schedules/${id}`)
 }
 
-export async function triggerSchedule(id: number) {
+export interface ScheduleTriggerResult {
+  triggered: boolean
+  reason?: string
+  run_id?: number | null
+  status?: string
+}
+
+export async function triggerSchedule(id: number): Promise<ScheduleTriggerResult> {
   return api.post(`/schedules/${id}/trigger`)
 }
 

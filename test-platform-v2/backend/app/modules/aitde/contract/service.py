@@ -55,6 +55,7 @@ def _approved_scope_items(db: Session, mission_id: int) -> list[dict]:
             "risk_level": r.risk_level,
             "reason": r.reason,
             "review_status": r.review_status,
+            "source_refs": json.loads(r.source_refs_json or "[]"),
         }
         for r in rows
         if r.review_status == ReviewStatus.APPROVED.value
@@ -66,7 +67,12 @@ def _approved_intents(db: Session, mission_id: int) -> list[dict]:
     from app.modules.aitde.scope.ambiguity_repository import list_intents as _li
 
     return [
-        {"intent_key": i.intent_key, "title": i.title, "business_goal": i.business_goal}
+        {
+            "intent_key": i.intent_key,
+            "title": i.title,
+            "business_goal": i.business_goal,
+            "source_refs": json.loads(i.source_refs_json or "[]"),
+        }
         for i in _li(db, mission_id)
         if i.review_status == ReviewStatus.APPROVED.value
     ]

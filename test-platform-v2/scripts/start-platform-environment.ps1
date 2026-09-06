@@ -253,6 +253,39 @@ function Assert-RuntimeProfile {
     if ($databaseName -cne $Profile["POSTGRES_DB"]) {
         throw "The production DATABASE_URL database must match POSTGRES_DB."
     }
+
+    $composeProfiles = @()
+    if ($Profile.ContainsKey("COMPOSE_PROFILES") -and -not [string]::IsNullOrWhiteSpace($Profile["COMPOSE_PROFILES"])) {
+        $composeProfiles = @(
+            $Profile["COMPOSE_PROFILES"].Split(",", [System.StringSplitOptions]::RemoveEmptyEntries) |
+                ForEach-Object { $_.Trim() }
+        )
+    }
+    if ($composeProfiles -contains "aitde-worker") {
+        foreach ($key in @(
+            "AITDE_WORKER_API_TOKEN",
+            "AITDE_WORKER_KEY",
+            "AITDE_WORKER_HEARTBEAT_SECONDS",
+            "AITDE_V3_ENABLED",
+            "TEMPORAL_ENABLED",
+            "TEMPORAL_GRPC_ENDPOINT"
+        )) {
+            if (-not $Profile.ContainsKey($key) -or [string]::IsNullOrWhiteSpace($Profile[$key])) {
+                throw "The managed AITDE Worker profile requires non-empty $key."
+            }
+        }
+        if ($Profile["AITDE_V3_ENABLED"] -cne "true" -or $Profile["TEMPORAL_ENABLED"] -cne "true") {
+            throw "The managed AITDE Worker profile requires AITDE_V3_ENABLED=true and TEMPORAL_ENABLED=true."
+        }
+        [double]$heartbeatSeconds = 0
+        if (
+            -not [double]::TryParse($Profile["AITDE_WORKER_HEARTBEAT_SECONDS"], [ref]$heartbeatSeconds) -or
+            $heartbeatSeconds -lt 1 -or
+            $heartbeatSeconds -ge 180
+        ) {
+            throw "AITDE_WORKER_HEARTBEAT_SECONDS must be at least 1 and less than 180."
+        }
+    }
 }
 
 function Assert-NoPlaceholderValues {

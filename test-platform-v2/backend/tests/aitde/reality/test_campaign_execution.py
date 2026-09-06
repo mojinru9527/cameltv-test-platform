@@ -12,7 +12,11 @@ import json
 
 from app.modules.aitde.common.enums import QualityGateResult
 from app.modules.aitde.continuous import service
-from app.modules.aitde.continuous.models import ExecutionCampaign
+from app.modules.aitde.continuous.models import (
+    BuildObservation,
+    EnvironmentFingerprint,
+    ExecutionCampaign,
+)
 from app.modules.aitde.continuous.schemas import CampaignCreateIn, TriggerIn
 from app.modules.aitde.execution.models import ExecutionRun
 from app.modules.aitde.mission.models import Mission
@@ -33,6 +37,24 @@ def _seed_mission_scenario(db) -> tuple[int, int]:
         ScenarioVersionModel(
             id=10, scenario_id=1, version_no=1, contract_version_id=100,
             risk_level="P0", title="Scenario",
+        )
+    )
+    db.add(
+        EnvironmentFingerprint(
+            id=200,
+            environment_id=1,
+            fingerprint_hash="fp-target",
+            source_type="AUTO",
+            confidence="HIGH",
+        )
+    )
+    db.add(
+        BuildObservation(
+            id=300,
+            mission_id=7,
+            environment_id=1,
+            fingerprint_id=200,
+            status="NEW",
         )
     )
     db.commit()

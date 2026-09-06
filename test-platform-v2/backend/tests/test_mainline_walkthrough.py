@@ -127,8 +127,10 @@ def test_empty_plan_is_blocked_and_cannot_pass(db_session):
     run = version_task_service.start_run(db_session, task.id)
 
     assert run.status == "blocked"
-    assert run.total == 0
-    with pytest.raises(APIException, match="没有真实通过的检查"):
+    assert run.total == 1
+    assert run.blocked == 1
+    assert run.total == run.passed + run.failed + run.skipped + run.blocked
+    with pytest.raises(APIException, match="存在未通过或未执行"):
         version_task_service.release_task(db_session, task.id, verdict="pass")
 
 

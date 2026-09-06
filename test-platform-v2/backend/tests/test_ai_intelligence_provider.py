@@ -254,13 +254,62 @@ def test_deterministic_baseline_is_honest():
         ScenarioContext(
             mission_id=7,
             contract_version_id=1,
-            rules=[{"rule_key": "r1", "title": "t", "statement": "s", "risk_level": "P2"}],
+            rules=[
+                {
+                    "rule_key": "r1",
+                    "title": "t",
+                    "statement": "s",
+                    "risk_level": "P2",
+                    "source_refs": [{"artifact_id": 1, "fragment_id": 2}],
+                }
+            ],
             outcomes=[],
         )
     )
     oracle = scen.items[0].oracles[0]
     assert oracle.source_type == "RULE_BASELINE"
     assert oracle.required is False
+
+
+def test_deterministic_baseline_preserves_real_source_refs_end_to_end():
+    prov = DeterministicScopeProvider()
+    source_ref = {"artifact_id": 41, "fragment_id": 73}
+    scope_item = dict(_SCOPE_ITEM, source_refs=[source_ref])
+
+    intents = prov.design_intents(
+        ScopeIntentContext(mission_id=7, scope_items=[scope_item])
+    )
+    assert intents.items[0].source_refs[0].model_dump() == {
+        **source_ref,
+        "location": None,
+    }
+
+    contract = prov.build_contract(
+        ContractContext(
+            mission_id=7,
+            scope_items=[scope_item],
+            intents=[
+                {
+                    "intent_key": "intent-1",
+                    "business_goal": "goal",
+                    "source_refs": [source_ref],
+                }
+            ],
+        )
+    )
+    assert contract.rules[0].source_refs[0].fragment_id == 73
+    assert contract.required_outcomes[0].source_refs[0].artifact_id == 41
+
+    scenarios = prov.design_scenarios(
+        ScenarioContext(
+            mission_id=7,
+            contract_version_id=9,
+            rules=[contract.rules[0].model_dump(mode="json")],
+            outcomes=[],
+        )
+    )
+    assert scenarios.items[0].source_refs[0].fragment_id == 73
+    assert scenarios.items[0].oracles[0].source_refs[0].artifact_id == 41
 
 
 def test_factory_gating(monkeypatch):

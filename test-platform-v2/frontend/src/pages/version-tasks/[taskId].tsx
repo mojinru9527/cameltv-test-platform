@@ -9,6 +9,10 @@ export function isPassVerdictAllowed(run?: VersionTaskRun): boolean {
   return Boolean(run && run.passed > 0 && run.failed === 0 && run.skipped === 0 && run.blocked === 0)
 }
 
+export function isRunAllowed(task?: VersionTask | null): boolean {
+  return Boolean(task && ['draft', 'plan_review', 'approved', 'executing'].includes(task.status))
+}
+
 /** B8 版本任务执行与证据：一键运行 → 进度 → 证据回放 → 失败分类转缺陷草稿。 */
 export default function VersionTaskRunPage() {
   const { taskId } = useParams()
@@ -129,7 +133,14 @@ export default function VersionTaskRunPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="primary" onClick={handleRun} disabled={loading}>一键运行</Button>
+            <Button
+              variant="primary"
+              onClick={handleRun}
+              disabled={loading || !isRunAllowed(task)}
+              title={!isRunAllowed(task) ? '当前任务状态不可执行' : undefined}
+            >
+              一键运行
+            </Button>
             <Badge tone="neutral">覆盖 {latest && latest.total > 0 ? `${latest.passed}/${latest.total}` : '—'}</Badge>
             {latest && <StatusBadge variant={RUN_STATUS_TO_VARIANT[latest.status] ?? 'pending'} />}
           </div>
