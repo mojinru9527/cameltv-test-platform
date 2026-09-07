@@ -59,6 +59,9 @@ def create_mission(
             code=400, msg=f"非法任务类型：{mission_type}", http_status=400
         )
 
+    version_task_id = data.get("version_task_id")
+    _validate_version_task(db, version_task_id, project_id)
+
     payload: dict[str, Any] = {
         "mission_key": repository._build_mission_key(db, project_id),
         "mission_type": mission_type,
@@ -66,6 +69,7 @@ def create_mission(
         "version_label": data.get("version_label"),
         "qa_owner_id": data.get("qa_owner_id"),
         "default_environment_id": data.get("default_environment_id"),
+        "version_task_id": version_task_id,
         "owner_id": user_id,
         "status": MissionStatus.DRAFT.value,
         "acceptance_status": AcceptanceStatus.NOT_EVALUATED.value,
@@ -121,6 +125,9 @@ def update_mission(
             code=400, msg=f"非法任务类型：{target_type}", http_status=400
         )
 
+    if "version_task_id" in data:
+        _validate_version_task(db, data.get("version_task_id"), project_id)
+
     return repository.update(
         db,
         row,
@@ -130,6 +137,7 @@ def update_mission(
             "owner_id": data.get("owner_id"),
             "qa_owner_id": data.get("qa_owner_id"),
             "default_environment_id": data.get("default_environment_id"),
+            "version_task_id": data.get("version_task_id"),
             "status": target_status,
             "acceptance_status": data.get("acceptance_status"),
         },
@@ -139,3 +147,15 @@ def update_mission(
 def archive_mission(db: Session, mission_id: int, project_id: int) -> Mission:
     row = get_mission(db, mission_id, project_id)
     return repository.archive(db, row)
+
+
+def _validate_version_task(
+    db: Session, version_task_id: int | None, project_id: int
+) -> None:
+    if version_task_id is None:
+        return
+    from app.models.version_task import VersionTask
+
+    task = db.get(VersionTask, version_task_id)
+    if task is None or task.project_id != project_id:
+        raise APIException(code=404, msg="版本任务不存在", http_status=404)

@@ -5,6 +5,9 @@ export interface ScenarioRow {
   scenario_version_id: number
   scenario_key: string
   title: string
+  case_type: 'FUNCTIONAL' | 'API' | 'UI' | 'UNCLASSIFIED' | string
+  requirement_role: 'NEW' | 'CHANGED' | 'IMPACTED_BASELINE' | 'UNCLASSIFIED' | string
+  module_key: string
   priority: string
   risk_level: string
   review_status: 'PROPOSED' | 'APPROVED' | 'REJECTED' | 'REQUEST_CHANGE' | string
@@ -32,6 +35,9 @@ export interface ScenarioDetail {
   scenario_version_id: number
   title: string
   business_goal: string
+  case_type: string
+  requirement_role: string
+  module_key: string
   priority: string
   risk_level: string
   given_model: Record<string, unknown>

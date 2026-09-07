@@ -71,6 +71,7 @@ export interface Mission {
   current_contract_version_id: number | null
   acceptance_status: string
   legacy_version_mission_id: number | null
+  version_task_id: number | null
   created_by: number
   created_at: string | null
   updated_at: string | null
@@ -90,6 +91,7 @@ export interface MissionCreateInput {
   version_label?: string | null
   qa_owner_id?: number | null
   default_environment_id?: number | null
+  version_task_id?: number | null
 }
 
 export interface MissionUpdateInput {
@@ -98,6 +100,7 @@ export interface MissionUpdateInput {
   owner_id?: number | null
   qa_owner_id?: number | null
   default_environment_id?: number | null
+  version_task_id?: number | null
   status?: string
   acceptance_status?: string
 }

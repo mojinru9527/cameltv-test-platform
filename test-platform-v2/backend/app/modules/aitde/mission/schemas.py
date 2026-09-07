@@ -22,6 +22,7 @@ class MissionCreate(BaseModel):
     version_label: str | None = Field(default=None, max_length=64)
     qa_owner_id: int | None = None
     default_environment_id: int | None = None
+    version_task_id: int | None = Field(default=None, gt=0)
 
 
 class MissionUpdate(BaseModel):
@@ -30,6 +31,7 @@ class MissionUpdate(BaseModel):
     owner_id: int | None = None
     qa_owner_id: int | None = None
     default_environment_id: int | None = None
+    version_task_id: int | None = Field(default=None, gt=0)
     # 状态迁移由 service 做生命周期校验，禁止非法跳转（如 DRAFT → CONTRACT_FROZEN）。
     status: MissionStatus | None = None
     acceptance_status: AcceptanceStatus | None = None
@@ -51,6 +53,7 @@ class MissionOut(BaseModel):
     current_contract_version_id: int | None = None
     acceptance_status: str
     legacy_version_mission_id: int | None = None
+    version_task_id: int | None = None
     created_by: int
     created_at: datetime
     updated_at: datetime | None = None
