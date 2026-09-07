@@ -76,6 +76,20 @@ def sanitize_headers(headers: dict[str, str]) -> dict[str, str]:
 
 def sanitize_body_bytes(data: bytes, content_type: str) -> bytes:
     """Redact secret fields from a JSON body; strip bearer/query secrets elsewhere."""
+    media_type = (content_type or "").split(";", 1)[0].strip().lower()
+    textual = (
+        media_type.startswith("text/")
+        or "json" in media_type
+        or media_type in {
+            "application/javascript",
+            "application/x-www-form-urlencoded",
+            "application/xml",
+            "application/xhtml+xml",
+        }
+    )
+    if not textual:
+        return data
+
     text = data.decode("utf-8", errors="replace")
     if "json" in (content_type or "").lower():
         try:

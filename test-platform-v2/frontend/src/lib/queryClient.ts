@@ -26,4 +26,5 @@ export const missionKeys = {
   list: (filters: { keyword?: string; status?: string; page?: number }) =>
     ['missions', 'list', filters] as const,
   detail: (id: number) => ['missions', 'detail', id] as const,
+  lifecycle: (id: number) => ['missions', 'lifecycle', id] as const,
 }

@@ -7,6 +7,9 @@
       "scenario_key": "order-cancel-after-refund",
       "title": "PAID 订单先退款再取消",
       "business_goal": "状态机不被非法迁移破坏",
+      "case_type": "API",
+      "requirement_role": "CHANGED",
+      "module_key": "订单/退款取消",
       "priority": "P1",
       "risk_level": "P1",
       "given": {
@@ -53,6 +56,9 @@
       "scenario_key": "order-status-never-regress",
       "title": "重复回调不回退状态",
       "business_goal": "幂等",
+      "case_type": "FUNCTIONAL",
+      "requirement_role": "IMPACTED_BASELINE",
+      "module_key": "订单/状态机",
       "priority": "P1",
       "risk_level": "P1",
       "given": {

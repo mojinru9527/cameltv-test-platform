@@ -34,3 +34,12 @@ def test_unparseable_json_is_rejected():
     safe, status = sanitize(b'{"broken": ', "application/json")
     assert status == SanitizationStatus.REJECTED.value
     assert safe == b'{"broken": '
+
+
+def test_binary_media_is_not_corrupted_by_text_sanitization():
+    png = b"\x89PNG\r\n\x1a\n\x00\x00\xff\xfe\x80"
+
+    safe, status = sanitize(png, "image/png")
+
+    assert status == SanitizationStatus.SANITIZED.value
+    assert safe == png

@@ -60,6 +60,24 @@ class _FakeAIProvider:
             schema_version="1.0", mission_id=context.mission_id, items=[_candidate()]
         )
 
+    def operation_metadata(self):
+        return {
+            "model_provider": "openai_compatible",
+            "model_name": "gpt-5.2",
+            "prompt_version": "scope_analysis_v1:cache-v1",
+            "input_hash": "abc123",
+            "duration_ms": 17,
+            "token_usage": {
+                "input_tokens": 100,
+                "output_tokens": 20,
+                "total_tokens": 120,
+                "cached_input_tokens": 60,
+                "uncached_input_tokens": 40,
+                "cache_hit_rate": 0.6,
+                "cache_details_available": True,
+            },
+        }
+
 
 def _analyze_via(prov):
     return prov.analyze_scope(_CTX)
@@ -80,6 +98,11 @@ def test_run_intelligence_ai_success_writes_operation(db_session, monkeypatch):
     assert row.status == AIOperationStatus.SUCCEEDED.value
     assert row.operation_type == "scope:analyze"
     assert row.mission_id == 3
+    assert row.model_name == "gpt-5.2"
+    assert row.prompt_version == "scope_analysis_v1:cache-v1"
+    assert row.input_hash == "abc123"
+    assert row.duration_ms == 17
+    assert '"cached_input_tokens": 60' in row.token_usage_json
 
 
 def test_run_intelligence_ai_failure_records_failed_and_degrades(db_session, monkeypatch):

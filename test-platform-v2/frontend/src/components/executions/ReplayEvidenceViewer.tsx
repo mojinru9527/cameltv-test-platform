@@ -1,5 +1,9 @@
 import { Badge } from '@/ui'
-import { EVIDENCE_TYPE_LABELS } from '@/api/executions'
+import {
+  EVIDENCE_TYPE_LABELS,
+  SANITIZATION_STATUS_LABELS,
+  SENSITIVITY_LABELS,
+} from '@/api/executions'
 import type { Evidence } from '@/api/executions'
 import { formatBytes } from './format'
 import { EvidenceIntegrityBadge } from '@/components/trust/EvidenceIntegrityBadge'
@@ -41,11 +45,11 @@ export default function ReplayEvidenceViewer({ evidence }: { evidence: Evidence 
         </div>
         <div className="flex justify-between gap-2">
           <dt className="text-muted-foreground">脱敏</dt>
-          <dd>{evidence.sanitization_status}</dd>
+          <dd>{SANITIZATION_STATUS_LABELS[evidence.sanitization_status] ?? evidence.sanitization_status}</dd>
         </div>
         <div className="flex justify-between gap-2">
           <dt className="text-muted-foreground">敏感度</dt>
-          <dd>{evidence.sensitivity}</dd>
+          <dd>{SENSITIVITY_LABELS[evidence.sensitivity.toUpperCase()] ?? evidence.sensitivity}</dd>
         </div>
       </dl>
 

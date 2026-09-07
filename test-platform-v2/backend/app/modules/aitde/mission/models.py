@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -46,6 +46,9 @@ class Mission(Base, TimestampMixin):
     )
     legacy_version_mission_id: Mapped[int | None] = mapped_column(
         Integer, default=None, unique=True
+    )
+    version_task_id: Mapped[int | None] = mapped_column(
+        ForeignKey("version_task.id", ondelete="SET NULL"), default=None, index=True
     )
     created_by: Mapped[int] = mapped_column(Integer, default=0)
     archived_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)

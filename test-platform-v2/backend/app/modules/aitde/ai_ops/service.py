@@ -84,12 +84,22 @@ def mark_succeeded(
     output_hash: str = "",
     token_usage: dict[str, Any] | None = None,
     duration_ms: int = 0,
+    model_provider: str = "",
+    model_name: str = "",
+    model_config_hash: str = "",
+    prompt_version: str = "",
+    input_hash: str = "",
 ) -> AIOperationRecord:
     operation.status = AIOperationStatus.SUCCEEDED.value
     operation.result_ref_json = json.dumps(result_ref or {}, ensure_ascii=False)
     operation.output_hash = output_hash
     operation.token_usage_json = json.dumps(token_usage or {}, ensure_ascii=False)
     operation.duration_ms = duration_ms
+    operation.model_provider = model_provider
+    operation.model_name = model_name
+    operation.model_config_hash = model_config_hash
+    operation.prompt_version = prompt_version
+    operation.input_hash = input_hash
     operation.finished_at = datetime.now()
     db.commit()
     db.refresh(operation)
@@ -102,10 +112,24 @@ def mark_failed(
     *,
     code: str = "",
     message: str = "",
+    token_usage: dict[str, Any] | None = None,
+    duration_ms: int = 0,
+    model_provider: str = "",
+    model_name: str = "",
+    model_config_hash: str = "",
+    prompt_version: str = "",
+    input_hash: str = "",
 ) -> AIOperationRecord:
     operation.status = AIOperationStatus.FAILED.value
     operation.error_code = code
     operation.error_message = message
+    operation.token_usage_json = json.dumps(token_usage or {}, ensure_ascii=False)
+    operation.duration_ms = duration_ms
+    operation.model_provider = model_provider
+    operation.model_name = model_name
+    operation.model_config_hash = model_config_hash
+    operation.prompt_version = prompt_version
+    operation.input_hash = input_hash
     operation.finished_at = datetime.now()
     db.commit()
     db.refresh(operation)

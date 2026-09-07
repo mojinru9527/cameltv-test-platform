@@ -8,8 +8,10 @@ sanitization, prompt and result-shaping logic.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 
@@ -64,11 +66,13 @@ def parse_json_object(raw: str) -> dict[str, Any]:
 def _build_request(
     cfg: Any,
     *,
+    project_id: int,
     system_prompt: str,
     user_message: str,
     max_tokens: int,
     temperature: float | None,
     json_mode: bool,
+    cache_namespace: str | None,
 ) -> dict[str, Any]:
     body: dict[str, Any] = {
         "model": cfg.model,
@@ -81,7 +85,98 @@ def _build_request(
     }
     if json_mode:
         body["response_format"] = {"type": "json_object"}
+    if _is_openai_official(cfg.api_base_url):
+        namespace = cache_namespace or hashlib.sha256(
+            system_prompt.encode("utf-8")
+        ).hexdigest()[:16]
+        identity = "|".join(
+            (
+                str(project_id),
+                str(getattr(cfg, "provider_id", "")),
+                str(cfg.model),
+                namespace,
+            )
+        )
+        digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:32]
+        prefix = "aitde" if (cache_namespace or "").startswith("aitde") else "prompt"
+        body["prompt_cache_key"] = f"{prefix}-{digest}"
     return body
+
+
+def _is_openai_official(api_base_url: str) -> bool:
+    """Only send OpenAI-specific request fields to the official API host."""
+    try:
+        return (urlparse(api_base_url).hostname or "").lower() == "api.openai.com"
+    except ValueError:
+        return False
+
+
+def _token_count(value: Any) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return max(0, int(value))
+
+
+def normalize_token_usage(raw: Any) -> dict[str, Any]:
+    """Normalize OpenAI and DeepSeek usage envelopes for durable telemetry."""
+    if not isinstance(raw, dict):
+        return {}
+    known_fields = {
+        "prompt_tokens",
+        "completion_tokens",
+        "total_tokens",
+        "prompt_tokens_details",
+        "prompt_cache_hit_tokens",
+        "prompt_cache_miss_tokens",
+    }
+    if not any(key in raw for key in known_fields):
+        return {}
+
+    input_tokens = _token_count(raw.get("prompt_tokens"))
+    output_tokens = _token_count(raw.get("completion_tokens"))
+    total_tokens = _token_count(raw.get("total_tokens"))
+    cached_tokens: int | None = None
+    uncached_tokens: int | None = None
+    details = raw.get("prompt_tokens_details")
+    if isinstance(details, dict) and "cached_tokens" in details:
+        cached_tokens = _token_count(details.get("cached_tokens"))
+    elif "prompt_cache_hit_tokens" in raw:
+        cached_tokens = _token_count(raw.get("prompt_cache_hit_tokens"))
+    if "prompt_cache_miss_tokens" in raw:
+        uncached_tokens = _token_count(raw.get("prompt_cache_miss_tokens"))
+
+    if all(
+        value is None
+        for value in (input_tokens, output_tokens, total_tokens, cached_tokens, uncached_tokens)
+    ):
+        return {}
+
+    cache_details_available = cached_tokens is not None
+    if input_tokens is None and cached_tokens is not None and uncached_tokens is not None:
+        input_tokens = cached_tokens + uncached_tokens
+    input_tokens = input_tokens or 0
+    output_tokens = output_tokens or 0
+    total_tokens = total_tokens if total_tokens is not None else input_tokens + output_tokens
+    if cache_details_available and uncached_tokens is None:
+        uncached_tokens = max(0, input_tokens - (cached_tokens or 0))
+
+    normalized: dict[str, Any] = {
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "total_tokens": total_tokens,
+        "cache_details_available": cache_details_available,
+    }
+    if cache_details_available:
+        normalized.update(
+            {
+                "cached_input_tokens": cached_tokens or 0,
+                "uncached_input_tokens": uncached_tokens or 0,
+                "cache_hit_rate": round((cached_tokens or 0) / input_tokens, 4)
+                if input_tokens
+                else 0.0,
+            }
+        )
+    return normalized
 
 
 def _summary_from_response(response: httpx.Response) -> dict[str, Any]:
@@ -94,6 +189,7 @@ def _summary_from_response(response: httpx.Response) -> dict[str, Any]:
             "content": content,
             "finish_reason": finish_reason,
             "truncated": finish_reason == "length",
+            "usage": normalize_token_usage(data.get("usage")),
         }
     except (KeyError, TypeError, IndexError) as exc:
         raise AiClientResponseError("AI response envelope is invalid") from exc
@@ -116,18 +212,21 @@ def chat_completions_full(
     max_tokens: int | None = None,
     temperature: float | None = None,
     json_mode: bool = True,
+    cache_namespace: str | None = None,
 ) -> dict[str, Any]:
-    """Sync call returning {content, finish_reason, truncated}."""
+    """Sync call returning content, finish state and normalized usage."""
     cfg = resolve_config(db, project_id)
     if cfg is None:
         raise AiClientUnavailableError("AI service is not configured")
     body = _build_request(
         cfg,
+        project_id=project_id,
         system_prompt=system_prompt,
         user_message=user_message,
         max_tokens=max_tokens or settings.ai_max_tokens,
         temperature=temperature,
         json_mode=json_mode,
+        cache_namespace=cache_namespace,
     )
     last_error: Exception | None = None
     for _ in _retry_attempts():
@@ -142,7 +241,15 @@ def chat_completions_full(
                 timeout=settings.ai_timeout_seconds,
             )
             response.raise_for_status()
-            return _summary_from_response(response)
+            summary = _summary_from_response(response)
+            summary.update(
+                {
+                    "model_provider": str(getattr(cfg, "provider_type", "")),
+                    "model_name": str(cfg.model),
+                    "prompt_cache_key": str(body.get("prompt_cache_key") or ""),
+                }
+            )
+            return summary
         except httpx.TimeoutException as exc:  # subclass first
             last_error = exc
         except httpx.RequestError as exc:
@@ -167,18 +274,21 @@ async def achat_completions_full(
     max_tokens: int | None = None,
     temperature: float | None = None,
     json_mode: bool = True,
+    cache_namespace: str | None = None,
 ) -> dict[str, Any]:
-    """Async call returning {content, finish_reason, truncated}."""
+    """Async call returning content, finish state and normalized usage."""
     cfg = resolve_config(db, project_id)
     if cfg is None:
         raise AiClientUnavailableError("AI service is not configured")
     body = _build_request(
         cfg,
+        project_id=project_id,
         system_prompt=system_prompt,
         user_message=user_message,
         max_tokens=max_tokens or settings.ai_max_tokens,
         temperature=temperature,
         json_mode=json_mode,
+        cache_namespace=cache_namespace,
     )
     last_error: Exception | None = None
     for _ in _retry_attempts():
@@ -193,7 +303,15 @@ async def achat_completions_full(
                     json=body,
                 )
             response.raise_for_status()
-            return _summary_from_response(response)
+            summary = _summary_from_response(response)
+            summary.update(
+                {
+                    "model_provider": str(getattr(cfg, "provider_type", "")),
+                    "model_name": str(cfg.model),
+                    "prompt_cache_key": str(body.get("prompt_cache_key") or ""),
+                }
+            )
+            return summary
         except httpx.TimeoutException as exc:  # subclass first
             last_error = exc
         except httpx.RequestError as exc:
@@ -218,6 +336,7 @@ def chat_completions(
     max_tokens: int | None = None,
     temperature: float | None = None,
     json_mode: bool = True,
+    cache_namespace: str | None = None,
 ) -> Any:
     """Synchronous call returning parsed JSON (json_mode) or raw text."""
     full = chat_completions_full(
@@ -228,6 +347,7 @@ def chat_completions(
         max_tokens=max_tokens,
         temperature=temperature,
         json_mode=json_mode,
+        cache_namespace=cache_namespace,
     )
     return _parse_result(full["content"], json_mode)
 
@@ -241,6 +361,7 @@ async def achat_completions(
     max_tokens: int | None = None,
     temperature: float | None = None,
     json_mode: bool = True,
+    cache_namespace: str | None = None,
 ) -> Any:
     """Async call returning parsed JSON (json_mode) or raw text."""
     full = await achat_completions_full(
@@ -251,5 +372,6 @@ async def achat_completions(
         max_tokens=max_tokens,
         temperature=temperature,
         json_mode=json_mode,
+        cache_namespace=cache_namespace,
     )
     return _parse_result(full["content"], json_mode)

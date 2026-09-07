@@ -7,6 +7,9 @@
       "scenario_key": "member-create-then-query",
       "title": "创建会员后可查询",
       "business_goal": "CRUD 主路径",
+      "case_type": "FUNCTIONAL",
+      "requirement_role": "NEW",
+      "module_key": "会员/创建查询",
       "priority": "P2",
       "risk_level": "P2",
       "given": {

@@ -13,7 +13,9 @@ from app.services import ai_client
 from app.services.ai_client import (
     AiClientResponseError,
     AiClientUnavailableError,
+    achat_completions_full,
     achat_completions,
+    chat_completions_full,
     chat_completions,
     is_configured,
     parse_json_object,
@@ -21,13 +23,21 @@ from app.services.ai_client import (
 )
 from app.services.ai_config_service import AIProviderUnconfiguredError
 
-_CFG = SimpleNamespace(model="m", api_base_url="https://ai.test", api_key="k")
+_CFG = SimpleNamespace(
+    provider_id=7,
+    provider_name="test",
+    provider_type="openai_compatible",
+    model="m",
+    api_base_url="https://ai.test",
+    api_key="k",
+)
 
 
 class _FakeResponse:
-    def __init__(self, content: str, status_code: int = 200):
+    def __init__(self, content: str, status_code: int = 200, usage=None):
         self._content = content
         self.status_code = status_code
+        self._usage = usage
 
     def raise_for_status(self) -> None:
         if self.status_code >= 400:
@@ -36,12 +46,16 @@ class _FakeResponse:
             )
 
     def json(self):
-        return {"choices": [{"message": {"content": self._content}}]}
+        data = {"choices": [{"message": {"content": self._content}}]}
+        if self._usage is not None:
+            data["usage"] = self._usage
+        return data
 
 
 class _FakeAsyncClient:
     def __init__(self, *a, **k):
         self._results = []
+        self.requests = []
 
     def set_results(self, results):
         self._results = list(results)
@@ -53,6 +67,7 @@ class _FakeAsyncClient:
         return False
 
     async def post(self, *a, **k):
+        self.requests.append(k)
         item = self._results.pop(0)
         if isinstance(item, Exception):
             raise item
@@ -103,6 +118,153 @@ def test_chat_completions_sync_success(monkeypatch):
     assert result == {"ok": True}
 
 
+def test_openai_usage_and_cache_key_are_normalized(monkeypatch):
+    cfg = SimpleNamespace(
+        **{
+            **_CFG.__dict__,
+            "api_base_url": "https://api.openai.com/v1",
+            "model": "gpt-5.2",
+        }
+    )
+    monkeypatch.setattr(ai_client.ai_config_service, "resolve", lambda db, pid: cfg)
+    captured = {}
+
+    def _post(*args, **kwargs):
+        captured.update(kwargs["json"])
+        return _FakeResponse(
+            json.dumps({"ok": True}),
+            usage={
+                "prompt_tokens": 1200,
+                "completion_tokens": 200,
+                "total_tokens": 1400,
+                "prompt_tokens_details": {"cached_tokens": 800},
+            },
+        )
+
+    monkeypatch.setattr(ai_client.httpx, "post", _post)
+    result = chat_completions_full(
+        None,
+        42,
+        system_prompt="stable prompt",
+        user_message="dynamic",
+        cache_namespace="aitde-v1",
+    )
+
+    assert result["usage"] == {
+        "input_tokens": 1200,
+        "output_tokens": 200,
+        "total_tokens": 1400,
+        "cached_input_tokens": 800,
+        "uncached_input_tokens": 400,
+        "cache_hit_rate": pytest.approx(0.6667),
+        "cache_details_available": True,
+    }
+    assert captured["prompt_cache_key"].startswith("aitde-")
+
+
+def test_prompt_cache_key_is_stable_and_scoped(monkeypatch):
+    cfg = SimpleNamespace(
+        **{
+            **_CFG.__dict__,
+            "api_base_url": "https://api.openai.com/v1",
+            "model": "gpt-5.2",
+        }
+    )
+    monkeypatch.setattr(ai_client.ai_config_service, "resolve", lambda db, pid: cfg)
+    keys = []
+
+    def _post(*args, **kwargs):
+        keys.append(kwargs["json"]["prompt_cache_key"])
+        return _FakeResponse("{}")
+
+    monkeypatch.setattr(ai_client.httpx, "post", _post)
+    for project_id, namespace, system_prompt in (
+        (42, "aitde-v1", "scope prompt"),
+        (42, "aitde-v1", "contract prompt"),
+        (43, "aitde-v1", "scope prompt"),
+        (42, "other-v1", "scope prompt"),
+    ):
+        chat_completions_full(
+            None,
+            project_id,
+            system_prompt=system_prompt,
+            user_message="dynamic",
+            cache_namespace=namespace,
+        )
+
+    assert keys[0] == keys[1]
+    assert len(set(keys)) == 3
+
+    cfg.model = "gpt-5.3"
+    chat_completions_full(
+        None,
+        42,
+        system_prompt="scope prompt",
+        user_message="dynamic",
+        cache_namespace="aitde-v1",
+    )
+    assert keys[-1] not in keys[:-1]
+
+
+def test_deepseek_usage_normalized_without_openai_cache_field(monkeypatch):
+    cfg = SimpleNamespace(
+        **{
+            **_CFG.__dict__,
+            "provider_type": "deepseek_official",
+            "api_base_url": "https://api.deepseek.com",
+            "model": "deepseek-chat",
+        }
+    )
+    monkeypatch.setattr(ai_client.ai_config_service, "resolve", lambda db, pid: cfg)
+    captured = {}
+
+    def _post(*args, **kwargs):
+        captured.update(kwargs["json"])
+        return _FakeResponse(
+            "{}",
+            usage={
+                "prompt_tokens": 1000,
+                "completion_tokens": 100,
+                "total_tokens": 1100,
+                "prompt_cache_hit_tokens": 250,
+                "prompt_cache_miss_tokens": 750,
+            },
+        )
+
+    monkeypatch.setattr(ai_client.httpx, "post", _post)
+    result = chat_completions_full(
+        None,
+        1,
+        system_prompt="stable prompt",
+        user_message="dynamic",
+        cache_namespace="aitde-v1",
+    )
+
+    assert "prompt_cache_key" not in captured
+    assert result["usage"]["cached_input_tokens"] == 250
+    assert result["usage"]["uncached_input_tokens"] == 750
+    assert result["usage"]["cache_hit_rate"] == 0.25
+
+
+def test_missing_usage_returns_empty_metadata(monkeypatch):
+    monkeypatch.setattr(ai_client.httpx, "post", lambda *a, **k: _FakeResponse("{}"))
+    result = chat_completions_full(
+        None, 1, system_prompt="stable prompt", user_message="dynamic"
+    )
+    assert result["usage"] == {}
+
+
+@pytest.mark.parametrize("usage", [{}, {"prompt_tokens": "unknown"}, []])
+def test_empty_or_malformed_usage_does_not_fabricate_tokens(monkeypatch, usage):
+    monkeypatch.setattr(
+        ai_client.httpx, "post", lambda *a, **k: _FakeResponse("{}", usage=usage)
+    )
+    result = chat_completions_full(
+        None, 1, system_prompt="stable prompt", user_message="dynamic"
+    )
+    assert result["usage"] == {}
+
+
 def test_chat_completions_sync_retries_timeout(monkeypatch):
     calls = {"n": 0}
 
@@ -151,3 +313,26 @@ def test_achat_completions_async(monkeypatch):
         achat_completions(None, 1, system_prompt="s", user_message="u")
     )
     assert result == {"ok": True}
+
+
+def test_achat_completions_full_matches_sync_usage(monkeypatch):
+    fake = _FakeAsyncClient()
+    fake.set_results(
+        [
+            _FakeResponse(
+                "{}",
+                usage={
+                    "prompt_tokens": 10,
+                    "completion_tokens": 2,
+                    "total_tokens": 12,
+                    "prompt_tokens_details": {"cached_tokens": 0},
+                },
+            )
+        ]
+    )
+    monkeypatch.setattr(ai_client.httpx, "AsyncClient", lambda *a, **k: fake)
+    result = asyncio.run(
+        achat_completions_full(None, 1, system_prompt="s", user_message="u")
+    )
+    assert result["usage"]["cache_details_available"] is True
+    assert result["usage"]["cache_hit_rate"] == 0.0

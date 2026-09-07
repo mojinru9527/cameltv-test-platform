@@ -6,7 +6,9 @@ types so providers/services do not depend on the generic client taxonomy.
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import time
 from typing import Any
 
 from app.services import ai_client
@@ -34,19 +36,59 @@ def call_llm_json(
     ``IntelligenceLLMError``; malformed content raises
     ``IntelligenceLLMResponseError``.
     """
+    result, _metadata = call_llm_json_full(
+        db=db,
+        project_id=project_id,
+        system_prompt=system_prompt,
+        user_payload=user_payload,
+        max_tokens=max_tokens,
+    )
+    return result
+
+
+def call_llm_json_full(
+    *,
+    db,
+    project_id: int,
+    system_prompt: str,
+    user_payload: dict[str, Any],
+    max_tokens: int = 4096,
+    prompt_version: str = "",
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Return validated JSON plus privacy-safe operation telemetry."""
+    user_message = json.dumps(user_payload, ensure_ascii=False, sort_keys=True)
+    started = time.perf_counter()
     try:
-        result = ai_client.chat_completions(
+        full = ai_client.chat_completions_full(
             db,
             project_id,
             system_prompt=system_prompt,
-            user_message=json.dumps(user_payload, ensure_ascii=False),
+            user_message=user_message,
             max_tokens=max_tokens,
             json_mode=True,
+            cache_namespace="aitde-cache-v1",
         )
     except ai_client.AiClientUnavailableError as exc:
         raise IntelligenceLLMError(str(exc)) from exc
     except ai_client.AiClientResponseError as exc:
         raise IntelligenceLLMResponseError(str(exc)) from exc
+    try:
+        result = ai_client.parse_json_object(full["content"])
+    except ai_client.AiClientResponseError as exc:
+        raise IntelligenceLLMResponseError(str(exc)) from exc
     if not isinstance(result, dict):
         raise IntelligenceLLMResponseError("AI response must be a JSON object")
-    return result
+    provider = str(full.get("model_provider") or "")
+    model = str(full.get("model_name") or "")
+    metadata = {
+        "model_provider": provider,
+        "model_name": model,
+        "model_config_hash": hashlib.sha256(
+            f"{provider}|{model}".encode("utf-8")
+        ).hexdigest(),
+        "prompt_version": f"{prompt_version}:cache-v1" if prompt_version else "cache-v1",
+        "input_hash": hashlib.sha256(user_message.encode("utf-8")).hexdigest(),
+        "duration_ms": round((time.perf_counter() - started) * 1000),
+        "token_usage": full.get("usage") or {},
+    }
+    return result, metadata

@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Badge, Button, Skeleton } from '@/ui'
 import {
@@ -29,9 +30,29 @@ import {
   type ScenarioDetail,
   type FunctionalProjection,
 } from '@/api/scenarios'
+import {
+  fetchMissionLifecycle,
+  type MissionLifecycleCase,
+} from '@/api/missions'
+import { missionKeys } from '@/lib/queryClient'
 import { fetchCurrentContract } from '@/api/contract'
 import { useAitdeV3Enabled } from '@/config/aitde'
-import { Sparkles, Check, X, FileText, Play } from '@/lib/icons'
+import OutcomeBadge from '@/components/executions/OutcomeBadge'
+import { Sparkles, Check, X, FileText, Play, History } from '@/lib/icons'
+
+const CASE_TYPE_LABELS: Record<string, string> = {
+  FUNCTIONAL: '功能',
+  API: '接口',
+  UI: 'UI 自动化',
+  UNCLASSIFIED: '未分类',
+}
+
+const REQUIREMENT_ROLE_LABELS: Record<string, string> = {
+  NEW: '新增',
+  CHANGED: '变更',
+  IMPACTED_BASELINE: '受影响基线',
+  UNCLASSIFIED: '未分类',
+}
 
 export default function MissionScenariosPage() {
   const { id } = useParams()
@@ -49,13 +70,30 @@ export default function MissionScenariosPage() {
   const [projection, setProjection] = useState<FunctionalProjection | null>(null)
   const [viewOpen, setViewOpen] = useState(false)
 
-  const reload = () => setReloadVersion((version) => version + 1)
+  const lifecycleQuery = useQuery({
+    queryKey: missionKeys.lifecycle(missionId),
+    queryFn: ({ signal }) => fetchMissionLifecycle(missionId, signal),
+    enabled: Number.isFinite(missionId) && missionId > 0,
+  })
+  const caseFacts = useMemo<Record<number, MissionLifecycleCase>>(
+    () => Object.fromEntries(
+      (lifecycleQuery.data?.cases ?? []).map((item) => [item.scenario_id, item]),
+    ),
+    [lifecycleQuery.data],
+  )
+
+  const reload = () => {
+    setReloadVersion((version) => version + 1)
+    void lifecycleQuery.refetch()
+  }
 
   useAbortableEffect((signal) => {
     if (!missionId) return
     setLoading(true)
     fetchMissionScenarios(missionId, signal)
-      .then(setRows)
+      .then((scenarioRows) => {
+        setRows(scenarioRows)
+      })
       .catch((err) => {
         if (!(err?.code === 'ERR_CANCELED')) toast.error(err.message || '加载失败')
       })
@@ -132,10 +170,10 @@ export default function MissionScenariosPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>场景</TableHead>
-                <TableHead>优先级</TableHead>
-                <TableHead>风险</TableHead>
+                <TableHead>类型</TableHead>
+                <TableHead>模块 / 需求</TableHead>
                 <TableHead>评审</TableHead>
-                <TableHead>Oracle</TableHead>
+                <TableHead>执行事实</TableHead>
                 <TableHead className="text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
@@ -149,20 +187,38 @@ export default function MissionScenariosPage() {
               ) : (
                 rows.map((r) => {
                   const st = SCENARIO_REVIEW_LABELS[r.review_status]
+                  const fact = caseFacts[r.id]
                   return (
                     <TableRow key={r.id}>
                       <TableCell>
                         <p className="font-medium">{r.title}</p>
                         <p className="font-mono text-xs text-muted-foreground">{r.scenario_key}</p>
                       </TableCell>
-                      <TableCell>{r.priority}</TableCell>
-                      <TableCell>{r.risk_level}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {CASE_TYPE_LABELS[fact?.case_type] ?? fact?.case_type ?? '未分类'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-sm">{fact?.module_key || '未填写模块'}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {REQUIREMENT_ROLE_LABELS[fact?.requirement_role] ?? fact?.requirement_role ?? '未分类'}
+                          {' · '}来源 {fact?.source_ref_count ?? 0}
+                        </p>
+                      </TableCell>
                       <TableCell>
                         <Badge variant="secondary" className={st?.color}>
                           {st?.label ?? r.review_status}
                         </Badge>
                       </TableCell>
-                      <TableCell>{r.oracle_count}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <OutcomeBadge outcome={fact?.latest_outcome ?? null} />
+                          <span className="text-xs text-muted-foreground">
+                            执行 {fact?.run_count ?? 0} · 证据 {fact?.verified_evidence_count ?? 0}
+                          </span>
+                        </div>
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           {aitdeEnabled && (
@@ -187,6 +243,17 @@ export default function MissionScenariosPage() {
                           <Button variant="ghost" size="sm" onClick={() => openView(r)}>
                             <FileText className="size-3.5" /> 功能视图
                           </Button>
+                          {fact?.latest_run_id && fact.replay_count > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              aria-label={`回放 Run #${fact.latest_run_id}`}
+                              title={`回放 Run #${fact.latest_run_id}`}
+                              onClick={() => navigate(`/executions/${fact.latest_run_id}/replay`)}
+                            >
+                              <History className="size-3.5" /> 回放
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

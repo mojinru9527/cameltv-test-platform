@@ -592,6 +592,17 @@ class ChangeSetService:
         return ChangeSetService._changeset_dict(row, repo.list_change_items(db, row.id))
 
     @staticmethod
+    def list_for_mission(
+        db: Session, project_id: int, mission_id: int
+    ) -> list[dict]:
+        return [
+            ChangeSetService._changeset_dict(
+                row, repo.list_change_items(db, row.id)
+            )
+            for row in repo.list_change_sets(db, project_id, mission_id)
+        ]
+
+    @staticmethod
     def _changeset_dict(row: ChangeSet, items: list[ChangeItem]) -> dict:
         return {
             "id": row.id,
@@ -762,6 +773,17 @@ class ImpactAnalyzer:
         if run is None:
             return None
         return ImpactAnalyzer._run_dict(run, repo.list_impact_results(db, run.id), [])
+
+    @staticmethod
+    def list_for_mission(
+        db: Session, project_id: int, mission_id: int
+    ) -> list[dict]:
+        return [
+            ImpactAnalyzer._run_dict(
+                row, repo.list_impact_results(db, row.id), []
+            )
+            for row in repo.list_impact_runs(db, project_id, mission_id)
+        ]
 
     @staticmethod
     def _paths_for_item(

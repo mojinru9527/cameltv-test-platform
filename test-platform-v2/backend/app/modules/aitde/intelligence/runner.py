@@ -16,6 +16,11 @@ from sqlalchemy.orm import Session
 T = TypeVar("T")
 
 
+def _operation_metadata(provider: Any) -> dict[str, Any]:
+    getter = getattr(provider, "operation_metadata", None)
+    return getter() if callable(getter) else {}
+
+
 def run_intelligence(
     db: Session,
     project_id: int,
@@ -56,15 +61,18 @@ def run_intelligence(
         from app.services.ai_errors import ai_health_registry
 
         ai_health_registry.record_failure(project_id, exc)
+        metadata = _operation_metadata(prov)
         ai_ops_service.mark_failed(
-            db, op, code="AI_CALL_FAILED", message=str(exc)[:500]
+            db, op, code="AI_CALL_FAILED", message=str(exc)[:500], **metadata
         )
         fallback = DeterministicScopeProvider()
         return fn(fallback, *args, **kwargs), op.id, fallback.created_by_type
     from app.services.ai_errors import ai_health_registry
 
     ai_health_registry.record_success(project_id)
-    ai_ops_service.mark_succeeded(db, op, result_ref={})
+    ai_ops_service.mark_succeeded(
+        db, op, result_ref={}, **_operation_metadata(prov)
+    )
     return result, op.id, prov.created_by_type
 
 

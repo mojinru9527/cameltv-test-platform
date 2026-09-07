@@ -1,0 +1,38 @@
+{
+  "case_key": "BASKETBALL-API-001",
+  "executed_at": "2026-09-07T09:55:02.615Z",
+  "target": "https://camel-test5.elelive.cn/basketball-service/ee/sports_live/home_match?day=20260907&sportType=basketball",
+  "request": {
+    "method": "GET",
+    "query": {
+      "day": "20260907",
+      "sportType": "basketball"
+    }
+  },
+  "response": {
+    "http_status": 200,
+    "service_status": 200,
+    "content_type": "application/json",
+    "body_bytes": 36328,
+    "today": "20260907",
+    "data_keys": [
+      "today",
+      "obs_group",
+      "living_group",
+      "hot_group",
+      "category_group",
+      "country_group",
+      "other_group"
+    ],
+    "living_groups": 2,
+    "category_groups": 1,
+    "country_groups": 9
+  },
+  "assertions": [
+    { "name": "HTTP status", "expected": 200, "actual": 200, "result": "PASS" },
+    { "name": "Service status", "expected": 200, "actual": 200, "result": "PASS" },
+    { "name": "Requested date", "expected": "20260907", "actual": "20260907", "result": "PASS" },
+    { "name": "Basketball groups", "expected": "living_group is an array", "actual": "2 groups", "result": "PASS" }
+  ],
+  "result": "PASS"
+}

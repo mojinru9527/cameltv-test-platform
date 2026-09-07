@@ -58,4 +58,30 @@ describe('Mission Gate evidence requirements', () => {
       { campaign_id: 1, build_observation_id: 1 },
     )).toBe('NOT_EVALUATED')
   })
+
+  it('renders gate results with user-facing status labels', async () => {
+    mocks.fetchMissionAcceptance.mockResolvedValue({
+      items: [{
+        id: 7,
+        mission_id: 34,
+        campaign_id: 8,
+        build_observation_id: 9,
+        policy_id: 1,
+        result: 'FAIL',
+        checks_json: [{
+          gate: 'G5_UI_RESOURCE_ERRORS_ZERO',
+          label: 'UI 资源错误为零',
+          pass: false,
+          status: 'FAIL',
+          detail: '发现 11 个控制台错误',
+        }],
+        evaluated_at: '2026-09-07T10:00:00Z',
+      }],
+    })
+
+    renderPage()
+
+    expect((await screen.findAllByText('未通过')).length).toBeGreaterThanOrEqual(2)
+    expect(screen.queryByText('FAIL')).toBeNull()
+  })
 })

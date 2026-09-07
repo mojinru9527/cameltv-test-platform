@@ -4,9 +4,15 @@ import { toast } from 'sonner'
 import { useQuery } from '@tanstack/react-query'
 import { Badge, Skeleton } from '@/ui'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import { fetchMission, MISSION_STATUS_LABELS, MISSION_TYPE_LABELS } from '@/api/missions'
+import {
+  fetchMission,
+  fetchMissionLifecycle,
+  MISSION_STATUS_LABELS,
+  MISSION_TYPE_LABELS,
+} from '@/api/missions'
 import { missionKeys } from '@/lib/queryClient'
 import { cn } from '@/lib/utils'
+import { AlertTriangle } from '@/lib/icons'
 
 const TABS = [
   { key: 'overview', label: '概览', path: 'overview' },
@@ -32,6 +38,11 @@ export default function MissionLayout() {
     queryFn: ({ signal }) => fetchMission(missionId, signal),
     enabled: Number.isFinite(missionId) && missionId > 0,
   })
+  const lifecycleQuery = useQuery({
+    queryKey: missionKeys.lifecycle(missionId),
+    queryFn: ({ signal }) => fetchMissionLifecycle(missionId, signal),
+    enabled: Number.isFinite(missionId) && missionId > 0,
+  })
 
   useEffect(() => {
     if (error) toast.error(error instanceof Error ? error.message : '加载失败')
@@ -53,6 +64,13 @@ export default function MissionLayout() {
   }
 
   const statusMeta = MISSION_STATUS_LABELS[mission.status]
+  const lifecycle = lifecycleQuery.data
+  const acceptanceStatus = lifecycle?.mission.acceptance_status ?? mission.acceptance_status
+  const acceptanceLabel = acceptanceStatus === 'PASS'
+    ? '验收通过'
+    : acceptanceStatus === 'FAIL'
+      ? '验收失败'
+      : '未验收'
 
   return (
     <div className="space-y-4 p-4">
@@ -68,14 +86,24 @@ export default function MissionLayout() {
             </>
           )}
         </div>
-        <h1 className="mt-1 text-xl font-semibold tracking-[-0.02em]">{mission.title}</h1>
+        <h1 className="mt-1 text-xl font-semibold tracking-normal">{mission.title}</h1>
         <div className="mt-2 flex items-center gap-2">
           <Badge variant="secondary" className={statusMeta?.color}>
             {statusMeta?.label ?? mission.status}
           </Badge>
-          <Badge variant="outline">{mission.acceptance_status}</Badge>
+          <Badge variant="outline">{acceptanceLabel}</Badge>
         </div>
       </div>
+
+      {lifecycle && lifecycle.integrity_status !== 'COMPLETE' && (
+        <div className="flex items-start gap-2 border-l-2 border-status-warning bg-status-warning-muted px-3 py-2 text-sm text-status-warning">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <span>
+            任务事实链不完整，不可判定为通过
+            {!lifecycle.mission.acceptance_consistent && '；已忽略与 Quality Gate 不一致的历史验收状态'}
+          </span>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-1 border-b">
         {TABS.map((tab) => (

@@ -167,9 +167,10 @@ export function fetchTriggers(signal?: AbortSignal): Promise<TriggersResult> {
 // ── Label maps ──
 
 export const GATE_RESULT_LABELS: Record<string, { label: string; color: string }> = {
-  PASS: { label: 'PASS', color: 'bg-status-success-muted text-status-success' },
-  FAIL: { label: 'FAIL', color: 'bg-status-danger-muted text-status-danger' },
+  PASS: { label: '通过', color: 'bg-status-success-muted text-status-success' },
+  FAIL: { label: '未通过', color: 'bg-status-danger-muted text-status-danger' },
   INCONCLUSIVE: { label: '无法判定', color: 'bg-status-warning-muted text-status-warning' },
+  NOT_EVALUATED: { label: '未评估', color: 'bg-muted text-muted-foreground' },
 }
 
 export const BUILD_STATUS_LABELS: Record<string, { label: string; color: string }> = {

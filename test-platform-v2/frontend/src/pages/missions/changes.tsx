@@ -1,94 +1,156 @@
-import { useParams } from 'react-router'
 import { useState } from 'react'
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui'
+import { useNavigate, useParams } from 'react-router'
+import { toast } from 'sonner'
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Skeleton,
+} from '@/ui'
 import PageHeader from '@/components/PageHeader'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import { CHANGE_KIND_LABELS, detectChanges, type ChangeSet } from '@/api/smartRegression'
+import useAbortableEffect from '@/hooks/useAbortableEffect'
+import {
+  CHANGE_KIND_LABELS,
+  CHANGE_ENTITY_TYPE_LABELS,
+  CHANGE_RISK_HINT_LABELS,
+  CHANGE_SET_STATUS_LABELS,
+  CHANGE_TYPE_LABELS,
+  fetchMissionChangeSets,
+  type ChangeSet,
+} from '@/api/smartRegression'
+import { RefreshCw } from '@/lib/icons'
 
-const CHANGE_TYPES = ['PRD', 'OPENAPI', 'DB_SCHEMA', 'UI_DISCOVERY', 'ENVIRONMENT', 'HISTORICAL_RISK']
-
-/** V37-003..007 ChangeSet viewer: detect a change and inspect the normalized items. */
 export default function MissionChangesPage() {
   const { id } = useParams()
   const missionId = Number(id)
+  const navigate = useNavigate()
   useDocumentTitle('变化检测')
-  const [changeType, setChangeType] = useState('PRD')
-  const [changeSet, setChangeSet] = useState<ChangeSet | null>(null)
-  const [detecting, setDetecting] = useState(false)
+  const [changeSets, setChangeSets] = useState<ChangeSet[]>([])
+  const [selectedId, setSelectedId] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [reloadVersion, setReloadVersion] = useState(0)
 
-  const onDetect = async (baseline: Record<string, unknown>, current: Record<string, unknown>) => {
-    setDetecting(true)
-    try {
-      const cs = await detectChanges(missionId, { change_type: changeType, baseline, current })
-      setChangeSet(cs)
-    } finally {
-      setDetecting(false)
-    }
+  useAbortableEffect((signal) => {
+    if (!missionId) return
+    setLoading(true)
+    fetchMissionChangeSets(missionId, signal)
+      .then(({ items }) => {
+        setChangeSets(items)
+        setSelectedId((current) => current || String(items[0]?.id ?? ''))
+      })
+      .catch((err) => {
+        if (!(err?.code === 'ERR_CANCELED')) toast.error(err.message || '变化记录加载失败')
+      })
+      .finally(() => {
+        if (!signal.aborted) setLoading(false)
+      })
+  }, [missionId, reloadVersion])
+
+  const changeSet = changeSets.find((item) => item.id === Number(selectedId)) ?? changeSets[0]
+
+  if (loading && changeSets.length === 0) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-48 w-full" />
+      </div>
+    )
   }
 
   return (
     <div className="space-y-4">
-      <PageHeader title="变化检测" description="ChangeSet 检测与归一化差异查看（V37-003..007）" />
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex flex-wrap items-center gap-2">
-            发起检测
-            <Select value={changeType} onValueChange={setChangeType}>
-              <SelectTrigger className="w-[190px]">
-                <SelectValue placeholder="变更类型" />
-              </SelectTrigger>
-              <SelectContent>
-                {CHANGE_TYPES.map((t) => (
-                  <SelectItem key={t} value={t}>{t}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex flex-wrap gap-2 text-sm">
-            <Button size="sm" disabled={detecting} onClick={() => void onDetect({ frag1: { content_hash: 'a' } }, { frag1: { content_hash: 'c' }, frag2: { content_hash: 'd' } })}>
-              {detecting ? '检测中…' : '示例 PRD Diff'}
+      <PageHeader
+        title="变化检测"
+      >
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="刷新变化记录"
+            title="刷新变化记录"
+            onClick={() => setReloadVersion((value) => value + 1)}
+          >
+            <RefreshCw className="size-4" />
+          </Button>
+      </PageHeader>
+
+      {changeSets.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Select value={String(changeSet?.id ?? '')} onValueChange={setSelectedId}>
+            <SelectTrigger className="w-full sm:w-[320px]" aria-label="选择变化记录">
+              <SelectValue placeholder="选择变化记录" />
+            </SelectTrigger>
+            <SelectContent>
+              {changeSets.map((item) => (
+                <SelectItem key={item.id} value={String(item.id)}>
+                  #{item.id} · {CHANGE_TYPE_LABELS[item.change_type] ?? item.change_type} · {item.items.length} 项
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {changeSet && (
+            <Button
+              size="sm"
+              onClick={() => navigate(`/missions/${missionId}/impact?changeSet=${changeSet.id}`)}
+            >
+              查看影响
             </Button>
-            <Button size="sm" variant="secondary" disabled={detecting} onClick={() => void onDetect({}, { signals: [{ scenario_id: 1, risk_hint: 'LAST_BUSINESS_FAIL', reason: 'run 9 fail' }] })}>
-              {detecting ? '检测中…' : '示例历史风险信号'}
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            生产环境由 CI/Trigger 自动推送 baseline/current 快照；此处用于人工快速观测。
-          </p>
-        </CardContent>
-      </Card>
+          )}
+        </div>
+      )}
 
       {changeSet ? (
         <Card>
           <CardHeader>
-            <CardTitle className="flex flex-wrap items-center gap-2">
-              ChangeSet #{changeSet.id}
-              <Badge tone="neutral">{changeSet.change_type}</Badge>
-              <Badge tone="neutral">{changeSet.status}</Badge>
+            <CardTitle className="flex flex-wrap items-center gap-2 text-base">
+              变化记录 #{changeSet.id}
+              <Badge tone="neutral">{CHANGE_TYPE_LABELS[changeSet.change_type] ?? changeSet.change_type}</Badge>
+              <Badge tone="neutral">{CHANGE_SET_STATUS_LABELS[changeSet.status] ?? changeSet.status}</Badge>
             </CardTitle>
             <div className="text-xs text-muted-foreground">
-              hash <span className="font-mono">{changeSet.content_hash.slice(0, 16)}…</span> · 创建 {changeSet.created_at ? new Date(changeSet.created_at).toLocaleString() : '-'} · {changeSet.items.length} 项
+              <span className="font-mono">{changeSet.content_hash.slice(0, 16)}…</span>
+              {' · '}{changeSet.created_at ? new Date(changeSet.created_at).toLocaleString() : '-'}
+              {' · '}{changeSet.items.length} 项
             </div>
           </CardHeader>
           <CardContent className="space-y-2">
             {changeSet.items.length === 0 ? (
-              <p className="text-sm text-muted-foreground">无变化项。</p>
+              <p className="text-sm text-muted-foreground">本次检测未发现变化。</p>
             ) : (
-              changeSet.items.map((it) => (
-                <div key={it.id} className="flex flex-wrap items-center gap-2 border-b py-1.5 text-sm last:border-0">
-                  <Badge tone="neutral">{CHANGE_KIND_LABELS[it.change_kind] ?? it.change_kind}</Badge>
-                  <span className="font-mono text-xs text-muted-foreground">{it.entity_type}</span>
-                  <span className="font-medium">{it.entity_key}</span>
-                  {it.risk_hint !== 'NONE' && <Badge tone="warning">{it.risk_hint}</Badge>}
+              changeSet.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="grid gap-1 border-b py-2 text-sm last:border-0 sm:grid-cols-[auto_minmax(9rem,1fr)_minmax(12rem,2fr)_auto] sm:items-center"
+                >
+                  <Badge tone="neutral">
+                    {CHANGE_KIND_LABELS[item.change_kind] ?? item.change_kind}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {CHANGE_ENTITY_TYPE_LABELS[item.entity_type] ?? item.entity_type}
+                  </span>
+                  <span className="font-medium">{item.entity_key}</span>
+                  {item.risk_hint !== 'NONE' && (
+                    <Badge tone="warning">
+                      {CHANGE_RISK_HINT_LABELS[item.risk_hint] ?? item.risk_hint}
+                    </Badge>
+                  )}
                 </div>
               ))
             )}
           </CardContent>
         </Card>
       ) : (
-        <p className="text-sm text-muted-foreground">尚未发起检测。</p>
+        <div className="rounded-md border border-dashed px-3 py-10 text-center text-sm text-muted-foreground">
+          尚无持久化的变化检测结果。
+        </div>
       )}
     </div>
   )

@@ -21,6 +21,9 @@ from app.modules.aitde.scenario.schemas import OracleCandidate, ScenarioCandidat
 
 def content_hash(candidate: ScenarioCandidate) -> str:
     payload = {
+        "case_type": candidate.case_type.value,
+        "requirement_role": candidate.requirement_role.value,
+        "module_key": candidate.module_key,
         "given": candidate.given,
         "when": candidate.when,
         "expected": candidate.expected_state,
@@ -101,6 +104,9 @@ def create_version(
         contract_version_id=contract_version_id,
         title=candidate.title,
         business_goal=candidate.business_goal,
+        case_type=candidate.case_type.value,
+        requirement_role=candidate.requirement_role.value,
+        module_key=candidate.module_key,
         priority=candidate.priority.value,
         risk_level=candidate.risk_level.value,
         given_model_json=json.dumps(candidate.given, ensure_ascii=False),

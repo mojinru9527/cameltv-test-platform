@@ -161,6 +161,22 @@ class ScenarioReviewStatus(str, Enum):
     REQUEST_CHANGE = "REQUEST_CHANGE"
 
 
+class ScenarioCaseType(str, Enum):
+    """Tester-visible case lane for one scenario version."""
+
+    FUNCTIONAL = "FUNCTIONAL"
+    API = "API"
+    UI = "UI"
+
+
+class RequirementRole(str, Enum):
+    """How a scenario relates to the requirement currently under test."""
+
+    NEW = "NEW"
+    CHANGED = "CHANGED"
+    IMPACTED_BASELINE = "IMPACTED_BASELINE"
+
+
 class AIOperationStatus(str, Enum):
     QUEUED = "QUEUED"
     RUNNING = "RUNNING"

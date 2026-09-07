@@ -156,7 +156,7 @@ export default function RunDetailPage() {
           <ArrowLeft className="size-4" /> 返回执行中心
         </Button>
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <h1 className="text-xl font-semibold tracking-[-0.02em]">Run #{run.id}</h1>
+          <h1 className="text-xl font-semibold">Run #{run.id}</h1>
           <OutcomeBadge outcome={run.outcome} />
           <RuntimeStatusBadge status={run.runtime_status} />
           {run.outcome === 'PASS' && (

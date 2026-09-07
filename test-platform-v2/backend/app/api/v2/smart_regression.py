@@ -71,6 +71,21 @@ def detect_risk(
     )
 
 
+@router.get("/missions/{mission_id}/change-sets", response_model=R[dict])
+def list_mission_change_sets(
+    mission_id: int,
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    return R.ok(
+        {
+            "items": service.ChangeSetService.list_for_mission(
+                db, current.project_id or 0, mission_id
+            )
+        }
+    )
+
+
 @router.get("/change-sets/{change_set_id}", response_model=R[dict])
 def get_change_set(
     change_set_id: int,
@@ -109,6 +124,21 @@ def get_impact_run(
     if data is None:
         _issue_404("ImpactRun 不存在")
     return R.ok(data)
+
+
+@router.get("/missions/{mission_id}/impact-runs", response_model=R[dict])
+def list_mission_impact_runs(
+    mission_id: int,
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    return R.ok(
+        {
+            "items": service.ImpactAnalyzer.list_for_mission(
+                db, current.project_id or 0, mission_id
+            )
+        }
+    )
 
 
 @router.get(

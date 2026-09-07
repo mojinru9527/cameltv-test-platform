@@ -21,7 +21,7 @@ function makeOp(overrides: Record<string, unknown> = {}) {
     error_code: '',
     error_message: 'stack trace with credentials',
     duration_ms: 1234,
-    token_usage_json: '{"prompt_tokens":120,"completion_tokens":30}',
+    token_usage_json: '{"input_tokens":120,"output_tokens":30,"total_tokens":150,"cached_input_tokens":80,"uncached_input_tokens":40,"cache_hit_rate":0.6667,"cache_details_available":true,"deduplicated_request_count":1}',
     created_at: '2026-08-29T00:00:00',
     finished_at: '2026-08-29T00:00:01',
     ...overrides,
@@ -57,7 +57,12 @@ describe('AiDebugDrawer（V30-085）', () => {
     expect(screen.getByText('internal/deterministic-v1')).toBeTruthy()
     expect(screen.getByText('scope_analysis_v1:abc123')).toBeTruthy()
     expect(screen.getByText('1234 ms')).toBeTruthy()
-    expect(screen.getByText('prompt_tokens=120, completion_tokens=30')).toBeTruthy()
+    expect(screen.getByText('120')).toBeTruthy()
+    expect(screen.getByText('80')).toBeTruthy()
+    expect(screen.getByText('40')).toBeTruthy()
+    expect(screen.getByText('30')).toBeTruthy()
+    expect(screen.getByText('66.67%')).toBeTruthy()
+    expect(screen.getByText('1 次')).toBeTruthy()
   })
 
   it('无权限时不渲染任何调试内容', () => {
@@ -73,11 +78,26 @@ describe('AiDebugDrawer（V30-085）', () => {
     expect(screen.queryByText(/should-not-render/)).toBeNull()
   })
 
-  it('parseTokenUsage 仅取 number 字段并容忍坏 JSON', () => {
-    expect(parseTokenUsage('{"prompt_tokens":1,"model":"x"}')).toEqual([
-      { label: 'prompt_tokens', value: 1 },
-    ])
-    expect(parseTokenUsage('not-json')).toEqual([])
-    expect(parseTokenUsage('{}')).toEqual([])
+  it('parseTokenUsage 区分零命中与供应商未提供缓存明细', () => {
+    expect(parseTokenUsage('{"input_tokens":10,"output_tokens":2,"cached_input_tokens":0,"uncached_input_tokens":10,"cache_hit_rate":0,"cache_details_available":true}')).toEqual({
+      inputTokens: 10,
+      outputTokens: 2,
+      cachedInputTokens: 0,
+      uncachedInputTokens: 10,
+      cacheHitRate: 0,
+      cacheDetailsAvailable: true,
+      deduplicatedRequests: 0,
+    })
+    expect(parseTokenUsage('{"input_tokens":10,"output_tokens":2}')).toEqual({
+      inputTokens: 10,
+      outputTokens: 2,
+      cachedInputTokens: null,
+      uncachedInputTokens: null,
+      cacheHitRate: null,
+      cacheDetailsAvailable: false,
+      deduplicatedRequests: 0,
+    })
+    expect(parseTokenUsage('not-json')).toBeNull()
+    expect(parseTokenUsage('{}')).toBeNull()
   })
 })

@@ -22,6 +22,7 @@ def mission_to_dict(row: Mission) -> dict[str, Any]:
         "current_contract_version_id": row.current_contract_version_id,
         "acceptance_status": row.acceptance_status,
         "legacy_version_mission_id": row.legacy_version_mission_id,
+        "version_task_id": row.version_task_id,
         "created_by": row.created_by,
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "updated_at": row.updated_at.isoformat() if row.updated_at else None,
