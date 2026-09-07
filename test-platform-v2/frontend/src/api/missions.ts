@@ -113,6 +113,71 @@ export interface MissionListParams {
   page_size?: number
 }
 
+export interface MissionLifecyclePhase {
+  mission_id: number
+  mission_type: string
+  label: string
+  status: string
+  is_current: boolean
+}
+
+export interface MissionLifecycleStage {
+  key: string
+  label: string
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETE' | string
+  total: number
+  completed: number
+  gap: string
+}
+
+export interface MissionLifecycleCase {
+  scenario_id: number
+  scenario_version_id: number
+  scenario_key: string
+  title: string
+  case_type: 'FUNCTIONAL' | 'API' | 'UI' | 'UNCLASSIFIED' | string
+  requirement_role: 'NEW' | 'CHANGED' | 'IMPACTED_BASELINE' | 'UNCLASSIFIED' | string
+  module_key: string | null
+  review_status: string
+  source_ref_count: number
+  run_count: number
+  latest_run_id: number | null
+  latest_outcome: string | null
+  evidence_count: number
+  defect_count: number
+  retest_count: number
+  retest_status: 'NOT_REQUIRED' | 'PENDING_RETEST' | 'RETEST_PASSED' | 'RETEST_FAILED' | string
+}
+
+export interface MissionLifecycle {
+  mission: Pick<
+    Mission,
+    'id' | 'mission_type' | 'status' | 'acceptance_status' | 'version_task_id'
+  >
+  version_task: {
+    id: number
+    title: string
+    version: string
+    status: string
+  } | null
+  phases: MissionLifecyclePhase[]
+  stages: MissionLifecycleStage[]
+  coverage: {
+    case_types: Record<'FUNCTIONAL' | 'API' | 'UI' | 'UNCLASSIFIED', number>
+    requirement_roles: Record<'NEW' | 'CHANGED' | 'IMPACTED_BASELINE' | 'UNCLASSIFIED', number>
+  }
+  totals: {
+    cases: number
+    runs: number
+    evidence: number
+    defects: number
+    retests: number
+    executed_cases: number
+  }
+  cases: MissionLifecycleCase[]
+  gaps: string[]
+}
+
 // ── AITDE Mission API ──
 
 export function fetchMissions(
@@ -124,6 +189,13 @@ export function fetchMissions(
 
 export function fetchMission(id: number, signal?: AbortSignal): Promise<Mission> {
   return v2.get(`/missions/${id}`, { signal })
+}
+
+export function fetchMissionLifecycle(
+  id: number,
+  signal?: AbortSignal,
+): Promise<MissionLifecycle> {
+  return v2.get(`/missions/${id}/lifecycle`, { signal })
 }
 
 export function createMission(payload: MissionCreateInput): Promise<Mission> {
