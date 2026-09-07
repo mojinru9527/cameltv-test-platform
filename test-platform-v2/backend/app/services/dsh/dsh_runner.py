@@ -24,6 +24,7 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.core.resource_budget import BudgetTimeout, ResourceLease, configured_budget
+from app.core.process_tree import run_supervised
 from app.services.ai_config_service import EffectiveAiConfig
 
 logger = logging.getLogger(__name__)
@@ -238,7 +239,8 @@ def _run_node_cli(
 
     started = time.monotonic()
     try:
-        proc = subprocess.run(
+        run_process = run_supervised if settings.heavy_task_budget_enabled else subprocess.run
+        proc = run_process(
             cmd,
             cwd=workdir,
             capture_output=True,

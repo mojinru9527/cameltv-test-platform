@@ -45,6 +45,7 @@ param(
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 . (Join-Path $PSScriptRoot 'capacity.ps1')
+. (Join-Path $PSScriptRoot 'release-build.ps1')
 
 # ── Token 管理（首次输入，之后存本地）─────────────────────────────
 $tokenStore = "$HOME\.cameltv-release-console\token.json"
@@ -78,14 +79,6 @@ function Invoke-Api([string]$method, [string]$path, $body = $null) {
     }
 }
 
-function Get-Digest([string]$image) {
-    $id = docker image inspect $image --format "{{index .RepoDigests 0}}" 2>$null
-    if ($id -and $id -match "sha256:([0-9a-f]{64})") { return $Matches[1] }
-    $id2 = docker image inspect $image --format "{{.Id}}" 2>$null
-    if ($id2 -match "sha256:([0-9a-f]{64})") { return $Matches[1] }
-    throw "无法获取镜像 $image digest"
-}
-
 function Invoke-BuildxExport {
     # 通过 cmd /c 把「完整 argv」原样透传给 docker buildx。
     #
@@ -107,7 +100,9 @@ function Invoke-BuildxExport {
         $cmd = "docker buildx build --builder desktop-linux -t `"$Image`""
         if ($Dockerfile) { $cmd += " -f `"$Dockerfile`"" }
         if ($BuildArg)   { $cmd += " --build-arg `"$BuildArg`"" }
-        $cmd += " --output=type=docker,dest=`"$Dest`" ."
+        $metadataPath = "$Dest.metadata.json"
+        if (Test-Path -LiteralPath $metadataPath) { Remove-Item -LiteralPath $metadataPath }
+        $cmd += " --metadata-file `"$metadataPath`" --output=type=docker,dest=`"$Dest`" ."
         Write-Host "  buildx export: $cmd" -ForegroundColor DarkGray
         cmd /c $cmd 2>&1 | Select-Object -Last 2
         if ($LASTEXITCODE -ne 0) { throw "buildx 导出失败: $cmd" }
@@ -124,9 +119,13 @@ function Invoke-Release {
     Write-Host "==> 导出前端 cameltv-tp-frontend:$Tag (ICP=$IcpNumber)" -ForegroundColor Cyan
     Write-Host "==> 导出后端 cameltv-tp-backend:$Tag" -ForegroundColor Cyan
 
-    # 2. 自动提取 digest
-    $feDigest = Get-Digest "cameltv-tp-frontend:$Tag"
-    $beDigest = Get-Digest "cameltv-tp-backend:$Tag"
+    # Export first: type=docker does not load the new tag into the local store.
+    # Metadata binds the manifest to this build, even on a first clean release.
+    New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
+    Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-backend:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Dest "$OutputDir\$Tag-backend.tar"
+    Invoke-BuildxExport -Cwd "$repoRoot\test-platform-v2\frontend" -Image "cameltv-tp-frontend:$Tag" -BuildArg "VITE_ICP_NUMBER=$IcpNumber" -Dest "$OutputDir\$Tag-frontend.tar"
+    $feDigest = Get-ExportDigest "$OutputDir\$Tag-frontend.tar.metadata.json"
+    $beDigest = Get-ExportDigest "$OutputDir\$Tag-backend.tar.metadata.json"
     Write-Host "==> 前端 digest: $feDigest" -ForegroundColor Green
     Write-Host "==> 后端 digest: $beDigest" -ForegroundColor Green
 
@@ -153,18 +152,8 @@ function Invoke-Release {
     $deploymentId = $submit.deployment_id
     Write-Host "==> 登记成功 id=$deploymentId（状态 DRAFT）" -ForegroundColor Green
 
-    # 4. 导出 + 上传镜像
-    Write-Host "==> 导出并上传镜像" -ForegroundColor Cyan
-    New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
-    # containerd 存储（io.containerd.snapshotter.v1）下 docker save 可能产出
-    # 残缺 OCI tar（缺 index.json/manifest.json → 服务器 load 报
-    # "unrecognized image format"，2026-08-25 演练实测），改用 buildx
-    # type=docker 导出（含 manifest.json 的经典 docker 归档，服务器可 load）。
-    # 经 cmd /c 透传以规避 PS5.1 脚本模式对 --output 的原生参数重引号问题（见 Invoke-BuildxExport）。
-    # 注意：buildx 导出必须串行——同一 builder 并发构建会导致层 digest 冲突
-    # （"unexpected digest ... copied"，2026-09-01 实测），先后端后前端。
-    Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-backend:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Dest "$OutputDir\$Tag-backend.tar"
-    Invoke-BuildxExport -Cwd "$repoRoot\test-platform-v2\frontend" -Image "cameltv-tp-frontend:$Tag" -BuildArg "VITE_ICP_NUMBER=$IcpNumber" -Dest "$OutputDir\$Tag-frontend.tar"
+    # 4. Upload the archives produced above.
+    Write-Host "==> 上传镜像" -ForegroundColor Cyan
     ssh -i $KeyPath -o BatchMode=yes "${UserName}@${HostName}" "mkdir -p $ReleaseDir" 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Cannot prepare remote release directory' }
     Assert-ReleaseUploadCapacity -HostName $HostName -UserName $UserName -KeyPath $KeyPath `

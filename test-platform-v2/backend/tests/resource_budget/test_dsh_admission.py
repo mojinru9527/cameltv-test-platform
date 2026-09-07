@@ -1,4 +1,5 @@
 from unittest.mock import Mock, patch
+import threading
 
 import pytest
 
@@ -74,3 +75,56 @@ def test_configured_classes_share_execution_but_not_parent_lane(tmp_path):
             with configured_budget().wait('ui', 'child', timeout=0):
                 assert configured_budget().try_acquire('lanhu', 'other') is None
                 assert configured_budget('orchestration').try_acquire('dsh', 'other') is None
+
+
+def test_team_monitor_return_does_not_release_live_runner(tmp_path):
+    budget = FileBudget(tmp_path, 1)
+    started = threading.Event()
+    finish = threading.Event()
+    threads = []
+
+    def runtime(*args, **kwargs):
+        started.set()
+        assert finish.wait(5)
+        return runner.DshRunResult()
+
+    def monitor(db, task, runner):
+        thread = threading.Thread(target=runner, args=('team',))
+        threads.append(thread)
+        thread.start()
+        assert started.wait(2)
+        # Simulate the existing monitor returning before execution ends.
+
+    db = Mock()
+    db.get.return_value = Mock(status='running')
+    lease = budget.wait('dsh', 'team', timeout=0)
+    try:
+        with patch.object(worker, 'SessionLocal', return_value=db), \
+                patch.object(worker, 'execute_task', side_effect=monitor), \
+                patch.object(runner, 'run_dsh_task', side_effect=runtime):
+            worker._process_claimed(1, lease)
+            assert budget.try_acquire('dsh', 'next') is None
+            finish.set()
+            threads[0].join(2)
+    finally:
+        finish.set()
+        for thread in threads:
+            thread.join(5)
+    with budget.wait('dsh', 'next', timeout=0):
+        pass
+
+
+def test_late_team_dispatch_cannot_start_after_owner_return(tmp_path):
+    budget = FileBudget(tmp_path, 1)
+    callbacks = []
+    db = Mock()
+    db.get.return_value = Mock(status='running')
+    lease = budget.wait('dsh', 'team', timeout=0)
+    with patch.object(worker, 'SessionLocal', return_value=db), \
+            patch.object(worker, 'execute_task', side_effect=lambda db, task, runner: callbacks.append(runner)), \
+            patch.object(runner, 'run_dsh_task') as runtime:
+        worker._process_claimed(1, lease)
+        assert callbacks[0]('late').exit_code == 1
+        runtime.assert_not_called()
+    with budget.wait('dsh', 'next', timeout=0):
+        pass

@@ -31,6 +31,9 @@ jobs:
       - name: Validate upload capacity admission
         shell: pwsh
         run: ./scripts/ops/test-capacity.ps1
+      - name: Release build metadata smoke
+        shell: pwsh
+        run: ./scripts/ops/test-release-build.ps1
 
       - name: Validate changed workflow YAML syntax
         shell: bash

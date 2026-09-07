@@ -19,6 +19,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.resource_budget import configured_budget
+from app.core.process_tree import process_group_options, terminate_process_tree
 
 
 logger = logging.getLogger("playwright")
@@ -373,6 +374,11 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
     ]
     logger.info(f"Running: {' '.join(cmd)} in {runner_dir}")
 
+    from app.core.config import settings
+
+    supervised = settings.heavy_task_budget_enabled
+    stop_process = terminate_process_tree if supervised else lambda process: process.kill()
+    proc = None
     try:
         proc = subprocess.Popen(
             cmd,
@@ -383,6 +389,7 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
             errors="replace",
             cwd=str(runner_dir),
             env=env,
+            **(process_group_options() if supervised else {}),
         )
 
         # 记录进程 PID 以便取消时 kill
@@ -414,7 +421,7 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
             # 检查取消标记
             if run.cancel_requested or run.status == "cancelled":
                 logger.info(f"Cancelling Playwright process PID={proc.pid} for run #{run_id}")
-                proc.kill()
+                stop_process(proc)
                 output_thread.join(timeout=10)
                 stdout_text = process_output["stdout"]
                 stderr_text = process_output["stderr"]
@@ -431,7 +438,7 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
             run_timeout = _runner_timeout()
             if elapsed > run_timeout:
                 logger.warning(f"Playwright timeout for run #{run_id} after {elapsed:.0f}s")
-                proc.kill()
+                stop_process(proc)
                 output_thread.join(timeout=10)
                 stdout_text = process_output["stdout"]
                 stderr_text = process_output["stderr"]
@@ -456,7 +463,7 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
         # 7. 进程正常结束，收集输出
         output_thread.join(timeout=10)
         if output_thread.is_alive():
-            proc.kill()
+            stop_process(proc)
             return _fail_run(db, run, "Playwright 输出读取线程未能结束", job)
         stdout_text = process_output["stdout"]
         stderr_text = process_output["stderr"]
@@ -548,6 +555,10 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
             db, run,
             f"执行异常: {type(e).__name__}: {e}", job,
         )
+    finally:
+        if supervised and proc is not None:
+            terminate_process_tree(proc)
+            proc.wait(timeout=10)
 
 
 # ── Helpers ──

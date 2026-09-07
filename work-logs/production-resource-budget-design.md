@@ -94,8 +94,29 @@ peak measurement and parent/child completion remain mandatory before enabling.
 | DSH | Lazy dsh_task_service poller; direct run_dsh_task | Separate orchestration lane; bound queued claims and runtime admission |
 | AITDE browser | PlaywrightPageAdapter open/close | Hold execution lease for actual browser lifetime, including startup failure |
 | Embedding | EmbeddingService available/embed, API and ingestion | Budget model load and inference; avoid nested lease deadlock; API profile must avoid loading local model |
+| XHR capture | In-process thread from UI capture route | Reserve before thread creation; retryable 429 while busy; move route and status ownership together |
 | Scheduled maintenance | API lifespan / APScheduler | Explicit owner; preserve schedule updates and startup recovery |
 | AI/background tasks | Lazy ensure_worker_running calls | Submission persists work; API must not start execution threads |
 
 The initial backend full regression is being allowed to finish before changing
 its source snapshot. New slices require their own affected regression evidence.
+
+## Supervision slice evidence
+
+- Linux process-group helper tested in a disposable local `python:3.12-slim`
+  container with no network and a read-only source mount. Two real process
+  tests pass: timeout and normally exited parent both leave no live child.
+- DSH team dispatch transfers lease ownership to its execution thread. Tests
+  simulate the monitor returning before the runtime finishes and a late thread
+  dispatch after owner close. Neither may release capacity early or start late.
+- DSH/resource regression: 98 passed, 2 Linux-only skips on Windows, exit 0.
+  Playwright/DSH/OCR regression before the team ownership refinement: 99 passed.
+- XHR admission and route regression: 37 passed, 2 Linux-only skips, exit 0.
+  OpenAPI now declares the retryable 429 and Retry-After header.
+- Supervision is tied to the disabled resource-budget flag. Linux groups cover
+  descendants in the owned group, not deliberately detached sessions. Windows
+  uses taskkill for active parents and has no equivalent successful-parent
+  guarantee. Production remains Linux; container limits remain required.
+- Native BrowserRuntimeDriver has no production callers found in app/; its
+  busy outcome is runtime_error, not a durable queue retry. Keep this distinction
+  in the rollout review, rather than claiming a native Temporal execution path.

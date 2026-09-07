@@ -100,6 +100,26 @@ Remote required checks and PR audit have not run because push is not yet authori
 - Test-generated tracked baseline JSON has only line-ending churn and is
   excluded from task commits; no user changes reverted.
 
+## Supervision and release-build incremental evidence (2026-09-08)
+
+- Disposable local Linux stdlib process-tree suite: 2 passed, exit 0 (1.056s).
+  Actual child processes were checked after timeout and normal parent exit.
+- Playwright/environment/artifact/DSH/OCR plus budget tests: 99 passed, exit 0.
+- DSH team ownership refinement plus budget/tasks/runner/sandbox: 98 passed,
+  2 Linux-only skipped on Windows, exit 0. No running test sessions remain.
+- XHR capacity admission/API/route-layer regression: 37 passed, 2 skipped,
+  exit 0. Final XHR/API run including the OpenAPI header assertion: 7 passed
+  in 5.10s, exit 0. F821, diff whitespace, PowerShell parser and YAML checks pass.
+- Release digest ordering debt above is now fixed locally: build/export first,
+  then read `containerimage.config.digest` from fresh build metadata. Existing
+  local image tags are no longer the digest source. Missing/malformed metadata
+  is rejected before deployment registration. PowerShell tests pass, exit 0.
+- Real scratch-image buildx export passed. Parsing its Docker archive and
+  hashing the referenced config produced exactly the fresh metadata digest:
+  `sha256:cdf7d1bdf6a1e397aafdb0c8be05280a3a75881b6bde378d71d1e345a3497332`.
+  This verifies export metadata behavior, not a full production image build.
+- No production cleanup, deployment, container restart or feature activation.
+
 ## Initial slice retro card
 
 Planned: 2 hours implementation/QA, excluding gated rollout.

@@ -26,7 +26,6 @@ import re
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from functools import partial
 from pathlib import Path
 
 from sqlalchemy import select
@@ -585,6 +584,23 @@ def _execute_team(db, task: DshTask, params: dict, runner, provider: "EffectiveA
 
 def _process_claimed(task_id: int, lease=None) -> None:
     db = None
+    ownership = threading.Lock()
+    transferred = False
+    dispatch_closed = False
+
+    def _leased_run(*args, **kwargs):
+        nonlocal transferred
+        from app.services.dsh.dsh_runner import DshRunResult, run_dsh_task
+
+        with ownership:
+            if dispatch_closed or transferred:
+                return DshRunResult(exit_code=1, error='DSH task dispatch is no longer active')
+            transferred = True
+        try:
+            return run_dsh_task(*args, resource_lease=lease, **kwargs)
+        finally:
+            lease.release()
+
     try:
         db = SessionLocal()
         task = db.get(DshTask, task_id)
@@ -593,16 +609,18 @@ def _process_claimed(task_id: int, lease=None) -> None:
         if lease is None:
             execute_task(db, task)
         else:
-            from app.services.dsh.dsh_runner import run_dsh_task
-
-            execute_task(db, task, runner=partial(run_dsh_task, resource_lease=lease))
+            execute_task(db, task, runner=_leased_run)
     finally:
         try:
             if db is not None:
                 db.close()
         finally:
-            if lease is not None:
-                lease.release()
+            # A team's monitor may time out before its execution thread exits.
+            # Once dispatched, only that runtime thread may release admission.
+            with ownership:
+                dispatch_closed = True
+                if lease is not None and not transferred:
+                    lease.release()
 
 
 def _poll_once() -> None:

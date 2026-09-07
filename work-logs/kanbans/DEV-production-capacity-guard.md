@@ -50,3 +50,10 @@ F821 and whitespace checks pass. Next: process-tree supervision and team-timeout
 lease ownership, then actual execution ownership/image split. Native browser
 currently reports capacity exhaustion as runtime_error; durable admission
 deferral still needs integration before activating the feature.
+
+Supervision follow-up: real Linux process-group tests pass; DSH team runtime
+now retains its lease even if the monitor returns early. XHR capture reserves
+capacity before spawning and returns retryable 429 when full. Release script
+now reads fresh export metadata after build (real archive hash comparison
+passed). Next focus is Phase 3 execution ownership and image split; all runtime
+features remain default-disabled pending the complete rollout review.
