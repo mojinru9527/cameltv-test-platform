@@ -16,6 +16,7 @@
 | E232-10 | API 用例执行 | JSON/trace | 增量 | `retest-9101/api-case-result.json`, `retest-9101/api-case.trace` | PASS | 接口契约或环境变化后刷新 |
 | E232-11 | UI 自动化录制 | PNG/WebM | 增量 | `retest-9101/ui-case.png`, `retest-9101/ui-case.webm` | FAIL | 缺陷修复后必须复验并新增父子 Run 证据 |
 | E232-12 | Test5 初始语义快照与 Mission 复现数据 | 快照/脚本 | 增量 | `retest-9101/target-initial.yml`, `retest-9101/seed_mission_9101.py` | PASS | 仅用于本批隔离复现，生产数据不得由脚本伪造 |
+| E232-13 | AI 缓存指标抽屉 | 截图/浏览器清单 | 增量 | `platform-ui/ai-cache-drawer-desktop.png`, `platform-ui/ai-cache-drawer-mobile.png`, `platform-ui/ai-cache-browser-report.json` | PASS | usage 展示或抽屉布局变化后刷新；无真实供应商 usage 时不得伪造数值 |
 
 ## 事实摘要
 
@@ -24,6 +25,7 @@
 - 1 个 Build、1 个 Campaign、1 个 Quality Gate；Gate 4/5，验收 FAIL。
 - 3 个变更项、1 次影响分析（3 个受影响场景）、6 条 Lineage、1 个场景缺口。
 - 浏览器报告：16 个检查、0 内容缺失、0 横向溢出、0 控制台错误、0 失败请求、0 重复有效 GET。
+- AI 缓存抽屉：桌面与手机均无横向溢出、0 控制台错误、0 应用请求失败；历史空 usage 显示“—”，数值/0% 由自动化契约测试覆盖。
 
 ## 失败说明
 

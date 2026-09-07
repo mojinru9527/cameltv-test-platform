@@ -49,6 +49,13 @@
 **验收标准**：命令、退出码、失败集合可追溯；C227-1 满足；required checks 全绿后才能 Leader APPROVED。  
 **涉及文件**：work-logs 与 evidence。
 
+### [x] Task 7: AI 缓存复用与成本遥测
+
+**描述**：保留稳定公共提示前缀、同操作精确请求去重、OpenAI 官方缓存路由键，并把 OpenAI/DeepSeek usage 归一化写入 AI 操作记录。
+**验收标准**：OpenAI/DeepSeek 两种命中字段可识别；非 OpenAI 端点无专用字段；歧义/意图相同请求从两次降为一次；调试抽屉区分 0% 与未提供。
+**涉及文件**：共享 AI client、AITDE prompt/provider/runner、ai_ops service、AI Debug Drawer 与测试。
+**参考**：PRD US6。
+
 ## 质量要求
 
 - [ ] 后端 F821、相关 Pytest、全量 Pytest、Alembic 单头通过
@@ -57,3 +64,4 @@
 - [ ] 所有新端点有权限和项目隔离测试
 - [ ] UI 桌面 1440x900、平板 768x1024、移动 390x844 走查
 - [ ] 无调试输出、凭据和生产秘密进入提交
+- [x] 缓存指标只来自供应商 usage，不显示 Prompt 原文、缓存键或价格推算

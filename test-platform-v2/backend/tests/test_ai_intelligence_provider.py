@@ -13,7 +13,6 @@ import httpx
 import pytest
 
 from app.core import config
-from app.modules.aitde.intelligence import llm_sync
 from app.services import ai_client
 from app.modules.aitde.intelligence.provider import (
     AiIntelligenceProvider,
@@ -23,11 +22,13 @@ from app.modules.aitde.intelligence.provider import (
     ScopeContext,
     ScopeIntentContext,
     build_intelligence_provider,
+    _load_prompt,
 )
 from app.modules.aitde.intelligence.llm_sync import (
     IntelligenceLLMError,
     IntelligenceLLMResponseError,
     call_llm_json,
+    call_llm_json_full,
 )
 from app.services.ai_config_service import (
     AIProviderUnconfiguredError,
@@ -92,6 +93,44 @@ def test_call_llm_json_retries_transient_then_succeeds(monkeypatch):
     assert result == {"ok": True}
 
 
+def test_call_llm_json_full_returns_safe_operation_metadata(monkeypatch):
+    monkeypatch.setattr(
+        ai_client,
+        "chat_completions_full",
+        lambda *a, **k: {
+            "content": '{"ok": true}',
+            "finish_reason": "stop",
+            "truncated": False,
+            "usage": {
+                "input_tokens": 100,
+                "output_tokens": 20,
+                "total_tokens": 120,
+                "cached_input_tokens": 60,
+                "uncached_input_tokens": 40,
+                "cache_hit_rate": 0.6,
+                "cache_details_available": True,
+            },
+            "model_provider": "openai_compatible",
+            "model_name": "gpt-5.2",
+            "prompt_cache_key": "aitde-abc",
+        },
+    )
+    payload, metadata = call_llm_json_full(
+        db=None,
+        project_id=1,
+        system_prompt="stable",
+        user_payload={"mission_id": 7},
+        prompt_version="scope_analysis_v1",
+    )
+    assert payload == {"ok": True}
+    assert metadata["token_usage"]["cached_input_tokens"] == 60
+    assert metadata["model_name"] == "gpt-5.2"
+    assert metadata["prompt_version"] == "scope_analysis_v1:cache-v1"
+    assert metadata["input_hash"]
+    assert metadata["duration_ms"] >= 0
+    assert "mission_id" not in metadata
+
+
 def test_call_llm_json_invalid_json_raises_response_error(monkeypatch):
     monkeypatch.setattr(
         ai_client.httpx, "post", lambda *a, **k: _FakeResponse("not-json")
@@ -134,6 +173,13 @@ def test_ai_provider_analyze_scope_validates_output():
     assert client.calls[0]["payload"]["fragments"][0]["artifact_id"] == 1
 
 
+def test_ai_provider_injected_client_keeps_empty_operation_metadata():
+    client = _fake_client({"test scoping analyst": {"items": [_SCOPE_ITEM]}})
+    prov = AiIntelligenceProvider(db=None, project_id=1, client=client)
+    prov.analyze_scope(ScopeContext(mission_id=7, fragments=[(1, 2, "标题", "正文")]))
+    assert prov.operation_metadata() == {}
+
+
 def test_ai_provider_detect_ambiguities_and_intents():
     client = _fake_client(
         {
@@ -171,6 +217,69 @@ def test_ai_provider_detect_ambiguities_and_intents():
     intent = prov.design_intents(ctx)
     assert amb.items[0].ambiguity_key == "amb-1"
     assert intent.items[0].intent_key == "intent-1"
+    assert len(client.calls) == 1
+
+
+def test_aitde_prompts_share_a_substantive_stable_cache_prefix():
+    scope = _load_prompt("scope_analysis_v1")
+    contract = _load_prompt("contract_builder_v1")
+    marker = "--- OPERATION-SPECIFIC CONTRACT ---"
+    scope_prefix = scope.split(marker, 1)[0]
+    contract_prefix = contract.split(marker, 1)[0]
+    assert scope_prefix == contract_prefix
+    assert len(scope_prefix.split()) >= 1024
+
+
+def test_default_ai_provider_aggregates_usage_and_deduplicates(monkeypatch):
+    from app.modules.aitde.intelligence import llm_sync
+
+    calls = []
+    payload = {
+        "ambiguities": [],
+        "intents": [
+            {
+                "intent_key": "intent-1",
+                "title": "续费",
+                "business_goal": "恢复会员权益",
+                "required_outcomes": ["会员状态为生效"],
+                "risk_level": "P2",
+                "source_refs": [{"artifact_id": 1, "fragment_id": 2}],
+            }
+        ],
+    }
+
+    def _full(**kwargs):
+        calls.append(kwargs)
+        return payload, {
+            "model_provider": "openai_compatible",
+            "model_name": "gpt-5.2",
+            "model_config_hash": "model-hash",
+            "prompt_version": "ambiguity_intent_v1:cache-v1",
+            "input_hash": "input-hash",
+            "duration_ms": 11,
+            "token_usage": {
+                "input_tokens": 1200,
+                "output_tokens": 100,
+                "total_tokens": 1300,
+                "cached_input_tokens": 900,
+                "uncached_input_tokens": 300,
+                "cache_hit_rate": 0.75,
+                "cache_details_available": True,
+            },
+        }
+
+    monkeypatch.setattr(llm_sync, "call_llm_json_full", _full)
+    prov = AiIntelligenceProvider(db=None, project_id=1)
+    context = ScopeIntentContext(mission_id=7, scope_items=[_SCOPE_ITEM])
+    prov.detect_ambiguities(context)
+    prov.design_intents(context)
+
+    metadata = prov.operation_metadata()
+    assert len(calls) == 1
+    assert metadata["token_usage"]["request_count"] == 1
+    assert metadata["token_usage"]["deduplicated_request_count"] == 1
+    assert metadata["token_usage"]["cached_input_tokens"] == 900
+    assert metadata["token_usage"]["cache_hit_rate"] == 0.75
 
 
 def test_ai_provider_contract_and_scenarios_force_ai_inferred_not_required():

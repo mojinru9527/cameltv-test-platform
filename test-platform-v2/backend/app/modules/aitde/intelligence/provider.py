@@ -20,6 +20,9 @@ config: configured -> AI provider; unconfigured/disabled -> deterministic.
 
 from __future__ import annotations
 
+import hashlib
+import json
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Protocol
@@ -57,6 +60,7 @@ from app.modules.aitde.scope.schemas import (
 )
 
 _PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
+_CACHE_PREFIX_VERSION = "cache-v1"
 _SOURCE_TYPE_AI_INFERRED = "AI_INFERRED"
 _SOURCE_TYPE_RULE_BASELINE = "RULE_BASELINE"
 
@@ -67,8 +71,12 @@ def _source_refs(item: dict) -> list[SourceRef]:
 
 
 def _load_prompt(name: str) -> str:
-    """Read a prompt template shipped next to this module."""
-    return (_PROMPTS_DIR / f"{name}.txt").read_text(encoding="utf-8")
+    """Read the shared stable prefix before the operation-specific prompt."""
+    common = (_PROMPTS_DIR / f"{_CACHE_PREFIX_VERSION}.txt").read_text(
+        encoding="utf-8"
+    )
+    task = (_PROMPTS_DIR / f"{name}.txt").read_text(encoding="utf-8")
+    return f"{common}\n\n--- OPERATION-SPECIFIC CONTRACT ---\n\n{task}"
 
 
 @dataclass
@@ -323,25 +331,109 @@ class AiIntelligenceProvider:
         if client is None:
             from app.modules.aitde.intelligence import llm_sync
 
-            self._client: Callable[..., dict[str, Any]] = llm_sync.call_llm_json
+            self._client: Callable[..., Any] = llm_sync.call_llm_json_full
+            self._captures_metadata = True
         else:
             self._client = client
+            self._captures_metadata = False
+        self._operation_calls: list[dict[str, Any]] = []
+        self._response_cache: dict[str, dict[str, Any]] = {}
+        self._deduplicated_calls = 0
 
     # ── internals ────────────────────────────────────────────────────────
     def _call(self, prompt_name: str, user_payload: dict[str, Any]) -> dict[str, Any]:
         from app.modules.aitde.intelligence.llm_sync import IntelligenceLLMResponseError
 
-        payload = self._client(
-            db=self._db,
-            project_id=self._project_id,
-            system_prompt=_load_prompt(prompt_name),
-            user_payload=user_payload,
-        )
+        request_fingerprint = hashlib.sha256(
+            (
+                prompt_name
+                + "|"
+                + json.dumps(user_payload, ensure_ascii=False, sort_keys=True)
+            ).encode("utf-8")
+        ).hexdigest()
+        if request_fingerprint in self._response_cache:
+            self._deduplicated_calls += 1
+            return deepcopy(self._response_cache[request_fingerprint])
+
+        call_args = {
+            "db": self._db,
+            "project_id": self._project_id,
+            "system_prompt": _load_prompt(prompt_name),
+            "user_payload": user_payload,
+        }
+        if self._captures_metadata:
+            payload, metadata = self._client(
+                **call_args, prompt_version=prompt_name
+            )
+            self._operation_calls.append(metadata)
+        else:
+            payload = self._client(**call_args)
         if not isinstance(payload, dict):
             raise IntelligenceLLMResponseError(
                 f"{prompt_name}: response is not a JSON object"
             )
+        self._response_cache[request_fingerprint] = deepcopy(payload)
         return payload
+
+    def operation_metadata(self) -> dict[str, Any]:
+        """Aggregate metadata when one domain operation performs several calls."""
+        if not self._operation_calls:
+            return {}
+        calls = self._operation_calls
+        usages = [call.get("token_usage") or {} for call in calls]
+        reported_usages = [usage for usage in usages if usage]
+        numeric_keys = (
+            "input_tokens",
+            "output_tokens",
+            "total_tokens",
+            "cached_input_tokens",
+            "uncached_input_tokens",
+        )
+        usage = (
+            {
+                key: sum(int(item.get(key) or 0) for item in reported_usages)
+                for key in numeric_keys
+            }
+            if reported_usages
+            else {}
+        )
+        cache_details_available = bool(reported_usages) and len(reported_usages) == len(
+            usages
+        ) and all(
+            item.get("cache_details_available") is True for item in reported_usages
+        )
+        if reported_usages:
+            usage["cache_details_available"] = cache_details_available
+        usage["request_count"] = len(calls)
+        usage["deduplicated_request_count"] = self._deduplicated_calls
+        if cache_details_available:
+            usage["cache_hit_rate"] = (
+                round(usage["cached_input_tokens"] / usage["input_tokens"], 4)
+                if usage["input_tokens"]
+                else 0.0
+            )
+        elif reported_usages:
+            usage.pop("cached_input_tokens", None)
+            usage.pop("uncached_input_tokens", None)
+        prompt_versions = sorted(
+            {str(call.get("prompt_version") or "") for call in calls}
+        )
+        input_hashes = "|".join(str(call.get("input_hash") or "") for call in calls)
+        first = calls[0]
+        input_hash = (
+            str(first.get("input_hash") or "")
+            if len(calls) == 1
+            else hashlib.sha256(input_hashes.encode("utf-8")).hexdigest()
+        )
+        return {
+            "model_provider": first.get("model_provider") or "",
+            "model_name": first.get("model_name") or "",
+            "model_config_hash": first.get("model_config_hash") or "",
+            "prompt_version": ",".join(filter(None, prompt_versions))[:128],
+            "input_hash": input_hash,
+            "duration_ms": sum(int(call.get("duration_ms") or 0) for call in calls),
+            "token_usage": usage,
+        }
 
     @staticmethod
     def _validate(model_cls: type, value: Any, prompt_name: str) -> Any:
