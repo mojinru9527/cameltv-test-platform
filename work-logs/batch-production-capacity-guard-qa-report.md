@@ -210,7 +210,25 @@ Durable plan follow-up evidence (before final full regression):
 - The split manifest contract is not yet a deployable production bundle:
   executor/archive/rollback/retention integration remains incomplete.
 
-## Original capacity retro card
+## Complete release-set integration (incremental)
+
+- Console unittest: 36 passed, exit 0. Covers archive config-digest verification,
+  wrong tags/repositories, missing runner/config, immutable registration, remote
+  failure states, duplicate and cross-deployment rejection, target-mode rollback,
+  command ordering and pinned split retention.
+- Actual Compose merge: 3 passed, exit 0. Native local SCP/hash/failure probe and
+  fresh-build metadata probe: exit 0. F821 and diff whitespace: exit 0.
+- scan-common-bugs: HARD=0, WARN=332, exit 1 for existing warnings; count matches
+  the recorded main baseline. No newly introduced warning category observed.
+- Initial API tests exposed connections retained after SQLite context exit;
+  deterministic connection close fixed the Windows file-handle failures. All
+  tests pass after the fix. Tests use isolated databases and a mocked SSH executor;
+  they do not establish real production split/combined transition success.
+- CI now installs the console's declared dependencies and HTTPX before these
+  tests. Real final-image transition rehearsal, full regressions and host sizing
+  remain required. No production changes executed.
+
+### Original capacity retrospective
 
 Planned: 2 hours implementation/QA, excluding gated rollout.
 Actual: approximately 0.3 hours to local QA.

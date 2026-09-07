@@ -28,16 +28,19 @@ def validate_space(free: int, free_inodes: int, inodes: int, required: int) -> N
         raise RuntimeError(f'inode capacity insufficient: free={free_inodes}, total={inodes}')
 
 
-def check(release_dir: str, stage: str, archive_bytes: int = 0, tag: str = '') -> dict:
+def check(release_dir: str, stage: str, archive_bytes: int = 0, tag: str = '', runtime_mode: str = 'combined') -> dict:
+    if runtime_mode not in ('combined', 'split'):
+        raise ValueError('invalid runtime mode')
     release = Path(release_dir).resolve(strict=True)
     if not release.is_dir():
         raise ValueError('release directory is not a directory')
     if stage == 'import':
         if not re.fullmatch(r'release-\d{8}-\d{4}', tag):
             raise ValueError('expected release-YYYYMMDD-NNNN tag')
-        archives = [release / f'{tag}-{part}.tar' for part in ('backend', 'frontend')]
+        parts = ('backend', 'frontend', 'runner') if runtime_mode == 'split' else ('backend', 'frontend')
+        archives = [release / f'{tag}-{part}.tar' for part in parts]
         if any(p.is_symlink() or not p.is_file() or p.stat().st_size == 0 for p in archives):
-            raise ValueError('both nonempty regular release archives are required')
+            raise ValueError('all nonempty regular release archives are required')
         archive_bytes = sum(p.stat().st_size for p in archives)
     required = required_bytes(archive_bytes, stage)
     docker_root = subprocess.check_output(
@@ -64,10 +67,10 @@ def check(release_dir: str, stage: str, archive_bytes: int = 0, tag: str = '') -
     return {'ok': True, 'stage': stage, 'archive_bytes': archive_bytes, 'filesystems': results}
 
 
-def remote_check_command(release_dir: str, tag: str) -> str:
+def remote_check_command(release_dir: str, tag: str, runtime_mode: str = 'combined') -> str:
     source = base64.b64encode(Path(__file__).read_bytes()).decode('ascii')
     args = base64.b64encode(json.dumps({
-        'release_dir': release_dir, 'stage': 'import', 'tag': tag,
+        'release_dir': release_dir, 'stage': 'import', 'tag': tag, 'runtime_mode': runtime_mode,
     }).encode()).decode('ascii')
     code = (
         "import base64,json; ns={'__name__':'capacity_remote'}; "
@@ -83,6 +86,7 @@ def main() -> None:
     parser.add_argument('--release-dir', default='/opt/cameltv-release')
     parser.add_argument('--archive-bytes', type=int, default=0)
     parser.add_argument('--tag', default='')
+    parser.add_argument('--runtime-mode', choices=['combined', 'split'], default='combined')
     args = parser.parse_args()
     try:
         result = check(**vars(args))

@@ -52,6 +52,27 @@ class CleanupTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             cleanup.build_plan(self.images, [], [], [self.keep[0]], 1788825600)
 
+    def test_pinned_split_requires_complete_runner_and_configuration(self):
+        tag = self.keep[0]
+        config = {'name': f'{tag}-execution.yml', 'size': 100, 'mtime_ns': 1, 'regular': True}
+        with self.assertRaises(ValueError):
+            self.plan(archives=[config])
+        self.images.append({'Id': 'runner-current', 'RepoTags': [f'cameltv-tp-runner:{tag}']})
+        with self.assertRaises(ValueError):
+            self.plan()
+        result = self.plan(archives=[config])
+        self.assertNotIn(f'cameltv-tp-runner:{tag}', result['image_tags'])
+        self.assertEqual(result['archives'], [])
+
+    def test_old_runner_is_eligible_but_execution_configuration_is_retained(self):
+        tag = 'release-20260903-0001'
+        self.images.append({'Id': 'runner-old', 'RepoTags': [f'cameltv-tp-runner:{tag}']})
+        files = [dict(name=f'{tag}-runner.tar', size=100, mtime_ns=1, regular=True),
+                 dict(name=f'{tag}-execution.yml', size=100, mtime_ns=1, regular=True)]
+        result = self.plan(archives=files)
+        self.assertIn(f'cameltv-tp-runner:{tag}', result['image_tags'])
+        self.assertEqual(result['archives'], [files[0]])
+
     def test_recent_archive_backup_and_symlink_not_candidates(self):
         files = [
             {'name': 'release-20260903-0001-backend.tar', 'size': 100, 'mtime_ns': 1, 'regular': True},

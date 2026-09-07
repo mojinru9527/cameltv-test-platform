@@ -39,7 +39,10 @@ param(
     [string]$KeyPath = "",
     [string]$IcpNumber = "粤ICP备2026121122号-1",
     [string]$OutputDir = "F:\CamelTv-safe-backup\release-artifacts",
-    [string]$ReleaseDir = "/opt/cameltv-release"
+    [string]$ReleaseDir = "/opt/cameltv-release",
+    [ValidateSet('combined', 'split')]
+    [string]$RuntimeMode = 'combined',
+    [string]$ExecutionConfig = ''
 )
 
 $ErrorActionPreference = "Stop"
@@ -94,6 +97,7 @@ function Invoke-BuildxExport {
         [string]$Image,
         [string]$Dockerfile,
         [string]$BuildArg,
+        [string]$Target,
         [string]$Dest
     )
     Push-Location $Cwd
@@ -101,6 +105,7 @@ function Invoke-BuildxExport {
         $cmd = "docker buildx build --builder desktop-linux -t `"$Image`""
         if ($Dockerfile) { $cmd += " -f `"$Dockerfile`"" }
         if ($BuildArg)   { $cmd += " --build-arg `"$BuildArg`"" }
+        if ($Target)     { $cmd += " --target `"$Target`"" }
         $metadataPath = "$Dest.metadata.json"
         if (Test-Path -LiteralPath $metadataPath) { Remove-Item -LiteralPath $metadataPath }
         $cmd += " --metadata-file `"$metadataPath`" --output=type=docker,dest=`"$Dest`" ."
@@ -113,6 +118,10 @@ function Invoke-BuildxExport {
 # ── 发布流程 ────────────────────────────────────────────────────
 function Invoke-Release {
     if (-not $Tag) { throw "-Tag 必填（如 release-20260823-0003）" }
+    if ($Tag -notmatch '^release-\d{8}-\d{4}$') { throw 'Use an immutable release-YYYYMMDD-NNNN tag' }
+    if ($RuntimeMode -eq 'split' -and (-not $ExecutionConfig -or -not (Test-Path -LiteralPath $ExecutionConfig -PathType Leaf))) {
+        throw 'Split release requires a reviewed execution Compose configuration'
+    }
     $gitSha = (git -C $repoRoot rev-parse HEAD).Trim()
     Write-Host "==> Git SHA: $gitSha" -ForegroundColor Cyan
 
@@ -123,10 +132,20 @@ function Invoke-Release {
     # Export first: type=docker does not load the new tag into the local store.
     # Metadata binds the manifest to this build, even on a first clean release.
     New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
-    Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-backend:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Dest "$OutputDir\$Tag-backend.tar"
+    $backendTarget = if ($RuntimeMode -eq 'split') { 'api' } else { 'runtime' }
+    Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-backend:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Target $backendTarget -Dest "$OutputDir\$Tag-backend.tar"
     Invoke-BuildxExport -Cwd "$repoRoot\test-platform-v2\frontend" -Image "cameltv-tp-frontend:$Tag" -BuildArg "VITE_ICP_NUMBER=$IcpNumber" -Dest "$OutputDir\$Tag-frontend.tar"
     $feDigest = Get-ExportDigest "$OutputDir\$Tag-frontend.tar.metadata.json"
     $beDigest = Get-ExportDigest "$OutputDir\$Tag-backend.tar.metadata.json"
+    $archives = @("$OutputDir\$Tag-backend.tar", "$OutputDir\$Tag-frontend.tar")
+    if ($RuntimeMode -eq 'split') {
+        Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-runner:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Target runner -Dest "$OutputDir\$Tag-runner.tar"
+        $runnerDigest = Get-ExportDigest "$OutputDir\$Tag-runner.tar.metadata.json"
+        $archives += "$OutputDir\$Tag-runner.tar"
+        $configArtifact = "$OutputDir\$Tag-execution.yml"
+        Copy-Item -LiteralPath $ExecutionConfig -Destination $configArtifact
+        $executionChecksum = (Get-FileHash -LiteralPath $configArtifact -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
     Write-Host "==> 前端 digest: $feDigest" -ForegroundColor Green
     Write-Host "==> 后端 digest: $beDigest" -ForegroundColor Green
 
@@ -143,7 +162,14 @@ function Invoke-Release {
         config_schema = "platform-runtime/v1"
         secret_refs = @("secret://production/cameltv/platform@v1")
         qa_evidence = @("artifact://release-platform/qa-e2e")
-    } | ConvertTo-Json -Depth 6
+    }
+    if ($RuntimeMode -eq 'split') {
+        $manifest.runtime_mode = 'split'
+        $manifest.runner = @{ image = 'cameltv-tp-runner'; digest = "sha256:$runnerDigest"; sbom_sha256 = $zero64 }
+        $manifest.execution_config_sha256 = $executionChecksum
+    }
+    $manifest = $manifest | ConvertTo-Json -Depth 6
+    [IO.File]::WriteAllText("$OutputDir\$Tag-manifest.json", $manifest, [Text.UTF8Encoding]::new($false))
 
     Write-Host "==> 提交登记 $releaseId" -ForegroundColor Cyan
     $submit = Invoke-Api "POST" "/api/deployments" @{
@@ -158,7 +184,7 @@ function Invoke-Release {
     ssh -i $KeyPath -o BatchMode=yes "${UserName}@${HostName}" "mkdir -p $ReleaseDir" 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Cannot prepare remote release directory' }
     Assert-ReleaseUploadCapacity -HostName $HostName -UserName $UserName -KeyPath $KeyPath `
-        -ReleaseDir $ReleaseDir -Archives @("$OutputDir\$Tag-backend.tar", "$OutputDir\$Tag-frontend.tar")
+        -ReleaseDir $ReleaseDir -Archives $archives
     # 并行上传前后端（两个独立文件，无冲突；单连接带宽受限，并行可缩短总时长）
     $transferScript = Join-Path $PSScriptRoot 'release-transfer.ps1'
     $upload = {
@@ -166,10 +192,11 @@ function Invoke-Release {
         . $script
         Send-ReleaseArchive -KeyPath $key -Source $source -Destination $destination
     }
-    $upJobs = @(
-        Start-Job -ScriptBlock $upload -ArgumentList $transferScript, $KeyPath, "$OutputDir\$Tag-backend.tar", "${UserName}@${HostName}:$ReleaseDir/"
-        Start-Job -ScriptBlock $upload -ArgumentList $transferScript, $KeyPath, "$OutputDir\$Tag-frontend.tar", "${UserName}@${HostName}:$ReleaseDir/"
-    )
+    $artifacts = @($archives)
+    if ($RuntimeMode -eq 'split') { $artifacts += $configArtifact }
+    $upJobs = @(foreach ($artifact in $artifacts) {
+        Start-Job -ScriptBlock $upload -ArgumentList $transferScript, $KeyPath, $artifact, "${UserName}@${HostName}:$ReleaseDir/"
+    })
     Wait-ReleaseUploads -Jobs $upJobs
 
     # 5. 发布（可选）

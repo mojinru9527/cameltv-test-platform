@@ -115,3 +115,16 @@ capacity/cleanup tests: 21 passed; PowerShell and workflow YAML parse checks pas
 CI covers transfer rejection and Compose merge contracts. Console deploy/import/
 rollback and retention still need the complete image-set wiring. Production
 override image mappings inspected read-only; no server state changed.
+
+Release-set integration slice: producer exports api/backend, frontend and runner
+with fresh config digests, binds the reviewed execution YAML checksum, and uploads
+the complete set. Console validates immutable registration, rejects tag mismatch,
+claims production state before SSH, blocks concurrent/observing releases and
+records execution failures. Rollback resolves the target's registered topology;
+executor checks retained images/config before retagging and stops old consumers
+before recreation. SQLite request connections now close deterministically.
+Cleanup recognizes runner images/archives and requires complete pinned split
+sets; execution YAML is retained. Console tests: 36 passed; actual Compose merge:
+3 passed; native transfer and build-metadata probes pass; F821 passes; scan HARD=0,
+WARN=332 unchanged. Final bundle rebuild/real transition rehearsal, complete host
+budget, product consolidation, final QA and production rollout remain pending.

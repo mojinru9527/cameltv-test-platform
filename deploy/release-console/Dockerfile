@@ -13,7 +13,7 @@ RUN apt-get update \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app.py tencent_executor.py capacity.py ./
+COPY app.py tencent_executor.py capacity.py release_artifacts.py ./
 COPY static ./static
 
 EXPOSE 8003

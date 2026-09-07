@@ -14,8 +14,9 @@ import sys
 import time
 
 TAG = r'release-\d{8}-\d{4}'
-IMAGE = re.compile(rf'cameltv-tp-(backend|frontend):({TAG})')
-ARCHIVE = re.compile(rf'({TAG})-(backend|frontend)\.tar')
+IMAGE = re.compile(rf'cameltv-tp-(backend|frontend|runner):({TAG})')
+ARCHIVE = re.compile(rf'({TAG})-(backend|frontend|runner)\.tar')
+EXECUTION_CONFIG = re.compile(rf'({TAG})-execution\.yml')
 LOCK_PATH = '/run/lock/cameltv-release-capacity.lock'
 
 
@@ -30,7 +31,7 @@ def snapshot(release_dir: Path) -> tuple[list, list, list]:
     containers = json.loads(docker('container', 'inspect', *ids)) if ids else []
     archives = []
     for path in sorted(release_dir.iterdir()):
-        if not ARCHIVE.fullmatch(path.name):
+        if not ARCHIVE.fullmatch(path.name) and not EXECUTION_CONFIG.fullmatch(path.name):
             continue
         info = path.lstat()
         archives.append({'name': path.name, 'size': info.st_size,
@@ -49,10 +50,20 @@ def build_plan(images: list, containers: list, archives: list,
     if len(keep) < 2 or any(not re.fullmatch(TAG, tag) for tag in keep):
         raise ValueError('pin at least two distinct release tags: current and verified rollback')
     refs = {tag: i['Id'] for i in images for tag in i['RepoTags']}
+    split_tags = {m[2] for ref in refs if (m := IMAGE.fullmatch(ref)) and m[1] == 'runner'}
+    for item in archives:
+        config = EXECUTION_CONFIG.fullmatch(item['name'])
+        archive = ARCHIVE.fullmatch(item['name'])
+        if config or (archive and archive[2] == 'runner'):
+            split_tags.add((config or archive)[1])
     for tag in keep:
-        for part in ('backend', 'frontend'):
+        for part in ('backend', 'frontend', 'runner') if tag in split_tags else ('backend', 'frontend'):
             if f'cameltv-tp-{part}:{tag}' not in refs:
                 raise ValueError(f'pinned release pair missing: {tag} {part}')
+        if tag in split_tags and not any(
+            a['name'] == f'{tag}-execution.yml' and a['regular'] and a['size'] > 0 for a in archives
+        ):
+            raise ValueError(f'pinned split release configuration missing: {tag}')
     releases = {m[2] for ref in refs if (m := IMAGE.fullmatch(ref))}
     keep.update(sorted(releases, reverse=True)[:2])
     for tag in releases:
