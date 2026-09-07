@@ -106,3 +106,12 @@ outage and complete after restart. Resource suite: 67 passed, 2 Linux-only skips
 24.45s; migration SQLite upgrade/downgrade and PostgreSQL offline DDL pass;
 Alembic single head 20260915_plan_dispatch; F821 passes. All work remains local
 pending final combined QA/push. Production has not changed.
+
+Release integration preparation: native SCP failures now fail the background
+upload and parent release flow, with job-handle cleanup; real local transfer
+probe passes. ReleaseManifest now binds split runner/config artifacts while
+preserving old two-image canonical digests. Release-control tests: 29 passed;
+capacity/cleanup tests: 21 passed; PowerShell and workflow YAML parse checks pass.
+CI covers transfer rejection and Compose merge contracts. Console deploy/import/
+rollback and retention still need the complete image-set wiring. Production
+override image mappings inspected read-only; no server state changed.

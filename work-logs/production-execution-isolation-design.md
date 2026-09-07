@@ -116,7 +116,28 @@ completed it after runner restart. This uses current mounted source and an
 isolated SQLite test database. Final-image and production database verification
 remain required. Full resource slice: 67 passed, 2 Linux-only skips (24.45s).
 
-## Queue slice evidence
+## Release-set contract follow-up
+
+ReleaseManifest now accepts explicit runtime_mode=split only with a runner
+artifact and execution_config_sha256. Combined releases omit the new fields
+from canonical hashing, preserving already registered immutable release IDs.
+The generated JSON schema matches the model and digest-only Compose rendering
+includes the runner artifact for split releases. Console execution and archive
+handling still require complete-set integration before split publication.
+
+Release archive transfers now check native scp exit status inside each background
+job. The parent fails on any upload failure and removes the completed job handles
+before leaving. A real local SCP probe verified successful content hashes and
+failure propagation/cleanup without network access. CI runs this probe and the
+actual execution Compose merge test.
+
+Production read-only layout inspection confirms docker-compose.override.yml
+binds backend/aitde-worker/volume-permissions to cameltv-tp-backend:main and
+frontend to cameltv-tp-frontend:main. Split activation must preserve this layer,
+use explicit release-mode metadata, and restore the old combined service topology
+when rolling back. No production config was modified.
+
+## Original queue evidence
 
 - Existing schedule/UI-schedule/AI/DSH/API-worker/task-worker regression:
   104 passed, 9 warnings, exit 0 (27.09s).

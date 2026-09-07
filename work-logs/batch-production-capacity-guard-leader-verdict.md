@@ -4,14 +4,15 @@ Date: 2026-09-07 | Executor: codex
 Status: LOCAL REVIEW COMPLETE; NOT APPROVED FOR MERGE YET.
 
 Product, PM, interface design, Dev and local QA artifacts exist. The local
-checks support the capacity and retention code, not a claim that production
-space has already been reclaimed. Approval is pending the user's one-time
-push/PR/merge confirmation, required remote checks and successful final PR audit.
+checks support incremental implementation, not a claim that production space
+has already been reclaimed. The user authorized all four roadmap phases and
+push/PR/final merge together. Final approval remains pending complete-scope QA,
+latest required remote checks and successful final PR audit.
 
 ## Review
 
-- Scope is operations-only, with no platform feature removal or guessed memory
-  limits. Explicit rollback/current pairs, aliases, container references and
+- Initial capacity scope is now part of the authorized four-phase delivery;
+  do not guess memory limits from idle samples. Explicit rollback/current pairs, aliases, container references and
   recent assets are protected. No generic prune, forced image removal or
   database/volume/container deletion is implemented.
 - Cleanup is preview-first and approval-bound; fresh state is rechecked.
@@ -22,7 +23,10 @@ push/PR/merge confirmation, required remote checks and successful final PR audit
   to a previously undiscovered test folder.
 - Production disk target remains unresolved. Do not extend deletion to the
   stopped legacy worker or call the overall optimization complete.
-- Roadmap batches 2-4 remain planned; do not begin them before this batch merges.
+- All roadmap phases stay on the same branch and PR 415 as explicitly requested.
+  Async plan recovery and real-container execution checks are complete locally;
+  complete-set release/rollback, workload sizing, product consolidation and full
+  final regression are still required before the one combined merge.
 
 ## 流程回写
 

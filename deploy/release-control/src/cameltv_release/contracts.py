@@ -4,7 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 
@@ -78,10 +78,22 @@ class ReleaseManifest(BaseModel):
     git_sha: str
     frontend: Artifact
     backend: BackendArtifact
+    runtime_mode: Literal['combined', 'split'] = 'combined'
+    runner: Artifact | None = None
+    execution_config_sha256: str | None = None
     database: DatabaseTarget
     config_schema: str = Field(min_length=1)
     secret_refs: list[str] = Field(min_length=1)
     qa_evidence: list[str] = Field(min_length=1)
+
+    @model_validator(mode='after')
+    def validate_execution_set(self) -> 'ReleaseManifest':
+        if self.runtime_mode == 'split':
+            if self.runner is None or not _SHA256_PATTERN.fullmatch(self.execution_config_sha256 or ''):
+                raise ValueError('split runtime requires runner and execution_config_sha256')
+        elif self.runner is not None or self.execution_config_sha256 is not None:
+            raise ValueError('combined runtime cannot include split execution artifacts')
+        return self
 
     @field_validator("git_sha")
     @classmethod
@@ -112,6 +124,10 @@ class ReleaseManifest(BaseModel):
     def canonical_json(self) -> bytes:
         """Return canonical bytes used to identify this immutable manifest."""
         payload: dict[str, Any] = self.model_dump(mode="json")
+        # Preserve immutable IDs of already registered two-image releases.
+        if self.runtime_mode == 'combined':
+            for key in ('runtime_mode', 'runner', 'execution_config_sha256'):
+                payload.pop(key)
         return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
 
     def manifest_sha256(self) -> str:

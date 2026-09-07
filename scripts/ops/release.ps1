@@ -46,6 +46,7 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 . (Join-Path $PSScriptRoot 'capacity.ps1')
 . (Join-Path $PSScriptRoot 'release-build.ps1')
+. (Join-Path $PSScriptRoot 'release-transfer.ps1')
 
 # ── Token 管理（首次输入，之后存本地）─────────────────────────────
 $tokenStore = "$HOME\.cameltv-release-console\token.json"
@@ -159,16 +160,17 @@ function Invoke-Release {
     Assert-ReleaseUploadCapacity -HostName $HostName -UserName $UserName -KeyPath $KeyPath `
         -ReleaseDir $ReleaseDir -Archives @("$OutputDir\$Tag-backend.tar", "$OutputDir\$Tag-frontend.tar")
     # 并行上传前后端（两个独立文件，无冲突；单连接带宽受限，并行可缩短总时长）
-    $upJobs = @(
-        Start-Job -ScriptBlock { param($k, $f1, $f2) scp -i $k -o BatchMode=yes $f1 "$f2" } -ArgumentList $KeyPath, "$OutputDir\$Tag-backend.tar", "${UserName}@${HostName}:$ReleaseDir/",
-        Start-Job -ScriptBlock { param($k, $f1, $f2) scp -i $k -o BatchMode=yes $f1 "$f2" } -ArgumentList $KeyPath, "$OutputDir\$Tag-frontend.tar", "${UserName}@${HostName}:$ReleaseDir/"
-    )
-    $upJobs | Wait-Job | Out-Null
-    foreach ($jb in $upJobs) {
-        $out = Receive-Job $jb 2>&1 | Out-String
-        if ($jb.State -ne "Completed") { Remove-Job $jb -Force; throw "上传失败: $out" }
-        Remove-Job $jb
+    $transferScript = Join-Path $PSScriptRoot 'release-transfer.ps1'
+    $upload = {
+        param($script, $key, $source, $destination)
+        . $script
+        Send-ReleaseArchive -KeyPath $key -Source $source -Destination $destination
     }
+    $upJobs = @(
+        Start-Job -ScriptBlock $upload -ArgumentList $transferScript, $KeyPath, "$OutputDir\$Tag-backend.tar", "${UserName}@${HostName}:$ReleaseDir/"
+        Start-Job -ScriptBlock $upload -ArgumentList $transferScript, $KeyPath, "$OutputDir\$Tag-frontend.tar", "${UserName}@${HostName}:$ReleaseDir/"
+    )
+    Wait-ReleaseUploads -Jobs $upJobs
 
     # 5. 发布（可选）
     if ($Publish) {

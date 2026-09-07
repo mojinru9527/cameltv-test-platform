@@ -197,7 +197,20 @@ Durable plan follow-up evidence (before final full regression):
   snapshots vary and must not be interpreted as measured peak savings.
 - F821 passed. No production schema or runtime was changed.
 
-## Initial slice retro card
+## Release contract follow-up
+
+- release-control regression: 29 passed, 0.52s, exit 0. Includes unchanged legacy
+  manifest hashes, required runner/config binding for split layouts, rendered
+  runner image and checked-in schema equality.
+- `test-release-transfer.ps1`: exit 0. Real local SCP copied known contents with
+  matching hashes; nonexistent source failed the background upload and parent
+  wait helper, and completed job handles were removed. No network transfer.
+- Capacity/cleanup unittest regression: 21 passed, exit 0.
+- Release PowerShell syntax and changed CI YAML parsed successfully, exit 0.
+- The split manifest contract is not yet a deployable production bundle:
+  executor/archive/rollback/retention integration remains incomplete.
+
+## Original capacity retro card
 
 Planned: 2 hours implementation/QA, excluding gated rollout.
 Actual: approximately 0.3 hours to local QA.
