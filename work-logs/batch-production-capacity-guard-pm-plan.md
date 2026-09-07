@@ -42,6 +42,13 @@ one final scope-wide audit and merge. This supersedes per-phase merge ordering.
 
 ## Validation commands
 
+Execution-isolation follow-up completed locally: durable asynchronous plan
+dispatch, additive migration, owner heartbeats and project-scoped job status.
+Validation includes two fresh process consumers, API submission during actual
+runner outage, and completion after restart. Pending release slices remain:
+compiler/runtime inventory closure, complete image-set publication/rollback,
+mixed workload sizing and product task/report consolidation.
+
 From this worktree:
 
 ```powershell

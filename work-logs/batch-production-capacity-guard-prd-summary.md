@@ -10,6 +10,11 @@ cannot rule out short memory peaks. Container storage occupied approximately
 25 GB and release archives 2.7 GB. No production deletion is justified solely
 by image size, table estimates, or a stopped container's exit code.
 
+The user expanded the original capacity-only scope to all four phases of the
+implementation roadmap, delivered together in PR 415. This full batch now covers
+disk protection, shared resource admission, API/runner isolation, and task/report
+entry consolidation with on-demand/off-peak knowledge processing.
+
 ## Success criteria
 
 - Preview cleanup with exact tags/files, retained versions and a plan digest.
@@ -21,6 +26,19 @@ by image size, table estimates, or a stopped container's exit code.
   closed on inspection errors. Preserve a working rollback path.
 - Operational target: at least 8 GiB free after approved cleanup. Report actual
   measured change rather than summing shared image sizes.
+- Heavy execution shares a same-host budget; browser children and DSH parents
+  cannot deadlock by competing for the same lane. Cancellation and crashes must
+  release owned resources without orphaned child processes.
+- API stays usable during runner failure. Accepted queued work persists before
+  acknowledgment. Unclaimed work survives restarts; interrupted running work is
+  reported explicitly without unsafe automatic replay of external side effects.
+- Separate image targets, shared artifacts, measured limits, health checks and
+  complete-set release/rollback preserve production functionality.
+- One task/report navigation preserves existing deep links and permissions;
+  populated knowledge/Wiki/graph features remain available. Optional knowledge
+  work runs on demand or off peak. Validate historical/new task mapping.
+- Complete all affected local and required CI checks, final audit, single squash
+  merge, main checks and reviewed production optimization with measured evidence.
 
 ## Acceptance stories
 
@@ -33,11 +51,12 @@ by image size, table estimates, or a stopped container's exit code.
 
 ## Non-goals and inherited conditions
 
-No business data deletion, service shutdown, memory limits guessed from idle
-usage, feature removal, database migration or new monitoring daemon in this
-batch. C-CONDITIONS.md was searched for storage/capacity dependencies; C140-1
+No business data deletion, guessed memory limits, blanket container/image prune,
+or removal of populated knowledge features. Additive schema changes needed for
+durable execution are in the expanded scope. C-CONDITIONS.md was searched for storage/capacity dependencies; C140-1
 concerns the obsolete Railway storage deployment and is not closed here.
-Other open business/UI conditions remain outside this operations-only batch.
+Other business/UI conditions are included only where required by the authorized
+task/report consolidation, rather than reopening unrelated feature work.
 
 ## Skills and delivery
 

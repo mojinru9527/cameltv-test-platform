@@ -1,8 +1,10 @@
 # Production Capacity Guard - Interface Design
 
-No product UI changes. Python standard library only; JSON is the operator
-interface. SSH transports base64-encoded Python source and JSON arguments,
-not shell-interpolated file paths or secrets.
+Initial capacity slice uses standard-library Python and JSON for the operator
+interface. The authorized combined scope additionally includes application and
+product changes described in production-resource-budget-design.md and
+production-execution-isolation-design.md. SSH transports base64-encoded Python
+source and JSON arguments, not shell-interpolated file paths or secrets.
 
 ## Capacity admission
 
@@ -37,3 +39,21 @@ is deliberately not estimated by adding image virtual sizes.
 Failures exit nonzero. Partial application is reported by the process failure;
 rerun preview rather than replaying approval. Retention never deletes the
 database, audit trail, credentials, dumps or running/stopped containers.
+
+## Durable asynchronous plans
+
+Replace the untracked HTTP BackgroundTasks execution with an additive
+plan_execution_job table using existing QueueSpec/atomic_claim primitives.
+Persist request parameters and caller/project identity before acknowledgment;
+return the job_id along with the compatible async=true field. Polling consumers
+belong exclusively to the runner lifecycle. Their liveness is part of /health.
+The plan's existing execution records remain the source of case results.
+
+Pending jobs survive process restart. A claimed job has owner and heartbeat;
+fresh workers cannot claim it twice. Heartbeat-expired running jobs become
+failed and are not replayed automatically. Explicitly re-submit after assessing
+any partial external side effects. The project-scoped execution-jobs endpoint
+shows pending/running/completed/failed state and recorded failure messages.
+Completed means dispatch finished, not that every test passed; result counts
+retain their existing meaning, including blocked cases. The old process-only
+run_async_execute_all wrapper is removed after checking it has no other callers.

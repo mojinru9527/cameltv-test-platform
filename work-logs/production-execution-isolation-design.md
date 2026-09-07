@@ -93,6 +93,29 @@ The first smoke omitted X-Project-Id and correctly received 403; the request was
 corrected without weakening authorization. Repeat with final built images,
 migrations and mixed workloads before rollout.
 
+## Durable plan completion
+
+Asynchronous execute-all now persists PlanExecutionJob before acknowledgment.
+The mixed route keeps validated async requests in API even with no configured
+runner; synchronous bodies (including absent/null bodies) are forwarded intact.
+FastAPI's published OpenAPI marks the async submission owner separately. Invalid
+requests retain normal framework validation and project/RBAC checks.
+
+The runner's existing consumer lifecycle owns the plan queue. Atomic claim,
+periodic owner-scoped heartbeats and conditional finalization prevent duplicate
+claims and stale owners overwriting results. Lost running jobs become failed;
+they are not replayed automatically because earlier case side effects may have
+committed. GET execution-jobs exposes the latest 50 jobs scoped to project/plan.
+The obsolete run_async_execute_all process-only wrapper has no callers and was
+removed. Additive migration 20260915_plan_dispatch preserves older-image rollback
+compatibility; dropping dispatch history is not part of operational rollback.
+
+Two fresh processes executed one pending plan exactly once. Real API/runner
+container smoke also accepted a pending plan during runner shutdown, then
+completed it after runner restart. This uses current mounted source and an
+isolated SQLite test database. Final-image and production database verification
+remain required. Full resource slice: 67 passed, 2 Linux-only skips (24.45s).
+
 ## Queue slice evidence
 
 - Existing schedule/UI-schedule/AI/DSH/API-worker/task-worker regression:

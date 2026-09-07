@@ -93,6 +93,9 @@ def main():
                 detail = executed.json()
                 raise RuntimeError(f'Cross-container browser execution failed: HTTP {executed.status_code}; '
                                    f'{detail.get("stderr", detail.get("detail", detail.get("msg", detail.get("message", "no detail"))))}')
+            created = client.post('/api/v1/test-plans', headers=headers, json={'name': 'capacity async plan'})
+            assert created.status_code == 200 and created.json().get('code') == 0, 'Plan creation failed'
+            plan_id = created.json()['data']['id']
             stats = docker('stats', '--no-stream', '--format', '{{.Name}} {{.MemUsage}}', *containers)
             docker('stop', '--time', '10', containers[0])
             unavailable = client.post('/api/v1/playground/execute', headers=headers,
@@ -100,8 +103,25 @@ def main():
             assert unavailable.status_code == 503, 'Missing runner must fail closed'
             assert unavailable.headers.get('retry-after') == '5'
             assert client.get('/health').status_code == 200, 'API must remain responsive'
+            queued = client.post(f'/api/v1/test-plans/{plan_id}/execute-all', headers=headers,
+                                 json={'async_mode': True, 'auto_ui': False})
+            assert queued.status_code == 200 and queued.json()['data']['job_id'], 'Async submission must persist during outage'
+            job_id = queued.json()['data']['job_id']
+            jobs_url = f'/api/v1/test-plans/{plan_id}/execution-jobs'
+            assert client.get(jobs_url, headers=headers).json()['data'][0]['status'] == 'pending'
+            docker('start', containers[0])
+            wait_healthy(containers[0])
+            for _ in range(30):
+                jobs = client.get(jobs_url, headers=headers).json()['data']
+                job = next(item for item in jobs if item['id'] == job_id)
+                if job['status'] == 'completed':
+                    break
+                time.sleep(1)
+            else:
+                raise RuntimeError('Pending plan did not complete after runner restart')
         print(json.dumps({'result': 'passed', 'checks': ['auth', 'login', 'real-browser-forward',
-                         'runner-outage-503', 'api-stays-responsive'], 'post_run_memory': stats}))
+                         'runner-outage-503', 'api-stays-responsive', 'async-accepted-during-outage',
+                         'async-completed-after-restart'], 'post_run_memory': stats}))
     finally:
         # Only the fresh resources named by this invocation are removed.
         for name in reversed(containers):

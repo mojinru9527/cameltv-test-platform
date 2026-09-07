@@ -95,3 +95,14 @@ Production read-only refresh: 3723 MiB total, 2232 MiB available, swap 306 MiB;
 disk still 94%, 2.6 GiB available. No production state changed. Next: finish
 durable plan dispatch/compiler inventory, release image-set/rollback support,
 mixed-workload sizing and product consolidation before full QA/one final merge.
+
+Durable async plan slice: plan_execution_job additive migration and queue use
+existing atomic claims. API keeps async submissions local even while runner is
+down; sync request body is preserved for forwarding. Runner owns claim/heartbeat/
+completion; stale running work is failed without automatic replay. Project-scoped
+status route added and old in-memory background wrapper removed. Two actual
+fresh processes execute a pending request once; real containers accept during
+outage and complete after restart. Resource suite: 67 passed, 2 Linux-only skips,
+24.45s; migration SQLite upgrade/downgrade and PostgreSQL offline DDL pass;
+Alembic single head 20260915_plan_dispatch; F821 passes. All work remains local
+pending final combined QA/push. Production has not changed.

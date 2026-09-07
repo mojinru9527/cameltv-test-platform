@@ -4,6 +4,7 @@ from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.testclient import TestClient
 import httpx
+import pytest
 
 from app.core.config import settings
 from app.core.execution_dispatch import ExecutionDispatch, RUNNER_ENDPOINTS
@@ -127,3 +128,23 @@ def test_real_included_route_dispatches_after_fastapi_aggregation(client, monkey
     assert response.status_code == 202
     assert response.json() == {'owner': 'runner'}
     assert observed == ['/api/v1/playground/execute']
+
+
+@pytest.mark.parametrize('body', [b'{"async_mode":false,"environment_id":17}', b'null', b''])
+def test_mixed_plan_sync_body_survives_inspection(client, monkeypatch, body):
+    observed = []
+
+    def upstream(request):
+        observed.append(request.content)
+        return httpx.Response(200, stream=httpx.ByteStream(b'{"code":0}'),
+                              headers={'content-type': 'application/json'})
+
+    original = httpx.AsyncClient
+    monkeypatch.setattr(settings, 'worker_execution_enabled', False)
+    monkeypatch.setattr(settings, 'runner_http_url', 'http://runner:8000')
+    monkeypatch.setattr(httpx, 'AsyncClient', lambda **kwargs: original(
+        transport=httpx.MockTransport(upstream), **kwargs))
+    result = client.post('/api/v1/test-plans/1/execute-all', content=body,
+                         headers={'content-type': 'application/json'})
+    assert result.status_code == 200
+    assert observed == [body]

@@ -69,6 +69,20 @@ the API remain pending until on-demand reembedding or this sweep. Processing
 uses the existing embedding batch size, preserves pending data when capacity
 is busy, and skips completed chunks on subsequent runs.
 
+Asynchronous `POST /api/v1/test-plans/{id}/execute-all` requests are committed to
+`plan_execution_job` before returning `async=true` and `job_id`. They remain local
+to the API even during runner outage; synchronous requests still require the
+runner. `GET /api/v1/test-plans/{id}/execution-jobs` exposes the latest 50 dispatch
+states within the caller's project. Pending jobs survive restart. Running jobs
+with expired heartbeats are marked failed, never automatically replayed, because
+part of a plan may already have affected external systems. Review partial case
+results before submitting another execution. `completed` describes the dispatch
+lifecycle; inspect result counts for passed/failed/blocked test outcomes.
+
+Apply migration `20260915_plan_dispatch` before starting this version's consumers.
+The table is additive; older images can ignore it during a code rollback. Do not
+downgrade/drop the table while pending/running requests or retained history exist.
+
 Worker health uses `/tmp/platform-worker.heartbeat`; check that its modification
 time is less than 30 seconds old. The heartbeat is renewed only while the
 scheduler and all required consumer loops are alive, and removed during shutdown.

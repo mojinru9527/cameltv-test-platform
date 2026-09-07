@@ -180,6 +180,23 @@ remaining warning count is 332, matching the initial main snapshot.
 - Read-only production refresh: total 3723 MiB, available 2232 MiB, swap 306 MiB;
   root filesystem 94% used and 2.6 GiB free. No cleanup/deployment was performed.
 
+## Durable plan evidence
+
+Durable plan follow-up evidence (before final full regression):
+
+- Entire resource-budget suite: 67 passed, 2 Linux-only skips, 24.45s, exit 0.
+- Plan/dispatch/legacy async regression: 20 passed, 2 existing collection warnings,
+  14.29s, exit 0. Null/absent synchronous-body follow-up: 9 passed, 3.11s, exit 0.
+- Additive migration: SQLite upgrade/downgrade + PostgreSQL offline DDL, 2 passed,
+  0.29s, exit 0. Alembic reports one head, 20260915_plan_dispatch. Actual PostgreSQL
+  migration execution remains part of final verification.
+- Fresh-process test consumes one persisted plan once across two invocations.
+- Extended real-container smoke exits 0: async plan accepted while runner is
+  stopped, visible as pending, completes after restart; synchronous 503 and API
+  health checks still pass. Post-task memory 195.9 MiB API / 208.4 MiB runner;
+  snapshots vary and must not be interpreted as measured peak savings.
+- F821 passed. No production schema or runtime was changed.
+
 ## Initial slice retro card
 
 Planned: 2 hours implementation/QA, excluding gated rollout.

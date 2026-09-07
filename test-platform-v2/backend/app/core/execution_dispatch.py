@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import httpx
 from fastapi.routing import APIRoute
+from pydantic import ValidationError
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response, StreamingResponse
 
@@ -91,6 +92,12 @@ class ExecutionRoute(APIRoute):
         names = RUNNER_ENDPOINTS.get(self.endpoint.__module__, set())
         if self.endpoint.__name__ in names:
             self.openapi_extra = {**(self.openapi_extra or {}), 'x-execution-owner': 'runner'}
+            if self._mixed_plan_route():
+                self.openapi_extra['x-async-submission-owner'] = 'api'
+
+    def _mixed_plan_route(self):
+        return (self.endpoint.__module__ == 'app.api.v1.test_plan_execution'
+                and self.endpoint.__name__ == 'execute_all_cases')
 
     def get_route_handler(self):
         local_handler = super().get_route_handler()
@@ -101,11 +108,38 @@ class ExecutionRoute(APIRoute):
         async def handler(request: Request):
             if settings.worker_execution_enabled:
                 return await local_handler(request)
+            if self._mixed_plan_route():
+                from app.api.v1.test_plan_execution import ExecuteAllBody
+                body = await request.body()
+                try:
+                    data = ExecuteAllBody.model_validate_json(body) if body and body.strip() != b'null' else ExecuteAllBody()
+                except ValidationError:
+                    # Preserve the framework's existing validation response.
+                    return await local_handler(request)
+                if data.async_mode:
+                    return await local_handler(request)
+                return _ForwardedResponse(body=body)
             return _ForwardedResponse()
 
         return handler
 
 
 class _ForwardedResponse(Response):
+    def __init__(self, *, body=None):
+        super().__init__()
+        self._buffered_body = body
+
     async def __call__(self, scope, receive, send):
-        await ExecutionDispatch(None)(scope, receive, send)
+        if self._buffered_body is None:
+            await ExecutionDispatch(None)(scope, receive, send)
+            return
+        sent = False
+
+        async def replay():
+            nonlocal sent
+            if not sent:
+                sent = True
+                return {'type': 'http.request', 'body': self._buffered_body, 'more_body': False}
+            return await receive()
+
+        await ExecutionDispatch(None)(scope, replay, send)

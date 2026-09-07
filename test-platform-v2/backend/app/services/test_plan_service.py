@@ -1255,35 +1255,6 @@ def _execution_to_dict(r: TestExecution, case: TestCase | None) -> dict:
         "executor_name": "",
     }
 
-def run_async_execute_all(
-    *,
-    plan_id: int,
-    executor_id: int,
-    environment_id: int | None,
-    ui_environment_id: int | None,
-    auto_ui: bool,
-    project_id: int,
-) -> None:
-    """batch-169 C168-2：后台执行计划全部用例，避免同步请求被网关 300s 切断。"""
-    from app.core.db import SessionLocal
-    db = SessionLocal()
-    try:
-        execute_all_cases(
-            db,
-            plan_id,
-            executor_id=executor_id,
-            environment_id=environment_id,
-            ui_environment_id=ui_environment_id,
-            auto_ui=auto_ui,
-            project_id=project_id,
-        )
-    except Exception:
-        logger.exception("后台计划执行失败 plan_id=%d", plan_id)
-        db.rollback()
-    finally:
-        db.close()
-
-
 # ═══════════════════════════════════════════════════════
 # 路由层 ORM 收敛薄函数（Batch 181 路由拆分）
 # ═══════════════════════════════════════════════════════
