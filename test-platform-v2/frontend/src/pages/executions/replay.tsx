@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Skeleton } from '@/ui'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
-import { fetchRunReplay, type RunReplay } from '@/api/executions'
+import { EVIDENCE_TYPE_LABELS, fetchRunReplay, type RunReplay } from '@/api/executions'
 import OutcomeBadge from '@/components/executions/OutcomeBadge'
 import RuntimeStatusBadge from '@/components/executions/RuntimeStatusBadge'
 import ReplayEvidenceViewer from '@/components/executions/ReplayEvidenceViewer'
@@ -86,7 +86,7 @@ export default function ReplayPage() {
           <ArrowLeft className="size-4" /> 返回详情
         </Button>
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <h1 className="text-xl font-semibold tracking-[-0.02em]">回放 Run #{runId}</h1>
+          <h1 className="text-xl font-semibold">回放 Run #{runId}</h1>
           <OutcomeBadge outcome={view.outcome} />
           <RuntimeStatusBadge status={view.runtime_status} />
           <Badge variant="outline" className="font-mono">hash {replay.hash.slice(0, 12)}</Badge>
@@ -191,7 +191,9 @@ export default function ReplayPage() {
                             active ? 'bg-muted' : 'hover:bg-muted/60',
                           )}
                         >
-                          <span className="min-w-0 flex-1 truncate">{e.evidence_type}</span>
+                          <span className="min-w-0 flex-1 truncate">
+                            {EVIDENCE_TYPE_LABELS[e.evidence_type] ?? e.evidence_type}
+                          </span>
                           <span className="font-mono text-muted-foreground">
                             {e.content_hash.slice(0, 8)}…
                           </span>

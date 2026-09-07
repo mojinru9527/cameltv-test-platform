@@ -1,0 +1,669 @@
+{
+  "target": "http://127.0.0.1:5188",
+  "generatedAt": "2026-09-07T11:13:10.032Z",
+  "results": [
+    {
+      "name": "overview",
+      "route": "/missions/9101/overview",
+      "missing": [],
+      "dimensions": {
+        "viewportWidth": 1440,
+        "scrollWidth": 1434,
+        "overflow": false
+      },
+      "requestCounts": {
+        "/api/v2/health": 1,
+        "/api/v1/system/menus": 1,
+        "/api/v2/missions/9101": 1,
+        "/api/v2/missions/9101/lifecycle": 1
+      },
+      "duplicateGets": []
+    },
+    {
+      "name": "sources",
+      "route": "/missions/9101/sources",
+      "missing": [],
+      "dimensions": {
+        "viewportWidth": 1440,
+        "scrollWidth": 1440,
+        "overflow": false
+      },
+      "requestCounts": {
+        "/api/v2/health": 1,
+        "/api/v1/system/menus": 1,
+        "/api/v2/missions/9101": 1,
+        "/api/v2/missions/9101/lifecycle": 1,
+        "/api/v2/missions/9101/sources": 1
+      },
+      "duplicateGets": []
+    },
+    {
+      "name": "scope",
+      "route": "/missions/9101/scope",
+      "missing": [],
+      "dimensions": {
+        "viewportWidth": 1440,
+        "scrollWidth": 1440,
+        "overflow": false
+      },
+      "requestCounts": {
+        "/api/v2/health": 1,
+        "/api/v1/system/menus": 1,
+        "/api/v2/missions/9101": 1,
+        "/api/v2/missions/9101/lifecycle": 1,
+        "/api/v2/missions/9101/scope": 1
+      },
+      "duplicateGets": []
+    },
+    {
+      "name": "contract",
+      "route": "/missions/9101/contract",
+      "missing": [],
+      "dimensions": {
+        "viewportWidth": 1440,
+        "scrollWidth": 1434,
+        "overflow": false
+      },
+      "requestCounts": {
+        "/api/v2/health": 1,
+        "/api/v1/system/menus": 1,
+        "/api/v2/missions/9101": 1,
+        "/api/v2/missions/9101/lifecycle": 1,
+        "/api/v2/missions/9101/ambiguities": 1,
+        "/api/v2/missions/9101/contract": 1
+      },
+      "duplicateGets": []
+    },
+    {
+      "name": "scenarios",
+      "route": "/missions/9101/scenarios",
+      "missing": [],
+      "dimensions": {
+        "viewportWidth": 1440,
+        "scrollWidth": 1440,
+        "overflow": false
+      },
+      "requestCounts": {
+        "/api/v2/health": 1,
+        "/api/v1/system/menus": 1,
+        "/api/v2/missions/9101": 1,
+        "/api/v2/missions/9101/lifecycle": 1,
+        "/api/v2/missions/9101/scenarios": 1
+      },
+      "duplicateGets": []
+    },
+    {
+      "name": "executions",
+      "route": "/missions/9101/executions",
+      "missing": [],
+      "dimensions": {
+        "viewportWidth": 1440,
+        "scrollWidth": 1440,
+        "overflow": false
+      },
+      "requestCounts": {
+        "/api/v2/health": 1,
+        "/api/v1/system/menus": 1,
+        "/api/v2/missions/9101": 1,
+        "/api/v2/missions/9101/lifecycle": 1,
+        "/api/v2/missions/9101/executions?page=1&page_size=20": 1
+      },
+      "duplicateGets": []
+    },
+    {
+      "name": "builds",
+      "route": "/missions/9101/builds",
+      "missing": [],
+      "dimensions": {
+        "viewportWidth": 1440,
+        "scrollWidth": 1440,
+        "overflow": false
+      },
+      "requestCounts": {
+        "/api/v2/health": 1,
+        "/api/v1/system/menus": 1,
+        "/api/v2/missions/9101": 1,
+        "/api/v2/missions/9101/lifecycle": 1,
+        "/api/v2/missions/9101/builds": 1
+      },
+      "duplicateGets": []
+    },
+    {
+      "name": "acceptance",
+      "route": "/missions/9101/acceptance",
+      "missing": [],
+      "dimensions": {
+        "viewportWidth": 1440,
+        "scrollWidth": 1440,
+        "overflow": false
+      },
+      "requestCounts": {
+        "/api/v2/health": 1,
+        "/api/v1/system/menus": 1,
+        "/api/v2/missions/9101": 1,
+        "/api/v2/missions/9101/lifecycle": 1,
+        "/api/v2/missions/9101/acceptance": 1,
+        "/api/v2/missions/9101/builds": 1,
+        "/api/v2/missions/9101/campaigns": 1
+      },
+      "duplicateGets": []
+    },
+    {
+      "name": "changes",
+      "route": "/missions/9101/changes",
+      "missing": [],
+      "dimensions": {
+        "viewportWidth": 1440,
+        "scrollWidth": 1440,
+        "overflow": false
+      },
+      "requestCounts": {
+        "/api/v2/health": 1,
+        "/api/v1/system/menus": 1,
+        "/api/v2/missions/9101": 1,
+        "/api/v2/missions/9101/lifecycle": 1,
+        "/api/v2/missions/9101/change-sets": 1
+      },
+      "duplicateGets": []
+    },
+    {
+      "name": "impact",
+      "route": "/missions/9101/impact",
+      "missing": [],
+      "dimensions": {
+        "viewportWidth": 1440,
+        "scrollWidth": 1440,
+        "overflow": false
+      },
+      "requestCounts": {
+        "/api/v2/health": 1,
+        "/api/v1/system/menus": 1,
+        "/api/v2/missions/9101": 1,
+        "/api/v2/missions/9101/lifecycle": 1,
+        "/api/v2/missions/9101/impact-runs": 1
+      },
+      "duplicateGets": []
+    },
+    {
+      "name": "lineage",
+      "route": "/missions/9101/trace",
+      "missing": [],
+      "dimensions": {
+        "viewportWidth": 1440,
+        "scrollWidth": 1440,
+        "overflow": false
+      },
+      "requestCounts": {
+        "/api/v2/health": 1,
+        "/api/v1/system/menus": 1,
+        "/api/v2/missions/9101": 1,
+        "/api/v2/missions/9101/lifecycle": 1,
+        "/api/v2/missions/9101/lineage": 1
+      },
+      "duplicateGets": []
+    },
+    {
+      "name": "gaps",
+      "route": "/missions/9101/gaps",
+      "missing": [],
+      "dimensions": {
+        "viewportWidth": 1440,
+        "scrollWidth": 1440,
+        "overflow": false
+      },
+      "requestCounts": {
+        "/api/v2/health": 1,
+        "/api/v1/system/menus": 1,
+        "/api/v2/missions/9101": 1,
+        "/api/v2/missions/9101/lifecycle": 1,
+        "/api/v2/missions/9101/scenario-gaps": 1
+      },
+      "duplicateGets": []
+    },
+    {
+      "name": "source-fragments",
+      "route": "/missions/9101/sources",
+      "missing": []
+    },
+    {
+      "name": "replay",
+      "route": "/executions/3/replay",
+      "missing": []
+    },
+    {
+      "name": "overview-tablet",
+      "route": "/missions/9101/overview",
+      "missing": [],
+      "dimensions": {
+        "viewportWidth": 768,
+        "scrollWidth": 762,
+        "overflow": false
+      }
+    },
+    {
+      "name": "overview-mobile",
+      "route": "/missions/9101/overview",
+      "missing": [],
+      "dimensions": {
+        "viewportWidth": 390,
+        "scrollWidth": 384,
+        "overflow": false
+      }
+    }
+  ],
+  "consoleErrors": [],
+  "failedRequests": [],
+  "apiRequestCount": 82,
+  "apiRequests": [
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/health",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v1/system/menus",
+      "path": "/api/v1/system/menus"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101",
+      "path": "/api/v2/missions/9101"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lifecycle",
+      "path": "/api/v2/missions/9101/lifecycle"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/health",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v1/system/menus",
+      "path": "/api/v1/system/menus"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101",
+      "path": "/api/v2/missions/9101"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lifecycle",
+      "path": "/api/v2/missions/9101/lifecycle"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/sources",
+      "path": "/api/v2/missions/9101/sources"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/health",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v1/system/menus",
+      "path": "/api/v1/system/menus"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101",
+      "path": "/api/v2/missions/9101"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lifecycle",
+      "path": "/api/v2/missions/9101/lifecycle"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/scope",
+      "path": "/api/v2/missions/9101/scope"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/health",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v1/system/menus",
+      "path": "/api/v1/system/menus"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101",
+      "path": "/api/v2/missions/9101"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lifecycle",
+      "path": "/api/v2/missions/9101/lifecycle"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/ambiguities",
+      "path": "/api/v2/missions/9101/ambiguities"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/contract",
+      "path": "/api/v2/missions/9101/contract"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/health",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v1/system/menus",
+      "path": "/api/v1/system/menus"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101",
+      "path": "/api/v2/missions/9101"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lifecycle",
+      "path": "/api/v2/missions/9101/lifecycle"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/scenarios",
+      "path": "/api/v2/missions/9101/scenarios"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/health",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v1/system/menus",
+      "path": "/api/v1/system/menus"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101",
+      "path": "/api/v2/missions/9101"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lifecycle",
+      "path": "/api/v2/missions/9101/lifecycle"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/executions?page=1&page_size=20",
+      "path": "/api/v2/missions/9101/executions?page=1&page_size=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/health",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v1/system/menus",
+      "path": "/api/v1/system/menus"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101",
+      "path": "/api/v2/missions/9101"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lifecycle",
+      "path": "/api/v2/missions/9101/lifecycle"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/builds",
+      "path": "/api/v2/missions/9101/builds"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/health",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v1/system/menus",
+      "path": "/api/v1/system/menus"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101",
+      "path": "/api/v2/missions/9101"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lifecycle",
+      "path": "/api/v2/missions/9101/lifecycle"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/acceptance",
+      "path": "/api/v2/missions/9101/acceptance"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/builds",
+      "path": "/api/v2/missions/9101/builds"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/campaigns",
+      "path": "/api/v2/missions/9101/campaigns"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/health",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v1/system/menus",
+      "path": "/api/v1/system/menus"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101",
+      "path": "/api/v2/missions/9101"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lifecycle",
+      "path": "/api/v2/missions/9101/lifecycle"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/change-sets",
+      "path": "/api/v2/missions/9101/change-sets"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/health",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v1/system/menus",
+      "path": "/api/v1/system/menus"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101",
+      "path": "/api/v2/missions/9101"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lifecycle",
+      "path": "/api/v2/missions/9101/lifecycle"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/impact-runs",
+      "path": "/api/v2/missions/9101/impact-runs"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/health",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v1/system/menus",
+      "path": "/api/v1/system/menus"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101",
+      "path": "/api/v2/missions/9101"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lifecycle",
+      "path": "/api/v2/missions/9101/lifecycle"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lineage",
+      "path": "/api/v2/missions/9101/lineage"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/health",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v1/system/menus",
+      "path": "/api/v1/system/menus"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101",
+      "path": "/api/v2/missions/9101"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lifecycle",
+      "path": "/api/v2/missions/9101/lifecycle"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/scenario-gaps",
+      "path": "/api/v2/missions/9101/scenario-gaps"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/health",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v1/system/menus",
+      "path": "/api/v1/system/menus"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101",
+      "path": "/api/v2/missions/9101"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lifecycle",
+      "path": "/api/v2/missions/9101/lifecycle"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/sources",
+      "path": "/api/v2/missions/9101/sources"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/sources/1/fragments",
+      "path": "/api/v2/missions/9101/sources/1/fragments"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/health",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v1/system/menus",
+      "path": "/api/v1/system/menus"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101",
+      "path": "/api/v2/missions/9101"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lifecycle",
+      "path": "/api/v2/missions/9101/lifecycle"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/executions?page=1&page_size=20",
+      "path": "/api/v2/missions/9101/executions?page=1&page_size=20"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/runs/3/replay",
+      "path": "/api/v2/runs/3/replay"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/health",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v1/system/menus",
+      "path": "/api/v1/system/menus"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101",
+      "path": "/api/v2/missions/9101"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lifecycle",
+      "path": "/api/v2/missions/9101/lifecycle"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/health",
+      "path": "/api/v2/health"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v1/system/menus",
+      "path": "/api/v1/system/menus"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101",
+      "path": "/api/v2/missions/9101"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5188/api/v2/missions/9101/lifecycle",
+      "path": "/api/v2/missions/9101/lifecycle"
+    }
+  ]
+}

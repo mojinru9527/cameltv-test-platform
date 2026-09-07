@@ -243,3 +243,9 @@ export const GAP_TYPE_LABELS: Record<string, string> = {
   UNCOVERED_JOURNEY: '未覆盖旅程',
   NEW_OPENAPI_STATE: '新 OpenAPI 状态',
 }
+
+export const GAP_STATUS_LABELS: Record<string, string> = {
+  OPEN: '待处理',
+  CONVERTED: '已转为提案',
+  DISMISSED: '已忽略',
+}

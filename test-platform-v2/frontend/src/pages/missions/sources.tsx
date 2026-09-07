@@ -165,19 +165,23 @@ export default function MissionSourcesPage() {
               ) : (
                 sources.map((s) => {
                   const ps = PARSE_STATUS_LABELS[s.parse_status]
+                  const emptyParsedSource = s.parse_status === 'PARSED' && s.fragment_count === 0
                   return (
                     <TableRow key={s.id}>
                       <TableCell className="font-medium">{s.name}</TableCell>
                       <TableCell>{SOURCE_TYPE_LABELS[s.source_type] ?? s.source_type}</TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className={ps?.color}>
-                          {ps?.label ?? s.parse_status}
+                        <Badge
+                          variant="secondary"
+                          className={emptyParsedSource ? 'bg-status-warning-muted text-status-warning' : ps?.color}
+                        >
+                          {emptyParsedSource ? '空片段' : ps?.label ?? s.parse_status}
                         </Badge>
                       </TableCell>
                       <TableCell>{s.fragment_count}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          {s.parse_status !== 'PARSED' && (
+                          {(s.parse_status !== 'PARSED' || emptyParsedSource) && (
                             <Button
                               variant="ghost"
                               size="sm"

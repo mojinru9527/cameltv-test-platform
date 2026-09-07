@@ -134,6 +134,13 @@ export function fetchChangeSet(changeSetId: number, signal?: AbortSignal): Promi
   return aitdeV2.get(`/change-sets/${changeSetId}`, { signal })
 }
 
+export function fetchMissionChangeSets(
+  missionId: number,
+  signal?: AbortSignal,
+): Promise<{ items: ChangeSet[] }> {
+  return aitdeV2.get(`/missions/${missionId}/change-sets`, { signal })
+}
+
 // ── Impact analysis ──
 
 export function analyzeImpact(changeSetId: number): Promise<ImpactRun> {
@@ -142,6 +149,13 @@ export function analyzeImpact(changeSetId: number): Promise<ImpactRun> {
 
 export function fetchImpactRun(impactRunId: number, signal?: AbortSignal): Promise<ImpactRun> {
   return aitdeV2.get(`/impact-runs/${impactRunId}`, { signal })
+}
+
+export function fetchMissionImpactRuns(
+  missionId: number,
+  signal?: AbortSignal,
+): Promise<{ items: ImpactRun[] }> {
+  return aitdeV2.get(`/missions/${missionId}/impact-runs`, { signal })
 }
 
 export function explainImpact(impactRunId: number, scenarioId: number): Promise<ExplainResult> {
@@ -195,4 +209,47 @@ export const CHANGE_KIND_LABELS: Record<string, string> = {
   ADDED: '新增',
   CHANGED: '变更',
   DELETED: '删除',
+}
+
+export const CHANGE_TYPE_LABELS: Record<string, string> = {
+  PRD: '需求文档',
+  REQUIREMENT: '需求',
+  CODE: '代码',
+  OPENAPI: '接口契约',
+  DATA: '数据',
+}
+
+export const CHANGE_SET_STATUS_LABELS: Record<string, string> = {
+  PENDING: '待分析',
+  ANALYZING: '分析中',
+  ANALYZED: '已分析',
+  COMPLETED: '已完成',
+  FAILED: '分析失败',
+}
+
+export const CHANGE_ENTITY_TYPE_LABELS: Record<string, string> = {
+  PAGE: '页面',
+  API_ENDPOINT: '接口',
+  JOURNEY: '业务流程',
+  REQUIREMENT: '需求',
+}
+
+export const CHANGE_RISK_HINT_LABELS: Record<string, string> = {
+  NONE: '无风险提示',
+  CONTRACT_RULE: '契约规则',
+  RECENT_CHANGE: '近期变更',
+  HIGH_RISK: '高风险',
+}
+
+export const IMPACT_STATUS_LABELS: Record<string, string> = {
+  PENDING: '待分析',
+  RUNNING: '分析中',
+  COMPLETED: '已完成',
+  FAILED: '分析失败',
+}
+
+export const SELECTION_TYPE_LABELS: Record<string, string> = {
+  SMART: '智能选择',
+  FULL: '全量回归',
+  MANUAL: '手动选择',
 }

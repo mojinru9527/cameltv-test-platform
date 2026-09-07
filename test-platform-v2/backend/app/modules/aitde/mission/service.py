@@ -128,6 +128,14 @@ def update_mission(
     if "version_task_id" in data:
         _validate_version_task(db, data.get("version_task_id"), project_id)
 
+    target_acceptance = data.get("acceptance_status")
+    if target_acceptance is not None and target_acceptance != row.acceptance_status:
+        raise APIException(
+            code=400,
+            msg="验收状态只能由绑定 Build 与 Campaign 的 Quality Gate 生成",
+            http_status=400,
+        )
+
     return repository.update(
         db,
         row,
@@ -139,7 +147,7 @@ def update_mission(
             "default_environment_id": data.get("default_environment_id"),
             "version_task_id": data.get("version_task_id"),
             "status": target_status,
-            "acceptance_status": data.get("acceptance_status"),
+            "acceptance_status": target_acceptance,
         },
     )
 

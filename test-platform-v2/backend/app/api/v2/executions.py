@@ -149,12 +149,13 @@ def list_mission_runs(
         page=page,
         page_size=page_size,
     )
+    facts = service.list_run_facts(db, items, current.project_id or 0)
     return R.ok(
         {
             "total": total,
             "page": page,
             "page_size": page_size,
-            "items": [run_to_dict(r) for r in items],
+            "items": [{**run_to_dict(r), **facts.get(r.id, {})} for r in items],
         }
     )
 

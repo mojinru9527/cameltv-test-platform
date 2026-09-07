@@ -600,7 +600,11 @@ def evaluate_gate(
         check(
             "G9_RUN_ENV_MATCHES_BUILD",
             env_checked > 0 and env_match == env_checked,
-            f"env_match={env_match}/{env_checked} target={target_fingerprint_hash or 'none'} conf={target_confidence or 'none'}",
+            (
+                f"env_match={env_match}/{env_checked} "
+                f"target={target_fingerprint_hash or 'none'} "
+                f"conf={target_confidence or 'none'}"
+            ),
             "NOT_EVALUATED" if executed == 0 else None,
         )
     )
@@ -658,6 +662,21 @@ def evaluate_gate(
             "checks_json": json.dumps(checks),
         },
     )
+    # Mission acceptance is a projection of the latest persisted Quality Gate.
+    # It is never an independently writable success flag.
+    from app.modules.aitde.mission.models import Mission
+
+    mission = db.scalar(
+        select(Mission).where(
+            Mission.id == mission_id,
+            Mission.project_id == project_id,
+        )
+    )
+    if mission is not None:
+        mission.acceptance_status = (
+            result if result in {"PASS", "FAIL"} else "NOT_EVALUATED"
+        )
+        db.commit()
     return gate_result_to_dict(row)
 
 

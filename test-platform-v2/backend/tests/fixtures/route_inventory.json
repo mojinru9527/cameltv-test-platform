@@ -1,5 +1,5 @@
 {
-  "count": 644,
+  "count": 646,
   "routes": [
     {
       "path": "/api/v1/knowledge/version-records",
@@ -2066,6 +2066,10 @@
       "method": "GET"
     },
     {
+      "path": "/api/v2/missions/{mission_id}/change-sets",
+      "method": "GET"
+    },
+    {
       "path": "/api/v2/missions/{mission_id}/changes/detect",
       "method": "POST"
     },
@@ -2087,6 +2091,10 @@
     },
     {
       "path": "/api/v2/missions/{mission_id}/intents",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v2/missions/{mission_id}/impact-runs",
       "method": "GET"
     },
     {

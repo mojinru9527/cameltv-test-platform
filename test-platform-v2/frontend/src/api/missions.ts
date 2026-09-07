@@ -140,10 +140,17 @@ export interface MissionLifecycleCase {
   module_key: string | null
   review_status: string
   source_ref_count: number
+  source_refs_valid: boolean
+  content_complete: boolean
   run_count: number
   latest_run_id: number | null
   latest_outcome: string | null
   evidence_count: number
+  verified_evidence_count: number
+  step_count: number
+  assertion_count: number
+  replay_count: number
+  execution_complete: boolean
   defect_count: number
   retest_count: number
   retest_status: 'NOT_REQUIRED' | 'PENDING_RETEST' | 'RETEST_PASSED' | 'RETEST_FAILED' | string
@@ -153,7 +160,10 @@ export interface MissionLifecycle {
   mission: Pick<
     Mission,
     'id' | 'mission_type' | 'status' | 'acceptance_status' | 'version_task_id'
-  >
+  > & {
+    stored_acceptance_status: string
+    acceptance_consistent: boolean
+  }
   version_task: {
     id: number
     title: string
@@ -162,6 +172,8 @@ export interface MissionLifecycle {
   } | null
   phases: MissionLifecyclePhase[]
   stages: MissionLifecycleStage[]
+  supporting_stages: MissionLifecycleStage[]
+  integrity_status: 'COMPLETE' | 'INCOMPLETE'
   coverage: {
     case_types: Record<'FUNCTIONAL' | 'API' | 'UI' | 'UNCLASSIFIED', number>
     requirement_roles: Record<'NEW' | 'CHANGED' | 'IMPACTED_BASELINE' | 'UNCLASSIFIED', number>
@@ -170,11 +182,26 @@ export interface MissionLifecycle {
     cases: number
     runs: number
     evidence: number
+    verified_evidence: number
+    steps: number
+    assertions: number
+    replays: number
     defects: number
     retests: number
     executed_cases: number
   }
   cases: MissionLifecycleCase[]
+  artifacts: {
+    fragments: number
+    change_sets: number
+    change_items: number
+    impact_runs: number
+    lineage_edges: number
+    gap_candidates: number
+    latest_change_set_id: number | null
+    latest_impact_run_id: number | null
+    latest_gate_result_id: number | null
+  }
   gaps: string[]
 }
 

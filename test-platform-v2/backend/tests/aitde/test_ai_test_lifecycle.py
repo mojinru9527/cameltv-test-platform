@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+from datetime import datetime
+
 import pytest
 from pydantic import ValidationError
 
@@ -11,7 +14,19 @@ from app.modules.aitde.contract.models import (
     TestContractVersion as _TestContractVersion,
 )
 from app.modules.aitde.execution import defects as run_defects
-from app.modules.aitde.execution.models import EvidenceArtifact, ExecutionRun
+from app.modules.aitde.ai_closed_loop.models import ScenarioGapCandidate
+from app.modules.aitde.continuous.models import (
+    BuildObservation,
+    ExecutionCampaign,
+    QualityGateResultRecord,
+)
+from app.modules.aitde.execution.models import (
+    AssertionResult,
+    EvidenceArtifact,
+    ExecutionRun,
+    ExecutionStep,
+    ReplayManifest,
+)
 from app.modules.aitde.intelligence.provider import (
     AiIntelligenceProvider,
     DeterministicScopeProvider,
@@ -25,7 +40,17 @@ from app.modules.aitde.scenario.models import (
 )
 from app.modules.aitde.scenario.schemas import ScenarioCandidate
 from app.modules.aitde.scope.models import ScopeItem
-from app.modules.aitde.sources.models import MissionSourceLink, SourceArtifact
+from app.modules.aitde.smart_regression.models import (
+    ChangeItem,
+    ChangeSet,
+    ImpactAnalysisRun,
+    LineageEdge,
+)
+from app.modules.aitde.sources.models import (
+    MissionSourceLink,
+    SourceArtifact,
+    SourceFragment,
+)
 
 
 def _version_task(db, *, project_id: int, version: str) -> VersionTask:
@@ -88,6 +113,23 @@ def test_mission_rejects_cross_project_version_task(db_session):
             {"title": "越权任务", "version_task_id": foreign_task.id},
             project_id=1,
             user_id=9,
+        )
+
+
+def test_mission_acceptance_cannot_be_marked_pass_directly(db_session):
+    mission = mission_service.create_mission(
+        db_session,
+        {"title": "16.0.0 需求测试", "mission_type": "FEATURE"},
+        project_id=1,
+        user_id=9,
+    )
+
+    with pytest.raises(APIException, match="Quality Gate"):
+        mission_service.update_mission(
+            db_session,
+            mission.id,
+            project_id=1,
+            data={"acceptance_status": "PASS"},
         )
 
 
@@ -420,6 +462,310 @@ def test_mission_lifecycle_exposes_per_case_evidence_defect_and_retest(db_sessio
     assert case["latest_outcome"] == "PASS"
 
 
+def test_mission_lifecycle_rejects_structural_placeholders_as_complete(db_session):
+    """A PARSED flag, frozen ``{}``, or evidence URI is not execution proof."""
+    from app.modules.aitde.mission.lifecycle import build_lifecycle
+
+    mission = _seed_lifecycle(db_session)
+    result = build_lifecycle(db_session, mission.id, project_id=1)
+
+    stages = {stage["key"]: stage for stage in result["stages"]}
+    assert stages["sources"]["status"] == "IN_PROGRESS"
+    assert stages["contract"]["status"] == "IN_PROGRESS"
+    assert stages["cases"]["status"] == "IN_PROGRESS"
+    assert stages["execution"]["status"] == "IN_PROGRESS"
+    assert stages["acceptance"]["status"] == "NOT_STARTED"
+    assert result["mission"]["acceptance_status"] == "NOT_EVALUATED"
+    assert result["mission"]["stored_acceptance_status"] == "PASS"
+    assert result["mission"]["acceptance_consistent"] is False
+    assert result["integrity_status"] == "INCOMPLETE"
+    assert result["cases"][0]["execution_complete"] is False
+
+
+def test_mission_lifecycle_requires_real_fragment_references(db_session):
+    from app.modules.aitde.mission.lifecycle import build_lifecycle
+
+    mission = _seed_lifecycle(db_session)
+    source = db_session.query(SourceArtifact).filter_by(project_id=1).one()
+    db_session.add(
+        SourceFragment(
+            artifact_id=source.id,
+            fragment_key="requirement-1",
+            title="篮球多项目切换",
+            text="篮球列表支持按项目切换，并保持赛事筛选状态。",
+            location_json='{"section":"需求说明"}',
+            content_hash="f" * 64,
+            sequence=1,
+        )
+    )
+    db_session.commit()
+
+    result = build_lifecycle(db_session, mission.id, project_id=1)
+
+    source_stage = next(stage for stage in result["stages"] if stage["key"] == "sources")
+    assert source_stage["status"] == "COMPLETE"
+    # The scenario points at fragment id=2, not the persisted fragment, so it
+    # must remain incomplete even though the source itself now has a fragment.
+    assert result["cases"][0]["source_refs_valid"] is False
+
+
+def test_mission_lifecycle_is_complete_only_with_real_end_to_end_facts(db_session):
+    from app.modules.aitde.mission.lifecycle import build_lifecycle
+
+    mission = _seed_lifecycle(db_session)
+    source = db_session.query(SourceArtifact).filter_by(project_id=1).one()
+    source.normalized_text = "篮球列表支持项目切换，并保持筛选条件。"
+    fragment = SourceFragment(
+        artifact_id=source.id,
+        fragment_key="requirement-1",
+        title="篮球多项目切换",
+        text=source.normalized_text,
+        location_json='{"section":"需求说明"}',
+        content_hash="f" * 64,
+        sequence=1,
+    )
+    db_session.add(fragment)
+    db_session.flush()
+    source_ref = [{"artifact_id": source.id, "fragment_id": fragment.id}]
+
+    for item in db_session.query(ScopeItem).filter_by(mission_id=mission.id):
+        item.reason = "16.0.0 篮球多项目适配需求"
+        item.source_refs_json = json.dumps(source_ref)
+
+    contract_version = db_session.get(
+        _TestContractVersion, mission.current_contract_version_id
+    )
+    contract_version.snapshot_json = json.dumps(
+        {
+            "schema_version": "1.0",
+            "mission_id": mission.id,
+            "scope_revision": "r1",
+            "rules": [
+                {
+                    "rule_key": "project-switch",
+                    "title": "篮球项目切换",
+                    "statement": "切换后只展示所选项目赛事",
+                    "risk_level": "P1",
+                    "source_refs": source_ref,
+                }
+            ],
+            "required_outcomes": [
+                {
+                    "outcome_key": "selected-project-visible",
+                    "statement": "项目名称、赛事列表和请求参数一致",
+                    "source_refs": source_ref,
+                }
+            ],
+        },
+        ensure_ascii=False,
+    )
+
+    existing_version = db_session.query(_TestScenarioVersion).one()
+    existing_version.business_goal = "验证页面按篮球项目展示赛事"
+    existing_version.given_model_json = '{"project":"默认项目"}'
+    existing_version.when_model_json = '{"action":"切换篮球项目"}'
+    existing_version.expected_state_json = '{"selected_project":"目标项目"}'
+    existing_version.source_refs_json = json.dumps(source_ref)
+
+    for index, case_type in enumerate(("FUNCTIONAL", "API"), start=2):
+        scenario = _TestScenario(
+            project_id=1,
+            mission_id=mission.id,
+            scenario_key=f"BASKETBALL-{case_type}-{index:03d}",
+            current_version_no=1,
+        )
+        db_session.add(scenario)
+        db_session.flush()
+        version = _TestScenarioVersion(
+            scenario_id=scenario.id,
+            version_no=1,
+            contract_version_id=contract_version.id,
+            title=f"{case_type} 篮球项目切换",
+            business_goal="验证篮球多项目适配",
+            case_type=case_type,
+            requirement_role="CHANGED" if case_type == "API" else "NEW",
+            module_key=f"篮球/{case_type}",
+            given_model_json='{"project":"默认项目"}',
+            when_model_json='{"action":"切换项目"}',
+            expected_state_json='{"project":"目标项目"}',
+            source_refs_json=json.dumps(source_ref),
+            review_status="APPROVED",
+            created_by=1,
+        )
+        db_session.add(version)
+        db_session.flush()
+        db_session.add(
+            ExecutionRun(
+                project_id=1,
+                mission_id=mission.id,
+                scenario_id=scenario.id,
+                scenario_version_id=version.id,
+                contract_version_id=contract_version.id,
+                environment_id=14,
+                runtime_status="FINISHED",
+                outcome="PASS",
+                evidence_status="COMPLETE",
+                created_by=1,
+            )
+        )
+    db_session.flush()
+
+    runs = db_session.query(ExecutionRun).filter_by(mission_id=mission.id).all()
+    existing_evidence = db_session.query(EvidenceArtifact).all()
+    for artifact in existing_evidence:
+        artifact.storage_verified_at = datetime.now()
+    existing_evidence_run_ids = {artifact.run_id for artifact in existing_evidence}
+    for run in runs:
+        db_session.add(
+            ExecutionStep(
+                run_id=run.id,
+                sequence=1,
+                step_key="execute-case",
+                step_type="API",
+                status="SUCCEEDED",
+                input_snapshot_json='{"target":"test5"}',
+                output_snapshot_json='{"status":"ok"}',
+            )
+        )
+        db_session.add(
+            AssertionResult(
+                run_id=run.id,
+                oracle_id=1,
+                expected_json='{"status":"ok"}',
+                actual_json='{"status":"ok"}',
+                result="PASS",
+                reason_code="MATCH",
+            )
+        )
+        if run.id not in existing_evidence_run_ids:
+            db_session.add(
+                EvidenceArtifact(
+                    project_id=1,
+                    run_id=run.id,
+                    evidence_type="SCREENSHOT",
+                    storage_uri=f"evidence/{run.id}.png",
+                    content_hash="e" * 64,
+                    content_type="image/png",
+                    size_bytes=128,
+                    sanitization_status="SANITIZED",
+                    integrity_status="VERIFIED",
+                    storage_verified_at=datetime.now(),
+                )
+            )
+        db_session.add(
+            ReplayManifest(
+                run_id=run.id,
+                schema_version="1.0",
+                manifest_json=json.dumps({"run_id": run.id}),
+                manifest_hash="r" * 64,
+            )
+        )
+
+    build = BuildObservation(
+        mission_id=mission.id,
+        environment_id=14,
+        fingerprint_id=1,
+        change_summary_json='{"build":"16.0.0-test5"}',
+        status="EVALUATED",
+    )
+    db_session.add(build)
+    db_session.flush()
+    campaign = ExecutionCampaign(
+        project_id=1,
+        mission_id=mission.id,
+        name="16.0.0 功能测试",
+        campaign_type="FULL",
+        environment_id=14,
+        build_observation_id=build.id,
+        status="COMPLETED",
+    )
+    db_session.add(campaign)
+    db_session.flush()
+    db_session.add(
+        QualityGateResultRecord(
+            mission_id=mission.id,
+            campaign_id=campaign.id,
+            build_observation_id=build.id,
+            policy_id=1,
+            result="PASS",
+            checks_json='[{"gate":"G1","status":"PASS","pass":true}]',
+        )
+    )
+
+    change_set = ChangeSet(
+        project_id=1,
+        mission_id=mission.id,
+        change_type="PRD",
+        status="ANALYZED",
+        content_hash="c" * 64,
+    )
+    db_session.add(change_set)
+    db_session.flush()
+    db_session.add(
+        ChangeItem(
+            change_set_id=change_set.id,
+            change_kind="CHANGED",
+            entity_type="SOURCE_FRAGMENT",
+            entity_key=str(fragment.id),
+            risk_hint="CONTRACT_RULE",
+            source_refs_json=json.dumps(source_ref),
+        )
+    )
+    db_session.add(
+        ImpactAnalysisRun(
+            project_id=1,
+            mission_id=mission.id,
+            change_set_id=change_set.id,
+            algorithm_version="v1",
+            status="COMPLETED",
+            input_hash="i" * 64,
+            finished_at=datetime.now(),
+        )
+    )
+    db_session.add(
+        LineageEdge(
+            project_id=1,
+            mission_id=mission.id,
+            from_type="SOURCE_FRAGMENT",
+            from_id=fragment.id,
+            to_type="SCENARIO_VERSION",
+            to_id=existing_version.id,
+            edge_type="DERIVES_FROM",
+            source_refs_json=json.dumps(source_ref),
+        )
+    )
+    db_session.add(
+        ScenarioGapCandidate(
+            mission_id=mission.id,
+            gap_type="UNCOVERED_JOURNEY",
+            title="跨项目返回状态",
+            description="补充返回上一项目时筛选状态保持用例",
+            source_refs_json=json.dumps(source_ref),
+            evidence_refs_json='[{"run_id": 1}]',
+            risk_level="P2",
+            confidence=0.81,
+            status="OPEN",
+        )
+    )
+    db_session.commit()
+
+    result = build_lifecycle(db_session, mission.id, project_id=1)
+
+    assert result["integrity_status"] == "COMPLETE"
+    assert all(stage["status"] == "COMPLETE" for stage in result["stages"])
+    assert all(
+        stage["status"] == "COMPLETE" for stage in result["supporting_stages"]
+    )
+    assert result["mission"]["acceptance_status"] == "PASS"
+    assert result["coverage"]["case_types"] == {
+        "FUNCTIONAL": 1,
+        "API": 1,
+        "UI": 1,
+        "UNCLASSIFIED": 0,
+    }
+    assert all(case["execution_complete"] for case in result["cases"])
+
+
 def test_mission_lifecycle_is_project_scoped(db_session):
     from app.modules.aitde.mission.lifecycle import build_lifecycle
 
@@ -444,7 +790,62 @@ def test_mission_lifecycle_api(client, auth_headers, db_session, monkeypatch):
         "cases": 1,
         "runs": 2,
         "evidence": 1,
+        "verified_evidence": 0,
+        "steps": 0,
+        "assertions": 0,
+        "replays": 0,
         "defects": 1,
         "retests": 1,
         "executed_cases": 1,
     }
+
+
+def test_mission_change_and_impact_lists_are_persisted_and_project_scoped(
+    client, auth_headers, db_session, monkeypatch
+):
+    from app.core import config
+
+    monkeypatch.setattr(config.settings, "aitde_v3_enabled", True)
+    mission = _seed_lifecycle(db_session)
+    change_set = ChangeSet(
+        project_id=1,
+        mission_id=mission.id,
+        change_type="PRD",
+        status="DETECTED",
+        content_hash="c" * 64,
+    )
+    foreign_change_set = ChangeSet(
+        project_id=2,
+        mission_id=mission.id,
+        change_type="OPENAPI",
+        status="DETECTED",
+        content_hash="d" * 64,
+    )
+    db_session.add_all([change_set, foreign_change_set])
+    db_session.flush()
+    impact_run = ImpactAnalysisRun(
+        project_id=1,
+        mission_id=mission.id,
+        change_set_id=change_set.id,
+        algorithm_version="v1",
+        status="COMPLETED",
+        input_hash="i" * 64,
+    )
+    db_session.add(impact_run)
+    db_session.commit()
+
+    changes = client.get(
+        f"/api/v2/missions/{mission.id}/change-sets", headers=auth_headers
+    )
+    impacts = client.get(
+        f"/api/v2/missions/{mission.id}/impact-runs", headers=auth_headers
+    )
+
+    assert changes.status_code == 200
+    assert [item["id"] for item in changes.json()["data"]["items"]] == [
+        change_set.id
+    ]
+    assert impacts.status_code == 200
+    assert [item["id"] for item in impacts.json()["data"]["items"]] == [
+        impact_run.id
+    ]

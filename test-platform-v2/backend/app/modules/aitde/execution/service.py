@@ -7,6 +7,7 @@ separate from ``outcome`` (business conclusion).
 """
 from __future__ import annotations
 
+from collections import Counter
 from datetime import datetime, timezone
 from typing import Any
 
@@ -22,7 +23,13 @@ from app.modules.aitde.common.enums import (
     TriggerType,
 )
 from app.modules.aitde.execution import repository
-from app.modules.aitde.execution.models import ExecutionRun
+from app.modules.aitde.execution.models import (
+    AssertionResult,
+    EvidenceArtifact,
+    ExecutionRun,
+    ExecutionStep,
+    ReplayManifest,
+)
 from app.modules.aitde.scenario.models import TestScenario, TestScenarioVersion
 
 _VALID_RUN_STATUSES = {s.value for s in RunStatus}
@@ -278,6 +285,67 @@ def list_runs(
         page=page,
         page_size=page_size,
     )
+
+
+def list_run_facts(
+    db: Session, runs: list[ExecutionRun], project_id: int
+) -> dict[int, dict[str, Any]]:
+    """Return display facts for a page of runs using bounded bulk queries."""
+    if not runs:
+        return {}
+    run_ids = [run.id for run in runs]
+    version_ids = {run.scenario_version_id for run in runs}
+    versions = {
+        version.id: version
+        for version in db.scalars(
+            select(TestScenarioVersion).where(TestScenarioVersion.id.in_(version_ids))
+        ).all()
+    }
+    steps = Counter(
+        db.scalars(
+            select(ExecutionStep.run_id).where(ExecutionStep.run_id.in_(run_ids))
+        ).all()
+    )
+    assertions = Counter(
+        db.scalars(
+            select(AssertionResult.run_id).where(AssertionResult.run_id.in_(run_ids))
+        ).all()
+    )
+    evidence_rows = list(
+        db.scalars(
+            select(EvidenceArtifact).where(
+                EvidenceArtifact.project_id == project_id,
+                EvidenceArtifact.run_id.in_(run_ids),
+            )
+        ).all()
+    )
+    evidence = Counter(item.run_id for item in evidence_rows)
+    verified_evidence = Counter(
+        item.run_id
+        for item in evidence_rows
+        if item.integrity_status == "VERIFIED"
+        and item.sanitization_status == "SANITIZED"
+        and item.storage_verified_at is not None
+    )
+    replay = Counter(
+        db.scalars(
+            select(ReplayManifest.run_id).where(ReplayManifest.run_id.in_(run_ids))
+        ).all()
+    )
+    facts: dict[int, dict[str, Any]] = {}
+    for run in runs:
+        version = versions.get(run.scenario_version_id)
+        facts[run.id] = {
+            "scenario_title": version.title if version else None,
+            "case_type": version.case_type if version else None,
+            "requirement_role": version.requirement_role if version else None,
+            "step_count": steps[run.id],
+            "assertion_count": assertions[run.id],
+            "evidence_count": evidence[run.id],
+            "verified_evidence_count": verified_evidence[run.id],
+            "replay_available": replay[run.id] > 0,
+        }
+    return facts
 
 
 def transition_runtime_status(row: ExecutionRun, target: str) -> None:

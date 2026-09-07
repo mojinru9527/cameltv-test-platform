@@ -1,6 +1,7 @@
 """AITDE V3.1 execution model → dict mappers (V31)."""
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from app.modules.aitde.execution.models import (
@@ -12,6 +13,15 @@ from app.modules.aitde.execution.models import (
     ReplayManifest,
     ScenarioAdapter,
 )
+
+
+def _json_value(raw: Any) -> Any:
+    if not isinstance(raw, str):
+        return raw
+    try:
+        return json.loads(raw)
+    except ValueError:
+        return raw
 
 
 def adapter_to_dict(row: ScenarioAdapter) -> dict[str, Any]:
@@ -85,8 +95,8 @@ def step_to_dict(row: ExecutionStep) -> dict[str, Any]:
         "status": row.status,
         "error_type": row.error_type,
         "error_message": row.error_message,
-        "input_snapshot_json": row.input_snapshot_json,
-        "output_snapshot_json": row.output_snapshot_json,
+        "input_snapshot_json": _json_value(row.input_snapshot_json),
+        "output_snapshot_json": _json_value(row.output_snapshot_json),
         "trace_id": row.trace_id,
         "span_id": row.span_id,
         "started_at": row.started_at.isoformat() if row.started_at else None,
@@ -100,12 +110,12 @@ def assertion_to_dict(row: AssertionResult) -> dict[str, Any]:
         "run_id": row.run_id,
         "step_id": row.step_id,
         "oracle_id": row.oracle_id,
-        "oracle_snapshot_json": row.oracle_snapshot_json,
-        "expected_json": row.expected_json,
-        "actual_json": row.actual_json,
+        "oracle_snapshot_json": _json_value(row.oracle_snapshot_json),
+        "expected_json": _json_value(row.expected_json),
+        "actual_json": _json_value(row.actual_json),
         "result": row.result,
         "reason_code": row.reason_code,
-        "evidence_refs_json": row.evidence_refs_json,
+        "evidence_refs_json": _json_value(row.evidence_refs_json),
         # V3.9-R1 (TRUST-007): expose oracle provenance/trust so the frontend
         # TrustLevelBadge can show VERIFIED vs LEGACY_UNVERIFIED correctly.
         "test_oracle_id": row.test_oracle_id,

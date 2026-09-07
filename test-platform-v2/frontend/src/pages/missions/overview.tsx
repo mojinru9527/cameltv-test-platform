@@ -13,7 +13,7 @@ import {
 import OutcomeBadge from '@/components/executions/OutcomeBadge'
 import { ErrorState } from '@/components/state'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import { Bug, CheckCircle2, Circle, Inbox, Loader2 } from '@/lib/icons'
+import { AlertTriangle, Bug, CheckCircle2, Circle, History, Inbox } from '@/lib/icons'
 import { missionKeys } from '@/lib/queryClient'
 import { useAuthStore } from '@/stores/auth'
 import { Badge, Button, Card, CardContent, Skeleton, cn } from '@/ui'
@@ -40,10 +40,17 @@ const RETEST_LABELS: Record<string, string> = {
   RETEST_FAILED: '复验失败',
 }
 
+const ACCEPTANCE_STATUS_LABELS: Record<string, string> = {
+  PASS: '通过',
+  FAIL: '未通过',
+  NOT_EVALUATED: '未评估',
+  BLOCKED: '已阻塞',
+}
+
 function StageStatus({ stage }: { stage: MissionLifecycleStage }) {
   const complete = stage.status === 'COMPLETE'
   const inProgress = stage.status === 'IN_PROGRESS'
-  const Icon = complete ? CheckCircle2 : inProgress ? Loader2 : Circle
+  const Icon = complete ? CheckCircle2 : inProgress ? AlertTriangle : Circle
   return (
     <div className="flex min-w-0 items-start gap-2.5">
       <Icon
@@ -51,7 +58,7 @@ function StageStatus({ stage }: { stage: MissionLifecycleStage }) {
         className={cn(
           'mt-0.5 size-4 shrink-0',
           complete && 'text-status-success',
-          inProgress && 'animate-spin text-status-info',
+          inProgress && 'text-status-warning',
           !complete && !inProgress && 'text-muted-foreground',
         )}
       />
@@ -101,12 +108,25 @@ function CaseRow({ item }: { item: MissionLifecycleCase }) {
       </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
         <span>执行 {item.run_count}</span>
-        <span>证据 {item.evidence_count}</span>
+        <span>步骤 {item.step_count}</span>
+        <span>断言 {item.assertion_count}</span>
+        <span>证据 {item.verified_evidence_count}/{item.evidence_count}</span>
+        <span>回放 {item.replay_count}</span>
         <span>缺陷 {item.defect_count}</span>
       </div>
       <div className="flex flex-wrap items-center gap-2 md:justify-end">
         <OutcomeBadge outcome={item.latest_outcome} />
         <RetestBadge value={item.retest_status} />
+        {item.latest_run_id && item.replay_count > 0 && (
+          <Link
+            to={`/executions/${item.latest_run_id}/replay`}
+            aria-label={`回放 Run #${item.latest_run_id}`}
+            title={`回放 Run #${item.latest_run_id}`}
+            className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <History className="size-4" />
+          </Link>
+        )}
       </div>
     </div>
   )
@@ -183,7 +203,9 @@ export default function MissionOverviewPage() {
           <Badge variant="secondary" className={statusMeta?.color}>
             {statusMeta?.label ?? mission.status}
           </Badge>
-          <Badge variant="outline">验收 {mission.acceptance_status}</Badge>
+          <Badge variant="outline">
+            验收 {ACCEPTANCE_STATUS_LABELS[lifecycle.mission.acceptance_status] ?? lifecycle.mission.acceptance_status}
+          </Badge>
           {lifecycle.version_task && (
             <span className="text-sm text-muted-foreground">
               版本 {lifecycle.version_task.version}
@@ -228,7 +250,9 @@ export default function MissionOverviewPage() {
                   <span className="truncate text-sm font-medium">{phase.label}</span>
                   {phase.is_current && <Badge variant="secondary">当前</Badge>}
                 </div>
-                <p className="mt-1 truncate text-xs text-muted-foreground">{phase.status}</p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">
+                  {MISSION_STATUS_LABELS[phase.status]?.label ?? phase.status}
+                </p>
               </Link>
             ))}
           </div>
@@ -287,6 +311,37 @@ export default function MissionOverviewPage() {
             )}
           </CardContent>
         </Card>
+      </section>
+
+      <section aria-labelledby="supporting-facts-title" className="border-t pt-4">
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <h2 id="supporting-facts-title" className="text-sm font-semibold">验证资产</h2>
+          <span className="text-xs text-muted-foreground">
+            变化 {lifecycle.artifacts.change_items} · 影响 {lifecycle.artifacts.impact_runs} · 追溯 {lifecycle.artifacts.lineage_edges} · 缺口 {lifecycle.artifacts.gap_candidates}
+          </span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {lifecycle.supporting_stages.map((stage) => {
+            const path = stage.key === 'builds'
+              ? 'builds'
+              : stage.key === 'changes'
+                ? 'changes'
+                : stage.key === 'impact'
+                  ? 'impact'
+                  : stage.key === 'lineage'
+                    ? 'trace'
+                    : 'gaps'
+            return (
+              <Link
+                key={stage.key}
+                to={`/missions/${missionId}/${path}`}
+                className="min-h-16 border-l-2 border-border px-3 py-2 transition-colors hover:bg-muted/60"
+              >
+                <StageStatus stage={stage} />
+              </Link>
+            )
+          })}
+        </div>
       </section>
 
       {canViewAiDebug && (

@@ -46,6 +46,8 @@ const lifecycle = {
     mission_type: 'FEATURE',
     status: 'SCENARIO_READY',
     acceptance_status: 'PASS',
+    stored_acceptance_status: 'PASS',
+    acceptance_consistent: true,
     version_task_id: 6,
   },
   version_task: { id: 6, title: '16.0.0 验收', version: '16.0.0', status: 'executing' },
@@ -62,11 +64,30 @@ const lifecycle = {
     { key: 'execution', label: '执行证据', status: 'IN_PROGRESS', total: 3, completed: 1, gap: '2 条用例尚无证据' },
     { key: 'acceptance', label: '验收结论', status: 'COMPLETE', total: 1, completed: 1, gap: '' },
   ],
+  supporting_stages: [
+    { key: 'builds', label: 'Build', status: 'COMPLETE', total: 1, completed: 1, gap: '' },
+    { key: 'changes', label: '变化检测', status: 'COMPLETE', total: 1, completed: 1, gap: '' },
+    { key: 'impact', label: '影响分析', status: 'COMPLETE', total: 1, completed: 1, gap: '' },
+    { key: 'lineage', label: 'Lineage', status: 'COMPLETE', total: 1, completed: 1, gap: '' },
+    { key: 'gaps', label: '场景缺口', status: 'COMPLETE', total: 1, completed: 1, gap: '' },
+  ],
+  integrity_status: 'INCOMPLETE',
   coverage: {
     case_types: { FUNCTIONAL: 1, API: 1, UI: 1, UNCLASSIFIED: 0 },
     requirement_roles: { NEW: 2, CHANGED: 0, IMPACTED_BASELINE: 1, UNCLASSIFIED: 0 },
   },
-  totals: { cases: 3, runs: 2, evidence: 1, defects: 1, retests: 1, executed_cases: 1 },
+  totals: {
+    cases: 3,
+    runs: 2,
+    evidence: 1,
+    verified_evidence: 1,
+    steps: 2,
+    assertions: 2,
+    replays: 1,
+    defects: 1,
+    retests: 1,
+    executed_cases: 1,
+  },
   cases: [
     {
       scenario_id: 10,
@@ -78,15 +99,33 @@ const lifecycle = {
       module_key: '篮球/项目切换',
       review_status: 'APPROVED',
       source_ref_count: 1,
+      source_refs_valid: true,
+      content_complete: true,
       run_count: 2,
       latest_run_id: 13,
       latest_outcome: 'PASS',
       evidence_count: 1,
+      verified_evidence_count: 1,
+      step_count: 2,
+      assertion_count: 2,
+      replay_count: 1,
+      execution_complete: true,
       defect_count: 1,
       retest_count: 1,
       retest_status: 'RETEST_PASSED',
     },
   ],
+  artifacts: {
+    fragments: 4,
+    change_sets: 1,
+    change_items: 2,
+    impact_runs: 1,
+    lineage_edges: 6,
+    gap_candidates: 1,
+    latest_change_set_id: 20,
+    latest_impact_run_id: 30,
+    latest_gate_result_id: 40,
+  },
   gaps: ['2 条用例尚无证据'],
 }
 
@@ -125,10 +164,14 @@ describe('MissionOverviewPage lifecycle facts', () => {
     expect(screen.getByText('切换篮球项目')).toBeTruthy()
     expect(screen.getByText('来源 1')).toBeTruthy()
     expect(screen.getByText('执行 2')).toBeTruthy()
-    expect(screen.getByText('证据 1')).toBeTruthy()
+    expect(screen.getByText('证据 1/1')).toBeTruthy()
+    expect(screen.getByText('步骤 2')).toBeTruthy()
+    expect(screen.getByText('断言 2')).toBeTruthy()
+    expect(screen.getByText('回放 1')).toBeTruthy()
     expect(screen.getByText('缺陷 1')).toBeTruthy()
     expect(screen.getByText('复验通过')).toBeTruthy()
     expect(screen.getByText('2 条用例尚无证据')).toBeTruthy()
+    expect(screen.getByText('验证资产')).toBeTruthy()
     expect(screen.queryByText('AI 分析 → Tester 评审')).toBeNull()
   })
 
