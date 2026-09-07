@@ -218,7 +218,12 @@ def test_ai_provider_contract_and_scenarios_force_ai_inferred_not_required():
                 ],
                 "required_outcomes": [],
             },
-            "test scenario designer": {"items": [scenario_item]},
+            "test scenario designer": {
+                "items": [
+                    dict(scenario_item, scenario_key=f"S-{index}", case_type=case_type)
+                    for index, case_type in enumerate(("FUNCTIONAL", "API", "UI"), 1)
+                ]
+            },
         },
     )
     prov = AiIntelligenceProvider(db=None, project_id=1, client=client)

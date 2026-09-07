@@ -480,6 +480,15 @@ class AiIntelligenceProvider:
                 if oracle.source_type == _SOURCE_TYPE_AI_INFERRED:
                     oracle.required = False
             items.append(cand)
+        present_lanes = {candidate.case_type.value for candidate in items}
+        missing_lanes = {"FUNCTIONAL", "API", "UI"} - present_lanes
+        if missing_lanes:
+            from app.modules.aitde.intelligence.llm_sync import IntelligenceLLMResponseError
+
+            raise IntelligenceLLMResponseError(
+                "scenario_design_v1: missing case lanes: "
+                + ", ".join(sorted(missing_lanes))
+            )
         return ScenarioDesignOutput(
             schema_version="1.0",
             contract_version_id=context.contract_version_id,
