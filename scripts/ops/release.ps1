@@ -44,6 +44,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+. (Join-Path $PSScriptRoot 'capacity.ps1')
 
 # ── Token 管理（首次输入，之后存本地）─────────────────────────────
 $tokenStore = "$HOME\.cameltv-release-console\token.json"
@@ -165,6 +166,9 @@ function Invoke-Release {
     Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-backend:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Dest "$OutputDir\$Tag-backend.tar"
     Invoke-BuildxExport -Cwd "$repoRoot\test-platform-v2\frontend" -Image "cameltv-tp-frontend:$Tag" -BuildArg "VITE_ICP_NUMBER=$IcpNumber" -Dest "$OutputDir\$Tag-frontend.tar"
     ssh -i $KeyPath -o BatchMode=yes "${UserName}@${HostName}" "mkdir -p $ReleaseDir" 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot prepare remote release directory' }
+    Assert-ReleaseUploadCapacity -HostName $HostName -UserName $UserName -KeyPath $KeyPath `
+        -ReleaseDir $ReleaseDir -Archives @("$OutputDir\$Tag-backend.tar", "$OutputDir\$Tag-frontend.tar")
     # 并行上传前后端（两个独立文件，无冲突；单连接带宽受限，并行可缩短总时长）
     $upJobs = @(
         Start-Job -ScriptBlock { param($k, $f1, $f2) scp -i $k -o BatchMode=yes $f1 "$f2" } -ArgumentList $KeyPath, "$OutputDir\$Tag-backend.tar", "${UserName}@${HostName}:$ReleaseDir/",

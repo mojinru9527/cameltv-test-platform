@@ -25,6 +25,13 @@ jobs:
       - name: Validate CI scope classifier contract
         run: python scripts/ci/test_classify_ci_changes.py
 
+      - name: Validate release capacity and retention safeguards
+        run: python -m unittest discover -s deploy/release-console/tests -v
+
+      - name: Validate upload capacity admission
+        shell: pwsh
+        run: ./scripts/ops/test-capacity.ps1
+
       - name: Validate changed workflow YAML syntax
         shell: bash
         env:

@@ -23,6 +23,8 @@ import os
 import tempfile
 from pathlib import Path
 
+from capacity import remote_check_command
+
 
 @dataclasses.dataclass(frozen=True)
 class ExecutorConfig:
@@ -163,6 +165,8 @@ class TencentSshExecutor:
         if not image_tag.replace("-", "").isalnum():
             raise ExecutorCommandFailed("invalid image tag")
         commands = [
+            "exec 9>/run/lock/cameltv-release-capacity.lock && flock -n 9",
+            remote_check_command(self.config.release_dir, image_tag),
             f"docker load -i {self.config.release_dir}/{image_tag}-backend.tar",
             f"docker load -i {self.config.release_dir}/{image_tag}-frontend.tar",
             f"docker tag cameltv-tp-backend:{image_tag} {self.config.image_backend}",
@@ -190,6 +194,7 @@ class TencentSshExecutor:
         backend_repo = self.config.image_backend.rsplit(":", 1)[0]
         frontend_repo = self.config.image_frontend.rsplit(":", 1)[0]
         commands = [
+            "exec 9>/run/lock/cameltv-release-capacity.lock && flock -n 9",
             f"docker tag {backend_repo}:{image_tag} {self.config.image_backend} || true",  # noqa: E501
             f"docker tag {frontend_repo}:{image_tag} {self.config.image_frontend} || true",  # noqa: E501
             # 同 deploy：containerd snapshotter 下必须 --force-recreate 才会换镜像。
