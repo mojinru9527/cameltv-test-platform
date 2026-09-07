@@ -28,7 +28,11 @@ from app.modules.aitde.execution.mapper import (
     run_to_dict,
     step_to_dict,
 )
-from app.modules.aitde.execution.schemas import RunCreate, ShadowAuditCreate
+from app.modules.aitde.execution.schemas import (
+    RunCreate,
+    RunDefectCreate,
+    ShadowAuditCreate,
+)
 from app.schemas.common import R
 
 router = APIRouter(tags=["AITDE - Execution"], dependencies=[Depends(require_aitde_v3)])
@@ -79,6 +83,33 @@ def retry_run(
     return R.ok(run_to_dict(row))
 
 
+@router.post("/runs/{run_id}/defects", response_model=R[dict])
+def create_run_defect(
+    run_id: int,
+    payload: RunDefectCreate,
+    current: CurrentUser = Depends(require_permission("defect:create")),
+    db: Session = Depends(get_db),
+):
+    from app.modules.aitde.execution.defects import create_for_run
+
+    row = create_for_run(
+        db,
+        run_id,
+        project_id=current.project_id or 0,
+        user_id=current.user.id,
+        severity=payload.severity,
+        note=payload.note,
+    )
+    return R.ok(
+        {
+            "id": row.id,
+            "defect_id": row.defect_id,
+            "status": row.status,
+            "aitde_run_id": row.aitde_run_id,
+        }
+    )
+
+
 @router.get("/runs/{run_id}/steps", response_model=R[dict])
 def list_steps(
     run_id: int,
@@ -118,12 +149,13 @@ def list_mission_runs(
         page=page,
         page_size=page_size,
     )
+    facts = service.list_run_facts(db, items, current.project_id or 0)
     return R.ok(
         {
             "total": total,
             "page": page,
             "page_size": page_size,
-            "items": [run_to_dict(r) for r in items],
+            "items": [{**run_to_dict(r), **facts.get(r.id, {})} for r in items],
         }
     )
 

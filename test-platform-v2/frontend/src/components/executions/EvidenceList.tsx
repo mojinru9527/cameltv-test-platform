@@ -1,5 +1,5 @@
 import { Badge } from '@/ui'
-import { EVIDENCE_TYPE_LABELS } from '@/api/executions'
+import { EVIDENCE_TYPE_LABELS, SANITIZATION_STATUS_LABELS } from '@/api/executions'
 import type { Evidence } from '@/api/executions'
 import { formatBytes } from './format'
 import { EvidenceIntegrityBadge } from '@/components/trust/EvidenceIntegrityBadge'
@@ -23,7 +23,9 @@ export default function EvidenceList({ evidence }: { evidence: Evidence[] }) {
             <span>{formatBytes(e.size_bytes)}</span>
             <span>· {e.storage_provider}</span>
             <span>· {e.content_type}</span>
-            <Badge variant="outline">{e.sanitization_status}</Badge>
+            <Badge variant="outline">
+              {SANITIZATION_STATUS_LABELS[e.sanitization_status] ?? e.sanitization_status}
+            </Badge>
           </div>
           <div className="mt-2">
             <EvidenceIntegrityBadge evidence={e} />

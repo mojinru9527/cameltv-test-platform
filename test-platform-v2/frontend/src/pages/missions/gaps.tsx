@@ -9,6 +9,7 @@ import {
   convertScenarioGap,
   listScenarioGaps,
   GAP_TYPE_LABELS,
+  GAP_STATUS_LABELS,
   type ScenarioGap,
 } from '@/api/aiClosedLoop'
 
@@ -57,10 +58,10 @@ export default function MissionGapsPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="场景缺口" description={`Mission #${missionId} 的 Gap Candidates（V38-010，proposal only）`} />
+      <PageHeader title="场景缺口" description={`任务 #${missionId} 的待补测试场景`} />
       {gaps.length === 0 ? (
         <div className="rounded-md border border-dashed px-3 py-10 text-center text-sm text-muted-foreground">
-          暂无 Gap 候选
+          暂无场景缺口
         </div>
       ) : (
         <div className="space-y-2">
@@ -69,11 +70,14 @@ export default function MissionGapsPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone="neutral">{GAP_TYPE_LABELS[g.gap_type] ?? g.gap_type}</Badge>
                 <Badge tone="neutral">{g.risk_level}</Badge>
-                <Badge tone="neutral">{g.status}</Badge>
+                <Badge tone="neutral">{GAP_STATUS_LABELS[g.status] ?? g.status}</Badge>
                 <span className="text-xs text-muted-foreground">置信度 {(g.confidence * 100).toFixed(0)}%</span>
               </div>
               <p className="mt-2 text-sm font-medium">{g.title}</p>
               {g.description && <p className="mt-1 text-sm text-muted-foreground">{g.description}</p>}
+              <p className="mt-1 text-xs text-muted-foreground">
+                来源 {g.source_refs.length} · 证据 {g.evidence_refs.length}
+              </p>
               {g.status === 'OPEN' && (
                 <Button
                   size="sm"
@@ -81,7 +85,7 @@ export default function MissionGapsPage() {
                   onClick={() => convert(g)}
                   disabled={convertingId !== null}
                 >
-                  {convertingId === g.id ? '转换中…' : '转 Contract/Scenario Proposal'}
+                  {convertingId === g.id ? '转换中…' : '转为契约/场景提案'}
                 </Button>
               )}
             </div>

@@ -46,8 +46,8 @@ export function resolveGateCheckStatus(check: GateCheck, result: GateContext): s
 }
 
 const CHECK_STATUS_META: Record<string, { label: string; className: string }> = {
-  PASS: { label: 'PASS', className: 'bg-status-success-muted text-status-success' },
-  FAIL: { label: 'FAIL', className: 'bg-status-danger-muted text-status-danger' },
+  PASS: { label: '通过', className: 'bg-status-success-muted text-status-success' },
+  FAIL: { label: '未通过', className: 'bg-status-danger-muted text-status-danger' },
   NOT_EVALUATED: { label: '未评估', className: 'bg-muted text-muted-foreground' },
   BLOCKED: { label: '已阻塞', className: 'bg-status-warning-muted text-status-warning' },
 }

@@ -31,7 +31,9 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
 import {
   fetchMissionRuns,
+  CASE_TYPE_LABELS,
   OUTCOME_LABELS,
+  REQUIREMENT_ROLE_LABELS,
   RUNTIME_STATUS_LABELS,
   captureSnapshot,
   createRun,
@@ -44,7 +46,7 @@ import { fetchCurrentContract } from '@/api/contract'
 import { fetchEnvironments } from '@/api/environment'
 import OutcomeBadge from '@/components/executions/OutcomeBadge'
 import RuntimeStatusBadge from '@/components/executions/RuntimeStatusBadge'
-import { Plus, FlaskConical, AlertTriangle } from '@/lib/icons'
+import { Plus, FlaskConical, AlertTriangle, History } from '@/lib/icons'
 
 const PAGE_SIZE = 20
 
@@ -232,11 +234,11 @@ export default function MissionExecutionsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Run</TableHead>
-                <TableHead>场景</TableHead>
+                <TableHead>用例</TableHead>
                 <TableHead>结果</TableHead>
                 <TableHead>状态</TableHead>
-                <TableHead>证据</TableHead>
-                <TableHead>触发</TableHead>
+                <TableHead>执行事实</TableHead>
+                <TableHead>回放</TableHead>
                 <TableHead>创建时间</TableHead>
               </TableRow>
             </TableHeader>
@@ -256,17 +258,46 @@ export default function MissionExecutionsPage() {
                     onClick={() => navigate(`/executions/${r.id}`)}
                   >
                     <TableCell className="font-mono text-xs">#{r.id}</TableCell>
-                    <TableCell className="font-mono text-xs">#{r.scenario_id}</TableCell>
+                    <TableCell>
+                      <p className="text-sm font-medium">{r.scenario_title || `场景 #${r.scenario_id}`}</p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        <Badge variant="outline">
+                          {CASE_TYPE_LABELS[r.case_type ?? 'UNCLASSIFIED'] ?? r.case_type ?? '未分类'}
+                        </Badge>
+                        <Badge variant="secondary">
+                          {REQUIREMENT_ROLE_LABELS[r.requirement_role ?? 'UNCLASSIFIED'] ?? r.requirement_role ?? '未分类'}
+                        </Badge>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <OutcomeBadge outcome={r.outcome} />
                     </TableCell>
                     <TableCell>
                       <RuntimeStatusBadge status={r.runtime_status} />
                     </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{r.evidence_status}</Badge>
+                    <TableCell className="text-xs text-muted-foreground">
+                      步骤 {r.step_count ?? 0} · 断言 {r.assertion_count ?? 0}
+                      <br />
+                      已验证证据 {r.verified_evidence_count ?? 0}/{r.evidence_count ?? 0}
                     </TableCell>
-                    <TableCell>{r.trigger_type}</TableCell>
+                    <TableCell>
+                      {r.replay_available ? (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`回放 Run #${r.id}`}
+                          title={`回放 Run #${r.id}`}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            navigate(`/executions/${r.id}/replay`)
+                          }}
+                        >
+                          <History className="size-4" />
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">无回放</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {r.created_at ?? '—'}
                     </TableCell>

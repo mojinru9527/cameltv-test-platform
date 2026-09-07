@@ -62,6 +62,21 @@ def get_change_set(db: Session, change_set_id: int) -> ChangeSet | None:
     return db.get(ChangeSet, change_set_id)
 
 
+def list_change_sets(
+    db: Session, project_id: int, mission_id: int
+) -> list[ChangeSet]:
+    return list(
+        db.scalars(
+            select(ChangeSet)
+            .where(
+                ChangeSet.project_id == project_id,
+                ChangeSet.mission_id == mission_id,
+            )
+            .order_by(ChangeSet.id.desc())
+        ).all()
+    )
+
+
 def list_change_items(db: Session, change_set_id: int) -> list[ChangeItem]:
     stmt = (
         select(ChangeItem)
@@ -111,6 +126,21 @@ def create_impact_run(
 
 def get_impact_run(db: Session, impact_run_id: int) -> ImpactAnalysisRun | None:
     return db.get(ImpactAnalysisRun, impact_run_id)
+
+
+def list_impact_runs(
+    db: Session, project_id: int, mission_id: int
+) -> list[ImpactAnalysisRun]:
+    return list(
+        db.scalars(
+            select(ImpactAnalysisRun)
+            .where(
+                ImpactAnalysisRun.project_id == project_id,
+                ImpactAnalysisRun.mission_id == mission_id,
+            )
+            .order_by(ImpactAnalysisRun.id.desc())
+        ).all()
+    )
 
 
 def list_impact_results(db: Session, impact_run_id: int) -> list[ImpactResult]:

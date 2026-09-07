@@ -1,0 +1,28 @@
+{
+  "date": "2026-09-07",
+  "target": "http://127.0.0.1:5188/missions/9101/overview",
+  "data_source": "local backend and existing historical AI operation records",
+  "checks": {
+    "labels": [
+      "输入 Token",
+      "缓存命中 Token",
+      "未命中 Token",
+      "输出 Token",
+      "缓存命中率",
+      "应用内复用"
+    ],
+    "historical_usage_rendered_as_unknown": true,
+    "desktop_1440x900_horizontal_overflow": false,
+    "mobile_390x844_horizontal_overflow": false,
+    "console_errors": [],
+    "application_failed_requests": []
+  },
+  "ignored_browser_requests": [
+    "GET /favicon.svg net::ERR_ABORTED during navigation"
+  ],
+  "screenshots": [
+    "ai-cache-drawer-desktop.png",
+    "ai-cache-drawer-mobile.png"
+  ],
+  "truth_boundary": "The local provider was not configured, so historical rows intentionally show an em dash. Numeric cache-hit rendering is covered by component and backend contract tests; no supplier usage was fabricated for screenshots."
+}

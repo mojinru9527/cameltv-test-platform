@@ -9,6 +9,7 @@ export const ASSERTION_RESULT_LABELS: Record<string, { label: string; color: str
 
 export const STEP_STATUS_LABELS: Record<string, { label: string; color: string }> = {
   SUCCESS: { label: '成功', color: 'bg-status-success-muted text-status-success' },
+  SUCCEEDED: { label: '成功', color: 'bg-status-success-muted text-status-success' },
   FAILED: { label: '失败', color: 'bg-status-danger-muted text-status-danger' },
   RUNNING: { label: '执行中', color: 'bg-status-info-muted text-status-info' },
   PENDING: { label: '等待', color: 'bg-muted text-muted-foreground' },

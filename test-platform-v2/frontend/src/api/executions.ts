@@ -55,6 +55,14 @@ export interface Run {
   duration_ms?: number | null
   created_by: number
   created_at: string | null
+  scenario_title?: string | null
+  case_type?: string | null
+  requirement_role?: string | null
+  step_count?: number
+  assertion_count?: number
+  evidence_count?: number
+  verified_evidence_count?: number
+  replay_available?: boolean
 }
 
 export interface Step {
@@ -364,4 +372,33 @@ export const EVIDENCE_TYPE_LABELS: Record<string, string> = {
   API_RESPONSE: '接口响应',
   SYSTEM_LOG: '系统日志',
   TRACE: '链路',
+}
+
+export const CASE_TYPE_LABELS: Record<string, string> = {
+  FUNCTIONAL: '功能',
+  API: '接口',
+  UI: 'UI 自动化',
+  UNCLASSIFIED: '未分类',
+}
+
+export const REQUIREMENT_ROLE_LABELS: Record<string, string> = {
+  NEW: '新增需求',
+  CHANGED: '变更需求',
+  IMPACTED_BASELINE: '受影响基线',
+  UNCLASSIFIED: '未分类',
+}
+
+export const SANITIZATION_STATUS_LABELS: Record<string, string> = {
+  SANITIZED: '已脱敏',
+  NOT_REQUIRED: '无需脱敏',
+  PENDING: '待处理',
+  FAILED: '脱敏失败',
+}
+
+export const SENSITIVITY_LABELS: Record<string, string> = {
+  PUBLIC: '公开',
+  INTERNAL: '内部',
+  CONFIDENTIAL: '敏感',
+  RESTRICTED: '严格受限',
+  NORMAL: '普通',
 }

@@ -11,9 +11,7 @@ export interface EvidenceIntegrityBadgeProps {
 }
 
 /**
- * Summarizes the integrity of a single evidence item:
- * Stored / Sanitized / Hash / Size / Object, each marked with a Lucide icon.
- * Legacy 0-byte / hash-less placeholders are flagged as UNTRUSTED LEGACY EVIDENCE.
+ * Summarizes whether an evidence object is stored, sanitized, hashed and readable.
  */
 export function EvidenceIntegrityBadge({ evidence, className }: EvidenceIntegrityBadgeProps) {
   const integrity = deriveEvidenceIntegrity(evidence)
@@ -26,34 +24,34 @@ export function EvidenceIntegrityBadge({ evidence, className }: EvidenceIntegrit
         variant="outline"
         className={integrity.stored ? 'text-status-success' : 'text-status-danger'}
       >
-        Stored {mark(integrity.stored)}
+        已存储 {mark(integrity.stored)}
       </Badge>
       <Badge
         variant="outline"
         className={integrity.sanitized ? 'text-status-success' : 'text-status-danger'}
       >
-        Sanitized {mark(integrity.sanitized)}
+        已脱敏 {mark(integrity.sanitized)}
       </Badge>
       <Badge
         variant="outline"
         className={integrity.hash ? 'text-status-success' : 'text-status-danger'}
       >
-        Hash {mark(integrity.hash)}
+        校验值 {mark(integrity.hash)}
       </Badge>
       <Badge
         variant="outline"
         className={integrity.object ? 'text-status-success' : 'text-status-warning'}
       >
-        Object {mark(integrity.object)}
+        文件可用 {mark(integrity.object)}
       </Badge>
       <Badge
         variant="outline"
         className={integrity.sizeBytes > 0 ? '' : 'text-status-warning'}
       >
-        Size {formatBytes(integrity.sizeBytes)}
+        大小 {formatBytes(integrity.sizeBytes)}
       </Badge>
       {integrity.isLegacyUntrusted && (
-        <Badge tone="danger">UNTRUSTED LEGACY EVIDENCE</Badge>
+        <Badge tone="danger">旧证据不可信</Badge>
       )}
     </div>
   )

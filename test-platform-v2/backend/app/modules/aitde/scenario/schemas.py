@@ -6,7 +6,12 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from app.modules.aitde.common.enums import OracleType, RiskLevel
+from app.modules.aitde.common.enums import (
+    OracleType,
+    RequirementRole,
+    RiskLevel,
+    ScenarioCaseType,
+)
 from app.modules.aitde.scope.schemas import SourceRef
 
 
@@ -26,6 +31,9 @@ class ScenarioCandidate(BaseModel):
     scenario_key: str = Field(min_length=1, max_length=128)
     title: str = Field(min_length=1, max_length=255)
     business_goal: str = ""
+    case_type: ScenarioCaseType
+    requirement_role: RequirementRole
+    module_key: str = Field(min_length=1, max_length=255)
     priority: RiskLevel = RiskLevel.P2
     risk_level: RiskLevel = RiskLevel.P2
     given: dict[str, Any] = Field(default_factory=dict)

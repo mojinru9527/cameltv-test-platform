@@ -77,6 +77,17 @@ def get_mission(
     return R.ok(mission_to_dict(mission))
 
 
+@router.get("/{mission_id}/lifecycle", response_model=R[dict])
+def get_mission_lifecycle(
+    mission_id: int,
+    current: CurrentUser = Depends(require_permission("mission:detail")),
+    db: Session = Depends(get_db),
+):
+    from app.modules.aitde.mission.lifecycle import build_lifecycle
+
+    return R.ok(build_lifecycle(db, mission_id, current.project_id or 0))
+
+
 @router.patch("/{mission_id}", response_model=R[dict])
 def update_mission(
     mission_id: int,

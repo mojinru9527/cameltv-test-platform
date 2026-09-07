@@ -43,6 +43,13 @@ class TestScenarioVersion(Base, TimestampMixin):
     contract_version_id: Mapped[int] = mapped_column(Integer, index=True)
     title: Mapped[str] = mapped_column(String(255), default="")
     business_goal: Mapped[str] = mapped_column(Text, default="")
+    case_type: Mapped[str] = mapped_column(
+        String(24), default="UNCLASSIFIED", index=True
+    )
+    requirement_role: Mapped[str] = mapped_column(
+        String(32), default="UNCLASSIFIED", index=True
+    )
+    module_key: Mapped[str] = mapped_column(String(255), default="")
     priority: Mapped[str] = mapped_column(String(4), default=RiskLevel.P2.value)
     risk_level: Mapped[str] = mapped_column(String(4), default=RiskLevel.P2.value)
     given_model_json: Mapped[str] = mapped_column(Text, default="{}")
