@@ -322,6 +322,9 @@ class QueueWorkerLoop:
     def kick(self) -> None:
         self._wake.set()
 
+    def is_running(self) -> bool:
+        return self._thread is not None and self._thread.is_alive()
+
     def shutdown(self, timeout: float = 5.0) -> None:
         with self._lock:
             thread = self._thread

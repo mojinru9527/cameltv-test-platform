@@ -656,7 +656,8 @@ def _poll_once() -> None:
 
 def ensure_worker_running() -> None:
     """启动后台轮询线程（幂等）。"""
-    _loop.start()
+    if settings.worker_execution_enabled:
+        _loop.start()
 
 
 def shutdown_worker(timeout: float = 5.0) -> None:

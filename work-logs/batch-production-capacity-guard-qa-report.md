@@ -120,6 +120,21 @@ Remote required checks and PR audit have not run because push is not yet authori
   This verifies export metadata behavior, not a full production image build.
 - No production cleanup, deployment, container restart or feature activation.
 
+## Phase 3 queue ownership evidence (2026-09-08)
+
+- Existing schedule/UI-schedule/AI/DSH/API-worker/task-worker: 104 passed,
+  9 warnings, exit 0, 27.09s.
+- Ownership plus shared task queue: 22 passed, exit 0, 52.14s.
+- Two real sequential worker processes against a temporary SQLite database,
+  with workload execution stubbed: 6 ownership tests passed, exit 0, 13.20s.
+  A durable manual trigger executes once and remains completed on restart.
+- Schedule/environment/async/stale/wiki-sync/mainline: 22 passed, 4 warnings,
+  exit 0, 11.73s. F821 and whitespace checks pass.
+- Follow-up shutdown ordering stops scheduler admission before consumer drain;
+  final process startup/exit regression: 6 passed, exit 0, 15.89s. F821 passes.
+- This is durable queue isolation, not full API/runtime isolation. Synchronous
+  heavy endpoints, image builds, final full regression and production remain pending.
+
 ## Initial slice retro card
 
 Planned: 2 hours implementation/QA, excluding gated rollout.

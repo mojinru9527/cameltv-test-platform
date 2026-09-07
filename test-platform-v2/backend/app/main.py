@@ -112,39 +112,8 @@ async def lifespan(_: FastAPI):
 
     from app.core.scheduler import init_scheduler, shutdown_scheduler
 
-    init_scheduler()
-
-    # ── V2.6: Auto-sync scheduler for external integrations ──
-    if settings.sync_enabled:
-        from app.core.db import SessionLocal
-        from app.models.integration import IntegrationConfig
-
-        _sync_db = SessionLocal()
-        try:
-            _configs = _sync_db.query(IntegrationConfig).filter(
-                IntegrationConfig.enabled,
-                IntegrationConfig.sync_interval_minutes > 0,
-            ).all()
-            for _cfg in _configs:
-                from app.services.sync.engine import run_scheduled_sync
-                from apscheduler.triggers.interval import IntervalTrigger
-                from app.core.scheduler import scheduler as _scheduler
-
-                job_id = f"sync_integration_{_cfg.id}"
-                if not _scheduler.get_job(job_id):
-                    _scheduler.add_job(
-                        run_scheduled_sync,
-                        trigger=IntervalTrigger(minutes=_cfg.sync_interval_minutes),
-                        args=[_cfg.id],
-                        id=job_id,
-                        name=f"Sync integration #{_cfg.id} ({_cfg.provider_type})",
-                        replace_existing=True,
-                    )
-                    logger.info("[sync] Registered auto-sync job for integration #%s (%s) every %smin", _cfg.id, _cfg.name, _cfg.sync_interval_minutes)
-        except Exception as exc:
-            logger.warning("[sync] WARNING — failed to register auto-sync jobs: %s", exc)
-        finally:
-            _sync_db.close()
+    if settings.worker_execution_enabled:
+        init_scheduler()
 
     from app.services.ai_tasks import ensure_worker_running as ensure_ai_worker
 
@@ -164,7 +133,8 @@ async def lifespan(_: FastAPI):
         shutdown_api_task_worker()
         shutdown_ai_worker()
         shutdown_agent_queue()
-        shutdown_scheduler()
+        if settings.worker_execution_enabled:
+            shutdown_scheduler()
 
 
 app = FastAPI(

@@ -57,3 +57,13 @@ capacity before spawning and returns retryable 429 when full. Release script
 now reads fresh export metadata after build (real archive hash comparison
 passed). Next focus is Phase 3 execution ownership and image split; all runtime
 features remain default-disabled pending the complete rollout review.
+
+Phase 3 queue ownership slice implemented: API can persist tasks without lazy
+consumer startup; `app.worker` owns the durable consumers and scheduler. Manual
+schedule triggers use an atomic heartbeat claim and survive API/worker handoff.
+Cron/integration registries refresh committed changes. Independent real worker
+processes consumed a test dispatch once across restart (6 ownership tests pass).
+Existing queue/schedule regression: 104 passed; shared task queue plus ownership:
+22 passed; additional schedule/wiki-sync/mainline regression: 22 passed.
+Synchronous heavy calls, image targets, Temporal consolidation and production
+limits are still outstanding. See production-execution-isolation-design.md.

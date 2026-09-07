@@ -22,6 +22,7 @@ class Settings(BaseSettings):
 
     # Same-host admission; enable only with a shared local volume across runners.
     heavy_task_budget_enabled: bool = False
+    worker_execution_enabled: bool = True
     heavy_task_budget_capacity: int = 1
     orchestration_budget_capacity: int = 1
     heavy_task_budget_dir: str = ""

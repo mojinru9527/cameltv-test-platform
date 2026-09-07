@@ -39,6 +39,26 @@ uvicorn app.main:app --reload --port 8000
 
 ## Database Migrations
 
+### Separate durable consumers
+
+`python -m app.worker` runs the existing durable task consumers and scheduler
+without the HTTP server. It requires the same migrated database and artifact
+volume as the API, with `WORKER_EXECUTION_ENABLED=true`. An API process using
+`WORKER_EXECUTION_ENABLED=false` still persists submissions but does not start
+these consumers. Manual schedule dispatches survive this handoff; cron changes
+are reconciled within 5 seconds and integration intervals within 15 seconds.
+
+This setting isolates background consumers only. Synchronous browser/model/media
+entry points still require the execution-isolation migration before using an
+API image without their runtimes. The combined deployment remains the default;
+see `work-logs/production-execution-isolation-design.md` at the repository root.
+
+Worker health uses `/tmp/platform-worker.heartbeat`; check that its modification
+time is less than 30 seconds old. The heartbeat is renewed only while the
+scheduler and all required consumer loops are alive, and removed during shutdown.
+
+### Migration commands
+
 Local development keeps `AUTO_CREATE_TABLES=true` so a fresh SQLite database starts without extra steps.
 
 For production deployments:

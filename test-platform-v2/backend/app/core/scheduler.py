@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ def _execute_schedule(schedule_id: int, run_id: int | None = None):
             .where(TestSchedule.id == schedule_id)
             .with_for_update()
         )
-        if not sched:
+        if not sched or (run_id is None and not sched.enabled):
             logger.warning(f"[scheduler] Schedule #{schedule_id} not found, skipping")
             return {"triggered": False, "reason": "not_found"}
 
@@ -74,6 +75,18 @@ def _execute_schedule(schedule_id: int, run_id: int | None = None):
             if run is None or run.schedule_id != schedule_id:
                 db.rollback()
                 return {"triggered": False, "reason": "run_not_found", "run_id": run_id}
+            from sqlalchemy import update
+
+            claimed = db.execute(
+                update(TestScheduleRun)
+                .where(TestScheduleRun.id == run_id,
+                       TestScheduleRun.status == 'running',
+                       TestScheduleRun.heartbeat_at.is_(None))
+                .values(heartbeat_at=datetime.now(timezone.utc))
+            )
+            if claimed.rowcount != 1:
+                db.rollback()
+                return {"triggered": False, "reason": "already_claimed", "run_id": run_id}
 
         # Batch 164 / C163-1：运行开始写入心跳，供 stale 回收判定
         run.heartbeat_at = datetime.now(timezone.utc)
@@ -261,6 +274,8 @@ def _execute_schedule(schedule_id: int, run_id: int | None = None):
 
 def add_schedule_job(schedule_id: int, cron_expression: str):
     """Register a cron job for a schedule (idempotent)."""
+    if not settings.worker_execution_enabled:
+        return
     try:
         scheduler.add_job(
             func=_execute_schedule,
@@ -278,6 +293,8 @@ def add_schedule_job(schedule_id: int, cron_expression: str):
 
 def remove_schedule_job(schedule_id: int):
     """Remove a cron job."""
+    if not settings.worker_execution_enabled:
+        return
     try:
         scheduler.remove_job(f"schedule_{schedule_id}")
         logger.info(f"[scheduler] Job removed: schedule_{schedule_id}")
@@ -291,6 +308,70 @@ def toggle_schedule_job(schedule_id: int, enabled: bool, cron_expression: str):
         add_schedule_job(schedule_id, cron_expression)
     else:
         remove_schedule_job(schedule_id)
+
+
+def refresh_schedule_jobs() -> None:
+    """Reconcile schedules committed by a separate API process."""
+    from app.core.db import SessionLocal
+    from app.models.test_schedule import TestSchedule
+    from sqlalchemy import select
+
+    with SessionLocal() as db:
+        desired = dict(db.execute(
+            select(TestSchedule.id, TestSchedule.cron_expression).where(TestSchedule.enabled)
+        ).all())
+    for job in scheduler.get_jobs():
+        suffix = job.id.removeprefix('schedule_')
+        if job.id.startswith('schedule_') and suffix.isdigit() and int(suffix) not in desired:
+            scheduler.remove_job(job.id)
+    for schedule_id, expression in desired.items():
+        current = scheduler.get_job(f'schedule_{schedule_id}')
+        trigger = CronTrigger.from_crontab(expression)
+        if current is None or str(current.trigger) != str(trigger):
+            add_schedule_job(schedule_id, expression)
+
+
+def poll_pending_schedule_runs() -> None:
+    """Consume durable manual triggers without an API-owned execution thread."""
+    from app.core.db import SessionLocal
+    from app.models.test_schedule import TestScheduleRun
+    from sqlalchemy import select
+
+    with SessionLocal() as db:
+        pending = db.execute(
+            select(TestScheduleRun.id, TestScheduleRun.schedule_id)
+            .where(TestScheduleRun.status == 'running', TestScheduleRun.heartbeat_at.is_(None))
+            .order_by(TestScheduleRun.id).limit(1)
+        ).first()
+    if pending is not None:
+        _execute_schedule(pending.schedule_id, pending.id)
+
+
+def refresh_integration_jobs() -> None:
+    from app.core.db import SessionLocal
+    from app.models.integration import IntegrationConfig
+    from app.services.sync.engine import run_scheduled_sync
+    from apscheduler.triggers.interval import IntervalTrigger
+    from sqlalchemy import select
+
+    desired = {}
+    if settings.sync_enabled:
+        with SessionLocal() as db:
+            desired = dict(db.execute(
+                select(IntegrationConfig.id, IntegrationConfig.sync_interval_minutes)
+                .where(IntegrationConfig.enabled, IntegrationConfig.sync_interval_minutes > 0)
+            ).all())
+    for job in scheduler.get_jobs():
+        suffix = job.id.removeprefix('sync_integration_')
+        if job.id.startswith('sync_integration_') and suffix.isdigit() and int(suffix) not in desired:
+            scheduler.remove_job(job.id)
+    for config_id, minutes in desired.items():
+        job_id = f'sync_integration_{config_id}'
+        current = scheduler.get_job(job_id)
+        trigger = IntervalTrigger(minutes=minutes)
+        if current is None or str(current.trigger) != str(trigger):
+            scheduler.add_job(run_scheduled_sync, trigger=trigger, args=[config_id],
+                              id=job_id, replace_existing=True, max_instances=1, coalesce=True)
 
 
 def _naive_utc(dt):
@@ -355,6 +436,9 @@ def init_scheduler():
     from app.models.test_schedule import TestSchedule
     from sqlalchemy import select
 
+    if not settings.worker_execution_enabled:
+        return
+
     scheduler.start()
     logger.info("[scheduler] BackgroundScheduler started")
 
@@ -377,6 +461,17 @@ def init_scheduler():
     # ── 注册独立任务 Worker 轮询 ──
     from app.services.task_worker import poll_and_execute
     from apscheduler.triggers.interval import IntervalTrigger
+    for job_id, callback, seconds in (
+        ('schedule_registry_refresh', refresh_schedule_jobs, 5),
+        ('manual_schedule_poll', poll_pending_schedule_runs, 2),
+        ('integration_registry_refresh', refresh_integration_jobs, 15),
+    ):
+        scheduler.add_job(callback, trigger=IntervalTrigger(seconds=seconds),
+                          id=job_id, replace_existing=True, max_instances=1, coalesce=True)
+    try:
+        refresh_integration_jobs()
+    except Exception:
+        logger.exception('Initial integration schedule refresh failed')
     try:
         scheduler.add_job(
             func=poll_and_execute,
@@ -417,7 +512,6 @@ def init_scheduler():
     # ── 概念地图自演化（每天凌晨 4:00）──
     try:
         from app.services.knowledge.entity_service import evolve_graph_in_new_session
-        from app.core.config import settings
         if settings.knowledge_graph_enabled:
             def _evolve_all_projects():
                 from app.core.db import SessionLocal
@@ -448,7 +542,6 @@ def init_scheduler():
 
     # ── 存储保留期清理（每日定时 + 启动即跑；生产磁盘防护）──
     try:
-        from app.core.config import settings
         from app.services.storage_retention import cleanup_storage
 
         if settings.storage_retention_enabled:
