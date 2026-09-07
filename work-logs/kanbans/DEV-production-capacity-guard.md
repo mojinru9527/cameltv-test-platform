@@ -10,13 +10,43 @@ Base: origin/main | Branch: feature/production-capacity-guard
 - [x] S1: protected cleanup and capacity helpers + tests (21 unittest cases pass).
 - [x] S2: upload/import integration (PowerShell success and rejection checks pass).
 - [x] S3: local QA, dry-run evidence, review (production rollout not executed).
-- [ ] User batch push/PR/merge confirmation.
+- [x] User batch push/PR/merge confirmation; user additionally authorized all roadmap phases and one final combined merge.
 - [ ] Required checks, final audit, merge.
 - [ ] Reviewed production application and post-checks.
 
-Current position: awaiting required batch push/PR/merge confirmation. Added CI smoke coverage under .github/workflows to ensure
-the new release-console tests actually run; worktree scope updated accordingly.
-No code pushed and no production state changed. Production dry-run identifies
+Current position: authorized combined delivery in Draft PR 415. Added CI smoke
+coverage under .github/workflows; worktree scope updated accordingly.
+Initial capacity slice pushed; no production state changed. Production dry-run identifies
 four image tags and four tar files; archive bytes 2851748352. Import/upload
 reserve target is not yet attainable through the conservative preview alone.
-Later roadmap batches may start only after this batch merges.
+Latest user instruction overrides the earlier per-batch merge ordering: finish
+all four phases in this isolated branch and merge together after their gates.
+Scope now also includes test-platform-v2/, docs/adr/ and CLAUDE.md.
+Initial capacity commit 0f3138ff pushed; Draft PR 415 created. Initial checks
+all passed and base audit passed; do not merge until all phases finish.
+
+## Remaining roadmap (same final delivery)
+- [ ] Phase 2: inventory all entry points and define cross-process resource ownership.
+- [ ] Phase 2: shared capacity, cancellation/crash recovery, telemetry and regression.
+- [ ] Phase 3: API/runner image split and migrated execution entry points.
+- [ ] Phase 3: restart recovery, isolated execution smoke, measured image/runtime evidence.
+- [ ] Phase 4: consolidate task/report entry points, preserve historical links/permissions.
+- [ ] Phase 4: knowledge processing on-demand/off-peak, UI/functional validation.
+- [ ] Complete scope-wide QA, update PR title/body and final audit.
+- [ ] Squash merge, main CI and reviewed production optimization rollout.
+
+Current Phase 2 slice: shared filelock primitive + UI/Lanhu polling admission
+implemented, default disabled pending all entry-point coverage. 11 new tests
+pass, Linux crash-recovery probe passes, selected existing tests pass (51).
+Initial full backend regression passed: 2533 passed, 49 skipped, 1 xfailed.
+DSH parent uses platform child
+execution and must receive a separate orchestration budget to avoid deadlock;
+see the evidence-led design refinement. No new production config was enabled.
+
+DSH orchestration admission now implemented with pre-claim polling and direct
+runner coverage. Direct Lanhu, native browser and embedding admission added.
+Incremental DSH regression: 103 passed; mixed entry-point regression: 94 passed.
+F821 and whitespace checks pass. Next: process-tree supervision and team-timeout
+lease ownership, then actual execution ownership/image split. Native browser
+currently reports capacity exhaustion as runtime_error; durable admission
+deferral still needs integration before activating the feature.

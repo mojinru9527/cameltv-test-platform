@@ -20,6 +20,12 @@ class Settings(BaseSettings):
     app_version: str = "2.1.0"
     environment: str = "development"          # "development" | "production"
 
+    # Same-host admission; enable only with a shared local volume across runners.
+    heavy_task_budget_enabled: bool = False
+    heavy_task_budget_capacity: int = 1
+    orchestration_budget_capacity: int = 1
+    heavy_task_budget_dir: str = ""
+
     # ── AITDE V3 feature flag (V30-001) ──
     # 关闭：不展示 V3 菜单；/api/v2 health 可存在，业务入口拒绝；不影响 V1。
     # 开启：新 Domain 主链（Mission/Source/Scope/Contract/Scenario）进入可试用。
@@ -409,4 +415,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-

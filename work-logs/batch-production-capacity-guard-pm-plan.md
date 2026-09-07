@@ -6,20 +6,22 @@ Date: 2026-09-07 | Executor: Codex | Branch: feature/production-capacity-guard
 
 1. Capacity guard (this full batch): inventory, protected cleanup preview and
    application, upload/import admission checks, regression and operational runbook.
-2. Resource budget (after batch 1 merges): inventory every heavy-task entry;
-   implement a shared durable lease with global heavy-task capacity one,
-   cancellation/expiry recovery and workload attribution. Test UI, Lanhu,
+2. Resource budget (same combined PR): inventory every heavy-task entry;
+   implement shared kernel-backed leases with execution capacity one and a
+   separate orchestration lane, cancellation/crash recovery and workload attribution. Test UI, Lanhu,
    DSH and Temporal concurrency together before setting measured container limits.
-3. Execution isolation (after batch 2 merges): separate API and runner images;
+3. Execution isolation (same combined PR): separate API and runner images;
    move browser/OCR/DSH execution out of API, preserving claims, task IDs,
    heartbeats, artifacts and restart recovery. Compare image size and task results.
-4. Product consolidation (after batch 3 merges): freeze unused experimental
+4. Product consolidation (same combined PR): freeze unused experimental
    entry expansion; design one task/report navigation with historical deep links;
    retain populated knowledge/Wiki/graph features and move optional processing
    to explicit or off-peak jobs. Validate permissions and old/new task mapping.
 
-Each subsequent batch starts from the merged latest main. The current batch
-does not promise later-batch functionality or treat planning as implementation.
+The user subsequently authorized all phases and explicitly requested a single
+combined final merge. Keep all phases in this isolated worktree and PR 415,
+complete phase-specific Product/PM/Design/Dev/QA/Leader evidence, then perform
+one final scope-wide audit and merge. This supersedes per-phase merge ordering.
 
 ## Current implementation slices
 

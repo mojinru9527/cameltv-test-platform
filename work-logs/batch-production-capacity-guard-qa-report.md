@@ -4,6 +4,12 @@ Date: 2026-09-07 | Executor: codex
 Verdict: PASS for local implementation; production rollout NOT EXECUTED.
 Base: 8f6599bb (origin/main at worktree creation, Batch 232 / PR 414).
 
+Scope note (2026-09-08): this report covers initial capacity commit 0f3138ff.
+The user expanded PR 415 to include all roadmap phases before one combined
+merge. It is no longer an operations-only PR. Resource-phase progress and
+validation are recorded in production-resource-budget-design.md and the kanban;
+final full-scope QA must replace this initial delivery conclusion before merge.
+
 ## Executed checks
 
 | Check | Exit | Result |
@@ -75,7 +81,26 @@ Remote required checks and PR audit have not run because push is not yet authori
 5. The cleanup tool does not read pending deployments from the console DB;
    operators must pin those tags and pause out-of-band deployment before apply.
 
-## Retro card
+## Phase 2 incremental evidence (2026-09-08)
+
+- Initial resource primitive/UI/Lanhu snapshot: `python -m pytest -q --tb=short`
+  in backend, exit 0; 2533 passed, 49 skipped, 1 xfailed, 62 warnings, 589.89s.
+  Actual failures: empty set. Later DSH/native-browser/inference edits are not
+  covered by this full-suite result.
+- DSH admission + existing runner/sandbox/tasks/attachment/agent execution:
+  103 passed in 8.09s, exit 0. Separate parent and browser child lanes exercised.
+- All resource-budget tests + Lanhu import/worker + knowledge RAG + browser
+  driver/hybrid cleanup: 94 passed in 17.96s, exit 0. Direct Lanhu busy admission,
+  lease handoff, inference deferral, browser startup/close errors covered.
+- `python -m ruff check app/ --select F821`: exit 0. `git diff --check`: exit 0.
+- No production feature switch enabled. Remaining before activation: actual
+  child-process-tree supervision, DSH team timeout lease ownership, queue
+  deferral for native browser admission, API/runner entry-point migration,
+  mixed workload memory measurement and cross-container integration.
+- Test-generated tracked baseline JSON has only line-ending churn and is
+  excluded from task commits; no user changes reverted.
+
+## Initial slice retro card
 
 Planned: 2 hours implementation/QA, excluding gated rollout.
 Actual: approximately 0.3 hours to local QA.

@@ -18,6 +18,8 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.core.resource_budget import configured_budget
+
 
 logger = logging.getLogger("playwright")
 
@@ -222,7 +224,13 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
     if not _semaphore.acquire(blocking=False):
         return {"status": _current_run_status(db, run_id), "run_id": run_id}
 
+    lease = None
     try:
+        budget = configured_budget()
+        if budget is not None:
+            lease = budget.try_acquire('ui', f'ui:{run_id}')
+            if lease is None:
+                return {"status": _current_run_status(db, run_id), "run_id": run_id}
         if not _claim_pending_run(db, run_id):
             return {"status": _current_run_status(db, run_id), "run_id": run_id}
         from app.models.ui_test import UiTestJob
@@ -273,7 +281,11 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
         )
         return output
     finally:
-        _semaphore.release()
+        try:
+            if lease is not None:
+                lease.release()
+        finally:
+            _semaphore.release()
 
 
 def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) -> dict:

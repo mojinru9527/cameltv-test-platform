@@ -26,12 +26,14 @@ import re
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from functools import partial
 from pathlib import Path
 
 from sqlalchemy import select
 
 from app.core.config import settings
 from app.core.db import SessionLocal
+from app.core.resource_budget import configured_budget
 from app.core.task_queue import (
     QueueSpec,
     QueueWorkerLoop,
@@ -581,28 +583,57 @@ def _execute_team(db, task: DshTask, params: dict, runner, provider: "EffectiveA
             logger.exception("dsh artifact ingest failed for task %s", task.id)
 
 
-def _process_claimed(task_id: int) -> None:
-    db = SessionLocal()
+def _process_claimed(task_id: int, lease=None) -> None:
+    db = None
     try:
+        db = SessionLocal()
         task = db.get(DshTask, task_id)
         if task is None or task.status != "running":
             return
-        execute_task(db, task)
+        if lease is None:
+            execute_task(db, task)
+        else:
+            from app.services.dsh.dsh_runner import run_dsh_task
+
+            execute_task(db, task, runner=partial(run_dsh_task, resource_lease=lease))
     finally:
-        db.close()
+        try:
+            if db is not None:
+                db.close()
+        finally:
+            if lease is not None:
+                lease.release()
 
 
 def _poll_once() -> None:
     """单次轮询：原子认领一条任务并提交到执行池。"""
-    db = SessionLocal()
+    db = None
+    lease = None
+    submitted = False
     try:
+        budget = configured_budget('orchestration')
+        if budget is not None:
+            lease = budget.try_acquire('dsh', 'dsh:poller')
+            if lease is None:
+                return
+        db = SessionLocal()
         task = claim_next_task(db)
         if task is not None:
-            _executor.submit(_process_claimed, task.id)
+            if lease is None:
+                _executor.submit(_process_claimed, task.id)
+            else:
+                lease.bind_task(f'dsh:{task.id}')
+                _executor.submit(_process_claimed, task.id, lease)
+            submitted = True
     except Exception as exc:  # noqa: BLE001 - 轮询失败不退出
         logger.warning("DSH task worker poll error: %s", exc)
     finally:
-        db.close()
+        try:
+            if db is not None:
+                db.close()
+        finally:
+            if not submitted and lease is not None:
+                lease.release()
 
 
 def ensure_worker_running() -> None:

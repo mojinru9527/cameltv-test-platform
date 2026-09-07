@@ -11,8 +11,10 @@ from __future__ import annotations
 
 import logging
 import threading
+from contextlib import nullcontext
 
 from app.core.config import settings
+from app.core.resource_budget import configured_budget
 
 logger = logging.getLogger("knowledge.embedding")
 
@@ -31,7 +33,7 @@ class EmbeddingService:
         self._cache_dir = cache_dir or settings.embedding_cache_dir or None
         self._model = None
         self._unavailable = False
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
 
     @property
     def model_name(self) -> str:
@@ -62,11 +64,28 @@ class EmbeddingService:
 
     def available(self) -> bool:
         """模型是否就绪（会触发首次加载/下载）。"""
-        self._ensure_model()
-        return self._model is not None
+        if self._model is not None:
+            return True
+        budget = configured_budget()
+        admission = budget.try_acquire('embedding', 'embedding:load') if budget else nullcontext()
+        if admission is None:
+            return False
+        with admission, self._lock:
+            self._ensure_model()
+            return self._model is not None
 
     def embed(self, texts: list[str]):
         """批量嵌入，返回 np.ndarray[float32, (n, dim)]（已 L2 归一化）；不可用/异常返回 None。"""
+        if not texts:
+            return None
+        budget = configured_budget()
+        admission = budget.try_acquire('embedding', 'embedding:batch') if budget else nullcontext()
+        if admission is None:
+            return None
+        with admission, self._lock:
+            return self._embed_admitted(texts)
+
+    def _embed_admitted(self, texts: list[str]):
         texts = [t if isinstance(t, str) else "" for t in (texts or [])]
         if not texts:
             return None

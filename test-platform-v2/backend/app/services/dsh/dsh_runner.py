@@ -19,9 +19,11 @@ import threading
 import time
 import uuid
 from dataclasses import dataclass
+from contextlib import nullcontext
 from pathlib import Path
 
 from app.core.config import settings
+from app.core.resource_budget import BudgetTimeout, ResourceLease, configured_budget
 from app.services.ai_config_service import EffectiveAiConfig
 
 logger = logging.getLogger(__name__)
@@ -119,6 +121,7 @@ def run_dsh_task(
     mode: str = "single",          # Batch 191：single | team（团队路由到 agent-team profile / team.cordis.yml）
     provider: EffectiveAiConfig | None = None,
     images: list[str] | None = None,  # 图片附件 file_id 列表（Batch fix：对齐 DSH web 贴图）
+    resource_lease: ResourceLease | None = None,
 ) -> DshRunResult:
     """执行一次 dsh 任务，返回结构化结果。
 
@@ -153,7 +156,16 @@ def run_dsh_task(
         return DshRunResult(final_response="", exit_code=1, error=f"无法创建会话目录 {sess_root}: {exc}")
 
     # 并发闸门：超过 DSH_MAX_CONCURRENT 的任务排队等待（团队任务同样受控，C172-1 不回归）
-    with _concurrency_gate:
+    budget = configured_budget('orchestration')
+    # Polled tasks transfer their lease; direct callers obtain the same lane.
+    # The browser lane stays available to children created by this parent.
+    admission = nullcontext()
+    if budget is not None and resource_lease is None:
+        try:
+            admission = budget.wait('dsh', f'dsh:{uuid.uuid4().hex}', timeout=30)
+        except BudgetTimeout:
+            return DshRunResult(exit_code=75, error='DSH orchestration capacity unavailable')
+    with admission, _concurrency_gate:
         workdir = _workspace_for(workspace, sess_root)
         if images:
             # 图片附件：上传文件落任务工作区，并在任务文本末尾追加可读提示
