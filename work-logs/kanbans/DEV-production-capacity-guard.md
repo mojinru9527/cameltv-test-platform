@@ -83,3 +83,15 @@ Runner build now passes import/nonroot/real Chromium smoke. Unpacked API is
 is claimed. Builds precede the final direct-browser edits and require refresh.
 Current-source Linux process cleanup tests: 2 passed. Scan HARD fixed; compare
 the unchanged 332 warnings with the existing main baseline before committing.
+
+Synchronous/image slice committed as c2a36f2a. Baseline scan comparison passes:
+332 -> 332 warnings; zero new files/categories and zero HARD findings.
+Optional execution Compose overlay now has tested image ownership, shared
+artifact/spec volumes, explicit memory values and ordered startup. Three actual
+Compose merge tests pass. Real two-container HTTP/browser smoke passes including
+auth/project scope and runner outage while API stays healthy. Post-task memory:
+API 195.3 MiB / runner 325.2 MiB (no RAG/DSH; not peak). Smoke resources cleaned.
+Production read-only refresh: 3723 MiB total, 2232 MiB available, swap 306 MiB;
+disk still 94%, 2.6 GiB available. No production state changed. Next: finish
+durable plan dispatch/compiler inventory, release image-set/rollback support,
+mixed-workload sizing and product consolidation before full QA/one final merge.

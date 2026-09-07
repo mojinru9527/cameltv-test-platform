@@ -69,6 +69,30 @@ Optional 03:31 Asia/Shanghai catch-up processes active unembedded chunks using
 the existing per-batch limit. Tests verify project filtering, repeat-run
 idempotence, busy deferral, and no database work in API/disabled RAG roles.
 
+## Opt-in Compose and container evidence
+
+`test-platform-v2/deploy/docker-compose.execution.yml` overlays the base Compose.
+Supply explicit API_IMAGE, RUNNER_IMAGE, API_MEMORY_LIMIT, RUNNER_MEMORY_LIMIT
+and TEMPORAL_WORKER_MEMORY_LIMIT. Values in the smoke test are provisional local
+ceilings, not production sizing. The base combined deployment is unchanged.
+
+Runner uses the image's migration/start command; API waits for runner health and
+starts HTTP directly. Temporal retains its gateway command and runner image,
+and shares admission through the artifact volume. Both generated-script roots
+are shared with API/runner/Temporal and initialized by volume-permissions.
+Memory and PID limits apply to long-lived application processes. Database and
+Temporal-server sizing still need the complete host budget.
+
+Actual Compose config merge tests: 3 passed. Disposable API and runner containers
+using current mounted application source passed login/auth/project context,
+forwarded real Chromium execution, runner outage -> 503 + Retry-After, and API
+health during that outage. Post-task memory: API 195.3 MiB, runner 325.2 MiB.
+These are post-task snapshots with RAG/DSH disabled, not peaks or production
+savings. All temporary containers, network and test-data volume were removed.
+The first smoke omitted X-Project-Id and correctly received 403; the request was
+corrected without weakening authorization. Repeat with final built images,
+migrations and mixed workloads before rollout.
+
 ## Queue slice evidence
 
 - Existing schedule/UI-schedule/AI/DSH/API-worker/task-worker regression:

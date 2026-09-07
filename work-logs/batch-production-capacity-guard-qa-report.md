@@ -161,6 +161,25 @@ process cleanup tests ran against mounted current source: 2 passed, exit 0.
 Scan follow-up eliminated the ProcessLookupError silent-pass HARD finding;
 remaining warning count is 332, matching the initial main snapshot.
 
+## Compose and real HTTP execution evidence
+
+- `python scripts/ops/test_execution_compose.py -v`: 3 passed, exit 0. Uses
+  actual Docker Compose merge output, including the optional Temporal profile.
+  Checks role/image targets, acyclic startup, shared volumes, memory/PID limits.
+- `python scripts/ops/smoke_execution_containers.py`: exit 0. Disposable local
+  SQLite and containers with current source mounted into built runtime images.
+  Auth and login pass; authenticated project-scoped request executes a real
+  Chromium test through API -> runner; stopping runner produces 503 with
+  Retry-After while API /health remains 200. Temporary resources removed.
+- Post-task snapshot: API 195.3 MiB / 512 MiB ceiling; runner 325.2 MiB / 1.5 GiB.
+  RAG/DSH disabled and no peak sampling: not a sizing verdict or production gain.
+- Initial smoke failed because the test omitted mandatory X-Project-Id. Corrected
+  the test request; authorization remains enforced. Compose test assumptions
+  were also corrected for inactive profiles, nullable command and string limits.
+- Main-warning comparison: exit 0, 332 -> 332, no new files/categories, HARD=0.
+- Read-only production refresh: total 3723 MiB, available 2232 MiB, swap 306 MiB;
+  root filesystem 94% used and 2.6 GiB free. No cleanup/deployment was performed.
+
 ## Initial slice retro card
 
 Planned: 2 hours implementation/QA, excluding gated rollout.
