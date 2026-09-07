@@ -157,3 +157,8 @@ class AssertionOut(BaseModel):
 class ShadowAuditCreate(BaseModel):
     audit_outcome: str = Field(min_length=1, max_length=16)
     reason: str = Field(default="", max_length=2000)
+
+
+class RunDefectCreate(BaseModel):
+    severity: str = Field(default="P2", pattern="^P[0-3]$")
+    note: str = Field(default="", max_length=2000)

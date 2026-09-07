@@ -47,6 +47,7 @@ class DefectOut(BaseModel):
     status: str = "open"
     case_id: Optional[int] = None
     execution_id: Optional[int] = None
+    aitde_run_id: Optional[int] = None
     assignee_id: int = 0
     external_id: str = ""
     external_url: str = ""

@@ -5,6 +5,8 @@ from pydantic import ValidationError
 
 from app.core.exceptions import APIException
 from app.models.version_task import VersionTask
+from app.modules.aitde.execution import defects as run_defects
+from app.modules.aitde.execution.models import ExecutionRun
 from app.modules.aitde.intelligence.provider import (
     AiIntelligenceProvider,
     DeterministicScopeProvider,
@@ -138,3 +140,73 @@ def test_ai_scenario_response_missing_classification_fails_closed():
                 outcomes=[],
             )
         )
+
+
+def _execution_run(db, *, project_id: int = 1, outcome: str = "BUSINESS_FAIL"):
+    row = ExecutionRun(
+        project_id=project_id,
+        mission_id=7,
+        scenario_id=11,
+        scenario_version_id=12,
+        contract_version_id=13,
+        environment_id=14,
+        runtime_status="FINISHED",
+        outcome=outcome,
+        evidence_status="COMPLETE",
+        created_by=1,
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def test_failed_aitde_run_creates_one_linked_defect(db_session):
+    run = _execution_run(db_session)
+
+    first = run_defects.create_for_run(
+        db_session, run.id, project_id=1, user_id=9, severity="P1"
+    )
+    second = run_defects.create_for_run(
+        db_session, run.id, project_id=1, user_id=9, severity="P1"
+    )
+
+    assert first.id == second.id
+    assert first.aitde_run_id == run.id
+    assert first.execution_id is None
+
+
+def test_passed_aitde_run_cannot_create_defect(db_session):
+    run = _execution_run(db_session, outcome="PASS")
+
+    with pytest.raises(APIException, match="没有失败结果"):
+        run_defects.create_for_run(
+            db_session, run.id, project_id=1, user_id=9, severity="P2"
+        )
+
+
+def test_aitde_run_defect_is_project_scoped(db_session):
+    run = _execution_run(db_session, project_id=2)
+
+    with pytest.raises(APIException, match="执行记录不存在"):
+        run_defects.create_for_run(
+            db_session, run.id, project_id=1, user_id=9, severity="P2"
+        )
+
+
+def test_create_defect_from_run_api(client, auth_headers, db_session, monkeypatch):
+    from app.core import config
+
+    monkeypatch.setattr(config.settings, "aitde_v3_enabled", True)
+    run = _execution_run(db_session)
+
+    response = client.post(
+        f"/api/v2/runs/{run.id}/defects",
+        headers=auth_headers,
+        json={"severity": "P1", "note": "篮球项目切换后比分未刷新"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["aitde_run_id"] == run.id
+    assert data["status"] == "open"

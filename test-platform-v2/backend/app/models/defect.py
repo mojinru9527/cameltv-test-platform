@@ -24,6 +24,9 @@ class Defect(Base):
     #   rejected / closed → open (reopen)
     case_id: Mapped[Optional[int]] = mapped_column(default=None, index=True)
     execution_id: Mapped[Optional[int]] = mapped_column(default=None)
+    aitde_run_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("execution_runs.id", ondelete="SET NULL"), default=None, index=True
+    )
     assignee_id: Mapped[int] = mapped_column(default=0, index=True)
     external_id: Mapped[str] = mapped_column(String(100), default="")     # 禅道/Jira ID
     external_url: Mapped[str] = mapped_column(String(500), default="")    # 外部链接
