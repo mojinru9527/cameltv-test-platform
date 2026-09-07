@@ -1,5 +1,5 @@
 {
-  "count": 642,
+  "count": 644,
   "routes": [
     {
       "path": "/api/v1/knowledge/version-records",
@@ -2038,6 +2038,10 @@
       "method": "PATCH"
     },
     {
+      "path": "/api/v2/missions/{mission_id}/lifecycle",
+      "method": "GET"
+    },
+    {
       "path": "/api/v2/missions/{mission_id}/acceptance",
       "method": "GET"
     },
@@ -2259,6 +2263,10 @@
     },
     {
       "path": "/api/v2/runs/{run_id}/cancel",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v2/runs/{run_id}/defects",
       "method": "POST"
     },
     {
