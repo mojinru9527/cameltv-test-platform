@@ -20,16 +20,16 @@
 | 2 | 缺陷与复验关联 | 已完成 | 已完成 | 已完成 | 待开始 | 待开始 | 缺陷关联单次执行，复验沿用 parent run |
 | 3 | 生命周期聚合 API | 已完成 | 已完成 | 已完成 | 待开始 | 待开始 | 单接口聚合阶段、证据、缺陷和复验 |
 | 4 | Mission 概览真实工作台 | 已完成 | 已完成 | 已完成 | 待开始 | 待开始 | 相关 Vitest 25/25，typecheck/build 通过 |
-| 5 | QA、Leader、PR 与生产发布 | 已完成 | 进行中 | 进行中 | 待开始 | 待开始 | C227-1 |
+| 5 | QA、Leader、PR 与生产发布 | 已完成 | 已完成 | 已完成 | 待开始 | 待开始 | 等待一次总确认与远端门禁；C227-1 |
 
 ## 当前位置
 
 ```text
 Batch 232 - AI Test Lifecycle
 ├── 已完成: Slice 1-4 编码与相关自测
-├── 进行中: 全量质量门禁、浏览器验收与 QA 证据
+├── 已完成: 全量质量门禁、三视口浏览器验收、QA 与条件 Leader 判决
 ├── 待审批: 首轮 QA 后的一次总确认
-└── 下一步: 完成 QA 报告后申请推送、Draft PR、合入与生产发布总确认
+└── 下一步: 推送、Draft PR、required checks、最终审计、合入与生产发布
 ```
 
 ## 阻塞与风险
@@ -46,5 +46,5 @@ Batch 232 - AI Test Lifecycle
 | PM 计划 | `work-logs/batch-232-ai-test-lifecycle-pm-plan.md` | 已完成 |
 | 设计规范 | `work-logs/batch-232-ai-test-lifecycle-design-spec.md` | 已完成 |
 | 实现计划 | `docs/superpowers/plans/2026-09-07-ai-test-lifecycle.md` | 已完成 |
-| QA 报告 | `work-logs/batch-232-ai-test-lifecycle-qa-report.md` | 进行中 |
-| Leader 判决 | `work-logs/batch-232-ai-test-lifecycle-leader-verdict.md` | 待开始 |
+| QA 报告 | `work-logs/batch-232-ai-test-lifecycle-qa-report.md` | 已完成 |
+| Leader 判决 | `work-logs/batch-232-ai-test-lifecycle-leader-verdict.md` | 条件通过 |
