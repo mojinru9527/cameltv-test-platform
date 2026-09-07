@@ -37,6 +37,38 @@ API-process memory for changes made after worker startup.
 
 No production split or memory-saving claim follows from this first queue slice.
 
+## Synchronous ownership slice
+
+Explicit ExecutionRoute ownership forwards synchronous browser/compilation,
+DSH generation and RAG calls to an internal HTTP runner. Durable queue submissions
+stay in the API. FastAPI 0.139.2 lazily includes routers, so ownership is applied
+through get_route_handler rather than patching APIRoute.app after inclusion.
+Behavioral tests exercise the actual aggregated playground route. Authentication
+and project checks run on the runner using the original caller's headers/cookies.
+Streaming forwarding preserves duplicate Set-Cookie and strips hop headers;
+unavailability returns 503 without automatic mutation retry or local fallback.
+
+HTTP runner and standalone worker share a task_consumers lifecycle. The HTTP
+health endpoint fails when a required consumer is no longer alive. API role
+guards prevent local embedding/model loading and browser/DSH execution.
+
+Playground and direct plan UI calls now take the same browser execution lease.
+Busy playground calls return 429 with Retry-After; busy plan cases record blocked
+and remain available for explicit re-execution instead of becoming false failed
+tests. Their child process groups are supervised when the budget is enabled.
+Compiler standalone validation and durable async plan dispatch remain to review.
+
+API and runner Docker targets share Python layers. API excludes system Node,
+browser installation and DSH; Python embedding dependencies remain for imports.
+Application COPY occurs after large runtime layers, avoiding their invalidation
+on application edits. The default target still produces the combined image.
+The first API build passed import, UID 10001, role and no-browser smoke in a real
+container. This is image structure evidence, not measured production RAM savings.
+
+Optional 03:31 Asia/Shanghai catch-up processes active unembedded chunks using
+the existing per-batch limit. Tests verify project filtering, repeat-run
+idempotence, busy deferral, and no database work in API/disabled RAG roles.
+
 ## Queue slice evidence
 
 - Existing schedule/UI-schedule/AI/DSH/API-worker/task-worker regression:

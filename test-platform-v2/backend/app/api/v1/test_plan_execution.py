@@ -24,7 +24,9 @@ from app.services import audit_service, test_plan_service, triage_service
 
 logger = logging.getLogger("test_plan")
 
-router = APIRouter(prefix="/test-plans", tags=["测试计划-执行"])
+from app.core.execution_dispatch import ExecutionRoute
+
+router = APIRouter(prefix="/test-plans", tags=["测试计划-执行"], route_class=ExecutionRoute)
 
 
 def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:

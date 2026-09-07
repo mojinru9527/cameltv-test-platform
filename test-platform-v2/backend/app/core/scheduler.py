@@ -510,6 +510,16 @@ def init_scheduler():
         logger.error(f"[scheduler] Failed to register freshness decay: {e}")
 
     # ── 概念地图自演化（每天凌晨 4:00）──
+    if settings.knowledge_embedding_schedule_enabled:
+        from app.services.knowledge.vectorize import embed_pending_projects_in_new_session
+
+        scheduler.add_job(
+            embed_pending_projects_in_new_session,
+            trigger=CronTrigger(hour=3, minute=31, timezone=scheduler.timezone),
+            id='knowledge_embedding_catchup', replace_existing=True, max_instances=1,
+            coalesce=True,
+        )
+
     try:
         from app.services.knowledge.entity_service import evolve_graph_in_new_session
         if settings.knowledge_graph_enabled:

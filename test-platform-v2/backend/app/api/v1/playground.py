@@ -15,7 +15,9 @@ from app.services.playground_service import (
     compile_case_batch, get_case_by_case_id, run_case_batch,
 )
 
-router = APIRouter(prefix="/playground", tags=["Playground"])
+from app.core.execution_dispatch import ExecutionRoute
+
+router = APIRouter(prefix="/playground", tags=["Playground"], route_class=ExecutionRoute)
 
 
 @router.post("/batch-compile", response_model=PlaygroundBatchCompileResponse)

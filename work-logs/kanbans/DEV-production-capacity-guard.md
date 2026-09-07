@@ -67,3 +67,19 @@ Existing queue/schedule regression: 104 passed; shared task queue plus ownership
 22 passed; additional schedule/wiki-sync/mainline regression: 22 passed.
 Synchronous heavy calls, image targets, Temporal consolidation and production
 limits are still outstanding. See production-execution-isolation-design.md.
+
+Synchronous ownership slice: real aggregated routes forward to the HTTP runner;
+API guards prohibit local models/browsers; HTTP and standalone consumers share
+lifecycle/health checks. API target builds and imports as nonroot without system
+Node/browser installation. Runner build is being verified. Off-peak knowledge
+catch-up has filtering/idempotence/busy-deferral tests. Direct playground/plan UI
+now use shared admission and supervised process groups; busy plan results are
+blocked, not failed. Resource suite: 54 passed, 2 Linux-only skips; related browser
+regression: 38 passed; catch-up/dispatch/RAG: 27 passed. F821 passes. These are
+incremental results, not final full regression. No production changes or new push.
+
+Runner build now passes import/nonroot/real Chromium smoke. Unpacked API is
+980 MB; runner 5.35 GB; shared layers 972.9 MB. No complete-runtime size reduction
+is claimed. Builds precede the final direct-browser edits and require refresh.
+Current-source Linux process cleanup tests: 2 passed. Scan HARD fixed; compare
+the unchanged 332 warnings with the existing main baseline before committing.

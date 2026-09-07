@@ -57,6 +57,8 @@ def embed_pending_chunks_in_new_session(
     """
     if not settings.rag_enabled:
         return {"embedded": 0, "skipped": 0, "reason": "rag_disabled"}
+    if not settings.worker_execution_enabled:
+        return {"embedded": 0, "skipped": 0, "reason": "runner_deferred"}
     if not embedding_service.available():
         return {"embedded": 0, "skipped": 0, "reason": "model_unavailable"}
 
@@ -98,3 +100,20 @@ def embed_pending_chunks_in_new_session(
         return {"embedded": 0, "skipped": 0, "reason": "error"}
     finally:
         db.close()
+
+
+def embed_pending_projects_in_new_session() -> dict:
+    """Off-peak catch-up for API writes and resource-busy ingestion."""
+    if not (settings.worker_execution_enabled and settings.rag_enabled):
+        return {'projects': 0, 'embedded': 0}
+    with SessionLocal() as db:
+        projects = list(db.scalars(
+            select(KnowledgeChunk.project_id).where(
+                KnowledgeChunk.is_deleted.is_(False), KnowledgeChunk.embedding_id == '',
+            ).distinct()
+        ).all())
+    embedded = 0
+    for project_id in projects:
+        result = embed_pending_chunks_in_new_session(project_id)
+        embedded += result.get('embedded', 0)
+    return {'projects': len(projects), 'embedded': embedded}

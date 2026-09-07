@@ -85,3 +85,21 @@ def test_browser_errors_release_and_close_is_idempotent(tmp_path, failure):
     adapter.close()
     with budget.wait('ui', 'next', timeout=0):
         pass
+
+
+def test_api_role_never_loads_embedding_model_or_runs_local_binaries():
+    from app.core.config import settings
+    from app.services import playwright_executor
+    from app.services.dsh import dsh_runner
+
+    service = embedding.EmbeddingService()
+    with patch.object(settings, 'worker_execution_enabled', False), \
+            patch.object(settings, 'runner_http_url', 'http://runner:8000'), \
+            patch.object(service, '_ensure_model') as load, \
+            patch.object(playwright_executor, '_resolve_cmd') as lookup:
+        assert service.available() is False
+        assert service.embed(['text']) is None
+        assert playwright_executor._check_playwright_installed()[0] is True
+        assert dsh_runner.run_dsh_task('task').exit_code == 75
+    load.assert_not_called()
+    lookup.assert_not_called()

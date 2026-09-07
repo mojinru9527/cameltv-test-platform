@@ -26,7 +26,9 @@ from app.schemas.ui_test import (
 from app.services import ui_test_service
 from app.services.audit_service import write_audit
 
-router = APIRouter(prefix="/ui-tests", tags=["UI 自动化"])
+from app.core.execution_dispatch import ExecutionRoute
+
+router = APIRouter(prefix="/ui-tests", tags=["UI 自动化"], route_class=ExecutionRoute)
 
 
 def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str, detail: str = ""):

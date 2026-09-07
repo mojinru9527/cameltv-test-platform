@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 import os
+import logging
 import signal
 import subprocess
+
+logger = logging.getLogger(__name__)
 
 
 def process_group_options() -> dict:
@@ -15,7 +18,7 @@ def terminate_process_tree(proc: subprocess.Popen) -> None:
         try:
             os.killpg(proc.pid, signal.SIGKILL)
         except ProcessLookupError:
-            pass
+            logger.debug('Owned process group already exited: %s', proc.pid)
     else:
         # Windows development fallback; Linux production has group ownership.
         if proc.poll() is None:

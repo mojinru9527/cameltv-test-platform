@@ -62,6 +62,8 @@ def runtime_available() -> tuple[bool, str]:
     reason = settings.dsh_unavailable_reason()
     if reason:
         return False, reason
+    if not settings.worker_execution_enabled:
+        return (True, '') if settings.runner_http_url else (False, 'Execution service is not configured')
     if settings.dsh_runtime == "node":
         entry = _node_entry()
         if not entry.exists():
@@ -133,6 +135,8 @@ def run_dsh_task(
     - mode=team 时 node 走 --profile agent-team、python-sdk 走 team.cordis.yml，
       超时用 dsh_team_timeout_seconds（1800s）；沙箱语义（隔离工作区/闸门/配额）完全复用。
     """
+    if not settings.worker_execution_enabled:
+        return DshRunResult(exit_code=75, error='DSH must execute in the runner service')
     if not task or not task.strip():
         return DshRunResult(final_response="", exit_code=2, error="任务文本为空")
     if len(task) > settings.dsh_max_task_chars:

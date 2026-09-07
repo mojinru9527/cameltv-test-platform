@@ -135,6 +135,32 @@ Remote required checks and PR audit have not run because push is not yet authori
 - This is durable queue isolation, not full API/runtime isolation. Synchronous
   heavy endpoints, image builds, final full regression and production remain pending.
 
+## Synchronous ownership incremental evidence
+
+- `python -m pytest tests/resource_budget -q`: 54 passed, 2 Linux-only skips,
+  20.89s, exit 0. Includes fresh worker-process lifecycle tests.
+- Direct browser admission + existing playground/plan/auth regression: 38 passed,
+  6 existing collection warnings, 3.43s, exit 0. Expanded admission-only follow-up:
+  7 passed, 0.47s, exit 0 (adds blocked plan persistence and missing npx cleanup).
+- Catch-up, HTTP dispatch and RAG regression: 27 passed, 4.61s, exit 0.
+- F821: passed, exit 0.
+- Real API Docker target built successfully. Container smoke passed app import,
+  effective UID 10001, worker execution disabled, no system Node and no installed
+  browser directory. Python Playwright/model packages remain for import stability.
+- Runner image/build, cross-container workflow, final full regression and
+  production limits/rollout remain outstanding. No production savings claimed.
+
+Image follow-up: runner target built successfully and a real Chromium launched,
+rendered a local HTML page and closed as UID 10001. Docker system df reports API
+980 MB, runner 5.35 GB, shared 972.9 MB, API unique 6.963 MB. Inspect Size reports
+compressed content (228936319 / 1397292433 bytes), which must not be confused with
+the unpacked figures. The complete runtime is not materially smaller yet; the
+split isolates execution and shares layers. Both builds precede the latest direct
+browser admission edits, so final image builds still need refresh. The Linux
+process cleanup tests ran against mounted current source: 2 passed, exit 0.
+Scan follow-up eliminated the ProcessLookupError silent-pass HARD finding;
+remaining warning count is 332, matching the initial main snapshot.
+
 ## Initial slice retro card
 
 Planned: 2 hours implementation/QA, excluding gated rollout.

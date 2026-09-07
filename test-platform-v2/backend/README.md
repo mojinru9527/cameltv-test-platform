@@ -48,10 +48,26 @@ volume as the API, with `WORKER_EXECUTION_ENABLED=true`. An API process using
 these consumers. Manual schedule dispatches survive this handoff; cron changes
 are reconciled within 5 seconds and integration intervals within 15 seconds.
 
-This setting isolates background consumers only. Synchronous browser/model/media
-entry points still require the execution-isolation migration before using an
-API image without their runtimes. The combined deployment remains the default;
-see `work-logs/production-execution-isolation-design.md` at the repository root.
+For the API image (`--target api`), configure `RUNNER_HTTP_URL` with the internal
+HTTP runner origin. Registered synchronous execution routes forward their
+original authentication, body and query to that runner. The runner uses
+`WORKER_EXECUTION_ENABLED=true` and owns the consumers in its HTTP lifespan;
+do not start another standalone consumer process in that container. Missing or
+unreachable runners return retryable HTTP 503 without local execution or retry.
+The route inventory lives in `app/core/execution_dispatch.py`.
+
+`--target runner` includes browser, Node and DSH runtimes. The default Docker
+target remains the combined image for existing deployment and rollback callers.
+The shared database, volumes and complete release flow still need validation
+before production cutover; see `work-logs/production-execution-isolation-design.md`
+at the repository root. Python model dependencies remain in the API image for
+import compatibility, but its role guard prevents loading a local model.
+
+`KNOWLEDGE_EMBEDDING_SCHEDULE_ENABLED=true` on the runner enables a daily
+03:31 Asia/Shanghai catch-up of active, unembedded chunks. Writes accepted by
+the API remain pending until on-demand reembedding or this sweep. Processing
+uses the existing embedding batch size, preserves pending data when capacity
+is busy, and skips completed chunks on subsequent runs.
 
 Worker health uses `/tmp/platform-worker.heartbeat`; check that its modification
 time is less than 30 seconds old. The heartbeat is renewed only while the

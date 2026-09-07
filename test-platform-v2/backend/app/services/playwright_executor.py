@@ -118,6 +118,10 @@ def _resolve_cmd(name: str) -> str | None:
 
 def _check_playwright_installed() -> tuple[bool, str]:
     """检查 Playwright 是否可用。"""
+    from app.core.config import settings
+
+    if not settings.worker_execution_enabled:
+        return (True, 'Execution delegated to runner') if settings.runner_http_url else (False, 'Execution service is not configured')
     npx = _resolve_cmd("npx")
     if not npx:
         return False, "npx 命令不可用，请安装 Node.js"
@@ -222,6 +226,10 @@ def _resolve_environment_variables(db: Session, environment_id: int | None) -> d
 
 def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) -> dict:
     """Acquire a bounded slot and atomically claim a pending run before execution."""
+    from app.core.config import settings
+
+    if not settings.worker_execution_enabled:
+        return {"status": _current_run_status(db, run_id), "run_id": run_id}
     if not _semaphore.acquire(blocking=False):
         return {"status": _current_run_status(db, run_id), "run_id": run_id}
 

@@ -44,6 +44,8 @@ class EmbeddingService:
         return self._dim
 
     def _ensure_model(self) -> None:
+        if not settings.worker_execution_enabled:
+            return
         if self._model is not None or self._unavailable:
             return
         with self._lock:
@@ -64,6 +66,8 @@ class EmbeddingService:
 
     def available(self) -> bool:
         """模型是否就绪（会触发首次加载/下载）。"""
+        if not settings.worker_execution_enabled:
+            return False
         if self._model is not None:
             return True
         budget = configured_budget()
@@ -76,7 +80,7 @@ class EmbeddingService:
 
     def embed(self, texts: list[str]):
         """批量嵌入，返回 np.ndarray[float32, (n, dim)]（已 L2 归一化）；不可用/异常返回 None。"""
-        if not texts:
+        if not texts or not settings.worker_execution_enabled:
             return None
         budget = configured_budget()
         admission = budget.try_acquire('embedding', 'embedding:batch') if budget else nullcontext()

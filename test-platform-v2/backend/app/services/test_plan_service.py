@@ -17,6 +17,8 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.base_service import batch_user_names
 from app.core.config import settings
 from app.core.execution_status import canonical_exec_status
+from app.core.process_tree import run_supervised
+from app.core.resource_budget import configured_budget
 
 logger = logging.getLogger(__name__)
 from app.models.test_case import TestCase
@@ -700,6 +702,20 @@ def _write_plan_ui_job(db: Session, case, spec_code: str, creator_id: int, proje
 
 
 def _execute_ui_case_sync(db, case, project_id: int, *, base_url: str = "", storage_state: dict | None = None) -> dict:
+    if not settings.worker_execution_enabled:
+        return {'ok': False, 'blocked': True, 'error': 'Execution service required'}
+    budget = configured_budget()
+    lease = budget.try_acquire('plan-ui', uuid.uuid4().hex) if budget else None
+    if budget and lease is None:
+        return {'ok': False, 'blocked': True, 'error': 'Execution capacity busy; retry later'}
+    try:
+        return _execute_ui_case_owned(db, case, project_id, base_url=base_url, storage_state=storage_state)
+    finally:
+        if lease is not None:
+            lease.release()
+
+
+def _execute_ui_case_owned(db, case, project_id: int, *, base_url: str = "", storage_state: dict | None = None) -> dict:
     """同步编译并执行一条 UI 用例（batch-167: LLM 优先 + 规则兜底 + 真实 Playwright 链路）。
 
     返回 pass/fail、产物与执行摘要；编译含 TODO 占位或执行失败都如实返回。
@@ -730,11 +746,11 @@ def _execute_ui_case_sync(db, case, project_id: int, *, base_url: str = "", stor
     except OSError:
         logger.warning("默认截图清理失败")
 
+    storage_state_path = None
     try:
         npx = shutil.which("npx") or shutil.which("npx.cmd")
         if not npx:
             return {"ok": False, "error": "npx/playwright 不可用", "spec_code": spec_code, "compiler": compiler}
-        storage_state_path = None
         run_env = None
         if storage_state:
             import tempfile as _tempfile
@@ -742,7 +758,8 @@ def _execute_ui_case_sync(db, case, project_id: int, *, base_url: str = "", stor
             with open(_fd, "w", encoding="utf-8") as _fh:
                 json.dump(storage_state, _fh, ensure_ascii=False)
             run_env = {**os.environ, "PLAYWRIGHT_STORAGE_STATE": storage_state_path}
-        result = subprocess.run(
+        run_process = run_supervised if settings.heavy_task_budget_enabled else subprocess.run
+        result = run_process(
             [
                 npx, "playwright", "test", rel_spec,
                 "--project", "chromium", "--reporter", "json",
@@ -921,7 +938,7 @@ def execute_all_cases(
             # UI 用例：真实编译 + headless Chromium 执行（batch-74 统一编排）
             try:
                 ui_result = _execute_ui_case_sync(db, tc, project_id, base_url=base_url, storage_state=ui_storage_state)
-                status = "passed" if ui_result.get("ok") else "failed"
+                status = "blocked" if ui_result.get("blocked") else ("passed" if ui_result.get("ok") else "failed")
                 actual_result = json.dumps(ui_result, ensure_ascii=False, default=str)
                 if ui_result.get("ok"):
                     notes = (
@@ -929,7 +946,7 @@ def execute_all_cases(
                         f"截图 {len(ui_result.get('screenshots', []))} 张"
                     )
                 else:
-                    notes = f"UI 执行失败: {_ui_error_summary(ui_result)}"
+                    notes = f"UI {'执行阻塞' if ui_result.get('blocked') else '执行失败'}: {_ui_error_summary(ui_result)}"
             except Exception as e:
                 status = "failed"
                 actual_result = json.dumps({"error": str(e)}, ensure_ascii=False)
@@ -943,11 +960,11 @@ def execute_all_cases(
             ):
                 try:
                     ui_result = _execute_ui_case_sync(db, tc, project_id, base_url=base_url, storage_state=ui_storage_state)
-                    status = "passed" if ui_result.get("ok") else "failed"
+                    status = "blocked" if ui_result.get("blocked") else ("passed" if ui_result.get("ok") else "failed")
                     actual_result = json.dumps(ui_result, ensure_ascii=False, default=str)
                     notes = (
                         f"手动用例自动转 UI 执行: {ui_result.get('total', 0)} 条断言"
-                        if ui_result.get("ok") else f"手动用例转 UI 执行失败: {_ui_error_summary(ui_result)}"
+                        if ui_result.get("ok") else f"手动用例转 UI {'执行阻塞' if ui_result.get('blocked') else '执行失败'}: {_ui_error_summary(ui_result)}"
                     )
                     if ui_result.get("ok") or ui_result.get("spec_code"):
                         _write_plan_ui_job(db, tc, ui_result.get("spec_code", ""), executor_id, project_id)
@@ -1367,4 +1384,3 @@ def trigger_plan_from_ci(
         executed += 1
     db.flush()
     return plan, executed
-

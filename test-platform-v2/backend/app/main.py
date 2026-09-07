@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from contextlib import asynccontextmanager
+from contextlib import ExitStack, asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -59,7 +59,7 @@ class RequestSizeLimitMiddleware:
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(application: FastAPI):
     import app.models  # noqa: F401
 
     # ── security validation (fail early in production) ──
@@ -110,31 +110,13 @@ async def lifespan(_: FastAPI):
 
     run_seed()
 
-    from app.core.scheduler import init_scheduler, shutdown_scheduler
-
-    if settings.worker_execution_enabled:
-        init_scheduler()
-
-    from app.services.ai_tasks import ensure_worker_running as ensure_ai_worker
-
-    ensure_ai_worker()
-
-    try:
-        yield
-    finally:
-        from app.services.ai_tasks import shutdown_worker as shutdown_ai_worker
-        from app.services.api_task_worker import (
-            shutdown_processor as shutdown_api_task_worker,
-        )
-        from app.services.knowledge.agent_queue import (
-            shutdown_processor as shutdown_agent_queue,
-        )
-
-        shutdown_api_task_worker()
-        shutdown_ai_worker()
-        shutdown_agent_queue()
+    with ExitStack() as runtime:
+        application.state.consumers_healthy = lambda: True
         if settings.worker_execution_enabled:
-            shutdown_scheduler()
+            from app.worker import task_consumers
+
+            application.state.consumers_healthy = runtime.enter_context(task_consumers())
+        yield
 
 
 app = FastAPI(
@@ -183,4 +165,8 @@ app.include_router(v2_router)
 
 @app.get("/health", tags=["system"], summary="Health check")
 def health():
+    if not getattr(app.state, 'consumers_healthy', lambda: True)():
+        from starlette.responses import JSONResponse
+
+        return JSONResponse({'status': 'unhealthy', 'reason': 'task consumer stopped'}, status_code=503)
     return {"status": "ok", "version": settings.app_version}
