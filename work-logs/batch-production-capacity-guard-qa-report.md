@@ -302,3 +302,18 @@ modified. Fresh API and runner builds completed with baked source, no app mount.
   rehearsal remain open. Do not treat these provisional limits as production sizing.
 - Logs: backend/regression-production-capacity-final.log, root/execution-peak-final.log,
   root/dev-gate-backend-final.log (local, not committed). No production mutation.
+
+### Persistent HTTP model follow-up
+
+Extended baked-image smoke passed with RAG enabled and the cache shared by the
+batch process and real HTTP runner. Three authenticated search-health + hybrid
+search cycles loaded/inferred using the model in the same Uvicorn PID 7. Its RSS
+after each cycle was 345084, 345124, 345144 KiB: only 60 KiB drift over these three
+cycles. Chromium execution afterwards, outage behavior and pending-job recovery
+also passed. This establishes a stable short smoke, not a long-duration leak test.
+Runner cgroup peak 739991552 bytes; API 219447296. The earlier cold-cache run had a
+higher peak and remains the conservative observed peak. Do not subtract these
+different runs to claim savings. Initial process scanner also matched init and
+its own probe because of substring matching; now it matches exact application
+arguments and Python executable. Only Uvicorn PID 7 values above were used.
+Log: execution-http-model-final.log. DSH/Temporal mixed sizing remains pending.

@@ -47,7 +47,9 @@ def main():
         'ADMIN_USERNAME': 'capacity-admin', 'ADMIN_PASSWORD': password,
         'TESTER_PASSWORD': secrets.token_urlsafe(24), 'COOKIE_SECURE': 'false',
         'DATABASE_URL': 'sqlite:////app/storage/smoke.db',
-        'AI_ENABLED': 'false', 'DSH_ENABLED': 'false', 'RAG_ENABLED': 'false',
+        'AI_ENABLED': 'false', 'DSH_ENABLED': 'false',
+        'RAG_ENABLED': str(args.include_embedding).lower(),
+        'EMBEDDING_CACHE_DIR': '/app/storage/model-cache',
         'KNOWLEDGE_INGEST_ENABLED': 'false', 'LANHU_MCP_ENABLED': 'false',
         'HEAVY_TASK_BUDGET_ENABLED': 'true', 'HEAVY_TASK_BUDGET_CAPACITY': '1',
         'HEAVY_TASK_BUDGET_DIR': '/app/storage/resource-budget',
@@ -103,6 +105,7 @@ def main():
             assert created.status_code == 200 and created.json().get('code') == 0, 'Plan creation failed'
             plan_id = created.json()['data']['id']
             embedding_result = None
+            http_model_cycles = []
             if args.include_embedding:
                 embedding_code = (
                     'import json; from app.services.knowledge.embedding_service import EmbeddingService; '
@@ -112,6 +115,26 @@ def main():
                     'print(json.dumps({"rows":len(v),"dimensions":s.dim,"model_released":True}))'
                 )
                 embedding_result = json.loads(docker('exec', containers[0], 'python', '-c', embedding_code, timeout=300).splitlines()[-1])
+                # Exercise model loading in the actual persistent HTTP worker as
+                # well as the standalone batch process. Observe RSS across repeat
+                # loads without inventing a memory-release threshold.
+                rss_code = (
+                    'import json; from pathlib import Path; rows=[]; '
+                    '\nfor p in Path("/proc").glob("[0-9]*/status"):'
+                    '\n try:'
+                    '\n  cmd=(p.parent/"cmdline").read_bytes().split(b"\\0")'
+                    '\n  if b"python" in cmd[0] and b"app.main:app" in cmd:'
+                    '\n   rows.append({"pid":int(p.parent.name),"rss_kib":int(next(l for l in p.read_text().splitlines() if l.startswith("VmRSS:")).split()[1])})'
+                    '\n except (OSError,StopIteration): pass'
+                    '\nprint(json.dumps(rows))'
+                )
+                for cycle in range(3):
+                    healthy_model = client.get('/api/v1/knowledge/search/health', headers=headers)
+                    assert healthy_model.status_code == 200 and healthy_model.json()['data']['embedding_available'], 'HTTP worker must load the real model'
+                    searched = client.post('/api/v1/knowledge/search', headers=headers,
+                                           json={'query': 'isolated capacity verification', 'mode': 'hybrid'})
+                    assert searched.status_code == 200 and searched.json()['code'] == 0, 'HTTP model search failed'
+                    http_model_cycles.append({'cycle': cycle + 1, 'processes': json.loads(docker('exec', containers[0], 'python', '-c', rss_code))})
                 assert client.get('/health').status_code == 200
                 repeated = client.post('/api/v1/playground/execute', headers=headers,
                                        json={'spec_code': code, 'timeout_ms': 15000})
@@ -149,6 +172,7 @@ def main():
                          'runner-outage-503', 'api-stays-responsive', 'async-accepted-during-outage',
                          'async-completed-after-restart'], 'post_run_memory': stats,
                          'source_mounted': args.source_mount, 'embedding': embedding_result,
+                         'http_model_cycles': http_model_cycles,
                          'cgroup_memory_bytes': peaks}))
     finally:
         # Only the fresh resources named by this invocation are removed.
