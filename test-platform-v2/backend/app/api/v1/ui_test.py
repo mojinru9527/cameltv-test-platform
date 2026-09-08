@@ -26,7 +26,9 @@ from app.schemas.ui_test import (
 from app.services import ui_test_service
 from app.services.audit_service import write_audit
 
-router = APIRouter(prefix="/ui-tests", tags=["UI 自动化"])
+from app.core.execution_dispatch import ExecutionRoute
+
+router = APIRouter(prefix="/ui-tests", tags=["UI 自动化"], route_class=ExecutionRoute)
 
 
 def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str, detail: str = ""):
@@ -269,17 +271,24 @@ def download_artifact(
     return FileResponse(file_path, filename=file_path.name)
 
 
-@router.post("/capture", response_model=R[dict], summary="创建页面 XHR 采集任务（C115-3）")
+@router.post(
+    "/capture", response_model=R[dict], summary="创建页面 XHR 采集任务（C115-3）",
+    responses={429: {"description": "Browser capacity busy; retry after Retry-After seconds",
+                     "headers": {"Retry-After": {"schema": {"type": "string"}}}}},
+)
 def create_capture(
     body: dict,
     current: CurrentUser = Depends(require_permission("uitest:trigger")),
 ):
     """B10/C103-5 平台采集：pages 列表（绝对 URL 或站点相对路径）→ 后台只读采集 → 样本 JSON。"""
-    from app.services.xhr_capture_service import create_capture_task
+    from app.services.xhr_capture_service import CaptureCapacityUnavailable, create_capture_task
     pages = [str(x) for x in (body.get("pages") or []) if str(x).strip()]
     if not pages:
         raise HTTPException(422, "pages 不能为空")
-    task = create_capture_task(pages=pages, project_id=current.project_id or 0)
+    try:
+        task = create_capture_task(pages=pages, project_id=current.project_id or 0)
+    except CaptureCapacityUnavailable as exc:
+        raise HTTPException(429, '执行器繁忙，请稍后重试', headers={'Retry-After': '5'}) from exc
     return R.ok(task)
 
 

@@ -342,7 +342,7 @@ def test_schedule_run_executes_plan_and_records_non_pending_result(
             "name": "C55-4 真实执行调度",
             "plan_id": plan.id,
             "cron_expression": "0 9 * * 1-5",
-            "enabled": False,
+            "enabled": True,
         },
         headers=auth_headers,
     )
@@ -385,7 +385,7 @@ def test_schedule_run_rejects_duplicate_while_running(
             "name": "C55-4 幂等调度",
             "plan_id": plan.id,
             "cron_expression": "0 9 * * 1-5",
-            "enabled": False,
+            "enabled": True,
         },
         headers=auth_headers,
     )
@@ -425,7 +425,7 @@ def test_schedule_run_persists_failed_terminal_state(
             "name": "C55-4 失败调度",
             "plan_id": plan.id,
             "cron_expression": "0 9 * * 1-5",
-            "enabled": False,
+            "enabled": True,
         },
         headers=auth_headers,
     )

@@ -1,0 +1,77 @@
+# Opt-in only after the complete image set and rollback have been validated.
+# docker compose -f docker-compose.yml -f docker-compose.execution.yml ...
+# Required memory values must be established from measured workloads.
+services:
+  backend:
+    image: ${API_IMAGE:?API_IMAGE is required}
+    build:
+      target: api
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      WORKER_EXECUTION_ENABLED: "false"
+      RUNNER_HTTP_URL: http://runner:8000
+    depends_on:
+      runner:
+        condition: service_healthy
+    volumes:
+      - tp-generated-specs:/app/tests/playwright/specs/generated
+      - tp-generated-jobs:/app/tests/playwright/generated
+    init: true
+    mem_limit: ${API_MEMORY_LIMIT:?API_MEMORY_LIMIT is required}
+    pids_limit: 128
+
+  runner:
+    extends:
+      file: docker-compose.yml
+      service: backend
+    image: ${RUNNER_IMAGE:?RUNNER_IMAGE is required}
+    build:
+      target: runner
+    environment:
+      WORKER_EXECUTION_ENABLED: "true"
+      DSH_RUNTIME: ${DSH_RUNTIME:-node}
+      HEAVY_TASK_BUDGET_ENABLED: "true"
+      HEAVY_TASK_BUDGET_CAPACITY: "1"
+      ORCHESTRATION_BUDGET_CAPACITY: "1"
+      HEAVY_TASK_BUDGET_DIR: /app/storage/resource-budget
+      KNOWLEDGE_EMBEDDING_SCHEDULE_ENABLED: ${KNOWLEDGE_EMBEDDING_SCHEDULE_ENABLED:-false}
+    volumes:
+      - tp-generated-specs:/app/tests/playwright/specs/generated
+      - tp-generated-jobs:/app/tests/playwright/generated
+    init: true
+    mem_limit: ${RUNNER_MEMORY_LIMIT:?RUNNER_MEMORY_LIMIT is required}
+    pids_limit: 256
+    stop_grace_period: 60s
+
+  # Temporal retains its own gateway process, sharing browser admission with
+  # runner. It must never inherit the lightweight API build target.
+  aitde-worker:
+    image: ${RUNNER_IMAGE:?RUNNER_IMAGE is required}
+    build:
+      target: runner
+    environment:
+      WORKER_EXECUTION_ENABLED: "true"
+      HEAVY_TASK_BUDGET_ENABLED: "true"
+      HEAVY_TASK_BUDGET_CAPACITY: "1"
+      ORCHESTRATION_BUDGET_CAPACITY: "1"
+      HEAVY_TASK_BUDGET_DIR: /app/storage/resource-budget
+    volumes:
+      - tp-generated-specs:/app/tests/playwright/specs/generated
+      - tp-generated-jobs:/app/tests/playwright/generated
+    mem_limit: ${TEMPORAL_WORKER_MEMORY_LIMIT:?TEMPORAL_WORKER_MEMORY_LIMIT is required}
+    pids_limit: 256
+
+  volume-permissions:
+    image: ${API_IMAGE:?API_IMAGE is required}
+    build:
+      target: api
+    command: ["sh", "-c", "chown -R 10001:10001 /data /app/storage /app/tests/playwright/specs/generated /app/tests/playwright/generated"]
+    volumes:
+      - tp-generated-specs:/app/tests/playwright/specs/generated
+      - tp-generated-jobs:/app/tests/playwright/generated
+
+volumes:
+  tp-generated-specs:
+    driver: local
+  tp-generated-jobs:
+    driver: local

@@ -24,7 +24,9 @@ from app.services import audit_service, test_plan_service, triage_service
 
 logger = logging.getLogger("test_plan")
 
-router = APIRouter(prefix="/test-plans", tags=["测试计划-执行"])
+from app.core.execution_dispatch import ExecutionRoute
+
+router = APIRouter(prefix="/test-plans", tags=["测试计划-执行"], route_class=ExecutionRoute)
 
 
 def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
@@ -191,18 +193,22 @@ def execute_all_cases(
     batch-169：async_mode=true 时后台执行并立即返回，避免多 UI 用例超过网关 300s。
     """
     if body and body.async_mode:
-        background_tasks.add_task(
-            test_plan_service.run_async_execute_all,
-            plan_id=plan_id,
-            executor_id=current.user.id,
-            environment_id=body.environment_id,
-            ui_environment_id=body.ui_environment_id,
-            auto_ui=body.auto_ui,
-            project_id=current.project_id or 0,
-        )
+        from app.services.plan_execution_queue import enqueue
+        try:
+            job_id = enqueue(
+                db,
+                plan_id=plan_id,
+                executor_id=current.user.id,
+                environment_id=body.environment_id,
+                ui_environment_id=body.ui_environment_id,
+                auto_ui=body.auto_ui,
+                project_id=current.project_id or 0,
+            )
+        except ValueError as exc:
+            return R(code=404, msg=str(exc))
         _audit(req, current, db, "plan:execute_all:async", f"plan #{plan_id}",
                f"environment={body.environment_id}, ui_environment={body.ui_environment_id}, auto_ui={body.auto_ui}")
-        return R.ok({"async": True, "message": "计划已在后台执行，请稍后刷新执行记录"})
+        return R.ok({"async": True, "job_id": job_id, "message": "计划已加入执行队列，请稍后刷新执行记录"})
 
     try:
         result = test_plan_service.execute_all_cases(
@@ -296,6 +302,16 @@ def list_executions(
         project_id=current.project_id or 0,
     )
     return R.ok(Page(total=total, page=page, page_size=page_size, items=[ExecutionOut(**it) for it in items]))
+
+
+@router.get("/{plan_id}/execution-jobs", response_model=R[list[dict]])
+def list_execution_jobs(
+    plan_id: int,
+    current: CurrentUser = Depends(require_permission("testplan:detail")),
+    db: Session = Depends(get_db),
+):
+    from app.services.plan_execution_queue import list_jobs
+    return R.ok(list_jobs(db, plan_id, current.project_id or 0))
 
 
 @router.post("/{plan_id}/triage", response_model=R[dict], summary="分析计划中的失败执行")

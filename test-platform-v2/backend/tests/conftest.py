@@ -27,6 +27,17 @@ _sched_patch.start()
 _shutdown_patch = _patch("app.core.scheduler.shutdown_scheduler", lambda: None)
 _shutdown_patch.start()
 
+# Route tests use their own SQLite session. Real consumer startup/restart is
+# exercised in isolated subprocess tests, not against the worktree database.
+from contextlib import contextmanager as _contextmanager
+
+@_contextmanager
+def _isolated_consumers():
+    yield lambda: True
+
+_consumers_patch = _patch('app.worker.task_consumers', _isolated_consumers)
+_consumers_patch.start()
+
 # Disable login rate limiter for tests — all test clients share localhost IP
 _rate_limit_patch = _patch("app.core.rate_limit.login_limiter.is_allowed", return_value=(True, 0))
 _rate_limit_patch.start()

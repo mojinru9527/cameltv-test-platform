@@ -7,8 +7,8 @@ import type { MenuItem } from '@/types'
  *
  * 侧边栏顶层固定 5 行（菜单数据仍由后端按角色权限过滤，前端只负责「按 code 组装展示」）：
  *   1 工作台      menu:workbench
- *   2 版本验收    版本验收任务 menu:versiontask + 智能测试任务 menu:missions + 版本发布包 menu:versionmission
- *   3 结果与缺陷  报告中心 menu:report + 缺陷管理 menu:defect
+ *   2 任务与报告  版本任务 / 智能测试 / 报告 / 发布包，保留各自历史路径与权限
+ *   3 缺陷管理    menu:defect
  *   4 知识中心    menu:knowledge
  *   5 资产与更多  其余全部模块，按 资产/更多/专家/系统 分桶（空桶/空容器不渲染）
  * 未命中任何分桶的 code（含未来新增菜单）一律落入「更多」桶（fail-safe）。
@@ -24,8 +24,8 @@ export type MainRowDef = MainRowLinkDef | MainRowGroupDef
 /** 顶层 5 行蓝图（顺序即展示顺序）。 */
 export const MAIN_ROW_DEFS: readonly MainRowDef[] = [
   { kind: 'link', code: 'menu:workbench' },
-  { kind: 'group', label: '版本验收', codes: ['menu:versiontask', 'menu:missions', 'menu:versionmission'] },
-  { kind: 'group', label: '结果与缺陷', codes: ['menu:report', 'menu:defect'] },
+  { kind: 'group', label: '任务与报告', codes: ['menu:versiontask', 'menu:missions', 'menu:report', 'menu:versionmission'] },
+  { kind: 'link', code: 'menu:defect' },
   { kind: 'link', code: 'menu:knowledge' },
 ]
 
@@ -102,7 +102,6 @@ export function buildNavigation(menus: MenuItem[]): NavigationModel {
     const items = def.codes
       .map((code) => byCode.get(code))
       .filter((item): item is MenuItem => Boolean(item))
-      .sort(bySort)
     if (items.length === 0) continue
     for (const item of items) seen.add(item.code)
     mainRows.push({ kind: 'group', label: def.label, items })

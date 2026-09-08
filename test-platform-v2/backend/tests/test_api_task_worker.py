@@ -38,19 +38,28 @@ class TestApiTaskWorkerLifecycle:
         assert not thread.is_alive()
         assert api_task_worker._loop._thread is None
 
-    def test_app_lifespan_shuts_down_api_task_worker(self):
-        """FastAPI TestClient 退出时必须关闭 API 任务处理器。"""
+    def test_app_lifespan_exits_owned_consumer_context(self):
+        """HTTP runner exits its shared consumer context; real loops have subprocess tests."""
+        from contextlib import contextmanager
         from fastapi.testclient import TestClient
-
+        from app.core.config import settings
         from app.main import app
 
-        with patch(
-            "app.services.api_task_worker.shutdown_processor",
-        ) as shutdown_api_task_worker:
-            with TestClient(app):
-                pass
+        events = []
 
-        shutdown_api_task_worker.assert_called_once_with()
+        @contextmanager
+        def consumers():
+            events.append('started')
+            try:
+                yield lambda: True
+            finally:
+                events.append('stopped')
+
+        with patch('app.worker.task_consumers', consumers), patch.object(settings, 'worker_execution_enabled', True):
+            with TestClient(app):
+                assert events == ['started']
+
+        assert events == ['started', 'stopped']
 
 
 class TestApiTaskWorkerClaim:

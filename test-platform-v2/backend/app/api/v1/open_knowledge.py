@@ -26,7 +26,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/open", tags=["开放API-Agent查询面"])
+from app.core.execution_dispatch import ExecutionRoute
+
+router = APIRouter(prefix="/open", tags=["开放API-Agent查询面"], route_class=ExecutionRoute)
 
 
 # ── 知识源列表 ──

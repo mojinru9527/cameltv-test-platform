@@ -37,6 +37,7 @@ related: ["test-platform-v2/CLAUDE.md", "docs/adr/README.md", "COMMANDS.md"]
 3. **纯 Python 单栈**：后端全栈采用 Python FastAPI，放弃 Java/PHP 多栈方案
 4. **测试金字塔**：P0（核心必测）→ P3（次要），自动化优先覆盖 P0/P1
 5. **AI 原生**：DeepSeek LLM 驱动用例生成，蓝湖 MCP 驱动需求分析
+6. **执行资源归属**：可选 API/runner 拆分由 runner 持有重任务、消费者与调度；API 先持久化异步任务，重任务共享宿主预算。生产启用前验证容量和完整回滚，见 [ADR-0026](docs/adr/0026-production-execution-resource-ownership.md)。
 
 ## 关键约定
 

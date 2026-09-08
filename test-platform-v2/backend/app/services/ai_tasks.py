@@ -224,7 +224,10 @@ def _process_claimed(task_id: str) -> None:
 
 def ensure_worker_running() -> None:
     """启动后台轮询线程（幂等）。每个进程一个 worker，均可认领 DB 中的任务。"""
-    _loop.start()
+    from app.core.config import settings
+
+    if settings.worker_execution_enabled:
+        _loop.start()
 
 
 def shutdown_worker(timeout: float = 5.0) -> None:

@@ -39,6 +39,56 @@ uvicorn app.main:app --reload --port 8000
 
 ## Database Migrations
 
+### Separate durable consumers
+
+`python -m app.worker` runs the existing durable task consumers and scheduler
+without the HTTP server. It requires the same migrated database and artifact
+volume as the API, with `WORKER_EXECUTION_ENABLED=true`. An API process using
+`WORKER_EXECUTION_ENABLED=false` still persists submissions but does not start
+these consumers. Manual schedule dispatches survive this handoff; cron changes
+are reconciled within 5 seconds and integration intervals within 15 seconds.
+
+For the API image (`--target api`), configure `RUNNER_HTTP_URL` with the internal
+HTTP runner origin. Registered synchronous execution routes forward their
+original authentication, body and query to that runner. The runner uses
+`WORKER_EXECUTION_ENABLED=true` and owns the consumers in its HTTP lifespan;
+do not start another standalone consumer process in that container. Missing or
+unreachable runners return retryable HTTP 503 without local execution or retry.
+The route inventory lives in `app/core/execution_dispatch.py`.
+
+`--target runner` includes browser, Node and DSH runtimes. The default Docker
+target remains the combined image for existing deployment and rollback callers.
+The shared database, volumes and complete release flow still need validation
+before production cutover; see `work-logs/production-execution-isolation-design.md`
+at the repository root. Python model dependencies remain in the API image for
+import compatibility, but its role guard prevents loading a local model.
+
+`KNOWLEDGE_EMBEDDING_SCHEDULE_ENABLED=true` on the runner enables a daily
+03:31 Asia/Shanghai catch-up of active, unembedded chunks. Writes accepted by
+the API remain pending until on-demand reembedding or this sweep. Processing
+uses the existing embedding batch size, preserves pending data when capacity
+is busy, and skips completed chunks on subsequent runs.
+
+Asynchronous `POST /api/v1/test-plans/{id}/execute-all` requests are committed to
+`plan_execution_job` before returning `async=true` and `job_id`. They remain local
+to the API even during runner outage; synchronous requests still require the
+runner. `GET /api/v1/test-plans/{id}/execution-jobs` exposes the latest 50 dispatch
+states within the caller's project. Pending jobs survive restart. Running jobs
+with expired heartbeats are marked failed, never automatically replayed, because
+part of a plan may already have affected external systems. Review partial case
+results before submitting another execution. `completed` describes the dispatch
+lifecycle; inspect result counts for passed/failed/blocked test outcomes.
+
+Apply migration `20260915_plan_dispatch` before starting this version's consumers.
+The table is additive; older images can ignore it during a code rollback. Do not
+downgrade/drop the table while pending/running requests or retained history exist.
+
+Worker health uses `/tmp/platform-worker.heartbeat`; check that its modification
+time is less than 30 seconds old. The heartbeat is renewed only while the
+scheduler and all required consumer loops are alive, and removed during shutdown.
+
+### Migration commands
+
 Local development keeps `AUTO_CREATE_TABLES=true` so a fresh SQLite database starts without extra steps.
 
 For production deployments:

@@ -19,9 +19,15 @@ from __future__ import annotations
 
 import base64
 import dataclasses
+import json
 import os
+import re
+import shlex
 import tempfile
 from pathlib import Path
+
+from capacity import remote_check_command
+from release_artifacts import remote_verify_command, runtime_mode
 
 
 @dataclasses.dataclass(frozen=True)
@@ -39,6 +45,7 @@ class ExecutorConfig:
     compose_project: str
     command_timeout_seconds: int = 600
     keep_backups: int = 7
+    image_runner: str = 'cameltv-tp-runner:main'
 
 
 class ExecutorNotConfigured(RuntimeError):
@@ -67,6 +74,19 @@ def _require(settings_like: object, attr: str) -> str:
             f"TENCENT_EXECUTOR_{attr.upper()} is not configured"
         )
     return value
+
+
+def rollback_runtime_override(mode: str) -> dict:
+    """Retain the current additive schema when starting a previous image.
+
+    Old Alembic trees cannot resolve a newer revision. Operational rollback must
+    start the compatible application directly, never migrate the database down.
+    """
+    if mode not in ('combined', 'split'):
+        raise ValueError('invalid rollback runtime mode')
+    command = ['uvicorn', 'app.main:app', '--host', '0.0.0.0', '--port', '8000']
+    owners = ('backend', 'runner') if mode == 'split' else ('backend',)
+    return {'services': {owner: {'command': command} for owner in owners}}
 
 
 class TencentSshExecutor:
@@ -107,7 +127,7 @@ class TencentSshExecutor:
         try:
             if key_path is None:
                 raise ExecutorNotConfigured("TENCENT_SSH_KEY is not configured")
-            remote = " && ".join(commands)
+            remote = "bash -c " + shlex.quote("set -o pipefail; " + " && ".join(commands))
             ssh_args = [
                 "ssh",
                 "-i",
@@ -147,34 +167,83 @@ class TencentSshExecutor:
                 except OSError:
                     pass
 
-    def _compose(self, *args: str) -> str:
+    def _compose(self, *args: str, mode: str = 'combined', tag: str = '', rollback: bool = False) -> str:
+        extra, environment = '', ''
+        if mode == 'split':
+            if not re.fullmatch(r'release-\d{8}-\d{4}', tag):
+                raise ExecutorCommandFailed('invalid split release tag')
+            extra = ('-f docker-compose.yml -f docker-compose.override.yml '
+                     f'-f docker-compose.execution.{tag}.yml ')
+            environment = (f'API_IMAGE={shlex.quote(self.config.image_backend)} '
+                           f'RUNNER_IMAGE={shlex.quote(self.config.image_runner)} ')
+        if rollback:
+            if not extra:
+                extra = '-f docker-compose.yml -f docker-compose.override.yml '
+            extra += '-f docker-compose.rollback-runtime.yml '
         return (
-            f"cd {self.config.compose_dir} && "
-            f"docker compose --project-name {self.config.compose_project} "
-            f"--env-file ../config/runtime/production.env {' '.join(args)}"
+            f"cd {shlex.quote(self.config.compose_dir)} && {environment}"
+            f"docker compose --project-name {shlex.quote(self.config.compose_project)} "
+            f"--env-file ../config/runtime/production.env {extra}{' '.join(shlex.quote(arg) for arg in args)}"
         )
+
+    def _activate(self, tag: str, mode: str, *, rollback: bool = False) -> list[str]:
+        # Stop old consumers before introducing the new owner topology. Docker
+        # preserves the durable queues and artifacts; no database is recreated.
+        commands = []
+        if rollback:
+            path = shlex.quote(f'{self.config.compose_dir}/docker-compose.rollback-runtime.yml')
+            payload = shlex.quote(json.dumps(rollback_runtime_override(mode)))
+            commands.extend([f'test ! -L {path}', f"printf '%s' {payload} > {path}",
+                             self._compose('config', '--quiet', mode=mode, tag=tag, rollback=True)])
+        commands.append(self._compose('stop', '--timeout', '60', 'backend', 'aitde-worker'))
+        project = shlex.quote(f'label=com.docker.compose.project={self.config.compose_project}')
+        commands.append(f'docker ps -q --filter {project} --filter label=com.docker.compose.service=runner | xargs -r docker stop --time 60')
+        services = ('runner', 'backend', 'frontend', 'aitde-worker') if mode == 'split' else ('backend', 'frontend', 'aitde-worker')
+        commands.append(self._compose('up', '-d', '--no-build', '--force-recreate', '--wait',
+                                      '--wait-timeout', '180', *services, mode=mode, tag=tag,
+                                      rollback=rollback))
+        commands.append("curl -fsS -o /dev/null http://127.0.0.1:8080/api/v1/open/health")
+        return commands
+
+    def _split_config(self, tag: str, checksum: str, *, install: bool) -> list[str]:
+        if not re.fullmatch(r'[0-9a-f]{64}', checksum):
+            raise ExecutorCommandFailed('invalid execution config checksum')
+        source = shlex.quote(f'{self.config.release_dir}/{tag}-execution.yml')
+        target = shlex.quote(f'{self.config.compose_dir}/docker-compose.execution.{tag}.yml')
+        commands = []
+        if install:
+            commands.extend([f'test ! -L {target}', f'( test ! -e {target} || cmp -s -- {source} {target} )',
+                             f'cp -- {source} {target}'])
+        commands.append(f'test -f {target} && test ! -L {target}')
+        commands.append(f'test "$(sha256sum -- {target} | cut -d " " -f 1)" = {checksum}')
+        commands.append(self._compose('config', '--quiet', mode='split', tag=tag))
+        return commands
 
     # ── public actions ───────────────────────────────────────────────────
 
-    def deploy(self, image_tag: str) -> ExecutorResult:
+    def deploy(self, image_tag: str, *, manifest: dict | None = None) -> ExecutorResult:
         """Load uploaded images then compose up; waits for backend health."""
         # image_tag is an internally generated tag like "release-<ts>" — it is
         # still validated to contain only safe characters.
         if not image_tag.replace("-", "").isalnum():
             raise ExecutorCommandFailed("invalid image tag")
+        mode = runtime_mode(manifest) if manifest is not None else 'combined'
+        if manifest is not None and manifest.get('release_id') != image_tag:
+            raise ExecutorCommandFailed('release tag differs from registered manifest')
         commands = [
-            f"docker load -i {self.config.release_dir}/{image_tag}-backend.tar",
-            f"docker load -i {self.config.release_dir}/{image_tag}-frontend.tar",
-            f"docker tag cameltv-tp-backend:{image_tag} {self.config.image_backend}",
-            f"docker tag cameltv-tp-frontend:{image_tag} {self.config.image_frontend}",
-            # 生产演练实测：服务器 docker（containerd snapshotter）下，
-            # compose up --no-build 不识别 docker tag 重指（镜像 ID 变更被忽略，
-            # 容器不重建 = 假成功）。必须显式 --force-recreate 且限定业务服务
-            # （不动 postgres，避免不必要的数据库重启）。
-            self._compose("up", "-d", "--no-build", "--force-recreate", "backend", "frontend"),
-            "sleep 20 && curl -sk -o /dev/null -w '%{http_code}' "
-            "http://127.0.0.1:8080/api/v1/open/health | grep -q 200",
+            "exec 9>/run/lock/cameltv-release-capacity.lock && flock -n 9",
+            remote_check_command(self.config.release_dir, image_tag, mode),
         ]
+        if manifest is not None:
+            commands.append(remote_verify_command(self.config.release_dir, image_tag, manifest))
+        if mode == 'split':
+            commands.extend(self._split_config(image_tag, manifest['execution_config_sha256'], install=True))
+        parts = ('backend', 'frontend', 'runner') if mode == 'split' else ('backend', 'frontend')
+        for part in parts:
+            commands.append(f'docker load -i {shlex.quote(f"{self.config.release_dir}/{image_tag}-{part}.tar")}')
+        for part in parts:
+            commands.append(f'docker tag cameltv-tp-{part}:{image_tag} {shlex.quote(getattr(self.config, f"image_{part}"))}')
+        commands.extend(self._activate(image_tag, mode))
         output = self._run_remote(commands)
         return ExecutorResult(
             ok=True,
@@ -183,20 +252,27 @@ class TencentSshExecutor:
             logs=output[-4000:],
         )
 
-    def rollback(self, image_tag: str) -> ExecutorResult:
+    def rollback(self, image_tag: str, *, manifest: dict | None = None) -> ExecutorResult:
         """Re-tag a previously captured stable image and compose up."""
         if not image_tag.replace("-", "").isalnum():
             raise ExecutorCommandFailed("invalid image tag")
-        backend_repo = self.config.image_backend.rsplit(":", 1)[0]
-        frontend_repo = self.config.image_frontend.rsplit(":", 1)[0]
+        mode = runtime_mode(manifest) if manifest is not None else 'combined'
+        if manifest is not None and manifest.get('release_id') != image_tag:
+            raise ExecutorCommandFailed('rollback tag differs from registered manifest')
         commands = [
-            f"docker tag {backend_repo}:{image_tag} {self.config.image_backend} || true",  # noqa: E501
-            f"docker tag {frontend_repo}:{image_tag} {self.config.image_frontend} || true",  # noqa: E501
-            # 同 deploy：containerd snapshotter 下必须 --force-recreate 才会换镜像。
-            self._compose("up", "-d", "--no-build", "--force-recreate", "backend", "frontend"),
-            "sleep 20 && curl -sk -o /dev/null -w '%{http_code}' "
-            "http://127.0.0.1:8080/api/v1/open/health | grep -q 200",
+            "exec 9>/run/lock/cameltv-release-capacity.lock && flock -n 9",
         ]
+        parts = ('backend', 'frontend', 'runner') if mode == 'split' else ('backend', 'frontend')
+        for part in parts:
+            repo = getattr(self.config, f'image_{part}').rsplit(':', 1)[0]
+            commands.append(f'docker image inspect {shlex.quote(f"{repo}:{image_tag}")} >/dev/null')
+        if mode == 'split':
+            commands.extend(self._split_config(image_tag, manifest['execution_config_sha256'], install=False))
+        for part in parts:
+            target = getattr(self.config, f'image_{part}')
+            repo = target.rsplit(':', 1)[0]
+            commands.append(f'docker tag {shlex.quote(f"{repo}:{image_tag}")} {shlex.quote(target)}')
+        commands.extend(self._activate(image_tag, mode, rollback=True))
         output = self._run_remote(commands)
         return ExecutorResult(
             ok=True,
@@ -238,7 +314,7 @@ class TencentSshExecutor:
         """Return a quick production health snapshot (no state change)."""
         commands = [
             self._compose("ps", "--format", "table {{.Name}}\t{{.Status}}"),
-            "curl -sk -o /dev/null -w 'front=%{http_code}' https://swiftbugs.cn/api/v1/open/health",  # noqa: E501
+            "curl -fsS -o /dev/null -w 'front=%{http_code}' https://swiftbugs.cn/api/v1/open/health",  # noqa: E501
         ]
         output = self._run_remote(commands)
         return ExecutorResult(
@@ -270,5 +346,6 @@ def build_executor_from_settings(settings_like: object) -> TencentSshExecutor:
         ),
         command_timeout_seconds=getattr(settings_like, "tencent_executor_timeout", 600),
         keep_backups=getattr(settings_like, "tencent_executor_keep_backups", 7),
+        image_runner=getattr(settings_like, 'tencent_executor_image_runner', 'cameltv-tp-runner:main'),
     )
     return TencentSshExecutor(config)

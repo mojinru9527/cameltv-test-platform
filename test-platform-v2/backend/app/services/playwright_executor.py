@@ -18,6 +18,9 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.core.resource_budget import configured_budget
+from app.core.process_tree import process_group_options, terminate_process_tree
+
 
 logger = logging.getLogger("playwright")
 
@@ -115,6 +118,10 @@ def _resolve_cmd(name: str) -> str | None:
 
 def _check_playwright_installed() -> tuple[bool, str]:
     """检查 Playwright 是否可用。"""
+    from app.core.config import settings
+
+    if not settings.worker_execution_enabled:
+        return (True, 'Execution delegated to runner') if settings.runner_http_url else (False, 'Execution service is not configured')
     npx = _resolve_cmd("npx")
     if not npx:
         return False, "npx 命令不可用，请安装 Node.js"
@@ -219,10 +226,20 @@ def _resolve_environment_variables(db: Session, environment_id: int | None) -> d
 
 def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) -> dict:
     """Acquire a bounded slot and atomically claim a pending run before execution."""
+    from app.core.config import settings
+
+    if not settings.worker_execution_enabled:
+        return {"status": _current_run_status(db, run_id), "run_id": run_id}
     if not _semaphore.acquire(blocking=False):
         return {"status": _current_run_status(db, run_id), "run_id": run_id}
 
+    lease = None
     try:
+        budget = configured_budget()
+        if budget is not None:
+            lease = budget.try_acquire('ui', f'ui:{run_id}')
+            if lease is None:
+                return {"status": _current_run_status(db, run_id), "run_id": run_id}
         if not _claim_pending_run(db, run_id):
             return {"status": _current_run_status(db, run_id), "run_id": run_id}
         from app.models.ui_test import UiTestJob
@@ -273,7 +290,11 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
         )
         return output
     finally:
-        _semaphore.release()
+        try:
+            if lease is not None:
+                lease.release()
+        finally:
+            _semaphore.release()
 
 
 def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) -> dict:
@@ -361,6 +382,11 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
     ]
     logger.info(f"Running: {' '.join(cmd)} in {runner_dir}")
 
+    from app.core.config import settings
+
+    supervised = settings.heavy_task_budget_enabled
+    stop_process = terminate_process_tree if supervised else lambda process: process.kill()
+    proc = None
     try:
         proc = subprocess.Popen(
             cmd,
@@ -371,6 +397,7 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
             errors="replace",
             cwd=str(runner_dir),
             env=env,
+            **(process_group_options() if supervised else {}),
         )
 
         # 记录进程 PID 以便取消时 kill
@@ -402,7 +429,7 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
             # 检查取消标记
             if run.cancel_requested or run.status == "cancelled":
                 logger.info(f"Cancelling Playwright process PID={proc.pid} for run #{run_id}")
-                proc.kill()
+                stop_process(proc)
                 output_thread.join(timeout=10)
                 stdout_text = process_output["stdout"]
                 stderr_text = process_output["stderr"]
@@ -419,7 +446,7 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
             run_timeout = _runner_timeout()
             if elapsed > run_timeout:
                 logger.warning(f"Playwright timeout for run #{run_id} after {elapsed:.0f}s")
-                proc.kill()
+                stop_process(proc)
                 output_thread.join(timeout=10)
                 stdout_text = process_output["stdout"]
                 stderr_text = process_output["stderr"]
@@ -444,7 +471,7 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
         # 7. 进程正常结束，收集输出
         output_thread.join(timeout=10)
         if output_thread.is_alive():
-            proc.kill()
+            stop_process(proc)
             return _fail_run(db, run, "Playwright 输出读取线程未能结束", job)
         stdout_text = process_output["stdout"]
         stderr_text = process_output["stderr"]
@@ -536,6 +563,10 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
             db, run,
             f"执行异常: {type(e).__name__}: {e}", job,
         )
+    finally:
+        if supervised and proc is not None:
+            terminate_process_tree(proc)
+            proc.wait(timeout=10)
 
 
 # ── Helpers ──
