@@ -1,5 +1,6 @@
 """Disposable local API/runner HTTP smoke; does not deploy or read production data."""
 import json
+import argparse
 import secrets
 import subprocess
 import time
@@ -12,8 +13,8 @@ import httpx
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def docker(*args):
-    result = subprocess.run(['docker', *args], capture_output=True, text=True, timeout=60)
+def docker(*args, timeout=60):
+    result = subprocess.run(['docker', *args], capture_output=True, text=True, timeout=timeout)
     if result.returncode:
         raise RuntimeError(f'Docker {args[0]} failed (exit {result.returncode})')
     return result.stdout.strip()
@@ -33,6 +34,10 @@ def wait_healthy(name):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--source-mount', action='store_true', help='Use current source instead of validating baked image code')
+    parser.add_argument('--include-embedding', action='store_true', help='Download the public local model and measure a real embedding batch')
+    args = parser.parse_args()
     prefix = f'capacity-smoke-{uuid.uuid4().hex[:10]}'
     network, volume = prefix, f'{prefix}-data'
     containers = []
@@ -58,17 +63,18 @@ def main():
             config = {**env, 'WORKER_EXECUTION_ENABLED': str(role == 'runner').lower(),
                       'AUTO_CREATE_TABLES': str(role == 'runner').lower(),
                       'RUNNER_HTTP_URL': 'http://runner:8000' if role == 'api' else ''}
-            args = ['run', '-d', '--name', name, '--network', network, '--network-alias', role,
+            run_args = ['run', '-d', '--name', name, '--network', network, '--network-alias', role,
                     '--init', '--memory', limit, '--pids-limit', '256',
-                    '-v', f'{volume}:/app/storage',
-                    '--mount', f'type=bind,source={ROOT / "test-platform-v2/backend/app"},target=/app/app,readonly']
+                    '-v', f'{volume}:/app/storage']
+            if args.source_mount:
+                run_args.extend(['--mount', f'type=bind,source={ROOT / "test-platform-v2/backend/app"},target=/app/app,readonly'])
             if role == 'api':
-                args.extend(['-p', '127.0.0.1::8000'])
+                run_args.extend(['-p', '127.0.0.1::8000'])
             for key, value in config.items():
-                args.extend(['-e', f'{key}={value}'])
-            args.extend(['--entrypoint', 'uvicorn', f'cameltv-tp-{role}:capacity-local',
+                run_args.extend(['-e', f'{key}={value}'])
+            run_args.extend(['--entrypoint', 'uvicorn', f'cameltv-tp-{role}:capacity-local',
                          'app.main:app', '--host', '0.0.0.0', '--port', '8000'])
-            docker(*args)
+            docker(*run_args)
             wait_healthy(name)
 
         address = docker('port', containers[1], '8000/tcp').splitlines()[0]
@@ -96,6 +102,26 @@ def main():
             created = client.post('/api/v1/test-plans', headers=headers, json={'name': 'capacity async plan'})
             assert created.status_code == 200 and created.json().get('code') == 0, 'Plan creation failed'
             plan_id = created.json()['data']['id']
+            embedding_result = None
+            if args.include_embedding:
+                embedding_code = (
+                    'import json; from app.services.knowledge.embedding_service import EmbeddingService; '
+                    's=EmbeddingService(cache_dir="/app/storage/model-cache"); '
+                    'v=s.embed(["isolated capacity verification"]*16); '
+                    'assert v is not None and v.shape==(16,s.dim); assert s._model is None; '
+                    'print(json.dumps({"rows":len(v),"dimensions":s.dim,"model_released":True}))'
+                )
+                embedding_result = json.loads(docker('exec', containers[0], 'python', '-c', embedding_code, timeout=300).splitlines()[-1])
+                assert client.get('/health').status_code == 200
+                repeated = client.post('/api/v1/playground/execute', headers=headers,
+                                       json={'spec_code': code, 'timeout_ms': 15000})
+                assert repeated.status_code == 200 and repeated.json().get('passed'), 'Browser execution must recover after model release'
+            peak_code = (
+                'import json; from pathlib import Path; '
+                'p=Path("/sys/fs/cgroup"); '
+                'print(json.dumps({k:int((p/k).read_text()) for k in ("memory.current","memory.peak")}))'
+            )
+            peaks = {name.rsplit('-', 1)[-1]: json.loads(docker('exec', name, 'python', '-c', peak_code)) for name in containers}
             stats = docker('stats', '--no-stream', '--format', '{{.Name}} {{.MemUsage}}', *containers)
             docker('stop', '--time', '10', containers[0])
             unavailable = client.post('/api/v1/playground/execute', headers=headers,
@@ -121,7 +147,9 @@ def main():
                 raise RuntimeError('Pending plan did not complete after runner restart')
         print(json.dumps({'result': 'passed', 'checks': ['auth', 'login', 'real-browser-forward',
                          'runner-outage-503', 'api-stays-responsive', 'async-accepted-during-outage',
-                         'async-completed-after-restart'], 'post_run_memory': stats}))
+                         'async-completed-after-restart'], 'post_run_memory': stats,
+                         'source_mounted': args.source_mount, 'embedding': embedding_result,
+                         'cgroup_memory_bytes': peaks}))
     finally:
         # Only the fresh resources named by this invocation are removed.
         for name in reversed(containers):

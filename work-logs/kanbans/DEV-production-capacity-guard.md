@@ -135,3 +135,13 @@ pass. Frontend full regression: 697 passed across 159 files (190.85s). Browser
 production-build fixture smoke passes three viewports, exact effective request
 counts and zero page errors. Model residency policy and final resource sizing,
 complete deployment rehearsal, combined QA/PR/main/production remain pending.
+
+Final verification update: Docker recovered and latest baked API/runner images
+pass real browser + embedding + outage/durable recovery smoke. Runner peak
+1269.35 MiB; API peak 207.48 MiB. Embedding uses a separate child process, so this
+does not prove resident HTTP-worker native memory release or full DSH sizing.
+Backend full suite now passes: 2594 passed, 51 skipped, 1 xfailed (637.05s).
+Actual PostgreSQL migration/retry/downgrade/reupgrade preserves expected data.
+Backend dev-gate PASS_WITH_WARN: HARD=0, unchanged WARN=332; four guards pass.
+Remaining: long-lived/mixed workload sizing, complete split/combined transition,
+production capacity closure, final PR/CI/audit/merge and verified rollout.

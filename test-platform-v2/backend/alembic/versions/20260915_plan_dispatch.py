@@ -24,9 +24,10 @@ def upgrade():
         sa.Column('started_at', sa.DateTime(), nullable=True),
         sa.Column('finished_at', sa.DateTime(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False),
+        if_not_exists=True,
     )
     for column in ('project_id', 'plan_id', 'status'):
-        op.create_index(f'ix_plan_execution_job_{column}', 'plan_execution_job', [column])
+        op.create_index(f'ix_plan_execution_job_{column}', 'plan_execution_job', [column], if_not_exists=True)
 
 
 def downgrade():

@@ -4,7 +4,7 @@ import runpy
 
 from alembic.migration import MigrationContext
 from alembic.operations import Operations
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine, inspect, select, func
 from sqlalchemy.pool import StaticPool
 
 from app.models.plan_execution_job import PlanExecutionJob
@@ -35,6 +35,20 @@ def test_postgres_offline_ddl_and_revision_length():
     context = MigrationContext.configure(dialect_name='postgresql', opts={'as_sql': True, 'output_buffer': output})
     with Operations.context(context):
         migration()['upgrade']()
-    assert 'CREATE TABLE plan_execution_job' in output.getvalue()
-    assert 'CREATE INDEX ix_plan_execution_job_status' in output.getvalue()
+    assert 'CREATE TABLE IF NOT EXISTS plan_execution_job' in output.getvalue()
+    assert 'CREATE INDEX IF NOT EXISTS ix_plan_execution_job_status' in output.getvalue()
     assert len(migration()['revision']) <= 32
+
+
+def test_reconciliation_preserves_auto_created_jobs_and_is_retryable():
+    engine = create_engine('sqlite://', poolclass=StaticPool)
+    with engine.begin() as connection:
+        PlanExecutionJob.__table__.create(connection)
+        connection.execute(PlanExecutionJob.__table__.insert().values(project_id=1, plan_id=2, creator_id=3))
+        connection.exec_driver_sql('DROP INDEX ix_plan_execution_job_status')
+        with Operations.context(MigrationContext.configure(connection)):
+            migration()['upgrade']()
+            migration()['upgrade']()
+        assert connection.scalar(select(func.count()).select_from(PlanExecutionJob)) == 1
+        assert 'ix_plan_execution_job_status' in {i['name'] for i in inspect(connection).get_indexes('plan_execution_job')}
+    engine.dispose()

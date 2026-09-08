@@ -271,3 +271,34 @@ post-cleanup free space; never promise summed virtual image sizes as savings.
   with its inference-manager AF_UNIX bind conflict. Normal startup and controlled
   restart did not restore it. Final container measurements/rehearsal remain open;
   this local issue must not be represented as a production failure.
+
+## Final regression and recovered container verification (2026-09-08)
+
+This section supersedes the local Docker blocker above. Starting the installed
+Docker Desktop executable restored the engine; unrelated containers were not
+modified. Fresh API and runner builds completed with baked source, no app mount.
+
+- Final backend regression: **2594 passed, 51 skipped, 1 xfailed, 62 warnings**,
+  exit 0, 637.05 seconds. Earlier run: 9 failed, 2584 passed. Fixed the actual
+  migration retry defect; updated worker lifecycle, explicitly enabled cron,
+  Docker stage and route inventory contracts. Final failure set is empty.
+- PostgreSQL 16 disposable integration passed: upgrade, expected columns/indexes,
+  interrupted-stamp retry preserving jobs, downgrade preserving unrelated data,
+  and reupgrade. The temporary container and volume were removed.
+- Backend dev-gate: exit 2, PASS_WITH_WARN; F821 and all four route guards pass.
+  HARD=0; WARN=332 matches the recorded main baseline. Frontend gate and full
+  regression results remain as recorded above.
+- Real baked-image smoke: authentication/project forwarding, Chromium execution,
+  runner-outage 503, responsive API, durable plan acceptance during outage and
+  completion after restart all pass. Public BGE model produces 16 x 512 vectors,
+  releases its Python model reference, and subsequent browser execution passes.
+- Runner cgroup memory.peak=1,331,007,488 bytes (1269.35 MiB); API peak=217,559,040
+  bytes (207.48 MiB). Runner memory.current=1,006,817,280 bytes includes cache;
+  Docker stats reports 424.6 MiB excluding reclaimable cache. These are different
+  metrics, not contradictory savings claims. Runner limit was 1536 MiB, API 512.
+- Embedding was invoked by a separate Python process inside the runner container.
+  This verifies container capacity and model output, **not** long-lived HTTP worker
+  native-memory release. DSH/Temporal mixed workload and full deployment topology
+  rehearsal remain open. Do not treat these provisional limits as production sizing.
+- Logs: backend/regression-production-capacity-final.log, root/execution-peak-final.log,
+  root/dev-gate-backend-final.log (local, not committed). No production mutation.
