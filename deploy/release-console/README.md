@@ -102,3 +102,12 @@ python3 release_cleanup.py --keep-tag release-20260907-0001 --keep-tag release-2
 - 所有 API 需要 `Authorization: Bearer <token>`；token 缺失时服务拒绝启动（fail-closed）
 - SSH 私钥仅环境变量注入，临时文件 0600 用完即删
 - 状态机强制合法流转；无用户输入拼接进命令
+# Database compatibility during rollback
+
+Operational rollback preserves the newer additive schema. The executor supplies
+an explicit `docker-compose.rollback-runtime.yml` command override so old images
+start Uvicorn directly instead of rerunning an Alembic tree that cannot resolve
+the newer revision. Split rollback overrides both API and runner launch commands;
+the dedicated Temporal gateway keeps its own launcher. Regular deploys still run
+migrations. Every release must verify the previous image against the new schema;
+this mechanism cannot make destructive/incompatible migrations safe to roll back.

@@ -33,6 +33,7 @@ related: ["template.md", "0001-use-python-fastapi-monostack.md", "../document-st
 | [0019](0019-task-queue-and-soft-delete-conventions.md) | 认领式任务队列统一与删除语义唯一约定 | ✅ 已采纳 | 2026-08 |
 | [0020](0020-os-level-sandbox-deployment-assessment.md) | OS 级沙箱（seccomp/nsjail）部署层评估结论 | ✅ 已采纳 | 2026-08 |
 | [0021](0021-aitde-v3-1-unified-execution.md) | AITDE V3.1 统一执行 + Proof Replay（确定性结论、无 AI 裁决） | ✅ 已采纳 | 2026-08 |
+| [0026](0026-production-execution-resource-ownership.md) | 生产执行资源归属、持久队列与完整版本回滚 | ✅ 已采纳（生产待验收） | 2026-09 |
 
 ## ADR 状态
 

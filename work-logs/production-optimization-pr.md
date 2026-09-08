@@ -22,7 +22,13 @@ persistent HTTP model cycles, authentication/project forwarding, runner outage
 and durable task recovery. Console tests, real Compose merge and native transfer
 failure checks pass. Evidence: work-logs/batch-production-capacity-guard-qa-report.md.
 
-Draft: full DSH/Temporal mixed-memory sizing and real release topology transition
-rehearsal remain required before final approval. Production still has only 2.4 GiB
+Real split -> old combined -> split topology rehearsal now passes with PostgreSQL,
+Temporal, preserved plan records, worker registration and Chromium. It exposed and
+fixed old images rerunning Alembic against an unknown newer revision: rollback now
+preserves the additive schema and supplies direct application startup commands.
+Real complete-bundle export/digest verification/import and six-member DSH with
+browser/model overlap also pass using an isolated local LLM fixture.
+
+Draft: final remote regression/audit and production capacity remain open. Production has only 2.4 GiB
 free; reviewed cleanup alone cannot establish the release reserve. No production
 cleanup, deployment, measured resource savings or final merge is claimed.

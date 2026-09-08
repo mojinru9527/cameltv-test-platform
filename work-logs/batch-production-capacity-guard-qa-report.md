@@ -317,3 +317,50 @@ different runs to claim savings. Initial process scanner also matched init and
 its own probe because of substring matching; now it matches exact application
 arguments and Python executable. Only Uvicorn PID 7 values above were used.
 Log: execution-http-model-final.log. DSH/Temporal mixed sizing remains pending.
+
+## Real topology, bundle and DSH verification
+
+- Real Compose project with isolated PostgreSQL/Temporal: split -> old combined
+  backend image `release-20260907-0001` -> split passes. New-image startup performs
+  the complete PostgreSQL migration chain. Existing plan row, login and real
+  Chromium execution survive both transitions; real machine-token worker
+  registration and gateway processes pass. Test volumes/project were removed.
+- First topology run exposed old Alembic launchers rejecting the new revision.
+  A direct old-image probe confirms `Can't locate revision identified by
+  20260915_plan_dispatch`. Added failing combined/split rollback tests, then an
+  explicit rollback-only runtime command override preserving the additive schema.
+  Normal deployment still migrates. Console tests now **37 passed**, F821 passes.
+  The successful rehearsal uses the same override helper as the SSH executor.
+- Topology snapshots after browser work: split API ~199-200 MiB, runner ~200-202,
+  Temporal worker ~151-154, PostgreSQL ~139-156, Temporal ~71-76, frontend ~11.
+  Old combined backend ~350 MiB. These demonstrate extra idle process overhead,
+  not RAM savings from image splitting. Test limits remain provisional.
+- Real split bundle export/verification/import passed: 1,653,616,640 archive bytes,
+  all three fresh build config digests match, altered configuration rejected,
+  restored config accepted and every archive imported successfully. Temporary
+  tags/files removed. The bundle probe pins the recorded build config digests;
+  rebuilds require updating that verification input. It does not contact SSH.
+- Real DSH agent-team profile and six live member sessions, with a local
+  deterministic LLM fixture (no paid AI requests): browser work acquires the
+  separate heavy lane while orchestration remains held, then real BGE embedding
+  succeeds while the parent is still running. Both leases become available after
+  completion. Cgroup peak=457089024 bytes (~436 MiB) in this isolated process.
+  Long production prompts/data are not simulated; cold-cache runner peak from the
+  HTTP smoke remains the larger measurement. No production sizing claim is made.
+- Logs: execution-topology-retry.log, release-bundle-real-final.log,
+  dsh-team-model-memory-final.log. Real execution evidence complements, rather
+  than replaces, archive/SSH ordering and Compose merge contract tests.
+
+## Remote full regression follow-up
+
+At de2aa657, required CI backend ran the full suite: 2637 passed, 2 failed,
+6 skipped, 1 xfailed (698.48s). Both failures are stale Docker structure contracts:
+unqualified COPY and a single USER statement. A further assertion expected two
+Python base stages instead of three. Updated checks require pinned builder,
+provider and shared runtime stages and nonroot USER in both API/runner stages.
+Local deployment contracts: 12 passed. The local submodule was initialized to
+execute previously skipped Lanhu-dependent tests rather than infer their health.
+CI frontend, policy, PostgreSQL, data integration and security checks passed.
+Final remote backend rerun is required; the failed run is not marked green.
+After submodule initialization, all 40 deployment/Lanhu login/provider tests pass
+(5.07 seconds). Console 37 and real Compose merge 3 tests pass after rollback fix.

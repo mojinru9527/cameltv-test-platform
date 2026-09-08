@@ -145,3 +145,13 @@ Actual PostgreSQL migration/retry/downgrade/reupgrade preserves expected data.
 Backend dev-gate PASS_WITH_WARN: HARD=0, unchanged WARN=332; four guards pass.
 Remaining: long-lived/mixed workload sizing, complete split/combined transition,
 production capacity closure, final PR/CI/audit/merge and verified rollout.
+
+Real topology now passes split -> previous combined backend -> split with actual
+PostgreSQL migration, Temporal gateway/worker registration, preserved plan and
+Chromium work. Fixed a discovered old-image Alembic rollback-launcher defect;
+console 37 tests pass. Real three-image bundle export/digest/config rejection/
+import passes. Six-member DSH + browser + BGE fixture overlap passes (436 MiB peak,
+short deterministic fixture; production long-prompt sizing is still conditional).
+Pushed de2aa657 and updated Draft PR 415; initial audit passes. Remote backend
+2637 pass/2 stale Docker-contract failures are being corrected and rerun. Other
+remote checks passed. Still no production mutation or final approval/merge.

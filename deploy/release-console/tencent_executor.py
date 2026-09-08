@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import base64
 import dataclasses
+import json
 import os
 import re
 import shlex
@@ -73,6 +74,19 @@ def _require(settings_like: object, attr: str) -> str:
             f"TENCENT_EXECUTOR_{attr.upper()} is not configured"
         )
     return value
+
+
+def rollback_runtime_override(mode: str) -> dict:
+    """Retain the current additive schema when starting a previous image.
+
+    Old Alembic trees cannot resolve a newer revision. Operational rollback must
+    start the compatible application directly, never migrate the database down.
+    """
+    if mode not in ('combined', 'split'):
+        raise ValueError('invalid rollback runtime mode')
+    command = ['uvicorn', 'app.main:app', '--host', '0.0.0.0', '--port', '8000']
+    owners = ('backend', 'runner') if mode == 'split' else ('backend',)
+    return {'services': {owner: {'command': command} for owner in owners}}
 
 
 class TencentSshExecutor:
@@ -153,7 +167,7 @@ class TencentSshExecutor:
                 except OSError:
                     pass
 
-    def _compose(self, *args: str, mode: str = 'combined', tag: str = '') -> str:
+    def _compose(self, *args: str, mode: str = 'combined', tag: str = '', rollback: bool = False) -> str:
         extra, environment = '', ''
         if mode == 'split':
             if not re.fullmatch(r'release-\d{8}-\d{4}', tag):
@@ -162,21 +176,32 @@ class TencentSshExecutor:
                      f'-f docker-compose.execution.{tag}.yml ')
             environment = (f'API_IMAGE={shlex.quote(self.config.image_backend)} '
                            f'RUNNER_IMAGE={shlex.quote(self.config.image_runner)} ')
+        if rollback:
+            if not extra:
+                extra = '-f docker-compose.yml -f docker-compose.override.yml '
+            extra += '-f docker-compose.rollback-runtime.yml '
         return (
             f"cd {shlex.quote(self.config.compose_dir)} && {environment}"
             f"docker compose --project-name {shlex.quote(self.config.compose_project)} "
             f"--env-file ../config/runtime/production.env {extra}{' '.join(shlex.quote(arg) for arg in args)}"
         )
 
-    def _activate(self, tag: str, mode: str) -> list[str]:
+    def _activate(self, tag: str, mode: str, *, rollback: bool = False) -> list[str]:
         # Stop old consumers before introducing the new owner topology. Docker
         # preserves the durable queues and artifacts; no database is recreated.
-        commands = [self._compose('stop', '--timeout', '60', 'backend', 'aitde-worker')]
+        commands = []
+        if rollback:
+            path = shlex.quote(f'{self.config.compose_dir}/docker-compose.rollback-runtime.yml')
+            payload = shlex.quote(json.dumps(rollback_runtime_override(mode)))
+            commands.extend([f'test ! -L {path}', f"printf '%s' {payload} > {path}",
+                             self._compose('config', '--quiet', mode=mode, tag=tag, rollback=True)])
+        commands.append(self._compose('stop', '--timeout', '60', 'backend', 'aitde-worker'))
         project = shlex.quote(f'label=com.docker.compose.project={self.config.compose_project}')
         commands.append(f'docker ps -q --filter {project} --filter label=com.docker.compose.service=runner | xargs -r docker stop --time 60')
         services = ('runner', 'backend', 'frontend', 'aitde-worker') if mode == 'split' else ('backend', 'frontend', 'aitde-worker')
         commands.append(self._compose('up', '-d', '--no-build', '--force-recreate', '--wait',
-                                      '--wait-timeout', '180', *services, mode=mode, tag=tag))
+                                      '--wait-timeout', '180', *services, mode=mode, tag=tag,
+                                      rollback=rollback))
         commands.append("curl -fsS -o /dev/null http://127.0.0.1:8080/api/v1/open/health")
         return commands
 
@@ -247,7 +272,7 @@ class TencentSshExecutor:
             target = getattr(self.config, f'image_{part}')
             repo = target.rsplit(':', 1)[0]
             commands.append(f'docker tag {shlex.quote(f"{repo}:{image_tag}")} {shlex.quote(target)}')
-        commands.extend(self._activate(image_tag, mode))
+        commands.extend(self._activate(image_tag, mode, rollback=True))
         output = self._run_remote(commands)
         return ExecutorResult(
             ok=True,

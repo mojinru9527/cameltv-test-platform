@@ -72,6 +72,19 @@ class ExecutorCapacityTests(unittest.TestCase):
                     operation('release-20260908-0001', manifest=self.split_manifest())
         run.assert_not_called()
 
+    def test_rollback_skips_old_image_migration_launcher(self):
+        for manifest in (None, self.split_manifest()):
+            with self.subTest(split=manifest is not None):
+                with patch.object(self.executor, '_run_remote', return_value='ok') as run:
+                    self.executor.rollback('release-20260907-0001', manifest=manifest)
+                commands = run.call_args.args[0]
+                activation = next(c for c in commands if 'up -d' in c)
+                self.assertIn('docker-compose.rollback-runtime.yml', activation)
+                validation = next(i for i, c in enumerate(commands) if 'rollback-runtime.yml' in c and 'config --quiet' in c)
+                stop = next(i for i, c in enumerate(commands) if 'stop --timeout' in c)
+                self.assertLess(validation, stop)
+                self.assertTrue(any('uvicorn' in c and 'app.main:app' in c for c in commands))
+
 
 if __name__ == '__main__':
     unittest.main()
