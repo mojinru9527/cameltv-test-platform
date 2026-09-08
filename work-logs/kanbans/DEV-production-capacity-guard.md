@@ -26,12 +26,12 @@ Initial capacity commit 0f3138ff pushed; Draft PR 415 created. Initial checks
 all passed and base audit passed; do not merge until all phases finish.
 
 ## Remaining roadmap (same final delivery)
-- [ ] Phase 2: inventory all entry points and define cross-process resource ownership.
-- [ ] Phase 2: shared capacity, cancellation/crash recovery, telemetry and regression.
-- [ ] Phase 3: API/runner image split and migrated execution entry points.
-- [ ] Phase 3: restart recovery, isolated execution smoke, measured image/runtime evidence.
-- [ ] Phase 4: consolidate task/report entry points, preserve historical links/permissions.
-- [ ] Phase 4: knowledge processing on-demand/off-peak, UI/functional validation.
+- [x] Phase 2: inventory all entry points and define cross-process resource ownership.
+- [x] Phase 2: shared capacity, cancellation/crash recovery, telemetry and regression.
+- [x] Phase 3: API/runner image split and migrated execution entry points.
+- [x] Phase 3: restart recovery, isolated execution smoke, measured image/runtime evidence.
+- [x] Phase 4: consolidate task/report entry points, preserve historical links/permissions.
+- [x] Phase 4: knowledge processing on-demand/off-peak, UI/functional validation.
 - [ ] Complete scope-wide QA, update PR title/body and final audit.
 - [ ] Squash merge, main CI and reviewed production optimization rollout.
 

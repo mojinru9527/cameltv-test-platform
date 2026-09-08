@@ -18,12 +18,14 @@ failure blocks. Check is a point-in-time snapshot, not a disk reservation.
 
 ## Cleanup
 
-Release tag grammar: release-YYYYMMDD-NNNN. Allowlist only cameltv-tp-backend
-and cameltv-tp-frontend. Require at least two explicit retained complete pairs.
+Release tag grammar: release-YYYYMMDD-NNNN. Allowlist only cameltv-tp-backend,
+cameltv-tp-frontend and cameltv-tp-runner. Require two explicit retained complete
+release sets; split sets also require their runner and retained execution YAML.
 Protect two latest release tags, releases younger than 48 hours, all container
 image IDs and any image having a tag outside the allowlist grammar.
-Only exact regular non-symlink *-backend.tar/*-frontend.tar archives older
-than 48 hours are candidates; no recursion and no backup suffixes.
+Only exact regular non-symlink *-backend.tar/*-frontend.tar/*-runner.tar archives older
+than 48 hours are candidates; no recursion and no backup suffixes. Execution YAML
+files are retained and their checksums are bound to immutable release manifests.
 
 Preview is the default. Apply requires the exact SHA-256 digest of a freshly
 computed plan. Recheck container/image references before image deletion;

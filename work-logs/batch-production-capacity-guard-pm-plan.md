@@ -45,9 +45,11 @@ one final scope-wide audit and merge. This supersedes per-phase merge ordering.
 Execution-isolation follow-up completed locally: durable asynchronous plan
 dispatch, additive migration, owner heartbeats and project-scoped job status.
 Validation includes two fresh process consumers, API submission during actual
-runner outage, and completion after restart. Pending release slices remain:
-compiler/runtime inventory closure, complete image-set publication/rollback,
-mixed workload sizing and product task/report consolidation.
+runner outage, and completion after restart. Compiler/runtime inventory, complete
+image-set export/import and actual topology rollback, bounded mixed workload
+measurements and product task/report consolidation are now verified locally.
+Production sequence, measured candidate limits and remaining capacity gates are
+specified in [production-capacity-rollout-plan.md](production-capacity-rollout-plan.md).
 
 From this worktree:
 

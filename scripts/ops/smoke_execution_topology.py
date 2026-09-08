@@ -40,7 +40,7 @@ def main():
         'TEMPORAL_TASK_QUEUE': project, 'AITDE_V3_ENABLED': 'true',
         'FRONTEND_PORT': '127.0.0.1:0', 'API_IMAGE': 'cameltv-tp-api:capacity-local',
         'RUNNER_IMAGE': 'cameltv-tp-runner:capacity-local',
-        'API_MEMORY_LIMIT': '512m', 'RUNNER_MEMORY_LIMIT': '1536m',
+        'API_MEMORY_LIMIT': '384m', 'RUNNER_MEMORY_LIMIT': '1536m',
         'TEMPORAL_WORKER_MEMORY_LIMIT': '512m',
         'AITDE_WORKER_KEY': project, 'WORKER_HEARTBEAT_SECONDS': '5',
     })
@@ -116,6 +116,25 @@ def main():
                         time.sleep(1)
                     else:
                         raise RuntimeError('Real worker heartbeat registration failed')
+                    worker_browser = None
+                    if mode == 'split':
+                        worker_id = compose(mode, 'ps', '-q', 'aitde-worker')
+                        probe = '''from app.core.resource_budget import configured_budget
+from playwright.sync_api import sync_playwright
+from pathlib import Path
+import json
+with configured_budget().wait('browser', 'temporal-container-smoke', timeout=5):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True, args=['--no-sandbox'])
+        try:
+            page = browser.new_page()
+            page.set_content('<h1>worker browser</h1>')
+            assert page.locator('h1').inner_text() == 'worker browser'
+            print(json.dumps({k:int((Path('/sys/fs/cgroup')/k).read_text()) for k in ('memory.current','memory.peak')}))
+        finally:
+            browser.close()
+'''
+                        worker_browser = json.loads(run(['docker', 'exec', worker_id, 'python', '-c', probe]))
                     if plan_id is None:
                         created = client.post('/api/v1/test-plans', headers=headers, json={'name': project})
                         assert created.status_code == 200 and created.json()['code'] == 0
@@ -133,7 +152,7 @@ def main():
                 worker_logs = compose(mode, 'logs', '--tail', '40', 'aitde-worker')
                 assert 'Traceback' not in worker_logs, 'Temporal worker failed'
                 results.append({'mode': mode, 'plan_preserved': True, 'browser_passed': True,
-                                'memory': memory})
+                                'memory': memory, 'worker_browser': worker_browser})
                 print(json.dumps({'progress': results[-1]}), flush=True)
             print(json.dumps({'result': 'passed', 'transitions': results,
                               'limits_are_provisional': True}), flush=True)

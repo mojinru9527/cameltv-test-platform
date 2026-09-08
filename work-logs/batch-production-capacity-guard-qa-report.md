@@ -364,3 +364,21 @@ CI frontend, policy, PostgreSQL, data integration and security checks passed.
 Final remote backend rerun is required; the failed run is not marked green.
 After submodule initialization, all 40 deployment/Lanhu login/provider tests pass
 (5.07 seconds). Console 37 and real Compose merge 3 tests pass after rollback fix.
+
+### Final candidate limits and worker browser check
+
+Repeated real topology transitions with API limited to 384 MiB pass. The actual
+Temporal gateway remains active while a real Chromium process runs inside its
+512 MiB worker container under the shared admission lease. Worker cgroup peaks:
+362819584 and 335126528 bytes (~346 and 320 MiB), below the tested 512 MiB limit.
+This validates image/runtime/lease coexistence, not a Temporal workflow's complete
+business semantics. API/plan/registration/browser and both rollbacks still pass.
+Log: execution-topology-worker-memory.log. Newly built standalone console image
+also succeeds; transient package DNS retries recovered without dependency changes.
+
+QA retrospective update: original two-hour capacity estimate no longer represents
+the expanded four-phase scope (work spanned 2026-09-07 to 2026-09-09; precise active
+hours unavailable). Two P1 implementation defects repaired (migration retry and
+rollback launcher); operational P1 disk capacity remains open. At least four
+validation/repair rounds. Next prevention: initialize submodules and test the old
+real image against the new database revision before claiming rollback compatibility.
