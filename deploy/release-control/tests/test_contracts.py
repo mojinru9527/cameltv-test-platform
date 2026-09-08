@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import hashlib
+import json
 
 import pytest
 from pydantic import ValidationError
@@ -42,6 +44,28 @@ def test_manifest_hash_is_stable_across_input_key_order(valid_manifest: dict[str
 
     assert manifest.manifest_sha256() == reordered.manifest_sha256()
     assert len(manifest.manifest_sha256()) == 64
+
+
+def test_legacy_manifest_digest_is_unchanged(valid_manifest):
+    legacy = json.dumps(valid_manifest, sort_keys=True, separators=(',', ':'), ensure_ascii=True).encode()
+    assert ReleaseManifest.model_validate(valid_manifest).manifest_sha256() == hashlib.sha256(legacy).hexdigest()
+
+
+def test_split_manifest_binds_runner_and_configuration(valid_manifest):
+    from cameltv_release.compose_adapter import render_release_compose
+    value = {**valid_manifest, 'runtime_mode': 'split',
+             'runner': dict(valid_manifest['frontend']), 'execution_config_sha256': 'f' * 64}
+    manifest = ReleaseManifest.model_validate(value)
+    assert 'runner' in render_release_compose(manifest)['services']
+    changed = ReleaseManifest.model_validate({**value, 'execution_config_sha256': 'e' * 64})
+    assert changed.manifest_sha256() != manifest.manifest_sha256()
+    for key in ('runner', 'execution_config_sha256'):
+        incomplete = dict(value)
+        incomplete.pop(key)
+        with pytest.raises(ValidationError):
+            ReleaseManifest.model_validate(incomplete)
+    with pytest.raises(ValidationError):
+        ReleaseManifest.model_validate({**value, 'runtime_mode': 'combined'})
 
 
 @pytest.mark.parametrize(

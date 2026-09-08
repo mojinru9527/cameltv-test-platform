@@ -1,4 +1,5 @@
 import { Badge, Button, PageShell } from '@/ui'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { useChartColors } from '@/hooks/use-chart-colors'
@@ -141,12 +142,29 @@ export function getReportPassCount(stats: Record<string, unknown>): number {
 
 export default function ReportPage() {
   useDocumentTitle('报告中心')
-  // 视图切换（P2c）：报告中心 / 质量追溯，?tab=trace 可直达（旧 /trace 路由重定向至此）
   const [searchParams, setSearchParams] = useSearchParams()
   const viewTab = searchParams.get('tab') === 'trace' ? 'trace' : 'reports'
-  const setViewTab = (next: 'reports' | 'trace') => {
-    setSearchParams(next === 'trace' ? { tab: 'trace' } : {}, { replace: true })
+  const setViewTab = (next: string) => {
+    const params = new URLSearchParams(searchParams)
+    if (next === 'trace') params.set('tab', 'trace')
+    else params.delete('tab')
+    setSearchParams(params, { replace: true })
   }
+  return (
+    <PageShell title="报告中心" glass>
+      <Tabs value={viewTab} onValueChange={setViewTab} className="space-y-4">
+        <TabsList aria-label="报告视图切换">
+          <TabsTrigger value="reports">报告中心</TabsTrigger>
+          <TabsTrigger value="trace">质量追溯</TabsTrigger>
+        </TabsList>
+        <TabsContent value="reports">{viewTab === 'reports' && <ReportsPanel />}</TabsContent>
+        <TabsContent value="trace">{viewTab === 'trace' && <TracePanel />}</TabsContent>
+      </Tabs>
+    </PageShell>
+  )
+}
+
+function ReportsPanel() {
   const chartColors = useChartColors()
   const [keywordInput, setKeywordInput] = useState('')
   const [keyword, setKeyword] = useState('')
@@ -176,10 +194,10 @@ export default function ReportPage() {
 
   // ── Data fetching with useApi ──
   const { data, isLoading, isRefetching, isError, error, refetch } = useApi(
-    () => {
+    (signal) => {
       const params: any = { page, page_size: 20 }
       if (keyword) params.keyword = keyword
-      return fetchReports(params) as unknown as Promise<{ total: number; items: any[]; page: number; page_size: number }>
+      return fetchReports(params, signal) as unknown as Promise<{ total: number; items: any[]; page: number; page_size: number }>
     },
     [keyword, page]
   )
@@ -189,7 +207,7 @@ export default function ReportPage() {
 
   // ── Trends data ──
   const trendsState = useApi<TrendsData>(
-    () => fetchTrends(),
+    (signal) => fetchTrends(signal),
     [],
   )
 
@@ -307,35 +325,8 @@ export default function ReportPage() {
   ]
 
   return (
-    <PageShell
-      title="报告中心"
-      description="聚合测试执行结果，生成多维度质量报告，支持导出与钻取分析。"
-      glass
-    >
+    <>
       <div className="space-y-4">
-      {/* 视图切换（P2c）：报告中心 / 质量追溯 */}
-      <div className="flex items-center gap-2" role="tablist" aria-label="报告视图切换">
-        {([['reports', '报告中心'], ['trace', '质量追溯']] as const).map(([k, label]) => (
-          <button
-            key={k}
-            type="button"
-            role="tab"
-            aria-selected={viewTab === k}
-            className={cn(
-              'rounded-md px-4 py-1 text-sm font-medium transition-colors',
-              viewTab === k
-                ? 'bg-accent text-accent-foreground font-semibold'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-            onClick={() => setViewTab(k)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {viewTab === 'trace' ? <TracePanel /> : (
-      <>
       {/* ── Trend Section ── */}
       <AsyncState
         isLoading={trendsState.isLoading}
@@ -754,8 +745,6 @@ export default function ReportPage() {
           )}
         </SheetContent>
       </Sheet>
-      </>
-      )}
     </div>
       <TemplateManager
         open={templateManagerOpen}
@@ -763,6 +752,6 @@ export default function ReportPage() {
         templates={templates}
         onChanged={loadTemplates}
       />
-    </PageShell>
+    </>
   )
 }

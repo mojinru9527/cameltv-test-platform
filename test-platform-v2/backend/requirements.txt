@@ -30,3 +30,5 @@ cryptography>=42.0
 # ── AITDE V3.4 Durable Runtime：Temporal client + in-memory test WorkflowEnvironment ──
 # 生产由 Control Plane worker 拉取任务；test/CI 用 temporalio.testing.WorkflowEnvironment 跑真实编排。
 temporalio>=1.32
+# Shared same-host task admission; already pinned in requirements.lock.
+filelock>=3.32

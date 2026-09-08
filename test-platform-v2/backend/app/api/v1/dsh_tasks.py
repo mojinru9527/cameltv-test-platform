@@ -17,7 +17,9 @@ from app.services.dsh import dsh_attachment_service, dsh_task_service
 from app.services.dsh.dsh_runner import runtime_available
 from app.services.ai_errors import ai_health_registry
 
-router = APIRouter(prefix="/dsh-tasks", tags=["DSH 任务"])
+from app.core.execution_dispatch import ExecutionRoute
+
+router = APIRouter(prefix="/dsh-tasks", tags=["DSH 任务"], route_class=ExecutionRoute)
 
 
 def _availability(project_id: int) -> tuple[bool, str]:

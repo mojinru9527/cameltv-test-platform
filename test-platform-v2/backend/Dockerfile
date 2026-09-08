@@ -7,8 +7,16 @@ WORKDIR /app
 COPY test-platform-v2/backend/requirements.txt test-platform-v2/backend/requirements.lock ./
 RUN pip install --no-cache-dir --require-hashes -r requirements.lock
 
-# ── Runtime stage ──
-FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de
+# Fetch the provider without requiring local submodule contents in cloud builds.
+FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de AS provider
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
+    && git clone --depth 1 --branch main \
+        https://github.com/mojinru9527/lanhu-mcp.git /tmp/lanhu-mcp \
+    && mkdir -p /app/lanhu-mcp \
+    && cp /tmp/lanhu-mcp/lanhu_mcp_server.py /app/lanhu-mcp/lanhu_mcp_server.py
+
+# Shared Python layers occupy disk once when API and runner are deployed together.
+FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de AS runtime-base
 ARG APP_UID=10001
 ARG APP_GID=10001
 WORKDIR /app
@@ -27,6 +35,14 @@ ENV VIRTUAL_ENV=/opt/venv \
     HOME=/home/cameltv \
     XDG_CACHE_HOME=/home/cameltv/.cache
 
+RUN groupadd --gid "${APP_GID}" cameltv \
+    && useradd --uid "${APP_UID}" --gid "${APP_GID}" --create-home --home-dir /home/cameltv --shell /usr/sbin/nologin cameltv \
+    && mkdir -p /app/storage /app/storage/lanhu-data \
+    && chown -R cameltv:cameltv /app /home/cameltv
+COPY --from=provider --chown=cameltv:cameltv /app/lanhu-mcp /app/lanhu-mcp
+
+FROM runtime-base AS runner
+
 # Node 22（NodeSource）：dsh CLI 依赖 commander>=22.12 / pi-ai>=22.19，
 # Debian apt 的 nodejs（18/20）不满足（Batch 191 生产构建报 EBADENGINE）。
 # openssh-client：发布平台 SSH 执行器（release-platform batch）依赖 ssh/scp。
@@ -41,9 +57,6 @@ RUN apt-get update \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-RUN groupadd --gid "${APP_GID}" cameltv \
-    && useradd --uid "${APP_UID}" --gid "${APP_GID}" --create-home --home-dir /home/cameltv --shell /usr/sbin/nologin cameltv
-
 # Install the npm-locked UI runner before copying specs so source edits retain
 # the dependency/browser cache layer. Align Python Playwright to the same
 # release so Lanhu screenshots and UI jobs share one Chromium installation.
@@ -56,29 +69,6 @@ RUN PLAYWRIGHT_VERSION="$(node -p "require('./tests/playwright/package-lock.json
     && python -m playwright install chromium \
     && npm cache clean --force \
     && rm -rf /var/lib/apt/lists/*
-
-COPY test-platform-v2/backend/app ./app
-COPY test-platform-v2/backend/alembic ./alembic
-COPY test-platform-v2/backend/alembic.ini .
-COPY test-platform-v2/backend/tests/playwright ./tests/playwright
-COPY test-platform-v2/deploy/aitde-runtime/scripts/start-worker.sh /usr/local/bin/start-aitde-worker
-RUN chmod 0555 /usr/local/bin/start-aitde-worker
-
-# lanhu-mcp 是 Git 子模块，云构建（Railway/Vercel/CI）默认不拉取子模块内容。
-# 在构建期直接从子模块 remote 拉取，保证无本地子模块也能构建（长期验证路径）。
-# 注意（2026-08-22 生产部署三连失败复盘）：
-#  - #300 的 "COPY 本地优先、缺失回退" 不可行：Railway builder 以 archive 发运
-#    仓库（子模块空目录被丢弃，lanhu-mcp/ 目录不存在），COPY 源缺失=构建直接失败；
-#  - bind-mount 方案亦不可行：Railway Metal builder 只支持 type=cache 挂载，
-#    报 "dockerfile invalid: other mount types are not supported"。
-# 如自建/离线服务器需要本地子模块文件，请使用本地变体 Dockerfile
-# （./Dockerfile.local，COPY 方式；国内服务器无法访问 GitHub 时用），
-# 勿改动本 Dockerfile 的 clone 路径。
-RUN git clone --depth 1 --branch main \
-        https://github.com/mojinru9527/lanhu-mcp.git /tmp/lanhu-mcp \
-    && mkdir -p /app/lanhu-mcp \
-    && cp /tmp/lanhu-mcp/lanhu_mcp_server.py /app/lanhu-mcp/lanhu_mcp_server.py \
-    && rm -rf /tmp/lanhu-mcp
 
 # ── DSH 运行时（Batch 191 生产启用）──────────────────────────────
 # npm 发布版 @deepseek-ai/dsh 依赖自洽（dsh-base/dsh-headless 随依赖树安装，
@@ -153,6 +143,27 @@ RUN npm install -g pnpm@11 \
 RUN mkdir -p /app/storage /app/storage/lanhu-data /ms-playwright "${XDG_CACHE_HOME}" \
     && chown -R cameltv:cameltv /app /ms-playwright /home/cameltv
 
+# Code edits must not invalidate browser/DSH installation or copy their files
+# into a fresh recursive-chown layer on every release.
+COPY --chown=cameltv:cameltv test-platform-v2/backend/app ./app
+COPY --chown=cameltv:cameltv test-platform-v2/backend/alembic ./alembic
+COPY --chown=cameltv:cameltv test-platform-v2/backend/alembic.ini .
+COPY --chown=cameltv:cameltv test-platform-v2/backend/tests/playwright ./tests/playwright
+COPY --chmod=0555 test-platform-v2/deploy/aitde-runtime/scripts/start-worker.sh /usr/local/bin/start-aitde-worker
+
 USER cameltv:cameltv
 EXPOSE 8000
 CMD ["sh", "-c", "echo '=== CamelTv Test Platform v2.6 ===' && test \"$(alembic heads | grep -c ' (head)$')\" -eq 1 && echo 'Running database migrations...' && alembic upgrade head && echo 'Starting application...' && exec uvicorn app.main:app --host 0.0.0.0 --port \"${PORT:-8000}\""]
+
+FROM runtime-base AS api
+ENV WORKER_EXECUTION_ENABLED=false
+COPY --chown=cameltv:cameltv test-platform-v2/backend/app ./app
+COPY --chown=cameltv:cameltv test-platform-v2/backend/alembic ./alembic
+COPY --chown=cameltv:cameltv test-platform-v2/backend/alembic.ini .
+COPY --chown=cameltv:cameltv test-platform-v2/backend/tests/playwright ./tests/playwright
+USER cameltv:cameltv
+EXPOSE 8000
+CMD ["sh", "-c", "test \"$(alembic heads | grep -c ' (head)$')\" -eq 1 && alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port \"${PORT:-8000}\""]
+
+# Preserve the combined image for existing release/rollback callers until cutover.
+FROM runner AS runtime

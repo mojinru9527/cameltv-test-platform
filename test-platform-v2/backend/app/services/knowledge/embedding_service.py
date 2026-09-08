@@ -10,9 +10,12 @@
 from __future__ import annotations
 
 import logging
+import gc
 import threading
+from contextlib import nullcontext
 
 from app.core.config import settings
+from app.core.resource_budget import configured_budget
 
 logger = logging.getLogger("knowledge.embedding")
 
@@ -31,7 +34,7 @@ class EmbeddingService:
         self._cache_dir = cache_dir or settings.embedding_cache_dir or None
         self._model = None
         self._unavailable = False
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
 
     @property
     def model_name(self) -> str:
@@ -42,6 +45,8 @@ class EmbeddingService:
         return self._dim
 
     def _ensure_model(self) -> None:
+        if not settings.worker_execution_enabled:
+            return
         if self._model is not None or self._unavailable:
             return
         with self._lock:
@@ -62,11 +67,46 @@ class EmbeddingService:
 
     def available(self) -> bool:
         """模型是否就绪（会触发首次加载/下载）。"""
-        self._ensure_model()
-        return self._model is not None
+        if not settings.worker_execution_enabled:
+            return False
+        budget = configured_budget()
+        if self._model is not None and budget is None:
+            return True
+        admission = budget.try_acquire('embedding', 'embedding:load') if budget else nullcontext()
+        if admission is None:
+            return False
+        with admission, self._lock:
+            try:
+                self._ensure_model()
+                return self._model is not None
+            finally:
+                if budget is not None:
+                    self._release_model()
 
     def embed(self, texts: list[str]):
         """批量嵌入，返回 np.ndarray[float32, (n, dim)]（已 L2 归一化）；不可用/异常返回 None。"""
+        if not texts or not settings.worker_execution_enabled:
+            return None
+        budget = configured_budget()
+        admission = budget.try_acquire('embedding', 'embedding:batch') if budget else nullcontext()
+        if admission is None:
+            return None
+        with admission, self._lock:
+            try:
+                return self._embed_admitted(texts)
+            finally:
+                if budget is not None:
+                    self._release_model()
+
+    def _release_model(self) -> None:
+        # Release the ONNX session while still owning shared admission. Keeping
+        # it resident after returning the lease would overlap the next browser
+        # workload. Disk model caches remain available for the next load.
+        if self._model is not None:
+            self._model = None
+            gc.collect()
+
+    def _embed_admitted(self, texts: list[str]):
         texts = [t if isinstance(t, str) else "" for t in (texts or [])]
         if not texts:
             return None

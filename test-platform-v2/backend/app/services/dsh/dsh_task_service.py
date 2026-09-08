@@ -32,6 +32,7 @@ from sqlalchemy import select
 
 from app.core.config import settings
 from app.core.db import SessionLocal
+from app.core.resource_budget import configured_budget
 from app.core.task_queue import (
     QueueSpec,
     QueueWorkerLoop,
@@ -581,33 +582,82 @@ def _execute_team(db, task: DshTask, params: dict, runner, provider: "EffectiveA
             logger.exception("dsh artifact ingest failed for task %s", task.id)
 
 
-def _process_claimed(task_id: int) -> None:
-    db = SessionLocal()
+def _process_claimed(task_id: int, lease=None) -> None:
+    db = None
+    ownership = threading.Lock()
+    transferred = False
+    dispatch_closed = False
+
+    def _leased_run(*args, **kwargs):
+        nonlocal transferred
+        from app.services.dsh.dsh_runner import DshRunResult, run_dsh_task
+
+        with ownership:
+            if dispatch_closed or transferred:
+                return DshRunResult(exit_code=1, error='DSH task dispatch is no longer active')
+            transferred = True
+        try:
+            return run_dsh_task(*args, resource_lease=lease, **kwargs)
+        finally:
+            lease.release()
+
     try:
+        db = SessionLocal()
         task = db.get(DshTask, task_id)
         if task is None or task.status != "running":
             return
-        execute_task(db, task)
+        if lease is None:
+            execute_task(db, task)
+        else:
+            execute_task(db, task, runner=_leased_run)
     finally:
-        db.close()
+        try:
+            if db is not None:
+                db.close()
+        finally:
+            # A team's monitor may time out before its execution thread exits.
+            # Once dispatched, only that runtime thread may release admission.
+            with ownership:
+                dispatch_closed = True
+                if lease is not None and not transferred:
+                    lease.release()
 
 
 def _poll_once() -> None:
     """单次轮询：原子认领一条任务并提交到执行池。"""
-    db = SessionLocal()
+    db = None
+    lease = None
+    submitted = False
     try:
+        budget = configured_budget('orchestration')
+        if budget is not None:
+            lease = budget.try_acquire('dsh', 'dsh:poller')
+            if lease is None:
+                return
+        db = SessionLocal()
         task = claim_next_task(db)
         if task is not None:
-            _executor.submit(_process_claimed, task.id)
+            if lease is None:
+                _executor.submit(_process_claimed, task.id)
+            else:
+                lease.bind_task(f'dsh:{task.id}')
+                _executor.submit(_process_claimed, task.id, lease)
+            submitted = True
     except Exception as exc:  # noqa: BLE001 - 轮询失败不退出
         logger.warning("DSH task worker poll error: %s", exc)
     finally:
-        db.close()
+        try:
+            if db is not None:
+                db.close()
+        finally:
+            if not submitted and lease is not None:
+                lease.release()
 
 
 def ensure_worker_running() -> None:
     """启动后台轮询线程（幂等）。"""
-    _loop.start()
+    if settings.worker_execution_enabled:
+        _loop.start()
 
 
 def shutdown_worker(timeout: float = 5.0) -> None:

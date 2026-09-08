@@ -96,6 +96,21 @@
     "backend": {
       "$ref": "#/$defs/BackendArtifact"
     },
+    "runtime_mode": {
+      "default": "combined",
+      "enum": ["combined", "split"],
+      "title": "Runtime Mode",
+      "type": "string"
+    },
+    "runner": {
+      "anyOf": [{"$ref": "#/$defs/Artifact"}, {"type": "null"}],
+      "default": null
+    },
+    "execution_config_sha256": {
+      "anyOf": [{"type": "string"}, {"type": "null"}],
+      "default": null,
+      "title": "Execution Config Sha256"
+    },
     "config_schema": {
       "minLength": 1,
       "title": "Config Schema",

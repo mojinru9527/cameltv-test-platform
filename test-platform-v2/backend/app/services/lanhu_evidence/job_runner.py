@@ -124,6 +124,29 @@ def run_job_in_new_session(
     job_id: int,
     project_id: int,
     session_factory: SessionFactory | None = None,
+    *,
+    resource_lease=None,
+) -> None:
+    from app.core.resource_budget import configured_budget
+
+    lease = None
+    if resource_lease is None:
+        budget = configured_budget()
+        if budget is not None:
+            lease = budget.try_acquire('lanhu', f'lanhu:{job_id}')
+            if lease is None:
+                return
+    try:
+        _run_admitted_job(job_id, project_id, session_factory)
+    finally:
+        if lease is not None:
+            lease.release()
+
+
+def _run_admitted_job(
+    job_id: int,
+    project_id: int,
+    session_factory: SessionFactory | None = None,
 ) -> None:
     """Run a job using a fresh, closed session for every persistence boundary."""
     factory = session_factory or SessionLocal

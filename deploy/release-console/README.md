@@ -69,6 +69,45 @@ release.swiftbugs.cn {
 
 ## 安全
 
+### 容量与历史发布保留
+
+发布上传前和 `docker load` 前均执行容量准入；检查失败不会继续上传或导入。
+检查 Docker 数据目录、发布目录以及存在的 `/var/lib/containerd` 文件系统。
+上传门槛为 `max(8 GiB, 3 * 归档字节数 + 2 GiB)`，导入门槛为
+`max(8 GiB, 2 * 归档字节数 + 2 GiB)`；有 inode 统计时保留至少 5% 且不少于 1024。
+这是一项保守准入策略，不是压缩镜像解包空间的精确估计，也不预留磁盘空间。
+远端依赖 Python 3、Docker、`flock`；固定 containerd 路径对应当前腾讯云主机，
+自定义 containerd 数据目录时须同步调整检查。回滚不受容量准入限制。
+
+维护窗口内先在主机执行 `release_cleanup.py` 预览，明确指定当前和已验证回滚版本：
+
+```bash
+python3 release_cleanup.py --keep-tag release-20260907-0001 --keep-tag release-20260906-0001
+# 复核 JSON 中的对象后，用相同参数追加 --apply-digest <本次 digest> 执行。
+```
+
+工具只操作 `/opt/cameltv-release` 的历史镜像包及两个平台镜像仓库的历史发布标签。
+默认保护最近两次发布、48 小时内的发布、指定的完整镜像对、所有容器引用的镜像
+和带特殊别名的镜像；不删除容器、卷、数据库、备份或目录。镜像共享层使虚拟大小
+不可直接相加；以执行前后的磁盘可用字节数验证实际收益。
+保留工具默认仅预览，执行必须匹配清单摘要；失败后重新预览，禁止重放旧摘要。
+发布/回滚与清理使用同一个主机锁，维护期间暂停绕过控制台的其他发布操作。
+待发布或计划再次回滚的其他版本也必须逐个传入 `--keep-tag`；工具不会查询发布
+控制台状态库。清理前将拟删除的历史归档迁至外部存储并校验校验和，以便恢复。
+生产现有旧控制台须升级后才能共享锁；升级前只运行预览。
+
+回归：`python -m unittest discover -s deploy/release-console/tests -v`；
+上传入口回归：`pwsh scripts/ops/test-capacity.ps1`。
+
 - 所有 API 需要 `Authorization: Bearer <token>`；token 缺失时服务拒绝启动（fail-closed）
 - SSH 私钥仅环境变量注入，临时文件 0600 用完即删
 - 状态机强制合法流转；无用户输入拼接进命令
+# Database compatibility during rollback
+
+Operational rollback preserves the newer additive schema. The executor supplies
+an explicit `docker-compose.rollback-runtime.yml` command override so old images
+start Uvicorn directly instead of rerunning an Alembic tree that cannot resolve
+the newer revision. Split rollback overrides both API and runner launch commands;
+the dedicated Temporal gateway keeps its own launcher. Regular deploys still run
+migrations. Every release must verify the previous image against the new schema;
+this mechanism cannot make destructive/incompatible migrations safe to roll back.

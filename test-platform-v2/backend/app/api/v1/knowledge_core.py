@@ -37,7 +37,9 @@ from app.services.knowledge.embedding_service import embedding_service
 from app.services.knowledge.vectorize import embed_pending_chunks_in_new_session
 
 logger = logging.getLogger("knowledge")
-router = APIRouter(prefix="/knowledge", tags=["知识中心-概览/检索"])
+from app.core.execution_dispatch import ExecutionRoute
+
+router = APIRouter(prefix="/knowledge", tags=["知识中心-概览/检索"], route_class=ExecutionRoute)
 
 
 def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str, detail: str = "") -> None:

@@ -13,12 +13,17 @@ import uuid
 from pathlib import Path
 
 from app.core.config import settings
+from app.core.resource_budget import configured_budget
 
 logger = logging.getLogger(__name__)
 
 _STORAGE = Path(settings.storage_dir) / "xhr-capture" if getattr(settings, "storage_dir", None) else Path("storage") / "xhr-capture"
 _TASKS: dict[str, dict] = {}
 _LOCK = threading.Lock()
+
+
+class CaptureCapacityUnavailable(RuntimeError):
+    pass
 
 # 只读查询型 POST（同 production-p0-contract READONLY_POST_PATTERNS）
 _READONLY_POST = ["/ee/ads/activity/get", "/ee/search/", "/ee/news/", "/ee/client/",
@@ -43,11 +48,29 @@ def _allowed(method: str, url: str) -> bool:
 
 def create_capture_task(*, pages: list[str], project_id: int) -> dict:
     task_id = f"cap-{uuid.uuid4().hex[:10]}"
+    budget = configured_budget()
+    lease = budget.try_acquire('xhr', task_id) if budget is not None else None
+    if budget is not None and lease is None:
+        raise CaptureCapacityUnavailable('Browser execution capacity unavailable')
     with _LOCK:
         _TASKS[task_id] = {"id": task_id, "status": "running", "project_id": project_id,
                            "pages": pages, "sample_count": 0, "file": "", "error": "", "created_at": time.time()}
-    thread = threading.Thread(target=_run, args=(task_id, pages), daemon=True)
-    thread.start()
+    def _execute():
+        try:
+            _run(task_id, pages)
+        finally:
+            if lease is not None:
+                lease.release()
+
+    try:
+        thread = threading.Thread(target=_execute, daemon=True)
+        thread.start()
+    except BaseException:
+        with _LOCK:
+            _TASKS.pop(task_id, None)
+        if lease is not None:
+            lease.release()
+        raise
     return _TASKS[task_id]
 
 

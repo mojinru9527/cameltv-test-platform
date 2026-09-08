@@ -396,15 +396,17 @@ def trigger_schedule(db: Session, schedule_id: int, project_id: int) -> dict:
     db.commit()
     db.refresh(run)
 
+    from app.core.config import settings
     import threading
 
-    t = threading.Thread(
-        target=_execute_schedule,
-        args=(schedule_id, run.id),
-        daemon=True,
-        name=f"schedule-trigger-{schedule_id}",
-    )
-    t.start()
+    if settings.worker_execution_enabled:
+        t = threading.Thread(
+            target=_execute_schedule,
+            args=(schedule_id, run.id),
+            daemon=True,
+            name=f"schedule-trigger-{schedule_id}",
+        )
+        t.start()
 
     return {
         "schedule_id": schedule_id,

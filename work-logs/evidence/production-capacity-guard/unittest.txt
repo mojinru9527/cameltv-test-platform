@@ -1,0 +1,26 @@
+test_capacity_boundary_and_inodes (test_capacity.CapacityTests.test_capacity_boundary_and_inodes) ... ok
+test_docker_inspection_error_fails_closed (test_capacity.CapacityTests.test_docker_inspection_error_fails_closed) ... ok
+test_invalid_sizes_and_stages_fail (test_capacity.CapacityTests.test_invalid_sizes_and_stages_fail) ... ok
+test_missing_archive_rejected_before_docker_inspection (test_capacity.CapacityTests.test_missing_archive_rejected_before_docker_inspection) ... ok
+test_real_archive_sizes_and_same_device_are_checked_once (test_capacity.CapacityTests.test_real_archive_sizes_and_same_device_are_checked_once) ... ok
+test_remote_command_does_not_interpolate_paths (test_capacity.CapacityTests.test_remote_command_does_not_interpolate_paths) ... ok
+test_upload_accounts_for_archive_and_import (test_capacity.CapacityTests.test_upload_accounts_for_archive_and_import) ... ok
+test_admission_precedes_docker_load_under_shared_lock (test_capacity_integration.ExecutorCapacityTests.test_admission_precedes_docker_load_under_shared_lock) ... ok
+test_failed_remote_admission_never_reports_success (test_capacity_integration.ExecutorCapacityTests.test_failed_remote_admission_never_reports_success) ... ok
+test_rollback_uses_lock_without_capacity_requirement (test_capacity_integration.ExecutorCapacityTests.test_rollback_uses_lock_without_capacity_requirement) ... ok
+test_at_least_two_pinned_tags_required (test_release_cleanup.CleanupTests.test_at_least_two_pinned_tags_required) ... ok
+test_digest_changes_with_container_reference (test_release_cleanup.CleanupTests.test_digest_changes_with_container_reference) ... ok
+test_failed_delete_stops_before_archive_removal (test_release_cleanup.CleanupTests.test_failed_delete_stops_before_archive_removal) ... ok
+test_missing_rollback_pair_fails_closed (test_release_cleanup.CleanupTests.test_missing_rollback_pair_fails_closed) ... ok
+test_new_container_reference_stops_apply_before_image_removal (test_release_cleanup.CleanupTests.test_new_container_reference_stops_apply_before_image_removal) ... ok
+test_only_old_unreferenced_release_is_candidate (test_release_cleanup.CleanupTests.test_only_old_unreferenced_release_is_candidate) ... ok
+test_recent_archive_backup_and_symlink_not_candidates (test_release_cleanup.CleanupTests.test_recent_archive_backup_and_symlink_not_candidates) ... ok
+test_recent_rebuild_with_old_tag_is_protected (test_release_cleanup.CleanupTests.test_recent_rebuild_with_old_tag_is_protected) ... ok
+test_stale_apply_performs_no_deletion (test_release_cleanup.CleanupTests.test_stale_apply_performs_no_deletion) ... ok
+test_stopped_container_and_non_release_alias_protect_image (test_release_cleanup.CleanupTests.test_stopped_container_and_non_release_alias_protect_image) ... ok
+test_successful_apply_removes_only_reviewed_regular_archive (test_release_cleanup.CleanupTests.test_successful_apply_removes_only_reviewed_regular_archive) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 0.019s
+
+OK

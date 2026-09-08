@@ -43,8 +43,8 @@ export interface CaseTrace {
   }>
 }
 
-export async function fetchCoverage(): Promise<CoverageData> {
-  return client.get('/trace/coverage') as Promise<CoverageData>
+export async function fetchCoverage(signal?: AbortSignal): Promise<CoverageData> {
+  return client.get('/trace/coverage', { signal }) as Promise<CoverageData>
 }
 
 export async function fetchCaseTrace(caseId: number): Promise<CaseTrace> {

@@ -33,6 +33,10 @@ def _get_executor() -> ThreadPoolExecutor:
 
 def ensure_processor_running() -> None:
     """确保处理器已就绪（懒初始化线程池），并恢复进程重启前的 pending 任务。"""
+    from app.core.config import settings
+
+    if not settings.worker_execution_enabled:
+        return
     _get_executor()
     _recover_pending_runs()
 
@@ -66,6 +70,10 @@ def enqueue_run(run_id: int, job_id: int, project_id: int) -> None:
     超出部分在线程池内部排队。
     """
     global _running
+    from app.core.config import settings
+
+    if not settings.worker_execution_enabled:
+        return
     with _lock:
         _running += 1
     _get_executor().submit(_execute_run, run_id, job_id, project_id)

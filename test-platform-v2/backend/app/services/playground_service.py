@@ -11,6 +11,13 @@ import tempfile
 import time
 from pathlib import Path
 from typing import Optional
+from contextlib import nullcontext
+import uuid
+
+from fastapi import HTTPException
+from app.core.config import settings
+from app.core.process_tree import run_supervised
+from app.core.resource_budget import configured_budget
 
 logger = logging.getLogger(__name__)
 
@@ -243,6 +250,17 @@ def _playground_runner_dir() -> Path | None:
 
 
 def execute_spec(req: ExecuteRequest) -> ExecuteResponse:
+    if not settings.worker_execution_enabled:
+        raise HTTPException(503, 'Execution service required', headers={'Retry-After': '5'})
+    budget = configured_budget()
+    lease = budget.try_acquire('playground', uuid.uuid4().hex) if budget else None
+    if budget and lease is None:
+        raise HTTPException(429, 'Execution capacity busy', headers={'Retry-After': '5'})
+    with lease if lease is not None else nullcontext():
+        return _execute_spec_owned(req)
+
+
+def _execute_spec_owned(req: ExecuteRequest) -> ExecuteResponse:
     """Execute a Playwright spec in headless Chromium via subprocess.
 
     优先把工作目录放在 UI Runner 内（模块解析可命中 npm ci 锁定的
@@ -276,7 +294,8 @@ export default defineConfig({{
 """, encoding="utf-8")
 
         try:
-            result = subprocess.run(
+            run_process = run_supervised if settings.heavy_task_budget_enabled else subprocess.run
+            result = run_process(
                 ["npx", "playwright", "test", str(spec_file), "--config", str(config)],
                 capture_output=True,
                 text=True,

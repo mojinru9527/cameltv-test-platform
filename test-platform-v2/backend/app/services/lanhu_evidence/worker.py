@@ -14,6 +14,7 @@ from sqlalchemy import func, update
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.resource_budget import configured_budget
 from app.core.db import SessionLocal
 from app.core.task_queue import QueueSpec, atomic_claim
 from app.models.lanhu_evidence import LanhuEvidenceJob
@@ -107,41 +108,56 @@ def poll_and_execute_evidence_jobs() -> None:
     if not _semaphore.acquire(blocking=False):
         return
 
-    job_id: int | None = None
-    project_id = 0
-    db = SessionLocal()
+    lease = None
+    worker_started = False
     try:
-        claimed = claim_next_job(db)
-        if claimed is not None:
-            job_id = claimed.id
-            project_id = claimed.project_id
-    except Exception:  # noqa: BLE001
-        db.rollback()
-        logger.exception("Failed to claim a Lanhu evidence job")
-    finally:
-        db.close()
-
-    if job_id is None:
-        _semaphore.release()
-        return
-
-    def _runner() -> None:
+        budget = configured_budget()
+        if budget is not None:
+            lease = budget.try_acquire('lanhu', 'lanhu:poller')
+            if lease is None:
+                return
+        job_id: int | None = None
+        project_id = 0
+        db = SessionLocal()
         try:
-            from app.services.lanhu_evidence.job_runner import run_job_in_new_session
-
-            run_job_in_new_session(job_id, project_id)
+            claimed = claim_next_job(db)
+            if claimed is not None:
+                job_id = claimed.id
+                project_id = claimed.project_id
         except Exception:  # noqa: BLE001
-            logger.exception("Lanhu evidence job #%s worker crashed", job_id)
+            db.rollback()
+            logger.exception("Failed to claim a Lanhu evidence job")
         finally:
-            _semaphore.release()
+            db.close()
+        if job_id is None:
+            return
+        if lease is not None:
+            lease.bind_task(f'lanhu:{job_id}')
 
-    thread = threading.Thread(
-        target=_runner,
-        daemon=True,
-        name=f"lanhu-evidence-{job_id}",
-    )
-    try:
+        def _runner() -> None:
+            try:
+                from app.services.lanhu_evidence.job_runner import run_job_in_new_session
+
+                if lease is None:
+                    run_job_in_new_session(job_id, project_id)
+                else:
+                    run_job_in_new_session(job_id, project_id, resource_lease=lease)
+            except Exception:  # noqa: BLE001
+                logger.exception("Lanhu evidence job #%s worker crashed", job_id)
+            finally:
+                try:
+                    if lease is not None:
+                        lease.release()
+                finally:
+                    _semaphore.release()
+
+        thread = threading.Thread(target=_runner, daemon=True, name=f'lanhu-evidence-{job_id}')
         thread.start()
-    except Exception:
-        _semaphore.release()
-        raise
+        worker_started = True
+    finally:
+        if not worker_started:
+            try:
+                if lease is not None:
+                    lease.release()
+            finally:
+                _semaphore.release()

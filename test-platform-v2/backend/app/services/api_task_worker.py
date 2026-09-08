@@ -287,7 +287,10 @@ def execute_task(task_id: int, project_id: int, worker_id: str) -> None:
 
 def ensure_processor_running() -> None:
     """启动后台轮询线程（若未启动）。幂等，多次调用安全。"""
-    _loop.start()
+    from app.core.config import settings
+
+    if settings.worker_execution_enabled:
+        _loop.start()
 
 
 def kick() -> None:

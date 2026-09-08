@@ -17,10 +17,12 @@ from __future__ import annotations
 import logging
 import re
 import time
+import uuid
 from pathlib import Path
 from typing import Any
 
 from app.modules.aitde.browser.locator import SemanticLocatorResolver
+from app.core.resource_budget import configured_budget
 
 logger = logging.getLogger("aitde.browser")
 
@@ -62,8 +64,23 @@ class PlaywrightPageAdapter:
         self._context: Any = None
         self._page: Any = None
         self._network: list[dict[str, Any]] = []
+        self._resource_lease = None
 
     def open(self) -> None:
+        if self._pw is not None or self._resource_lease is not None:
+            raise BrowserRuntimeError('browser adapter already open')
+        budget = configured_budget()
+        if budget is not None:
+            self._resource_lease = budget.try_acquire('browser', f'browser:{uuid.uuid4().hex}')
+            if self._resource_lease is None:
+                raise BrowserRuntimeError('browser execution capacity unavailable')
+        try:
+            self._open_admitted()
+        except BaseException:
+            self.close()
+            raise
+
+    def _open_admitted(self) -> None:
         from playwright.sync_api import sync_playwright
 
         self._pw = sync_playwright().start()
@@ -168,10 +185,18 @@ class PlaywrightPageAdapter:
         return path
 
     def close(self) -> None:
-        if self._browser is not None:
-            self._browser.close()
-        if self._pw is not None:
-            self._pw.stop()
+        try:
+            try:
+                if self._browser is not None:
+                    self._browser.close()
+            finally:
+                if self._pw is not None:
+                    self._pw.stop()
+        finally:
+            self._browser = self._pw = self._context = self._page = None
+            if self._resource_lease is not None:
+                self._resource_lease.release()
+                self._resource_lease = None
 
 
 # ── rule-based locator resolution (pure, unit-testable) ──────────────────────

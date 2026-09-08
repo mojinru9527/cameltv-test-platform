@@ -8,7 +8,7 @@ from cameltv_release.contracts import ReleaseManifest
 
 def render_release_compose(manifest: ReleaseManifest) -> dict[str, Any]:
     """Return a test-release definition bound exclusively to manifest digests."""
-    return {
+    definition = {
         "name": f"cameltv-release-{manifest.release_id}",
         "x-cameltv-release": {
             "release_id": manifest.release_id,
@@ -26,3 +26,12 @@ def render_release_compose(manifest: ReleaseManifest) -> dict[str, Any]:
             },
         },
     }
+    if manifest.runtime_mode == 'split':
+        definition['x-cameltv-release'].update(
+            runtime_mode='split', execution_config_sha256=manifest.execution_config_sha256,
+        )
+        definition['services']['runner'] = {
+            'image': f'{manifest.runner.image}@{manifest.runner.digest}',
+            'restart': 'unless-stopped',
+        }
+    return definition

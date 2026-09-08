@@ -361,6 +361,10 @@ def _queue_loop() -> None:
 def ensure_processor_running() -> None:
     """确保队列处理器已启动（幂等）。"""
     global _processor_started, _processor_thread
+    from app.core.config import settings
+
+    if not settings.worker_execution_enabled:
+        return
     with _processor_lock:
         if _processor_thread is not None and _processor_thread.is_alive():
             _processor_started = True
@@ -375,6 +379,10 @@ def ensure_processor_running() -> None:
         _processor_thread.start()
         _processor_started = True
         logger.info("Agent queue processor thread started")
+
+
+def processor_is_running() -> bool:
+    return _processor_thread is not None and _processor_thread.is_alive()
 
 
 def shutdown_processor(timeout: float = 5.0) -> None:

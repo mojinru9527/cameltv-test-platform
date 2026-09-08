@@ -15,14 +15,6 @@ def test_execute_all_async_returns_immediately(
     plan = TestPlan(project_id=1, name="B169-PLAN", status="draft")
     db_session.add(plan)
     db_session.commit()
-    calls = {}
-
-    import app.api.v1.test_plan_execution as tp_module
-
-    def fake_bg(**kwargs):
-        calls.update(kwargs)
-
-    monkeypatch.setattr(tp_module.test_plan_service, "run_async_execute_all", fake_bg)
     resp = client.post(
         f"/api/v1/test-plans/{plan.id}/execute-all",
         headers=auth_headers,
@@ -34,8 +26,12 @@ def test_execute_all_async_returns_immediately(
     assert resp.status_code == 200
     data = resp.json()["data"]
     assert data["async"] is True
-    assert calls.get("plan_id") == plan.id
-    assert calls.get("ui_environment_id") == 2
+    import json
+    from app.models.plan_execution_job import PlanExecutionJob
+    job = db_session.get(PlanExecutionJob, data['job_id'])
+    assert job.status == 'pending'
+    assert job.plan_id == plan.id
+    assert json.loads(job.request_json)['ui_environment_id'] == 2
 
 
 def test_sync_mode_keeps_old_behavior(db_session, client, auth_headers, monkeypatch):

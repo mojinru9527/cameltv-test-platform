@@ -15,6 +15,7 @@ import hashlib
 import json
 import re
 import sqlite3
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
@@ -23,6 +24,7 @@ from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from release_artifacts import runtime_mode
 
 from tencent_executor import (
     ExecutorCommandFailed,
@@ -62,6 +64,7 @@ class ConsoleSettings:
         self.tencent_executor_backup_dir = _env("TENCENT_EXECUTOR_BACKUP_DIR", "/opt/cameltv-backup")
         self.tencent_executor_image_backend = _env("TENCENT_EXECUTOR_IMAGE_BACKEND", "cameltv-tp-backend:latest")
         self.tencent_executor_image_frontend = _env("TENCENT_EXECUTOR_IMAGE_FRONTEND", "cameltv-tp-frontend:latest")
+        self.tencent_executor_image_runner = _env("TENCENT_EXECUTOR_IMAGE_RUNNER", "cameltv-tp-runner:main")
         self.tencent_executor_compose_project = _env("TENCENT_EXECUTOR_COMPOSE_PROJECT", "cameltv-tp-production")
         self.tencent_executor_timeout = int(_env("TENCENT_EXECUTOR_TIMEOUT", "600"))
         self.tencent_executor_keep_backups = int(_env("TENCENT_EXECUTOR_KEEP_BACKUPS", "7"))
@@ -75,14 +78,19 @@ def _now_iso() -> str:
     return datetime.now(UTC).isoformat()
 
 
-def _store_conn() -> sqlite3.Connection:
+@contextmanager
+def _store_conn():
     if not settings.release_control_database_path:
         raise HTTPException(503, "release-control 状态库未配置")
     path = Path(settings.release_control_database_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
-    return conn
+    try:
+        with conn:
+            yield conn
+    finally:
+        conn.close()
 
 
 _SCHEMA_SQL = """
@@ -145,6 +153,14 @@ def _transition_state(
         row = conn.execute("SELECT state FROM deployments WHERE id = ?", (deployment_id,)).fetchone()
         if row is None or row["state"] != from_state:
             return False
+        if to_state in {"PROD_DEPLOYING", "PROD_ROLLING_BACK"}:
+            busy = conn.execute(
+                "SELECT id FROM deployments WHERE environment = 'production' "
+                "AND state IN ('PROD_DEPLOYING', 'PROD_ROLLING_BACK', 'PROD_OBSERVING') AND id != ?",
+                (deployment_id,),
+            ).fetchone()
+            if busy is not None:
+                return False
         conn.execute("UPDATE deployments SET state = ? WHERE id = ?", (to_state, deployment_id))
         seq = int(
             conn.execute(
@@ -234,6 +250,44 @@ def _executor():
         raise HTTPException(503, str(exc)) from exc
 
 
+def _registered_manifest(release_id: str, raw: str, digest: str) -> dict:
+    if hashlib.sha256(raw.encode('utf-8')).hexdigest() != digest:
+        raise HTTPException(409, 'Registered manifest checksum mismatch')
+    try:
+        manifest = json.loads(raw)
+        if not isinstance(manifest, dict) or manifest.get('schema_version') != '1.0':
+            raise ValueError('manifest schema_version must be 1.0')
+        if manifest.get('release_id') != release_id:
+            raise ValueError('manifest release_id mismatch')
+        if not re.fullmatch(r'release-\d{8}-\d{4}', release_id):
+            raise ValueError('invalid release tag')
+        if not re.fullmatch(r'[0-9a-f]{40}', str(manifest.get('git_sha', ''))):
+            raise ValueError('invalid git_sha')
+        mode = runtime_mode(manifest)
+        for part in ('backend', 'frontend', 'runner') if mode == 'split' else ('backend', 'frontend'):
+            artifact = manifest.get(part)
+            if not isinstance(artifact, dict) or artifact.get('image') != f'cameltv-tp-{part}':
+                raise ValueError(f'invalid {part} repository')
+            if not re.fullmatch(r'sha256:[0-9a-f]{64}', str(artifact.get('digest', ''))):
+                raise ValueError(f'invalid {part} digest')
+        return manifest
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+def _deployment_manifest(deployment_id: str):
+    with _store_conn() as conn:
+        _ensure_schema(conn)
+        row = conn.execute(
+            'SELECT d.state, d.release_id, d.manifest_sha256, r.manifest_json '
+            'FROM deployments d JOIN releases r ON r.release_id = d.release_id WHERE d.id = ?',
+            (deployment_id,),
+        ).fetchone()
+    if row is None:
+        raise HTTPException(404, 'Deployment not found')
+    return row, _registered_manifest(row['release_id'], row['manifest_json'], row['manifest_sha256'])
+
+
 # ── read API ──────────────────────────────────────────────────────────────
 
 
@@ -271,12 +325,19 @@ def list_events(deployment_id: str, authorization: str | None = Header(None, ali
 @app.post("/api/deployments")
 def submit_release(body: SubmitReleaseIn, authorization: str | None = Header(None, alias="Authorization", include_in_schema=False)):
     _require_token(authorization)
+    manifest_sha256 = hashlib.sha256(body.manifest_json.encode('utf-8')).hexdigest()
+    _registered_manifest(body.release_id, body.manifest_json, manifest_sha256)
+    if body.image_tag != body.release_id:
+        raise HTTPException(422, 'Image tag must match registered release')
     with _store_conn() as conn:
         _ensure_schema(conn)
         conn.execute("BEGIN IMMEDIATE")
         manifest_sha256 = hashlib.sha256(body.manifest_json.encode("utf-8")).hexdigest()
         deployment_id = uuid4().hex
         try:
+            existing = conn.execute('SELECT manifest_sha256 FROM releases WHERE release_id = ?', (body.release_id,)).fetchone()
+            if existing is not None and existing['manifest_sha256'] != manifest_sha256:
+                raise HTTPException(409, 'Release already registered with a different manifest')
             conn.execute(
                 "INSERT OR IGNORE INTO releases(release_id, manifest_sha256, manifest_json, created_at) VALUES (?, ?, ?, ?)",  # noqa: E501
                 (body.release_id, manifest_sha256, body.manifest_json, _now_iso()),
@@ -325,6 +386,7 @@ def submit_release(body: SubmitReleaseIn, authorization: str | None = Header(Non
 def validate_deployment(deployment_id: str, authorization: str | None = Header(None, alias="Authorization", include_in_schema=False)):
     """DRAFT → VALIDATED：不可变 manifest 结构校验（ADR-0015 门禁）。"""
     _require_token(authorization)
+    _deployment_manifest(deployment_id)
     with _store_conn() as conn:
         _ensure_schema(conn)
         row = conn.execute(
@@ -364,25 +426,22 @@ def validate_deployment(deployment_id: str, authorization: str | None = Header(N
 @app.post("/api/deployments/{deployment_id}/publish")
 def publish_deployment(deployment_id: str, body: PublishIn, authorization: str | None = Header(None, alias="Authorization", include_in_schema=False)):
     _require_token(authorization)
-    with _store_conn() as conn:
-        _ensure_schema(conn)
-        row = conn.execute("SELECT state FROM deployments WHERE id = ?", (deployment_id,)).fetchone()
-    if row is None:
-        raise HTTPException(404, "发布记录不存在")
+    row, manifest = _deployment_manifest(deployment_id)
+    if body.image_tag != row['release_id']:
+        raise HTTPException(422, 'Image tag must match registered release')
     if row["state"] not in {"VALIDATED", "TEST_VERIFIED"}:
         raise HTTPException(409, f"当前状态 {row['state']} 不允许发布")
 
     executor = _executor()
+    if not _transition_state(deployment_id, row['state'], 'PROD_DEPLOYING', 'deploy', 'console', 'publish started'):
+        raise HTTPException(409, 'Deployment state changed or production is busy')
     try:
-        result = executor.deploy(body.image_tag)
-    except ExecutorCommandFailed as exc:
+        result = executor.deploy(body.image_tag, manifest=manifest)
+    except Exception as exc:
+        _transition_state(deployment_id, 'PROD_DEPLOYING', 'PROD_FAILED', 'deploy', 'console', 'publish failed')
         raise HTTPException(500, f"发布执行失败: {exc}") from exc
-
-    try:
-        _transition_state(deployment_id, row["state"], "PROD_DEPLOYING", "deploy", "console", "publish started")
-        _transition_state(deployment_id, "PROD_DEPLOYING", "PROD_OBSERVING", "deploy", "console", "publish succeeded")
-    except Exception:
-        pass
+    if not _transition_state(deployment_id, "PROD_DEPLOYING", "PROD_OBSERVING", "deploy", "console", "publish succeeded"):
+        raise HTTPException(409, 'Deployment completed but state changed; reconcile before retrying')
     return ActionOut(
         action="publish",
         ok=True,
@@ -427,20 +486,24 @@ def rollback_deployment(deployment_id: str, body: RollbackIn, authorization: str
     with _store_conn() as conn:
         _ensure_schema(conn)
         row = conn.execute("SELECT state FROM deployments WHERE id = ?", (deployment_id,)).fetchone()
+        target = conn.execute('SELECT * FROM releases WHERE release_id = ?', (body.image_tag,)).fetchone()
     if row is None:
         raise HTTPException(404, "发布记录不存在")
-
+    if row['state'] not in {'PROD_FAILED', 'PROD_OBSERVING', 'PRODUCTION_VERIFIED'}:
+        raise HTTPException(409, 'Current state does not allow rollback')
+    if target is None:
+        raise HTTPException(404, 'Rollback release is not registered')
+    manifest = _registered_manifest(target['release_id'], target['manifest_json'], target['manifest_sha256'])
     executor = _executor()
+    if not _transition_state(deployment_id, row['state'], 'PROD_ROLLING_BACK', 'rollback', 'console', f'rollback started: {body.image_tag}'):
+        raise HTTPException(409, 'Deployment state changed or production is busy')
     try:
-        result = executor.rollback(body.image_tag)
-    except ExecutorCommandFailed as exc:
+        result = executor.rollback(body.image_tag, manifest=manifest)
+    except Exception as exc:
+        _transition_state(deployment_id, 'PROD_ROLLING_BACK', 'PROD_FAILED', 'rollback', 'console', 'rollback failed')
         raise HTTPException(500, f"回滚执行失败: {exc}") from exc
-
-    try:
-        _transition_state(deployment_id, row["state"], "PROD_ROLLING_BACK", "rollback", "console", "rollback started")
-        _transition_state(deployment_id, "PROD_ROLLING_BACK", "PROD_ROLLED_BACK", "rollback", "console", "rollback succeeded")
-    except Exception:
-        pass
+    if not _transition_state(deployment_id, 'PROD_ROLLING_BACK', 'PROD_ROLLED_BACK', 'rollback', 'console', f'rollback succeeded: {body.image_tag}'):
+        raise HTTPException(409, 'Rollback completed but state changed; reconcile before retrying')
     return ActionOut(
         action="rollback",
         ok=True,

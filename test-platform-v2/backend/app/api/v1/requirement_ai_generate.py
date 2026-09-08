@@ -27,7 +27,9 @@ from app.schemas.requirement import (
 from app.services import audit_service, requirement_service
 from app.services.openapi_import_service import get_project_service
 
-router = APIRouter(prefix="/requirements", tags=["需求文档-AI-生成"])
+from app.core.execution_dispatch import ExecutionRoute
+
+router = APIRouter(prefix="/requirements", tags=["需求文档-AI-生成"], route_class=ExecutionRoute)
 logger = logging.getLogger("requirement")
 
 

@@ -12,6 +12,7 @@ import subprocess
 from pathlib import Path
 
 from app.core.config import settings
+from app.core.process_tree import run_supervised
 from app.services.lanhu_evidence.ocr_provider import (
     OcrProvider,
     OcrResult,
@@ -61,7 +62,8 @@ class LocalCommandOcrProvider(OcrProvider):
             )
         cmd = settings.lanhu_ocr_command.replace("{image}", str(image_path))
         try:
-            result = subprocess.run(
+            run_process = run_supervised if settings.heavy_task_budget_enabled else subprocess.run
+            result = run_process(
                 cmd, shell=True, capture_output=True, text=True, timeout=120,
             )
         except subprocess.TimeoutExpired:

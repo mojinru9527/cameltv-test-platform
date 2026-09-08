@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from contextlib import asynccontextmanager
+from contextlib import ExitStack, asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -59,7 +59,7 @@ class RequestSizeLimitMiddleware:
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(application: FastAPI):
     import app.models  # noqa: F401
 
     # ── security validation (fail early in production) ──
@@ -110,61 +110,13 @@ async def lifespan(_: FastAPI):
 
     run_seed()
 
-    from app.core.scheduler import init_scheduler, shutdown_scheduler
+    with ExitStack() as runtime:
+        application.state.consumers_healthy = lambda: True
+        if settings.worker_execution_enabled:
+            from app.worker import task_consumers
 
-    init_scheduler()
-
-    # ── V2.6: Auto-sync scheduler for external integrations ──
-    if settings.sync_enabled:
-        from app.core.db import SessionLocal
-        from app.models.integration import IntegrationConfig
-
-        _sync_db = SessionLocal()
-        try:
-            _configs = _sync_db.query(IntegrationConfig).filter(
-                IntegrationConfig.enabled,
-                IntegrationConfig.sync_interval_minutes > 0,
-            ).all()
-            for _cfg in _configs:
-                from app.services.sync.engine import run_scheduled_sync
-                from apscheduler.triggers.interval import IntervalTrigger
-                from app.core.scheduler import scheduler as _scheduler
-
-                job_id = f"sync_integration_{_cfg.id}"
-                if not _scheduler.get_job(job_id):
-                    _scheduler.add_job(
-                        run_scheduled_sync,
-                        trigger=IntervalTrigger(minutes=_cfg.sync_interval_minutes),
-                        args=[_cfg.id],
-                        id=job_id,
-                        name=f"Sync integration #{_cfg.id} ({_cfg.provider_type})",
-                        replace_existing=True,
-                    )
-                    logger.info("[sync] Registered auto-sync job for integration #%s (%s) every %smin", _cfg.id, _cfg.name, _cfg.sync_interval_minutes)
-        except Exception as exc:
-            logger.warning("[sync] WARNING — failed to register auto-sync jobs: %s", exc)
-        finally:
-            _sync_db.close()
-
-    from app.services.ai_tasks import ensure_worker_running as ensure_ai_worker
-
-    ensure_ai_worker()
-
-    try:
+            application.state.consumers_healthy = runtime.enter_context(task_consumers())
         yield
-    finally:
-        from app.services.ai_tasks import shutdown_worker as shutdown_ai_worker
-        from app.services.api_task_worker import (
-            shutdown_processor as shutdown_api_task_worker,
-        )
-        from app.services.knowledge.agent_queue import (
-            shutdown_processor as shutdown_agent_queue,
-        )
-
-        shutdown_api_task_worker()
-        shutdown_ai_worker()
-        shutdown_agent_queue()
-        shutdown_scheduler()
 
 
 app = FastAPI(
@@ -213,4 +165,8 @@ app.include_router(v2_router)
 
 @app.get("/health", tags=["system"], summary="Health check")
 def health():
+    if not getattr(app.state, 'consumers_healthy', lambda: True)():
+        from starlette.responses import JSONResponse
+
+        return JSONResponse({'status': 'unhealthy', 'reason': 'task consumer stopped'}, status_code=503)
     return {"status": "ok", "version": settings.app_version}

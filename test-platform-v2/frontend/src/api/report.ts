@@ -35,8 +35,8 @@ export async function fetchReports(params: {
   keyword?: string
   page?: number
   page_size?: number
-} = {}) {
-  return api.get('/reports', { params })
+} = {}, signal?: AbortSignal) {
+  return api.get('/reports', { params, signal })
 }
 
 export async function fetchReport(id: number) {
@@ -68,7 +68,7 @@ export function exportReportUrl(
 
 // ── Report Trends ──
 
-export async function fetchTrends(): Promise<TrendsData> {
-  const response = await api.get('/reports/trends')
+export async function fetchTrends(signal?: AbortSignal): Promise<TrendsData> {
+  const response = await api.get('/reports/trends', { signal })
   return response as unknown as TrendsData
 }

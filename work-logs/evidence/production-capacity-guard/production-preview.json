@@ -1,0 +1,43 @@
+{
+  "applied": false,
+  "archive_bytes": 2851748352,
+  "archives": [
+    {
+      "mtime_ns": 1788432381383854783,
+      "name": "release-20260903-0001-backend.tar",
+      "regular": true,
+      "size": 1398110208
+    },
+    {
+      "mtime_ns": 1788432395270838050,
+      "name": "release-20260903-0001-frontend.tar",
+      "regular": true,
+      "size": 27321856
+    },
+    {
+      "mtime_ns": 1788541610767439192,
+      "name": "release-20260905-0001-backend.tar",
+      "regular": true,
+      "size": 1398996992
+    },
+    {
+      "mtime_ns": 1788541732522307874,
+      "name": "release-20260905-0001-frontend.tar",
+      "regular": true,
+      "size": 27319296
+    }
+  ],
+  "digest": "2831f18e86667a8fad838bda04fe103758541402ebb1dd926c9938cdc3a18c59",
+  "free_after": 2744856576,
+  "free_before": 2744864768,
+  "image_tags": [
+    "cameltv-tp-backend:release-20260905-0001",
+    "cameltv-tp-backend:release-20260905-0002",
+    "cameltv-tp-frontend:release-20260905-0001",
+    "cameltv-tp-frontend:release-20260905-0002"
+  ],
+  "keep_tags": [
+    "release-20260906-0001",
+    "release-20260907-0001"
+  ]
+}

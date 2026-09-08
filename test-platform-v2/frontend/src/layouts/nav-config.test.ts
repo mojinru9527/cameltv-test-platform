@@ -47,8 +47,8 @@ describe('batch-212 buildNavigation（5 入口 + 资产与更多分桶）', () =
     const model = buildNavigation(TESTER_MENUS)
     expect(flattenMain(model)).toEqual([
       'menu:workbench', // 1 工作台
-      '版本验收', 'menu:versionmission', 'menu:missions', // 2（组内按 sort 升序）
-      '结果与缺陷', 'menu:report', 'menu:defect', // 3
+      '任务与报告', 'menu:missions', 'menu:report', 'menu:versionmission',
+      'menu:defect', // 3
       'menu:knowledge', // 4
     ])
     expect(model.assetSections.length).toBeGreaterThan(0)
@@ -85,7 +85,7 @@ describe('batch-212 buildNavigation（5 入口 + 资产与更多分桶）', () =
     expect(system.items.map((i) => i.code)).toEqual(['menu:system', 'menu:integration', 'menu:notify'])
   })
 
-  it('缺权限的组自动省略：viewer 无 missions/versionmission → 版本验收行不出现', () => {
+  it('只读角色只显示有权限的报告，不补出任务入口', () => {
     const viewerMenus: MenuItem[] = [
       menu('menu:workbench', '/workbench', 1),
       menu('menu:requirement', '/requirement', 3),
@@ -98,7 +98,7 @@ describe('batch-212 buildNavigation（5 入口 + 资产与更多分桶）', () =
     const model = buildNavigation(viewerMenus)
     expect(flattenMain(model)).toEqual([
       'menu:workbench',
-      '结果与缺陷', 'menu:report', 'menu:defect',
+      '任务与报告', 'menu:report', 'menu:defect',
       'menu:knowledge',
     ])
   })
@@ -114,6 +114,22 @@ describe('batch-212 buildNavigation（5 入口 + 资产与更多分桶）', () =
     const model = buildNavigation([])
     expect(model.mainRows).toEqual([])
     expect(model.assetSections).toEqual([])
+  })
+
+  it('任务和报告只出现一次，保留历史 URL 和菜单权限', () => {
+    const menus = [...TESTER_MENUS, menu('menu:versiontask', '/version-tasks', 30)]
+    const model = buildNavigation(menus)
+    const group = model.mainRows.find((row) => row.kind === 'group' && row.label === '任务与报告')
+    expect(group?.kind).toBe('group')
+    if (group?.kind !== 'group') throw new Error('Missing task/report navigation')
+    expect(group.items.map((item) => item.path)).toEqual(['/version-tasks', '/missions', '/report', '/release-bundles'])
+    const displayed = [
+      ...model.mainRows.flatMap((row) => row.kind === 'link' ? [row.item] : row.items),
+      ...model.assetSections.flatMap((section) => section.items),
+    ]
+    expect(displayed).toHaveLength(menus.length)
+    expect(new Set(displayed.map((item) => item.code)).size).toBe(menus.length)
+    for (const item of displayed) expect(menus).toContain(item)
   })
 })
 
