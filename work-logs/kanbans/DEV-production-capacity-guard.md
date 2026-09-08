@@ -128,3 +128,10 @@ sets; execution YAML is retained. Console tests: 36 passed; actual Compose merge
 3 passed; native transfer and build-metadata probes pass; F821 passes; scan HARD=0,
 WARN=332 unchanged. Final bundle rebuild/real transition rehearsal, complete host
 budget, product consolidation, final QA and production rollout remain pending.
+Product slice now implemented and verified: one task/report navigation group,
+historical menu objects/paths preserved, inactive report/trace panels unmounted
+and requests cancelled. Fresh dependency install, typecheck and production build
+pass. Frontend full regression: 697 passed across 159 files (190.85s). Browser
+production-build fixture smoke passes three viewports, exact effective request
+counts and zero page errors. Model residency policy and final resource sizing,
+complete deployment rehearsal, combined QA/PR/main/production remain pending.

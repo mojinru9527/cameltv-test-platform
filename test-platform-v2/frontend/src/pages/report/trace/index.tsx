@@ -29,7 +29,7 @@ function typeLabel(t: string): string {
 export default function TracePanel() {
   const chartColors = useChartColors()
   const { data, isLoading, isError, error, refetch } = useApi<CoverageData>(
-    () => fetchCoverage(),
+    (signal) => fetchCoverage(signal),
     [],
   )
 

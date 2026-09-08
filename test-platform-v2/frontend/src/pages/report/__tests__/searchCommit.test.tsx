@@ -10,7 +10,10 @@ const api = vi.hoisted(() => ({
   deleteReport: vi.fn(),
   fetchTemplates: vi.fn(),
   fetchPlans: vi.fn(),
+  fetchCoverage: vi.fn(),
 }))
+
+vi.mock('@/api/trace', () => ({ fetchCoverage: (...args: unknown[]) => api.fetchCoverage(...args) }))
 
 vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
@@ -87,6 +90,7 @@ describe('报告中心搜索提交态（B60-P2-001）', () => {
     })
     api.fetchPlans.mockResolvedValue([])
     api.fetchTemplates.mockResolvedValue([])
+    api.fetchCoverage.mockImplementation(() => new Promise(() => {}))
     useAuthStore.setState({ permissions: ['*'], currentProjectId: 1 })
   })
 
@@ -110,7 +114,7 @@ describe('报告中心搜索提交态（B60-P2-001）', () => {
       page: 1,
       page_size: 20,
       keyword: '回归',
-    })
+    }, expect.any(AbortSignal))
 
     fireEvent.change(input, { target: { value: '回归2' } })
     fireEvent.keyDown(input, { key: 'Enter' })
@@ -119,7 +123,7 @@ describe('报告中心搜索提交态（B60-P2-001）', () => {
       page: 1,
       page_size: 20,
       keyword: '回归2',
-    })
+    }, expect.any(AbortSignal))
   })
 
   it('只读角色不显示生成报告入口（B60-P1-009）', async () => {
@@ -131,5 +135,24 @@ describe('报告中心搜索提交态（B60-P2-001）', () => {
     )
     await waitFor(() => expect(api.fetchReports).toHaveBeenCalledTimes(1))
     expect(screen.queryByRole('button', { name: '生成报告' })).toBeNull()
+  })
+
+  it('追溯深链接不加载报告和趋势，切换时取消离开视图的请求', async () => {
+    render(<MemoryRouter initialEntries={['/report?tab=trace']}><ReportPage /></MemoryRouter>)
+    await waitFor(() => expect(api.fetchCoverage).toHaveBeenCalledTimes(1))
+    expect(api.fetchReports).not.toHaveBeenCalled()
+    expect(api.fetchTrends).not.toHaveBeenCalled()
+    const coverageSignal = api.fetchCoverage.mock.calls[0][0] as AbortSignal
+    fireEvent.mouseDown(screen.getByRole('tab', { name: '报告中心' }), { button: 0, ctrlKey: false })
+    await waitFor(() => expect(api.fetchReports).toHaveBeenCalledTimes(1))
+    expect(coverageSignal.aborted).toBe(true)
+    expect(api.fetchTrends).toHaveBeenCalledTimes(1)
+    const reportsSignal = api.fetchReports.mock.calls[0][1] as AbortSignal
+    const trendsSignal = api.fetchTrends.mock.calls[0][0] as AbortSignal
+    fireEvent.mouseDown(screen.getByRole('tab', { name: '质量追溯' }), { button: 0, ctrlKey: false })
+    await waitFor(() => expect(api.fetchCoverage).toHaveBeenCalledTimes(2))
+    expect(reportsSignal.aborted).toBe(true)
+    expect(trendsSignal.aborted).toBe(true)
+    expect(api.fetchReports).toHaveBeenCalledTimes(1)
   })
 })

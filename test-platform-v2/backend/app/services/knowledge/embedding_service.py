@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import logging
+import gc
 import threading
 from contextlib import nullcontext
 
@@ -68,15 +69,19 @@ class EmbeddingService:
         """模型是否就绪（会触发首次加载/下载）。"""
         if not settings.worker_execution_enabled:
             return False
-        if self._model is not None:
-            return True
         budget = configured_budget()
+        if self._model is not None and budget is None:
+            return True
         admission = budget.try_acquire('embedding', 'embedding:load') if budget else nullcontext()
         if admission is None:
             return False
         with admission, self._lock:
-            self._ensure_model()
-            return self._model is not None
+            try:
+                self._ensure_model()
+                return self._model is not None
+            finally:
+                if budget is not None:
+                    self._release_model()
 
     def embed(self, texts: list[str]):
         """批量嵌入，返回 np.ndarray[float32, (n, dim)]（已 L2 归一化）；不可用/异常返回 None。"""
@@ -87,7 +92,19 @@ class EmbeddingService:
         if admission is None:
             return None
         with admission, self._lock:
-            return self._embed_admitted(texts)
+            try:
+                return self._embed_admitted(texts)
+            finally:
+                if budget is not None:
+                    self._release_model()
+
+    def _release_model(self) -> None:
+        # Release the ONNX session while still owning shared admission. Keeping
+        # it resident after returning the lease would overlap the next browser
+        # workload. Disk model caches remain available for the next load.
+        if self._model is not None:
+            self._model = None
+            gc.collect()
 
     def _embed_admitted(self, texts: list[str]):
         texts = [t if isinstance(t, str) else "" for t in (texts or [])]

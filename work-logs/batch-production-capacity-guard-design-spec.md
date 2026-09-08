@@ -57,3 +57,18 @@ shows pending/running/completed/failed state and recorded failure messages.
 Completed means dispatch finished, not that every test passed; result counts
 retain their existing meaning, including blocked cases. The old process-only
 run_async_execute_all wrapper is removed after checking it has no other callers.
+
+## Product consolidation implementation
+
+The existing version-task and Mission models have different lifecycle and
+historical identifiers. Both remain accessible in a single `任务与报告` navigation
+group, ordered as version tasks, intelligent tasks, reports and release bundles.
+Defects retain their own link. The server-filtered MenuItem objects, paths and
+permission codes are reused verbatim; no extra list/count requests are added.
+Knowledge/Wiki/graph entry points and data remain available.
+
+Report/trace tabs use the existing accessible Tabs component. Only the active
+panel mounts its hooks, charts and dialogs. Report list, trend and coverage
+requests receive the hook's AbortSignal and are cancelled when their panel
+unmounts. `/report`, `/report?tab=trace`, and the existing `/trace` redirect remain
+valid. This consolidates navigation without renumbering or migrating task data.

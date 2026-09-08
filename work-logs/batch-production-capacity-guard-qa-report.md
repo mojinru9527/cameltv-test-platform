@@ -237,3 +237,37 @@ Rework: 2 review rounds (apply-path tests and recent rebuild protection).
 Root causes: capacity management debt, independent deployment tools.
 Next prevention: always compare actual unique/shared image storage and measure
 post-cleanup free space; never promise summed virtual image sizes as savings.
+## Product consolidation verification
+
+- Fresh `npm ci` passed after restricting Go build-tool concurrency to two.
+  First install hit the local machine's memory allocation limit; no dependency
+  version or lockfile changed to work around the failure.
+- Typecheck passed. Production build passed, exit 0, Vite build 9.78 seconds.
+- Relevant navigation/report tests: 18 passed. Complete frontend regression:
+  159 files, 697 tests passed, exit 0, 190.85 seconds. Logs retained locally at
+  frontend/build-production-capacity.log and frontend/test-production-capacity.log.
+- Playwright exercised the actual production build using isolated API fixtures:
+  historical report row accessible; each task/report menu path appears once;
+  trace deep link starts zero report/trend requests; switching to reports issues
+  one list and one trend request; switching back issues neither again. No page
+  errors, and no page horizontal overflow at 1440, 820 and 390 px.
+- Screenshots inspected: F:/CamelTv-safe-backup/production-capacity-ui/ (desktop,
+  tablet, mobile and trace). Fixture data does not prove production data health;
+  post-deployment smoke remains required. Mobile table keeps its internal scroll.
+- Component tests additionally verify request AbortSignals on tab departure and
+  read-only creation permissions. Navigation tests preserve the exact original
+  menu objects/paths and reject duplicate or invented permission entries.
+## Model residency and latest host observation
+
+- New residency tests first failed for all three budgeted operations (available,
+  inference and failure). After implementation, residency/admission/RAG tests:
+  29 passed, 4.03 seconds, exit 0; backend F821 passed.
+- Frontend dev-gate: PASS_WITH_WARN, exit 2; typecheck/lint exit 0; scan HARD=0,
+  WARN=332 unchanged. Backend guard/full regression still required separately.
+- Read-only production observation on 2026-09-08: total RAM 3723 MiB, available
+  2501 MiB, swap used 624 MiB; disk 94%, free 2.4 GiB. Application, worker,
+  PostgreSQL and Temporal containers healthy. No production mutation occurred.
+- Docker Desktop on the local machine currently fails before engine startup
+  with its inference-manager AF_UNIX bind conflict. Normal startup and controlled
+  restart did not restore it. Final container measurements/rehearsal remain open;
+  this local issue must not be represented as a production failure.

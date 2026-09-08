@@ -120,3 +120,16 @@ its source snapshot. New slices require their own affected regression evidence.
 - Native BrowserRuntimeDriver has no production callers found in app/; its
   busy outcome is runtime_error, not a durable queue retry. Keep this distinction
   in the rollout review, rather than claiming a native Temporal execution path.
+## Embedding residency policy
+
+Budgeted execution releases the ONNX model/session while holding the shared
+execution lease, after inference, inference failure or model availability probes.
+Garbage collection runs before the next workload can acquire the lease. The disk
+model cache and stored vectors are retained; the next request reloads the model.
+Unbudgeted combined installations keep their existing process cache. This trades
+cold-load time for avoiding retained model/browser memory overlap on the small
+production host. No native allocator RSS savings are claimed without measurement.
+
+Four lifecycle tests exercise actual weak-reference destruction before lease
+release, reload across successive requests, exceptions and cache compatibility.
+Embedding/admission/RAG regression: 29 passed, 4.03 seconds, exit 0.
