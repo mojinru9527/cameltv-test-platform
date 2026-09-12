@@ -63,6 +63,7 @@ jobs:
         run: |
           $token = node tests/automation/ui/utils/fetch-auth-token.cjs
           if ([string]::IsNullOrWhiteSpace($token)) { throw 'business token refresh failed' }
+          Write-Output "::add-mask::$token"
           Add-Content -Path $env:GITHUB_ENV -Value "CAMELTV_AUTH_TOKEN<<EOF"
           Add-Content -Path $env:GITHUB_ENV -Value $token
           Add-Content -Path $env:GITHUB_ENV -Value "EOF"
