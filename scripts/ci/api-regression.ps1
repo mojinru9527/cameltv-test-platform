@@ -100,7 +100,8 @@ function Invoke-ApiRun {
         $env:JUNIT_OUTPUT = $junit
         $env:JSON_OUTPUT = $json
 
-        $cmd = @("playwright", "test", "--config=./playwright.config.ts")
+        # Windows self-hosted runners can fail worker fork with spawn UNKNOWN; keep CI deterministic.
+        $cmd = @("playwright", "test", "--config=./playwright.config.ts", "--workers=1")
         if ($Grep) { $cmd += @("--grep", $Grep) }
         Write-Host "[run] npx $($cmd -join ' ')  (base=$BaseUrl)"
         & npx @cmd
