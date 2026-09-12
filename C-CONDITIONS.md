@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-06 (Batch 231：复核现有 Open 条件，本批无新增 C 条件)
+**最后更新**: 2026-09-13 (P1 closeout：关闭 C111-1、C227-1；生产发布验证见 `work-logs/release-20260913-0001-production-verification.md`)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -67,7 +67,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C227-1 | Draft PR required checks 全绿并通过最终 `audit-ai-pr.ps1 -RequireSuccessfulChecks` 后，Leader 才可 APPROVED 并合入 main。 | P1 | 2026-09-03 |
+| ~~C227-1~~ | ~~Draft PR required checks 全绿并通过最终 `audit-ai-pr.ps1 -RequireSuccessfulChecks` 后，Leader 才可 APPROVED 并合入 main。~~ → **Closed**：PR #408 已以 commit `9cf894fc` squash 合入 main，全部 required checks SUCCESS；发布工件与真实边界见该 PR body。 | P1 | 2026-09-03 |
 
 ### batch-216 — B6 VersionTask 统一事实源（2026-09-03）—— 新增
 
@@ -337,7 +337,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C111-1 | internal-network 自托管 runner（win-internal-001）启动后，验证 api-regression 与 prod-smoke 各 1 次成功运行（0s 失败根因=runner offline，B11） | P1 | 2026-08-06 |
+| ~~C111-1~~ | ~~internal-network 自托管 runner（win-internal-001）启动后，验证 api-regression 与 prod-smoke 各 1 次成功运行（0s 失败根因=runner offline，B11）~~ → **Closed**：Runner 已改为 `CamelTvActionsRunner` 自启动/自恢复任务并完成故障恢复演练；Test API 回归 run `34706865048` 与正式环境冒烟 run `34707507943` 均在 `3f9f3d88` 上成功。 | P1 | 2026-08-06 |
 | ~~C111-2~~ | ~~C110-3 回填合入部署后，生产执行 run-batch-execution.py（170 条）并核对 TestCase 回填（last_run 分布 + has_response）~~ → **Closed**：batch-112 task#4 生产批量执行 **170/170 全绿**（passed=170/failed=0）+ has_response=170，按端点明细无失败（`evidence/batch-112/batch-execution-summary.json`） | P1 | 2026-08-06 |
 | ~~C111-3~~ | ~~UI 定时回归 job+schedule 触发后核对运行报告（P0 spec 10/10）~~ → **Closed**：平台 UI job#2 触发 run 9 = **10/10 通过**（pass=10/fail=0，46.8s，`evidence/batch-112/ui-schedule-summary.json`）；守卫 B112-4 收敛修复后平台运行闭环 | P2 | 2026-08-06 |
 | C111-4 | Test5 契约补拉（konfi-service/admin-service）导入平台（内网+凭据就绪后；C95-1/C74-2 承接） | P2 | 2026-08-06 |
@@ -517,6 +517,12 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## Closed (已完成)
 
+### 2026-09-13 — Production/CI P1 closeout
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C111-1 | internal-network Runner 回归验证 | Closed：`CamelTvActionsRunner` 已承接启动与自恢复；API 回归 `34706865048`、正式冒烟 `34707507943` 均 SUCCESS | 2026-09-13 |
+| C227-1 | PR required checks + 最终审计门禁 | Closed：PR #408，commit `9cf894fc`，required checks 全绿 | 2026-09-03 |
 ### Batch 191 冒烟修复 — C191-1 关闭（2026-08-17，fix/batch-191-r1-smoke-fixes）
 
 | ID | 内容 | 合入方式 | 日期 |
