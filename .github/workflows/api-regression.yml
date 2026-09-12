@@ -36,8 +36,8 @@ jobs:
             "auth_username=${{ secrets.CAMELTV_PROD_USERNAME }}" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "auth_password=${{ secrets.CAMELTV_PROD_PASSWORD }}" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           } else {
-            "base_url=https://g3-test3.elelive.cn"    | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "health_urls=https://camelive-g3-test5.elelive.cn/,https://g3-test3.elelive.cn/" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "base_url=https://camel-test5.elelive.cn" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "health_urls=https://camel-test5.elelive.cn/" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "login_url=https://camel-test5.elelive.cn/account-service/ee/client/demo/login" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "auth_username=${{ secrets.CAMELTV_TEST_USERNAME }}" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "auth_password=${{ secrets.CAMELTV_TEST_PASSWORD }}" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
