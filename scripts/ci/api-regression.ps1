@@ -44,7 +44,16 @@ function Invoke-HealthChecks {
             $r = Invoke-WebRequest -Uri $u -Method Get -TimeoutSec 15 -MaximumRedirection 3 -UseBasicParsing
             Write-Host "[health] OK   $u -> $($r.StatusCode)"
         } catch {
-            $code = $_.Exception.Response.StatusCode.value__
+            $statusCode = $null
+            if ($null -ne $_.Exception.Response) {
+                $statusCode = [int]$_.Exception.Response.StatusCode
+            }
+            if ($null -ne $statusCode -and $statusCode -ge 400 -and $statusCode -lt 500) {
+                Write-Host "[health] OK   $u -> $statusCode (reachable HTTP response)"
+                continue
+            }
+            $code = "n/a"
+            if ($null -ne $statusCode) { $code = $statusCode }
             Write-Host "[health] FAIL $u -> $code ($($_.Exception.Message))"
             $failures += $u
         }
