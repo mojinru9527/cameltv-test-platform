@@ -19,6 +19,18 @@ $parameters = @{
 Assert-ReleaseUploadCapacity @parameters
 if ($script:sshCalls -ne 1) { throw 'Expected one SSH inspection' }
 if ($script:lastRemoteCommand.Contains('$(must-not-run)')) { throw 'Unescaped path reached shell' }
+$threeParameters = $parameters.Clone()
+$threeParameters.Archives = @(
+    (Join-Path $PSScriptRoot 'capacity.ps1'),
+    (Join-Path $PSScriptRoot 'test-capacity.ps1'),
+    (Join-Path $PSScriptRoot 'release-transfer.ps1')
+)
+Assert-ReleaseUploadCapacity @threeParameters
+if ($script:sshCalls -ne 2) { throw 'Expected split upload inspection' }
+$matchesThree64 = [regex]::Matches($script:lastRemoteCommand, "b64decode\('([A-Za-z0-9+/=]+)'\)")
+if ($matchesThree64.Count -ne 2) { throw 'Expected encoded source and structured arguments for split upload' }
+$payloadThree = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($matchesThree64[1].Groups[1].Value)) | ConvertFrom-Json
+if ($payloadThree.archive_bytes -le $payload.archive_bytes) { throw 'Split upload archive bytes were not aggregated' }
 $matches64 = [regex]::Matches($script:lastRemoteCommand, "b64decode\('([A-Za-z0-9+/=]+)'\)")
 if ($matches64.Count -ne 2) { throw 'Expected encoded source and structured arguments' }
 $payload = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($matches64[1].Groups[1].Value)) | ConvertFrom-Json
