@@ -202,6 +202,11 @@ def test_primary_success_schedules_shadow(monkeypatch):
     monkeypatch.setattr(config.settings, "ai_enabled", True)
     monkeypatch.setattr(config.settings, "ai_retry_attempts", 1)
     monkeypatch.setattr(config.settings, "ai_exact_cache_enabled", False)
+    monkeypatch.setattr(config.settings, "ai_runtime_mode", "shadow")
+    monkeypatch.setattr(config.settings, "ai_shadow_enabled", True)
+    monkeypatch.setattr(config.settings, "ai_local_runtime_enabled", True)
+    monkeypatch.setattr(config.settings, "ai_local_base_url", "http://127.0.0.1:11434/v1")
+    monkeypatch.setattr(config.settings, "ai_local_model", "local-model")
     monkeypatch.setattr(ai_client.ai_config_service, "resolve", lambda db, pid: _CFG)
     monkeypatch.setattr(ai_client.httpx, "post", lambda *a, **k: _FakeResponse('{"ok":true}'))
     monkeypatch.setattr(shadow, "schedule_shadow_run", lambda **kwargs: captured.append(kwargs) or True)
@@ -226,6 +231,7 @@ def test_runtime_and_shadow_api_are_published():
     assert "/api/v1/ai-config/runtime" in paths
     assert "/api/v1/ai-config/runtime/health-check" in paths
     assert "/api/v1/ai-config/shadow-runs" in paths
+    assert "/api/v1/ai-config/shadow-policy" in paths
 
 def test_local_runtime_health_check(monkeypatch):
     from app.services.ai_gateway import runtime

@@ -12,6 +12,7 @@ from app.core.deps import CurrentUser, require_permission
 from app.schemas.common import R
 from app.services.ai_config_service import ai_config_service
 from app.services.ai_gateway.cache import clear_exact_cache, exact_cache_stats
+from app.services.ai_gateway.policy import evaluate_shadow_policy
 from app.services.ai_gateway.runtime import check_local_runtime, runtime_status
 from app.services.ai_gateway.shadow import list_shadow_runs
 
@@ -148,6 +149,27 @@ def local_runtime_health(
     current: CurrentUser = Depends(require_permission("ai_config:manage")),
 ):
     return R.ok(check_local_runtime())
+
+
+@router.get(
+    "/shadow-policy",
+    response_model=R[dict],
+    summary="基于 Shadow 证据的路由建议",
+)
+def shadow_policy(
+    namespace: str | None = Query(default=None, max_length=128),
+    min_samples: int = Query(default=20, ge=1, le=500),
+    current: CurrentUser = Depends(require_permission("ai_config:view")),
+    db: Session = Depends(get_db),
+):
+    return R.ok(
+        evaluate_shadow_policy(
+            db,
+            current.project_id or 0,
+            namespace=namespace,
+            min_samples=min_samples,
+        )
+    )
 
 
 @router.get(

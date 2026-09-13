@@ -59,6 +59,7 @@ def _record_running(
     input_hash: str,
     primary: dict[str, Any],
     shadow_model: str,
+    shadow_provider: str,
     json_mode: bool,
 ) -> AiShadowRun:
     row = AiShadowRun(
@@ -68,7 +69,7 @@ def _record_running(
         input_hash=input_hash,
         primary_provider=str(primary.get("model_provider") or ""),
         primary_model=str(primary.get("model_name") or ""),
-        shadow_provider="local_openai_compatible",
+        shadow_provider=shadow_provider,
         shadow_model=shadow_model,
         json_mode=json_mode,
     )
@@ -89,11 +90,14 @@ def run_shadow_once(
     max_tokens: int,
     temperature: float | None,
     json_mode: bool,
+    shadow_config: Any | None = None,
+    shadow_origin: str = "",
 ) -> int | None:
-    """Run one local shadow call synchronously and persist the comparison."""
-    cfg = local_runtime_config()
-    if cfg is None:
+    """Run one shadow call synchronously and persist the comparison."""
+    cfg = None if shadow_config is not None else local_runtime_config()
+    if shadow_config is None and cfg is None:
         return None
+    call_cfg = shadow_config or cfg.as_ai_config()
     db = SessionLocal()
     try:
         row = _record_running(
@@ -102,19 +106,20 @@ def run_shadow_once(
             namespace=namespace,
             input_hash=_hash_text(f"{system_prompt}\n{user_message}"),
             primary=primary,
-            shadow_model=cfg.model,
+            shadow_model=str(getattr(call_cfg, "model", "")),
+            shadow_provider=str(getattr(call_cfg, "provider_type", "")),
             json_mode=json_mode,
         )
         try:
             shadow = ai_client.call_configured_full(
-                cfg.as_ai_config(),
+                call_cfg,
                 project_id=project_id,
                 system_prompt=system_prompt,
                 user_message=user_message,
                 max_tokens=max_tokens,
                 temperature=temperature,
                 json_mode=json_mode,
-                timeout_seconds=cfg.timeout_seconds,
+                timeout_seconds=getattr(cfg, "timeout_seconds", None) if cfg is not None else None,
             )
             comparison = compare_outputs(primary, shadow, json_mode=json_mode)
             for key, value in comparison.items():
@@ -146,9 +151,14 @@ def schedule_shadow_run(
     max_tokens: int,
     temperature: float | None,
     json_mode: bool,
+    shadow_config: Any | None = None,
+    shadow_origin: str = "",
 ) -> bool:
     """Queue a shadow comparison when enabled; never affect the primary call."""
-    if not settings.ai_shadow_enabled or local_runtime_config() is None:
+    if not settings.ai_shadow_enabled:
+        return False
+    cfg = None if shadow_config is not None else local_runtime_config()
+    if shadow_config is None and cfg is None:
         return False
     rate = shadow_sample_rate()
     if rate <= 0.0 or random.random() >= rate:
@@ -164,6 +174,8 @@ def schedule_shadow_run(
         max_tokens=max_tokens,
         temperature=temperature,
         json_mode=json_mode,
+        shadow_config=shadow_config,
+        shadow_origin=shadow_origin,
     )
     return True
 

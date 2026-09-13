@@ -4868,6 +4868,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ai-config/shadow-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 基于 Shadow 证据的路由建议 */
+        get: operations["shadow_policy_api_v1_ai_config_shadow_policy_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ai-config/cache-stats": {
         parameters: {
             query?: never;
@@ -28868,6 +28885,40 @@ export interface operations {
     resolve_config_api_v1_ai_config_resolve_get: {
         parameters: {
             query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    shadow_policy_api_v1_ai_config_shadow_policy_get: {
+        parameters: {
+            query?: {
+                namespace?: string | null;
+                min_samples?: number;
+            };
             header?: {
                 "X-Project-Id"?: number | null;
             };
