@@ -54,6 +54,8 @@ services:
       - AI_MODEL=${AI_MODEL:-deepseek-chat}
       - AI_MAX_TOKENS=${AI_MAX_TOKENS:-8192}
       - AI_TEMPERATURE=${AI_TEMPERATURE:-0.3}
+      - AI_EXACT_CACHE_ENABLED=${AI_EXACT_CACHE_ENABLED:-false}
+      - AI_EXACT_CACHE_TTL_SECONDS=${AI_EXACT_CACHE_TTL_SECONDS:-86400}
       # ── AITDE v3 (Mission/Source/Scope/Contract/Scenario ...) ──
       - AITDE_V3_ENABLED=${AITDE_V3_ENABLED:-false}
       # ── AITDE Durable Runtime / Temporal ──

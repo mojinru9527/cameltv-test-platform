@@ -1,5 +1,5 @@
 {
-  "count": 647,
+  "count": 649,
   "routes": [
     {
       "path": "/api/v1/test-plans/{plan_id}/execution-jobs",
@@ -72,6 +72,14 @@
     {
       "path": "/api/v1/ai-config/providers/{provider_id}/test-connection",
       "method": "POST"
+    },
+    {
+      "path": "/api/v1/ai-config/cache",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/ai-config/cache-stats",
+      "method": "GET"
     },
     {
       "path": "/api/v1/ai-config/resolve",

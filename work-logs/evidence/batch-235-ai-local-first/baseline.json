@@ -1,0 +1,40 @@
+{
+  "generated_at": "2026-09-13T13:17:07",
+  "provider": {
+    "ai_enabled": true,
+    "api_base_url": "https://api.deepseek.com",
+    "model": "deepseek-v4-pro",
+    "exact_cache_enabled": false,
+    "exact_cache_ttl_seconds": 86400
+  },
+  "embedding": {
+    "model": "BAAI/bge-small-zh-v1.5",
+    "dim": 512,
+    "cache_dir": "",
+    "rag_enabled": true
+  },
+  "runtime": {
+    "signals": {
+      "node_runtime": true,
+      "dsh_runtime": true,
+      "playwright_chromium": true,
+      "ffmpeg": true,
+      "fastembed": true
+    },
+    "detected_count": 5
+  },
+  "frontend": {
+    "dist_present": false,
+    "asset_count": 0,
+    "total_bytes": 0,
+    "largest_bytes": 0
+  },
+  "exact_cache": {
+    "enabled": false,
+    "entries": 0,
+    "active_entries": 0,
+    "expired_entries": 0,
+    "hit_count": 0,
+    "namespaces": []
+  }
+}

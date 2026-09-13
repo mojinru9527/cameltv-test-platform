@@ -10,16 +10,22 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from typing import Any
 from urllib.parse import urlparse
 
 import httpx
 
 from app.core.config import settings
+from app.services.ai_gateway.cache import lookup_exact_cache, store_exact_cache
+from app.services.ai_gateway.keys import build_cache_key, sha256_text
 from app.services.ai_config_service import (
     AIProviderUnconfiguredError,
     ai_config_service,
 )
+
+
+logger = logging.getLogger("ai_gateway.client")
 
 
 class AiClientUnavailableError(RuntimeError):
@@ -203,6 +209,91 @@ def _parse_result(content: str, json_mode: bool) -> Any:
     return parse_json_object(content) if json_mode else content
 
 
+def _effective_temperature(temperature: float | None) -> float:
+    return settings.ai_temperature if temperature is None else float(temperature)
+
+
+def _exact_cache_key(
+    db,
+    *,
+    project_id: int,
+    cfg: Any,
+    system_prompt: str,
+    user_message: str,
+    max_tokens: int,
+    temperature: float,
+    json_mode: bool,
+    cache_namespace: str | None,
+) -> str | None:
+    if not settings.ai_exact_cache_enabled or db is None or not cache_namespace:
+        return None
+    return build_cache_key(
+        project_id=project_id,
+        provider_id=int(getattr(cfg, "provider_id", 0) or 0),
+        model=str(cfg.model),
+        namespace=cache_namespace,
+        system_prompt=system_prompt,
+        user_message=user_message,
+        json_mode=json_mode,
+        max_tokens=max_tokens,
+        temperature=temperature,
+    )
+
+
+def _cache_hit(summary: dict[str, Any], cache_key: str) -> dict[str, Any]:
+    """Return a truthful current-call summary with zero new token usage."""
+    cached = dict(summary)
+    saved_usage = cached.get("usage") or {}
+    cached.update(
+        {
+            "usage": {},
+            "cache_saved_usage": saved_usage,
+            "cache_status": "hit",
+            "cache_key": cache_key[:16],
+        }
+    )
+    return cached
+
+
+def _finish_with_cache(
+    summary: dict[str, Any],
+    *,
+    db,
+    project_id: int,
+    cfg: Any,
+    cache_namespace: str | None,
+    cache_key: str | None,
+    system_prompt: str,
+    user_message: str,
+) -> dict[str, Any]:
+    summary["cache_key"] = cache_key[:16] if cache_key else ""
+    if cache_key is None:
+        summary["cache_status"] = "disabled"
+        return summary
+    if summary.get("truncated"):
+        summary["cache_status"] = "bypass_truncated"
+        return summary
+    try:
+        store_exact_cache(
+            db,
+            project_id=project_id,
+            namespace=cache_namespace or "",
+            cache_key=cache_key,
+            provider_id=int(getattr(cfg, "provider_id", 0) or 0),
+            provider_type=str(getattr(cfg, "provider_type", "")),
+            model=str(cfg.model),
+            prompt_hash=sha256_text(system_prompt),
+            input_hash=sha256_text(user_message),
+            response=summary,
+            usage=summary.get("usage") or {},
+        )
+        summary["cache_status"] = "write"
+    except Exception:  # noqa: BLE001 - cache must never break the model call
+        logger.exception("Exact AI cache write wrapper failed")
+        summary["cache_status"] = "bypass_error"
+    return summary
+
+
 def chat_completions_full(
     db,
     project_id: int,
@@ -218,12 +309,30 @@ def chat_completions_full(
     cfg = resolve_config(db, project_id)
     if cfg is None:
         raise AiClientUnavailableError("AI service is not configured")
+    effective_max_tokens = max_tokens or settings.ai_max_tokens
+    effective_temperature = _effective_temperature(temperature)
+    cache_key = _exact_cache_key(
+        db,
+        project_id=project_id,
+        cfg=cfg,
+        system_prompt=system_prompt,
+        user_message=user_message,
+        max_tokens=effective_max_tokens,
+        temperature=effective_temperature,
+        json_mode=json_mode,
+        cache_namespace=cache_namespace,
+    )
+    if cache_key:
+        cached = lookup_exact_cache(db, project_id=project_id, cache_key=cache_key)
+        if cached is not None:
+            return _cache_hit(cached, cache_key)
+
     body = _build_request(
         cfg,
         project_id=project_id,
         system_prompt=system_prompt,
         user_message=user_message,
-        max_tokens=max_tokens or settings.ai_max_tokens,
+        max_tokens=effective_max_tokens,
         temperature=temperature,
         json_mode=json_mode,
         cache_namespace=cache_namespace,
@@ -249,7 +358,16 @@ def chat_completions_full(
                     "prompt_cache_key": str(body.get("prompt_cache_key") or ""),
                 }
             )
-            return summary
+            return _finish_with_cache(
+                summary,
+                db=db,
+                project_id=project_id,
+                cfg=cfg,
+                cache_namespace=cache_namespace,
+                cache_key=cache_key,
+                system_prompt=system_prompt,
+                user_message=user_message,
+            )
         except httpx.TimeoutException as exc:  # subclass first
             last_error = exc
         except httpx.RequestError as exc:
@@ -280,12 +398,30 @@ async def achat_completions_full(
     cfg = resolve_config(db, project_id)
     if cfg is None:
         raise AiClientUnavailableError("AI service is not configured")
+    effective_max_tokens = max_tokens or settings.ai_max_tokens
+    effective_temperature = _effective_temperature(temperature)
+    cache_key = _exact_cache_key(
+        db,
+        project_id=project_id,
+        cfg=cfg,
+        system_prompt=system_prompt,
+        user_message=user_message,
+        max_tokens=effective_max_tokens,
+        temperature=effective_temperature,
+        json_mode=json_mode,
+        cache_namespace=cache_namespace,
+    )
+    if cache_key:
+        cached = lookup_exact_cache(db, project_id=project_id, cache_key=cache_key)
+        if cached is not None:
+            return _cache_hit(cached, cache_key)
+
     body = _build_request(
         cfg,
         project_id=project_id,
         system_prompt=system_prompt,
         user_message=user_message,
-        max_tokens=max_tokens or settings.ai_max_tokens,
+        max_tokens=effective_max_tokens,
         temperature=temperature,
         json_mode=json_mode,
         cache_namespace=cache_namespace,
@@ -311,7 +447,16 @@ async def achat_completions_full(
                     "prompt_cache_key": str(body.get("prompt_cache_key") or ""),
                 }
             )
-            return summary
+            return _finish_with_cache(
+                summary,
+                db=db,
+                project_id=project_id,
+                cfg=cfg,
+                cache_namespace=cache_namespace,
+                cache_key=cache_key,
+                system_prompt=system_prompt,
+                user_message=user_message,
+            )
         except httpx.TimeoutException as exc:  # subclass first
             last_error = exc
         except httpx.RequestError as exc:

@@ -166,6 +166,9 @@ class Settings(BaseSettings):
     ai_max_tokens: int = 16384                 # requested maximum output per sub-call
     ai_temperature: float = 0.3
     ai_split_calls: bool = True                # split generation into functional + API parallel calls to avoid truncation
+    # Phase 1 exact-response cache: opt-in only; namespace + model/prompt/input/params form the key.
+    ai_exact_cache_enabled: bool = False
+    ai_exact_cache_ttl_seconds: int = 86400
 
     # ── DeepSeek Harness (dsh) — Batch 172 ──
     dsh_enabled: bool = False                    # 总开关：启用 dsh 执行能力（A/B/C 共用）
