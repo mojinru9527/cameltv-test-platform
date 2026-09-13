@@ -25,7 +25,8 @@ AI 全链路当前已经统一到共享 `ai_client`，并能记录供应商 usag
 - 不拆 API/AI Worker/UI Runner 镜像；属于 Phase 4。
 - 不改前端页面和交互。
 - 不默认开启精确缓存，避免在模型/Prompt 版本治理未完成前复用陈旧输出。
-- 不缓存 `finish_reason=length` 的截断响应。
+- 不缓存 inish_reason=length 的截断响应。
+- C 条件核对：本批不关闭既有 Open 条件；不涉及体育接口真实数据、生产执行资源归属或发布控制面条件，故不纳入。
 
 ## 4. 用户故事 + 验收标准
 
