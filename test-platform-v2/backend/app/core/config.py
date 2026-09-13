@@ -170,6 +170,16 @@ class Settings(BaseSettings):
     ai_exact_cache_enabled: bool = False
     ai_exact_cache_ttl_seconds: int = 86400
 
+    # ── Phase 2: 独立本地 OpenAI-compatible Runtime + Shadow Mode ──
+    ai_local_runtime_enabled: bool = False
+    ai_local_base_url: str = "http://127.0.0.1:11434/v1"
+    ai_local_api_key: str = ""
+    ai_local_model: str = ""
+    ai_shadow_enabled: bool = False
+    ai_shadow_sample_rate: float = 0.0
+    ai_shadow_timeout_seconds: float = 60.0
+    ai_shadow_max_output_chars: int = 200000
+
     # ── DeepSeek Harness (dsh) — Batch 172 ──
     dsh_enabled: bool = False                    # 总开关：启用 dsh 执行能力（A/B/C 共用）
     dsh_runtime: str = "node"                    # node | python-sdk；Windows 本地开发用 node，生产 Linux 用 python-sdk
