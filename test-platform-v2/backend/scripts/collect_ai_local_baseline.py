@@ -90,9 +90,10 @@ def main() -> int:
         output = Path(args.output)
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(text + "\n", encoding="utf-8")
-    print(text)
+    sys.stdout.write(text + "\n")
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
