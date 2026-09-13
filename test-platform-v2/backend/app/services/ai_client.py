@@ -20,6 +20,7 @@ import httpx
 from app.core.config import settings
 from app.services.ai_gateway.cache import lookup_exact_cache, store_exact_cache
 from app.services.ai_gateway.keys import build_cache_key, sha256_text
+from app.services.ai_gateway.router import resolve_route
 from app.services.ai_config_service import (
     AIProviderUnconfiguredError,
     ai_config_service,
@@ -52,8 +53,13 @@ def resolve_config(db, project_id: int) -> Any | None:
 
 
 def is_configured(db, project_id: int) -> bool:
-    """True when AI is enabled globally AND the project has a usable provider."""
-    return resolve_config(db, project_id) is not None
+    """True when the active runtime route has a usable primary config."""
+    from app.services.ai_gateway.router import LocalRuntimeUnavailableError
+
+    try:
+        return resolve_route(db, project_id) is not None
+    except LocalRuntimeUnavailableError:
+        return False
 
 
 def parse_json_object(raw: str) -> dict[str, Any]:
@@ -269,6 +275,8 @@ def _finish_with_cache(
     max_tokens: int,
     temperature: float | None,
     json_mode: bool,
+    shadow_config: Any | None = None,
+    shadow_origin: str = "",
 ) -> dict[str, Any]:
     summary["cache_key"] = cache_key[:16] if cache_key else ""
     if cache_key is None:
@@ -283,6 +291,8 @@ def _finish_with_cache(
             max_tokens=max_tokens,
             temperature=temperature,
             json_mode=json_mode,
+            shadow_config=shadow_config,
+            shadow_origin=shadow_origin,
         )
         return summary
     if summary.get("truncated"):
@@ -297,6 +307,8 @@ def _finish_with_cache(
             max_tokens=max_tokens,
             temperature=temperature,
             json_mode=json_mode,
+            shadow_config=shadow_config,
+            shadow_origin=shadow_origin,
         )
         return summary
     try:
@@ -327,6 +339,8 @@ def _finish_with_cache(
         max_tokens=max_tokens,
         temperature=temperature,
         json_mode=json_mode,
+        shadow_config=shadow_config,
+        shadow_origin=shadow_origin,
     )
     return summary
 
@@ -342,7 +356,11 @@ def _schedule_shadow_safely(
     max_tokens: int,
     temperature: float | None,
     json_mode: bool,
+    shadow_config: Any | None = None,
+    shadow_origin: str = "",
 ) -> None:
+    if shadow_config is None:
+        return
     try:
         from app.services.ai_gateway.shadow import schedule_shadow_run
 
@@ -356,6 +374,8 @@ def _schedule_shadow_safely(
             max_tokens=max_tokens,
             temperature=temperature,
             json_mode=json_mode,
+            shadow_config=shadow_config,
+            shadow_origin=shadow_origin,
         )
     except Exception:  # noqa: BLE001 - shadow is observational only
         logger.exception("Shadow scheduling failed")
@@ -423,6 +443,67 @@ def _call_configured_full(
     raise AiClientUnavailableError(f"AI request failed: {last_error}") from last_error
 
 
+async def _acall_configured_full(
+    cfg: Any,
+    *,
+    project_id: int,
+    system_prompt: str,
+    user_message: str,
+    max_tokens: int,
+    temperature: float | None,
+    json_mode: bool,
+    cache_namespace: str | None = None,
+    timeout_seconds: float | None = None,
+) -> dict[str, Any]:
+    body = _build_request(
+        cfg,
+        project_id=project_id,
+        system_prompt=system_prompt,
+        user_message=user_message,
+        max_tokens=max_tokens,
+        temperature=temperature,
+        json_mode=json_mode,
+        cache_namespace=cache_namespace,
+    )
+    started = time.perf_counter()
+    last_error: Exception | None = None
+    for _ in _retry_attempts():
+        try:
+            async with httpx.AsyncClient(timeout=timeout_seconds or settings.ai_timeout_seconds) as client:
+                response = await client.post(
+                    f"{cfg.api_base_url.rstrip('/')}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {cfg.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json=body,
+                )
+            response.raise_for_status()
+            summary = _summary_from_response(response)
+            summary.update(
+                {
+                    "model_provider": str(getattr(cfg, "provider_type", "")),
+                    "model_name": str(cfg.model),
+                    "prompt_cache_key": str(body.get("prompt_cache_key") or ""),
+                    "duration_ms": round((time.perf_counter() - started) * 1000),
+                }
+            )
+            return summary
+        except httpx.TimeoutException as exc:
+            last_error = exc
+        except httpx.RequestError as exc:
+            last_error = exc
+        except httpx.HTTPStatusError as exc:
+            last_error = exc
+            if exc.response.status_code not in {429, 500, 502, 503, 504}:
+                raise AiClientUnavailableError(
+                    f"AI API returned HTTP {exc.response.status_code}"
+                ) from exc
+        except (KeyError, TypeError, json.JSONDecodeError) as exc:
+            raise AiClientResponseError("AI response envelope is invalid") from exc
+    raise AiClientUnavailableError(f"AI request failed: {last_error}") from last_error
+
+
 def call_configured_full(
     cfg: Any,
     *,
@@ -461,9 +542,10 @@ def chat_completions_full(
     cache_namespace: str | None = None,
 ) -> dict[str, Any]:
     """Sync call returning content, finish state and normalized usage."""
-    cfg = resolve_config(db, project_id)
-    if cfg is None:
+    route = resolve_route(db, project_id, namespace=cache_namespace or "")
+    if route is None:
         raise AiClientUnavailableError("AI service is not configured")
+    cfg = route.primary_config
     effective_max_tokens = max_tokens or settings.ai_max_tokens
     effective_temperature = _effective_temperature(temperature)
     cache_key = _exact_cache_key(
@@ -482,16 +564,37 @@ def chat_completions_full(
         if cached is not None:
             return _cache_hit(cached, cache_key)
 
-    summary = _call_configured_full(
-        cfg,
-        project_id=project_id,
-        system_prompt=system_prompt,
-        user_message=user_message,
-        max_tokens=effective_max_tokens,
-        temperature=temperature,
-        json_mode=json_mode,
-        cache_namespace=cache_namespace,
-    )
+    try:
+        summary = _call_configured_full(
+            cfg,
+            project_id=project_id,
+            system_prompt=system_prompt,
+            user_message=user_message,
+            max_tokens=effective_max_tokens,
+            temperature=temperature,
+            json_mode=json_mode,
+            cache_namespace=cache_namespace,
+        )
+        summary["route_status"] = "primary"
+        summary["route_origin"] = route.primary_origin
+    except AiClientUnavailableError:
+        if route.fallback_config is None:
+            raise
+        summary = _call_configured_full(
+            route.fallback_config,
+            project_id=project_id,
+            system_prompt=system_prompt,
+            user_message=user_message,
+            max_tokens=effective_max_tokens,
+            temperature=temperature,
+            json_mode=json_mode,
+            cache_namespace=cache_namespace,
+        )
+        summary["route_status"] = "fallback"
+        summary["route_origin"] = route.fallback_origin
+        summary["route_fallback_from"] = route.primary_origin
+        cfg = route.fallback_config
+        cache_key = None
     return _finish_with_cache(
         summary,
         db=db,
@@ -504,7 +607,10 @@ def chat_completions_full(
         max_tokens=effective_max_tokens,
         temperature=temperature,
         json_mode=json_mode,
+        shadow_config=route.shadow_config,
+        shadow_origin=route.shadow_origin,
     )
+
 
 async def achat_completions_full(
     db,
@@ -518,9 +624,10 @@ async def achat_completions_full(
     cache_namespace: str | None = None,
 ) -> dict[str, Any]:
     """Async call returning content, finish state and normalized usage."""
-    cfg = resolve_config(db, project_id)
-    if cfg is None:
+    route = resolve_route(db, project_id, namespace=cache_namespace or "")
+    if route is None:
         raise AiClientUnavailableError("AI service is not configured")
+    cfg = route.primary_config
     effective_max_tokens = max_tokens or settings.ai_max_tokens
     effective_temperature = _effective_temperature(temperature)
     cache_key = _exact_cache_key(
@@ -539,63 +646,52 @@ async def achat_completions_full(
         if cached is not None:
             return _cache_hit(cached, cache_key)
 
-    body = _build_request(
-        cfg,
+    try:
+        summary = await _acall_configured_full(
+            cfg,
+            project_id=project_id,
+            system_prompt=system_prompt,
+            user_message=user_message,
+            max_tokens=effective_max_tokens,
+            temperature=temperature,
+            json_mode=json_mode,
+            cache_namespace=cache_namespace,
+        )
+        summary["route_status"] = "primary"
+        summary["route_origin"] = route.primary_origin
+    except AiClientUnavailableError:
+        if route.fallback_config is None:
+            raise
+        summary = await _acall_configured_full(
+            route.fallback_config,
+            project_id=project_id,
+            system_prompt=system_prompt,
+            user_message=user_message,
+            max_tokens=effective_max_tokens,
+            temperature=temperature,
+            json_mode=json_mode,
+            cache_namespace=cache_namespace,
+        )
+        summary["route_status"] = "fallback"
+        summary["route_origin"] = route.fallback_origin
+        summary["route_fallback_from"] = route.primary_origin
+        cfg = route.fallback_config
+        cache_key = None
+    return _finish_with_cache(
+        summary,
+        db=db,
         project_id=project_id,
+        cfg=cfg,
+        cache_namespace=cache_namespace,
+        cache_key=cache_key,
         system_prompt=system_prompt,
         user_message=user_message,
         max_tokens=effective_max_tokens,
         temperature=temperature,
         json_mode=json_mode,
-        cache_namespace=cache_namespace,
+        shadow_config=route.shadow_config,
+        shadow_origin=route.shadow_origin,
     )
-    last_error: Exception | None = None
-    for _ in _retry_attempts():
-        try:
-            async with httpx.AsyncClient(timeout=settings.ai_timeout_seconds) as client:
-                response = await client.post(
-                    f"{cfg.api_base_url.rstrip('/')}/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {cfg.api_key}",
-                        "Content-Type": "application/json",
-                    },
-                    json=body,
-                )
-            response.raise_for_status()
-            summary = _summary_from_response(response)
-            summary.update(
-                {
-                    "model_provider": str(getattr(cfg, "provider_type", "")),
-                    "model_name": str(cfg.model),
-                    "prompt_cache_key": str(body.get("prompt_cache_key") or ""),
-                }
-            )
-            return _finish_with_cache(
-                summary,
-                db=db,
-                project_id=project_id,
-                cfg=cfg,
-                cache_namespace=cache_namespace,
-                cache_key=cache_key,
-                system_prompt=system_prompt,
-                user_message=user_message,
-                max_tokens=effective_max_tokens,
-                temperature=temperature,
-                json_mode=json_mode,
-            )
-        except httpx.TimeoutException as exc:  # subclass first
-            last_error = exc
-        except httpx.RequestError as exc:
-            last_error = exc
-        except httpx.HTTPStatusError as exc:
-            last_error = exc
-            if exc.response.status_code not in {429, 500, 502, 503, 504}:
-                raise AiClientUnavailableError(
-                    f"AI API returned HTTP {exc.response.status_code}"
-                ) from exc
-        except (KeyError, TypeError, json.JSONDecodeError) as exc:
-            raise AiClientResponseError("AI response envelope is invalid") from exc
-    raise AiClientUnavailableError(f"AI request failed: {last_error}") from last_error
 
 
 def chat_completions(
