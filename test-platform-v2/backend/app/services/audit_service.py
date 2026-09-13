@@ -9,6 +9,19 @@ from sqlalchemy.orm import Session
 from app.models.audit import AuditLog
 
 
+def resolve_actor(db: Session, user_id: int | None) -> tuple[int, str]:
+    """Resolve an audit actor to a stable user id and login name."""
+    resolved_id = int(user_id or 0)
+    if resolved_id <= 0:
+        return 0, ""
+    from app.models.user import User
+
+    user = db.get(User, resolved_id)
+    if user is None:
+        return resolved_id, ""
+    return resolved_id, user.username or ""
+
+
 def write_audit(
     db: Session, *,
     user_id: int = 0, username: str = "",

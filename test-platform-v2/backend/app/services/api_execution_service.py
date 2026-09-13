@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
 from app.models.test_case import TestCase
+from app.services.audit_service import resolve_actor
 from app.services.environment_service import resolve_variables
 
 # Column variable pattern for dataset parameterized execution
@@ -85,6 +86,7 @@ def execute_api_case(
     dataset_id: int | None = None,
     confirm_prod: bool = False,
     has_execute_prod: bool = False,
+    actor_user_id: int = 0,
     _dep_chain: frozenset[int] | None = None,
 ) -> dict:
     """执行已保存的 API 用例，返回执行结果。若提供 dataset_id 则进行参数化批量执行。"""
@@ -115,6 +117,7 @@ def execute_api_case(
             environment_id=environment_id,
             confirm_prod=confirm_prod,
             has_execute_prod=has_execute_prod,
+            actor_user_id=actor_user_id,
             _dep_chain=(_dep_chain or frozenset()) | {case_id},
         )
     else:
@@ -133,10 +136,12 @@ def execute_api_case(
         return _execute_with_dataset(db, request_def, assertions, environment_id, dataset_id,
                                      project_id=project_id,
                                      confirm_prod=confirm_prod, has_execute_prod=has_execute_prod,
+                                     actor_user_id=actor_user_id,
                                      require_release_assertions=case.review_status == "approved")
     return _do_execute(db, request_def, assertions, environment_id=environment_id,
                        project_id=project_id,
                        confirm_prod=confirm_prod, has_execute_prod=has_execute_prod,
+                       actor_user_id=actor_user_id,
                        require_release_assertions=case.review_status == "approved")
 
 def quick_execute(
@@ -150,16 +155,19 @@ def quick_execute(
     confirm_prod: bool = False,
     has_execute_prod: bool = False,
     require_release_assertions: bool = False,
+    actor_user_id: int = 0,
 ) -> dict:
     """即时执行（不依赖已保存用例），用于调试面板。若提供 dataset_id 则批量执行。"""
     if dataset_id:
         return _execute_with_dataset(db, request_def, assertions or [], environment_id, dataset_id,
                                      project_id=project_id,
                                      confirm_prod=confirm_prod, has_execute_prod=has_execute_prod,
+                                     actor_user_id=actor_user_id,
                                      require_release_assertions=require_release_assertions)
     return _do_execute(db, request_def, assertions or [], environment_id=environment_id,
                        project_id=project_id,
                        confirm_prod=confirm_prod, has_execute_prod=has_execute_prod,
+                       actor_user_id=actor_user_id,
                        require_release_assertions=require_release_assertions)
 
 # ═══════════════════════════════════════════════════════
@@ -177,6 +185,7 @@ def _do_execute(
     confirm_prod: bool = False,
     has_execute_prod: bool = False,
     require_release_assertions: bool = False,
+    actor_user_id: int = 0,
 ) -> dict:
     """核心执行流程：解析变量 → 生产保护检查 → 发请求 → 跑断言 → 汇总结果。"""
     execution_id = f"APIEXEC-{uuid.uuid4().hex[:12].upper()}"
@@ -228,7 +237,9 @@ def _do_execute(
             )
 
     # 0.1 生产环境保护检查
-    allowed, prod_msg = _check_prod_protection(db, method, environment_id, confirm_prod, has_execute_prod)
+    allowed, prod_msg = _check_prod_protection(
+        db, method, environment_id, confirm_prod, has_execute_prod, actor_user_id=actor_user_id,
+    )
     if not allowed:
         return _error_result(
             prod_msg,
@@ -725,6 +736,7 @@ def _resolve_dependencies(
     environment_id: int | None,
     confirm_prod: bool,
     has_execute_prod: bool,
+    actor_user_id: int,
     _dep_chain: frozenset[int],
 ) -> dict:
     """C107-2：执行前置接口用例，返回 {dep_case_id: response_json}（递归支持多级，环检测）。"""
@@ -745,6 +757,7 @@ def _resolve_dependencies(
             environment_id=environment_id,
             confirm_prod=confirm_prod,
             has_execute_prod=has_execute_prod,
+            actor_user_id=actor_user_id,
             _dep_chain=_dep_chain | {dep_id},
         )
         if not r.get("all_pass"):
@@ -1385,6 +1398,7 @@ def _check_prod_protection(
     environment_id: int | None,
     confirm_prod: bool = False,
     has_execute_prod: bool = False,
+    actor_user_id: int = 0,
 ) -> tuple[bool, str]:
     """检查生产环境保护。
 
@@ -1403,18 +1417,19 @@ def _check_prod_protection(
     if env.env_type != "prod" and not env.is_production:
         return True, ""
 
-    # 记录生产环境执行的审计日志
-    try:
-        from app.services.audit_service import write_audit
-        write_audit(
-            db,
-            project_id=env.project_id,
-            action="apitest:execute_prod",
-            target=f"env/{environment_id}",
-            detail=f"Production {method_upper} execution on env #{environment_id} ({env.name})",
-        )
-    except Exception:
-        pass  # 审计日志写入失败不应阻断执行
+    # 记录生产环境执行的审计日志。审计不可写时 fail-closed。
+    from app.services.audit_service import write_audit
+
+    actor_id, actor_username = resolve_actor(db, actor_user_id)
+    write_audit(
+        db,
+        user_id=actor_id,
+        username=actor_username,
+        project_id=env.project_id,
+        action="apitest:execute_prod",
+        target=f"env/{environment_id}",
+        detail=f"Production {method_upper} execution on env #{environment_id} ({env.name})",
+    )
 
     # 读操作在生产环境始终允许
     if method_upper in READ_METHODS:
@@ -1448,6 +1463,7 @@ def _execute_with_dataset(
     confirm_prod: bool = False,
     has_execute_prod: bool = False,
     require_release_assertions: bool = False,
+    actor_user_id: int = 0,
 ) -> dict:
     """遍历数据集每一行，逐行替换 ${column_name} 并执行，返回批量结果。"""
     from app.services.dataset_service import get_dataset_rows, get_dataset
@@ -1481,6 +1497,7 @@ def _execute_with_dataset(
                             project_id=project_id, dataset_row_index=row_idx,
                             confirm_prod=confirm_prod,
                             has_execute_prod=has_execute_prod,
+                            actor_user_id=actor_user_id,
                             require_release_assertions=require_release_assertions)
         per_row_results.append({
             "row_index": row_idx,

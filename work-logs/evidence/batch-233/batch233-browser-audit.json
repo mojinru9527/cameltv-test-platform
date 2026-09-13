@@ -1,0 +1,90 @@
+{
+  "browser": "151.0.7922.34",
+  "login_user": "admin",
+  "environment": {
+    "status": 200,
+    "body": {
+      "code": 0,
+      "msg": "ok",
+      "data": {
+        "id": 1,
+        "project_id": 1,
+        "name": "batch233-browser production target",
+        "env_type": "prod",
+        "base_url": "https://batch233-browser.invalid",
+        "description": "Batch 233 browser audit evidence",
+        "is_production": false,
+        "access_type": "public",
+        "execution_mode": "on_platform",
+        "runner_key": "",
+        "created_at": "2026-09-13T09:58:11.567032",
+        "updated_at": "2026-09-13T09:58:11.567032"
+      }
+    }
+  },
+  "execution": {
+    "status": 200,
+    "body": {
+      "code": 0,
+      "msg": "ok",
+      "data": {
+        "status": "error",
+        "status_code": 0,
+        "response_headers": {},
+        "response_body": null,
+        "raw_body": null,
+        "duration_ms": 0,
+        "assertions": [],
+        "all_pass": false,
+        "assertion_summary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0
+        },
+        "error": "连接失败: [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1010)",
+        "error_type": "NETWORK_ERROR",
+        "environment_id": 1,
+        "resolved_url": "https://batch233-browser.invalid/health",
+        "execution_id": "APIEXEC-69FB46FE8B55",
+        "request_snapshot": {
+          "method": "GET",
+          "original_url": "https://batch233-browser.invalid/health",
+          "resolved_url": "https://batch233-browser.invalid/health",
+          "headers": {},
+          "query_params": {},
+          "body": "",
+          "environment_id": 1,
+          "dataset_row_index": null,
+          "execution_id": "APIEXEC-69FB46FE8B55",
+          "curl": "curl \\\n  -X \\\n  GET \\\n  \"https://batch233-browser.invalid/health\""
+        },
+        "response_snapshot": {},
+        "executed_at": "2026-09-13T01:58:18.474027+00:00"
+      }
+    }
+  },
+  "guard_audit": {
+    "id": 2,
+    "user_id": 1,
+    "username": "admin",
+    "project_id": 1,
+    "action": "production_operation:allowed",
+    "target": "env#1 \"batch233-browser production target\" (https://batch233-browser.invalid)",
+    "detail": "Execute API quick request (GET); environment_type=prod",
+    "ip": "",
+    "created_at": "2026-09-13T09:58:12.162253"
+  },
+  "execution_audit": {
+    "id": 3,
+    "user_id": 1,
+    "username": "admin",
+    "project_id": 1,
+    "action": "apitest:execute_prod",
+    "target": "env/1",
+    "detail": "Production GET execution on env #1 (batch233-browser production target)",
+    "ip": "",
+    "created_at": "2026-09-13T09:58:12.164254"
+  },
+  "console_errors": [],
+  "screenshot": "F:\\CamelTv-safe-backup\\CamelTv-worktrees\\codex-batch-233-production-audit-actor\\work-logs\\evidence\\batch-233\\batch233-production-audit.png"
+}
