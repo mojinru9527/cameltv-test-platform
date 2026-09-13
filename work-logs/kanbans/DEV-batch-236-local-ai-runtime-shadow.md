@@ -12,13 +12,13 @@
 
 | Slice | 内容 | 状态 |
 |------|------|------|
-| S1 | Runtime 配置与状态 | 待开始 |
-| S2 | Shadow 模型与迁移 | 待开始 |
-| S3 | 后台 Shadow 执行 | 待开始 |
-| S4 | Runtime/Shadow API | 待开始 |
-| S5 | 配置与 compose | 待开始 |
-| S6 | 测试与 QA 证据 | 待开始 |
+| S1 | Runtime 配置与状态 | ✅ 完成 |
+| S2 | Shadow 模型与迁移 | ✅ 完成 |
+| S3 | 后台 Shadow 执行 | ✅ 完成 |
+| S4 | Runtime/Shadow API | ✅ 完成 |
+| S5 | 配置与 compose | ✅ 完成 |
+| S6 | 测试与 QA 证据 | ✅ 完成，QA PASS |
 
 ## 当前位置
 
-Dev 已创建 Phase 2 工件，准备实现本地 runtime 配置与 Shadow 数据模型。
+Phase 2 本地实现与 QA 完成；等待用户一次总确认和远端 required checks。
