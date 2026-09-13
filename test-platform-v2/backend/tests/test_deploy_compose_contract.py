@@ -153,7 +153,8 @@ def test_backend_image_installs_locked_ui_lanhu_and_media_runtime() -> None:
         "COPY test-platform-v2/backend/requirements.txt "
         "test-platform-v2/backend/requirements.lock ./"
     ) in dockerfile
-    assert "pip install --no-cache-dir --require-hashes -r requirements.lock" in dockerfile
+    assert "pip install --require-hashes -r requirements.lock" in dockerfile
+    assert "--mount=type=cache,target=/root/.cache/pip" in dockerfile
     assert (
         'pip install --no-cache-dir --no-deps --force-reinstall '
         '"playwright==${PLAYWRIGHT_VERSION}"'
