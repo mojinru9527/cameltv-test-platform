@@ -380,6 +380,7 @@ def trigger_regression_for_bundle(
             confirmed=body.confirm_prod,
         ),
         set(current.permissions),
+        user_id=current.user.id,
     )
 
     # 获取模块名称

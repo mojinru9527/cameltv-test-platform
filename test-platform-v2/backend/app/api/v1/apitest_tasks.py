@@ -80,6 +80,7 @@ def api_quick_execute(
                 confirmed=body.confirm_prod,
             ),
             set(current.permissions),
+            user_id=current.user.id,
         )
 
     try:
@@ -91,6 +92,7 @@ def api_quick_execute(
             dataset_id=body.dataset_id,
             confirm_prod=body.confirm_prod,
             has_execute_prod=has_execute_prod,
+            actor_user_id=current.user.id,
         )
     except Exception as e:
         return R(code=1, msg=f"执行失败: {e}")
@@ -141,6 +143,7 @@ def create_task(
                     confirmed=body.confirm_prod,
                 ),
                 set(current.permissions),
+                user_id=current.user.id,
             )
         except APIException as exc:
             raise HTTPException(exc.http_status, exc.msg) from exc

@@ -256,6 +256,7 @@ def execute_test_case(
                     confirmed=confirm_prod,
                 ),
                 set(current.permissions),
+                user_id=current.user.id,
             )
         except APIException as exc:
             return R(code=exc.code, msg=exc.msg)
@@ -271,6 +272,7 @@ def execute_test_case(
                 current.is_super
                 or rbac_service.has_permission(current.permissions, "apitest:execute_prod")
             ),
+            actor_user_id=current.user.id,
         )
     except ValueError as e:
         return R(code=1, msg=str(e))

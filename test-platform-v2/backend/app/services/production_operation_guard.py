@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import APIException, forbidden, not_found
 from app.models.environment import Environment
-from app.services.audit_service import write_audit
+from app.services.audit_service import resolve_actor, write_audit
 
 
 @dataclass(frozen=True)
@@ -24,6 +24,8 @@ def require_allowed_operation(
     db: Session,
     operation: ProductionOperation,
     user_permissions: set[str],
+    *,
+    user_id: int = 0,
 ) -> Environment | None:
     """Return a project-owned environment after policy and audit checks.
 
@@ -62,8 +64,11 @@ def require_allowed_operation(
         f'env#{environment.id} "{environment.name}" '
         f'({_sanitized_base_url(environment.base_url)})'
     )
+    actor_id, actor_username = resolve_actor(db, user_id)
     write_audit(
         db,
+        user_id=actor_id,
+        username=actor_username,
         project_id=operation.project_id,
         action="production_operation:allowed",
         target=target,
