@@ -1,5 +1,5 @@
-# Batch 235 — AI Local-First 基础（Phase 0 + Phase 1）— Leader Verdict（待远端门禁）
-> **Leader (🎯)** | Date: 2026-09-13 | Decision: 有条件通过（待总确认 + required checks）
+# Batch 235 — AI Local-First 基础（Phase 0 + Phase 1）— Leader Verdict
+> **Leader (🎯)** | Date: 2026-09-13 | Decision: APPROVED（已合入）
 
 ## 评审摘要
 
@@ -27,7 +27,7 @@
 
 ## 判决
 
-有条件通过。条件：
+最终 APPROVED。PR #428 的 required checks 全绿，最终审计通过，已 squash merge 到 main（merge commit `5775f23c`）。
 
 1. 用户完成本批一次总确认（推送 + Draft PR + required checks 通过后合入 main）。
 2. Draft PR 创建后运行 `audit-ai-pr.ps1`，并等待 required checks 全绿。

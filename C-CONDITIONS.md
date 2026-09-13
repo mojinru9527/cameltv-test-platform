@@ -56,11 +56,17 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ---
 
 ## Open (待处理)
-### batch-235 — AI Local-First Phase 0/1（2026-09-13）—— 新增
+
+### batch-236 — 本地 AI Runtime 与 Shadow Mode（2026-09-13）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C235-1 | Phase 2 必须实现独立本地推理运行时与 Shadow Mode，禁止把模型权重打入 API 镜像 | P1 | 2026-09-13 |
+| C236-1 | Phase 3 必须实现 local-first routing、Shadow 证据到策略转换及云端失败兜底 | P1 | 2026-09-13 |
+| C236-2 | Phase 4 拆分 API/AI Worker/UI Runner 镜像前，必须先记录镜像体积与构建缓存基线 | P2 | 2026-09-13 |### batch-235 — AI Local-First Phase 0/1（2026-09-13）—— 新增
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C235-1 | **In-Progress（Batch 236）**：独立本地推理运行时与 Shadow Mode 已实现，待 Batch 236 合入后关闭；模型权重不进 API 镜像 | P1 | 2026-09-13 |
 | C235-2 | Phase 3 再启用 local-first 路由和云端兜底；不得在 Batch 235 默认开启精确缓存 | P1 | 2026-09-13 |
 | C235-3 | Phase 4 拆分 API/AI Worker/UI Runner 镜像前，必须先取得镜像体积基线 | P2 | 2026-09-13 |
 

@@ -12,6 +12,8 @@ from app.core.deps import CurrentUser, require_permission
 from app.schemas.common import R
 from app.services.ai_config_service import ai_config_service
 from app.services.ai_gateway.cache import clear_exact_cache, exact_cache_stats
+from app.services.ai_gateway.runtime import check_local_runtime, runtime_status
+from app.services.ai_gateway.shadow import list_shadow_runs
 
 router = APIRouter(prefix="/ai-config", tags=["AI 配置"])
 
@@ -124,6 +126,41 @@ def resolve_config(
     db: Session = Depends(get_db),
 ):
     return R.ok(ai_config_service.resolve_out(db, current.project_id or 0))
+
+
+@router.get(
+    "/runtime",
+    response_model=R[dict],
+    summary="本地 AI Runtime 状态",
+)
+def local_runtime_status(
+    current: CurrentUser = Depends(require_permission("ai_config:view")),
+):
+    return R.ok(runtime_status())
+
+
+@router.post(
+    "/runtime/health-check",
+    response_model=R[dict],
+    summary="探测本地 AI Runtime",
+)
+def local_runtime_health(
+    current: CurrentUser = Depends(require_permission("ai_config:manage")),
+):
+    return R.ok(check_local_runtime())
+
+
+@router.get(
+    "/shadow-runs",
+    response_model=R[dict],
+    summary="本地模型 Shadow 对比记录",
+)
+def shadow_runs(
+    limit: int = Query(default=50, ge=1, le=200),
+    current: CurrentUser = Depends(require_permission("ai_config:view")),
+    db: Session = Depends(get_db),
+):
+    return R.ok({"items": list_shadow_runs(db, current.project_id or 0, limit=limit)})
 
 
 @router.get(
