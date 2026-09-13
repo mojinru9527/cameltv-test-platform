@@ -53,6 +53,8 @@ def runtime_status() -> dict:
     cfg = local_runtime_config()
     return {
         "enabled": bool(settings.ai_local_runtime_enabled),
+        "runtime_mode": (settings.ai_runtime_mode or "cloud_only"),
+        "fallback_to_cloud": bool(settings.ai_local_fallback_to_cloud),
         "configured": cfg is not None,
         "base_url": cfg.base_url if cfg else (settings.ai_local_base_url or "").rstrip("/"),
         "model": cfg.model if cfg else "",

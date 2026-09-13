@@ -1,5 +1,5 @@
 # Batch 236 — 本地 AI Runtime 与 Shadow Mode（Phase 2）— Leader Verdict
-> **Leader (🎯)** | Date: 2026-09-13 | Decision: 有条件通过（待总确认 + required checks）
+> **Leader (🎯)** | Date: 2026-09-13 | Decision: APPROVED（已合入）
 
 ## 评审摘要
 
@@ -27,7 +27,7 @@
 
 ## 判决
 
-有条件通过。条件：
+最终 APPROVED。PR #429 的 required checks 全绿，最终审计通过，已 squash merge 到 main（merge commit `a071cbe7`）。
 
 1. 用户完成 Batch 236 一次总确认（推送 + Draft PR + required checks 通过后合入 main）。
 2. Draft PR 创建后通过 `audit-ai-pr.ps1`，等待 required checks 全绿。
