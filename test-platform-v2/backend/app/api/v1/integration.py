@@ -144,6 +144,7 @@ def sync_now(
             confirmed=confirm_prod,
         ),
         set(current.permissions),
+        user_id=current.user.id,
     )
 
     if direction is None:

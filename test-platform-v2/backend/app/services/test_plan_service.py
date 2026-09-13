@@ -524,6 +524,7 @@ def auto_execute_api_cases(
                 db, tc.id,
                 project_id=project_id,
                 environment_id=environment_id,
+                actor_user_id=executor_id,
             )
             api_pass = exec_result.get("all_pass", False)
             status = "passed" if api_pass else "failed"
@@ -924,6 +925,7 @@ def execute_all_cases(
                     db, tc.id,
                     project_id=project_id,
                     environment_id=environment_id,
+                    actor_user_id=executor_id,
                 )
                 api_pass = exec_result.get("all_pass", False)
                 status = "passed" if api_pass else "failed"

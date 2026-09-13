@@ -61,7 +61,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C230-1 | 为 `production_operation:allowed` 与 `apitest:execute_prod` 审计写入透传认证用户的 `user_id` 和稳定登录名 `username`；必须补权限隔离、审计持久化及真实浏览器证据，禁止继续生成无操作人的生产操作记录。 | P1 | 2026-09-05 |
+| ~~C230-1~~ | ~~为 `production_operation:allowed` 与 `apitest:execute_prod` 审计写入透传认证用户的 `user_id` 和稳定登录名 `username`；必须补权限隔离、审计持久化及真实浏览器证据，禁止继续生成无操作人的生产操作记录。~~ → **Closed**：Batch 233 贯通 route/quick/case/worker/plan/dependency/dataset；审计失败 fail-closed；Chromium 证据确认两条记录均为 `user_id=1`、`username=admin`。 | P1 | 2026-09-05 |
 
 ### batch-227 — AI 全链路就绪向导（2026-09-03）—— 新增
 
@@ -523,6 +523,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|---------|------|
 | C111-1 | internal-network Runner 回归验证 | Closed：`CamelTvActionsRunner` 已承接启动与自恢复；API 回归 `34706865048`、正式冒烟 `34707507943` 均 SUCCESS | 2026-09-13 |
 | C227-1 | PR required checks + 最终审计门禁 | Closed：PR #408，commit `9cf894fc`，required checks 全绿 | 2026-09-03 |
+| C230-1 | 生产审计操作人身份 | Closed：Batch 233；backend full regression 2602 passed / 51 skipped / 1 xfailed；Chromium audit evidence `work-logs/evidence/batch-233/batch233-browser-audit.json` | 2026-09-13 |
 ### Batch 191 冒烟修复 — C191-1 关闭（2026-08-17，fix/batch-191-r1-smoke-fixes）
 
 | ID | 内容 | 合入方式 | 日期 |

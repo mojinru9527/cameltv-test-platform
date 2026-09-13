@@ -159,6 +159,7 @@ def execute_task(task_id: int, project_id: int, worker_id: str) -> None:
                     environment_id=task.environment_id,
                     confirm_prod=bool(task.confirm_prod),
                     has_execute_prod=True,  # 已在路由层验证权限
+                    actor_user_id=task.creator_id,
                 )
                 item.status = "passed" if result.get("all_pass", False) else "failed"
                 item.duration_ms = result.get("duration_ms", 0)
