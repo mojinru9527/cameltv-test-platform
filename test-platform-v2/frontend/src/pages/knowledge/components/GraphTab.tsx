@@ -64,7 +64,8 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 export default function GraphTab() {
-  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null)
+  const [containerReady, setContainerReady] = useState(false)
   const networkRef = useRef<Network | null>(null)
   const loadControllerRef = useRef<AbortController | null>(null)
   const [graphData, setGraphData] = useState<GraphView | null>(null)
@@ -110,9 +111,22 @@ export default function GraphTab() {
     return () => loadControllerRef.current?.abort()
   }, [loadGraph])
 
+  useEffect(() => {
+    if (!containerEl) return
+
+    const updateReady = () => {
+      setContainerReady(containerEl.clientWidth > 0 && containerEl.clientHeight > 0)
+    }
+    updateReady()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(updateReady)
+    observer.observe(containerEl)
+    return () => observer.disconnect()
+  }, [containerEl])
+
   // 渲染 vis-network
   useEffect(() => {
-    if (!graphData || !containerRef.current) return
+    if (!graphData || !containerEl || !containerReady) return
 
     // 销毁旧实例
     if (networkRef.current) {
@@ -174,7 +188,7 @@ export default function GraphTab() {
       }))
     )
 
-    const network = new Network(containerRef.current, { nodes, edges }, {
+    const network = new Network(containerEl, { nodes, edges }, {
       physics: {
         solver: 'forceAtlas2Based',
         forceAtlas2Based: {
@@ -228,7 +242,7 @@ export default function GraphTab() {
       network.destroy()
       networkRef.current = null
     }
-  }, [graphData])
+  }, [graphData, containerEl, containerReady])
 
   // 按类型过滤节点可见性
   useEffect(() => {
@@ -402,7 +416,7 @@ export default function GraphTab() {
 
         {/* vis 容器 */}
         <div
-          ref={containerRef}
+          ref={setContainerEl}
           className="w-full h-full"
           role="img"
           aria-label={`知识图谱，共 ${graphData.nodes.length} 个节点、${graphData.edges.length} 条关系`}
