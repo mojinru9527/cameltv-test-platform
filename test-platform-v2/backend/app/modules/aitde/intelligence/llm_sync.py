@@ -90,5 +90,8 @@ def call_llm_json_full(
         "input_hash": hashlib.sha256(user_message.encode("utf-8")).hexdigest(),
         "duration_ms": round((time.perf_counter() - started) * 1000),
         "token_usage": full.get("usage") or {},
+        "exact_cache_status": str(full.get("cache_status") or ""),
+        "exact_cache_key": str(full.get("cache_key") or ""),
+        "exact_cache_saved_usage": full.get("cache_saved_usage") or {},
     }
     return result, metadata

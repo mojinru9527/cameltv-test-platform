@@ -4817,6 +4817,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ai-config/cache-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 当前项目 AI 精确缓存统计 */
+        get: operations["cache_stats_api_v1_ai_config_cache_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai-config/cache": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 清理当前项目 AI 精确缓存 */
+        delete: operations["clear_cache_api_v1_ai_config_cache_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ai-config/resolve": {
         parameters: {
             query?: never;
