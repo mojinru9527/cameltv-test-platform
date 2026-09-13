@@ -1,0 +1,21 @@
+{
+  "collected_at": "2026-09-13T17:55:05.8631687+08:00",
+  "git_head": "0e4b5f1b02ae432f15377a5efa2f8474fe63c8eb",
+  "docker_available": false,
+  "docker_server_version": "",
+  "docker_error": "\r\nfailed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine; check if the path is correct and if the daemon is running: open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.",
+  "images": [],
+  "static": {
+    "backend_targets": [
+      "builder",
+      "provider",
+      "runtime-base",
+      "runner",
+      "api",
+      "runtime"
+    ],
+    "backend_cache_mounts": 3,
+    "frontend_cache_mounts": 1,
+    "execution_overlay": true
+  }
+}

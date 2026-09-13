@@ -5,7 +5,7 @@ RUN python -m venv /opt/venv
 ENV PATH=/opt/venv/bin:$PATH
 WORKDIR /app
 COPY test-platform-v2/backend/requirements.txt test-platform-v2/backend/requirements.lock ./
-RUN pip install --no-cache-dir --require-hashes -r requirements.lock
+RUN --mount=type=cache,target=/root/.cache/pip pip install --require-hashes -r requirements.lock
 
 # Fetch the provider without requiring local submodule contents in cloud builds.
 FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de AS provider
@@ -61,7 +61,7 @@ RUN apt-get update \
 # the dependency/browser cache layer. Align Python Playwright to the same
 # release so Lanhu screenshots and UI jobs share one Chromium installation.
 COPY test-platform-v2/backend/tests/playwright/package*.json ./tests/playwright/
-RUN PLAYWRIGHT_VERSION="$(node -p "require('./tests/playwright/package-lock.json').packages['node_modules/playwright'].version")" \
+RUN --mount=type=cache,target=/root/.npm PLAYWRIGHT_VERSION="$(node -p "require('./tests/playwright/package-lock.json').packages['node_modules/playwright'].version")" \
     && pip install --no-cache-dir --no-deps --force-reinstall "playwright==${PLAYWRIGHT_VERSION}" \
     && cd /app/tests/playwright \
     && npm ci \
@@ -80,7 +80,7 @@ RUN PLAYWRIGHT_VERSION="$(node -p "require('./tests/playwright/package-lock.json
 # （pnpm 9 对 workspace root 的 add 报 ERR_PNPM_ADDING_TO_ROOT）。
 # 生产 DSH_HARNESS_PATH=/usr/local/lib/node_modules/@deepseek-ai/dsh/lib/bin.js
 # （NodeSource Node 22 布局实际为 /usr/lib/node_modules/...，生产环境变量按此配置）
-RUN npm install -g pnpm@11 \
+RUN --mount=type=cache,target=/root/.npm npm install -g pnpm@11 \
     && npm install -g @deepseek-ai/dsh@0.1.0-rc.7 \
     && DSH_HOME=/home/cameltv/.dsh dsh plugin --profile agent-team add '@nanmicoder/dsh-agent-teams@^0.1.5' \
     && node -e "const fs=require('fs');const p='/home/cameltv/.dsh/profiles/agent-team/package.json';const j=JSON.parse(fs.readFileSync(p));if(!j.dsh.profile.bundles.includes('@deepseek-ai/dsh-headless')){j.dsh.profile.bundles.splice(1,0,'@deepseek-ai/dsh-headless');fs.writeFileSync(p,JSON.stringify(j,null,2));console.log('agent-team bundles:',j.dsh.profile.bundles.join(','))}" \

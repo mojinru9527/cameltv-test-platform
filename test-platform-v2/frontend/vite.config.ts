@@ -20,6 +20,9 @@ export default defineConfig(({ mode }) => {
           manualChunks: {
             'vendor-react': ['react', 'react-dom', 'react-router', 'zustand'],
             'vendor-http': ['axios'],
+            'vendor-charts': ['recharts'],
+            'vendor-graph': ['vis-network', 'vis-data'],
+            'vendor-mindmap': ['markmap-lib', 'markmap-view'],
           },
         },
       },

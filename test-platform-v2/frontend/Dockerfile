@@ -2,7 +2,7 @@
 FROM node:22.22-alpine@sha256:e58326d0d441090181ac150dc2078d3e2cf6a0d42e809aebba3ef5880935ffdd AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 COPY . .
 # ICP 备案号（可选）：构建时注入，非空时页面底部展示并链接 beian.miit.gov.cn
 ARG VITE_ICP_NUMBER
