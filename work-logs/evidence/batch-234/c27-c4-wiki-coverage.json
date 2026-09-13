@@ -1,0 +1,103 @@
+{
+  "condition": "C27-C4",
+  "method": "4 annotated requirement bundles -> module tree -> wiki/sync/bundle -> coverage",
+  "threshold": 0.7,
+  "total_pages": 8,
+  "synced_pages": 8,
+  "coverage_rate": 1.0,
+  "pass": true,
+  "bundles": [
+    {
+      "title": "C27-C1 赛事预测",
+      "bundle_id": 2,
+      "sync": {
+        "release_bundle_id": 2,
+        "raw_sources_created": 2,
+        "raw_sources_updated": 0,
+        "raw_sources_skipped": 0,
+        "coverage": {
+          "total_pages": 2,
+          "synced_pages": 2,
+          "missing_pages": 0
+        },
+        "errors": []
+      },
+      "coverage": {
+        "total_pages": 2,
+        "synced_pages": 2,
+        "stale_pages": 0,
+        "missing_pages": 0,
+        "coverage_rate": 1.0
+      }
+    },
+    {
+      "title": "C27-C1 用户中心",
+      "bundle_id": 3,
+      "sync": {
+        "release_bundle_id": 3,
+        "raw_sources_created": 2,
+        "raw_sources_updated": 0,
+        "raw_sources_skipped": 0,
+        "coverage": {
+          "total_pages": 2,
+          "synced_pages": 2,
+          "missing_pages": 0
+        },
+        "errors": []
+      },
+      "coverage": {
+        "total_pages": 2,
+        "synced_pages": 2,
+        "stale_pages": 0,
+        "missing_pages": 0,
+        "coverage_rate": 1.0
+      }
+    },
+    {
+      "title": "C27-C1 运营后台",
+      "bundle_id": 4,
+      "sync": {
+        "release_bundle_id": 4,
+        "raw_sources_created": 2,
+        "raw_sources_updated": 0,
+        "raw_sources_skipped": 0,
+        "coverage": {
+          "total_pages": 2,
+          "synced_pages": 2,
+          "missing_pages": 0
+        },
+        "errors": []
+      },
+      "coverage": {
+        "total_pages": 2,
+        "synced_pages": 2,
+        "stale_pages": 0,
+        "missing_pages": 0,
+        "coverage_rate": 1.0
+      }
+    },
+    {
+      "title": "C27-C1 数据报表",
+      "bundle_id": 5,
+      "sync": {
+        "release_bundle_id": 5,
+        "raw_sources_created": 2,
+        "raw_sources_updated": 0,
+        "raw_sources_skipped": 0,
+        "coverage": {
+          "total_pages": 2,
+          "synced_pages": 2,
+          "missing_pages": 0
+        },
+        "errors": []
+      },
+      "coverage": {
+        "total_pages": 2,
+        "synced_pages": 2,
+        "stale_pages": 0,
+        "missing_pages": 0,
+        "coverage_rate": 1.0
+      }
+    }
+  ]
+}
