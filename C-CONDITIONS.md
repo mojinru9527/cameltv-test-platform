@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-13 (P1 closeout：关闭 C111-1、C227-1、C225-1、C27-C1~C4、C96-1、C134-1、C203-1；生产发布验证见 `work-logs/release-20260913-0001-production-verification.md`)
+**最后更新**: 2026-09-13 (P1 closeout：关闭 C111-1、C227-1、C225-1、C27-C1~C4、C96-1、C134-1、C203-1；外部 P1 已完成复核并迁入 Deferred；生产发布验证见 `work-logs/release-20260913-0001-production-verification.md`)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -214,10 +214,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ### batch-172 — DSH Harness 集成（2026-08-14）
 
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C172-1 | 生产启用 dsh 前完成沙箱加固（隔离容器/受限工作区 + 任务级配额）并补充安全回归证据；未加固前生产 DSH_ENABLED 必须保持 false | P1 | 2026-08-14 |
-| C172-2 | `dsh_runner._run_python_sdk` 通过改 os.environ 传凭据，多线程并发可能互相覆盖；生产 python-sdk 路径启用前改为显式传参或加锁 | P2 | 2026-08-14 |
+> C172-1/2 已由 Batch 184 关闭，见上方 Closed 记录；此处移除重复 Open 行。
 
 ### batch-167 — 版本级三类型覆盖主链路（2026-08-13）
 
@@ -514,6 +511,16 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | ~~C134-1~~ | ~~lanhu-mcp 提供可用 `lanhu_login` 自动登录（Playwright SSO）+ 清理子模块明文密码（extract_doc.py 本地硬编码）；后端 runtime.login 钩子接线~~ → **Closed**：pinned 子模块 `3cfd2ef` 已提供 `lanhu_login` / `_save_cached_cookie`；后端 `_load_lanhu_runtime`、`/api/v1/lanhu-evidence/jobs/login` 与重试/持久化链路已接线；子模块无 `extract_doc.py` 明文凭据。本地 29 例定向测试全绿，PR #408 全新检出后端全量回归 SUCCESS。 | P1 | 2026-08-10 |
+
+
+### 外部/阻塞项（Deferred，2026-09-13 P1 最终复核）
+
+| ID | 内容 | 优先级 | 当前阻塞与解除条件 |
+|----|------|--------|------------------|
+| C124-1 | 生产导入 147 页/3526 图片并验证文本+设计稿 | P1 | **Deferred**：标注导出包未在 main worktree 发现，生产浅层查找未发现；生产磁盘余量约 3.4 GiB。解除=提供/挂载导出包与容量窗口后执行并留证。 |
+| C124-2 | 生产图谱页截图复测 | P1 | **Deferred**：Batch 234 已在 main 修复隐藏挂载；生产仍运行 3f9f3d88，且需有效生产管理员会话。解除=部署含 Batch 234 的版本并完成生产浏览器截图。 |
+| C167-1 | UI 自动化登录态/写操作覆盖 | P1 | **Deferred**：Web 登录态已覆盖；收藏/点赞/评论/Follow/充值/提现/下注为 APP 专属，需真机与授权。历史 iOS 阻塞为 solox 缺 iOS 26.5 DeviceSupport，当前宿主亦无 tidevice。解除=提供 APP 真机/授权或接口授权。 |
+| C204-1 | Test5 两副本服务无网关路由 | P1 | **Deferred**：2026-09-13 复测 `camel-service-final`/`camel-test-confirm` health 均 404，`camel-service` 为 200。解除=服务方确认下线后归档资产/用例并归零 404，或恢复路由后复跑矩阵。 |
 
 ## Closed (已完成)
 

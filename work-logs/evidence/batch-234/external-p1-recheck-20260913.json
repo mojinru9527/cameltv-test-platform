@@ -1,0 +1,30 @@
+{
+  "date": "2026-09-13",
+  "scope": "Final P1 condition audit after PR #424/#425",
+  "items": {
+    "C172-1": {
+      "status": "closed_duplicate_cleanup",
+      "evidence": "Batch 184 completed isolated task workspace ws-{uuid}, DSH_MAX_CONCURRENT and DSH_MAX_TASK_CHARS; production DSH_ENABLED remains false."
+    },
+    "C124-1": {
+      "status": "deferred",
+      "blocker": "The 147-page/3526-image Lanhu export package is not present in the main worktree; a shallow production /opt search did not find it. Production free space after release-20260913-0001 is about 3.4 GiB.",
+      "unblock": "Provide/mount the annotated Lanhu export package and a production capacity window, then run import-requirement-design.py and verify text plus design assets."
+    },
+    "C124-2": {
+      "status": "deferred",
+      "blocker": "Batch 234 fixes hidden-tab graph initialization in main, but production still runs source 3f9f3d88; an authenticated production graph walkthrough is pending deployment plus a valid production admin session.",
+      "unblock": "Deploy a main release containing Batch 234, open /knowledge?tab=graph with a production admin session, capture screenshot and zero-crash evidence."
+    },
+    "C167-1": {
+      "status": "deferred",
+      "blocker": "Web login state is already covered; APP-only write flows (favorite/like/comment/follow/recharge/withdraw/bet) have no Web entry and require APP device/auth. Current host probe did not provide tidevice, and the prior iOS blocker remains solox missing iOS 26.5 DeviceSupport.",
+      "unblock": "Provide APP real-device execution capability plus authentication/data authorization, or authorized interfaces for the APP-only flows."
+    },
+    "C204-1": {
+      "status": "deferred",
+      "blocker": "2026-09-13 re-probe: camel-service-final/actuator/health and camel-test-confirm/actuator/health both return HTTP 404 while camel-service returns HTTP 200. Service owner confirmation or route restoration is still required.",
+      "unblock": "Confirm both replica services are retired (then archive assets/cases and rerun the matrix to zero 404), or restore gateway routes and rerun the matrix."
+    }
+  }
+}
