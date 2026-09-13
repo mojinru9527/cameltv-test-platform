@@ -12,16 +12,17 @@
 ## 交付切片进度
 | # | Slice | 方案 | 编码 | 自测 | 审批 | 合入 | 备注 |
 |---|-------|:----:|:----:|:----:|:----:|:----:|------|
-| 1 | 审计身份 helper | 已完成 | 已完成 | 已完成 | 待总确认 | 待开始 | 解析稳定 username |
-| 2 | guard identity | 已完成 | 已完成 | 已完成 | 待总确认 | 待开始 | 5 个调用点透传 user_id |
-| 3 | API execution identity | 已完成 | 已完成 | 已完成 | 待总确认 | 待开始 | quick/case/worker/plan/deps/dataset |
-| 4 | QA + C230 closeout | 已完成 | 已完成 | 已完成 | 待总确认 | 待开始 | QA PASS + Chromium evidence |
+| 1 | 审计身份 helper | 已完成 | 已完成 | 已完成 | 已完成 | 待开始 | 解析稳定 username |
+| 2 | guard identity | 已完成 | 已完成 | 已完成 | 已完成 | 待开始 | 5 个调用点透传 user_id |
+| 3 | API execution identity | 已完成 | 已完成 | 已完成 | 已完成 | 待开始 | quick/case/worker/plan/deps/dataset |
+| 4 | QA + C230 closeout | 已完成 | 已完成 | 已完成 | 已完成 | 待开始 | QA PASS + Chromium evidence |
 
 ## 当前位置
-QA PASS；等待用户一次总确认（推送 + Draft PR + required checks 后合入 main）。
+QA PASS；Leader APPROVED；等待 required checks 与最终 PR 审计后合入 main。
 
 ## 阻塞与风险
 | 阻塞项 | 严重度 | 描述 | 需要谁 | 记录时间 |
 |--------|:------:|------|--------|----------|
 | 无 | — | 当前无阻塞 | — | 2026-09-13 |
+
 
