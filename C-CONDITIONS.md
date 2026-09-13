@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-13 (P1 closeout：关闭 C111-1、C227-1、C27-C1~C4、C96-1；生产发布验证见 `work-logs/release-20260913-0001-production-verification.md`)
+**最后更新**: 2026-09-13 (P1 closeout：关闭 C111-1、C227-1、C225-1、C27-C1~C4、C96-1、C134-1、C203-1；生产发布验证见 `work-logs/release-20260913-0001-production-verification.md`)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -165,7 +165,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C203-1 | lanhu-mcp 子模块相关 5 例基线失败：`test_deploy_compose_contract::test_backend_build_context_contains_runner_and_root_lanhu_submodule`、`test_lanhu_login_hook`×2、`test_lanhu_provider`×2，在 Batch 203 A/B 全量（1686/1703）与 CI 全新检出重复失败，主仓库同样失败；解除条件=修复 lanhu-mcp 子模块内容/指针（或补齐构建期初始化）并使双端全新检出全量回归绿（5 例归零证据 + PR/commit） | P1 | 2026-08-24 |
+| ~~C203-1~~ | ~~lanhu-mcp 子模块相关 5 例基线失败：`test_deploy_compose_contract::test_backend_build_context_contains_runner_and_root_lanhu_submodule`、`test_lanhu_login_hook`×2、`test_lanhu_provider`×2，在 Batch 203 A/B 全量（1686/1703）与 CI 全新检出重复失败，主仓库同样失败~~ → **Closed**：pinned 子模块更新为 `3cfd2ef`；本地 `test_lanhu_login_hook`、`test_lanhu_provider`、compose 契约 29/29 通过；PR #408 的「后端全新检出与全量回归」required check SUCCESS。 | P1 | 2026-08-24 |
 | ~~C203-2~~ | ~~Test5 `camel-service` 网关服务未恢复（404/无路由）：`/ee/sports_live/home_match` 真实参数成功用例未补测（URL 组装、参数预填、2xx 语义已对照验证；camel-service 恢复前 E/F 组证据保持）；解除条件=服务恢复后经平台 DebugTab 执行 `day=20260615` 返回 2xx + 业务码 200 并留截图/响应体证据~~ → **Closed**：2026-08-24 camel-service 恢复后实测——平台 DebugTab 执行 `GET http://camel-api-gateway05.svc.elelive.cn/camel-service/ee/sports_live/home_match?day=20260615` → **HTTP 200 / 506.5ms / 业务码 `status=200`**，响应体含真实赛事数据（`today=20260824`，`hot_group` FIFA World Cup/芬兰赛真实赛程）；直连 curl 同 URL 亦 200；合入 commit `04c6406c`（PR #316）。**扩展证据（同日，按「全部接口与接口用例」口径）**：平台引擎（quick-execute，断言=2xx+`$.status=200`+`$.data` exists）补测——`home_match_by_group?day=20260615&group=hot`、`search/hot`（POST）、`hot_match`、`version/version` 全部 HTTP 200 + all_pass + 真实数据；`init_basic_info` 超时 30s（接口侧慢，平台诚实失败，非平台缺陷）。**用例链路缺口已由本修复关闭**：①导入 response `$ref` 未解析 → 生成用例缺业务码断言；②用例执行 URL 缺服务前缀 → 网关 404。修复后 E2E（线上契约解析→资产更新→生成→执行）：生成断言=2xx+rt+`$.status`+`$.data.today`，执行 `/camel-service/ee/sports_live/home_match` → HTTP 200 / 5 断言全过 / 真实数据（合入 commit/PR 见关闭记录） | P2 | 2026-08-24 |
 
 ### batch-191 — /dsh-tasks AgentTeams 团队模式（2026-08-17）—— C191-1 已关闭 / C191-2/C191-3 保持
@@ -257,7 +257,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C161-1 | 蓝湖自动登录：pinned lanhu-mcp 子模块无 `lanhu_login` 钩子（生产 #29/#30 采集失败「未配置 LANHU_USERNAME/LANHU_PASSWORD」）；需升级子模块或用户通过「蓝湖登录/更新Cookie」手动更新 Cookie 后复验采集成功 | P1 | 2026-08-12 |
+| ~~C161-1~~ | ~~蓝湖自动登录：pinned lanhu-mcp 子模块无 `lanhu_login` 钩子（生产 #29/#30 采集失败「未配置 LANHU_USERNAME/LANHU_PASSWORD」）；需升级子模块或用户通过「蓝湖登录/更新Cookie」手动更新 Cookie 后复验采集成功~~ → **Closed**：已在 Closed 表关闭；pinned 子模块 `3cfd2ef` 提供登录钩子，生产 #32 Cookie 方式 109/109 页采集闭环。 | P1 | 2026-08-12 |
 | C161-2 | 含 API 用例的定时调度：创建/触发前绑定执行环境（15.0.0-每日上线回归 调度触发被环境预检拦截 execution_failed） | P2 | 2026-08-12 |
 | C161-3 | surface 残留 79 条「其他」：含模块为空/未覆盖域，按域+模块规则回填（当前用户端 5012 / 运营后台 3437） | P3 | 2026-08-12 |
 | ~~C120-2~~ | ~~多 worker 部署后验证~~ → **Closed**：batch-161 生产复验完成——异步拆分/生成按 task.project_id 取文档并持久化（15.0.0 生成 338/导入 276；16.0.0 生成 405/导入 178） | P3 | 2026-08-12 |
@@ -513,7 +513,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C134-1 | lanhu-mcp 提供可用 `lanhu_login` 自动登录（Playwright SSO）+ 清理子模块明文密码（extract_doc.py 本地硬编码）；后端 runtime.login 钩子接线 | P1 | 2026-08-10 |
+| ~~C134-1~~ | ~~lanhu-mcp 提供可用 `lanhu_login` 自动登录（Playwright SSO）+ 清理子模块明文密码（extract_doc.py 本地硬编码）；后端 runtime.login 钩子接线~~ → **Closed**：pinned 子模块 `3cfd2ef` 已提供 `lanhu_login` / `_save_cached_cookie`；后端 `_load_lanhu_runtime`、`/api/v1/lanhu-evidence/jobs/login` 与重试/持久化链路已接线；子模块无 `extract_doc.py` 明文凭据。本地 29 例定向测试全绿，PR #408 全新检出后端全量回归 SUCCESS。 | P1 | 2026-08-10 |
 
 ## Closed (已完成)
 
@@ -530,6 +530,8 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C27-C4 | Wiki 基线同步覆盖率 ≥70% | Closed：Batch 234，8/8 = 100%，missing=0 | 2026-08-05 |
 | C96-1 | C27-C1~C4 本地全栈验证 | Closed：Batch 234 四项全部通过；证据目录 `work-logs/evidence/batch-234/` | 2026-08-05 |
 | C225-1 | B1-B15 最终验收与交付文档 | Closed：Batch 226 15/15 矩阵 + 黑盒走查 + `docs/platform-refactor/07-b1-b15-delivery-and-usage.md` + `08-b1-b15-implementation.md`；PR #407 | 2026-09-03 |
+| C134-1 | 蓝湖登录钩子、runtime 接线与明文凭据清理 | Closed：pinned 子模块 `3cfd2ef` + 29/29 定向测试 + PR #408 全新检出全量回归 | 2026-08-10 |
+| C203-1 | lanhu-mcp 子模块相关 5 例基线失败 | Closed：`3cfd2ef` + 29/29 定向测试 + PR #408 后端全新检出与全量回归 SUCCESS | 2026-08-24 |
 ### Batch 191 冒烟修复 — C191-1 关闭（2026-08-17，fix/batch-191-r1-smoke-fixes）
 
 | ID | 内容 | 合入方式 | 日期 |
