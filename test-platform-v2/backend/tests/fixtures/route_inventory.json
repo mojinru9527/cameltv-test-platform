@@ -1,5 +1,5 @@
 {
-  "count": 649,
+  "count": 652,
   "routes": [
     {
       "path": "/api/v1/test-plans/{plan_id}/execution-jobs",
@@ -2596,6 +2596,18 @@
     {
       "method": "POST",
       "path": "/api/v1/onboarding/businesses/{onboarding_id}/steps/{step}"
+    },
+    {
+      "path": "/api/v1/ai-config/runtime",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ai-config/runtime/health-check",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ai-config/shadow-runs",
+      "method": "GET"
     }
   ]
 }
