@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.schemas.common import R
 from app.services.ai_config_service import ai_config_service
+from app.services.ai_gateway.cache import clear_exact_cache, exact_cache_stats
 
 router = APIRouter(prefix="/ai-config", tags=["AI 配置"])
 
@@ -122,3 +124,32 @@ def resolve_config(
     db: Session = Depends(get_db),
 ):
     return R.ok(ai_config_service.resolve_out(db, current.project_id or 0))
+
+
+@router.get(
+    "/cache-stats",
+    response_model=R[dict],
+    summary="当前项目 AI 精确缓存统计",
+)
+def cache_stats(
+    current: CurrentUser = Depends(require_permission("ai_config:view")),
+    db: Session = Depends(get_db),
+):
+    stats = exact_cache_stats(db, current.project_id or 0)
+    stats["project_id"] = current.project_id or 0
+    stats["ttl_seconds"] = max(0, int(settings.ai_exact_cache_ttl_seconds))
+    return R.ok(stats)
+
+
+@router.delete(
+    "/cache",
+    response_model=R[dict],
+    summary="清理当前项目 AI 精确缓存",
+)
+def clear_cache(
+    namespace: str | None = Query(default=None, max_length=128),
+    current: CurrentUser = Depends(require_permission("ai_config:manage")),
+    db: Session = Depends(get_db),
+):
+    deleted = clear_exact_cache(db, current.project_id or 0, namespace=namespace)
+    return R.ok({"deleted": deleted, "namespace": namespace or ""})

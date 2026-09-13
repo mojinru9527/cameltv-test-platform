@@ -406,6 +406,12 @@ class AiIntelligenceProvider:
             usage["cache_details_available"] = cache_details_available
         usage["request_count"] = len(calls)
         usage["deduplicated_request_count"] = self._deduplicated_calls
+        usage["exact_cache_hit_count"] = sum(
+            1 for call in calls if call.get("exact_cache_status") == "hit"
+        )
+        usage["exact_cache_write_count"] = sum(
+            1 for call in calls if call.get("exact_cache_status") == "write"
+        )
         if cache_details_available:
             usage["cache_hit_rate"] = (
                 round(usage["cached_input_tokens"] / usage["input_tokens"], 4)

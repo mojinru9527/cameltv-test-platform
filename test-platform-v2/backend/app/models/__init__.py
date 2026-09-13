@@ -1,4 +1,5 @@
 """统一导出所有模型，确保 Base.metadata 能感知全部表。"""
+from app.models.ai_gateway_cache import AiResponseCache
 from app.models.ai_provider import AiProvider
 from app.models.ai_task import AiTask
 from app.models.plan_execution_job import PlanExecutionJob
@@ -85,6 +86,7 @@ from app.models.wiki import (
 
 __all__ = [
     "AiProvider",
+    "AiResponseCache",
     "AiTask",
     "PlanExecutionJob",
     "InteractionEdge",
@@ -187,7 +189,3 @@ __all__ = [
     "LanhuEvidenceAsset",
     "LanhuOcrBlock",
 ]
-
-
-
-
