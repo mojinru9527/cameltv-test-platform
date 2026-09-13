@@ -37,6 +37,7 @@ related: ["template.md", "0001-use-python-fastapi-monostack.md", "../document-st
 | [0027](0027-ai-local-first-gateway.md) | 本地优先 AI Gateway 与精确响应缓存 | ✅ 已采纳（Phase 1） | 2026-09 |
 | [0028](0028-local-ai-runtime-shadow-mode.md) | 独立本地 AI Runtime 与 Shadow Mode | ✅ 已采纳（Phase 2） | 2026-09 |
 | [0029](0029-local-first-routing-fallback.md) | 本地优先路由与云端失败兜底 | ✅ 已采纳（Phase 3） | 2026-09 |
+| [0030](0030-image-split-build-cache.md) | AI 镜像拆分与 BuildKit 缓存 | ✅ 已采纳（Phase 4） | 2026-09 |
 
 ## ADR 状态
 

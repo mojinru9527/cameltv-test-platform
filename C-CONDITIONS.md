@@ -61,14 +61,14 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C237-1 | Phase 4 必须先采集 API/AI Worker/UI Runner 镜像体积与 BuildKit 缓存基线，再拆镜像 | P1 | 2026-09-13 |
-| C237-2 | 不得把模型权重或 CUDA 运行时打入 API 镜像 | P1 | 2026-09-13 |
+| ~~C237-1~~ | ~~Phase 4 必须先采集 API/AI Worker/UI Runner 镜像体积与 BuildKit 缓存基线，再拆镜像~~ → **Closed（Batch 238）**：历史真实测量基线已引用；新增可重复采集脚本、split 契约与 cache mount 测试 | P1 | 2026-09-13 |
+| ~~C237-2~~ | ~~不得把模型权重或 CUDA 运行时打入 API 镜像~~ → **Closed（Batch 238）**：API target 契约禁止 Node/DSH/Chromium；模型权重继续外挂 runtime | P1 | 2026-09-13 |
 
 ### batch-236 — 本地 AI Runtime 与 Shadow Mode（2026-09-13）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C236-1 | **In-Progress（Batch 237）**：local-first routing、Shadow 证据建议及云端失败兜底已实现，待 Batch 237 合入后关闭 | P1 | 2026-09-13 |
+| ~~C236-1~~ | ~~Phase 3 必须实现 local-first routing、Shadow 证据到策略转换及云端失败兜底~~ → **Closed**：Batch 237 PR #430 合入 main（`0e4b5f1b`），四模式路由、sync/async fallback、shadow-policy 与全量回归通过 | P1 | 2026-09-13 |
 | C236-2 | Phase 4 拆分 API/AI Worker/UI Runner 镜像前，必须先记录镜像体积与构建缓存基线 | P2 | 2026-09-13 |### batch-235 — AI Local-First Phase 0/1（2026-09-13）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
