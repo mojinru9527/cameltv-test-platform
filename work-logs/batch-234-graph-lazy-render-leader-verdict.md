@@ -1,6 +1,6 @@
 # Batch 234 — Leader Verdict
 
-> **Leader (🎯)** | Date: 2026-09-13 | Decision: 有条件通过（待一次总确认 + required checks）
+> **Leader (🎯)** | Date: 2026-09-13 | Decision: APPROVED
 
 ## 评审摘要
 
@@ -26,7 +26,7 @@
 
 ## 判决
 
-本批代码与本地 QA 证据满足合入前质量要求。最终 APPROVED 仍以用户一次总确认、Draft PR required checks 全绿及 `audit-ai-pr.ps1 -RequireSuccessfulChecks` 通过为条件。
+总确认已完成；PR #424 required checks 全绿；`audit-ai-pr.ps1 -RequireSuccessfulChecks` 通过；已 squash merge 到 `main`，commit `0721dee5`。批准合入。
 
 ## 下一批次 Leader 条件（如有）
 

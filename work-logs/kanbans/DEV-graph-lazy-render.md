@@ -7,7 +7,7 @@
 | 分支 | fix/graph-tab-lazy-render |
 | 基线 | origin/main e7c43257 |
 | 目标 | 修复 GraphTab 隐藏挂载后 canvas 不初始化 |
-| 状态 | In Progress |
+| 状态 | Merged |
 
 ## Slice 计划
 
@@ -19,4 +19,4 @@
 
 ## 当前位置
 
-全部 Slice 完成；QA PASS，Leader 有条件通过，等待一次总确认与 required checks。
+全部 Slice 完成；QA PASS；required checks 全绿；最终审计通过；PR #424 已 squash merge 到 main，commit `0721dee5`。批次关闭。
