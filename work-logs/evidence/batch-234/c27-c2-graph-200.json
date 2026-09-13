@@ -1,0 +1,12 @@
+{
+  "condition": "C27-C2",
+  "url": "http://127.0.0.1:5175/knowledge?tab=graph",
+  "label": "知识图谱，共 200 个节点、199 条关系",
+  "canvases": 1,
+  "render_ms": 1029,
+  "target_ms": 3000,
+  "pass": true,
+  "console_errors": [],
+  "page_errors": [],
+  "screenshot": "F:/CamelTv-safe-backup/CamelTv-worktrees/codex-graph-tab-lazy-render/work-logs/evidence/batch-234/c27-c2-graph-200-fixed.png"
+}

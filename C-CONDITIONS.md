@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-13 (P1 closeout：关闭 C111-1、C227-1；生产发布验证见 `work-logs/release-20260913-0001-production-verification.md`)
+**最后更新**: 2026-09-13 (P1 closeout：关闭 C111-1、C227-1、C27-C1~C4、C96-1；生产发布验证见 `work-logs/release-20260913-0001-production-verification.md`)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -391,7 +391,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C96-1 | C27-C1~C4 四项验证在本地全栈（staging 替代）执行，数据/性能测量就绪后逐项关闭（V1 工具删除已于 Batch 98 完成） | P1 | 2026-08-05 |
+| ~~C96-1~~ | ~~C27-C1~C4 四项验证在本地全栈（staging 替代）执行，数据/性能测量就绪后逐项关闭（V1 工具删除已于 Batch 98 完成）~~ → **Closed**：Batch 234 完成四项本地全栈验证：模块树准确率 100%（25/25）、200 节点图谱渲染 1029ms、release_bundle UI E2E 通过、Wiki 覆盖率 100%（8/8）；证据 `work-logs/evidence/batch-234/`。 | P1 | 2026-08-05 |
 
 ### batch-99 — 性能采集功能优化（Batch 99 Leader 条件）
 
@@ -453,10 +453,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C74-2 | Test5 无契约服务契约补拉 | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供；**探测 2026-08-07：VPN 未连通（camel-admintest5/网关/elelive 全部超时 000），konfi 密码仍待提供** | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供（2026-08-05：运营后台测试环境 camel-admintest5.elelive.cn，账号 ll）；2026-08-05 VPN 实测网关服务未就绪（路由空/health 503），konfi 密码待提供 |
 | C65-3 | Test5 外部前置条件逐项解锁登记 | P1 | 清单 1.4 已更新（konfi 解锁登记 2026-08-05）；admin-service 已登记（2026-08-05）；业务 DB/Redis 已登记（7.1），体育平台无 MQ（N/A） |
 | C63-2 | 外部阻塞项解除时先登记提供人/日期/授权范围 | P0 | 任一外部项解锁时遵守 |
-| C27-C1 | 模块树自动提取准确率 ≥70% | P1 | staging 替代已登记（test 环境 + 本地全栈）；执行待数据/性能测量（C96-1） |
-| C27-C2 | 图谱层级视图 200 节点渲染 <3s | P1 | 同上 |
-| C27-C3 | release_bundle 创建流程端到端 | P1 | 同上 |
-| C27-C4 | Wiki 基线同步覆盖率 ≥70% | P1 | 同上 |
+| ~~C27-C1~~ | ~~模块树自动提取准确率 ≥70%~~ → **Closed**：Batch 234，4 份标注需求文档直建后节点路径集合 25/25，准确率/精确率均 100%；证据 `work-logs/evidence/batch-234/c27-c1-module-accuracy.json`。 | P1 | 2026-08-05 |
+| ~~C27-C2~~ | ~~图谱层级视图 200 节点渲染 <3s~~ → **Closed**：Batch 234 修复隐藏 Tab 首次挂载，200 节点真实 Chromium 渲染 1029ms（含 canvas 初始化，零页面错误）；证据 `work-logs/evidence/batch-234/c27-c2-graph-200.json` + 截图。 | P1 | 2026-08-05 |
+| ~~C27-C3~~ | ~~release_bundle 创建流程端到端~~ → **Closed**：Batch 234，本地全栈 UI 登录 → 新建发布包 → 详情页，创建 HTTP 200/code=0，零控制台错误；证据 `work-logs/evidence/batch-234/c27-c3-release-bundle.json` + 截图。 | P1 | 2026-08-05 |
+| ~~C27-C4~~ | ~~Wiki 基线同步覆盖率 ≥70%~~ → **Closed**：Batch 234，4 个发布包 8 个页面同步 8/8，覆盖率 100%、missing=0；证据 `work-logs/evidence/batch-234/c27-c4-wiki-coverage.json`。 | P1 | 2026-08-05 |
 | C31-2 | 至少一名人工审查者确认变更范围与生产验收结论 | P1 | 已关闭（用户 2026-08-05 确认），见 Closed 表 |
 | C31-3 | 运营后台验收需生产地址与只读测试账号 | P1 | 已关闭（viewer 只读角色/账号实现 + 测试 3/3），见 Closed 表 |
 | batch-18-C7 | 迁移 20260710_0017 staging 双向演练 | P2 | staging 可用后执行 |
@@ -524,6 +524,11 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C111-1 | internal-network Runner 回归验证 | Closed：`CamelTvActionsRunner` 已承接启动与自恢复；API 回归 `34706865048`、正式冒烟 `34707507943` 均 SUCCESS | 2026-09-13 |
 | C227-1 | PR required checks + 最终审计门禁 | Closed：PR #408，commit `9cf894fc`，required checks 全绿 | 2026-09-03 |
 | C230-1 | 生产审计操作人身份 | Closed：Batch 233；backend full regression 2602 passed / 51 skipped / 1 xfailed；Chromium audit evidence `work-logs/evidence/batch-233/batch233-browser-audit.json` | 2026-09-13 |
+| C27-C1 | 模块树自动提取准确率 ≥70% | Closed：Batch 234，25/25 = 100%；`work-logs/evidence/batch-234/c27-c1-module-accuracy.json` | 2026-08-05 |
+| C27-C2 | 图谱 200 节点渲染 <3s | Closed：Batch 234，修复隐藏挂载；1029ms，canvas=1，零错误 | 2026-08-05 |
+| C27-C3 | release_bundle 端到端 | Closed：Batch 234，真实 UI 创建 HTTP 200 + 详情页可达；零控制台错误 | 2026-08-05 |
+| C27-C4 | Wiki 基线同步覆盖率 ≥70% | Closed：Batch 234，8/8 = 100%，missing=0 | 2026-08-05 |
+| C96-1 | C27-C1~C4 本地全栈验证 | Closed：Batch 234 四项全部通过；证据目录 `work-logs/evidence/batch-234/` | 2026-08-05 |
 ### Batch 191 冒烟修复 — C191-1 关闭（2026-08-17，fix/batch-191-r1-smoke-fixes）
 
 | ID | 内容 | 合入方式 | 日期 |

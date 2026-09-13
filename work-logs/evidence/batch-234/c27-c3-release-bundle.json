@@ -1,0 +1,12 @@
+{
+  "condition": "C27-C3",
+  "url": "http://127.0.0.1:5175/release-bundles/6",
+  "id": 6,
+  "name": "C27-C3 E2E 1789270324383",
+  "create_http": 200,
+  "create_code": 0,
+  "detail_visible": true,
+  "console_errors": [],
+  "page_errors": [],
+  "screenshot": "F:/CamelTv-safe-backup/c27-validation/evidence/c27-c3-release-bundle-fixed.png"
+}
