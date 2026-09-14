@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-15（Batch 246 Engineering Governance；关闭 C243-3，处理 C243-4/C244-1）
+**最后更新**: 2026-09-15（Batch 246 Engineering Governance；关闭 C243-3，处理 C243-4/C244-1，新增 C246-1）
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -56,6 +56,12 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ---
 
 ## Open (待处理)
+
+### batch-246 — Engineering Governance & Required Checks（2026-09-15）—— 新增
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C246-1 | 升级或替换 LHCI 开发依赖链，消除当前 dev-only npm audit：7 high / 1 moderate / 2 low；在此之前 `npm-audit-baseline.json` ratchet 必须阻止新增 advisory，生产依赖继续要求 0 | P2 | 2026-09-15 |
 
 ### batch-244 — Contract & Data Layer Hardening（2026-09-14）—— 新增
 
