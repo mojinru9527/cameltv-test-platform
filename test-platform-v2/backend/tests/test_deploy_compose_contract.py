@@ -101,9 +101,12 @@ def test_backend_build_context_contains_runner_and_root_lanhu_submodule() -> Non
     backend_build = compose["services"]["backend"]["build"]
     backend_environment = compose["services"]["backend"]["environment"]
 
+    # Batch 241: split is the default topology, so the backend service builds the
+    # slim ``api`` target instead of the combined ``runtime`` image.
     assert backend_build == {
         "context": "../..",
         "dockerfile": "test-platform-v2/backend/Dockerfile",
+        "target": "api",
     }
     assert "WORKSPACE_ROOT=/app" in backend_environment
     assert "LANHU_MCP_DIR=/app/lanhu-mcp" in backend_environment

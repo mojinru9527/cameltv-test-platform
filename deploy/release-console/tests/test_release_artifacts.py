@@ -18,7 +18,7 @@ class ReleaseArtifactsTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.tag = 'release-20260908-0001'
         self.manifest = {'release_id': self.tag, 'runtime_mode': 'split'}
-        for part in ('backend', 'frontend', 'runner'):
+        for part in ('backend', 'frontend', 'runner', 'ai-gateway'):
             config = json.dumps({'config': {'Labels': {'part': part}}}).encode()
             descriptor = [{'Config': 'config.json', 'RepoTags': [f'cameltv-tp-{part}:{self.tag}'], 'Layers': []}]
             with tarfile.open(self.root / f'{self.tag}-{part}.tar', 'w') as archive:
@@ -33,9 +33,9 @@ class ReleaseArtifactsTests(unittest.TestCase):
 
     def test_complete_split_bundle_and_legacy_pair(self):
         result = release_artifacts.verify(str(self.root), self.tag, self.manifest)
-        self.assertEqual(set(result['config_digests']), {'backend', 'frontend', 'runner'})
+        self.assertEqual(set(result['config_digests']), {'backend', 'frontend', 'runner', 'ai-gateway'})
         legacy = {key: value for key, value in self.manifest.items()
-                  if key not in ('runner', 'runtime_mode', 'execution_config_sha256')}
+                  if key not in ('runner', 'ai-gateway', 'runtime_mode', 'execution_config_sha256')}
         self.assertEqual(release_artifacts.verify(str(self.root), self.tag, legacy)['runtime_mode'], 'combined')
 
     def test_missing_runner_and_changed_configuration_are_rejected(self):
