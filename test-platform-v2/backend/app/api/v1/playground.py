@@ -33,7 +33,7 @@ def batch_compile_endpoint(
 @router.post("/batch-run", response_model=PlaygroundBatchRunResponse)
 def batch_run_endpoint(
     req: PlaygroundBatchRunRequest,
-    current: CurrentUser = Depends(require_permission("uitest:trigger")),
+    current: CurrentUser = Depends(require_permission("uitest:code_execute")),
     db: Session = Depends(get_db),
 ) -> PlaygroundBatchRunResponse:
     """批量编译 + 执行功能用例，并把结果回填用例 / 回写 UI 任务。"""
@@ -67,7 +67,7 @@ def compile_endpoint(
 @router.post("/execute", response_model=ExecuteResponse)
 def execute_endpoint(
     req: ExecuteRequest,
-    current: CurrentUser = Depends(require_permission("uitest:trigger")),
+    current: CurrentUser = Depends(require_permission("uitest:code_execute")),
 ) -> ExecuteResponse:
     """Execute a Playwright .spec.ts in headless Chromium and return the result."""
     return execute_spec(req)

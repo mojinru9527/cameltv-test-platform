@@ -76,7 +76,7 @@ def list_jobs(
 @router.post("", response_model=R[UiTestJobOut])
 def create_job(
     req: Request, body: UiTestJobCreate,
-    current: CurrentUser = Depends(require_permission("uitest:create")),
+    current: CurrentUser = Depends(require_permission("uitest:code_execute")),
     db: Session = Depends(get_db),
 ):
     r = ui_test_service.create_job(db, body, current.user.id, current.project_id or 0)
@@ -367,7 +367,7 @@ def get_job(
 @router.put("/{job_id}", response_model=R[UiTestJobOut])
 def update_job(
     req: Request, job_id: int, body: UiTestJobUpdate,
-    current: CurrentUser = Depends(require_permission("uitest:update")),
+    current: CurrentUser = Depends(require_permission("uitest:code_execute")),
     db: Session = Depends(get_db),
 ):
     r = ui_test_service.update_job(db, job_id, body, current.project_id or 0)
@@ -398,7 +398,7 @@ def delete_job(
 def trigger_job(
     req: Request, job_id: int,
     body: UiTestTriggerRequest | None = None,
-    current: CurrentUser = Depends(require_permission("uitest:trigger")),
+    current: CurrentUser = Depends(require_permission("uitest:code_execute")),
     db: Session = Depends(get_db),
 ):
     """触发 UI 测试 — 立即创建 run 并入队，由队列 worker 异步执行 Playwright。"""
