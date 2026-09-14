@@ -106,6 +106,14 @@ docker compose --project-name cameltv-tp-production \
 - 蓝湖下载缓存使用 `/data/lanhu`，由 `tp-data` 持久化
 - 使用 `docker compose down -v` 会**永久删除数据库和验收产物**
 
+## 执行器安全边界
+
+- 用户提供或可编辑的 Playwright spec 不再是 tester 默认能力；需要 `uitest:code_execute`。
+- Runner 子进程不再继承后端完整环境，`SECRET_KEY`、数据库和 AI/蓝湖凭据不会传入 Playwright。
+- `backend` 与继承它的 runner/AI gateway 默认 `cap_drop: ALL`、`no-new-privileges` 和独立 PIDs 限制；Chromium 冒烟需在对应镜像上保持通过。
+- OpenAPI URL 导入使用统一出站策略：默认拒绝私网/回环/链路本地/保留地址，并对重定向和响应体设置上限。
+- 生产 HTML 由前端 Nginx 注入 CSP/HSTS/X-Frame 等头；主题 bootstrap 已外置为 `/theme-bootstrap.js`，不依赖 CSP 的内联脚本豁免。
+- `/health`、`/openapi.json`、`/docs`、`/redoc` 必须显式反代，不能被 SPA fallback 伪装成 `200 text/html`。
 ## Backend 执行器运行时
 
 backend 镜像从仓库根目录构建，Dockerfile 因而可以同时复制：
@@ -209,4 +217,3 @@ Compose 固定 `AUTO_CREATE_TABLES=false`。必须由外层负载均衡器或反
 **数据库错误**：删除 volume 重建 `docker compose down -v && docker compose up -d`
 
 > `docker compose down -v` 会永久删除数据，只能在确认已有备份并明确需要重建时执行。
-
