@@ -156,7 +156,9 @@ def import_excel(
                 code=413,
             )
 
-    contents = file.file.read()
+    contents = file.file.read(10 * 1024 * 1024 + 1)
+    if len(contents) > 10 * 1024 * 1024:
+        raise APIException(msg="文件大小不能超过 10 MB", code=413)
     cases = excel_bytes_to_cases(contents)
     if not cases:
         return R(code=1, msg="未能从 Excel 文件中解析出用例（请确保包含「用例标题」列）")

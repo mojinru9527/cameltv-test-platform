@@ -292,7 +292,7 @@ def upload_attachment(
             )
     # P1-5b: 直接读取（Content-Length 已做前置检查，max 50 MB；upload_attachment
     # 需要完整 bytes，流式写入临时文件后再次读回不能节省峰值内存）。
-    content = file.file.read()
+    content = file.file.read(50 * 1024 * 1024 + 1)
     if len(content) > 50 * 1024 * 1024:
         from app.core.exceptions import APIException
         raise APIException(msg="附件大小不能超过 50 MB", code=413)

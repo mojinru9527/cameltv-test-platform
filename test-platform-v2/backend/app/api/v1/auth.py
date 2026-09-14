@@ -1,6 +1,8 @@
 """鉴权路由 —— 登录 / 当前用户 / 修改密码。"""
 from __future__ import annotations
 
+import secrets
+
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
 
@@ -8,7 +10,7 @@ from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser, get_current_user
 from app.core.exceptions import APIException
-from app.core.security import hash_password, verify_password
+from app.core.security import hash_password, password_token_version, verify_password
 from app.schemas.auth import (
     ChangePasswordIn,
     LoginIn,
@@ -234,7 +236,12 @@ def forgot_password(body: ForgotPasswordRequest, request: Request, db: Session =
     # 生成重置 token（30 分钟有效，通过 extra payload 携带 type 标记）
     reset_token = create_access_token(
         user.id,
-        extra={"type": "password_reset", "expires_minutes": 30},
+        extra={
+            "type": "password_reset",
+            "pwdv": password_token_version(user.password),
+            "jti": secrets.token_urlsafe(16),
+        },
+        expires_minutes=30,
     )
 
     # 尝试发送邮件通知（如有 SMTP 配置）
@@ -287,11 +294,22 @@ def reset_password(body: ResetPasswordRequest, request: Request, db: Session = D
         db.commit()
         raise APIException(code=400, msg="无效的重置 token")
 
-    user = user_service.get_user_orm(db, int(user_id))
+    expected_password_version = payload.get("pwdv")
+    if not expected_password_version:
+        _auth_audit(db, request, "auth.password_reset", "reset-password", "重置失败：重置 token 缺少密码版本")
+        db.commit()
+        raise APIException(code=400, msg="无效的重置 token")
+
+    # Lock the user row so concurrent requests cannot both consume one token.
+    user = auth_service.get_user_for_password_reset(db, int(user_id))
     if not user or user.status != 1:
         _auth_audit(db, request, "auth.password_reset", "reset-password", "重置失败：用户不存在或已禁用")
         db.commit()
         raise APIException(code=400, msg="用户不存在或已禁用")
+    if password_token_version(user.password) != expected_password_version:
+        _auth_audit(db, request, "auth.password_reset", f"reset {user.username}", "重置失败：token 已使用或已失效", user_id=user.id, username=user.username)
+        db.commit()
+        raise APIException(code=400, msg="重置 token 已使用或已失效")
 
     if len(body.new_password) < 6:
         _auth_audit(db, request, "auth.password_reset", f"reset {user.username}", "重置失败：密码长度至少 6 位",

@@ -18,6 +18,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.core.execution_sandbox import execution_process_kwargs
 from app.core.resource_budget import configured_budget
 from app.core.process_tree import process_group_options, terminate_process_tree
 
@@ -351,23 +352,25 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
         return _fail_run(db, run, msg, job)
 
     # 4. 构建执行环境变量（注入 BASE_URL + CAMELTV_BASE_URL + 环境变量 + CAMELTV_* 透传 + 输出路径）
-    env = os.environ.copy()
+    # Build an explicit child environment. Never copy the backend env: it
+    # contains SECRET_KEY, database credentials and provider tokens.
+    sandbox_overrides: dict[str, str] = {
+        "PLAYWRIGHT_JSON_OUTPUT_NAME": str(artifact_dir / "report.json"),
+    }
     base_url = (run.base_url or "").strip()
     if base_url:
-        env["BASE_URL"] = base_url
+        sandbox_overrides["BASE_URL"] = base_url
         # B14：真实体育 E2E（tests/automation/ui）读取 CAMELTV_BASE_URL（preconditions.ts），
         # 仅注入 BASE_URL 会导致契约变量缺失而 BlockedRunError。二者同时注入，缺失契约变量时诚实报错。
-        env["CAMELTV_BASE_URL"] = base_url
+        sandbox_overrides["CAMELTV_BASE_URL"] = base_url
         logger.info(f"Injecting BASE_URL/CAMELTV_BASE_URL={base_url} for run #{run_id}")
-    env.update(_resolve_environment_variables(db, job.environment_id))
+    sandbox_overrides.update(_resolve_environment_variables(db, job.environment_id))
     # CAMELTV_* 前缀变量透传（体育 E2E preconditions 依赖；如 CAMELTV_TARGET_ENV/
     # CAMELTV_RUN_LEVEL/AD_BLOCK_DOMAINS 等），便于平台环境注入驱动 tests/automation/ui
-    env.update({
+    sandbox_overrides.update({
         k: v for k, v in os.environ.items()
         if k.startswith("CAMELTV_") and _ENV_KEY_PATTERN.fullmatch(k)
     })
-    # Playwright JSON 报告写入产物目录
-    env["PLAYWRIGHT_JSON_OUTPUT_NAME"] = str(artifact_dir / "report.json")
 
     npx = _resolve_cmd("npx")
     if not npx:
@@ -396,7 +399,7 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
             encoding="utf-8",
             errors="replace",
             cwd=str(runner_dir),
-            env=env,
+            **execution_process_kwargs(sandbox_overrides),
             **(process_group_options() if supervised else {}),
         )
 

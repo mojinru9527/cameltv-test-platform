@@ -16,6 +16,7 @@ import uuid
 
 from fastapi import HTTPException
 from app.core.config import settings
+from app.core.execution_sandbox import execution_process_kwargs
 from app.core.process_tree import run_supervised
 from app.core.resource_budget import configured_budget
 
@@ -301,6 +302,7 @@ export default defineConfig({{
                 text=True,
                 timeout=req.timeout_ms // 1000 + 15,
                 cwd=str(tmpdir),
+                **execution_process_kwargs(),
             )
             passed = result.returncode == 0
             stdout = result.stdout or ""

@@ -211,7 +211,7 @@ COPY --chmod=0555 test-platform-v2/deploy/aitde-runtime/scripts/start-worker.sh 
 
 USER cameltv:cameltv
 EXPOSE 8000
-CMD ["sh", "-c", "echo '=== CamelTv Test Platform v2.6 ===' && test \"$(alembic heads | grep -c ' (head)$')\" -eq 1 && echo 'Running database migrations...' && alembic upgrade head && echo 'Starting application...' && exec uvicorn app.main:app --host 0.0.0.0 --port \"${PORT:-8000}\""]
+CMD ["sh", "-c", "echo '=== CamelTv Test Platform v2.6 ===' && test \"$(alembic heads | grep -c ' (head)$')\" -eq 1 && echo 'Running database migrations...' && alembic upgrade head && echo 'Starting application...' && exec uvicorn app.main:app --host 0.0.0.0 --proxy-headers --forwarded-allow-ips=\"${FORWARDED_ALLOW_IPS:-*}\" --port \"${PORT:-8000}\""]
 
 FROM runtime-api-base AS api
 ENV WORKER_EXECUTION_ENABLED=false
@@ -221,7 +221,7 @@ COPY --chown=cameltv:cameltv test-platform-v2/backend/alembic.ini .
 COPY --chown=cameltv:cameltv test-platform-v2/backend/tests/playwright ./tests/playwright
 USER cameltv:cameltv
 EXPOSE 8000
-CMD ["sh", "-c", "test \"$(alembic heads | grep -c ' (head)$')\" -eq 1 && alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port \"${PORT:-8000}\""]
+CMD ["sh", "-c", "test \"$(alembic heads | grep -c ' (head)$')\" -eq 1 && alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --proxy-headers --forwarded-allow-ips=\"${FORWARDED_ALLOW_IPS:-*}\" --port \"${PORT:-8000}\""]
 
 # AI Gateway is an internal Python service: no Node, DSH or Chromium.
 FROM runtime-ai-base AS ai-gateway

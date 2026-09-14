@@ -3,13 +3,13 @@ import { resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const indexHtml = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8')
+const themeBootstrap = readFileSync(resolve(process.cwd(), 'public/theme-bootstrap.js'), 'utf8')
 const appMain = readFileSync(resolve(process.cwd(), 'src/main.tsx'), 'utf8')
 const themeLabMain = readFileSync(resolve(process.cwd(), 'src/theme-lab/main.tsx'), 'utf8')
 
 function getThemeBootstrapScript(): string {
-  const match = indexHtml.match(/<script data-theme-bootstrap>([\s\S]*?)<\/script>/)
-  if (!match) throw new Error('Theme bootstrap script is missing from index.html')
-  return match[1]
+  expect(indexHtml).toContain('<script src="/theme-bootstrap.js"></script>')
+  return themeBootstrap
 }
 
 function runThemeBootstrap({

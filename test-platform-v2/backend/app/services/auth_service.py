@@ -63,6 +63,13 @@ def login(db: Session, username: str, password: str) -> LoginOut:
     )
 
 
+
+def get_user_for_password_reset(db: Session, user_id: int) -> User | None:
+    """Lock and return a user for one-time password reset consumption."""
+    return db.scalar(
+        select(User).where(User.id == user_id).with_for_update()
+    )
+
 def register(
     db: Session,
     *,
