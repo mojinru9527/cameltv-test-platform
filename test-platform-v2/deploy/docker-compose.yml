@@ -33,8 +33,6 @@ services:
       target: api
     cap_drop:
       - ALL
-    security_opt:
-      - no-new-privileges:true
     pids_limit: 512
     environment:
       - ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT is required}
@@ -243,6 +241,8 @@ services:
     init: true
     mem_limit: ${AI_GATEWAY_MEMORY_LIMIT:-1024m}
     pids_limit: 128
+    security_opt:
+      - no-new-privileges:true
     stop_grace_period: 60s
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/internal/ai/v1/health')"]
@@ -271,6 +271,8 @@ services:
     init: true
     mem_limit: ${RUNNER_MEMORY_LIMIT:-1536m}
     pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
     stop_grace_period: 60s
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
@@ -328,3 +330,5 @@ volumes:
     driver: local
   pg-data:
     driver: local
+
+
