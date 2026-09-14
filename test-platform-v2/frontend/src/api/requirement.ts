@@ -65,15 +65,15 @@ export async function fetchAiTask(
   return api.get(`/requirements/ai-task/${taskId}`)
 }
 
-export async function runAsyncAiTask(
+export async function runAsyncAiTask<T = unknown>(
   taskId: string,
   signal?: AbortSignal,
-): Promise<any> {
+): Promise<T> {
   // C102-1/C116-2：轮询异步 AI 任务（2s/次），完成返回 result，失败抛错。
   for (let i = 0; i < 300; i += 1) {
     if (signal?.aborted) throw new Error('已取消')
     const task = await fetchAiTask(taskId)
-    if (task.status === 'done') return task.result
+    if (task.status === 'done') return task.result as T
     if (task.status === 'failed') throw new Error(task.error || 'AI 任务失败')
     await new Promise((resolve) => setTimeout(resolve, 2000))
   }
@@ -319,4 +319,6 @@ export async function generateApiFromEndpoints(
     params: serviceId ? { service_id: serviceId } : {},
   })
 }
+
+
 

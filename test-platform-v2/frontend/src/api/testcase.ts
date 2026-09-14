@@ -1,4 +1,5 @@
 import api, { cachedGet, clearApiCache } from './client'
+import type { TestCaseCreate, TestCaseUpdate } from './apiContract'
 
 export interface TestCaseFilter {
   case_id?: string
@@ -74,22 +75,22 @@ export async function fetchTaxonomy(
 // ── Category CRUD ──
 
 export async function createDomain(name: string) {
-  clearApiCache('/test-cases/domains')
+  clearApiCache('/test-cases')
   return api.post('/test-cases/domains', { name })
 }
 
 export async function deleteDomain(domainId: number) {
-  clearApiCache('/test-cases/domains')
+  clearApiCache('/test-cases')
   return api.delete(`/test-cases/domains/${domainId}`)
 }
 
 export async function createModule(domainId: number, name: string) {
-  clearApiCache('/test-cases/domains')
+  clearApiCache('/test-cases')
   return api.post(`/test-cases/domains/${domainId}/modules`, { name })
 }
 
 export async function deleteModule(domainId: number, moduleId: number) {
-  clearApiCache('/test-cases/domains')
+  clearApiCache('/test-cases')
   return api.delete(`/test-cases/domains/${domainId}/modules/${moduleId}`)
 }
 
@@ -101,23 +102,28 @@ export async function fetchTestCase(id: number) {
   return api.get(`/test-cases/${id}`)
 }
 
-export async function createTestCase(body: Record<string, any>) {
+export async function createTestCase(body: Partial<TestCaseCreate>) {
+  clearApiCache('/test-cases')
   return api.post('/test-cases', body)
 }
 
-export async function updateTestCase(id: number, body: Record<string, any>) {
+export async function updateTestCase(id: number, body: TestCaseUpdate) {
+  clearApiCache('/test-cases')
   return api.put(`/test-cases/${id}`, body)
 }
 
 export async function deleteTestCase(id: number) {
+  clearApiCache('/test-cases')
   return api.delete(`/test-cases/${id}`)
 }
 
-export async function batchUpdateCases(ids: number[], fields: Record<string, any>) {
+export async function batchUpdateCases(ids: number[], fields: Partial<TestCaseUpdate>) {
+  clearApiCache('/test-cases')
   return api.put('/test-cases/batch', { ids, ...fields })
 }
 
 export async function batchDeleteCases(ids: number[]) {
+  clearApiCache('/test-cases')
   return api.delete('/test-cases/batch', { data: { ids } })
 }
 
@@ -177,10 +183,15 @@ export async function fetchVersionDetail(caseId: number, versionId: number): Pro
 
 // ── Review ──
 
-export async function reviewCase(caseId: number, action: string, comment: string = ''): Promise<any> {
+export async function reviewCase(caseId: number, action: string, comment: string = ''): Promise<unknown> {
   return api.post(`/test-cases/${caseId}/review`, { action, comment })
 }
 
 export async function fetchReviewHistory(caseId: number): Promise<import('@/types').TestCaseReviewTransition[]> {
   return api.get(`/test-cases/${caseId}/review-history`)
 }
+
+
+
+
+

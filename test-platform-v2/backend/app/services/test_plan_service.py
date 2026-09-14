@@ -20,10 +20,21 @@ from app.core.execution_status import canonical_exec_status
 from app.core.process_tree import run_supervised
 from app.core.resource_budget import configured_budget
 
-logger = logging.getLogger(__name__)
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
 from app.services.elk_service import build_kibana_link, extract_trace_id
+
+logger = logging.getLogger(__name__)
+
+
+def _load_test_case_map(db: Session, case_ids: list[int]) -> dict[int, TestCase]:
+    """Load selected test cases once for batch validation/execution."""
+    unique_ids = {int(case_id) for case_id in case_ids if case_id is not None}
+    if not unique_ids:
+        return {}
+    rows = db.scalars(select(TestCase).where(TestCase.id.in_(unique_ids))).all()
+    return {row.id: row for row in rows}
+
 
 
 # ═══════════════════════════════════════════════════════
@@ -169,11 +180,11 @@ def add_cases(
     ) or 0
 
     added = 0
-    for case_id in case_ids:
+    case_map = _load_test_case_map(db, case_ids)
+    for case_id in dict.fromkeys(case_ids):
         if case_id in existing:
             continue
-        # 验证用例存在且属于同项目
-        tc = db.get(TestCase, case_id)
+        tc = case_map.get(case_id)
         if not tc or tc.project_id != project_id:
             continue
         max_sort += 1
@@ -364,11 +375,8 @@ def ensure_plan_execution_ready(
     pcs = db.scalars(
         select(TestPlanCase).where(TestPlanCase.plan_id == plan_id)
     ).all()
-    api_cases = []
-    for pc in pcs:
-        tc = db.get(TestCase, pc.case_id)
-        if tc and tc.case_type == "api":
-            api_cases.append((pc, tc))
+    case_map = _load_test_case_map(db, [pc.case_id for pc in pcs])
+    api_cases = [(pc, case_map[pc.case_id]) for pc in pcs if case_map.get(pc.case_id) and case_map[pc.case_id].case_type == "api"]
     if not api_cases:
         return  # 纯人工/UI 计划不需要环境
 
@@ -503,11 +511,8 @@ def auto_execute_api_cases(
         .where(TestPlanCase.plan_id == plan_id)
     ).all()
 
-    api_cases = []
-    for pc in pcs:
-        tc = db.get(TestCase, pc.case_id)
-        if tc and tc.case_type == "api":
-            api_cases.append((pc, tc))
+    case_map = _load_test_case_map(db, [pc.case_id for pc in pcs])
+    api_cases = [(pc, case_map[pc.case_id]) for pc in pcs if case_map.get(pc.case_id) and case_map[pc.case_id].case_type == "api"]
 
     if not api_cases:
         return {"total": 0, "executed": 0, "passed": 0, "failed": 0, "details": [], "message": "计划中没有 API 类型用例"}
@@ -1357,3 +1362,4 @@ def trigger_plan_from_ci(
         executed += 1
     db.flush()
     return plan, executed
+

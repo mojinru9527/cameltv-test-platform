@@ -85,14 +85,14 @@ export async function confirmOpenApiImport(
 
 export async function generateApiCases(
   data: GenerateApiCasesRequest,
-): Promise<{ cases: any[]; total: number; imported_case_ids: number[] }> {
-  return api.post('/apitest/cases/generate', data) as unknown as Promise<{ cases: any[]; total: number; imported_case_ids: number[] }>
+): Promise<{ cases: unknown[]; total: number; imported_case_ids: number[] }> {
+  return api.post('/apitest/cases/generate', data) as unknown as Promise<{ cases: unknown[]; total: number; imported_case_ids: number[] }>
 }
 
 export async function batchGenerateApiCases(
   data: BatchGenerateRequest,
-): Promise<{ total_generated: number; imported_case_ids: number[]; errors: any[] }> {
-  return api.post('/apitest/cases/batch-generate', data) as unknown as Promise<{ total_generated: number; imported_case_ids: number[]; errors: any[] }>
+): Promise<{ total_generated: number; imported_case_ids: number[]; errors: unknown[] }> {
+  return api.post('/apitest/cases/batch-generate', data) as unknown as Promise<{ total_generated: number; imported_case_ids: number[]; errors: unknown[] }>
 }
 
 // ── 批量执行任务 ──
@@ -129,3 +129,4 @@ export async function deleteApiExecutionTask(taskId: number): Promise<{ deleted:
 export async function cancelApiExecutionTask(taskId: number): Promise<{ status: string }> {
   return api.post(`/apitest/tasks/${taskId}/cancel`) as unknown as Promise<{ status: string }>
 }
+
