@@ -22,21 +22,23 @@
 
 | # | Slice | 方案 | 编码 | 自测 | 审批 | 合入 | 备注 |
 |---|-------|:----:|:----:|:----:|:----:|:----:|------|
-| 1 | `@/ui` 唯一出口与迁移 | ✅ | 🔄 ⬅️ | ⏳ | ⏳ | ⏳ | 当前切片 |
-| 2 | 任务优先首页 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 3 | 登录恢复与可操作性 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 4 | 视觉/a11y/治理验证 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
+| 1 | `@/ui` 唯一出口与迁移 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 164 文件迁移；ESLint + 治理测试 |
+| 2 | 任务优先首页 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 4 任务入口 + 可展开模块 |
+| 3 | 登录恢复与可操作性 | ✅ | ✅ | ✅ | ⏳ | ⏳ | forgot/reset + 邮件 + Caps Lock |
+| 4 | 视觉/a11y/治理验证 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 三视口 6/6 + axe + 截图 |
+
+> 状态图例：⏳ 待开始 | 🔄 进行中 | ✅ 已完成 | ❌ 已取消 | 🔒 阻塞中
 
 ---
 
 ## 📍 当前位置
 
 ```
-Batch 245 — @/ui 唯一出口与迁移
-├── 已完成: Product/PM/Design 工件、现状审计、worktree 隔离
-├── 🔄 进行中: canonical barrel、兼容适配、导入迁移、ESLint 门禁
-├── ⏳ 待审批: 切片自测结果
-└── ⏳ 下一步: 任务优先首页
+Batch 245 — QA 与 Leader 本地评审完成
+├── 已完成: 4 个切片、前后端全量、G0-G2、三视口 axe/截图
+├── 🔄 进行中: 等待用户一次总确认（推送 + Draft PR + required checks 后合入）
+├── ⏳ 待审批: 用户总确认
+└── ⏳ 下一步: 推送 feature/ui-ux-consolidation-phase-3 → Draft PR → checks → squash 合入
 ```
 
 ---
@@ -44,9 +46,16 @@ Batch 245 — @/ui 唯一出口与迁移
 ## 📜 批次记录
 
 ### Batch 245 — UI/UX Consolidation (2026-09-14)
-- **产出**: 待本批完成后记录
-- **审批**: 待 QA/Leader/用户总确认
-- **耗时**: 进行中
+- **产出**:
+  - `ad518a17` Product/PM/Design/看板
+  - `69f2a28d` `@/ui` 唯一出口
+  - `ba6abc04` 任务优先首页
+  - `c013669a` 登录恢复与密码辅助
+  - `0354a559` 多视口视觉/axe 证据
+  - `782b1533` 工件格式收口
+- **审批**: QA PASS（本地）；Leader 有条件通过，等待用户总确认与 CI required checks
+- **耗时**: 约 6h
+- **记录**: [QA 报告](../batch-245-ui-ux-consolidation-qa-report.md) / [Leader Verdict](../batch-245-ui-ux-consolidation-leader-verdict.md)
 
 ---
 
@@ -54,8 +63,8 @@ Batch 245 — @/ui 唯一出口与迁移
 
 | 阻塞项 | 严重度 | 描述 | 需要谁 | 记录时间 |
 |--------|:------:|------|--------|----------|
-| 批量导入迁移 | P2 | 现有双入口共影响 169 个文件，需机械迁移并全量 typecheck | Dev | 2026-09-14 |
-| SMTP 配置 | P2 | 生产是否配置 SMTP 未知；UI 必须显式提示管理员兜底 | QA/运维 | 2026-09-14 |
+| 无代码阻塞 | P3 | 邮件投递需生产配置 SMTP 与 FRONTEND_URL；UI 已诚实提示 | 运维/发布负责人 | 2026-09-14 |
+| WARN ratchet | P3 | `dev-gate` HARD=0，历史 WARN=330，Phase 4 建基线 | Phase 4 | 2026-09-14 |
 
 ---
 
@@ -66,5 +75,5 @@ Batch 245 — @/ui 唯一出口与迁移
 | PRD | [link](../batch-245-ui-ux-consolidation-prd-summary.md) | ✅ |
 | PM 计划 | [link](../batch-245-ui-ux-consolidation-pm-plan.md) | ✅ |
 | 设计规范 | [link](../batch-245-ui-ux-consolidation-design-spec.md) | ✅ |
-| QA 报告 | [link](../batch-245-ui-ux-consolidation-qa-report.md) | ⏳ |
-| Leader Verdict | [link](../batch-245-ui-ux-consolidation-leader-verdict.md) | ⏳ |
+| QA 报告 | [link](../batch-245-ui-ux-consolidation-qa-report.md) | ✅ |
+| Leader Verdict | [link](../batch-245-ui-ux-consolidation-leader-verdict.md) | ✅ |
