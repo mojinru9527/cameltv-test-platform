@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import secrets
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
@@ -105,6 +106,9 @@ def public_access(db: Session = Depends(get_db)):
     data = PublicAccessOut(
         registration_enabled=settings.effective_registration_enabled,
         invite_code_required=settings.invite_code_required,
+        password_reset_email_enabled=bool(
+            settings.smtp_host and settings.frontend_url and (settings.smtp_from or settings.smtp_user)
+        ),
         modules=menu_service.menu_tree(db, ["*"]),
     )
     return R.ok(data)
@@ -244,22 +248,14 @@ def forgot_password(body: ForgotPasswordRequest, request: Request, db: Session =
         expires_minutes=30,
     )
 
-    # 尝试发送邮件通知（如有 SMTP 配置）
-    try:
-        from app.services.notify_service import notify_sync
-        notify_sync(
-            db,
-            project_id=0,
-            event="password_reset_requested",
-            data={
-                "username": user.username,
-                "reset_token": reset_token,
-                "expires_in": "30 minutes",
-                "ip": request.client.host if request.client else "",
-            },
+    # 仅发送可恢复的完整链接；未配置 SMTP/前端域名时保持防枚举静默，管理员仍可人工协助。
+    if settings.frontend_url and user.email:
+        reset_url = (
+            f"{settings.frontend_url.rstrip('/')}/reset-password"
+            f"?token={quote(reset_token, safe='')}"
         )
-    except Exception:
-        pass  # 邮件不是必需的，token 可通过管理员人工交接
+        from app.services.notify_service import send_password_reset_email
+        send_password_reset_email(user.email, reset_url)
 
     _auth_audit(db, request, "auth.password_reset_request", f"forgot {user.username}",
                 "重置密码请求：已生成重置 token", user_id=user.id, username=user.username)
