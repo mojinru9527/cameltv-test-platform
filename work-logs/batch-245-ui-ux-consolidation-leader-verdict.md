@@ -31,6 +31,10 @@
 - ✅ `dev-gate.ps1` — HARD=0、G1/G2 全绿；WARN=330 为既有 ratchet 基线，本批不新增阻断。
 - ✅ 视觉证据 — `work-logs/evidence/batch-245/` 6 张 PNG。
 
+## CI 首轮修复
+
+首轮前端 required check 暴露治理测试的跨平台路径判断缺陷：Linux 下 ignore 目录使用 `/`，测试仅按 `\` 比较。已改用 `node:path.sep`，本地全量 710/710 通过；修复提交后必须重新等待 required checks，禁止复用首轮结果。
+
 ## 判决
 
 本批实现与本地 QA 已满足 C243-3；在**用户一次总确认**后推送分支、创建 Draft PR，并等待 required checks。required checks 全绿且 `audit-ai-pr.ps1 -RequireSuccessfulChecks` 通过后，可转为 Ready 并 squash 合入 `main`。在最终审计前不得把 `C243-3` 标为 Closed。

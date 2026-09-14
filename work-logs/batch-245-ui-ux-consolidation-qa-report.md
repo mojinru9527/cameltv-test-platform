@@ -51,6 +51,13 @@
 | WCAG AA/axe | ✅ | 新首页和恢复路径无 wcag2a/2aa/21a/21aa violations |
 | 视觉证据 | ✅ | `work-logs/evidence/batch-245/*.png` 6 张，覆盖三视口 |
 
+## CI 首轮修复记录
+
+- 首轮 `前端全新检出与全量回归` 在 Linux 上失败：治理测试仅按 Windows `\` 判断 ignore 目录，把 `components/ui`/`ui` 自身误报为业务违规。
+- 修复：改用 `node:path.sep` 做跨平台路径比较。
+- 本地复验：`npm run typecheck`、`npm run lint`、定向 Vitest 2/2、全量 Vitest 164 files / 710 tests 全部通过。
+- 该修复会生成新 SHA，必须重新运行 required checks，不能复用首轮结果。
+
 ## 代码实现逻辑审计
 
 - `@/ui` 是唯一公共 barrel；canonical shadcn 实现仍在 `components/ui`，避免同时维护两套真实实现。

@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync } from 'node:fs'
-import { extname, relative, resolve } from 'node:path'
+import { extname, relative, resolve, sep } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const sourceRoot = resolve(process.cwd(), 'src')
@@ -17,7 +17,7 @@ function collectSources(directory = sourceRoot): string[] {
 }
 
 function isIgnored(file: string): boolean {
-  return ignoredRoots.some((root) => file === root || file.startsWith(`${root}\\`))
+  return ignoredRoots.some((root) => file === root || file.startsWith(`${root}${sep}`))
 }
 
 describe('Batch 245 UI entry governance', () => {
