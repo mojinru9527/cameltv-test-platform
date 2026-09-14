@@ -32,6 +32,10 @@
 - ✅ axe — 28 passed；Lighthouse — 通过。
 - ✅ CI 契约 — quality/range contracts 各 10 passed。
 
+## CI 首轮修复
+
+后端 Linux mypy 基线补充了 3 类 Windows API 平台差异；ratchet 改为 Windows/Linux 分平台 baseline（193/199），本地两端选择逻辑通过。新提交后必须重新等待 required checks。
+
 ## 判决
 
 C243-4 与 C244-1 的本地实现和 QA 均已完成。用户一次总确认后推送 `feature/engineering-governance-phase-4`、创建 Draft PR，并等待 required checks；全部通过且 `audit-ai-pr.ps1 -RequireSuccessfulChecks` 成功后，可转 Ready 并 squash 合入 `main`。

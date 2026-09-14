@@ -31,6 +31,13 @@
 
 > `dev-gate` 的 WARN 330 为仓库既有机械扫描基线，不是本批新增缺陷；本轮新增的 Ruff/mypy ratchet 与依赖审计均无新增问题。
 
+## CI 首轮修复记录
+
+- 首轮 `后端全新检出与全量回归` 在 Linux mypy 上额外报告 `openvpn_service.py` 的 3 类 Windows API（`CREATE_NO_WINDOW` / `WINFUNCTYPE` / `WinDLL`，共 6 occurrence）。
+- 修复：mypy baseline 改为平台分片，Windows 基线 193，Linux 基线 199；Ruff baseline 保持共享。
+- 本地复验：Windows ratchet PASS，Linux baseline 选择逻辑 PASS；新提交必须重新跑 required checks。
+- 前端 required job 首轮已通过。
+
 ## 逐条件验证
 
 ### C243-4：required checks 工程治理

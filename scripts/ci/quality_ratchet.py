@@ -21,6 +21,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND_ROOT = REPO_ROOT / "test-platform-v2" / "backend"
 DEFAULT_BASELINE = BACKEND_ROOT / "quality-ratchet-baseline.json"
+PLATFORM_KEY = "win32" if sys.platform.startswith("win") else "linux" if sys.platform.startswith("linux") else sys.platform
 MYPY_ERROR = re.compile(r"^(.+):(\d+): error: (.*)$")
 MYPY_CODE = re.compile(r"\[([a-zA-Z0-9_-]+)\]\s*$")
 
@@ -88,17 +89,32 @@ def _load_baseline(path: Path) -> dict[str, dict[str, int]]:
     if not path.exists():
         raise RuntimeError(f"baseline missing: {path}; run with --update")
     payload = json.loads(path.read_text(encoding="utf-8"))
-    return {"ruff": payload.get("ruff", {}), "mypy": payload.get("mypy", {})}
+    mypy_platforms = payload.get("mypyPlatforms")
+    if isinstance(mypy_platforms, dict):
+        mypy = mypy_platforms.get(PLATFORM_KEY, {})
+    else:
+        mypy = payload.get("mypy", {})
+    return {"ruff": payload.get("ruff", {}), "mypy": mypy}
 
 
 def _write_baseline(path: Path, current: dict[str, dict[str, int]]) -> None:
+    existing = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    mypy_platforms = dict(existing.get("mypyPlatforms", {}))
+    mypy_platforms[PLATFORM_KEY] = current["mypy"]
     payload = {
-        "schema_version": 2,
+        "schema_version": 3,
         "generated_at": datetime.now(UTC).isoformat(),
         "policy": "line-independent finding counts; no new Ruff/mypy occurrence is allowed",
-        "counts": {tool: sum(findings.values()) for tool, findings in current.items()},
+        "counts": {
+            "ruff": sum(current["ruff"].values()),
+            "mypyPlatforms": {
+                platform: sum(findings.values())
+                for platform, findings in mypy_platforms.items()
+            },
+        },
         "ruff": current["ruff"],
-        "mypy": current["mypy"],
+        "mypyPlatforms": mypy_platforms,
+        "mypy": mypy_platforms.get("win32", current["mypy"]),
     }
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
