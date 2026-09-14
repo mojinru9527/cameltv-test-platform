@@ -6,7 +6,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   useSidebar,
-} from '@/components/ui/sidebar'
+} from '@/ui'
 import type { MenuItem } from '@/types'
 import {
   LayoutDashboard,

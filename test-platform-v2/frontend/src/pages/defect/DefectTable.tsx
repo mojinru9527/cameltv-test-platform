@@ -10,7 +10,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+} from '@/ui'
 import { deleteDefect } from '@/api/defect'
 import type { DefectItem } from '@/types'
 import { SEVERITY_MAP, STATUS_MAP, severityBadgeClass, statusBadgeClass } from './constants'

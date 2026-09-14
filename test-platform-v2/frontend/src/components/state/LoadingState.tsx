@@ -15,7 +15,7 @@ import {
   SkeletonTable,
   SkeletonCard,
   SkeletonPage,
-} from '@/components/ui/skeleton'
+} from '@/ui'
 
 // ---------------------------------------------------------------------------
 // Types

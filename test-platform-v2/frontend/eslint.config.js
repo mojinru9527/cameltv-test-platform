@@ -48,5 +48,31 @@ export default [
       'react-hooks/exhaustive-deps': 'error',
     },
   },
+  {
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/components/ui/**', 'src/ui/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/components/ui', '@/components/ui/*'],
+              message: '业务代码请从 @/ui 导入；canonical shadcn 实现只在 src/ui 适配层内引用。',
+            },
+            {
+              group: ['@radix-ui/*'],
+              message: 'Radix primitive 只在 src/components/ui 内使用；业务代码请从 @/ui 导入。',
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]
-

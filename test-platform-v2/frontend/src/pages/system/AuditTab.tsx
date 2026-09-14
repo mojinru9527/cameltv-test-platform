@@ -11,7 +11,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import { format } from 'date-fns'
 import { useState } from 'react'
 import { fetchAuditLogs, exportAuditLogsCsv } from '@/api/system'

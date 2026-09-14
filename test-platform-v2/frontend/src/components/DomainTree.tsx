@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/ui'
 import { FolderOpen, ChevronRight, FileText, ArrowRight } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 

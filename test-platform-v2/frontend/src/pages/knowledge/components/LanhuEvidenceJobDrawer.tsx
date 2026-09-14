@@ -2,13 +2,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import {
   Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle,
-} from '@/components/ui/sheet'
+} from '@/ui'
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog'
-import { Textarea } from '@/components/ui/textarea'
+} from '@/ui'
+import { Textarea } from '@/ui'
 import {
   cancelLanhuEvidenceJob,
   deleteLanhuEvidenceJob,

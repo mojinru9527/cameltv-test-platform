@@ -8,7 +8,7 @@ import {
   CommandGroup,
   CommandItem,
   CommandShortcut,
-} from '@/components/ui/command'
+} from '@/ui'
 import {
   LayoutDashboard,
   FileText,

@@ -2,8 +2,8 @@ import { useMemo } from 'react'
 import { useApi } from '@/hooks/useApi'
 import { fetchVersionKnowledge, type VersionKnowledgeRecord } from '@/api/knowledge'
 import { AsyncState } from '@/components/state'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
+import { Badge } from '@/ui'
 
 /**
  * B11 知识闭环：版本记录 / 复用建议 Tab。

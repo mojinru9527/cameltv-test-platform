@@ -8,7 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import { MaskPreviewTable, type MaskEntry } from './MaskPreviewTable'
 import type { MaskingProfile, MaskingRule } from '@/api/production'
 import { Plus, Trash2, ShieldCheck } from '@/lib/icons'

@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
-import { Card, CardContent } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent } from '@/ui'
+import { Skeleton } from '@/ui'
 import {
   fetchWikiConfig, fetchWikiRawSources, fetchWikiPages, fetchWikiPage,
   fetchWikiPageLinks, fetchWikiRawSource, createWikiIngestJob, fetchWikiIngestJob, approveWikiPage, rejectWikiPage,

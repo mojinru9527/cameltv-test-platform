@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
 import { Badge } from '@/ui'

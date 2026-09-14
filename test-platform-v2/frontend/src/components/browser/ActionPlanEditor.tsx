@@ -6,7 +6,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import { Plus, Trash2, Code2, List, ArrowUp, ArrowDown } from '@/lib/icons'
 import { COMMAND_DRIVER_LABELS, type CommandIR, type CommandIRCommand } from '@/api/actionPlans'
 import { cn } from '@/lib/utils'

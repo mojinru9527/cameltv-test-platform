@@ -4,7 +4,7 @@ import { saveInteractions } from '@/api/requirementModules'
 import type { ModuleTreeNode } from '@/types'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
-import { Label } from '@/components/ui/label'
+import { Label } from '@/ui'
 import { Badge } from '@/ui'
 import {
   Select,
@@ -12,15 +12,15 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Checkbox } from '@/components/ui/checkbox'
+} from '@/ui'
+import { ScrollArea } from '@/ui'
+import { Checkbox } from '@/ui'
 import { Trash2, Move, Plus } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 

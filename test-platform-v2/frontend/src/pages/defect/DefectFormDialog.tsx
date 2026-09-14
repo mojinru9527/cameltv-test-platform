@@ -6,21 +6,21 @@ import { toast } from 'sonner'
 import { Loader2 } from '@/lib/icons'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
-import { Textarea } from '@/components/ui/textarea'
+import { Textarea } from '@/ui'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import { createDefect, updateDefect } from '@/api/defect'
 import { fetchTestCases } from '@/api/testcase'
 import { fetchUsers } from '@/api/system'

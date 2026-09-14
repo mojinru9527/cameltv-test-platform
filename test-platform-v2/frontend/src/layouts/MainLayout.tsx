@@ -19,9 +19,9 @@ import {
   SidebarMenu,
   SidebarProvider,
   SidebarTrigger,
-} from '@/components/ui/sidebar'
-import { Separator } from '@/components/ui/separator'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+} from '@/ui'
+import { Separator } from '@/ui'
+import { Avatar, AvatarFallback } from '@/ui'
 import { Badge, Button } from '@/ui'
 import CommandPalette from '@/components/CommandPalette'
 import AskAiButton from '@/components/foolproof/AskAiButton'
@@ -38,7 +38,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,7 +50,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from '@/ui'
 import {
   LogOut,
   User,
@@ -499,4 +499,3 @@ export default function MainLayout() {
     </SidebarProvider>
   )
 }
-

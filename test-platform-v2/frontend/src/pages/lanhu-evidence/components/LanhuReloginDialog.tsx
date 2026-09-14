@@ -8,8 +8,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Textarea } from '@/components/ui/textarea'
+} from '@/ui'
+import { Textarea } from '@/ui'
 import { Input } from '@/ui'
 import { Button } from '@/ui'
 import { toast } from 'sonner'

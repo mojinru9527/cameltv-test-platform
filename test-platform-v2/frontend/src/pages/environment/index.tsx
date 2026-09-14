@@ -12,16 +12,16 @@ import {
 } from '@/lib/icons'
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
-} from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
-import { Switch } from '@/components/ui/switch'
+} from '@/ui'
+import { Textarea } from '@/ui'
+import { Switch } from '@/ui'
 import { useAuthStore } from '@/stores/auth'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,10 +31,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+} from '@/ui'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import type { Environment, EnvironmentVariable } from '@/types'
 import {
   fetchEnvironments, createEnvironment, updateEnvironment, deleteEnvironment,

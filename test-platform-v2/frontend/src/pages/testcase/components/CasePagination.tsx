@@ -4,7 +4,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import Pagination from '@/components/Pagination'
 
 interface CasePaginationProps {

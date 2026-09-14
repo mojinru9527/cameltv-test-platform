@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/ui'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/ui'
+import { Textarea } from '@/ui'
 import { cn } from '@/lib/utils'
 import { Plus, Trash2, Check, Code2, KeyRound } from '@/lib/icons'
 

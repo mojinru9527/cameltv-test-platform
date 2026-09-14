@@ -1,5 +1,5 @@
 import { FileText, Users, Shield, KeyRound } from '@/lib/icons'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/ui'
 import { useAuthStore } from '@/stores/auth'
 import PageHeader from '@/components/PageHeader'
 import AuditTab from './AuditTab'

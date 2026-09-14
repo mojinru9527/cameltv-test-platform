@@ -6,10 +6,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import { Button } from '@/ui'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ScrollArea } from '@/ui'
+import { Skeleton } from '@/ui'
 import { Badge } from '@/ui'
 import { cn } from '@/lib/utils'
 import { downloadLanhuEvidenceAsset } from '@/api/lanhuEvidence'

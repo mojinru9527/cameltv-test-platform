@@ -1,14 +1,14 @@
 import { useState, useMemo } from 'react'
 import { ArrowUp, ArrowDown, Columns2 } from '@/lib/icons'
 import { Button } from '@/ui'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Checkbox } from '@/ui'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from '@/ui'
 import {
   Table,
   TableHeader,
@@ -16,8 +16,8 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from '@/components/ui/table'
-import { SkeletonTable } from '@/components/ui/skeleton'
+} from '@/ui'
+import { SkeletonTable } from '@/ui'
 import EmptyState from '@/components/EmptyState'
 import Pagination from '@/components/Pagination'
 import { cn } from '@/lib/utils'

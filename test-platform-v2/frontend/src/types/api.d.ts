@@ -12295,6 +12295,8 @@ export interface components {
             registration_enabled: boolean;
             /** Invite Code Required */
             invite_code_required: boolean;
+            /** Password Reset Email Enabled */
+            password_reset_email_enabled?: boolean;
             /** Modules */
             modules?: components["schemas"]["MenuOut"][];
         };

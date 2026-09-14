@@ -4,16 +4,16 @@ import { fetchGlobalNav } from '@/api/requirementModules'
 import type { ModuleTreeNode, GlobalNavItemOut } from '@/types'
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from '@/ui'
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetDescription,
-} from '@/components/ui/sheet'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
+} from '@/ui'
+import { ScrollArea } from '@/ui'
+import { Separator } from '@/ui'
 import {
   ArrowRight,
   ArrowLeft,

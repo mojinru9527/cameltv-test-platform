@@ -10,17 +10,17 @@ import {
   GitBranch, FileCheck, Server, Monitor, ArrowRight, Layers, CheckCircle2, XCircle, MinusCircle,
 } from '@/lib/icons'
 import { Button } from '@/ui'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/ui'
 import { Badge } from '@/ui'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import { Input } from '@/ui'
-import { Label } from '@/components/ui/label'
+import { Label } from '@/ui'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+} from '@/ui'
+import { Textarea } from '@/ui'
 import { Progress } from '@/ui'
 import { toast } from 'sonner'
 import {

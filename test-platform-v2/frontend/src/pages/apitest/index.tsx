@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { FlaskConical, FileText, FolderTree, ClipboardCheck } from '@/lib/icons'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui'
 import PageHeader from '@/components/PageHeader'
 import AssetTab from './components/AssetTab'
 import DebugTab from './components/DebugTab'

@@ -1,14 +1,14 @@
 import { Badge, Button } from '@/ui'
 import { useState } from 'react'
 import { ArrowRight, Loader2 } from '@/lib/icons'
-import { Textarea } from '@/components/ui/textarea'
+import { Textarea } from '@/ui'
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import { STATUS_MAP, statusBadgeClass } from './constants'
 
 interface DefectTransitionDialogProps {

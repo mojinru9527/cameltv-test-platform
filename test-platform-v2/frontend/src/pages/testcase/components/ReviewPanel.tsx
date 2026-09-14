@@ -1,6 +1,6 @@
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
-import { Textarea } from '@/components/ui/textarea'
+import { Textarea } from '@/ui'
 import type { TestCaseReviewTransition } from '@/types'
 
 const REVIEW_LABELS: Record<string, string> = { draft: '草稿', submitted: '已提交', approved: '已通过', rejected: '已驳回' }

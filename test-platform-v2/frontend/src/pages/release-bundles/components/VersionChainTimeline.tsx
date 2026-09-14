@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router'
 import type { ReleaseBundleVersionChain } from '@/types'
 import { Badge } from '@/ui'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/ui'
 import { Button } from '@/ui'
 import { Package, ChevronRight, ExternalLink, ArrowUp, Smartphone, Settings } from '@/lib/icons'
 import { cn } from '@/lib/utils'

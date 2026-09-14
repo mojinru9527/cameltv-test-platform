@@ -1,6 +1,6 @@
 import { Badge } from '@/ui'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Card, CardContent } from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/ui'
+import { Card, CardContent } from '@/ui'
 import { BarChart3, ClipboardCheck, Link2, Monitor, Server, Zap } from '@/lib/icons'
 import type { TestModule } from '@/types'
 import { ClientScopeBadges } from './AiDisplayParts'

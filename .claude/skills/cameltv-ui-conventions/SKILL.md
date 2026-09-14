@@ -15,6 +15,13 @@ description: test-platform-v2 前端 UI 规范——用哪个组件、什么样�
 - 主题由 `data-theme-id` 驱动（crystal/xlab/column/clay/liquid）+ `.dark` class，全部定义在 `src/globals.css`。**改颜色改 CSS 变量，不在组件里写死颜色。**
 - 无 Markdown 渲染库：长文本/JSON 用 `<pre className="whitespace-pre-wrap">` 直出。
 
+## 组件入口（Batch 245 起强制）
+
+- **业务唯一入口**：页面、布局、业务组件和测试统一 `import ... from '@/ui'`。
+- **canonical 实现**：`src/components/ui/*` 是 shadcn/Radix 的底层实现，只允许 `src/ui/**` 聚合适配层引用；业务代码禁止直接导入 `@/components/ui/*` 或 `@radix-ui/*`。
+- **兼容边界**：历史 `primary/danger/tone` API 由 `src/ui/primitives/*` 薄适配；不要复制一套新实现，也不要绕过 `@/ui` 修样式。
+- **机械门禁**：ESLint `no-restricted-imports` + `batch245-ui-entry-governance.test.ts` 会阻断回潮。
+
 ## 用哪个组件（先复用，别造轮子）
 
 | 需求 | 用这个 | 位置 |

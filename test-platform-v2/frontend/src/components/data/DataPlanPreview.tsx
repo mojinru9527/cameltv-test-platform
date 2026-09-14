@@ -6,7 +6,7 @@ import {
   CardTitle,
   CardDescription,
   CardAction,
-} from '@/components/ui/card'
+} from '@/ui'
 import { Check, ShieldCheck, Lock } from '@/lib/icons'
 import { DataPlanRiskBadge } from './DataPlanRiskBadge'
 import { SuccessStageBadge } from '@/components/trust/SuccessStageBadge'

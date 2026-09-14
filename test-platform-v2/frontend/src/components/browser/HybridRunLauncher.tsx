@@ -6,7 +6,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
+} from '@/ui'
 import { toast } from 'sonner'
 import { Zap } from '@/lib/icons'
 import { runHybrid, type HybridRunResult } from '@/api/browserInteractions'

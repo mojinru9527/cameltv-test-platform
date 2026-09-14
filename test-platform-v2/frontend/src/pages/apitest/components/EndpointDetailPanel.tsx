@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { BrainCircuit, Loader2 } from '@/lib/icons'
 import { Badge } from '@/ui'
-import { Card, CardContent } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent } from '@/ui'
+import { Skeleton } from '@/ui'
 import { searchKnowledge } from '@/api/knowledge'
 import type { ApiEndpoint, KnowledgeSearchResult } from '@/types'
 

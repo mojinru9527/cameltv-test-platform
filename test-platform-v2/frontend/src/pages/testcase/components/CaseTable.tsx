@@ -2,7 +2,7 @@ import { Fragment, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Badge, Button } from '@/ui'
 import type { BadgeTone } from '@/ui'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Checkbox } from '@/ui'
 import {
   Table,
   TableBody,
@@ -10,7 +10,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+} from '@/ui'
 import { AsyncState } from '@/components/state'
 import { CheckCircle2, ChevronDown, ChevronRight, Edit, History, Send, Trash2, XCircle, MessageSquare } from '@/lib/icons'
 import { formatNumberedText, formatStepActions, formatStepExpectations } from '../caseListFormatters'

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import {
   Card, CardContent, CardFooter, CardHeader, CardTitle,
-} from '@/components/ui/card'
+} from '@/ui'
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
 import { Progress } from '@/ui'

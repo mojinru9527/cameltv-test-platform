@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogClose,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import { getExplanation } from '@/lib/page-explanations'
 import { cn } from '@/lib/utils'
 

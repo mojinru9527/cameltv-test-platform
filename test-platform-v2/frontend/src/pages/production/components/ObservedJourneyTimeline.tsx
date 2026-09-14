@@ -7,7 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
 import { fetchJourney, type Journey, type JourneyDetail } from '@/api/production'
 import { normalizeXhrRefs, displayValue, parseMaybeObject } from '../utils'

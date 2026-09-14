@@ -8,7 +8,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
+} from '@/ui'
 
 export default function LoginPage() {
   const navigate = useNavigate()

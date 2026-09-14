@@ -4,14 +4,14 @@ import { toast } from 'sonner'
 import { Input } from '@/ui'
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/ui'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import { searchKnowledge, reembedKnowledge, fetchSearchHealth } from '@/api/knowledge'
 import type { KnowledgeSearchResult, SearchHealth } from '@/types'
 import { useAuthStore } from '@/stores/auth'
@@ -21,7 +21,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 
 const MODES = [
   { v: 'hybrid', l: '混合（关键词+向量）' },

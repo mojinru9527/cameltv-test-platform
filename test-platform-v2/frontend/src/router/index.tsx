@@ -15,6 +15,8 @@ import { Button, Input } from '@/ui'
 
 const LoginPage = lazy(() => import('@/pages/login'))
 const RegisterPage = lazy(() => import('@/pages/register'))
+const ForgotPasswordPage = lazy(() => import('@/pages/forgot-password'))
+const ResetPasswordPage = lazy(() => import('@/pages/reset-password'))
 const MyProjectsPage = lazy(() => import('@/pages/my-projects'))
 const SystemPage = lazy(() => import('@/pages/system'))
 const TestCasePage = lazy(() => import('@/pages/testcase'))
@@ -225,6 +227,8 @@ function ForcedPasswordChangePage() {
 export const router = createBrowserRouter([
   { path: '/login', element: <PageLoader><LoginPage /></PageLoader> },
   { path: '/register', element: <PageLoader><RegisterPage /></PageLoader> },
+  { path: '/forgot-password', element: <PageLoader><ForgotPasswordPage /></PageLoader> },
+  { path: '/reset-password', element: <PageLoader><ResetPasswordPage /></PageLoader> },
   {
     path: '/change-password',
     element: <RequireAuth><ForcedPasswordChangePage /></RequireAuth>,
@@ -508,4 +512,3 @@ export const router = createBrowserRouter([
     ],
   },
 ])
-

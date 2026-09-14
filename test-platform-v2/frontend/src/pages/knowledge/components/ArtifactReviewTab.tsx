@@ -6,17 +6,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from '@/ui'
 import {
   Dialog,
   DialogContent,
@@ -24,10 +24,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
+} from '@/ui'
+import { Label } from '@/ui'
 import { Input } from '@/ui'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Checkbox } from '@/ui'
 import { toast } from 'sonner'
 import {
   fetchAiArtifacts,

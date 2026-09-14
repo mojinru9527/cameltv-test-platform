@@ -3,10 +3,10 @@ import { toast } from 'sonner'
 import { Input } from '@/ui'
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/ui'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import {
   createWikiDiffTask, fetchWikiDiffTasks, fetchWikiDiffTask,
 } from '@/api/wiki'

@@ -5,7 +5,7 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet'
+} from '@/ui'
 import { Badge, Skeleton } from '@/ui'
 import { useAuthStore } from '@/stores/auth'
 import {

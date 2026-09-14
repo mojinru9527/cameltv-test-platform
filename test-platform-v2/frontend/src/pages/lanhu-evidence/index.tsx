@@ -11,8 +11,8 @@ import {
   type LanhuEvidenceJob,
 } from '@/api/lanhuEvidence'
 import { Button, Input, Badge, Label } from '@/ui'
-import { Switch } from '@/components/ui/switch'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Switch } from '@/ui'
+import { Checkbox } from '@/ui'
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,7 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+} from '@/ui'
 import {
   Table,
   TableBody,
@@ -39,7 +39,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import PageHeader from '@/components/PageHeader'
 import { AsyncState } from '@/components/state'
 import Pagination from '@/components/Pagination'

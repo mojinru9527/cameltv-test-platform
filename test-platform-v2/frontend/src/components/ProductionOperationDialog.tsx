@@ -12,9 +12,9 @@ import {
   AlertDialogHeader,
   AlertDialogMedia,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
+} from '@/ui'
+import { Checkbox } from '@/ui'
+import { Label } from '@/ui'
 
 export interface ProductionOperationDialogProps {
   open: boolean

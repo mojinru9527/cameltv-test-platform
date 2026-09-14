@@ -13,16 +13,16 @@ import {
   Send,
   Trash2,
 } from '@/lib/icons'
-import { Card, CardContent } from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
-import { Separator } from '@/components/ui/separator'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent } from '@/ui'
+import { Textarea } from '@/ui'
+import { Separator } from '@/ui'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui'
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet'
+} from '@/ui'
 import useApi from '@/hooks/useApi'
 import {
   fetchTransitions,

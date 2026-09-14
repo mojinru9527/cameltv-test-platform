@@ -7,8 +7,8 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
+} from '@/ui'
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/ui'
 import { Search, RotateCcw, Plus, Upload, Download } from '@/lib/icons'
 import { groupDomainLabel } from '@/utils/domainNaming'
 
