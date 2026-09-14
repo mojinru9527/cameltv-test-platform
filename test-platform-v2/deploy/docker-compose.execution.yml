@@ -39,6 +39,10 @@ services:
       WORKER_EXECUTION_ENABLED: "false"
     expose:
       - "8100"
+    init: true
+    mem_limit: ${AI_GATEWAY_MEMORY_LIMIT:?AI_GATEWAY_MEMORY_LIMIT is required}
+    pids_limit: 128
+    stop_grace_period: 60s
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/internal/ai/v1/health')"]
       interval: 30s

@@ -12,7 +12,8 @@
 | 门禁 | 命令 | 退出码 | 结果 |
 |------|------|--------|------|
 | 后端全量 | `python -m pytest -q` | 0 | **2640 passed, 51 skipped, 1 xfailed**, 668.38s |
-| 定向 AI/镜像契约 | `pytest tests/test_ai_gateway_service.py tests/test_image_split_cache_contract.py -q` | 0 | 11 passed |
+| 定向 AI/镜像契约 | pytest tests/test_ai_gateway_service.py tests/test_image_split_cache_contract.py -q | 0 | 11 passed |
+| Compose 合并 | python scripts/ops/test_execution_compose.py -v | 0 | 3 passed |
 | 后端 F821 | `ruff check app/ --select F821` | 0 | All checks passed |
 | 前端类型 | `npm run typecheck` | 0 | PASS |
 | 前端 lint | `npm run lint` | 0 | PASS |
@@ -49,6 +50,7 @@ sync/async 远程分支测试 PASS；远程模式下不调用本地 `resolve_rou
 |---|--------|------|------|------|
 | 1 | P2 | 内部服务返回 `R` 对象导致 FastAPI 响应校验失败 | 修复为 `model_dump()`；8 条服务测试通过 | ✅ 已修复 |
 | 2 | P2 | API URL 已配置但 Token 缺失时曾静默回退 embedded | 改为 request-level fail-closed；测试通过 | ✅ 已修复 |
+| 3 | P2 | CI 的 execution Compose 合并测试未提供 AI_GATEWAY_IMAGE/TOKEN/MEMORY，导致 AI/Git 策略失败 | 补齐测试 env 与 ai-gateway 资源限制；本地 Compose 3/3 通过 | ✅ 已修复 |
 
 ## 发布建议
 
@@ -63,3 +65,4 @@ sync/async 远程分支测试 PASS；远程模式下不调用本地 `resolve_rou
 | 本会话完成 | 0/0/2/0 | 2 | 响应契约 + 配置失败策略 | 内部 API 先定 response contract；远程配置必须 fail-closed |
 
 **技能使用**: `cameltv-agent-team` → 工件与门禁；`cameltv-bug-guard` → 进程边界、HTTP、配置与递归核查。
+
