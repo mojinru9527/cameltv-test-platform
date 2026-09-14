@@ -10,9 +10,9 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Optional
 
-from sqlalchemy import func, select
+
+from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
 
 from app.models.test_case import TestCase
@@ -36,8 +36,8 @@ def _execution_filter(
     *,
     project_id: int,
     plan_case_ids_sub=None,
-    start_date: Optional[date] = None,
-    end_date: Optional[date] = None,
+    start_date: date | None = None,
+    end_date: date | None = None,
 ) -> tuple[int, int, int]:
     """统计 TestExecution 总数/通过/失败（可附加 plan_case 子查询与时间范围）。"""
     if plan_case_ids_sub is not None:
@@ -71,11 +71,122 @@ def _execution_filter(
     return (db.scalar(base) or 0, db.scalar(pass_base) or 0, db.scalar(fail_base) or 0)
 
 
+def get_projects_statistics(
+    db: Session,
+    project_ids: list[int],
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> dict[int, dict]:
+    """Batch project statistics with a constant number of grouped queries.
+
+    This is the cross-project read path. It intentionally mirrors the fields
+    consumed by the dashboard cards while avoiding a per-project query loop.
+    """
+    ids = list(dict.fromkeys(project_ids))
+    if not ids:
+        return {}
+
+    stats: dict[int, dict] = {
+        pid: {
+            "total_cases": 0,
+            "api_cases": 0,
+            "total_plans": 0,
+            "execution_total": 0,
+            "execution_pass": 0,
+            "execution_fail": 0,
+            "cases_executed": 0,
+            "cases_passed": 0,
+            "pass_rate": 0.0,
+        }
+        for pid in ids
+    }
+
+    case_rows = db.execute(
+        select(
+            TestCase.project_id,
+            func.count(TestCase.id),
+            func.sum(case((TestCase.case_type.in_(case_type_values("api")), 1), else_=0)),
+        )
+        .where(TestCase.project_id.in_(ids), TestCase.is_deleted.is_(False))
+        .group_by(TestCase.project_id)
+    ).all()
+    for pid, total_cases, api_cases in case_rows:
+        stats[pid]["total_cases"] = int(total_cases or 0)
+        stats[pid]["api_cases"] = int(api_cases or 0)
+
+    plan_rows = db.execute(
+        select(TestPlan.project_id, func.count(TestPlan.id))
+        .where(TestPlan.project_id.in_(ids))
+        .group_by(TestPlan.project_id)
+    ).all()
+    for pid, total_plans in plan_rows:
+        stats[pid]["total_plans"] = int(total_plans or 0)
+
+    execution_stmt = (
+        select(
+            TestPlan.project_id,
+            func.count(TestExecution.id),
+            func.sum(case((TestExecution.status == "passed", 1), else_=0)),
+            func.sum(case((TestExecution.status == "failed", 1), else_=0)),
+        )
+        .join(TestPlanCase, TestPlanCase.id == TestExecution.plan_case_id)
+        .join(TestPlan, TestPlan.id == TestPlanCase.plan_id)
+        .where(TestPlan.project_id.in_(ids))
+        .group_by(TestPlan.project_id)
+    )
+    if start_date:
+        execution_stmt = execution_stmt.where(
+            TestExecution.executed_at >= datetime.combine(start_date, datetime.min.time())
+        )
+    if end_date:
+        execution_stmt = execution_stmt.where(
+            TestExecution.executed_at <= datetime.combine(end_date, datetime.max.time())
+        )
+    execution_rows = db.execute(execution_stmt).all()
+    for pid, total, passed, failed in execution_rows:
+        stats[pid]["execution_total"] = int(total or 0)
+        stats[pid]["execution_pass"] = int(passed or 0)
+        stats[pid]["execution_fail"] = int(failed or 0)
+
+    executed_rows = db.execute(
+        select(TestPlan.project_id, func.count(func.distinct(TestPlanCase.case_id)))
+        .join(TestExecution, TestExecution.plan_case_id == TestPlanCase.id)
+        .join(TestPlan, TestPlan.id == TestPlanCase.plan_id)
+        .join(TestCase, TestCase.id == TestPlanCase.case_id)
+        .where(
+            TestPlan.project_id.in_(ids),
+            TestCase.is_deleted.is_(False),
+        )
+        .group_by(TestPlan.project_id)
+    ).all()
+    for pid, cases_executed in executed_rows:
+        stats[pid]["cases_executed"] = int(cases_executed or 0)
+
+    passed_rows = db.execute(
+        select(TestPlan.project_id, func.count(func.distinct(TestPlanCase.case_id)))
+        .join(TestExecution, TestExecution.plan_case_id == TestPlanCase.id)
+        .join(TestPlan, TestPlan.id == TestPlanCase.plan_id)
+        .join(TestCase, TestCase.id == TestPlanCase.case_id)
+        .where(
+            TestPlan.project_id.in_(ids),
+            TestCase.is_deleted.is_(False),
+            TestExecution.status == "passed",
+        )
+        .group_by(TestPlan.project_id)
+    ).all()
+    for pid, cases_passed in passed_rows:
+        stats[pid]["cases_passed"] = int(cases_passed or 0)
+
+    for item in stats.values():
+        item["pass_rate"] = round(item["cases_passed"] / max(item["cases_executed"], 1) * 100, 1)
+    return stats
+
+
 def get_project_statistics(
     db: Session,
     project_id: int,
-    start_date: Optional[date] = None,
-    end_date: Optional[date] = None,
+    start_date: date | None = None,
+    end_date: date | None = None,
 ) -> dict:
     """项目级统计（用例域统一口径）。"""
     active = _active_cases_sub(project_id)
@@ -104,11 +215,6 @@ def get_project_statistics(
     )
 
     # 用例级：计划内 / 已执行 / 已通过（仅未删除用例）
-    plan_case_ids = (
-        select(TestPlanCase.id)
-        .join(TestPlan, TestPlan.id == TestPlanCase.plan_id)
-        .where(TestPlan.project_id == project_id)
-    )
     cases_in_plans = db.scalar(
         select(func.count())
         .select_from(

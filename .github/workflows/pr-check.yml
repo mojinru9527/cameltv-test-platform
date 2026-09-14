@@ -66,21 +66,14 @@ jobs:
         working-directory: test-platform-v2/backend
         run: |
           pip install -r requirements.txt
-          pip install pytest
+          pip install pytest -r requirements-quality.txt
 
-      - name: Lint (ruff)
-        working-directory: test-platform-v2/backend
-        continue-on-error: true
-        run: |
-          pip install ruff
-          ruff check app/ --output-format=github || echo "::warning::ruff 检查发现问题"
+      - name: Full Ruff/mypy ratchet
+        run: python scripts/ci/quality_ratchet.py
 
-      - name: Type Check (mypy)
+      - name: Backend dependency audit
         working-directory: test-platform-v2/backend
-        continue-on-error: true
-        run: |
-          pip install mypy
-          mypy app/ --ignore-missing-imports --no-error-summary || echo "::warning::mypy 类型检查发现问题"
+        run: python -X utf8 -m pip_audit -r requirements.txt --progress-spinner off
 
       # D4: pytest with coverage. --cov-fail-under=70 is a soft gate (continue-on-error).
       - name: Unit Tests + Coverage (pytest)
@@ -216,6 +209,10 @@ jobs:
         working-directory: test-platform-v2/frontend
         run: npm run test:a11y:ci
 
+      - name: Lighthouse Accessibility
+        working-directory: test-platform-v2/frontend
+        run: npm run lighthouse:a11y
+
       - name: Upload A11y Report
         if: always()
         uses: actions/upload-artifact@v4
@@ -246,6 +243,13 @@ jobs:
       - name: Install Dependencies
         working-directory: test-platform-v2/frontend
         run: npm ci
+
+      - name: Production dependency audit
+        working-directory: test-platform-v2/frontend
+        run: npm audit --omit=dev --audit-level=high --registry=https://registry.npmjs.org
+
+      - name: Full npm audit ratchet
+        run: node scripts/ci/npm_audit_ratchet.mjs
 
       - name: Type Check (tsc)
         working-directory: test-platform-v2/frontend

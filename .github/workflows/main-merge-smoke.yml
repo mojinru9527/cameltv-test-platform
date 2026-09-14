@@ -30,11 +30,18 @@ jobs:
         working-directory: test-platform-v2/backend
         run: |
           pip install -r requirements.txt
-          pip install ruff
+          pip install -r requirements-quality.txt
 
       - name: 未定义符号检查
         working-directory: test-platform-v2/backend
         run: ruff check app/ --select F821 --output-format=github
+
+      - name: Full Ruff/mypy ratchet
+        run: python scripts/ci/quality_ratchet.py
+
+      - name: Backend dependency audit
+        working-directory: test-platform-v2/backend
+        run: python -X utf8 -m pip_audit -r requirements.txt --progress-spinner off
 
       - name: 应用导入冒烟
         working-directory: test-platform-v2/backend
@@ -58,6 +65,13 @@ jobs:
       - name: Install Frontend Dependencies
         working-directory: test-platform-v2/frontend
         run: npm ci
+
+      - name: Frontend production dependency audit
+        working-directory: test-platform-v2/frontend
+        run: npm audit --omit=dev --audit-level=high --registry=https://registry.npmjs.org
+
+      - name: Full npm audit ratchet
+        run: node scripts/ci/npm_audit_ratchet.mjs
 
       - name: Type Check
         working-directory: test-platform-v2/frontend

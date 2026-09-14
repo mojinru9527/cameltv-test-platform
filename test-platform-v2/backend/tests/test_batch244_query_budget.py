@@ -8,7 +8,7 @@ from sqlalchemy import event
 from app.models.api_asset import ApiEndpoint, ApiService
 from app.models.test_case import TestCase
 from app.models.test_plan import TestPlan
-from app.services import dashboard_service, openapi_import_service, test_plan_service
+from app.services import dashboard_service, openapi_import_service, statistics_service, test_plan_service
 
 
 def _capture_statements(db):
@@ -95,19 +95,26 @@ def test_cross_project_trends_use_bounded_queries(monkeypatch):
             return FakeResult()
 
     monkeypatch.setattr(
-        dashboard_service,
-        "get_dashboard_stats",
-        lambda db, project_id, start_date, end_date: {
-            "total_cases": 0,
-            "total_plans": 0,
-            "api_cases": 0,
-            "pass_rate": 0.0,
+        statistics_service,
+        "get_projects_statistics",
+        lambda db, project_ids, start_date=None, end_date=None: {
+            1: {
+                "total_cases": 0,
+                "total_plans": 0,
+                "api_cases": 0,
+                "execution_total": 0,
+                "execution_pass": 0,
+                "pass_rate": 0.0,
+            },
+            2: {
+                "total_cases": 0,
+                "total_plans": 0,
+                "api_cases": 0,
+                "execution_total": 0,
+                "execution_pass": 0,
+                "pass_rate": 0.0,
+            },
         },
-    )
-    monkeypatch.setattr(
-        dashboard_service,
-        "_execution_filter_for_project",
-        lambda db, project_id, start_date, end_date: (0, 0, 0),
     )
     monkeypatch.setattr(
         "app.services.project_service.projects_for_user",
@@ -124,4 +131,14 @@ def test_cross_project_trends_use_bounded_queries(monkeypatch):
     assert len(result["trends"]["defects"]) == 7
     assert db.calls == 3  # defect count + execution window + defect window
 
+def test_batch_project_statistics_uses_fixed_query_count(db_session):
+    project_ids = list(range(1, 21))
+    statements, remove = _capture_statements(db_session)
+    try:
+        result = statistics_service.get_projects_statistics(db_session, project_ids)
+    finally:
+        remove()
 
+    assert len(statements) == 5
+    assert set(result) == set(project_ids)
+    assert all(item["total_cases"] == 0 for item in result.values())
