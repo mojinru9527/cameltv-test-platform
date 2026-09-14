@@ -20,6 +20,7 @@ Phase 1–3 已把运行时安全、契约与 UI 体验补齐，但工程治理�
 | mypy findings | 186（mypy 2.3.1 基线） | 只减不增，新增即失败 | `quality_ratchet.py` |
 | 后端依赖漏洞 | 未阻断 | `pip-audit` 0 known vulnerabilities | required backend job |
 | 前端生产依赖漏洞 | 7 total（4 high/3 moderate） | `npm audit --omit=dev` 0 high/critical | required frontend job |
+| 完整 npm audit | LHCI dev-chain advisories | exact baseline ratchet；无新增 | `npm_audit_ratchet.mjs` |
 | Lighthouse accessibility | 脚本未安装/可吞错 | accessibility >= 0.9，失败阻断 | required frontend job |
 | axe | 仅扩展 observation | required frontend job | required frontend job |
 | Cross-project dashboard 查询 | 项目数线性 | 固定 5 个批量统计查询 + 固定趋势查询 | query budget test |

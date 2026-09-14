@@ -57,7 +57,7 @@ G4 测试与质量  →  CI 汇总，pytest/Vitest + 覆盖边界/异常 + 状�
 
 - Ruff 保留完整 `E/F/B/UP/RUF` 配置，仅排除中文文档必然触发的 `RUF001-003`；当前历史 findings 以精确计数写入 `quality-ratchet-baseline.json`。
 - mypy 使用 `mypy app/ --ignore-missing-imports --no-error-summary`，同样按 file/code/message + 出现次数 ratchet，禁止新增。
-- 前端生产依赖执行 `npm audit --omit=dev --audit-level=high`；Lighthouse accessibility 与 axe 均纳入 required frontend job，不再使用 `continue-on-error` 或 `|| echo`。
+- 前端生产依赖执行 `npm audit --omit=dev --audit-level=high`；完整 dev/传递审计由 `scripts/ci/npm_audit_ratchet.mjs` 做精确 baseline ratchet。Lighthouse accessibility 与 axe 均纳入 required frontend job，不再使用 `continue-on-error` 或 `|| echo`。
 - `--update` 仅用于已完成修复后的基线收口，PR 中必须附减少量与原因。
 
 ## 2. GitHub Clean Code 参考来源（研发基线）

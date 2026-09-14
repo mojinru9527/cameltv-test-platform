@@ -27,6 +27,7 @@
 **验收标准**:
 - `npm run lighthouse:a11y` exit 0，accessibility >= 0.9。
 - `npm audit --omit=dev --audit-level=high` exit 0。
+- 完整 `node scripts/ci/npm_audit_ratchet.mjs` 无新增 advisory。
 - `package.json` 中不再存在 `|| echo`。
 **涉及文件**:
 - `test-platform-v2/frontend/package.json`

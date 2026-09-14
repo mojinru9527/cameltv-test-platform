@@ -83,4 +83,4 @@ npm run lighthouse:a11y
 npm audit --omit=dev --audit-level=high --registry=https://registry.npmjs.org
 ```
 
-`lighthouse:a11y` 会按 `.lighthouserc.json` 自动启动 `vite preview`，并以 accessibility >= 0.9 作为错误门禁；失败不再通过 shell `|| echo` 吞掉。
+`lighthouse:a11y` 会按 `.lighthouserc.json` 自动启动 `vite preview`，并以 accessibility >= 0.9 作为错误门禁；失败不再通过 shell `|| echo` 吞掉。生产依赖必须为 0；完整 npm audit 由 `npm-audit-baseline.json` 只减不增。
