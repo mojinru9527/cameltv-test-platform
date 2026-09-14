@@ -17,45 +17,80 @@ from app.core.exceptions import APIException, api_exception_handler
 
 logger = logging.getLogger(__name__)
 
-# P1-S6c: 全局请求体大小限制 (100 MB)
+# P1-S6c: global request body limit. Content-Length is only a fast path;
+# the actual byte stream is counted below so chunked requests cannot bypass it.
 _MAX_BODY_BYTES = 100 * 1024 * 1024
 
 
-class RequestSizeLimitMiddleware:
-    """ASGI middleware that rejects requests with Content-Length > 100 MB."""
+class RequestBodyTooLarge(Exception):
+    """Internal signal used to stop an ASGI request before parsing."""
 
-    def __init__(self, app: ASGIApp, max_bytes: int = _MAX_BODY_BYTES) -> None:
+
+class RequestSizeLimitMiddleware:
+    """Reject requests once their actual or declared body grows past the cap."""
+
+    def __init__(self, app: ASGIApp, max_bytes: int | None = None) -> None:
         self.app = app
-        self.max_bytes = max_bytes
+        self.max_bytes = max_bytes if max_bytes is not None else settings.max_request_body_bytes
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] == "http":
-            headers: dict[bytes, bytes] = {}
-            for k, v in scope.get("headers", []):
-                headers[k] = v
-            content_length = headers.get(b"content-length")
-            if content_length:
-                try:
-                    cl = int(content_length.decode())
-                except (ValueError, UnicodeDecodeError):
-                    cl = 0
-                if cl > self.max_bytes:
-                    body = (
-                        b'{"code":413,"message":"'
-                        b'Request body exceeds 100 MB limit",'
-                        b'"data":null}'
-                    )
-                    await send({
-                        "type": "http.response.start",
-                        "status": 413,
-                        "headers": [
-                            (b"content-type", b"application/json"),
-                            (b"content-length", str(len(body)).encode()),
-                        ],
-                    })
-                    await send({"type": "http.response.body", "body": body})
-                    return
-        await self.app(scope, receive, send)
+        if scope["type"] != "http" or self.max_bytes <= 0:
+            await self.app(scope, receive, send)
+            return
+
+        headers: dict[bytes, bytes] = {}
+        for k, v in scope.get("headers", []):
+            headers[k.lower()] = v
+        content_length = headers.get(b"content-length")
+        if content_length:
+            try:
+                cl = int(content_length.decode())
+            except (ValueError, UnicodeDecodeError):
+                cl = 0
+            if cl > self.max_bytes:
+                await self._reject(send)
+                return
+
+        total = 0
+        response_started = False
+
+        async def limited_receive() -> dict:
+            nonlocal total
+            message = await receive()
+            if message.get("type") == "http.request":
+                total += len(message.get("body", b""))
+                if total > self.max_bytes:
+                    raise RequestBodyTooLarge()
+            return message
+
+        async def tracked_send(message: dict) -> None:
+            nonlocal response_started
+            if message.get("type") == "http.response.start":
+                response_started = True
+            await send(message)
+
+        try:
+            await self.app(scope, limited_receive, tracked_send)
+        except RequestBodyTooLarge:
+            if response_started:
+                raise
+            await self._reject(send)
+
+    async def _reject(self, send: Send) -> None:
+        body = (
+            b'{"code":413,"message":"'
+            b'Request body exceeds configured limit",'
+            b'"data":null}'
+        )
+        await send({
+            "type": "http.response.start",
+            "status": 413,
+            "headers": [
+                (b"content-type", b"application/json"),
+                (b"content-length", str(len(body)).encode()),
+            ],
+        })
+        await send({"type": "http.response.body", "body": body})
 
 
 @asynccontextmanager
