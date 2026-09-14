@@ -81,7 +81,7 @@ class PostgreSQLGateContractTests(unittest.TestCase):
         self.assertIn("alembic upgrade head", job)
 
     def test_required_gate_runs_postgresql_concurrency_regressions(self) -> None:
-        self._assert_pg_concurrency_gate(MAIN_GATE, "backend_tests")
+        self._assert_pg_concurrency_gate(MAIN_GATE, "backend-clean-checkout")
 
     def test_extended_pg_gate_runs_postgresql_concurrency_regressions(self) -> None:
         self._assert_pg_concurrency_gate(PR_CHECK, "backend-check-pg")
@@ -124,6 +124,50 @@ class JenkinsRuntimeContractTests(unittest.TestCase):
         self.assertIn("docker compose exec -T backend python -c", jenkins)
         self.assertIn("http://localhost:8000/health", jenkins)
         self.assertNotIn("curl -s -o /dev/null -w '%{http_code}' http://localhost/health", jenkins)
+
+
+class BackendImageGateContractTests(unittest.TestCase):
+    """Batch 242: the required backend job must also gate the image build.
+
+    Batch 240 shipped wx-resolved locks that dropped linux-only transitives and
+    made the api / ai-gateway images unbuildable. The required backend job only
+    ran pytest, so nothing blocked it. These assertions keep the new gate in
+    place: a linux resolution check for every lock plus a real api image build.
+    """
+
+    def setUp(self) -> None:
+        workflow = _read(MAIN_GATE)
+        self.job = _job_block(workflow, "backend-clean-checkout")
+
+    def test_backend_job_resolves_every_lock_on_linux(self) -> None:
+        step = _step_block(self.job, "依赖锁 Linux 解析校验")
+
+        self.assertIn("--require-hashes", step)
+        self.assertIn("--dry-run", step)
+        for lock in (
+            "requirements.api.lock",
+            "requirements.ai.lock",
+            "requirements.runner.lock",
+        ):
+            with self.subTest(lock=lock):
+                self.assertIn(lock, step)
+        self.assertNotIn("continue-on-error", step)
+        self.assertNotRegex(step, r"\|\|\s*(?:true|echo)")
+
+    def test_backend_job_builds_the_api_image_from_repo_root(self) -> None:
+        step = _step_block(self.job, "API 镜像构建冒烟")
+
+        self.assertIn("docker build", step)
+        self.assertIn("--target api", step)
+        self.assertIn("test-platform-v2/backend/Dockerfile", step)
+        self.assertIn(".", step)
+        self.assertNotIn("continue-on-error", step)
+
+    def test_backend_job_timeout_covers_the_added_build_work(self) -> None:
+        match = re.search(r"timeout-minutes:\s*(\d+)", self.job)
+
+        self.assertIsNotNone(match, "backend job must declare a timeout")
+        self.assertGreaterEqual(int(match.group(1)), 25)
 
 
 if __name__ == "__main__":

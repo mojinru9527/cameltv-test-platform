@@ -29,3 +29,19 @@ related: ["0030-image-split-build-cache.md"]
    默认拓扑切换为 split；combined `runtime` 改为回滚 overlay（`docker-compose.combined.yml`）。
 8. AI Gateway 在 `AI_GATEWAY_TOKEN` 缺失时必须让 `/internal/ai/v1/health` 返回 503，
    使容器级 `--wait` 门禁与 compose `${VAR:?}` 语义一致（Batch 241）。
+9. 三个 Docker target 各自消费自己的 lock，阶段名与角色一一对应（Batch 242）：
+
+   | 阶段 | lock | target |
+   |------|------|--------|
+   | `builder-api` | `requirements.api.lock` | `api` |
+   | `builder-ai` | `requirements.ai.lock` | `ai-gateway` |
+   | `builder-runner` | `requirements.runner.lock` | `runner` / `runtime` |
+
+   `requirements.lock` 保留为**约束源**（生成三套锁）与文档基线，不再被任何 Docker
+   target 安装；`Dockerfile.local`（本地全量开发镜像）与每日 `pr-check.yml` 继续使用它。
+   `requirements.runner.lock` 与 `requirements.lock` 当前版本集合一致（119 pins，
+   0 版本差异），因此上述收口在依赖层面零漂移。
+10. 三套 lock 的**平台正确性**由 required 后端 job 守卫（Batch 242）：
+    对每个 lock 执行 Linux `pip install --dry-run --require-hashes --ignore-installed`
+    （不得加 `--no-deps`，否则会跳过正是出问题的依赖解析），
+    并额外执行 `docker build --target api` 冒烟。

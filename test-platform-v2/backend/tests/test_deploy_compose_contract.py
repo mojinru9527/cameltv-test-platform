@@ -149,14 +149,16 @@ def test_backend_image_installs_locked_ui_lanhu_and_media_runtime() -> None:
     assert "python -m playwright install chromium" in dockerfile
     assert "playwright install --with-deps chromium" in dockerfile
     assert "PLAYWRIGHT_BROWSERS_PATH=/ms-playwright" in dockerfile
-    for stage in ('builder', 'builder-api', 'builder-ai', 'provider', 'runtime-base', 'runtime-api-base', 'runtime-ai-base'):
+    for stage in ('builder-runner', 'builder-api', 'builder-ai', 'provider', 'runtime-base', 'runtime-api-base', 'runtime-ai-base'):
         assert re.search(rf'^FROM python:3\.12-slim@sha256:[0-9a-f]{{64}} AS {stage}$',
                          dockerfile, re.MULTILINE)
+    # Batch 242: the runner/combined stage installs its own lock, matching
+    # ADR-0031's three-lock layout instead of reusing requirements.lock.
     assert (
-        "COPY test-platform-v2/backend/requirements.txt "
-        "test-platform-v2/backend/requirements.lock ./"
+        "COPY test-platform-v2/backend/requirements.runner.txt "
+        "test-platform-v2/backend/requirements.runner.lock ./"
     ) in dockerfile
-    assert "pip install --require-hashes -r requirements.lock" in dockerfile
+    assert "pip install --require-hashes -r requirements.runner.lock" in dockerfile
     assert "pip install --require-hashes -r requirements.api.lock" in dockerfile
     assert "pip install --require-hashes -r requirements.ai.lock" in dockerfile
     assert "--mount=type=cache,target=/root/.cache/pip" in dockerfile
@@ -175,7 +177,7 @@ def test_backend_runtime_uses_non_root_user_and_writable_paths() -> None:
     backend = compose["services"]["backend"]
 
     assert "python -m venv /opt/venv" in dockerfile
-    assert "COPY --from=builder /opt/venv /opt/venv" in dockerfile
+    assert "COPY --from=builder-runner /opt/venv /opt/venv" in dockerfile
     assert "VIRTUAL_ENV=/opt/venv" in dockerfile
     assert "PATH=/opt/venv/bin:$PATH" in dockerfile
     assert "/root/.local" not in dockerfile
