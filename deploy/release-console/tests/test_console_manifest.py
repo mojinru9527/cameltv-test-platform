@@ -32,7 +32,7 @@ class ConsoleManifestTests(unittest.TestCase):
 
     def register(self, tag='release-20260908-0001', split=False):
         manifest = dict(schema_version='1.0', release_id=tag, git_sha='a' * 40)
-        for part in ('backend', 'frontend', 'runner') if split else ('backend', 'frontend'):
+        for part in ('backend', 'frontend', 'runner', 'ai-gateway') if split else ('backend', 'frontend'):
             manifest[part] = dict(image=f'cameltv-tp-{part}', digest='sha256:' + 'b' * 64)
         if split:
             manifest.update(runtime_mode='split', execution_config_sha256='c' * 64)

@@ -13,7 +13,8 @@ class ExecutorCapacityTests(unittest.TestCase):
             host='test', user='test', ssh_key_b64='', compose_dir='/opt/compose',
             release_dir='/opt/releases', backup_dir='/opt/backups',
             image_backend='cameltv-tp-backend:main',
-            image_frontend='cameltv-tp-frontend:main', compose_project='test'))
+            image_frontend='cameltv-tp-frontend:main',
+            image_ai_gateway='cameltv-tp-ai-gateway:main', compose_project='test'))
 
     def test_admission_precedes_docker_load_under_shared_lock(self):
         with patch.object(self.executor, '_run_remote', return_value='ok') as run:
@@ -38,6 +39,7 @@ class ExecutorCapacityTests(unittest.TestCase):
     def split_manifest(self):
         return {'release_id': 'release-20260907-0001', 'runtime_mode': 'split',
                 'runner': {'image': 'cameltv-tp-runner', 'digest': 'sha256:' + 'a' * 64},
+                'ai-gateway': {'image': 'cameltv-tp-ai-gateway', 'digest': 'sha256:' + 'c' * 64},
                 'execution_config_sha256': 'b' * 64}
 
     def test_split_verification_precedes_import_and_all_imports_precede_stop(self):
@@ -45,7 +47,7 @@ class ExecutorCapacityTests(unittest.TestCase):
             self.executor.deploy('release-20260907-0001', manifest=self.split_manifest())
         commands = run.call_args.args[0]
         first_load = next(i for i, command in enumerate(commands) if command.startswith('docker load'))
-        self.assertEqual(sum(c.startswith('docker load') for c in commands), 3)
+        self.assertEqual(sum(c.startswith('docker load') for c in commands), 4)
         self.assertTrue(commands[2].startswith('python3 -c '))
         self.assertTrue(any('config --quiet' in c for c in commands[:first_load]))
         stop = next(i for i, c in enumerate(commands) if 'stop --timeout' in c)
@@ -54,14 +56,14 @@ class ExecutorCapacityTests(unittest.TestCase):
         activation = next(c for c in commands if 'up -d' in c)
         self.assertIn('docker-compose.execution.release-20260907-0001.yml', activation)
         self.assertIn('--wait', activation)
-        self.assertIn('runner backend frontend aitde-worker', activation)
+        self.assertIn('runner ai-gateway backend frontend aitde-worker', activation)
 
     def test_split_rollback_checks_complete_set_before_retagging(self):
         with patch.object(self.executor, '_run_remote', return_value='ok') as run:
             self.executor.rollback('release-20260907-0001', manifest=self.split_manifest())
         commands = run.call_args.args[0]
         first_tag = next(i for i, c in enumerate(commands) if c.startswith('docker tag'))
-        self.assertEqual(sum(c.startswith('docker image inspect') for c in commands[:first_tag]), 3)
+        self.assertEqual(sum(c.startswith('docker image inspect') for c in commands[:first_tag]), 4)
         self.assertTrue(any('sha256sum' in c for c in commands[:first_tag]))
         self.assertFalse(any('|| true' in c for c in commands))
 
@@ -84,6 +86,12 @@ class ExecutorCapacityTests(unittest.TestCase):
                 stop = next(i for i, c in enumerate(commands) if 'stop --timeout' in c)
                 self.assertLess(validation, stop)
                 self.assertTrue(any('uvicorn' in c and 'app.main:app' in c for c in commands))
+                # Combined rollback layers the combined overlay; split rollback
+                # keeps the AI gateway alive with its own entrypoint command.
+                if manifest is None:
+                    self.assertIn('docker-compose.combined.yml', activation)
+                else:
+                    self.assertTrue(any('app.ai_gateway_app:app' in c for c in commands))
 
 
 if __name__ == '__main__':

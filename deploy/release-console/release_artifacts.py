@@ -19,6 +19,8 @@ def runtime_mode(manifest: dict) -> str:
     if mode == 'split':
         if not isinstance(manifest.get('runner'), dict):
             raise ValueError('split release requires runner artifact')
+        if not isinstance(manifest.get('ai-gateway'), dict):
+            raise ValueError('split release requires ai-gateway artifact')
         if not re.fullmatch(r'[0-9a-f]{64}', str(manifest.get('execution_config_sha256', ''))):
             raise ValueError('split release requires execution config checksum')
     return mode
@@ -42,7 +44,7 @@ def verify(release_dir: str, tag: str, manifest: dict) -> dict:
         raise ValueError('release tag must match registered manifest')
     mode = runtime_mode(manifest)
     root = Path(release_dir).resolve(strict=True)
-    parts = ('backend', 'frontend', 'runner') if mode == 'split' else ('backend', 'frontend')
+    parts = ('backend', 'frontend', 'runner', 'ai-gateway') if mode == 'split' else ('backend', 'frontend')
     digests = {}
     for part in parts:
         artifact = manifest.get(part)
