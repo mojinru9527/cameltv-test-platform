@@ -32,8 +32,16 @@ def password_token_version(hashed_password: str) -> str:
     return hashlib.sha256(hashed_password.encode("utf-8")).hexdigest()[:16]
 
 
-def create_access_token(subject: str | int, extra: dict | None = None) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
+def create_access_token(
+    subject: str | int,
+    extra: dict | None = None,
+    *,
+    expires_minutes: int | None = None,
+) -> str:
+    lifetime = settings.access_token_expire_minutes if expires_minutes is None else expires_minutes
+    if lifetime <= 0:
+        raise ValueError("expires_minutes must be positive")
+    expire = datetime.now(timezone.utc) + timedelta(minutes=lifetime)
     payload: dict = {"sub": str(subject), "exp": expire}
     if extra:
         payload.update(extra)
