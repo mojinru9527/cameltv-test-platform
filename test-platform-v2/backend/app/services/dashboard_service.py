@@ -194,6 +194,9 @@ def get_cross_project_stats(
         .group_by(Defect.project_id)
     ).all())
 
+    bulk_stats = statistics_service.get_projects_statistics(
+        db, project_ids, start_date=start_date, end_date=end_date,
+    )
     per_project = []
     agg_cases = 0
     agg_plans = 0
@@ -201,24 +204,24 @@ def get_cross_project_stats(
     agg_pass = 0
     agg_defects = 0
 
-    for pid in project_ids:
-        stats = get_dashboard_stats(db, pid, start_date, end_date)
+    for project in project_list:
+        pid = int(project["id"])
+        stats = bulk_stats.get(pid, {})
         defect_count = int(defect_counts.get(pid, 0))
         per_project.append({
             "project_id": pid,
-            "project_name": next((p["name"] for p in project_list if p["id"] == pid), ""),
-            "total_cases": stats["total_cases"],
-            "total_plans": stats["total_plans"],
-            "api_cases": stats["api_cases"],
-            "pass_rate": stats["pass_rate"],
+            "project_name": project["name"],
+            "total_cases": stats.get("total_cases", 0),
+            "total_plans": stats.get("total_plans", 0),
+            "api_cases": stats.get("api_cases", 0),
+            "pass_rate": stats.get("pass_rate", 0.0),
             "defect_count": defect_count,
         })
-        agg_cases += stats["total_cases"]
-        agg_plans += stats["total_plans"]
+        agg_cases += stats.get("total_cases", 0)
+        agg_plans += stats.get("total_plans", 0)
         agg_defects += defect_count
-        total, pass_, _ = _execution_filter_for_project(db, pid, start_date, end_date)
-        agg_execs += total
-        agg_pass += pass_
+        agg_execs += stats.get("execution_total", 0)
+        agg_pass += stats.get("execution_pass", 0)
 
     overall_pr = round((agg_pass / agg_execs) * 100, 1) if agg_execs > 0 else 0.0
     aggregate = {
@@ -410,5 +413,3 @@ def get_todo_items(db: Session, project_id: int) -> dict:
         "failures": _todo_bucket(failures_items, failures_count),
         "releases": _todo_bucket(release_items, release_count),
     }
-
-

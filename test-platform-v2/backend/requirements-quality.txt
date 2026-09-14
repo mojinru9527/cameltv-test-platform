@@ -1,0 +1,4 @@
+# Pinned quality/audit tools for local G1 and required CI ratchets.
+mypy==2.3.1
+pip-audit==2.10.1
+ruff==0.15.22

@@ -1,7 +1,7 @@
 ---
 title: "测试平台 代码开发校验门禁（减少返工）"
 owner: "qa-team"
-last_reviewed: "2026-08-07"
+last_reviewed: "2026-09-15"
 status: "active"
 expires: "2027-01-07"
 tags: ["gate", "clean-code", "gherkin", "qa-management", "engineering", "ci", "rework"]
@@ -46,12 +46,19 @@ G4 测试与质量  →  CI 汇总，pytest/Vitest + 覆盖边界/异常 + 状�
 | 闸门 | 时机 | 工具（已存在） | 强制门槛 | 对应规范 |
 |------|------|--------------|---------|---------|
 | **G0 提交卫生** | pre-`commit` | `scripts/git/scan-common-bugs.ps1`（HARD）+ git hooks | 无调试遗留、无硬编码密钥、无备份/DB/IDE 文件 | `engineering-standards.md` §5、`AGENTS.md` §3.5 |
-| **G1 代码体检** | pre-`push` / CI | `ruff check --select F821`、`npm run typecheck`、`npm run lint`、`npm run build` + Clean Code 约定 | 无未定义符号、类型通过、无 `any` 滥用、命名/函数/注释合规 | Clean Code 规范 §3/§4/§9 |
+| **G1 代码体检** | pre-`push` / CI | `ruff check --select F821`、`scripts/ci/quality_ratchet.py`（完整 Ruff/mypy 只减不增）、`npm run typecheck`、`npm run lint`、`npm run build`、生产依赖审计 | F821=0；Ruff/mypy 无新增 finding；前后端生产依赖无 high/critical；命名/函数/注释合规 | Clean Code 规范 §3/§4/§9、C243-4 |
 | **G2 分层与依赖** | pre-`push` / CI | `test_route_layer_orm_ban.py`、`test_route_inventory.py` + Code Review | 分层单向、路由禁 ORM、Store 不调 API、队列走原语 | Clean Code 规范 §6 |
 | **G3 行为验收** | PR（Review） | `tests/clean-code/*.feature`（Gherkin）+ 代码评审 | 关键行为有 Given/When/Then、正负用例齐、断言可验证 | Clean Code 规范 §8、`tests/test-case-standards` |
-| **G4 测试与质量** | CI（merge） | `pytest`、`npm test`、PostgreSQL concurrency、Alembic 单头 | 全量回归通过、状态词表规范、删除语义统一 | `AGENTS.md` §3、`backend/CLAUDE.md` |
+| **G4 测试与质量** | CI（merge） | `pytest`、`npm test`、PostgreSQL concurrency、Alembic 单头、axe、Lighthouse、`pip-audit`、`npm audit` | 全量回归通过；axe/accessibility 门禁通过；生产依赖审计通过 | `AGENTS.md` §3、`backend/CLAUDE.md`、C243-4 |
 
 ---
+
+## 1.1 C243-4 required governance ratchet
+
+- Ruff 保留完整 `E/F/B/UP/RUF` 配置，仅排除中文文档必然触发的 `RUF001-003`；当前历史 findings 以精确计数写入 `quality-ratchet-baseline.json`。
+- mypy 使用 `mypy app/ --ignore-missing-imports --no-error-summary`，同样按 file/code/message + 出现次数 ratchet，禁止新增。
+- 前端生产依赖执行 `npm audit --omit=dev --audit-level=high`；完整 dev/传递审计由 `scripts/ci/npm_audit_ratchet.mjs` 做精确 baseline ratchet。Lighthouse accessibility 与 axe 均纳入 required frontend job，不再使用 `continue-on-error` 或 `|| echo`。
+- `--update` 仅用于已完成修复后的基线收口，PR 中必须附减少量与原因。
 
 ## 2. GitHub Clean Code 参考来源（研发基线）
 

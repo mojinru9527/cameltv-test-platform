@@ -85,6 +85,31 @@ if (-not $SkipBackend -and -not $SkipRuff -and (Test-Path -LiteralPath $backend)
 }
 else { Write-Host "`n[G1] ruff F821 SKIPPED (-SkipBackend/-SkipRuff or dir missing)" }
 
+# ── G1 后端完整 Ruff/mypy ratchet + 依赖审计 ──────────
+if (-not $SkipBackend -and (Test-Path -LiteralPath $backend)) {
+    Write-Host "`n[G1] full Ruff/mypy ratchet ..."
+    Push-Location $root
+    try {
+        $out = @(& python scripts/ci/quality_ratchet.py 2>&1)
+        $code = $LASTEXITCODE
+        $out | Select-Object -Last 40 | Write-Host
+        if ($code -ne 0) { $failed = $true; Write-Host "  -> quality ratchet FAILED (Block)" }
+        Write-Host "  -> exit=$code"
+    }
+    finally { Pop-Location }
+
+    Write-Host "`n[G1] backend dependency audit ..."
+    Push-Location $backend
+    try {
+        $out = @(& python -X utf8 -m pip_audit -r requirements.txt --progress-spinner off 2>&1)
+        $code = $LASTEXITCODE
+        $out | Select-Object -Last 20 | Write-Host
+        if ($code -ne 0) { $failed = $true; Write-Host "  -> dependency audit FAILED (Block)" }
+        Write-Host "  -> exit=$code"
+    }
+    finally { Pop-Location }
+}
+
 # ── G1 前端 typecheck + lint ──────────────────────────
 if (-not $SkipFrontend -and (Test-Path -LiteralPath (Join-Path $frontend "package.json"))) {
     if (-not $SkipTypecheck) {
@@ -113,7 +138,29 @@ if (-not $SkipFrontend -and (Test-Path -LiteralPath (Join-Path $frontend "packag
         }
         finally { Pop-Location }
     }
-    else { Write-Host "`n[G1] lint SKIPPED (-SkipLint)" }
+else { Write-Host "`n[G1] lint SKIPPED (-SkipLint)" }
+
+    Write-Host "`n[G1] full npm audit ratchet ..."
+    Push-Location $root
+    try {
+        $out = @(& node scripts/ci/npm_audit_ratchet.mjs 2>&1)
+        $code = $LASTEXITCODE
+        $out | Select-Object -Last 20 | Write-Host
+        if ($code -ne 0) { $failed = $true; Write-Host "  -> npm audit ratchet FAILED (Block)" }
+        Write-Host "  -> exit=$code"
+    }
+    finally { Pop-Location }
+
+    Write-Host "`n[G1] frontend production dependency audit ..."
+    Push-Location $frontend
+    try {
+        $out = @(& npm audit --omit=dev --audit-level=high --registry=https://registry.npmjs.org 2>&1)
+        $code = $LASTEXITCODE
+        $out | Select-Object -Last 20 | Write-Host
+        if ($code -ne 0) { $failed = $true; Write-Host "  -> dependency audit FAILED (Block)" }
+        Write-Host "  -> exit=$code"
+    }
+    finally { Pop-Location }
 }
 else { Write-Host "`n[G1] frontend SKIPPED (-SkipFrontend or package.json missing)" }
 

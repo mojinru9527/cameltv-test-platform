@@ -1,0 +1,3 @@
+ruff: baseline=768 current=768 increased_keys=0 decreased_keys=0
+mypy: baseline=193 current=193 increased_keys=0 decreased_keys=0
+QUALITY_RATCHET=PASS

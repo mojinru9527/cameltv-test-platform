@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-14（Batch 245 UI/UX Consolidation；关闭 C243-2，C243-3 进入待 PR 验证）
+**最后更新**: 2026-09-15（Batch 246 Engineering Governance；关闭 C243-3，处理 C243-4/C244-1，新增 C246-1）
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -57,11 +57,17 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## Open (待处理)
 
+### batch-246 — Engineering Governance & Required Checks（2026-09-15）—— 新增
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C246-1 | 升级或替换 LHCI 开发依赖链，消除当前 dev-only npm audit：7 high / 1 moderate / 2 low；在此之前 `npm-audit-baseline.json` ratchet 必须阻止新增 advisory，生产依赖继续要求 0 | P2 | 2026-09-15 |
+
 ### batch-244 — Contract & Data Layer Hardening（2026-09-14）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C244-1 | Cross-project per-project dashboard 统计改为 GROUP BY/一次性聚合，彻底消除项目数线性查询 | P2 | 2026-09-14 |
+| C244-1 | Cross-project per-project dashboard 统计改为 GROUP BY/一次性聚合，彻底消除项目数线性查询。**Batch 246**：已实现批量 GROUP BY 统计与固定查询预算测试；待 PR required checks 后关闭 | P2 | 2026-09-14 |
 
 
 ### batch-243 — Platform Security Hardening（2026-09-14）—— 新增
@@ -70,8 +76,8 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|--------|---------|
 | C243-1 | 在代码级执行权限/env/资源限制之外，完成单任务 Runner 容器隔离、只读 rootfs 与更严格 egress policy | P2 | 2026-09-14 |
 | ~~C243-2~~ | ~~第二阶段使用生成式 OpenAPI typed client，消除核心 API 的手写 any 与响应契约漂移~~ → **Closed（Batch 244）**：PR #437 / `27d042e8`；新增 generated contract entry、生产 API `any` 清零、ESLint 收口、契约与查询预算测试通过 | P1 | 2026-09-14 |
-| C243-3 | 第三阶段收敛两套 UI 组件体系，按任务入口重做公开首页/登录恢复路径，并保留视觉回归。**Batch 245**：实现与本地 QA 已完成（164/710 前端、2677 后端、6 条多视口 axe 通过）；待 PR required checks 与合入后关闭 | P1 | 2026-09-14 |
-| C243-4 | 第四阶段把完整 Ruff/mypy、axe/Lighthouse 和依赖审计纳入 required checks，禁止失败后 echo 成功 | P1 | 2026-09-14 |
+| ~~C243-3~~ | ~~第三阶段收敛两套 UI 组件体系，按任务入口重做公开首页/登录恢复路径，并保留视觉回归~~ → **Closed（Batch 245）**：PR #438 / `4c94fb49`；唯一 `@/ui` 入口、任务优先首页、登录恢复、三视口 axe/截图全部通过 | P1 | 2026-09-14 |
+| C243-4 | 第四阶段把完整 Ruff/mypy、axe/Lighthouse 和依赖审计纳入 required checks，禁止失败后 echo 成功。**Batch 246**：已实现 Ruff/mypy exact-count ratchet、pip/npm production audit、axe/Lighthouse required steps 与 `|| echo` 移除；待 PR required checks 后关闭 | P1 | 2026-09-14 |
 
 
 

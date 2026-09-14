@@ -172,3 +172,37 @@ class BackendImageGateContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class PhaseFourGovernanceContractTests(unittest.TestCase):
+    """C243-4: full static analysis, a11y and dependency audits stay required."""
+
+    def test_backend_required_job_runs_quality_ratchet_and_audits(self) -> None:
+        job = _job_block(_read(MAIN_GATE), "backend-clean-checkout")
+        for step_name, expected in (
+            ("Full Ruff/mypy ratchet", "python scripts/ci/quality_ratchet.py"),
+            ("Backend dependency audit", "pip_audit -r requirements.txt"),
+        ):
+            with self.subTest(step=step_name):
+                step = _step_block(job, step_name)
+                self.assertIn(expected, step)
+                self.assertNotIn("continue-on-error", step)
+                self.assertNotRegex(step, r"\|\|\s*(?:true|echo)")
+
+    def test_frontend_required_job_runs_a11y_lighthouse_and_audit(self) -> None:
+        job = _job_block(_read(MAIN_GATE), "frontend-clean-checkout")
+        for step_name, expected in (
+            ("Frontend production dependency audit", "npm audit --omit=dev --audit-level=high"),
+            ("Full npm audit ratchet", "node scripts/ci/npm_audit_ratchet.mjs"),
+            ("Axe accessibility gate", "npm run test:a11y:ci"),
+            ("Lighthouse accessibility gate", "npm run lighthouse:a11y"),
+        ):
+            with self.subTest(step=step_name):
+                step = _step_block(job, step_name)
+                self.assertIn(expected, step)
+                self.assertNotIn("continue-on-error", step)
+                self.assertNotRegex(step, r"\|\|\s*(?:true|echo)")
+
+    def test_lighthouse_script_fails_closed(self) -> None:
+        package_json = _read(ROOT / "test-platform-v2" / "frontend" / "package.json")
+        self.assertIn('"lighthouse:a11y": "lhci autorun --config=.lighthouserc.json"', package_json)
+        self.assertNotIn("|| echo", package_json)

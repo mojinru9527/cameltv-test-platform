@@ -1,0 +1,64 @@
+== 代码开发校验门禁（G0-G2） ==
+repo = F:/CamelTv-worktrees/codex-engineering-governance-phase-4
+
+[G0] scan-common-bugs ...
+== scan-common-bugs ==
+HARD findings : 0
+WARN findings : 330
+  -> WARN findings found (需复核)
+  -> exit=2
+
+[G1] ruff F821 ...
+All checks passed!
+  -> exit=0
+
+[G1] full Ruff/mypy ratchet ...
+ruff: baseline=768 current=768 increased_keys=0 decreased_keys=0
+mypy: baseline=193 current=193 increased_keys=0 decreased_keys=0
+QUALITY_RATCHET=PASS
+  -> exit=0
+
+[G1] backend dependency audit ...
+No known vulnerabilities found
+  -> exit=0
+
+[G1] npm run typecheck ...
+
+> cameltv-test-frontend@2.1.0 typecheck
+> tsc -b
+
+  -> exit=0
+
+[G1] npm run lint ...
+
+> cameltv-test-frontend@2.1.0 lint
+> eslint . --max-warnings=0
+
+  -> exit=0
+
+[G1] full npm audit ratchet ...
+npm audit ratchet: baseline=16 current=16 new=0 removed=0
+severity counts: {"info":0,"low":2,"moderate":1,"high":7,"critical":0,"total":10}
+NPM_AUDIT_RATCHET=PASS
+  -> exit=0
+
+[G1] frontend production dependency audit ...
+found 0 vulnerabilities
+  -> exit=0
+
+[G2] route-layer guard tests ...
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0
+rootdir: F:\CamelTv-worktrees\codex-engineering-governance-phase-4\test-platform-v2\backend
+configfile: pytest.ini
+plugins: anyio-4.13.0, cov-7.1.0
+collected 4 items
+
+tests\test_route_layer_orm_ban.py ...                                    [ 75%]
+tests\test_route_inventory.py .                                          [100%]
+
+============================== 4 passed in 2.23s ==============================
+  -> exit=0
+
+== 门禁汇总 ==
+GATE_RESULT=PASS_WITH_WARN (机械项通过; 存在 WARN -> 人工复核)

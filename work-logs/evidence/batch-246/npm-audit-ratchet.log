@@ -1,0 +1,3 @@
+npm audit ratchet: baseline=16 current=16 new=0 removed=0
+severity counts: {"info":0,"low":2,"moderate":1,"high":7,"critical":0,"total":10}
+NPM_AUDIT_RATCHET=PASS
