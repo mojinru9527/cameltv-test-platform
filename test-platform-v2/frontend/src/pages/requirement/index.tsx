@@ -241,7 +241,7 @@ export default function RequirementPage() {
     setGenerating(true)
     try {
       const task = await generateTestCasesAsync(docId, { use_extraction: useExtraction })
-      const result = await runAsyncAiTask(task.id)
+      const result = await runAsyncAiTask<AIGenerateResult>(task.id)
       setAiResult(result)
       setActiveDocId(docId)
       setModalMode('generate')
@@ -303,7 +303,7 @@ export default function RequirementPage() {
         rejected_notes: '用户主动重新拆分',
       })
       const task = await extractFeaturesAsync(docId)
-      const result = await runAsyncAiTask(task.id)
+      const result = await runAsyncAiTask<FeatureExtractionResult>(task.id)
       setExtractionResult(result)
       setActiveDocId(docId)
       setModalMode('extract')
@@ -693,3 +693,5 @@ export default function RequirementPage() {
     </PageShell>
   )
 }
+
+

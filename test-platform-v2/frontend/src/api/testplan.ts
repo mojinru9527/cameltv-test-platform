@@ -18,11 +18,11 @@ export async function fetchPlan(id: number, signal?: AbortSignal) {
   return api.get(`/test-plans/${id}`)
 }
 
-export async function createPlan(body: Record<string, any>) {
+export async function createPlan(body: Record<string, unknown>) {
   return api.post('/test-plans', body)
 }
 
-export async function updatePlan(id: number, body: Record<string, any>) {
+export async function updatePlan(id: number, body: Record<string, unknown>) {
   return api.put(`/test-plans/${id}`, body)
 }
 
@@ -55,7 +55,7 @@ export interface TriageClassified {
   explanation: string
   suggested_action: string
   notes: string
-  result_data: Record<string, any>
+  result_data: Record<string, unknown>
   executed_at: string
 }
 
@@ -110,5 +110,6 @@ export async function executeAllCases(planId: number, environmentId?: number, au
 export async function autoExecutePlan(planId: number, environmentId?: number) {
   return api.post(`/test-plans/${planId}/auto-execute`, { environment_id: environmentId || null })
 }
+
 
 

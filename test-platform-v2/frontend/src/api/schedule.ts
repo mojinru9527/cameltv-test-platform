@@ -24,7 +24,7 @@ export async function createSchedule(body: {
   return api.post('/schedules', body)
 }
 
-export async function updateSchedule(id: number, body: Record<string, any>) {
+export async function updateSchedule(id: number, body: Record<string, unknown>) {
   return api.put(`/schedules/${id}`, body)
 }
 
@@ -46,3 +46,4 @@ export async function triggerSchedule(id: number): Promise<ScheduleTriggerResult
 export async function fetchScheduleRuns(id: number, page: number = 1) {
   return api.get(`/schedules/${id}/runs`, { params: { page, page_size: 20 } })
 }
+

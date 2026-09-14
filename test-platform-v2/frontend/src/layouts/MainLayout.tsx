@@ -116,7 +116,7 @@ export default function MainLayout() {
           if (Array.isArray(data)) {
             setMenus(data)
           } else {
-            setMenus(data.modules)
+            setMenus(data.modules ?? [])
             setRegistrationEnabled(data.registration_enabled)
           }
           setMenuError(false)
@@ -499,3 +499,4 @@ export default function MainLayout() {
     </SidebarProvider>
   )
 }
+

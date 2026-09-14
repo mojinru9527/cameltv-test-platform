@@ -12,7 +12,7 @@ export interface DshTask {
   // B1：场景标识（import_requirement/functional/api/ui/general）
   scene: string
   // Batch 191：团队进度快照（空 = {}；内容 = 插件 team.json 原文）
-  team_json: Record<string, any>
+  team_json: Record<string, unknown>
   output_text: string
   session_dir: string
   error: string
@@ -70,7 +70,7 @@ export async function fetchDshTask(id: number, signal?: AbortSignal): Promise<Ds
 // B1：scene（import_requirement/functional/api/ui/general）+ scene_params 场景参数
 export async function createDshTask(
   task: string,
-  params?: Record<string, any>,
+  params?: Record<string, unknown>,
   mode?: 'single' | 'team',
   scene?: string,
   sceneParams?: Record<string, unknown>,
@@ -117,3 +117,4 @@ export async function fetchDshTaskArtifacts(id: number, signal?: AbortSignal): P
   if (signal) return api.get(`/dsh-tasks/${id}/artifacts`, { signal })
   return api.get(`/dsh-tasks/${id}/artifacts`)
 }
+

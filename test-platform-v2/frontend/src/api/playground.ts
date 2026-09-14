@@ -59,7 +59,7 @@ export interface PlaygroundBatchRunResult {
   failed: number
   todo_blocked?: number
   results: PlaygroundCaseRunResult[]
-  report: Record<string, any>
+  report: Record<string, unknown>
 }
 
 export async function compilePlaygroundBatch(
@@ -75,3 +75,4 @@ export async function runPlaygroundBatch(
 ): Promise<PlaygroundBatchRunResult> {
   return api.post('/playground/batch-run', body, { ...(signal ? { signal } : {}) })
 }
+
