@@ -248,6 +248,9 @@ jobs:
         working-directory: test-platform-v2/frontend
         run: npm audit --omit=dev --audit-level=high --registry=https://registry.npmjs.org
 
+      - name: Full npm audit ratchet
+        run: node scripts/ci/npm_audit_ratchet.mjs
+
       - name: Type Check (tsc)
         working-directory: test-platform-v2/frontend
         run: npm run typecheck

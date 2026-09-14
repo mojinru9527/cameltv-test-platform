@@ -192,6 +192,7 @@ class PhaseFourGovernanceContractTests(unittest.TestCase):
         job = _job_block(_read(MAIN_GATE), "frontend-clean-checkout")
         for step_name, expected in (
             ("Frontend production dependency audit", "npm audit --omit=dev --audit-level=high"),
+            ("Full npm audit ratchet", "node scripts/ci/npm_audit_ratchet.mjs"),
             ("Axe accessibility gate", "npm run test:a11y:ci"),
             ("Lighthouse accessibility gate", "npm run lighthouse:a11y"),
         ):

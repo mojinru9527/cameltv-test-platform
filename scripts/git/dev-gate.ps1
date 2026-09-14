@@ -140,6 +140,17 @@ if (-not $SkipFrontend -and (Test-Path -LiteralPath (Join-Path $frontend "packag
     }
 else { Write-Host "`n[G1] lint SKIPPED (-SkipLint)" }
 
+    Write-Host "`n[G1] full npm audit ratchet ..."
+    Push-Location $root
+    try {
+        $out = @(& node scripts/ci/npm_audit_ratchet.mjs 2>&1)
+        $code = $LASTEXITCODE
+        $out | Select-Object -Last 20 | Write-Host
+        if ($code -ne 0) { $failed = $true; Write-Host "  -> npm audit ratchet FAILED (Block)" }
+        Write-Host "  -> exit=$code"
+    }
+    finally { Pop-Location }
+
     Write-Host "`n[G1] frontend production dependency audit ..."
     Push-Location $frontend
     try {
