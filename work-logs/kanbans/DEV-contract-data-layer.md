@@ -1,6 +1,6 @@
 # Batch 244 Dev Kanban — Contract & Data Layer Hardening
 
-> **Dev (💻)** | Date: 2026-09-14 | Status: In Progress
+> **Dev (💻)** | Date: 2026-09-14 | Status: Ready for Confirmation
 
 ## 项目信息
 
@@ -18,18 +18,18 @@
 
 | # | Slice | 方案 | 编码 | 自测 | 审批 | 合入 |
 |---|-------|:----:|:----:|:----:|:----:|:----:|
-| S1 | OpenAPI contract 类型入口 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ |
-| S2 | 生产 API `any` 清零 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ |
-| S3 | OpenAPI/计划/dashboard N+1 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ |
-| S4 | 缓存失效收敛 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ |
+| S1 | OpenAPI contract 类型入口 | ✅ | ✅ | ✅ | ⏳ | ⏳ |
+| S2 | 生产 API `any` 清零 | ✅ | ✅ | ✅ | ⏳ | ⏳ |
+| S3 | OpenAPI/计划/dashboard N+1 | ✅ | ✅ | ✅ | ⏳ | ⏳ |
+| S4 | 缓存失效收敛 | ✅ | ✅ | ✅ | ⏳ | ⏳ |
 
 ## 当前位置
 
 ```
 Batch 244 — Contract & Data Layer Hardening
 ├── 已完成: Product / PM / Design / Dev 方案
-├── 🔄 进行中: S1 contract 类型入口
-├── ⏳ 待审批: 用户一次总确认
+├── 已完成: S1-S4 + 全量 QA
+├── 🔄 待审批: 用户一次总确认
 └── ⏳ 下一步: QA + Leader
 ```
 
@@ -54,3 +54,4 @@ Batch 244 — Contract & Data Layer Hardening
 | 设计规范 | [link](../batch-244-contract-data-layer-design-spec.md) | ✅ |
 | QA 报告 | [link](../batch-244-contract-data-layer-qa-report.md) | ⏳ |
 | Leader verdict | [link](../batch-244-contract-data-layer-leader-verdict.md) | ⏳ |
+
