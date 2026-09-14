@@ -81,7 +81,6 @@ def get_dashboard_stats(
     api_cases = st["api_cases"]
     total_execs = st["execution_total"]
     pass_execs = st["execution_pass"]
-    fail_execs = st["execution_fail"]
     # Batch 175（FIX-173-P1-01）：通过率统一为「用例级」口径（cases_passed / cases_executed），
     # 与质量追溯/报告中心一致，消除工作台 9.1% vs 追溯 22.1% 的分裂。
     # 执行记录级通过率（含重跑）作为独立字段保留，供明细/趋势展示并明确标注口径。
@@ -169,7 +168,7 @@ def get_cross_project_stats(
     is_superadmin: bool = False,
     start_date: date | None = None,
     end_date: date | None = None,
-) -> dict:
+    ) -> dict:
     """Aggregate dashboard statistics across all projects visible to the user."""
     from app.services import project_service
 
@@ -188,7 +187,13 @@ def get_cross_project_stats(
             "trends": {"pass_rate": [], "defects": []},
         }
 
-    # Per-project stats
+    # Batch all project-level defect counts instead of querying inside the loop.
+    defect_counts = dict(db.execute(
+        select(Defect.project_id, func.count(Defect.id))
+        .where(Defect.project_id.in_(project_ids))
+        .group_by(Defect.project_id)
+    ).all())
+
     per_project = []
     agg_cases = 0
     agg_plans = 0
@@ -198,10 +203,7 @@ def get_cross_project_stats(
 
     for pid in project_ids:
         stats = get_dashboard_stats(db, pid, start_date, end_date)
-        defect_count = db.scalar(
-            select(func.count(Defect.id)).where(Defect.project_id == pid)
-        ) or 0
-
+        defect_count = int(defect_counts.get(pid, 0))
         per_project.append({
             "project_id": pid,
             "project_name": next((p["name"] for p in project_list if p["id"] == pid), ""),
@@ -219,7 +221,6 @@ def get_cross_project_stats(
         agg_pass += pass_
 
     overall_pr = round((agg_pass / agg_execs) * 100, 1) if agg_execs > 0 else 0.0
-
     aggregate = {
         "total_projects": len(project_ids),
         "total_cases": agg_cases,
@@ -229,27 +230,54 @@ def get_cross_project_stats(
         "total_defects": agg_defects,
     }
 
-    # Trends: last 7 days
+    today = date.today()
+    first_day = today - timedelta(days=6)
+    window_start = datetime.combine(first_day, datetime.min.time())
+    window_end = datetime.combine(today, datetime.max.time())
+
+    # Two bounded queries + in-memory aggregation replace project x day queries.
+    execution_rows = db.execute(
+        select(TestPlan.project_id, TestExecution.executed_at, TestExecution.status)
+        .join(TestPlanCase, TestPlanCase.id == TestExecution.plan_case_id)
+        .join(TestPlan, TestPlan.id == TestPlanCase.plan_id)
+        .where(
+            TestPlan.project_id.in_(project_ids),
+            TestExecution.executed_at >= window_start,
+            TestExecution.executed_at <= window_end,
+        )
+    ).all()
+    defect_rows = db.execute(
+        select(Defect.project_id, Defect.created_at)
+        .where(
+            Defect.project_id.in_(project_ids),
+            Defect.created_at >= window_start,
+            Defect.created_at <= window_end,
+        )
+    ).all()
+
+    daily_execs: dict[tuple[int, date], int] = {}
+    daily_pass: dict[tuple[int, date], int] = {}
+    for pid, executed_at, status in execution_rows:
+        if not executed_at:
+            continue
+        key = (pid, executed_at.date())
+        daily_execs[key] = daily_execs.get(key, 0) + 1
+        if status == "passed":
+            daily_pass[key] = daily_pass.get(key, 0) + 1
+    daily_defects: dict[tuple[int, date], int] = {}
+    for pid, created_at in defect_rows:
+        if not created_at:
+            continue
+        key = (pid, created_at.date())
+        daily_defects[key] = daily_defects.get(key, 0) + 1
+
     pass_rate_trend = []
     defect_trend = []
-    today = date.today()
-    for i in range(6, -1, -1):
-        day = today - timedelta(days=i)
-        day_execs = 0
-        day_pass = 0
-        day_defects = 0
-        for pid in project_ids:
-            t, p, _ = _execution_filter_for_project(db, pid, day, day)
-            day_execs += t
-            day_pass += p
-            dc = db.scalar(
-                select(func.count(Defect.id)).where(
-                    Defect.project_id == pid,
-                    Defect.created_at >= datetime.combine(day, datetime.min.time()),
-                    Defect.created_at <= datetime.combine(day, datetime.max.time()),
-                )
-            ) or 0
-            day_defects += dc
+    for offset in range(6, -1, -1):
+        day = today - timedelta(days=offset)
+        day_execs = sum(daily_execs.get((pid, day), 0) for pid in project_ids)
+        day_pass = sum(daily_pass.get((pid, day), 0) for pid in project_ids)
+        day_defects = sum(daily_defects.get((pid, day), 0) for pid in project_ids)
         day_pr = round((day_pass / day_execs) * 100, 1) if day_execs > 0 else 0.0
         pass_rate_trend.append({"date": day.isoformat(), "pass_rate": day_pr, "total_execs": day_execs, "count": None})
         defect_trend.append({"date": day.isoformat(), "pass_rate": None, "total_execs": None, "count": day_defects})
@@ -260,8 +288,6 @@ def get_cross_project_stats(
         "per_project": per_project,
         "trends": {"pass_rate": pass_rate_trend, "defects": defect_trend},
     }
-
-
 
 # ── Batch 213 (B3): 首页「我的待办」聚合 ──
 
@@ -384,4 +410,5 @@ def get_todo_items(db: Session, project_id: int) -> dict:
         "failures": _todo_bucket(failures_items, failures_count),
         "releases": _todo_bucket(release_items, release_count),
     }
+
 
