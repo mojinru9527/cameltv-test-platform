@@ -39,23 +39,23 @@ shadcn/ui + Radix + Tailwind + CVA；颜色、边框、焦点和状态走语义 
 ## 4. 设计 QA 走查发现
 
 ### 🟠 P1-1 双 UI 公共入口冲突
-事实：`src/ui/index.ts:4` 声明单一入口，但 `pages/layouts/components` 有 169 个文件直接引用 `@/components/ui/*`。  
+事实：`src/ui/index.ts:4` 声明单一入口，但 `pages/layouts/components` 有 169 个文件直接引用 `@/components/ui/*`。
 **建议**：以 `@/ui` 聚合 canonical 导出，先用兼容适配保留历史调用，再迁移导入并加 ESLint 门禁。
 
 ### 🟠 P1-2 首页信息架构倒置
-事实：`GuestPlatformHome.tsx:53-83` 直接渲染完整模块树，主任务入口只有一个通用“登录并开始使用”。  
+事实：`GuestPlatformHome.tsx:53-83` 直接渲染完整模块树，主任务入口只有一个通用“登录并开始使用”。
 **建议**：增加需求、接口、UI、报告四类任务卡；模块目录折叠到“浏览全部模块”。
 
 ### 🟠 P1-3 登录恢复链路缺失
-事实：后端具有 `/auth/forgot-password` 与 `/auth/reset-password`，前端 `api/auth.ts` 和路由都无对应实现。  
+事实：后端具有 `/auth/forgot-password` 与 `/auth/reset-password`，前端 `api/auth.ts` 和路由都无对应实现。
 **建议**：新增两个 auth 页面和 typed API；缺失 SMTP 时显示管理员兜底，不伪报邮件发送。
 
 ### 🟡 P2-1 密码可操作性不足
-事实：`LoginForm.tsx:80-91` 只有固定 `type=password`，无显隐和 Caps Lock 提示。  
+事实：`LoginForm.tsx:80-91` 只有固定 `type=password`，无显隐和 Caps Lock 提示。
 **建议**：加可访问的显隐按钮与 Caps Lock 非阻断提示。
 
 ### 🟡 P2-2 移动端触控目标风险
-事实：新首页主要卡片/按钮可能使用默认 `h-8`；登录 CTA 为 `h-9`。  
+事实：新首页主要卡片/按钮可能使用默认 `h-8`；登录 CTA 为 `h-9`。
 **建议**：主要入口统一 `min-h-11`，显隐按钮用 44px 命中区，输入保持紧凑但触控区域足够。
 
 ## 5. 设计签核
