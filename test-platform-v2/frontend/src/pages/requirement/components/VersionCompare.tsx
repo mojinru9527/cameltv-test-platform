@@ -6,12 +6,12 @@
 import { useState, useCallback } from 'react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import { Badge } from '@/ui'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Switch } from '@/ui'
+import { Label } from '@/ui'
+import { ScrollArea } from '@/ui'
+import { Skeleton } from '@/ui'
 import { cn } from '@/lib/utils'
 import {
   GitCompare, ArrowRight, Plus, Minus, Pencil, Trash2,

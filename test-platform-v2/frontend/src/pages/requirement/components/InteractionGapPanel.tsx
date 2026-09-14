@@ -6,10 +6,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { interactionCoverageGaps } from '@/api/requirement'
 import { Button, Input } from '@/ui'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui'
 import { Badge } from '@/ui'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
+import { Skeleton } from '@/ui'
 import { GitCompare, RefreshCw } from '@/lib/icons'
 
 const GAP_PAGE_SIZE = 50

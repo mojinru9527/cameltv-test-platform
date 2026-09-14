@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
 import { Button, Badge } from '@/ui'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'

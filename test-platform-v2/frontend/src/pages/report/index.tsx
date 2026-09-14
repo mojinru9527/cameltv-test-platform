@@ -1,5 +1,5 @@
 import { Badge, Button, PageShell } from '@/ui'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/ui'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { useChartColors } from '@/hooks/use-chart-colors'
@@ -13,8 +13,8 @@ import TemplateManager from './TemplateManager'
 import TracePanel from './trace'
 import { fetchPlans } from '@/api/testplan'
 import { Input } from '@/ui'
-import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Textarea } from '@/ui'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
 import ChartFrame from '@/components/charts/ChartFrame'
 import { Progress } from '@/ui'
 import {
@@ -24,20 +24,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from '@/ui'
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet'
+} from '@/ui'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,14 +48,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+} from '@/ui'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import {
   Table,
   TableBody,
@@ -63,11 +63,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import { cn } from '@/lib/utils'
 import { execStatusLabel, normalizeExecStatus } from '@/utils/executionStatus'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
-import { SkeletonText } from '@/components/ui/skeleton'
+import { SkeletonText } from '@/ui'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuthStore } from '@/stores/auth'

@@ -15,13 +15,13 @@ import type { RegressionScopeResult, TriggerRegressionResult } from '@/api/relea
 import { fetchModuleTree } from '@/api/requirementModules'
 import type { VersionDiffResult, Environment } from '@/types'
 import { Button } from '@/ui'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
 import { Badge } from '@/ui'
 import { Input } from '@/ui'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Label } from '@/ui'
+import { Textarea } from '@/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui'
 import {
   ArrowLeft,
   Package,
@@ -790,8 +790,3 @@ export default function BundleDetailPage() {
     </div>
   )
 }
-
-
-
-
-

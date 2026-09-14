@@ -7,16 +7,16 @@ import {
   CardTitle,
   CardDescription,
   CardAction,
-} from '@/components/ui/card'
-import { Switch } from '@/components/ui/switch'
+} from '@/ui'
+import { Switch } from '@/ui'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+} from '@/ui'
+import { Textarea } from '@/ui'
 import { Save, FileText } from '@/lib/icons'
 import { ConstraintEditor } from './ConstraintEditor'
 import type { DataRequirement, UpdateDataRequirementInput } from '@/api/dataRequirements'

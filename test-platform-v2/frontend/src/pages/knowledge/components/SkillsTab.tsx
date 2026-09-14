@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/ui'
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
 import { Input } from '@/ui'
@@ -9,7 +9,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import { fetchSkills, applySkill, type SkillTemplate, type SkillParam } from '@/api/knowledge'
 import {
   Loader2,

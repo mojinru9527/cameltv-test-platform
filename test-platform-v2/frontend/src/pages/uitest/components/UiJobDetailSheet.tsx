@@ -1,13 +1,13 @@
 import { Badge } from '@/ui'
 import { Button } from '@/ui'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/ui'
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+} from '@/ui'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui'
 import {
   Table,
   TableBody,
@@ -15,7 +15,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import { Monitor, Play } from '@/lib/icons'
 import { execStatusLabel } from '@/utils/executionStatus'
 import { BROWSER_MAP, browserBadgeClass, getEnvironment, isProductionJob, statusBadgeClass } from '../uiShared'
@@ -145,4 +145,3 @@ export default function UiJobDetailSheet({
     </Sheet>
   )
 }
-

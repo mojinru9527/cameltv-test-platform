@@ -9,14 +9,14 @@ import { getCaptureTask, listReleaseBundles, productionDiff } from '@/api/requir
 import type { ProductionDiffResult, ReleaseBundleBrief } from '@/types'
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
+import { Input } from '@/ui'
+import { Textarea } from '@/ui'
+import { Label } from '@/ui'
+import { Skeleton } from '@/ui'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import { GitCompare, Loader2 } from '@/lib/icons'
 
 const CHANGE_TYPE_LABEL: Record<string, string> = {

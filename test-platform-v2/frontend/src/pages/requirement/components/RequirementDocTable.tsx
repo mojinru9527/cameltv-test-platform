@@ -1,9 +1,9 @@
 import { Badge, Button, type BadgeTone } from '@/ui'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
 import { Input } from '@/ui'
 import Pagination from '@/components/Pagination'
 import { AsyncState } from '@/components/state'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui'
 import {
   Trash2, Eye, FileSpreadsheet, FileText,
   Layers, Link2, Search, XCircle, Loader2, ExternalLink, GitCompare, Sparkles, Inbox,

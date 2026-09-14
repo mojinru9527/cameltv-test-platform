@@ -6,7 +6,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import { WORKER_STATUS_LABELS, type WorkerNode } from '@/api/runtime'
 import { AlertCircle, RefreshCw } from '@/lib/icons'
 import { NetworkZoneBadge } from './NetworkZoneBadge'

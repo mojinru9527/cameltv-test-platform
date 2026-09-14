@@ -1,6 +1,6 @@
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/ui'
 import { Badge } from '@/ui'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/ui'
 import { CheckCircle2, Info } from '@/lib/icons'
 import type { RequirementAnalysis } from '@/types'
 import { SEVERITY_BADGE_CLASSES, SEVERITY_CONFIG } from './AiDisplayParts'

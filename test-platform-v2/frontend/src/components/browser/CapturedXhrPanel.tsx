@@ -6,7 +6,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import { type BrowserSessionEvent } from '@/api/browserInteractions'
 
 export interface CapturedXhrPanelProps {

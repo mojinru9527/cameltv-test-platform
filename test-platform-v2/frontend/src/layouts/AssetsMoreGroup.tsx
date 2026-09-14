@@ -4,12 +4,12 @@ import {
   SidebarGroupLabel,
   SidebarMenu,
   useSidebar,
-} from '@/components/ui/sidebar'
+} from '@/ui'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+} from '@/ui'
 import { ChevronRight } from '@/lib/icons'
 import type { AssetSection } from './nav-config'
 import { isPathInItems, readAssetsMoreOpen, writeAssetsMoreOpen } from './nav-config'

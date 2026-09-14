@@ -5,7 +5,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from '@/components/ui/sidebar'
+} from '@/ui'
 import type { MainNavRow } from './nav-config'
 import { menuIcon } from './NavigationMenuItems'
 

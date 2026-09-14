@@ -16,10 +16,10 @@ import type {
   TestModule, ApiMatchItem, ApiService,
 } from '@/types'
 import { Badge, Button } from '@/ui'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Textarea } from '@/components/ui/textarea'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Alert, AlertDescription, AlertTitle } from '@/ui'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/ui'
+import { Textarea } from '@/ui'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui'
 import {
   Search, CheckCircle2, Info, Import, Loader2, FileText,
   Layers, AlertTriangle, RefreshCw,

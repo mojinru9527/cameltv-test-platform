@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useSearchParams } from 'react-router'
 import PageHeader from '@/components/PageHeader'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui'
 import { Input } from '@/ui'
 import { Button } from '@/ui'
 import {
@@ -11,7 +11,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import { LayoutDashboard, Database, FileCheck, Search, GitBranch, Layers, Calendar, BookOpen, GitCompare, FolderOpen, Sparkles, Zap } from '@/lib/icons'
 import type { LucideIcon } from '@/lib/icons'
 import OverviewTab from './components/OverviewTab'

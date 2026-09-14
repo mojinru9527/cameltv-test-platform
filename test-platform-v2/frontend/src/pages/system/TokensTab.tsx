@@ -12,7 +12,7 @@ import {
   type ApiTokenItem,
 } from '@/api/token'
 import { Button, Input, Badge } from '@/ui'
-import { Switch } from '@/components/ui/switch'
+import { Switch } from '@/ui'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
 import {
@@ -22,7 +22,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,7 +32,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+} from '@/ui'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import { Plus, KeyRound, Copy, Check } from '@/lib/icons'
 import { useAuthStore } from '@/stores/auth'
@@ -50,7 +50,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 
 const tokenSchema = z.object({
   name: z.string().min(1, '名称必填'),

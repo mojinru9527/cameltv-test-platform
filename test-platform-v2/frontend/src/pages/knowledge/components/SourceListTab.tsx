@@ -6,14 +6,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
 import {
@@ -22,7 +22,7 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet'
+} from '@/ui'
 import { fetchKnowledgeSources, fetchKnowledgeSource, fetchSourceChunks, verifyKnowledgeSource } from '@/api/knowledge'
 import { fetchReleaseBundles } from '@/api/releaseBundles'
 import { fetchSyncCoverage } from '@/api/wiki'

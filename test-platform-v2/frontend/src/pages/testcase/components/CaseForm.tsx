@@ -3,15 +3,15 @@ import { Controller } from 'react-hook-form'
 import AssertionEditor from '@/pages/apitest/components/AssertionEditor'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
-import { Textarea } from '@/components/ui/textarea'
+import { Textarea } from '@/ui'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { SearchableSelect } from '@/components/ui/searchable-select'
+} from '@/ui'
+import { SearchableSelect } from '@/ui'
 import { Code2, FileText } from '@/lib/icons'
 import { compareDomainGroups, groupDomainLabel } from '@/utils/domainNaming'
 

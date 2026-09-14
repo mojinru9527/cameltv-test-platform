@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
 import { Badge } from '@/ui'
 import {
   Dialog,
@@ -7,7 +7,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import { fetchKnowledgeSources, fetchSourceChunks } from '@/api/knowledge'
 import type { KnowledgeChunk, KnowledgeSource } from '@/types'
 import { Loader2, FolderOpen } from '@/lib/icons'

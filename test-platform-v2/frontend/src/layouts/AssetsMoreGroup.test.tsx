@@ -1,8 +1,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { SidebarProvider } from '@/components/ui/sidebar'
-import { TooltipProvider } from '@/components/ui/tooltip'
+import { SidebarProvider } from '@/ui'
+import { TooltipProvider } from '@/ui'
 import type { AssetSection } from './nav-config'
 import { ASSETS_MORE_STORAGE_KEY } from './nav-config'
 import { AssetsMoreGroup } from './AssetsMoreGroup'

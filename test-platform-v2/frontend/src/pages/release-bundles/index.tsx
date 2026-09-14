@@ -8,7 +8,7 @@ import {
 } from '@/api/releaseBundles'
 import type { ReleaseBundleListItem } from '@/types'
 import { Button } from '@/ui'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
 import { Input } from '@/ui'
 import { Badge } from '@/ui'
 import {
@@ -19,15 +19,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
+} from '@/ui'
+import { Label } from '@/ui'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import {
   Table,
   TableBody,
@@ -35,7 +35,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import { Progress } from '@/ui'
 import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'

@@ -1,5 +1,5 @@
 import { Badge } from '@/ui'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui'
 import type { CoverageReport } from '@/types'
 
 interface Props {

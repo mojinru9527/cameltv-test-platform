@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Skeleton } from '@/ui'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
 import {

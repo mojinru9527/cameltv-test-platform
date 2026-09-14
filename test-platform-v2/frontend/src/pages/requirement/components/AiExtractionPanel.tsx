@@ -1,6 +1,6 @@
 import { Badge } from '@/ui'
-import { Card, CardContent } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Card, CardContent } from '@/ui'
+import { Checkbox } from '@/ui'
 import { ChevronDown, ChevronRight } from '@/lib/icons'
 import type { FeatureExtractionResult, TestModule } from '@/types'
 import {

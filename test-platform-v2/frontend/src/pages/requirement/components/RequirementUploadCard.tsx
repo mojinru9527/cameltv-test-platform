@@ -1,6 +1,6 @@
 import { Button, Input } from '@/ui'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui'
 import { Cloud, Inbox, Link2, Loader2, XCircle } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 

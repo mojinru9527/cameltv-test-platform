@@ -3,20 +3,20 @@ import { Upload, Trash2, Eye, Plus, RefreshCw, FileText, FileJson } from 'lucide
 import { toast } from 'sonner'
 
 import { Button } from '@/ui'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
 import { Input } from '@/ui'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Label } from '@/ui'
+import { Textarea } from '@/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui'
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import { Badge } from '@/ui'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui'
 import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
 import ConfirmActionDialog from '@/components/ConfirmActionDialog'

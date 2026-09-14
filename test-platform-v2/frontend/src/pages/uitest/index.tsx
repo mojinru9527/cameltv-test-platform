@@ -33,9 +33,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import { Badge } from '@/ui'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/ui'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,8 +46,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+} from '@/ui'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui'
 import {
   Table,
   TableBody,
@@ -55,7 +55,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { execStatusLabel } from '@/utils/executionStatus'
 import { BROWSER_MAP, browserBadgeClass, getEnvironment, isProductionJob, statusBadgeClass, JOB_STATUS_FILTERS } from './uiShared'
@@ -572,4 +572,3 @@ export default function UiTestPage() {
     </div>
   )
 }
-

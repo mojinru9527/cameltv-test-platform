@@ -16,7 +16,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
+} from '@/ui'
 import { User, Lock, Send, KeyRound, Loader2 } from '@/lib/icons'
 
 const registerSchema = z

@@ -1,5 +1,5 @@
 import { Badge } from '@/ui'
-import { Card } from '@/components/ui/card'
+import { Card } from '@/ui'
 
 // ── Batch 191：团队进度树（只读展示 team_json 快照，不经 Markdown 渲染） ──
 

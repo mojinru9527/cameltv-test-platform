@@ -13,8 +13,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+} from '@/ui'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui'
 import { createTestCase, updateTestCase, reviewCase, fetchReviewHistory } from '@/api/testcase'
 import { fetchDatasets } from '@/api/dataset'
 import CaseForm from './components/CaseForm'

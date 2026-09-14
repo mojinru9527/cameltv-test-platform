@@ -3,7 +3,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/ui'
 import DomainTree from '@/components/DomainTree'
 
 import { cn } from '@/lib/utils'
