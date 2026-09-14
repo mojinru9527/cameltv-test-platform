@@ -26,11 +26,20 @@ services:
       start_period: 10s
 
   backend:
+    image: ${API_IMAGE:-cameltv-tp-api:latest}
     build:
       context: ../..
       dockerfile: test-platform-v2/backend/Dockerfile
+      target: api
     environment:
       - ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT is required}
+      # Split default: backend is the slim API process and delegates AI to the
+      # ai-gateway service and browser work to the runner service.
+      - AI_GATEWAY_URL=${AI_GATEWAY_URL:-http://ai-gateway:8100}
+      - AI_GATEWAY_TOKEN=${AI_GATEWAY_TOKEN:-}
+      - AI_GATEWAY_ROLE=${AI_GATEWAY_ROLE:-remote}
+      - RUNNER_HTTP_URL=${RUNNER_HTTP_URL:-http://runner:8000}
+      - WORKER_EXECUTION_ENABLED=${WORKER_EXECUTION_ENABLED:-false}
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
@@ -148,6 +157,10 @@ services:
 
   aitde-worker:
     profiles: ["aitde-worker"]
+    build:
+      context: ../..
+      dockerfile: test-platform-v2/backend/Dockerfile
+      target: runner
     extends:
       service: backend
     command:
@@ -190,10 +203,70 @@ services:
       retries: 3
       start_period: 15s
 
+  ai-gateway:
+    extends:
+      service: backend
+    image: ${AI_GATEWAY_IMAGE:-cameltv-tp-ai-gateway:latest}
+    build:
+      target: ai-gateway
+    command: ["uvicorn", "app.ai_gateway_app:app", "--host", "0.0.0.0", "--port", "8100"]
+    environment:
+      AI_GATEWAY_ROLE: gateway
+      AI_GATEWAY_TOKEN: ${AI_GATEWAY_TOKEN:-}
+      WORKER_EXECUTION_ENABLED: "false"
+      DATA_DIR: /app/storage
+    expose:
+      - "8100"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      volume-permissions:
+        condition: service_completed_successfully
+    init: true
+    mem_limit: ${AI_GATEWAY_MEMORY_LIMIT:-1024m}
+    pids_limit: 128
+    stop_grace_period: 60s
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/internal/ai/v1/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  runner:
+    extends:
+      service: backend
+    image: ${RUNNER_IMAGE:-cameltv-tp-runner:latest}
+    build:
+      target: runner
+    environment:
+      AI_GATEWAY_ROLE: remote
+      WORKER_EXECUTION_ENABLED: "true"
+    depends_on:
+      ai-gateway:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      volume-permissions:
+        condition: service_completed_successfully
+    init: true
+    mem_limit: ${RUNNER_MEMORY_LIMIT:-1536m}
+    pids_limit: 256
+    stop_grace_period: 60s
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
   volume-permissions:
+    image: ${API_IMAGE:-cameltv-tp-api:latest}
     build:
       context: ../..
       dockerfile: test-platform-v2/backend/Dockerfile
+      target: api
     user: "0:0"
     command:
       - sh

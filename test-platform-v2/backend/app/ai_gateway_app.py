@@ -47,6 +47,11 @@ def require_internal_token(
 
 @app.get("/internal/ai/v1/health")
 def health() -> dict[str, Any]:
+    # Deployment gate: a gateway without an internal token must never be
+    # considered healthy, otherwise compose ``--wait`` would accept a topology
+    # in which every authenticated AI call fails with 503 at runtime.
+    if not (settings.ai_gateway_token or ""):
+        raise HTTPException(status_code=503, detail="AI Gateway token is not configured")
     return R.ok(
         {
             "ok": True,

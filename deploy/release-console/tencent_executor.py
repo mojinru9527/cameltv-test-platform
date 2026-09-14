@@ -46,6 +46,17 @@ class ExecutorConfig:
     command_timeout_seconds: int = 600
     keep_backups: int = 7
     image_runner: str = 'cameltv-tp-runner:main'
+    image_ai_gateway: str = 'cameltv-tp-ai-gateway:main'
+
+
+def release_parts(mode: str) -> tuple[str, ...]:
+    """Image parts shipped for a runtime mode; split adds the AI gateway."""
+    return ('backend', 'frontend', 'runner', 'ai-gateway') if mode == 'split' else ('backend', 'frontend')
+
+
+def image_target(config: 'ExecutorConfig', part: str) -> str:
+    """Map a release part ("ai-gateway") to its configured image target."""
+    return getattr(config, f"image_{part.replace('-', '_')}")
 
 
 class ExecutorNotConfigured(RuntimeError):
@@ -84,9 +95,19 @@ def rollback_runtime_override(mode: str) -> dict:
     """
     if mode not in ('combined', 'split'):
         raise ValueError('invalid rollback runtime mode')
-    command = ['uvicorn', 'app.main:app', '--host', '0.0.0.0', '--port', '8000']
+    api_command = ['uvicorn', 'app.main:app', '--host', '0.0.0.0', '--port', '8000']
     owners = ('backend', 'runner') if mode == 'split' else ('backend',)
-    return {'services': {owner: {'command': command} for owner in owners}}
+    services = {owner: {'command': api_command} for owner in owners}
+    if mode == 'split':
+        # The gateway keeps serving AI during a rollback, so it must not
+        # inherit the public API entrypoint command.
+        services['ai-gateway'] = {
+            'command': [
+                'uvicorn', 'app.ai_gateway_app:app',
+                '--host', '0.0.0.0', '--port', '8100',
+            ]
+        }
+    return {'services': services}
 
 
 class TencentSshExecutor:
@@ -175,10 +196,14 @@ class TencentSshExecutor:
             extra = ('-f docker-compose.yml -f docker-compose.override.yml '
                      f'-f docker-compose.execution.{tag}.yml ')
             environment = (f'API_IMAGE={shlex.quote(self.config.image_backend)} '
-                           f'RUNNER_IMAGE={shlex.quote(self.config.image_runner)} ')
+                           f'RUNNER_IMAGE={shlex.quote(self.config.image_runner)} '
+                           f'AI_GATEWAY_IMAGE={shlex.quote(self.config.image_ai_gateway)} ')
+        else:
+            # The repository default topology is split; combined releases and
+            # rollbacks layer the combined overlay back on top of it.
+            extra = ('-f docker-compose.yml -f docker-compose.override.yml '
+                     '-f docker-compose.combined.yml ')
         if rollback:
-            if not extra:
-                extra = '-f docker-compose.yml -f docker-compose.override.yml '
             extra += '-f docker-compose.rollback-runtime.yml '
         return (
             f"cd {shlex.quote(self.config.compose_dir)} && {environment}"
@@ -195,10 +220,10 @@ class TencentSshExecutor:
             payload = shlex.quote(json.dumps(rollback_runtime_override(mode)))
             commands.extend([f'test ! -L {path}', f"printf '%s' {payload} > {path}",
                              self._compose('config', '--quiet', mode=mode, tag=tag, rollback=True)])
-        commands.append(self._compose('stop', '--timeout', '60', 'backend', 'aitde-worker'))
+        commands.append(self._compose('stop', '--timeout', '60', 'backend', 'aitde-worker', 'runner', 'ai-gateway'))
         project = shlex.quote(f'label=com.docker.compose.project={self.config.compose_project}')
         commands.append(f'docker ps -q --filter {project} --filter label=com.docker.compose.service=runner | xargs -r docker stop --time 60')
-        services = ('runner', 'backend', 'frontend', 'aitde-worker') if mode == 'split' else ('backend', 'frontend', 'aitde-worker')
+        services = ('runner', 'ai-gateway', 'backend', 'frontend', 'aitde-worker') if mode == 'split' else ('backend', 'frontend', 'aitde-worker')
         commands.append(self._compose('up', '-d', '--no-build', '--force-recreate', '--wait',
                                       '--wait-timeout', '180', *services, mode=mode, tag=tag,
                                       rollback=rollback))
@@ -238,11 +263,11 @@ class TencentSshExecutor:
             commands.append(remote_verify_command(self.config.release_dir, image_tag, manifest))
         if mode == 'split':
             commands.extend(self._split_config(image_tag, manifest['execution_config_sha256'], install=True))
-        parts = ('backend', 'frontend', 'runner') if mode == 'split' else ('backend', 'frontend')
+        parts = release_parts(mode)
         for part in parts:
             commands.append(f'docker load -i {shlex.quote(f"{self.config.release_dir}/{image_tag}-{part}.tar")}')
         for part in parts:
-            commands.append(f'docker tag cameltv-tp-{part}:{image_tag} {shlex.quote(getattr(self.config, f"image_{part}"))}')
+            commands.append(f'docker tag cameltv-tp-{part}:{image_tag} {shlex.quote(image_target(self.config, part))}')
         commands.extend(self._activate(image_tag, mode))
         output = self._run_remote(commands)
         return ExecutorResult(
@@ -262,14 +287,14 @@ class TencentSshExecutor:
         commands = [
             "exec 9>/run/lock/cameltv-release-capacity.lock && flock -n 9",
         ]
-        parts = ('backend', 'frontend', 'runner') if mode == 'split' else ('backend', 'frontend')
+        parts = release_parts(mode)
         for part in parts:
-            repo = getattr(self.config, f'image_{part}').rsplit(':', 1)[0]
+            repo = image_target(self.config, part).rsplit(':', 1)[0]
             commands.append(f'docker image inspect {shlex.quote(f"{repo}:{image_tag}")} >/dev/null')
         if mode == 'split':
             commands.extend(self._split_config(image_tag, manifest['execution_config_sha256'], install=False))
         for part in parts:
-            target = getattr(self.config, f'image_{part}')
+            target = image_target(self.config, part)
             repo = target.rsplit(':', 1)[0]
             commands.append(f'docker tag {shlex.quote(f"{repo}:{image_tag}")} {shlex.quote(target)}')
         commands.extend(self._activate(image_tag, mode, rollback=True))
@@ -347,5 +372,10 @@ def build_executor_from_settings(settings_like: object) -> TencentSshExecutor:
         command_timeout_seconds=getattr(settings_like, "tencent_executor_timeout", 600),
         keep_backups=getattr(settings_like, "tencent_executor_keep_backups", 7),
         image_runner=getattr(settings_like, 'tencent_executor_image_runner', 'cameltv-tp-runner:main'),
+        image_ai_gateway=getattr(
+            settings_like,
+            'tencent_executor_image_ai_gateway',
+            'cameltv-tp-ai-gateway:main',
+        ),
     )
     return TencentSshExecutor(config)

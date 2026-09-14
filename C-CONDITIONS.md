@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-14（Batch 240 AI/RAG Python 依赖分层；新增 C240-1）
+**最后更新**: 2026-09-14（Batch 241 AI split 默认拓扑与容器级验收；关闭 C239-2/C239-3/C240-1，新增 C241-1/C241-2）
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -59,17 +59,25 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 
 
+### batch-241 — AI split 默认拓扑与容器级验收（2026-09-14）—— 新增
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| ~~C241-1~~ | ~~三套新 lock 必须在目标平台（linux/amd64）可解析，`--require-hashes` 安装通过~~ → **Closed（Batch 241）**：补齐 `secretstorage`/`jeepney`/`uvloop`，api/ai-gateway/runner 三 target 真机构建通过 | P0 | 2026-09-14 |
+| C241-2 | `requirements.runner.lock` 当前未被 Dockerfile 引用（runner target 复用 `requirements.lock`）；需决定改为真正引用或删除死文件 | P2 | 2026-09-14 |
+| C241-3 | `main-quality-gate` 的后端 required job 需增加 `docker build --target api`（或等价镜像构建冒烟），否则 lock/依赖层缺陷仍会绕过门禁 | P1 | 2026-09-14 |
+
 ### batch-240 — AI/RAG Python 依赖分层（2026-09-14）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C240-1 | 记录新 API/AI Gateway/Runner 实际镜像大小与共享层，验证 API image 体积下降 | P1 | 2026-09-14 |### batch-239 — 独立 AI Gateway 服务边界（2026-09-14）—— 新增
+| ~~C240-1~~ | ~~记录新 API/AI Gateway/Runner 实际镜像大小与共享层，验证 API image 体积下降~~ → **Closed（Batch 241）**：真机实测 api 112.6 MiB / ai-gateway 171.1 MiB / runner 1336.0 MiB，API 下降 91.6%，共享层 4–5 层，证据见 `work-logs/evidence/batch-241-ai-split-smoke.json` | P1 | 2026-09-14 |### batch-239 — 独立 AI Gateway 服务边界（2026-09-14）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | ~~C239-1~~ | ~~拆分 Python AI/RAG 依赖与 lock，确保 FastEmbed/ONNX 不再进入 API image layer~~ → **Closed（Batch 240）**：API lock 去除 FastEmbed/ONNX/NumPy/Playwright，AI/Runner lock 分层，干净 API venv 导入通过 | P1 | 2026-09-14 |
-| C239-2 | 在真实 Docker host 完成 API→AI Gateway→runtime 全链路 smoke，再切换默认 split 拓扑 | P1 | 2026-09-14 |
-| C239-3 | 发布 profile 必须同时支持 split 与 combined rollback，AI_GATEWAY_TOKEN/IMAGE 缺失时 fail-closed | P1 | 2026-09-14 |### batch-237 — 本地优先路由与云端兜底（2026-09-13）—— 新增
+| ~~C239-2~~ | ~~在真实 Docker host 完成 API→AI Gateway→runtime 全链路 smoke，再切换默认 split 拓扑~~ → **Closed（Batch 241）**：本地真实 Docker host 跑通 api/ai-gateway/runner 全链路（匿名调用 401），base compose 默认即 split，combined overlay 可回滚 | P1 | 2026-09-14 |
+| ~~C239-3~~ | ~~发布 profile 必须同时支持 split 与 combined rollback，AI_GATEWAY_TOKEN/IMAGE 缺失时 fail-closed~~ → **Closed（Batch 241）**：split 制品集加入 ai-gateway；combined 分支叠加 combined overlay；缺 token 时 split overlay 渲染失败、网关 health 返回 503 | P1 | 2026-09-14 |### batch-237 — 本地优先路由与云端兜底（2026-09-13）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|

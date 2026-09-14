@@ -65,6 +65,9 @@ class ConsoleSettings:
         self.tencent_executor_image_backend = _env("TENCENT_EXECUTOR_IMAGE_BACKEND", "cameltv-tp-backend:latest")
         self.tencent_executor_image_frontend = _env("TENCENT_EXECUTOR_IMAGE_FRONTEND", "cameltv-tp-frontend:latest")
         self.tencent_executor_image_runner = _env("TENCENT_EXECUTOR_IMAGE_RUNNER", "cameltv-tp-runner:main")
+        self.tencent_executor_image_ai_gateway = _env(
+            "TENCENT_EXECUTOR_IMAGE_AI_GATEWAY", "cameltv-tp-ai-gateway:main"
+        )
         self.tencent_executor_compose_project = _env("TENCENT_EXECUTOR_COMPOSE_PROJECT", "cameltv-tp-production")
         self.tencent_executor_timeout = int(_env("TENCENT_EXECUTOR_TIMEOUT", "600"))
         self.tencent_executor_keep_backups = int(_env("TENCENT_EXECUTOR_KEEP_BACKUPS", "7"))

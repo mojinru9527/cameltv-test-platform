@@ -1,0 +1,41 @@
+# Combined rollback overlay.
+#
+# The repository default is the split topology (api + ai-gateway + runner).
+# Apply this overlay together with docker-compose.yml to fall back to the single
+# combined ``runtime`` image, which executes API, AI and browser work in one
+# process again:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.combined.yml up -d
+#
+# The overlay intentionally keeps the repository default untouched so an
+# operator can roll back without editing tracked files.
+services:
+  backend:
+    build:
+      target: runtime
+    environment:
+      # Run AI locally inside the API process; no ai-gateway hop.
+      AI_GATEWAY_ROLE: embedded
+      AI_GATEWAY_URL: ""
+      RUNNER_HTTP_URL: ""
+      WORKER_EXECUTION_ENABLED: "true"
+    depends_on: !reset
+      postgres:
+        condition: service_healthy
+      volume-permissions:
+        condition: service_completed_successfully
+
+  runner:
+    # Excluded unless the operator explicitly enables the profile.
+    profiles: ["combined-disabled"]
+
+  ai-gateway:
+    profiles: ["combined-disabled"]
+
+  aitde-worker:
+    build:
+      target: runtime
+
+  volume-permissions:
+    build:
+      target: runtime

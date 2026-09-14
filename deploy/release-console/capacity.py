@@ -37,7 +37,7 @@ def check(release_dir: str, stage: str, archive_bytes: int = 0, tag: str = '', r
     if stage == 'import':
         if not re.fullmatch(r'release-\d{8}-\d{4}', tag):
             raise ValueError('expected release-YYYYMMDD-NNNN tag')
-        parts = ('backend', 'frontend', 'runner') if runtime_mode == 'split' else ('backend', 'frontend')
+        parts = ('backend', 'frontend', 'runner', 'ai-gateway') if runtime_mode == 'split' else ('backend', 'frontend')
         archives = [release / f'{tag}-{part}.tar' for part in parts]
         if any(p.is_symlink() or not p.is_file() or p.stat().st_size == 0 for p in archives):
             raise ValueError('all nonempty regular release archives are required')
