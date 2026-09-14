@@ -1,7 +1,7 @@
 ---
 title: "CamelTv 测试平台前端"
 owner: "frontend-team"
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-09-14"
 status: "active"
 expires: "2026-12-26"
 tags: ["frontend", "react", "shadcn-ui", "vite", "typescript"]
@@ -52,6 +52,13 @@ npm run dev        # http://localhost:5173 （已配置 /api 代理到 localhost
 ```dotenv
 VITE_API_BASE=http://localhost:8000/api/v1
 ```
+
+## UI 组件入口
+
+业务页面、布局、组件和测试统一从 `@/ui` 导入。`src/components/ui` 是 canonical
+shadcn/Radix 实现，只允许 `src/ui` 聚合层引用；ESLint
+`no-restricted-imports` 与 `batch245-ui-entry-governance.test.ts` 会阻断双入口回潮。
+历史 `primary` / `danger` / `tone` API 由 `src/ui/primitives` 兼容适配。
 
 ## 契约同步（前后端不脱节）
 
