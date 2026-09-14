@@ -38,6 +38,17 @@ describe('cachedGet 会话级缓存与去重（Batch 150 / C147-5）', () => {
     expect(get).toHaveBeenCalledTimes(2)
   })
 
+  it('Batch 244：/test-cases 前缀同时失效 stats/domains/taxonomy 缓存', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue([{ id: 1 }])
+    await cachedGet('/test-cases/stats', undefined, { ttl: 60_000 })
+    await cachedGet('/test-cases/domains', undefined, { ttl: 60_000 })
+    await cachedGet('/test-cases/taxonomy', { case_type: 'api' }, { ttl: 60_000 })
+    clearApiCache('/test-cases')
+    await cachedGet('/test-cases/stats', undefined, { ttl: 60_000 })
+    await cachedGet('/test-cases/domains', undefined, { ttl: 60_000 })
+    await cachedGet('/test-cases/taxonomy', { case_type: 'api' }, { ttl: 60_000 })
+    expect(get).toHaveBeenCalledTimes(6)
+  })
   it('force 选项强制刷新', async () => {
     const get = vi.spyOn(client, 'get').mockResolvedValue([{ id: 1 }])
     await cachedGet('/f', undefined, { ttl: 60_000 })
@@ -88,3 +99,4 @@ describe('cachedGet 会话级缓存与去重（Batch 150 / C147-5）', () => {
     expect(get).toHaveBeenCalledTimes(1)
   })
 })
+

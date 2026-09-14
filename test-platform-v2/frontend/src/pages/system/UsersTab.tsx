@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { createUser, deleteUser, fetchRoles, fetchUsers, updateUser } from '@/api/system'
+import type { UserCreate } from '@/api/apiContract'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
 import { Badge } from '@/ui'
@@ -79,13 +80,13 @@ export default function UsersTab() {
   const doSave = async (v: UserFormData) => {
     setSaving(true)
     try {
-      const payload: Record<string, any> = {
-        ...v,
+      const payload: UserCreate = {
+        username: v.username,
+        password: v.password ?? '',
+        nickname: v.nickname ?? '',
+        email: v.email ?? '',
         status: v.status ? 1 : 0,
         role_codes: selectedRoleCodes,
-      }
-      if (editing?.id && !payload.password) {
-        delete payload.password
       }
       if (editing?.id) {
         await updateUser(editing.id, payload)
@@ -301,3 +302,6 @@ export default function UsersTab() {
     </div>
   )
 }
+
+
+

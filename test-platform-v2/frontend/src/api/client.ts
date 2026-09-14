@@ -1,5 +1,5 @@
 import { toast } from 'sonner'
-import axios from 'axios'
+import axios, { type AxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import { API_BASE_URL } from './baseUrl'
 import { normalizeApiErrorMessage } from './errorMessage'
@@ -10,6 +10,10 @@ interface ApiEnvelope<T> {
   msg: string
   data: T
 }
+
+/** Axios config extension understood by the shared response interceptor. */
+export type ApiRequestConfig = AxiosRequestConfig & { suppressErrorToast?: boolean }
+
 
 const client = axios.create({
   baseURL: API_BASE_URL,
@@ -150,3 +154,8 @@ export function clearApiCache(prefix?: string): void {
     if (key.startsWith(prefix)) getCache.delete(key)
   }
 }
+
+
+
+
+

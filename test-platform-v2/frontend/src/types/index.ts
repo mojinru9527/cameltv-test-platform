@@ -1,3 +1,4 @@
+import type { LoginOut } from '@/api/apiContract'
 /**
  * 业务类型（P0 手写）。
  * 后续可用 `npm run gen:api` 从后端 OpenAPI 自动生成 src/types/api.d.ts 替代。
@@ -33,14 +34,7 @@ export interface Organization {
   project_count: number
 }
 
-export interface LoginResult {
-  access_token: string
-  token_type: string
-  user: User
-  projects: Project[]
-  permissions: string[]
-  organizations?: Organization[]
-}
+export type LoginResult = LoginOut
 
 export interface MeResult {
   user: User
@@ -1705,3 +1699,5 @@ export interface ExtractionQuality {
   warnings: string[]
   extraction_meta: string
 }
+
+

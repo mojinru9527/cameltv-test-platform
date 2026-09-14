@@ -64,9 +64,10 @@ export interface RequirementTraceSummary {
   coverage_rate: number
   execution_rate: number
   pass_rate: number
-  cases: Array<Record<string, any>>
+  cases: Array<Record<string, unknown>>
 }
 
 export async function fetchRequirementTrace(docId: number): Promise<RequirementTraceSummary> {
   return client.get(`/trace/requirement/${docId}`) as Promise<RequirementTraceSummary>
 }
+

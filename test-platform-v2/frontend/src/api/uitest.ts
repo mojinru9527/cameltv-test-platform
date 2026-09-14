@@ -1,7 +1,7 @@
 import api from './client'
 import type { UiJobItem, UiRunItem, UiRunArtifact, RunnerHealth } from '@/types'
 
-export async function fetchUiJobs(params: Record<string, any> = {}, signal?: AbortSignal) {
+export async function fetchUiJobs(params: Record<string, unknown> = {}, signal?: AbortSignal) {
   return api.get('/ui-tests', { params, ...(signal ? { signal } : {}) })
 }
 
@@ -9,11 +9,11 @@ export async function fetchUiJob(id: number) {
   return api.get(`/ui-tests/${id}`)
 }
 
-export async function createUiJob(body: Record<string, any>) {
+export async function createUiJob(body: Record<string, unknown>) {
   return api.post('/ui-tests', body)
 }
 
-export async function updateUiJob(id: number, body: Record<string, any>) {
+export async function updateUiJob(id: number, body: Record<string, unknown>) {
   return api.put(`/ui-tests/${id}`, body)
 }
 
@@ -25,7 +25,7 @@ export async function triggerUiJob(id: number, confirmProd = false) {
   return api.post(`/ui-tests/${id}/trigger`, { confirm_prod: confirmProd })
 }
 
-export async function fetchUiRuns(jobId: number, params: Record<string, any> = {}) {
+export async function fetchUiRuns(jobId: number, params: Record<string, unknown> = {}) {
   return api.get(`/ui-tests/${jobId}/runs`, { params })
 }
 
@@ -58,8 +58,10 @@ export async function fetchRunnerHealth(): Promise<RunnerHealth> {
 }
 
 export async function fetchScripts(signal?: AbortSignal): Promise<string[]> {
-  const res: any = signal
+  const res: { available_specs?: string[] } = signal
     ? await api.get('/ui-tests/scripts', { signal })
     : await api.get('/ui-tests/scripts')
-  return res?.available_specs ?? []
+  return res.available_specs ?? []
 }
+
+

@@ -297,7 +297,7 @@ export interface SkillParam {
   label: string
   type: string
   required: boolean
-  default?: any
+  default?: unknown
   description?: string
   options?: string[]
 }
@@ -309,7 +309,7 @@ export interface SkillApplyResult {
   agent_run_id?: number
   knowledge_context?: string
   prompt?: string
-  params?: Record<string, any>
+  params?: Record<string, unknown>
   note?: string
   error?: string
 }
@@ -320,7 +320,7 @@ export async function fetchSkills(): Promise<SkillTemplate[]> {
 
 export async function applySkill(
   skillName: string,
-  params?: Record<string, any>,
+  params?: Record<string, unknown>,
 ): Promise<SkillApplyResult> {
   return api.post(`/knowledge/skills/${skillName}/apply`, { params })
 }
@@ -328,3 +328,4 @@ export async function applySkill(
 // ── 类型重导出（供组件直接使用） ──
 
 export type { KnowledgeIteration, KnowledgeSnapshot, CompareSnapshots } from '@/types'
+

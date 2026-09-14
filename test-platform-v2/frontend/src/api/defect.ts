@@ -18,11 +18,11 @@ export async function fetchDefect(id: number) {
   return api.get(`/defects/${id}`)
 }
 
-export async function createDefect(body: Record<string, any>) {
+export async function createDefect(body: Record<string, unknown>) {
   return api.post('/defects', body)
 }
 
-export async function updateDefect(id: number, body: Record<string, any>) {
+export async function updateDefect(id: number, body: Record<string, unknown>) {
   return api.put(`/defects/${id}`, body)
 }
 
@@ -83,3 +83,4 @@ export function getAttachmentUrl(defectId: number, attachmentId: number): string
 export async function deleteAttachment(defectId: number, attachmentId: number): Promise<void> {
   await api.delete(`/defects/${defectId}/attachments/${attachmentId}`)
 }
+

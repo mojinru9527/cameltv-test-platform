@@ -1,8 +1,9 @@
 import client, { cachedGet } from './client'
-import type { LoginResult, MenuItem, PublicAccessConfig } from '@/types'
+import type { MenuItem } from '@/types'
+import type { LoginOut, PublicAccessOut } from './apiContract'
 
 export function login(username: string, password: string) {
-  return client.post<unknown, LoginResult>('/auth/login', { username, password })
+  return client.post<unknown, LoginOut>('/auth/login', { username, password })
 }
 
 export interface RegisterPayload {
@@ -16,13 +17,13 @@ export interface RegisterPayload {
 
 /** 普通用户注册；受控环境可由后端策略要求平台邀请码。 */
 export function register(body: RegisterPayload) {
-  return client.post<unknown, LoginResult>('/auth/register', body)
+  return client.post<unknown, LoginOut>('/auth/register', body)
 }
 
 /** 未登录访客可读取的安全入口配置与模块目录。 */
 export function fetchPublicAccess(signal?: AbortSignal) {
-  if (signal) return client.get<unknown, PublicAccessConfig>('/auth/public-access', { signal })
-  return client.get<unknown, PublicAccessConfig>('/auth/public-access')
+  if (signal) return client.get<unknown, PublicAccessOut>('/auth/public-access', { signal })
+  return client.get<unknown, PublicAccessOut>('/auth/public-access')
 }
 
 /** P1-1: 通知后端清除 httpOnly 鉴权 cookie。 */
@@ -35,3 +36,7 @@ export function fetchMenus(signal?: AbortSignal) {
   // 整页刷新/路由重挂载不再重复请求静态菜单。
   return cachedGet<MenuItem[]>('/system/menus', undefined, { ttl: 60_000, signal })
 }
+
+
+
+

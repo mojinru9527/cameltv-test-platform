@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { createRole, deleteRole, fetchPermissions, fetchRoles, updateRole } from '@/api/system'
+import type { RoleCreate } from '@/api/apiContract'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
@@ -103,8 +104,11 @@ export default function RolesTab() {
   const doSave = async (v: RoleFormData) => {
     setSaving(true)
     try {
-      const payload: Record<string, any> = {
-        ...v,
+      const payload: RoleCreate = {
+        code: v.code,
+        name: v.name,
+        data_scope: v.data_scope ?? 'project',
+        remark: v.remark ?? '',
         permission_codes: checkedPerms,
       }
       if (editing?.id) {
@@ -313,3 +317,7 @@ export default function RolesTab() {
     </div>
   )
 }
+
+
+
+

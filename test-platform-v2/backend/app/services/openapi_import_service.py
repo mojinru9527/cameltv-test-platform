@@ -152,15 +152,19 @@ def confirm_openapi_import(
     skipped = 0
     errors = []
     source_label = _source_label(source_type)
+    existing_endpoints = {
+        (row.method.upper(), row.path): row
+        for row in db.query(ApiEndpoint).filter_by(
+            project_id=project_id,
+            service_id=service.id,
+        ).all()
+    }
 
     for ep_data in endpoints:
         try:
             method = ep_data["method"].upper()
             path = ep_data["path"]
-
-            existing = db.query(ApiEndpoint).filter_by(
-                project_id=project_id, service_id=service.id, method=method, path=path,
-            ).first()
+            existing = existing_endpoints.get((method, path))
 
             if existing:
                 # 更新已有接口
@@ -192,6 +196,7 @@ def confirm_openapi_import(
                     version=version,
                 )
                 db.add(endpoint)
+                existing_endpoints[(method, path)] = endpoint
                 created += 1
         except Exception as e:
             errors.append({"method": ep_data.get("method"), "path": ep_data.get("path"), "error": str(e)})

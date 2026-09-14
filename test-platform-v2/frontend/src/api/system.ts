@@ -1,12 +1,13 @@
-import client from './client'
+import client, { clearApiCache } from './client'
+import type { RoleCreate, RoleUpdate, UserCreate, UserUpdate } from './apiContract'
 import { API_BASE_URL } from './baseUrl'
 import { useAuthStore } from '@/stores/auth'
 
 // ── 用户 ──
 export function fetchUsers(signal?: AbortSignal) { return client.get('/system/users', { signal }) }
 export function fetchUser(id: number) { return client.get(`/system/users/${id}`) }
-export function createUser(body: any) { return client.post('/system/users', body) }
-export function updateUser(id: number, body: any) { return client.put(`/system/users/${id}`, body) }
+export function createUser(body: UserCreate) { return client.post('/system/users', body) }
+export function updateUser(id: number, body: UserUpdate) { return client.put(`/system/users/${id}`, body) }
 export function deleteUser(id: number) { return client.delete(`/system/users/${id}`) }
 
 // ── 注册邀请码（Batch 104）──
@@ -32,15 +33,15 @@ export function disableInviteCode(id: number) {
 
 // ── 角色 ──
 export function fetchRoles() { return client.get('/system/roles') }
-export function createRole(body: any) { return client.post('/system/roles', body) }
-export function updateRole(id: number, body: any) { return client.put(`/system/roles/${id}`, body) }
-export function deleteRole(id: number) { return client.delete(`/system/roles/${id}`) }
+export function createRole(body: RoleCreate) { clearApiCache('/system/menus'); return client.post('/system/roles', body) }
+export function updateRole(id: number, body: RoleUpdate) { clearApiCache('/system/menus'); return client.put(`/system/roles/${id}`, body) }
+export function deleteRole(id: number) { clearApiCache('/system/menus'); return client.delete(`/system/roles/${id}`) }
 
 // ── 权限 ──
 export function fetchPermissions() { return client.get('/system/permissions') }
 
 // ── 审计 ──
-export function fetchAuditLogs(params?: any) { return client.get('/system/audit-logs', { params }) }
+export function fetchAuditLogs(params?: Record<string, unknown>) { return client.get('/system/audit-logs', { params }) }
 
 /** 导出审计日志 CSV，返回 Blob 供前端下载 */
 export async function exportAuditLogsCsv(params?: { action?: string; keyword?: string }) {
@@ -70,3 +71,8 @@ export async function exportAuditLogsCsv(params?: { action?: string; keyword?: s
   document.body.removeChild(a)
   URL.revokeObjectURL(a.href)
 }
+
+
+
+
+

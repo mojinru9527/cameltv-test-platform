@@ -1,4 +1,4 @@
-import api from './client'
+import api, { type ApiRequestConfig } from './client'
 
 // 蓝湖证据包 OCR 前端契约（对齐后端 /api/v1/lanhu-evidence/*）
 
@@ -123,7 +123,7 @@ export async function fetchLanhuEvidenceJobs(params?: {
     params,
     signal,
     suppressErrorToast,
-  } as any)
+  } as ApiRequestConfig)
 }
 
 export async function fetchLanhuEvidenceJob(
@@ -155,7 +155,7 @@ export async function downloadLanhuEvidenceAsset(
     responseType: 'blob',
     signal,
     suppressErrorToast: true,
-  } as any)
+  } as ApiRequestConfig)
 }
 
 export async function reviewLanhuEvidencePage(
@@ -197,3 +197,6 @@ export async function clearLanhuCookie(): Promise<{ saved: boolean; cleared: boo
 export async function lanhuRelogin(username: string, password: string): Promise<{ ok: boolean; message: string }> {
   return api.post('/lanhu-evidence/login', { username, password })
 }
+
+
+
