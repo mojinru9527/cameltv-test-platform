@@ -50,7 +50,7 @@ jobs:
     needs: detect_changes
     if: ${{ always() }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:16-alpine
@@ -115,6 +115,28 @@ jobs:
         working-directory: test-platform-v2/backend
         run: |
           python -c "import app.main; print('import OK: routers/models resolve on clean checkout')"
+
+      - name: 依赖锁 Linux 解析校验
+        if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+        working-directory: test-platform-v2/backend
+        run: |
+          # Batch 240 shipped locks resolved on Windows, which silently dropped
+          # linux-only transitives (secretstorage / jeepney / uvloop) and made
+          # the api and ai-gateway images unbuildable. A full-resolution dry-run
+          # on linux is the cheapest guard for that defect class.
+          for lock in requirements.api.lock requirements.ai.lock requirements.runner.lock; do
+            echo "::group::resolve $lock"
+            python -m pip install --dry-run --quiet --require-hashes --ignore-installed -r "$lock"
+            echo "::endgroup::"
+          done
+
+      - name: API 镜像构建冒烟
+        if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+        run: |
+          # Real end-to-end guard: the api image must build from its own lock.
+          # Context is the repository root, matching docker-compose.yml.
+          docker build --target api -t cameltv-tp-api:ci-gate \
+            -f test-platform-v2/backend/Dockerfile .
 
       - name: Alembic 单头校验
         if: ${{ needs.detect_changes.outputs.backend == 'true' }}

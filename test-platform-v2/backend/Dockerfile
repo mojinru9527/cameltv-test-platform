@@ -1,11 +1,11 @@
-# ── Builder stage ──
-FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de AS builder
+# ── Builder stage (runner/combined: AI+Playwright) ──
+FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de AS builder-runner
 ENV VIRTUAL_ENV=/opt/venv
 RUN python -m venv /opt/venv
 ENV PATH=/opt/venv/bin:$PATH
 WORKDIR /app
-COPY test-platform-v2/backend/requirements.txt test-platform-v2/backend/requirements.lock ./
-RUN --mount=type=cache,target=/root/.cache/pip pip install --require-hashes -r requirements.lock
+COPY test-platform-v2/backend/requirements.runner.txt test-platform-v2/backend/requirements.runner.lock ./
+RUN --mount=type=cache,target=/root/.cache/pip pip install --require-hashes -r requirements.runner.lock
 
 # API dependencies: no FastEmbed/ONNX/NumPy/Playwright.
 FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de AS builder-api
@@ -81,7 +81,7 @@ WORKDIR /app
 
 # Keep Python dependencies outside root's home so the runtime user can import
 # them without widening permissions on /root.
-COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder-runner /opt/venv /opt/venv
 ENV VIRTUAL_ENV=/opt/venv \
     PATH=/opt/venv/bin:$PATH \
     PYTHONUNBUFFERED=1 \
