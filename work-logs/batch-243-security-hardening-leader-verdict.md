@@ -34,7 +34,7 @@
 ## 判决
 
 有条件通过。代码、QA 和本地硬门禁已达到合入前标准；在当前用户一次总确认前不得 push/PR。
-用户确认后需完成：
+首轮 CI 发现并修复 overlay 重复 `security_opt`（commit `43ec2eff`）；该提交改变了待推送范围，按门禁需重新展示并确认。\n\n用户确认后需完成：
 
 1. push `feature/platform-hardening-phases-1-4`；
 2. 创建 Draft PR 指向 `main`；
@@ -65,3 +65,4 @@
 | 18h planned | 0/0/0/1 | 2 | 权限模型适配 + 主题脚本测试契约迁移 | 开批先锁定权限矩阵、静态入口和测试读取路径 |
 
 **技能使用**：`cameltv-agent-team` → 六部门与 C 条件闭环；`cameltv-bug-guard` → 路由/副作用/安全回归；`cameltv-ui-conventions` → CSP 外置脚本不改变视觉与无障碍。
+

@@ -23,7 +23,7 @@
 | Compose contract | `docker compose config --quiet` | ✅ compose-config-ok |
 | Frontend image | `docker build .../frontend/Dockerfile` | ✅ image built |
 | HTML header smoke | Nginx container + `Invoke-WebRequest` | ✅ CSP/HSTS/X-Frame present；`theme-bootstrap.js` 200 |
-| Backend api image | `docker build --target api` | ⚠️ Docker daemon unavailable during local retry；CI required backend build job仍会执行 |
+| Exec overlay compose | `docker compose -f docker-compose.yml -f docker-compose.execution.yml config --quiet` | ✅ combined-compose-config-ok |\n| Execution compose contract | `python scripts/ops/test_execution_compose.py` | ✅ Ran 3 tests, OK |\n| Backend api image | `docker build --target api` | ⚠️ Docker daemon unavailable during local retry；CI required backend build job仍会执行 |
 
 ## 逐条件验证
 
@@ -66,7 +66,7 @@
 
 | # | 严重级 | 描述 | 证据 | 状态 |
 |---|--------|------|------|------|
-| 1 | P3 | 前端既有测试仍输出 act/NaN/Select warning，均为主干存量测试告警，与本批功能失败无关 | 前端全量测试 stderr | 记录，后续治理批次处理 |
+| 1 | P3 | 前端既有测试仍输出 act/NaN/Select warning，均为主干存量测试告警，与本批功能失败无关 | 前端全量测试 stderr | 记录，后续治理批次处理 |\n| 2 | P2 | 首轮 CI 发现 execution overlay 继承同值 `security_opt`，Compose 拒绝启动 | GitHub Actions run `34840283743` | ✅ 修复：最终服务显式声明；base/overlay config 与 `scripts/ops/test_execution_compose.py` 通过 |
 
 ## 发布建议
 
@@ -80,3 +80,4 @@
 | 18h planned | 0/0/0/1 | 2 | 资源适配 + 测试契约从内联脚本迁移到外置脚本 | Batch 开工即固定环境、权限和测试路径基线 |
 
 **技能使用**：`cameltv-agent-team`、`cameltv-bug-guard` → 六部门流水线、路由/副作用/安全契约核查。
+
