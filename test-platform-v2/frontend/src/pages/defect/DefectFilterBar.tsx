@@ -6,7 +6,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import SearchInput from '@/components/SearchInput'
 import { SEVERITY_MAP, STATUS_MAP } from './constants'
 

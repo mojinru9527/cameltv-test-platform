@@ -26,6 +26,7 @@ class PublicAccessOut(BaseModel):
 
     registration_enabled: bool
     invite_code_required: bool
+    password_reset_email_enabled: bool = False
     modules: list[MenuOut] = Field(default_factory=list)
 
 

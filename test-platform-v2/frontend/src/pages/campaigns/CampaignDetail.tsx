@@ -8,7 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import PageHeader from '@/components/PageHeader'
 import { CampaignProgress } from '@/components/trust/CampaignProgress'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'

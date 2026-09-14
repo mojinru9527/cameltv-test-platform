@@ -6,7 +6,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import { parseMaybeObject } from '../utils'
 import type { Journey, JourneyStep } from '@/api/production'
 

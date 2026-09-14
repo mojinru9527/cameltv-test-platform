@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
 import { Button } from '@/ui'
 import { Lightbulb, ArrowRight } from '@/lib/icons'
 import { cn } from '@/lib/utils'
@@ -53,4 +53,3 @@ export function EmptyStateGuide({ stepTitle, steps, primaryAction, className }: 
 }
 
 export default EmptyStateGuide
-

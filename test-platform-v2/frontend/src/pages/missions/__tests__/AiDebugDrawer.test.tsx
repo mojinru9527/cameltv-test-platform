@@ -1,7 +1,7 @@
 // AI Debug Drawer tests (v331-remediation-2 B2 / V30-085)
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { TooltipProvider } from '@/components/ui/tooltip'
+import { TooltipProvider } from '@/ui'
 
 import { AiDebugDrawer, parseTokenUsage } from '../AiDebugDrawer'
 import { useAuthStore } from '@/stores/auth'

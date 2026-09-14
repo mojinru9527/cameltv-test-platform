@@ -4,21 +4,21 @@ import { z } from 'zod'
 
 import { Button } from '@/ui'
 import { Input } from '@/ui'
-import { Textarea } from '@/components/ui/textarea'
+import { Textarea } from '@/ui'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import { Loader2 } from '@/lib/icons'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
 import { fetchScripts } from '@/api/uitest'

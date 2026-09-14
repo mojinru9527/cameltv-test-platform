@@ -4,7 +4,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from '@/ui'
 import { getTerm } from '@/lib/terminology'
 import { cn } from '@/lib/utils'
 

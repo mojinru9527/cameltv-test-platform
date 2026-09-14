@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import type { ModuleTreeNode } from '@/types'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
 import { Badge } from '@/ui'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+} from '@/ui'
 import { ChevronRight, Smartphone, Monitor, Globe, Shield, Package, type LucideIcon } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 

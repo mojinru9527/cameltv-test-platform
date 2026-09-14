@@ -1,5 +1,5 @@
 import { Badge, Button } from '@/ui'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
 import { Loader2, Search } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { TYPE_TAG } from './RequirementDocTable'

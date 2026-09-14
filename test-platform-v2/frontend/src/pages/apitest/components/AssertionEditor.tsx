@@ -18,10 +18,10 @@ import { useEffect, useState } from 'react'
 import { Plus, Trash2 } from '@/lib/icons'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/ui'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 
 type AssertionItem = {
   type: string

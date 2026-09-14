@@ -6,7 +6,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'

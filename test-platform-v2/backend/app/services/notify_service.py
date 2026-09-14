@@ -220,6 +220,40 @@ def _sync_send_email(host, port, user, password, msg):
         raise
 
 
+def send_password_reset_email(to_addr: str, reset_url: str) -> bool:
+    """Queue a password-reset email without blocking the auth request.
+
+    Returns False when the deployment has no complete SMTP/frontend link
+    configuration or the user has no deliverable address.
+    """
+    from app.core.config import settings
+
+    if not (to_addr and reset_url and settings.smtp_host and (settings.smtp_from or settings.smtp_user)):
+        return False
+
+    from email.mime.text import MIMEText
+
+    body = (
+        "你在 CamelTv 测试平台发起了密码重置。\n\n"
+        f"请在 30 分钟内打开以下链接设置新密码：\n{reset_url}\n\n"
+        "如果这不是你的操作，请忽略本邮件，现有密码不会改变。"
+    )
+    msg = MIMEText(body, "plain", "utf-8")
+    msg["Subject"] = "CamelTv 测试平台 — 密码重置"
+    msg["From"] = settings.smtp_from or settings.smtp_user
+    msg["To"] = to_addr
+
+    _get_notify_executor().submit(
+        _sync_send_email,
+        settings.smtp_host,
+        settings.smtp_port,
+        settings.smtp_user,
+        settings.smtp_password,
+        msg,
+    )
+    return True
+
+
 async def notify(db: Session, project_id: int, event: str, data: dict) -> dict:
     """Dispatch an event notification to all matching channels (fire-and-forget).
 

@@ -15,8 +15,8 @@ import {
   type LanhuEvidenceQuality,
 } from '@/api/lanhuEvidence'
 import { Button, Badge, Label } from '@/ui'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/ui'
+import { Textarea } from '@/ui'
 import {
   Dialog,
   DialogContent,
@@ -24,7 +24,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import {
   Table,
   TableBody,
@@ -32,7 +32,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import PageHeader from '@/components/PageHeader'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'

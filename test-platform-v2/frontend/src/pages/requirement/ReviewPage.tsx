@@ -4,16 +4,16 @@ import { toast } from 'sonner'
 
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
+import { Checkbox } from '@/ui'
 import { Input } from '@/ui'
-import { Textarea } from '@/components/ui/textarea'
+import { Textarea } from '@/ui'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import {
   ArrowLeft, CheckCircle2, XCircle, Edit, Import, ListFilter, Loader2,
   FileText, Layers, Search,

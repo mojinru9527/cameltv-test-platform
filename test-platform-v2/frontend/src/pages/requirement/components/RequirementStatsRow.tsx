@@ -1,5 +1,5 @@
 import StatCard from '@/components/StatCard'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/ui'
 import { Progress } from '@/ui'
 import { BookOpen, Layers, Sparkles } from '@/lib/icons'
 

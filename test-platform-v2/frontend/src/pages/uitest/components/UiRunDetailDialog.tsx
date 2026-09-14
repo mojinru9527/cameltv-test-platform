@@ -1,14 +1,14 @@
 import { Badge } from '@/ui'
 import { Button } from '@/ui'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/ui'
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+} from '@/ui'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui'
 import {
   AlertTriangle,
   Ban,

@@ -7,7 +7,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+} from '@/ui'
 import { getEnvironment } from '../uiShared'
 import type { Environment, UiJobItem } from '@/types'
 

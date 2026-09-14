@@ -5,14 +5,14 @@ import {
 } from '@/api/requirementModules'
 import type { ModuleAdminLinkOut, ModuleTreeNode } from '@/types'
 import { Button } from '@/ui'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
 import { Badge } from '@/ui'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from '@/ui'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+} from '@/ui'
 import {
   ChevronRight,
   Link2,

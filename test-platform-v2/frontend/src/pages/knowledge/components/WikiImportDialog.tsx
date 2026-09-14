@@ -7,10 +7,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import { Input } from '@/ui'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
+import { Label } from '@/ui'
+import { Switch } from '@/ui'
 import { Button } from '@/ui'
 import LanhuEvidenceDialog from './LanhuEvidenceDialog'
 import LanhuEvidenceJobDrawer from './LanhuEvidenceJobDrawer'

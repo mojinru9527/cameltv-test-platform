@@ -1,23 +1,14 @@
-import { type HTMLAttributes } from 'react'
+import type { ComponentProps } from 'react'
+
+import {
+  Badge as CanonicalBadge,
+  badgeVariants,
+} from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import type { VariantProps } from 'class-variance-authority'
 
 export type BadgeTone = 'success' | 'warning' | 'danger' | 'info' | 'neutral'
-
-const VARIANT_TO_TONE = {
-  default: 'neutral',
-  destructive: 'danger',
-  outline: 'neutral',
-  secondary: 'neutral',
-  ghost: 'neutral',
-} as const satisfies Record<string, BadgeTone>
-
-export type BadgeVariant = keyof typeof VARIANT_TO_TONE
-
-export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  tone?: BadgeTone
-  /** @deprecated Prefer `tone`; retained while existing consumers migrate. */
-  variant?: BadgeVariant
-}
+export type BadgeVariant = VariantProps<typeof badgeVariants>['variant']
 
 const toneClass: Record<BadgeTone, string> = {
   success: 'ui-badge-success bg-status-success-muted text-status-success',
@@ -27,28 +18,34 @@ const toneClass: Record<BadgeTone, string> = {
   neutral: 'ui-badge-neutral bg-secondary text-secondary-foreground',
 }
 
-function resolveTone(tone?: BadgeTone, variant?: BadgeVariant): BadgeTone {
-  if (tone) return tone
-  if (variant) return VARIANT_TO_TONE[variant]
-  return 'neutral'
+export interface BadgeProps extends ComponentProps<typeof CanonicalBadge> {
+  tone?: BadgeTone
+  variant?: BadgeVariant
 }
 
-export function Badge({ className, tone, variant, children, ...props }: BadgeProps) {
-  const resolved = resolveTone(tone, variant)
+/**
+ * Compatibility adapter for the legacy semantic `tone` API.
+ * Tone classes now decorate the canonical shadcn Badge implementation.
+ */
+export function Badge({
+  className,
+  tone,
+  variant = 'secondary',
+  children,
+  ...props
+}: BadgeProps) {
+  const resolvedVariant = tone ? 'secondary' : variant
+  const resolvedToneClass = tone ? toneClass[tone] : ''
+
   return (
-    <span
-      data-slot="badge"
-      data-tone={resolved}
-      className={cn(
-        'ui-badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-2xl border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap',
-        'transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
-        'aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 [&>svg]:pointer-events-none [&>svg]:size-3',
-        toneClass[resolved],
-        className,
-      )}
+    <CanonicalBadge
+      variant={resolvedVariant}
+      className={cn(resolvedToneClass, className)}
       {...props}
     >
       {children}
-    </span>
+    </CanonicalBadge>
   )
 }
+
+export { badgeVariants }

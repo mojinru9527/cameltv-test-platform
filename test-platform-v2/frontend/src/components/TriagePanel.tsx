@@ -15,8 +15,8 @@ import { toast } from 'sonner'
 
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
-import { Card, CardContent } from '@/components/ui/card'
-import { SkeletonText } from '@/components/ui/skeleton'
+import { Card, CardContent } from '@/ui'
+import { SkeletonText } from '@/ui'
 import EmptyState from '@/components/EmptyState'
 import {
   AlertDialog,
@@ -27,7 +27,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+} from '@/ui'
 
 import {
   Bug,

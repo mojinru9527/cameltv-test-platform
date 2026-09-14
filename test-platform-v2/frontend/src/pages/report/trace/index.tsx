@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
 import { Badge, SpatialChain, type ChainNode } from '@/ui'
 import StatCard from '@/components/StatCard'
 import ChartFrame from '@/components/charts/ChartFrame'

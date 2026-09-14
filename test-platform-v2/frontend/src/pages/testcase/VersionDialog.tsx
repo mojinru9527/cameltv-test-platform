@@ -8,7 +8,7 @@ import { Badge } from '@/ui'
 import { Button } from '@/ui'
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import type { TestCaseVersion, TestCaseVersionDetail } from '@/types'
 import { fetchVersionDetail } from '@/api/testcase'
 

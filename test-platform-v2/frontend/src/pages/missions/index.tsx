@@ -20,7 +20,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import {
   fetchMissions,

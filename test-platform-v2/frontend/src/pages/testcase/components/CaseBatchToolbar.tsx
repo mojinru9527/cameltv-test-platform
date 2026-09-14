@@ -5,7 +5,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import { Trash2 } from '@/lib/icons'
 
 interface CaseBatchToolbarProps {

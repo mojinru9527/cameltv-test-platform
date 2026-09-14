@@ -6,7 +6,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import { displayValue } from '../utils'
 
 export interface MaskEntry {

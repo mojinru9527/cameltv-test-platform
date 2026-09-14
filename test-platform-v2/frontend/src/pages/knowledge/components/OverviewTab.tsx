@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
 import { fetchKnowledgeOverview } from '@/api/knowledge'
 import type { KnowledgeOverview } from '@/types'
 import { Loader2 } from '@/lib/icons'

@@ -7,9 +7,9 @@ import { createRole, deleteRole, fetchPermissions, fetchRoles, updateRole } from
 import type { RoleCreate } from '@/api/apiContract'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
-import { Textarea } from '@/components/ui/textarea'
+import { Textarea } from '@/ui'
 import { Badge } from '@/ui'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Checkbox } from '@/ui'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
 import {
@@ -18,7 +18,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/ui'
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,7 +37,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+} from '@/ui'
 import { cn } from '@/lib/utils'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import { Plus, Loader2 } from '@/lib/icons'
@@ -317,7 +317,3 @@ export default function RolesTab() {
     </div>
   )
 }
-
-
-
-

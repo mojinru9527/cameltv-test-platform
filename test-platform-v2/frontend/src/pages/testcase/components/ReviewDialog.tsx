@@ -7,8 +7,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Textarea } from '@/components/ui/textarea'
+} from '@/ui'
+import { Textarea } from '@/ui'
 
 interface ReviewDialogProps {
   open: boolean

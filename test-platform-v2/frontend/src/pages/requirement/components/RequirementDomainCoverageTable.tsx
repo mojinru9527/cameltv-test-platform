@@ -1,7 +1,7 @@
 import { Badge } from '@/ui'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
 import Pagination from '@/components/Pagination'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui'
 
 interface Props {
   paginatedDomains: any[]

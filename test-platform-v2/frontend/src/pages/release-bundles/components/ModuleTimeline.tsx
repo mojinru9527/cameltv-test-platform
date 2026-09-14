@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Badge } from '@/ui'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
+import { Skeleton } from '@/ui'
 import { cn } from '@/lib/utils'
 
 interface ModuleVersionChange {

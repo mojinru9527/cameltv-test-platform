@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
   CardAction,
-} from '@/components/ui/card'
+} from '@/ui'
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import {
   Table,
   TableBody,
@@ -24,7 +24,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/ui'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
 import { FixtureStatusBadge } from './FixtureStatusBadge'
 import { FixtureManifestViewer } from './FixtureManifestViewer'

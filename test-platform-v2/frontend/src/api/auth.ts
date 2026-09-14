@@ -26,6 +26,19 @@ export function fetchPublicAccess(signal?: AbortSignal) {
   return client.get<unknown, PublicAccessOut>('/auth/public-access')
 }
 
+/** 请求密码重置邮件；后端采用防用户名枚举的统一响应。 */
+export function forgotPassword(username: string) {
+  return client.post<unknown, null>('/auth/forgot-password', { username })
+}
+
+/** 使用邮件中的一次性 token 设置新密码。 */
+export function resetPassword(token: string, newPassword: string) {
+  return client.post<unknown, null>('/auth/reset-password', {
+    token,
+    new_password: newPassword,
+  })
+}
+
 /** P1-1: 通知后端清除 httpOnly 鉴权 cookie。 */
 export function logoutApi() {
   return client.post<unknown, null>('/auth/logout')
@@ -36,7 +49,3 @@ export function fetchMenus(signal?: AbortSignal) {
   // 整页刷新/路由重挂载不再重复请求静态菜单。
   return cachedGet<MenuItem[]>('/system/menus', undefined, { ttl: 60_000, signal })
 }
-
-
-
-

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui'
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
 import {
@@ -8,7 +8,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/ui'
 import { fetchKnowledgeSources, fetchSourceChunks, verifyKnowledgeSource } from '@/api/knowledge'
 import type { KnowledgeChunk, KnowledgeSource } from '@/types'
 import { Loader2, Sparkles, BookOpen, Inbox, CheckCircle2, ChevronDown, ChevronRight } from '@/lib/icons'
