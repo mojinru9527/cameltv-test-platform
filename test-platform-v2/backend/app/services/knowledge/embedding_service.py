@@ -20,6 +20,10 @@ from app.core.resource_budget import configured_budget
 logger = logging.getLogger("knowledge.embedding")
 
 
+def _local_embedding_allowed() -> bool:
+    return bool(settings.worker_execution_enabled or settings.ai_gateway_role == "gateway")
+
+
 class EmbeddingService:
     """本地 onnx 文本嵌入（bge-small-zh-v1.5，512 维）。线程安全懒加载。"""
 
@@ -45,7 +49,7 @@ class EmbeddingService:
         return self._dim
 
     def _ensure_model(self) -> None:
-        if not settings.worker_execution_enabled:
+        if not _local_embedding_allowed():
             return
         if self._model is not None or self._unavailable:
             return
@@ -67,7 +71,11 @@ class EmbeddingService:
 
     def available(self) -> bool:
         """模型是否就绪（会触发首次加载/下载）。"""
-        if not settings.worker_execution_enabled:
+        from app.services.ai_gateway import remote
+
+        if remote.remote_requested():
+            return True
+        if not _local_embedding_allowed():
             return False
         budget = configured_budget()
         if self._model is not None and budget is None:
@@ -85,7 +93,24 @@ class EmbeddingService:
 
     def embed(self, texts: list[str]):
         """批量嵌入，返回 np.ndarray[float32, (n, dim)]（已 L2 归一化）；不可用/异常返回 None。"""
-        if not texts or not settings.worker_execution_enabled:
+        if not texts:
+            return None
+        from app.services.ai_gateway import remote
+
+        if remote.remote_requested():
+            try:
+                import numpy as np
+
+                arr = np.asarray(remote.embed(texts), dtype=np.float32)
+                if arr.ndim != 2 or arr.shape[0] != len(texts):
+                    return None
+                norms = np.linalg.norm(arr, axis=1, keepdims=True)
+                norms[norms == 0] = 1.0
+                return arr / norms
+            except Exception:  # noqa: BLE001 - remote embedding degrades like local embedding
+                logger.exception("远程嵌入计算失败")
+                return None
+        if not _local_embedding_allowed():
             return None
         budget = configured_budget()
         admission = budget.try_acquire('embedding', 'embedding:batch') if budget else nullcontext()

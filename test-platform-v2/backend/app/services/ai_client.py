@@ -542,6 +542,21 @@ def chat_completions_full(
     cache_namespace: str | None = None,
 ) -> dict[str, Any]:
     """Sync call returning content, finish state and normalized usage."""
+    from app.services.ai_gateway import remote as gateway_remote
+
+    if gateway_remote.remote_requested():
+        try:
+            return gateway_remote.chat_full(
+                project_id=project_id,
+                system_prompt=system_prompt,
+                user_message=user_message,
+                max_tokens=max_tokens or settings.ai_max_tokens,
+                temperature=temperature,
+                json_mode=json_mode,
+                cache_namespace=cache_namespace,
+            )
+        except gateway_remote.AiGatewayRemoteError as exc:
+            raise AiClientUnavailableError(str(exc)) from exc
     route = resolve_route(db, project_id, namespace=cache_namespace or "")
     if route is None:
         raise AiClientUnavailableError("AI service is not configured")
@@ -624,6 +639,21 @@ async def achat_completions_full(
     cache_namespace: str | None = None,
 ) -> dict[str, Any]:
     """Async call returning content, finish state and normalized usage."""
+    from app.services.ai_gateway import remote as gateway_remote
+
+    if gateway_remote.remote_requested():
+        try:
+            return await gateway_remote.achat_full(
+                project_id=project_id,
+                system_prompt=system_prompt,
+                user_message=user_message,
+                max_tokens=max_tokens or settings.ai_max_tokens,
+                temperature=temperature,
+                json_mode=json_mode,
+                cache_namespace=cache_namespace,
+            )
+        except gateway_remote.AiGatewayRemoteError as exc:
+            raise AiClientUnavailableError(str(exc)) from exc
     route = resolve_route(db, project_id, namespace=cache_namespace or "")
     if route is None:
         raise AiClientUnavailableError("AI service is not configured")

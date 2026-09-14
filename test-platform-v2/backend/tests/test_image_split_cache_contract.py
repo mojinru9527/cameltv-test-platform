@@ -16,6 +16,7 @@ def test_backend_dockerfile_has_light_api_and_heavy_runtime_targets():
     dockerfile = (BACKEND / "Dockerfile").read_text(encoding="utf-8")
     assert "FROM runtime-base AS runner" in dockerfile
     assert "FROM runtime-base AS api" in dockerfile
+    assert "FROM runtime-base AS ai-gateway" in dockerfile
     assert "FROM runner AS runtime" in dockerfile
 
     runner = dockerfile[dockerfile.index("FROM runtime-base AS runner"):dockerfile.index("FROM runtime-base AS api")]
@@ -42,6 +43,8 @@ def test_opt_in_execution_overlay_uses_split_targets():
     assert services["runner"]["build"]["target"] == "runner"
     assert services["aitde-worker"]["build"]["target"] == "runner"
     assert services["volume-permissions"]["build"]["target"] == "api"
+    assert services["ai-gateway"]["build"]["target"] == "ai-gateway"
+    assert services["backend"]["environment"]["AI_GATEWAY_URL"] == "http://ai-gateway:8100"
 
 
 def test_frontend_heavy_chunks_and_spa_shell_cache_policy():

@@ -165,5 +165,13 @@ USER cameltv:cameltv
 EXPOSE 8000
 CMD ["sh", "-c", "test \"$(alembic heads | grep -c ' (head)$')\" -eq 1 && alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port \"${PORT:-8000}\""]
 
+# AI Gateway is an internal Python service: no Node, DSH or Chromium.
+FROM runtime-base AS ai-gateway
+ENV AI_GATEWAY_ROLE=gateway
+COPY --chown=cameltv:cameltv test-platform-v2/backend/app ./app
+USER cameltv:cameltv
+EXPOSE 8100
+CMD ["uvicorn", "app.ai_gateway_app:app", "--host", "0.0.0.0", "--port", "8100"]
+
 # Preserve the combined image for existing release/rollback callers until cutover.
 FROM runner AS runtime

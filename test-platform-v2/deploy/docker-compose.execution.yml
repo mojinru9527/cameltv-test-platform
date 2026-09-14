@@ -10,8 +10,13 @@ services:
     environment:
       WORKER_EXECUTION_ENABLED: "false"
       RUNNER_HTTP_URL: http://runner:8000
+      AI_GATEWAY_URL: http://ai-gateway:8100
+      AI_GATEWAY_TOKEN: ${AI_GATEWAY_TOKEN:?AI_GATEWAY_TOKEN is required}
+      AI_GATEWAY_ROLE: remote
     depends_on:
       runner:
+        condition: service_healthy
+      ai-gateway:
         condition: service_healthy
     volumes:
       - tp-generated-specs:/app/tests/playwright/specs/generated
@@ -19,6 +24,32 @@ services:
     init: true
     mem_limit: ${API_MEMORY_LIMIT:?API_MEMORY_LIMIT is required}
     pids_limit: 128
+
+  ai-gateway:
+    extends:
+      file: docker-compose.yml
+      service: backend
+    image: ${AI_GATEWAY_IMAGE:?AI_GATEWAY_IMAGE is required}
+    build:
+      target: ai-gateway
+    command: ["uvicorn", "app.ai_gateway_app:app", "--host", "0.0.0.0", "--port", "8100"]
+    environment:
+      AI_GATEWAY_ROLE: gateway
+      AI_GATEWAY_TOKEN: ${AI_GATEWAY_TOKEN:?AI_GATEWAY_TOKEN is required}
+      WORKER_EXECUTION_ENABLED: "false"
+    expose:
+      - "8100"
+    init: true
+    mem_limit: ${AI_GATEWAY_MEMORY_LIMIT:?AI_GATEWAY_MEMORY_LIMIT is required}
+    pids_limit: 128
+    stop_grace_period: 60s
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/internal/ai/v1/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
 
   runner:
     extends:
@@ -29,6 +60,9 @@ services:
       target: runner
     environment:
       WORKER_EXECUTION_ENABLED: "true"
+      AI_GATEWAY_URL: http://ai-gateway:8100
+      AI_GATEWAY_TOKEN: ${AI_GATEWAY_TOKEN:?AI_GATEWAY_TOKEN is required}
+      AI_GATEWAY_ROLE: remote
       DSH_RUNTIME: ${DSH_RUNTIME:-node}
       HEAVY_TASK_BUDGET_ENABLED: "true"
       HEAVY_TASK_BUDGET_CAPACITY: "1"
@@ -51,6 +85,9 @@ services:
       target: runner
     environment:
       WORKER_EXECUTION_ENABLED: "true"
+      AI_GATEWAY_URL: http://ai-gateway:8100
+      AI_GATEWAY_TOKEN: ${AI_GATEWAY_TOKEN:?AI_GATEWAY_TOKEN is required}
+      AI_GATEWAY_ROLE: remote
       HEAVY_TASK_BUDGET_ENABLED: "true"
       HEAVY_TASK_BUDGET_CAPACITY: "1"
       ORCHESTRATION_BUDGET_CAPACITY: "1"

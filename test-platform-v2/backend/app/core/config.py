@@ -172,6 +172,9 @@ class Settings(BaseSettings):
 
     # ── Phase 2: 独立本地 OpenAI-compatible Runtime + Shadow Mode ──
     ai_local_runtime_enabled: bool = False
+    ai_gateway_url: str = ""
+    ai_gateway_token: str = ""
+    ai_gateway_role: str = "embedded"  # embedded | remote | gateway
     ai_runtime_mode: str = "cloud_only"  # cloud_only | shadow | local_preferred | local_only
     ai_local_fallback_to_cloud: bool = True
     ai_local_base_url: str = "http://127.0.0.1:11434/v1"
