@@ -25,6 +25,9 @@ class ExecutionComposeTests(unittest.TestCase):
             'ADMIN_PASSWORD': 'compose-validation-only', 'TESTER_PASSWORD': 'compose-validation-only',
             'COOKIE_SECURE': 'false', 'DATABASE_URL': 'sqlite:////data/compose-test.db',
             'API_IMAGE': 'cameltv-tp-api:capacity-local', 'RUNNER_IMAGE': 'cameltv-tp-runner:capacity-local',
+            'AI_GATEWAY_IMAGE': 'cameltv-tp-ai-gateway:capacity-local',
+            'AI_GATEWAY_TOKEN': 'compose-validation-only',
+            'AI_GATEWAY_MEMORY_LIMIT': '512m',
             'API_MEMORY_LIMIT': '512m', 'RUNNER_MEMORY_LIMIT': '1536m',
             'TEMPORAL_WORKER_MEMORY_LIMIT': '512m',
         })
@@ -45,6 +48,11 @@ class ExecutionComposeTests(unittest.TestCase):
         self.assertEqual(api['environment']['WORKER_EXECUTION_ENABLED'], 'false')
         self.assertEqual(runner['environment']['WORKER_EXECUTION_ENABLED'], 'true')
         self.assertEqual(api['depends_on']['runner']['condition'], 'service_healthy')
+        gateway = self.services['ai-gateway']
+        self.assertEqual(gateway['build']['target'], 'ai-gateway')
+        self.assertEqual(gateway['environment']['AI_GATEWAY_ROLE'], 'gateway')
+        self.assertEqual(api['environment']['AI_GATEWAY_URL'], 'http://ai-gateway:8100')
+        self.assertEqual(api['depends_on']['ai-gateway']['condition'], 'service_healthy')
         self.assertNotIn('runner', runner['depends_on'])
         self.assertNotIn('backend', runner['depends_on'])
         self.assertEqual(api['command'][0], 'uvicorn')
