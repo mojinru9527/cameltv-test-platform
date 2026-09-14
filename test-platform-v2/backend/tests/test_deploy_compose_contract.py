@@ -146,7 +146,7 @@ def test_backend_image_installs_locked_ui_lanhu_and_media_runtime() -> None:
     assert "python -m playwright install chromium" in dockerfile
     assert "playwright install --with-deps chromium" in dockerfile
     assert "PLAYWRIGHT_BROWSERS_PATH=/ms-playwright" in dockerfile
-    for stage in ('builder', 'provider', 'runtime-base'):
+    for stage in ('builder', 'builder-api', 'builder-ai', 'provider', 'runtime-base', 'runtime-api-base', 'runtime-ai-base'):
         assert re.search(rf'^FROM python:3\.12-slim@sha256:[0-9a-f]{{64}} AS {stage}$',
                          dockerfile, re.MULTILINE)
     assert (
@@ -154,6 +154,8 @@ def test_backend_image_installs_locked_ui_lanhu_and_media_runtime() -> None:
         "test-platform-v2/backend/requirements.lock ./"
     ) in dockerfile
     assert "pip install --require-hashes -r requirements.lock" in dockerfile
+    assert "pip install --require-hashes -r requirements.api.lock" in dockerfile
+    assert "pip install --require-hashes -r requirements.ai.lock" in dockerfile
     assert "--mount=type=cache,target=/root/.cache/pip" in dockerfile
     assert (
         'pip install --no-cache-dir --no-deps --force-reinstall '
@@ -198,9 +200,9 @@ def test_backend_runtime_uses_non_root_user_and_writable_paths() -> None:
     assert dockerfile.index(chown) < dockerfile.index(runtime_user)
     assert dockerfile.index("npm ci") < dockerfile.index(runtime_user)
     assert dockerfile.index("lanhu_mcp_server.py") < dockerfile.index(runtime_user)
-    for target in ('runner', 'api'):
+    for base, target in (('runtime-base', 'runner'), ('runtime-api-base', 'api'), ('runtime-ai-base', 'ai-gateway')):
         stage = next(stage for stage in re.split(r'^FROM ', dockerfile, flags=re.MULTILINE)
-                     if stage.startswith(f'runtime-base AS {target}\n'))
+                     if stage.startswith(f'{base} AS {target}\n'))
         assert [line.strip() for line in stage.splitlines()
                 if line.lstrip().startswith('USER ')] == [runtime_user]
     assert 'FROM runner AS runtime' in dockerfile  # Combined target inherits nonroot.

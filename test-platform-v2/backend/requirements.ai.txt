@@ -1,0 +1,3 @@
+-r requirements.api.txt
+fastembed>=0.3
+numpy>=1.26

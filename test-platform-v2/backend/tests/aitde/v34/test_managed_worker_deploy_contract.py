@@ -60,7 +60,7 @@ def test_backend_image_contains_managed_worker_launcher() -> None:
         "COPY --chmod=0555 test-platform-v2/deploy/aitde-runtime/scripts/start-worker.sh "
         "/usr/local/bin/start-aitde-worker" in dockerfile
     )
-    assert dockerfile.index('FROM runtime-base AS runner') < dockerfile.index('start-worker.sh') < dockerfile.index('FROM runtime-base AS api')
+    assert dockerfile.index('FROM runtime-base AS runner') < dockerfile.index('start-worker.sh') < dockerfile.index('FROM runtime-api-base AS api')
     assert 'BACKEND_APP_DIR=${BACKEND_APP_DIR:-' in launcher
     assert 'cd "$BACKEND_APP_DIR"' in launcher
     assert 'heartbeat.pid' in launcher
