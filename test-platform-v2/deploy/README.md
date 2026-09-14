@@ -56,6 +56,11 @@ production 在基础设施就绪后使用不同 `COMPOSE_PROJECT_NAME`、端口�
 | `PLATFORM_FRONTEND_URL` | 无 | 用户固定访问的完整 HTTPS 来源 |
 | `FRONTEND_PORT` | `80` | 前端访问端口 |
 | `ALLOWED_ORIGINS` | 无 | 最终 HTTPS 入口的精确来源 |
+| `FORWARDED_ALLOW_IPS` | Compose 中 `*` | Uvicorn 可信反向代理地址；后端未直接暴露时保持前端容器/内网 CIDR，直接暴露时必须改为明确网段 |
+| `MAX_REQUEST_BODY_BYTES` | `104857600` | ASGI 实际接收字节上限，分块请求同样受限 |
+| `OUTBOUND_MAX_RESPONSE_BYTES` | `10485760` | OpenAPI URL 导入最大响应体，防止无界读取 |
+| `EXECUTION_SANDBOX_ENABLED` | `true` | Playwright 子进程最小环境和 POSIX 资源限制总开关 |
+| `EXECUTION_MEMORY_LIMIT_MB` | `2048` | Runner 子进程地址空间上限，最终仍以容器 memory limit 为准 |
 | `ELK_BASE_URL` | (空) | Kibana 地址，用于 traceId 链路 |
 | `ELK_INDEX` | `*` | ELK 索引 pattern |
 | `COMPOSE_PROFILES` | (空) | 生产设为 `aitde-worker` 后由 Compose 管理 Durable Worker |
@@ -204,3 +209,4 @@ Compose 固定 `AUTO_CREATE_TABLES=false`。必须由外层负载均衡器或反
 **数据库错误**：删除 volume 重建 `docker compose down -v && docker compose up -d`
 
 > `docker compose down -v` 会永久删除数据，只能在确认已有备份并明确需要重建时执行。
+

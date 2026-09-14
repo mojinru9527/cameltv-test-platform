@@ -71,7 +71,7 @@ export default function UiJobDetailSheet({
               </div>
             </dl>
 
-            {hasPerm('uitest:trigger') && (
+            {hasPerm('uitest:code_execute') && (
               <div>
                 <Button
                   onClick={() => onRequestTrigger(detail)}
@@ -145,3 +145,4 @@ export default function UiJobDetailSheet({
     </Sheet>
   )
 }
+

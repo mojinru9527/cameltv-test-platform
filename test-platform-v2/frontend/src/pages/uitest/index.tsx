@@ -216,7 +216,7 @@ export default function UiTestPage() {
             编辑
           </Button>
         )}
-        {hasPerm('uitest:trigger') && (
+        {hasPerm('uitest:code_execute') && (
           <Button
             size="xs"
             variant="secondary"
@@ -436,7 +436,7 @@ export default function UiTestPage() {
               <RotateCcw className="size-4" />
               刷新
             </Button>
-            {hasPerm('uitest:create') && (
+            {hasPerm('uitest:code_execute') && (
               <Button onClick={() => { form.reset({ name: '', description: '', test_spec: '', browser: 'chromium', environment_id: environments[0]?.id ?? null, case_id: null, cron_expression: '', schedule_enabled: false }); setEditing(null); setDrawer(true) }}>
                 <Plus className="size-4" />
                 新建任务
@@ -572,3 +572,4 @@ export default function UiTestPage() {
     </div>
   )
 }
+
