@@ -116,3 +116,15 @@ ELK_INDEX=cameltv-*
 ```
 
 Keep `ELK_BASE_URL` blank for local development.
+
+## 质量门禁
+
+```bash
+pip install -r requirements-quality.txt
+cd ../..
+python scripts/ci/quality_ratchet.py
+cd test-platform-v2/backend
+python -X utf8 -m pip_audit -r requirements.txt --progress-spinner off
+```
+
+`quality-ratchet-baseline.json` 记录现有完整 Ruff/mypy findings 的精确计数；正常开发只允许减少，不允许新增。`--update` 只能在明确完成基线收口评审后使用。

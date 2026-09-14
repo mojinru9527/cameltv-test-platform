@@ -166,7 +166,7 @@ pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor 
 
 ### 3.1 代码质量
 
-- [ ] **硬门禁通过**: 后端 `ruff check app/ --select F821`，前端 `npm run typecheck && npm run build`
+- [ ] **硬门禁通过**: 后端 `ruff check app/ --select F821` + `python scripts/ci/quality_ratchet.py` + `pip-audit -r requirements.txt`；前端 `npm run typecheck && npm run lint && npm run build && npm run test:a11y:ci && npm run lighthouse:a11y` + `npm audit --omit=dev --audit-level=high`
 - [ ] **Clean Code 门禁（G0–G2 机械项）**: 一键跑 `pwsh scripts/git/dev-gate.ps1 -RepositoryPath (Get-Location).Path`（串起 `scan-common-bugs` 提交卫生 + ruff F821 + 前端 typecheck/lint + 路由层守卫测试）；G0–G2 出现 HARD/类型/守卫失败即 Block，见 [docs/code-development-gate.md](docs/code-development-gate.md)。G3 行为验收走 `tests/clean-code/*.feature`（Gherkin），G4 由 CI 全量兜底。
 - [ ] **相关测试通过**: 后端执行受影响模块 Pytest，前端执行受影响模块 Vitest
 - [ ] **全量回归已记录**: PR 前执行后端 `pytest`、前端 `npm test`；若存在已知基线失败，必须列出基线与本分支失败集合，确认无新增失败，禁止只写“历史问题”
@@ -226,7 +226,7 @@ pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor 
 
 ### 4.3 已知差距
 
-- 全量 Ruff、mypy、覆盖率阈值和 a11y 中仍有历史债务，暂由扩展工作流报告；运行时 F821、全量测试、类型检查和构建必须阻断
+- 全量 Ruff/mypy 仍含历史债务，但已通过 `quality-ratchet-baseline.json` 进入 required checks 的只减不增门禁；F821、全量测试、类型检查、构建、axe/Lighthouse 和生产依赖审计必须阻断。覆盖率阈值仍由扩展工作流观察
 - 单人仓库无法要求 PR 作者自己审批，因此远端以 required checks、禁止强推/删除和 Agent Team PR 审计作为合并门禁
 - `lanhu-mcp` 是后端蓝湖 Provider 的运行/开发依赖，必须通过 `.gitmodules` 在干净检出中初始化
 - push 到 `main` 不再重复双端全量；由 `main-merge-smoke.yml` 合并冒烟 + 每日定时回归（api-regression / pr-check 观察）兜底主干健康
@@ -260,4 +260,3 @@ pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor 
 - 测试策略: [docs/testing-strategy.md](docs/testing-strategy.md)
 - CI 流程: [deploy/CLAUDE.md](deploy/CLAUDE.md)
 - ADR: [ADR-0014 单一 main 主干与 AI Worktree 隔离](docs/adr/0014-single-main-trunk-ai-worktrees.md)
-

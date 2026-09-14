@@ -73,3 +73,14 @@ npm run gen:api    # 读 http://localhost:8000/openapi.json → src/types/api.d.
 ```bash
 npm run build      # 产物在 dist/，由 Nginx 托管（见 Dockerfile）
 ```
+
+## 质量门禁
+
+```bash
+npm run build
+npm run test:a11y:ci
+npm run lighthouse:a11y
+npm audit --omit=dev --audit-level=high --registry=https://registry.npmjs.org
+```
+
+`lighthouse:a11y` 会按 `.lighthouserc.json` 自动启动 `vite preview`，并以 accessibility >= 0.9 作为错误门禁；失败不再通过 shell `|| echo` 吞掉。
