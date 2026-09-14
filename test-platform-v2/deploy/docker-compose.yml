@@ -31,6 +31,9 @@ services:
       context: ../..
       dockerfile: test-platform-v2/backend/Dockerfile
       target: api
+    cap_drop:
+      - ALL
+    pids_limit: 512
     environment:
       - ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT is required}
       # Split default: backend is the slim API process and delegates AI to the
@@ -54,6 +57,19 @@ services:
       - DB_POOL_SIZE=${DB_POOL_SIZE:-10}
       - DB_MAX_OVERFLOW=${DB_MAX_OVERFLOW:-20}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost}
+      # The backend is not published directly in compose. Nginx is the only
+      # ingress in the private network, so explicit proxy trust is safe here.
+      - FORWARDED_ALLOW_IPS=${FORWARDED_ALLOW_IPS:-*}
+      - EXECUTION_SANDBOX_ENABLED=${EXECUTION_SANDBOX_ENABLED:-true}
+      - EXECUTION_CPU_LIMIT_SECONDS=${EXECUTION_CPU_LIMIT_SECONDS:-300}
+      - EXECUTION_MEMORY_LIMIT_MB=${EXECUTION_MEMORY_LIMIT_MB:-2048}
+      - EXECUTION_FILE_SIZE_LIMIT_MB=${EXECUTION_FILE_SIZE_LIMIT_MB:-128}
+      - EXECUTION_OPEN_FILES_LIMIT=${EXECUTION_OPEN_FILES_LIMIT:-4096}
+      - EXECUTION_PROCESS_LIMIT=${EXECUTION_PROCESS_LIMIT:-256}
+      - MAX_REQUEST_BODY_BYTES=${MAX_REQUEST_BODY_BYTES:-104857600}
+      - OUTBOUND_REQUEST_TIMEOUT_SECONDS=${OUTBOUND_REQUEST_TIMEOUT_SECONDS:-20}
+      - OUTBOUND_MAX_REDIRECTS=${OUTBOUND_MAX_REDIRECTS:-5}
+      - OUTBOUND_MAX_RESPONSE_BYTES=${OUTBOUND_MAX_RESPONSE_BYTES:-10485760}
       - ELK_BASE_URL=${ELK_BASE_URL:-}
       - ELK_INDEX=${ELK_INDEX:-*}
       # ── AI / LLM ──
@@ -225,6 +241,8 @@ services:
     init: true
     mem_limit: ${AI_GATEWAY_MEMORY_LIMIT:-1024m}
     pids_limit: 128
+    security_opt:
+      - no-new-privileges:true
     stop_grace_period: 60s
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/internal/ai/v1/health')"]
@@ -253,6 +271,8 @@ services:
     init: true
     mem_limit: ${RUNNER_MEMORY_LIMIT:-1536m}
     pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
     stop_grace_period: 60s
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
@@ -310,3 +330,5 @@ volumes:
     driver: local
   pg-data:
     driver: local
+
+

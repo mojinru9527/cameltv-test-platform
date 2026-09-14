@@ -188,7 +188,7 @@ Pipeline 流程：Checkout → Backend Lint → Backend Test(pytest) → Fronten
 
 ## API 文档
 
-后端由 FastAPI 运行时生成 OpenAPI：`/openapi.json`、`/docs`（Swagger UI）和 `/redoc`。业务路由统一位于 `/api/v1`，健康检查位于 `/health`。前端类型需在后端契约可访问时显式运行 `npm run gen:api` 生成，仓库中的生成文件不能替代运行时契约核对。
+后端由 FastAPI 运行时生成 OpenAPI：`/openapi.json`、`/docs`（Swagger UI）和 `/redoc`。业务路由统一位于 `/api/v1`，健康检查位于 `/health`。生产前端 Nginx 已显式代理这些固定路径，不能再由 SPA fallback 返回 `200 text/html`。前端类型需在后端契约可访问时显式运行 `npm run gen:api` 生成，仓库中的生成文件不能替代运行时契约核对。
 
 API 测试资产导入支持 OpenAPI 3.x 与 Swagger 2.0 的 JSON/YAML 文本或 URL，并提供预览/确认流程；Knife4j/Swagger 文档 URL 作为来源类型记录。该导入能力只证明契约解析与资产入库，不代表当前 Test5 六服务或生产接口已经执行通过。
 
@@ -207,3 +207,4 @@ API 测试资产导入支持 OpenAPI 3.x 与 Swagger 2.0 的 JSON/YAML 文本或
 ## 凭据管理
 
 部署人员通过未跟踪的 `.env` 设置首批账号密码；普通用户由管理员在“系统管理”中创建。真实密码、Token、API Key、Webhook 和 VPN 文件不得提交到 Git。
+

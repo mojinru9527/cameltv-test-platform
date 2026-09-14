@@ -126,7 +126,7 @@ def upload_dataset(
                 return R(code=1, msg=f"文件大小超过 10MB 限制 (got {cl / (1024*1024):.1f} MB)")
 
     # Size check: 10 MB limit (二次校验)
-    content_bytes = file.file.read()
+    content_bytes = file.file.read(10 * 1024 * 1024 + 1)
     if len(content_bytes) > 10 * 1024 * 1024:
         return R(code=1, msg="文件大小超过 10MB 限制")
 

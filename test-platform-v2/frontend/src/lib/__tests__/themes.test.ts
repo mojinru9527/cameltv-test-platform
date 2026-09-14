@@ -73,7 +73,7 @@ describe('production theme registry', () => {
   })
 
   it('keeps the synchronous first-paint bootstrap aligned with the typed catalog', () => {
-    const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8')
+    const html = readFileSync(resolve(process.cwd(), 'public/theme-bootstrap.js'), 'utf8')
     const defaultTheme = html.match(/const defaultTheme = '([^']+)'/)?.[1]
     const knownThemeBlock = html.match(/const knownThemes = new Set\(\[([\s\S]*?)\]\)/)?.[1] ?? ''
     const legacyThemeBlock = html.match(/const legacyThemes = new Map\(\[([\s\S]*?)\]\)/)?.[1] ?? ''

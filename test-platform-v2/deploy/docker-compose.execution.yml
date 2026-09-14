@@ -24,6 +24,8 @@ services:
     init: true
     mem_limit: ${API_MEMORY_LIMIT:?API_MEMORY_LIMIT is required}
     pids_limit: 128
+    security_opt:
+      - no-new-privileges:true
 
   ai-gateway:
     extends:
@@ -112,3 +114,4 @@ volumes:
     driver: local
   tp-generated-jobs:
     driver: local
+

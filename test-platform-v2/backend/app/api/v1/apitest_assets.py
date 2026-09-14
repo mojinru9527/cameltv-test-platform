@@ -14,6 +14,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
+from app.core.outbound_policy import OutboundPolicyError, safe_get_text
 from app.core.deps import CurrentUser, require_permission
 from app.schemas.api_asset import (
     ApiEndpointCreate,
@@ -68,18 +69,15 @@ def _resolve_spec(source_type: str, source_ref: str, spec_content: str | None) -
     - openapi_text/file: 文字/文件内容
     """
     import yaml as _yaml
+    from urllib.parse import urljoin, urlparse
 
     raw = spec_content or ""
 
     # URL 导入
     if source_type in ("openapi_url", "swagger_doc_url") and source_ref:
         try:
-            import httpx
-            from urllib.parse import urljoin, urlparse
-
-            resp = httpx.get(source_ref, timeout=30, follow_redirects=True)
-            resp.raise_for_status()
-            raw = resp.text
+            response = safe_get_text(source_ref)
+            raw = response.text
 
             # 如果返回的是 HTML 页面（Knife4j/Swagger UI），尝试发现真实 spec URL
             if raw.strip().lower().startswith("<!doctype") or "<html" in raw[:512].lower():
@@ -99,13 +97,12 @@ def _resolve_spec(source_type: str, source_ref: str, spec_content: str | None) -
                     candidates.insert(0, f"{base}{group_base}/v3/api-docs")
                     candidates.insert(1, f"{base}{group_base}/v2/api-docs")
 
-                # 尝试各候选 URL
                 spec_raw = None
                 for url in candidates:
                     try:
-                        r = httpx.get(url, timeout=15)
-                        if r.status_code == 200:
-                            body = r.text.strip()
+                        candidate = safe_get_text(url)
+                        if candidate.status_code == 200:
+                            body = candidate.text.strip()
                             # swagger-resources 返回 JSON 数组 — 取第一个 location
                             if url.endswith("swagger-resources"):
                                 try:
@@ -114,15 +111,19 @@ def _resolve_spec(source_type: str, source_ref: str, spec_content: str | None) -
                                         loc = resources[0].get("location") or resources[0].get("url", "")
                                         if loc:
                                             loc_url = urljoin(base, loc)
-                                            r2 = httpx.get(loc_url, timeout=15)
-                                            if r2.status_code == 200:
-                                                spec_raw = r2.text
+                                            discovered = safe_get_text(loc_url)
+                                            if discovered.status_code == 200:
+                                                spec_raw = discovered.text
                                                 break
                                     continue
+                                except OutboundPolicyError:
+                                    raise
                                 except Exception:
-                                    logger.warning("接口发现响应解析失败，跳过该 endpoint")
+                                    logger.warning("接口发现响应解析失败，跳过 endpoint")
                             spec_raw = body
                             break
+                    except OutboundPolicyError:
+                        raise
                     except Exception:
                         continue
 
@@ -130,6 +131,8 @@ def _resolve_spec(source_type: str, source_ref: str, spec_content: str | None) -
                     raw = spec_raw
                 else:
                     return None
+        except OutboundPolicyError:
+            raise
         except Exception:
             return None
 
@@ -147,6 +150,11 @@ def _resolve_spec(source_type: str, source_ref: str, spec_content: str | None) -
             return None
 
 
+def _resolve_spec_or_400(source_type: str, source_ref: str, spec_content: str | None) -> dict | None:
+    try:
+        return _resolve_spec(source_type, source_ref, spec_content)
+    except OutboundPolicyError as exc:
+        raise HTTPException(400, str(exc)) from exc
 def _batch_generate_for_endpoints(db: Session, batch_id: int, project_id: int) -> tuple[int, list[int]]:
     """导入后批量生成基础用例。返回 (生成条数, 创建的用例 id 列表)。"""
     endpoints = openapi_import_service.list_endpoints_by_import_batch(db, batch_id, project_id)
@@ -332,7 +340,7 @@ def import_preview(
     from app.services.openapi_import_service import preview_openapi_import_with_db
 
     pid = _current_project_id(current)
-    spec = _resolve_spec(body.source_type, body.source_ref, body.spec_content)
+    spec = _resolve_spec_or_400(body.source_type, body.source_ref, body.spec_content)
     if not spec:
         raise HTTPException(400, "无法解析 OpenAPI 文档，请检查输入内容")
 
@@ -351,7 +359,7 @@ def import_confirm(
     from app.services.openapi_import_service import confirm_openapi_import
 
     pid = _current_project_id(current)
-    spec = _resolve_spec(body.source_type, body.source_ref, body.spec_content)
+    spec = _resolve_spec_or_400(body.source_type, body.source_ref, body.spec_content)
     if not spec:
         raise HTTPException(400, "无法解析 OpenAPI 文档")
 

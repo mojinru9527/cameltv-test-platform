@@ -51,7 +51,7 @@ beforeAll(() => {
 describe('UI 自动化页面请求状态', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    useAuthStore.setState({ permissions: ['uitest:list', 'uitest:create'] })
+    useAuthStore.setState({ permissions: ['uitest:list', 'uitest:create', 'uitest:code_execute'] })
     api.fetchUiJobs.mockResolvedValue({ total: 0, items: [], page: 1, page_size: 20 })
     api.fetchScripts.mockResolvedValue(['specs/sports-smoke.spec.ts'])
     api.triggerUiJob.mockResolvedValue({ id: 1, status: 'pending' })
@@ -107,7 +107,7 @@ describe('UI 自动化页面请求状态', () => {
 
   it('生产任务展示目标并在显式确认后提交 confirm_prod', async () => {
     useAuthStore.setState({
-      permissions: ['uitest:list', 'uitest:trigger', 'uitest:trigger_prod'],
+      permissions: ['uitest:list', 'uitest:trigger', 'uitest:code_execute', 'uitest:trigger_prod'],
     })
     environmentApi.fetchEnvironments.mockResolvedValue([
       {
@@ -156,7 +156,7 @@ describe('UI 自动化页面请求状态', () => {
   })
 
   it('缺少生产执行权限时禁用生产任务执行按钮', async () => {
-    useAuthStore.setState({ permissions: ['uitest:list', 'uitest:trigger'] })
+    useAuthStore.setState({ permissions: ['uitest:list', 'uitest:trigger', 'uitest:code_execute'] })
     environmentApi.fetchEnvironments.mockResolvedValue([
       {
         id: 9,
@@ -197,3 +197,4 @@ describe('UI 自动化页面请求状态', () => {
     expect(trigger.getAttribute('title')).toContain('uitest:trigger_prod')
   })
 })
+

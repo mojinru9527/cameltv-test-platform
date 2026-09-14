@@ -48,7 +48,7 @@ FORBIDDEN_TESTER_CODES = {
     "agent:run", "agent:admin",
     "ai_artifact:import",
     "lanhu_evidence:import", "lanhu_evidence:review",
-    "integration:sync_prod", "apitest:execute_prod", "uitest:trigger_prod",
+    "integration:sync_prod", "apitest:execute_prod", "uitest:trigger_prod", "uitest:code_execute",
     "report:delete", "defect:delete", "mission:delete",
 }
 

@@ -126,6 +126,7 @@ _ACTIONS = [
     ("uitest:update", "编辑UI自动化任务", "button"),
     ("uitest:delete", "删除UI自动化任务", "button"),
     ("uitest:trigger", "触发UI自动化", "button"),
+    ("uitest:code_execute", "执行自定义 Playwright 代码", "button"),
     ("uitest:trigger_prod", "触发生产环境UI自动化", "button"),
     # API 测试
     ("apitest:execute", "执行接口测试", "button"),

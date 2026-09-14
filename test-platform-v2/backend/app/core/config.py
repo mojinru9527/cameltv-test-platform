@@ -24,6 +24,22 @@ class Settings(BaseSettings):
     heavy_task_budget_enabled: bool = False
     worker_execution_enabled: bool = True
     runner_http_url: str = ""
+    # Security boundary for user-influenced Playwright/Node execution. This is
+    # defense in depth, not a substitute for a dedicated sandbox container.
+    execution_sandbox_enabled: bool = True
+    execution_cpu_limit_seconds: int = 300
+    execution_memory_limit_mb: int = 2048
+    execution_file_size_limit_mb: int = 128
+    execution_open_files_limit: int = 4096
+    execution_process_limit: int = 256
+    # Actual ASGI body cap. Content-Length is an optimisation, never the
+    # enforcement point, because chunked requests can omit it.
+    max_request_body_bytes: int = 100 * 1024 * 1024
+    # Outbound OpenAPI/spec imports must be bounded and default-deny internal
+    # networks. Keep these values conservative because imports run in-process.
+    outbound_request_timeout_seconds: float = 20.0
+    outbound_max_redirects: int = 5
+    outbound_max_response_bytes: int = 10 * 1024 * 1024
     knowledge_embedding_schedule_enabled: bool = False
     heavy_task_budget_capacity: int = 1
     orchestration_budget_capacity: int = 1

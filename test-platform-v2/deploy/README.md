@@ -56,6 +56,11 @@ production 在基础设施就绪后使用不同 `COMPOSE_PROJECT_NAME`、端口�
 | `PLATFORM_FRONTEND_URL` | 无 | 用户固定访问的完整 HTTPS 来源 |
 | `FRONTEND_PORT` | `80` | 前端访问端口 |
 | `ALLOWED_ORIGINS` | 无 | 最终 HTTPS 入口的精确来源 |
+| `FORWARDED_ALLOW_IPS` | Compose 中 `*` | Uvicorn 可信反向代理地址；后端未直接暴露时保持前端容器/内网 CIDR，直接暴露时必须改为明确网段 |
+| `MAX_REQUEST_BODY_BYTES` | `104857600` | ASGI 实际接收字节上限，分块请求同样受限 |
+| `OUTBOUND_MAX_RESPONSE_BYTES` | `10485760` | OpenAPI URL 导入最大响应体，防止无界读取 |
+| `EXECUTION_SANDBOX_ENABLED` | `true` | Playwright 子进程最小环境和 POSIX 资源限制总开关 |
+| `EXECUTION_MEMORY_LIMIT_MB` | `2048` | Runner 子进程地址空间上限，最终仍以容器 memory limit 为准 |
 | `ELK_BASE_URL` | (空) | Kibana 地址，用于 traceId 链路 |
 | `ELK_INDEX` | `*` | ELK 索引 pattern |
 | `COMPOSE_PROFILES` | (空) | 生产设为 `aitde-worker` 后由 Compose 管理 Durable Worker |
@@ -101,6 +106,14 @@ docker compose --project-name cameltv-tp-production \
 - 蓝湖下载缓存使用 `/data/lanhu`，由 `tp-data` 持久化
 - 使用 `docker compose down -v` 会**永久删除数据库和验收产物**
 
+## 执行器安全边界
+
+- 用户提供或可编辑的 Playwright spec 不再是 tester 默认能力；需要 `uitest:code_execute`。
+- Runner 子进程不再继承后端完整环境，`SECRET_KEY`、数据库和 AI/蓝湖凭据不会传入 Playwright。
+- `backend` 与继承它的 runner/AI gateway 默认 `cap_drop: ALL`、`no-new-privileges` 和独立 PIDs 限制；Chromium 冒烟需在对应镜像上保持通过。
+- OpenAPI URL 导入使用统一出站策略：默认拒绝私网/回环/链路本地/保留地址，并对重定向和响应体设置上限。
+- 生产 HTML 由前端 Nginx 注入 CSP/HSTS/X-Frame 等头；主题 bootstrap 已外置为 `/theme-bootstrap.js`，不依赖 CSP 的内联脚本豁免。
+- `/health`、`/openapi.json`、`/docs`、`/redoc` 必须显式反代，不能被 SPA fallback 伪装成 `200 text/html`。
 ## Backend 执行器运行时
 
 backend 镜像从仓库根目录构建，Dockerfile 因而可以同时复制：
