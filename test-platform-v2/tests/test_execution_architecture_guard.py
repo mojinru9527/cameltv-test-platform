@@ -52,3 +52,19 @@ def test_ci_does_not_start_legacy_executors_directly() -> None:
             if token in text:
                 offenders.append(f"{path.name}:{token}")
     assert offenders == [], offenders
+
+
+def test_ordinary_execution_paths_do_not_call_platform_llm() -> None:
+    guarded = [
+        ROOT / "backend/app/api/v1/apitest_tasks.py",
+        ROOT / "backend/app/api/v1/test_plan_execution.py",
+        ROOT / "backend/app/modules/campaign_execution/service.py",
+        ROOT / "backend/app/modules/aitde/execution/service.py",
+    ]
+    offenders = []
+    for path in guarded:
+        text = path.read_text(encoding="utf-8")
+        for token in ("ai_service", "AiProvider", "default_model"):
+            if token in text:
+                offenders.append(f"{path.name}:{token}")
+    assert offenders == [], offenders
