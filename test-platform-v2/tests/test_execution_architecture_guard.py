@@ -29,3 +29,26 @@ def test_api_task_create_uses_canonical_campaign_adapter() -> None:
     assert "create_api_task_campaign" in block
     assert "create_execution_task" not in block
     assert "api_task_worker" not in block
+
+
+def test_plan_execute_uses_canonical_campaign_adapter() -> None:
+    source = (ROOT / "backend/app/api/v1/test_plan_execution.py").read_text(
+        encoding="utf-8"
+    )
+    start = source.index("def execute_all_cases(")
+    end = source.index('@router.post("/{plan_id}/auto-execute"', start)
+    block = source[start:end]
+    assert "create_plan_campaign" in block
+    assert "plan_execution_queue" not in block
+    assert "test_plan_service.execute_all_cases" not in block
+
+
+def test_ci_does_not_start_legacy_executors_directly() -> None:
+    workflows = ROOT / ".github/workflows"
+    offenders = []
+    for path in workflows.glob("*.y*ml"):
+        text = path.read_text(encoding="utf-8")
+        for token in ("api_task_worker", "plan_execution_queue", "playwright_executor"):
+            if token in text:
+                offenders.append(f"{path.name}:{token}")
+    assert offenders == [], offenders

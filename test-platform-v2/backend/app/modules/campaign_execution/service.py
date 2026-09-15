@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import APIException
 from app.models.environment import Environment
 from app.models.test_case import TestCase
+from app.models.test_plan import TestPlan, TestPlanCase
 from app.modules.aitde.execution import repository
 from app.modules.aitde.execution import service as execution_service
 from app.modules.aitde.execution.models import EnvironmentSnapshot, ExecutionRun, ScenarioAdapter
@@ -184,3 +185,71 @@ def _ensure_environment_snapshot(db: Session, environment_id: int) -> int:
             mission_id=0,
         )
     return snapshot.id
+
+
+def create_plan_campaign(
+    db: Session,
+    *,
+    project_id: int,
+    user_id: int,
+    plan_id: int,
+    environment_id: int | None,
+) -> tuple[TestCampaign, list[ExecutionRun], int]:
+    """Materialize a TestPlan's API cases into the canonical Campaign chain."""
+    plan = db.scalar(select(TestPlan).where(TestPlan.id == plan_id, TestPlan.project_id == project_id))
+    if plan is None:
+        raise APIException(code=404, msg="计划不存在", http_status=404)
+    if environment_id is None:
+        raise APIException(code=400, msg="canonical 计划执行必须提供 environment_id", http_status=400)
+    environment = db.scalar(
+        select(Environment).where(Environment.id == environment_id, Environment.project_id == project_id)
+    )
+    if environment is None:
+        raise APIException(code=404, msg="环境不存在或不属于当前项目", http_status=404)
+
+    plan_cases = db.scalars(select(TestPlanCase).where(TestPlanCase.plan_id == plan_id)).all()
+    case_ids = [pc.case_id for pc in plan_cases]
+    cases = list(db.scalars(select(TestCase).where(TestCase.id.in_(case_ids))).all()) if case_ids else []
+    api_cases = [case for case in cases if case.case_type == "api"]
+    if not api_cases:
+        raise APIException(code=400, msg="计划没有可迁移到 canonical Run 的 API 用例", http_status=400)
+
+    bindings = [(case, _resolve_api_case_binding(db, project_id, case.id)) for case in api_cases]
+    snapshot_id = _ensure_environment_snapshot(db, environment.id)
+    campaign = TestCampaign(
+        project_id=project_id,
+        name=f"plan-{plan.id} [{uuid.uuid4().hex[:8].upper()}]",
+        type="test_plan",
+        environment_id=environment.id,
+        strategy_json=json.dumps({"source": "test_plan"}, ensure_ascii=False),
+        status="draft",
+        created_by=user_id,
+    )
+    db.add(campaign)
+    db.flush()
+    for sequence, (case, binding) in enumerate(bindings, start=1):
+        scenario_id, scenario_version_id, contract_version_id, mission_id, adapter_id = binding
+        db.add(
+            CampaignItem(
+                campaign_id=campaign.id,
+                asset_type="api_case",
+                asset_id=case.id,
+                sequence=sequence,
+                config_json=json.dumps(
+                    {
+                        "mission_id": mission_id,
+                        "scenario_id": scenario_id,
+                        "scenario_version_id": scenario_version_id,
+                        "contract_version_id": contract_version_id,
+                        "environment_snapshot_id": snapshot_id,
+                        "adapter_id": adapter_id,
+                        "plan_id": plan.id,
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+        )
+    db.commit()
+    db.refresh(campaign)
+    runs = start_campaign(db, project_id=project_id, campaign_id=campaign.id, user_id=user_id)
+    return campaign, runs, len(cases) - len(api_cases)

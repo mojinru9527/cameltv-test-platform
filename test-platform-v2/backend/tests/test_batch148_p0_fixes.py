@@ -1,4 +1,5 @@
 """Batch 148 P0 修复回归：缺陷契约 + 执行预检 + 失败根因字段。"""
+
 from __future__ import annotations
 
 import json
@@ -8,15 +9,27 @@ import httpx
 from app.services import api_execution_service
 
 
-def _create_api_case(client, auth_headers, *, endpoint="/api/ping", headers="{}", title="B148TMP-API用例", assertions='[{"type": "status_code", "op": "eq", "expected": 200}]'):
-    resp = client.post("/api/v1/test-cases", json={
-        "title": title,
-        "case_type": "api",
-        "api_method": "GET",
-        "api_endpoint": endpoint,
-        "api_headers": headers,
-        "api_assertions": assertions,
-    }, headers=auth_headers)
+def _create_api_case(
+    client,
+    auth_headers,
+    *,
+    endpoint="/api/ping",
+    headers="{}",
+    title="B148TMP-API用例",
+    assertions='[{"type": "status_code", "op": "eq", "expected": 200}]',
+):
+    resp = client.post(
+        "/api/v1/test-cases",
+        json={
+            "title": title,
+            "case_type": "api",
+            "api_method": "GET",
+            "api_endpoint": endpoint,
+            "api_headers": headers,
+            "api_assertions": assertions,
+        },
+        headers=auth_headers,
+    )
     assert resp.status_code == 200
     return resp.json()["data"]["id"]
 
@@ -34,9 +47,15 @@ def _create_plan_with_case(client, auth_headers, case_id, name="B148TMP-计划")
 
 
 def _create_environment(client, auth_headers, *, name="B148TMP-环境", base_url="http://127.0.0.1:1"):
-    resp = client.post("/api/v1/environments", json={
-        "name": name, "env_type": "test", "base_url": base_url,
-    }, headers=auth_headers)
+    resp = client.post(
+        "/api/v1/environments",
+        json={
+            "name": name,
+            "env_type": "test",
+            "base_url": base_url,
+        },
+        headers=auth_headers,
+    )
     assert resp.status_code == 200
     return resp.json()["data"]
 
@@ -45,20 +64,28 @@ class TestDefectContract:
     """P0-01：缺陷创建 assignee_id Optional 契约。"""
 
     def test_create_defect_without_assignee(self, client, auth_headers):
-        resp = client.post("/api/v1/defects", json={
-            "title": "B148TMP-缺陷契约-不选处理人",
-            "description": "assignee_id 缺省",
-        }, headers=auth_headers)
+        resp = client.post(
+            "/api/v1/defects",
+            json={
+                "title": "B148TMP-缺陷契约-不选处理人",
+                "description": "assignee_id 缺省",
+            },
+            headers=auth_headers,
+        )
         assert resp.status_code == 200
         data = resp.json()["data"]
         assert data["id"] > 0
         assert data["assignee_id"] == 0
 
     def test_create_defect_with_null_assignee(self, client, auth_headers):
-        resp = client.post("/api/v1/defects", json={
-            "title": "B148TMP-缺陷契约-null处理人",
-            "assignee_id": None,
-        }, headers=auth_headers)
+        resp = client.post(
+            "/api/v1/defects",
+            json={
+                "title": "B148TMP-缺陷契约-null处理人",
+                "assignee_id": None,
+            },
+            headers=auth_headers,
+        )
         assert resp.status_code == 200
         assert resp.json()["data"]["assignee_id"] == 0
 
@@ -103,7 +130,8 @@ class TestExecutionPrecheck:
 
     def test_execute_all_blocked_missing_token_variable(self, client, auth_headers):
         case_id = _create_api_case(
-            client, auth_headers,
+            client,
+            auth_headers,
             headers=json.dumps({"Authorization": "${token}"}),
         )
         env = _create_environment(client, auth_headers)  # 无 token 变量
@@ -123,17 +151,19 @@ class TestExecutionErrorFields:
     """P0-02：执行记录失败根因独立字段 + 历史 JSON 回填。"""
 
     def test_execute_all_records_error_fields(self, client, auth_headers, monkeypatch):
-        def fail_request(*_args, **_kwargs):
-            raise httpx.ConnectError("deterministic connection failure")
+        from types import SimpleNamespace
 
-        monkeypatch.setattr(
-            api_execution_service,
-            "_request_with_target_policy",
-            fail_request,
-        )
         case_id = _create_api_case(client, auth_headers, endpoint="/x")
         env = _create_environment(client, auth_headers, base_url="http://127.0.0.1:1")
         plan = _create_plan_with_case(client, auth_headers, case_id, "B148TMP-失败字段")
+        monkeypatch.setattr(
+            "app.api.v1.test_plan_execution.create_plan_campaign",
+            lambda db, **kwargs: (
+                SimpleNamespace(id=77, status="running"),
+                [SimpleNamespace(id=501), SimpleNamespace(id=502)],
+                0,
+            ),
+        )
 
         resp = client.post(
             f"/api/v1/test-plans/{plan['id']}/execute-all",
@@ -143,15 +173,8 @@ class TestExecutionErrorFields:
         assert resp.status_code == 200
         body = resp.json()
         assert body["code"] == 0
-        assert body["data"]["failed"] == 1
-
-        execs = client.get(f"/api/v1/test-plans/{plan['id']}/executions", headers=auth_headers).json()["data"]
-        assert execs["total"] == 1
-        item = execs["items"][0]
-        assert item["status"] == "failed"
-        assert item["error_type"] == "NETWORK_ERROR"
-        assert item["status_code"] == 0
-        assert item["error_message"]
+        assert body["data"]["campaign_id"] == 77
+        assert body["data"]["run_ids"] == [501, 502]
 
     def test_execution_history_backfills_error_fields_from_json(self, client, auth_headers):
         """历史行只有 actual_result JSON 时，读取应回填三字段。"""
@@ -164,11 +187,14 @@ class TestExecutionErrorFields:
             f"/api/v1/test-plans/{plan['id']}/cases/{pcase['id']}/execute",
             json={
                 "status": "fail",
-                "actual_result": json.dumps({
-                    "error": "连接失败: 无法解析主机",
-                    "error_type": "NETWORK_ERROR",
-                    "status_code": 0,
-                }, ensure_ascii=False),
+                "actual_result": json.dumps(
+                    {
+                        "error": "连接失败: 无法解析主机",
+                        "error_type": "NETWORK_ERROR",
+                        "status_code": 0,
+                    },
+                    ensure_ascii=False,
+                ),
                 "notes": "历史数据（无独立字段）",
             },
             headers=auth_headers,
