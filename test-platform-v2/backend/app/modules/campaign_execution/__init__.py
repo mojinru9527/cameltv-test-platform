@@ -1,1 +1,1 @@
-from . import router as router
+"""Canonical Campaign orchestration domain."""

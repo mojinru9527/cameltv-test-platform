@@ -30,3 +30,8 @@ PASS for PR-01 implementation slice.
 ## Residual risk
 - PR-01 does not yet link CampaignItem rows to ExecutionRun rows with a dedicated FK. The existing service contract and package sequence defer API/Plan cutover to PR-02+; no double-write was introduced.
 - Frontend checks were skipped because this slice changes backend only; CI scope classification must confirm backend domain.
+
+## CI follow-up
+- GitHub backend gate exposed a clean-process circular import: `app.models.__init__` imported the campaign models, whose package `__init__` eagerly imported the router and `app.core.deps`.
+- Fixed by keeping `campaign_execution.__init__` side-effect free; the v1 router imports the submodule explicitly.
+- Added `test_app_bootstrap_import.py`, which runs `from app.main import app` in a fresh Python process to prevent fixture/import-order masking.
