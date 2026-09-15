@@ -30,3 +30,11 @@ class ExecutionReportRequest(BaseModel):
     steps: list[dict[str, Any]] = Field(default_factory=list)
     artifacts: list[dict[str, Any]] = Field(default_factory=list)
     error_message: str = Field(default="", max_length=4000)
+
+
+class ExecutionHeartbeatRequest(BaseModel):
+    runner_id: str = Field(min_length=1, max_length=128)
+
+
+class ExecutionCancelRequest(BaseModel):
+    reason: str = Field(default="", max_length=500)
