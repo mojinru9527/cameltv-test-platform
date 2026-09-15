@@ -8,7 +8,7 @@ function Assert-ReleaseUploadCapacity {
         [Parameter(Mandatory)] [string]$ReleaseDir,
         [Parameter(Mandatory)] [string[]]$Archives
     )
-    if ($Archives.Count -lt 2 -or $Archives.Count -gt 3) { throw 'Expected 2 or 3 release archives' }
+    if ($Archives.Count -lt 2 -or $Archives.Count -gt 4) { throw 'Expected 2, 3, or 4 release archives' }
     [long]$archiveBytes = 0
     foreach ($archive in $Archives) {
         $item = Get-Item -LiteralPath $archive -ErrorAction Stop
