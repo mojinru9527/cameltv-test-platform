@@ -1,0 +1,10 @@
+{
+  "canonical_new_writes_100_percent": true,
+  "legacy_new_writes_zero_full_cycle": false,
+  "historical_mapping_complete": false,
+  "legacy_urls_readonly_or_redirect": false,
+  "architecture_guard_green": true,
+  "project_isolation_runner_concurrency_artifact_security_green": true,
+  "rollback_restore_drill_success": false,
+  "product_qa_architecture_signoff": false
+}
