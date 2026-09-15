@@ -19,6 +19,17 @@ try {
     if ($release.IndexOf('Get-ExportDigest') -gt $release.IndexOf('POST')) {
         throw 'Deployment must only be registered after verified build metadata'
     }
+    $requiredSplitArtifacts = @(
+        'cameltv-tp-ai-gateway:$Tag',
+        '-Target ai-gateway',
+        '$Tag-ai-gateway.tar',
+        "ai-gateway' ="
+    )
+    foreach ($required in $requiredSplitArtifacts) {
+        if (-not $release.Contains($required)) {
+            throw "Split release is missing AI Gateway artifact contract: $required"
+        }
+    }
     Write-Host 'PASS: fresh digest, invalid metadata rejection and release ordering.'
 } finally {
     Remove-Item -LiteralPath $metadataFile
