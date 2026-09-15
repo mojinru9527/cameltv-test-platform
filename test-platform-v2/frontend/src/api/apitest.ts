@@ -118,15 +118,3 @@ export async function fetchApiExecutionTasks(params: {
 export async function fetchApiExecutionTask(taskId: number): Promise<ApiTaskDetail> {
   return api.get(`/apitest/tasks/${taskId}`) as unknown as Promise<ApiTaskDetail>
 }
-
-export async function retryApiExecutionTask(taskId: number): Promise<ApiExecutionTask> {
-  return api.post(`/apitest/tasks/${taskId}/retry-failed`) as unknown as Promise<ApiExecutionTask>
-}
-
-export async function deleteApiExecutionTask(taskId: number): Promise<{ deleted: number }> {
-  return api.delete(`/apitest/tasks/${taskId}`) as unknown as Promise<{ deleted: number }>
-}
-export async function cancelApiExecutionTask(taskId: number): Promise<{ status: string }> {
-  return api.post(`/apitest/tasks/${taskId}/cancel`) as unknown as Promise<{ status: string }>
-}
-

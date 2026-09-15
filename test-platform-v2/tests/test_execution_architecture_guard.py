@@ -76,3 +76,27 @@ def test_canonical_campaign_path_does_not_call_legacy_bridge() -> None:
     )
     assert "legacy_bridge" not in text
     assert "_ensure_legacy_run" not in text
+
+def test_legacy_task_mutations_are_readonly() -> None:
+    source = (ROOT / "backend/app/api/v1/apitest_tasks.py").read_text(encoding="utf-8")
+    for start_marker, end_marker in (
+        ('@router.delete("/tasks/{task_id}"', '@router.post("/tasks/{task_id}/cancel"'),
+        ('@router.post("/tasks/{task_id}/cancel"', '@router.post("/tasks/{task_id}/retry-failed"'),
+        ('@router.post("/tasks/{task_id}/retry-failed"', '@router.get("/tasks/{task_id}/items/{item_id}/curl"'),
+    ):
+        block = source[source.index(start_marker):source.index(end_marker, source.index(start_marker))]
+        assert "_legacy_mutation_gone()" in block
+        assert "db.commit()" not in block
+        assert "create_execution_task" not in block
+
+
+def test_legacy_runner_mutations_are_readonly() -> None:
+    source = (ROOT / "backend/app/api/v1/api_runner.py").read_text(encoding="utf-8")
+    start = source.index('@router.post("/tasks"')
+    end = source.index('@router.get("/tasks"', start)
+    block = source[start:end]
+    assert "_legacy_runner_gone()" in block
+    assert "svc.create_runner_task(" not in block
+    assert "svc.claim_runner_task(" not in block
+    assert "svc.report_runner_task(" not in block
+    assert "db.commit()" not in block

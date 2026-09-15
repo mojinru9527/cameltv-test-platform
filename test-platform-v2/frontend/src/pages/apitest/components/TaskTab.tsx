@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
-import { RefreshCw, XCircle, CheckCircle2, Clock, Loader2, Eye, ChevronDown, ChevronRight, ClipboardCheck, Trash2, RotateCcw } from '@/lib/icons'
+import { RefreshCw, XCircle, CheckCircle2, Clock, Loader2, Eye, ChevronDown, ChevronRight, ClipboardCheck } from '@/lib/icons'
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
 import { Card, CardHeader, CardTitle, CardContent } from '@/ui'
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/ui'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui'
-import { fetchApiExecutionTasks, fetchApiExecutionTask, cancelApiExecutionTask, retryApiExecutionTask, deleteApiExecutionTask } from '@/api/apitest'
+import { fetchApiExecutionTasks, fetchApiExecutionTask } from '@/api/apitest'
 import type { ApiExecutionTask, ApiTaskDetail } from '@/types'
 import { execStatusLabel, normalizeExecStatus } from '@/utils/executionStatus'
 
@@ -26,12 +26,12 @@ function statusBadgeClass(status?: string): string {
 }
 
 export default function TaskTab() {
+  const navigate = useNavigate()
   const [tasks, setTasks] = useState<ApiExecutionTask[]>([])
   const [total, setTotal] = useState(0)
   const [statusFilter, setStatusFilter] = useState<string>('')
   const [detail, setDetail] = useState<ApiTaskDetail | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<ApiExecutionTask | null>(null)
 
   const loadTasks = useCallback(async () => {
     try {
@@ -54,32 +54,6 @@ export default function TaskTab() {
     } catch (e: any) { toast.error(e?.message || '获取详情失败') }
   }
 
-  const cancelTask = async (taskId: number) => {
-    try {
-      await cancelApiExecutionTask(taskId)
-      toast.success('任务已取消')
-      loadTasks()
-    } catch (e: any) { toast.error(e?.message || '取消失败') }
-  }
-
-  const retryTask = async (taskId: number) => {
-    try {
-      await retryApiExecutionTask(taskId)
-      toast.success('已创建重跑任务')
-      loadTasks()
-    } catch (e: any) { toast.error(e?.message || '重跑失败') }
-  }
-
-  const doDeleteTask = async () => {
-    if (!deleteTarget) return
-    try {
-      await deleteApiExecutionTask(deleteTarget.id)
-      toast.success('任务已删除')
-      setDeleteTarget(null)
-      loadTasks()
-    } catch (e: any) { toast.error(e?.message || '删除失败') }
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
@@ -97,11 +71,17 @@ export default function TaskTab() {
         <span className="text-xs text-muted-foreground">{total} 个任务</span>
       </div>
 
+      <div className="rounded-lg border bg-muted/40 px-4 py-3">
+        <p className="text-sm font-medium">历史执行记录只读</p>
+        <p className="mt-1 text-xs text-muted-foreground">仅用于审计与排障。新执行或失败重跑请使用 canonical ExecutionRun。</p>
+        <Button variant="secondary" size="sm" className="mt-2" onClick={() => navigate('/executions')}>前往执行中心</Button>
+      </div>
+
       <div className="border rounded-lg divide-y">
         {tasks.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground">
-            <p className="text-sm">暂无执行任务</p>
-            <p className="text-xs mt-1">在「接口用例」中选择用例发起批量执行</p>
+            <p className="text-sm">暂无历史执行任务</p>
+            <p className="text-xs mt-1">新批量执行请使用接口用例页或执行中心</p>
           </div>
         ) : (
           tasks.map(task => (
@@ -142,54 +122,6 @@ export default function TaskTab() {
                 >
                   <Eye className="size-4" />
                 </Button>
-                {(task.status === 'pending' || task.status === 'running') && (
-                  <Button
-                    size="icon-sm"
-                    variant="ghost"
-                    className="text-destructive"
-                    onClick={() => cancelTask(task.id)}
-                    aria-label={`取消任务${task.name}`}
-                  >
-                    <XCircle className="size-4" />
-                  </Button>
-                )}
-                {task.failed > 0 && task.status !== 'pending' && task.status !== 'running' && (
-                  <Button
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => retryTask(task.id)}
-                    aria-label={`重跑失败用例：${task.name}`}
-                    title="重跑失败用例"
-                  >
-                    <RotateCcw className="size-4" />
-                  </Button>
-                )}
-                {task.status !== 'pending' && task.status !== 'running' && (
-                  <AlertDialog open={deleteTarget?.id === task.id} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        size="icon-sm"
-                        variant="ghost"
-                        className="text-destructive"
-                        onClick={() => setDeleteTarget(task)}
-                        aria-label={`删除任务${task.name}`}
-                        title="删除任务"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent size="sm">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>确定删除执行任务？</AlertDialogTitle>
-                        <AlertDialogDescription>将同时删除任务下所有执行明细，此操作无法撤销。</AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>取消</AlertDialogCancel>
-                        <AlertDialogAction variant="destructive" onClick={() => void doDeleteTask()}>删除</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
                 </div>
               </div>
             </div>

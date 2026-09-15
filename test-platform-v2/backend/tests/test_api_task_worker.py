@@ -523,14 +523,16 @@ class TestApiTaskWorkerApi:
         assert data == {"campaign_id": 88, "run_ids": [501], "status": "running", "total": 1}
         assert db_session.query(ApiExecutionTask).count() == 0
 
-    def test_cancel_task_sets_cancel_requested(self, client, auth_headers, db_session):
-        """POST /apitest/tasks/{id}/cancel 应设置 cancel_requested=True。"""
+    def test_legacy_task_mutations_return_gone_without_writes(
+        self, client, auth_headers, db_session
+    ):
+        """Legacy task mutation URLs must fail closed before changing any row."""
         from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
         from app.models.test_case import TestCase
 
         case = TestCase(
             project_id=1,
-            title="Cancel API Test",
+            title="Readonly Legacy Case",
             case_type="api",
             api_method="GET",
             api_endpoint="https://httpbin.org/get",
@@ -538,255 +540,62 @@ class TestApiTaskWorkerApi:
         )
         db_session.add(case)
         db_session.commit()
-
         task = ApiExecutionTask(
             project_id=1,
-            task_id="T-API-CANCEL",
-            name="API Cancel",
+            task_id="T-READONLY",
+            name="Readonly Legacy Task",
             total=1,
             status="pending",
         )
         db_session.add(task)
         db_session.flush()
-        db_session.add(ApiExecutionTaskItem(task_id=task.id, case_id=case.id))
+        db_session.add(ApiExecutionTaskItem(task_id=task.id, case_id=case.id, status="failed"))
         db_session.commit()
 
-        resp = client.post(
-            f"/api/v1/apitest/tasks/{task.id}/cancel",
-            headers=auth_headers,
+        before_counts = (
+            db_session.query(ApiExecutionTask).count(),
+            db_session.query(ApiExecutionTaskItem).count(),
         )
-        assert resp.status_code == 200
-        assert resp.json()["data"]["status"] == "cancelling"
-
-        db_session.refresh(task)
-        assert task.cancel_requested is True
-
-    def test_cancel_rejects_non_pending_running(self, client, auth_headers, db_session):
-        """只能取消 pending 或 running 状态的任务。"""
-        from app.models.api_asset import ApiExecutionTask
-
-        task = ApiExecutionTask(
-            project_id=1,
-            task_id="T-DONE",
-            name="Done",
-            total=1,
-            status="success",
+        mutations = (
+            ("post", f"/api/v1/apitest/tasks/{task.id}/cancel"),
+            ("post", f"/api/v1/apitest/tasks/{task.id}/retry-failed"),
+            ("delete", f"/api/v1/apitest/tasks/{task.id}"),
         )
-        db_session.add(task)
-        db_session.commit()
+        for method, url in mutations:
+            resp = getattr(client, method)(url, headers=auth_headers)
+            assert resp.status_code == 410
+            assert "canonical ExecutionRun" in resp.json()["detail"]
 
-        resp = client.post(
-            f"/api/v1/apitest/tasks/{task.id}/cancel",
-            headers=auth_headers,
-        )
-        assert resp.status_code == 400
+        db_session.expire_all()
+        assert (
+            db_session.query(ApiExecutionTask).count(),
+            db_session.query(ApiExecutionTaskItem).count(),
+        ) == before_counts
+        refreshed = db_session.get(ApiExecutionTask, task.id)
+        assert refreshed is not None
+        assert refreshed.status == "pending"
+        assert refreshed.cancel_requested is False
 
-    def test_retry_failed_creates_new_task_with_failed_cases(self, client, auth_headers, db_session):
-        """POST /apitest/tasks/{id}/retry-failed 应创建新任务（trigger_type=retry_failed），仅含失败 case。"""
-        from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
-        from app.models.test_case import TestCase
-
-        case1 = TestCase(
-            project_id=1,
-            title="Retry Case 1",
-            case_type="api",
-            api_method="GET",
-            api_endpoint="https://httpbin.org/get",
-            api_assertions='[{"type":"status_code","expected":200,"operator":"eq"}]',
-        )
-        case2 = TestCase(
-            project_id=1,
-            title="Retry Case 2",
-            case_type="api",
-            api_method="GET",
-            api_endpoint="https://httpbin.org/get",
-            api_assertions='[{"type":"status_code","expected":200,"operator":"eq"}]',
-        )
-        db_session.add_all([case1, case2])
-        db_session.commit()
-
-        task = ApiExecutionTask(
-            project_id=1,
-            task_id="T-RETRY-SRC",
-            name="Retry Source",
-            total=2,
-            status="success",
-            passed=1,
-            failed=1,
-        )
-        db_session.add(task)
-        db_session.flush()
-
-        db_session.add(
-            ApiExecutionTaskItem(
-                task_id=task.id,
-                case_id=case1.id,
-                status="passed",
-            )
-        )
-        db_session.add(
-            ApiExecutionTaskItem(
-                task_id=task.id,
-                case_id=case2.id,
-                status="failed",
-                error_message="请求超时",
-            )
-        )
-        db_session.commit()
-
-        resp = client.post(
-            f"/api/v1/apitest/tasks/{task.id}/retry-failed",
-            headers=auth_headers,
-        )
-        assert resp.status_code == 200
-        data = resp.json()["data"]
-        assert data["retry_count"] == 1
-        assert "new_task_id" in data
-        new_task_id = data["new_task_id"]
-
-        # 验证新任务
-        from app.models.api_asset import ApiExecutionTask
-
-        new_task = db_session.get(ApiExecutionTask, new_task_id)
-        assert new_task is not None
-        assert new_task.trigger_type == "retry_failed"
-        assert new_task.total == 1
-        assert new_task.status == "pending"
-
-        # 验证新任务的 item 只包含失败用例
-        items = db_session.query(ApiExecutionTaskItem).filter_by(task_id=new_task.id).all()
-        assert len(items) == 1
-        assert items[0].case_id == case2.id
-
-    def test_retry_failed_rejects_empty_failed(self, client, auth_headers, db_session):
-        """无失败项时应返回 400。"""
-        from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
-        from app.models.test_case import TestCase
-
-        case = TestCase(
-            project_id=1,
-            title="All Pass",
-            case_type="api",
-            api_method="GET",
-            api_endpoint="https://httpbin.org/get",
-            api_assertions='[{"type":"status_code","expected":200,"operator":"eq"}]',
-        )
-        db_session.add(case)
-        db_session.commit()
-
-        task = ApiExecutionTask(
-            project_id=1,
-            task_id="T-ALL-PASS",
-            name="All Pass",
-            total=1,
-            status="success",
-            passed=1,
-        )
-        db_session.add(task)
-        db_session.flush()
-        db_session.add(
-            ApiExecutionTaskItem(
-                task_id=task.id,
-                case_id=case.id,
-                status="passed",
-            )
-        )
-        db_session.commit()
-
-        resp = client.post(
-            f"/api/v1/apitest/tasks/{task.id}/retry-failed",
-            headers=auth_headers,
-        )
-        assert resp.status_code == 400
-
-    def test_retry_failed_enforces_project_isolation(self, client, auth_headers, db_session):
-        """retry-failed 应拒绝跨项目访问。"""
+    def test_legacy_task_mutations_preserve_project_isolation(
+        self, client, auth_headers, db_session
+    ):
+        """Foreign historical tasks remain indistinguishable from missing tasks."""
         from app.models.api_asset import ApiExecutionTask
 
         task = ApiExecutionTask(
             project_id=999,
-            task_id="T-OTHER",
-            name="Other Project",
-            total=1,
-            status="failed",
-        )
-        db_session.add(task)
-        db_session.commit()
-
-        resp = client.post(
-            f"/api/v1/apitest/tasks/{task.id}/retry-failed",
-            headers=auth_headers,  # X-Project-Id: 1
-        )
-        assert resp.status_code == 403
-
-    def test_cancel_enforces_project_isolation(self, client, auth_headers, db_session):
-        """cancel 应拒绝跨项目访问。"""
-        from app.models.api_asset import ApiExecutionTask
-
-        task = ApiExecutionTask(
-            project_id=999,
-            task_id="T-OTHER-C",
-            name="Other Cancel",
+            task_id="T-FOREIGN-READONLY",
+            name="Foreign Readonly Task",
             total=1,
             status="pending",
         )
         db_session.add(task)
         db_session.commit()
 
-        resp = client.post(
-            f"/api/v1/apitest/tasks/{task.id}/cancel",
-            headers=auth_headers,
-        )
-        assert resp.status_code == 403
-
-    def test_retry_failed_deduplicates_case_ids(self, client, auth_headers, db_session):
-        """同一 case 多次失败只应在新任务中出现一次。"""
-        from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
-        from app.models.test_case import TestCase
-
-        case = TestCase(
-            project_id=1,
-            title="Dup Case",
-            case_type="api",
-            api_method="GET",
-            api_endpoint="https://httpbin.org/get",
-            api_assertions='[{"type":"status_code","expected":200,"operator":"eq"}]',
-        )
-        db_session.add(case)
-        db_session.commit()
-
-        task = ApiExecutionTask(
-            project_id=1,
-            task_id="T-DUP",
-            name="Dup Test",
-            total=2,
-            status="failed",
-            failed=2,
-        )
-        db_session.add(task)
-        db_session.flush()
-
-        # 同一 case 两次失败（参数化场景可能发生）
-        db_session.add(
-            ApiExecutionTaskItem(
-                task_id=task.id,
-                case_id=case.id,
-                status="failed",
-            )
-        )
-        db_session.add(
-            ApiExecutionTaskItem(
-                task_id=task.id,
-                case_id=case.id,
-                status="failed",
-            )
-        )
-        db_session.commit()
-
-        resp = client.post(
-            f"/api/v1/apitest/tasks/{task.id}/retry-failed",
-            headers=auth_headers,
-        )
-        assert resp.status_code == 200
-        data = resp.json()["data"]
-        assert data["retry_count"] == 1  # 去重后只有 1 个 case
+        for method, url in (
+            ("post", f"/api/v1/apitest/tasks/{task.id}/cancel"),
+            ("post", f"/api/v1/apitest/tasks/{task.id}/retry-failed"),
+            ("delete", f"/api/v1/apitest/tasks/{task.id}"),
+        ):
+            resp = getattr(client, method)(url, headers=auth_headers)
+            assert resp.status_code == 404

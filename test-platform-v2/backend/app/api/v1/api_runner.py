@@ -7,8 +7,6 @@ Batch 206 / C-内网执行器：/api/v1/apitest/runner/*
 """
 from __future__ import annotations
 
-import json
-
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -19,6 +17,16 @@ from app.schemas.common import R
 from app.services import runner_execution_service as svc
 
 router = APIRouter(prefix="/apitest/runner", tags=["接口测试-内网执行器"])
+
+
+_LEGACY_RUNNER_MESSAGE = (
+    "Legacy internal runner queue is read-only. Use canonical runner endpoints "
+    "under /api/v1/execution/runs/claim|heartbeat|report."
+)
+
+
+def _legacy_runner_gone() -> None:
+    raise HTTPException(status_code=410, detail=_LEGACY_RUNNER_MESSAGE)
 
 
 class RunnerTaskCreateRequest(BaseModel):
@@ -46,50 +54,34 @@ def _pid(current: CurrentUser) -> int:
     return current.project_id
 
 
-@router.post("/tasks", response_model=R[dict], summary="创建内网执行器任务")
+@router.post("/tasks", response_model=R[dict], summary="创建内网执行器任务（历史只读）")
 def create_runner_task(
     body: RunnerTaskCreateRequest,
     current: CurrentUser = Depends(require_permission("apitest:execute")),
     db: Session = Depends(get_db),
 ):
-    pid = _pid(current)
-    task = svc.create_runner_task(
-        db, pid, body.environment_id, body.task_id, body.request, body.assertions, body.runner_key
-    )
-    db.commit()
-    return R.ok({"task_id": task.id, "status": task.status, "execution_id": task.task_id})
+    _pid(current)
+    _legacy_runner_gone()
 
 
-@router.post("/claim", response_model=R[dict], summary="runner 认领任务")
+@router.post("/claim", response_model=R[dict], summary="runner 认领任务（历史只读）")
 def claim_runner_task(
     body: RunnerClaimRequest,
     current: CurrentUser = Depends(require_permission("apitest:execute")),
     db: Session = Depends(get_db),
 ):
-    task = svc.claim_runner_task(db, body.runner_key)
-    if not task:
-        return R.ok({"claimed": False, "message": "无待认领任务"})
-    return R.ok({
-        "claimed": True,
-        "task_id": task.id,
-        "execution_id": task.task_id,
-        "environment_id": task.environment_id,
-        "project_id": task.project_id,
-        "request": json.loads(task.request),
-        "assertions": json.loads(task.assertions),
-    })
+    _pid(current)
+    _legacy_runner_gone()
 
 
-@router.post("/report", response_model=R[dict], summary="runner 回传结果")
+@router.post("/report", response_model=R[dict], summary="runner 回传结果（历史只读）")
 def report_runner_task(
     body: RunnerReportRequest,
     current: CurrentUser = Depends(require_permission("apitest:execute")),
     db: Session = Depends(get_db),
 ):
-    task = svc.report_runner_task(db, body.task_id, status=body.status, result=body.result, error_message=body.error_message)
-    if not task:
-        raise HTTPException(404, "任务不存在或状态不合法")
-    return R.ok({"task_id": task.id, "status": task.status})
+    _pid(current)
+    _legacy_runner_gone()
 
 
 @router.get("/tasks", response_model=R[dict], summary="平台查看内网执行器任务")

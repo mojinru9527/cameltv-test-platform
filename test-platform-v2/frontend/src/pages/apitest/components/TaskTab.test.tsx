@@ -1,14 +1,13 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const fetchApiExecutionTasks = vi.fn()
 const fetchApiExecutionTask = vi.fn()
-const cancelApiExecutionTask = vi.fn()
 
 vi.mock('@/api/apitest', () => ({
   fetchApiExecutionTasks: (...args: any[]) => fetchApiExecutionTasks(...args),
   fetchApiExecutionTask: (...args: any[]) => fetchApiExecutionTask(...args),
-  cancelApiExecutionTask: (...args: any[]) => cancelApiExecutionTask(...args),
 }))
 vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
@@ -62,20 +61,23 @@ describe('API execution task controls', () => {
         },
       ],
     })
-    cancelApiExecutionTask.mockReset().mockResolvedValue(undefined)
   })
 
-  it('provides accessible names for icon-only task actions', async () => {
-    render(<TaskTab />)
+  it('shows historical tasks as read-only with detail access only', async () => {
+    render(
+      <MemoryRouter>
+        <TaskTab />
+      </MemoryRouter>,
+    )
 
     expect(await screen.findByText('夜间回归')).toBeTruthy()
-    expect(screen.getByRole('button', { name: '刷新执行任务' })).toBeTruthy()
+    expect(screen.getByText('历史执行记录只读')).toBeTruthy()
+    expect(screen.getByRole('button', { name: '前往执行中心' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /取消.*夜间回归/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: /重跑.*夜间回归/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: /删除.*夜间回归/ })).toBeNull()
 
     const detailButton = screen.getByRole('button', { name: /查看.*夜间回归.*详情/ })
-    const cancelButton = screen.getByRole('button', { name: /取消.*夜间回归/ })
-    fireEvent.click(cancelButton)
-    await waitFor(() => expect(cancelApiExecutionTask).toHaveBeenCalledWith(9))
-
     fireEvent.click(detailButton)
     expect(await screen.findByText('用例 #7')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: '展开' }))
@@ -85,7 +87,11 @@ describe('API execution task controls', () => {
   })
 
   it('stacks task content into non-overlapping rows on narrow screens', async () => {
-    render(<TaskTab />)
+    render(
+      <MemoryRouter>
+        <TaskTab />
+      </MemoryRouter>,
+    )
 
     const row = await screen.findByTestId('api-task-row-9')
     expect(row.className).toContain('flex-col')
