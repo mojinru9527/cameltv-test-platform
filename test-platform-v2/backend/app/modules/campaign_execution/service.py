@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import uuid
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -253,3 +254,112 @@ def create_plan_campaign(
     db.refresh(campaign)
     runs = start_campaign(db, project_id=project_id, campaign_id=campaign.id, user_id=user_id)
     return campaign, runs, len(cases) - len(api_cases)
+
+
+def _runner_now() -> datetime:
+    return datetime.now(UTC).replace(tzinfo=None)
+
+
+def _capabilities_match(required_json: str, provided: dict) -> bool:
+    try:
+        required = json.loads(required_json or "{}")
+    except (TypeError, ValueError):
+        return False
+    if not isinstance(required, dict):
+        return False
+    return all(provided.get(key) == value for key, value in required.items())
+
+
+def claim_execution_run(db: Session, *, project_id: int, runner_id: str, capabilities: dict) -> ExecutionRun | None:
+    candidates = db.scalars(
+        select(ExecutionRun)
+        .where(ExecutionRun.project_id == project_id, ExecutionRun.runtime_status == "QUEUED")
+        .order_by(ExecutionRun.id.asc())
+        .with_for_update(skip_locked=True)
+    ).all()
+    for run in candidates:
+        if not _capabilities_match(run.runner_capabilities_json, capabilities):
+            continue
+        now = _runner_now()
+        run.runtime_status = "RUNNING"
+        run.runner_id = runner_id
+        run.started_at = run.started_at or now
+        run.locked_at = now
+        run.heartbeat_at = now
+        db.commit()
+        db.refresh(run)
+        return run
+    return None
+
+
+def heartbeat_execution_run(db: Session, *, run_id: int, project_id: int, runner_id: str) -> bool:
+    run = db.scalar(
+        select(ExecutionRun).where(
+            ExecutionRun.id == run_id,
+            ExecutionRun.project_id == project_id,
+            ExecutionRun.runner_id == runner_id,
+            ExecutionRun.runtime_status == "RUNNING",
+        )
+    )
+    if run is None:
+        return False
+    run.heartbeat_at = _runner_now()
+    run.locked_at = run.heartbeat_at
+    db.commit()
+    return True
+
+
+def report_execution_run(
+    db: Session,
+    *,
+    run_id: int,
+    project_id: int,
+    runner_id: str,
+    runtime_status: str,
+    outcome: str | None,
+    error_message: str = "",
+) -> ExecutionRun | None:
+    target = runtime_status.upper()
+    if target not in {"FINISHED", "CANCELLED"}:
+        raise APIException(code=400, msg="runner report status 非法", http_status=400)
+    run = db.scalar(
+        select(ExecutionRun).where(
+            ExecutionRun.id == run_id,
+            ExecutionRun.project_id == project_id,
+            ExecutionRun.runner_id == runner_id,
+            ExecutionRun.runtime_status == "RUNNING",
+        )
+    )
+    if run is None:
+        return None
+    now = _runner_now()
+    run.runtime_status = target
+    run.outcome = outcome
+    run.finished_at = now
+    run.duration_ms = int((now - run.started_at).total_seconds() * 1000) if run.started_at else None
+    run.runner_id = ""
+    run.locked_at = None
+    run.heartbeat_at = None
+    db.commit()
+    db.refresh(run)
+    return run
+
+
+def cancel_execution_run(db: Session, *, run_id: int, project_id: int) -> ExecutionRun | None:
+    run = db.scalar(
+        select(ExecutionRun).where(
+            ExecutionRun.id == run_id,
+            ExecutionRun.project_id == project_id,
+            ExecutionRun.runtime_status.in_(("QUEUED", "RUNNING")),
+        )
+    )
+    if run is None:
+        return None
+    run.runtime_status = "CANCELLED"
+    run.finished_at = _runner_now()
+    run.runner_id = ""
+    run.locked_at = None
+    run.heartbeat_at = None
+    db.commit()
+    db.refresh(run)
+    return run
