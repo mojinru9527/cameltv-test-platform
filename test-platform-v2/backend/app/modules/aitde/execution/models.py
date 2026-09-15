@@ -8,6 +8,7 @@ and stores artifacts' metadata/hash only (never raw bytes) so the DB stays lean.
 These tables are created by migrations M31-1 / M31-2 / M31-3. The environment,
 assertion and evidence modules are service/engine layers over these models.
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -48,7 +49,9 @@ class ScenarioAdapter(Base, TimestampMixin):
     __tablename__ = "scenario_adapters"
     __table_args__ = (
         UniqueConstraint(
-            "scenario_version_id", "adapter_type", "adapter_version",
+            "scenario_version_id",
+            "adapter_type",
+            "adapter_version",
             name="uq_scenario_adapter_version_type",
         ),
     )
@@ -56,12 +59,8 @@ class ScenarioAdapter(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
     scenario_id: Mapped[int] = mapped_column(Integer, index=True)
     scenario_version_id: Mapped[int] = mapped_column(Integer, index=True)
-    adapter_type: Mapped[str] = mapped_column(
-        String(16), default=AdapterType.API.value, index=True
-    )
-    status: Mapped[str] = mapped_column(
-        String(16), default=AdapterStatus.DRAFT.value, index=True
-    )
+    adapter_type: Mapped[str] = mapped_column(String(16), default=AdapterType.API.value, index=True)
+    status: Mapped[str] = mapped_column(String(16), default=AdapterStatus.DRAFT.value, index=True)
     source_asset_type: Mapped[str | None] = mapped_column(String(64), default=None)
     source_asset_id: Mapped[int | None] = mapped_column(Integer, default=None)
     config_json: Mapped[str] = mapped_column(Text, default="{}")
@@ -108,18 +107,16 @@ class ExecutionRun(Base):
     adapter_id: Mapped[int | None] = mapped_column(Integer, default=None)
     environment_id: Mapped[int] = mapped_column(Integer, default=0, index=True)
     environment_snapshot_id: Mapped[int | None] = mapped_column(Integer, default=None, index=True)
-    runtime_status: Mapped[str] = mapped_column(
-        String(16), default=RunStatus.QUEUED.value, index=True
-    )
+    runtime_status: Mapped[str] = mapped_column(String(16), default=RunStatus.QUEUED.value, index=True)
     outcome: Mapped[str | None] = mapped_column(String(32), default=None, index=True)
-    evidence_status: Mapped[str] = mapped_column(
-        String(16), default=EvidenceStatus.PENDING.value, index=True
-    )
-    trigger_type: Mapped[str] = mapped_column(
-        String(16), default=TriggerType.MANUAL.value
-    )
+    evidence_status: Mapped[str] = mapped_column(String(16), default=EvidenceStatus.PENDING.value, index=True)
+    trigger_type: Mapped[str] = mapped_column(String(16), default=TriggerType.MANUAL.value)
     parent_run_id: Mapped[int | None] = mapped_column(Integer, default=None)
     retry_no: Mapped[int] = mapped_column(Integer, default=0)
+    runner_id: Mapped[str] = mapped_column(String(128), default="", index=True)
+    runner_capabilities_json: Mapped[str] = mapped_column(Text, default="{}")
+    locked_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
+    heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
     started_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
     duration_ms: Mapped[int | None] = mapped_column(Integer, default=None)
@@ -131,20 +128,14 @@ class ExecutionStep(Base):
     """M31-2: one step within a run, appended to an ordered timeline."""
 
     __tablename__ = "execution_steps"
-    __table_args__ = (
-        UniqueConstraint("run_id", "sequence", name="uq_run_step_sequence"),
-    )
+    __table_args__ = (UniqueConstraint("run_id", "sequence", name="uq_run_step_sequence"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     run_id: Mapped[int] = mapped_column(Integer, index=True)
     sequence: Mapped[int] = mapped_column(Integer, default=1)
     step_key: Mapped[str] = mapped_column(String(128), default="")
-    step_type: Mapped[str] = mapped_column(
-        String(16), default=StepType.ACTION.value, index=True
-    )
-    status: Mapped[str] = mapped_column(
-        String(16), default=StepStatus.PENDING.value, index=True
-    )
+    step_type: Mapped[str] = mapped_column(String(16), default=StepType.ACTION.value, index=True)
+    status: Mapped[str] = mapped_column(String(16), default=StepStatus.PENDING.value, index=True)
     error_type: Mapped[str | None] = mapped_column(String(64), default=None)
     error_message: Mapped[str | None] = mapped_column(Text, default=None)
     input_snapshot_json: Mapped[str | None] = mapped_column(Text, default=None)
@@ -179,9 +170,7 @@ class AssertionResult(Base):
     oracle_snapshot_json: Mapped[str] = mapped_column(Text, default="{}")
     expected_json: Mapped[str] = mapped_column(Text, default="{}")
     actual_json: Mapped[str] = mapped_column(Text, default="{}")
-    result: Mapped[str] = mapped_column(
-        String(16), default=AssertionResult.NOT_EVALUATED.value, index=True
-    )
+    result: Mapped[str] = mapped_column(String(16), default=AssertionResult.NOT_EVALUATED.value, index=True)
     reason_code: Mapped[str] = mapped_column(String(64), default="")
     evidence_refs_json: Mapped[str] = mapped_column(Text, default="[]")
     evaluated_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
@@ -196,23 +185,17 @@ class EvidenceArtifact(Base):
     project_id: Mapped[int] = mapped_column(Integer, default=0, index=True)
     run_id: Mapped[int] = mapped_column(Integer, index=True)
     step_id: Mapped[int | None] = mapped_column(Integer, default=None)
-    evidence_type: Mapped[str] = mapped_column(
-        String(32), default=EvidenceType.RESPONSE.value, index=True
-    )
+    evidence_type: Mapped[str] = mapped_column(String(32), default=EvidenceType.RESPONSE.value, index=True)
     storage_provider: Mapped[str] = mapped_column(String(32), default="local")
     storage_uri: Mapped[str] = mapped_column(String(512), default="")
     content_hash: Mapped[str] = mapped_column(String(64), default="", index=True)
     content_type: Mapped[str] = mapped_column(String(128), default="")
     size_bytes: Mapped[int] = mapped_column(Integer, default=0)
-    sanitization_status: Mapped[str] = mapped_column(
-        String(16), default=SanitizationStatus.PENDING.value, index=True
-    )
+    sanitization_status: Mapped[str] = mapped_column(String(16), default=SanitizationStatus.PENDING.value, index=True)
     sensitivity: Mapped[str] = mapped_column(String(16), default="normal")
     retention_class: Mapped[str] = mapped_column(String(32), default="standard")
     # V3.9-R1 (TRUST-004): physical integrity of the stored object.
-    integrity_status: Mapped[str] = mapped_column(
-        String(16), default=EvidenceIntegrityStatus.PENDING.value, index=True
-    )
+    integrity_status: Mapped[str] = mapped_column(String(16), default=EvidenceIntegrityStatus.PENDING.value, index=True)
     storage_verified_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
     sanitizer_version: Mapped[str | None] = mapped_column(String(32), default=None)
     storage_etag: Mapped[str | None] = mapped_column(String(128), default=None)
@@ -236,15 +219,11 @@ class LegacyExecutionLink(Base):
     """M31-3: bridge a unified Run to its legacy API/UI/TestExecution source record."""
 
     __tablename__ = "legacy_execution_links"
-    __table_args__ = (
-        UniqueConstraint("legacy_type", "legacy_id", name="uq_legacy_execution_link"),
-    )
+    __table_args__ = (UniqueConstraint("legacy_type", "legacy_id", name="uq_legacy_execution_link"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     run_id: Mapped[int] = mapped_column(Integer, index=True)
-    legacy_type: Mapped[str] = mapped_column(
-        String(32), default=LegacyExecutionType.API_TASK_ITEM.value, index=True
-    )
+    legacy_type: Mapped[str] = mapped_column(String(32), default=LegacyExecutionType.API_TASK_ITEM.value, index=True)
     legacy_id: Mapped[int] = mapped_column(Integer, index=True)
 
 
