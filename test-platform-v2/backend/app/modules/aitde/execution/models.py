@@ -99,6 +99,8 @@ class ExecutionRun(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     project_id: Mapped[int] = mapped_column(Integer, default=0, index=True)
+    campaign_id: Mapped[int | None] = mapped_column(Integer, default=None, index=True)
+    campaign_item_id: Mapped[int | None] = mapped_column(Integer, default=None, index=True)
     mission_id: Mapped[int] = mapped_column(Integer, index=True)
     scenario_id: Mapped[int] = mapped_column(Integer, index=True)
     scenario_version_id: Mapped[int] = mapped_column(Integer, index=True)
