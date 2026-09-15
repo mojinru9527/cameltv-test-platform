@@ -5,6 +5,7 @@
 - execute_task: cancel_requested 后跳过剩余 item
 - API: create_task 立即返回不执行、cancel_task 设置 cancel_requested、retry-failed 创建新任务
 """
+
 from __future__ import annotations
 
 import threading
@@ -49,17 +50,17 @@ class TestApiTaskWorkerLifecycle:
 
         @contextmanager
         def consumers():
-            events.append('started')
+            events.append("started")
             try:
                 yield lambda: True
             finally:
-                events.append('stopped')
+                events.append("stopped")
 
-        with patch('app.worker.task_consumers', consumers), patch.object(settings, 'worker_execution_enabled', True):
+        with patch("app.worker.task_consumers", consumers), patch.object(settings, "worker_execution_enabled", True):
             with TestClient(app):
-                assert events == ['started']
+                assert events == ["started"]
 
-        assert events == ['started', 'stopped']
+        assert events == ["started", "stopped"]
 
 
 class TestApiTaskWorkerClaim:
@@ -71,12 +72,18 @@ class TestApiTaskWorkerClaim:
         from app.services.api_task_worker import claim_next_task
 
         pending = ApiExecutionTask(
-            project_id=1, task_id="T-PENDING", name="Pending",
-            total=2, status="pending",
+            project_id=1,
+            task_id="T-PENDING",
+            name="Pending",
+            total=2,
+            status="pending",
         )
         running = ApiExecutionTask(
-            project_id=1, task_id="T-RUNNING", name="Running",
-            total=2, status="running",
+            project_id=1,
+            task_id="T-RUNNING",
+            name="Running",
+            total=2,
+            status="running",
         )
         db_session.add_all([pending, running])
         db_session.commit()
@@ -94,10 +101,18 @@ class TestApiTaskWorkerClaim:
         from app.services.api_task_worker import claim_next_task
 
         p1 = ApiExecutionTask(
-            project_id=1, task_id="T-P1", name="P1", total=1, status="pending",
+            project_id=1,
+            task_id="T-P1",
+            name="P1",
+            total=1,
+            status="pending",
         )
         p2 = ApiExecutionTask(
-            project_id=2, task_id="T-P2", name="P2", total=1, status="pending",
+            project_id=2,
+            task_id="T-P2",
+            name="P2",
+            total=1,
+            status="pending",
         )
         db_session.add_all([p1, p2])
         db_session.commit()
@@ -113,8 +128,11 @@ class TestApiTaskWorkerClaim:
         from app.services.api_task_worker import claim_next_task
 
         t = ApiExecutionTask(
-            project_id=1, task_id="T-SUCCESS", name="Done",
-            total=1, status="success",
+            project_id=1,
+            task_id="T-SUCCESS",
+            name="Done",
+            total=1,
+            status="success",
         )
         db_session.add(t)
         db_session.commit()
@@ -128,8 +146,11 @@ class TestApiTaskWorkerClaim:
         from app.services.api_task_worker import claim_next_task
 
         t = ApiExecutionTask(
-            project_id=1, task_id="T-START", name="Start Test",
-            total=1, status="pending",
+            project_id=1,
+            task_id="T-START",
+            name="Start Test",
+            total=1,
+            status="pending",
         )
         db_session.add(t)
         db_session.commit()
@@ -147,8 +168,12 @@ class TestApiTaskWorkerClaim:
         from app.services.api_task_worker import claim_next_task
 
         running = ApiExecutionTask(
-            project_id=1, task_id="T-HELD", name="Held By Another",
-            total=1, status="running", locked_by="worker-A",
+            project_id=1,
+            task_id="T-HELD",
+            name="Held By Another",
+            total=1,
+            status="running",
+            locked_by="worker-A",
             locked_at=datetime.now(timezone.utc) - timedelta(seconds=10),
         )
         db_session.add(running)
@@ -166,14 +191,22 @@ class TestApiTaskWorkerClaim:
         from app.services.api_task_worker import reap_stale_api_tasks
 
         stale = ApiExecutionTask(
-            project_id=1, task_id="T-ZOMBIE", name="Zombie",
-            total=1, status="running", locked_by="dead-worker",
+            project_id=1,
+            task_id="T-ZOMBIE",
+            name="Zombie",
+            total=1,
+            status="running",
+            locked_by="dead-worker",
             locked_at=datetime.now(timezone.utc) - timedelta(hours=2),
             started_at=datetime.now(timezone.utc) - timedelta(hours=2),
         )
         fresh = ApiExecutionTask(
-            project_id=1, task_id="T-FRESH", name="Fresh",
-            total=1, status="running", locked_by="live-worker",
+            project_id=1,
+            task_id="T-FRESH",
+            name="Fresh",
+            total=1,
+            status="running",
+            locked_by="live-worker",
             locked_at=datetime.now(timezone.utc),
         )
         db_session.add_all([stale, fresh])
@@ -198,13 +231,20 @@ class TestApiTaskWorkerClaim:
         from app.services.api_task_worker import claim_next_task
 
         zombie = ApiExecutionTask(
-            project_id=1, task_id="T-ZB2", name="Zombie2",
-            total=1, status="running", locked_by="dead",
+            project_id=1,
+            task_id="T-ZB2",
+            name="Zombie2",
+            total=1,
+            status="running",
+            locked_by="dead",
             locked_at=datetime.now(timezone.utc) - timedelta(hours=3),
         )
         pending = ApiExecutionTask(
-            project_id=1, task_id="T-NEXT", name="Next",
-            total=1, status="pending",
+            project_id=1,
+            task_id="T-NEXT",
+            name="Next",
+            total=1,
+            status="pending",
         )
         db_session.add_all([zombie, pending])
         db_session.commit()
@@ -227,9 +267,11 @@ class TestTaskWorkerNoApiBranch:
 
         from app.services import task_worker
 
-        with patch("app.services.task_worker._process_ui_runs") as mock_ui, \
-             patch("app.services.lanhu_evidence.worker.poll_and_execute_evidence_jobs") as mock_evidence, \
-             patch("app.services.api_task_worker.claim_next_task") as mock_claim:
+        with (
+            patch("app.services.task_worker._process_ui_runs") as mock_ui,
+            patch("app.services.lanhu_evidence.worker.poll_and_execute_evidence_jobs") as mock_evidence,
+            patch("app.services.api_task_worker.claim_next_task") as mock_claim,
+        ):
             task_worker.poll_and_execute()
 
         mock_ui.assert_called_once()
@@ -255,16 +297,22 @@ class TestApiTaskWorkerExecute:
         from app.services import api_task_worker
 
         case = TestCase(
-            project_id=1, title="Backfill Case", case_type="api",
-            api_method="GET", api_endpoint="https://httpbin.org/get",
+            project_id=1,
+            title="Backfill Case",
+            case_type="api",
+            api_method="GET",
+            api_endpoint="https://httpbin.org/get",
             api_assertions='[{"type":"status_code","expected":200,"operator":"eq"}]',
         )
         db_session.add(case)
         db_session.commit()
 
         task = ApiExecutionTask(
-            project_id=1, task_id="T-BACKFILL", name="Backfill Test",
-            total=1, status="pending",
+            project_id=1,
+            task_id="T-BACKFILL",
+            name="Backfill Test",
+            total=1,
+            status="pending",
         )
         db_session.add(task)
         db_session.flush()
@@ -291,8 +339,10 @@ class TestApiTaskWorkerExecute:
                 pass
 
         wrapped = _NoCloseSession(db_session)
-        with patch("app.services.api_task_worker.SessionLocal", return_value=wrapped), \
-             patch("app.services.api_execution_service.execute_api_case", return_value=fake_result):
+        with (
+            patch("app.services.api_task_worker.SessionLocal", return_value=wrapped),
+            patch("app.services.api_execution_service.execute_api_case", return_value=fake_result),
+        ):
             api_task_worker.execute_task(task.id, project_id=1, worker_id="test-worker")
 
         db_session.refresh(case)
@@ -311,8 +361,11 @@ class TestApiTaskWorkerExecute:
         from app.services import api_task_worker
 
         task = ApiExecutionTask(
-            project_id=1, task_id="T-BRIDGE", name="Bridge Test",
-            total=1, status="pending",
+            project_id=1,
+            task_id="T-BRIDGE",
+            name="Bridge Test",
+            total=1,
+            status="pending",
         )
         db_session.add(task)
         db_session.flush()
@@ -325,8 +378,7 @@ class TestApiTaskWorkerExecute:
             "request_snapshot": {"method": "GET", "resolved_url": "https://api.example.com"},
             "response_snapshot": {"status_code": 200, "body_preview": '{"code":0}'},
             "assertions": [
-                {"type": "status_code", "expected": 200, "actual": 200,
-                 "passed": True, "message": "HTTP 200 = 200 ✓"},
+                {"type": "status_code", "expected": 200, "actual": 200, "passed": True, "message": "HTTP 200 = 200 ✓"},
             ],
         }
 
@@ -341,13 +393,16 @@ class TestApiTaskWorkerExecute:
                 pass
 
         wrapped = _NoCloseSession(db_session)
-        with patch("app.services.api_task_worker.SessionLocal", return_value=wrapped), \
-             patch("app.services.api_execution_service.execute_api_case", return_value=fake_result):
+        with (
+            patch("app.services.api_task_worker.SessionLocal", return_value=wrapped),
+            patch("app.services.api_execution_service.execute_api_case", return_value=fake_result),
+        ):
             api_task_worker.execute_task(task.id, project_id=1, worker_id="test-worker")
 
         item = db_session.query(ApiExecutionTaskItem).filter_by(task_id=task.id).first()
         from app.modules.aitde.common.enums import LegacyExecutionType
         from app.modules.aitde.execution import legacy_bridge
+
         link = legacy_bridge.find_link(db_session, LegacyExecutionType.API_TASK_ITEM, item.id)
         assert link is not None
         run = repository.get_run(db_session, link.run_id, 1)
@@ -368,8 +423,12 @@ class TestApiTaskWorkerExecute:
 
         # 创建无用例的纯模型测试（不需要真实用例，因为 cancel_requested 会让 worker 提前退出）
         task = ApiExecutionTask(
-            project_id=1, task_id="T-CANCEL", name="Cancel Test",
-            total=2, status="pending", cancel_requested=True,
+            project_id=1,
+            task_id="T-CANCEL",
+            name="Cancel Test",
+            total=2,
+            status="pending",
+            cancel_requested=True,
         )
         db_session.add(task)
         db_session.flush()
@@ -416,27 +475,53 @@ class TestApiTaskWorkerExecute:
 class TestApiTaskWorkerApi:
     """通过 API 端点验证 worker 集成行为。"""
 
-    def test_create_task_returns_immediately_status_pending(self, client, auth_headers, db_session):
-        """POST /apitest/tasks 应立即返回，任务状态为 pending（不执行）。"""
+    def test_create_task_returns_canonical_campaign(self, client, auth_headers, db_session, monkeypatch):
+        """POST /apitest/tasks must create canonical Campaign/Run, not legacy rows."""
+        from types import SimpleNamespace
+
+        from app.models.api_asset import ApiExecutionTask
+        from app.models.environment import Environment
         from app.models.test_case import TestCase
 
+        environment = Environment(
+            project_id=1,
+            name="canonical env",
+            env_type="test",
+            base_url="https://example.invalid",
+        )
         case = TestCase(
-            project_id=1, title="Immediate Test", case_type="api",
-            api_method="GET", api_endpoint="https://httpbin.org/get",
+            project_id=1,
+            title="Immediate Test",
+            case_type="api",
+            api_method="GET",
+            api_endpoint="https://httpbin.org/get",
             api_assertions='[{"type":"status_code","expected":200,"operator":"eq"}]',
         )
-        db_session.add(case)
+        db_session.add_all([environment, case])
         db_session.commit()
 
-        resp = client.post("/api/v1/apitest/tasks", headers=auth_headers, json={
-            "name": "立即返回测试",
-            "case_ids": [case.id],
-        })
+        def fake_create_api_task_campaign(db, **kwargs):
+            assert kwargs["project_id"] == 1
+            assert kwargs["cases"][0].id == case.id
+            return SimpleNamespace(id=88, status="running"), [SimpleNamespace(id=501)]
+
+        monkeypatch.setattr(
+            "app.api.v1.apitest_tasks.create_api_task_campaign",
+            fake_create_api_task_campaign,
+        )
+        resp = client.post(
+            "/api/v1/apitest/tasks",
+            headers=auth_headers,
+            json={
+                "name": "立即返回测试",
+                "case_ids": [case.id],
+                "environment_id": environment.id,
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()["data"]
-        assert data["status"] == "pending"
-        assert data["total"] == 1
-        assert data["started_at"] is None  # 尚未开始执行
+        assert data == {"campaign_id": 88, "run_ids": [501], "status": "running", "total": 1}
+        assert db_session.query(ApiExecutionTask).count() == 0
 
     def test_cancel_task_sets_cancel_requested(self, client, auth_headers, db_session):
         """POST /apitest/tasks/{id}/cancel 应设置 cancel_requested=True。"""
@@ -444,16 +529,22 @@ class TestApiTaskWorkerApi:
         from app.models.test_case import TestCase
 
         case = TestCase(
-            project_id=1, title="Cancel API Test", case_type="api",
-            api_method="GET", api_endpoint="https://httpbin.org/get",
+            project_id=1,
+            title="Cancel API Test",
+            case_type="api",
+            api_method="GET",
+            api_endpoint="https://httpbin.org/get",
             api_assertions='[{"type":"status_code","expected":200,"operator":"eq"}]',
         )
         db_session.add(case)
         db_session.commit()
 
         task = ApiExecutionTask(
-            project_id=1, task_id="T-API-CANCEL", name="API Cancel",
-            total=1, status="pending",
+            project_id=1,
+            task_id="T-API-CANCEL",
+            name="API Cancel",
+            total=1,
+            status="pending",
         )
         db_session.add(task)
         db_session.flush()
@@ -475,8 +566,11 @@ class TestApiTaskWorkerApi:
         from app.models.api_asset import ApiExecutionTask
 
         task = ApiExecutionTask(
-            project_id=1, task_id="T-DONE", name="Done",
-            total=1, status="success",
+            project_id=1,
+            task_id="T-DONE",
+            name="Done",
+            total=1,
+            status="success",
         )
         db_session.add(task)
         db_session.commit()
@@ -493,32 +587,51 @@ class TestApiTaskWorkerApi:
         from app.models.test_case import TestCase
 
         case1 = TestCase(
-            project_id=1, title="Retry Case 1", case_type="api",
-            api_method="GET", api_endpoint="https://httpbin.org/get",
+            project_id=1,
+            title="Retry Case 1",
+            case_type="api",
+            api_method="GET",
+            api_endpoint="https://httpbin.org/get",
             api_assertions='[{"type":"status_code","expected":200,"operator":"eq"}]',
         )
         case2 = TestCase(
-            project_id=1, title="Retry Case 2", case_type="api",
-            api_method="GET", api_endpoint="https://httpbin.org/get",
+            project_id=1,
+            title="Retry Case 2",
+            case_type="api",
+            api_method="GET",
+            api_endpoint="https://httpbin.org/get",
             api_assertions='[{"type":"status_code","expected":200,"operator":"eq"}]',
         )
         db_session.add_all([case1, case2])
         db_session.commit()
 
         task = ApiExecutionTask(
-            project_id=1, task_id="T-RETRY-SRC", name="Retry Source",
-            total=2, status="success", passed=1, failed=1,
+            project_id=1,
+            task_id="T-RETRY-SRC",
+            name="Retry Source",
+            total=2,
+            status="success",
+            passed=1,
+            failed=1,
         )
         db_session.add(task)
         db_session.flush()
 
-        db_session.add(ApiExecutionTaskItem(
-            task_id=task.id, case_id=case1.id, status="passed",
-        ))
-        db_session.add(ApiExecutionTaskItem(
-            task_id=task.id, case_id=case2.id, status="failed",
-            error_message="请求超时",
-        ))
+        db_session.add(
+            ApiExecutionTaskItem(
+                task_id=task.id,
+                case_id=case1.id,
+                status="passed",
+            )
+        )
+        db_session.add(
+            ApiExecutionTaskItem(
+                task_id=task.id,
+                case_id=case2.id,
+                status="failed",
+                error_message="请求超时",
+            )
+        )
         db_session.commit()
 
         resp = client.post(
@@ -533,6 +646,7 @@ class TestApiTaskWorkerApi:
 
         # 验证新任务
         from app.models.api_asset import ApiExecutionTask
+
         new_task = db_session.get(ApiExecutionTask, new_task_id)
         assert new_task is not None
         assert new_task.trigger_type == "retry_failed"
@@ -550,22 +664,33 @@ class TestApiTaskWorkerApi:
         from app.models.test_case import TestCase
 
         case = TestCase(
-            project_id=1, title="All Pass", case_type="api",
-            api_method="GET", api_endpoint="https://httpbin.org/get",
+            project_id=1,
+            title="All Pass",
+            case_type="api",
+            api_method="GET",
+            api_endpoint="https://httpbin.org/get",
             api_assertions='[{"type":"status_code","expected":200,"operator":"eq"}]',
         )
         db_session.add(case)
         db_session.commit()
 
         task = ApiExecutionTask(
-            project_id=1, task_id="T-ALL-PASS", name="All Pass",
-            total=1, status="success", passed=1,
+            project_id=1,
+            task_id="T-ALL-PASS",
+            name="All Pass",
+            total=1,
+            status="success",
+            passed=1,
         )
         db_session.add(task)
         db_session.flush()
-        db_session.add(ApiExecutionTaskItem(
-            task_id=task.id, case_id=case.id, status="passed",
-        ))
+        db_session.add(
+            ApiExecutionTaskItem(
+                task_id=task.id,
+                case_id=case.id,
+                status="passed",
+            )
+        )
         db_session.commit()
 
         resp = client.post(
@@ -579,8 +704,11 @@ class TestApiTaskWorkerApi:
         from app.models.api_asset import ApiExecutionTask
 
         task = ApiExecutionTask(
-            project_id=999, task_id="T-OTHER", name="Other Project",
-            total=1, status="failed",
+            project_id=999,
+            task_id="T-OTHER",
+            name="Other Project",
+            total=1,
+            status="failed",
         )
         db_session.add(task)
         db_session.commit()
@@ -596,8 +724,11 @@ class TestApiTaskWorkerApi:
         from app.models.api_asset import ApiExecutionTask
 
         task = ApiExecutionTask(
-            project_id=999, task_id="T-OTHER-C", name="Other Cancel",
-            total=1, status="pending",
+            project_id=999,
+            task_id="T-OTHER-C",
+            name="Other Cancel",
+            total=1,
+            status="pending",
         )
         db_session.add(task)
         db_session.commit()
@@ -614,27 +745,42 @@ class TestApiTaskWorkerApi:
         from app.models.test_case import TestCase
 
         case = TestCase(
-            project_id=1, title="Dup Case", case_type="api",
-            api_method="GET", api_endpoint="https://httpbin.org/get",
+            project_id=1,
+            title="Dup Case",
+            case_type="api",
+            api_method="GET",
+            api_endpoint="https://httpbin.org/get",
             api_assertions='[{"type":"status_code","expected":200,"operator":"eq"}]',
         )
         db_session.add(case)
         db_session.commit()
 
         task = ApiExecutionTask(
-            project_id=1, task_id="T-DUP", name="Dup Test",
-            total=2, status="failed", failed=2,
+            project_id=1,
+            task_id="T-DUP",
+            name="Dup Test",
+            total=2,
+            status="failed",
+            failed=2,
         )
         db_session.add(task)
         db_session.flush()
 
         # 同一 case 两次失败（参数化场景可能发生）
-        db_session.add(ApiExecutionTaskItem(
-            task_id=task.id, case_id=case.id, status="failed",
-        ))
-        db_session.add(ApiExecutionTaskItem(
-            task_id=task.id, case_id=case.id, status="failed",
-        ))
+        db_session.add(
+            ApiExecutionTaskItem(
+                task_id=task.id,
+                case_id=case.id,
+                status="failed",
+            )
+        )
+        db_session.add(
+            ApiExecutionTaskItem(
+                task_id=task.id,
+                case_id=case.id,
+                status="failed",
+            )
+        )
         db_session.commit()
 
         resp = client.post(
