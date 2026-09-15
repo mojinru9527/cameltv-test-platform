@@ -7,6 +7,7 @@ from app.models.plan_execution_job import PlanExecutionJob
 from app.models.interaction_edge import InteractionEdge
 from app.models.api_asset import ApiEndpoint, ApiExecutionTask, ApiExecutionTaskItem, ApiImportBatch, ApiService
 from app.models.api_token import ApiToken
+from app.modules.campaign_execution.models import CampaignItem, TestCampaign
 from app.models.audit import AuditLog
 from app.models.dataset import Dataset
 from app.models.dsh_task import DshTask
@@ -97,6 +98,8 @@ __all__ = [
     "ApiExecutionTaskItem",
     "ApiImportBatch",
     "ApiService",
+    "TestCampaign",
+    "CampaignItem",
     "ApiToken",
     "User",
     "Role",

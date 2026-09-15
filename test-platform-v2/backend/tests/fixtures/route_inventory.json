@@ -1,5 +1,5 @@
 {
-  "count": 653,
+  "count": 654,
   "routes": [
     {
       "path": "/api/v1/test-plans/{plan_id}/execution-jobs",
@@ -2612,6 +2612,10 @@
     {
       "path": "/api/v1/ai-config/shadow-policy",
       "method": "GET"
+    },
+    {
+      "path": "/api/v1/execution/campaigns/{campaign_id}/runs",
+      "method": "POST"
     }
   ]
 }

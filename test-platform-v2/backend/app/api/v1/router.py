@@ -23,6 +23,7 @@ from app.api.v1 import version_task
 from app.api.v1 import metrics
 from app.api.v1 import convergence
 from app.api.v1 import onboarding
+from app.modules.campaign_execution import router as campaign_execution_router
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(auth.router)
@@ -82,5 +83,6 @@ api_router.include_router(version_task.router)
 api_router.include_router(metrics.router)
 api_router.include_router(convergence.router)
 api_router.include_router(onboarding.router)
+api_router.include_router(campaign_execution_router.router)
 api_router.include_router(template.router)
 
