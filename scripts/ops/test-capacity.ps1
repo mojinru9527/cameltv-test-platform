@@ -31,6 +31,19 @@ $matchesThree64 = [regex]::Matches($script:lastRemoteCommand, "b64decode\('([A-Z
 if ($matchesThree64.Count -ne 2) { throw 'Expected encoded source and structured arguments for split upload' }
 $payloadThree = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($matchesThree64[1].Groups[1].Value)) | ConvertFrom-Json
 if ($payloadThree.archive_bytes -le $payload.archive_bytes) { throw 'Split upload archive bytes were not aggregated' }
+$fourParameters = $parameters.Clone()
+$fourParameters.Archives = @(
+    (Join-Path $PSScriptRoot 'capacity.ps1'),
+    (Join-Path $PSScriptRoot 'test-capacity.ps1'),
+    (Join-Path $PSScriptRoot 'release-transfer.ps1'),
+    (Join-Path $PSScriptRoot 'test-release-transfer.ps1')
+)
+Assert-ReleaseUploadCapacity @fourParameters
+if ($script:sshCalls -ne 3) { throw 'Expected four-archive split upload inspection' }
+$matchesFour64 = [regex]::Matches($script:lastRemoteCommand, "b64decode\('([A-Za-z0-9+/=]+)'\)")
+if ($matchesFour64.Count -ne 2) { throw 'Expected encoded source and structured arguments for four-archive upload' }
+$payloadFour = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($matchesFour64[1].Groups[1].Value)) | ConvertFrom-Json
+if ($payloadFour.archive_bytes -le $payloadThree.archive_bytes) { throw 'Four-archive upload bytes were not aggregated' }
 $matches64 = [regex]::Matches($script:lastRemoteCommand, "b64decode\('([A-Za-z0-9+/=]+)'\)")
 if ($matches64.Count -ne 2) { throw 'Expected encoded source and structured arguments' }
 $payload = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($matches64[1].Groups[1].Value)) | ConvertFrom-Json
