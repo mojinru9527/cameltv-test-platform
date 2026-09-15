@@ -74,3 +74,30 @@ def test_runner_service_create_claim_report(db):
     reported = rsvc.report_runner_task(db, task.id, status="done", result={"http_status": 200})
     assert reported.status == "done"
     assert reported.finished_at is not None
+
+def test_legacy_runner_mutation_routes_are_readonly(client, auth_headers, db_session):
+    """Legacy internal-runner queue mutations must fail closed without row changes."""
+    from app.models.runner_execution import RunnerExecutionTask
+
+    before = db_session.query(RunnerExecutionTask).count()
+    requests = (
+        ("/api/v1/apitest/runner/tasks", {
+            "environment_id": 1,
+            "task_id": "legacy-probe",
+            "request": {"method": "GET", "url": "/health"},
+            "assertions": [],
+            "runner_key": "legacy-runner",
+        }),
+        ("/api/v1/apitest/runner/claim", {"runner_key": "legacy-runner"}),
+        ("/api/v1/apitest/runner/report", {
+            "task_id": 1,
+            "status": "done",
+            "result": {},
+            "error_message": "",
+        }),
+    )
+    for url, payload in requests:
+        response = client.post(url, headers=auth_headers, json=payload)
+        assert response.status_code == 410
+        assert "canonical runner endpoints" in response.json()["detail"]
+    assert db_session.query(RunnerExecutionTask).count() == before
