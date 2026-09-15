@@ -142,6 +142,9 @@ function Invoke-Release {
         Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-runner:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Target runner -Dest "$OutputDir\$Tag-runner.tar"
         $runnerDigest = Get-ExportDigest "$OutputDir\$Tag-runner.tar.metadata.json"
         $archives += "$OutputDir\$Tag-runner.tar"
+        Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-ai-gateway:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Target ai-gateway -Dest "$OutputDir\$Tag-ai-gateway.tar"
+        $gatewayDigest = Get-ExportDigest "$OutputDir\$Tag-ai-gateway.tar.metadata.json"
+        $archives += "$OutputDir\$Tag-ai-gateway.tar"
         $configArtifact = "$OutputDir\$Tag-execution.yml"
         Copy-Item -LiteralPath $ExecutionConfig -Destination $configArtifact
         $executionChecksum = (Get-FileHash -LiteralPath $configArtifact -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -166,6 +169,7 @@ function Invoke-Release {
     if ($RuntimeMode -eq 'split') {
         $manifest.runtime_mode = 'split'
         $manifest.runner = @{ image = 'cameltv-tp-runner'; digest = "sha256:$runnerDigest"; sbom_sha256 = $zero64 }
+        $manifest.'ai-gateway' = @{ image = 'cameltv-tp-ai-gateway'; digest = "sha256:$gatewayDigest"; sbom_sha256 = $zero64 }
         $manifest.execution_config_sha256 = $executionChecksum
     }
     $manifest = $manifest | ConvertTo-Json -Depth 6
@@ -185,7 +189,7 @@ function Invoke-Release {
     if ($LASTEXITCODE -ne 0) { throw 'Cannot prepare remote release directory' }
     Assert-ReleaseUploadCapacity -HostName $HostName -UserName $UserName -KeyPath $KeyPath `
         -ReleaseDir $ReleaseDir -Archives $archives
-    # 并行上传前后端（两个独立文件，无冲突；单连接带宽受限，并行可缩短总时长）
+    # 并行上传发布制品（独立文件无冲突；单连接带宽受限，并行可缩短总时长）
     $transferScript = Join-Path $PSScriptRoot 'release-transfer.ps1'
     $upload = {
         param($script, $key, $source, $destination)
