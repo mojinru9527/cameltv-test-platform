@@ -1,5 +1,5 @@
 {
-  "count": 658,
+  "count": 663,
   "routes": [
     {
       "path": "/api/v1/test-plans/{plan_id}/execution-jobs",
@@ -2631,6 +2631,26 @@
     },
     {
       "path": "/api/v1/execution/runs/{run_id}/cancel",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ai/agents/register",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ai/agents/health",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ai/jobs/claim",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ai/jobs/{job_id}/heartbeat",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ai/jobs/{job_id}/report",
       "method": "POST"
     }
   ]
