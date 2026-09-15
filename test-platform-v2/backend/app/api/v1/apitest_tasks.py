@@ -10,8 +10,6 @@ from __future__ import annotations
 
 import json
 import logging
-import uuid
-
 from app.modules.campaign_execution.service import create_api_task_campaign
 
 logger = logging.getLogger(__name__)
@@ -46,12 +44,15 @@ def _current_project_id(current: CurrentUser) -> int:
     return current.project_id
 
 
-def _kick_legacy_api_worker() -> None:
-    """Wake the legacy worker only for historical task cancel/retry endpoints."""
-    from app.services import api_task_worker
+_LEGACY_MUTATION_MESSAGE = (
+    "Legacy execution history is read-only. Use canonical ExecutionRun under "
+    "/api/v1/execution for new execution, retry, cancel, or report operations."
+)
 
-    api_task_worker.ensure_processor_running()
-    api_task_worker.kick()
+
+def _legacy_mutation_gone() -> None:
+    """Fail closed before any legacy execution row can be mutated."""
+    raise HTTPException(status_code=410, detail=_LEGACY_MUTATION_MESSAGE)
 
 
 # ═══════════════════════════════════════════════════════
@@ -221,104 +222,46 @@ def get_task(
     return R.ok(detail)
 
 
-@router.delete("/tasks/{task_id}", response_model=R[dict], summary="删除执行任务")
+@router.delete("/tasks/{task_id}", response_model=R[dict], summary="删除执行任务（历史只读）")
 def delete_task(
     task_id: int,
     current: CurrentUser = Depends(require_permission("apitest:execute")),
     db: Session = Depends(get_db),
 ):
-    """删除执行任务及其明细（仅终态任务可删）。"""
+    """Historical legacy tasks are immutable; canonical runs own deletion semantics."""
     pid = _current_project_id(current)
     task = api_execution_service.get_project_task(db, task_id, pid)
     if not task:
         raise HTTPException(404, "任务不存在")
-    if task.status in ("pending", "running"):
-        raise HTTPException(400, "任务执行中，请先取消后再删除")
-    api_execution_service.delete_task_items(db, task.id)
-    db.delete(task)
-    db.commit()
-    return {"deleted": task_id}
+    _legacy_mutation_gone()
 
 
-@router.post("/tasks/{task_id}/cancel", response_model=R[dict], summary="取消任务")
+@router.post("/tasks/{task_id}/cancel", response_model=R[dict], summary="取消任务（历史只读）")
 def cancel_task(
     task_id: int,
     current: CurrentUser = Depends(require_permission("apitest:task")),
     db: Session = Depends(get_db),
 ):
-    """设置 cancel_requested 标记，由 worker 在下一条 item 执行前检查并终止。"""
-    task = api_execution_service.get_task_by_id(db, task_id)
+    """Historical legacy tasks cannot be cancelled; use the canonical run endpoint."""
+    pid = _current_project_id(current)
+    task = api_execution_service.get_project_task(db, task_id, pid)
     if not task:
         raise HTTPException(404, "任务不存在")
-    pid = _current_project_id(current)
-    if task.project_id != pid:
-        raise HTTPException(403, "无权访问该任务")
-    if task.status not in ("pending", "running"):
-        raise HTTPException(400, "只能取消 pending 或 running 状态的任务")
-    task.cancel_requested = True
-    db.commit()
-    # 仅历史 task 兼容接口允许唤醒 legacy worker
-    _kick_legacy_api_worker()
-    return R.ok({"status": "cancelling", "task_id": task.id})
+    _legacy_mutation_gone()
 
 
-@router.post("/tasks/{task_id}/retry-failed", response_model=R[dict], summary="重跑失败用例")
+@router.post("/tasks/{task_id}/retry-failed", response_model=R[dict], summary="重跑失败用例（历史只读）")
 def retry_failed(
     task_id: int,
     current: CurrentUser = Depends(require_permission("apitest:task")),
     db: Session = Depends(get_db),
 ):
-    """为原任务中所有失败项创建新的重试任务（trigger_type=retry_failed）。
-
-    原任务不受影响；新任务仅包含失败项的 case_id。
-    """
+    """Historical retry is disabled; create a canonical campaign/run instead."""
     pid = _current_project_id(current)
-    task = api_execution_service.get_task_by_id(db, task_id)
+    task = api_execution_service.get_project_task(db, task_id, pid)
     if not task:
         raise HTTPException(404, "任务不存在")
-    if task.project_id != pid:
-        raise HTTPException(403, "无权访问该任务")
-
-    failed_items = api_execution_service.list_failed_task_items(db, task.id)
-
-    if not failed_items:
-        raise HTTPException(400, "没有失败的用例需要重跑")
-
-    # 收集失败用例的 case_id（去重）
-    failed_case_ids = list({it.case_id for it in failed_items})
-
-    # 创建新任务
-    retry_task_id_str = f"API-{uuid.uuid4().hex[:8].upper()}"
-    new_task = api_execution_service.create_execution_task(
-        db,
-        project_id=pid,
-        task_id=retry_task_id_str,
-        name=f"{task.name} (失败重试)",
-        environment_id=task.environment_id,
-        service_id=task.service_id,
-        status="pending",
-        total=len(failed_case_ids),
-        trigger_type="retry_failed",
-        creator_id=current.user.id if current.user else 0,
-        confirm_prod=task.confirm_prod,
-    )
-
-    api_execution_service.add_task_items(db, new_task.id, failed_case_ids)
-
-    db.commit()
-    db.refresh(new_task)
-
-    # 仅历史 task 兼容接口允许唤醒 legacy worker
-    _kick_legacy_api_worker()
-
-    return R.ok(
-        {
-            "new_task_id": new_task.id,
-            "new_task_uid": retry_task_id_str,
-            "retry_count": len(failed_case_ids),
-            "original_task_id": task.id,
-        }
-    )
+    _legacy_mutation_gone()
 
 
 @router.get("/tasks/{task_id}/items/{item_id}/curl", response_model=R[dict], summary="生成 curl 复现命令")
