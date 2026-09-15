@@ -5,11 +5,14 @@ Batch 181（FIX-173-P2-10）路由拆分：即时执行 / 批量任务 / 任务�
 TestCase ORM 查询收敛到 app.services.api_execution_service /
 api_case_generation_service。
 """
+
 from __future__ import annotations
 
 import json
 import logging
 import uuid
+
+from app.modules.campaign_execution.service import create_api_task_campaign
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +30,7 @@ from app.schemas.api_asset import (
     ApiTaskOut,
 )
 from app.schemas.common import R
-from app.services import api_execution_service, api_task_worker
+from app.services import api_execution_service
 from app.services.api_case_generation_service import get_api_cases_by_ids
 from app.services.api_execution_service import build_curl_command, quick_execute
 from app.services.failure_analyzer import analyze_api_failure
@@ -43,9 +46,18 @@ def _current_project_id(current: CurrentUser) -> int:
     return current.project_id
 
 
+def _kick_legacy_api_worker() -> None:
+    """Wake the legacy worker only for historical task cancel/retry endpoints."""
+    from app.services import api_task_worker
+
+    api_task_worker.ensure_processor_running()
+    api_task_worker.kick()
+
+
 # ═══════════════════════════════════════════════════════
 # 即时执行（保留原有功能）
 # ═══════════════════════════════════════════════════════
+
 
 @router.post("/api-execute", response_model=R[dict], summary="即时执行（调试）")
 def api_quick_execute(
@@ -73,9 +85,7 @@ def api_quick_execute(
                 project_id=pid,
                 environment_id=body.environment_id,
                 permission=(
-                    "apitest:execute_prod"
-                    if body.request.method in {"POST", "PUT", "PATCH", "DELETE"}
-                    else ""
+                    "apitest:execute_prod" if body.request.method in {"POST", "PUT", "PATCH", "DELETE"} else ""
                 ),
                 confirmed=body.confirm_prod,
             ),
@@ -85,7 +95,8 @@ def api_quick_execute(
 
     try:
         result = quick_execute(
-            db, request_def,
+            db,
+            request_def,
             assertions=assertions,
             project_id=pid,
             environment_id=body.environment_id,
@@ -104,7 +115,8 @@ def api_quick_execute(
 # 批量执行任务
 # ═══════════════════════════════════════════════════════
 
-@router.post("/tasks", response_model=R[ApiTaskOut], summary="创建执行任务")
+
+@router.post("/tasks", response_model=R[dict], summary="创建执行任务")
 def create_task(
     body: ApiTaskCreateRequest,
     current: CurrentUser = Depends(require_permission("apitest:task")),
@@ -112,13 +124,11 @@ def create_task(
 ):
     """从用例列表创建批量执行任务。
 
-    任务创建后状态为 pending，由持久化 task_worker 后台轮询认领执行。
-    接口立即返回，不等待用例执行完成。
+    对已迁移的 API 用例创建 canonical Campaign，并返回 campaign_id + run_ids。
 
     生产环境任务需要 apitest:execute_prod 权限 + confirm_prod=true。
     """
     pid = _current_project_id(current)
-    task_id_str = f"API-{uuid.uuid4().hex[:8].upper()}"
 
     # 验证用例存在且为 API 类型
     cases = get_api_cases_by_ids(db, pid, body.case_ids)
@@ -126,17 +136,13 @@ def create_task(
     if len(cases) != len(body.case_ids):
         raise HTTPException(400, "部分用例不存在或不是 API 类型")
 
-    has_execute_prod = current.is_super or "apitest:execute_prod" in current.permissions
     if body.environment_id is not None:
-        has_write_case = any(
-            (case.api_method or "GET").upper() in {"POST", "PUT", "PATCH", "DELETE"}
-            for case in cases
-        )
+        has_write_case = any((case.api_method or "GET").upper() in {"POST", "PUT", "PATCH", "DELETE"} for case in cases)
         try:
             require_allowed_operation(
                 db,
                 ProductionOperation(
-                    action=f"Create API execution task ({len(cases)} cases)",
+                    action=f"Create API execution campaign ({len(cases)} cases)",
                     project_id=pid,
                     environment_id=body.environment_id,
                     permission="apitest:execute_prod" if has_write_case else "",
@@ -148,30 +154,22 @@ def create_task(
         except APIException as exc:
             raise HTTPException(exc.http_status, exc.msg) from exc
 
-    task = api_execution_service.create_execution_task(
+    campaign, runs = create_api_task_campaign(
         db,
         project_id=pid,
-        task_id=task_id_str,
+        user_id=current.user.id,
         name=body.name,
+        cases=cases,
         environment_id=body.environment_id,
-        service_id=body.service_id,
-        status="pending",
-        total=len(cases),
-        creator_id=current.user.id if current.user else 0,
-        confirm_prod=body.confirm_prod,
     )
-
-    # 创建任务明细
-    api_execution_service.add_task_items(db, task.id, [case.id for case in cases])
-
-    db.commit()
-    db.refresh(task)
-
-    # 启动 worker 并唤醒以立即处理新任务
-    api_task_worker.ensure_processor_running()
-    api_task_worker.kick()
-
-    return R.ok(ApiTaskOut.model_validate(task))
+    return R.ok(
+        {
+            "campaign_id": campaign.id,
+            "run_ids": [run.id for run in runs],
+            "status": campaign.status,
+            "total": len(cases),
+        }
+    )
 
 
 @router.get("/tasks", response_model=R[dict], summary="任务列表")
@@ -185,13 +183,21 @@ def list_tasks(
 ):
     pid = _current_project_id(current)
     rows, total = api_execution_service.list_project_tasks(
-        db, pid,
-        service_id=service_id, status=status, page=page, page_size=page_size,
+        db,
+        pid,
+        service_id=service_id,
+        status=status,
+        page=page,
+        page_size=page_size,
     )
-    return R.ok({
-        "total": total, "page": page, "page_size": page_size,
-        "items": [ApiTaskOut.model_validate(r) for r in rows],
-    })
+    return R.ok(
+        {
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "items": [ApiTaskOut.model_validate(r) for r in rows],
+        }
+    )
 
 
 @router.get("/tasks/{task_id}", response_model=R[ApiTaskDetailOut], summary="任务详情")
@@ -251,8 +257,8 @@ def cancel_task(
         raise HTTPException(400, "只能取消 pending 或 running 状态的任务")
     task.cancel_requested = True
     db.commit()
-    # 唤醒 worker 以立即处理取消
-    api_task_worker.kick()
+    # 仅历史 task 兼容接口允许唤醒 legacy worker
+    _kick_legacy_api_worker()
     return R.ok({"status": "cancelling", "task_id": task.id})
 
 
@@ -302,16 +308,17 @@ def retry_failed(
     db.commit()
     db.refresh(new_task)
 
-    # 唤醒 worker
-    api_task_worker.ensure_processor_running()
-    api_task_worker.kick()
+    # 仅历史 task 兼容接口允许唤醒 legacy worker
+    _kick_legacy_api_worker()
 
-    return R.ok({
-        "new_task_id": new_task.id,
-        "new_task_uid": retry_task_id_str,
-        "retry_count": len(failed_case_ids),
-        "original_task_id": task.id,
-    })
+    return R.ok(
+        {
+            "new_task_id": new_task.id,
+            "new_task_uid": retry_task_id_str,
+            "retry_count": len(failed_case_ids),
+            "original_task_id": task.id,
+        }
+    )
 
 
 @router.get("/tasks/{task_id}/items/{item_id}/curl", response_model=R[dict], summary="生成 curl 复现命令")
@@ -368,8 +375,10 @@ def analyze_task_failures(
         cat = a["category"]
         categories[cat] = categories.get(cat, 0) + 1
 
-    return R.ok({
-        "total_failed": len(failed_items),
-        "categories": categories,
-        "analyses": analyses,
-    })
+    return R.ok(
+        {
+            "total_failed": len(failed_items),
+            "categories": categories,
+            "analyses": analyses,
+        }
+    )

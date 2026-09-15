@@ -3,6 +3,7 @@
 Verify that query `project_id` cannot override `X-Project-Id` header
 and that cross-project access to tasks is denied.
 """
+
 import pytest
 
 from _guard_helpers import assert_guard_404
@@ -332,9 +333,7 @@ class TestProjectScopedAssetDeletion:
         assert_guard_404(response)
         assert db.get(ApiService, service.id) is not None
 
-    def test_delete_service_returns_409_when_current_project_endpoint_references_it(
-        self, client, auth_headers, db
-    ):
+    def test_delete_service_returns_409_when_current_project_endpoint_references_it(self, client, auth_headers, db):
         """P0: deleting a service with current-project endpoints is rejected."""
         from app.models.api_asset import ApiEndpoint, ApiService
 
@@ -350,9 +349,7 @@ class TestProjectScopedAssetDeletion:
         assert response.status_code == 409
         assert db.get(ApiService, service.id) is not None
 
-    def test_historical_foreign_endpoint_reference_blocks_service_delete(
-        self, client, auth_headers, db
-    ):
+    def test_historical_foreign_endpoint_reference_blocks_service_delete(self, client, auth_headers, db):
         """P1: historical invalid bindings are retained rather than orphaned by deletion."""
         from app.models.api_asset import ApiEndpoint, ApiService
 
@@ -391,9 +388,7 @@ class TestProjectScopedAssetDeletion:
         assert_guard_404(response)
         assert db.get(ApiEndpoint, endpoint.id) is not None
 
-    def test_delete_endpoint_returns_409_when_generated_case_references_it(
-        self, client, auth_headers, db
-    ):
+    def test_delete_endpoint_returns_409_when_generated_case_references_it(self, client, auth_headers, db):
         """P0: a generated case's stable marker prevents endpoint deletion."""
         from app.models.api_asset import ApiEndpoint, ApiService
         from app.models.test_case import TestCase
@@ -404,13 +399,15 @@ class TestProjectScopedAssetDeletion:
         endpoint = ApiEndpoint(project_id=1, service_id=service.id, method="GET", path="/endpoint-ref")
         db.add(endpoint)
         db.flush()
-        db.add(TestCase(
-            project_id=1,
-            title="Generated reference",
-            case_type="api",
-            api_spec_ref=f"api_endpoint:{endpoint.id}",
-            source="ai_generated",
-        ))
+        db.add(
+            TestCase(
+                project_id=1,
+                title="Generated reference",
+                case_type="api",
+                api_spec_ref=f"api_endpoint:{endpoint.id}",
+                source="ai_generated",
+            )
+        )
         db.commit()
 
         response = client.delete(f"/api/v1/apitest/endpoints/{endpoint.id}", headers=auth_headers)
@@ -418,9 +415,7 @@ class TestProjectScopedAssetDeletion:
         assert response.status_code == 409
         assert db.get(ApiEndpoint, endpoint.id) is not None
 
-    def test_foreign_case_does_not_block_current_project_endpoint_delete(
-        self, client, auth_headers, db
-    ):
+    def test_foreign_case_does_not_block_current_project_endpoint_delete(self, client, auth_headers, db):
         """P1: another project's marker cannot block deletion in the active project."""
         from app.models.api_asset import ApiEndpoint, ApiService
         from app.models.test_case import TestCase
@@ -431,13 +426,15 @@ class TestProjectScopedAssetDeletion:
         endpoint = ApiEndpoint(project_id=1, service_id=service.id, method="DELETE", path="/isolated")
         db.add(endpoint)
         db.flush()
-        db.add(TestCase(
-            project_id=999,
-            title="Foreign generated reference",
-            case_type="api",
-            api_spec_ref=f"api_endpoint:{endpoint.id}",
-            source="ai_generated",
-        ))
+        db.add(
+            TestCase(
+                project_id=999,
+                title="Foreign generated reference",
+                case_type="api",
+                api_spec_ref=f"api_endpoint:{endpoint.id}",
+                source="ai_generated",
+            )
+        )
         db.commit()
         endpoint_id = endpoint.id
 
@@ -481,28 +478,43 @@ class TestProjectIsolationTasks:
         assert "Task P1" in names
         assert "Task P999" not in names
 
-    def test_tasks_create_uses_header_project(self, client, auth_headers, db):
-        """Creating a task should use the header project, not a query param."""
+    def test_tasks_create_uses_header_project(self, client, auth_headers, db, monkeypatch):
+        """Creating a canonical campaign should use the header project."""
+        from types import SimpleNamespace
+
         from app.models.test_case import TestCase
 
         tc = TestCase(
-            project_id=1, title="API Case for create", case_type="api",
-            api_method="GET", api_endpoint="https://httpbin.org/get",
+            project_id=1,
+            title="API Case for create",
+            case_type="api",
+            api_method="GET",
+            api_endpoint="https://httpbin.org/get",
             api_assertions='[{"type":"status_code","expected":200,"operator":"eq"}]',
         )
         db.add(tc)
         db.commit()
+        captured = {}
 
+        def fake_create_api_task_campaign(db, **kwargs):
+            captured.update(kwargs)
+            return SimpleNamespace(id=99, status="running"), [SimpleNamespace(id=700)]
+
+        monkeypatch.setattr(
+            "app.api.v1.apitest_tasks.create_api_task_campaign",
+            fake_create_api_task_campaign,
+        )
         headers = {**auth_headers, "X-Project-Id": "1"}
         resp = client.post(
             "/api/v1/apitest/tasks?project_id=999",
             json={"name": "Isolation Create Test", "case_ids": [tc.id]},
             headers=headers,
         )
-        # project_id=999 in query is ignored, should use project 1 from header
+        # project_id=999 in query is ignored; canonical adapter receives project 1.
         assert resp.status_code == 200
-        data = resp.json()["data"]
-        assert data["project_id"] == 1
+        assert captured["project_id"] == 1
+        assert resp.json()["data"]["campaign_id"] == 99
+        assert resp.json()["data"]["run_ids"] == [700]
 
     def test_services_create_uses_header_project(self, client, auth_headers):
         """Creating a service should use the header project."""
@@ -517,9 +529,7 @@ class TestProjectIsolationTasks:
         assert data["project_id"] == 1
         assert data["name"] == "header-svc"
 
-    def test_task_curl_rejects_item_from_other_project(
-        self, client, auth_headers, api_task_factory, db
-    ):
+    def test_task_curl_rejects_item_from_other_project(self, client, auth_headers, api_task_factory, db):
         """P0: curl generation must authorize the parent task before reading its item."""
         from app.models.api_asset import ApiExecutionTaskItem
 
@@ -540,19 +550,19 @@ class TestProjectIsolationTasks:
 
         assert_guard_404(response)
 
-    def test_task_failure_analysis_rejects_task_from_other_project(
-        self, client, auth_headers, api_task_factory, db
-    ):
+    def test_task_failure_analysis_rejects_task_from_other_project(self, client, auth_headers, api_task_factory, db):
         """P0: failure analysis must authorize task ownership before loading failed items."""
         from app.models.api_asset import ApiExecutionTaskItem
 
         task = api_task_factory(project_id=999)
-        db.add(ApiExecutionTaskItem(
-            task_id=task.id,
-            case_id=1,
-            status="failed",
-            error_message="private upstream failure",
-        ))
+        db.add(
+            ApiExecutionTaskItem(
+                task_id=task.id,
+                case_id=1,
+                status="failed",
+                error_message="private upstream failure",
+            )
+        )
         db.commit()
 
         response = client.get(

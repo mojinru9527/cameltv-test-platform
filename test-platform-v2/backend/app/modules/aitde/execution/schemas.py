@@ -99,6 +99,8 @@ class RunOut(BaseModel):
 
     id: int
     project_id: int
+    campaign_id: int | None = None
+    campaign_item_id: int | None = None
     mission_id: int
     scenario_id: int
     scenario_version_id: int

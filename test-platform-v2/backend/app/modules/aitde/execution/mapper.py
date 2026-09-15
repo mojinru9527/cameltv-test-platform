@@ -64,6 +64,8 @@ def run_to_dict(row: ExecutionRun) -> dict[str, Any]:
     return {
         "id": row.id,
         "project_id": row.project_id,
+        "campaign_id": row.campaign_id,
+        "campaign_item_id": row.campaign_item_id,
         "mission_id": row.mission_id,
         "scenario_id": row.scenario_id,
         "scenario_version_id": row.scenario_version_id,
