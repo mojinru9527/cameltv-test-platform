@@ -4,6 +4,7 @@ Batch 181（FIX-173-P2-10）路由拆分：原 test_plan.py 拆分为
 test_plan_crud.py / test_plan_execution.py（本文件）。
 端点函数体逐字移动，仅调整 import。
 """
+
 from __future__ import annotations
 
 import logging
@@ -14,13 +15,16 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
+from app.core.exceptions import APIException
 from app.core.execution_status import canonical_exec_status
 from app.schemas.common import Page, R
 from app.schemas.test_plan import (
     ExecutionCreate,
     ExecutionOut,
 )
+from app.modules.campaign_execution.service import create_plan_campaign
 from app.services import audit_service, test_plan_service, triage_service
+from app.services.production_operation_guard import ProductionOperation, require_allowed_operation
 
 logger = logging.getLogger("test_plan")
 
@@ -105,8 +109,7 @@ def _queue_plan_done_if_complete(
         {
             "plan_name": plan.get("name", ""),
             "result_summary": (
-                f"通过 {stats.get('pass_', 0)} / 失败 {stats.get('fail', 0)} / "
-                f"跳过 {stats.get('skip', 0)}"
+                f"通过 {stats.get('pass_', 0)} / 失败 {stats.get('fail', 0)} / 跳过 {stats.get('skip', 0)}"
             ),
             "link": "",
         },
@@ -133,6 +136,7 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
 # ═══════════════════════════════════════════════════════════
 # 执行记录
 # ═══════════════════════════════════════════════════════════
+
 
 @router.post("/{plan_id}/cases/{pcase_id}/execute", response_model=R[ExecutionOut])
 def execute_case(
@@ -174,6 +178,7 @@ class AutoExecuteBody(BaseModel):
 
 class ExecuteAllBody(BaseModel):
     environment_id: int | None = None
+    confirm_prod: bool = False
     auto_ui: bool = True  # batch-167: manual P0/P1 自动转 UI 执行
     ui_environment_id: int | None = None  # batch-168 D7: UI 自动化独立执行环境
     async_mode: bool = False  # batch-169 C168-2: true 时后台执行并立即返回
@@ -188,60 +193,63 @@ def execute_all_cases(
     current: CurrentUser = Depends(require_permission("testplan:execute")),
     db: Session = Depends(get_db),
 ):
-    """一键执行计划中全部用例：API 用例自动执行，人工/UI 用例标记为 skip。
-
-    batch-169：async_mode=true 时后台执行并立即返回，避免多 UI 用例超过网关 300s。
-    """
-    if body and body.async_mode:
-        from app.services.plan_execution_queue import enqueue
-        try:
-            job_id = enqueue(
-                db,
-                plan_id=plan_id,
-                executor_id=current.user.id,
-                environment_id=body.environment_id,
-                ui_environment_id=body.ui_environment_id,
-                auto_ui=body.auto_ui,
-                project_id=current.project_id or 0,
-            )
-        except ValueError as exc:
-            return R(code=404, msg=str(exc))
-        _audit(req, current, db, "plan:execute_all:async", f"plan #{plan_id}",
-               f"environment={body.environment_id}, ui_environment={body.ui_environment_id}, auto_ui={body.auto_ui}")
-        return R.ok({"async": True, "job_id": job_id, "message": "计划已加入执行队列，请稍后刷新执行记录"})
+    """Create the canonical Campaign for all API cases in the plan."""
+    project_id = current.project_id or 0
+    if not test_plan_service.get_plan(db, plan_id, project_id):
+        return R(code=404, msg="计划不存在")
+    target_environment_id = body.environment_id if body else None
 
     try:
-        result = test_plan_service.execute_all_cases(
+        test_plan_service.ensure_plan_execution_ready(
             db,
-            plan_id=plan_id,
-            executor_id=current.user.id,
-            environment_id=body.environment_id if body else None,
-            auto_ui=(body.auto_ui if body else True),
-            ui_environment_id=(body.ui_environment_id if body else None),
+            plan_id,
             project_id=current.project_id or 0,
+            environment_id=target_environment_id,
         )
-    except ValueError as e:
-        return R(code=1, msg=str(e))
-    except Exception as e:
-        return R(code=1, msg=f"批量执行失败: {e}")
+        if target_environment_id is None:
+            return R(code=1, msg="计划包含 API 用例时必须提供执行环境")
+        require_allowed_operation(
+            db,
+            ProductionOperation(
+                action="Execute canonical TestPlan campaign",
+                project_id=project_id,
+                environment_id=target_environment_id or 0,
+                permission="apitest:execute_prod",
+                confirmed=bool(body and body.confirm_prod),
+            ),
+            set(current.permissions),
+            user_id=current.user.id,
+        )
+        campaign, runs, skipped = create_plan_campaign(
+            db,
+            project_id=current.project_id or 0,
+            user_id=current.user.id,
+            plan_id=plan_id,
+            environment_id=target_environment_id,
+        )
+    except APIException as exc:
+        return R(code=exc.code, msg=exc.msg)
+    except ValueError as exc:
+        return R(code=1, msg=str(exc))
 
-    _audit(req, current, db, "plan:execute_all", f"plan #{plan_id}",
-           f"total={result['total']}, passed={result['passed']}, failed={result['failed']}, skipped={result['skipped']}")
-    _queue_failure_auto_chain_if_enabled(
-        background_tasks,
+    _audit(
+        req,
+        current,
         db,
-        plan_id=plan_id,
-        project_id=current.project_id or 0,
-        creator_id=current.user.id,
-        failed_count=result.get("failed", 0),
+        "plan:execute_all:campaign",
+        f"plan #{plan_id}",
+        f"campaign={campaign.id}, runs={len(runs)}, skipped={skipped}",
     )
-    _queue_plan_done_if_complete(
-        db,
-        background_tasks,
-        project_id=current.project_id or 0,
-        plan_id=plan_id,
+    return R.ok(
+        {
+            "async": bool(body and body.async_mode),
+            "campaign_id": campaign.id,
+            "run_ids": [run.id for run in runs],
+            "total": len(runs) + skipped,
+            "executed": len(runs),
+            "skipped": skipped,
+        }
     )
-    return R.ok(result)
 
 
 @router.post("/{plan_id}/auto-execute", response_model=R[dict], summary="自动执行计划中的 API 用例")
@@ -267,8 +275,14 @@ def auto_execute_api_cases(
     except Exception as e:
         return R(code=1, msg=f"批量执行失败: {e}")
 
-    _audit(req, current, db, "plan:auto_execute", f"plan #{plan_id}",
-           f"executed={result['executed']}, passed={result['passed']}, failed={result['failed']}")
+    _audit(
+        req,
+        current,
+        db,
+        "plan:auto_execute",
+        f"plan #{plan_id}",
+        f"executed={result['executed']}, passed={result['passed']}, failed={result['failed']}",
+    )
     _queue_failure_auto_chain_if_enabled(
         background_tasks,
         db,
@@ -296,9 +310,11 @@ def list_executions(
     db: Session = Depends(get_db),
 ):
     items, total = test_plan_service.get_executions(
-        db, plan_id,
+        db,
+        plan_id,
         pcase_id=pcase_id,
-        page=page, page_size=page_size,
+        page=page,
+        page_size=page_size,
         project_id=current.project_id or 0,
     )
     return R.ok(Page(total=total, page=page, page_size=page_size, items=[ExecutionOut(**it) for it in items]))
@@ -311,6 +327,7 @@ def list_execution_jobs(
     db: Session = Depends(get_db),
 ):
     from app.services.plan_execution_queue import list_jobs
+
     return R.ok(list_jobs(db, plan_id, current.project_id or 0))
 
 
@@ -379,6 +396,7 @@ def draft_defect_from_failure(
 # 批量操作
 # ═══════════════════════════════════════════════════════
 
+
 class BatchExecuteBody(BaseModel):
     pcase_ids: list[int] = []
     # Batch 182（P1-06）：接受新旧双值（旧前端/CI 传 pass/fail/skip/block），服务内规范化
@@ -432,6 +450,12 @@ def batch_execute_cases(
         creator_id=current.user.id,
         failed_count=failed,
     )
-    _audit(req, current, db, "plan:batch_execute", f"plan #{plan_id}",
-           f"executed={executed}, failed={failed}, errors={len(errors)}")
+    _audit(
+        req,
+        current,
+        db,
+        "plan:batch_execute",
+        f"plan #{plan_id}",
+        f"executed={executed}, failed={failed}, errors={len(errors)}",
+    )
     return R.ok({"executed": executed, "failed": failed, "errors": errors})

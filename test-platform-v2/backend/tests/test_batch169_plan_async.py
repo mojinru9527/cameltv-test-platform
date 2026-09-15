@@ -1,4 +1,5 @@
 """Batch 169 — 计划后台执行 + UI 执行超时/编译稳定 回归。"""
+
 from __future__ import annotations
 
 import subprocess
@@ -9,61 +10,85 @@ from app.services import test_plan_service
 from app.services import case_compiler_service
 
 
-def test_execute_all_async_returns_immediately(
-    db_session, client, auth_headers, monkeypatch
-):
+def test_execute_all_async_returns_canonical_campaign(db_session, client, auth_headers, monkeypatch):
+    from types import SimpleNamespace
+
+    from app.models.environment import Environment
+
+    environment = Environment(project_id=1, name="B169-ENV", env_type="test", base_url="https://example.invalid")
     plan = TestPlan(project_id=1, name="B169-PLAN", status="draft")
-    db_session.add(plan)
+    db_session.add_all([environment, plan])
     db_session.commit()
+    monkeypatch.setattr(
+        "app.api.v1.test_plan_execution.create_plan_campaign",
+        lambda db, **kwargs: (
+            SimpleNamespace(id=88, status="running"),
+            [SimpleNamespace(id=501), SimpleNamespace(id=502)],
+            0,
+        ),
+    )
     resp = client.post(
         f"/api/v1/test-plans/{plan.id}/execute-all",
         headers=auth_headers,
         json={
-            "environment_id": 1, "ui_environment_id": 2,
-            "auto_ui": True, "async_mode": True,
+            "environment_id": environment.id,
+            "ui_environment_id": 2,
+            "auto_ui": True,
+            "async_mode": True,
         },
     )
     assert resp.status_code == 200
     data = resp.json()["data"]
     assert data["async"] is True
-    import json
+    assert data["campaign_id"] == 88
+    assert data["run_ids"] == [501, 502]
     from app.models.plan_execution_job import PlanExecutionJob
-    job = db_session.get(PlanExecutionJob, data['job_id'])
-    assert job.status == 'pending'
-    assert job.plan_id == plan.id
-    assert json.loads(job.request_json)['ui_environment_id'] == 2
+
+    assert db_session.query(PlanExecutionJob).count() == 0
 
 
-def test_sync_mode_keeps_old_behavior(db_session, client, auth_headers, monkeypatch):
+def test_sync_mode_returns_canonical_campaign(db_session, client, auth_headers, monkeypatch):
+    from types import SimpleNamespace
+
+    from app.models.environment import Environment
+
+    environment = Environment(project_id=1, name="B169-SYNC-ENV", env_type="test", base_url="https://example.invalid")
     plan = TestPlan(project_id=1, name="B169-SYNC", status="draft")
-    db_session.add(plan)
+    db_session.add_all([environment, plan])
     db_session.commit()
-    # 无用例计划同步执行返回空结果
+    monkeypatch.setattr(
+        "app.api.v1.test_plan_execution.create_plan_campaign",
+        lambda db, **kwargs: (SimpleNamespace(id=89, status="running"), [], 0),
+    )
     resp = client.post(
         f"/api/v1/test-plans/{plan.id}/execute-all",
         headers=auth_headers,
-        json={"environment_id": 1, "auto_ui": False, "async_mode": False},
+        json={"environment_id": environment.id, "auto_ui": False, "async_mode": False},
     )
     assert resp.status_code == 200
     data = resp.json()["data"]
+    assert data["campaign_id"] == 89
     assert data["total"] == 0
-    assert "async" not in data
+    assert data["async"] is False
 
 
 def test_ui_timeout_uses_configured_seconds(db_session, monkeypatch):
     monkeypatch.setattr(test_plan_service.settings, "ui_run_timeout_seconds", 7.0)
     case = TestCase(
-        project_id=1, title="B169-UI", module="首页", case_type="manual", priority="P0",
+        project_id=1,
+        title="B169-UI",
+        module="首页",
+        case_type="manual",
+        priority="P0",
         steps='[{"step": 1, "desc": "打开首页", "expected": "看到首页"}]',
     )
     db_session.add(case)
     db_session.commit()
 
     monkeypatch.setattr(
-        test_plan_service, "_compile_ui_case",
-        lambda db, tc, project_id, base_url: (
-            "import { test, expect } from '@playwright/test';", "llm"
-        ),
+        test_plan_service,
+        "_compile_ui_case",
+        lambda db, tc, project_id, base_url: ("import { test, expect } from '@playwright/test';", "llm"),
     )
 
     def fake_run(*args, **kwargs):
@@ -92,7 +117,9 @@ def test_execute_all_batch_commit_keeps_results_and_api_task(db_session, monkeyp
     from app.models.test_plan import TestPlanCase
 
     env = Environment(
-        project_id=1, name="B174-ENV", env_type="test",
+        project_id=1,
+        name="B174-ENV",
+        env_type="test",
         base_url="https://httpbin.org",
     )
     db_session.add(env)
@@ -106,8 +133,11 @@ def test_execute_all_batch_commit_keeps_results_and_api_task(db_session, monkeyp
     pcs = []
     for i in range(12):  # > BATCH_COMMIT_SIZE=10，覆盖中途 commit
         case = TestCase(
-            project_id=1, title=f"B174-CASE-{i}", case_type="api",
-            api_method="GET", api_endpoint="https://httpbin.org/get",
+            project_id=1,
+            title=f"B174-CASE-{i}",
+            case_type="api",
+            api_method="GET",
+            api_endpoint="https://httpbin.org/get",
             api_assertions='[{"type":"status_code","expected":200,"operator":"eq"}]',
         )
         db_session.add(case)
@@ -125,8 +155,12 @@ def test_execute_all_batch_commit_keeps_results_and_api_task(db_session, monkeyp
     )
 
     result = test_plan_service.execute_all_cases(
-        db_session, plan.id,
-        executor_id=1, environment_id=env.id, auto_ui=False, project_id=1,
+        db_session,
+        plan.id,
+        executor_id=1,
+        environment_id=env.id,
+        auto_ui=False,
+        project_id=1,
     )
 
     assert result["total"] == 12
@@ -135,15 +169,13 @@ def test_execute_all_batch_commit_keeps_results_and_api_task(db_session, monkeyp
 
     # 全部执行记录已落库（分批 commit 后不再依赖末尾单事务）——唯一事实源
     from app.models.test_plan import TestExecution
+
     exec_rows = db_session.query(TestExecution).filter_by(plan_case_id=pcs[0].id).all()
     assert len(exec_rows) == 1
     assert exec_rows[0].status == "passed"  # Batch 182（P1-06）：统一词表
 
     # Batch 186（C182-1）：计划执行不再创建 trigger_type=plan 任务快照（单一事实源）
     from app.models.api_asset import ApiExecutionTask
-    plan_tasks = (
-        db_session.query(ApiExecutionTask).filter_by(trigger_type="plan").count()
-    )
-    assert plan_tasks == 0, (
-        f"计划执行不应再创建 API 任务: {plan_tasks}"
-    )
+
+    plan_tasks = db_session.query(ApiExecutionTask).filter_by(trigger_type="plan").count()
+    assert plan_tasks == 0, f"计划执行不应再创建 API 任务: {plan_tasks}"
