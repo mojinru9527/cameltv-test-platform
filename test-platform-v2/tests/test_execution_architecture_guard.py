@@ -68,3 +68,11 @@ def test_ordinary_execution_paths_do_not_call_platform_llm() -> None:
             if token in text:
                 offenders.append(f"{path.name}:{token}")
     assert offenders == [], offenders
+
+
+def test_canonical_campaign_path_does_not_call_legacy_bridge() -> None:
+    text = (ROOT / "backend/app/modules/campaign_execution/service.py").read_text(
+        encoding="utf-8"
+    )
+    assert "legacy_bridge" not in text
+    assert "_ensure_legacy_run" not in text
