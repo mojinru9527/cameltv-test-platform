@@ -18,32 +18,33 @@
 ```bash
 LANHU_EVIDENCE_ENABLED=true          # 总开关，默认 false（采集+OCR 成本高）
 LANHU_OCR_PROVIDER=mock              # mock（确定性演示/测试）| local（真实命令）
-# 真实 OCR：
+# 默认内置真实 OCR（无需显式 LANHU_OCR_COMMAND）：
 LANHU_OCR_PROVIDER=local
-LANHU_OCR_COMMAND=python F:/CamelTv/test-platform-v2/backend/scripts/ocr_paddle.py {image}   # {image} 占位图片路径
-LANHU_OCR_MIN_CONFIDENCE=0.60
+# 默认命令模板（{python} 由 provider 替换为当前解释器）：
+# LANHU_OCR_COMMAND={python} -m app.services.lanhu_evidence.rapidocr_cli --image "{image}"
 # 采集：
 LANHU_CAPTURE_VIEWPORT_WIDTH=1440
 LANHU_CAPTURE_VIEWPORT_HEIGHT=1200
+LANHU_CAPTURE_DEVICE_SCALE_FACTOR=2.0
 LANHU_CAPTURE_SCROLL_STEP_RATIO=0.85
 LANHU_CAPTURE_MAX_SEGMENTS_PER_PAGE=30
 LANHU_CAPTURE_WAIT_MS=600
 ```
 
 OCR 命令须逐行输出 JSON：`{"text":"比赛推送","confidence":0.96,"bbox":[0,0,100,20]}`。
-> 注意：PaddleOCR 原生 CLI **不**输出该逐行 JSON 格式，故仓库提供封装脚本
-> [`backend/scripts/ocr_paddle.py`](../backend/scripts/ocr_paddle.py)（兼容 PaddleOCR 2.x/3.x）。
-> 启用真实 OCR：`pip install paddleocr paddlepaddle`（首次运行自动下载模型，需联网），
-> 再把 `.env` 的 `LANHU_OCR_PROVIDER` 改为 `local` 并启用 `LANHU_OCR_COMMAND`。
+> 默认使用仓库内置的
+> [`rapidocr_cli.py`](../backend/app/services/lanhu_evidence/rapidocr_cli.py)：
+> RapidOCR + onnxruntime CPU 推理，模型随 wheel 打包，无需运行时下载。
+> 低置信度文本块同样保留，置信度仅作为合并/质量层元数据，不再丢弃小字或模糊字。
+> 如需使用 PaddleOCR 或其他外部引擎，再显式设置 `LANHU_OCR_COMMAND`；仓库仍保留
+> [`backend/scripts/ocr_paddle.py`](../backend/scripts/ocr_paddle.py)（兼容 PaddleOCR 2.x/3.x）
+> 作为可选适配器。
 >
 > **关键落地经验（2026-07-13 真实 OCR 调通）**：
-> 1. **python 解释器绝对路径**：`LANHU_OCR_COMMAND` 里的 python 必须指向**装了 paddleocr 的那个**解释器绝对路径，
->    它不一定等于后端进程的解释器（后端 venv 与 OCR venv 可以是两套）。例如：
->    `LANHU_OCR_COMMAND=F:/CamelTv/test-platform/.venv/Scripts/python.exe F:/CamelTv/test-platform-v2/backend/scripts/ocr_paddle.py {image}`
-> 2. **paddlepaddle 3.x oneDNN 回归 bug**：CPU 推理需 `enable_mkldnn=False, device='cpu'`（脚本已内置逐级降级）。
-> 3. **Windows stdout 编码**：脚本以 `ensure_ascii=True` 输出纯 ASCII `\uXXXX`，规避重定向时 cp936/UTF-8 不一致的乱码；
->    provider 侧 `json.loads` 无损还原中文。
-> 4. 慢网可用清华镜像加速：`pip install -i https://pypi.tuna.tsinghua.edu.cn/simple paddleocr paddlepaddle`。
+> 1. 外部引擎的 `python` 必须指向已安装该引擎的解释器；内置 RapidOCR 默认使用当前解释器。
+> 2. 外部引擎输出若非逐行 JSON，需先提供适配器。
+> 3. Windows 子进程管道使用 UTF-8，provider 侧按 UTF-8 解码。
+> 4. 慢网可用清华镜像加速依赖安装。
 
 前置依赖：`playwright` + chromium（`python -m playwright install chromium`）、`python-docx`、
 蓝湖登录态（`LANHU_COOKIE` 或 `LANHU_USERNAME`/`LANHU_PASSWORD` 自动登录）。
