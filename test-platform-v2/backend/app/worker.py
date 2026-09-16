@@ -20,7 +20,7 @@ def task_consumers():
         raise RuntimeError('worker process requires WORKER_EXECUTION_ENABLED=true')
     import app.models  # noqa: F401
     from app.core.scheduler import init_scheduler, shutdown_scheduler, scheduler
-    from app.services import ai_tasks, api_task_worker, plan_execution_queue
+    from app.services import ai_tasks
     from app.services.dsh import dsh_task_service
     from app.services.knowledge import agent_queue
     from app.services.ui_runner_queue import shutdown_processor
@@ -31,8 +31,6 @@ def task_consumers():
         cleanup.callback(shutdown_processor)
         for start, shutdown in (
             (ai_tasks.ensure_worker_running, ai_tasks.shutdown_worker),
-            (api_task_worker.ensure_processor_running, api_task_worker.shutdown_processor),
-            (plan_execution_queue.ensure_processor_running, plan_execution_queue.shutdown_processor),
             (dsh_task_service.ensure_worker_running, dsh_task_service.shutdown_worker),
             (agent_queue.ensure_processor_running, agent_queue.shutdown_processor),
         ):
@@ -44,8 +42,6 @@ def task_consumers():
 
         def healthy():
             return (scheduler.running and ai_tasks._loop.is_running()
-                    and api_task_worker._loop.is_running()
-                    and plan_execution_queue._loop.is_running()
                     and dsh_task_service._loop.is_running()
                     and agent_queue.processor_is_running())
 
