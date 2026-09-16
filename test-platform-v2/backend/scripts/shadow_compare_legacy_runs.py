@@ -1,11 +1,8 @@
-"""Shadow Mode execution: ≥100 legacy-run comparison + audit baseline (V31 §93).
+"""Read-only Shadow Mode comparison for historical legacy runs (V31 §93).
 
-Design notes (honesty first):
-- Runs are NOT fabricated. The script creates real API cases against a local
-  mock target service and drives the REAL execution chain
-  (api_task_worker.execute_task → execute_api_case → _bridge_item), so every
-  legacy ApiExecutionTaskItem row and every unified ExecutionRun is produced by
-  production code paths.
+The legacy executor has been deleted. This script only reads existing
+ApiExecutionTaskItem rows and LegacyExecutionLink mappings to compare the
+historical legacy verdict with the canonical ExecutionRun outcome.
 - Comparison: legacy verdict (item.status) vs unified outcome (frozen by
   EvidenceCompletenessPolicy + OutcomeClassifier). Categories:
     AGREE_PASS                   legacy passed  → unified PASS
@@ -19,123 +16,20 @@ Design notes (honesty first):
   reviewer=claude(executor), environment, timestamps and per-run evidence.
 
 Usage (from test-platform-v2/backend):
-    python scripts/shadow_compare_legacy_runs.py --runs 120 --execute --report
+    python scripts/shadow_compare_legacy_runs.py --runs 120 --report
 """
 from __future__ import annotations
 
 import argparse
 import json
-import socket
 import sys
-import threading
 from datetime import datetime, timezone
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 BACKEND_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BACKEND_ROOT))
 
 REPORT_DIR = BACKEND_ROOT.parent / "work-logs" / "evidence" / "batch-aitde-v331-remediation-2"
-
-
-class _MockTargetHandler(BaseHTTPRequestHandler):
-    """Deterministic mock business API: {"code":0,...} — assertions run for real."""
-
-    def do_GET(self) -> None:  # noqa: N802 (http.server API)
-        body = json.dumps({"code": 0, "data": {"member": {"id": 1, "status": "normal"}}}).encode()
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
-
-    def log_message(self, *args) -> None:  # silence per-request noise
-        return
-
-
-def start_mock_target() -> tuple[ThreadingHTTPServer, int]:
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _MockTargetHandler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    return server, server.server_address[1]
-
-
-def free_port() -> int:
-    with socket.socket() as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
-
-
-def execute_real_runs(total_runs: int) -> dict:
-    """Create a bulk API task with `total_runs` items and run the REAL worker.
-
-    The mock target is registered as a project test environment so the
-    request passes the platform's host allowlist (SSRF guard) the same way a
-    real configured environment would.
-    """
-    from app.core.db import SessionLocal
-    from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
-    from app.models.environment import Environment
-    from app.models.test_case import TestCase
-    from app.services import api_task_worker
-
-    server, port = start_mock_target()
-    project_id = 1
-    try:
-        db = SessionLocal()
-        environment = Environment(
-            project_id=project_id, name="Shadow compare mock target",
-            env_type="test", base_url=f"http://127.0.0.1:{port}",
-        )
-        db.add(environment)
-        db.flush()
-        environment_id = environment.id
-
-        case_ids: list[tuple[int, bool]] = []
-        for i in range(total_runs):
-            # 每 3 条里 1 条真实断言失败（legacy failed），其余真实通过
-            should_fail = (i % 3) == 2
-            assertions = [
-                {"type": "status_code", "expected": 200, "operator": "eq"},
-                {
-                    "type": "jsonpath",
-                    "path": "$.code",
-                    "expected": 999 if should_fail else 0,
-                    "operator": "eq",
-                },
-            ]
-            case = TestCase(
-                project_id=project_id,
-                title=f"Shadow compare case #{i + 1}",
-                case_type="api",
-                api_method="GET",
-                api_endpoint=f"http://127.0.0.1:{port}/members/{i + 1}",
-                api_assertions=json.dumps(assertions),
-            )
-            db.add(case)
-            db.flush()
-            case_ids.append((case.id, should_fail))
-        task = ApiExecutionTask(
-            project_id=project_id,
-            task_id=f"SHADOW-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
-            name="Shadow Mode comparison run (executor provisioned)",
-            total=len(case_ids),
-            status="pending",
-            environment_id=environment_id,
-        )
-        db.add(task)
-        db.flush()
-        for case_id, _fail in case_ids:
-            db.add(ApiExecutionTaskItem(task_id=task.id, case_id=case_id, status="pending"))
-        db.commit()
-        task_id = task.id
-        db.close()
-
-        # REAL chain: claim → execute_api_case (real HTTP) → persist → bridge
-        api_task_worker.execute_task(task_id, project_id=project_id, worker_id="shadow-compare")
-        return {"task_id": task_id, "expected_failures": sum(1 for _, f in case_ids if f)}
-    finally:
-        server.shutdown()
 
 
 def compare_and_report(
@@ -225,9 +119,7 @@ def compare_and_report(
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "gate": "V31 §93: ≥100 历史/真实 Run 新旧 Shadow 对比",
             "reviewer": reviewer,
-            "environment": "local worktree SQLite + in-process mock HTTP target "
-                           "(real execution chain: api_task_worker → execute_api_case "
-           "→ legacy_bridge)",
+            "environment": "historical read-only comparison (canonical run + legacy link)",
             "runs_requested": min_runs,
             "runs_compared": compared,
             "gate_met": compared >= 100,
@@ -301,7 +193,6 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runs", type=int, default=120)
     parser.add_argument("--init", action="store_true", help="create tables + seed first")
-    parser.add_argument("--execute", action="store_true", help="provision + really execute")
     parser.add_argument("--report", action="store_true", help="write report artifacts")
     parser.add_argument("--task-id", type=int, default=None,
                         help="limit comparison to one bulk task's items")
@@ -312,9 +203,6 @@ def main() -> int:
 
     if args.init:
         init_db()
-    if args.execute:
-        info = execute_real_runs(args.runs)
-        print(f"executed task {info['task_id']} (expected real failures: {info['expected_failures']})")
     report = compare_and_report(
         args.runs, write_feedback=not args.no_feedback,
         reviewer=args.reviewer, task_id=args.task_id,

@@ -202,35 +202,3 @@ def test_audit_failure_blocks_production_execution(db_session):
         assert audit.called, f'audit not called; result={result!r}'
         if result is not None:
             raise AssertionError(f'production execution did not fail closed: {result!r}')
-
-
-def test_api_task_worker_uses_creator_as_actor(db_session, monkeypatch):
-    from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
-    from app.services import api_task_worker
-
-    user = _user(db_session, username='worker-creator')
-    user_id = user.id
-    environment = _production_environment(db_session)
-    case = _api_case(db_session)
-    task = ApiExecutionTask(
-        project_id=1,
-        task_id='API-B233',
-        status='running',
-        creator_id=user.id,
-        environment_id=environment.id,
-        confirm_prod=True,
-        total=1,
-    )
-    db_session.add(task)
-    db_session.commit()
-    db_session.add(ApiExecutionTaskItem(task_id=task.id, case_id=case.id, status='pending'))
-    db_session.commit()
-
-    monkeypatch.setattr(api_task_worker, 'SessionLocal', lambda: db_session)
-    with patch(
-        'app.services.api_execution_service.execute_api_case',
-        return_value={'all_pass': True, 'duration_ms': 1},
-    ) as execute, patch('app.services.notify_service.queue_notification'):
-        api_task_worker.execute_task(task.id, 1, 'worker-test')
-
-    assert execute.call_args.kwargs['actor_user_id'] == user_id

@@ -34,7 +34,7 @@ from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
-# 默认失联阈值：30 分钟（与 batch-174 api_task_worker.STALE_LOCK_SECONDS 对齐）
+# 默认失联阈值：30 分钟（历史 API/UI 队列与 canonical runner 回收保持一致）
 DEFAULT_STALE_SECONDS = 30 * 60
 
 

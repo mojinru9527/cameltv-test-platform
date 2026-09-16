@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 from app.core import scheduler
 from app.models.test_schedule import TestSchedule as Schedule, TestScheduleRun as ScheduleRun
-from app.services import ai_tasks, api_task_worker, ui_runner_queue, schedule_service
+from app.services import ai_tasks, ui_runner_queue, schedule_service
 from app.services.dsh import dsh_task_service
 from app.services.knowledge import agent_queue
 
@@ -16,17 +16,15 @@ from app.services.knowledge import agent_queue
 def test_api_role_cannot_start_consumers_or_ui_pool():
     with patch.object(settings, 'worker_execution_enabled', False), \
             patch.object(ai_tasks._loop, 'start') as ai, \
-            patch.object(api_task_worker._loop, 'start') as api, \
             patch.object(dsh_task_service._loop, 'start') as dsh, \
             patch.object(ui_runner_queue, '_get_executor') as ui, \
             patch.object(agent_queue.threading, 'Thread') as knowledge:
         ai_tasks.ensure_worker_running()
-        api_task_worker.ensure_processor_running()
         dsh_task_service.ensure_worker_running()
         ui_runner_queue.ensure_processor_running()
         ui_runner_queue.enqueue_run(1, 2, 3)
         agent_queue.ensure_processor_running()
-    for start in (ai, api, dsh, ui, knowledge):
+    for start in (ai, dsh, ui, knowledge):
         start.assert_not_called()
 
 

@@ -36,9 +36,8 @@ class TestSemaphores:
         assert isinstance(_semaphore_ui, threading.Semaphore)
         assert _semaphore_ui._value >= 1
 
-    def test_api_semaphore_removed_batch174(self):
-        """Batch 174（FIX-173-P0-01）：API 批量任务已移交 api_task_worker 唯一处理，
-        task_worker 不再持有 API 信号量。"""
+    def test_api_semaphore_removed_after_legacy_delete(self):
+        """Legacy API execution no longer exists, so task_worker has no API semaphore."""
         from app.services import task_worker
         assert not hasattr(task_worker, "_semaphore_api")
 
@@ -47,14 +46,8 @@ class TestSemaphores:
 # API task poll — Batch 174 移除（FIX-173-P0-01）
 # ═══════════════════════════════════════════════════════════
 
-class TestProcessApiTasksRemoved:
-    """Batch 174：task_worker 的 API 处理分支已整体移除。
-
-    此前 APScheduler 轮询（task_worker）与 api_task_worker 守护线程并行认领同一
-    pending 任务，且认领后 status 已置 running，导致 task_worker._run_api_task 的
-    `status not in ("pending",)` 守卫直接 return —— 任务永久卡 running 无结果。
-    API 批量任务现在由 api_task_worker._processor_loop 唯一认领执行。
-    """
+class TestLegacyApiTasksNotConsumed:
+    """Legacy API tasks are historical rows, not a runnable queue."""
 
     def test_process_api_tasks_function_removed(self):
         from app.services import task_worker
@@ -62,7 +55,7 @@ class TestProcessApiTasksRemoved:
         assert not hasattr(task_worker, "_run_api_task")
 
     def test_poll_and_execute_does_not_touch_api_tasks(self, db_session):
-        """poll_and_execute 只处理 UI runs 与蓝湖证据包，绝不认领 API 任务。"""
+        """poll_and_execute only handles UI runs and Lanhu evidence jobs."""
         from app.models.api_asset import ApiExecutionTask
         from app.services import task_worker
 
@@ -74,14 +67,11 @@ class TestProcessApiTasksRemoved:
         db_session.commit()
 
         with patch("app.core.db.SessionLocal", return_value=_NoCloseSession(db_session)), \
-             patch("app.services.api_task_worker.claim_next_task") as mock_claim, \
              patch("app.services.lanhu_evidence.worker.poll_and_execute_evidence_jobs"):
             task_worker.poll_and_execute()
 
-        # API 认领绝不被 task_worker 触发（双 Worker 竞态根因已被移除）
-        mock_claim.assert_not_called()
         db_session.refresh(task)
-        assert task.status == "pending"  # 任务保持 pending，等待 api_task_worker
+        assert task.status == "pending"
 
 
 # ═══════════════════════════════════════════════════════════

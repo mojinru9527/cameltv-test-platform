@@ -61,19 +61,11 @@ def test_execute_public_on_platform_env_not_blocked(db):
     assert res["error_type"] != "NEEDS_RUNNER"
 
 
-def test_runner_service_create_claim_report(db):
-    req = {"method": "GET", "url": "/camel-service/ee/sports_live/hot_match", "headers": {}, "body": "", "query_params": {}}
-    task = rsvc.create_runner_task(db, 1, 7, "APIEXEC-ABC", req, [{"type": "status_code", "expected": 200, "operator": "gte"}], "test5-01")
-    db.commit(); db.refresh(task)
-    assert task.status == "pending"
-    # 认领
-    claimed = rsvc.claim_runner_task(db, "test5-01")
-    assert claimed is not None and claimed.id == task.id
-    assert claimed.status == "claimed"
-    # 回传
-    reported = rsvc.report_runner_task(db, task.id, status="done", result={"http_status": 200})
-    assert reported.status == "done"
-    assert reported.finished_at is not None
+def test_runner_service_write_helpers_are_deleted():
+    """Canonical runner writes live under /api/v1/execution/runs/*."""
+    assert not hasattr(rsvc, "create_runner_task")
+    assert not hasattr(rsvc, "claim_runner_task")
+    assert not hasattr(rsvc, "report_runner_task")
 
 def test_legacy_runner_mutation_routes_are_readonly(client, auth_headers, db_session):
     """Legacy internal-runner queue mutations must fail closed without row changes."""

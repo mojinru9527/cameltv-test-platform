@@ -6,11 +6,9 @@
 - 服务重启后 pending 任务自动恢复
 - 同时处理 UI 测试运行和蓝湖证据包任务
 
-Batch 174（FIX-173-P0-01）：移除 API 批量任务处理分支。
-API 批量任务由 api_task_worker 守护线程（_processor_loop，每 2s）唯一认领执行，
-此前 APScheduler 轮询（本文件 _process_api_tasks）与守护线程并行认领同一任务，
-且认领后 status 已置 running 导致本文件 _run_api_task 的
-`status not in ("pending",)` 守卫直接 return —— 任务永久卡 running 无 stale 回收。
+Legacy API/Plan executors were removed after the canonical ExecutionRun
+cutover. This worker intentionally handles only the remaining non-Legacy
+consumers.
 """
 from __future__ import annotations
 
@@ -30,7 +28,6 @@ _semaphore_ui = threading.Semaphore(MAX_CONCURRENT_UI_RUNS)
 def poll_and_execute():
     """主轮询入口 — 由 APScheduler interval job 调用。
     检查 pending 状态的 UI 运行和蓝湖证据包任务。
-    （Batch 174：API 批量任务已移交 api_task_worker 唯一处理）
     """
     reap_stale_ui_runs()
     _process_ui_runs()
