@@ -1,6 +1,6 @@
 # Batch 247 — Leader Verdict
 
-status: LOCAL APPROVED — PENDING PR CHECKS
+status: APPROVED
 date: 2026-09-17
 
 ## Review
@@ -23,11 +23,10 @@ Issue #422 的 5 项验收均已覆盖：
 
 ## Verdict
 
-本地工程门禁与真实 OCR 证据满足 Draft PR 条件。最终 `APPROVED` 待：
-
-1. PR required checks 全绿；
-2. `audit-ai-pr.ps1 -RequireSuccessfulChecks` 通过；
-3. 合并 main 并关闭 Issue #422。
+PR #457 的 9 项远端检查全部成功，
+`audit-ai-pr.ps1 -RequireSuccessfulChecks` 通过，已 squash-merge 到 `main`。
+合并提交为 `8950b931c3c4b63ce035f84384e417ebc2eba5a9`，Issue #422
+已随 PR 关闭。
 
 ## 流程回写
 
