@@ -1,6 +1,6 @@
 # Leader Verdict — Legacy delete final (PR-09)
 
-status: IN REVIEW
+status: APPROVED
 date: 2026-09-16
 
 ## Review
@@ -11,12 +11,9 @@ model. The explicit user waiver and three signoffs are recorded in the PRD.
 
 ## Verdict
 
-Local engineering evidence is sufficient for Draft PR creation. Final
-`APPROVED` requires:
-
-1. User-visible PR checks passing.
-2. `audit-ai-pr.ps1 -RequireSuccessfulChecks` passing.
-3. Post-merge production health/login and read-only Legacy verification.
+PR #455 passed all user-visible checks, `audit-ai-pr.ps1
+-RequireSuccessfulChecks`, and was squash-merged to `main`. Release
+`release-20260916-0003` was then deployed and verified in production.
 
 ## 流程回写
 
