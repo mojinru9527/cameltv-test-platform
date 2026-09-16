@@ -12,12 +12,12 @@
 
 | # | Slice | Design | Code | Self-test | Review | Merge |
 |---|-------|:------:|:----:|:---------:|:------:|:-----:|
-| 1 | RapidOCR CLI + provider | ✅ | ✅ | ✅ | ✅ | ⏳ |
-| 2 | 截图 2x DPR | ✅ | ✅ | ✅ | ✅ | ⏳ |
-| 3 | Lock + Dockerfile 系统库 | ✅ | ✅ | ✅ | ✅ | ⏳ |
-| 4 | 真实截图 + PR 验收 | ✅ | ✅ | ✅ | 🔄 | ⏳ |
+| 1 | RapidOCR CLI + provider | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 2 | 截图 2x DPR | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 3 | Lock + Dockerfile 系统库 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 4 | 真实截图 + PR 验收 | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ## Current Position
 
-Local implementation and QA evidence are complete. Waiting for Draft PR checks,
-final audit, merge and Issue #422 closure.
+PR #457 passed all required checks and final audit, then squash-merged to
+`main` as `8950b931c3c4b63ce035f84384e417ebc2eba5a9`. Issue #422 is closed.
