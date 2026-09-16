@@ -31,13 +31,19 @@ No new failures remain in the full suite excluding that known baseline.
 
 ## Production verification
 
-Pending merge and release deployment. The final evidence pack will record:
+Release `release-20260916-0003` (Git SHA
+`72a3002d01b9bc45e004695d0d46368e0892200a`, deployment
+`e3f4b92c95064e7db7230548c79b0c6e`) reached `PRODUCTION_VERIFIED`.
 
-- production health HTTP status
-- `sportsadmin` login
-- Legacy mutation endpoints returning `410`
-- no Legacy writer process in the worker container
-- unchanged historical table counts/fingerprints
+- all six production services healthy; external health HTTP 200
+- `sportsadmin` login returned `user_id=4`
+- Legacy task cancel/retry/delete and runner claim all returned `410`
+- final code present in backend, runner and aitde-worker images; deleted
+  executor files absent
+- no `api-task-worker`, `plan-execution-worker`, import traceback or
+  `ModuleNotFound` entries in the newly deployed worker logs
+- Legacy table counts/fingerprints remained exactly at baseline and
+  `drift=false`; new rows and updated rows were both zero
 
 ## Retro card
 
