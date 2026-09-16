@@ -28,6 +28,11 @@ PR #457 的 9 项远端检查全部成功，
 合并提交为 `8950b931c3c4b63ce035f84384e417ebc2eba5a9`，Issue #422
 已随 PR 关闭。
 
+生产发布 `release-20260917-0001`（deployment
+`5cee822bd24e4961a1b3b2f674e73ee1`）已到 `PRODUCTION_VERIFIED`；生产
+runner 真实中文 OCR 冒烟与 Legacy `410` 回归均通过，证据见
+`work-logs/batch-247-rapidocr-lanhu-production-evidence-20260917.md`。
+
 ## 流程回写
 
 | 发现 | 处理 | 落点 |
