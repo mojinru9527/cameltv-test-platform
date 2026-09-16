@@ -179,7 +179,10 @@ async def capture_page_segments(page_url: str, output_dir: Path, page_key: str) 
     try:
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
-            page = await browser.new_page(viewport={"width": vw, "height": vh})
+            page = await browser.new_page(
+                viewport={"width": vw, "height": vh},
+                device_scale_factor=settings.lanhu_capture_device_scale_factor,
+            )
             await page.goto(page_url, wait_until="networkidle", timeout=120000)
             await page.wait_for_timeout(wait_ms)
 

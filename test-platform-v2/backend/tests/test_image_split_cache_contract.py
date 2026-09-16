@@ -68,3 +68,7 @@ def test_python_dependency_layers_are_split_by_runtime_role():
     assert "playwright==" not in ai
     for runner_pkg in ("fastembed==", "onnxruntime==", "numpy==", "playwright=="):
         assert runner_pkg in runner
+    for ocr_pkg in ("rapidocr-onnxruntime==", "opencv-python==", "pyclipper==", "shapely=="):
+        assert ocr_pkg in runner
+        assert ocr_pkg not in api
+        assert ocr_pkg not in ai

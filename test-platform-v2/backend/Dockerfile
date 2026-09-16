@@ -111,6 +111,13 @@ RUN apt-get update \
         git \
         ffmpeg \
         openssh-client \
+        libgl1 \
+        libglib2.0-0 \
+        libxcb1 \
+        libx11-6 \
+        libxext6 \
+        libsm6 \
+        libice6 \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
