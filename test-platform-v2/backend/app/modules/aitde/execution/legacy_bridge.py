@@ -7,14 +7,10 @@ records. It is idempotent via ``legacy_execution_links``.
 API: reuses ApiExecutionTaskItem response/request data.
 UI: registers screenshots / video / trace / artifacts as EvidenceArtifact.
 
-v331-gap A1 (deep wiring): the real execution chain (api_task_worker /
-playwright_executor) now calls the bridge after execution. When no unified
-``run_id`` is supplied the bridge creates its own run
-(``trigger_type=LEGACY_BRIDGE``, zero scenario bindings — strict binding
-validation is a scenario-run requirement and does not apply to bridged legacy
-executions), writes the evidence + mapped assertions, then finalizes the run:
-outcome is frozen through the EvidenceCompletenessPolicy + OutcomeClassifier
-(never a silent PASS).
+The bridge never creates a Run implicitly.  Historical migration must create
+the canonical Run first and pass its real ``run_id``; the bridge can then attach
+historical evidence + mapped assertions and freeze the outcome through the
+EvidenceCompletenessPolicy + OutcomeClassifier (never a silent PASS).
 
 v331-gap A3: legacy assertions that can be mapped are persisted as
 AssertionResult rows (oracle_id=0 sentinel, ``source=legacy_bridge`` snapshot)
@@ -38,9 +34,7 @@ from app.core.exceptions import APIException
 from app.modules.aitde.common.enums import (
     EvidenceType,
     LegacyExecutionType,
-    RunStatus,
     StepType,
-    TriggerType,
 )
 from app.modules.aitde.evidence.service import store_artifact
 from app.modules.aitde.execution import repository
@@ -117,36 +111,6 @@ def step_for_run(
     )
 
 
-# ── v331-gap A1: bridge-owned runs ──────────────────────────────────────────
-
-
-def _ensure_legacy_run(
-    db: Session, project_id: int, *, environment_id: int = 0
-) -> ExecutionRun:
-    """Create the unified run a bridged legacy execution lands on.
-
-    Bridge runs carry zero scenario bindings (scenario/contract = 0) and
-    ``trigger_type=LEGACY_BRIDGE``; they start RUNNING so ``finish_run`` can
-    freeze the outcome once evidence + assertions are written.
-    """
-    return repository.create_run(
-        db,
-        {
-            "project_id": project_id,
-            "mission_id": 0,
-            "scenario_id": 0,
-            "scenario_version_id": 0,
-            "contract_version_id": 0,
-            "environment_id": environment_id,
-            "environment_snapshot_id": None,
-            "runtime_status": RunStatus.RUNNING.value,
-            "trigger_type": TriggerType.LEGACY_BRIDGE.value,
-            "started_at": _utcnow(),
-        },
-        user_id=0,
-    )
-
-
 def finalize_bridge_run(db: Session, run: ExecutionRun) -> str:
     """Freeze the run's outcome via the completeness policy + classifier."""
     from app.modules.aitde.execution import service as run_service
@@ -156,6 +120,26 @@ def finalize_bridge_run(db: Session, run: ExecutionRun) -> str:
     outcome = run_service.compute_outcome(assertions, evidence_ok)
     run_service.finish_run(db, run.id, run.project_id, outcome_str=outcome)
     return outcome
+
+
+def _require_explicit_run(
+    db: Session, *, run_id: int, project_id: int
+) -> ExecutionRun:
+    """Resolve the caller-owned Run; never create an implicit bridge Run."""
+    if not run_id:
+        raise APIException(
+            code=410,
+            msg="Legacy bridge 不再自动创建 ExecutionRun，请先创建 canonical Run 并传入 run_id",
+            http_status=410,
+        )
+    run_row = repository.get_run(db, run_id, project_id)
+    if run_row is None:
+        raise APIException(code=404, msg="统一执行记录不存在", http_status=404)
+    if run_row.runtime_status == "QUEUED":
+        from app.modules.aitde.execution import service as run_service
+
+        run_row = run_service.mark_running(db, run_row.id, project_id)
+    return run_row
 
 
 # ── v331-gap A3: legacy assertion mapping ───────────────────────────────────
@@ -255,7 +239,7 @@ def bridge_api_item(
     db: Session,
     *,
     project_id: int,
-    run_id: int | None = None,
+    run_id: int,
     legacy_id: int,
     request: str | dict[str, Any] | None = None,
     response: str | dict[str, Any] | None = None,
@@ -264,23 +248,12 @@ def bridge_api_item(
     environment_id: int = 0,
     step_status: str = "SUCCEEDED",
 ) -> dict[str, Any]:
-    """Register an API task item into the unified model (idempotent).
-
-    ``run_id=None`` auto-creates a LEGACY_BRIDGE run and finalizes its outcome.
-    """
+    """Register a historical API task item onto an existing canonical Run."""
     existing = find_link(db, LegacyExecutionType.API_TASK_ITEM, legacy_id)
     if existing is not None:
         return {"run_id": existing.run_id, "already_linked": True}
 
-    auto_run = run_id is None
-    if auto_run:
-        run_row = _ensure_legacy_run(db, project_id, environment_id=environment_id)
-    else:
-        # Tenant boundary: an explicit run must belong to the caller's project.
-        assert run_id is not None
-        run_row = repository.get_run(db, run_id, project_id)
-        if run_row is None:
-            raise APIException(code=404, msg="统一执行记录不存在", http_status=404)
+    run_row = _require_explicit_run(db, run_id=run_id, project_id=project_id)
     run_id = run_row.id
 
     step = step_for_run(db, run_id, f"api-{legacy_id}", StepType.API.value, step_status)
@@ -305,8 +278,7 @@ def bridge_api_item(
     result: dict[str, Any] = {
         "run_id": run_id, "step_id": step.id, "artifacts": artifacts, "assertions": mapped,
     }
-    if auto_run:
-        result["outcome"] = finalize_bridge_run(db, run_row)
+    result["outcome"] = finalize_bridge_run(db, run_row)
     return result
 
 
@@ -314,7 +286,7 @@ def bridge_ui_run(
     db: Session,
     *,
     project_id: int,
-    run_id: int | None = None,
+    run_id: int,
     legacy_id: int,
     screenshots: list[str] | None = None,
     video_url: str | None = None,
@@ -330,21 +302,14 @@ def bridge_ui_run(
 
     When ``artifact_dir`` is supplied, screenshot/video/trace files are read and
     their real bytes registered; unreadable paths degrade to the path string.
-    ``run_id=None`` auto-creates a LEGACY_BRIDGE run and finalizes its outcome.
+    The caller must supply an existing canonical ``run_id``; no implicit Run is
+    created.
     """
     existing = find_link(db, LegacyExecutionType.UI_RUN, legacy_id)
     if existing is not None:
         return {"run_id": existing.run_id, "already_linked": True}
 
-    auto_run = run_id is None
-    if auto_run:
-        run_row = _ensure_legacy_run(db, project_id, environment_id=environment_id)
-    else:
-        # Tenant boundary: an explicit run must belong to the caller's project.
-        assert run_id is not None
-        run_row = repository.get_run(db, run_id, project_id)
-        if run_row is None:
-            raise APIException(code=404, msg="统一执行记录不存在", http_status=404)
+    run_row = _require_explicit_run(db, run_id=run_id, project_id=project_id)
     run_id = run_row.id
 
     step = step_for_run(db, run_id, f"ui-{legacy_id}", StepType.UI.value, step_status)
@@ -395,6 +360,5 @@ def bridge_ui_run(
     result: dict[str, Any] = {
         "run_id": run_id, "step_id": step.id, "artifacts": artifacts, "assertions": mapped,
     }
-    if auto_run:
-        result["outcome"] = finalize_bridge_run(db, run_row)
+    result["outcome"] = finalize_bridge_run(db, run_row)
     return result

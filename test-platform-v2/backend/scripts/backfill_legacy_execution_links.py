@@ -1,8 +1,8 @@
 """Backfill canonical links for historical API and UI execution rows.
 
-Default mode is read-only. ``--apply`` calls the existing legacy bridge with
-``run_id=None``, which creates a canonical LEGACY_BRIDGE run and writes one
-``LegacyExecutionLink``. Legacy execution tables are never modified.
+Default mode is read-only. ``--apply`` creates the canonical LEGACY_BRIDGE Run
+explicitly and then attaches the historical evidence to that real ``run_id``.
+Legacy execution tables are never modified.
 """
 from __future__ import annotations
 
@@ -22,8 +22,12 @@ sys.path.insert(0, str(BACKEND_ROOT))
 from app.core.db import SessionLocal  # noqa: E402
 from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem  # noqa: E402
 from app.models.ui_test import UiTestJob, UiTestRun  # noqa: E402
-from app.modules.aitde.common.enums import LegacyExecutionType  # noqa: E402
-from app.modules.aitde.execution import legacy_bridge  # noqa: E402
+from app.modules.aitde.common.enums import (  # noqa: E402
+    LegacyExecutionType,
+    RunStatus,
+    TriggerType,
+)
+from app.modules.aitde.execution import legacy_bridge, repository  # noqa: E402
 from app.modules.aitde.execution.models import LegacyExecutionLink  # noqa: E402
 
 _API_STATUS_TO_STEP = {
@@ -93,6 +97,26 @@ def _safe_evidence(value: str | None) -> Any:
     if isinstance(parsed, (dict, list)):
         return parsed
     return {"legacy_unparseable": True}
+
+
+def _create_migration_run(db: Session, *, project_id: int, environment_id: int) -> int:
+    """Create the real canonical Run used by the historical migration."""
+    run = repository.create_run(
+        db,
+        {
+            "project_id": project_id,
+            "mission_id": 0,
+            "scenario_id": 0,
+            "scenario_version_id": 0,
+            "contract_version_id": 0,
+            "environment_id": environment_id,
+            "environment_snapshot_id": None,
+            "runtime_status": RunStatus.RUNNING.value,
+            "trigger_type": TriggerType.LEGACY_BRIDGE.value,
+        },
+        user_id=0,
+    )
+    return run.id
 
 
 def _api_coverage(db: Session) -> tuple[int, int]:
@@ -262,7 +286,11 @@ def apply_candidates(db: Session, candidates: list[Candidate]) -> dict[str, Any]
             legacy_bridge.bridge_api_item(
                 db,
                 project_id=candidate.project_id,
-                run_id=None,
+                run_id=_create_migration_run(
+                    db,
+                    project_id=candidate.project_id,
+                    environment_id=candidate.environment_id,
+                ),
                 legacy_id=candidate.item_id,
                 request=candidate.request,
                 response=candidate.response,
@@ -294,7 +322,11 @@ def apply_ui_candidates(db: Session, candidates: list[UiCandidate]) -> dict[str,
             legacy_bridge.bridge_ui_run(
                 db,
                 project_id=candidate.project_id,
-                run_id=None,
+                run_id=_create_migration_run(
+                    db,
+                    project_id=candidate.project_id,
+                    environment_id=candidate.environment_id,
+                ),
                 legacy_id=candidate.run_id,
                 screenshots=candidate.screenshots,
                 video_url=candidate.video_url,
