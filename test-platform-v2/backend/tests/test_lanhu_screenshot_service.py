@@ -179,3 +179,9 @@ def test_inner_scroll_probe_checks_overflow_and_observed_scroll_top_change():
     assert "getComputedStyle(el).overflowY" in _INNER_SCROLL_JS
     assert "['auto', 'scroll', 'overlay']" in _INNER_SCROLL_JS
     assert "scrollTopChanged" in _INNER_SCROLL_JS
+
+
+def test_capture_device_scale_factor_default_is_2x():
+    from app.core.config import settings
+
+    assert settings.lanhu_capture_device_scale_factor == 2.0

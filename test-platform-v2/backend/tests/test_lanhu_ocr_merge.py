@@ -76,3 +76,97 @@ def test_merge_marks_low_confidence_when_ocr_empty_and_dom_short():
     assert result.quality["status"] == "needs_review"
     assert result.quality["has_ocr"] is False
     assert result.quality["has_dom"] is False
+
+
+def test_local_provider_keeps_low_confidence_blocks(tmp_path, monkeypatch):
+    """低置信度文本块不再被过滤（避免小字/模糊字缺失，batch-247）。"""
+    import subprocess
+
+    from app.services.lanhu_evidence.local_ocr_provider import LocalCommandOcrProvider
+
+    monkeypatch.setattr(
+        "app.core.config.settings.lanhu_ocr_command",
+        '{python} -m app.services.lanhu_evidence.rapidocr_cli --image "{image}"',
+    )
+    image = tmp_path / "page.png"
+    image.write_bytes(b"fake")
+
+    class FakeResult:
+        returncode = 0
+        stderr = ""
+        stdout = '{"text":"低置信度小字","confidence":0.42,"bbox":[0,0,100,20]}\n'
+
+    monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: FakeResult())
+
+    result = LocalCommandOcrProvider().recognize(image)
+
+    assert result.status == "success"
+    assert len(result.blocks) == 1
+    assert result.blocks[0].confidence == 0.42
+    assert result.blocks[0].text == "低置信度小字"
+
+
+def test_local_provider_uses_current_python_interpreter(tmp_path, monkeypatch):
+    """命令模板中的 {python} 必须替换为当前解释器，避免 Windows venv 未激活。"""
+    import subprocess
+    import sys
+
+    from app.services.lanhu_evidence.local_ocr_provider import LocalCommandOcrProvider
+
+    monkeypatch.setattr(
+        "app.core.config.settings.lanhu_ocr_command",
+        '{python} -m app.services.lanhu_evidence.rapidocr_cli --image "{image}"',
+    )
+    image = tmp_path / "page.png"
+    image.write_bytes(b"fake")
+    captured: dict[str, object] = {}
+
+    class FakeResult:
+        returncode = 0
+        stderr = ""
+        stdout = ""
+
+    def fake_run(command, **kwargs):
+        captured["command"] = command
+        captured["kwargs"] = kwargs
+        return FakeResult()
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    result = LocalCommandOcrProvider().recognize(image)
+
+    assert result.status == "success"
+    assert sys.executable in str(captured["command"])
+    assert str(image) in str(captured["command"])
+    assert captured["kwargs"]["encoding"] == "utf-8"
+
+
+def test_rapidocr_cli_bbox_normalizes_quad():
+    """4 点框 → [x1,y1,x2,y2] 整数框（batch-247）。"""
+    from app.services.lanhu_evidence.rapidocr_cli import _bbox_from_points
+
+    points = [[22.0, 29.0], [275.0, 29.0], [275.0, 58.0], [22.0, 58.0]]
+    assert _bbox_from_points(points) == [22, 29, 275, 58]
+
+
+def test_rapidocr_cli_main_outputs_json_lines(monkeypatch, capsys, tmp_path):
+    """CLI 输出逐行 JSON，兼容 parse_command_output（batch-247）。"""
+    from app.services.lanhu_evidence import rapidocr_cli
+
+    image = tmp_path / "page.png"
+    image.write_bytes(b"fake")
+    monkeypatch.setattr(
+        rapidocr_cli,
+        "recognize_image",
+        lambda path: [
+            {"text": "赛事回放", "confidence": 0.99, "bbox": [0, 0, 100, 20]},
+            {"text": "低置信度小字", "confidence": 0.4, "bbox": [0, 20, 100, 40]},
+        ],
+    )
+
+    assert rapidocr_cli.main(["--image", str(image)]) == 0
+
+    lines = [line for line in capsys.readouterr().out.splitlines() if line.strip()]
+    assert len(lines) == 2
+    assert '"赛事回放"' in lines[0]
+    assert '"低置信度小字"' in lines[1]

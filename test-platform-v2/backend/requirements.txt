@@ -25,6 +25,9 @@ pytest-cov>=5.0
 # ── M2 RAG 向量化（本地嵌入，离线不外传）──
 fastembed>=0.3            # onnx TextEmbedding（bge-small-zh-v1.5），CPU 可跑，无 torch
 numpy>=1.26               # 向量存储（float32 blob）+ 暴力余弦
+
+# ── Lanhu 证据 OCR（CPU 中文识别，onnxruntime，模型随 wheel 打包离线可用）──
+rapidocr_onnxruntime>=1.4.4
 # AI 配置中心：Fernet 加密 AI 提供方 Key（lock 已含 cryptography==49.0.0，此处补直接依赖声明）
 cryptography>=42.0
 # ── AITDE V3.4 Durable Runtime：Temporal client + in-memory test WorkflowEnvironment ──

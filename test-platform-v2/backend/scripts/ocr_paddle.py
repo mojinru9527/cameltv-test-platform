@@ -11,7 +11,7 @@
     - 非 JSON 行会被解析器忽略，因此 PaddleOCR 自身日志/进度即使落到 stdout 也无害；
       但本脚本仍把日志强制导向 stderr，保持 stdout 干净。
     - bbox 为轴对齐外接矩形 [x1, y1, x2, y2]（整数像素）。
-    - confidence 为 0~1 浮点；低于 LANHU_OCR_MIN_CONFIDENCE 的块由 provider 侧过滤。
+    - confidence 为 0~1 浮点；provider 保留全部块，置信度仅作为元数据。
 
 依赖：
     pip install paddleocr paddlepaddle
