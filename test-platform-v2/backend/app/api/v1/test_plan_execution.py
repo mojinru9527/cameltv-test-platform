@@ -326,7 +326,8 @@ def list_execution_jobs(
     current: CurrentUser = Depends(require_permission("testplan:detail")),
     db: Session = Depends(get_db),
 ):
-    from app.services.plan_execution_queue import list_jobs
+    """Read historical plan jobs without restoring the legacy executor."""
+    from app.services.plan_execution_history import list_jobs
 
     return R.ok(list_jobs(db, plan_id, current.project_id or 0))
 

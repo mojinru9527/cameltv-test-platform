@@ -8,17 +8,22 @@ def test_no_second_execution_model() -> None:
 
 
 def test_no_new_execution_queue() -> None:
-    offenders = [
-        str(path)
-        for path in ROOT.rglob("*_execution_queue.py")
-        if path.name != "plan_execution_queue.py"
-    ]
+    offenders = [str(path) for path in ROOT.rglob("*_execution_queue.py")]
     assert offenders == [], offenders
 
 
-def test_legacy_queue_files_are_present_for_controlled_cutover() -> None:
-    assert (ROOT / "backend/app/services/api_task_worker.py").exists()
-    assert (ROOT / "backend/app/services/plan_execution_queue.py").exists()
+def test_legacy_executor_files_are_deleted_after_gate() -> None:
+    assert not (ROOT / "backend/app/services/api_task_worker.py").exists()
+    assert not (ROOT / "backend/app/services/plan_execution_queue.py").exists()
+
+
+def test_legacy_bridge_requires_explicit_canonical_run() -> None:
+    source = (ROOT / "backend/app/modules/aitde/execution/legacy_bridge.py").read_text(
+        encoding="utf-8"
+    )
+    assert "_ensure_legacy_run" not in source
+    assert "run_id is None" not in source
+    assert "run_id: int" in source
 
 
 def test_api_task_create_uses_canonical_campaign_adapter() -> None:
@@ -105,3 +110,9 @@ def test_worker_entrypoint_does_not_start_legacy_execution_loops() -> None:
     source = (ROOT / "backend/app/worker.py").read_text(encoding="utf-8")
     assert "api_task_worker" not in source
     assert "plan_execution_queue" not in source
+
+
+def test_legacy_temporal_runner_activities_are_removed() -> None:
+    source = (ROOT / "backend/app/temporal/activities.py").read_text(encoding="utf-8")
+    assert "run_legacy_api_task" not in source
+    assert "run_legacy_ui_task" not in source

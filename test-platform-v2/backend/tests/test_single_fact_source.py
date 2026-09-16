@@ -119,14 +119,8 @@ class TestSingleFactSource:
         items = db_session.query(ApiExecutionTaskItem).filter_by(task_id=task.id).all()
         assert len(items) == 1  # 历史 items 保留可读
 
-    def test_manual_batch_task_still_created(self, db_session):
-        """手动批量任务（非 plan 路径）不受影响。"""
-        from app.services.api_execution_service import create_execution_task
+    def test_manual_batch_task_writer_is_deleted(self):
+        """Manual API batches create canonical Campaigns, not task rows."""
+        from app.services import api_execution_service
 
-        task = create_execution_task(
-            db_session, project_id=1, task_id="MANUAL-1", name="手动批量",
-            environment_id=None, service_id=None, status="pending",
-            total=1, creator_id=1, confirm_prod=False, trigger_type="manual",
-        )
-        db_session.commit()
-        assert task.trigger_type == "manual"
+        assert not hasattr(api_execution_service, "create_execution_task")
