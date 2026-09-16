@@ -14,14 +14,15 @@
 
 | # | Slice | Design | Code | Self-test | Review | Merge |
 |---|-------|:------:|:----:|:---------:|:------:|:-----:|
-| 1 | Delete Legacy executors | ✅ | ✅ | ✅ | 🔄 | ⏳ |
-| 2 | Explicit bridge migration | ✅ | ✅ | ✅ | 🔄 | ⏳ |
-| 3 | Read-only history guards | ✅ | ✅ | ✅ | 🔄 | ⏳ |
+| 1 | Delete Legacy executors | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 2 | Explicit bridge migration | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 3 | Read-only history guards | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ## Current Position
 
-Local implementation and regression evidence are complete. Waiting for Draft
-PR checks, final audit, merge and production deployment.
+PR #455 is merged to `main`. Release `release-20260916-0003` is deployed and
+production-verified; the final Legacy table fingerprint check reports
+`drift=false`.
 
 ## Risks
 
