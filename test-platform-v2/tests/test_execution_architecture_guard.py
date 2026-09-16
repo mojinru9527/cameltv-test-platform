@@ -100,3 +100,8 @@ def test_legacy_runner_mutations_are_readonly() -> None:
     assert "svc.claim_runner_task(" not in block
     assert "svc.report_runner_task(" not in block
     assert "db.commit()" not in block
+
+def test_worker_entrypoint_does_not_start_legacy_execution_loops() -> None:
+    source = (ROOT / "backend/app/worker.py").read_text(encoding="utf-8")
+    assert "api_task_worker" not in source
+    assert "plan_execution_queue" not in source
