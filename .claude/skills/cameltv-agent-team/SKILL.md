@@ -37,7 +37,7 @@ description: Use for ANY change to the CamelTv test platform (test-platform-v2/)
 
 各部门的角色定位、关键规则和**交付物模板**见 [DEPARTMENTS.md](DEPARTMENTS.md)。
 
-## 批次模式（Batch 75 起）
+## 批次模式（Batch 75 起；Batch 256 起默认轻量）
 
 批次分为**完整批次**与**轻量批次**两档，判定与豁免规则详见 [docs/agent-team/pipeline-modes.md](../../../docs/agent-team/pipeline-modes.md)。摘要：
 
@@ -46,7 +46,15 @@ description: Use for ANY change to the CamelTv test platform (test-platform-v2/)
 | 完整批次 | 新功能 / 重构 / 配置 / Schema 变更 / 引入新行为、新接口、新配置 | PRD + PM + Design + Dev(代码+看板) + QA + Leader 六件 | 无 |
 | 轻量批次 | 验收 / 修复 / 纯文档 / 纯证据 / 内部流程工具 | PRD-lite + QA + Leader 三件 + 看板 | PRD-lite 中记录 `mode: light` + 理由 |
 
-判定标准：**是否引入新行为/新接口/新配置/新依赖**。是 → 完整批次；否 → 轻量批次。拿不准时按完整批次执行。轻量批次不是免检：QA 硬门禁、Leader 判决、C 条件、流程回写与复盘卡全部照常。
+**判定改为「默认轻量 + 触发升级」（Batch 256 起）**：
+
+- **触发器（命中任一 → 完整批次六件）**：新增对外接口 / 新增配置项 / 新增依赖 / Schema 或数据模型变更 /
+  **执行链路变更** / **AI 链路变更** / 权限模型变更。
+- **其余一律走轻量批次**（PRD-lite + QA + Leader + 看板），不再逐个人工判定：
+  验收、修复、纯文档、纯证据、内部工具、UI/交互调整、对外契约不变的重构。
+- 拿不准按完整批次；**执行链路 / AI 链路 / 数据模型任一变更永远不能用轻量**——它们决定证据可信度。
+
+轻量批次不是免检：QA 硬门禁、Leader 判决、C 条件、流程回写与复盘卡全部照常。
 
 ## 批次合并与发布节奏（Batch 115 起）
 
