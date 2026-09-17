@@ -37,9 +37,14 @@ Batch 248 — 全部切片完成，等待一次总确认
 ## 📜 批次记录
 
 ### Batch 248 — 本地 AI Agent 闭环 (2026-09-17)
-- **产出**: （进行中）worktree `F:\CamelTv-worktrees\codex-batch-248-local-ai-agent`，分支 `feature/batch-248-local-ai-agent`，base `becbf5c6`
-- **审批**: 待完成
-- **耗时**: 进行中
+- **产出**: 6 个 commit + PR [#460](https://github.com/mojinru9527/cameltv-test-platform/pull/460) → squash 合入 main（`1504b56b`）
+  - 后端：`ai_agent_token` 表 + 迁移 `20260922_ai_agent_token`；AiJob 创建/列表/详情/导入；agent token 鉴权；项目隔离认领；stale 回收；`model_name` 落库
+  - 需求域：`extract/generate(+async)` 默认派发 AiJob；0 模块静默确认修复
+  - 本地执行端：`scripts/ai_agent/cli.py` + `docs/ai/local-ai-agent.md`
+  - 前端：`/ai-jobs` 页 + AI 配置页入口（语义 tone/token）
+- **审批**: 用户一次总确认（推送+PR+合入）；required checks 全绿（后端全量 12m53s / 前端全量 4m7s）
+- **耗时**: 约 4h（含 1 次 CI 回归修复轮）
+- **记录**: [batch-248-local-ai-agent-qa-report.md](../batch-248-local-ai-agent-qa-report.md) ｜ [leader-verdict](../batch-248-local-ai-agent-leader-verdict.md)
 
 ## ⚠️ 阻塞与风险
 

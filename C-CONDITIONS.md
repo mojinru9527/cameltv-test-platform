@@ -1142,6 +1142,17 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C146-4 | batch-146→152 | Batch 152 关闭（由 C147-7 承接实现），见 batch-152-qa-report，commit c19b4a9 |
 | C147-10 | batch-147→152 | Batch 152 关闭（部分：local-setup.md + launcher -InstallDeps；剩余登记 C152-1），见 batch-152-qa-report，commit c19b4a9 |
 | C138-1 | batch-137→138 | 生产配置真实 OCR 引擎（LANHU_OCR_COMMAND 容器内路径），见 batch-137 leader-verdict；未入追踪器补录 |
+### batch-248 — 本地 AI Agent 闭环（Batch 248 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C248-1 | `extract` 类型结果支持自动写入需求拆分（或需求页一键"应用拆分结果"），闭合本地 Agent 拆分链路 | P1 | 2026-09-17 |
+| C248-2 | AI 任务页引入独立权限（如 `ai:job:view`），解除与 `apitest:execute` 的可见性耦合 | P2 | 2026-09-17 |
+| C248-3 | 生产发布时写入 `AI_PLATFORM_INFERENCE=false`，并显式处理失效的云端 provider（标注为运维专用或下线） | P1 | 2026-09-17 |
+| C248-4 | 本地 Agent 支持 `worker` 长轮询模式与失败重试，减少人工 claim/report 往返 | P2 | 2026-09-17 |
+| C248-5 | SKILL.md「权限或安全策略阻塞处理」补充 fetch/网络阻塞处置（含 CHANGELOG 同步）；本批建 worktree 时 scope 声明过窄也需在规范中给出前置提示 | P2 | 2026-09-17 |
+| C248-6 | AI Job 结果支持 diff 视图与人工审核后再导入（当前为直接导入 + 幂等保护） | P2 | 2026-09-17 |
+
 | C140-1 | batch-139→140 | Railway 为 /app/storage 配置持久卷（蓝湖证据截图/导出），见 batch-139/140/141 verdict；未入追踪器补录 |
 
 ---## 统计
