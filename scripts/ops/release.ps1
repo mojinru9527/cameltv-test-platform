@@ -103,7 +103,11 @@ function Invoke-BuildxExport {
     )
     Push-Location $Cwd
     try {
-        $cmd = "docker buildx build --builder desktop-linux -t `"$Image`""
+        # C248-8：BuildKit 默认网络在本机取 deb.debian.org 个别 .deb 会稳定失败
+        # （2026-09-17 两次复现：`Failed to fetch … liberror-perl … Unable to connect`），
+        # 表现为 runner target 构建中断、进而"看起来"只能复用旧镜像。构建期不需要网络隔离，
+        # 用 host 网络实测可完整构建 4 个镜像，故固定 --network=host。
+        $cmd = "docker buildx build --builder desktop-linux --network=host -t `"$Image`""
         if ($Dockerfile) { $cmd += " -f `"$Dockerfile`"" }
         if ($BuildArg)   { $cmd += " --build-arg `"$BuildArg`"" }
         if ($Target)     { $cmd += " --target `"$Target`"" }

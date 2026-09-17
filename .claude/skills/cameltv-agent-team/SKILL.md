@@ -151,6 +151,16 @@ git branch -d feature/batch-{N}-{name}
 
 每个代码任务从 `origin/main` 独立创建 worktree。仓库内 ADR-0014、`AGENTS.md` 和本文件是共同事实源；路径绑定的个人 Memory 只作辅助。已结束的旧任务分支禁止继续追加 commit。
 
+**动手前先判断分支是否已被 main 取代（C249-6）**：接续一个陌生/长时间未动的分支时，先比对两侧同名文件的**规模与内容**，再决定是否还需要开发，避免在已被 main 取代的分支上白做一轮：
+
+```bash
+git fetch origin main
+git diff --stat origin/main...HEAD        # 本分支相对 main 的真实差异
+git diff --stat origin/main:path/to/file HEAD:path/to/file   # 同名文件规模对比
+```
+
+判断口径：目标文件在 main 上已经**同等或更完整**（行数/内容覆盖本分支改动）→ 本分支大概率已过时，先在 PR/聊天中说明并请 Leader 确认，再决定是否继续；**规模相当但内容分叉**时必须逐行比对，不允许"看起来一样"就当成已完成。
+
 Claude Code 作为 VS Code 插件、Codex 作为 ChatGPT 桌面客户端、DeepSeek Harness 作为 Web/命令行会话可以并行工作，不会改变 Git 隔离语义。隔离依赖不同 worktree、分支、端口和 `.ai-worktree.json`；不同客户端/会话禁止同时修改同一个 worktree。
 
 ### 多窗口并行开发（强制）
@@ -217,7 +227,8 @@ pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -UserConfirmedExecuto
 
 - 🚨 多个 Agent Team 窗口共享同一个工作目录直接改代码 → 立即停止，创建 worktree 后重来
 - 🚨 在某个 worktree 分支上 `git merge` 其他窗口的分支（而非通过 PR 合入 main）→ 破坏追溯性
-- 🚨 跳过 worktree 直接用 `git stash` + `git checkout` 切换任务 → 代码覆盖风险极高
+    - 🚨 跳过 worktree 直接用 `git stash` + `git checkout` 切换任务 → 代码覆盖风险极高
+    - 🚨 未比对 `origin/main` 就继续开发一个旧分支（main 可能已经包含同等或更完整实现）→ 白做一轮，先跑 `git diff --stat origin/main...HEAD`
 
 ### 权限或安全策略阻塞处理
 
@@ -298,4 +309,3 @@ Agent Team 各部门执行任务时自动通过 RAG 检索知识库。检索优�
 - [ADR-0014](../../../docs/adr/0014-single-main-trunk-ai-worktrees.md) — 单一主干与 worktree 隔离决策
 - [local-dev-workflow.md](../../../docs/agent-team/local-dev-workflow.md)
 - [release-cadence.md](../../../docs/agent-team/release-cadence.md) — 发布火车：合代码 ≠ 发版本（主干随时合并、版本按窗口聚合） — 本地开发操作备忘（主干视图 / worktree 隔离 / 批次生命周期 / push 门禁）
-

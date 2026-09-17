@@ -104,6 +104,11 @@ FROM runtime-base AS runner
 # Node 22（NodeSource）：dsh CLI 依赖 commander>=22.12 / pi-ai>=22.19，
 # Debian apt 的 nodejs（18/20）不满足（Batch 191 生产构建报 EBADENGINE）。
 # openssh-client：发布平台 SSH 执行器（release-platform batch）依赖 ssh/scp。
+#
+# C248-8（2026-09-17）：这里曾写作 `curl -fsSL … | bash -`，管道会吞掉 curl 的失败
+# （无 pipefail，退出码取管道末段），于是静默退化成 Debian 的 nodejs——**有 node、没有 npm**；
+# 构建到下一步才以 `npm: not found` 报 exit 127，连续三次发布被迫改用「复用已验证 runner 镜像」。
+# 现在：setup 脚本先落盘再执行（下载失败立即中断），并在同一层断言 Node 主版本与 npm 存在。
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
@@ -118,9 +123,14 @@ RUN apt-get update \
         libxext6 \
         libsm6 \
         libice6 \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs \
-    && rm -rf /var/lib/apt/lists/*
+    && curl -fsSL --retry 3 --retry-delay 2 -o /tmp/nodesource_setup.sh https://deb.nodesource.com/setup_22.x \
+    && bash /tmp/nodesource_setup.sh \
+    && rm -f /tmp/nodesource_setup.sh \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/* \
+    && node -e "const v=process.versions.node; if(!v.startsWith('22.')){console.error('C248-8: expected Node 22 (NodeSource), got '+v); process.exit(1)}" \
+    && npm --version >/dev/null \
+    && echo "node $(node --version) / npm $(npm --version)"
 
 # Install the npm-locked UI runner before copying specs so source edits retain
 # the dependency/browser cache layer. Align Python Playwright to the same

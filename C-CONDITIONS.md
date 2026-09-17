@@ -1153,7 +1153,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C248-5 | SKILL.md「权限或安全策略阻塞处理」补充 fetch/网络阻塞处置（含 CHANGELOG 同步）；本批建 worktree 时 scope 声明过窄也需在规范中给出前置提示 | P2 | 2026-09-17 |
 | C248-6 | AI Job 结果支持 diff 视图与人工审核后再导入（当前为直接导入 + 幂等保护） | P2 | 2026-09-17 |
 | C248-7 | 发布控制面补"独占数据库迁移作业"（ADR-0015 §4）：manifest 的 `database.target_revision` 用真实 revision，publish 前校验单头并执行迁移，避免"代码已上线、schema 未迁移"（2026-09-17 发布实测） | P0 | 2026-09-17 |
-| C248-8 | 修复 `--target runner` 的本地可构建性（构建阶段缺 node 导致 exit 127），或将其正式移出常规发布路径并文档化"复用已验证 runner 镜像"流程 | P1 | 2026-09-17 |
+| ~~C248-8~~ | ~~修复 `--target runner` 的本地可构建性（构建阶段缺 node 导致 exit 127）~~ → **Closed**：Batch 252（根因= `curl … \| bash -` 管道吞失败静默降级到 Debian nodejs"有 node 没 npm"；改为 setup 落盘再执行 + 同层断言 node 22/npm，buildx 固定 `--network=host`；**真实构建成功**，日志 `node v22.23.2 / npm 10.9.8`），commit 883abd2a | P1 | 2026-09-17 |
 
 ### batch-249 — 发布控制面强制迁移（Batch 249 Leader 条件）
 
@@ -1163,9 +1163,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C249-2 | ✅ Closed：控制面服务自身发布（含迁移作业）——`cameltv-release-console:release-20260917` 已上线，`/opt/cameltv-release-console` 同参数换容器，回滚锚点 `:20260915`/`:20260913` 保留；前置修复见 PR #464（Dockerfile 漏 `migrations.py`） | — | 2026-09-17 |
 | ~~C249-3~~ | ~~控制面既有测试目录 E402 历史债清理（`tests/test_capacity.py` 等）~~ → **Closed**：Batch 250（`deploy/release-console` 全目录 `ruff check .` All checks passed），commit 2580c2ea | P3 | 2026-09-17 |
 | ~~C249-4~~ | ~~迁移作业失败时的生产可观测性：控制面事件记录目标 revision 与实际 `current` 差异~~ → **Closed**：Batch 250（校验步骤打印 `CAMELTV_MIGRATION target/actual`，事件 reason 落差异；生产验收 `release-20260917-0006` 实测 rc=0 且顺序为迁移→校验→停旧→起新），commit f186181d | P2 | 2026-09-17 |
-| C249-5 | 沿用旧镜像前必须核对 `RUNNER_ENDPOINTS` 转发面；补丁镜像必须含 `alembic/versions`（Batch 248 runner 热修事故教训） | P1 | 2026-09-17 |
-| C249-6 | SKILL.md/DEPARTMENTS.md 补充"合并前先比对两侧同名文件规模，判断分支是否已被 main 取代"（含 CHANGELOG 同步） | P2 | 2026-09-17 |
-| C249-7 | 控制面 Dockerfile 为显式列举 COPY：新增模块必须同步（本批 `migrations.py` 一度缺失）；建议改为 `COPY *.py ./` 或加守卫测试 | P1 | 2026-09-17 |
+| ~~C249-5~~ | ~~沿用旧镜像前必须核对 `RUNNER_ENDPOINTS` 转发面；补丁镜像必须含 `alembic/versions`~~ → **Closed**：Batch 252（`image_contract.py` AST 解析转发面 + `scripts/ops/verify-reused-image.ps1` 一键核对；生产验证 runner OK(0) / ai-gateway 当 runner 用 BLOCK(1)），commit 1f030809 | P1 | 2026-09-17 |
+| ~~C249-6~~ | ~~SKILL.md/DEPARTMENTS.md 补充"合并前先比对两侧同名文件规模，判断分支是否已被 main 取代"（含 CHANGELOG 同步）~~ → **Closed**：Batch 252（SKILL.md 新增「动手前先判断分支是否已被 main 取代」+ 多窗口 Red Flag；DEPARTMENTS.md Leader 节第 6 条；CHANGELOG 同批追加），commit c3dd4d22 | P2 | 2026-09-17 |
+| ~~C249-7~~ | ~~控制面 Dockerfile 为显式列举 COPY：新增模块必须同步（`migrations.py` 一度缺失）~~ → **Closed**：Batch 252（改 `COPY *.py ./` + `tests/test_dockerfile_copy_guard.py` 按 import 图守卫，负向用例把 COPY 换回旧列表必须报 `migrations.py`），commit bbea56ba | P1 | 2026-09-17 |
 
 ### batch-250 — 发布护栏（Batch 250 Leader 条件）
 
@@ -1177,9 +1177,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ---## 统计
 
-- **Open / 非关闭**: 54（rows=162, deferred=19；含 P0 blocking；口径见 `audit-cconditions.ps1` stats 输出，2026-09-17 Batch 251 收尾复核）
+- **Open / 非关闭**: 54（rows=162, deferred=19；含 P0 blocking；口径见 `audit-cconditions.ps1` stats 输出，2026-09-17 Batch 252 收尾复核）
 - **In Progress**: 0
-- **Closed**: 203（closed rows=185, missing evidence=0；Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
+- **Closed**: 203（closed rows=189, missing evidence=0；Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
 - **Total**: 302（tracker 条件 ID 计数；另有历史补录不计入）
 
 ## 维护约定

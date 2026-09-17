@@ -13,7 +13,10 @@ RUN apt-get update \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app.py tencent_executor.py capacity.py release_artifacts.py migrations.py ./
+# C249-7：改为通配拷贝——显式列举会在新增模块时漏拷（Batch 249 的 `migrations.py`
+# 一度没进镜像，控制面会 import 失败起不来，属"恢复平面"自锁）。守护测试见
+# tests/test_dockerfile_copy_guard.py（按 import 图校验覆盖）。
+COPY *.py ./
 COPY static ./static
 
 EXPOSE 8003
