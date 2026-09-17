@@ -68,7 +68,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| ~~C246-1~~ | ~~升级或替换 LHCI 开发依赖链，消除当前 dev-only npm audit：7 high / 1 moderate / 2 low~~ → **Closed（Batch 256）**：commit `eb97112a`；overrides 抬升 `puppeteer-core`/`@puppeteer/browsers`（无修复版的 `extract-zip` 退出依赖树）+ `tmp`/`uuid`，`npm audit --registry=https://registry.npmjs.org` 由 `10 (7 high)` → **0**，`npm-audit-baseline.json` 收紧为 0 条，真实 `npm run lighthouse:a11y` accessibility=1.0 通过 | P2 | 2026-09-15 |
+| ~~C246-1~~ | ~~升级或替换 LHCI 开发依赖链，消除当前 dev-only npm audit：7 high / 1 moderate / 2 low~~ → **Closed（Batch 256）**：commit `eb97112a` + `589a574c`；overrides 抬升 `puppeteer-core`/`@puppeteer/browsers`（无修复版的 `extract-zip` 退出依赖树）+ `tmp`/`uuid` + 显式 `proxy-agent`（`@puppeteer/browsers@3.x` 的可选 peer，npm 11 增量不写会让 CI 的 npm 10 `npm ci` EUSAGE），`npm audit --registry=https://registry.npmjs.org` 由 `10 (7 high)` → **0**，`npm-audit-baseline.json` 收紧为 0 条，真实 `npm run lighthouse:a11y` accessibility=1.0 通过 | P2 | 2026-09-15 |
 
 ### batch-244 — Contract & Data Layer Hardening（2026-09-14）—— 新增
 
@@ -576,7 +576,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 | 关闭证据 |
 |----|------|--------|---------|---------|
-| C246-1 | dev-only npm audit（7 high / 1 moderate / 2 low，全部经 `@lhci/cli` 传导）| P2 | 2026-09-15 | **Closed（Batch 256）**：commit `eb97112a`；`npm audit --registry=https://registry.npmjs.org --json` → `{"total":0}`；ratchet baseline 由 16 条 advisory 收紧到 0；真实 `npm run lighthouse:a11y` 退出码 0（accessibility=1.0，lighthouse 12.6.1） |
+| C246-1 | dev-only npm audit（7 high / 1 moderate / 2 low，全部经 `@lhci/cli` 传导）| P2 | 2026-09-15 | **Closed（Batch 256）**：commit `eb97112a` + `589a574c`；`npm audit --registry=https://registry.npmjs.org --json` → `{"total":0}`；ratchet baseline 由 16 条 advisory 收紧到 0；`node:22.22-alpine npm ci` 退出码 0 且 `docker build --target build` 通过；真实 `npm run lighthouse:a11y` 退出码 0（accessibility=1.0，lighthouse 12.6.1） |
 
 ### 2026-09-18 — 分诊关闭（已被后续批次覆盖）
 
