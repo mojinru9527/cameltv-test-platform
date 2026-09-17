@@ -585,6 +585,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C167-1 | UI 自动化登录态/写操作覆盖 | P1 | **Deferred**：Web 登录态已覆盖；收藏/点赞/评论/Follow/充值/提现/下注为 APP 专属，需真机与授权。历史 iOS 阻塞为 solox 缺 iOS 26.5 DeviceSupport，当前宿主亦无 tidevice。解除=提供 APP 真机/授权或接口授权。 |
 | C204-1 | Test5 两副本服务无网关路由 | P1 | **Deferred**：2026-09-13 复测 `camel-service-final`/`camel-test-confirm` health 均 404，`camel-service` 为 200。解除=服务方确认下线后归档资产/用例并归零 404，或恢复路由后复跑矩阵。 |
 
+### batch-252 — 发布链路收口（Batch 252 验收条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C252-1 | `release.ps1 -Publish` 在网络中断时**误报"发布失败"**：publish 请求在客户端抛连接错误即 `throw`，但服务端可能已经完整执行成功（2026-09-17 `release-20260917-0008` 实测：客户端报错、生产实际已切到新版本且 6 容器 healthy）。建议 publish/rollback 失败路径增加**状态核对（reconcile）**：异常后按 deployment id 查 `/api/deployments/{id}` 与 `/events`，若已到 `PROD_OBSERVING/PRODUCTION_VERIFIED` 则按成功报告并提示"服务端已完成" | P2 | 2026-09-18 |
+| C252-2 | 发布后容量回收固化为 SOP：`release-20260917-0008` 上传后磁盘一度 94%（2.7G 可用），人工按"保护最近两次发布 + 48h + 容器引用"清理旧 release 镜像与构建缓存后回到 8.1G；建议把"回收上一版 tar / 历史 release 镜像"写成发布流程的一步（或给 `release_cleanup.py` 补默认安全参数） | P2 | 2026-09-18 |
+
 ## Closed (已完成)
 
 ### 2026-09-13 — Production/CI P1 closeout
@@ -1169,6 +1176,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ### batch-250 — 发布护栏（Batch 250 Leader 条件）
 
+
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | ~~C250-1~~ | ~~迁移状态行的正向证据会被日志尾部截断（`ExecutorResult.logs` 只取最后 4000 字符）~~ → **Closed**：Batch 251（执行器从**完整远端输出**解析并随 `ExecutorResult.migration_status` 返回，事件 reason 优先用该字段；生产实测 `release-20260917-0007` 的 `PROD_OBSERVING.reason` = `publish succeeded; migration target=20260922_ai_agent_token actual=20260922_ai_agent_token`），commit ebed7c96 | P2 | 2026-09-17 |
@@ -1177,7 +1185,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ---## 统计
 
-- **Open / 非关闭**: 54（rows=162, deferred=19；含 P0 blocking；口径见 `audit-cconditions.ps1` stats 输出，2026-09-17 Batch 252 收尾复核）
+- **Open / 非关闭**: 56（rows=164, deferred=19；含 P0 blocking；口径见 `audit-cconditions.ps1` stats 输出，2026-09-18 分诊批次复核：分诊基线 54 + 本批新增 C252-1/C252-2）
 - **In Progress**: 0
 - **Closed**: 203（closed rows=189, missing evidence=0；Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
 - **Total**: 302（tracker 条件 ID 计数；另有历史补录不计入）
