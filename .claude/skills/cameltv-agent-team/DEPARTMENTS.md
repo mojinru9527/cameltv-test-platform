@@ -224,3 +224,6 @@ pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor 
 3. required checks 全绿并通过最终审计（`audit-ai-pr.ps1 -RequireSuccessfulChecks`）后，Leader 才能 APPROVED、将 Draft PR 标为 Ready 并执行合入。
 4. PR 合入后确认无未推送提交，再删除本地分支；远端分支按仓库策略处理。
 5. batch 结束更新看板：Slice 状态、当前位置、批次记录（产出+审批+耗时）。
+6. **接续旧分支前先判断它是否已被 main 取代（C249-6）**：`git diff --stat origin/main...HEAD` +
+   逐份比对同名文件规模/内容；目标文件在 main 上已同等或更完整时，先在 PR/聊天说明并请 Leader 确认，
+   不允许"看起来一样"就继续开发或宣称完成。

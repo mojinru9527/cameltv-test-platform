@@ -111,3 +111,32 @@ the newer revision. Split rollback overrides both API and runner launch commands
 the dedicated Temporal gateway keeps its own launcher. Regular deploys still run
 migrations. Every release must verify the previous image against the new schema;
 this mechanism cannot make destructive/incompatible migrations safe to roll back.
+
+## 沿用旧镜像 / 打补丁镜像前的核对（C249-5）
+
+runner target 在本地构建失败时（C248-8），发布采用"复用已验证镜像"的做法（Batch 247/248）。
+沿用前**必须**先跑核对——否则会出现"容器能起、任务全挂 / 迁移不可用"的隐形故障
+（Batch 248 runner 热修事故的教训）：
+
+```powershell
+# 本地镜像
+pwsh scripts/ops/verify-reused-image.ps1 -Image cameltv-tp-runner:release-20260917-0007 -Part runner
+# 服务器上的镜像（走 ssh）
+pwsh scripts/ops/verify-reused-image.ps1 -Image cameltv-tp-runner:release-20260917-0007 -Part runner `
+  -SshHost 111.230.155.116 -KeyPath F:\CamelTv-safe-backup\release-platform-key
+```
+
+核对项（实现见 `deploy/release-console/image_contract.py`，单元测试见 `tests/test_image_contract.py`）：
+
+| 项 | 要求 |
+|---|---|
+| 必需路径 | `alembic`、`alembic/versions`、`alembic.ini`（backend/api/runner）；runner 另需 `app/core/execution_dispatch.py` |
+| 转发面 | 镜像里的 `RUNNER_ENDPOINTS` 必须覆盖当前仓库 `test-platform-v2/backend/app/core/execution_dispatch.py` 声明的**全部** endpoint |
+| 退出码 | `0` = 可沿用；`1` = BLOCK，**不得沿用**（改回真实构建，或先修镜像再核对） |
+
+2026-09-17 生产实测：
+
+```
+OK    cameltv-tp-runner:release-20260917-0007             → 7 个模块 / 路径齐全（exit 0）
+BLOCK cameltv-tp-ai-gateway:release-20260917-0007（当 runner 用）→ 缺 alembic 三件套（exit 1）
+```
