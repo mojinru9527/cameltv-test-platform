@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-import capacity
+import capacity  # noqa: E402 - 控制面模块需先加入 sys.path（conftest.py 同样处理）
 
 
 class CapacityTests(unittest.TestCase):

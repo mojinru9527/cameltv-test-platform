@@ -42,7 +42,8 @@ param(
     [string]$ReleaseDir = "/opt/cameltv-release",
     [ValidateSet('combined', 'split')]
     [string]$RuntimeMode = 'combined',
-    [string]$ExecutionConfig = ''
+    [string]$ExecutionConfig = '',
+    [switch]$DryRun
 )
 
 $ErrorActionPreference = "Stop"
@@ -149,6 +150,34 @@ function Invoke-Release {
     Write-Host "==> Git SHA: $gitSha" -ForegroundColor Cyan
     $alembicHead = Get-AlembicHead -RepoRoot $repoRoot
     Write-Host "==> Alembic head: $alembicHead" -ForegroundColor Cyan
+
+    # ── DryRun（C249-1）：只计算 manifest/digest 预览，不构建 / 不登记 / 不上传 / 不发布 ──
+    # 背景：QA 曾用真实脚本"实测"某个函数，误触完整发布构建流程。
+    if ($DryRun) {
+        if ($RuntimeMode -eq 'split' -and (-not $ExecutionConfig -or -not (Test-Path -LiteralPath $ExecutionConfig -PathType Leaf))) {
+            throw 'DryRun 的 split 模式仍需 -ExecutionConfig 以计算 execution_config_sha256'
+        }
+        $zero64 = "0" * 64
+        $preview = [ordered]@{
+            schema_version = '1.0'; release_id = ($Tag -replace '[^a-z0-9-]', '-'); git_sha = $gitSha
+            runtime_mode = $RuntimeMode
+            database = @{ alembic_heads = @($alembicHead); target_revision = $alembicHead; rollback_mode = 'application-rollback-or-forward-fix' }
+            frontend = @{ image = 'cameltv-tp-frontend'; digest = '<computed during build>'; sbom_sha256 = $zero64 }
+            backend = @{ image = 'cameltv-tp-backend'; digest = '<computed during build>'; sbom_sha256 = $zero64; openapi_sha256 = $zero64 }
+        }
+        if ($RuntimeMode -eq 'split') {
+            $preview.runner = @{ image = 'cameltv-tp-runner'; digest = '<computed during build>'; sbom_sha256 = $zero64 }
+            $preview.'ai-gateway' = @{ image = 'cameltv-tp-ai-gateway'; digest = '<computed during build>'; sbom_sha256 = $zero64 }
+            $preview.execution_config_sha256 = (Get-FileHash -LiteralPath $ExecutionConfig -Algorithm SHA256).Hash.ToLowerInvariant()
+        }
+        New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
+        $previewPath = Join-Path $OutputDir "$Tag-dryrun-manifest.json"
+        [IO.File]::WriteAllText($previewPath, ($preview | ConvertTo-Json -Depth 6), [Text.UTF8Encoding]::new($false))
+        Write-Host "==> DryRun：未构建、未登记、未上传、未发布" -ForegroundColor Yellow
+        Write-Host "==> manifest 预览已写入 $previewPath" -ForegroundColor Green
+        $preview | ConvertTo-Json -Depth 6
+        return
+    }
 
     # 1. 构建镜像（buildx export 会构建，无需先 docker build 一次）
     Write-Host "==> 导出前端 cameltv-tp-frontend:$Tag (ICP=$IcpNumber)" -ForegroundColor Cyan
