@@ -1,31 +1,14 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-14T16:23:54.865Z",
+  "generated_at": "2026-09-17T16:41:52.990Z",
   "policy": "full npm audit ratchet; production audit must still be zero",
   "counts": {
     "info": 0,
-    "low": 2,
-    "moderate": 1,
-    "high": 7,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
     "critical": 0,
-    "total": 10
+    "total": 0
   },
-  "advisories": [
-    "@lhci/cli|high|via:@lhci/utils",
-    "@lhci/cli|high|via:inquirer",
-    "@lhci/cli|high|via:lighthouse",
-    "@lhci/cli|high|via:tmp",
-    "@lhci/cli|high|via:uuid",
-    "@lhci/utils|high|via:lighthouse",
-    "@puppeteer/browsers|high|via:extract-zip",
-    "external-editor|low|via:tmp",
-    "extract-zip|high|1139346|extract-zip|extract-zip unvalidated symlink path traversal",
-    "extract-zip|high|1193685|extract-zip|extract-zip allows arbitrary file writes through symlink archive entries",
-    "inquirer|low|via:external-editor",
-    "lighthouse|high|via:puppeteer-core",
-    "puppeteer-core|high|via:@puppeteer/browsers",
-    "tmp|high|1109537|tmp|tmp allows arbitrary temporary file / directory write via symbolic link `dir` parameter",
-    "tmp|high|1120654|tmp|tmp has Path Traversal via unsanitized prefix/postfix that enables directory escape",
-    "uuid|moderate|1119441|uuid|uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided"
-  ]
+  "advisories": []
 }
