@@ -26,3 +26,4 @@ related:
 | `07-b1-b15-delivery-and-usage.md` | B1-B15 最终交付与黑盒测试人员使用手册 | Batch 226 最终验收 |
 | `08-b1-b15-implementation.md` | 主链路事实源、AI、执行、放行、接入和副作用实现说明 | Batch 226 最终验收 |
 | `09-platform-landing-plan.md` | **落地方案（控制面 + 本地执行节点）**：目标形态、菜单收敛 4 入口、执行/数据模型、安全五硬线、运维要求、8 周 4 批计划 | Batch 256 起执行事实源 |
+| `10-landing-plan-task-backlog.md` | **有序任务清单**：B0–B4 任务、依赖拓扑、硬约束、最终验收 9 条、可直接复制的目标提示词 | 执行入口（Batch 256 起） |
