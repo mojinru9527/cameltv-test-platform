@@ -43,7 +43,9 @@ param(
     [ValidateSet('combined', 'split')]
     [string]$RuntimeMode = 'combined',
     [string]$ExecutionConfig = '',
-    [switch]$DryRun
+    [switch]$DryRun,
+    # C252-2：上传前回收历史发布 tar（镜像保留，回滚锚点不依赖 tar）
+    [switch]$ReclaimPrevious
 )
 
 $ErrorActionPreference = "Stop"
@@ -51,6 +53,7 @@ $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 . (Join-Path $PSScriptRoot 'capacity.ps1')
 . (Join-Path $PSScriptRoot 'release-build.ps1')
 . (Join-Path $PSScriptRoot 'release-transfer.ps1')
+. (Join-Path $PSScriptRoot 'release-reconcile.ps1')
 
 # ── Token 管理（首次输入，之后存本地）─────────────────────────────
 $tokenStore = "$HOME\.cameltv-release-console\token.json"
@@ -71,6 +74,8 @@ if (-not $KeyPath) {
 
 # ── 辅助 ────────────────────────────────────────────────────────
 function Invoke-Api([string]$method, [string]$path, $body = $null) {
+    # C252-1：记录最后一次请求级错误，供"请求中断但服务端已完成"的核对使用
+    $script:LastApiError = ''
     $headers = @{ Authorization = "Bearer $Token"; "Content-Type" = "application/json" }
     $params = @{ Uri = "$BaseUrl$path"; Method = $method; Headers = $headers; UseBasicParsing = $true; TimeoutSec = 900 }
     if ($body) { $params.Body = ($body | ConvertTo-Json -Depth 6) }
@@ -79,6 +84,7 @@ function Invoke-Api([string]$method, [string]$path, $body = $null) {
         if ($r.code -ne 0 -and $r.code -ne $null) { Write-Host "API 异常: $($r.msg)" -ForegroundColor Red; return $null }
         return $r
     } catch {
+        $script:LastApiError = $_.Exception.Message
         Write-Host "API 失败: $($_.Exception.Message)" -ForegroundColor Red
         return $null
     }
@@ -245,6 +251,16 @@ function Invoke-Release {
     Write-Host "==> 上传镜像" -ForegroundColor Cyan
     ssh -i $KeyPath -o BatchMode=yes "${UserName}@${HostName}" "mkdir -p $ReleaseDir" 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Cannot prepare remote release directory' }
+    if ($ReclaimPrevious) {
+        # C252-2：上传前回收历史发布 tar（镜像仍在服务器，回滚锚点不依赖 tar）。
+        # 依据 2026-09-17 实测：上传后磁盘一度 94%（2.7G 可用），需按发布节奏回收。
+        Write-Host "==> 回收历史发布 tar（保留镜像与本次 $Tag 的 tar）" -ForegroundColor Cyan
+        $reclaim = "echo 'before:'; df -h / | tail -1; " +
+            "ls -1 $ReleaseDir/release-*.tar 2>/dev/null | grep -v '$Tag-' > /tmp/reclaim.list || true; " +
+            "if [ -s /tmp/reclaim.list ]; then xargs -r rm -f < /tmp/reclaim.list; fi; " +
+            "echo removed_tars:; wc -l < /tmp/reclaim.list; echo 'after:'; df -h / | tail -1"
+        ssh -i $KeyPath -o BatchMode=yes "${UserName}@${HostName}" $reclaim
+    }
     Assert-ReleaseUploadCapacity -HostName $HostName -UserName $UserName -KeyPath $KeyPath `
         -ReleaseDir $ReleaseDir -Archives $archives
     # 并行上传发布制品（独立文件无冲突；单连接带宽受限，并行可缩短总时长）
@@ -268,12 +284,29 @@ function Invoke-Release {
         if (-not $val) { throw "验证失败（manifest 校验未通过，请到网页检查）" }
         Write-Host "==> 发布 $deploymentId" -ForegroundColor Cyan
         $pub = Invoke-Api "POST" "/api/deployments/$deploymentId/publish" @{ image_tag = $Tag }
-        if (-not $pub) { throw "发布失败" }
-        Write-Host "==> 发布成功: $($pub.summary)" -ForegroundColor Green
-        Write-Host "==> 确认上线（线上健康检查）" -ForegroundColor Cyan
-        $ver = Invoke-Api "POST" "/api/deployments/$deploymentId/verify" $null
-        if ($ver) { Write-Host "==> 上线确认: $($ver.summary)" -ForegroundColor Green }
-        else { Write-Host "==> 上线确认未通过，请到网页 https://release.swiftbugs.cn 手动「确认上线」" -ForegroundColor Yellow }
+        $stateAfterPublish = ''
+        if ($pub) {
+            $stateAfterPublish = 'PROD_OBSERVING'
+            Write-Host "==> 发布成功: $($pub.summary)" -ForegroundColor Green
+        } else {
+            # C252-1：请求可能在客户端侧中断，而服务端已经执行完；先核对真实状态再下结论
+            Write-Host "==> 发布请求未返回（$($script:LastApiError)），正在核对服务端真实状态…" -ForegroundColor Yellow
+            $outcome = Resolve-DeploymentOutcome -DeploymentId $deploymentId -QueryState {
+                param($id)
+                (Invoke-Api "GET" "/api/deployments/$id").state
+            }
+            if (-not $outcome.Succeeded) { throw "发布失败：$($outcome.Reason)" }
+            $stateAfterPublish = $outcome.State
+            Write-Host "==> 服务端已完成（状态 $stateAfterPublish）：请求中断 ≠ 发布失败，请勿重发" -ForegroundColor Green
+        }
+        if ($stateAfterPublish -eq 'PROD_OBSERVING') {
+            Write-Host "==> 确认上线（线上健康检查）" -ForegroundColor Cyan
+            $ver = Invoke-Api "POST" "/api/deployments/$deploymentId/verify" $null
+            if ($ver) { Write-Host "==> 上线确认: $($ver.summary)" -ForegroundColor Green }
+            else { Write-Host "==> 上线确认未通过，请到网页 https://release.swiftbugs.cn 手动「确认上线」" -ForegroundColor Yellow }
+        } else {
+            Write-Host "==> 已处于 $stateAfterPublish，跳过「确认上线」" -ForegroundColor Green
+        }
     } else {
         Write-Host "==> 构建+提交完成。去网页 https://release.swiftbugs.cn 点「发布」即可（状态 VALIDATED 后）" -ForegroundColor Yellow
     }
@@ -286,7 +319,18 @@ function Invoke-Rollback {
     $deploy = @($list) | Select-Object -First 1
     if (-not $deploy) { Write-Host "无发布记录" -ForegroundColor Yellow; return }
     $rb = Invoke-Api "POST" "/api/deployments/$($deploy.id)/rollback" @{ image_tag = $Tag }
-    if ($rb) { Write-Host "==> 回滚成功: $($rb.summary)" -ForegroundColor Green }
+    if ($rb) { Write-Host "==> 回滚成功: $($rb.summary)" -ForegroundColor Green; return }
+    # C252-1：回滚请求同样可能中断在客户端；按状态核对（PROD_ROLLED_BACK 视为成功）
+    Write-Host "==> 回滚请求未返回（$($script:LastApiError)），正在核对服务端真实状态…" -ForegroundColor Yellow
+    $outcome = Resolve-DeploymentOutcome -DeploymentId $deploy.id -QueryState {
+        param($id)
+        (Invoke-Api "GET" "/api/deployments/$id").state
+    } -SuccessStates @('PROD_ROLLED_BACK') -FailureStates @('PROD_FAILED')
+    if ($outcome.Succeeded) {
+        Write-Host "==> 服务端已回滚完成（状态 $($outcome.State)）：请求中断 ≠ 回滚失败" -ForegroundColor Green
+    } else {
+        throw "回滚失败：$($outcome.Reason)"
+    }
 }
 
 function Invoke-Backup {
