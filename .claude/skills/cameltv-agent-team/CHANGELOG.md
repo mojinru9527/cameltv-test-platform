@@ -2,6 +2,11 @@
 
 > 技能版本化唯一日志。凡修改 `SKILL.md` / `DEPARTMENTS.md` 必须在本文件追加一条。格式：日期 | 批次 | 变更摘要 | 动因。
 
+## 2026-09-17 | Batch 252 | 接续旧分支前先比对 main（C249-6）
+
+- **变更**：SKILL.md「防冲突规则」新增「动手前先判断分支是否已被 main 取代」小节（`git diff --stat origin/main...HEAD` + 同名文件规模/内容比对 + 规模相当但内容分叉时逐行比对），并在「Red Flag（多窗口版）」补一条对应红线；DEPARTMENTS.md Leader 节第 6 条同步该动作（接续旧分支前先判断是否已被 main 取代，必要时请 Leader 确认）。
+- **动因**：C249-6（Batch 249 Leader 条件）——Batch 249 曾在一个已被 main 取代的分支上试探合并，白做一轮（S1）；同时 2026-09-17 的 batch-250/251 都出现"接续旧 worktree/分支"的场景，需要统一动作避免重复劳动。
+
 ## 2026-08-17 | Batch 190 | DSH AgentTeams 船长模式（执行方式双模式化）
 
 - **变更**：SKILL.md「流水线」节新增执行模式表（模式①单会话角色扮演保留；模式②DSH AgentTeams 船长模式：船长=Leader、五成员 product/pm/design/dev/qa、带依赖任务图）；Git 工作流与 DEPARTMENTS.md（Dev 节 + Leader 节 audit 示例，QA P3-1）执行器三选问题同步为「Claude Code / Codex / DeepSeek Harness」；多窗口并行示例与措辞补第三执行器；新增 `docs/agent-team/dsh-agent-teams.md` 船长手册（完整/轻量批次协议、工件交接规则、常见坑、双模式选用）；新增 `scripts/git/start-deepseek-harness-agent-team.ps1` 便捷入口；start-agent-team-task.ps1 / new-ai-worktree.ps1 / verify-ai-worktree.ps1 报错文案同步三执行器；AGENTS.md §2.3/§2.5、local-dev-workflow.md、ADR-0014 同步。DEPARTMENTS.md 模板本体不变（工件事实源）。
