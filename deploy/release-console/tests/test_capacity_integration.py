@@ -38,6 +38,8 @@ class ExecutorCapacityTests(unittest.TestCase):
 
     def split_manifest(self):
         return {'release_id': 'release-20260907-0001', 'runtime_mode': 'split',
+                # Batch 249：发布必须携带真实 alembic revision（ADR-0015 §4）
+                'database': {'target_revision': '20260922_ai_agent_token'},
                 'runner': {'image': 'cameltv-tp-runner', 'digest': 'sha256:' + 'a' * 64},
                 'ai-gateway': {'image': 'cameltv-tp-ai-gateway', 'digest': 'sha256:' + 'c' * 64},
                 'execution_config_sha256': 'b' * 64}

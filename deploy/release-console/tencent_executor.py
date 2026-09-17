@@ -20,6 +20,8 @@ from __future__ import annotations
 import base64
 import dataclasses
 import json
+
+from migrations import migration_commands, target_revision
 import os
 import re
 import shlex
@@ -211,7 +213,8 @@ class TencentSshExecutor:
             f"--env-file ../config/runtime/production.env {extra}{' '.join(shlex.quote(arg) for arg in args)}"
         )
 
-    def _activate(self, tag: str, mode: str, *, rollback: bool = False) -> list[str]:
+    def _activate(self, tag: str, mode: str, *, rollback: bool = False,
+                  migration_target: str | None = None) -> list[str]:
         # Stop old consumers before introducing the new owner topology. Docker
         # preserves the durable queues and artifacts; no database is recreated.
         commands = []
@@ -220,6 +223,15 @@ class TencentSshExecutor:
             payload = shlex.quote(json.dumps(rollback_runtime_override(mode)))
             commands.extend([f'test ! -L {path}', f"printf '%s' {payload} > {path}",
                              self._compose('config', '--quiet', mode=mode, tag=tag, rollback=True)])
+        elif migration_target:
+            # ADR-0015 §4: the isolated migration job runs against the already
+            # tagged new API image, before any application container is restarted.
+            # A failure here aborts the whole command sequence (remote shell uses
+            # `set -e` semantics), so production keeps running the previous release.
+            commands.extend(migration_commands(
+                lambda *args: self._compose(*args, mode=mode, tag=tag),
+                target=migration_target,
+            ))
         commands.append(self._compose('stop', '--timeout', '60', 'backend', 'aitde-worker', 'runner', 'ai-gateway'))
         project = shlex.quote(f'label=com.docker.compose.project={self.config.compose_project}')
         commands.append(f'docker ps -q --filter {project} --filter label=com.docker.compose.service=runner | xargs -r docker stop --time 60')
@@ -268,7 +280,8 @@ class TencentSshExecutor:
             commands.append(f'docker load -i {shlex.quote(f"{self.config.release_dir}/{image_tag}-{part}.tar")}')
         for part in parts:
             commands.append(f'docker tag cameltv-tp-{part}:{image_tag} {shlex.quote(image_target(self.config, part))}')
-        commands.extend(self._activate(image_tag, mode))
+        migration_target = target_revision(manifest) if manifest is not None else None
+        commands.extend(self._activate(image_tag, mode, migration_target=migration_target))
         output = self._run_remote(commands)
         return ExecutorResult(
             ok=True,

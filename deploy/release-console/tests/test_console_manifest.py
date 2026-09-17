@@ -31,7 +31,10 @@ class ConsoleManifestTests(unittest.TestCase):
         self.addCleanup(executor_patch.stop)
 
     def register(self, tag='release-20260908-0001', split=False):
-        manifest = dict(schema_version='1.0', release_id=tag, git_sha='a' * 40)
+        # Batch 249（ADR-0015 §4）：发布必须携带真实 alembic revision，
+        # 占位值 see-verified-head 会被 validate 拒绝。
+        manifest = dict(schema_version='1.0', release_id=tag, git_sha='a' * 40,
+                        database=dict(target_revision='20260922_ai_agent_token'))
         for part in ('backend', 'frontend', 'runner', 'ai-gateway') if split else ('backend', 'frontend'):
             manifest[part] = dict(image=f'cameltv-tp-{part}', digest='sha256:' + 'b' * 64)
         if split:

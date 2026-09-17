@@ -25,6 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from release_artifacts import runtime_mode
+from migrations import MigrationFailed, MigrationNotConfigured, target_revision
 
 from tencent_executor import (
     ExecutorCommandFailed,
@@ -415,6 +416,15 @@ def validate_deployment(deployment_id: str, authorization: str | None = Header(N
         digest = str((manifest.get(side) or {}).get("digest", ""))
         if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
             raise HTTPException(422, f"manifest {side}.digest 必须是 sha256:<64 位 hex>")
+    # ADR-0015 §4（Batch 249）：发布必须携带真实 alembic revision，禁止占位值。
+    # 缺真实 revision 时发布会把"依赖新 schema 的代码"上线到未迁移的库上
+    # （2026-09-17 事故：ai_jobs.model_name 不存在 → /api/v1/ai/jobs 500）。
+    try:
+        target_revision(manifest)
+    except MigrationNotConfigured as exc:
+        raise HTTPException(422, f"manifest database.target_revision 必须是真实 revision：{exc}") from exc
+    except MigrationFailed as exc:
+        raise HTTPException(422, f"manifest database.target_revision 非法：{exc}") from exc
     if not _transition_state(deployment_id, "DRAFT", "VALIDATED", "validate", "console", "manifest validated"):
         raise HTTPException(409, "状态已变化，验证失败")
     return ActionOut(

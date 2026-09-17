@@ -59,6 +59,7 @@
         <h2>提交发布登记</h2>
         <label>Release ID</label><input id="f-releaseId" placeholder="rel-20260823-0002">
         <label>Git SHA</label><input id="f-gitSha" placeholder="40 位 commit sha">
+        <label>Alembic Head</label><input id="f-alembicHead" placeholder="真实 revision，如 20260922_ai_agent_token">
         <label>前端镜像 Digest</label><input id="f-feDigest" placeholder="64 位 sha256 hex">
         <label>后端镜像 Digest</label><input id="f-beDigest" placeholder="64 位 sha256 hex">
         <label>镜像 Tag</label><input id="f-tag" placeholder="release-20260823-0002">
@@ -127,7 +128,9 @@
         git_sha:document.getElementById('f-gitSha').value,
         frontend:{ image:'cameltv-tp-frontend', digest:'sha256:'+document.getElementById('f-feDigest').value, sbom_sha256:'0'.repeat(64) },
         backend:{ image:'cameltv-tp-backend', digest:'sha256:'+document.getElementById('f-beDigest').value, sbom_sha256:'0'.repeat(64), openapi_sha256:'0'.repeat(64) },
-        database:{ alembic_heads:['see-verified-head'], target_revision:'see-verified-head', rollback_mode:'application-rollback-or-forward-fix' },
+        // Batch 249（ADR-0015 §4）：必须是真实 alembic revision；占位值会被 validate 拒绝。
+        // 从待发布版本取：cd test-platform-v2/backend && python -m alembic heads
+        database:{ alembic_heads:[document.getElementById('f-alembicHead').value], target_revision:document.getElementById('f-alembicHead').value, rollback_mode:'application-rollback-or-forward-fix' },
         config_schema:'platform-runtime/v1',
         secret_refs:['secret://production/cameltv/platform@v1'],
         qa_evidence:['artifact://release-platform/qa-e2e']
