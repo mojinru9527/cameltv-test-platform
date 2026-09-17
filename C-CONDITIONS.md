@@ -1170,7 +1170,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ---## 统计
 
-- **Open / 非关闭**: 29（rows=132, deferred=8；口径见 `audit-cconditions.ps1` stats 输出，2026-09-18 Batch 254 重排后；其中**真实待办 16 条**，见 `work-logs/batch-254-conditions-restructure-qa-report.md`，差额来自同 ID 重复行）
+- **Open / 非关闭**: 27（rows=132, deferred=8；口径见 `audit-cconditions.ps1` stats 输出，2026-09-18 Batch 255 后；其中**真实待办 14 条**——Batch 254 重排的真实待办 16 条中 C252-1/C252-2 已于 Batch 255 关闭，差额来自同 ID 重复行）
 - **In Progress**: 0
 - **Closed**: 212（closed rows=195, missing evidence=0；Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
 - **Total**: 302（tracker 条件 ID 计数；另有历史补录不计入）
