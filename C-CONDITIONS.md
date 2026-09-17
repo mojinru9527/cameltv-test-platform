@@ -1152,6 +1152,8 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C248-4 | 本地 Agent 支持 `worker` 长轮询模式与失败重试，减少人工 claim/report 往返 | P2 | 2026-09-17 |
 | C248-5 | SKILL.md「权限或安全策略阻塞处理」补充 fetch/网络阻塞处置（含 CHANGELOG 同步）；本批建 worktree 时 scope 声明过窄也需在规范中给出前置提示 | P2 | 2026-09-17 |
 | C248-6 | AI Job 结果支持 diff 视图与人工审核后再导入（当前为直接导入 + 幂等保护） | P2 | 2026-09-17 |
+| C248-7 | 发布控制面补"独占数据库迁移作业"（ADR-0015 §4）：manifest 的 `database.target_revision` 用真实 revision，publish 前校验单头并执行迁移，避免"代码已上线、schema 未迁移"（2026-09-17 发布实测） | P0 | 2026-09-17 |
+| C248-8 | 修复 `--target runner` 的本地可构建性（构建阶段缺 node 导致 exit 127），或将其正式移出常规发布路径并文档化"复用已验证 runner 镜像"流程 | P1 | 2026-09-17 |
 
 | C140-1 | batch-139→140 | Railway 为 /app/storage 配置持久卷（蓝湖证据截图/导出），见 batch-139/140/141 verdict；未入追踪器补录 |
 
