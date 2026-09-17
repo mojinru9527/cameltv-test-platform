@@ -46,8 +46,8 @@ Batch 256 — QA/Leader 完成，等待用户一次总确认
 ## 📜 批次记录
 
 ### Batch 256 — Runner 隔离与依赖审计 (2026-09-18)
-- **产出**: 3 个提交（`eb97112a` 依赖 overrides + lockfile + baseline；`b1df101b` compose 加固 + 部署契约测试；`d750c4ec` 部署/坑位文档）+ 六部门工件 + 只读探针证据
-- **审批**: 待用户一次总确认（QA PASS / Leader 有条件通过）
+- **产出**: 5 个提交（`eb97112a` 依赖 overrides + lockfile + baseline；`b1df101b` compose 加固 + 部署契约测试；`d750c4ec` 部署/坑位文档；`e3f0136c` 六部门工件 + 只读探针证据 + C 条件；`589a574c` lockfile↔CI npm 10 对齐 + 复验证据）+ 只读探针与 npm ci/镜像构建证据
+- **审批**: 待用户一次总确认（QA PASS（P1 已修复复验）/ Leader 有条件通过）
 - **耗时**: 约 7h（计划 6h）
 
 ---
