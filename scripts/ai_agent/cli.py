@@ -4,6 +4,7 @@
 认领平台的 AiJob，把任务输入交给本地模型产出结果，再把结果回传平台。
 
 用法（A 模式：手动/客户端驱动，模型可随时切换）：
+    python scripts/ai_agent/cli.py login --username <平台账号>     # 平台 JWT（注册/查询/导入用）
     python scripts/ai_agent/cli.py register --agent-id my-local-agent
     python scripts/ai_agent/cli.py doctor
     python scripts/ai_agent/cli.py next --out job.json      # 认领任务并打印输入
@@ -33,6 +34,7 @@ def load_config() -> dict:
     cfg = {"base_url": os.environ.get("CAMELTV_BASE_URL", DEFAULT_BASE),
            "agent_id": os.environ.get("CAMELTV_AGENT_ID", ""),
            "token": os.environ.get("CAMELTV_AGENT_TOKEN", ""),
+           "jwt": os.environ.get("CAMELTV_JWT", ""),
            "project_id": os.environ.get("CAMELTV_PROJECT_ID", "")}
     if CONFIG_PATH.exists():
         try:
@@ -52,6 +54,8 @@ def call(cfg: dict, method: str, path: str, *, body=None, token: str | None = No
         headers["X-Project-Id"] = str(cfg["project_id"])
     if use_agent_token and token:
         headers["X-AI-Agent-Token"] = token
+    if cfg.get("jwt"):
+        headers["Authorization"] = f"Bearer {cfg['jwt']}"
     url = cfg["base_url"].rstrip("/") + "/api/v1" + path
     resp = httpx.request(method, url, headers=headers, json=body, timeout=300)
     try:
@@ -65,7 +69,40 @@ def call(cfg: dict, method: str, path: str, *, body=None, token: str | None = No
     return payload.get("data", payload)
 
 
+def cmd_login(args, cfg) -> int:
+    """登录平台并保存会话 JWT（register / health / import 需要平台登录态）。"""
+    password = args.password or os.environ.get("CAMELTV_PASSWORD", "")
+    if not password:
+        import getpass
+
+        password = getpass.getpass("请输入平台密码: ")
+    url = cfg["base_url"].rstrip("/") + "/api/v1/auth/login"
+    resp = httpx.post(url, json={"username": args.username, "password": password}, timeout=60)
+    try:
+        payload = resp.json()
+    except ValueError:
+        print(f"ERROR: 登录响应无法解析 (HTTP {resp.status_code})", file=sys.stderr)
+        return 2
+    token = (payload.get("data") or {}).get("access_token") or ""
+    if not token:
+        print(
+            f"ERROR: 登录失败 -> HTTP {resp.status_code} msg={payload.get('msg') or payload.get('detail')}",
+            file=sys.stderr,
+        )
+        return 2
+    cfg["jwt"] = token
+    if args.project_id:
+        cfg["project_id"] = str(args.project_id)
+    save_config(cfg)
+    print(json.dumps({"ok": True, "username": args.username, "project_id": cfg.get("project_id"),
+                      "saved_to": str(CONFIG_PATH)}, ensure_ascii=False))
+    return 0
+
+
 def cmd_register(args, cfg) -> int:
+    if not cfg.get("jwt"):
+        print("ERROR: 缺少平台登录态，请先执行 login --username <账号>", file=sys.stderr)
+        return 2
     body = {"agent_id": args.agent_id, "capabilities": args.capabilities}
     data = call(cfg, "POST", "/ai/agents/register", body=body, use_agent_token=False)
     cfg["agent_id"] = data["agent_id"]
@@ -81,7 +118,12 @@ def cmd_register(args, cfg) -> int:
 
 def cmd_doctor(args, cfg) -> int:
     report = {"base_url": cfg["base_url"], "agent_id": cfg.get("agent_id"), "project_id": cfg.get("project_id"),
-              "token_configured": bool(cfg.get("token"))}
+              "token_configured": bool(cfg.get("token")), "jwt_configured": bool(cfg.get("jwt"))}
+    if not cfg.get("jwt"):
+        report["ok"] = False
+        report["error"] = "缺少平台登录态：请先执行 login --username <账号>"
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 2
     try:
         health = call(cfg, "GET", "/ai/agents/health")
         report["agent_health"] = health
@@ -141,6 +183,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="camel-ai-agent", description="CamelTv 本地 AI Agent（平台零推理）")
     sub = parser.add_subparsers(dest="command", required=True)
 
+    login = sub.add_parser("login", help="登录平台并保存会话（注册/查询/导入需要）")
+    login.add_argument("--username", required=True)
+    login.add_argument("--password", default=os.environ.get("CAMELTV_PASSWORD", ""))
+    login.add_argument("--project-id", type=int, default=0)
+    login.set_defaults(func=cmd_login)
+
     reg = sub.add_parser("register", help="注册本地 Agent 并签发 token")
     reg.add_argument("--agent-id", required=True)
     reg.add_argument("--project-id", type=int, default=0)
@@ -179,7 +227,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     cfg = load_config()
-    if args.command != "register" and not cfg.get("agent_id"):
+    if args.command not in ("register", "login") and not cfg.get("agent_id"):
         print("ERROR: 未配置 agent_id，请先执行 register", file=sys.stderr)
         return 2
     return args.func(args, cfg)
