@@ -15,8 +15,8 @@
 | # | Slice | 方案 | 编码 | 自测 | 审批 | 合入 | 备注 |
 |---|-------|:----:|:----:|:----:|:----:|:----:|------|
 | 0 | 工件（PRD/PM/Design/看板） | ✅ | ✅ | ✅ | ✅ | ⏳ | |
-| 1 | 配置开关 + Agent token + Job 生产端/查询 + stale 回收 | ✅ | 🔄 ⬅️ | ⏳ | ⏳ | ⏳ | **当前位置** |
-| 2 | 需求拆分/生成切 AiJob（禁用静默空结果） | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
+| 1 | 配置开关 + Agent token + Job 生产端/查询 + stale 回收 | ✅ | ✅ | ✅ | ✅ | ⏳ | 9 tests passed；迁移升降级通过；HARD=0 |
+| 2 | 需求拆分/生成切 AiJob（禁用静默空结果） | ✅ | 🔄 ⬅️ | ⏳ | ⏳ | ⏳ | **当前位置** |
 | 3 | 结果导入用例库 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
 | 4 | 本地 Agent CLI + 接入文档 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
 | 5 | 前端 AI 任务页 + AI 配置页入口 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
@@ -27,11 +27,11 @@
 ## 📍 当前位置
 
 ```
-Batch 248 — Slice 1（后端内核）
-├── 已完成: worktree 创建+验证；四份工件；bug-guard 扫描
-├── 🔄 进行中: 配置开关 / ai_agent_token / create_job / claim 鉴权 / stale 回收
-├── ⏳ 待审批: 一次总确认（推送+PR+合入）— 待 Slice 1-6 完成且 QA 首轮证据齐备
-└── ⏳ 下一步: Slice 2 需求端点切换
+Batch 248 — Slice 2（需求端点切换）
+├── 已完成: Slice 0 工件；Slice 1 后端内核（ai_platform_inference/ai_job_stale_seconds、ai_agent_token 表+迁移、create/list/get_job、token 鉴权、项目隔离认领、stale 回收、model_name 落库、jobs/agent API）
+├── 🔄 进行中: extract/generate 改派 AiJob
+├── ⏳ 待审批: 一次总确认（推送+PR+合入）— 待 Slice 2-6 完成且 QA 首轮证据齐备
+└── ⏳ 下一步: Slice 3 结果导入用例库
 ```
 
 ## 📜 批次记录

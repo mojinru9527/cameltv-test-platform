@@ -192,6 +192,11 @@ class Settings(BaseSettings):
     ai_gateway_token: str = ""
     ai_gateway_role: str = "embedded"  # embedded | remote | gateway
     ai_runtime_mode: str = "cloud_only"  # cloud_only | shadow | local_preferred | local_only
+    # Batch 248：平台内 LLM 推理开关。默认 False = 平台不调用任何模型，
+    # AI 任务以 AiJob 派发给本地 Agent（本地 ChatGPT 客户端）执行。
+    ai_platform_inference: bool = False
+    # 本地 Agent 心跳丢失多少秒后，running 任务可被其他 Agent 回收认领。
+    ai_job_stale_seconds: int = 300
     ai_local_fallback_to_cloud: bool = True
     ai_local_base_url: str = "http://127.0.0.1:11434/v1"
     ai_local_api_key: str = ""
