@@ -37,7 +37,7 @@ description: Use for ANY change to the CamelTv test platform (test-platform-v2/)
 
 各部门的角色定位、关键规则和**交付物模板**见 [DEPARTMENTS.md](DEPARTMENTS.md)。
 
-## 批次模式（Batch 75 起）
+## 批次模式（Batch 75 起；Batch 256 起默认轻量）
 
 批次分为**完整批次**与**轻量批次**两档，判定与豁免规则详见 [docs/agent-team/pipeline-modes.md](../../../docs/agent-team/pipeline-modes.md)。摘要：
 
@@ -46,7 +46,15 @@ description: Use for ANY change to the CamelTv test platform (test-platform-v2/)
 | 完整批次 | 新功能 / 重构 / 配置 / Schema 变更 / 引入新行为、新接口、新配置 | PRD + PM + Design + Dev(代码+看板) + QA + Leader 六件 | 无 |
 | 轻量批次 | 验收 / 修复 / 纯文档 / 纯证据 / 内部流程工具 | PRD-lite + QA + Leader 三件 + 看板 | PRD-lite 中记录 `mode: light` + 理由 |
 
-判定标准：**是否引入新行为/新接口/新配置/新依赖**。是 → 完整批次；否 → 轻量批次。拿不准时按完整批次执行。轻量批次不是免检：QA 硬门禁、Leader 判决、C 条件、流程回写与复盘卡全部照常。
+**判定改为「默认轻量 + 触发升级」（Batch 256 起）**：
+
+- **触发器（命中任一 → 完整批次六件）**：新增对外接口 / 新增配置项 / 新增依赖 / Schema 或数据模型变更 /
+  **执行链路变更** / **AI 链路变更** / 权限模型变更。
+- **其余一律走轻量批次**（PRD-lite + QA + Leader + 看板），不再逐个人工判定：
+  验收、修复、纯文档、纯证据、内部工具、UI/交互调整、对外契约不变的重构。
+- 拿不准按完整批次；**执行链路 / AI 链路 / 数据模型任一变更永远不能用轻量**——它们决定证据可信度。
+
+轻量批次不是免检：QA 硬门禁、Leader 判决、C 条件、流程回写与复盘卡全部照常。
 
 ## 批次合并与发布节奏（Batch 115 起）
 
@@ -284,6 +292,26 @@ pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -UserConfirmedExecuto
 - PM 任务里塞了 PRD 没写的功能 → 范围蔓延，删掉。
 - Dev 连续多 batch 看板「当前位置」没变 → 可能卡住/上下文丢失，先对齐再动手。
 - Design 规范写「基于 Ant Design」→ 过时，真实栈是 shadcn/ui + Radix + Tailwind，见 `cameltv-ui-conventions`。
+- QA 报告没写「本批是否新增/复发常犯问题清单中的任一条」→ 退回（见下节）。
+
+## 跨批次常犯问题核对（Batch 256 起强制）
+
+> **动因**：2026-09-18 对 main `10e69b36` 与 `96cd5b65` 做了两次全量代码审计（跨 98 个提交、15 个批次），
+> 发现 8 类问题**两版都在**——不是谁疏忽，而是流水线里没有任何人负责核对它们。
+> 基线证据：[work-logs/reviews/2026-09-18-code-audit-baseline.md](../../../work-logs/reviews/2026-09-18-code-audit-baseline.md)。
+
+**规则**：
+
+1. **Dev 开工前**：按 `cameltv-bug-guard` 的「⚠️ 未关闭的已知风险」表扫一遍本批会碰到的文件；
+   碰到即修，不允许"只做本批需求、把已知风险留给下一批"。
+2. **QA 收尾必答三问**（写进 QA 报告固定小节）：
+   - 本批是否新增了清单中的任一项？（对照 `ruff --select S110,S112,B904,RUF012` 的数量与 grep 结果）
+   - 本批是否修复/关闭了其中任一项？（要贴 commit + 验证方式）
+   - 本批新增的"外部输入 → 出网 / 落盘 / 执行代码"路径，是否都过了对应铁律？
+3. **同一问题第二次出现 ⇒ 升级为自动检查**：不许再用"下次注意"了事，必须落一个可执行校验
+   （`scripts/git/scan-common-bugs.ps1` 规则、ruff 规则、或一条回归测试），并在 PR 描述里点名。
+4. **文档承诺 = 可执行校验**：定位文档/ADR 里写下的架构承诺（如"tester 默认 ≤5 入口""平台零推理"），
+   同批必须有能跑出结果的校验脚本或测试；只有文字没有校验的承诺，QA 视为未交付。
 
 ## KB 自动检索（RAG）
 
