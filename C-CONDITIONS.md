@@ -1155,6 +1155,18 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C248-7 | 发布控制面补"独占数据库迁移作业"（ADR-0015 §4）：manifest 的 `database.target_revision` 用真实 revision，publish 前校验单头并执行迁移，避免"代码已上线、schema 未迁移"（2026-09-17 发布实测） | P0 | 2026-09-17 |
 | C248-8 | 修复 `--target runner` 的本地可构建性（构建阶段缺 node 导致 exit 127），或将其正式移出常规发布路径并文档化"复用已验证 runner 镜像"流程 | P1 | 2026-09-17 |
 
+### batch-249 — 发布控制面强制迁移（Batch 249 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C249-1 | `release.ps1` 增加 `-DryRun`（只计算 manifest/digest，不构建不登记），杜绝 QA 误触真实发布 | P1 | 2026-09-17 |
+| C249-2 | ✅ Closed：控制面服务自身发布（含迁移作业）——`cameltv-release-console:release-20260917` 已上线，`/opt/cameltv-release-console` 同参数换容器，回滚锚点 `:20260915`/`:20260913` 保留；前置修复见 PR #464（Dockerfile 漏 `migrations.py`） | — | 2026-09-17 |
+| C249-3 | 控制面既有测试目录 E402 历史债清理（`tests/test_capacity.py` 等） | P3 | 2026-09-17 |
+| C249-4 | 迁移作业失败时的生产可观测性：控制面事件记录目标 revision 与实际 `current` 差异 | P2 | 2026-09-17 |
+| C249-5 | 沿用旧镜像前必须核对 `RUNNER_ENDPOINTS` 转发面；补丁镜像必须含 `alembic/versions`（Batch 248 runner 热修事故教训） | P1 | 2026-09-17 |
+| C249-6 | SKILL.md/DEPARTMENTS.md 补充"合并前先比对两侧同名文件规模，判断分支是否已被 main 取代"（含 CHANGELOG 同步） | P2 | 2026-09-17 |
+| C249-7 | 控制面 Dockerfile 为显式列举 COPY：新增模块必须同步（本批 `migrations.py` 一度缺失）；建议改为 `COPY *.py ./` 或加守卫测试 | P1 | 2026-09-17 |
+
 | C140-1 | batch-139→140 | Railway 为 /app/storage 配置持久卷（蓝湖证据截图/导出），见 batch-139/140/141 verdict；未入追踪器补录 |
 
 ---## 统计
