@@ -21,7 +21,12 @@ import base64
 import dataclasses
 import json
 
-from migrations import migration_commands, target_revision
+from migrations import (
+    migration_commands,
+    migration_failure_detail,
+    migration_success_detail,
+    target_revision,
+)
 import os
 import re
 import shlex
@@ -78,6 +83,9 @@ class ExecutorResult:
     summary: str
     logs: str = ""
     artifacts: tuple[str, ...] = ()
+    # C250-1：迁移状态取自**完整远端输出**（``logs`` 只保留尾部窗口，
+    # 成功发布时长输出会把早期状态行挤掉，事件就丢掉了 target/actual 证据）。
+    migration_status: str | None = None
 
 
 def _require(settings_like: object, attr: str) -> str:
@@ -283,11 +291,18 @@ class TencentSshExecutor:
         migration_target = target_revision(manifest) if manifest is not None else None
         commands.extend(self._activate(image_tag, mode, migration_target=migration_target))
         output = self._run_remote(commands)
+        migration_status = None
+        if manifest is not None:
+            # 从完整输出解析（不是 output[-4000:]），失败/成功两种形态都覆盖。
+            migration_status = migration_failure_detail(manifest, output) or migration_success_detail(
+                manifest, output
+            )
         return ExecutorResult(
             ok=True,
             action="deploy",
             summary=f"deployed {image_tag}",
             logs=output[-4000:],
+            migration_status=migration_status,
         )
 
     def rollback(self, image_tag: str, *, manifest: dict | None = None) -> ExecutorResult:

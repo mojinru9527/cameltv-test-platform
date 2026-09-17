@@ -110,6 +110,20 @@ class ConsoleManifestTests(unittest.TestCase):
         self.assertIn('publish succeeded', reason)
         self.assertIn('migration target=20260922_ai_agent_token actual=20260922_ai_agent_token', reason)
 
+    def test_migration_status_from_full_output_lands_in_event_reason(self):
+        """C250-1：即使 logs（尾部窗口）里没有状态行，事件也要记录迁移 target/actual。"""
+        identifier, _, body = self.register()
+        self.executor.deploy.return_value = SimpleNamespace(
+            summary='deployed',
+            logs='Container cameltv-tp-production-frontend-1 Healthy\n',
+            migration_status='migration target=20260922_ai_agent_token actual=20260922_ai_agent_token',
+        )
+        response = self.client.post(f'/api/deployments/{identifier}/publish', json={'image_tag': body['image_tag']})
+        self.assertEqual(response.status_code, 200, response.text)
+        reason = self.events(identifier)[-1]['reason']
+        self.assertIn('publish succeeded', reason)
+        self.assertIn('migration target=20260922_ai_agent_token actual=20260922_ai_agent_token', reason)
+
     def test_other_deployment_cannot_publish_while_observing(self):
         first, _, body = self.register()
         second, _, other = self.register('release-20260908-0002')

@@ -162,9 +162,15 @@ def _failure_reason(prefix: str, exc: Exception, manifest: dict | None = None) -
     return reason[:300]
 
 
-def _success_reason(prefix: str, logs: str | None, manifest: dict | None = None) -> str:
-    """迁移成功时把已验证的 target/current 一并落进事件（同一机制，正向证据）。"""
-    detail = migration_success_detail(manifest or {}, logs or "")
+def _success_reason(prefix: str, result: object, manifest: dict | None = None) -> str:
+    """迁移成功时把已验证的 target/current 一并落进事件（同一机制，正向证据）。
+
+    C250-1：优先用执行器从**完整输出**解析出的 ``migration_status``；
+    只有当执行结果没带该字段（例如测试替身）时，才回退到解析 ``logs`` 尾部窗口。
+    """
+    detail = getattr(result, "migration_status", None) or migration_success_detail(
+        manifest or {}, getattr(result, "logs", None) or ""
+    )
     return f"{prefix}; {detail}" if detail else prefix
 
 
@@ -482,7 +488,7 @@ def publish_deployment(deployment_id: str, body: PublishIn, authorization: str |
         raise HTTPException(500, f"发布执行失败: {exc}") from exc
     if not _transition_state(
         deployment_id, "PROD_DEPLOYING", "PROD_OBSERVING", "deploy", "console",
-        _success_reason("publish succeeded", getattr(result, "logs", None), manifest),
+        _success_reason("publish succeeded", result, manifest),
     ):
         raise HTTPException(409, 'Deployment completed but state changed; reconcile before retrying')
     return ActionOut(
