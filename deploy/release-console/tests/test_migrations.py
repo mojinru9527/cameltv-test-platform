@@ -3,7 +3,8 @@ import sys
 import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-import migrations  # noqa: E402 - 与既有测试一致：先把控制面目录加入 sys.path
+
+import migrations  # noqa: E402 - conftest.py 已加路径；此处保留兼容直接 py 执行
 
 
 class TargetRevisionTests(unittest.TestCase):
