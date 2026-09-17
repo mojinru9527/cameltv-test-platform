@@ -1,18 +1,6 @@
 {
-  "count": 663,
+  "count": 668,
   "routes": [
-    {
-      "path": "/api/v1/test-plans/{plan_id}/execution-jobs",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/knowledge/version-records",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/version-tasks/{task_id}/plan/generate-ai",
-      "method": "POST"
-    },
     {
       "path": "/api/v1/agents/queue",
       "method": "GET"
@@ -50,6 +38,14 @@
       "method": "GET"
     },
     {
+      "path": "/api/v1/ai-config/cache",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/ai-config/cache-stats",
+      "method": "GET"
+    },
+    {
       "path": "/api/v1/ai-config/providers",
       "method": "GET"
     },
@@ -74,16 +70,64 @@
       "method": "POST"
     },
     {
-      "path": "/api/v1/ai-config/cache",
-      "method": "DELETE"
-    },
-    {
-      "path": "/api/v1/ai-config/cache-stats",
-      "method": "GET"
-    },
-    {
       "path": "/api/v1/ai-config/resolve",
       "method": "GET"
+    },
+    {
+      "path": "/api/v1/ai-config/runtime",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ai-config/runtime/health-check",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ai-config/shadow-policy",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ai-config/shadow-runs",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ai/agents/health",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ai/agents/register",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ai/agents/tokens/revoke",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ai/jobs",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ai/jobs",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ai/jobs/claim",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ai/jobs/{job_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ai/jobs/{job_id}/heartbeat",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ai/jobs/{job_id}/import",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/ai/jobs/{job_id}/report",
+      "method": "POST"
     },
     {
       "path": "/api/v1/apitest/api-execute",
@@ -230,6 +274,18 @@
       "method": "GET"
     },
     {
+      "path": "/api/v1/convergence/assets",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/convergence/data-assets",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/convergence/test-plan/{test_plan_id}/archive",
+      "method": "POST"
+    },
+    {
       "path": "/api/v1/dashboard/cross-project",
       "method": "GET"
     },
@@ -239,6 +295,10 @@
     },
     {
       "path": "/api/v1/dashboard/test-summary",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/dashboard/todo",
       "method": "GET"
     },
     {
@@ -400,6 +460,26 @@
     {
       "path": "/api/v1/environments/{env_id}/variables/{var_id}",
       "method": "PUT"
+    },
+    {
+      "path": "/api/v1/execution/campaigns/{campaign_id}/runs",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/execution/runs/claim",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/execution/runs/{run_id}/cancel",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/execution/runs/{run_id}/heartbeat",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/execution/runs/{run_id}/report",
+      "method": "POST"
     },
     {
       "path": "/api/v1/integrations",
@@ -626,6 +706,10 @@
       "method": "POST"
     },
     {
+      "path": "/api/v1/knowledge/version-records",
+      "method": "GET"
+    },
+    {
       "path": "/api/v1/lanhu-evidence/assets/{asset_id}",
       "method": "GET"
     },
@@ -682,6 +766,10 @@
       "method": "POST"
     },
     {
+      "path": "/api/v1/metrics/operations",
+      "method": "GET"
+    },
+    {
       "path": "/api/v1/notify/channels",
       "method": "GET"
     },
@@ -700,6 +788,22 @@
     {
       "path": "/api/v1/notify/test",
       "method": "POST"
+    },
+    {
+      "path": "/api/v1/onboarding/businesses",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/onboarding/businesses",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/onboarding/businesses/{onboarding_id}/steps/{step}",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/onboarding/readiness",
+      "method": "GET"
     },
     {
       "path": "/api/v1/open/defects",
@@ -1386,6 +1490,10 @@
       "method": "POST"
     },
     {
+      "path": "/api/v1/test-plans/{plan_id}/execution-jobs",
+      "method": "GET"
+    },
+    {
       "path": "/api/v1/test-plans/{plan_id}/executions",
       "method": "GET"
     },
@@ -1556,6 +1664,106 @@
     {
       "path": "/api/v1/version-missions/{mission_id}/quality-gate",
       "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-tasks",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-tasks",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-tasks/compare",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-tasks/compat/missions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-tasks/compat/missions/{mission_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-tasks/knowledge/reuse",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}",
+      "method": "PATCH"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/defects",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/defects/{defect_id}/sync",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/executions",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/knowledge",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/notify",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/plan",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/plan/generate",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/plan/generate-ai",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/plan/{item_id}/review",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/regression-set",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/release",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/release-package",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/run",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/runs",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/runs/{run_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/runs/{run_id}/defect/{failure_index}",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-tasks/{task_id}/transition",
+      "method": "POST"
     },
     {
       "path": "/api/v1/wiki/config",
@@ -2050,10 +2258,6 @@
       "method": "PATCH"
     },
     {
-      "path": "/api/v2/missions/{mission_id}/lifecycle",
-      "method": "GET"
-    },
-    {
       "path": "/api/v2/missions/{mission_id}/acceptance",
       "method": "GET"
     },
@@ -2102,11 +2306,15 @@
       "method": "GET"
     },
     {
+      "path": "/api/v2/missions/{mission_id}/impact-runs",
+      "method": "GET"
+    },
+    {
       "path": "/api/v2/missions/{mission_id}/intents",
       "method": "GET"
     },
     {
-      "path": "/api/v2/missions/{mission_id}/impact-runs",
+      "path": "/api/v2/missions/{mission_id}/lifecycle",
       "method": "GET"
     },
     {
@@ -2464,194 +2672,6 @@
     {
       "path": "/health",
       "method": "GET"
-    },
-    {
-      "path": "/api/v1/dashboard/todo",
-      "method": "GET"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/version-tasks"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/version-tasks"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/version-tasks/compat/missions"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/version-tasks/compat/missions/{mission_id}"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/version-tasks/{task_id}"
-    },
-    {
-      "method": "PATCH",
-      "path": "/api/v1/version-tasks/{task_id}"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/version-tasks/{task_id}/defects"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/version-tasks/{task_id}/executions"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/version-tasks/{task_id}/transition"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/version-tasks/{task_id}/plan"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/version-tasks/{task_id}/plan/generate"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/version-tasks/{task_id}/plan/{item_id}/review"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/version-tasks/{task_id}/run"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/version-tasks/{task_id}/runs"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/version-tasks/{task_id}/runs/{run_id}"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/version-tasks/{task_id}/runs/{run_id}/defect/{failure_index}"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/version-tasks/{task_id}/release-package"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/version-tasks/{task_id}/release"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/version-tasks/{task_id}/notify"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/version-tasks/knowledge/reuse"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/version-tasks/{task_id}/knowledge"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/version-tasks/{task_id}/regression-set"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/version-tasks/{task_id}/defects/{defect_id}/sync"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/metrics/operations"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/version-tasks/compare"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/convergence/assets"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/convergence/data-assets"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/convergence/test-plan/{test_plan_id}/archive"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/onboarding/businesses"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/onboarding/businesses"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/onboarding/readiness"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/onboarding/businesses/{onboarding_id}/steps/{step}"
-    },
-    {
-      "path": "/api/v1/ai-config/runtime",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/ai-config/runtime/health-check",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/ai-config/shadow-runs",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/ai-config/shadow-policy",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/execution/campaigns/{campaign_id}/runs",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/execution/runs/claim",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/execution/runs/{run_id}/heartbeat",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/execution/runs/{run_id}/report",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/execution/runs/{run_id}/cancel",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/ai/agents/register",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/ai/agents/health",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/ai/jobs/claim",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/ai/jobs/{job_id}/heartbeat",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/ai/jobs/{job_id}/report",
-      "method": "POST"
     }
   ]
 }

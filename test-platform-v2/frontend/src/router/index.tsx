@@ -36,6 +36,7 @@ const IntegrationPage = lazy(() => import('@/pages/integration'))
 const KnowledgePage = lazy(() => import('@/pages/knowledge'))
 const DshTasksPage = lazy(() => import('@/pages/dsh-tasks'))
 const AiConfigPage = lazy(() => import('@/pages/ai-config'))
+const AiJobsPage = lazy(() => import('@/pages/ai-jobs'))
 const ReleaseBundlesPage = lazy(() => import('@/pages/release-bundles'))
 const BundleDetailPage = lazy(() => import('@/pages/release-bundles/BundleDetail'))
 const VersionPanoramaPage = lazy(() => import('@/pages/release-bundles/VersionPanorama'))
@@ -272,6 +273,7 @@ export const router = createBrowserRouter([
       { path: 'playground', element: <Navigate to="/testcase" replace /> },
       { path: 'dsh-tasks', element: <PageLoader><DshTasksPage /></PageLoader> },
       { path: 'ai-config', element: <PageLoader><AiConfigPage /></PageLoader> },
+      { path: 'ai-jobs', element: <PageLoader><AiJobsPage /></PageLoader> },
       { path: 'version-mission', element: <Navigate to="/release-bundles" replace /> },
       // DEF-20260905-002：列表页与建任务向导拆为独立路由，
       // `/version-tasks` 不再是向导（否则任务创建后没有可回访的列表入口）。
