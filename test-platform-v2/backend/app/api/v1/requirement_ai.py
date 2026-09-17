@@ -11,7 +11,6 @@ import logging
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.core.exceptions import not_found

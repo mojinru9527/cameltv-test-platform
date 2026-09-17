@@ -4,7 +4,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   Card,
   CardContent,
@@ -25,6 +24,8 @@ import {
   Tabs,
   TabsList,
   TabsTrigger,
+  Badge as ToneBadge,
+  StatusBadge,
 } from '@/ui'
 import {
   fetchAiAgentHealth,
@@ -42,12 +43,13 @@ const STATUS_TABS = [
   { value: 'failed', label: '失败' },
 ]
 
-const STATUS_BADGE: Record<string, string> = {
-  pending: 'bg-amber-100 text-amber-700',
-  running: 'bg-blue-100 text-blue-700',
-  completed: 'bg-emerald-100 text-emerald-700',
-  failed: 'bg-red-100 text-red-700',
-  cancelled: 'bg-muted text-muted-foreground',
+/** 平台 Job 状态 → 语义状态徽标（Batch 54 治理：禁止固定色板类）。 */
+const STATUS_VARIANT: Record<string, 'pass' | 'fail' | 'running' | 'pending' | 'blocked' | 'skipped'> = {
+  pending: 'pending',
+  running: 'running',
+  completed: 'pass',
+  failed: 'fail',
+  cancelled: 'skipped',
 }
 
 function extractError(err: unknown): string {
@@ -217,7 +219,7 @@ export default function AiJobsPage() {
                       <TableCell>#{job.id}</TableCell>
                       <TableCell>{job.job_type}</TableCell>
                       <TableCell>
-                        <Badge className={STATUS_BADGE[job.status] ?? ''}>{job.status}</Badge>
+                        <StatusBadge variant={STATUS_VARIANT[job.status] ?? 'pending'} label={job.status} />
                       </TableCell>
                       <TableCell className="text-muted-foreground">{job.agent_id || '—'}</TableCell>
                       <TableCell className="text-muted-foreground">{job.model_name || '—'}</TableCell>
@@ -245,7 +247,12 @@ export default function AiJobsPage() {
               agents.map((agent) => (
                 <div key={agent.agent_id} className="rounded-md border p-3">
                   <div className="font-medium">{agent.agent_id}</div>
-                  <div className="text-xs text-emerald-600">在线 · scope={agent.project_scope}</div>
+                  <div className="text-xs">
+                    <ToneBadge tone="success" className="mr-1">
+                      在线
+                    </ToneBadge>
+                    scope={agent.project_scope}
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     最近心跳：{agent.last_health_at?.replace('T', ' ').slice(0, 19) ?? '—'}
                   </div>

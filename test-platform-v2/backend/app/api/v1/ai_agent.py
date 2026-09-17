@@ -87,7 +87,7 @@ def _job_dict(job) -> dict:
     def _loads(raw: str, fallback):
         try:
             return json.loads(raw) if raw else fallback
-        except Exception:  # noqa: BLE001 - 历史脏数据不应打断列表
+        except Exception:  # 历史脏数据不应打断列表
             return fallback
 
     return {
