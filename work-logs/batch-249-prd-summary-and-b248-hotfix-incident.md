@@ -2,11 +2,48 @@
 
 > Date: 2026-09-17 | 执行器：Codex（用户确认）| 分支：`feature/batch-249-release-console-migration` | base：`origin/main` @ 156adea2
 
-## 0. 本批次范围（用户已选 B）
+## 0. 本批次范围（用户已选 B，S1 经实证取消）
 
-1. **S1**：把仅本地存在的 `feature/release-console`（1 个提交，落后 main 148）合并进主干（worktree `F:\CamelTv-safe-backup\wt-release-console`，`709d9ccc`）。
-2. **S2**：在控制面实现 ADR-0015 §4 的**独占数据库迁移作业**（manifest 用真实 `target_revision`，publish 前置校验单头并执行迁移，失败即中止）。
-3. **S3**：修复 Batch 248 交付缺陷 —— 本地 Agent CLI 缺登录（register/health/import 需用户 JWT）。
+### S1 —— ❌ 取消（实证：无需合并）
+
+原计划"把 `feature/release-console` 合入主干"。试探合并后发现：
+
+- `deploy/release-console/*` 在两侧都是**新增文件**（add/add 冲突）→ 说明 main 上**早已存在**该控制面服务；
+- 且 **main 的版本更新更完整**：`app.py` 476 行（分支 346）、`tencent_executor.py` 337 行（分支 235），另含分支没有的
+  `capacity.py` / `release_artifacts.py` / `release_cleanup.py` 与 5 个测试文件；
+- 今天拦下我的"磁盘容量不足"门禁即来自 main 的 `capacity.py`。
+
+结论：`feature/release-console` 是**已被 main 取代的历史残留分支**（仅本地存在、落后 148 提交、从未推送）。
+→ S1 无事可做；建议单独清理该分支与对应 worktree（属文档/清理动作，不在本批代码范围）。
+
+### S2 —— 本批主体：控制面"独占数据库迁移作业"（ADR-0015 §4）
+
+在 main 的 `deploy/release-console/` 上实现。现状（已核实的缺口）：
+
+```text
+deploy/release-console/README.md:112  "Every release must verify the previous image against the new schema…"
+deploy/release-console/tencent_executor.py:94  "…never migrate the database down"
+deploy/release-console/static/index.html:130  database:{ alembic_heads:['see-verified-head'], target_revision:'see-verified-head' }
+```
+
+即：控制面**只有文字约定，没有任何迁移执行/校验代码**，manifest 里也是占位值 `see-verified-head`——
+这正是 2026-09-17 发布出现"代码已上线、schema 未迁移（`ai_jobs.model_name` 不存在 → 500）"的直接原因。
+
+PM 任务（每项 30–60 分钟）：
+
+| # | 任务 | 验收标准 | 涉及文件 |
+|---|---|---|---|
+| S2-1 | manifest 的 `database` 用真实 revision：从待发布镜像内 `alembic heads` 读取并写入 | manifest 中 `target_revision`/`alembic_heads` 为真实单头，非 `see-verified-head` | `deploy/release-console/*`（manifest 构造处）、`static/index.html` 模板 |
+| S2-2 | 新增 `migrations.py`：在目标机执行 `alembic upgrade <target>` + `alembic current` 校验单头 | 失败即抛错并阻止后续 deploy 步骤 | `deploy/release-console/migrations.py`（新） |
+| S2-3 | 在 deploy 序列中插入迁移步骤（迁移 → 校验 → 起 api → 起 frontend），失败中止并保持旧容器可回滚 | 顺序可测；失败路径有单测 | `deploy/release-console/tencent_executor.py` |
+| S2-4 | 回滚路径**不**执行 down 迁移（沿用现有约定），并断言迁移步骤被跳过 | 与既有 `test_rollback_skips_old_image_migration_launcher` 一致 | 同上 + `tests/` |
+| S2-5 | 单测：迁移成功/失败/单头校验失败/回滚跳过 四类 | 全部通过，且不依赖真实服务器（mock 远端执行器） | `deploy/release-console/tests/test_migrations.py`（新） |
+| S2-6 | README 更新：迁移作业的位置、失败语义、与回滚的关系 | 文档与实现一致 | `deploy/release-console/README.md` |
+
+### S3 —— 已完成（Batch 248 交付缺陷）
+
+本地 Agent CLI 缺登录：register/agents:health/import 需要用户 JWT，而 CLI 只发 agent token → 必然 401。
+已新增 `login` 子命令并在生产验证 `login → register → doctor → next → report → import` 全通。
 
 ## 1. 事故记录：Batch 248 runner 热修（H1）
 
