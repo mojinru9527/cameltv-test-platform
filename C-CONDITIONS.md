@@ -1171,15 +1171,15 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C250-1 | 迁移状态行的**正向**证据会被日志尾部截断：`ExecutorResult.logs` 只取远端输出最后 4000 字符，成功发布时 `CAMELTV_MIGRATION` 行会被 `docker compose up --wait` 的输出挤出窗口 → `PROD_OBSERVING` 事件 reason 只剩 `publish succeeded`（生产验收实测，见 batch-250 production evidence Findings-1）。建议从**完整远端输出**解析迁移状态并随事件/返回体单独记录（或让迁移作业独占一次 `_run_remote`） | P2 | 2026-09-17 |
+| ~~C250-1~~ | ~~迁移状态行的正向证据会被日志尾部截断（`ExecutorResult.logs` 只取最后 4000 字符）~~ → **Closed**：Batch 251（执行器从**完整远端输出**解析并随 `ExecutorResult.migration_status` 返回，事件 reason 优先用该字段；生产实测 `release-20260917-0007` 的 `PROD_OBSERVING.reason` = `publish succeeded; migration target=20260922_ai_agent_token actual=20260922_ai_agent_token`），commit ebed7c96 | P2 | 2026-09-17 |
 
 | C140-1 | batch-139→140 | Railway 为 /app/storage 配置持久卷（蓝湖证据截图/导出），见 batch-139/140/141 verdict；未入追踪器补录 |
 
 ---## 统计
 
-- **Open / 非关闭**: 54（rows=162, deferred=19；含 P0 blocking；口径见 `audit-cconditions.ps1` stats 输出，2026-09-17 Batch 250 收尾复核）
+- **Open / 非关闭**: 54（rows=162, deferred=19；含 P0 blocking；口径见 `audit-cconditions.ps1` stats 输出，2026-09-17 Batch 251 收尾复核）
 - **In Progress**: 0
-- **Closed**: 203（closed rows=184, missing evidence=0；Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
+- **Closed**: 203（closed rows=185, missing evidence=0；Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
 - **Total**: 302（tracker 条件 ID 计数；另有历史补录不计入）
 
 ## 维护约定
