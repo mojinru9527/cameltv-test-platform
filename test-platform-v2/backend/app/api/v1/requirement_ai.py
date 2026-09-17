@@ -22,6 +22,7 @@ from app.schemas.requirement import (
     VersionInfo,
 )
 from app.services import audit_service, requirement_service
+from app.services.ai_job_dispatch import dispatch_requirement_job, local_agent_mode
 
 router = APIRouter(prefix="/requirements", tags=["需求文档-AI"])
 logger = logging.getLogger("requirement")
@@ -47,7 +48,7 @@ def _audit(
 
 # ── Stage 1: 功能拆分 (Feature Extraction) ────────────
 
-@router.post("/{document_id}/extract", response_model=R[FeatureExtractionResult])
+@router.post("/{document_id}/extract", response_model=R[dict])
 async def extract_features(
     document_id: int,
     req: Request,
@@ -157,6 +158,17 @@ async def extract_features(
     else:
         doc_content = doc.get("content") or ""
 
+    if local_agent_mode():
+        return R.ok(
+            dispatch_requirement_job(
+                db,
+                document_id=document_id,
+                job_type="extract",
+                project_id=current.project_id or 0,
+                user_id=current.user.id,
+            )
+        )
+
     try:
         from app.services.ai_service import extract_features as ai_extract
 
@@ -237,6 +249,8 @@ async def extract_features(
                 folder_hint=v.get("folder_hint", ""),
             ))
 
+    # Batch 248：本端点 response_model 改为 R[dict]（需兼容本地 Agent 派发分支），
+    # 平台内推理分支显式转 dict，返回 JSON 形状与改造前一致。
     return R.ok(FeatureExtractionResult(
         document_id=document_id,
         modules=extraction_result.get("modules", []),
@@ -249,7 +263,7 @@ async def extract_features(
         diff_summary=diff_summary,
         inherited_from_version=inherited_from_version,
         inherited_fp_count=inherited_fp_count,
-    ))
+    ).model_dump(by_alias=True))
 
 
 @router.get("/{document_id}/extraction", response_model=R[FeatureExtractionResult])
@@ -330,6 +344,13 @@ def confirm_extraction(
     }
 
     audit_detail = "确认功能拆分" if body.action == "confirm" else f"拒绝功能拆分: {body.rejected_notes[:100]}"
+    if body.action == "confirm" and not body.modules:
+        return R(
+            code=400,
+            msg="没有可确认的拆分结果（0 模块）：请先让本地 AI Agent 完成拆分任务并上报结果，"
+            "或检查该任务是否失败后重试。",
+        )
+
     try:
         result = requirement_service.confirm_extraction(
             db,
@@ -369,6 +390,17 @@ async def extract_features_async(
         return R(code=404, msg="需求文档不存在")
     content = doc.get("content") or doc.get("requirement_text") or ""
 
+    if local_agent_mode():
+        return R.ok(
+            dispatch_requirement_job(
+                db,
+                document_id=document_id,
+                job_type="extract",
+                project_id=current.project_id or 0,
+                user_id=current.user.id,
+            )
+        )
+
     task = submit_ai_task(document_id=document_id, task_type="extract", project_id=current.project_id or 0)
     return R.ok(task)
 
@@ -384,6 +416,17 @@ async def generate_test_cases_async(
     if not doc:
         return R(code=404, msg="需求文档不存在")
     content = doc.get("content") or doc.get("requirement_text") or ""
+
+    if local_agent_mode():
+        return R.ok(
+            dispatch_requirement_job(
+                db,
+                document_id=document_id,
+                job_type="generate",
+                project_id=current.project_id or 0,
+                user_id=current.user.id,
+            )
+        )
 
     task = submit_ai_task(document_id=document_id, task_type="generate", project_id=current.project_id or 0)
     return R.ok(task)

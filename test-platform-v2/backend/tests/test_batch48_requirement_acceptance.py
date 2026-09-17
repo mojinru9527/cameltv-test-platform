@@ -762,6 +762,12 @@ def test_generate_persists_inherited_cases_before_cases_get_and_import(
 
     monkeypatch.setattr(ai_service, "generate_test_cases", fake_generate)
 
+    # Batch 248：平台默认不推理（AI_PLATFORM_INFERENCE=false），本用例验证的是
+    # 旧平台内推理链路，因此显式打开该开关，保持用例原意。
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "ai_platform_inference", True, raising=False)
+
     response = client.post(
         f"/api/v1/requirements/{child.id}/generate",
         headers=auth_headers,

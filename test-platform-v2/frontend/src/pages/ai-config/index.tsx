@@ -304,6 +304,12 @@ export default function AiConfigPage() {
           <RefreshCw className={`size-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
           刷新
         </Button>
+        <Button variant="outline" asChild>
+          <a href="/ai-jobs">
+            <Zap className="size-4 mr-1" />
+            AI 任务
+          </a>
+        </Button>
       </PageHeader>
 
       {resolved && (

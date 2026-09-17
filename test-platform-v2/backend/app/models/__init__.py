@@ -5,6 +5,7 @@ from app.models.ai_shadow_run import AiShadowRun
 from app.models.ai_provider import AiProvider
 from app.models.ai_task import AiTask
 from app.models.ai_job import AiAgent, AiJob, AiResult
+from app.models.ai_agent_token import AiAgentToken
 from app.models.plan_execution_job import PlanExecutionJob
 from app.models.interaction_edge import InteractionEdge
 from app.models.api_asset import ApiEndpoint, ApiExecutionTask, ApiExecutionTaskItem, ApiImportBatch, ApiService
@@ -94,6 +95,7 @@ __all__ = [
     "AiShadowRun",
     "AiTask",
     "AiAgent",
+    "AiAgentToken",
     "AiJob",
     "AiResult",
     "PlanExecutionJob",

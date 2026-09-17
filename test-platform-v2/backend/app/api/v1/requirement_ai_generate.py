@@ -53,7 +53,7 @@ def _audit(
 
 # ── AI 生成 ───────────────────────────────────────────
 
-@router.post("/{document_id}/generate", response_model=R[AIGenerateResult])
+@router.post("/{document_id}/generate", response_model=R[dict])
 async def generate_test_cases(
     document_id: int,
     req: Request,
@@ -145,6 +145,19 @@ async def generate_test_cases(
 
                 # Replace extraction with only new FPs for AI
                 extraction = {**extraction, "modules": new_modules} if new_modules else None
+
+    from app.services.ai_job_dispatch import dispatch_requirement_job, local_agent_mode
+
+    if local_agent_mode():
+        return R.ok(
+            dispatch_requirement_job(
+                db,
+                document_id=document_id,
+                job_type="generate",
+                project_id=current.project_id or 0,
+                user_id=current.user.id,
+            )
+        )
 
     try:
         from app.services.ai_service import generate_test_cases as ai_generate
@@ -245,6 +258,8 @@ async def generate_test_cases(
     except Exception:
         db.rollback()
         raise
+    # Batch 248：本端点 response_model 改为 R[dict]（需兼容本地 Agent 派发分支），
+    # 平台内推理分支显式转 dict，返回 JSON 形状与改造前一致。
     return R.ok(AIGenerateResult(
         document_id=document_id,
         requirement_analysis=req_analysis,
@@ -252,7 +267,7 @@ async def generate_test_cases(
         api_cases=api_cases,
         raw_response=json.dumps(ai_result, ensure_ascii=False),
         extraction_summary=ai_result.get("extraction_summary", ""),
-    ))
+    ).model_dump(by_alias=True))
 
 
 # ── B1: 需求-API 匹配 ──────────────────────────────────

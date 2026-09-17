@@ -116,3 +116,27 @@ def test_legacy_temporal_runner_activities_are_removed() -> None:
     source = (ROOT / "backend/app/temporal/activities.py").read_text(encoding="utf-8")
     assert "run_legacy_api_task" not in source
     assert "run_legacy_ui_task" not in source
+
+
+def test_requirement_ai_paths_delegate_to_local_agent_by_default() -> None:
+    """Batch 248：需求拆分/生成必须先走本地 Agent 派发分支，再回退平台内推理。"""
+    for rel in (
+        "backend/app/api/v1/requirement_ai.py",
+        "backend/app/api/v1/requirement_ai_generate.py",
+    ):
+        source = (ROOT / rel).read_text(encoding="utf-8")
+        assert "local_agent_mode()" in source, rel
+        assert "dispatch_requirement_job(" in source, rel
+        # 派发分支必须出现在平台内推理调用之前
+        assert source.index("local_agent_mode()") < source.index("from app.services.ai_service import"), rel
+
+
+def test_local_agent_control_plane_has_no_platform_llm_calls() -> None:
+    for rel in (
+        "backend/app/api/v1/ai_agent.py",
+        "backend/app/services/ai_agent_service.py",
+        "backend/app/services/ai_job_dispatch.py",
+    ):
+        source = (ROOT / rel).read_text(encoding="utf-8")
+        for token in ("ai_service", "AiProvider", "default_model", "ai_gateway"):
+            assert token not in source, f"{rel} must not reference {token}"
