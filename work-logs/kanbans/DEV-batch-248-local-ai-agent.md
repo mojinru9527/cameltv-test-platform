@@ -16,22 +16,22 @@
 |---|-------|:----:|:----:|:----:|:----:|:----:|------|
 | 0 | 工件（PRD/PM/Design/看板） | ✅ | ✅ | ✅ | ✅ | ⏳ | |
 | 1 | 配置开关 + Agent token + Job 生产端/查询 + stale 回收 | ✅ | ✅ | ✅ | ✅ | ⏳ | 9 tests passed；迁移升降级通过；HARD=0 |
-| 2 | 需求拆分/生成切 AiJob（禁用静默空结果） | ✅ | 🔄 ⬅️ | ⏳ | ⏳ | ⏳ | **当前位置** |
-| 3 | 结果导入用例库 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 4 | 本地 Agent CLI + 接入文档 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 5 | 前端 AI 任务页 + AI 配置页入口 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 6 | 测试与架构守卫 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
+| 2 | 需求拆分/生成切 AiJob（禁用静默空结果） | ✅ | ✅ | ✅ | ✅ | ⏳ | 4 端点派发 + P2-1 修复 |
+| 3 | 结果导入用例库 | ✅ | ✅ | ✅ | ✅ | ⏳ | generate 幂等导入 |
+| 4 | 本地 Agent CLI + 接入文档 | ✅ | ✅ | ✅ | ✅ | ⏳ | cli.py + README + docs/ai |
+| 5 | 前端 AI 任务页 + AI 配置页入口 | ✅ | ✅ | ✅ | ✅ | ⏳ | typecheck+build 通过 |
+| 6 | 测试与架构守卫 | ✅ | ✅ | ✅ | ✅ | ⏳ | 349 passed；守卫 15 |
 
 > 状态图例：⏳ 待开始 | 🔄 进行中 | ✅ 已完成 | ❌ 已取消 | 🔒 阻塞中
 
 ## 📍 当前位置
 
 ```
-Batch 248 — Slice 2（需求端点切换）
-├── 已完成: Slice 0 工件；Slice 1 后端内核（ai_platform_inference/ai_job_stale_seconds、ai_agent_token 表+迁移、create/list/get_job、token 鉴权、项目隔离认领、stale 回收、model_name 落库、jobs/agent API）
-├── 🔄 进行中: extract/generate 改派 AiJob
-├── ⏳ 待审批: 一次总确认（推送+PR+合入）— 待 Slice 2-6 完成且 QA 首轮证据齐备
-└── ⏳ 下一步: Slice 3 结果导入用例库
+Batch 248 — 全部切片完成，等待一次总确认
+├── 已完成: Slice 0-6 全部；QA 报告 PASS；Leader CONDITIONAL-APPROVED
+├── 🔄 进行中: 等待用户一次总确认（推送+PR+required checks+合入）
+├── ⏳ 待审批: Draft PR 创建与 required checks
+└── ⏳ 下一步: 合入后更新 C-CONDITIONS 与看板批次记录
 ```
 
 ## 📜 批次记录
