@@ -1159,21 +1159,27 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C249-1 | `release.ps1` 增加 `-DryRun`（只计算 manifest/digest，不构建不登记），杜绝 QA 误触真实发布 | P1 | 2026-09-17 |
+| ~~C249-1~~ | ~~`release.ps1` 增加 `-DryRun`（只计算 manifest/digest，不构建不登记），杜绝 QA 误触真实发布~~ → **Closed**：Batch 250（`-DryRun` 实测零副作用：未构建/未登记/未上传/未发布，见 batch-250-qa-report §3），commit 2580c2ea | P1 | 2026-09-17 |
 | C249-2 | ✅ Closed：控制面服务自身发布（含迁移作业）——`cameltv-release-console:release-20260917` 已上线，`/opt/cameltv-release-console` 同参数换容器，回滚锚点 `:20260915`/`:20260913` 保留；前置修复见 PR #464（Dockerfile 漏 `migrations.py`） | — | 2026-09-17 |
-| C249-3 | 控制面既有测试目录 E402 历史债清理（`tests/test_capacity.py` 等） | P3 | 2026-09-17 |
-| C249-4 | 迁移作业失败时的生产可观测性：控制面事件记录目标 revision 与实际 `current` 差异 | P2 | 2026-09-17 |
+| ~~C249-3~~ | ~~控制面既有测试目录 E402 历史债清理（`tests/test_capacity.py` 等）~~ → **Closed**：Batch 250（`deploy/release-console` 全目录 `ruff check .` All checks passed），commit 2580c2ea | P3 | 2026-09-17 |
+| ~~C249-4~~ | ~~迁移作业失败时的生产可观测性：控制面事件记录目标 revision 与实际 `current` 差异~~ → **Closed**：Batch 250（校验步骤打印 `CAMELTV_MIGRATION target/actual`，事件 reason 落差异；生产验收 `release-20260917-0006` 实测 rc=0 且顺序为迁移→校验→停旧→起新），commit f186181d | P2 | 2026-09-17 |
 | C249-5 | 沿用旧镜像前必须核对 `RUNNER_ENDPOINTS` 转发面；补丁镜像必须含 `alembic/versions`（Batch 248 runner 热修事故教训） | P1 | 2026-09-17 |
 | C249-6 | SKILL.md/DEPARTMENTS.md 补充"合并前先比对两侧同名文件规模，判断分支是否已被 main 取代"（含 CHANGELOG 同步） | P2 | 2026-09-17 |
 | C249-7 | 控制面 Dockerfile 为显式列举 COPY：新增模块必须同步（本批 `migrations.py` 一度缺失）；建议改为 `COPY *.py ./` 或加守卫测试 | P1 | 2026-09-17 |
+
+### batch-250 — 发布护栏（Batch 250 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C250-1 | 迁移状态行的**正向**证据会被日志尾部截断：`ExecutorResult.logs` 只取远端输出最后 4000 字符，成功发布时 `CAMELTV_MIGRATION` 行会被 `docker compose up --wait` 的输出挤出窗口 → `PROD_OBSERVING` 事件 reason 只剩 `publish succeeded`（生产验收实测，见 batch-250 production evidence Findings-1）。建议从**完整远端输出**解析迁移状态并随事件/返回体单独记录（或让迁移作业独占一次 `_run_remote`） | P2 | 2026-09-17 |
 
 | C140-1 | batch-139→140 | Railway 为 /app/storage 配置持久卷（蓝湖证据截图/导出），见 batch-139/140/141 verdict；未入追踪器补录 |
 
 ---## 统计
 
-- **Open / 非关闭**: 61（rows=145, deferred=15；含 P0 blocking；口径见 `audit-cconditions.ps1` stats 输出）
+- **Open / 非关闭**: 54（rows=162, deferred=19；含 P0 blocking；口径见 `audit-cconditions.ps1` stats 输出，2026-09-17 Batch 250 收尾复核）
 - **In Progress**: 0
-- **Closed**: 192（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
+- **Closed**: 203（closed rows=184, missing evidence=0；Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
 - **Total**: 302（tracker 条件 ID 计数；另有历史补录不计入）
 
 ## 维护约定
