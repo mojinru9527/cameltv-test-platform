@@ -79,6 +79,37 @@ class ConsoleManifestTests(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(self.state(identifier), 'PROD_FAILED')
 
+    def events(self, identifier):
+        response = self.client.get(f'/api/deployments/{identifier}/events')
+        self.assertEqual(response.status_code, 200, response.text)
+        return response.json()
+
+    def test_migration_mismatch_is_recorded_in_event_reason(self):
+        """C249-4：迁移没生效时，发布事件必须带上 target 与实际 current 的差异。"""
+        identifier, _, body = self.register()
+        self.executor.deploy.side_effect = ExecutorCommandFailed(
+            'remote command failed rc=1: '
+            'CAMELTV_MIGRATION target=20260922_ai_agent_token actual=20260915_plan_dispatch'
+        )
+        response = self.client.post(f'/api/deployments/{identifier}/publish', json={'image_tag': body['image_tag']})
+        self.assertEqual(response.status_code, 500)
+        failure = self.events(identifier)[-1]
+        self.assertEqual(failure['to_state'], 'PROD_FAILED')
+        self.assertIn('target=20260922_ai_agent_token', failure['reason'])
+        self.assertIn('actual=20260915_plan_dispatch', failure['reason'])
+
+    def test_verified_migration_is_recorded_in_event_reason(self):
+        identifier, _, body = self.register()
+        self.executor.deploy.return_value = SimpleNamespace(
+            summary='deployed',
+            logs='CAMELTV_MIGRATION target=20260922_ai_agent_token actual=20260922_ai_agent_token\n',
+        )
+        response = self.client.post(f'/api/deployments/{identifier}/publish', json={'image_tag': body['image_tag']})
+        self.assertEqual(response.status_code, 200, response.text)
+        reason = self.events(identifier)[-1]['reason']
+        self.assertIn('publish succeeded', reason)
+        self.assertIn('migration target=20260922_ai_agent_token actual=20260922_ai_agent_token', reason)
+
     def test_other_deployment_cannot_publish_while_observing(self):
         first, _, body = self.register()
         second, _, other = self.register('release-20260908-0002')
