@@ -24,6 +24,7 @@ PLATFORM_ROOT = Path(__file__).resolve().parents[2]
 REPOSITORY_ROOT = PLATFORM_ROOT.parent
 BACKEND_ROOT = PLATFORM_ROOT / "backend"
 COMPOSE_PATH = PLATFORM_ROOT / "deploy" / "docker-compose.yml"
+EXECUTION_OVERLAY_PATH = PLATFORM_ROOT / "deploy" / "docker-compose.execution.yml"
 DOCKERFILE_PATH = BACKEND_ROOT / "Dockerfile"
 PYTHON_LOCK_PATH = BACKEND_ROOT / "requirements.lock"
 ROOT_DOCKERIGNORE_PATH = REPOSITORY_ROOT / ".dockerignore"
@@ -36,6 +37,55 @@ ACCEPTANCE_LAUNCHER = PLATFORM_ROOT / "scripts" / "start-batch56-acceptance.ps1"
 def _compose() -> tuple[str, dict]:
     content = COMPOSE_PATH.read_text(encoding="utf-8")
     return content, yaml.safe_load(content)
+
+
+def _execution_overlay() -> dict:
+    return yaml.safe_load(EXECUTION_OVERLAY_PATH.read_text(encoding="utf-8"))
+
+
+def test_execution_plane_containers_are_read_only_with_explicit_writable_points() -> None:
+    """Batch 256（C243-1 S1/S2）：执行面只读 rootfs + 显式白名单可写点。"""
+    _, compose = _compose()
+    services = compose["services"]
+
+    for name in ("runner", "aitde-worker"):
+        service = services[name]
+        assert service["read_only"] is True, f"{name} 必须只读 rootfs"
+        assert service["cap_drop"] == ["ALL"], f"{name} 必须显式 cap_drop ALL"
+        assert service["security_opt"] == [
+            "no-new-privileges:true",
+        ], f"{name} 必须显式 no-new-privileges"
+        assert service["user"] == "10001:10001", f"{name} 必须显式非 root 用户"
+
+        tmpfs = " ".join(service["tmpfs"])
+        # Playwright/Node/Python 临时文件与 worker pid 文件
+        assert "/tmp:rw" in tmpfs
+        # pip/npm/Playwright 缓存（XDG_CACHE_HOME 与 npm 默认 cache）
+        assert "/home/cameltv/.cache:rw" in tmpfs
+        assert "/home/cameltv/.npm:rw" in tmpfs
+        # 只读 rootfs 下生成物必须落在卷上（playwright_executor 会回写恢复 spec）
+        assert "tp-generated-specs:/app/tests/playwright/specs/generated" in service["volumes"]
+        assert "tp-generated-jobs:/app/tests/playwright/generated" in service["volumes"]
+
+
+def test_execution_overlay_never_redeclares_singleton_list_fields() -> None:
+    """overlay 与 base 的同值列表项会被 compose 判为重复并直接校验失败（Batch 243 回归）。
+
+    执行面加固只在 base 文件声明一次；overlay 仅允许追加自己的字段。
+    """
+    _, base = _compose()
+    overlay = _execution_overlay()
+
+    for name in ("runner", "aitde-worker"):
+        base_service = base["services"].get(name, {})
+        overlay_service = overlay["services"].get(name, {})
+        for key in ("security_opt", "cap_drop", "tmpfs"):
+            if key not in overlay_service:
+                continue
+            assert overlay_service[key] != base_service.get(key), (
+                f"{name}.{key} 在 base 与 overlay 中同值声明，"
+                "docker compose 会因重复项校验失败"
+            )
 
 
 def test_compose_keeps_production_knowledge_ingest_opt_in() -> None:
@@ -220,10 +270,17 @@ def test_existing_volumes_receive_the_runtime_uid_before_backend_starts() -> Non
     backend = compose["services"]["backend"]
 
     assert initializer["user"] == "0:0"
-    assert initializer["command"][-1] == "chown -R 10001:10001 /data /app/storage"
+    # Batch 256（C243-1 S2）：只读 rootfs 下执行面唯一可写出口是生成物卷，
+    # base 与 overlay 拓扑共用同一份初始化，避免 runner 因目录属主不符而写失败。
+    assert initializer["command"][-1] == (
+        "chown -R 10001:10001 /data /app/storage "
+        "/app/tests/playwright/specs/generated /app/tests/playwright/generated"
+    )
     assert initializer["volumes"] == [
         "tp-data:/data",
         "tp-artifacts:/app/storage",
+        "tp-generated-specs:/app/tests/playwright/specs/generated",
+        "tp-generated-jobs:/app/tests/playwright/generated",
     ]
     assert backend["depends_on"]["volume-permissions"] == {
         "condition": "service_completed_successfully",

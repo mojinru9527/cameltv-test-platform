@@ -39,6 +39,17 @@ def test_compose_manages_durable_worker_lifecycle() -> None:
     )
 
 
+def test_managed_worker_carries_the_execution_plane_hardening() -> None:
+    """Batch 256（C243-1 S1/S2）：worker 与 runner 共享浏览器准入，隔离等级必须一致。"""
+    worker = _compose()["services"]["aitde-worker"]
+
+    assert worker["read_only"] is True
+    assert worker["cap_drop"] == ["ALL"]
+    assert worker["security_opt"] == ["no-new-privileges:true"]
+    assert worker["user"] == "10001:10001"
+    assert any(entry.startswith("/tmp:rw") for entry in worker["tmpfs"])
+
+
 def test_backend_and_worker_define_the_same_temporal_routing() -> None:
     services = _compose()["services"]
     expected = {
