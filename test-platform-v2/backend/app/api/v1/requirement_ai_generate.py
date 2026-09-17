@@ -258,6 +258,8 @@ async def generate_test_cases(
     except Exception:
         db.rollback()
         raise
+    # Batch 248：本端点 response_model 改为 R[dict]（需兼容本地 Agent 派发分支），
+    # 平台内推理分支显式转 dict，返回 JSON 形状与改造前一致。
     return R.ok(AIGenerateResult(
         document_id=document_id,
         requirement_analysis=req_analysis,
@@ -265,7 +267,7 @@ async def generate_test_cases(
         api_cases=api_cases,
         raw_response=json.dumps(ai_result, ensure_ascii=False),
         extraction_summary=ai_result.get("extraction_summary", ""),
-    ))
+    ).model_dump(by_alias=True))
 
 
 # ── B1: 需求-API 匹配 ──────────────────────────────────

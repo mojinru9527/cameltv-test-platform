@@ -250,6 +250,8 @@ async def extract_features(
                 folder_hint=v.get("folder_hint", ""),
             ))
 
+    # Batch 248：本端点 response_model 改为 R[dict]（需兼容本地 Agent 派发分支），
+    # 平台内推理分支显式转 dict，返回 JSON 形状与改造前一致。
     return R.ok(FeatureExtractionResult(
         document_id=document_id,
         modules=extraction_result.get("modules", []),
@@ -262,7 +264,7 @@ async def extract_features(
         diff_summary=diff_summary,
         inherited_from_version=inherited_from_version,
         inherited_fp_count=inherited_fp_count,
-    ))
+    ).model_dump(by_alias=True))
 
 
 @router.get("/{document_id}/extraction", response_model=R[FeatureExtractionResult])
