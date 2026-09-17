@@ -5,6 +5,10 @@ from datetime import timedelta
 
 from app.models.ai_job import AiResult
 from app.services import ai_agent_service
+from app.services.ai_job_dispatch import dispatch_requirement_job, local_agent_mode
+from app.core.exceptions import APIException
+
+import pytest
 
 
 def test_register_agent_issues_verifiable_token(db_session) -> None:
@@ -109,3 +113,52 @@ def test_report_rejects_unknown_agent(db_session) -> None:
         ai_agent_service.report_job(db_session, job.id, "someone-else", "completed", "", {}, [], "", "")
         is None
     )
+
+
+# ── Slice 2：平台默认不推理，需求域任务改为派发 ──────────────────
+
+def test_platform_inference_is_off_by_default() -> None:
+    """平台默认不自己跑 LLM（本地 ChatGPT 客户端负责推理）。"""
+    assert local_agent_mode() is True
+
+
+def test_dispatch_requirement_job_creates_pending_job(db_session) -> None:
+    payload = dispatch_requirement_job(
+        db_session, document_id=123, job_type="extract", project_id=7, user_id=4
+    )
+    assert payload["mode"] == "local_agent"
+    assert payload["document_id"] == 123
+    job = ai_agent_service.get_job(db_session, project_id=7, job_id=payload["job_id"])
+    assert job is not None and job.status == "pending" and job.capability == "extract"
+    assert "123" in job.input_ref
+
+
+# ── Slice 3：结果导入 ──────────────────────────────────────────
+
+def test_import_requires_completed_job(db_session) -> None:
+    job = ai_agent_service.create_job(db_session, project_id=7, job_type="generate", payload={"document_id": 1})
+    with pytest.raises(APIException) as exc:
+        ai_agent_service.import_job_result(db_session, project_id=7, job_id=job.id, user_id=4)
+    assert exc.value.http_status == 400
+
+
+def test_import_rejects_extract_type(db_session, monkeypatch) -> None:
+    ai_agent_service.register_agent(db_session, "agent-imp", 7, ["extract"], issue_token=False)
+    job = ai_agent_service.create_job(db_session, project_id=7, job_type="extract", payload={"document_id": 1})
+    claimed = ai_agent_service.claim_job(db_session, "agent-imp", ["extract"])
+    assert claimed is not None
+    ai_agent_service.report_job(db_session, job.id, "agent-imp", "completed", "ok", {}, [], "m", "")
+    with pytest.raises(APIException) as exc:
+        ai_agent_service.import_job_result(db_session, project_id=7, job_id=job.id, user_id=4)
+    assert "generate" in str(exc.value.msg)
+
+
+def test_import_is_idempotent_for_same_job(db_session) -> None:
+    ai_agent_service.register_agent(db_session, "agent-idem", 7, ["generate"], issue_token=False)
+    job = ai_agent_service.create_job(db_session, project_id=7, job_type="generate", payload={"document_id": 1})
+    ai_agent_service.claim_job(db_session, "agent-idem", ["generate"])
+    ai_agent_service.report_job(db_session, job.id, "agent-idem", "completed", "ok", {}, [], "m", "")
+    job.imported_at = job.finished_at
+    db_session.commit()
+    result = ai_agent_service.import_job_result(db_session, project_id=7, job_id=job.id, user_id=4)
+    assert result["already_imported"] is True and result["imported"] == 0

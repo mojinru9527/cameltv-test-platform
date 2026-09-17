@@ -53,7 +53,7 @@ def _audit(
 
 # ── AI 生成 ───────────────────────────────────────────
 
-@router.post("/{document_id}/generate", response_model=R[AIGenerateResult])
+@router.post("/{document_id}/generate", response_model=R[dict])
 async def generate_test_cases(
     document_id: int,
     req: Request,
@@ -145,6 +145,19 @@ async def generate_test_cases(
 
                 # Replace extraction with only new FPs for AI
                 extraction = {**extraction, "modules": new_modules} if new_modules else None
+
+    from app.services.ai_job_dispatch import dispatch_requirement_job, local_agent_mode
+
+    if local_agent_mode():
+        return R.ok(
+            dispatch_requirement_job(
+                db,
+                document_id=document_id,
+                job_type="generate",
+                project_id=current.project_id or 0,
+                user_id=current.user.id,
+            )
+        )
 
     try:
         from app.services.ai_service import generate_test_cases as ai_generate

@@ -27,6 +27,7 @@ class AiJob(Base, TimestampMixin):
     summary: Mapped[str] = mapped_column(Text, default="")
     evidence_refs_json: Mapped[str] = mapped_column(Text, default="[]")
     model_name: Mapped[str] = mapped_column(String(128), default="")
+    imported_at: Mapped[datetime | None] = mapped_column(default=None)
     error_message: Mapped[str] = mapped_column(Text, default="")
     locked_at: Mapped[datetime | None] = mapped_column(default=None)
     heartbeat_at: Mapped[datetime | None] = mapped_column(default=None)

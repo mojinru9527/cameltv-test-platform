@@ -41,11 +41,15 @@ def upgrade() -> None:
             "ai_jobs",
             sa.Column("model_name", sa.String(128), nullable=False, server_default=sa.text("''")),
         )
+    if "imported_at" not in columns:
+        op.add_column("ai_jobs", sa.Column("imported_at", sa.DateTime(), nullable=True))
 
 
 def downgrade() -> None:
     inspector = sa.inspect(op.get_bind())
     columns = {c["name"] for c in inspector.get_columns("ai_jobs")}
+    if "imported_at" in columns:
+        op.drop_column("ai_jobs", "imported_at")
     if "model_name" in columns:
         op.drop_column("ai_jobs", "model_name")
     if "ai_agent_token" in set(inspector.get_table_names()):

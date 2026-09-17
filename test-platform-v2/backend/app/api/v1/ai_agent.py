@@ -26,6 +26,10 @@ class AgentTokenRevokeRequest(BaseModel):
     token_id: int
 
 
+class JobImportRequest(BaseModel):
+    indices: list[int] | None = None
+
+
 class JobCreateRequest(BaseModel):
     job_type: str = Field(min_length=1, max_length=64)
     capability: str = Field(default="", max_length=128)
@@ -233,6 +237,23 @@ def report_job(
     if job is None:
         raise HTTPException(409, "AI Job 未被该 Agent 持有或状态不允许上报")
     return R.ok(_job_dict(job))
+
+
+@router.post("/jobs/{job_id}/import", response_model=R[dict], summary="把结果导入用例库")
+def import_job_result(
+    job_id: int,
+    body: JobImportRequest | None = None,
+    current: CurrentUser = Depends(require_permission("requirement:import")),
+    db: Session = Depends(get_db),
+):
+    result = ai_agent_service.import_job_result(
+        db,
+        project_id=_project_id(current),
+        job_id=job_id,
+        user_id=current.user.id,
+        indices=(body.indices if body else None),
+    )
+    return R.ok(result)
 
 
 @router.get("/agents/health", response_model=R[dict], summary="Agent 在线状态")

@@ -248,3 +248,96 @@ def health_agents(db: Session, *, project_id: int | None = None) -> list[AiAgent
     if project_id:
         where.append(AiAgent.project_scope == project_id)
     return list(db.scalars(select(AiAgent).where(*where)).all())
+
+
+# ── 结果导入 ───────────────────────────────────────────────────
+
+def import_job_result(
+    db: Session,
+    *,
+    project_id: int,
+    job_id: int,
+    user_id: int,
+    indices: list[int] | None = None,
+) -> dict:
+    """把已完成 Job 的结果导入用例库（当前支持 generate 类型）。
+
+    结果先写入需求文档的 `ai_raw`（与平台内 AI 生成结果同一落点），
+    再复用 `requirement_service` 的既有导入链路，保证两条链路的用例结构一致。
+    同一 Job 重复导入直接短路，避免重复用例。
+    """
+    from app.models.requirement import RequirementDocument
+    from app.services import requirement_service
+
+    job = get_job(db, project_id=project_id, job_id=job_id)
+    if job is None:
+        raise APIException(code=404, msg="AI Job 不存在", http_status=404)
+    if job.status != "completed":
+        raise APIException(code=400, msg="只有已完成（completed）的 AI 任务可以导入", http_status=400)
+    if job.imported_at is not None:
+        return {"imported": 0, "skipped": 0, "total": 0, "already_imported": True}
+    if job.job_type != "generate":
+        raise APIException(
+            code=400,
+            msg="当前仅支持 generate 类型结果的自动导入；extract 结果请在需求页人工确认",
+            http_status=400,
+        )
+
+    try:
+        payload = json.loads(job.result_json or "{}")
+    except (json.JSONDecodeError, TypeError):
+        payload = {}
+    if not isinstance(payload, dict):
+        payload = {}
+    document_id = int(payload.get("document_id") or 0)
+    if not document_id:
+        raise APIException(code=400, msg="任务结果缺少 document_id，无法定位需求文档", http_status=400)
+
+    doc = db.scalar(
+        select(RequirementDocument).where(
+            RequirementDocument.id == document_id,
+            RequirementDocument.project_id == project_id,
+        )
+    )
+    if doc is None:
+        raise APIException(code=404, msg="需求文档不存在或不属于当前项目", http_status=404)
+
+    try:
+        merged = json.loads(doc.ai_raw or "{}")
+        if not isinstance(merged, dict):
+            merged = {}
+    except (json.JSONDecodeError, TypeError):
+        merged = {}
+    functional = payload.get("functional_cases") or []
+    api_cases = payload.get("api_cases") or []
+    merged["functional_cases"] = functional
+    merged["api_cases"] = api_cases
+    doc.ai_raw = json.dumps(merged, ensure_ascii=False)
+
+    selected_indices = indices if indices is not None else list(range(len(functional) + len(api_cases)))
+    selected = requirement_service.prepare_cases_for_import(
+        db,
+        doc_id=document_id,
+        project_id=project_id,
+        indices=selected_indices,
+        edited_cases=[],
+        reviewer_id=user_id,
+    )
+    if not selected:
+        raise APIException(code=400, msg="任务结果中没有可导入的用例", http_status=400)
+    result = requirement_service.import_cases(
+        db,
+        document_id,
+        selected,
+        project_id=project_id,
+        commit=False,
+        creator_id=user_id,
+    )
+    job.imported_at = _now()
+    db.commit()
+    return {
+        "imported": int(result.get("imported", 0)),
+        "skipped": int(result.get("skipped", 0)),
+        "total": len(selected),
+        "already_imported": False,
+    }
