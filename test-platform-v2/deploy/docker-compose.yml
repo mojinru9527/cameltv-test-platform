@@ -205,6 +205,20 @@ services:
       backend:
         condition: service_healthy
     init: true
+    # Batch 256（C243-1 S1/S2）：worker 与 runner 共享浏览器准入，隔离等级必须一致。
+    user: "10001:10001"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=${RUNNER_TMPFS_TMP_SIZE:-1g}
+      - /home/cameltv/.cache:rw,nosuid,nodev,size=${RUNNER_TMPFS_CACHE_SIZE:-512m}
+      - /home/cameltv/.npm:rw,nosuid,nodev,size=${RUNNER_TMPFS_CACHE_SIZE:-512m}
+    volumes:
+      - tp-generated-specs:/app/tests/playwright/specs/generated
+      - tp-generated-jobs:/app/tests/playwright/generated
     restart: unless-stopped
     healthcheck:
       test:
@@ -271,8 +285,24 @@ services:
     init: true
     mem_limit: ${RUNNER_MEMORY_LIMIT:-1536m}
     pids_limit: 256
+    # Batch 256（C243-1 S1/S2）：执行面不依赖 extends 隐式继承，显式声明最小权限；
+    # rootfs 只读 + 显式 tmpfs 白名单（/tmp 供 Playwright/Node/Python 与 worker pid 文件，
+    # 两个缓存目录供 npm/pip/Playwright 缓存），其余写入必须落在持久卷上。
+    user: "10001:10001"
+    cap_drop:
+      - ALL
     security_opt:
       - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=${RUNNER_TMPFS_TMP_SIZE:-1g}
+      - /home/cameltv/.cache:rw,nosuid,nodev,size=${RUNNER_TMPFS_CACHE_SIZE:-512m}
+      - /home/cameltv/.npm:rw,nosuid,nodev,size=${RUNNER_TMPFS_CACHE_SIZE:-512m}
+    volumes:
+      # 生成的 spec/job 目录必须可写（playwright_executor 会在缺文件时回写恢复）；
+      # 与 execution overlay 同名卷对齐，避免 base/overlay 两套拓扑语义分叉。
+      - tp-generated-specs:/app/tests/playwright/specs/generated
+      - tp-generated-jobs:/app/tests/playwright/generated
     stop_grace_period: 60s
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
@@ -291,10 +321,12 @@ services:
     command:
       - sh
       - -c
-      - chown -R 10001:10001 /data /app/storage
+      - chown -R 10001:10001 /data /app/storage /app/tests/playwright/specs/generated /app/tests/playwright/generated
     volumes:
       - tp-data:/data
       - tp-artifacts:/app/storage
+      - tp-generated-specs:/app/tests/playwright/specs/generated
+      - tp-generated-jobs:/app/tests/playwright/generated
     restart: "no"
 
   frontend:
@@ -328,7 +360,10 @@ volumes:
     driver: local
   tp-artifacts:
     driver: local
+  # Batch 256：生成的 spec/job 需要可写落点（只读 rootfs 下唯一的生成物出口）
+  tp-generated-specs:
+    driver: local
+  tp-generated-jobs:
+    driver: local
   pg-data:
     driver: local
-
-
