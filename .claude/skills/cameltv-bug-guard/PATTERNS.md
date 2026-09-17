@@ -121,3 +121,73 @@
 - SQLite WAL 支持并发读但写串行；高并发写考虑 PostgreSQL。
 - CORS 本地 `allow_origins=["*"]`；生产 CORS 由 Nginx 处理，后端不配。
 - v1/v2 端口冲突（都 8000/5173），不要同时启。
+
+---
+
+## 出网与执行安全（2026-09-18 两次全量审计新增）
+
+> 口径：对比 main `10e69b36`（Batch 255 前）与 `96cd5b65`（Batch 255）两次全量审计。
+> 下面 S1–S6 在**两版都存在**，说明它们不是"某次疏忽"，而是流程没覆盖到——
+> 所以固化成铁律，而不是等下一次审计再发现。
+
+### S1. 用户可控 URL 出网没有 SSRF 守卫
+
+- **现象**：需求「URL 导入」可以把内网服务、`127.0.0.1`、云元数据（`169.254.169.254`）的响应抓回来，
+  存进需求文档并在页面展示（可回读）。
+- **根因**：`requirement_source_service._request()` 只校验 `scheme`，随后 `httpx.get(..., follow_redirects=True)`；
+  代码库里其实**已有** `_validate_url_no_ssrf()`（`api_execution_service.py`），但需求抓取这条路没复用。
+- **修法**：抽出共享的 `assert_public_url(url)`；校验原始地址 + 每个重定向目标；限制响应体大小；解析后用 `ipaddress` 判定私网/回环/链路本地。
+- **自检**：任何"用户填 URL → 服务端去拉"的功能，先问三个问题：私网能打吗？重定向能绕吗？响应有上限吗？
+
+### S2. 凭据按"域名关键字"判定可信来源
+
+- **现象**：`classify_url()` 用 `"pingcode" in host` / `"atlassian"/"confluence" in host` 判定供应商，
+  然后把 `PINGCODE_API_TOKEN` / `CONFLUENCE_API_TOKEN` 作为 `Authorization: Bearer` 发出去。
+- **根因**：把"像供应商"当成"是供应商"；主机名匹配没有锚定根域，也没有校验解析后的 IP。
+- **修法**：白名单配置化（根域精确匹配或后缀匹配 + `.` 边界），并对解析 IP 做私网校验；
+  凭据只发给白名单内的 host，其余走"通用无凭据抓取"。
+- **自检**：凡是"认证信息 + 用户输入地址"同时出现，先确认地址是否可能由攻击者控制。
+
+### S3. `shell=True` + 模板插值
+
+- **现象**：本地 OCR 命令模板 `lanhu_ocr_command.replace("{image}", image_path)` 直接进 `shell=True`。
+- **根因**：图省事的字符串模板；路径含空格/`;`/`&&` 时命令会变形甚至注入。
+- **修法**：`shlex.split(template)` → 参数数组；`{image}` 作为独立 argv 元素；或改用内置 RapidOCR（Batch 247 已引入）不再走外部命令。
+- **自检**：`rg "shell=True"` 结果必须为空，或每处都有明确豁免理由。
+
+### S4. 文件路径拼接未收敛到基目录
+
+- **现象**：`LocalStorage._path()` 用 `os.path.normpath(os.path.join(base_dir, rel))`，`rel` 里的 `../` 可以逃出 `base_dir`。
+- **根因**：`normpath` 只做规范化，不做边界检查；`make_uri` 也只替换反斜杠。
+- **修法**：与 `app/api/v1/lanhu_evidence_assets.py` 的写法对齐——`Path(...).resolve()` 后 `is_relative_to(base)`，不满足直接 403/异常。
+- **自检**：新增任何"上传/导出/取证/下载"落盘逻辑时，同时写一条越过 `..` 的测试。
+
+### S5. 密钥加密出现两套派生实现
+
+- **现象**：`cipher.py` 用 `settings.effective_secret_key`（dev 会自动生成随机会话密钥），
+  `ai_config_service._fernet()` 用 `settings.secret_key`。SECRET_KEY 为空时后者对空串做 sha256 → 等价公开常量密钥。
+- **根因**：两处各自实现 Fernet 派生，没有单一入口。
+- **修法**：全部改调 `cipher.py`；启动时若"没有 SECRET_KEY 但库里已有密文"直接 fail-fast；轮换 SECRET_KEY 必须同时提供重加密脚本。
+- **自检**：`rg "sha256\(.*secret_key"` 只应命中 `cipher.py` 一处。
+
+### S6. 把 `--dry-run` 当沙箱
+
+- **现象**：用例编译链路把 `npx tsc --noEmit` + `npx playwright test --dry-run` 称为"sandbox 校验"，
+  计划执行路径甚至 `validate=False` 直接执行 LLM 生成的 spec。
+- **根因**：Playwright 的 dry-run 仍会**加载并执行 spec 模块的顶层语句**，只能查语法/收集结构，不能阻止 `child_process`/`fs`。
+- **修法**：危险 API 静态拦截（`child_process`/`fs`/`net`/`process.env`）+ 独立无凭据沙箱容器执行；把"dry-run ≠ 沙箱"写进设计说明。
+- **自检**：任何"生成代码 → 落盘 → 执行"的链路，先确认执行环境的 secret/卷/网络三件事。
+
+### S7. 静默吞异常与异常链丢失（长期不降）
+
+- **现象**：`except Exception: pass/continue` 11 + 7 处；`raise ...` 缺 `from err` 32 处（比上一版还多 4 处）。
+- **根因**：为了"不阻断主流程"就地兜底；缺少"兜底也要留痕"的默认动作。
+- **修法**：兜底一律 `logger.warning/debug(..., exc_info=True)`；重新抛错统一 `raise X(...) from err`；
+  前端禁止裸 `.catch(() => {})`（至少 `console.warn` 或注明刻意静默的理由）。
+- **自检**：`ruff check app/ --select S110,S112,B904` 的数量只能下降，不能上升。
+
+### S8. 类级可变默认值（RUF012）
+
+- **现象**：18 处（比上一版 +3），集中在 `services/sync/*.py`、`smart_regression/service.py`。
+- **根因**：用 `X: dict[str, str] = {}` 表达类级配置，实例间共享同一个对象。
+- **修法**：改 `ClassVar[...]` 标注（表达"就是类级常量"）或 `field(default_factory=...)`。

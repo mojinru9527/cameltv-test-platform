@@ -25,3 +25,4 @@ related:
 | `06-B1-B15-acceptance-remediation.md` | B15 后黑盒验收发现的 F-01…F-09 整改清单 | Batch 226 复验输入 |
 | `07-b1-b15-delivery-and-usage.md` | B1-B15 最终交付与黑盒测试人员使用手册 | Batch 226 最终验收 |
 | `08-b1-b15-implementation.md` | 主链路事实源、AI、执行、放行、接入和副作用实现说明 | Batch 226 最终验收 |
+| `09-platform-landing-plan.md` | **落地方案（控制面 + 本地执行节点）**：目标形态、菜单收敛 4 入口、执行/数据模型、安全五硬线、运维要求、8 周 4 批计划 | Batch 256 起执行事实源 |

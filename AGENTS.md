@@ -59,12 +59,13 @@ feature/* 或 fix/*
 - ✅ **新批次 worktree 必须从合并后的最新 develop/main 创建**
 - ✅ **多个并行批次（如 batch-37-platform-ga 与 batch-37-platform-polish-and-review）完成时，按交付顺序逐个合并，冲突在合并时解决**
 
-### 2.1.2 批次模式（完整/轻量，Batch 75 起，C75-4 同步）
+### 2.1.2 批次模式（完整/轻量，Batch 75 起；Batch 256 起默认轻量）
 
 批次按 `.claude/skills/cameltv-agent-team/SKILL.md`「批次模式」分为**完整批次**与**轻量批次**两档，详细判定与豁免格式见 `docs/agent-team/pipeline-modes.md`：
 
-- **完整批次**（新功能/重构/配置/Schema/新行为、新接口、新配置、新依赖）：PRD + PM + Design + Dev + QA + Leader 六件。
-- **轻量批次**（验收/修复/纯文档/纯证据/内部流程工具）：PRD-lite + QA + Leader 三件 + 看板；PRD-lite 必须记录 `mode: light` 与豁免理由。
+- **完整批次**（命中任一触发器：新接口 / 新配置 / 新依赖 / Schema 或数据模型变更 / 执行链路变更 / AI 链路变更 / 权限模型变更）：PRD + PM + Design + Dev + QA + Leader 六件。
+- **轻量批次（Batch 256 起为默认档）**（其余全部：验收 / 修复 / 纯文档 / 纯证据 / 内部流程工具 / UI 调整 / 对外契约不变的重构）：PRD-lite + QA + Leader 三件 + 看板；PRD-lite 必须记录 `mode: light` 与豁免理由。
+- **执行链路 / AI 链路 / 数据模型任一变更禁止走轻量档**（它们决定证据可信度）。
 
 两档**同等强制**以下 Git 门禁：独立 worktree、分支命名、Draft PR、`audit-ai-pr`、用户一次总确认（推送+PR+合入）、required checks 全绿后合入。本小节与 SKILL.md/pipeline-modes.md 措辞同步。
 
