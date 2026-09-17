@@ -723,6 +723,56 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 **解决方案**：迁移后固定保留 PG dump（`pg_dump -Fc`，`/opt/cameltv-backup/` + 本地 `F:\CamelTv-safe-backup\supabase-dump\cameltv-prod.dump`）；恢复用 `pg_restore --clean --if-exists`（仅空新库）。
 
+### 7.9 npm audit 打到镜像源 → “无漏洞”假象
+
+**现象**：本机 `npm audit` 返回 0 漏洞，CI/显式指定官方源时却报出 7 high 等一堆 advisory。
+
+**根因**：本机 npm 默认源是 `registry.npmmirror.com`，该镜像**未实现** advisories 接口
+（`[NOT_IMPLEMENTED] /-/npm/v1/security/*`）。审计请求返回空，被读成“没有漏洞”。
+
+**解决方案**：所有审计调用显式指定官方源：`npm audit --registry=https://registry.npmjs.org`；
+`scripts/ci/npm_audit_ratchet.mjs` 与 `dev-gate.ps1` 已固定该参数。新增审计步骤时不要省略。
+
+**相关文件**：`scripts/ci/npm_audit_ratchet.mjs`、`test-platform-v2/frontend/npm-audit-baseline.json`、
+`.github/workflows/main-quality-gate.yml`。
+
+**修复日期**：2026-09-18（Batch 256 实测确认并文档化）。
+
+### 7.10 多文件 compose 中同值列表项 → 校验失败
+
+**现象**：`docker compose -f docker-compose.yml -f docker-compose.execution.yml config` 直接报
+`services.<svc>.security_opt items at 0 and 1 are equal`（或 cap_drop/tmpfs 同类报错）。
+
+**根因**：Compose 合并多文件时对列表字段做**并集**，同值项不去重而是判为重复。
+overlay 只要重复声明 base 已有的 `security_opt`/`cap_drop`/`tmpfs` 项就会失败。
+
+**解决方案**：这类“单例列表”只在 base 文件声明一次，overlay 只追加自身新增项；
+`tests/test_deploy_compose_contract.py::test_execution_overlay_never_redeclares_singleton_list_fields`
+已把该约束写成回归测试。
+
+**相关文件**：`test-platform-v2/deploy/docker-compose.yml`、`test-platform-v2/deploy/docker-compose.execution.yml`。
+
+**修复日期**：2026-09-18（Batch 243 出现过一次，Batch 256 写入回归测试）。
+
+### 7.11 执行面 read_only 后 Playwright 任务全挂
+
+**现象**：给 `runner`/`aitde-worker` 打开 `read_only: true` 后，UI 任务报
+「测试脚本不存在」或截图/产物写失败；容器日志出现 `Read-only file system`。
+
+**根因**：只读 rootfs 下，凡运行期需要写入的路径都必须显式给出 tmpfs 或卷。
+执行面至少有四类写入点：临时文件（`/tmp`、`XDG_CACHE_HOME`、npm cache）、
+生成物卷（`tp-artifacts:/app/storage`）、生成 spec/job 目录
+（`tests/playwright/specs/generated`、`tests/playwright/generated`）、
+以及 `playwright_executor` 缺文件时的 spec 回写。
+
+**解决方案**：按 `test-platform-v2/deploy/README.md`「执行面只读 rootfs 与可写白名单」维护
+tmpfs/卷白名单；新增运行期写入路径时必须同时改白名单与部署契约测试。
+`/ms-playwright` 保持只读（浏览器为构建期预置），运行期不要再执行 `playwright install`。
+
+**相关文件**：`test-platform-v2/deploy/docker-compose.yml`、`app/services/playwright_executor.py`。
+
+**修复日期**：2026-09-18（Batch 256 建立白名单与真实运行探针）。
+
 ---
 
 ## 排查速查表
@@ -755,6 +805,9 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 | 改密码后连接失败 | POSTGRES_PASSWORD 仅首次初始化生效 | 7.5 |
 | /api 502（容器重启后） | Nginx DNS 缓存 | 7.6 |
 | Caddy 与前端端口冲突 | 前端容器须映射 127.0.0.1:8080:80 | 7.7 |
+| `npm audit` 报 0 但 CI 报一堆 advisory | 默认镜像源无 advisories 接口 | 7.9 |
+| compose `items at 0 and 1 are equal` | overlay 重复声明单例列表项 | 7.10 |
+| 只读 rootfs 后 UI 任务脚本“不存在” | 生成物/临时目录未进白名单 | 7.11 |
 
 ---
 
