@@ -25,7 +25,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from release_artifacts import runtime_mode
-from migrations import MigrationFailed, MigrationNotConfigured, target_revision
+from migrations import (
+    MigrationFailed,
+    MigrationNotConfigured,
+    migration_failure_detail,
+    migration_success_detail,
+    target_revision,
+)
 
 from tencent_executor import (
     ExecutorCommandFailed,
@@ -142,6 +148,24 @@ def _ensure_schema(conn: sqlite3.Connection) -> None:
 def _event_hash(payload: dict) -> str:
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
     return hashlib.sha256(canonical).hexdigest()
+
+
+def _failure_reason(prefix: str, exc: Exception, manifest: dict | None = None) -> str:
+    """C249-4：把迁移 target/current 差异写进发布事件，而不是只留一句 rc=1。
+
+    远程迁移校验现在总会打印 ``CAMELTV_MIGRATION target=X actual=Y``，
+    失败时该行就在异常文本里；解析出来落进 ``deployment_events.reason``，
+    运维在发布记录里能直接看到「迁移没生效」以及差在哪个 revision。
+    """
+    detail = migration_failure_detail(manifest or {}, str(exc))
+    reason = f"{prefix}: {detail}" if detail else prefix
+    return reason[:300]
+
+
+def _success_reason(prefix: str, logs: str | None, manifest: dict | None = None) -> str:
+    """迁移成功时把已验证的 target/current 一并落进事件（同一机制，正向证据）。"""
+    detail = migration_success_detail(manifest or {}, logs or "")
+    return f"{prefix}; {detail}" if detail else prefix
 
 
 def _transition_state(
@@ -451,9 +475,15 @@ def publish_deployment(deployment_id: str, body: PublishIn, authorization: str |
     try:
         result = executor.deploy(body.image_tag, manifest=manifest)
     except Exception as exc:
-        _transition_state(deployment_id, 'PROD_DEPLOYING', 'PROD_FAILED', 'deploy', 'console', 'publish failed')
+        _transition_state(
+            deployment_id, 'PROD_DEPLOYING', 'PROD_FAILED', 'deploy', 'console',
+            _failure_reason('publish failed', exc, manifest),
+        )
         raise HTTPException(500, f"发布执行失败: {exc}") from exc
-    if not _transition_state(deployment_id, "PROD_DEPLOYING", "PROD_OBSERVING", "deploy", "console", "publish succeeded"):
+    if not _transition_state(
+        deployment_id, "PROD_DEPLOYING", "PROD_OBSERVING", "deploy", "console",
+        _success_reason("publish succeeded", getattr(result, "logs", None), manifest),
+    ):
         raise HTTPException(409, 'Deployment completed but state changed; reconcile before retrying')
     return ActionOut(
         action="publish",
@@ -513,7 +543,10 @@ def rollback_deployment(deployment_id: str, body: RollbackIn, authorization: str
     try:
         result = executor.rollback(body.image_tag, manifest=manifest)
     except Exception as exc:
-        _transition_state(deployment_id, 'PROD_ROLLING_BACK', 'PROD_FAILED', 'rollback', 'console', 'rollback failed')
+        _transition_state(
+            deployment_id, 'PROD_ROLLING_BACK', 'PROD_FAILED', 'rollback', 'console',
+            _failure_reason('rollback failed', exc, manifest),
+        )
         raise HTTPException(500, f"回滚执行失败: {exc}") from exc
     if not _transition_state(deployment_id, 'PROD_ROLLING_BACK', 'PROD_ROLLED_BACK', 'rollback', 'console', f'rollback succeeded: {body.image_tag}'):
         raise HTTPException(409, 'Rollback completed but state changed; reconcile before retrying')

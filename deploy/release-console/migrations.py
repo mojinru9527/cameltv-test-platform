@@ -21,8 +21,13 @@ import shlex
 
 PLACEHOLDER_REVISION = "see-verified-head"
 
+# C249-4：迁移校验无论成功失败都打印目标 revision 与实际 current，失败时控制面
+# 才能把「迁移没生效」写进发布事件，而不是只留一句 `rc=1`。
+STATUS_MARKER = "CAMELTV_MIGRATION"
+
 _REVISION = re.compile(r"^[0-9a-zA-Z_]{1,128}$")
 _NOISE_PREFIXES = ("INFO", "Running", "ERROR", "FAILED", "Context impl", "Will assume")
+_STATUS = re.compile(rf"{STATUS_MARKER} target=(\S+) actual=(\S+)")
 
 
 class MigrationNotConfigured(RuntimeError):
@@ -78,9 +83,57 @@ def migration_commands(compose, *, target: str) -> list[str]:
         "run", "--rm", "-T", "--no-deps", "backend",
         "python", "-m", "alembic", "current",
     )
+    # 先取实际 current 并打印（成功/失败都会进控制面日志），再断言等于 target。
+    # 这样校验失败时输出里有 `target=X actual=Y`，控制面可直接落进发布事件。
     verify = (
-        "test \"$("
-        f"{current} 2>/dev/null | tail -n 1 | awk '{{print $1}}'"
-        f")\" = {shlex.quote(resolved)}"
+        f"migration_actual=$("
+        f"{current} 2>/dev/null | tail -n 1 | awk '{{print $1}}'); "
+        f"printf '{STATUS_MARKER} target=%s actual=%s\\n' "
+        f"{shlex.quote(resolved)} \"${{migration_actual:-<none>}}\"; "
+        f"test \"${{migration_actual}}\" = {shlex.quote(resolved)}"
     )
     return [upgrade, verify]
+
+
+def migration_status(output: str) -> dict | None:
+    """Parse the last ``CAMELTV_MIGRATION`` status line from remote output."""
+    for raw in reversed((output or "").splitlines()):
+        match = _STATUS.search(raw)
+        if match:
+            return {"target": match.group(1), "actual": match.group(2)}
+    return None
+
+
+def migration_failure_detail(manifest: dict, output: str) -> str | None:
+    """Return ``migration target=X actual=Y`` when the migration did not land.
+
+    Returns ``None`` when the output carries no status line (the failure
+    happened elsewhere) or when the observed revision already equals the
+    manifest target, so callers can fall back to their plain failure reason.
+    """
+    status = migration_status(output)
+    if status is None:
+        return None
+    try:
+        expected = target_revision(manifest)
+    except (MigrationNotConfigured, MigrationFailed):
+        expected = ""
+    if expected and status["actual"] == expected:
+        return None
+    if expected:
+        return f"migration target={expected} actual={status['actual']}"
+    return f"migration actual={status['actual']}"
+
+
+def migration_success_detail(manifest: dict, output: str) -> str | None:
+    """Return ``migration target=X actual=X`` when the migration verified."""
+    status = migration_status(output)
+    if status is None:
+        return None
+    try:
+        expected = target_revision(manifest)
+    except (MigrationNotConfigured, MigrationFailed):
+        return None
+    if status["actual"] != expected:
+        return None
+    return f"migration target={expected} actual={status['actual']}"
