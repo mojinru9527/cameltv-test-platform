@@ -6,8 +6,9 @@
 
 ## 1. 结论
 
-**PASS（可进入一次总确认）**，但 **M5（真实发布验收）尚未完成**，属合入后执行项——
-理由：验收要用控制面的新代码，而控制面镜像必须先从 main 重建（与 Batch 249 的 C249-2 同样模式）。
+**PASS**。代码已合入 main（PR #467 → `82aa9f4f`），控制面已重建部署（`release-20260917-2`），
+并在生产完成一次真实发布验收（`release-20260917-0006` → `PRODUCTION_VERIFIED`）。
+验收暴露 **1 个 P2 缺陷**（C250-1，成功路径正向证据被日志尾部截断），失败路径不受影响。
 
 | 指标 | 状态 |
 |------|------|
@@ -15,7 +16,7 @@
 | M2 控制面 lint 零告警 | ✅ 实测 |
 | M3 迁移校验留下 target/current | ✅ 单测 + 命令构造验证 |
 | M4 事件 reason 可判读迁移差异 | ✅ 单测（失败/成功两侧） |
-| M5 真实发布验收 | ⏳ 合入后执行（见 §6） |
+| M5 真实发布验收 | ✅ 已完成（见 §6；含 1 个 P2 发现 C250-1） |
 
 ## 2. 硬门禁证据
 
@@ -99,21 +100,37 @@ pwsh scripts/ops/release.ps1 -Tag release-20260917-0099 -RuntimeMode split `
 ### ⚪ P3-2（范围外，已登记）控制面 Dockerfile 显式列举 COPY
 - PR #464 已补 `migrations.py`；根因（新增模块必须同步 COPY）登记为 **C249-7**，不在本批。
 
-## 6. M5 — 真实发布验收（合入后执行，未完成）
+### 🟡 P2-3（生产验收发现，已登记 C250-1）迁移状态行的**正向**证据被日志尾部截断
+- **现象**：`release-20260917-0006` 发布成功，但 `PROD_OBSERVING` 事件 reason 只有 `publish succeeded`，
+  没有 `; migration target=X actual=X`；而同一机制在生产现场单独执行时能正确打印该行（见 §6）。
+- **根因**：`CAMELTV_MIGRATION target/actual` 在命令序列**早期**输出，而
+  `ExecutorResult.logs = output[-4000:]` 只保留远端输出最后 4000 字符，
+  其后的 `docker compose up --wait` 输出（60+ 行）把状态行挤出窗口 → `migration_success_detail` 解析不到。
+- **影响**：失败路径**不受影响**（序列在失败命令处中止，状态行必在尾部，C249-4 目标场景成立）；
+  受影响的是"成功后留下正向证据"这一附加能力，以及任何**早期**诊断行在长成功输出中的可见性。
+- **处置**：登记 **C250-1（P2）**；建议从**完整远端输出**解析迁移状态并单独随事件/返回体记录
+  （或让迁移作业独占一次 `_run_remote`）。本批不再追加生产发布（避免把未验证修复再次推上生产路径）。
 
-计划步骤与预期证据：
+## 6. M5 — 真实发布验收（已完成）
 
-1. 从 main 重建 `cameltv-release-console` 镜像并同参数换容器（保留 `:release-20260917` 回滚锚点）。
-2. 用 `release.ps1 -Tag release-20260917-0006 -RuntimeMode split -ExecutionConfig test-platform-v2/deploy/docker-compose.execution.yml -Publish` 做一次真实小版本发布。
-3. 预期观测：manifest `database.target_revision` 为真实 revision；远端日志顺序为 **迁移 → 校验 → 停旧 → 起新**；
-   日志含 `CAMELTV_MIGRATION target=X actual=X`；`/api/deployments/{id}/events` 的 `PROD_OBSERVING.reason` 含同一对 revision。
-4. 证据落 `work-logs/batch-250-release-guardrails-production-evidence-20260917.md`。
+证据全文：[batch-250-release-guardrails-production-evidence-20260917.md](batch-250-release-guardrails-production-evidence-20260917.md)
+
+| 步骤 | 结果 |
+|------|------|
+| 控制面重建部署（含 C249-4 代码） | ✅ `cameltv-release-console:release-20260917-2` 运行中，`:release-20260917` 保留为回滚锚点；无 token 访问 API = 401 |
+| 真实发布 | ✅ `release-20260917-0006`，`PRODUCTION_VERIFIED`，deployment `06840574f73e4c3ba1f1869c75708cb8` |
+| manifest 真实 revision | ✅ `database.target_revision=20260922_ai_agent_token`（validate 通过） |
+| 远端顺序 迁移→校验→停旧→起新 | ✅ 日志中 migration 容器 + Alembic 输出出现在所有 `Stopping` 之前 |
+| 迁移校验命令实测 | ✅ 控制面规划的原样命令在生产执行：`CAMELTV_MIGRATION target=20260922_ai_agent_token actual=20260922_ai_agent_token`，rc=0 |
+| 事件 reason 记录差异 | ⚠️ 失败路径 ✅（单测）；**成功路径 ❌** 被 4000 字符日志窗口截断 → 见 §5 P2-3 / C250-1 |
+| 上线验证 | ✅ `/health` 200、`/api/v1/open/health` v2.3.0、6 容器 healthy、DB revision = target、前端 200、未认证 API 401 |
 
 > 引用基线：容量/回滚/健康检查口径复用 `work-logs/batch-248-local-ai-agent-production-evidence-20260917.md`；
-> 本批只跑增量（迁移顺序 + 事件 reason）。
+> 本批只跑增量（迁移顺序 + 迁移状态行 + 事件 reason）。
+> 制品构成说明：backend/frontend 为本次新构建；runner/ai-gateway 复用 `-0005` 已验证镜像（C248-8 仍未修，见证据 Findings-2）。
 
 ## 7. 复盘卡
 
 | 计划耗时 | 缺陷(P0/P1/P2/P3) | 返工次数 | 根因分类 | 下次避免 |
 |----------|-------------------|----------|----------|----------|
-| 计划 3h / 实际约 2h（不含发布验收） | 0/0/2/2 | 1（C249-4 从"只记失败"扩展为失败+成功两侧证据） | 工具链 + 流程 | 发布路径的任何新命令，先在 `-DryRun`/单测里锁住命令构造，再上生产 |
+| 计划 3h / 实际约 5h（含发布验收与两次 runner 构建失败） | 0/0/3/2 | 2（runner 构建复现 C248-8 → 改为复用镜像；成功路径证据被截断 → 开 C250-1） | 工具链 + 流程 | ①发布路径新命令先用 `-DryRun`/单测锁构造；②凡是"要进事件/返回体"的诊断，必须从完整输出取，不能依赖日志尾部窗口 |
