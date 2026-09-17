@@ -114,6 +114,45 @@ docker compose --project-name cameltv-tp-production \
 - OpenAPI URL 导入使用统一出站策略：默认拒绝私网/回环/链路本地/保留地址，并对重定向和响应体设置上限。
 - 生产 HTML 由前端 Nginx 注入 CSP/HSTS/X-Frame 等头；主题 bootstrap 已外置为 `/theme-bootstrap.js`，不依赖 CSP 的内联脚本豁免。
 - `/health`、`/openapi.json`、`/docs`、`/redoc` 必须显式反代，不能被 SPA fallback 伪装成 `200 text/html`。
+
+### 执行面只读 rootfs 与可写白名单（Batch 256 / C243-1 S1+S2）
+
+`runner` 与 `aitde-worker` 是唯一执行用户代码/被测页面的容器，因此**不依赖 `extends` 隐式继承**，
+在 base compose 中显式声明最小权限；execution overlay 只追加自身字段（同值列表项重复会被 compose 拒绝合并）：
+
+| 项 | 值 | 说明 |
+|----|----|------|
+| `read_only` | `true` | 根文件系统只读，运行期写入只允许落在白名单 |
+| `tmpfs` | `/tmp`、`/home/cameltv/.cache`、`/home/cameltv/.npm` | Playwright/Node/Python 临时文件、worker pid 文件与缓存 |
+| `cap_drop` | `ALL` | 显式声明，不依赖继承 |
+| `security_opt` | `no-new-privileges:true` | 与 `cap_drop` 配合 |
+| `user` | `10001:10001` | 与镜像 `USER cameltv` 一致，显式固定 |
+
+可写落点只有两类：**tmpfs 白名单**与**持久卷**。
+
+| 路径 | 写入者 | 处置 |
+|------|--------|------|
+| `/tmp` | Playwright/Node/Python 临时文件；`WORKER_RUNTIME_DIR=/tmp/aitde-worker`（heartbeat/gateway pid） | tmpfs |
+| `/home/cameltv/.cache`、`/home/cameltv/.npm` | `XDG_CACHE_HOME`、npm cache | tmpfs |
+| `/app/storage` | 执行产物、蓝湖证据、`HEAVY_TASK_BUDGET_DIR=/app/storage/resource-budget`、DSH 会话（`storage/dsh-sessions`） | 卷 `tp-artifacts` |
+| `/data` | 数据库与模型缓存（`EMBEDDING_CACHE_DIR=/data/models/fastembed`） | 卷 `tp-data` |
+| `/app/tests/playwright/specs/generated`、`/app/tests/playwright/generated` | 生成 spec/job；`playwright_executor` 缺文件时的 spec 回写 | 卷 `tp-generated-specs` / `tp-generated-jobs`（base 与 overlay 一致） |
+| `/ms-playwright` | 构建期预置浏览器 | **保持只读**；运行期不要再执行 `playwright install` |
+
+`backend` 与 `ai-gateway` 不执行用户代码，本批不设 `read_only`，避免扩大回归面。
+
+执行面只读探针（可在已构建镜像上直接跑，完整版见
+`work-logs/evidence/batch-256/read-only-runner-probe.sh`）：
+
+```bash
+docker run --rm --read-only \
+  --tmpfs /tmp:rw,nosuid,nodev,size=1g \
+  --tmpfs /home/cameltv/.cache:rw,nosuid,nodev,size=512m \
+  --tmpfs /home/cameltv/.npm:rw,nosuid,nodev,size=512m \
+  --user 10001:10001 --cap-drop ALL --security-opt no-new-privileges:true \
+  "$RUNNER_IMAGE" sh -c 'echo x > /app/ro-probe && echo UNEXPECTED_OK || echo app-write-blocked'
+```
+
 ## Backend 执行器运行时
 
 backend 镜像从仓库根目录构建，Dockerfile 因而可以同时复制：
@@ -182,10 +221,11 @@ docker compose run --rm --no-deps backend python -c \
 
 ### 既有 volume 的权限迁移
 
-新创建的 `tp-data` 和 `tp-artifacts` 会继承镜像目录的非 root 所有权。
-Compose 在 backend 启动前运行一次 `volume-permissions` 服务，只对
-`tp-data:/data` 与 `tp-artifacts:/app/storage` 执行
-`chown -R 10001:10001`。它不会挂载或递归修改任意宿主机目录。
+新创建的 `tp-data`、`tp-artifacts`、`tp-generated-specs`、`tp-generated-jobs`
+会继承镜像目录的非 root 所有权。Compose 在 backend 启动前运行一次
+`volume-permissions` 服务，对这四个卷的目标路径执行 `chown -R 10001:10001`
+（Batch 256 起包含两个生成物卷：只读 rootfs 下它们是执行面唯一的脚本写出口）。
+它不会挂载或递归修改任意宿主机目录。
 
 ### 本镜像仍未解决的能力
 
