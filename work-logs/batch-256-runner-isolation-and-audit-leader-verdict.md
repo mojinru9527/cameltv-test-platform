@@ -19,6 +19,8 @@
 5. **`/ms-playwright` 保持只读**：tmpfs 会遮蔽镜像内预置浏览器；运行期 `playwright install` 属预期收紧，写入文档（P3）。
 6. **不扩大回归面**：`backend`/`ai-gateway` 不加 `read_only`（不执行用户代码）。
 7. **S3 egress / S4 每任务容器不做**：需生产网络拓扑与被测站点白名单，且会改动调度/预算/取消语义；拆为 C256-1 / C256-2，写明解除条件。
+8. **可选 peer 必须显式 override**：`@puppeteer/browsers@3.2.2` 声明可选 peer `proxy-agent >=8.0.1`。npm 11 在已有 lockfile 上增量解析**不会**写入该 peer，而 CI/npm 10 的 `npm ci` 会因此 EUSAGE 直接失败（QA 在合入前用 `node:22.22-alpine` 复现）。修复为显式 `overrides.proxy-agent = ^8.0.2`；**手工把缺失闭包并回 lockfile 的做法被判为不可接受**（下一次 `npm install` 会被重写），故要求以"显式 override + 与 CI 同版本 npm 的 `npm ci` 验证"作为唯一放行方式。
+9. **风险 override 必须有真实运行证据**：`proxy-agent` 同时是 LHCI 自身的依赖，跨主版本（6→8）存在运行期风险；本轮以真实 `npm run lighthouse:a11y`（accessibility=1.0）排除，而不是只跑 `npm audit`。
 
 ## 抽检通过
 
@@ -27,6 +29,7 @@
 - ✅ `test-platform-v2/deploy/docker-compose.yml` — runner/aitde-worker 显式 `user`/`cap_drop`/`security_opt`/`read_only`/`tmpfs`；`docker compose config` 在 base 与 overlay+profile 两种拓扑下均渲染出预期值（见 QA 报告表）
 - ✅ `test-platform-v2/backend/tests/test_deploy_compose_contract.py` — 新增只读白名单断言 + overlay 单例列表回归；`test_existing_volumes_receive_the_runtime_uid_before_backend_starts` 按新设计更新（**这是有意的设计变更，已在 PRD §3/Design §2 记录**）
 - ✅ `work-logs/evidence/batch-256/read-only-runner-probe.log` — 只读容器内 `APP_WRITE=blocked: Read-only file system`、`PLAYWRIGHT_STATS=expected=1 unexpected=0`
+- ✅ lockfile ↔ CI 一致性 — `node:22.22-alpine npm ci` 退出码 0（`added 828 packages`）；`docker build --target build` 退出码 0（`npm ci` + `✓ built in 10.49s`）
 - ✅ 硬门禁 — `ruff F821` 通过、`import app.main` OK、Alembic 单头、`pytest tests/test_deploy_compose_contract.py tests/aitde/v34 -q` 79 passed、`vitest 164 files/710 tests`、`npm run build ✓ built in 10.32s`、`dev-gate GATE_RESULT=PASS_WITH_WARN`（HARD=0，WARN 为既有基线且无一落在本批文件）
 - ✅ `audit-cconditions.ps1` — hard errors 0 / warnings 0 / closed rows missing evidence 0
 - ⏳ PR required checks — 尚未运行（需先取得用户一次总确认后 push + 建 Draft PR）
@@ -64,6 +67,6 @@
 
 | 计划耗时 | 缺陷(P0/P1/P2/P3) | 返工次数 | 根因分类 | 下次避免 |
 |----------|-------------------|----------|----------|----------|
-| 6h 计划 / 约 7h 实际 | 0/0/0/3 | 2 | 工具链 + 外部依赖（宿主内存/WSL 页缓存；本机 npm ci 可选包缺失） | 重工具型批次（构建/镜像/LHCI）开工前先释放 WSL 页缓存并确认 `npm ci` 基线可用，再进入编码，避免在验证阶段才发现环境不可用 |
+| 6h 计划 / 约 8h 实际 | 0/1/0/3 | 3 | 工具链 + 外部依赖（宿主内存/WSL 页缓存；本机 npm ci 可选包缺失；npm 11 与 npm 10 的可选 peer 解析差异） | 依赖类批次在改 lockfile 后**先跑与 CI 同版本 npm 的 `npm ci`**（`node:22.22-alpine` 容器）再进入前端门禁，避免把"本机能装"当作"CI 能装" |
 
 **技能使用**: `cameltv-agent-team`（流水线）、`cameltv-bug-guard`（Dev 自检）、`cameltv-deploy`（文档同步）→ 结论均已落入工件与门禁记录（非测试证据）。
