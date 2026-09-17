@@ -544,8 +544,8 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C252-1 | `release.ps1 -Publish` 在网络中断时**误报"发布失败"**：publish 请求在客户端抛连接错误即 `throw`，但服务端可能已经完整执行成功（2026-09-17 `release-20260917-0008` 实测：客户端报错、生产实际已切到新版本且 6 容器 healthy）。建议 publish/rollback 失败路径增加**状态核对（reconcile）**：异常后按 deployment id 查 `/api/deployments/{id}` 与 `/events`，若已到 `PROD_OBSERVING/PRODUCTION_VERIFIED` 则按成功报告并提示"服务端已完成" | P2 | 2026-09-18 |
-| C252-2 | 发布后容量回收固化为 SOP：`release-20260917-0008` 上传后磁盘一度 94%（2.7G 可用），人工按"保护最近两次发布 + 48h + 容器引用"清理旧 release 镜像与构建缓存后回到 8.1G；建议把"回收上一版 tar / 历史 release 镜像"写成发布流程的一步（或给 `release_cleanup.py` 补默认安全参数） | P2 | 2026-09-18 |
+| ~~C252-1~~ | ~~`release.ps1 -Publish` 在网络中断时误报"发布失败"~~ → **Closed**：Batch 255（新增 `scripts/ops/release-reconcile.ps1` + 6 例桩测试；`release.ps1` publish/rollback 失败路径接入状态核对：请求中断后按 deployment id 查状态，已到 `PROD_OBSERVING/PRODUCTION_VERIFIED`（回滚为 `PROD_ROLLED_BACK`）则按成功报告并提示"请勿重发"），commit 527665fb | P2 | 2026-09-18 |
+| ~~C252-2~~ | ~~发布后容量回收固化为 SOP~~ → **Closed**：Batch 255（`release.ps1` 新增 `-ReclaimPrevious`：上传前回收历史发布 tar 并打印 df 前后对照；镜像保留、回滚锚点不依赖 tar），commit 527665fb | P2 | 2026-09-18 |
 
 
 ## 常驻规则（Standing Rules，持续生效，不计入 Open/Closed 统计）
@@ -1211,4 +1211,3 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C84-1 | iOS 真机采集验收（tidevice 链） | P1 | 同 CP-C2（宿主 usbmux 服务缺失，tidevice 无法枚举设备） | P1 | 同 CP-C2（solox 支持后执行） |
 | C95-1 | Test5 窗口开启后用 konfi 账号取 token 拉契约（补 C74-2）；admin-service 登录提供后一并完成 | P2 | 2026-08-05；2026-08-07 探测：VPN 未连通 + konfi 密码待提供；VPN 连通+密码落位后执行 | P2 | 2026-08-05；2026-08-05 VPN 实测：隧道通但网关路由空/health 503（服务未就绪），konfi 登录 API 已定位（/konfiapi/user/login）但密码待提供；服务就绪+密码落位后执行 |
 | C95-2 | iOS 真机（CP-C2/C84-1）今晚用户执行后登记结果并关闭或转缺陷 | P2 | 2026-08-05 |
-
