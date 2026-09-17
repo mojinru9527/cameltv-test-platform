@@ -284,6 +284,26 @@ pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -UserConfirmedExecuto
 - PM 任务里塞了 PRD 没写的功能 → 范围蔓延，删掉。
 - Dev 连续多 batch 看板「当前位置」没变 → 可能卡住/上下文丢失，先对齐再动手。
 - Design 规范写「基于 Ant Design」→ 过时，真实栈是 shadcn/ui + Radix + Tailwind，见 `cameltv-ui-conventions`。
+- QA 报告没写「本批是否新增/复发常犯问题清单中的任一条」→ 退回（见下节）。
+
+## 跨批次常犯问题核对（Batch 256 起强制）
+
+> **动因**：2026-09-18 对 main `10e69b36` 与 `96cd5b65` 做了两次全量代码审计（跨 98 个提交、15 个批次），
+> 发现 8 类问题**两版都在**——不是谁疏忽，而是流水线里没有任何人负责核对它们。
+> 基线证据：[work-logs/reviews/2026-09-18-code-audit-baseline.md](../../../work-logs/reviews/2026-09-18-code-audit-baseline.md)。
+
+**规则**：
+
+1. **Dev 开工前**：按 `cameltv-bug-guard` 的「⚠️ 未关闭的已知风险」表扫一遍本批会碰到的文件；
+   碰到即修，不允许"只做本批需求、把已知风险留给下一批"。
+2. **QA 收尾必答三问**（写进 QA 报告固定小节）：
+   - 本批是否新增了清单中的任一项？（对照 `ruff --select S110,S112,B904,RUF012` 的数量与 grep 结果）
+   - 本批是否修复/关闭了其中任一项？（要贴 commit + 验证方式）
+   - 本批新增的"外部输入 → 出网 / 落盘 / 执行代码"路径，是否都过了对应铁律？
+3. **同一问题第二次出现 ⇒ 升级为自动检查**：不许再用"下次注意"了事，必须落一个可执行校验
+   （`scripts/git/scan-common-bugs.ps1` 规则、ruff 规则、或一条回归测试），并在 PR 描述里点名。
+4. **文档承诺 = 可执行校验**：定位文档/ADR 里写下的架构承诺（如"tester 默认 ≤5 入口""平台零推理"），
+   同批必须有能跑出结果的校验脚本或测试；只有文字没有校验的承诺，QA 视为未交付。
 
 ## KB 自动检索（RAG）
 
