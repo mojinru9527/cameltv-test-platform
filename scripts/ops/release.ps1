@@ -116,6 +116,29 @@ function Invoke-BuildxExport {
 }
 
 # ── 发布流程 ────────────────────────────────────────────────────
+function Get-AlembicHead([string]$RepoRoot) {
+    # Batch 249（ADR-0015 §4）：发布 manifest 必须携带真实 alembic revision。
+    # `alembic heads` 是离线命令（只读 versions 目录），不需要数据库连接。
+    $backend = Join-Path $RepoRoot 'test-platform-v2\backend'
+    $py = Join-Path $backend '.venv\Scripts\python.exe'
+    if (-not (Test-Path $py)) { $py = 'python' }
+    Push-Location $backend
+    try {
+        $output = & $py -m alembic heads 2>&1 | Out-String
+    } finally {
+        Pop-Location
+    }
+    $heads = @($output -split "`r?`n" |
+        Where-Object { $_ -match '\(head\)' } |
+        ForEach-Object { ($_.Trim() -split '\s+')[0] } |
+        Where-Object { $_ } |
+        Select-Object -Unique)
+    if ($heads.Count -ne 1) {
+        throw "alembic heads 必须恰好一个（实际: $($heads -join ', ')）—— 请先解决多分支 head 再发布"
+    }
+    return $heads[0]
+}
+
 function Invoke-Release {
     if (-not $Tag) { throw "-Tag 必填（如 release-20260823-0003）" }
     if ($Tag -notmatch '^release-\d{8}-\d{4}$') { throw 'Use an immutable release-YYYYMMDD-NNNN tag' }
@@ -124,6 +147,8 @@ function Invoke-Release {
     }
     $gitSha = (git -C $repoRoot rev-parse HEAD).Trim()
     Write-Host "==> Git SHA: $gitSha" -ForegroundColor Cyan
+    $alembicHead = Get-AlembicHead -RepoRoot $repoRoot
+    Write-Host "==> Alembic head: $alembicHead" -ForegroundColor Cyan
 
     # 1. 构建镜像（buildx export 会构建，无需先 docker build 一次）
     Write-Host "==> 导出前端 cameltv-tp-frontend:$Tag (ICP=$IcpNumber)" -ForegroundColor Cyan
@@ -161,7 +186,7 @@ function Invoke-Release {
         git_sha = $gitSha
         frontend = @{ image = "cameltv-tp-frontend"; digest = "sha256:$feDigest"; sbom_sha256 = $zero64 }
         backend = @{ image = "cameltv-tp-backend"; digest = "sha256:$beDigest"; sbom_sha256 = $zero64; openapi_sha256 = $zero64 }
-        database = @{ alembic_heads = @("see-verified-head"); target_revision = "see-verified-head"; rollback_mode = "application-rollback-or-forward-fix" }
+        database = @{ alembic_heads = @($alembicHead); target_revision = $alembicHead; rollback_mode = "application-rollback-or-forward-fix" }
         config_schema = "platform-runtime/v1"
         secret_refs = @("secret://production/cameltv/platform@v1")
         qa_evidence = @("artifact://release-platform/qa-e2e")
