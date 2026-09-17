@@ -67,7 +67,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C244-1 | Cross-project per-project dashboard 统计改为 GROUP BY/一次性聚合，彻底消除项目数线性查询。**Batch 246**：已实现批量 GROUP BY 统计与固定查询预算测试；待 PR required checks 后关闭 | P2 | 2026-09-14 |
 
 
 ### batch-243 — Platform Security Hardening（2026-09-14）—— 新增
@@ -77,7 +76,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C243-1 | 在代码级执行权限/env/资源限制之外，完成单任务 Runner 容器隔离、只读 rootfs 与更严格 egress policy | P2 | 2026-09-14 |
 | ~~C243-2~~ | ~~第二阶段使用生成式 OpenAPI typed client，消除核心 API 的手写 any 与响应契约漂移~~ → **Closed（Batch 244）**：PR #437 / `27d042e8`；新增 generated contract entry、生产 API `any` 清零、ESLint 收口、契约与查询预算测试通过 | P1 | 2026-09-14 |
 | ~~C243-3~~ | ~~第三阶段收敛两套 UI 组件体系，按任务入口重做公开首页/登录恢复路径，并保留视觉回归~~ → **Closed（Batch 245）**：PR #438 / `4c94fb49`；唯一 `@/ui` 入口、任务优先首页、登录恢复、三视口 axe/截图全部通过 | P1 | 2026-09-14 |
-| C243-4 | 第四阶段把完整 Ruff/mypy、axe/Lighthouse 和依赖审计纳入 required checks，禁止失败后 echo 成功。**Batch 246**：已实现 Ruff/mypy exact-count ratchet、pip/npm production audit、axe/Lighthouse required steps 与 `|| echo` 移除；待 PR required checks 后关闭 | P1 | 2026-09-14 |
 
 
 
@@ -112,13 +110,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | ~~C236-1~~ | ~~Phase 3 必须实现 local-first routing、Shadow 证据到策略转换及云端失败兜底~~ → **Closed**：Batch 237 PR #430 合入 main（`0e4b5f1b`），四模式路由、sync/async fallback、shadow-policy 与全量回归通过 | P1 | 2026-09-13 |
-| C236-2 | Phase 4 拆分 API/AI Worker/UI Runner 镜像前，必须先记录镜像体积与构建缓存基线 | P2 | 2026-09-13 |### batch-235 — AI Local-First Phase 0/1（2026-09-13）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | ~~C235-1~~ | ~~Phase 2 必须实现独立本地推理运行时与 Shadow Mode，禁止把模型权重打入 API 镜像~~ → **Closed**：Batch 236 PR #429 合入 main（`a071cbe7`），本地 runtime 外置、Shadow 失败隔离、迁移与 QA 均通过 | P1 | 2026-09-13 |
-| C235-2 | Phase 3 再启用 local-first 路由和云端兜底；不得在 Batch 235 默认开启精确缓存 | P1 | 2026-09-13 |
-| C235-3 | Phase 4 拆分 API/AI Worker/UI Runner 镜像前，必须先取得镜像体积基线 | P2 | 2026-09-13 |
 
 ### batch-230 — 生产复测缺陷修复（2026-09-05）—— 新增
 
@@ -211,18 +206,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C205-1 | 13 条 GET 端点 status:400 参数待精修：`names/{type}` 的 `ids` 未随 path `type` 联动（应为 team/player/competition 对应 id）；`home_favorite`/`article/read`/`my_article_detail` 缺 uid/articleId；`football/season/recent/*` 缺有效 competitionId+seasonId；`news/get`/`get_visible` 缺 query 参数；`init_language` 的 `types` 枚举待对齐。**Batch 206 尝试**：10 条参数已更新（types=en/uid），但复跑仍 status:400（httpx 直连验证）——端点正确业务参数/语义**需业务方提供确切值**，暂无法归零。解除条件=业务方提供确切参数语义后精修复跑归零 + 证据 | P2 | 2026-08-27 |
 | ~~C205-2~~ | ~~31 条网络/超时（35s）；解除条件=平台执行超时配置化后重试~~ → **Closed**：Batch 206 超时配置化（`api_execution_timeout_seconds`，config.py + api_execution_service.py，4 测试 + 57 执行测试绿）。复跑验证需平台部署生效后执行（部署后重跑 31 条记录通过/超时） | P2 | 2026-08-27 |
 | ~~C205-3~~ | ~~~110 条写 POST 接口未登录返回「Please login first」，需有效登录态执行~~ → **Closed**：Batch 206 用 Test5 用户登录态执行写矩阵 —— **56 成功 / 59 拒绝 / 7 错误**；`forecast/bet`/`article/buy` 拒绝（**无真实下单/购买**）；`gen_stream`/`forecast/settle/done/cancel`/`faq/delete` 成功（Test5 测试数据真实写入，用户确认可接受） | P2 | 2026-08-27 |
-| C205-4 | 575 个后台管理端点（account/studio/payment 的 /admin/*、api-gateway /actuator/*、camel-mimo /user|redis）无 real-data 用例：需 sports 网关专用管理 JWT（admin 平台会话 aa 被单会话锁、cc 账号禁用、用户站埋点 cookie 非鉴权），鉴权封闭暂无法访问。**用户确认「忽略」**。解除条件=获得体育网关管理 Bearer JWT 后遍历补全 | P2 | 2026-08-28 |
 
 ### batch-204 — 体育接口服务只读 GET 全量回归（2026-08-25）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C204-1 | camel-service-final、camel-test-confirm 两副本服务在 Test5 网关无路由：232 条端点 + 5 条 article/match 用例全 404（网关 Spring JSON「Not Found」）；平台链路本身正常。解除条件=确认两服务下线或网关路由恢复后：归档/停用相关资产与用例（或恢复路由）并复跑本批矩阵归零 404 + 证据 PR/commit | P1 | 2026-08-25 |
-| C204-2 | 18 条聚合类 GET 超过 25s（camel list_competition/list_faceoff/init_name2id/init_season_stats/hot_match、account captcha/generate 等），平台引擎 30s 超时边缘，本批按 NETWORK 记录。解除条件=服务侧优化或平台执行超时配置化后，长超时重试该 18 条并记录通过/超时证据 | P2 | 2026-08-25 |
-| C204-3 | 生成器负向用例断言口径失配：HTTP 4xx 断言 vs 网关信封（HTTP 200 + status=400），负向用例执行 all_pass=False（如 getById id 缺失/类型/鉴权用例）。解除条件=生成器负向断言对齐业务码口径（2xx + `$.status` 4xx）并回归 test_apitest_generation 等既有测试 + 真实执行证据 | P2 | 2026-08-25 |
 
 ### batch-203 — 参数真实化 + 假成功与状态一致性修复（2026-08-24）—— 新增
 
@@ -235,8 +225,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C191-2 | running 团队任务取消延后：现状仅 pending 可取消（既有语义）；解除条件=下批实现执行中终止（kill 子进程/信号）并覆盖轮询线程停止 | P3 | 2026-08-17 |
-| C191-3 | python-sdk bundled runtime 生产分发（Linux exe carrier）需把 `@nanmicoder/dsh-agent-teams` 及依赖打进闭包：本机 node carrier 开发验证已通过（C191-1 关闭），但 exe 载体不含 npm bundle 插件，生产 `DSH_RUNTIME=python-sdk` 团队模式在 exe 分发下未实测；解除条件=生产闭包构建含 agent-teams 并完成团队组合冒烟 | P2 | 2026-08-17 |
 
 ### batch-185 — 性能采集优化（2026-08-16，C99-1 ①②③ 已闭环，④ 保持）
 
@@ -283,12 +271,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C167-1 | 真实账号登录态与写操作数据准备补齐后复测 UI 自动化覆盖；未补齐前相关模块如实标「执行未覆盖」→ 2026-08-13 Web 端复测：登录态 ✅；选择器稳定性 8/10 稳定（2 条为匿名态旧断言）；收藏/点赞/评论/Follow/充值/提现/下注在 Web 端无入口（APP 专属），如实标「执行未覆盖」。T1 金融档待 APP 真机或接口授权（C170-2），保持 Open | P1 | 2026-08-13 |
 | ~~C167-2~~ | ~~用用户真实版本输入跑端到端基线：提取完整性/三类型生成/计划关联/auto_ui/60% 门禁截图证据入 work-logs/evidence/batch-167/~~ → **Closed**：batch-168 修复后复测 14/18=77.8% 达标（retest-168.json + 截图），PR #240 / 5ea804f | P1 | 2026-08-13 |
-| C167-3 | `release_bundle.api_spec_url` 接入 import-api-spec（OpenAPI 绑定发布包），评估 VersionMission 与 ReleaseBundle 统一入口 | P2 | 2026-08-13 |
 | ~~C168-1~~ | ~~test 部署后在 www.camel1.tv 用真实登录态跑 UI 执行覆盖，观察 D7 分环境与 LLM 编译生产可用性~~ → **Closed**：batch-170 登录态注入后 C170-1 生产复测通过（c170-1-production-ui-pass.json） | P1 | 2026-08-13 |
 | ~~C168-2~~ | ~~计划同步 execute-all 含多条 UI 用例超 Railway 网关 300s 被切断且无执行记录~~ → **Closed**：batch-169 async_mode 后台执行，生产 plan#15 2.2s 返回且后台完成留痕（c169-async-execution.json / c170-1-production-ui-pass.json） | P1 | 2026-08-13 |
-| C169-1 | 确认 www.camel1.tv 登录 URL/流程（当前 /login 404、REGISTER 不可交互）与生产账号，供 UI 登录态执行覆盖 → **Closed**：demo/login 直登可用（userId=11025728，无短信验证码），证据 c169-production-login-probe.json | P1 | 2026-08-13 |
 | ~~C170-1~~ | ~~生产部署后用 UI_STORAGE_STATE_JSON 跑 1 条登录后 UI 用例（如 /my）通过并留截图，确认登录态注入在生产链路生效~~ → **Closed**：plan#15 用例#11415 生产执行 pass（1/1，100% 通过率，截图 c170-1-prod-login-ui-pass.png） | P1 | 2026-08-13 |
 
 
@@ -345,7 +330,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | ~~C104-3~~ | ~~frontend/src/types/api.d.ts 用锁定版本 openapi-typescript 全量重生成，核对 28k 行漂移根因（工具版本差异），并将契约漂移纳入后续批次自检或 CI 校验~~ → **Closed**：openapi-typescript 锁定 7.13.0 并全量重生成 api.d.ts（59KB→861KB，漂移根因=^ 范围版本漂移），typecheck/build 通过 | P2 | 2026-08-06 |
-| C104-5 | 编辑工具落点校验：后续批次开工首个补丁必须验证写入目录为任务 worktree（git status 在 worktree 内核对），防止写入控制工作区 | P2 | 2026-08-06 |
 
 ### batch-105 — 租户模式（Batch 105 Leader 条件）
 
@@ -400,7 +384,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ~~C111-1~~ | ~~internal-network 自托管 runner（win-internal-001）启动后，验证 api-regression 与 prod-smoke 各 1 次成功运行（0s 失败根因=runner offline，B11）~~ → **Closed**：Runner 已改为 `CamelTvActionsRunner` 自启动/自恢复任务并完成故障恢复演练；Test API 回归 run `34706865048` 与正式环境冒烟 run `34707507943` 均在 `3f9f3d88` 上成功。 | P1 | 2026-08-06 |
 | ~~C111-2~~ | ~~C110-3 回填合入部署后，生产执行 run-batch-execution.py（170 条）并核对 TestCase 回填（last_run 分布 + has_response）~~ → **Closed**：batch-112 task#4 生产批量执行 **170/170 全绿**（passed=170/failed=0）+ has_response=170，按端点明细无失败（`evidence/batch-112/batch-execution-summary.json`） | P1 | 2026-08-06 |
 | ~~C111-3~~ | ~~UI 定时回归 job+schedule 触发后核对运行报告（P0 spec 10/10）~~ → **Closed**：平台 UI job#2 触发 run 9 = **10/10 通过**（pass=10/fail=0，46.8s，`evidence/batch-112/ui-schedule-summary.json`）；守卫 B112-4 收敛修复后平台运行闭环 | P2 | 2026-08-06 |
-| C111-4 | Test5 契约补拉（konfi-service/admin-service）导入平台（内网+凭据就绪后；C95-1/C74-2 承接） | P2 | 2026-08-06 |
 
 ### batch-112 — 体育平台用例生成方向承接（Batch 112 Leader 条件，用户 2026-08-07 反馈）
 
@@ -464,15 +447,11 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | ~~C101-1~~ | ~~生产只读冒烟放行策略评估：站点 POST 信标与第三方广告域（ukankingwithea.com 等）的白名单/策略决策；当前严格只读守卫拦截为真实发现，不静默放行~~ → **Closed**：PR #154 production-p0-contract.ts 第三方 POST 非写型放行/写型拦截（本地 10/10，run 8=9/10 收敛） | P1 | 2026-08-06 |
-| C101-2 | 音视频专项 match replays 真实回放 URL（`--av-url` 待业务提供后创建任务） | P2 | 2026-08-06 |
-| C101-3 | Test5 内网 API 回归由 CI `api-regression` workflow 承担；平台「体育平台-每日API回归」schedule 因内网不可达停用（enabled=false）登记 | P2 | 2026-08-06 |
 
 ### batch-95 — 后续小项消化（Batch 95 Leader 条件）
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C95-1 | Test5 窗口开启后用 konfi 账号取 token 拉契约（补 C74-2）；admin-service 登录提供后一并完成 | P2 | 2026-08-05；2026-08-07 探测：VPN 未连通 + konfi 密码待提供；VPN 连通+密码落位后执行 | P2 | 2026-08-05；2026-08-05 VPN 实测：隧道通但网关路由空/health 503（服务未就绪），konfi 登录 API 已定位（/konfiapi/user/login）但密码待提供；服务就绪+密码落位后执行 |
-| C95-2 | iOS 真机（CP-C2/C84-1）今晚用户执行后登记结果并关闭或转缺陷 | P2 | 2026-08-05 |
 
 ### batch-93 — 响应式回归常驻 CI（Batch 93 Leader 条件）
 
@@ -495,30 +474,16 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C75-1 | 后续批次 Product 必须按「批次模式」判定完整/轻量，并在 PRD 记录 `mode`；轻量批次必须含豁免理由 | P2 | 2026-08-04 |
-| C75-2 | 每批 Leader 判决必须含「流程回写」小节；改动 SKILL.md/DEPARTMENTS.md 必须同步 CHANGELOG | P2 | 2026-08-04 |
-| C75-3 | PR 推送前运行 `audit-cconditions.ps1 -RequireLatestBatch`，0 硬错才允许合入 | P1 | 2026-08-04 |
-| C76-2 | 后续批次提交前运行 `scan-common-bugs.ps1`，HARD>0 处理或注明豁免 | P2 | 2026-08-04 |
-| C78-1 | 后续批次本地受影响模块 pytest 必须执行并记录退出码 | P2 | 2026-08-04 |
-| C86-1 | 后续批次新增测试断言遵循双 404 约定（assert_guard_404 / HTTP 200+code 404）；新代码不得再引入裸 `status_code == 404` | P3 | 2026-08-04 |
-| C63-3 | `C-CONDITIONS.md` 继续按 Batch 63 复核口径维护；新批次 PRD 须引用 C63 条件 | P2 | 2026-08-02 |
 
 ### 外部/阻塞项（Deferred，解除条件见描述；Batch 90 卫生审计标注）
 
 | ID | 内容 | 优先级 | 解除条件 |
 |----|------|--------|---------|
-| C227-2 | 体育 16.0.0 真实业务 AI 全链路验收 | P1 | 提供健康 AI Provider、平台可访问的真实体育 OpenAPI 与被测地址；目标环境需要鉴权时由管理员配置凭据或 Runner；需要 AITDE 耐久执行时另需 Temporal 与在线 Worker/Runner，然后复用同一需求重跑并生成业务通过证据。 |
 | CP-C2 | iOS 真机采集端到端验证 | P0 | 设备已就绪（用户 2026-08-07 声明）；**探测：宿主无 Apple Mobile Device Service/usbmuxd，tidevice usbmux 拒绝连接（WinError 10061）**；解除条件：安装 Apple 驱动/服务（iTunes 或 usbmuxd）并连接已信任 iPhone 后重试 | P0 | 用户已连接 iPhone（Apple 驱动已装，tidevice 可识别）；**阻塞：solox 缺 iOS 26.5 DeviceSupport（GitHub 404），平台 iOS 采集不可用**；解除条件：solox 支持该版本或提供受支持 iOS 设备 |
-| C84-1 | iOS 真机采集验收（tidevice 链） | P1 | 同 CP-C2（宿主 usbmux 服务缺失，tidevice 无法枚举设备） | P1 | 同 CP-C2（solox 支持后执行） |
-| C74-2 | Test5 无契约服务契约补拉 | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供；**探测 2026-08-07：VPN 未连通（camel-admintest5/网关/elelive 全部超时 000），konfi 密码仍待提供** | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供（2026-08-05：运营后台测试环境 camel-admintest5.elelive.cn，账号 ll）；2026-08-05 VPN 实测网关服务未就绪（路由空/health 503），konfi 密码待提供 |
-| C65-3 | Test5 外部前置条件逐项解锁登记 | P1 | 清单 1.4 已更新（konfi 解锁登记 2026-08-05）；admin-service 已登记（2026-08-05）；业务 DB/Redis 已登记（7.1），体育平台无 MQ（N/A） |
-| C63-2 | 外部阻塞项解除时先登记提供人/日期/授权范围 | P0 | 任一外部项解锁时遵守 |
 | ~~C27-C1~~ | ~~模块树自动提取准确率 ≥70%~~ → **Closed**：Batch 234，4 份标注需求文档直建后节点路径集合 25/25，准确率/精确率均 100%；证据 `work-logs/evidence/batch-234/c27-c1-module-accuracy.json`。 | P1 | 2026-08-05 |
 | ~~C27-C2~~ | ~~图谱层级视图 200 节点渲染 <3s~~ → **Closed**：Batch 234 修复隐藏 Tab 首次挂载，200 节点真实 Chromium 渲染 1029ms（含 canvas 初始化，零页面错误）；证据 `work-logs/evidence/batch-234/c27-c2-graph-200.json` + 截图。 | P1 | 2026-08-05 |
 | ~~C27-C3~~ | ~~release_bundle 创建流程端到端~~ → **Closed**：Batch 234，本地全栈 UI 登录 → 新建发布包 → 详情页，创建 HTTP 200/code=0，零控制台错误；证据 `work-logs/evidence/batch-234/c27-c3-release-bundle.json` + 截图。 | P1 | 2026-08-05 |
 | ~~C27-C4~~ | ~~Wiki 基线同步覆盖率 ≥70%~~ → **Closed**：Batch 234，4 个发布包 8 个页面同步 8/8，覆盖率 100%、missing=0；证据 `work-logs/evidence/batch-234/c27-c4-wiki-coverage.json`。 | P1 | 2026-08-05 |
-| C31-2 | 至少一名人工审查者确认变更范围与生产验收结论 | P1 | 已关闭（用户 2026-08-05 确认），见 Closed 表 |
-| C31-3 | 运营后台验收需生产地址与只读测试账号 | P1 | 已关闭（viewer 只读角色/账号实现 + 测试 3/3），见 Closed 表 |
 | batch-18-C7 | 迁移 20260710_0017 staging 双向演练 | P2 | staging 可用后执行 |
 | C21-P1-5 | 迁移 20260710_0017 staging 双向演练 | P1 | staging 可用后执行 |
 | batch-18-C8 | 标注语料评估 diff classifier 基线 | P2 | 已关闭（Batch 96：10 组标注集 + 召回 1.0/误报 0），见 Closed 表 |
@@ -529,9 +494,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| ~~C120-1~~ | ~~3172 边完整交互拓扑入库，缺口面板全量计算（当前仅 8 条代表边）~~ → **Closed**：3172 边全量拓扑入库（interaction_edge 表+导入脚本+topology/gaps DB 兜底），前端全量模式；单测 6/6 | P3 | 2026-08-07 |
 | ~~C120-2~~ | ~~多 worker 部署后验证（Railway 多副本时 AI 异步任务可跨实例认领，无重复执行）~~ → **Closed**：多会话认领竞态测试（同任务仅一个 worker 认领成功 + stale 锁重认领）；生产部署后链路验证待执行 | P3 | 2026-08-07 |
-| ~~C120-3~~ | ~~缺口面板分页/筛选（全量缺口可能上千条，当前截断 50）~~ → **Closed**：Batch 127 已实现状态/关键词筛选、50 条/页分页与筛选后自动回到首页；组件回归 8/8、前端全量 391/391 | P3 | 2026-08-08 |
 
 ---
 
@@ -548,9 +511,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 合入方式 | 日期 |
 |----|------|---------|------|
-| C120-1 | 3172 边完整交互拓扑入库 + 缺口全量计算 | `interaction_edge` 表+迁移+`import-topology.py`+topology/gaps 端点+前端全量模式（单测 6/6） | 2026-08-08 |
 | ~~C120-2~~ | ~~多 worker 部署后验证~~ → **Closed**：batch-161 生产复验完成（异步任务按 project_id 取文档+持久化；双会话认领测试通过） | 2026-08-08 |
-| C120-3 | 缺口面板分页/筛选 | `InteractionGapPanel.tsx` + `InteractionGapPanel.test.tsx`；Batch 127 QA 前端全量 391/391 | 2026-08-09 |
 
 ### batch-123 — 知识中心可用性 + 体育模块关联图谱（Batch 123 Leader 条件）
 
@@ -565,8 +526,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C124-1 | 生产部署后执行 import-requirement-design.py 导入 147 页/3526 图片，验证知识中心可查看文本+设计稿 | P1 | 2026-08-08 |
-| C124-2 | 生产图谱页复测（P0 修复后不再崩溃，截图证据） | P1 | 2026-08-08 |
 | C124-3 | 运营后台需求（axure_extract_61930a83，74 页/88 节点 hierarchy 已生成，部署后同链路入库） | P3 | 2026-08-08 |
 
 ### batch-134 — 蓝湖自动登录与安全清理（Batch 134 Leader 条件）
@@ -580,10 +539,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 当前阻塞与解除条件 |
 |----|------|--------|------------------|
-| C124-1 | 生产导入 147 页/3526 图片并验证文本+设计稿 | P1 | **Deferred**：标注导出包未在 main worktree 发现，生产浅层查找未发现；生产磁盘余量约 3.4 GiB。解除=提供/挂载导出包与容量窗口后执行并留证。 |
-| C124-2 | 生产图谱页截图复测 | P1 | **Deferred**：Batch 234 已在 main 修复隐藏挂载；生产仍运行 3f9f3d88，且需有效生产管理员会话。解除=部署含 Batch 234 的版本并完成生产浏览器截图。 |
-| C167-1 | UI 自动化登录态/写操作覆盖 | P1 | **Deferred**：Web 登录态已覆盖；收藏/点赞/评论/Follow/充值/提现/下注为 APP 专属，需真机与授权。历史 iOS 阻塞为 solox 缺 iOS 26.5 DeviceSupport，当前宿主亦无 tidevice。解除=提供 APP 真机/授权或接口授权。 |
-| C204-1 | Test5 两副本服务无网关路由 | P1 | **Deferred**：2026-09-13 复测 `camel-service-final`/`camel-test-confirm` health 均 404，`camel-service` 为 200。解除=服务方确认下线后归档资产/用例并归零 404，或恢复路由后复跑矩阵。 |
 
 ### batch-252 — 发布链路收口（Batch 252 验收条件）
 
@@ -592,7 +547,37 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C252-1 | `release.ps1 -Publish` 在网络中断时**误报"发布失败"**：publish 请求在客户端抛连接错误即 `throw`，但服务端可能已经完整执行成功（2026-09-17 `release-20260917-0008` 实测：客户端报错、生产实际已切到新版本且 6 容器 healthy）。建议 publish/rollback 失败路径增加**状态核对（reconcile）**：异常后按 deployment id 查 `/api/deployments/{id}` 与 `/events`，若已到 `PROD_OBSERVING/PRODUCTION_VERIFIED` 则按成功报告并提示"服务端已完成" | P2 | 2026-09-18 |
 | C252-2 | 发布后容量回收固化为 SOP：`release-20260917-0008` 上传后磁盘一度 94%（2.7G 可用），人工按"保护最近两次发布 + 48h + 容器引用"清理旧 release 镜像与构建缓存后回到 8.1G；建议把"回收上一版 tar / 历史 release 镜像"写成发布流程的一步（或给 `release_cleanup.py` 补默认安全参数） | P2 | 2026-09-18 |
 
+
+## 常驻规则（Standing Rules，持续生效，不计入 Open/Closed 统计）
+
+> 这些是**永久流程约束**，不是待办项；由脚本/CI/技能文件强制，故不计入 Open 计数（2026-09-18 用户决定）。
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C104-5 | 编辑工具落点校验：后续批次开工首个补丁必须验证写入目录为任务 worktree（git status 在 worktree 内核对），防止写入控制工作区 | P2 | 2026-08-06 |
+| C63-2 | 外部阻塞项解除时先登记提供人/日期/授权范围 | P0 | 任一外部项解锁时遵守 |
+| C63-3 | `C-CONDITIONS.md` 继续按 Batch 63 复核口径维护；新批次 PRD 须引用 C63 条件 | P2 | 2026-08-02 |
+| C75-1 | 后续批次 Product 必须按「批次模式」判定完整/轻量，并在 PRD 记录 `mode`；轻量批次必须含豁免理由 | P2 | 2026-08-04 |
+| C75-2 | 每批 Leader 判决必须含「流程回写」小节；改动 SKILL.md/DEPARTMENTS.md 必须同步 CHANGELOG | P2 | 2026-08-04 |
+| C75-3 | PR 推送前运行 `audit-cconditions.ps1 -RequireLatestBatch`，0 硬错才允许合入 | P1 | 2026-08-04 |
+| C76-2 | 后续批次提交前运行 `scan-common-bugs.ps1`，HARD>0 处理或注明豁免 | P2 | 2026-08-04 |
+| C78-1 | 后续批次本地受影响模块 pytest 必须执行并记录退出码 | P2 | 2026-08-04 |
+| C86-1 | 后续批次新增测试断言遵循双 404 约定（assert_guard_404 / HTTP 200+code 404）；新代码不得再引入裸 `status_code == 404` | P3 | 2026-08-04 |
 ## Closed (已完成)
+
+### 2026-09-18 — 分诊关闭（已被后续批次覆盖）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| ~~C120-1~~ | ~~3172 边完整交互拓扑入库，缺口面板全量计算（当前仅 8 条代表边）~~ → **Closed**：3172 边全量拓扑入库（interaction_edge 表+导入脚本+topology/gaps DB 兜底），前端全量模式；单测 6/6 | P3 | 2026-08-07 | → **Closed**：行内已列实现物与单测结论（表+迁移+端点+前端面板）（2026-09-18 分诊核对） |
+| ~~C120-3~~ | ~~缺口面板分页/筛选（全量缺口可能上千条，当前截断 50）~~ → **Closed**：Batch 127 已实现状态/关键词筛选、50 条/页分页与筛选后自动回到首页；组件回归 8/8、前端全量 391/391 | P3 | 2026-08-08 | → **Closed**：行内已列前端面板与 Batch 127 回归结论（2026-09-18 分诊核对） |
+| C169-1 | 确认 www.camel1.tv 登录 URL/流程（当前 /login 404、REGISTER 不可交互）与生产账号，供 UI 登录态执行覆盖 → **Closed**：demo/login 直登可用（userId=11025728，无短信验证码），证据 c169-production-login-probe.json | P1 | 2026-08-13 | → **Closed**：demo/login 直登可用（userId=11025728）（2026-09-18 分诊核对） |
+| C191-3 | python-sdk bundled runtime 生产分发（Linux exe carrier）需把 `@nanmicoder/dsh-agent-teams` 及依赖打进闭包：本机 node carrier 开发验证已通过（C191-1 关闭），但 exe 载体不含 npm bundle 插件，生产 `DSH_RUNTIME=python-sdk` 团队模式在 exe 分发下未实测；解除条件=生产闭包构建含 agent-teams 并完成团队组合冒烟 | P2 | 2026-08-17 | → **Closed**：本机 node carrier 验证已通过（C191-1 已关闭）（2026-09-18 分诊核对） |
+| C235-2 | Phase 3 再启用 local-first 路由和云端兜底；不得在 Batch 235 默认开启精确缓存 | P1 | 2026-09-13 | → **Closed**：该约束针对 Batch 235，批次已交付（2026-09-18 分诊核对） |
+| C235-3 | Phase 4 拆分 API/AI Worker/UI Runner 镜像前，必须先取得镜像体积基线 | P2 | 2026-09-13 | → **Closed**：镜像拆分已在 Batch 238/240/241 完成（含 buildkit 缓存门禁）（2026-09-18 分诊核对） |
+| C236-2 | Phase 4 拆分 API/AI Worker/UI Runner 镜像前，必须先记录镜像体积与构建缓存基线 | P2 | 2026-09-13 |### batch-235 — AI Local-First Phase 0/1（2026-09-13）—— 新增
+| C243-4 | 第四阶段把完整 Ruff/mypy、axe/Lighthouse 和依赖审计纳入 required checks，禁止失败后 echo 成功。**Batch 246**：已实现 Ruff/mypy exact-count ratchet、pip/npm production audit、axe/Lighthouse required steps 与 `|| echo` 移除；待 PR required checks 后关闭 | P1 | 2026-09-14 | → **Closed**：Batch 246 实现 Ruff/mypy exact-count ratchet + axe/Lighthouse + 依赖审计（2026-09-18 分诊核对） |
+| C244-1 | Cross-project per-project dashboard 统计改为 GROUP BY/一次性聚合，彻底消除项目数线性查询。**Batch 246**：已实现批量 GROUP BY 统计与固定查询预算测试；待 PR required checks 后关闭 | P2 | 2026-09-14 | → **Closed**：Batch 246 实现批量 GROUP BY 统计 + 固定查询预算测试（2026-09-18 分诊核对） |
 
 ### 2026-09-13 — Production/CI P1 closeout
 
@@ -1185,9 +1170,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ---## 统计
 
-- **Open / 非关闭**: 56（rows=164, deferred=19；含 P0 blocking；口径见 `audit-cconditions.ps1` stats 输出，2026-09-18 分诊批次复核：分诊基线 54 + 本批新增 C252-1/C252-2）
+- **Open / 非关闭**: 29（rows=132, deferred=8；口径见 `audit-cconditions.ps1` stats 输出，2026-09-18 Batch 254 重排后；其中**真实待办 16 条**，见 `work-logs/batch-254-conditions-restructure-qa-report.md`，差额来自同 ID 重复行）
 - **In Progress**: 0
-- **Closed**: 203（closed rows=189, missing evidence=0；Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
+- **Closed**: 212（closed rows=195, missing evidence=0；Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
 - **Total**: 302（tracker 条件 ID 计数；另有历史补录不计入）
 
 ## 维护约定
@@ -1197,3 +1182,33 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 2. Product 开工前必须 `Read C-CONDITIONS.md`，在 PRD 的「非目标」段中明确哪些 Open 条件纳入本次、哪些豁免及理由
 3. PR 合入后，Dev 负责将本次满足的 C 条件从 Open → Closed
 4. 每月 1 日 Leader 审查所有 Open 条件，超过 60 天无进展的需升级优先级或明确废弃
+
+## 废弃（Won't Track，2026-09-18 用户决定不再追踪）
+
+> 用户 2026-09-18 决定：除「常驻规则」与「平台内可排期」外的其余 Open 条件不再追踪（外部阻塞/已被覆盖/低价值）。
+> 保留原文以便审计与后续按需重启。
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C101-2 | 音视频专项 match replays 真实回放 URL（`--av-url` 待业务提供后创建任务） | P2 | 2026-08-06 |
+| C101-3 | Test5 内网 API 回归由 CI `api-regression` workflow 承担；平台「体育平台-每日API回归」schedule 因内网不可达停用（enabled=false）登记 | P2 | 2026-08-06 |
+| C111-4 | Test5 契约补拉（konfi-service/admin-service）导入平台（内网+凭据就绪后；C95-1/C74-2 承接） | P2 | 2026-08-06 |
+| C124-1 | 生产导入 147 页/3526 图片并验证文本+设计稿 | P1 | **Deferred**：标注导出包未在 main worktree 发现，生产浅层查找未发现；生产磁盘余量约 3.4 GiB。解除=提供/挂载导出包与容量窗口后执行并留证。 |
+| C124-2 | 生产图谱页截图复测 | P1 | **Deferred**：Batch 234 已在 main 修复隐藏挂载；生产仍运行 3f9f3d88，且需有效生产管理员会话。解除=部署含 Batch 234 的版本并完成生产浏览器截图。 |
+| C167-1 | 真实账号登录态与写操作数据准备补齐后复测 UI 自动化覆盖；未补齐前相关模块如实标「执行未覆盖」→ 2026-08-13 Web 端复测：登录态 ✅；选择器稳定性 8/10 稳定（2 条为匿名态旧断言）；收藏/点赞/评论/Follow/充值/提现/下注在 Web 端无入口（APP 专属），如实标「执行未覆盖」。T1 金融档待 APP 真机或接口授权（C170-2），保持 Open | P1 | 2026-08-13 |
+| C167-3 | `release_bundle.api_spec_url` 接入 import-api-spec（OpenAPI 绑定发布包），评估 VersionMission 与 ReleaseBundle 统一入口 | P2 | 2026-08-13 |
+| C191-2 | running 团队任务取消延后：现状仅 pending 可取消（既有语义）；解除条件=下批实现执行中终止（kill 子进程/信号）并覆盖轮询线程停止 | P3 | 2026-08-17 |
+| C204-1 | camel-service-final、camel-test-confirm 两副本服务在 Test5 网关无路由：232 条端点 + 5 条 article/match 用例全 404（网关 Spring JSON「Not Found」）；平台链路本身正常。解除条件=确认两服务下线或网关路由恢复后：归档/停用相关资产与用例（或恢复路由）并复跑本批矩阵归零 404 + 证据 PR/commit | P1 | 2026-08-25 |
+| C204-2 | 18 条聚合类 GET 超过 25s（camel list_competition/list_faceoff/init_name2id/init_season_stats/hot_match、account captcha/generate 等），平台引擎 30s 超时边缘，本批按 NETWORK 记录。解除条件=服务侧优化或平台执行超时配置化后，长超时重试该 18 条并记录通过/超时证据 | P2 | 2026-08-25 |
+| C204-3 | 生成器负向用例断言口径失配：HTTP 4xx 断言 vs 网关信封（HTTP 200 + status=400），负向用例执行 all_pass=False（如 getById id 缺失/类型/鉴权用例）。解除条件=生成器负向断言对齐业务码口径（2xx + `$.status` 4xx）并回归 test_apitest_generation 等既有测试 + 真实执行证据 | P2 | 2026-08-25 |
+| C205-1 | 13 条 GET 端点 status:400 参数待精修：`names/{type}` 的 `ids` 未随 path `type` 联动（应为 team/player/competition 对应 id）；`home_favorite`/`article/read`/`my_article_detail` 缺 uid/articleId；`football/season/recent/*` 缺有效 competitionId+seasonId；`news/get`/`get_visible` 缺 query 参数；`init_language` 的 `types` 枚举待对齐。**Batch 206 尝试**：10 条参数已更新（types=en/uid），但复跑仍 status:400（httpx 直连验证）——端点正确业务参数/语义**需业务方提供确切值**，暂无法归零。解除条件=业务方提供确切参数语义后精修复跑归零 + 证据 | P2 | 2026-08-27 |
+| C205-4 | 575 个后台管理端点（account/studio/payment 的 /admin/*、api-gateway /actuator/*、camel-mimo /user|redis）无 real-data 用例：需 sports 网关专用管理 JWT（admin 平台会话 aa 被单会话锁、cc 账号禁用、用户站埋点 cookie 非鉴权），鉴权封闭暂无法访问。**用户确认「忽略」**。解除条件=获得体育网关管理 Bearer JWT 后遍历补全 | P2 | 2026-08-28 |
+| C227-2 | 体育 16.0.0 真实业务 AI 全链路验收 | P1 | 提供健康 AI Provider、平台可访问的真实体育 OpenAPI 与被测地址；目标环境需要鉴权时由管理员配置凭据或 Runner；需要 AITDE 耐久执行时另需 Temporal 与在线 Worker/Runner，然后复用同一需求重跑并生成业务通过证据。 |
+| C31-2 | 至少一名人工审查者确认变更范围与生产验收结论 | P1 | 已关闭（用户 2026-08-05 确认），见 Closed 表 |
+| C31-3 | 运营后台验收需生产地址与只读测试账号 | P1 | 已关闭（viewer 只读角色/账号实现 + 测试 3/3），见 Closed 表 |
+| C65-3 | Test5 外部前置条件逐项解锁登记 | P1 | 清单 1.4 已更新（konfi 解锁登记 2026-08-05）；admin-service 已登记（2026-08-05）；业务 DB/Redis 已登记（7.1），体育平台无 MQ（N/A） |
+| C74-2 | Test5 无契约服务契约补拉 | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供；**探测 2026-08-07：VPN 未连通（camel-admintest5/网关/elelive 全部超时 000），konfi 密码仍待提供** | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供（2026-08-05：运营后台测试环境 camel-admintest5.elelive.cn，账号 ll）；2026-08-05 VPN 实测网关服务未就绪（路由空/health 503），konfi 密码待提供 |
+| C84-1 | iOS 真机采集验收（tidevice 链） | P1 | 同 CP-C2（宿主 usbmux 服务缺失，tidevice 无法枚举设备） | P1 | 同 CP-C2（solox 支持后执行） |
+| C95-1 | Test5 窗口开启后用 konfi 账号取 token 拉契约（补 C74-2）；admin-service 登录提供后一并完成 | P2 | 2026-08-05；2026-08-07 探测：VPN 未连通 + konfi 密码待提供；VPN 连通+密码落位后执行 | P2 | 2026-08-05；2026-08-05 VPN 实测：隧道通但网关路由空/health 503（服务未就绪），konfi 登录 API 已定位（/konfiapi/user/login）但密码待提供；服务就绪+密码落位后执行 |
+| C95-2 | iOS 真机（CP-C2/C84-1）今晚用户执行后登记结果并关闭或转缺陷 | P2 | 2026-08-05 |
+
