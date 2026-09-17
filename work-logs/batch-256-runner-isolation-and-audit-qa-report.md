@@ -20,6 +20,8 @@
 | 前端单测 | `npx vitest run --reporter=dot --pool=forks --maxWorkers=2` | 0 | **164 files / 710 tests passed**（112.85s） |
 | 前端构建 | `npm run build` | 0 | `✓ built in 10.32s` |
 | a11y 门禁（真实 LHCI） | `npm run lighthouse:a11y` | 0 | `Run #1...done.`；**accessibility = 1.0**；lighthouse 12.6.1 |
+| lockfile ↔ CI npm 一致性 | `docker run --rm -v <fe>:/src -w /src node:22.22-alpine npm ci` | 0 | `added 828 packages`（npm 10.9.8，与 CI/镜像同版本） |
+| 前端镜像构建 | `docker build --target build -f Dockerfile .` | 0 | `npm ci` 828 packages + `✓ built in 10.49s` |
 | 完整审计 ratchet | `node scripts/ci/npm_audit_ratchet.mjs` | 0 | `baseline=0 current=0 new=0` → `NPM_AUDIT_RATCHET=PASS` |
 | 生产依赖审计 | `npm audit --omit=dev --audit-level=high --registry=https://registry.npmjs.org` | 0 | `found 0 vulnerabilities` |
 | 开发门禁 | `pwsh scripts/git/dev-gate.ps1` | 2 | `GATE_RESULT=PASS_WITH_WARN`（HARD=0；WARN=332 为既有基线，**无一条落在本批改动文件**；G1 全 exit=0；G2 路由守卫 4 passed） |
@@ -43,8 +45,10 @@
 | 审计实测（改前） | ✅ 基线 | `high=7 moderate=1 low=2 total=10`；全部经 `@lhci/cli` 传导 |
 | 审计实测（改后） | ✅ | `{"info":0,"low":0,"moderate":0,"high":0,"critical":0,"total":0}` |
 | 无修复版 advisory 的处理 | ✅ | `extract-zip`（区间 `*`，无修复版）**从依赖树移除**：`overrides` 把 `puppeteer-core` → `^25.11.0`、`@puppeteer/browsers` → `^3.2.2`（3.x 用 `modern-tar` 取代 `extract-zip`）；`tmp`→`0.2.7`、`uuid`→`^11.1.1` |
+| 可选 peer 收口（发现并修复的阻断缺陷） | ✅ | `@puppeteer/browsers@3.2.2` 声明可选 peer `proxy-agent >=8.0.1`：npm 11 增量解析不写该 peer，而 CI/npm 10 的 `npm ci` 会 EUSAGE（`Missing: proxy-agent@8.0.2 ...`）。修复=显式 override `proxy-agent: ^8.0.2`（持久有效；手工并回 lockfile 会被下一次 `npm install` 丢弃） |
+| 该缺陷的证据 | ✅ | 修复前 `node:22.22-alpine npm ci` → `EUSAGE Missing: proxy-agent@8.0.2 / quickjs-wasi@2.2.0 ...`；修复后同一命令 → `added 828 packages` 退出码 0（见上表两行） |
 | 不靠降级 | ✅ | 未使用 npm 建议的 `@lhci/cli@0.6.1`（降级）；`@lhci/cli` 保持 `^0.15.1`、`lighthouse` 保持 12.6.1 |
-| a11y 门禁未回归 | ✅ | 真实 `npm run lighthouse:a11y` 退出码 0，accessibility=1.0，报告 lighthouseVersion=12.6.1（证明 override 的 puppeteer-core 25 与 LHCI 12.6.1 实际可协同） |
+| a11y 门禁未回归 | ✅ | 真实 `npm run lighthouse:a11y` 退出码 0，accessibility=1.0，报告 lighthouseVersion=12.6.1（证明 override 的 puppeteer-core 25 / proxy-agent 8 与 LHCI 12.6.1 实际可协同；LHCI 自身依赖 proxy-agent，该 override 属高风险点，已用真实运行排除） |
 | ratchet 收紧 | ✅ | baseline advisories 由 16 条降为 **0 条**；新增任何 advisory 会立即失败 |
 | 审计调用点带 registry | ✅ | `.github/workflows/{main-quality-gate,main-merge-smoke,pr-check}.yml`、`scripts/ci/npm_audit_ratchet.mjs`、`scripts/git/dev-gate.ps1`、`frontend/README.md` 均已显式 `--registry=https://registry.npmjs.org` |
 | 生产依赖仍为 0 | ✅ | `npm audit --omit=dev` → 0 |
@@ -89,12 +93,13 @@ PLAYWRIGHT_STATS=expected=1 unexpected=0 flaky=0 skipped=0
 | 1 | P3 | `/ms-playwright` 只读后，运行期 `playwright install` 新浏览器版本会失败（现有任务是构建期预置浏览器，不受影响） | `deploy/README.md` 白名单表；探针内浏览器来自镜像 | 已文档化（接受） |
 | 2 | P3 | base 拓扑原先不共享生成 spec/job 目录（backend 写入、runner 不可见），本批统一为与 overlay 相同的命名卷 | `docker-compose.yml` volumes 对比改前渲染 | 已修复（本批） |
 | 3 | P3 | 本机 `npm ci` 因 esbuild 平台包缺失失败（详见 §6），`npm install` 可替代 | 基线 main 同样失败 | 环境问题（非回归） |
+| 4 | P1（已修复） | lockfile 与 CI 的 npm 10 不同步：`@puppeteer/browsers@3.2.2` 的可选 peer `proxy-agent>=8.0.1` 未被 npm 11 增量写入 lockfile，CI `npm ci` 会直接失败 | `node:22.22-alpine npm ci` 修复前 EUSAGE / 修复后 exit 0 | ✅ 已修复（显式 override `proxy-agent: ^8.0.2`），并写入 `docs/common-pitfalls.md` 7.12 |
 
-**P0/P1/P2：0 项。**
+**P0：0 ｜ P1：1（#4，已修复并以 npm 10 `npm ci` + 前端镜像构建复验）｜ P2：0 ｜ P3：3（记录/文档化）。**
 
 ## 发布建议
 
-状态: **READY**（可进入一次总确认 → Draft PR → required checks）
+状态: **READY**（P1 缺陷已修复并复验；可进入一次总确认 → Draft PR → required checks）
 必修复: 0 建议修复: 0（P3 已记录/文档化）
 
 ## CI 分层核对

@@ -773,6 +773,31 @@ tmpfs/卷白名单；新增运行期写入路径时必须同时改白名单与�
 
 **修复日期**：2026-09-18（Batch 256 建立白名单与真实运行探针）。
 
+### 7.12 npm 11 生成的 lockfile 在 CI（npm 10）`npm ci` 报 `Missing: ...`
+
+**现象**：本机 `npm install` 正常、`npm ci` 也能跑（或只报别的错），但 CI / `node:22.22-alpine` 镜像里的
+`npm ci` 直接 EUSAGE：`Missing: proxy-agent@8.0.2 from lock file`（及同一依赖闭包的一串包）。
+
+**根因**：`@puppeteer/browsers@3.x` 声明了**可选 peer** `proxy-agent >=8.0.1`。
+npm 11 在**已有 lockfile** 上做增量解析时不会补这条 peer（`npm install` / `npm update` 都报 up to date），
+而 npm 10 构建理想树时会要求 lockfile 含该 peer 解析，于是判定 lockfile 与 package.json 不同步。
+另外 npm 10.9.x 在 `--package-lock-only` / 全新 `install` 时会崩 `Cannot read properties of null (reading 'edgesOut')`，
+所以不能指望用 npm 10 反向生成 lockfile。
+
+**解决方案**：把该 peer 变成**显式 override**（npm 会持续执行、不会被增量安装丢弃），例如：
+
+```json
+"overrides": { "proxy-agent": "^8.0.2" }
+```
+
+改完用与 CI 相同的镜像校验：`docker run --rm -v "$PWD:/src" -w /src node:22.22-alpine npm ci`。
+只做「把缺少的闭包手工并回 lockfile」不可靠——下一次 `npm install` 就会被重写掉。
+
+**相关文件**：`test-platform-v2/frontend/package.json`、`test-platform-v2/frontend/package-lock.json`、
+`test-platform-v2/frontend/Dockerfile`（node:22.22-alpine）。
+
+**修复日期**：2026-09-18（Batch 256 实测发现并文档化）。
+
 ---
 
 ## 排查速查表
@@ -808,6 +833,7 @@ tmpfs/卷白名单；新增运行期写入路径时必须同时改白名单与�
 | `npm audit` 报 0 但 CI 报一堆 advisory | 默认镜像源无 advisories 接口 | 7.9 |
 | compose `items at 0 and 1 are equal` | overlay 重复声明单例列表项 | 7.10 |
 | 只读 rootfs 后 UI 任务脚本“不存在” | 生成物/临时目录未进白名单 | 7.11 |
+| CI `npm ci` 报 `Missing: xxx from lock file`（本机正常） | npm 11 增量不补可选 peer，CI 是 npm 10 | 7.12 |
 
 ---
 
