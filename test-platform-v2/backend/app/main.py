@@ -110,6 +110,22 @@ async def lifespan(application: FastAPI):
                 + "via environment or .env file.\n"
             )
 
+    # ── 密钥与存量密文一致性（Batch 259 / B2-5，关闭审计 S5）──
+    # 未配置 SECRET_KEY 却已有密文时拒绝启动：dev 的一次性密钥会让存量密文永久解不开，
+    # 且不会有任何报错——这种静默数据损坏比启动失败更贵。
+    try:
+        from app.core.cipher import assert_key_for_existing_ciphertext
+        from app.core.db import SessionLocal
+
+        with SessionLocal() as probe_session:
+            assert_key_for_existing_ciphertext(probe_session)
+    except RuntimeError:
+        # 这是明确的配置错误，必须让启动失败（不要吞掉）
+        logger.error("[security] SECRET_KEY 与存量密文不一致，拒绝启动")
+        raise
+    except Exception as exc:  # noqa: BLE001 - 探测失败（如表尚未迁移）不应阻断启动
+        logger.warning("[security] 密钥一致性探测跳过: %s", exc)
+
     # ── 蓝湖证据存储落点（Batch 140/141）：确保目录存在并打印，便于确认持久卷挂载 ──
     try:
         from app.api.v1.lanhu_evidence_jobs import _storage_base
