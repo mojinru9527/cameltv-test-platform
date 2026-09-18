@@ -14,8 +14,43 @@ from urllib.parse import urlparse
 import httpx
 
 from app.core.config import settings
+from app.core.url_guard import (
+    UrlNotAllowedError,
+    assert_public_url,
+    assert_public_url_after_redirect,
+)
 
 ALLOWED_SCHEMES = {"http", "https"}
+
+
+def _guard(url: str) -> str:
+    """出网前统一守卫（Batch 258 / B1-1）：策略本体在 app/core/url_guard.py。"""
+    try:
+        return assert_public_url(url)
+    except UrlNotAllowedError as exc:
+        raise RequirementSourceError(f"该需求地址不允许访问：{exc}", kind="guard") from exc
+
+
+def _guard_redirect(base_url: str, location: str) -> str:
+    """重定向目标必须二次校验（跳过守卫是最典型的 SSRF 绕过）。"""
+    try:
+        return assert_public_url_after_redirect(base_url, location)
+    except UrlNotAllowedError as exc:
+        raise RequirementSourceError(f"该需求地址不允许访问：{exc}", kind="guard") from exc
+
+
+def _read_bounded(response, max_bytes: int) -> bytes:
+    """流式读取并在超限时立即失败，避免把任意大响应读进内存。"""
+    chunks: list[bytes] = []
+    total = 0
+    for chunk in response.iter_bytes():
+        total += len(chunk)
+        if total > max_bytes:
+            raise RequirementSourceError(
+                f"需求地址响应体超过允许大小（上限 {max_bytes} 字节）", kind="guard"
+            )
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 class RequirementSourceError(ValueError):
@@ -81,17 +116,41 @@ def _request(url: str, *, headers: dict[str, str] | None = None) -> httpx.Respon
     parsed = urlparse(url)
     if parsed.scheme not in ALLOWED_SCHEMES:
         raise RequirementSourceError(f"不支持的协议: {parsed.scheme}", kind="input")
+    current = _guard(url)
+    max_redirects = settings.outbound_max_redirects
+    max_bytes = settings.outbound_max_response_bytes
     try:
-        return httpx.get(
-            url,
-            headers=headers,
+        # follow_redirects=False + 逐跳校验：每一跳的目标都重新过守卫，最后才落盘
+        with httpx.Client(
             timeout=settings.requirement_url_timeout_seconds,
-            follow_redirects=True,
-        )
+            follow_redirects=False,
+            trust_env=False,
+        ) as client:
+            for hop in range(max_redirects + 1):
+                with client.stream("GET", current, headers=headers) as response:
+                    if response.is_redirect:
+                        location = response.headers.get("location")
+                        if not location:
+                            raise RequirementSourceError(
+                                "需求地址重定向缺少 Location", kind="guard"
+                            )
+                        if hop >= max_redirects:
+                            raise RequirementSourceError(
+                                "需求地址重定向次数超过上限", kind="guard"
+                            )
+                        current = _guard_redirect(current, location)
+                        continue
+                    body = _read_bounded(response, max_bytes)
+                    return httpx.Response(
+                        status_code=response.status_code,
+                        headers=dict(response.headers),
+                        content=body,
+                    )
     except httpx.TimeoutException as exc:  # must precede httpx.HTTPError (subclass)
         raise RequirementSourceError("需求地址请求超时，请检查网络或稍后重试", kind="timeout") from exc
     except httpx.HTTPError as exc:
         raise RequirementSourceError(f"需求地址请求失败: {exc}", kind="network") from exc
+    raise RequirementSourceError("需求地址重定向次数超过上限", kind="guard")
 
 
 def _parse_pingcode(payload: Any) -> str:
@@ -195,4 +254,3 @@ def _parse_html_text(raw: str) -> str:
     parser = _TextHTMLParser()
     parser.feed(raw or "")
     return parser.text()
-
