@@ -22,6 +22,7 @@ from typing import Any
 import httpx
 
 from app.core.config import settings
+from app.core import spec_guard
 from app.models.test_case import TestCase
 from app.services.ai_config_service import ai_config_service
 
@@ -171,8 +172,16 @@ def compile_to_playwright(
         "model_used": settings.ai_model,
         "prompt_tokens": usage.get("prompt_tokens") if usage else None,
         "completion_tokens": usage.get("completion_tokens") if usage else None,
+        "blocked_apis": [],
         "error": None,
     }
+
+    # 2.5 危险 API 静态拦截（Batch 259 / B2-2）：把问题暴露在**编译阶段**，
+    # 而不是等执行时才失败。执行前 playground / playwright_executor 会再拦一次。
+    blocked_apis = spec_guard.assert_spec_safe(spec_code)
+    if blocked_apis:
+        result["blocked_apis"] = blocked_apis
+        result["error"] = "生成的用例代码包含禁止使用的 API（执行前会被拒绝）"
 
     # 3. 语法校验（dry-run）：只检查编译与 test 结构，不作为安全边界
     if validate:
