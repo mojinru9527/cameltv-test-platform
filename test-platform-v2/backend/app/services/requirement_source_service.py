@@ -96,19 +96,39 @@ class _TextHTMLParser(HTMLParser):
         return raw.strip()
 
 
+CREDENTIAL_KINDS = frozenset({"pingcode", "confluence"})
+"""会携带企业凭据的 provider 种类；只有白名单域名才允许被归入其中（Batch 258 / B1-2）。"""
+
+
+def _configured_domains(raw: str) -> tuple[str, ...]:
+    return tuple(part.strip().lower().lstrip(".") for part in (raw or "").split(",") if part.strip())
+
+
+def _is_trusted_host(host: str, domains: tuple[str, ...]) -> bool:
+    """根域及其子域匹配。刻意不做子串判定——`pingcode.attacker.tld` 必须不命中。"""
+    normalized = (host or "").lower().rstrip(".")
+    if not normalized:
+        return False
+    return any(normalized == domain or normalized.endswith("." + domain) for domain in domains)
+
+
 def classify_url(url: str) -> str:
-    """识别 URL 类型：lanhu / pingcode / confluence / generic。"""
+    """识别 URL 类型：lanhu / pingcode / confluence / generic（配置化白名单驱动）。
+
+    未命中白名单一律回落 `generic`，因此**结构上**不会携带任何凭据 Header。
+    """
     if not url or not url.strip():
         raise RequirementSourceError("需求地址为空", kind="input")
     host = (urlparse(url.strip()).hostname or "").lower()
     if not host:
         raise RequirementSourceError("需求地址不是合法的 URL", kind="input")
-    if "lanhu" in host:
-        return "lanhu"
-    if "pingcode" in host:
-        return "pingcode"
-    if "atlassian" in host or "confluence" in host:
-        return "confluence"
+    for provider_kind, configured in (
+        ("lanhu", settings.requirement_lanhu_domains),
+        ("pingcode", settings.requirement_pingcode_domains),
+        ("confluence", settings.requirement_confluence_domains),
+    ):
+        if _is_trusted_host(host, _configured_domains(configured)):
+            return provider_kind
     return "generic"
 
 
@@ -179,6 +199,9 @@ def fetch_url_content(url: str, *, kind: str | None = None) -> dict[str, str]:
             "蓝湖链接必须先通过「蓝湖证据包」质量门禁，再导入需求。请使用蓝湖入口提交。",
             kind="lanhu_gate",
         )
+    # 防御纵深：即使调用方显式指定 provider kind，也复核域名确实在白名单内才允许带凭据。
+    if kind in CREDENTIAL_KINDS and classify_url(url) != kind:
+        raise RequirementSourceError("目标域名不在信任白名单内，已拒绝发送凭据", kind="guard")
 
     if kind == "pingcode":
         token = settings.pingcode_api_token.strip()
