@@ -3,7 +3,10 @@
 设计要点:
 - 使用 DeepSeek (OpenAI 兼容 API) 生成 Playwright TypeScript 代码
 - 与 ai_service.py 的区别: 输出纯文本代码（非 JSON），不使用 json_object 格式
-- 生成后 sandbox 校验: npx playwright test --dry-run（语法检查，不实际执行）
+- 生成后做**语法检查**: npx playwright test --dry-run
+  ⚠️ 这不是安全边界：dry-run 仍会执行 spec 顶层语句，只检查 TypeScript 编译与 test 结构。
+  生成代码的安全边界由 `app/core/spec_guard.py`（静态拦截）+ `app/core/execution_sandbox.py`
+  （环境/资源隔离）共同承担，见 docs/adr 与 cameltv-bug-guard。
 - 编译失败的返回错误行号 + AI 修复建议
 """
 from __future__ import annotations
@@ -171,7 +174,7 @@ def compile_to_playwright(
         "error": None,
     }
 
-    # 3. Sandbox 校验
+    # 3. 语法校验（dry-run）：只检查编译与 test 结构，不作为安全边界
     if validate:
         validation = _validate_spec(spec_code, spec_file)
         result["validation"] = validation
@@ -291,6 +294,8 @@ def _validate_spec(spec_code: str, spec_file: str) -> dict:
     """使用 npx playwright test --dry-run 校验生成的代码语法。
 
     不实际执行测试，只检查 TypeScript 编译 + Playwright test 结构是否合法。
+    **这不是安全边界**（Batch 259 / B2-3）：dry-run 仍会执行 spec 顶层语句，
+    因此它拦不住危险代码；危险 API 由 `app/core/spec_guard.py` 在执行前静态拦截。
     """
     result = {"syntax_ok": True, "dry_run_ok": True, "errors": []}
 
