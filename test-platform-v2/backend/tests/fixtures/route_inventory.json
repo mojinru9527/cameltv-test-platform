@@ -1,5 +1,5 @@
 {
-  "count": 680,
+  "count": 682,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -528,6 +528,14 @@
     {
       "path": "/api/v1/execution/runs/{run_id}/report",
       "method": "POST"
+    },
+    {
+      "path": "/api/v1/impact/rebuild",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/impact/what-to-run",
+      "method": "GET"
     },
     {
       "path": "/api/v1/integrations",
