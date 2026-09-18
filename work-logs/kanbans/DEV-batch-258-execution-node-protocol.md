@@ -28,8 +28,8 @@
 | 3 | OCR 去 `shell=True`（B1-3） | ✅ | ✅ | ✅ | ⏳ | ⏳ | `rg shell=True app/` 为空 |
 | 4 | `ExecutionJob` 协议 + 迁移 + 权限点（B1-4） | ✅ | ✅ | ✅ | ⏳ | ⏳ | 迁移 from-base 演练通过 |
 | 5 | `cameltv-node` CLI（B1-5） | ✅ | ✅ | ✅ | ⏳ | ⏳ | 28 例回归绿；含最小证据端点 |
-| 6 | 平台侧节点状态（B1-6） | ✅ | 🔄 ⬅️ | ⏳ | ⏳ | ⏳ | **当前位置**（前端） |
-| 7 | B1 端到端证据 8 条（B1-7） | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 依赖 Slice 5/6 + Test5 可达 |
+| 6 | 平台侧节点状态（B1-6） | ✅ | ✅ | ✅ | ✅ | ⏳ | 前端四门禁全绿 |
+| 7 | B1 端到端证据 8 条（B1-7） | ✅ | ✅ | ✅ | ✅ | ⏳ | 本地替身 19/19；Test5 → C258-1 |
 
 > 状态图例：⏳ 待开始 | 🔄 进行中 | ✅ 已完成 | ❌ 已取消 | 🔒 阻塞中
 
@@ -38,13 +38,11 @@
 ## 📍 当前位置
 
 ```
-Batch 258 — Slice 6：平台侧节点状态
-├── 已完成: Slice 1/2/3（B1-1/S1、B1-2/S2、B1-3/S3）、Slice 4（B1-4 协议）、
-│          Slice 5（B1-5 CLI + 载荷下发 + 最小证据端点）
-│          commit 2dbbf2ff / 063bb3a2 / 2adb3dab / 52ba41e6 / a7a90e66 / 21e35a64
-├── 🔄 进行中: 首页/版本任务页节点状态（在线/离线、队列长度、一键启动指引，四态）
-├── ⏳ 待审批: 本批次一次总确认（推送 + Draft PR + required checks 通过后合入）
-└── ⏳ 下一步: Slice 7（B1-7 端到端证据）→ QA 硬门禁 → Leader 判决 → 总确认 → PR
+Batch 258 — 全部 Slice 完成，等一次总确认
+├── 已完成: Slice 1..7（B1-1…B1-7）；QA 报告 + Leader 判决已出（有条件通过）
+├── 未决（不阻塞合入）: C258-1 Test5 真机验收（需 VPN 机器）、C258-2 节点侧凭据隔离（B2-1）
+├── ⏳ 待用户: 一次总确认（推送 feature/batch-258-execution-node-protocol + Draft PR + CI 绿后合入 main）
+└── ⏳ 下一步: 收到总确认 → push → gh pr create --draft → audit-ai-pr → required checks → squash 合入 → 清理 worktree
 ```
 
 ---
