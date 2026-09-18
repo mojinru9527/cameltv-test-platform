@@ -19,7 +19,7 @@ from app.core.config import settings
 from app.core.url_guard import (
     UrlNotAllowedError,
     assert_public_url,
-    resolve_addresses,  # noqa: F401  re-exported: existing callers/tests patch this name
+    resolve_addresses,  # re-exported: existing callers/tests patch this name
 )
 
 # 保留历史名称：调用点与既有回归测试（tests/test_outbound_policy.py）零改动。

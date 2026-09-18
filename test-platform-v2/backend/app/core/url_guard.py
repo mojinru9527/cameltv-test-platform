@@ -84,7 +84,12 @@ def assert_public_url(
     """
     parsed = parse_http_url(url)
     if not allow_private:
-        resolved = (resolver or resolve_addresses)(parsed.hostname, effective_port(parsed))
+        # parse_http_url 已保证 hostname 非空；这里再取一次局部变量，既给 mypy 收窄类型，
+        # 也让"守卫在解析前就必须有主机名"这个前提显式可见。
+        host = parsed.hostname
+        if not host:
+            raise UrlNotAllowedError("URL 缺少主机名")
+        resolved = (resolver or resolve_addresses)(host, effective_port(parsed))
         if any(not address.is_global for address in resolved):
             raise UrlNotAllowedError(_PRIVATE_HINT)
     return parsed.geturl()
