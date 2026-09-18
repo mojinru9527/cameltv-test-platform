@@ -36,12 +36,13 @@
 
 ### 端到端演练（B1-7）
 
-`python scripts/node/drill_b1_e2e.py` → **19/19 PASS**，退出码 0，完整转录见
+`python scripts/node/drill_b1_e2e.py` → **25/25 PASS**，退出码 0，完整转录见
 [batch-258-execution-node-protocol-b1-drill-transcript.txt](batch-258-execution-node-protocol-b1-drill-transcript.txt)。
 
 链路里每一环都是真的：真 Alembic 迁移建库 → 真 uvicorn → 真登录/seed → 真节点令牌 →
 真 `cameltv-node up --once` 子进程 → 真 httpx（5 接口）+ 真 Chromium（3 Web，截图落盘）→
-真证据上传对账 → 真下载逐文件 sha256 校验 → 真失联回收与再认领。
+真证据上传对账 → 真下载逐文件 sha256 校验 → 真失联回收与再认领 →
+**真失败用例**（故意断言的失败 API/Web 各 1 条，验证失败未被伪造成通过且留存回放/截图证据）。
 
 ## 逐条件验证
 
@@ -104,7 +105,7 @@
 |--------|------|------|
 | 5 接口 + 3 Web 真实跑通 | ✅ | 5/5 与 3/3，真 httpx + 真 Chromium |
 | 证据可下载 | ✅ | 11 + 7 个文件，逐个 sha256 与 manifest 一致 |
-| 失败用例有请求回放/截图 | ✅ | 逐用例 `.request.json`/`.response.json`；3 张截图 |
+| 失败用例有请求回放/截图 | ✅ | 失败阶段实测：`neg-api` 留下 `request.json`（含 method/url/headers/body）+ `response.json`（HTTP 500），`neg-web` 留下 `neg-web.png` + `console.json`；任务结论为 `failed`（`failed=1`）而**未被伪造成通过**，节点仍正常退出 0（失败是任务结论，不是节点崩溃） |
 | 目标为体育 Test5 | ❌ | `camel-api-gateway05.svc.elelive.cn` → 192.168.50.170:80 **TCP 不通**（需 VPN）→ 登记 C258-1，**不伪造** |
 
 ## 缺陷列表

@@ -362,6 +362,89 @@ def main() -> int:
                 shots = [e["name"] for e in manifest["files"] if e["name"].endswith(".png")]
                 drill.check("Web 用例截图落盘", len(shots) == 3, f"screenshots={shots}")
 
+        # ── 失败用例证据：DoD 明确要求「失败用例有截图/请求回放」。
+        #    只跑通过用例证明不了这一条，必须真的跑失败用例并检查留存的证据。 ──
+        negative = {
+            "api": {
+                "cases": [
+                    {
+                        "id": "neg-api",
+                        "name": "故意失败：500 断言 200",
+                        "request": {"method": "GET", "url": "/api/boom"},
+                        "assertions": [{"type": "status", "expected": 200}],
+                    }
+                ],
+                "expect_files": ["neg-api.request.json", "neg-api.response.json"],
+            },
+            "web": {
+                "cases": [
+                    {
+                        "id": "neg-web",
+                        "name": "故意失败：断言不存在的文案",
+                        "steps": [
+                            {"action": "goto", "url": "/page"},
+                            {
+                                "action": "expect_text",
+                                "selector": "#title",
+                                "expected": "这段文案不存在",
+                            },
+                        ],
+                    }
+                ],
+                "expect_files": ["neg-web.png", "neg-web.console.json"],
+            },
+        }
+        for kind, spec in negative.items():
+            neg_job = api.post(
+                "/api/v1/execution-jobs",
+                json={
+                    "kind": kind,
+                    "case_refs": [case["id"] for case in spec["cases"]],
+                    "env_ref": "local-stand-in",
+                    "payload": {"base_url": target, "cases": spec["cases"]},
+                },
+                headers=admin_headers,
+            ).json()["data"]
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    str(NODE_CLI),
+                    "up",
+                    "--once",
+                    "--work-dir",
+                    str(tmp / "node-evidence"),
+                    "--poll-seconds",
+                    "1",
+                ],
+                env=node_env,
+                capture_output=True,
+                text=True,
+                timeout=1200,
+            )
+            after = api.get(
+                f"/api/v1/execution-jobs/{neg_job['id']}", headers=admin_headers
+            ).json()["data"]
+            drill.check(
+                f"{kind} 失败用例未被伪造成通过（任务 status={after['status']}）",
+                after["status"] == "failed" and after["result"]["failed"] == 1,
+                f"passed={after['result']['passed']} failed={after['result']['failed']}",
+            )
+            neg_bundles = api.get(
+                f"/api/v1/execution-jobs/{neg_job['id']}/evidence", headers=admin_headers
+            ).json()["data"]["bundles"]
+            names = {entry["name"] for entry in neg_bundles[0]["files"]} if neg_bundles else set()
+            missing = [name for name in spec["expect_files"] if name not in names]
+            drill.check(
+                f"{kind} 失败用例留存请求回放/截图证据",
+                not missing,
+                f"files={sorted(names)}" if not missing else f"缺失: {missing}",
+            )
+            drill.check(
+                f"{kind} 节点对失败任务仍正常退出（退出码 {proc.returncode}）",
+                proc.returncode == 0,
+                "失败是任务结论，不是节点崩溃",
+            )
+
         orphan = api.post(
             "/api/v1/execution-jobs",
             json={"kind": "api", "case_refs": ["orphan"], "payload": {"cases": api_cases[:1]}},

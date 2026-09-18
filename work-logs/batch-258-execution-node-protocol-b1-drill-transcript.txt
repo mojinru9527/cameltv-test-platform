@@ -28,9 +28,29 @@ Traceback (most recent call last):
     buffer.append(fh.read())
                   ^^^^^^^^^
 UnicodeDecodeError: 'gbk' codec can't decode byte 0x94 in position 18: illegal multibyte sequence
-替身被测系统: http://127.0.0.1:48245
+Exception in thread Thread-17 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\26029\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\26029\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\26029\AppData\Local\Programs\Python\Python312\Lib\subprocess.py", line 1599, in _readerthread
+    buffer.append(fh.read())
+                  ^^^^^^^^^
+UnicodeDecodeError: 'gbk' codec can't decode byte 0x94 in position 18: illegal multibyte sequence
+Exception in thread Thread-20 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\26029\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\26029\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\26029\AppData\Local\Programs\Python\Python312\Lib\subprocess.py", line 1599, in _readerthread
+    buffer.append(fh.read())
+                  ^^^^^^^^^
+UnicodeDecodeError: 'gbk' codec can't decode byte 0x94 in position 18: illegal multibyte sequence
+替身被测系统: http://127.0.0.1:49694
 [PASS] Alembic 真实迁移建库（upgrade head 退出码 0）
-平台: http://127.0.0.1:48599
+平台: http://127.0.0.1:59881
 [PASS] 平台登录（真实 seed + 真实 JWT） -- HTTP 200
 [PASS] 取到项目上下文 -- project_id=1
 [PASS] 注册执行节点并签发节点令牌 -- node=drill-node
@@ -46,14 +66,20 @@ UnicodeDecodeError: 'gbk' codec can't decode byte 0x94 in position 18: illegal m
 [PASS] web 证据清单含逐文件 sha256 -- attempt=1 files=7
 [PASS] web 证据可下载且 sha256 与 manifest 一致 -- 全部一致
 [PASS] Web 用例截图落盘 -- screenshots=['web-1.png', 'web-2.png', 'web-3.png']
-[PASS] 节点认领任务（HTTP + 节点令牌） -- job=3
+[PASS] api 失败用例未被伪造成通过（任务 status=failed） -- passed=0 failed=1
+[PASS] api 失败用例留存请求回放/截图证据 -- files=['neg-api.request.json', 'neg-api.response.json', 'results.json']
+[PASS] api 节点对失败任务仍正常退出（退出码 0） -- 失败是任务结论，不是节点崩溃
+[PASS] web 失败用例未被伪造成通过（任务 status=failed） -- passed=0 failed=1
+[PASS] web 失败用例留存请求回放/截图证据 -- files=['neg-web.console.json', 'neg-web.png', 'results.json']
+[PASS] web 节点对失败任务仍正常退出（退出码 0） -- 失败是任务结论，不是节点崩溃
+[PASS] 节点认领任务（HTTP + 节点令牌） -- job=5
 [PASS] 失去心跳后任务回到 pending（断线不丢任务） -- reclaimed=1 status=pending
 [PASS] 节点恢复后可再认领同一任务（attempt 递增） -- attempt=2
 
 ================ B1-7 演练结果 ================
-目标系统：本地替身 http://127.0.0.1:48245（Test5 内网需 VPN，本机不可达——不是 Test5 验收）
+目标系统：本地替身 http://127.0.0.1:49694（Test5 内网需 VPN，本机不可达——不是 Test5 验收）
 租约：3s（演练压缩；生产默认 300s，同一代码路径）
-通过 19/19
+通过 25/25
   PASS  Alembic 真实迁移建库（upgrade head 退出码 0）
   PASS  平台登录（真实 seed + 真实 JWT）
   PASS  取到项目上下文
@@ -70,7 +96,13 @@ UnicodeDecodeError: 'gbk' codec can't decode byte 0x94 in position 18: illegal m
   PASS  web 证据清单含逐文件 sha256
   PASS  web 证据可下载且 sha256 与 manifest 一致
   PASS  Web 用例截图落盘
+  PASS  api 失败用例未被伪造成通过（任务 status=failed）
+  PASS  api 失败用例留存请求回放/截图证据
+  PASS  api 节点对失败任务仍正常退出（退出码 0）
+  PASS  web 失败用例未被伪造成通过（任务 status=failed）
+  PASS  web 失败用例留存请求回放/截图证据
+  PASS  web 节点对失败任务仍正常退出（退出码 0）
   PASS  节点认领任务（HTTP + 节点令牌）
   PASS  失去心跳后任务回到 pending（断线不丢任务）
   PASS  节点恢复后可再认领同一任务（attempt 递增）
-证据目录：C:\Users\26029\AppData\Local\Temp\cameltv-b1-drill-c1tuynu1\evidence
+证据目录：C:\Users\26029\AppData\Local\Temp\cameltv-b1-drill-cnx2qpb0\evidence
