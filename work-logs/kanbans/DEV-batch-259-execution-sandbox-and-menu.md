@@ -26,8 +26,8 @@
 | 2 | 密钥派生统一 + fail-fast S5（B2-5） | ✅ | ✅ | ✅ | ⏳ | ⏳ | 9 例 + 2 条可执行校验 |
 | 3 | dry-run≠沙箱 + 计划路径 validate（B2-3） | ✅ | ✅ | ✅ | ⏳ | ⏳ | 4 条可执行校验 |
 | 4 | 危险 API 静态拦截（B2-2） | ✅ | ✅ | ✅ | ⏳ | ⏳ | 20 例（含"起进程前拒绝"） |
-| 5 | 执行沙箱硬化 H1（B2-1） | ✅ | 🔄 ⬅️ | ⏳ | ⏳ | ⏳ | **当前位置**（执行链路变更） |
-| 6 | 一级菜单收敛 4 入口（B2-6） | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | 前端 |
+| 5 | 执行沙箱硬化 H1（B2-1） | ✅ | ✅ | ✅ | ⏳ | ⏳ | 9 例 + 相关 77 例全绿；关闭 C258-2 |
+| 6 | 一级菜单收敛 4 入口（B2-6） | ✅ | 🔄 ⬅️ | ⏳ | ⏳ | ⏳ | **当前位置**（前端 IA 变更） |
 
 > 状态图例：⏳ 待开始 | 🔄 进行中 | ✅ 已完成 | ❌ 已取消 | 🔒 阻塞中
 
@@ -36,12 +36,20 @@
 ## 📍 当前位置
 
 ```
-Batch 259 — Slice 5：执行沙箱硬化（H1）
-├── 已完成: Slice 1（S4）、Slice 2（S5）、Slice 3（dry-run 纠正）、Slice 4（危险 API 拦截）
-│          commit 5312b497 / 6c4b7942 / 9da274f8 / 58bfc5b8 / 1c216955
-├── 🔄 进行中: 文件写入与出网收敛（关闭 C258-2 的节点侧凭据隔离）
+Batch 259 — Slice 6：一级菜单收敛（B2-6）
+├── 已完成: Slice 1（S4）、Slice 2（S5）、Slice 3（dry-run）、Slice 4（危险 API 拦截）、Slice 5（H1 沙箱）
+│          commit 5312b497 / 6c4b7942 / 9da274f8 / 58bfc5b8 / 1c216955 / ceb086b1
+├── 🔄 进行中: nav-config IA 收敛
+│   ├── 现状（实测）：MAIN_ROW_DEFS 已 4 行（工作台 / 任务与报告 / 缺陷 / 知识）
+│   │                  + 「资产与更多」折叠容器 = tester 顶层共 **5 个控件**
+│   ├── 目标（09 §2.1）：① 我的待办 ② 版本验收 ③ 结果与缺陷 ④ 知识库 + **专家区**（二级 + 权限门禁）
+│   ├── 影响面（rg 实测 6 个文件）：nav-config.ts / MainNavRows.tsx / AssetsMoreGroup.tsx
+│   │                  / MainLayout.tsx / page-explanations.ts / nav-config.test.ts
+│   │                  + AssetsMoreGroup.test.tsx / __tests__/NavSubItemLinks.test.tsx
+│   └── 待办: 容器更名「专家区」+ 分桶归位（资产移入专家区）+ `PRIMARY_ENTRY_LIMIT=4` 可执行断言
+│             + 「被隐藏页面仍可经权限+搜索访问」的可执行校验
 ├── ⏳ 待审批: 本批次一次总确认（推送 + Draft PR + required checks 通过后合入）
-└── ⏳ 下一步: Slice 6（菜单收敛 4 入口）→ QA 三问 + Leader → 一次总确认 → PR
+└── ⏳ 下一步: 完成 Slice 6 → QA 三问 + 硬门禁 → Leader → 一次总确认 → PR
 ```
 
 ---
