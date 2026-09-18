@@ -74,6 +74,14 @@
 
 权限点独立（不复用 `uitest:trigger`），节点令牌按项目隔离（H5）。
 
+**与方案 §3.2 的一处刻意偏离（需 Leader 复核）**：方案的数据模型表把 `JobLease` 列为独立对象，
+但同一行的说明是「沿用 `AiJob` 的 claim/heartbeat/stale 语义」——而 `AiJob` 的租约**就是**
+`locked_at`/`heartbeat_at`/`agent_id` 三个内联字段，并无独立租约表。
+本批选择**内联**：`execution_jobs.node_id / claimed_at / lease_expires_at / heartbeat_at`。
+理由：同一份租约两处记账正是 Batch 240–255 清理过的「双栈漂移」成因；独立租约表要到 B4
+需要"租约历史"证据链时才有增量价值，届时可另加 `job_lease_events` 追加式表，而不必拆分现有真源。
+若 Leader 判定必须独立成表，属可回退的设计变更（迁移已支持 downgrade）。
+
 ## 2. 状态设计核对（四态，B1-6 节点状态）
 
 | 状态 | 触发 | 呈现 |

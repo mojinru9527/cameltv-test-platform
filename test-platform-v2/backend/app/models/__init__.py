@@ -6,6 +6,7 @@ from app.models.ai_provider import AiProvider
 from app.models.ai_task import AiTask
 from app.models.ai_job import AiAgent, AiJob, AiResult
 from app.models.ai_agent_token import AiAgentToken
+from app.models.execution_job import ExecutionJob
 from app.models.plan_execution_job import PlanExecutionJob
 from app.models.interaction_edge import InteractionEdge
 from app.models.api_asset import ApiEndpoint, ApiExecutionTask, ApiExecutionTaskItem, ApiImportBatch, ApiService
@@ -99,6 +100,7 @@ __all__ = [
     "AiJob",
     "AiResult",
     "PlanExecutionJob",
+    "ExecutionJob",
     "InteractionEdge",
     "ApiEndpoint",
     "ApiExecutionTask",

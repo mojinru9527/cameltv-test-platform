@@ -263,6 +263,8 @@ class Settings(BaseSettings):
     requirement_lanhu_domains: str = "lanhuapp.com"
     requirement_pingcode_domains: str = "pingcode.com"
     requirement_confluence_domains: str = "atlassian.net"
+    # ── Batch 258 / B1-4：本地执行节点任务租约 ──
+    execution_job_lease_seconds: int = 300   # 认领/心跳授予的租约时长；过期即回收为 pending
 
     # ── File paths (configurable for portability) ──
     workspace_root: str = ""      # empty = auto-detect from app/services/__file__
