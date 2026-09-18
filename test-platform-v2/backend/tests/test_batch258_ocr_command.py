@@ -10,6 +10,8 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
 import app
 from app.services.lanhu_evidence import local_ocr_provider as ocr
 
@@ -112,3 +114,35 @@ class TestNoShellTrueAnywhereInApp:
             if "shell=True" in path.read_text(encoding="utf-8", errors="replace")
         ]
         assert offenders == [], f"app/ 下仍存在 shell=True: {offenders}"
+
+
+class TestRealRecognitionWithAwkwardPath:
+    """B1-3 DoD 原文：「含空格/分号的图片路径可正常识别」。
+
+    命令构造由上面的单测覆盖；这里跑**真识别**，证明解耦后的 argv 在真实
+    OCR 进程里也成立。依赖缺失时 skip（bug-guard：运行时守卫 + [SKIP]，
+    不要模块级硬断言 —— import 期失败会打断整个套件采集）。
+    """
+
+    def test_real_ocr_with_space_and_semicolon_path(self, tmp_path, monkeypatch):
+        pytest.importorskip("rapidocr_onnxruntime")
+        Image = pytest.importorskip("PIL.Image")
+        ImageDraw = pytest.importorskip("PIL.ImageDraw")
+
+        awkward_dir = tmp_path / "a b; c"
+        awkward_dir.mkdir(parents=True, exist_ok=True)
+        image_path = awkward_dir / "shot 1;2.png"
+        image = Image.new("RGB", (520, 120), "white")
+        ImageDraw.Draw(image).text((20, 40), "CAMELTV NODE 258", fill="black")
+        image.save(image_path)
+        assert " " in str(image_path) and ";" in str(image_path)
+
+        monkeypatch.setattr(ocr.settings, "lanhu_ocr_command", DEFAULT_TEMPLATE)
+        result = ocr.LocalCommandOcrProvider().recognize(image_path)
+
+        if result.status == "unavailable":
+            pytest.skip("OCR 命令未配置，跳过真实识别")
+        assert result.status == "success", (result.error_message or "")[:300]
+        assert result.blocks, "真实识别未返回任何文本块"
+        joined = " ".join(block.text for block in result.blocks).upper()
+        assert "CAMELTV" in joined, f"识别文本不符合预期: {joined[:200]}"

@@ -70,6 +70,7 @@
 |--------|------|------|
 | `rg "shell=True" app/` 为空 | ✅ | 并被一条测试固化为可执行校验 |
 | 含空格/分号路径不变形 | ✅ | 哨兵 + `shlex.split`，路径始终单一 argv |
+| **真实识别**（非仅命令构造） | ✅ | 真生成 PNG → 真 rapidocr 子进程，路径 `...\a b; c\shot 1;2.png`（同时含空格与分号）→ `status=success`，识别出 `CAMELTV NODE 258`；依赖缺失时 `importorskip` 跳过，不做模块级硬断言 |
 
 ### B1-4: ExecutionJob 协议 ✅ PASS
 **变更**: `app/models/execution_job.py`、迁移 ×2、`app/services/execution_job_service.py`、`app/api/v1/execution_jobs.py`、`app/seed.py`
