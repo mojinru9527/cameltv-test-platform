@@ -1,45 +1,60 @@
 import type { MenuItem } from '@/types'
 
 /**
- * batch-212（B2 入口收敛）导航模型 —— 角色友好「5 入口 + 资产与更多分桶」。
- * 事实源：docs/platform-refactor/01(§3.1 测试工程师界面 ≤5 一级入口) +
- * 02(功能 ABCD 白名单) + docs/superpowers/plans/2026-09-02-platform-refactor-rollout.md(B2)。
+ * batch-259（B2-6 菜单收敛）导航模型 —— 角色友好「4 入口 + 专家区」。
+ * 事实源：docs/platform-refactor/09-platform-landing-plan.md §2.1 +
+ * 01(§3.1 测试工程师界面入口收敛) + 02(功能 ABCD 白名单)。
  *
- * 侧边栏顶层固定 5 行（菜单数据仍由后端按角色权限过滤，前端只负责「按 code 组装展示」）：
- *   1 工作台      menu:workbench
- *   2 任务与报告  版本任务 / 智能测试 / 报告 / 发布包，保留各自历史路径与权限
- *   3 缺陷管理    menu:defect
- *   4 知识中心    menu:knowledge
- *   5 资产与更多  其余全部模块，按 资产/更多/专家/系统 分桶（空桶/空容器不渲染）
- * 未命中任何分桶的 code（含未来新增菜单）一律落入「更多」桶（fail-safe）。
+ * 侧边栏顶层 = **4 个一级入口**（tester 默认可见）+ **1 个专家区**（二级 + 权限门禁）：
+ *   ① 我的待办    menu:workbench
+ *   ② 版本验收    版本任务 / 智能测试(方案) / 发布包 / 需求源
+ *   ③ 结果与缺陷  缺陷管理 / 报告中心
+ *   ④ 知识库      menu:knowledge
+ *   专家区        资产（用例/接口/UI/数据/环境）、引擎与配置、个人、系统；
+ *                 按 资产/引擎与配置/个人/系统 分桶，空桶与空容器都不渲染。
+ *
+ * 未命中任何分桶的 code（含未来新增菜单）一律落入「更多」桶（fail-safe，不污染一级入口）。
+ * 一级入口数量由 `PRIMARY_ENTRY_LIMIT` 固化，并有测试断言守着，防止"用着用着又长回去"。
  */
 
-/** 「资产与更多」折叠容器展开状态 localStorage key（"1"=展开，其余/缺省=收起）。 */
-export const ASSETS_MORE_STORAGE_KEY = 'sidebar:assets-more-open'
+/**
+ * 一级入口数量上限（tester 默认可见）。改动此值必须同步更新 nav-config.test.ts 的断言。
+ * 专家区不计入该额度：它是二级容器 + 权限门禁，不是第 5 个平级入口。
+ */
+export const PRIMARY_ENTRY_LIMIT = 4
+
+/**
+ * 专家区折叠容器展开状态 localStorage key（"1"=展开，其余/缺省=收起）。
+ * 键名沿用 batch-212 的历史值，避免用户已保存的展开状态在本次收敛后失效。
+ */
+export const EXPERT_AREA_STORAGE_KEY = 'sidebar:assets-more-open'
 
 export type MainRowLinkDef = { kind: 'link'; code: string }
 export type MainRowGroupDef = { kind: 'group'; label: string; codes: readonly string[] }
 export type MainRowDef = MainRowLinkDef | MainRowGroupDef
 
-/** 顶层 5 行蓝图（顺序即展示顺序）。 */
+/** 顶层 4 个一级入口蓝图（顺序即展示顺序）。 */
 export const MAIN_ROW_DEFS: readonly MainRowDef[] = [
-  { kind: 'link', code: 'menu:workbench' },
-  { kind: 'group', label: '任务与报告', codes: ['menu:versiontask', 'menu:missions', 'menu:report', 'menu:versionmission'] },
-  { kind: 'link', code: 'menu:defect' },
-  { kind: 'link', code: 'menu:knowledge' },
+  { kind: 'link', code: 'menu:workbench' }, // ① 我的待办
+  {
+    kind: 'group',
+    label: '版本验收', // ②
+    codes: ['menu:versiontask', 'menu:missions', 'menu:versionmission', 'menu:requirement'],
+  },
+  { kind: 'group', label: '结果与缺陷', codes: ['menu:defect', 'menu:report'] }, // ③
+  { kind: 'link', code: 'menu:knowledge' }, // ④ 知识库
 ]
 
-export interface AssetBucketDef {
+export interface ExpertBucketDef {
   label: string
   codes: readonly string[]
 }
 
-/** 资产与更多 分桶（顺序即展示顺序；fail-safe 未命中 code 落入「更多」）。 */
-export const ASSET_BUCKET_DEFS: readonly AssetBucketDef[] = [
+/** 专家区分桶（顺序即展示顺序；fail-safe 未命中 code 落入「更多」）。 */
+export const EXPERT_BUCKET_DEFS: readonly ExpertBucketDef[] = [
   {
     label: '资产',
     codes: [
-      'menu:requirement', // 需求文档：需求源资产（02 §2 A）
       'menu:testcase',    // 用例服务：资产库保留（用户定稿）
       'menu:apitest',     // 接口测试：资产库 + 执行能力（保留）
       'menu:uitest',      // UI 自动化：资产库 + 执行能力（保留）
@@ -47,33 +62,35 @@ export const ASSET_BUCKET_DEFS: readonly AssetBucketDef[] = [
       'menu:environment', // 目标环境：资产（向导自动带出）
     ],
   },
-  { label: '更多', codes: ['menu:schedule', 'menu:myproject', 'menu:metrics', 'menu:onboarding'] },
   {
-    label: '专家',
+    label: '引擎与配置',
     codes: [
       'menu:dsh_tasks',      // DSH 任务：执行引擎（02 §2 B）
       'menu:ai_config',      // AI 配置：专家/管理员
       'menu:lanhu_evidence', // 蓝湖证据包：专家/管理员
       'menu:runtime',        // Durable Runtime：引擎专家
+      'menu:integration',    // 集成
+      'menu:notify',         // 通知
     ],
   },
-  { label: '系统', codes: ['menu:system', 'menu:integration', 'menu:notify'] },
+  { label: '个人', codes: ['menu:schedule', 'menu:myproject', 'menu:metrics', 'menu:onboarding'] },
+  { label: '系统', codes: ['menu:system'] },
 ]
 
 export type MainNavRow =
   | { kind: 'link'; item: MenuItem }
   | { kind: 'group'; label: string; items: MenuItem[] }
 
-export interface AssetSection {
+export interface ExpertSection {
   label: string
   items: MenuItem[]
 }
 
 export interface NavigationModel {
-  /** 顶层 5 行（缺权限的行自动省略）。 */
+  /** 顶层一级入口（≤ PRIMARY_ENTRY_LIMIT；缺权限的行自动省略）。 */
   mainRows: MainNavRow[]
-  /** 资产与更多 分桶（仅非空）。 */
-  assetSections: AssetSection[]
+  /** 专家区分桶（仅非空）。 */
+  expertSections: ExpertSection[]
 }
 
 const bySort = (a: MenuItem, b: MenuItem) => a.sort - b.sort
@@ -112,7 +129,7 @@ export function buildNavigation(menus: MenuItem[]): NavigationModel {
   const leftover: MenuItem[] = []
   for (const menu of menus) {
     if (seen.has(menu.code)) continue
-    const bucket = ASSET_BUCKET_DEFS.find((b) => b.codes.includes(menu.code))
+    const bucket = EXPERT_BUCKET_DEFS.find((b) => b.codes.includes(menu.code))
     if (bucket) {
       const list = bucketItems.get(bucket.label) ?? []
       list.push(menu)
@@ -122,20 +139,20 @@ export function buildNavigation(menus: MenuItem[]): NavigationModel {
     }
   }
 
-  const assetSections: AssetSection[] = []
-  for (const bucket of ASSET_BUCKET_DEFS) {
+  const expertSections: ExpertSection[] = []
+  for (const bucket of EXPERT_BUCKET_DEFS) {
     const list = (bucketItems.get(bucket.label) ?? []).sort(bySort)
     if (bucket.label === '更多') {
       // 未命中分桶的新 code 并入「更多」桶（fail-safe，保持展示顺序）
       list.push(...leftover.sort(bySort))
     }
-    if (list.length > 0) assetSections.push({ label: bucket.label, items: list })
+    if (list.length > 0) expertSections.push({ label: bucket.label, items: list })
   }
-  if (leftover.length > 0 && !assetSections.some((s) => s.label === '更多')) {
-    assetSections.push({ label: '更多', items: leftover.sort(bySort) })
+  if (leftover.length > 0 && !expertSections.some((s) => s.label === '更多')) {
+    expertSections.push({ label: '更多', items: leftover.sort(bySort) })
   }
 
-  return { mainRows, assetSections }
+  return { mainRows, expertSections }
 }
 
 /** 路径是否命中分桶任一项（命中时「资产与更多」自动展开）。查询串不参与比较。 */
@@ -146,12 +163,12 @@ export function isPathInItems(pathname: string, items: MenuItem[]): boolean {
   })
 }
 
-/** 读取「资产与更多」持久化展开状态（默认收起）。 */
+/** 读取专家区持久化展开状态（默认收起）。 */
 export function readAssetsMoreOpen(storage: Pick<Storage, 'getItem'>): boolean {
-  return storage.getItem(ASSETS_MORE_STORAGE_KEY) === '1'
+  return storage.getItem(EXPERT_AREA_STORAGE_KEY) === '1'
 }
 
-/** 持久化「资产与更多」展开状态。 */
+/** 持久化专家区展开状态。 */
 export function writeAssetsMoreOpen(storage: Pick<Storage, 'setItem'>, open: boolean): void {
-  storage.setItem(ASSETS_MORE_STORAGE_KEY, open ? '1' : '0')
+  storage.setItem(EXPERT_AREA_STORAGE_KEY, open ? '1' : '0')
 }
