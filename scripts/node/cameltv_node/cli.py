@@ -214,18 +214,20 @@ class HeartbeatThread(threading.Thread):
         self._cfg = cfg
         self._job_id = job_id
         self._interval = max(5.0, float(interval))
-        self._stop = threading.Event()
+        # 注意：不能命名成 `_stop` —— threading.Thread 内部有同名方法，
+        # 覆盖它会让解释器在收尾时调用我们的 Event 对象 → TypeError: not callable。
+        self._stop_event = threading.Event()
         self.lost = False
 
     def run(self) -> None:
-        while not self._stop.wait(self._interval):
+        while not self._stop_event.wait(self._interval):
             ok = _heartbeat_once(self._cfg, self._job_id)
             if not ok:
                 self.lost = True
                 print(f"[warn] 心跳失败（job {self._job_id}），任务可能被判超时回收", file=sys.stderr)
 
     def stop(self) -> None:
-        self._stop.set()
+        self._stop_event.set()
         self.join(timeout=5)
 
 

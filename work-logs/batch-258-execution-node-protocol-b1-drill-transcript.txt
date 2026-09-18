@@ -1,0 +1,76 @@
+Exception in thread Thread-3 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\26029\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\26029\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\26029\AppData\Local\Programs\Python\Python312\Lib\subprocess.py", line 1599, in _readerthread
+    buffer.append(fh.read())
+                  ^^^^^^^^^
+UnicodeDecodeError: 'gbk' codec can't decode byte 0x94 in position 837: illegal multibyte sequence
+Exception in thread Thread-4 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\26029\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\26029\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\26029\AppData\Local\Programs\Python\Python312\Lib\subprocess.py", line 1599, in _readerthread
+    buffer.append(fh.read())
+                  ^^^^^^^^^
+UnicodeDecodeError: 'gbk' codec can't decode byte 0x94 in position 18: illegal multibyte sequence
+Exception in thread Thread-11 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\26029\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\26029\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\26029\AppData\Local\Programs\Python\Python312\Lib\subprocess.py", line 1599, in _readerthread
+    buffer.append(fh.read())
+                  ^^^^^^^^^
+UnicodeDecodeError: 'gbk' codec can't decode byte 0x94 in position 18: illegal multibyte sequence
+替身被测系统: http://127.0.0.1:48245
+[PASS] Alembic 真实迁移建库（upgrade head 退出码 0）
+平台: http://127.0.0.1:48599
+[PASS] 平台登录（真实 seed + 真实 JWT） -- HTTP 200
+[PASS] 取到项目上下文 -- project_id=1
+[PASS] 注册执行节点并签发节点令牌 -- node=drill-node
+[PASS] 登记执行任务：5 接口 + 3 Web -- job ids = {'api': 1, 'web': 2}
+[PASS] cameltv-node up --once 跑 api 任务（退出码 0）
+[PASS] cameltv-node up --once 跑 web 任务（退出码 0）
+[PASS] api 任务 1: 5/5 通过并上报 -- status=completed passed=5
+[PASS] api 证据包可查 -- bundles=1
+[PASS] api 证据清单含逐文件 sha256 -- attempt=1 files=11
+[PASS] api 证据可下载且 sha256 与 manifest 一致 -- 全部一致
+[PASS] web 任务 2: 3/3 通过并上报 -- status=completed passed=3
+[PASS] web 证据包可查 -- bundles=1
+[PASS] web 证据清单含逐文件 sha256 -- attempt=1 files=7
+[PASS] web 证据可下载且 sha256 与 manifest 一致 -- 全部一致
+[PASS] Web 用例截图落盘 -- screenshots=['web-1.png', 'web-2.png', 'web-3.png']
+[PASS] 节点认领任务（HTTP + 节点令牌） -- job=3
+[PASS] 失去心跳后任务回到 pending（断线不丢任务） -- reclaimed=1 status=pending
+[PASS] 节点恢复后可再认领同一任务（attempt 递增） -- attempt=2
+
+================ B1-7 演练结果 ================
+目标系统：本地替身 http://127.0.0.1:48245（Test5 内网需 VPN，本机不可达——不是 Test5 验收）
+租约：3s（演练压缩；生产默认 300s，同一代码路径）
+通过 19/19
+  PASS  Alembic 真实迁移建库（upgrade head 退出码 0）
+  PASS  平台登录（真实 seed + 真实 JWT）
+  PASS  取到项目上下文
+  PASS  注册执行节点并签发节点令牌
+  PASS  登记执行任务：5 接口 + 3 Web
+  PASS  cameltv-node up --once 跑 api 任务（退出码 0）
+  PASS  cameltv-node up --once 跑 web 任务（退出码 0）
+  PASS  api 任务 1: 5/5 通过并上报
+  PASS  api 证据包可查
+  PASS  api 证据清单含逐文件 sha256
+  PASS  api 证据可下载且 sha256 与 manifest 一致
+  PASS  web 任务 2: 3/3 通过并上报
+  PASS  web 证据包可查
+  PASS  web 证据清单含逐文件 sha256
+  PASS  web 证据可下载且 sha256 与 manifest 一致
+  PASS  Web 用例截图落盘
+  PASS  节点认领任务（HTTP + 节点令牌）
+  PASS  失去心跳后任务回到 pending（断线不丢任务）
+  PASS  节点恢复后可再认领同一任务（attempt 递增）
+证据目录：C:\Users\26029\AppData\Local\Temp\cameltv-b1-drill-c1tuynu1\evidence

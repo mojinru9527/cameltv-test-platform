@@ -103,7 +103,10 @@ def evaluate_assertions(
 def _default_api_client_factory(timeout: float):
     import httpx
 
-    return httpx.Client(timeout=timeout, follow_redirects=True)
+    # trust_env=False：被测系统是内网服务，绝不能被操作系统的全局代理接管
+    # （否则请求会绕到公司/本机代理，既可能失败也把内网目标暴露给代理）。
+    # 访问平台的调用另走 cameltv_node.cli.call()，那里保留 proxy 支持。
+    return httpx.Client(timeout=timeout, follow_redirects=True, trust_env=False)
 
 
 def run_api_cases(
