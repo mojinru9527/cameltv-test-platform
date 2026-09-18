@@ -1,5 +1,5 @@
 {
-  "count": 682,
+  "count": 684,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -1743,6 +1743,14 @@
     },
     {
       "path": "/api/v1/version-tasks/knowledge/reuse",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/version-tasks/knowledge/reuse-decisions",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/version-tasks/knowledge/reuse-stats",
       "method": "GET"
     },
     {

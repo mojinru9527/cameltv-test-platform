@@ -8,6 +8,7 @@ from app.models.ai_job import AiAgent, AiJob, AiResult
 from app.models.ai_agent_token import AiAgentToken
 from app.models.execution_job import ExecutionJob
 from app.models.impact_edge import ImpactEdge
+from app.models.reuse_suggestion import ReuseSuggestionEvent
 from app.models.plan_execution_job import PlanExecutionJob
 from app.models.interaction_edge import InteractionEdge
 from app.models.api_asset import ApiEndpoint, ApiExecutionTask, ApiExecutionTaskItem, ApiImportBatch, ApiService
@@ -103,6 +104,7 @@ __all__ = [
     "PlanExecutionJob",
     "ExecutionJob",
     "ImpactEdge",
+    "ReuseSuggestionEvent",
     "InteractionEdge",
     "ApiEndpoint",
     "ApiExecutionTask",
