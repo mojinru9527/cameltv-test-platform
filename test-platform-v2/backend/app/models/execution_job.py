@@ -27,6 +27,7 @@ class ExecutionJob(Base, TimestampMixin):
     kind: Mapped[str] = mapped_column(String(16), default="api", index=True)  # api | web
     status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
     case_refs_json: Mapped[str] = mapped_column(Text, default="[]")
+    payload_json: Mapped[str] = mapped_column(Text, default="{}")
     env_ref: Mapped[str] = mapped_column(String(255), default="")
     attempt: Mapped[int] = mapped_column(Integer, default=0)
     timeout_seconds: Mapped[int] = mapped_column(Integer, default=1800)

@@ -8,14 +8,15 @@
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.schemas.common import R
-from app.services import ai_agent_service, execution_job_service
+from app.services import ai_agent_service, execution_evidence_store, execution_job_service
 
 router = APIRouter(prefix="/execution-jobs", tags=["Execution Jobs"])
 
@@ -25,6 +26,7 @@ class JobCreateRequest(BaseModel):
     case_refs: list[str] = Field(default_factory=list)
     env_ref: str = Field(default="", max_length=255)
     timeout_seconds: int = Field(default=1800, ge=1, le=86400)
+    payload: dict = Field(default_factory=dict)
 
 
 class NodeRequest(BaseModel):
@@ -74,6 +76,7 @@ def create_job(
         case_refs=body.case_refs,
         env_ref=body.env_ref,
         timeout_seconds=body.timeout_seconds,
+        payload=body.payload,
     )
     return R.ok(execution_job_service.job_dict(job))
 
@@ -181,3 +184,83 @@ def report(
     if job is None:
         raise HTTPException(404, "任务不存在或不属于当前节点")
     return R.ok(execution_job_service.job_dict(job))
+
+
+@router.get("/{job_id}/payload", response_model=R[dict], summary="节点拉取可执行载荷")
+def get_payload(
+    job_id: int,
+    node_id: str = Query(min_length=1, max_length=64),
+    x_ai_agent_token: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    scope = _node_scope(node_id, x_ai_agent_token, db)
+    job = execution_job_service.get_job(db, project_id=scope, job_id=job_id)
+    if job is None:
+        raise HTTPException(404, "执行任务不存在")
+    return R.ok(
+        {
+            "job_id": job.id,
+            "kind": job.kind,
+            "attempt": job.attempt,
+            "env_ref": job.env_ref,
+            "timeout_seconds": job.timeout_seconds,
+            "payload": execution_job_service.job_payload(job),
+        }
+    )
+
+
+@router.post("/{job_id}/evidence", response_model=R[dict], summary="节点上传执行证据（含 sha256 manifest）")
+def upload_evidence(
+    job_id: int,
+    node_id: str = Query(min_length=1, max_length=64),
+    files: list[UploadFile] = File(...),
+    x_ai_agent_token: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    """最小证据落盘口径；完整性门禁与篡改显红由 B4-1 加固。"""
+    scope = _node_scope(node_id, x_ai_agent_token, db)
+    job = execution_job_service.get_job(db, project_id=scope, job_id=job_id)
+    if job is None:
+        raise HTTPException(404, "执行任务不存在")
+    payload: list[tuple[str, bytes]] = []
+    for upload in files:
+        payload.append((upload.filename or "", upload.file.read()))
+    try:
+        manifest = execution_evidence_store.save_bundle(
+            job_id=job.id, attempt=job.attempt, files=payload
+        )
+    except execution_evidence_store.EvidenceStoreError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return R.ok(manifest)
+
+
+@router.get("/{job_id}/evidence", response_model=R[dict], summary="执行证据清单（每次尝试一份 manifest）")
+def list_evidence(
+    job_id: int,
+    current: CurrentUser = Depends(require_permission("execution:view")),
+    db: Session = Depends(get_db),
+):
+    job = execution_job_service.get_job(db, project_id=_project_id(current), job_id=job_id)
+    if job is None:
+        raise HTTPException(404, "执行任务不存在")
+    bundles = execution_evidence_store.list_bundles(job.id)
+    return R.ok({"job_id": job.id, "attempt": job.attempt, "bundles": bundles})
+
+
+@router.get("/{job_id}/evidence/{name}", summary="下载执行证据文件")
+def download_evidence(
+    job_id: int,
+    name: str,
+    attempt: int = Query(default=0, ge=0),
+    current: CurrentUser = Depends(require_permission("execution:view")),
+    db: Session = Depends(get_db),
+):
+    job = execution_job_service.get_job(db, project_id=_project_id(current), job_id=job_id)
+    if job is None:
+        raise HTTPException(404, "执行任务不存在")
+    resolved_attempt = attempt or job.attempt
+    try:
+        path = execution_evidence_store.resolve_file(job.id, resolved_attempt, name)
+    except execution_evidence_store.EvidenceStoreError as exc:
+        raise HTTPException(403, str(exc)) from exc
+    return FileResponse(str(path), filename=path.name)

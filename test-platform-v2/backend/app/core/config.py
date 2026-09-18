@@ -265,6 +265,7 @@ class Settings(BaseSettings):
     requirement_confluence_domains: str = "atlassian.net"
     # ── Batch 258 / B1-4：本地执行节点任务租约 ──
     execution_job_lease_seconds: int = 300   # 认领/心跳授予的租约时长；过期即回收为 pending
+    execution_evidence_storage_dir: str = ""  # 执行证据落盘根目录；空 = backend/storage/execution-evidence
 
     # ── File paths (configurable for portability) ──
     workspace_root: str = ""      # empty = auto-detect from app/services/__file__

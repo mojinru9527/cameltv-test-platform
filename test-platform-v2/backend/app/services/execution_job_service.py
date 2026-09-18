@@ -38,6 +38,7 @@ def job_dict(job: ExecutionJob) -> dict:
         "kind": job.kind,
         "status": job.status,
         "case_refs": _loads(job.case_refs_json, []),
+        "has_payload": bool(_loads(job.payload_json, {})),
         "env_ref": job.env_ref or "",
         "attempt": job.attempt,
         "node_id": job.node_id or "",
@@ -73,6 +74,7 @@ def create_job(
     case_refs: list[str],
     env_ref: str = "",
     timeout_seconds: int = 1800,
+    payload: dict | None = None,
 ) -> ExecutionJob:
     if kind not in JOB_KINDS:
         raise APIException(
@@ -84,6 +86,7 @@ def create_job(
         kind=kind,
         status="pending",
         case_refs_json=json.dumps(list(case_refs or []), ensure_ascii=False),
+        payload_json=json.dumps(payload or {}, ensure_ascii=False),
         env_ref=(env_ref or "")[:255],
         attempt=0,
         timeout_seconds=max(1, int(timeout_seconds)),
@@ -96,6 +99,12 @@ def create_job(
     db.commit()
     db.refresh(job)
     return job
+
+
+def job_payload(job: ExecutionJob) -> dict:
+    """节点拉取的可执行载荷（用例列表等）。控制面只透传，不理解其内容。"""
+    payload = _loads(job.payload_json, {})
+    return payload if isinstance(payload, dict) else {}
 
 
 def list_jobs(
