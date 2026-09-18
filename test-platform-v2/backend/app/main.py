@@ -123,7 +123,10 @@ async def lifespan(application: FastAPI):
         # 这是明确的配置错误，必须让启动失败（不要吞掉）
         logger.error("[security] SECRET_KEY 与存量密文不一致，拒绝启动")
         raise
-    except Exception as exc:  # noqa: BLE001 - 探测失败（如表尚未迁移）不应阻断启动
+    except Exception as exc:
+        # 探测失败（例如表尚未迁移）不应阻断启动；这是刻意的宽捕获，
+        # 但不要为此加 noqa 抑制：质量棘轮里 BLE001 未启用，
+        # 抑制指令本身会多出一条 RUF100（unused noqa）。
         logger.warning("[security] 密钥一致性探测跳过: %s", exc)
 
     # ── 蓝湖证据存储落点（Batch 140/141）：确保目录存在并打印，便于确认持久卷挂载 ──
