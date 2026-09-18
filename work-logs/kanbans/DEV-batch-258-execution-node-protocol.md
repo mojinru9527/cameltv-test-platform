@@ -23,10 +23,10 @@
 
 | # | Slice | 方案 | 编码 | 自测 | 审批 | 合入 | 备注 |
 |---|-------|:----:|:----:|:----:|:----:|:----:|------|
-| 1 | `url_guard` 统一守卫 + 需求抓取/发布包导入接入（B1-1） | ✅ | 🔄 ⬅️ | ⏳ | ⏳ | ⏳ | **当前位置** |
-| 2 | 令牌域名白名单（B1-2） | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | 依赖 Slice 1 的守卫 |
-| 3 | OCR 去 `shell=True`（B1-3） | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | 独立 |
-| 4 | `ExecutionJob` 协议 + 迁移 + 权限点（B1-4） | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | 数据模型变更 |
+| 1 | `url_guard` 统一守卫 + 需求抓取/发布包导入接入（B1-1） | ✅ | ✅ | ✅ | ⏳ | ⏳ | 71 例回归绿 |
+| 2 | 令牌域名白名单（B1-2） | ✅ | ✅ | ✅ | ⏳ | ⏳ | 12 例回归绿 |
+| 3 | OCR 去 `shell=True`（B1-3） | ✅ | ✅ | ✅ | ⏳ | ⏳ | `rg shell=True app/` 为空 |
+| 4 | `ExecutionJob` 协议 + 迁移 + 权限点（B1-4） | ✅ | 🔄 ⬅️ | ⏳ | ⏳ | ⏳ | **当前位置**（数据模型变更） |
 | 5 | `cameltv-node` CLI（B1-5） | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 依赖 Slice 4 |
 | 6 | 平台侧节点状态（B1-6） | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 依赖 Slice 4 |
 | 7 | B1 端到端证据 8 条（B1-7） | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 依赖 Slice 5/6 + Test5 可达 |
@@ -38,11 +38,12 @@
 ## 📍 当前位置
 
 ```
-Batch 258 — Slice 1：url_guard 统一守卫
-├── 已完成: worktree 验证；PRD/PM/Design 三份工件；审计 S1/S2/S3 证据位置复核
-├── 🔄 进行中: app/core/url_guard.py 抽取 + outbound_policy 反向依赖 + 需求抓取接入
+Batch 258 — Slice 4：ExecutionJob 协议
+├── 已完成: Slice 1/2/3（B1-1 出网守卫、B1-2 令牌白名单、B1-3 OCR 去 shell），
+│          commit 2dbbf2ff / 063bb3a2 / 2adb3dab / 52ba41e6；审计 S1/S2/S3 三条闭合
+├── 🔄 进行中: ExecutionJob/JobLease 模型 + Alembic 迁移 + claim/heartbeat/report/stale 回收 + 权限点
 ├── ⏳ 待审批: 本批次一次总确认（推送 + Draft PR + required checks 通过后合入）
-└── ⏳ 下一步: Slice 2/3（白名单、OCR）→ Slice 4（ExecutionJob）
+└── ⏳ 下一步: Slice 5（cameltv-node CLI）→ Slice 6（节点状态）→ Slice 7（端到端证据）→ QA/Leader
 ```
 
 ---
