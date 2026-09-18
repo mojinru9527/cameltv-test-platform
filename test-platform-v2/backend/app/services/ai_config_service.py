@@ -6,15 +6,13 @@
 
 from __future__ import annotations
 
-import base64
-import hashlib
 import json
 
-from cryptography.fernet import Fernet, InvalidToken
+from cryptography.fernet import InvalidToken
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
+from app.core.cipher import decrypt_value, encrypt_value
 from app.core.exceptions import APIException
 from app.models.ai_provider import AiProvider
 from app.services import ai_errors
@@ -58,22 +56,23 @@ def _first_model(models_json: str) -> str:
         return ""
 
 
-def _fernet() -> Fernet:
-    digest = hashlib.sha256(settings.secret_key.encode("utf-8")).digest()
-    return Fernet(base64.urlsafe_b64encode(digest))
-
-
 def _encrypt_key(plain: str) -> str:
+    """AI 提供方密钥加密——统一走 app/core/cipher.py（Batch 259 / B2-5）。
+
+    此前这里用 `settings.secret_key` 自行派生 sha256 密钥，与 cipher.py 的
+    `effective_secret_key` 不是同一个值：dev 下 secret_key 为空串，
+    等价于用公开常量密钥加密。现在只保留一套实现。
+    """
     if not plain:
         return ""
-    return _fernet().encrypt(plain.encode("utf-8")).decode("utf-8")
+    return encrypt_value(plain)
 
 
 def _decrypt_key(stored: str) -> str:
     if not stored:
         return ""
     try:
-        return _fernet().decrypt(stored.encode("utf-8")).decode("utf-8")
+        return decrypt_value(stored)
     except InvalidToken:
         # SECRET_KEY 轮换后存量密文无法解密——转业务错误引导重新录入，避免裸 500。
         raise AIProviderUnconfiguredError(

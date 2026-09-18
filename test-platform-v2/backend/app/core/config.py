@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     execution_file_size_limit_mb: int = 128
     execution_open_files_limit: int = 4096
     execution_process_limit: int = 256
+    # ── Batch 259 / B2-1（H1）：执行沙箱出网白名单 ──
+    # 逗号分隔的主机白名单（被测系统 + 平台 API）。空 = 不注入。
+    # 进程内无法做内核级网络隔离，因此该值作为**唯一事实源**下发给子进程
+    # （CAMELTV_EGRESS_ALLOWLIST），由部署层的容器/网络命名空间或节点侧代理执行。
+    execution_egress_allowlist: str = ""
     # Actual ASGI body cap. Content-Length is an optimisation, never the
     # enforcement point, because chunked requests can omit it.
     max_request_body_bytes: int = 100 * 1024 * 1024

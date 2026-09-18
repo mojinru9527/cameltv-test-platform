@@ -19,6 +19,7 @@ from app.core.config import settings
 from app.core.execution_sandbox import execution_process_kwargs
 from app.core.process_tree import run_supervised
 from app.core.resource_budget import configured_budget
+from app.core import spec_guard
 
 logger = logging.getLogger(__name__)
 
@@ -281,6 +282,14 @@ def _execute_spec_owned(req: ExecuteRequest) -> ExecuteResponse:
 
     try:
         spec_file = tmpdir / "playground.spec.ts"
+        # Batch 259 / B2-2（H1）：用户提交的代码在**落盘与执行之前**先过危险 API 静态拦截。
+        # 这里是"用户输入 → 执行代码"最直接的入口，因此必须在写文件之前拒绝。
+        findings = spec_guard.assert_spec_safe(req.spec_code)
+        if findings:
+            raise HTTPException(
+                400,
+                "提交的用例代码包含禁止使用的 API，已拒绝执行：\n" + "\n".join(findings),
+            )
         spec_file.write_text(req.spec_code, encoding="utf-8")
 
         # Minimal Playwright config for this single spec

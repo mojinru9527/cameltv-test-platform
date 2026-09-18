@@ -96,6 +96,25 @@ foreach ($line in @(Invoke-CheckedGit -Path $root -Arguments @("worktree", "list
 New-Item -ItemType Directory -Path $destinationRootFull -Force | Out-Null
 Invoke-CheckedGit -Path $root -Arguments @("worktree", "add", "-b", $branch, $destination, "origin/$BaseBranch") | Out-Null
 
+# Batch 259: 归一化 scope —— 调用方可能传真正的数组（-Scope a,b,c），
+# 也可能传**一个逗号拼接的字符串**（`pwsh -File script.ps1 -Scope a,b,c` 会把
+# "a,b,c" 原样作为单个参数传入）。后者会让元数据写成单元素数组，
+# 于是 audit-ai-pr.ps1 的 Test-PathInScope 逐条比对必然全部不通过（B1、B2 各踩一次）。
+# 这里两种形态都拆成独立条目。
+$scopeEntries = @()
+foreach ($entry in $Scope) {
+    foreach ($part in ([string]$entry -split ',')) {
+        $trimmed = $part.Trim()
+        if ($trimmed) { $scopeEntries += $trimmed }
+    }
+}
+# 外层 @() 必不可少：Select-Object 在只剩一个元素时返回标量，
+# 而 Set-StrictMode 下对标量取 .Count 会直接抛异常。
+$normalizedScope = @($scopeEntries | Select-Object -Unique)
+if ($normalizedScope.Count -eq 0) {
+    throw "Scope must contain at least one non-empty path."
+}
+
 $metadata = [ordered]@{
     schema_version = 3
     workflow = $Workflow
@@ -104,7 +123,7 @@ $metadata = [ordered]@{
     branch = $branch
     base = "origin/$BaseBranch"
     created_at = (Get-Date).ToString("o")
-    scope = @($Scope)
+    scope = @($normalizedScope)
     ports = [ordered]@{ frontend = $FrontendPort; backend = $BackendPort }
 }
 if ($Workflow -eq "agent-team") {

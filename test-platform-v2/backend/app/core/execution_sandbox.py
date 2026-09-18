@@ -1,8 +1,19 @@
 """Execution sandbox primitives for user-influenced Playwright processes.
 
-This module does not claim OS-level container isolation. It removes accidental
-secret inheritance and applies best-effort POSIX resource limits so a runner
-can be migrated to a dedicated container later without changing call sites.
+**边界声明（Batch 259 / B2-1，H1）——先说清楚"这层不是什么"：**
+
+- 本模块**不宣称**具备 OS/内核级隔离。它做的是**进程内可达面收敛**：
+  环境变量白名单（子进程拿不到 SECRET_KEY / DB 口令 / provider token）、
+  best-effort POSIX 资源上限（CPU/内存/文件大小/句柄/进程数）。
+- **文件系统与网络的内核级隔离属于部署层**：容器、只读挂载、网络命名空间或节点侧
+  出网代理。本模块只把出网白名单（`execution_egress_allowlist` → `CAMELTV_EGRESS_ALLOWLIST`）
+  作为**唯一事实源**下发给子进程与节点，避免白名单出现第二处实现。
+- **非 root 运行**同样是部署层要求（容器 user / systemd 用户），不在进程内解决。
+- 生成代码的危险 API 由 `app/core/spec_guard.py` 在**执行前**静态拦截——
+  静态检查也不是沙箱，两者互不替代（与 B2-3 纠正的「dry-run 不是沙箱」同一原则）。
+
+这样划分的目的：任何读到这段注释的人都能准确知道"哪一层负责什么"，
+不会把"执行路径已经过沙箱"当成既成事实。
 """
 from __future__ import annotations
 
@@ -60,6 +71,11 @@ def sandbox_environment(extra: Mapping[str, str | int | float | None] | None = N
         for key, value in os.environ.items()
         if key.startswith("CAMELTV_") and value and key.replace("_", "").isalnum()
     })
+    # 出网白名单：进程内不阻断网络，但把唯一事实源交给子进程/节点侧执行者，
+    # 避免"配置在平台、执行靠另外一份清单"的双份漂移。
+    allowlist = (settings.execution_egress_allowlist or "").strip()
+    if allowlist:
+        env["CAMELTV_EGRESS_ALLOWLIST"] = allowlist
     if extra:
         for key, value in extra.items():
             if value is not None:

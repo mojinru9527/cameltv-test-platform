@@ -119,7 +119,7 @@ describe('侧栏子项链接化（DEF-20260904-001）', () => {
     expect(onNavigate).not.toHaveBeenCalled()
   })
 
-  it('资产与更多分桶子项同样渲染为带 href 的真实链接并可导航', () => {
+  it('专家区分桶子项同样渲染为带 href 的真实链接并可导航', () => {
     renderBucket()
 
     const link = screen.getByRole('link', { name: '用户管理' })
@@ -129,7 +129,7 @@ describe('侧栏子项链接化（DEF-20260904-001）', () => {
     expect(screen.getByText('用户管理页')).toBeTruthy()
   })
 
-  it('移动端点击分桶子项仍会收起抽屉（goTo 的副作用未被误删）', () => {
+  it('移动端点击专家区子项仍会收起抽屉（goTo 的副作用未被误删）', () => {
     renderBucket(true)
 
     fireEvent.click(screen.getByText('打开抽屉'))
