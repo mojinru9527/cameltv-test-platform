@@ -20,6 +20,7 @@
 | `python -m alembic heads` | 0 | `20260924_batch258_execution_payload (head)` —— 单头（本批无新迁移） |
 | `pytest`（本批域 9 个文件） | 0 | **85 passed, 1 skipped**（skip = 符号链接需 Windows 开发者模式） |
 | `pytest tests/test_execution_sandbox.py tests/resource_budget` | 0 | 77 passed, 2 skipped |
+| **`pytest -q`（全量，与 CI 后端 required 同命令）** | 0 | **2839 passed, 52 skipped, 1 xfailed, 0 failed**（11:53） |
 
 ### 前端
 
@@ -98,6 +99,7 @@
 | D2 | P3 | 同类问题二次出现（B2-3）：注释里写了 `validate=False`，命中「计划路径不得关闭校验」检查 | 首轮断言 FAIL | ✅ 改措辞；已在测试注释里写明"prose 也会命中" |
 | D3 | P3 | 新 IA 的分组项顺序期望写错（按 `sort` 而非 `codes` 顺序） | `nav-config.test.ts` 2 例 FAIL | ✅ 按既有契约（codes 顺序）修正期望 |
 | D4 | P3 | 本机全量 `npm test` JS heap OOM（非代码缺陷） | `FATAL ERROR: JavaScript heap out of memory` | ✅ 以 `--maxWorkers=2` 复跑全绿；解法记入本报告供后续复用 |
+| D5 | P3 | 本机全量 `pytest` 出现 3 例假失败：`tests/test_session_credentials.py` 的本地服务器被系统代理（IE/WinHTTP 注册表 `127.0.0.1:7688`）接管，返回 `502 + connection: close + content-length: 0` | 设 `NO_PROXY` 后同 6 例全过（决定性实验）；且 CI 无该代理、B1 的 CI 后端全量通过 | ✅ **根因修复**：`tests/conftest.py` 默认 `NO_PROXY=127.0.0.1,localhost`（只对回环生效，不影响外网/内网行为验证）；复跑全量 2839 passed / 0 failed |
 
 无未修复缺陷。D1/D2 是同一类问题（字面量守卫 vs 散文），已连续两批出现 → 见下文 bug-guard 第 1 问。
 

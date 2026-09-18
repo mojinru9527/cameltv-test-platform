@@ -1,6 +1,17 @@
 """Shared test fixtures — in-memory SQLite, test client, seeded data."""
 from __future__ import annotations
 
+import os
+
+# ── Batch 259：本机代理会把回环流量也代理出去，导致"本地起服务 + 本地访问"的用例假失败 ──
+# httpx 默认 trust_env=True，会读取系统代理（Windows 上含 IE/WinHTTP 注册表项）。
+# 若开发机装了代理（例如 127.0.0.1:7688），本地测试服务器就会被代理接管，
+# 返回 `502 + connection: close + content-length: 0`，看起来像业务缺陷。
+# 实测：tests/test_session_credentials.py 在设了 NO_PROXY 后由 3 失败转为 6 通过。
+# 这里只对回环地址生效，不影响测试对真实外网/内网行为的验证。
+os.environ.setdefault("NO_PROXY", "127.0.0.1,localhost")
+os.environ.setdefault("no_proxy", "127.0.0.1,localhost")
+
 
 import pytest
 from fastapi.testclient import TestClient
