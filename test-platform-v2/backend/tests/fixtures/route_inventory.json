@@ -1,5 +1,5 @@
 {
-  "count": 668,
+  "count": 680,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -460,6 +460,54 @@
     {
       "path": "/api/v1/environments/{env_id}/variables/{var_id}",
       "method": "PUT"
+    },
+    {
+      "path": "/api/v1/execution-jobs",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/execution-jobs",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/execution-jobs/claim",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/execution-jobs/node-status",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/execution-jobs/reclaim-stale",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/execution-jobs/{job_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/execution-jobs/{job_id}/evidence",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/execution-jobs/{job_id}/evidence",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/execution-jobs/{job_id}/evidence/{name}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/execution-jobs/{job_id}/heartbeat",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/execution-jobs/{job_id}/payload",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/execution-jobs/{job_id}/report",
+      "method": "POST"
     },
     {
       "path": "/api/v1/execution/campaigns/{campaign_id}/runs",

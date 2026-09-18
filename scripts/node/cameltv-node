@@ -1,0 +1,3 @@
+#!/bin/sh
+# cameltv-node —— 一条命令开工（Linux/macOS）。用法：cameltv-node up --node-id my-pc
+exec python3 "$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)/cameltv_node/cli.py" "$@"

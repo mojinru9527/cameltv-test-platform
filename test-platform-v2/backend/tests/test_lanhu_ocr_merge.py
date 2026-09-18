@@ -136,8 +136,11 @@ def test_local_provider_uses_current_python_interpreter(tmp_path, monkeypatch):
     result = LocalCommandOcrProvider().recognize(image)
 
     assert result.status == "success"
-    assert sys.executable in str(captured["command"])
-    assert str(image) in str(captured["command"])
+    # Batch 258 / B1-3：命令由「shell 字符串」改为 argv 数组，断言随之改为成员判断。
+    assert isinstance(captured["command"], list)
+    assert sys.executable in captured["command"]
+    assert str(image) in captured["command"]
+    assert captured["kwargs"]["shell"] is False
     assert captured["kwargs"]["encoding"] == "utf-8"
 
 

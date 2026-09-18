@@ -3,21 +3,28 @@
 This is intentionally smaller than a general HTTP client: it validates every
 URL and redirect, rejects non-global IP addresses by default, and limits the
 response body before any parser sees it.
+
+Batch 258 / B1-1: the URL & IP policy itself now lives in `app.core.url_guard`.
+This module keeps only the bounded-GET capability and reuses that single policy,
+so there is exactly one implementation of "reject private / revalidate redirect".
 """
 from __future__ import annotations
 
-import ipaddress
-import socket
 from dataclasses import dataclass
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urljoin
 
 import httpx
 
 from app.core.config import settings
+from app.core.url_guard import (
+    UrlNotAllowedError,
+    assert_public_url,
+    resolve_addresses,  # re-exported: existing callers/tests patch this name
+)
 
-
-class OutboundPolicyError(ValueError):
-    """Raised when a user-supplied outbound URL violates policy."""
+# 保留历史名称：调用点与既有回归测试（tests/test_outbound_policy.py）零改动。
+OutboundPolicyError = UrlNotAllowedError
+"""Raised when a user-supplied outbound URL violates policy."""
 
 
 @dataclass(frozen=True)
@@ -27,45 +34,9 @@ class SafeTextResponse:
     text: str
 
 
-def resolve_addresses(host: str, port: int) -> set[ipaddress.IPv4Address | ipaddress.IPv6Address]:
-    """Resolve all addresses and reject ambiguous/unavailable DNS results."""
-    try:
-        records = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
-    except socket.gaierror as exc:
-        raise OutboundPolicyError(f"无法解析目标主机: {host}") from exc
-    addresses = set()
-    for record in records:
-        raw = record[4][0]
-        try:
-            addresses.add(ipaddress.ip_address(raw))
-        except ValueError:
-            continue
-    if not addresses:
-        raise OutboundPolicyError(f"目标主机没有可用地址: {host}")
-    return addresses
-
-
 def validate_outbound_url(url: str, *, allow_private: bool = False) -> str:
     """Validate a single URL and return its normalized string."""
-    parsed = urlsplit(url.strip())
-    if parsed.scheme not in {"http", "https"}:
-        raise OutboundPolicyError("仅允许 http/https URL")
-    if not parsed.hostname:
-        raise OutboundPolicyError("URL 缺少主机名")
-    if parsed.username is not None or parsed.password is not None:
-        raise OutboundPolicyError("URL 不允许携带用户名或密码")
-    try:
-        port = parsed.port or (443 if parsed.scheme == "https" else 80)
-    except ValueError as exc:
-        raise OutboundPolicyError("URL 端口无效") from exc
-    if not 1 <= port <= 65535:
-        raise OutboundPolicyError("URL 端口无效")
-
-    if not allow_private:
-        addresses = resolve_addresses(parsed.hostname, port)
-        if any(not address.is_global for address in addresses):
-            raise OutboundPolicyError("禁止访问私网、回环、链路本地或保留地址")
-    return parsed.geturl()
+    return assert_public_url(url, allow_private=allow_private, resolver=resolve_addresses)
 
 
 def safe_get_text(
