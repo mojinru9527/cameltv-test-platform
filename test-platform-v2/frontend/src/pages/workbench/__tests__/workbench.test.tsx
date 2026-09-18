@@ -52,6 +52,8 @@ describe('我的待办 /workbench 页面', () => {
     )
 
     expect(screen.getByText('我的待办')).toBeTruthy()
+    // B1-6：首页必须挂载执行节点状态卡（没有节点时要主动说明原因）
+    expect(screen.getByText('执行节点')).toBeTruthy()
     expect(screen.getByText('待审')).toBeTruthy()
     expect(screen.getByText('在跑')).toBeTruthy()
     expect(screen.getByText('失败 / 需关注')).toBeTruthy()

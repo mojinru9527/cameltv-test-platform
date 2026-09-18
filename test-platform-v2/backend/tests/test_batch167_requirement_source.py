@@ -39,9 +39,28 @@ class TestHtmlToText:
 
 class TestGenericFetch:
     def test_fetch_html(self, monkeypatch):
-        def fake_get(url, headers=None, timeout=None, follow_redirects=True):
-            return httpx.Response(200, text="<html><head><title>需求标题</title></head><body><p>正文</p></body></html>")
-        monkeypatch.setattr(httpx, "get", fake_get)
+        """Batch 258：`_request` 改为 httpx.Client + 逐跳出网守卫，替身随接缝更新。
+
+        断言内容（标题/正文/分类）刻意保持不变——这是契约，不是实现细节。
+        """
+        import ipaddress
+
+        from app.core import url_guard
+
+        monkeypatch.setattr(
+            url_guard,
+            "resolve_addresses",
+            lambda host, port: {ipaddress.ip_address("93.184.216.34")},
+        )
+        mock = httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                headers={"content-type": "text/html; charset=utf-8"},
+                content="<html><head><title>需求标题</title></head><body><p>正文</p></body></html>".encode(),
+            )
+        )
+        real_client = httpx.Client
+        monkeypatch.setattr(httpx, "Client", lambda **kwargs: real_client(transport=mock, **kwargs))
         result = fetch_url_content("https://example.com/req.html")
         assert "正文" in result["content"]
         assert result["title"] == "需求标题"
@@ -103,5 +122,4 @@ class TestExtractionQualityEndpoint:
         assert data["chunks"] == 3
         assert data["fallback"] is True
         assert data["function_point_count"] == 40
-
 

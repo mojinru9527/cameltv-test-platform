@@ -11,6 +11,7 @@ import { Button } from '@/ui'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useApi } from '@/hooks/useApi'
 import { fetchDashboardTodo } from '@/api/dashboard'
+import NodeStatusCard from '@/components/execution/NodeStatusCard'
 import type { DashboardTodo, TodoBucket } from '@/types'
 
 interface TodoPanelProps {
@@ -136,6 +137,8 @@ export default function Workbench() {
         <TermTip term="run" />
         <Link to="/version-tasks/new"><Button size="sm" variant="primary">创建版本任务</Button></Link>
       </div>
+      {/* B1-6：没有执行节点时，页面必须主动说明「为什么点了没反应」 */}
+      <NodeStatusCard />
       <AsyncState
         isLoading={isLoading}
         isError={isError}

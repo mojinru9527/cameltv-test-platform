@@ -136,6 +136,9 @@ _ACTIONS = [
     ("apitest:task", "管理执行任务", "button"),
     ("apitest:asset_manage", "管理接口资产", "button"),
     ("apitest:execute_prod", "执行生产环境接口测试", "button"),
+    # 本地执行节点（Batch 258 / B1-4）：控制面只登记与调度，执行发生在本地节点
+    ("execution:view", "查看执行任务与节点状态", "button"),
+    ("execution:manage", "登记执行任务与回收失联租约", "button"),
     # 项目管理
     ("project:list", "查看项目列表", "button"),
     ("project:detail", "查看项目详情", "button"),
@@ -258,6 +261,8 @@ _TESTER_ACTIONS = {
     # 接口测试（保留；生产执行留管理员）
     "apitest:execute", "apitest:view", "apitest:import", "apitest:generate",
     "apitest:task", "apitest:asset_manage",
+    # 本地执行节点（Batch 258 / B1-4）：tester 可查看节点与队列状态；登记/回收留管理员
+    "execution:view",
     # 知识 / Wiki / Agent（只读视角；管理/审核留管理员）
     "knowledge:view",
     "agent:view", "agent:list",

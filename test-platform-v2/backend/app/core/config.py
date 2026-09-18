@@ -257,6 +257,15 @@ class Settings(BaseSettings):
     pingcode_api_token: str = ""                    # PingCode 访问令牌（环境变量注入）
     confluence_api_base_url: str = ""               # Confluence REST API 根地址
     confluence_api_token: str = ""                  # Confluence 访问令牌（环境变量注入）
+    # ── Batch 258 / B1-2：需求源信任域名白名单（凭据只发给白名单根域及其子域）──
+    # 禁止子串判定：`"pingcode" in host` 会把 pingcode.attacker.tld 也判定为可信。
+    # 自建实例（如内网 PingCode）把根域追加进来即可，逗号分隔。
+    requirement_lanhu_domains: str = "lanhuapp.com"
+    requirement_pingcode_domains: str = "pingcode.com"
+    requirement_confluence_domains: str = "atlassian.net"
+    # ── Batch 258 / B1-4：本地执行节点任务租约 ──
+    execution_job_lease_seconds: int = 300   # 认领/心跳授予的租约时长；过期即回收为 pending
+    execution_evidence_storage_dir: str = ""  # 执行证据落盘根目录；空 = backend/storage/execution-evidence
 
     # ── File paths (configurable for portability) ──
     workspace_root: str = ""      # empty = auto-detect from app/services/__file__
