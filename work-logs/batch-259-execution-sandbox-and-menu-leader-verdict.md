@@ -54,6 +54,7 @@
 | 本机全量 `vitest` 触发 JS heap OOM，需 `--maxWorkers=2` 才能跑完 | 解法记入 QA 报告，供后续批次与 QA 部门复用 | `work-logs/batch-259-...-qa-report.md` 缺陷 D4 |
 | 09 §2.1 的"4 入口 + 专家区"与 batch-212 的"5 入口"措辞不同，执行者需自行判断哪个是当前口径 | 本批以 09（更新的事实源）为准并记录理由 | 本判决「关键决策 1/6」；建议 B3 开工前把 01 §3.1 的"≤5 一级入口"同步为 ≤4，避免两份方案长期打架 |
 | 组件文件名 `AssetsMoreGroup.tsx` 与用户可见名「专家区」不再一致（历史遗留） | 保留文件名以免扩大改动面，已在组件 docstring 注明；作为 B3 的低优先级整理项 | `frontend/src/layouts/AssetsMoreGroup.tsx:19-24` |
+| **`start-agent-team-task.ps1 -Scope a,b,c` 经 `pwsh -File` 调用时会把整份清单写成"一个逗号拼接的字符串"**，`.ai-worktree.json` 的 `scope` 变成单元素数组 → `audit-ai-pr.ps1` 的 `Test-PathInScope` 逐条比对必然全部不通过（B1、B2 各踩一次；本批在 push 前预检发现并修正为 5 元素数组） | 本批修正元数据并记录；建议改 `new-ai-worktree.ps1`：对 `-Scope` 每个元素再按逗号拆分（或在 `-File` 调用下自行 join 后再 split），从根上消除该陷阱 | `scripts/git/new-ai-worktree.ps1`（`$metadata.scope = @($Scope)` 处）；B3 开工前修 |
 
 ## 复盘卡
 
