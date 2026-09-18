@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/ui'
-import { LayoutDashboard, Database, FileCheck, Search, GitBranch, Layers, Calendar, BookOpen, GitCompare, FolderOpen, Sparkles, Zap } from '@/lib/icons'
+import { LayoutDashboard, Database, FileCheck, Search, GitBranch, Layers, Calendar, BookOpen, GitCompare, FolderOpen, Sparkles, Zap, Target } from '@/lib/icons'
 import type { LucideIcon } from '@/lib/icons'
 import OverviewTab from './components/OverviewTab'
 import SourceListTab from './components/SourceListTab'
@@ -27,19 +27,27 @@ import ProjectTab from './components/ProjectTab'
 import PlatformTab from './components/PlatformTab'
 import SkillsTab from './components/SkillsTab'
 import VersionKnowledgeTab from './components/VersionKnowledgeTab'
+import ImpactTab from './components/ImpactTab'
 import CaptureDialog from './components/CaptureDialog'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuthStore } from '@/stores/auth'
 
 
 /**
- * (batch-212 入口收敛) 知识中心 Tab 目录：普通用户视图只留 项目知识/平台研发/检索 3 Tab；
- * 其余为维护/专家 Tab（来源管理/AI 审核台/图谱/实体/迭代/Wiki 知识库/知识差异对比/Skills/概览），
+ * 知识中心 Tab 目录（Batch 260 / B3-5 收敛）。
+ *
+ * 普通用户（tester）视图**恰好 3 Tab**：影响面 / 项目知识 / 检索。
+ *   - 「影响面」是 09 §2.4 唯一知识问题的落点（改了 X 要跑哪些 + 未覆盖缺口）；
+ *   - 版本记录与复用建议不再单独占页签，其数据经由影响面与任务侧复用建议呈现。
+ * 其余为维护/专家 Tab（概览/知识源/AI 审核台/图谱/实体/迭代/Wiki/知识差异对比/Skills/平台研发），
  * 需知识维护权限才可见（02 白名单 §3「知识中心普通用户多余 Tab 收维护入口」）。
+ *
+ * 这条"3 Tab"由 `NORMAL_KNOWLEDGE_TABS` 固化，并有测试断言守着（防止回涨）。
  */
 type KnowledgeTabDef = { value: string; label: string; icon: LucideIcon }
 
 const KNOWLEDGE_TAB_DEFS: KnowledgeTabDef[] = [
+  { value: 'impact', label: '影响面', icon: Target },
   { value: 'project', label: '项目知识', icon: FolderOpen },
   { value: 'platform', label: '平台研发', icon: Sparkles },
   { value: 'versionrecords', label: '版本记录', icon: Calendar },
@@ -56,7 +64,9 @@ const KNOWLEDGE_TAB_DEFS: KnowledgeTabDef[] = [
   { value: 'skills', label: 'Skills', icon: Zap },
 ]
 
-const NORMAL_KNOWLEDGE_TABS = new Set(['project', 'platform', 'versionrecords', 'reuse', 'search'])
+/** 普通用户可见页签上限与清单（Batch 260 / B3-5：收敛到 3 个，与上面的 docblock 一致）。 */
+export const NORMAL_TAB_LIMIT = 3
+export const NORMAL_KNOWLEDGE_TABS = new Set(['impact', 'project', 'search'])
 
 function visibleKnowledgeTabs(canMaintain: boolean): KnowledgeTabDef[] {
   if (canMaintain) return KNOWLEDGE_TAB_DEFS
@@ -69,7 +79,8 @@ function visibleKnowledgeTabs(canMaintain: boolean): KnowledgeTabDef[] {
 export default function KnowledgePage() {
   useDocumentTitle('知识中心')
   const [searchParams, setSearchParams] = useSearchParams()
-  // (batch-212 入口收敛) 普通用户默认只读 3 Tab；维护 Tab 需知识维护权限（专家/管理员）。
+  // (Batch 260 / B3-5) 普通用户只读 3 Tab，默认落在「影响面」（09 §2.4 的知识主线）；
+  // 维护 Tab 需知识维护权限（专家/管理员）。
   const hasPerm = useAuthStore((s) => s.hasPerm)
   const canMaintainKnowledge =
     hasPerm('*') || hasPerm('knowledge:manage') || hasPerm('knowledge:approve') ||
@@ -78,7 +89,7 @@ export default function KnowledgePage() {
     () => visibleKnowledgeTabs(canMaintainKnowledge),
     [canMaintainKnowledge],
   )
-  const requestedTab = searchParams.get('tab') || (canMaintainKnowledge ? 'overview' : 'project')
+  const requestedTab = searchParams.get('tab') || (canMaintainKnowledge ? 'overview' : 'impact')
   const tab = allowedTabs.some((def) => def.value === requestedTab)
     ? requestedTab
     : allowedTabs[0].value
@@ -152,6 +163,9 @@ export default function KnowledgePage() {
 </TabsList>
         </div>
 
+        <TabsContent value="impact" className={cn('mt-4', tab !== 'impact' && 'hidden')} forceMount={visitedTabs.has('impact') ? true : undefined}>
+          <ImpactTab />
+        </TabsContent>
         <TabsContent value="project" className={cn('mt-4', tab !== 'project' && 'hidden')} forceMount={visitedTabs.has('project') ? true : undefined}>
           <ProjectTab />
         </TabsContent>
