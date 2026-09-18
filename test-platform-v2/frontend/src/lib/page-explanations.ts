@@ -73,7 +73,7 @@ export function getExplanation(pathname: string): PageExplanation {
   if (hit) return hit.exp
   return {
     title: '测试平台',
-    description: '这是平台的一个模块。你可以从左侧「我的待办/版本验收/结果与缺陷/知识复用/资产与更多」进入主线。',
+    description: '这是平台的一个模块。你可以从左侧「我的待办/版本验收/结果与缺陷/知识库」四个入口进入主线，其余能力在底部的「专家区」里。',
     actions: ['回到我的待办', '去版本验收'],
   }
 }

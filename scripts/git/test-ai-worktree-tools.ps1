@@ -93,6 +93,16 @@ try {
     Assert-True ($codexCreated.Executor -eq "codex") "Codex entry must fix executor=codex"
     Assert-True ($agentTeamCreated.Workflow -eq "agent-team") "Agent Team entry must fix workflow=agent-team"
     Assert-True ($agentTeamCreated.Executor -eq "codex") "Agent Team entry must preserve the selected executor"
+
+    # Batch 259: `pwsh -File ... -Scope "alpha,beta,gamma"` 会把整份清单作为**单个字符串**传入。
+    # 元数据必须拆成 3 条独立条目，否则 audit-ai-pr.ps1 的逐条范围比对会全部判为越界。
+    $commaScopeCreated = @(& $agentTeamStarter -Executor codex -UserConfirmedExecutor -Kind feature -Task comma-scope -Scope "alpha,beta,gamma" -FrontendPort 55180 -BackendPort 58007 -RepositoryPath $control -DestinationRoot $worktrees)[-1]
+    $commaMetadata = Get-Content -Raw -LiteralPath (Join-Path $commaScopeCreated.Path ".ai-worktree.json") | ConvertFrom-Json
+    $commaScopeCount = @($commaMetadata.scope).Count
+    Assert-True ($commaScopeCount -eq 3) "comma-joined -Scope must become 3 entries (got $commaScopeCount)"
+    Assert-True (@($commaMetadata.scope)[0] -eq "alpha") "first comma scope entry must be 'alpha'"
+    Assert-True (@($commaMetadata.scope)[2] -eq "gamma") "last comma scope entry must be 'gamma'"
+
     $agentTeamPath = Join-Path $worktrees "codex-agent-team-isolation"
     $agentTeamMetadataPath = Join-Path $agentTeamPath ".ai-worktree.json"
     $agentTeamMetadata = Get-Content -Raw -LiteralPath $agentTeamMetadataPath | ConvertFrom-Json

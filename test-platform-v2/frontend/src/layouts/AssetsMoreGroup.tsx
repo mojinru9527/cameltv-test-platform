@@ -11,13 +11,15 @@ import {
   CollapsibleTrigger,
 } from '@/ui'
 import { ChevronRight } from '@/lib/icons'
-import type { AssetSection } from './nav-config'
+import type { ExpertSection } from './nav-config'
 import { isPathInItems, readAssetsMoreOpen, writeAssetsMoreOpen } from './nav-config'
 import { NavigationMenuItems } from './NavigationMenuItems'
 
 /**
- * batch-212（B2 入口收敛）「资产与更多」折叠容器：第 5 个一级入口。
- * 其余模块按 资产/更多/专家/系统 分桶收进这里（空分桶/空容器不渲染），
+ * 「专家区」折叠容器（batch-259 / B2-6 收敛后的二级区域）。
+ * 文件名为 batch-212 历史遗留（当时叫「资产与更多」）；用户可见名称是 **专家区**，
+ * 它不占一级入口额度（`PRIMARY_ENTRY_LIMIT`），而是二级容器 + 权限门禁。
+ * 模块按 资产/引擎与配置/个人/系统 分桶收进这里（空分桶/空容器不渲染），
  * 展开状态持久化到 localStorage；当前页落在任一桶内时自动展开。
  * 侧边栏图标折叠模式（collapsible="icon"）下不做折叠组，分桶项直接图标平铺。
  */
@@ -26,7 +28,7 @@ export function AssetsMoreGroup({
   pathname,
   onNavigate,
 }: {
-  sections: AssetSection[]
+  sections: ExpertSection[]
   pathname: string
   onNavigate: (path: string, label: string) => void
 }) {
@@ -67,7 +69,7 @@ export function AssetsMoreGroup({
       <SidebarGroup>
         <SidebarGroupLabel asChild>
           <CollapsibleTrigger className="flex w-full items-center justify-between">
-            <span>资产与更多</span>
+            <span>专家区</span>
             <span className="flex items-center gap-1">
               <span className="text-xs opacity-60">{total}</span>
               <ChevronRight

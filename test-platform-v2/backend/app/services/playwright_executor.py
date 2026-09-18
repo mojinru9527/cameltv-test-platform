@@ -19,6 +19,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.execution_sandbox import execution_process_kwargs
+from app.core import spec_guard
 from app.core.resource_budget import configured_budget
 from app.core.process_tree import process_group_options, terminate_process_tree
 
@@ -350,6 +351,22 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
         if available:
             msg += f"。可用脚本: {', '.join(available[:10])}"
         return _fail_run(db, run, msg, job)
+
+    # Batch 259 / B2-2（H1）：执行前静态拦截危险 API。
+    # 覆盖"生成代码 → 执行"全链路（ui_test 与计划执行都经本函数），
+    # 拒绝时给出可读原因（行号 + 命中规则），而不是抛裸异常。
+    try:
+        spec_source = spec_path.read_text(encoding="utf-8", errors="replace")
+    except OSError as exc:
+        return _fail_run(db, run, f"读取测试脚本失败: {exc}", job)
+    findings = spec_guard.assert_spec_safe(spec_source)
+    if findings:
+        return _fail_run(
+            db,
+            run,
+            "用例代码包含禁止使用的 API，已拒绝执行：\n" + "\n".join(findings),
+            job,
+        )
 
     # 4. 构建执行环境变量（注入 BASE_URL + CAMELTV_BASE_URL + 环境变量 + CAMELTV_* 透传 + 输出路径）
     # Build an explicit child environment. Never copy the backend env: it

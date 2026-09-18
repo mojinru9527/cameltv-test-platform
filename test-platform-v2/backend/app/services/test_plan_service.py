@@ -609,7 +609,9 @@ def _compile_ui_case(db, case, project_id: int, base_url: str) -> tuple[str, str
     """LLM 优先编译 UI spec；LLM 不可用/失败时回退规则引擎。返回 (spec_code, compiler)。"""
     try:
         from app.services.case_compiler_service import compile_to_playwright
-        compiled = compile_to_playwright(db, case, project_id=project_id, base_url=base_url, validate=False)
+        # Batch 259 / B2-3：计划执行路径不再跳过语法校验（原先显式关闭 validate）。
+        # 坏 spec 必须在编译阶段就被发现，而不是等到执行时以"业务失败"的形式出现。
+        compiled = compile_to_playwright(db, case, project_id=project_id, base_url=base_url)
         spec_code = (compiled.get("spec_code") or "").strip()
         if spec_code and "TODO" not in spec_code:
             return spec_code, "llm"
@@ -1362,4 +1364,3 @@ def trigger_plan_from_ci(
         executed += 1
     db.flush()
     return plan, executed
-

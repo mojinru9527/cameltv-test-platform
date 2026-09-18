@@ -168,7 +168,7 @@ export default function MainLayout() {
 
   const userInitials = (user?.nickname || user?.username || 'U')[0].toUpperCase()
 
-  // (batch-212 入口收敛) 角色友好导航模型：顶层 5 行 + 资产与更多分桶
+  // (batch-259 / B2-6 收敛) 角色友好导航模型：4 个一级入口 + 专家区（二级 + 权限门禁）
   // （事实源 docs/platform-refactor/01 §3.1 + 02 白名单；菜单数据仍按角色权限由后端过滤）。
   const navigation = useMemo(() => buildNavigation(menus), [menus])
 
@@ -225,9 +225,9 @@ export default function MainLayout() {
             </SidebarMenu>
           </SidebarGroup>
 
-          {/* ── 第 5 个一级入口：「资产与更多」折叠容器（资产/更多/专家/系统分桶）── */}
+          {/* ── 专家区（二级容器，不占一级入口额度）：资产/引擎与配置/个人/系统分桶 ── */}
           <AssetsMoreGroup
-            sections={navigation.assetSections}
+            sections={navigation.expertSections}
             pathname={location.pathname}
             onNavigate={navigateMenu}
           />

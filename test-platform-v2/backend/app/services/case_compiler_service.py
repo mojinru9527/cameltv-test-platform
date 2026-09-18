@@ -3,7 +3,10 @@
 设计要点:
 - 使用 DeepSeek (OpenAI 兼容 API) 生成 Playwright TypeScript 代码
 - 与 ai_service.py 的区别: 输出纯文本代码（非 JSON），不使用 json_object 格式
-- 生成后 sandbox 校验: npx playwright test --dry-run（语法检查，不实际执行）
+- 生成后做**语法检查**: npx playwright test --dry-run
+  ⚠️ 这不是安全边界：dry-run 仍会执行 spec 顶层语句，只检查 TypeScript 编译与 test 结构。
+  生成代码的安全边界由 `app/core/spec_guard.py`（静态拦截）+ `app/core/execution_sandbox.py`
+  （环境/资源隔离）共同承担，见 docs/adr 与 cameltv-bug-guard。
 - 编译失败的返回错误行号 + AI 修复建议
 """
 from __future__ import annotations
@@ -19,6 +22,7 @@ from typing import Any
 import httpx
 
 from app.core.config import settings
+from app.core import spec_guard
 from app.models.test_case import TestCase
 from app.services.ai_config_service import ai_config_service
 
@@ -168,10 +172,18 @@ def compile_to_playwright(
         "model_used": settings.ai_model,
         "prompt_tokens": usage.get("prompt_tokens") if usage else None,
         "completion_tokens": usage.get("completion_tokens") if usage else None,
+        "blocked_apis": [],
         "error": None,
     }
 
-    # 3. Sandbox 校验
+    # 2.5 危险 API 静态拦截（Batch 259 / B2-2）：把问题暴露在**编译阶段**，
+    # 而不是等执行时才失败。执行前 playground / playwright_executor 会再拦一次。
+    blocked_apis = spec_guard.assert_spec_safe(spec_code)
+    if blocked_apis:
+        result["blocked_apis"] = blocked_apis
+        result["error"] = "生成的用例代码包含禁止使用的 API（执行前会被拒绝）"
+
+    # 3. 语法校验（dry-run）：只检查编译与 test 结构，不作为安全边界
     if validate:
         validation = _validate_spec(spec_code, spec_file)
         result["validation"] = validation
@@ -291,6 +303,8 @@ def _validate_spec(spec_code: str, spec_file: str) -> dict:
     """使用 npx playwright test --dry-run 校验生成的代码语法。
 
     不实际执行测试，只检查 TypeScript 编译 + Playwright test 结构是否合法。
+    **这不是安全边界**（Batch 259 / B2-3）：dry-run 仍会执行 spec 顶层语句，
+    因此它拦不住危险代码；危险 API 由 `app/core/spec_guard.py` 在执行前静态拦截。
     """
     result = {"syntax_ok": True, "dry_run_ok": True, "errors": []}
 
