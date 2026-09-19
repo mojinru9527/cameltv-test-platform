@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-15（Batch 246 Engineering Governance；关闭 C243-3，处理 C243-4/C244-1，新增 C246-1）
+**最后更新**: 2026-09-19（Batch 262 Ops Restore Drill Evidence；新增 C262-1 生产无 85% 磁盘告警、C262-2 备份非每日、C262-3 P1 生产库落后主干）
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
