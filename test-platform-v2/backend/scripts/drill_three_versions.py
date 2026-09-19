@@ -38,6 +38,7 @@ from sqlalchemy import func, select  # noqa: E402
 
 from app.core.db import SessionLocal  # noqa: E402
 from app.models.ai_job import AiAgent  # noqa: E402
+from app.models.test_case import TestCase  # noqa: E402
 from app.modules.aitde.continuous.models import EnvironmentFingerprint  # noqa: E402
 from app.services import pilot_dataset_service, pilot_slo_service  # noqa: E402
 
@@ -97,6 +98,68 @@ def _api_client(args) -> httpx.Client:
     return httpx.Client(base_url=args.base_url.rstrip("/"), timeout=120, trust_env=False)
 
 
+def _json_or(raw, default):
+    if raw in (None, ""):
+        return default
+    if isinstance(raw, (dict, list)):
+        return raw
+    try:
+        return json.loads(raw)
+    except (TypeError, ValueError):
+        return default
+
+
+def _load_executable_cases(args, dataset: dict) -> tuple[list[dict], list[dict], list[str]]:
+    """把试点集选中项换成**可执行定义**（Batch 266 / C264-3）。
+
+    此前 driver 把 `select_pilot_cases` 的 brief（只有 id/title/module/priority）直接当 payload，
+    节点拿不到 method/path/断言与 url/steps：
+      - API 侧回落成裸 `GET <base>/` → 404；
+      - Web 侧 `steps=[]` → 截图即通过（**空过**）。
+    现在按 case id 从平台库取结构化字段；取不到可执行定义就**明确报错**，不再空过。
+    """
+    api_briefs = dataset.get("api", [])
+    web_briefs = dataset.get("web", [])
+    ids = [int(c["id"]) for c in api_briefs + web_briefs if str(c.get("id", "")).isdigit()]
+    rows: dict[int, TestCase] = {}
+    if ids:
+        with SessionLocal() as db:
+            rows = {row.id: row for row in db.scalars(select(TestCase).where(TestCase.id.in_(ids))).all()}
+
+    api_cases: list[dict] = []
+    web_cases: list[dict] = []
+    unexecutable: list[str] = []
+
+    for brief in api_briefs:
+        row = rows.get(int(brief["id"])) if str(brief.get("id", "")).isdigit() else None
+        endpoint = (getattr(row, "api_endpoint", "") or "").strip()
+        if row is None or not endpoint:
+            unexecutable.append(f"api:{brief.get('id')}")
+            continue
+        api_cases.append({
+            "id": f"case:{row.id}",
+            "name": row.title,
+            "request": {
+                "method": (row.api_method or "GET").upper(),
+                "url": endpoint,
+                "headers": _json_or(row.api_headers, {}),
+                "body": _json_or(row.api_body, None),
+            },
+            "assertions": _json_or(row.api_assertions, []),
+        })
+
+    for brief in web_briefs:
+        row = rows.get(int(brief["id"])) if str(brief.get("id", "")).isdigit() else None
+        steps = _json_or(getattr(row, "steps", "[]"), []) if row is not None else []
+        executable = [s for s in steps if isinstance(s, dict) and s.get("action")]
+        if row is None or not executable:
+            unexecutable.append(f"web:{brief.get('id')}")
+            continue
+        web_cases.append({"id": f"case:{row.id}", "name": row.title, "steps": executable})
+
+    return api_cases, web_cases, unexecutable
+
+
 def _auth_headers(args) -> dict[str, str]:
     """用户态请求头（Batch 265 / C264-3）。
 
@@ -122,10 +185,18 @@ def _auth_headers(args) -> dict[str, str]:
 
 def run_versions(args, dataset: dict) -> list[dict]:
     """逐版本：登记任务 → 等节点跑完 → 校验证据包 → 记录指标。"""
-    case_refs = [f"case:{c['id']}" for c in dataset.get("api", []) + dataset.get("web", [])]
+    api_cases, web_cases, unexecutable = _load_executable_cases(args, dataset)
+    if unexecutable:
+        raise SystemExit(
+            "以下试点用例缺少可执行定义（api_endpoint 或 steps[].action）："
+            + ", ".join(unexecutable[:10])
+            + (" …" if len(unexecutable) > 10 else "")
+            + "；请先补齐用例定义再跑（不空过，见 C264-3）"
+        )
+    case_refs = [c["id"] for c in api_cases + web_cases]
     payload = {
-        "api": {"base_url": args.target_url, "cases": dataset.get("api", [])},
-        "web": {"base_url": args.target_url, "cases": dataset.get("web", [])},
+        "api": {"base_url": args.target_url, "cases": api_cases},
+        "web": {"base_url": args.web_target_url or args.target_url, "cases": web_cases},
     }
     versions: list[dict] = []
     with _api_client(args) as client:
@@ -189,6 +260,7 @@ def main() -> int:
     parser.add_argument("--account-slot", default="", help="账号槽位名（不是凭据）")
     parser.add_argument("--base-url", required=True, help="平台 API 地址")
     parser.add_argument("--target-url", default="", help="被测系统地址（Test5 网关，需 VPN）")
+    parser.add_argument("--web-target-url", default="", help="Web 用例基址（默认同 --target-url）")
     parser.add_argument("--user-token", default="", help="用户 JWT（登记/查询任务用；execution:manage）")
     parser.add_argument("--username", default="", help="平台账号（与 --password 一起，用于现登录取 JWT）")
     parser.add_argument("--password", default="", help="平台密码（仅当未提供 --user-token 时使用）")
