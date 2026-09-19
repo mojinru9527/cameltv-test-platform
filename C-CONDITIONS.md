@@ -57,6 +57,12 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## Open (待处理)
 
+### batch-261 — B4 落地：体育连续验收（2026-09-19）—— 新增
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C261-1 | B4-3/4/5 的真实「连续 3 个版本 SLO」数字未产出：Test5 需 VPN（见 C258-1，`192.168.50.170:80` TCP 不通）、库内无体育 16.x 资产（见 C260-1）。本批已交付**判定内核**（`pilot_slo_service`：≤2h 方案/≤3h 执行、证据完整率 100%、复用命中率 ≥50%、连续 ≥3 版，含断档重计数）与**演练驱动**（`drill_three_versions.py`：前置检查不过即 exit 4 且不执行任何版本），本机实测如实报 not_ready（数据集/指纹/节点/被测系统四项阻塞）。**解除条件**：在接 VPN 且库内有体育资产的机器上执行 `build_pilot_baseline.py` 与 `drill_three_versions.py`（参数见 `work-logs/batch-261-sports-continuous-acceptance-final-acceptance-report.md` §2 第 7 条），回贴 `baseline.json` / `drill-report.json`，由 `compute_slo` 判定达成即关闭 | P1 | 2026-09-19 |
+
 ### batch-260 — B3 落地：知识主线（影响图 + 查询 + 复用命中率 + 页签收敛）（2026-09-19）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
