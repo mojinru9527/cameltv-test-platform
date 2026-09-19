@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-19（Batch 266 执行链路可执行性：新增 C266-1 P1 / C266-2 P2，并关闭 C264-3 / C264-4；Batch 265：C265-1~3；Batch 264：C264-1~4；Batch 263：C263-1；Batch 262：C262-1~4）
+**最后更新**: 2026-09-20（Batch 268 复用命中率埋点接线：新增 C268-1 P1，修复 C267-3；Batch 266 执行链路可执行性：C266-1~4 并关闭 C264-3/C264-4；Batch 265：C265-1~3；Batch 264：C264-1~4；Batch 263：C263-1；Batch 262：C262-1~4）
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -56,6 +56,12 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ---
 
 ## Open (待处理)
+
+### batch-268 — 复用命中率埋点接线（2026-09-20）—— 新增
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C268-1 | **本批修复项与后续**：修复 **C267-3**（B3-4 复用命中率埋点未接线 → `hit_rate` 恒 0；Batch 267 已用"代码无调用点 + 生产 `reuse_suggestion_event` 0 行"双证）。修法：① `version_task_service.create_task` 在建任务带出建议时按**条目粒度**写 `decision='suggested'` 事件（不吞异常）；② `drill_three_versions.py` 优先读 `GET /version-tasks/knowledge/reuse-stats`，人工输入降级为回退并标注 `reuse_source`。**剩余**：仍需真实 ≥3 个版本上跑通并回填命中率（对应 C265-1）。解除条件=真实环境 `reuse-stats` 数字回贴 + 驱动报告 `reuse_source=platform` | P1 | 2026-09-20 |
 
 ### batch-266 — 执行链路可执行性（2026-09-19）—— 新增
 

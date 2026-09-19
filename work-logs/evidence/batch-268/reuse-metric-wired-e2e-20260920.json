@@ -1,0 +1,20 @@
+{
+  "captured_at": "2026-09-20",
+  "title": "复用命中率埋点接线前后对照（API 级端到端，batch-268 代码）",
+  "how": "用本批代码起平台（127.0.0.1:8124，试点库）→ 登录 → 建版本任务 → 读 reuse-stats → 记录一次 adopted → 再读 reuse-stats",
+  "seed": "试点库预置一条版本知识记录（16.0，plan_summary 含 4 项 adopted/modified：登录冒烟 / 赛事列表 / 直播入口 / 结算流程）",
+  "trace": [
+    {"step": "stats before（建任务前）", "result": {"suggested": 0, "adopted": 0, "rejected": 0, "hit_rate": 0.0, "meets_50pct": null, "pending": 0}},
+    {"step": "POST /version-tasks（建任务 16.1）", "result": "200"},
+    {"step": "GET /version-tasks/knowledge/reuse", "result": "[('16.0', ['登录冒烟', '赛事列表', '直播入口', '结算流程'])]"},
+    {"step": "stats after create", "result": {"suggested": 4, "adopted": 0, "hit_rate": 0.0, "pending": 4}, "note": "本批按**建议条目**记录（4 条），此前恒为 0"},
+    {"step": "POST /knowledge/reuse-decisions（adopted×1）", "result": "200"},
+    {"step": "stats after adopt", "result": {"suggested": 4, "adopted": 1, "rejected": 0, "hit_rate": 0.25, "meets_50pct": false, "pending": 3}}
+  ],
+  "first_run_note": "接线刚生效时的首轮观测为 suggested=1 → adopted=1 → hit_rate=1.0（当时按'知识记录'粒度）；随后改为按'建议条目'粒度（更贴合 B3-4 语义），本条 trace 为条目粒度下的最终观测。",
+  "conclusion": [
+    "接线前：suggested 恒为 0（生产实证 reuse_suggestion_event 0 行）→ hit_rate 恒 0，⑦ 的复用率不可测。",
+    "接线后：建任务即写入建议事件（条目粒度），记录 adopted/rejected 后 hit_rate = adopted/suggested 可计算、meets_50pct 可判定。",
+    "驱动侧同步改为**优先读平台指标**（`/version-tasks/knowledge/reuse-stats`），人工输入降级为回退（报告中会标注 reuse_source）。"
+  ]
+}
