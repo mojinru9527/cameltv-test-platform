@@ -37,7 +37,8 @@ S6（dry-run 当沙箱 / 无凭据沙箱）**部分关闭**——表述纠正 + 
 **实测**：`MAIN_ROW_DEFS` = 4 行（我的待办 / 版本验收 / 结果与缺陷 / 知识库），新增 `PRIMARY_ENTRY_LIMIT=4` 常量与「任何角色/菜单集合下 mainRows ≤4」断言；「资产与更多」更名**专家区**（二级 + 权限门禁，不占一级额度）。
 知识中心 tester 页签同时由 5 收敛为 **3**（影响面/项目知识/检索），并有「恰好 3」断言。
 **证据**：`frontend/src/layouts/nav-config.test.ts`、`frontend/src/pages/knowledge/__tests__/KnowledgeTabs.test.tsx`；`npx vitest run --maxWorkers=2` → 168 文件 737 例全绿。
-**未覆盖**：Playwright E2E（a11y 套件）未在本机执行——本机内存限制下只跑了 vitest；CI 的 a11y job 在 PR required 中执行。
+**浏览器层证据（本机实跑）**：`npm run test:a11y:ci`（Playwright + Chromium，与 CI 同命令）→ **28 passed（39.4s）**，覆盖 login/a11y 基线、batch61 键盘·响应式·axe 基线（多路由 × desktop/tablet/mobile）、batch245 认证首页视觉。
+**如实说明（残余缺口）**：本仓 Playwright 套件**没有**"数一级导航数量"的断言；`≤4` 落在 vitest 模型层（`PRIMARY_ENTRY_LIMIT` 与「恰好 3」断言，随 CI 前端 required 运行）。若要求**浏览器层**数导航项，需要一个带后端会话的 E2E job，本批未新增——不把模型断言表述成浏览器 E2E。
 
 ### ② 本地节点一条命令可用 ✅
 **怎么验**：`cameltv-node up` → 平台显示在线 → 认领任务。

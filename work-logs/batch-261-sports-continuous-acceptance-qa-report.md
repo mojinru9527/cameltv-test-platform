@@ -32,6 +32,10 @@
 | `npm run lint` | 0 | `eslint . --max-warnings=0` 无告警 |
 | `npx vitest run --maxWorkers=2` | 0 | **168 文件 / 737 例全绿** |
 | `npm run build` | 0 | `✓ built in 12.04s` |
+| **`npm run test:a11y:ci`（Playwright + Chromium，与 CI 同命令）** | 0 | **28 passed（39.4s）**：login/a11y 基线 + batch61 键盘·响应式·axe 基线（多路由 × desktop/tablet/mobile）+ batch245 认证首页视觉 |
+
+> a11y E2E 在**无后端**下运行（preview 静态构建）：日志中可见 `/api/v2/health` 代理 `ECONNREFUSED 127.0.0.1:8018`，属预期（worktree 后端未启动），用例按未登录/访客态断言并通过。
+> 该套件**不断言一级导航数量**——导航计数断言位于 vitest 模型层（`nav-config.test.ts` 的 `PRIMARY_ENTRY_LIMIT`、`KnowledgeTabs.test.tsx` 的「恰好 3」），二者互为补充，见「发布建议」中的残余缺口。
 
 ## 逐条件验证
 
@@ -110,6 +114,11 @@ python -m pytest -q -p no:cacheprovider
 
 状态：**READY**（B4-1/B4-2 全绿；B4-3/4/5 交付内核与驱动，真实数字按实登记为 C261-1）
 必修复：0　建议修复：0
+
+**残余证据缺口（如实披露）**：B2-6 的 DoD 写「导航项 **E2E** 断言 ≤4」，本仓现有 Playwright 套件**没有**断言一级导航数量；
+该断言实现在 vitest 模型层（`nav-config.test.ts` / `KnowledgeTabs.test.tsx`，随 CI 前端 required 运行）。
+浏览器层 E2E 已覆盖 a11y/键盘/响应式基线（28 例通过），但「登录 tester → 数一级导航」这种**需后端会话**的 E2E 本批未新增——
+若要补齐，需一个带后端的 E2E job，建议随 B5/后续批次排期（避免把"模型断言"表述成"浏览器 E2E"）。
 
 **行为变更提示**：
 1. 新增 `GET /execution-jobs/{job_id}/evidence/verify`（`execution:view`）；
