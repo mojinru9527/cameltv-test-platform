@@ -20,6 +20,7 @@ import {
   TableRow,
 } from '@/ui'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import LocalExecutionEvidenceSection from '@/components/execution/LocalExecutionEvidenceSection'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
 import { fetchMissions, type Mission } from '@/api/missions'
 import {
@@ -235,6 +236,9 @@ export default function ExecutionCenterPage() {
           </Button>
         </div>
       </div>
+
+      {/* B4-1：本地节点执行证据的校验入口（09 方案把执行记录归到入口③「结果与缺陷」） */}
+      <LocalExecutionEvidenceSection />
     </div>
   )
 }

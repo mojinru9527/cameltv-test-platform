@@ -132,6 +132,83 @@ class TestTamperDetection:
 
 
 class TestCompletenessPerKind:
+    def test_api_endpoint_verifies_and_is_not_shadowed_by_download(self, db_session, client, auth_headers):
+        """`/evidence/verify` 必须命中校验分支，不能被 `/evidence/{name}` 抢走（注册顺序）。"""
+        reg = client.post(
+            "/api/v1/ai/agents/register",
+            json={"agent_id": "node-verify", "capabilities": ["api"]},
+            headers=auth_headers,
+        )
+        node_token = reg.json()["data"]["token"]
+        created = client.post(
+            "/api/v1/execution-jobs",
+            json={"kind": "api", "case_refs": ["c1"]},
+            headers=auth_headers,
+        ).json()["data"]
+        job_id = created["id"]
+        client.post(
+            "/api/v1/execution-jobs/claim",
+            json={"node_id": "node-verify"},
+            headers={"X-AI-Agent-Token": node_token},
+        )
+        uploaded = client.post(
+            f"/api/v1/execution-jobs/{job_id}/evidence",
+            params={"node_id": "node-verify"},
+            headers={"X-AI-Agent-Token": node_token},
+            files=[
+                ("files", ("c1.request.json", b'{"method":"GET"}', "application/json")),
+                ("files", ("c1.response.json", b'{"status_code":200}', "application/json")),
+            ],
+        )
+        assert uploaded.status_code == 200
+
+        resp = client.get(f"/api/v1/execution-jobs/{job_id}/evidence/verify", headers=auth_headers)
+        assert resp.status_code == 200
+        body = resp.json()["data"]
+        assert body["verdict"] == "verified"
+        assert body["completeness"]["complete"] is True
+        assert "files" in body  # 是校验结果，不是文件下载
+
+    def test_api_reports_tamper_after_byte_change(self, db_session, client, auth_headers):
+        import json as _json
+
+        reg = client.post(
+            "/api/v1/ai/agents/register",
+            json={"agent_id": "node-tamper", "capabilities": ["api"]},
+            headers=auth_headers,
+        )
+        node_token = reg.json()["data"]["token"]
+        job_id = client.post(
+            "/api/v1/execution-jobs", json={"kind": "api", "case_refs": ["c1"]}, headers=auth_headers
+        ).json()["data"]["id"]
+        client.post(
+            "/api/v1/execution-jobs/claim",
+            json={"node_id": "node-tamper"},
+            headers={"X-AI-Agent-Token": node_token},
+        )
+        client.post(
+            f"/api/v1/execution-jobs/{job_id}/evidence",
+            params={"node_id": "node-tamper"},
+            headers={"X-AI-Agent-Token": node_token},
+            files=[
+                ("files", ("c1.request.json", b'{"method":"GET"}', "application/json")),
+                ("files", ("c1.response.json", b'{"status_code":200}', "application/json")),
+            ],
+        )
+        # 直接改盘上一字节（模拟事后篡改）
+        target = store.bundle_dir(job_id, 1) / "c1.response.json"
+        target.write_bytes(b'{"status_code":500}')
+
+        body = client.get(
+            f"/api/v1/execution-jobs/{job_id}/evidence/verify", headers=auth_headers
+        ).json()["data"]
+        assert body["verdict"] == "tampered"
+        assert body["tampered"] == ["c1.response.json"]
+        assert body["completeness"]["complete"] is False
+        # 校验 API 的结果可被前端直接渲染（含逐文件状态）
+        assert any(f["status"] == "tampered" for f in body["files"])
+        _ = _json
+
     def test_web_bundle_requires_screenshot_and_console(self):
         store.save_bundle(
             job_id=2,

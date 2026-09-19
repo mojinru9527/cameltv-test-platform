@@ -1,5 +1,5 @@
 {
-  "count": 684,
+  "count": 685,
   "routes": [
     {
       "path": "/api/v1/agents/queue",
@@ -492,6 +492,10 @@
     {
       "path": "/api/v1/execution-jobs/{job_id}/evidence",
       "method": "POST"
+    },
+    {
+      "path": "/api/v1/execution-jobs/{job_id}/evidence/verify",
+      "method": "GET"
     },
     {
       "path": "/api/v1/execution-jobs/{job_id}/evidence/{name}",
