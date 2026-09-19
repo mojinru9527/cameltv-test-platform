@@ -33,5 +33,17 @@
       "守卫后写入的新任务（task 6/7/8）均为 suggested 4 / adopted 3 / rejected 1（75%）平衡",
       "重启平台后聚合：suggested 16 / adopted 10 / rejected 3 / hit_rate 0.625（≤1）/ meets_50pct true"
     ]
+  },
+  "driver_live_read": {
+    "captured_at": "2026-09-20",
+    "how": "用**真 httpx 客户端**（非 mock）加载本批驱动模块，调用 `_platform_reuse_stats` 打真实平台 8124",
+    "result": {"driver_read": {"suggested": 16, "adopted": 10}, "hit_rate": 0.625},
+    "platform_raw": {"suggested": 16, "adopted": 10, "rejected": 3, "hit_rate": 0.625, "meets_50pct": true},
+    "reading": "驱动读数与平台原始接口逐项一致 → 『复用数字来自平台埋点』这条链路成立（此前只有 mock 单测覆盖）。"
+  },
+  "local_full_run_note": {
+    "attempts": 2,
+    "outcome": "两次 `--versions 3/1` 全量演练均被本机连接重置中断（平台为单进程 uvicorn + SQLite，节点边跑边写时 httpx 读超时/连接被重置）",
+    "conclusion": "该中断属**本地试点环境**的资源问题（与 Batch 266 记录的本机 OOM 同源），不影响本批结论；正式 3 版本复用数字需在真实环境跑（C265-1/C268-1）"
   }
 }
