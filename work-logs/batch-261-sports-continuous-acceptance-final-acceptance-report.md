@@ -167,3 +167,18 @@ test_execution 行数 = 137642
 | `scripts/node/drill_b1_e2e.py` + `work-logs/batch-258-execution-node-protocol-b1-drill-transcript.txt` | 19→25 项 PASS | **未重跑**（需起平台 + 节点子进程 + 替身被测系统的完整演练）。仅核对转录取证：文件存在，含 `通过 25/25` 与 25 条 `PASS`；转录头部的 `UnicodeDecodeError` 是 Windows GBK 解码噪声，不影响该结论 |
 | `scripts/build_pilot_baseline.py` / `scripts/drill_three_versions.py` | 前置检查 not_ready、exit 4 | **未重跑**（需 Test5 环境）。其"环境不足即如实失败"的行为由 11 例单测覆盖 |
 | 第 ⑥ 条时延实测（中位 4.0ms） | 试用规模合成数据 | **未复跑**（临时内存库 harness 未入库）。确定性对照项"查询条数不随规模增长"由 `tests/test_batch260_impact_query.py` 13 例覆盖并通过 |
+
+### A.4 审计基线 S1–S5「已关闭」的代码级复核（2026-09-19）
+
+本报告开头断言 S1–S5 已关闭、S6 部分关闭。该断言的证据此前分散在各批 QA 报告里，这里给出**当前代码上的复核**（基线定义见 `work-logs/reviews/2026-09-18-code-audit-baseline.md` §4）：
+
+| 编号 | 基线问题（main@96cd5b6） | 当前代码证据 | 复核结论 |
+|---|---|---|---|
+| S1 | 用户可控 URL 出网无 SSRF 守卫（`requirement_source_service.py:80-90`） | 策略本体收敛到 `app/core/url_guard.py`；`_guard()` 在出网前调用（`:139`），重定向逐跳 `_guard_redirect`（`:161`）；`app/core/outbound_policy.py` 反向复用该模块（**不存在第二套 IP 判定**） | ✅ 关闭 |
+| S2 | 令牌按"域名含关键字"外发（同文件 `:71-75`、`:128,145`） | `requirement_source_service.py:204`「目标域名不在信任白名单内，已拒绝发送凭据」——白名单判定发生在**拼 `Authorization` 之前**；`tests/test_batch258_token_whitelist.py` 12 例通过 | ✅ 关闭 |
+| S3 | `subprocess(shell=True)` + `{image}` 未加引号（`lanhu_evidence/local_ocr_provider.py:62-74`） | 该 provider 现以 **argv 数组 + `shell=False`** 执行（`local_ocr_provider.py:94`），模板经哨兵分词后再插值；全仓 `test-platform-v2/backend/app` 下 `shell=True` / `os.system(` 命中数 = **0** | ✅ 关闭 |
+| S4 | 本地对象存储路径未收敛到 base（`object_storage/local.py:24-26`） | `local.py:44-46` = 分段 → `resolve()` → `is_relative_to(base)` 兜底；`tests/test_batch259_object_storage_containment.py` = **16 passed, 1 skipped** | ✅ 关闭 |
+| S5 | 密钥加密两套派生（`core/cipher.py:21` vs `ai_config_service.py:61-62`） | `ai_config_service.py:15` 直接复用 `core/cipher.py` 的 `encrypt_value/decrypt_value`，自派生实现已删除；另加「无 `SECRET_KEY` 但库中已有密文 → 启动即失败」兜底（`cipher.py:80-95`） | ✅ 关闭 |
+| S6 | 把 `playwright --dry-run` 当沙箱（`case_compiler_service.py:290-345`、`validate=False`） | 表述纠正 + `tests/test_batch259_spec_guard.py` 20 例（危险 API 在**起进程之前**被拒）；**内核级无凭据沙箱仍属节点侧部署层 → `C259-2`（P1，Open）** | ⚠️ 部分关闭（与原文一致） |
+
+**方法**：只读 grep + 源码阅读 + 上列测试实际执行。附带上表外的一项：`tests/test_outbound_policy.py` 3 例通过。
