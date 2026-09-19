@@ -1,0 +1,47 @@
+{
+  "probe_date": "2026-09-19",
+  "probe_from": "local workstation (F:\\\\CamelTv-safe-backup\\\\wt-main), Invoke-WebRequest -SkipCertificateCheck",
+  "source_of_targets": "production DB `environment` table (read-only): id 12 体育平台-Test5-篮球UI / id 3,11 体育平台-Test5 / id 13 体育平台-Test5-篮球API / id 7 体育平台-Test5-接口",
+  "api_gateway": {
+    "base": "http://camel-api-gateway05.svc.elelive.cn",
+    "routing_note": "网关按 /<service>/ 前缀路由；体育服务前缀 = /camel-service",
+    "probes": [
+      {"path": "/actuator/health", "status": 200},
+      {"path": "/camel-service/ee/sports_live/u/stop_push", "status": 200, "bytes": 126},
+      {"path": "/camel-mimo/v3/api-docs", "status": 200, "bytes": 16284},
+      {"path": "/live-platform/v2/api-docs?group=swagger%202.X%E7%89%88%E6%9C%AC", "status": 200, "bytes": 41872},
+      {"path": "/ee/sports_live/u/stop_push (无前缀)", "status": 404}
+    ]
+  },
+  "web_targets": [
+    {
+      "env_id": 12,
+      "name": "体育平台-Test5-篮球UI",
+      "url": "https://camel-bball-test5.elelive.cn/basketball",
+      "status": 200,
+      "bytes": 448697,
+      "title": "Basketball Live Scores, Stats & Fixtures",
+      "h1": "Basketball Live Scores, Stats & Fixtures",
+      "nav_links": ["Home", "News", "My", "BBall", "National Basketball League", "VTB United League Supercup"]
+    },
+    {
+      "env_id": 3,
+      "name": "体育平台-Test5",
+      "url": "https://camelive-g3-test5.elelive.cn",
+      "status": 200,
+      "bytes": 747370,
+      "title": "Watch Free Football Live Streaming, Score & Fixtures - Camel Live",
+      "h1": "Football Today - Watch Live Streaming, Soccer Score, Fixtures & Results",
+      "nav_links": ["Football", "Basketball", "Home", "News", "My", "Camel Live", "Indonesian Super League", "Indian Calcutta Football League"]
+    },
+    {
+      "env_id": 2,
+      "name": "体育平台-生产-站点UI",
+      "url": "https://www.camel1.tv",
+      "status": 200,
+      "bytes": 760714,
+      "note": "生产站点，仅作对照；试点用例以 Test5 为被测目标"
+    }
+  ],
+  "implication": "③/⑦ 的 Web 侧不再缺目标：Test5 篮球 UI 与足球/直播 UI 均 200 可达，30 条 Web 用例可基于真实页面（Home/News/My/联赛入口/Football↔Basketball 切换等）编写，无需编造。"
+}

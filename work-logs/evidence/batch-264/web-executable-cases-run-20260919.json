@@ -1,0 +1,29 @@
+{
+  "captured_at": "2026-09-19",
+  "title": "30 条 Web 用例的可执行版实跑（27/30 稳定通过，3 条受共享上下文影响）",
+  "how": "把 sports-web-cases-executable.json 的 steps 用**与节点执行器相同的动作语义**在 Playwright 上逐条跑（goto/click/wait_visible/expect_visible/expect_text/wait）",
+  "runs": [
+    {"round": 1, "passed": 25, "failed": 5},
+    {"round": 2, "passed": 27, "failed": 3},
+    {"round": 3, "passed": 27, "failed": 3}
+  ],
+  "stable_failures": [
+    {"case_id": "SP-WEB-027", "symptom": "直播站 /basketball 的 h1 断言在连续访问后不成立（隔离访问时 h1='Basketball Live Scores, Stats & Fixtures - Camel L…'）"},
+    {"case_id": "SP-WEB-028", "symptom": "直播站 /q/news 的 text=News 可见性在连续访问后不成立（隔离访问时可见）"},
+    {"case_id": "SP-WEB-030", "symptom": "直播站首页 text=Fixtures 可见性在连续访问后不成立（隔离访问时可见）"}
+  ],
+  "root_causes": [
+    {
+      "name": "共享浏览器上下文",
+      "evidence": "scripts/node/cameltv_node/executor.py:230 — 一个 job 只创建一次 `new_context()`/`new_page()`，30 条用例共享 cookie/localStorage；站点会记住用户偏好（分区/语言），后续访问渲染不同 → 断言翻转",
+      "fix": "每条用例独立 context（或按用例 storage_state 隔离）→ 执行器能力变更"
+    },
+    {
+      "name": "expect_visible 的首元素语义",
+      "evidence": "executor.py 的 expect_visible 用 `page.is_visible(selector)`（只判断**第一个**匹配元素），而 `wait_visible` 用 `wait_for_selector`（任一匹配可见即通过）；`text=` 选择器常匹配多个元素，两者结论可能相反",
+      "fix": "用例统一用 wait_visible 做"存在性/可见性"断言，或把 expect_visible 改为 anyway 匹配语义"
+    }
+  ],
+  "verified_stable": "其余 27 条在 3 轮实跑中稳定通过（含篮球站 12 条、直播站 15 条：h1 文案断言 + 结构性入口可见性）",
+  "conclusion": "30 条可执行用例已产出，但要做到 30/30 稳定，需要先修执行器的上下文隔离（C264-4）与断言语义；在此之前 §5 第 ⑦ 条的 Web 数字会抖动，不能当稳定 SLO 证据"
+}
