@@ -75,6 +75,7 @@
 |---|:------:|------|------|
 | D1 | P3 | 选择器要求 `module LIKE '<前缀>%'`，而契约导入产生的模块名是 controller（`sports-live-controller` 等），两者口径不一致；不归一就永远选到 0 条 | ✅ 本批固化口径：接口用例归入 `体育/接口/<controller>`，Web 用例归入 `体育/<栏目>`，`--module-prefix 体育` 即可同时命中 |
 | D2 | P3 | `baseline-sample.json` 的 `fingerprint_confidence=LOW` | 说明：本机样本未提供完整环境指纹组件（非密因子），置信度低属如实反映；真实环境跑时应带 `--components-file` |
+| D3 | **P1** | 验收驱动 `drill_three_versions.py` 用节点令牌调用户端点 → 401，⑦ 条按文档命令无法跑通 | 证据 `evidence/batch-264/driver-auth-defect-20260919.json`；已登记 `C264-3`（建议修 driver 增加用户凭据参数） |
 
 ## bug-guard「未关闭已知风险」表核对（三问）
 

@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-19（Batch 264 体育试点数据集；新增 C264-1 P1 试点集口径落真实环境、C264-2 P2 Web 用例尚未真跑；同日 Batch 263/262 分别新增 C263-1、C262-1~C262-4）
+**最后更新**: 2026-09-19（Batch 264 体育试点数据集；新增 C264-1 P1 试点集口径落真实环境、C264-2 P2 Web 用例尚未真跑、C264-3 P1 验收驱动 401 缺陷；同日 Batch 263/262 分别新增 C263-1、C262-1~C262-4）
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -63,6 +63,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|--------|---------|
 | C264-1 | **试点集口径要落到真实环境**：本批在临时库实测 `build_pilot_baseline` 得 `meets_target=true`（api 50 / web 30，shortfall 0/0），但真实环境的导入尚未执行——契约导入产生的模块名是 controller（`sports-live-controller`），与本批固化口径（接口入 `体育/接口/<controller>`、Web 入 `体育/<栏目>`）需在真实环境同样归一，否则 `--module-prefix 体育` 会选到 0 条。解除条件=在接 Test5 的平台上执行同一套导入+归一，回贴真实 `baseline.json`（`meets_target=true`） | P1 | 2026-09-19 |
 | C264-2 | **Web 用例尚未真正执行**：30 条 Web 用例是结构化步骤（`case_type=ui` + steps/expected），真正跑起来依赖 `case_compiler` 编译成 spec（B2-3 链路）。解除条件=至少 3 条 Web 用例在 Test5（真机外）跑通并留证据包（截图 + manifest sha256） | P2 | 2026-09-19 |
+| C264-3 | **P1 验收驱动无法自建任务（401）**：`scripts/drill_three_versions.py:110` 用 `X-AI-Agent-Token`（节点令牌）调 `POST /api/v1/execution-jobs`，而该端点要求用户 JWT（`require_permission("execution:manage")`）→ 必然 401，§5 第 ⑦ 条按文档命令永远跑不通。对照：同库改用用户 JWT 后立刻 200，且节点认领并执行（pending→running→failed，stub payload）。解除条件=驱动增加用户凭据参数（`--user-token` 或账号登录取 JWT）并复跑至少 1 个版本留证据；修复为代码变更，按 `pipeline-modes` 判定批次档位 | P1 | 2026-09-19 |
 
 ### batch-263 — 老队列遗留面处置裁定（2026-09-19）—— 新增
 
