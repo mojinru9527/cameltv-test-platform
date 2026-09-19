@@ -20,6 +20,7 @@
 | `python -m alembic heads` | 0 | 单头（本批**无新迁移**，复用既有表） |
 | `python scripts/ci/quality_ratchet.py` | 0 | **QUALITY_RATCHET=PASS**（ruff/mypy increased_keys 均为 0） |
 | `pytest tests/test_batch261_*.py tests/test_route_inventory.py` | 0 | 45 passed |
+| 影响面查询时延（试点规模合成数据，一次性测量） | 0 | 50 模块 / 80 用例 / 90 边 → 5 次取中位 **4.0ms**（min 3.8 / max 7.4），DoD 阈值 2000ms → PASS |
 | **`pytest -q`（全量，CI 后端 required 同命令）** | 0 | **2922 passed, 52 skipped, 1 xfailed, 0 failed**（12:49） |
 | `python scripts/build_pilot_baseline.py`（空库冒烟） | 3 | **如实报缺口**（shortfall api 50 / web 30），不凑数 |
 | `python scripts/drill_three_versions.py`（本机冒烟） | 4 | **如实报 not_ready** 并列出 4 项具体阻塞；未执行任何版本 |
