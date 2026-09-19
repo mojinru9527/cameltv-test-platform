@@ -52,6 +52,8 @@
 **2) 本批是否修复/关闭了其中任一项？** 无对应项（S1–S6 已在 B1/B2 处理）；本批未触碰 `app/`。
 **3) 新增路径是否过铁律？** 不适用（无新增路径）。生产操作本身只读 + 临时库，凭据未落仓库（手册只写连接方式）。
 
+**追加（2026-09-19 推送前，按审计基线 S7/S8 复核复发）**：`python -m ruff check app --select S110,S112,B904,RUF012,RUF100 --statistics` 实测 **11/7/32/18**，与 `work-logs/reviews/2026-09-18-code-audit-baseline.md` 基线**逐项一致 → B1–B4 未造成复发**。同时发现 `S110/S112` 不在 `quality_ratchet.py` 覆盖的规则集内（`pyproject.toml` 未启用 `S`，只靠 `scan-common-bugs.ps1` 的 `except: pass` HARD 规则兜底），已登记 **`C262-4`（P2）**。证据见验收报告附录 A.5。
+
 ## CI 分层核对
 
 本 PR 只改 `docs/**`、`work-logs/**`、`C-CONDITIONS.md` → 分类器按"文档"域处理，前后端重测试跳过，但 required 汇总 job 仍会给出明确成功结论；**不把 required 名称存在当作重测试已跑**。

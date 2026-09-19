@@ -45,6 +45,7 @@ S6（dry-run 当沙箱 / 无凭据沙箱）**部分关闭**——表述纠正 + 
 **实测**：Batch 258 的端到端演练**真起节点子进程**执行 `up --once`，完成注册→认领→执行→上传证据→上报；平台侧 `NodeStatusCard` 显示在线/队列/心跳超时。
 **证据**：`scripts/node/drill_b1_e2e.py` 转录（`work-logs/batch-258-...-b1-drill-transcript.txt`，19→25 项 PASS）；`tests/test_batch258_node_cli.py` 28 例。
 **诚实说明**：演练期间修掉两个真 bug（心跳线程覆盖 `threading.Thread._stop` 导致退出码 1；被测系统请求被系统代理接管返回 502）。
+**推送前复跑（2026-09-19，main @ `334748bf`）**：同一脚本重跑 → **通过 25/25**（与 Batch 258 转录逐项一致），存档 `work-logs/evidence/batch-262/b1-drill-replay-20260919.txt`。
 
 ### ③ 8 条试点用例真实跑通且证据可查 ⚠️ 部分达成
 **怎么验**：平台上打开执行记录 → 下载证据。
@@ -164,7 +165,7 @@ test_execution 行数 = 137642
 
 | 引用 | 报告原写 | 状态 |
 |---|---|---|
-| `scripts/node/drill_b1_e2e.py` + `work-logs/batch-258-execution-node-protocol-b1-drill-transcript.txt` | 19→25 项 PASS | **未重跑**（需起平台 + 节点子进程 + 替身被测系统的完整演练）。仅核对转录取证：文件存在，含 `通过 25/25` 与 25 条 `PASS`；转录头部的 `UnicodeDecodeError` 是 Windows GBK 解码噪声，不影响该结论 |
+| `scripts/node/drill_b1_e2e.py` + `work-logs/batch-258-execution-node-protocol-b1-drill-transcript.txt` | 19→25 项 PASS | ✅ **已重跑（2026-09-19，main @ `334748bf`）**：`python scripts/node/drill_b1_e2e.py` → `通过 25/25`，与 Batch 258 转录逐项一致；本次以 UTF-8 输出（无 GBK 解码噪声），存档 `work-logs/evidence/batch-262/b1-drill-replay-20260919.txt` |
 | `scripts/build_pilot_baseline.py` / `scripts/drill_three_versions.py` | 前置检查 not_ready、exit 4 | **未重跑**（需 Test5 环境）。其"环境不足即如实失败"的行为由 11 例单测覆盖 |
 | 第 ⑥ 条时延实测（中位 4.0ms） | 试用规模合成数据 | **未复跑**（临时内存库 harness 未入库）。确定性对照项"查询条数不随规模增长"由 `tests/test_batch260_impact_query.py` 13 例覆盖并通过 |
 
@@ -182,3 +183,20 @@ test_execution 行数 = 137642
 | S6 | 把 `playwright --dry-run` 当沙箱（`case_compiler_service.py:290-345`、`validate=False`） | 表述纠正 + `tests/test_batch259_spec_guard.py` 20 例（危险 API 在**起进程之前**被拒）；**内核级无凭据沙箱仍属节点侧部署层 → `C259-2`（P1，Open）** | ⚠️ 部分关闭（与原文一致） |
 
 **方法**：只读 grep + 源码阅读 + 上列测试实际执行。附带上表外的一项：`tests/test_outbound_policy.py` 3 例通过。
+
+### A.5 审计基线 S7/S8 的复发核对与棘轮覆盖范围（2026-09-19）
+
+审计基线把 S7（静默吞异常 + 异常链丢失）、S8（类级可变默认值）标为**未随 S1–S6 关闭**的项，并要求"把数量做成 CI 棘轮（只降不升）"。按落地方案约束 ④ 核对：
+
+| 项 | 2026-09-18 基线 | 2026-09-19 实测（main @ `334748bf`） | 结论 |
+|---|---:|---:|---|
+| `S110` try-except-pass | 11 | **11** | 未复发 |
+| `S112` try-except-continue | 7 | **7** | 未复发 |
+| `B904` raise-without-from-inside-except | 32 | **32** | 未复发 |
+| `RUF012` mutable-class-default | 18 | **18** | 未复发 |
+
+命令：`python -m ruff check app --select S110,S112,B904,RUF012,RUF100 --statistics`（工作目录 `test-platform-v2/backend`）。即 **B1–B4 四个批次没有让 S7/S8 恶化**。
+
+**棘轮覆盖范围核对（未处理则登记）**：`scripts/ci/quality_ratchet.py` 执行 `ruff check app/ --config pyproject.toml`，而 `pyproject.toml` 的 `select = [E, F, B, UP, RUF]` —— 因此 `B904`(B) 与 `RUF012`(RUF) 在棘轮内，**`S110/S112` 不在**（`S` 规则集未启用）。该缺口已登记 **`C262-4`（P2）**；现行兜底是 `scripts/git/scan-common-bugs.ps1` 把 `except: pass`（同行与换行两种写法）判为 **HARD**，本批实测 HARD 0。
+
+N-1/N-2/N-3（前端 effect 无 cleanup、裸 `.catch(() => {})`、`noqa` 堆积）属前端静态债，**本批未测量**，保持基线原文状态，不计入本报告结论。
