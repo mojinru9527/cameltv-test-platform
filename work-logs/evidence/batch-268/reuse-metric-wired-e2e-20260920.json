@@ -16,5 +16,22 @@
     "接线前：suggested 恒为 0（生产实证 reuse_suggestion_event 0 行）→ hit_rate 恒 0，⑦ 的复用率不可测。",
     "接线后：建任务即写入建议事件（条目粒度），记录 adopted/rejected 后 hit_rate = adopted/suggested 可计算、meets_50pct 可判定。",
     "驱动侧同步改为**优先读平台指标**（`/version-tasks/knowledge/reuse-stats`），人工输入降级为回退（报告中会标注 reuse_source）。"
-  ]
+  ],
+  "second_defect_found_and_fixed": {
+    "id": "C268-2",
+    "symptom": "命中率可以 >1：本地流程跑出 hit_rate 2.5（adopted 10 / suggested 4），随后又出现 1.1875",
+    "root_cause": [
+      "record_decision 不校验该 (task_id, suggestion_ref) 是否真的被带出过 -> adopted 可凭空增加",
+      "reuse_stats 直接按 decision 计数，历史/不一致数据会同时进入分子与分母"
+    ],
+    "fix": [
+      "record_decision 增加守卫：没有对应 suggested 事件就拒绝（APIException 400）",
+      "reuse_stats 改为只统计有对应带出事件的 adopted/rejected -> 命中率有界于 [0,1]（对历史脏数据免疫）"
+    ],
+    "verification": [
+      "守卫前写入的旧任务（task 3/4/5）仍为 adopted 3 > suggested 1，但已不计入聚合",
+      "守卫后写入的新任务（task 6/7/8）均为 suggested 4 / adopted 3 / rejected 1（75%）平衡",
+      "重启平台后聚合：suggested 16 / adopted 10 / rejected 3 / hit_rate 0.625（≤1）/ meets_50pct true"
+    ]
+  }
 }

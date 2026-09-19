@@ -94,6 +94,41 @@ def test_no_previous_knowledge_means_no_suggestion_events(db_session):
     assert db_session.query(ReuseSuggestionEvent).count() == 0
 
 
+def test_decision_requires_matching_suggestion(db_session):
+    """C268-2：未带出过的建议不能记采纳/否掉，否则命中率 >1（本地实测出现过 2.5）。"""
+    import pytest
+
+    from app.core.exceptions import APIException
+
+    db_session.query(ReuseSuggestionEvent).delete()
+    db_session.commit()
+    with pytest.raises(APIException):
+        reuse_metrics_service.record_decision(
+            db_session,
+            project_id=1,
+            task_id=42,
+            suggestion_ref="knowledge:1:凭空条目",
+            decision="adopted",
+        )
+
+
+def test_hit_rate_never_exceeds_one(db_session):
+    _seed_knowledge(db_session, version="16.1")
+    db_session.query(ReuseSuggestionEvent).delete()
+    db_session.commit()
+    task = version_task_service.create_task(db_session, project_id=1, title="试点 16.3", version="16.3")
+    refs = [e.suggestion_ref for e in db_session.query(ReuseSuggestionEvent).all()]
+    assert refs, "建任务应先带出建议"
+    for ref in refs:
+        reuse_metrics_service.record_decision(
+            db_session, project_id=1, task_id=task.id, suggestion_ref=ref, decision="adopted"
+        )
+    stats = reuse_metrics_service.reuse_stats(db_session, project_id=1)
+    assert stats["suggested"] == len(refs)
+    assert stats["adopted"] == len(refs)
+    assert stats["hit_rate"] <= 1.0
+
+
 class _FakeResponse:
     def __init__(self, status_code: int, payload: dict | None = None):
         self.status_code = status_code

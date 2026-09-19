@@ -9,7 +9,7 @@
 """
 from __future__ import annotations
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import APIException
@@ -48,6 +48,23 @@ def record_decision(
         raise APIException(
             code=400,
             msg=f"决定只能是 adopted 或 rejected，收到 {decision!r}",
+            http_status=400,
+        )
+    # Batch 268 / C268-2：决策必须对应**真的被带出过**的建议。
+    # 否则 adopted 可以凭空增加，命中率 = adopted/suggested 会 >1（本地实测出现过 2.5）。
+    ref = (suggestion_ref or "").strip()
+    suggested_id = db.scalar(
+        select(ReuseSuggestionEvent.id).where(
+            ReuseSuggestionEvent.project_id == project_id,
+            ReuseSuggestionEvent.task_id == task_id,
+            ReuseSuggestionEvent.suggestion_ref == ref,
+            ReuseSuggestionEvent.decision == "suggested",
+        )
+    )
+    if suggested_id is None:
+        raise APIException(
+            code=400,
+            msg="该复用建议未被带出过，不能记录采纳/否掉（否则命中率分母失真）",
             http_status=400,
         )
     return _record(
@@ -105,18 +122,22 @@ def _record(
 
 
 def reuse_stats(db: Session, *, project_id: int) -> dict:
-    """命中率统计（B3-4 DoD：命中率可统计；≥50% 目标进入 B4 验收）。"""
+    """命中率统计（B3-4 DoD：命中率可统计；≥50% 目标进入 B4 验收）。
+
+    Batch 268 / C268-2：只统计**有对应带出事件**的采纳/否掉，避免历史或不一致数据把
+    `hit_rate` 抬到 1 以上（本地实测出现过 2.5 与 1.1875）。命中率因此天然有界于 [0, 1]。
+    """
     rows = db.execute(
-        select(ReuseSuggestionEvent.decision, func.count())
-        .where(ReuseSuggestionEvent.project_id == project_id)
-        .group_by(ReuseSuggestionEvent.decision)
+        select(
+            ReuseSuggestionEvent.task_id,
+            ReuseSuggestionEvent.suggestion_ref,
+            ReuseSuggestionEvent.decision,
+        ).where(ReuseSuggestionEvent.project_id == project_id)
     ).all()
-    counts = {decision: 0 for decision in DECISIONS}
-    for decision, count in rows:
-        counts[decision] = int(count)
-    suggested = counts["suggested"]
-    adopted = counts["adopted"]
-    rejected = counts["rejected"]
+    suggested_refs = {(task_id, ref) for task_id, ref, decision in rows if decision == "suggested"}
+    adopted = sum(1 for task_id, ref, decision in rows if decision == "adopted" and (task_id, ref) in suggested_refs)
+    rejected = sum(1 for task_id, ref, decision in rows if decision == "rejected" and (task_id, ref) in suggested_refs)
+    suggested = len(suggested_refs)
     hit_rate = round(adopted / suggested, 4) if suggested else 0.0
     return {
         "suggested": suggested,

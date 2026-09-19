@@ -62,6 +62,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | C268-1 | **本批修复项与后续**：修复 **C267-3**（B3-4 复用命中率埋点未接线 → `hit_rate` 恒 0；Batch 267 已用"代码无调用点 + 生产 `reuse_suggestion_event` 0 行"双证）。修法：① `version_task_service.create_task` 在建任务带出建议时按**条目粒度**写 `decision='suggested'` 事件（不吞异常）；② `drill_three_versions.py` 优先读 `GET /version-tasks/knowledge/reuse-stats`，人工输入降级为回退并标注 `reuse_source`。**剩余**：仍需真实 ≥3 个版本上跑通并回填命中率（对应 C265-1）。解除条件=真实环境 `reuse-stats` 数字回贴 + 驱动报告 `reuse_source=platform` | P1 | 2026-09-20 |
+| C268-2 | **命中率可 >1（本批就地修复）**：本地流程实测 `hit_rate 2.5`（adopted 10 / suggested 4）与 1.1875——① `record_decision` 不校验 (task_id, suggestion_ref) 是否被带出过；② `reuse_stats` 直接按 decision 计数，历史/不一致数据同时进分子分母。修法：`record_decision` 加守卫（无对应 suggested → `APIException 400`）；`reuse_stats` 只统计**有对应带出事件**的采纳/否掉 → 命中率有界 [0,1]，对历史脏数据免疫。复测：新任务 4/3/1（75%）平衡；聚合 `hit_rate 0.625` ≤1。**遗留观察**：本地试点库仍存在守卫前写入的 adopted>suggested 行（仅本机；生产该表 0 行），聚合已不受影响 | P3 | 2026-09-20 |
 
 ### batch-266 — 执行链路可执行性（2026-09-19）—— 新增
 
