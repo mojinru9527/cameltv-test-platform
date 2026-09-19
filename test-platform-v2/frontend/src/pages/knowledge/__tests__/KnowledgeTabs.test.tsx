@@ -40,6 +40,7 @@ vi.mock('@/pages/knowledge/components/IterationTab', () => ({ default: () => <di
 vi.mock('@/pages/knowledge/components/WikiTab', () => ({ default: () => <div data-testid="tab-wiki">Wiki 知识库内容</div> }))
 vi.mock('@/pages/knowledge/components/WikiDiffTab', () => ({ default: () => <div data-testid="tab-wikidiff">知识差异对比内容</div> }))
 vi.mock('@/pages/knowledge/components/SkillsTab', () => ({ default: () => <div data-testid="tab-skills">Skills 内容</div> }))
+vi.mock('@/pages/knowledge/components/ImpactTab', () => ({ default: () => <div data-testid="tab-impact">影响面内容</div> }))
 vi.mock('@/pages/knowledge/components/CaptureDialog', () => ({ default: () => null }))
 
 // (batch-212) 权限 stub：普通用户（false）只读 3 Tab；维护者（true）可见全部。
@@ -66,29 +67,35 @@ function clickTab(name: string | RegExp) {
   fireEvent.click(tab)
 }
 
-describe('知识中心 tab 收敛（batch-212）', () => {
+describe('知识中心 tab 收敛（batch-260 / B3-5：3 入口 = 影响面/项目知识/检索）', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     authStub.hasPerm = () => false
   })
 
-  it('普通用户只读 3 Tab：项目知识/平台研发/检索，默认项目知识', () => {
+  it('普通用户只读 3 Tab：影响面/项目知识/检索，默认影响面', () => {
     renderPage()
-    expect(screen.getByTestId('tab-project')).toBeVisible()
+    expect(screen.getByTestId('tab-impact')).toBeVisible()
+    expect(screen.getByRole('tab', { name: /影响面/ })).toBeTruthy()
     expect(screen.getByRole('tab', { name: /项目知识/ })).toBeTruthy()
-    expect(screen.getByRole('tab', { name: /平台研发/ })).toBeTruthy()
     expect(screen.getByRole('tab', { name: /检索/ })).toBeTruthy()
-    // 专家/维护 Tab 不再出现
+    // 恰好 3 个一级页签（本批 DoD）
+    expect(screen.getAllByRole('tab')).toHaveLength(3)
+    // 专家/维护 Tab 不再出现（平台研发随本批移入专家区）
+    expect(screen.queryByRole('tab', { name: /平台研发/ })).toBeNull()
     expect(screen.queryByRole('tab', { name: /概览/ })).toBeNull()
     expect(screen.queryByRole('tab', { name: /AI 审核台/ })).toBeNull()
     expect(screen.queryByRole('tab', { name: /图谱/ })).toBeNull()
     expect(screen.queryByRole('tab', { name: /知识源/ })).toBeNull()
+    // 漂移进来的两个页签已收口
+    expect(screen.queryByRole('tab', { name: /版本记录/ })).toBeNull()
+    expect(screen.queryByRole('tab', { name: /复用建议/ })).toBeNull()
     expect(screen.queryByTestId('tab-overview')).not.toBeInTheDocument()
   })
 
-  it('普通用户深链到维护 Tab（?tab=graph）自动回落项目知识，不 404', () => {
+  it('普通用户深链到维护 Tab（?tab=graph）自动回落首个允许页签，不 404', () => {
     renderPage('/knowledge?tab=graph')
-    expect(screen.getByTestId('tab-project')).toBeVisible()
+    expect(screen.getByTestId('tab-impact')).toBeVisible()
     expect(screen.queryByTestId('tab-graph')).not.toBeInTheDocument()
   })
 
@@ -96,14 +103,14 @@ describe('知识中心 tab 收敛（batch-212）', () => {
     renderPage()
     clickTab(/检索/)
     await waitFor(() => expect(screen.getByTestId('tab-search')).toBeVisible())
-    expect(screen.getByTestId('tab-project')).not.toBeVisible()
+    expect(screen.getByTestId('tab-impact')).not.toBeVisible()
   })
 
   it('维护者/管理员可见全部 Tab，默认概览', () => {
     authStub.hasPerm = () => true
     renderPage()
     expect(screen.getByTestId('tab-overview')).toBeVisible()
-    for (const name of [/项目知识/, /平台研发/, /检索/, /AI 审核台/, /图谱/, /知识源/, /实体/, /迭代/, /Wiki 知识库/, /知识差异对比/, /Skills/]) {
+    for (const name of [/影响面/, /项目知识/, /平台研发/, /检索/, /AI 审核台/, /图谱/, /知识源/, /实体/, /迭代/, /Wiki 知识库/, /知识差异对比/, /Skills/]) {
       expect(screen.getByRole('tab', { name })).toBeTruthy()
     }
   })

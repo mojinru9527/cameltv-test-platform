@@ -139,6 +139,9 @@ _ACTIONS = [
     # 本地执行节点（Batch 258 / B1-4）：控制面只登记与调度，执行发生在本地节点
     ("execution:view", "查看执行任务与节点状态", "button"),
     ("execution:manage", "登记执行任务与回收失联租约", "button"),
+    # 知识主线（Batch 260 / B3-3）：影响面查询只读；重建关联是独立动作，不复用 uitest:*
+    ("impact:view", "查看影响面与未覆盖缺口", "button"),
+    ("impact:manage", "重建影响图关联", "button"),
     # 项目管理
     ("project:list", "查看项目列表", "button"),
     ("project:detail", "查看项目详情", "button"),
@@ -263,6 +266,8 @@ _TESTER_ACTIONS = {
     "apitest:task", "apitest:asset_manage",
     # 本地执行节点（Batch 258 / B1-4）：tester 可查看节点与队列状态；登记/回收留管理员
     "execution:view",
+    # 知识主线（Batch 260 / B3-3）：tester 可查询影响面；重建关联留管理员
+    "impact:view",
     # 知识 / Wiki / Agent（只读视角；管理/审核留管理员）
     "knowledge:view",
     "agent:view", "agent:list",

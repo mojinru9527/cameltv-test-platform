@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query, Request
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
@@ -25,7 +26,7 @@ from app.schemas.version_task import (
     VersionTaskTransition,
     VersionTaskUpdate,
 )
-from app.services import audit_service, version_task_service
+from app.services import audit_service, reuse_metrics_service, version_task_service
 
 router = APIRouter(prefix="/version-tasks", tags=["版本验收任务"])
 
@@ -359,6 +360,44 @@ def reuse_suggestions(
     db: Session = Depends(get_db),
 ):
     return R.ok(version_task_service.get_reuse_suggestions(db, current.project_id or 0, limit=limit))
+
+
+# ── B3-4（Batch 260）: 复用建议命中率 —— 旁挂埋点，不改上面既有契约 ──
+class ReuseDecisionRequest(BaseModel):
+    task_id: int = Field(ge=1)
+    suggestion_ref: str = Field(min_length=1, max_length=200)
+    decision: str = Field(pattern="^(adopted|rejected)$")
+
+
+@router.get("/knowledge/reuse-stats", response_model=R[dict], summary="复用建议命中率（B3-4）")
+def reuse_stats(
+    current: CurrentUser = Depends(require_permission("impact:view")),
+    db: Session = Depends(get_db),
+):
+    return R.ok(reuse_metrics_service.reuse_stats(db, project_id=current.project_id or 0))
+
+
+@router.post("/knowledge/reuse-decisions", response_model=R[dict], summary="记录复用建议采纳/否掉（B3-4）")
+def record_reuse_decision(
+    body: ReuseDecisionRequest,
+    current: CurrentUser = Depends(require_permission("mission:update")),
+    db: Session = Depends(get_db),
+):
+    event = reuse_metrics_service.record_decision(
+        db,
+        project_id=current.project_id or 0,
+        task_id=body.task_id,
+        suggestion_ref=body.suggestion_ref,
+        decision=body.decision,
+        decided_by=current.user.id if current.user else 0,
+    )
+    return R.ok(
+        {
+            "task_id": event.task_id,
+            "suggestion_ref": event.suggestion_ref,
+            "decision": event.decision,
+        }
+    )
 
 
 @router.get("/{task_id}/knowledge", response_model=R[dict], summary="版本知识记录")

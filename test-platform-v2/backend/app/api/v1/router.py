@@ -17,6 +17,7 @@ from app.api.v1 import (
     dsh_tasks,
     environment,
     execution_jobs,
+    impact,
     integration,
     notify,
     open_api,
@@ -98,6 +99,7 @@ api_router.include_router(dsh_tasks.router)
 api_router.include_router(ai_config.router)
 api_router.include_router(ai_agent.router)
 api_router.include_router(execution_jobs.router)
+api_router.include_router(impact.router)
 api_router.include_router(wiki_core.router)
 api_router.include_router(wiki_diff.router)
 api_router.include_router(wiki_external.router)
