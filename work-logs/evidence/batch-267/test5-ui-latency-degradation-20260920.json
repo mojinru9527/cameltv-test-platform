@@ -1,0 +1,24 @@
+{
+  "captured_at": "2026-09-20",
+  "title": "Test5 UI 站点间歇性极慢 —— Web 用例波动的**目标侧**根因",
+  "why": "Batch 266 登记 C266-4（Web 通过数 29→26→21）时只能确认'非上下文串味'；本批把目标站本身的加载耗时测了一遍，结论落在目标侧。",
+  "browser_probe": {
+    "tool": "Playwright chromium，goto(wait_until=domcontentloaded, timeout=30s) + wait_for_selector('h1', visible, 20s)",
+    "results": [
+      {"round": 1, "page": "bball_home", "outcome": "OK", "ms": 16305},
+      {"round": 1, "page": "live_home", "outcome": "FAIL(TimeoutError)", "ms": 30012},
+      {"round": 2, "page": "bball_home", "outcome": "OK", "ms": 370},
+      {"round": 2, "page": "live_home", "outcome": "FAIL(TimeoutError)", "ms": 30010}
+    ]
+  },
+  "http_probe": [
+    {"url": "https://camelive-g3-test5.elelive.cn/", "status": 200, "ms": 21974, "bytes": 766337},
+    {"url": "https://camel-bball-test5.elelive.cn/basketball", "status": 200, "ms": 9516, "bytes": 614118},
+    {"url": "https://camel-api-gateway05.svc.elelive.cn/actuator/health", "status": 200, "ms": 95, "bytes": 49}
+  ],
+  "conclusion": [
+    "同一个目标环境下，**API 网关 95ms**，而两个 UI 站点单页加载 9~22 秒、且浏览器侧出现 30s 级超时。",
+    "因此 C266-4（Web 用例通过数波动）的主要原因是**目标站自身慢/抖动**，而不是用例断言写法；逐用例上下文隔离（Batch 266）已排除共享状态因素。",
+    "本项目侧的处置选择：① 把目标侧性能问题交体育平台方（与 C267-1 同源）；② 或在用例/驱动里明确更长的导航超时与重试口径，并把'UI 站点可用性'单列一条冒烟（避免与'断言正确性'混在一起判定）。"
+  ]
+}
