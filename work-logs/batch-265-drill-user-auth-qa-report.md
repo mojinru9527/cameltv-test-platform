@@ -60,6 +60,9 @@ SLO 明细（报告 evidence/batch-265/drill-three-versions.json）：
 | D1 | **P1** | 驱动用节点令牌调用户端点 → 401，⑦ 条按文档命令无法跑通（C264-3） | ✅ 本批修复并实跑验证 |
 | D2 | P3 | `--out` 指向不存在目录时崩溃（实跑命中） | ✅ 本批修复（`parent.mkdir(parents=True, exist_ok=True)`） |
 | D3 | P2 | 复用命中率无法由驱动自动观测，需版本任务流程产生真实建议/采纳数 | ⏳ 登记 `C265-1` |
+| D4 | **P1** | 试点集执行 payload 不带可执行细节：API 侧 50/50 裸 `GET <base>/`→404；Web 侧 `steps=[]` 且 30 张截图逐字节相同（空白页）→ **30/30 是空过**，不能作为通过证据 | ⏳ 登记 `C265-3`；证据 `evidence/batch-265/pilot-payload-vacuous-execution-20260919.json` |
+
+> **勘误**：本批早期曾把「Web 30/30 在真实 Test5 上通过」当作结论，经证据复核（截图 SHA256 相同、steps 为空）**该结论作废**。
 
 ## bug-guard「未关闭已知风险」表核对（三问）
 

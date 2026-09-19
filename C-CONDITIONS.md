@@ -63,6 +63,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|--------|---------|
 | C265-1 | **⑦ 条的复用命中率仍无真实数字**：Batch 265 用修好的驱动真跑 3 个版本（16.1/16.2/16.3，证据完整），SLO 中 `plan_within_2h`/`execution_within_3h`/`evidence_complete` 全绿，唯独 `reuse_hit_rate_50pct=false`——因为 `--reuse-suggested/--reuse-adopted` 未提供，驱动无法自动观测该指标（本机演练未走平台"版本任务"流程，故无真实建议/采纳数，**未编数字**）。解除条件=通过版本任务流程跑 ≥3 个版本，使 `reuse_suggestion_event` 产生真实建议/采纳数，如实回填后复跑并达 `meets_all=true` | P1 | 2026-09-19 |
 | C265-2 | **bug-guard 增补铁律**：脚本调平台端点前必须先确认该端点是**用户态**（`Depends(require_permission(...))`，需 JWT）还是**节点态**（`X-AI-Agent-Token`）；Batch 264/265 的 401 即因混用。解除条件=写入 `cameltv-bug-guard` PATTERNS/SKILL 并有对应回归或检查手段 | P2 | 2026-09-19 |
+| C265-3 | **P1 试点集执行 payload 不带可执行细节 → 实跑为空过**：driver 把 `pilot_dataset_service.select_pilot_cases` 的 brief（`{id,title,module,priority}`）直接塞进 job payload，节点拿不到 method/path/params（API 侧 50/50 全部裸 `GET <base>/` → 404）与 url/steps（Web 侧 `steps=[]`、30 张截图逐字节相同=空白页 → 30/30 属**空过**）。因此 §5 第 ⑦ 条当前既不能判"未达成"为环境问题，也不能判"达成"。解除条件=payload 携带完整用例定义（API: method/path/params/headers/断言；Web: url/steps/断言），或节点按 case id 从平台取全量定义；修复后重跑 3 版本并以 `meets_all=true` 判定 | P1 | 2026-09-19 |
 
 ### batch-263 — 老队列遗留面处置裁定（2026-09-19）—— 新增
 
