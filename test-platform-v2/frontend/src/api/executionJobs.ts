@@ -33,6 +33,61 @@ export async function fetchNodeStatus(signal?: AbortSignal): Promise<NodeStatus>
   return api.get('/execution-jobs/node-status', { signal })
 }
 
+export interface ExecutionJobItem {
+  id: number
+  kind: string
+  status: string
+  attempt: number
+  env_ref: string
+  summary: string
+  created_at: string | null
+}
+
+export interface ExecutionJobList {
+  items: ExecutionJobItem[]
+  total: number
+}
+
+export async function fetchExecutionJobs(
+  params: { page?: number; page_size?: number } = {},
+  signal?: AbortSignal,
+): Promise<ExecutionJobList> {
+  return api.get('/execution-jobs', { params, signal })
+}
+
+/** 证据包校验结果（Batch 261 / B4-1）。 */
+export interface EvidenceFileStatus {
+  name: string
+  evidence_type: string | null
+  status: 'ok' | 'tampered' | 'missing'
+  expected_sha256?: string
+  actual_sha256?: string | null
+}
+
+export interface EvidenceVerification {
+  job_id: number
+  attempt: number
+  verdict: 'verified' | 'tampered' | 'missing' | 'incomplete'
+  files: EvidenceFileStatus[]
+  tampered: string[]
+  missing: string[]
+  extra: string[]
+  unclassified: string[]
+  completeness: { required: string[]; present: string[]; missing: string[]; complete: boolean }
+  reason?: string
+}
+
+export async function verifyEvidenceBundle(
+  jobId: number,
+  attempt?: number,
+  signal?: AbortSignal,
+): Promise<EvidenceVerification> {
+  return api.get(`/execution-jobs/${jobId}/evidence/verify`, {
+    params: attempt ? { attempt } : {},
+    signal,
+  })
+}
+
 /** 一键启动指引：与 `scripts/node/README.md` 的命令保持一致。 */
 export function nodeStartCommand(nodeId = 'my-pc'): string {
   return `cameltv-node up --node-id ${nodeId}`
