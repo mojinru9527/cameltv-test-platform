@@ -146,3 +146,18 @@ def test_web_cases_get_fresh_context_per_case(tmp_path):
     results = node_executor.run_web_cases(cases, evidence_dir=tmp_path, page_factory=_factory)
     assert results["total"] == 3
     assert calls["count"] == 3
+
+
+def test_environment_level_unavailable_still_propagates(tmp_path):
+    """环境级不可用（未装 Playwright）必须抛出，不能被"用例级异常收敛"吞掉。"""
+    import pytest
+
+    def _unavailable():
+        raise node_executor.ExecutorUnavailable("未安装 Playwright")
+
+    with pytest.raises(node_executor.ExecutorUnavailable):
+        node_executor.run_web_cases(
+            [{"id": "ui-x", "steps": [{"action": "goto", "url": "/"}]}],
+            evidence_dir=tmp_path,
+            page_factory=_unavailable,
+        )

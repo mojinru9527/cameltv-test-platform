@@ -323,6 +323,9 @@ def run_web_cases(
                 case_results.append(
                     _run_one_web_case(page, case, directory=directory, base_url=base_url)
                 )
+        except ExecutorUnavailable:
+            # 环境级不可用（如未安装 Playwright）必须冒泡：不许把"跑不起来"降级成"用例失败"。
+            raise
         except Exception as exc:  # noqa: BLE001 - 单条用例失败不得拖垮整个 job
             case_results.append(
                 {
