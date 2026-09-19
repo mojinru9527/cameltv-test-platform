@@ -67,6 +67,20 @@
 
 ### A4 门禁 ✅
 
+### A5 追加：30 条 Web 用例的**可执行版**与实跑 ✅（含 3 条不稳定项如实登记）
+
+产出 `evidence/batch-264/sports-web-cases-executable.json`（节点动作 schema：goto/click/wait_visible/expect_visible/expect_text/wait），并用同一套语义在本机 Playwright 逐条实跑 3 轮：
+
+```
+round1: 25/30   round2: 27/30   round3: 27/30
+稳定失败 3 条：SP-WEB-027 / 028 / 030（均在"连续访问后"，隔离访问时通过）
+根因：executor.py:230 一个 job 只建一个浏览器上下文 → 用例共享 cookie/localStorage，站点记住偏好后渲染变化
+     另一处：expect_visible 用 page.is_visible（只判首个匹配）与 wait_visible（任一匹配）语义不一致
+→ 登记 C264-4（P1）
+```
+
+证据：`evidence/batch-264/web-executable-cases-run-20260919.json`
+
 见上表。
 
 ## 缺陷列表
