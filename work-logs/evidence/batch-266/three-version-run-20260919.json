@@ -1,0 +1,25 @@
+{
+  "captured_at": "2026-09-19",
+  "command": "python scripts/drill_three_versions.py --project-id 1 --environment-id 12 --account-slot sports-tester-01 --base-url http://127.0.0.1:8123 --target-url http://camel-api-gateway05.svc.elelive.cn/camel-service --web-target-url https://camelive-g3-test5.elelive.cn/ --username *** --versions 3 --module-prefix 体育 --job-timeout 1800 --person-hours-per-version 1.5",
+  "environment": "本机平台(uvicorn@8123 + 试点库) + 本机 cameltv-node(逐用例独立 Chromium) + 真实 Test5",
+  "slo": {
+    "versions": ["16.1", "16.2", "16.3"],
+    "plan_within_2h": "true（1.5 人日/版本，由执行者如实提供）",
+    "execution_within_3h": "true（0.141 / 0.274 / 0.3xx 小时）",
+    "evidence_complete": "true（三版 100%）",
+    "reuse_hit_rate_50pct": "false（null：未走版本任务流程，无真实建议/采纳数，未编数字）",
+    "meets_all": false,
+    "consecutive_passing": 0
+  },
+  "jobs": {
+    "16.1": {"api": {"id": 23, "passed": 5, "failed": 45, "total": 50}, "web": {"id": 24, "passed": 29, "failed": 1, "total": 30, "failed_cases": ["直播站首页 Scores 区块可见"]}},
+    "16.2": {"api": {"id": 25, "passed": 5, "failed": 45, "total": 50}, "web": {"id": 26, "passed": 26, "failed": 4, "total": 30, "failed_cases": ["篮球站首页 News 入口可见", "篮球站首页 BBall 入口可见", "篮球站首页 Scores 区块可见", "直播站首页主标题"]}},
+    "16.3": {"api": {"id": 27, "passed": 5, "failed": 45, "total": 50}, "web": {"id": 28, "passed": 21, "failed": 9, "total": 30, "failed_cases": ["篮球站首页 Scores 区块可见", "篮球站首页 VTB United League Supercup 入口可见", "直播站首页 Fixtures 区块可见", "直播站首页 Scores 区块可见", "…其余 5 条同类"]}}
+  },
+  "conclusions": [
+    "执行链路：三版全部 evidence_complete=True，逐用例独立上下文生效（不再出现'截图逐字节相同'）。",
+    "SLO：三项达标（人日/执行时长/证据完整），唯一未达标是复用命中率（需版本任务流程，C265-1）。",
+    "API：三版一致 5/50 失败——自动生成用例缺真实参数（业务错误 → $.data.* 不存在），属样本质量（C266-1）。",
+    "Web：通过数 29→26→21 逐版下降，失败集中在首页标签可见性（News/BBall/Scores/Fixtures/主标题）——目标页为动态渲染，标签出现时机不稳定，属**用例稳定性**问题（新登记 C266-4）。"
+  ]
+}

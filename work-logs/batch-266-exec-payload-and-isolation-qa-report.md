@@ -70,6 +70,18 @@ Web 失败归因：case 601/602「打开比赛详情页」——Batch 264 采集
 
 ## 复盘卡
 
+## 追加：3 版本实跑结果（Batch 266 收尾）
+
+```
+[version 16.1] jobs=[23,24] evidence_complete=True   API 5/50 ｜ Web 29/30
+[version 16.2] jobs=[25,26] evidence_complete=True   API 5/50 ｜ Web 26/30
+[version 16.3] jobs=[27,28] evidence_complete=True   API 5/50 ｜ Web 21/30
+SLO：plan_within_2h ✓ · execution_within_3h ✓（0.141/0.274/…）· evidence_complete ✓ · reuse_hit_rate ✗(null)
+     meets_all=false（唯一缺口是复用命中率，属 C265-1）
+```
+
+**新增发现（登记 `C266-4`）**：Web 用例通过数逐版下降（29→26→21），失败集中在**首页标签可见性**断言（News/BBall/Scores/Fixtures/主标题）——目标页动态渲染，标签出现时机不稳定；这与"上下文隔离"无关（已修），属用例稳定性问题。证据：`evidence/batch-266/three-version-run-20260919.json`
+
 | 计划耗时 | 缺陷(P0/P1/P2/P3) | 返工次数 | 根因分类 | 下次避免 |
 |----------|-------------------|----------|----------|----------|
 | 5h / ~4h | 0/4/2/0 | 3 | 需求（断言语义未与生成器对齐）+ 环境（本机 OOM、僵尸任务） | 动执行链路前先跑一遍"真实 payload"冒烟；本机跑逐用例浏览器前先释放 Docker 内存；清理僵尸任务再启动新轮次 |

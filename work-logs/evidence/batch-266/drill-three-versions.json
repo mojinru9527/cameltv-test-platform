@@ -1,0 +1,612 @@
+{
+  "status": "completed",
+  "checks": {
+    "database_ok": true,
+    "dataset_meets_target": true,
+    "fingerprint_present": true,
+    "node_online": true,
+    "target_reachable": true,
+    "account_slot_configured": true
+  },
+  "dataset": {
+    "project_id": 1,
+    "module_prefix": "体育",
+    "targets": {
+      "api": 50,
+      "web": 30
+    },
+    "counts": {
+      "api": 50,
+      "web": 30
+    },
+    "shortfall": {
+      "api": 0,
+      "web": 0
+    },
+    "meets_target": true,
+    "api": [
+      {
+        "id": 1,
+        "title": "【正向】/ee/sports_live/u/stop_push - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 4,
+        "title": "【正向】/ee/sports_live/u/start_push - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 7,
+        "title": "【正向】/ee/sports_live/u/gen_stream - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 10,
+        "title": "【正向】/ee/sports_live/test_goal_event - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 13,
+        "title": "【正向】/ee/sports_live/set_logo - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 16,
+        "title": "【正向】/ee/sports_live/set_hd - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 19,
+        "title": "【正向】/ee/sports_live/select_match - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 22,
+        "title": "【正向】统计 - 正常请求",
+        "module": "体育/接口/球员",
+        "priority": "P0"
+      },
+      {
+        "id": 25,
+        "title": "【正向】比赛 - 正常请求",
+        "module": "体育/接口/球员",
+        "priority": "P0"
+      },
+      {
+        "id": 28,
+        "title": "【正向】/ee/sports_live/p/football/match/diary - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 31,
+        "title": "【正向】/ee/sports_live/news_status - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 34,
+        "title": "【正向】/ee/sports_live/news/read - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 37,
+        "title": "【正向】/ee/sports_live/list_favorite_team - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 40,
+        "title": "【正向】/ee/sports_live/list_favorite_player - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 43,
+        "title": "【正向】/ee/sports_live/list_favorite_news - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 46,
+        "title": "【正向】/ee/sports_live/list_favorite_competition - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 49,
+        "title": "【正向】/ee/sports_live/like - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 52,
+        "title": "【正向】/ee/sports_live/heartbeat - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 55,
+        "title": "【正向】/ee/sports_live/football/match/gen_stream - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 58,
+        "title": "【正向】/ee/sports_live/football/match/del_stream - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 61,
+        "title": "【正向】/ee/sports_live/favorite - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 64,
+        "title": "【正向】/ee/sports_live/competition_agg_page - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 67,
+        "title": "【正向】/ee/sports_live/cancel_hd - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 70,
+        "title": "【正向】/ee/sports_live/batch_get_like_num - 正常请求",
+        "module": "体育/接口/sports-live-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 73,
+        "title": "【正向】/ee/search/synonyms/cou - 正常请求",
+        "module": "体育/接口/搜索",
+        "priority": "P0"
+      },
+      {
+        "id": 76,
+        "title": "【正向】推荐搜索 - 正常请求",
+        "module": "体育/接口/搜索",
+        "priority": "P0"
+      },
+      {
+        "id": 79,
+        "title": "【正向】/ee/search/query_match_for_article - 正常请求",
+        "module": "体育/接口/搜索",
+        "priority": "P0"
+      },
+      {
+        "id": 82,
+        "title": "【正向】综合搜索 - 正常请求",
+        "module": "体育/接口/搜索",
+        "priority": "P0"
+      },
+      {
+        "id": 85,
+        "title": "【正向】/ee/search/m/q - 正常请求",
+        "module": "体育/接口/搜索",
+        "priority": "P0"
+      },
+      {
+        "id": 88,
+        "title": "【正向】/ee/search/m/c - 正常请求",
+        "module": "体育/接口/搜索",
+        "priority": "P0"
+      },
+      {
+        "id": 91,
+        "title": "【正向】/ee/search/m/af - 正常请求",
+        "module": "体育/接口/搜索",
+        "priority": "P0"
+      },
+      {
+        "id": 94,
+        "title": "【正向】热门搜索 - 正常请求",
+        "module": "体育/接口/搜索",
+        "priority": "P0"
+      },
+      {
+        "id": 97,
+        "title": "【正向】/ee/search/batchAddTeamToEs - 正常请求",
+        "module": "体育/接口/搜索",
+        "priority": "P0"
+      },
+      {
+        "id": 100,
+        "title": "【正向】/ee/search/batchAddPlayerToEs - 正常请求",
+        "module": "体育/接口/搜索",
+        "priority": "P0"
+      },
+      {
+        "id": 103,
+        "title": "【正向】/ee/search/batchAddNewsToEs - 正常请求",
+        "module": "体育/接口/搜索",
+        "priority": "P0"
+      },
+      {
+        "id": 106,
+        "title": "【正向】/ee/search/batchAddMatchToEs - 正常请求",
+        "module": "体育/接口/搜索",
+        "priority": "P0"
+      },
+      {
+        "id": 109,
+        "title": "【正向】/ee/search/batchAddCompetitionToEs - 正常请求",
+        "module": "体育/接口/搜索",
+        "priority": "P0"
+      },
+      {
+        "id": 112,
+        "title": "【正向】/ee/replay/callback - 正常请求",
+        "module": "体育/接口/match-replay-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 115,
+        "title": "【正向】/ee/news/save - 正常请求",
+        "module": "体育/接口/news-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 118,
+        "title": "【正向】/ee/news/related - 正常请求",
+        "module": "体育/接口/news-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 121,
+        "title": "【正向】/ee/news/list_visible - 正常请求",
+        "module": "体育/接口/news-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 124,
+        "title": "【正向】/ee/news/list - 正常请求",
+        "module": "体育/接口/news-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 127,
+        "title": "【正向】/ee/news/audit_pass_all - 正常请求",
+        "module": "体育/接口/news-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 130,
+        "title": "【正向】/ee/news/audit - 正常请求",
+        "module": "体育/接口/news-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 133,
+        "title": "【正向】/ee/news/aggregate_news_kind - 正常请求",
+        "module": "体育/接口/news-controller",
+        "priority": "P0"
+      },
+      {
+        "id": 136,
+        "title": "【正向】用户记录 - 正常请求",
+        "module": "体育/接口/预测比赛",
+        "priority": "P0"
+      },
+      {
+        "id": 139,
+        "title": "【正向】[测试]停止下注 - 正常请求",
+        "module": "体育/接口/预测比赛",
+        "priority": "P0"
+      },
+      {
+        "id": 142,
+        "title": "【正向】[测试]结算 - 正常请求",
+        "module": "体育/接口/预测比赛",
+        "priority": "P0"
+      },
+      {
+        "id": 145,
+        "title": "【正向】预测比赛列表 - 正常请求",
+        "module": "体育/接口/预测比赛",
+        "priority": "P0"
+      },
+      {
+        "id": 148,
+        "title": "【正向】[测试]准备开奖 - 正常请求",
+        "module": "体育/接口/预测比赛",
+        "priority": "P0"
+      }
+    ],
+    "web": [
+      {
+        "id": 592,
+        "title": "篮球站首页主标题",
+        "module": "体育/篮球",
+        "priority": "P0"
+      },
+      {
+        "id": 593,
+        "title": "篮球站首页 News 入口可见",
+        "module": "体育/篮球",
+        "priority": "P0"
+      },
+      {
+        "id": 594,
+        "title": "篮球站首页 BBall 入口可见",
+        "module": "体育/篮球",
+        "priority": "P0"
+      },
+      {
+        "id": 596,
+        "title": "篮球站首页 Scores 区块可见",
+        "module": "体育/篮球",
+        "priority": "P0"
+      },
+      {
+        "id": 598,
+        "title": "篮球站首页 National Basketball League 入口可见",
+        "module": "体育/联赛",
+        "priority": "P0"
+      },
+      {
+        "id": 599,
+        "title": "篮球站首页 VTB United League Supercup 入口可见",
+        "module": "体育/联赛",
+        "priority": "P0"
+      },
+      {
+        "id": 601,
+        "title": "篮球站新闻列表页渲染出新闻条目",
+        "module": "体育/新闻",
+        "priority": "P0"
+      },
+      {
+        "id": 602,
+        "title": "篮球站个人中心页可打开（页脚可见）",
+        "module": "体育/我的",
+        "priority": "P0"
+      },
+      {
+        "id": 605,
+        "title": "从首页点击联赛入口进入联赛页",
+        "module": "体育/联赛",
+        "priority": "P0"
+      },
+      {
+        "id": 608,
+        "title": "直播站首页 News 入口可见",
+        "module": "体育/新闻",
+        "priority": "P0"
+      },
+      {
+        "id": 609,
+        "title": "直播站首页 Football 入口可见",
+        "module": "体育/直播",
+        "priority": "P0"
+      },
+      {
+        "id": 610,
+        "title": "直播站首页 Basketball 切换入口可见",
+        "module": "体育/直播",
+        "priority": "P0"
+      },
+      {
+        "id": 617,
+        "title": "直播站阿语路由页面可加载",
+        "module": "体育/多语言",
+        "priority": "P0"
+      },
+      {
+        "id": 618,
+        "title": "直播站篮球分区页（篮球站内容）可打开",
+        "module": "体育/直播",
+        "priority": "P0"
+      },
+      {
+        "id": 621,
+        "title": "直播站首页 Football 与 Fixtures 同时可见",
+        "module": "体育/直播",
+        "priority": "P0"
+      },
+      {
+        "id": 595,
+        "title": "篮球站首页 Fixtures 区块可见",
+        "module": "体育/篮球",
+        "priority": "P1"
+      },
+      {
+        "id": 597,
+        "title": "篮球站首页搜索入口可见",
+        "module": "体育/篮球",
+        "priority": "P1"
+      },
+      {
+        "id": 600,
+        "title": "篮球站首页 Camel Live 跨站入口可见",
+        "module": "体育/篮球",
+        "priority": "P1"
+      },
+      {
+        "id": 603,
+        "title": "National Basketball League 联赛页标题",
+        "module": "体育/联赛",
+        "priority": "P1"
+      },
+      {
+        "id": 604,
+        "title": "篮球站新闻页渲染出新闻条目",
+        "module": "体育/新闻",
+        "priority": "P1"
+      },
+      {
+        "id": 606,
+        "title": "篮球站首页二次访问仍正常",
+        "module": "体育/篮球",
+        "priority": "P1"
+      },
+      {
+        "id": 611,
+        "title": "直播站首页 Camel Live 入口可见",
+        "module": "体育/直播",
+        "priority": "P1"
+      },
+      {
+        "id": 612,
+        "title": "直播站首页 Fixtures 区块可见",
+        "module": "体育/直播",
+        "priority": "P1"
+      },
+      {
+        "id": 613,
+        "title": "直播站首页 Scores 区块可见",
+        "module": "体育/直播",
+        "priority": "P1"
+      },
+      {
+        "id": 614,
+        "title": "直播站首页搜索入口可见",
+        "module": "体育/直播",
+        "priority": "P1"
+      },
+      {
+        "id": 615,
+        "title": "Indonesian Super League 入口可见",
+        "module": "体育/联赛",
+        "priority": "P1"
+      },
+      {
+        "id": 616,
+        "title": "Indian Calcutta Football League 入口可见",
+        "module": "体育/联赛",
+        "priority": "P1"
+      },
+      {
+        "id": 619,
+        "title": "直播站新闻页渲染出新闻条目",
+        "module": "体育/新闻",
+        "priority": "P1"
+      },
+      {
+        "id": 607,
+        "title": "直播站首页主标题",
+        "module": "体育/直播",
+        "priority": "P2"
+      },
+      {
+        "id": 620,
+        "title": "直播站首页二次访问仍可渲染",
+        "module": "体育/直播",
+        "priority": "P2"
+      }
+    ]
+  },
+  "versions": [
+    {
+      "version": "16.1",
+      "job_ids": [
+        23,
+        24
+      ],
+      "person_hours": 1.5,
+      "execution_hours": 0.141,
+      "evidence_complete": true,
+      "reuse_suggested": 0,
+      "reuse_adopted": 0
+    },
+    {
+      "version": "16.2",
+      "job_ids": [
+        25,
+        26
+      ],
+      "person_hours": 1.5,
+      "execution_hours": 0.274,
+      "evidence_complete": true,
+      "reuse_suggested": 0,
+      "reuse_adopted": 0
+    },
+    {
+      "version": "16.3",
+      "job_ids": [
+        27,
+        28
+      ],
+      "person_hours": 1.5,
+      "execution_hours": 0.292,
+      "evidence_complete": true,
+      "reuse_suggested": 0,
+      "reuse_adopted": 0
+    }
+  ],
+  "slo": {
+    "versions": [
+      {
+        "version": "16.1",
+        "person_hours": 1.5,
+        "execution_hours": 0.141,
+        "reuse_suggested": 0,
+        "reuse_adopted": 0,
+        "reuse_hit_rate": null,
+        "meets": {
+          "plan_within_2h": true,
+          "execution_within_3h": true,
+          "evidence_complete": true,
+          "reuse_hit_rate_50pct": false
+        },
+        "all_met": false
+      },
+      {
+        "version": "16.2",
+        "person_hours": 1.5,
+        "execution_hours": 0.274,
+        "reuse_suggested": 0,
+        "reuse_adopted": 0,
+        "reuse_hit_rate": null,
+        "meets": {
+          "plan_within_2h": true,
+          "execution_within_3h": true,
+          "evidence_complete": true,
+          "reuse_hit_rate_50pct": false
+        },
+        "all_met": false
+      },
+      {
+        "version": "16.3",
+        "person_hours": 1.5,
+        "execution_hours": 0.292,
+        "reuse_suggested": 0,
+        "reuse_adopted": 0,
+        "reuse_hit_rate": null,
+        "meets": {
+          "plan_within_2h": true,
+          "execution_within_3h": true,
+          "evidence_complete": true,
+          "reuse_hit_rate_50pct": false
+        },
+        "all_met": false
+      }
+    ],
+    "consecutive_passing": 0,
+    "consecutive_required": 3,
+    "overall_reuse_hit_rate": null,
+    "meets_all": false,
+    "thresholds": {
+      "person_hours_per_version_max": 2.0,
+      "execution_hours_per_version_max": 3.0,
+      "evidence_completeness_min": 1.0,
+      "reuse_hit_rate_min": 0.5,
+      "consecutive_versions_min": 3
+    }
+  },
+  "environment_fingerprint_source": "environment_fingerprints",
+  "account_slot": "sports-tester-01"
+}
