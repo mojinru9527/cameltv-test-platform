@@ -62,6 +62,7 @@ def evaluate_assertions(
     text: str,
     payload: Any,
     assertions: list[dict],
+    elapsed_ms: float | None = None,
 ) -> list[dict]:
     """返回逐条断言结果；未识别的断言类型记为失败（不静默放过）。"""
     results: list[dict] = []
@@ -70,12 +71,39 @@ def evaluate_assertions(
         expected = assertion.get("expected")
         passed = False
         actual: Any = None
-        if kind == "status":
+        if kind in {"status", "status_code"}:
+            # Batch 266：库内生成的用例用 `status_code` + `operator`（gte/lt…）表达区间，
+            # 节点此前只认等值 `status`，导致这类断言一律判失败。这里补齐算子，
+            # 仍保持"未识别即失败"的原则（未知算子不放过）。
             actual = status_code
-            passed = status_code == expected
-        elif kind == "json_path":
+            operator = str(assertion.get("operator") or "eq").strip().lower()
+            if status_code is None:
+                passed = False
+            elif operator in {"gte", "ge", ">="}:
+                passed = status_code >= expected
+            elif operator in {"gt", ">"}:
+                passed = status_code > expected
+            elif operator in {"lte", "le", "<="}:
+                passed = status_code <= expected
+            elif operator in {"lt", "<"}:
+                passed = status_code < expected
+            elif operator in {"eq", "equals", "=="}:
+                passed = status_code == expected
+            else:
+                actual = f"未识别的断言算子: {operator or '(空)'}"
+                passed = False
+        elif kind in {"json_path", "jsonpath"}:
+            # Batch 266：库内生成的用例用小写 `jsonpath`；且 `expected=null` 表示
+            # "该路径存在且非空"，而不是"等于 null"。
             actual = _dig(payload, str(assertion.get("path") or ""))
-            passed = actual == expected
+            if expected is None:
+                passed = actual not in (None, "", [], {})
+            else:
+                passed = actual == expected
+        elif kind == "response_time":
+            # Batch 266：`expected` 是毫秒上限（响应时间断言）。
+            actual = elapsed_ms
+            passed = elapsed_ms is not None and expected is not None and elapsed_ms <= float(expected)
         elif kind == "text_contains":
             actual = expected in (text or "") if expected is not None else False
             passed = bool(actual)
@@ -192,7 +220,11 @@ def _run_one_api_case(
         record["error"] = f"{type(exc).__name__}: {exc}"
 
     record["assertions"] = evaluate_assertions(
-        status_code=status_code, text=text, payload=payload, assertions=case.get("assertions") or []
+        status_code=status_code,
+        text=text,
+        payload=payload,
+        assertions=case.get("assertions") or [],
+        elapsed_ms=record.get("elapsed_ms"),
     )
     record["passed"] = bool(record["assertions"]) and all(
         item["passed"] for item in record["assertions"]
@@ -213,6 +245,31 @@ def _run_one_api_case(
 
 
 # ── Web 执行 ───────────────────────────────────────────────────
+
+def _any_visible(page: Any, selector: str) -> bool:
+    """任一匹配元素可见即视为可见（Batch 266 / C264-4）。
+
+    `page.is_visible(selector)` 只看**第一个**匹配元素，而 `text=` 这类选择器常匹配多个，
+    与 `wait_visible`（任一匹配可见）结论可能相反。这里统一为"任一匹配可见"。
+    """
+    try:
+        locator = page.locator(selector)
+        count = locator.count()
+    except AttributeError:
+        # 测试替身等不实现 locator 的页面对象：退回单匹配语义（真实 Playwright page 有 locator）。
+        try:
+            return bool(page.is_visible(selector))
+        except Exception:  # noqa: BLE001
+            return False
+    except Exception:  # noqa: BLE001 - 选择器非法按不可见处理（失败可见）
+        return False
+    for index in range(min(int(count), 20)):
+        try:
+            if locator.nth(index).is_visible():
+                return True
+        except Exception:  # noqa: BLE001 - 单个元素查询失败不影响其余匹配
+            continue
+    return False
 
 def _default_page_factory(headless: bool = True):
     """真实 Playwright 适配器；未安装即明确报错（不降级成"通过"）。"""
@@ -250,15 +307,32 @@ def run_web_cases(
     page_factory: Callable[[], Any] | None = None,
     base_url: str = "",
 ) -> dict:
-    """顺序执行 Web 用例；每步失败即停在该用例，并保留已产出的截图。"""
+    """顺序执行 Web 用例；**每条用例独立浏览器上下文**（Batch 266 / C264-4）。
+
+    此前一个 job 只建一次 context/page，用例共享 cookie 与 localStorage，
+    站点记住偏好后渲染变化，导致依赖页面状态的断言在连续访问时翻转
+    （实测 30 条里 3 条）。现在按用例重建上下文，隔离状态。
+    """
     directory = Path(evidence_dir)
     directory.mkdir(parents=True, exist_ok=True)
     factory = page_factory or _default_page_factory
     case_results: list[dict] = []
-    with factory() as page:
-        for case in cases:
+    for case in cases:
+        try:
+            with factory() as page:
+                case_results.append(
+                    _run_one_web_case(page, case, directory=directory, base_url=base_url)
+                )
+        except Exception as exc:  # noqa: BLE001 - 单条用例失败不得拖垮整个 job
             case_results.append(
-                _run_one_web_case(page, case, directory=directory, base_url=base_url)
+                {
+                    "id": str(case.get("id") or case.get("name") or "case"),
+                    "name": case.get("name") or case.get("id") or "case",
+                    "steps": [],
+                    "passed": False,
+                    "error": f"{type(exc).__name__}: {str(exc)[:200]}",
+                    "finished_at": _now(),
+                }
             )
     return _summarize(case_results)
 
@@ -278,31 +352,34 @@ def _run_one_web_case(page: Any, case: dict, *, directory: Path, base_url: str) 
     for index, step in enumerate(case.get("steps") or []):
         action = str(step.get("action") or "").strip()
         target = step.get("selector") or ""
-        if action == "goto":
-            url = str(step.get("url") or "")
-            if base_url and not url.lower().startswith(("http://", "https://")):
-                url = base_url.rstrip("/") + "/" + url.lstrip("/")
-            page.goto(url, wait_until=step.get("wait_until") or "domcontentloaded")
-        elif action == "click":
-            page.click(str(target))
-        elif action == "fill":
-            page.fill(str(target), str(step.get("value") or ""))
-        elif action == "press":
-            page.press(str(target), str(step.get("key") or "Enter"))
-        elif action == "wait_visible":
-            page.wait_for_selector(str(target), state="visible", timeout=int(step.get("timeout_ms") or 15000))
-        elif action == "expect_visible":
-            visible = bool(page.is_visible(str(target)))
-            if visible != bool(step.get("expected", True)):
-                failure = f"步骤 {index} expect_visible 不满足: {target}"
-        elif action == "expect_text":
-            actual_text = page.inner_text(str(target))
-            if str(step.get("expected") or "") not in actual_text:
-                failure = f"步骤 {index} expect_text 不包含 {step.get('expected')!r}"
-        elif action == "wait":
-            page.wait_for_timeout(int(step.get("ms") or 500))
-        else:
-            failure = f"步骤 {index} 未知动作: {action or '(空)'}"
+        try:
+            if action == "goto":
+                url = str(step.get("url") or "")
+                if base_url and not url.lower().startswith(("http://", "https://")):
+                    url = base_url.rstrip("/") + "/" + url.lstrip("/")
+                page.goto(url, wait_until=step.get("wait_until") or "domcontentloaded")
+            elif action == "click":
+                page.click(str(target))
+            elif action == "fill":
+                page.fill(str(target), str(step.get("value") or ""))
+            elif action == "press":
+                page.press(str(target), str(step.get("key") or "Enter"))
+            elif action == "wait_visible":
+                page.wait_for_selector(str(target), state="visible", timeout=int(step.get("timeout_ms") or 15000))
+            elif action == "expect_visible":
+                visible = _any_visible(page, str(target))
+                if visible != bool(step.get("expected", True)):
+                    failure = f"步骤 {index} expect_visible 不满足: {target}"
+            elif action == "expect_text":
+                actual_text = page.inner_text(str(target))
+                if str(step.get("expected") or "") not in actual_text:
+                    failure = f"步骤 {index} expect_text 不包含 {step.get('expected')!r}"
+            elif action == "wait":
+                page.wait_for_timeout(int(step.get("ms") or 500))
+            else:
+                failure = f"步骤 {index} 未知动作: {action or '(空)'}"
+        except Exception as exc:  # noqa: BLE001 - 单步异常记为用例失败，不拖垮 job
+            failure = f"步骤 {index} {action or '(空)'} 执行异常: {type(exc).__name__}: {str(exc)[:120]}"
 
         record["steps"].append({"index": index, "action": action, "selector": target, "ok": failure is None})
         if failure:
