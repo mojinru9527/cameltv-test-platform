@@ -1,0 +1,35 @@
+{
+  "captured_at": "2026-09-19",
+  "tool": "test-platform-v2/backend/scripts/drill_three_versions.py（B4-3/4/5 验收驱动自带预检）",
+  "command": "python scripts/drill_three_versions.py --project-id 1 --environment-id 12 --account-slot sports-tester-01 --base-url http://127.0.0.1:8123 --target-url http://camel-api-gateway05.svc.elelive.cn/actuator/health --node-token *** --versions 3 --module-prefix 体育",
+  "environment": "本机临时 SQLite（Batch 264 试点集 + 环境指纹），对生产/测试零写入",
+  "exit_code": 4,
+  "result": {
+    "status": "not_ready",
+    "checks": {
+      "database_ok": true,
+      "dataset_meets_target": true,
+      "fingerprint_present": true,
+      "node_online": false,
+      "target_reachable": true,
+      "account_slot_configured": true
+    },
+    "blockers": ["没有在线执行节点（在测试人员机器上执行 cameltv-node up）"],
+    "dataset": {
+      "counts": { "api": 50, "web": 30 },
+      "targets": { "api": 50, "web": 30 },
+      "shortfall": { "api": 0, "web": 0 }
+    },
+    "note": "环境未就绪，未执行任何版本（不会用本地替身顶替体育验收）"
+  },
+  "fingerprint_evidence": {
+    "environment_id": 12,
+    "fingerprint_hash": "5e7ca8bbc59352a93c1b30b3c1a033447b910ca5f528e833ec565c85b6cda4cc",
+    "confidence": "HIGH",
+    "components": ["service_versions", "openapi_hash", "db_schema_version", "static_asset_hash"],
+    "cross_check": "openapi_hash = 5fb9a478fc73665d…，与 tests/api-testing/specs/test5-contracts/manifest.json 记录的 camel-service sha256 完全一致"
+  },
+  "before_batch_264": "同一预检当时为 dataset_meets_target=false（api 0/50、web 0/30）、fingerprint_present=false；target_reachable 亦为 false（入口用错：裸路径 404）",
+  "after_batch_264": "dataset_meets_target=true（50/30）、fingerprint_present=true（HIGH）、target_reachable=true；仅剩 node_online=false",
+  "remaining_blocker_detail": "需要一台在线执行节点：在测试人员机器上 `cameltv-node up`（平台侧签发节点令牌），之后同一命令去掉 dummy token 即可跑 3 个版本"
+}

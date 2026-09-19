@@ -14,6 +14,7 @@
 | 命令 | 结果 |
 |------|------|
 | `python scripts/build_pilot_baseline.py --project-id 1 --environment-id 12 --module-prefix 体育` | **meets_target=true**：counts api **50** / web **30**，shortfall **0/0**，exit **0** |
+| `python scripts/drill_three_versions.py …（验收驱动自带预检）` | **dataset_meets_target=true**、`fingerprint_present=true`（confidence HIGH）、`target_reachable=true`；仅剩 `node_online=false` → exit 4，证据 `evidence/batch-264/drill-preflight-20260919.json` |
 | `pwsh scripts/git/scan-common-bugs.ps1` | HARD **0** / WARN 344（= 主干基线，非阻断） |
 | `pwsh scripts/git/audit-cconditions.ps1` | hard errors **0** / warnings **0** |
 | CI 范围分类 | 本批仅 `work-logs/**` → `{"backend": false, "frontend": false, "reasons": ["documentation"]}` |
