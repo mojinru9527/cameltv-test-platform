@@ -24,6 +24,7 @@
 - ✅ `drill_three_versions.py` — 调用点 `headers = _auth_headers(args)`；`--help` 明确两类令牌用途。
 - ✅ `tests/test_batch265_drill_user_auth.py` — 3 例覆盖"用户令牌→Bearer""仅节点令牌→明确失败""调用点不回退"。
 - ✅ 实跑报告 `evidence/batch-265/drill-three-versions.json` — 3 个版本、证据完整；SLO 明细含未达标的复用率。
+- ✅ 追加验证 `evidence/batch-265/pilot-8cases-real-test5-20260919.json` — 用正确 payload 重投：API 5/5（真实业务端点，含信封码断言）+ Web 3/3（三张截图 SHA256 互不相同），证明**链路可用、缺口只在 payload 构造**（`C265-3`）。
 - ✅ 未越界 — 未改 `app/`（除测试目录），未动权限模型。
 
 ## 判决

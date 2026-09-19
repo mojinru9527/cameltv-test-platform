@@ -64,6 +64,19 @@ SLO 明细（报告 evidence/batch-265/drill-three-versions.json）：
 
 > **勘误**：本批早期曾把「Web 30/30 在真实 Test5 上通过」当作结论，经证据复核（截图 SHA256 相同、steps 为空）**该结论作废**。
 
+## 追加验证：用**正确的可执行 payload** 重跑 8 条试点用例（§5 第 ③ 条）
+
+为区分"驱动缺陷"与"链路缺陷"，用同一平台+同一节点、按 `drill_b1_e2e.py` 证明过的 payload 结构重投任务：
+
+| 任务 | 结果 | 证据 |
+|------|------|------|
+| API job **12**（5 条真实体育业务端点） | **completed，passed 5 / failed 0**，evidence_files 11 | `/ee/version/version`（$.data 含『打包时间』）· `/ee/stream_stats/quality` · `/ee/sports_live/list_faceoff` · `/ee/sports_live/living_group_match` · `/ee/sports_live/player/hot-players` |
+| Web job **11**（3 条真实页面） | **completed，passed 3 / failed 0**，evidence_files 7 | 截图 `sp-web-1.png` 967912B / `sp-web-2.png` 1089762B / `sp-web-3.png` 451633B，**SHA256 互不相同**（真实渲染） |
+
+对照：job **10** 用随机 GET 端点只过 3/5，失败两条是 **HTTP 200 但信封码 `$.status=400`**（缺参数）——按仓库"envelope 码 vs HTTP 码"约定，这是**正确判定**，换成信封 200 的端点后 5/5。
+
+**结论**：执行链路（平台登记 → 节点认领 → 真打 Test5 → 上传证据 → 完整性校验）**可用**；缺口只在 driver 的 payload 构造（`C265-3`）。证据文件：`evidence/batch-265/pilot-8cases-real-test5-20260919.json`。
+
 ## bug-guard「未关闭已知风险」表核对（三问）
 
 **1) 本批是否新增清单中任一项？** 否——只改 QA 驱动的鉴权参数与输出路径。
