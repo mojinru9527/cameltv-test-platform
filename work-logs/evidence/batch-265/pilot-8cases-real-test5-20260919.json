@@ -1,0 +1,38 @@
+{
+  "captured_at": "2026-09-19",
+  "title": "§5 第 ③ 条：8 条试点用例在真实 Test5 上跑通（非真机）",
+  "why": "Batch 265 发现 driver 的 payload 只有 brief（C265-3），节点执行会空过；本证据用**正确的可执行 payload**（API: request{method,url}+assertions[]；Web: steps[{action,...}]）在同一个平台+节点上重跑，证明链路本身可用，缺口只在 payload 构造",
+  "environment": {
+    "platform": "本机 uvicorn @127.0.0.1:8123（SQLite 试点库，项目 1）",
+    "node": "本机 cameltv-node（pilot-node，project_scope=1，online）",
+    "api_target": "http://camel-api-gateway05.svc.elelive.cn/camel-service",
+    "web_targets": ["https://camelive-g3-test5.elelive.cn/", "https://camel-bball-test5.elelive.cn/basketball"]
+  },
+  "api": {
+    "job_id": 12,
+    "verdict": "completed，passed 5 / failed 0，evidence_files 11",
+    "cases": [
+      {"id": "sp-api-1", "url": "/ee/version/version", "assertions": "HTTP 200 + $.status=200 + $.data 含『打包时间』", "passed": true},
+      {"id": "sp-api-2", "url": "/ee/stream_stats/quality", "assertions": "HTTP 200 + $.status=200", "passed": true},
+      {"id": "sp-api-3", "url": "/ee/sports_live/list_faceoff", "assertions": "HTTP 200 + $.status=200 + $.data 非空", "passed": true},
+      {"id": "sp-api-4", "url": "/ee/sports_live/living_group_match", "assertions": "HTTP 200 + $.status=200 + $.data 非空", "passed": true},
+      {"id": "sp-api-5", "url": "/ee/sports_live/player/hot-players", "assertions": "HTTP 200 + $.status=200 + $.data 非空", "passed": true}
+    ],
+    "note": "首轮（job 10）用 5 条随机 GET 端点只过 3/5：失败的两条 HTTP 200 但**信封码** $.status=400（u/push_state、token 缺参数）——断言按仓库约定检查信封码，因此失败是**正确判定**，换成信封 200 的业务端点后 5/5。"
+  },
+  "web": {
+    "job_id": 11,
+    "verdict": "completed，passed 3 / failed 0，evidence_files 7",
+    "cases": [
+      {"id": "sp-web-1", "steps": ["goto 直播站首页", "wait_visible h1", "expect_text h1 含 Football Today"], "passed": true, "screenshot": "sp-web-1.png 967912B"},
+      {"id": "sp-web-2", "steps": ["goto 直播站首页", "expect_visible text=Camel Live"], "passed": true, "screenshot": "sp-web-2.png 1089762B"},
+      {"id": "sp-web-3", "steps": ["goto 篮球站首页", "wait_visible h1", "expect_text h1 含 Basketball Live Scores"], "passed": true, "screenshot": "sp-web-3.png 451633B"}
+    ],
+    "note": "三张截图 SHA256 互不相同（E6F91C54… / B9141008… / 354FB2D2…），体积 452KB~1.09MB —— 与 Batch 265 早前『30 张截图逐字节相同=空白页』形成对照，证明这次是**真实渲染**而非空过。"
+  },
+  "conclusion": [
+    "§5 第 ③ 条（8 条试点用例真机外跑通、证据可查）**本机端到端达成**：5 接口 + 3 Web 全过，证据包含 request/response、console、截图、manifest。",
+    "执行链路（平台登记 → 节点认领 → 真打 Test5 → 上传证据 → 校验完整性）已被证明可用。",
+    "⑦ 条仍差两件事：① driver 的 payload 需按本文件的结构携带完整用例定义（C265-3）；② 复用命中率需走版本任务流程取真实数字（C265-1）。"
+  ]
+}

@@ -7,7 +7,13 @@
     python scripts/drill_three_versions.py \
         --project-id 1 --environment-id 9 --account-slot sports-tester-01 \
         --base-url https://swiftbugs.cn --target-url http://camel-api-gateway05.svc.elelive.cn \
-        --node-token <节点令牌> --versions 3 --person-hours-per-version 1.5
+        --user-token <用户 JWT> --versions 3 --person-hours-per-version 1.5
+
+凭据口径（Batch 265 修正）：
+  - 「登记任务 / 查任务 / 校验证据包」属于**用户**端点（`execution:manage` / `execution:view`），
+    必须用用户 JWT（`--user-token`，或用 `--username/--password` 现登录取 JWT）；
+  - `--node-token` 只是**节点侧**凭据（认领/心跳/上报由 cameltv-node 使用），**不能**用于登记任务；
+    本脚本不再用它发 HTTP 请求，保留参数仅为兼容旧命令行并给出明确提示。
 
 **诚实原则（不可绕过）**：
   - 前置检查不过 → 打印**具体缺哪一环**并以退出码 4 结束，**不会继续跑**；
@@ -91,6 +97,29 @@ def _api_client(args) -> httpx.Client:
     return httpx.Client(base_url=args.base_url.rstrip("/"), timeout=120, trust_env=False)
 
 
+def _auth_headers(args) -> dict[str, str]:
+    """用户态请求头（Batch 265 / C264-3）。
+
+    `POST /api/v1/execution-jobs` 等端点依赖 `require_permission("execution:manage")`，
+    只认用户 JWT；早期版本误用节点令牌（`X-AI-Agent-Token`）导致必然 401。
+    """
+    token = (args.user_token or "").strip()
+    if not token and args.username:
+        with _api_client(args) as client:
+            resp = client.post(
+                "/api/v1/auth/login",
+                json={"username": args.username, "password": args.password or ""},
+            )
+            resp.raise_for_status()
+            token = ((resp.json().get("data") or {}).get("access_token") or "").strip()
+    if not token:
+        raise SystemExit(
+            "缺少用户凭据：请用 --user-token <JWT> 或 --username/--password 登录。"
+            "节点令牌（--node-token）只用于节点侧认领，不能登记任务（见 C264-3）。"
+        )
+    return {"Authorization": f"Bearer {token}", "X-Project-Id": str(args.project_id)}
+
+
 def run_versions(args, dataset: dict) -> list[dict]:
     """逐版本：登记任务 → 等节点跑完 → 校验证据包 → 记录指标。"""
     case_refs = [f"case:{c['id']}" for c in dataset.get("api", []) + dataset.get("web", [])]
@@ -100,7 +129,7 @@ def run_versions(args, dataset: dict) -> list[dict]:
     }
     versions: list[dict] = []
     with _api_client(args) as client:
-        headers = {"X-AI-Agent-Token": args.node_token} if args.node_token else {}
+        headers = _auth_headers(args)
         for index in range(args.versions):
             version_label = f"{args.version_prefix}{index + 1}"
             started = datetime.now()
@@ -160,7 +189,14 @@ def main() -> int:
     parser.add_argument("--account-slot", default="", help="账号槽位名（不是凭据）")
     parser.add_argument("--base-url", required=True, help="平台 API 地址")
     parser.add_argument("--target-url", default="", help="被测系统地址（Test5 网关，需 VPN）")
-    parser.add_argument("--node-token", default="", help="节点令牌（供本机节点认领）")
+    parser.add_argument("--user-token", default="", help="用户 JWT（登记/查询任务用；execution:manage）")
+    parser.add_argument("--username", default="", help="平台账号（与 --password 一起，用于现登录取 JWT）")
+    parser.add_argument("--password", default="", help="平台密码（仅当未提供 --user-token 时使用）")
+    parser.add_argument(
+        "--node-token",
+        default="",
+        help="节点令牌（保留兼容；仅节点侧使用，本脚本不再用它发请求）",
+    )
     parser.add_argument("--module-prefix", default="体育")
     parser.add_argument("--api-limit", type=int, default=pilot_dataset_service.PILOT_API_TARGET)
     parser.add_argument("--web-limit", type=int, default=pilot_dataset_service.PILOT_WEB_TARGET)
@@ -202,6 +238,7 @@ def main() -> int:
         "account_slot": args.account_slot,
     }
     if args.out:
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
         Path(args.out).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"报告已写入 {args.out}")
     print(json.dumps({"meets_all": slo["meets_all"], "consecutive_passing": slo["consecutive_passing"]}, ensure_ascii=False))

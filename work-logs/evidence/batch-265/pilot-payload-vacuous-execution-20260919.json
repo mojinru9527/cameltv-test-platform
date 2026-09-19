@@ -1,0 +1,22 @@
+{
+  "captured_at": "2026-09-19",
+  "title": "试点集执行 payload 不带可执行细节 → API 全 404、Web 空过（30/30 不可信）",
+  "context": "Batch 265 用修好的凭据真跑 3 个版本（job id 2..9），四个版本对的执行结果完全一致",
+  "results": {
+    "api_jobs": "passed 0 / failed 50（job 2/4/6/8，每次运行相同）",
+    "web_jobs": "passed 30 / failed 0（job 3/5/7/9）——但见下，这是空过"
+  },
+  "api_evidence": {
+    "sample_request": {"method": "GET", "url": "http://camel-api-gateway05.svc.elelive.cn/camel-service/", "headers": {}, "body": null},
+    "observed": "所有 50 条请求都是裸 GET <base>/（无 path/query/body），响应 404",
+    "root_cause": "driver 把 select_pilot_cases 的 brief（{id,title,module,priority}）直接作为 cases 塞进 job payload；brief 不含 method/path/params，节点无从构造请求"
+  },
+  "web_evidence": {
+    "results_json": "cases[].steps 全部为 []，passed=true",
+    "screenshots": "30 张 .png 均为 1280x720 / 4254 bytes，且 SHA256 逐字节相同（592.png 与 593.png 哈希一致）→ 同一张空白页",
+    "conclusion": "30/30 pass 属于**空过**（没有步骤、没有断言、没有真实导航），不能作为 §5 第 ⑦ 条或第 ③ 条的通过证据"
+  },
+  "correction": "Batch 264/265 早期结论『Web 30/30 在真实 Test5 上通过』**作废**；当前真实结论是：Web 侧未真正执行，API 侧 50/50 失败",
+  "fix_direction": "payload 必须携带完整用例定义（API: method/path/params/headers/断言；Web: url/steps/断言），或由节点按 case id 从平台取全量定义后再执行；修复后重跑 3 版本并以 meets_all 判定",
+  "registered_as": "C265-3（P1）"
+}

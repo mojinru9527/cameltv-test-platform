@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-19（Batch 264 体育试点数据集；新增 C264-1 P1 试点集口径落真实环境、C264-2 P2 Web 用例尚未真跑、C264-3 P1 验收驱动 401 缺陷、C264-4 P1 节点 Web 执行缺用例级隔离；同日 Batch 263/262 分别新增 C263-1、C262-1~C262-4）
+**最后更新**: 2026-09-19（Batch 265 演练驱动用户凭据修复：C265-1 P1 / C265-2 P2 / C265-3 P1；Batch 264 体育试点数据集：C264-1 P1 / C264-2 P2 / C264-3 P1 / C264-4 P1；同日 Batch 263、262 分别新增 C263-1、C262-1~C262-4）
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -57,6 +57,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## Open (待处理)
 
+### batch-265 — 演练驱动用户凭据修复（2026-09-19）—— 新增
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C265-1 | **⑦ 条的复用命中率仍无真实数字**：Batch 265 用修好的驱动真跑 3 个版本（16.1/16.2/16.3，证据完整），SLO 中 `plan_within_2h`/`execution_within_3h`/`evidence_complete` 全绿，唯独 `reuse_hit_rate_50pct=false`——因为 `--reuse-suggested/--reuse-adopted` 未提供，驱动无法自动观测该指标（本机演练未走平台"版本任务"流程，故无真实建议/采纳数，**未编数字**）。解除条件=通过版本任务流程跑 ≥3 个版本，使 `reuse_suggestion_event` 产生真实建议/采纳数，如实回填后复跑并达 `meets_all=true` | P1 | 2026-09-19 |
+| C265-2 | **bug-guard 增补铁律**：脚本调平台端点前必须先确认该端点是**用户态**（`Depends(require_permission(...))`，需 JWT）还是**节点态**（`X-AI-Agent-Token`）；Batch 264/265 的 401 即因混用。解除条件=写入 `cameltv-bug-guard` PATTERNS/SKILL 并有对应回归或检查手段 | P2 | 2026-09-19 |
+| C265-3 | **P1 试点集执行 payload 不带可执行细节 → 实跑为空过**：driver 把 `pilot_dataset_service.select_pilot_cases` 的 brief（`{id,title,module,priority}`）直接塞进 job payload，节点拿不到 method/path/params（API 侧 50/50 全部裸 `GET <base>/` → 404）与 url/steps（Web 侧 `steps=[]`、30 张截图逐字节相同=空白页 → 30/30 属**空过**）。因此 §5 第 ⑦ 条当前既不能判"未达成"为环境问题，也不能判"达成"。解除条件=payload 携带完整用例定义（API: method/path/params/headers/断言；Web: url/steps/断言），或节点按 case id 从平台取全量定义；修复后重跑 3 版本并以 `meets_all=true` 判定 | P1 | 2026-09-19 |
 ### batch-264 — 体育试点数据集（2026-09-19）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
@@ -65,7 +72,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C264-2 | **Web 用例尚未真正执行**：30 条 Web 用例是结构化步骤（`case_type=ui` + steps/expected），真正跑起来依赖 `case_compiler` 编译成 spec（B2-3 链路）。解除条件=至少 3 条 Web 用例在 Test5（真机外）跑通并留证据包（截图 + manifest sha256） | P2 | 2026-09-19 |
 | C264-3 | **P1 验收驱动无法自建任务（401）**：`scripts/drill_three_versions.py:110` 用 `X-AI-Agent-Token`（节点令牌）调 `POST /api/v1/execution-jobs`，而该端点要求用户 JWT（`require_permission("execution:manage")`）→ 必然 401，§5 第 ⑦ 条按文档命令永远跑不通。对照：同库改用用户 JWT 后立刻 200，且节点认领并执行（pending→running→failed，stub payload）。解除条件=驱动增加用户凭据参数（`--user-token` 或账号登录取 JWT）并复跑至少 1 个版本留证据；修复为代码变更，按 `pipeline-modes` 判定批次档位 | P1 | 2026-09-19 |
 | C264-4 | **P1 节点 Web 执行缺少用例级隔离**：`scripts/node/cameltv_node/executor.py:230` 一个 job 只建一个 `new_context()/new_page()`，30 条用例共享 cookie/localStorage；站点记住偏好后渲染变化，导致依赖站点状态的断言**翻转**（实测 30 条中 3 条在连续访问下失败、隔离访问下通过；3 轮分别为 25/27/27）。另：`expect_visible` 用 `page.is_visible`（只看首个匹配），而 `wait_visible` 用 `wait_for_selector`（任一匹配可见），`text=` 多匹配时两者结论可能相反。解除条件=每条用例独立 context（或 storage 隔离）+ 统一可见性断言语义，并复跑 30 条达稳定 30/30 | P1 | 2026-09-19 |
-
 ### batch-263 — 老队列遗留面处置裁定（2026-09-19）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
