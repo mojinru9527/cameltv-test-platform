@@ -122,6 +122,7 @@ RequirementVersion ──(变更)──▶ Module ──(覆盖)──▶ Case(�
 | `ImpactEdge` | 知识主线边 | source_ref, target_ref, kind(changed/covers/depends), version, confidence |
 
 兼容策略：老的 `ui_test_service` / `api_task_worker` 队列**冻结不扩展**，试点通过后再删；
+（2026-09-19 Batch 263 裁定：`api_task_worker`/`plan_execution_queue` 已删（#455）；`ui_test_service` 保留为 `/uitest` 服务层、不再承担队列职责；控制面内置浏览器路径待随 AITDE 一并收口 → `C263-1`）
 避免 Batch 240–255 已经清理过的"双执行栈"再次长回来。
 
 ### 3.3 本地节点：按需即可，但三个细节必须做到
@@ -227,4 +228,3 @@ RequirementVersion ──(变更)──▶ Module ──(覆盖)──▶ Case(�
 | R3 | 体育内网 + VPN 可达性 | 执行失败误判 | 环境指纹 + 失败分类；平台不下发内网凭据 |
 | R4 | 磁盘 94% | 发布/备份失败 | 证据分片 + 保留策略 + 告警（B1 前先清理） |
 | R5 | 流水线虽瘦身但仍有人写六件 | 速度恢复不明显 | PR 模板按批次类型校验工件数量 |
-

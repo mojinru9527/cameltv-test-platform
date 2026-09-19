@@ -101,6 +101,7 @@ B1-4 ─┴─ B1-5 ─┴─ B1-6 ── B2-1 ─ B2-2 ─ B2-3        │
 
 1. 控制面**不得**运行浏览器 / 模型 / ffmpeg；不得存被测系统凭据（ADR-0026 + 本方案 §3.1）。
 2. 老队列（`ui_test_service` / `api_task_worker`）**冻结不扩展**，B4 后删除。
+   - **2026-09-19 状态（Batch 263 裁定）**：① 冻结成立——B1–B4（`2ced1baf..04deca80`）未改动这两个文件（`git log` 该区间内为空）；② 执行器已删——`api_task_worker.py` / `plan_execution_queue.py` 于 `72a3002d`（PR #455）删除，`tests/test_legacy_delete_gate.py` 2 例在测且门禁 8/8 全 true；③ **`ui_test_service.py` 保留**——它已不是执行队列（执行面由 `ExecutionJob` + `cameltv-node` 承接，见 B1-4/B1-5/B1-6），仍是 `/uitest` 的服务层、被 6 处引用，且被 AITDE 蓝图 §11.2 列为复用件。控制面残留的 `playwright_executor.py` 内置浏览器路径随 `/uitest` 执行面切到 node 时收口 → `C263-1`。
 3. 任何"用户输入 → 出网 / 落盘 / 执行代码"的新路径，必须同时给出守卫与回归测试（`cameltv-bug-guard`）。
 4. 证据包必须可校验、可回溯到原始执行（manifest + job_id 链）。
 5. 批次门禁：独立 worktree、PR、required checks 全绿、一次总确认；执行/AI/数据模型变更 = 完整批次。
@@ -145,4 +146,3 @@ B1-4 ─┴─ B1-5 ─┴─ B1-6 ── B2-1 ─ B2-2 ─ B2-3        │
 | §4.1 五条硬线 | B1-1、B1-2、B2-1…B2-5、B4-1 |
 | §4.2 六条已知风险 | B1-1/B1-2/B1-3（3 条）、B2-3/B2-4/B2-5（3 条） |
 | §5 运维要求 | B0-1…B0-3、B4-5 |
-
