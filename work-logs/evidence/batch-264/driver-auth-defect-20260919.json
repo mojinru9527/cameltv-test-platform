@@ -1,0 +1,24 @@
+{
+  "captured_at": "2026-09-19",
+  "title": "drill_three_versions.py 无法自建执行任务（401）——验收驱动缺陷",
+  "environment": "本机临时平台（uvicorn @127.0.0.1:8123，SQLite 试点库）+ 本机 cameltv-node（已注册、在线）",
+  "reproduction": {
+    "command": "python scripts/drill_three_versions.py --project-id 1 --environment-id 12 --account-slot sports-tester-01 --base-url http://127.0.0.1:8123 --target-url http://camel-api-gateway05.svc.elelive.cn/camel-service --node-token <节点令牌> --versions 1 --module-prefix 体育",
+    "preflight": "6/6 通过（database_ok / dataset_meets_target 50+30 / fingerprint_present HIGH / node_online / target_reachable / account_slot_configured）",
+    "failure": "httpx.HTTPStatusError: Client error '401 Unauthorized' for url 'http://127.0.0.1:8123/api/v1/execution-jobs'",
+    "failure_site": "scripts/drill_three_versions.py:110 → headers = {\"X-AI-Agent-Token\": args.node_token}"
+  },
+  "root_cause": {
+    "route": "app/api/v1/execution_jobs.py（POST /api/v1/execution-jobs）",
+    "evidence": "该路由依赖 `CurrentUser = Depends(require_permission(\"execution:manage\"))` —— 要的是用户 JWT；`X-AI-Agent-Token` 只被 app/api/v1/ai_agent.py（节点认领/心跳/上报）接受",
+    "conclusion": "驱动用节点令牌调用户端点，鉴权走不通；对照 B1 演练 scripts/node/drill_b1_e2e.py 用的是 admin JWT（含 X-Project-Id）"
+  },
+  "control_experiment": {
+    "command": "POST /api/v1/execution-jobs（Authorization: Bearer <用户 JWT> + X-Project-Id: 1）",
+    "result": "200，job id=1，status=pending",
+    "node_behaviour": "pending → running(attempt=1) → failed（payload 为探针 stub 用例，非真实试点用例）",
+    "meaning": "换成正确凭据后，平台登记 → 节点认领 → 执行 这条链路是通的；缺陷只在驱动的凭据选择"
+  },
+  "impact": "§5 第 ⑦ 条按文档命令无法跑通（无论环境多完整都会 401）；这是驱动缺陷，不是环境问题",
+  "suggested_fix": "drill_three_versions.py 增加 --user-token（或 --username/--password 登录取 JWT）用于登记与查询任务；节点令牌仍只用于节点侧。修复属代码变更 → 完整/轻量批次按 pipeline-modes 判定"
+}
