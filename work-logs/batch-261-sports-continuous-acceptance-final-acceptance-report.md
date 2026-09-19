@@ -22,7 +22,7 @@ S6（dry-run 当沙箱 / 无凭据沙箱）**部分关闭**——表述纠正 + 
 |---|--------|------|------|
 | 1 | 菜单只剩 4 个入口 + 专家区 | ✅ **达成** | Batch 259 §B2-6 + Batch 260 §B3-5 |
 | 2 | 本地节点一条命令可用 | ✅ **达成** | Batch 258 §B1-5/B1-7（真实子进程 + 认领 + 上报） |
-| 3 | 8 条试点用例真实跑通且证据可查 | ⚠️ **部分达成** | 真实 httpx + 真 Chromium 跑通 5+3；目标为**本地替身**（Test5 不可达 → C258-1） |
+| 3 | 8 条试点用例真实跑通且证据可查 | ✅ **达成（真机外）** | 2026-09-19 起在**真实 Test5** 跑通 5 接口（含信封码断言）+ 3 Web（截图 SHA256 互不相同）；此前为本地替身 → 详见 §2 第 ③ 条 |
 | 4 | 断线不丢任务 | ✅ **达成** | Batch 258 §B1-4（租约回收 + attempt 递增） |
 | 5 | 恶意 URL / 恶意 spec 全被拒 | ✅ **达成** | Batch 258 §B1-1/B1-2 + Batch 259 §B2-2 |
 | 6 | 「改了 X 要跑哪些」可用 | ✅ **达成** | Batch 260 §B3-3（API + 前端视图；试点规模时延实测中位 4.0ms « 2000ms） |
@@ -52,7 +52,20 @@ S6（dry-run 当沙箱 / 无凭据沙箱）**部分关闭**——表述纠正 + 
 **实测**：5 条接口用例经**真 httpx**、3 条 Web 用例经**真 Chromium** 执行；证据上传后逐文件 sha256 与 manifest 对账，再逐个下载复核一致；失败用例留存请求回放与截图（`neg-api.request.json`/`neg-web.png`）。
 Batch 261 追加证据包校验：**改一字节即判定 tampered，且该证据不再满足必需证据**（API + 前端显红）。
 **证据**：`scripts/node/drill_b1_e2e.py` 25/25；`tests/test_batch261_evidence_bundle.py` 17 例。
-**未达成部分**：目标系统是**本地替身**，不是 Test5 体育环境——`camel-api-gateway05.svc.elelive.cn` 解析为 `192.168.50.170` 但 TCP 80 不通（需 VPN）→ `C258-1`。**未伪造** Test5 结论。
+**未达成部分（历史）**：B1–B4 交付时目标系统是**本地替身**，不是 Test5 体育环境——`camel-api-gateway05.svc.elelive.cn` 解析为 `192.168.50.170` 但 TCP 80 不通（需 VPN）→ `C258-1`。**当时未伪造** Test5 结论。
+
+**2026-09-19 更新：③ 条在真实 Test5 上达成（真机外）**
+
+Test5 入口已恢复且口径纠正（网关按 `/<service>/` 路由 → 体育 API 基址 `http://camel-api-gateway05.svc.elelive.cn/camel-service`）。用**可执行 payload**（`request{method,url}`+`assertions[]` / `steps[{action,...}]`）在平台+节点上实跑 8 条：
+
+| 任务 | 用例 | 结果 | 证据 |
+|---|---|---|---|
+| API job **12** | `/ee/version/version`（$.data 含『打包时间』）· `/ee/stream_stats/quality` · `/ee/sports_live/list_faceoff` · `/ee/sports_live/living_group_match` · `/ee/sports_live/player/hot-players` | **5/5 passed**，evidence_files 11 | 请求/响应回放 + manifest；断言含 HTTP 200 **与信封码 `$.status`=200** |
+| Web job **11** | 直播站首页主标题 · 直播站导航含 `Camel Live` · 篮球站首页主标题 | **3/3 passed**，evidence_files 7 | 截图 967912B / 1089762B / 451633B，**SHA256 互不相同**（真实渲染） |
+
+对照与勘误：job **10** 用随机 GET 端点只过 3/5，两条失败是 **HTTP 200 但信封码 400**（缺参数）——按其仓库约定属正确判定；另需说明，Batch 265 早期曾把 driver 产生的「Web 30/30」当通过，复核后确认那是**空过**（`steps=[]`、30 张截图逐字节相同），该说法已作废并登记 `C265-3`。
+
+**当前判定**：③ 条**达成（真机外）**——5 接口 + 3 Web 真实跑通、证据可下载；真机（APP 侧）不在此条范围。证据：`work-logs/evidence/batch-265/pilot-8cases-real-test5-20260919.json`。
 
 ### ④ 断线不丢任务 ✅
 **怎么验**：执行中杀掉节点 → 任务回 pending → 重启节点继续。
