@@ -547,5 +547,51 @@ tp logagg --help
 
 ---
 
+## 8. 本地执行节点 `cameltv-node`（Batch 258 起）
+
+平台的**控制面只做登记 · 调度 · 证据 · 知识**：接口与 Web 用例的真实执行发生在**测试人员本机**，
+由本地节点 `cameltv-node` 完成（ADR-0026 / `docs/platform-refactor/09-platform-landing-plan.md` §3.1）。
+
+```bash
+# 首次：签发节点令牌（写在 ~/.cameltv-node.json，不写入仓库）
+python scripts/node/cameltv_node/cli.py login --username <平台账号> --project-id <项目ID>
+
+# 一条命令开工：注册 + 心跳续租 + 认领循环 + 真实执行 + 证据上传 + 上报
+python scripts/node/cameltv_node/cli.py up --node-id my-pc --capabilities api web
+
+# 自检 / 单跑一轮 / 只跑接口或 Web
+python scripts/node/cameltv_node/cli.py doctor
+python scripts/node/cameltv_node/cli.py up --node-id my-pc --once
+python scripts/node/cameltv_node/cli.py run-api --job <任务ID> --out ./evidence
+python scripts/node/cameltv_node/cli.py run-web --job <任务ID> --out ./evidence
+```
+
+Windows 可用 `scripts\node\cameltv-node.cmd`；细节见 `scripts/node/README.md`。
+断网/崩溃不丢任务：租约过期后任务回到 `pending`，节点恢复后可再次认领。
+
+## 9. 知识与验收脚本（Batch 260 / 261）
+
+```bash
+# 影响图回填 + 模块关联覆盖率（B3-2；无资产时如实报缺口）
+cd test-platform-v2/backend
+python scripts/backfill_impact_edges.py --project-id <N> [--bundle-id <B>] [--dry-run]
+
+# 体育试点数据集与基线（B4-2）：输出接口/Web 目标与缺口 + 环境指纹 + 账号槽位引用
+python scripts/build_pilot_baseline.py --project-id <N> --environment-id <E> \
+    --module-prefix 体育 --account-slot <槽位名> --components-file fingerprint.json --out baseline.json
+
+# 连续 3 版本演练（B4-3/4/5）：前置检查不过则 exit 4 并列出阻塞，不会用本地替身顶替
+python scripts/drill_three_versions.py --project-id <N> --environment-id <E> \
+    --account-slot <槽位名> --base-url <平台地址> --target-url <Test5 网关> \
+    --node-token <节点令牌> --versions 3 --person-hours-per-version <人工审核小时> \
+    --reuse-suggested <带出数> --reuse-adopted <采纳数> --out drill-report.json
+```
+
+退出码：`backfill_impact_edges` / `build_pilot_baseline` 为 0 达标、1/3 有缺口、2 环境不可用；
+`drill_three_versions` 为 0 达标、4 环境未就绪、5 跑完但 SLO 未达成。
+验收口径与 9 条检查单见 `work-logs/batch-261-sports-continuous-acceptance-final-acceptance-report.md`。
+
+---
+
 > **提示（已退役）：** v1 凭据文件 `test-platform/.env` 随 Batch 100 移除；CI 凭据改由 GitHub Secrets 注入，
 > 业务 DB/Redis 地址见 `docs/production-delivery/生产环境交付清单.md`。

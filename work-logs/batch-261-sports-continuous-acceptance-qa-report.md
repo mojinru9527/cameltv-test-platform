@@ -113,6 +113,11 @@ python -m pytest -q -p no:cacheprovider
 
 ## 发布建议
 
+**文档保鲜（AGENTS.md §3.3）**：本批新增 3 个可执行脚本（`build_pilot_baseline.py`、`drill_three_versions.py`，
+以及 B1/B3 起就存在但一直未记录的 `cameltv_node/cli.py`、`backfill_impact_edges.py`），此前**均未写入 `COMMANDS.md`**——
+属于"命令变了但文档没跟上"的自查项遗漏。本次已在 `COMMANDS.md` 新增 §8（本地执行节点）与 §9（知识与验收脚本），
+含命令、退出码语义与指向验收报告的入口。
+
 状态：**READY**（B4-1/B4-2 全绿；B4-3/4/5 交付内核与驱动，真实数字按实登记为 C261-1）
 必修复：0　建议修复：0
 
