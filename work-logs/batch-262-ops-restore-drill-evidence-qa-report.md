@@ -14,7 +14,7 @@
 | 命令 | 退出码 | 摘要 |
 |------|:------:|------|
 | CI 范围分类期望 | — | 本批仅改 `docs/**`、`work-logs/**`、`C-CONDITIONS.md` → 属"文档/证据"域，前后端重测试按规则跳过，三个 required contexts 仍返回明确结果 |
-| `pwsh scripts/git/scan-common-bugs.ps1` | 0 | HARD 0 |
+| `pwsh scripts/git/scan-common-bugs.ps1` | 2 | **HARD 0**；WARN 344，与主干基线逐项一致（同一命令在 `wt-main` 亦为 HARD 0 / WARN 344）。退出码 2 = 存在 WARN 且未启用 `-FailOnWarning`，按门禁规则**非阻断** |
 | 文档元数据检查（frontmatter: title/owner/created/status/expires/related） | ✅ | `docs/ops/restore-drill.md` 按 `docs/` 规范携带元数据 |
 | **演练本身（生产实测，本批的核心证据）** | 0 | 见下 |
 

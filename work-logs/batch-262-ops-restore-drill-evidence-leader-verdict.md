@@ -58,3 +58,11 @@
 | 3h / ~1.5h | 0/0/1/1 | 0 | 需求（引用不存在的交付物）+ 外部依赖（GitHub 网络中断） | 验收条目里的文件引用先做存在性校验；网络中断时用离线建 worktree 并显式记录为例外 |
 
 **技能使用**: `cameltv-bug-guard` → 三问核对（零代码改动，结论为"无新增路径"）；非测试证据。
+
+## 合入前勘误（2026-09-19，推送前复核）
+
+| 项 | 原文 | 实测更正 | 证据 |
+|----|------|---------|------|
+| QA 门禁退出码 | 本批 QA 报告「可执行门禁」表写 `scan-common-bugs.ps1` 退出码 `0` | 实际退出码 **2**：HARD 0 / WARN 344，未启用 `-FailOnWarning` 时「存在 WARN」即返回 2，按门禁规则非阻断；WARN 344 与主干 `wt-main` 完全一致（同命令同输出），本批**未新增任何 HARD/WARN** | `pwsh -NoProfile -File scripts/git/scan-common-bugs.ps1`（worktree / `wt-main` 各一次） |
+| 合入前置 3（GitHub 连通性） | 「推送前确认 GitHub 连通性恢复（本批创建时 direct 与代理两条路径均不可达）」 | 推送前复测：两条路径**仍未恢复**——`github.com` 解析到 `20.205.243.166:443` TCP 超时；`127.0.0.1:7688` 无进程监听（`Test-NetConnection` False）。改用**仅本次命令生效**的方式落可达边缘 IP：`git -c http.https://github.com.proxy= -c http.curloptResolve=github.com:443:140.82.112.3 <cmd>`；`ls-remote --heads origin main` 返回 `334748bf` 验证通过。**未改写用户全局 git 配置**（`http.https://github.com.proxy` 保持原值）。备用通道另测可用：`ssh -T git@github.com` → `Hi mojinru9527!` | 上述命令 + 输出 |
+| 网络分层事实 | — | 同机 `api.github.com`（`20.205.243.168`）、`ssh.github.com:443`、`github.com:22`、`140.82.112.3:443` 均可达，仅 `github.com` 当前 DNS 应答指向的 IP 不可达 → 属**单一 IP 级**网络故障，不是整机断网 | `TcpClient` 逐目标连通性实测 |
