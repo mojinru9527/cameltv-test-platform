@@ -16,7 +16,12 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.schemas.common import R
-from app.services import ai_agent_service, execution_evidence_store, execution_job_service
+from app.services import (
+    ai_agent_service,
+    evidence_bundle_service,
+    execution_evidence_store,
+    execution_job_service,
+)
 
 router = APIRouter(prefix="/execution-jobs", tags=["Execution Jobs"])
 
@@ -245,6 +250,27 @@ def list_evidence(
         raise HTTPException(404, "执行任务不存在")
     bundles = execution_evidence_store.list_bundles(job.id)
     return R.ok({"job_id": job.id, "attempt": job.attempt, "bundles": bundles})
+
+
+@router.get("/{job_id}/evidence/verify", response_model=R[dict], summary="校验证据包（manifest sha256 + 完整性）")
+def verify_evidence(
+    job_id: int,
+    attempt: int = Query(default=0, ge=0),
+    current: CurrentUser = Depends(require_permission("execution:view")),
+    db: Session = Depends(get_db),
+):
+    """B4-1：改一字节即判定 tampered，并让该证据不再满足必需证据（Design §2）。
+
+    注意注册顺序：本路由必须在 `/{job_id}/evidence/{name}` **之前**，
+    否则 `verify` 会被当成文件名走下载分支（cameltv-bug-guard：静态路径段先于路径参数）。
+    """
+    job = execution_job_service.get_job(db, project_id=_project_id(current), job_id=job_id)
+    if job is None:
+        raise HTTPException(404, "执行任务不存在")
+    resolved_attempt = attempt or job.attempt
+    return R.ok(
+        evidence_bundle_service.verify_bundle(job.id, resolved_attempt, kind=job.kind)
+    )
 
 
 @router.get("/{job_id}/evidence/{name}", summary="下载执行证据文件")
