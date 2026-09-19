@@ -17,6 +17,7 @@
 | `pwsh scripts/git/scan-common-bugs.ps1` | 2 | **HARD 0**；WARN 344，与主干基线逐项一致（同一命令在 `wt-main` 亦为 HARD 0 / WARN 344）。退出码 2 = 存在 WARN 且未启用 `-FailOnWarning`，按门禁规则**非阻断** |
 | 文档元数据检查（frontmatter: title/owner/created/status/expires/related） | ✅ | `docs/ops/restore-drill.md` 按 `docs/` 规范携带元数据 |
 | **演练本身（生产实测，本批的核心证据）** | 0 | 见下 |
+| 验收报告引用证据逐份复跑（本批追加） | — | 8 份后端单测 + 前端全量（168 文件/737 例）+ Playwright a11y（28 passed）全部重跑核对；发现并更正 `tests/test_url_guard.py` 例数 19→17，见验收报告附录 A |
 
 ## 逐条件验证
 

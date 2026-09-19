@@ -61,7 +61,7 @@ Batch 261 追加证据包校验：**改一字节即判定 tampered，且该证�
 ### ⑤ 恶意 URL / 恶意 spec 全被拒 ✅
 **怎么验**：用 5 个恶意 URL + 1 个恶意 spec 复现。
 **实测**：5 类恶意 URL 全部被拒（`127.0.0.1` / `169.254.169.254` / 内网域名 / 重定向劫持 / 超大响应），且断言**拒绝发生在出网之前**；伪装域 `pingcode.attacker.tld` 收不到任何 Header；含 `execSync` 的 spec 在**起进程之前**被拒并给出含行号的可读原因。
-**证据**：`tests/test_url_guard.py` 19 例、`tests/test_batch258_requirement_source_guard.py` 10 例、`tests/test_batch258_token_whitelist.py` 12 例、`tests/test_batch259_spec_guard.py` 20 例。
+**证据**：`tests/test_url_guard.py` **17** 例（勘误见附录 A）、`tests/test_batch258_requirement_source_guard.py` 10 例、`tests/test_batch258_token_whitelist.py` 12 例、`tests/test_batch259_spec_guard.py` 20 例。
 
 ### ⑥ 「改了 X 要跑哪些」可用 ✅
 **怎么验**：平台输入变更模块 → 得到用例集 + 最近结果 + 缺口。
@@ -131,3 +131,39 @@ test_execution 行数 = 137642
 4. **第 8、9 条**：**不在 B1–B4 代码交付范围**（属 B0 运维项），且需生产访问；我没有实测证据，故不给结论。
 
 **如果你要我继续推进第 7/8/9 条**，请提供：Test5 VPN 可达的执行环境（第 7 条），以及生产主机的 `df -h` / 备份恢复演练授权（第 8、9 条）。拿到后我可以按上述命令跑完并回填本报告的对应结论。
+
+## 附录 A. 引用证据逐份复跑（2026-09-19，推送 Batch 262 前）
+
+本报告每个「N 例 / N 文件」都在主干（`334748bf`）上重跑核对一次，避免"报告数字与仓库实际不符"。
+
+### A.1 后端（`test-platform-v2/backend`，`python -m pytest <file> -q`）
+
+| 引用文件 | 报告原写 | 复跑实测 | 结论 |
+|---|---:|---:|---|
+| `tests/test_batch258_node_cli.py` | 28 | 28 passed (4.55s) | ✅ 一致 |
+| `tests/test_batch258_execution_job_protocol.py` | 18 | 18 passed (5.05s) | ✅ 一致 |
+| `tests/test_url_guard.py` | 19 | **17 passed (0.10s)**；`--collect-only` 亦为 17 | ❌ **已更正为 17** |
+| `tests/test_batch258_requirement_source_guard.py` | 10 | 10 passed (0.10s) | ✅ 一致 |
+| `tests/test_batch258_token_whitelist.py` | 12 | 12 passed (0.09s) | ✅ 一致 |
+| `tests/test_batch259_spec_guard.py` | 20 | 20 passed (0.11s) | ✅ 一致 |
+| `tests/test_batch260_impact_query.py` | 13 | 13 passed (4.13s；3 warnings) | ✅ 一致 |
+| `tests/test_batch261_evidence_bundle.py` | 17 | 17 passed (2.83s) | ✅ 一致 |
+
+**`test_url_guard.py` 勘误说明**：该文件自 Batch 258 引入（`2ced1baf`）后**未被任何后续提交改动**（`git log -- tests/test_url_guard.py` 仅一条），文件内 14 个 `def test_`，其中 1 处 `@pytest.mark.parametrize` 展开后共 **17** 例。原写的 19 例最初出自 Batch 258 QA 报告 S1 行的笔误；本报告按实测改正，Batch 258 QA 报告作为已合入批次的历史工件**不改写**，在此留痕。
+
+### A.2 前端（`test-platform-v2/frontend`）
+
+| 引用 | 报告原写 | 复跑实测 | 结论 |
+|---|---|---|---|
+| `npx vitest run --maxWorkers=2` | 168 文件 / 737 例 | **168 passed (168) / 737 passed (737)**，148.42s | ✅ 一致 |
+| `npm run test:a11y:ci`（Chromium） | 28 passed（39.4s） | **28 passed（41.6s）** | ✅ 计数一致（耗时差为机器负载） |
+
+> 复跑在 `wt-main` 工作区执行（= 本分支 base `334748bf`）。Batch 262 未改动任何前端文件，故与在本分支上跑等价。
+
+### A.3 未复跑的引用（如实标注，不当作已验证）
+
+| 引用 | 报告原写 | 状态 |
+|---|---|---|
+| `scripts/node/drill_b1_e2e.py` + `work-logs/batch-258-execution-node-protocol-b1-drill-transcript.txt` | 19→25 项 PASS | **未重跑**（需起平台 + 节点子进程 + 替身被测系统的完整演练）。仅核对转录取证：文件存在，含 `通过 25/25` 与 25 条 `PASS`；转录头部的 `UnicodeDecodeError` 是 Windows GBK 解码噪声，不影响该结论 |
+| `scripts/build_pilot_baseline.py` / `scripts/drill_three_versions.py` | 前置检查 not_ready、exit 4 | **未重跑**（需 Test5 环境）。其"环境不足即如实失败"的行为由 11 例单测覆盖 |
+| 第 ⑥ 条时延实测（中位 4.0ms） | 试用规模合成数据 | **未复跑**（临时内存库 harness 未入库）。确定性对照项"查询条数不随规模增长"由 `tests/test_batch260_impact_query.py` 13 例覆盖并通过 |
