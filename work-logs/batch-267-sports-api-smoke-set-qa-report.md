@@ -54,6 +54,17 @@ HTTP  ：live 首页 200/21.9s ｜ bball 首页 200/9.5s ｜ API 网关健康 20
 证据  ：work-logs/evidence/batch-267/test5-ui-latency-degradation-20260920.json
 ```
 
+## 追加发现 2（本批附带，直接改变 ⑦ 的判定）：复用命中率埋点未接线
+
+```
+代码：app/services/reuse_metrics_service.record_suggestion（写 decision='suggested'）——全仓无调用点
+     GET /version-tasks/knowledge/reuse 只带出建议、不写埋点；决策接口只接受 adopted|rejected
+     命中率 = adopted / suggested if suggested else 0.0  →  suggested 恒 0 ⇒ hit_rate 恒 0
+生产：reuse_suggestion_event = 0 行（同期 version_task=6、version_knowledge_record=1）→ 与代码结论一致
+结论：⑦ 的「复用命中率 ≥50%」在平台侧**无法被测出**，不是"缺真实数字"→ 登记 C267-3（P1）
+证据：work-logs/evidence/batch-267/reuse-metric-not-wired-20260920.json
+```
+
 | 计划耗时 | 缺陷(P0/P1/P2/P3) | 返工次数 | 根因分类 | 下次避免 |
 |----------|-------------------|----------|----------|----------|
 | 2h / ~1.5h | 0/0/1/0 | 1 | 外部依赖（目标端点性能不稳定）+ 环境（本地 JWT 过期、平台被清理） | 冒烟集选定前先做 3 次重复探测；本地跑之前确认平台/节点/JWT 三项都在 |
