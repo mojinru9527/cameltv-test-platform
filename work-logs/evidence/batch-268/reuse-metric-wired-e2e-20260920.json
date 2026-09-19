@@ -45,5 +45,19 @@
     "attempts": 2,
     "outcome": "两次 `--versions 3/1` 全量演练均被本机连接重置中断（平台为单进程 uvicorn + SQLite，节点边跑边写时 httpx 读超时/连接被重置）",
     "conclusion": "该中断属**本地试点环境**的资源问题（与 Batch 266 记录的本机 OOM 同源），不影响本批结论；正式 3 版本复用数字需在真实环境跑（C265-1/C268-1）"
+  },
+  "partial_full_run": {
+    "captured_at": "2026-09-20",
+    "attempt": "第 3 次尝试（环境已清理为 1 平台 + 1 节点，空闲 3.8~3.9GB）",
+    "completed_versions": [
+      {"version": "16.1", "api": {"job": 38, "passed": 45, "failed": 5, "total": 50}, "web": {"job": 37, "passed": 28, "failed": 2, "total": 30}},
+      {"version": "16.2", "api": {"job": 40, "passed": 45, "failed": 5, "total": 50}, "web": {"job": 39, "passed": 27, "failed": 3, "total": 30}}
+    ],
+    "interrupted": "版本 16.3（job 41）执行期间 httpx `ReadError WinError 10053`（连接被本机中止）；平台随后仍健康（/api/v2/health=200），节点进程仍在 → 属负载下的 localhost 连接中断，非崩溃",
+    "reading": [
+      "接口冒烟集本轮 45/50（较 Batch 267 首轮 42/50 更好——两个慢端点这次有响应），说明批量执行与断言链路稳定。",
+      "Web 28/30 与 27/30 的波动与 C267-2 的目标站 UI 慢一致。",
+      "**不把 2/3 版本当作『连续 3 版本达标』**：该项仍需一次完整 3 版本运行（本地或真实环境）。"
+    ]
   }
 }
