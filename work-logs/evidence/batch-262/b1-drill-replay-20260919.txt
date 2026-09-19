@@ -1,0 +1,62 @@
+B1-7 端到端演练 · 复跑记录（2026-09-19）
+命令    : python scripts/node/drill_b1_e2e.py
+工作区  : F:\CamelTv-safe-backup\wt-main（main @ 334748bf，与本批次 base 相同；Batch 262 未改任何后端文件）
+编码    : PYTHONIOENCODING=utf-8 / PYTHONUTF8=1（Batch 258 那次转录里的 UnicodeDecodeError 是 Windows GBK 解码噪声，本跑已消除）
+说明    : 被测目标是本地替身（Test5 内网需 VPN，本机不可达），其余每一环都是真的——
+          真 Alembic 迁移建库 / 真 uvicorn / 真节点 CLI 子进程 / 真 httpx / 真 Chromium / 真 sha256 对账 / 真下载校验。
+          证据目录位于系统临时目录，运行结束由系统回收；本文件记录的是"当日可复现"这一事实。
+
+[PASS] 取到项目上下文 -- project_id=1
+[PASS] 注册执行节点并签发节点令牌 -- node=drill-node
+[PASS] 登记执行任务：5 接口 + 3 Web -- job ids = {'api': 1, 'web': 2}
+[PASS] cameltv-node up --once 跑 api 任务（退出码 0） -- [job 1] kind=api attempt=1 env=local-stand-in | [job 1] completed — 5/5 pass（证据 11 个文件）
+[PASS] cameltv-node up --once 跑 web 任务（退出码 0） -- [job 2] kind=web attempt=1 env=local-stand-in | [job 2] completed — 3/3 pass（证据 7 个文件）
+[PASS] api 任务 1: 5/5 通过并上报 -- status=completed passed=5
+[PASS] api 证据包可查 -- bundles=1
+[PASS] api 证据清单含逐文件 sha256 -- attempt=1 files=11
+[PASS] api 证据可下载且 sha256 与 manifest 一致 -- 全部一致
+[PASS] web 任务 2: 3/3 通过并上报 -- status=completed passed=3
+[PASS] web 证据包可查 -- bundles=1
+[PASS] web 证据清单含逐文件 sha256 -- attempt=1 files=7
+[PASS] web 证据可下载且 sha256 与 manifest 一致 -- 全部一致
+[PASS] Web 用例截图落盘 -- screenshots=['web-1.png', 'web-2.png', 'web-3.png']
+[PASS] api 失败用例未被伪造成通过（任务 status=failed） -- passed=0 failed=1
+[PASS] api 失败用例留存请求回放/截图证据 -- files=['neg-api.request.json', 'neg-api.response.json', 'results.json']
+[PASS] api 节点对失败任务仍正常退出（退出码 0） -- 失败是任务结论，不是节点崩溃
+[PASS] web 失败用例未被伪造成通过（任务 status=failed） -- passed=0 failed=1
+[PASS] web 失败用例留存请求回放/截图证据 -- files=['neg-web.console.json', 'neg-web.png', 'results.json']
+[PASS] web 节点对失败任务仍正常退出（退出码 0） -- 失败是任务结论，不是节点崩溃
+[PASS] 节点认领任务（HTTP + 节点令牌） -- job=5
+[PASS] 失去心跳后任务回到 pending（断线不丢任务） -- reclaimed=1 status=pending
+[PASS] 节点恢复后可再认领同一任务（attempt 递增） -- attempt=2
+
+================ B1-7 演练结果 ================
+目标系统：本地替身 http://127.0.0.1:8669（Test5 内网需 VPN，本机不可达——不是 Test5 验收）
+租约：3s（演练压缩；生产默认 300s，同一代码路径）
+通过 25/25
+  PASS  Alembic 真实迁移建库（upgrade head 退出码 0）
+  PASS  平台登录（真实 seed + 真实 JWT）
+  PASS  取到项目上下文
+  PASS  注册执行节点并签发节点令牌
+  PASS  登记执行任务：5 接口 + 3 Web
+  PASS  cameltv-node up --once 跑 api 任务（退出码 0）
+  PASS  cameltv-node up --once 跑 web 任务（退出码 0）
+  PASS  api 任务 1: 5/5 通过并上报
+  PASS  api 证据包可查
+  PASS  api 证据清单含逐文件 sha256
+  PASS  api 证据可下载且 sha256 与 manifest 一致
+  PASS  web 任务 2: 3/3 通过并上报
+  PASS  web 证据包可查
+  PASS  web 证据清单含逐文件 sha256
+  PASS  web 证据可下载且 sha256 与 manifest 一致
+  PASS  Web 用例截图落盘
+  PASS  api 失败用例未被伪造成通过（任务 status=failed）
+  PASS  api 失败用例留存请求回放/截图证据
+  PASS  api 节点对失败任务仍正常退出（退出码 0）
+  PASS  web 失败用例未被伪造成通过（任务 status=failed）
+  PASS  web 失败用例留存请求回放/截图证据
+  PASS  web 节点对失败任务仍正常退出（退出码 0）
+  PASS  节点认领任务（HTTP + 节点令牌）
+  PASS  失去心跳后任务回到 pending（断线不丢任务）
+  PASS  节点恢复后可再认领同一任务（attempt 递增）
+证据目录：C:\Users\26029\AppData\Local\Temp\cameltv-b1-drill-nifelq8y\evidence
