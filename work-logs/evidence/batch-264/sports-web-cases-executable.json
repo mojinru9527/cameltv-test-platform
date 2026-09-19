@@ -1,46 +1,731 @@
 {
-  "generated_at": "2026-09-19",
-  "note": "30 条 Web 用例的**可执行**版本（节点执行器动作 schema）。每个断言都来自真实页面实测（Playwright 元素发现），不含推测选择器。",
-  "actions_supported": ["goto", "click", "fill", "press", "wait_visible", "expect_visible", "expect_text", "wait"],
-  "targets": {
-    "bball": "https://camel-bball-test5.elelive.cn/basketball",
-    "bball_news": "https://camel-bball-test5.elelive.cn/q/news",
-    "bball_my": "https://camel-bball-test5.elelive.cn/my",
-    "bball_league_nbl": "https://camel-bball-test5.elelive.cn/basketball/league/National%20Basketball%20League",
-    "live": "https://camelive-g3-test5.elelive.cn/",
-    "live_ar": "https://camelive-g3-test5.elelive.cn/ar"
+ "generated_at": "2026-09-19",
+ "note": "30 条 Web 用例的**可执行**版本（节点执行器动作 schema）。每个断言都来自真实页面实测（Playwright 元素发现），不含推测选择器。 ｜ Batch 266 收尾：首页类用例统一'先等 h1 锚点 + 2.5s 稳定等待'，标签断言改用可重试的 wait_visible（C266-4）。",
+ "actions_supported": [
+  "goto",
+  "click",
+  "fill",
+  "press",
+  "wait_visible",
+  "expect_visible",
+  "expect_text",
+  "wait"
+ ],
+ "targets": {
+  "bball": "https://camel-bball-test5.elelive.cn/basketball",
+  "bball_news": "https://camel-bball-test5.elelive.cn/q/news",
+  "bball_my": "https://camel-bball-test5.elelive.cn/my",
+  "bball_league_nbl": "https://camel-bball-test5.elelive.cn/basketball/league/National%20Basketball%20League",
+  "live": "https://camelive-g3-test5.elelive.cn/",
+  "live_ar": "https://camelive-g3-test5.elelive.cn/ar"
+ },
+ "cases": [
+  {
+   "case_id": "SP-WEB-001",
+   "name": "篮球站首页主标题",
+   "module": "体育/篮球",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camel-bball-test5.elelive.cn/basketball"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1"
+    },
+    {
+     "action": "wait",
+     "ms": 2500
+    },
+    {
+     "action": "expect_text",
+     "selector": "h1",
+     "expected": "Basketball Live Scores"
+    }
+   ]
   },
-  "cases": [
-    {"case_id": "SP-WEB-001", "name": "篮球站首页主标题", "module": "体育/篮球", "steps": [{"action": "goto", "url": "https://camel-bball-test5.elelive.cn/basketball"}, {"action": "wait_visible", "selector": "h1"}, {"action": "expect_text", "selector": "h1", "expected": "Basketball Live Scores"}]},
-    {"case_id": "SP-WEB-002", "name": "篮球站首页 News 入口可见", "module": "体育/篮球", "steps": [{"action": "goto", "url": "https://camel-bball-test5.elelive.cn/basketball"}, {"action": "expect_visible", "selector": "text=News"}]},
-    {"case_id": "SP-WEB-003", "name": "篮球站首页 BBall 入口可见", "module": "体育/篮球", "steps": [{"action": "goto", "url": "https://camel-bball-test5.elelive.cn/basketball"}, {"action": "expect_visible", "selector": "text=BBall"}]},
-    {"case_id": "SP-WEB-004", "name": "篮球站首页 Fixtures 区块可见", "module": "体育/篮球", "steps": [{"action": "goto", "url": "https://camel-bball-test5.elelive.cn/basketball"}, {"action": "expect_visible", "selector": "text=Fixtures"}]},
-    {"case_id": "SP-WEB-005", "name": "篮球站首页 Scores 区块可见", "module": "体育/篮球", "steps": [{"action": "goto", "url": "https://camel-bball-test5.elelive.cn/basketball"}, {"action": "expect_visible", "selector": "text=Scores"}]},
-    {"case_id": "SP-WEB-006", "name": "篮球站首页搜索入口可见", "module": "体育/篮球", "steps": [{"action": "goto", "url": "https://camel-bball-test5.elelive.cn/basketball"}, {"action": "expect_visible", "selector": "text=Search"}]},
-    {"case_id": "SP-WEB-007", "name": "篮球站首页 National Basketball League 入口可见", "module": "体育/联赛", "steps": [{"action": "goto", "url": "https://camel-bball-test5.elelive.cn/basketball"}, {"action": "expect_visible", "selector": "text=National Basketball League"}]},
-    {"case_id": "SP-WEB-008", "name": "篮球站首页 VTB United League Supercup 入口可见", "module": "体育/联赛", "steps": [{"action": "goto", "url": "https://camel-bball-test5.elelive.cn/basketball"}, {"action": "expect_visible", "selector": "text=VTB United League Supercup"}]},
-    {"case_id": "SP-WEB-009", "name": "篮球站首页 Camel Live 跨站入口可见", "module": "体育/篮球", "steps": [{"action": "goto", "url": "https://camel-bball-test5.elelive.cn/basketball"}, {"action": "expect_visible", "selector": "text=Camel Live"}]},
-    {"case_id": "SP-WEB-010", "name": "篮球站新闻列表页渲染出新闻条目", "module": "体育/新闻", "steps": [{"action": "goto", "url": "https://camel-bball-test5.elelive.cn/q/news"}, {"action": "wait_visible", "selector": "a[href^=\"/news/detail/\"]", "timeout_ms": 20000}]},
-    {"case_id": "SP-WEB-011", "name": "篮球站个人中心页可打开（页脚可见）", "module": "体育/我的", "steps": [{"action": "goto", "url": "https://camel-bball-test5.elelive.cn/my"}, {"action": "wait_visible", "selector": "a[href=\"/about-us\"]", "timeout_ms": 20000}]},
-    {"case_id": "SP-WEB-012", "name": "National Basketball League 联赛页标题", "module": "体育/联赛", "steps": [{"action": "goto", "url": "https://camel-bball-test5.elelive.cn/basketball/league/National%20Basketball%20League"}, {"action": "wait_visible", "selector": "h1"}, {"action": "expect_text", "selector": "h1", "expected": "National Basketball League"}]},
-    {"case_id": "SP-WEB-013", "name": "篮球站新闻页渲染出新闻条目", "module": "体育/新闻", "steps": [{"action": "goto", "url": "https://camel-bball-test5.elelive.cn/q/news"}, {"action": "wait_visible", "selector": "a[href^=\"/news/detail/\"]", "timeout_ms": 20000}]},
-    {"case_id": "SP-WEB-014", "name": "从首页点击联赛入口进入联赛页", "module": "体育/联赛", "steps": [{"action": "goto", "url": "https://camel-bball-test5.elelive.cn/basketball"}, {"action": "click", "selector": "text=National Basketball League"}, {"action": "wait_visible", "selector": "text=Scores"}]},
-    {"case_id": "SP-WEB-015", "name": "篮球站首页二次访问仍正常", "module": "体育/篮球", "steps": [{"action": "goto", "url": "https://camel-bball-test5.elelive.cn/basketball"}, {"action": "wait_visible", "selector": "h1"}, {"action": "goto", "url": "https://camel-bball-test5.elelive.cn/basketball"}, {"action": "expect_text", "selector": "h1", "expected": "Basketball Live Scores"}]},
-
-    {"case_id": "SP-WEB-016", "name": "直播站首页主标题", "module": "体育/直播", "steps": [{"action": "goto", "url": "https://camelive-g3-test5.elelive.cn/"}, {"action": "wait_visible", "selector": "h1", "timeout_ms": 30000}, {"action": "wait", "ms": 1500}, {"action": "expect_text", "selector": "h1", "expected": "Football Today"}]},
-    {"case_id": "SP-WEB-017", "name": "直播站首页 News 入口可见", "module": "体育/新闻", "steps": [{"action": "goto", "url": "https://camelive-g3-test5.elelive.cn/"}, {"action": "wait_visible", "selector": "h1", "timeout_ms": 30000}, {"action": "wait", "ms": 1500}, {"action": "expect_visible", "selector": "text=News"}]},
-    {"case_id": "SP-WEB-018", "name": "直播站首页 Football 入口可见", "module": "体育/直播", "steps": [{"action": "goto", "url": "https://camelive-g3-test5.elelive.cn/"}, {"action": "wait_visible", "selector": "h1", "timeout_ms": 30000}, {"action": "wait", "ms": 1500}, {"action": "expect_visible", "selector": "text=Football"}]},
-    {"case_id": "SP-WEB-019", "name": "直播站首页 Basketball 切换入口可见", "module": "体育/直播", "steps": [{"action": "goto", "url": "https://camelive-g3-test5.elelive.cn/"}, {"action": "wait_visible", "selector": "h1", "timeout_ms": 30000}, {"action": "wait", "ms": 1500}, {"action": "expect_visible", "selector": "text=Basketball"}]},
-    {"case_id": "SP-WEB-020", "name": "直播站首页 Camel Live 入口可见", "module": "体育/直播", "steps": [{"action": "goto", "url": "https://camelive-g3-test5.elelive.cn/"}, {"action": "wait_visible", "selector": "h1", "timeout_ms": 30000}, {"action": "wait", "ms": 1500}, {"action": "expect_visible", "selector": "text=Camel Live"}]},
-    {"case_id": "SP-WEB-021", "name": "直播站首页 Fixtures 区块可见", "module": "体育/直播", "steps": [{"action": "goto", "url": "https://camelive-g3-test5.elelive.cn/"}, {"action": "wait_visible", "selector": "h1", "timeout_ms": 30000}, {"action": "wait", "ms": 1500}, {"action": "expect_visible", "selector": "text=Fixtures"}]},
-    {"case_id": "SP-WEB-022", "name": "直播站首页 Scores 区块可见", "module": "体育/直播", "steps": [{"action": "goto", "url": "https://camelive-g3-test5.elelive.cn/"}, {"action": "wait_visible", "selector": "h1", "timeout_ms": 30000}, {"action": "wait", "ms": 1500}, {"action": "expect_visible", "selector": "text=Scores"}]},
-    {"case_id": "SP-WEB-023", "name": "直播站首页搜索入口可见", "module": "体育/直播", "steps": [{"action": "goto", "url": "https://camelive-g3-test5.elelive.cn/"}, {"action": "wait_visible", "selector": "h1", "timeout_ms": 30000}, {"action": "wait", "ms": 1500}, {"action": "expect_visible", "selector": "text=Search"}]},
-    {"case_id": "SP-WEB-024", "name": "Indonesian Super League 入口可见", "module": "体育/联赛", "steps": [{"action": "goto", "url": "https://camelive-g3-test5.elelive.cn/"}, {"action": "wait_visible", "selector": "h1", "timeout_ms": 30000}, {"action": "wait", "ms": 1500}, {"action": "expect_visible", "selector": "text=Indonesian Super League"}]},
-    {"case_id": "SP-WEB-025", "name": "Indian Calcutta Football League 入口可见", "module": "体育/联赛", "steps": [{"action": "goto", "url": "https://camelive-g3-test5.elelive.cn/"}, {"action": "wait_visible", "selector": "h1", "timeout_ms": 30000}, {"action": "wait", "ms": 1500}, {"action": "expect_visible", "selector": "text=Indian Calcutta Football League"}]},
-    {"case_id": "SP-WEB-026", "name": "直播站阿语路由页面可加载", "module": "体育/多语言", "steps": [{"action": "goto", "url": "https://camelive-g3-test5.elelive.cn/ar"}, {"action": "wait_visible", "selector": "body"}, {"action": "wait", "ms": 1500}, {"action": "wait_visible", "selector": "h1", "timeout_ms": 30000}]},
-    {"case_id": "SP-WEB-027", "name": "直播站篮球分区页（篮球站内容）可打开", "module": "体育/直播", "steps": [{"action": "goto", "url": "https://camelive-g3-test5.elelive.cn/basketball"}, {"action": "wait_visible", "selector": "h1", "timeout_ms": 30000}, {"action": "wait", "ms": 2000}, {"action": "expect_text", "selector": "h1", "expected": "Basketball Live Scores"}]},
-    {"case_id": "SP-WEB-028", "name": "直播站新闻页渲染出新闻条目", "module": "体育/新闻", "steps": [{"action": "goto", "url": "https://camelive-g3-test5.elelive.cn/q/news"}, {"action": "wait_visible", "selector": "a[href^=\"/news/detail/\"]", "timeout_ms": 20000}]},
-    {"case_id": "SP-WEB-029", "name": "直播站首页二次访问仍可渲染", "module": "体育/直播", "steps": [{"action": "goto", "url": "https://camelive-g3-test5.elelive.cn/"}, {"action": "wait_visible", "selector": "h1", "timeout_ms": 30000}, {"action": "goto", "url": "https://camelive-g3-test5.elelive.cn/"}, {"action": "wait_visible", "selector": "h1", "timeout_ms": 30000}, {"action": "wait_visible", "selector": "text=Football", "timeout_ms": 20000}]},
-    {"case_id": "SP-WEB-030", "name": "直播站首页 Football 与 Fixtures 同时可见", "module": "体育/直播", "steps": [{"action": "goto", "url": "https://camelive-g3-test5.elelive.cn/"}, {"action": "wait_visible", "selector": "h1", "timeout_ms": 30000}, {"action": "wait", "ms": 2500}, {"action": "expect_visible", "selector": "text=Football"}, {"action": "expect_visible", "selector": "text=Fixtures"}]}
-  ]
+  {
+   "case_id": "SP-WEB-002",
+   "name": "篮球站首页 News 入口可见",
+   "module": "体育/篮球",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camel-bball-test5.elelive.cn/basketball"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 2500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=News"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-003",
+   "name": "篮球站首页 BBall 入口可见",
+   "module": "体育/篮球",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camel-bball-test5.elelive.cn/basketball"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 2500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=BBall"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-004",
+   "name": "篮球站首页 Fixtures 区块可见",
+   "module": "体育/篮球",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camel-bball-test5.elelive.cn/basketball"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 2500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=Fixtures"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-005",
+   "name": "篮球站首页 Scores 区块可见",
+   "module": "体育/篮球",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camel-bball-test5.elelive.cn/basketball"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 2500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=Scores"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-006",
+   "name": "篮球站首页搜索入口可见",
+   "module": "体育/篮球",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camel-bball-test5.elelive.cn/basketball"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 2500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=Search"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-007",
+   "name": "篮球站首页 National Basketball League 入口可见",
+   "module": "体育/联赛",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camel-bball-test5.elelive.cn/basketball"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 2500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=National Basketball League"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-008",
+   "name": "篮球站首页 VTB United League Supercup 入口可见",
+   "module": "体育/联赛",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camel-bball-test5.elelive.cn/basketball"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 2500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=VTB United League Supercup"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-009",
+   "name": "篮球站首页 Camel Live 跨站入口可见",
+   "module": "体育/篮球",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camel-bball-test5.elelive.cn/basketball"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 2500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=Camel Live"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-010",
+   "name": "篮球站新闻列表页渲染出新闻条目",
+   "module": "体育/新闻",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camel-bball-test5.elelive.cn/q/news"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "a[href^=\"/news/detail/\"]",
+     "timeout_ms": 20000
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-011",
+   "name": "篮球站个人中心页可打开（页脚可见）",
+   "module": "体育/我的",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camel-bball-test5.elelive.cn/my"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "a[href=\"/about-us\"]",
+     "timeout_ms": 20000
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-012",
+   "name": "National Basketball League 联赛页标题",
+   "module": "体育/联赛",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camel-bball-test5.elelive.cn/basketball/league/National%20Basketball%20League"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1"
+    },
+    {
+     "action": "expect_text",
+     "selector": "h1",
+     "expected": "National Basketball League"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-013",
+   "name": "篮球站新闻页渲染出新闻条目",
+   "module": "体育/新闻",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camel-bball-test5.elelive.cn/q/news"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "a[href^=\"/news/detail/\"]",
+     "timeout_ms": 20000
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-014",
+   "name": "从首页点击联赛入口进入联赛页",
+   "module": "体育/联赛",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camel-bball-test5.elelive.cn/basketball"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 2500
+    },
+    {
+     "action": "click",
+     "selector": "text=National Basketball League"
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=Scores"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-015",
+   "name": "篮球站首页二次访问仍正常",
+   "module": "体育/篮球",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camel-bball-test5.elelive.cn/basketball"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1"
+    },
+    {
+     "action": "wait",
+     "ms": 2500
+    },
+    {
+     "action": "goto",
+     "url": "https://camel-bball-test5.elelive.cn/basketball"
+    },
+    {
+     "action": "expect_text",
+     "selector": "h1",
+     "expected": "Basketball Live Scores"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-016",
+   "name": "直播站首页主标题",
+   "module": "体育/直播",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camelive-g3-test5.elelive.cn/"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 1500
+    },
+    {
+     "action": "expect_text",
+     "selector": "h1",
+     "expected": "Football Today"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-017",
+   "name": "直播站首页 News 入口可见",
+   "module": "体育/新闻",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camelive-g3-test5.elelive.cn/"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 1500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=News"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-018",
+   "name": "直播站首页 Football 入口可见",
+   "module": "体育/直播",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camelive-g3-test5.elelive.cn/"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 1500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=Football"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-019",
+   "name": "直播站首页 Basketball 切换入口可见",
+   "module": "体育/直播",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camelive-g3-test5.elelive.cn/"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 1500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=Basketball"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-020",
+   "name": "直播站首页 Camel Live 入口可见",
+   "module": "体育/直播",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camelive-g3-test5.elelive.cn/"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 1500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=Camel Live"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-021",
+   "name": "直播站首页 Fixtures 区块可见",
+   "module": "体育/直播",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camelive-g3-test5.elelive.cn/"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 1500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=Fixtures"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-022",
+   "name": "直播站首页 Scores 区块可见",
+   "module": "体育/直播",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camelive-g3-test5.elelive.cn/"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 1500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=Scores"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-023",
+   "name": "直播站首页搜索入口可见",
+   "module": "体育/直播",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camelive-g3-test5.elelive.cn/"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 1500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=Search"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-024",
+   "name": "Indonesian Super League 入口可见",
+   "module": "体育/联赛",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camelive-g3-test5.elelive.cn/"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 1500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=Indonesian Super League"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-025",
+   "name": "Indian Calcutta Football League 入口可见",
+   "module": "体育/联赛",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camelive-g3-test5.elelive.cn/"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 1500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=Indian Calcutta Football League"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-026",
+   "name": "直播站阿语路由页面可加载",
+   "module": "体育/多语言",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camelive-g3-test5.elelive.cn/ar"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "body"
+    },
+    {
+     "action": "wait",
+     "ms": 1500
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-027",
+   "name": "直播站篮球分区页（篮球站内容）可打开",
+   "module": "体育/直播",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camelive-g3-test5.elelive.cn/basketball"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 2000
+    },
+    {
+     "action": "expect_text",
+     "selector": "h1",
+     "expected": "Basketball Live Scores"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-028",
+   "name": "直播站新闻页渲染出新闻条目",
+   "module": "体育/新闻",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camelive-g3-test5.elelive.cn/q/news"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "a[href^=\"/news/detail/\"]",
+     "timeout_ms": 20000
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-029",
+   "name": "直播站首页二次访问仍可渲染",
+   "module": "体育/直播",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camelive-g3-test5.elelive.cn/"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 2500
+    },
+    {
+     "action": "goto",
+     "url": "https://camelive-g3-test5.elelive.cn/"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=Football"
+    }
+   ]
+  },
+  {
+   "case_id": "SP-WEB-030",
+   "name": "直播站首页 Football 与 Fixtures 同时可见",
+   "module": "体育/直播",
+   "steps": [
+    {
+     "action": "goto",
+     "url": "https://camelive-g3-test5.elelive.cn/"
+    },
+    {
+     "action": "wait_visible",
+     "selector": "h1",
+     "timeout_ms": 30000
+    },
+    {
+     "action": "wait",
+     "ms": 2500
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=Football"
+    },
+    {
+     "action": "expect_visible",
+     "selector": "text=Fixtures"
+    }
+   ]
+  }
+ ]
 }
