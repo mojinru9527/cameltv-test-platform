@@ -1,0 +1,683 @@
+{
+  "status": "completed",
+  "partial": false,
+  "reuse_mode": "version-task",
+  "checks": {
+    "database_ok": true,
+    "dataset_meets_target": true,
+    "fingerprint_present": true,
+    "node_online": true,
+    "target_reachable": true,
+    "account_slot_configured": true
+  },
+  "dataset": {
+    "project_id": 1,
+    "module_prefix": "体育",
+    "targets": {
+      "api": 50,
+      "web": 30
+    },
+    "counts": {
+      "api": 50,
+      "web": 30
+    },
+    "shortfall": {
+      "api": 0,
+      "web": 0
+    },
+    "meets_target": true,
+    "api": [
+      {
+        "id": 622,
+        "title": "【冒烟】/ee/version/version 状态码与业务码",
+        "module": "体育/接口/version",
+        "priority": "P0"
+      },
+      {
+        "id": 627,
+        "title": "【冒烟】/ee/stream_stats/quality 状态码与业务码",
+        "module": "体育/接口/stream-stats",
+        "priority": "P0"
+      },
+      {
+        "id": 632,
+        "title": "【冒烟】/ee/sports_live/v_stream 状态码与业务码",
+        "module": "体育/接口/sports-live",
+        "priority": "P0"
+      },
+      {
+        "id": 637,
+        "title": "【冒烟】/ee/sports_live/v_origin_stream 状态码与业务码",
+        "module": "体育/接口/sports-live",
+        "priority": "P0"
+      },
+      {
+        "id": 652,
+        "title": "【冒烟】/ee/sports_live/player/hot-players 状态码与业务码",
+        "module": "体育/接口/sports-live",
+        "priority": "P0"
+      },
+      {
+        "id": 657,
+        "title": "【冒烟】/ee/sports_live/living_group_match 状态码与业务码",
+        "module": "体育/接口/sports-live",
+        "priority": "P0"
+      },
+      {
+        "id": 662,
+        "title": "【冒烟】/ee/sports_live/list_hot_team_match 状态码与业务码",
+        "module": "体育/接口/sports-live",
+        "priority": "P0"
+      },
+      {
+        "id": 667,
+        "title": "【冒烟】/ee/sports_live/list_faceoff 状态码与业务码",
+        "module": "体育/接口/sports-live",
+        "priority": "P0"
+      },
+      {
+        "id": 623,
+        "title": "【冒烟】/ee/version/version 信封 traceId 存在",
+        "module": "体育/接口/version",
+        "priority": "P1"
+      },
+      {
+        "id": 624,
+        "title": "【冒烟】/ee/version/version 响应时间 ≤5s",
+        "module": "体育/接口/version",
+        "priority": "P1"
+      },
+      {
+        "id": 626,
+        "title": "【冒烟】/ee/version/version 数据非空",
+        "module": "体育/接口/version",
+        "priority": "P1"
+      },
+      {
+        "id": 628,
+        "title": "【冒烟】/ee/stream_stats/quality 信封 traceId 存在",
+        "module": "体育/接口/stream-stats",
+        "priority": "P1"
+      },
+      {
+        "id": 629,
+        "title": "【冒烟】/ee/stream_stats/quality 响应时间 ≤5s",
+        "module": "体育/接口/stream-stats",
+        "priority": "P1"
+      },
+      {
+        "id": 633,
+        "title": "【冒烟】/ee/sports_live/v_stream 信封 traceId 存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 634,
+        "title": "【冒烟】/ee/sports_live/v_stream 响应时间 ≤5s",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 636,
+        "title": "【冒烟】/ee/sports_live/v_stream 数据非空",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 638,
+        "title": "【冒烟】/ee/sports_live/v_origin_stream 信封 traceId 存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 639,
+        "title": "【冒烟】/ee/sports_live/v_origin_stream 响应时间 ≤5s",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 642,
+        "title": "【冒烟】/ee/sports_live/sync_team 状态码与业务码",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 644,
+        "title": "【冒烟】/ee/sports_live/sync_team 响应时间 ≤5s",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 647,
+        "title": "【冒烟】/ee/sports_live/sync_competition 状态码与业务码",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 649,
+        "title": "【冒烟】/ee/sports_live/sync_competition 响应时间 ≤5s",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 653,
+        "title": "【冒烟】/ee/sports_live/player/hot-players 信封 traceId 存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 654,
+        "title": "【冒烟】/ee/sports_live/player/hot-players 响应时间 ≤5s",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 656,
+        "title": "【冒烟】/ee/sports_live/player/hot-players 数据非空",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 658,
+        "title": "【冒烟】/ee/sports_live/living_group_match 信封 traceId 存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 659,
+        "title": "【冒烟】/ee/sports_live/living_group_match 响应时间 ≤30s（慢端点）",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 661,
+        "title": "【冒烟】/ee/sports_live/living_group_match 数据存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 663,
+        "title": "【冒烟】/ee/sports_live/list_hot_team_match 信封 traceId 存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 664,
+        "title": "【冒烟】/ee/sports_live/list_hot_team_match 响应时间 ≤5s",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 666,
+        "title": "【冒烟】/ee/sports_live/list_hot_team_match 数据存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 668,
+        "title": "【冒烟】/ee/sports_live/list_faceoff 信封 traceId 存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 669,
+        "title": "【冒烟】/ee/sports_live/list_faceoff 响应时间 ≤5s",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 671,
+        "title": "【冒烟】/ee/sports_live/list_faceoff 数据存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P1"
+      },
+      {
+        "id": 625,
+        "title": "【冒烟】/ee/version/version 信封 timestamp 存在",
+        "module": "体育/接口/version",
+        "priority": "P2"
+      },
+      {
+        "id": 630,
+        "title": "【冒烟】/ee/stream_stats/quality 信封 timestamp 存在",
+        "module": "体育/接口/stream-stats",
+        "priority": "P2"
+      },
+      {
+        "id": 631,
+        "title": "【冒烟】/ee/stream_stats/quality 仅状态码（无 data）",
+        "module": "体育/接口/stream-stats",
+        "priority": "P2"
+      },
+      {
+        "id": 635,
+        "title": "【冒烟】/ee/sports_live/v_stream 信封 timestamp 存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P2"
+      },
+      {
+        "id": 640,
+        "title": "【冒烟】/ee/sports_live/v_origin_stream 信封 timestamp 存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P2"
+      },
+      {
+        "id": 641,
+        "title": "【冒烟】/ee/sports_live/v_origin_stream 仅状态码（无 data）",
+        "module": "体育/接口/sports-live",
+        "priority": "P2"
+      },
+      {
+        "id": 643,
+        "title": "【冒烟】/ee/sports_live/sync_team 信封 traceId 存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P2"
+      },
+      {
+        "id": 645,
+        "title": "【冒烟】/ee/sports_live/sync_team 信封 timestamp 存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P2"
+      },
+      {
+        "id": 646,
+        "title": "【冒烟】/ee/sports_live/sync_team 仅状态码（无 data）",
+        "module": "体育/接口/sports-live",
+        "priority": "P2"
+      },
+      {
+        "id": 648,
+        "title": "【冒烟】/ee/sports_live/sync_competition 信封 traceId 存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P2"
+      },
+      {
+        "id": 650,
+        "title": "【冒烟】/ee/sports_live/sync_competition 信封 timestamp 存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P2"
+      },
+      {
+        "id": 651,
+        "title": "【冒烟】/ee/sports_live/sync_competition 仅状态码（无 data）",
+        "module": "体育/接口/sports-live",
+        "priority": "P2"
+      },
+      {
+        "id": 655,
+        "title": "【冒烟】/ee/sports_live/player/hot-players 信封 timestamp 存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P2"
+      },
+      {
+        "id": 660,
+        "title": "【冒烟】/ee/sports_live/living_group_match 信封 timestamp 存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P2"
+      },
+      {
+        "id": 665,
+        "title": "【冒烟】/ee/sports_live/list_hot_team_match 信封 timestamp 存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P2"
+      },
+      {
+        "id": 670,
+        "title": "【冒烟】/ee/sports_live/list_faceoff 信封 timestamp 存在",
+        "module": "体育/接口/sports-live",
+        "priority": "P2"
+      }
+    ],
+    "web": [
+      {
+        "id": 592,
+        "title": "篮球站首页主标题",
+        "module": "体育/篮球",
+        "priority": "P0"
+      },
+      {
+        "id": 593,
+        "title": "篮球站首页 News 入口可见",
+        "module": "体育/篮球",
+        "priority": "P0"
+      },
+      {
+        "id": 594,
+        "title": "篮球站首页 BBall 入口可见",
+        "module": "体育/篮球",
+        "priority": "P0"
+      },
+      {
+        "id": 596,
+        "title": "篮球站首页 Scores 区块可见",
+        "module": "体育/篮球",
+        "priority": "P0"
+      },
+      {
+        "id": 598,
+        "title": "篮球站首页 National Basketball League 入口可见",
+        "module": "体育/联赛",
+        "priority": "P0"
+      },
+      {
+        "id": 599,
+        "title": "篮球站首页 VTB United League Supercup 入口可见",
+        "module": "体育/联赛",
+        "priority": "P0"
+      },
+      {
+        "id": 601,
+        "title": "篮球站新闻列表页渲染出新闻条目",
+        "module": "体育/新闻",
+        "priority": "P0"
+      },
+      {
+        "id": 602,
+        "title": "篮球站个人中心页可打开（页脚可见）",
+        "module": "体育/我的",
+        "priority": "P0"
+      },
+      {
+        "id": 605,
+        "title": "从首页点击联赛入口进入联赛页",
+        "module": "体育/联赛",
+        "priority": "P0"
+      },
+      {
+        "id": 608,
+        "title": "直播站首页 News 入口可见",
+        "module": "体育/新闻",
+        "priority": "P0"
+      },
+      {
+        "id": 609,
+        "title": "直播站首页 Football 入口可见",
+        "module": "体育/直播",
+        "priority": "P0"
+      },
+      {
+        "id": 610,
+        "title": "直播站首页 Basketball 切换入口可见",
+        "module": "体育/直播",
+        "priority": "P0"
+      },
+      {
+        "id": 617,
+        "title": "直播站阿语路由页面可加载",
+        "module": "体育/多语言",
+        "priority": "P0"
+      },
+      {
+        "id": 618,
+        "title": "直播站篮球分区页（篮球站内容）可打开",
+        "module": "体育/直播",
+        "priority": "P0"
+      },
+      {
+        "id": 621,
+        "title": "直播站首页 Football 与 Fixtures 同时可见",
+        "module": "体育/直播",
+        "priority": "P0"
+      },
+      {
+        "id": 595,
+        "title": "篮球站首页 Fixtures 区块可见",
+        "module": "体育/篮球",
+        "priority": "P1"
+      },
+      {
+        "id": 597,
+        "title": "篮球站首页搜索入口可见",
+        "module": "体育/篮球",
+        "priority": "P1"
+      },
+      {
+        "id": 600,
+        "title": "篮球站首页 Camel Live 跨站入口可见",
+        "module": "体育/篮球",
+        "priority": "P1"
+      },
+      {
+        "id": 603,
+        "title": "National Basketball League 联赛页标题",
+        "module": "体育/联赛",
+        "priority": "P1"
+      },
+      {
+        "id": 604,
+        "title": "篮球站新闻页渲染出新闻条目",
+        "module": "体育/新闻",
+        "priority": "P1"
+      },
+      {
+        "id": 606,
+        "title": "篮球站首页二次访问仍正常",
+        "module": "体育/篮球",
+        "priority": "P1"
+      },
+      {
+        "id": 611,
+        "title": "直播站首页 Camel Live 入口可见",
+        "module": "体育/直播",
+        "priority": "P1"
+      },
+      {
+        "id": 612,
+        "title": "直播站首页 Fixtures 区块可见",
+        "module": "体育/直播",
+        "priority": "P1"
+      },
+      {
+        "id": 613,
+        "title": "直播站首页 Scores 区块可见",
+        "module": "体育/直播",
+        "priority": "P1"
+      },
+      {
+        "id": 614,
+        "title": "直播站首页搜索入口可见",
+        "module": "体育/直播",
+        "priority": "P1"
+      },
+      {
+        "id": 615,
+        "title": "Indonesian Super League 入口可见",
+        "module": "体育/联赛",
+        "priority": "P1"
+      },
+      {
+        "id": 616,
+        "title": "Indian Calcutta Football League 入口可见",
+        "module": "体育/联赛",
+        "priority": "P1"
+      },
+      {
+        "id": 619,
+        "title": "直播站新闻页渲染出新闻条目",
+        "module": "体育/新闻",
+        "priority": "P1"
+      },
+      {
+        "id": 607,
+        "title": "直播站首页主标题",
+        "module": "体育/直播",
+        "priority": "P2"
+      },
+      {
+        "id": 620,
+        "title": "直播站首页二次访问仍可渲染",
+        "module": "体育/直播",
+        "priority": "P2"
+      }
+    ]
+  },
+  "versions": [
+    {
+      "version": "20.1",
+      "version_task_id": 10,
+      "job_ids": [
+        52,
+        53
+      ],
+      "person_hours": 1.5,
+      "execution_hours": 0.043,
+      "evidence_complete": true,
+      "reuse_suggested": 4,
+      "reuse_adopted": 2,
+      "reuse_rejected": 2,
+      "reuse_source": "platform:version-task-delta",
+      "decisions": {
+        "adopted": [
+          "赛事列表",
+          "直播入口"
+        ],
+        "rejected": [
+          "登录冒烟",
+          "结算流程"
+        ],
+        "missing": [],
+        "reason": "赛事列表/直播入口=复用：本版本 50 条接口用例覆盖 list_faceoff / list_hot_team_match / living_group_match / v_stream / v_origin_stream / player-hot-players 等端点，30 条 Web 用例覆盖篮球站与直播站首页、联赛入口与新闻页；登录冒烟/结算流程=未复用：试点集内不含登录与结算（支付/下单）类用例，本版本没有执行到这两条建议覆盖的范围。"
+      },
+      "cumulative_reuse": {
+        "suggested": 24,
+        "adopted": 12,
+        "rejected": 5,
+        "hit_rate": 0.5,
+        "meets_50pct": true,
+        "pending": 7
+      }
+    },
+    {
+      "version": "20.2",
+      "version_task_id": 11,
+      "job_ids": [
+        54,
+        55
+      ],
+      "person_hours": 1.5,
+      "execution_hours": 0.038,
+      "evidence_complete": true,
+      "reuse_suggested": 4,
+      "reuse_adopted": 2,
+      "reuse_rejected": 2,
+      "reuse_source": "platform:version-task-delta",
+      "decisions": {
+        "adopted": [
+          "赛事列表",
+          "直播入口"
+        ],
+        "rejected": [
+          "登录冒烟",
+          "结算流程"
+        ],
+        "missing": [],
+        "reason": "赛事列表/直播入口=复用：本版本 50 条接口用例覆盖 list_faceoff / list_hot_team_match / living_group_match / v_stream / v_origin_stream / player-hot-players 等端点，30 条 Web 用例覆盖篮球站与直播站首页、联赛入口与新闻页；登录冒烟/结算流程=未复用：试点集内不含登录与结算（支付/下单）类用例，本版本没有执行到这两条建议覆盖的范围。"
+      },
+      "cumulative_reuse": {
+        "suggested": 28,
+        "adopted": 14,
+        "rejected": 7,
+        "hit_rate": 0.5,
+        "meets_50pct": true,
+        "pending": 7
+      }
+    },
+    {
+      "version": "20.3",
+      "version_task_id": 12,
+      "job_ids": [
+        56,
+        57
+      ],
+      "person_hours": 1.5,
+      "execution_hours": 0.042,
+      "evidence_complete": true,
+      "reuse_suggested": 4,
+      "reuse_adopted": 2,
+      "reuse_rejected": 2,
+      "reuse_source": "platform:version-task-delta",
+      "decisions": {
+        "adopted": [
+          "赛事列表",
+          "直播入口"
+        ],
+        "rejected": [
+          "登录冒烟",
+          "结算流程"
+        ],
+        "missing": [],
+        "reason": "赛事列表/直播入口=复用：本版本 50 条接口用例覆盖 list_faceoff / list_hot_team_match / living_group_match / v_stream / v_origin_stream / player-hot-players 等端点，30 条 Web 用例覆盖篮球站与直播站首页、联赛入口与新闻页；登录冒烟/结算流程=未复用：试点集内不含登录与结算（支付/下单）类用例，本版本没有执行到这两条建议覆盖的范围。"
+      },
+      "cumulative_reuse": {
+        "suggested": 32,
+        "adopted": 16,
+        "rejected": 9,
+        "hit_rate": 0.5,
+        "meets_50pct": true,
+        "pending": 7
+      }
+    }
+  ],
+  "slo": {
+    "versions": [
+      {
+        "version": "20.1",
+        "person_hours": 1.5,
+        "execution_hours": 0.043,
+        "reuse_suggested": 4,
+        "reuse_adopted": 2,
+        "reuse_hit_rate": 0.5,
+        "meets": {
+          "plan_within_2h": true,
+          "execution_within_3h": true,
+          "evidence_complete": true,
+          "reuse_hit_rate_50pct": true
+        },
+        "all_met": true
+      },
+      {
+        "version": "20.2",
+        "person_hours": 1.5,
+        "execution_hours": 0.038,
+        "reuse_suggested": 4,
+        "reuse_adopted": 2,
+        "reuse_hit_rate": 0.5,
+        "meets": {
+          "plan_within_2h": true,
+          "execution_within_3h": true,
+          "evidence_complete": true,
+          "reuse_hit_rate_50pct": true
+        },
+        "all_met": true
+      },
+      {
+        "version": "20.3",
+        "person_hours": 1.5,
+        "execution_hours": 0.042,
+        "reuse_suggested": 4,
+        "reuse_adopted": 2,
+        "reuse_hit_rate": 0.5,
+        "meets": {
+          "plan_within_2h": true,
+          "execution_within_3h": true,
+          "evidence_complete": true,
+          "reuse_hit_rate_50pct": true
+        },
+        "all_met": true
+      }
+    ],
+    "consecutive_passing": 3,
+    "consecutive_required": 3,
+    "overall_reuse_hit_rate": 0.5,
+    "meets_all": true,
+    "thresholds": {
+      "person_hours_per_version_max": 2.0,
+      "execution_hours_per_version_max": 3.0,
+      "evidence_completeness_min": 1.0,
+      "reuse_hit_rate_min": 0.5,
+      "consecutive_versions_min": 3
+    }
+  },
+  "environment_fingerprint_source": "environment_fingerprints",
+  "account_slot": "sports-tester-01"
+}
