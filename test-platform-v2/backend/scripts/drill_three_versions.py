@@ -46,6 +46,10 @@ EXIT_OK = 0
 EXIT_NOT_READY = 4
 EXIT_SLO_NOT_MET = 5
 
+# C269-2：瞬断重试的口径（测试可覆盖这两个常量以避免真的 sleep）
+RETRY_ATTEMPTS = 3
+RETRY_BACKOFF_SECONDS = 1.5
+
 
 def collect_preflight(args) -> dict:
     checks = {
@@ -189,14 +193,145 @@ def _platform_reuse_stats(client, headers: dict) -> tuple[int, int]:
     B3-4 的 `reuse_suggestion_event` 现已在"建任务带出建议"时写入；驱动应**读平台指标**
     而不是依赖人工输入（人工口径保留为回退）。返回 (suggested, adopted)。
     """
-    try:
-        resp = client.get("/api/v1/version-tasks/knowledge/reuse-stats", headers=headers)
-    except httpx.HTTPError:
-        return 0, 0
-    if resp.status_code != 200:
-        return 0, 0
-    data = (resp.json() or {}).get("data") or {}
+    data = _reuse_stats_full(client, headers)
     return int(data.get("suggested") or 0), int(data.get("adopted") or 0)
+
+
+def _request_with_retry(
+    client,
+    method: str,
+    url: str,
+    *,
+    attempts: int | None = None,
+    backoff: float | None = None,
+    **kwargs,
+):
+    """C269-2：只对**瞬时传输错误**（以及幂等 GET 的 5xx）做有界重试。
+
+    Batch 269 实测：本机试点实例（单进程 uvicorn + SQLite）会在负载下重置 localhost
+    连接，一次 `httpx.ReadError` 就让整轮 3 版本演练白跑（4 次尝试全废，每次约 20 分钟）。
+    这里重试的是"可能只是抖动"的情况；**HTTP 4xx 与断言失败一律不重试**——那是真问题，
+    不能靠重试掩盖。POST 的 5xx 也不重试，避免重复登记任务。
+    """
+    attempts = RETRY_ATTEMPTS if attempts is None else attempts
+    backoff = RETRY_BACKOFF_SECONDS if backoff is None else backoff
+    retry_5xx = method.upper() == "GET"
+    total = max(1, attempts)
+    for index in range(total):
+        last_attempt = index + 1 >= total
+        try:
+            resp = client.request(method, url, **kwargs)
+        except httpx.TransportError:
+            if last_attempt:
+                raise
+            time.sleep(backoff * (index + 1))
+            continue
+        if retry_5xx and resp.status_code >= 500 and not last_attempt:
+            time.sleep(backoff * (index + 1))
+            continue
+        return resp
+    raise RuntimeError("unreachable")  # pragma: no cover - 循环内必然 return 或 raise
+
+
+def _get(client, url: str, **kwargs):
+    return _request_with_retry(client, "GET", url, **kwargs)
+
+
+def _post(client, url: str, **kwargs):
+    return _request_with_retry(client, "POST", url, **kwargs)
+
+
+def _reuse_stats_full(client, headers: dict) -> dict:
+    """平台累计复用读数（失败即返回空 dict，调用方按缺失处理，不编数字）。"""
+    try:
+        resp = _get(client, "/api/v1/version-tasks/knowledge/reuse-stats", headers=headers)
+    except httpx.HTTPError:
+        return {}
+    if resp.status_code != 200:
+        return {}
+    return (resp.json() or {}).get("data") or {}
+
+
+def _suggestion_refs(client, headers: dict) -> list[tuple[str, str]]:
+    """(suggestion_ref, title) —— 必须与 `version_task_service.create_task` 写入的 ref 同构。
+
+    create_task 用 `f"knowledge:{记录id}:{条目标题}"` 写 `decision='suggested'`；这里读同一个
+    数据源（`GET /version-tasks/knowledge/reuse`）重建 ref，才能命中 `record_decision` 的守卫。
+    """
+    resp = _get(
+        client,
+        "/api/v1/version-tasks/knowledge/reuse",
+        headers=headers,
+        params={"limit": 5},
+    )
+    if resp.status_code != 200:
+        return []
+    out: list[tuple[str, str]] = []
+    for record in (resp.json() or {}).get("data") or []:
+        for title in record.get("reuse") or []:
+            out.append((f"knowledge:{record.get('id')}:{title}", str(title)))
+    return out
+
+
+def _load_decisions(raw: str) -> dict:
+    """逐版本复用决策文件：`{ "<版本>": {"adopted": [...], "rejected": [...], "reason": "..."} }`。"""
+    if not raw:
+        return {}
+    path = Path(raw)
+    if not path.exists():
+        raise SystemExit(f"决策文件不存在：{path}")
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise SystemExit(f"决策文件无法解析：{exc}") from exc
+
+
+def _decisions_for(decisions: dict, version: str) -> dict:
+    entry = decisions.get(version) or decisions.get("_default") or {}
+    return {
+        "adopted": [str(x) for x in entry.get("adopted") or []],
+        "rejected": [str(x) for x in entry.get("rejected") or []],
+        "reason": str(entry.get("reason") or ""),
+    }
+
+
+def _apply_decisions(client, headers: dict, task_id: int, refs, decisions: dict) -> dict:
+    """把操作者对**本版本**建议的采纳/否掉写回平台（只认本版本真正带出过的 ref）。"""
+    ref_by_title: dict[str, str] = {}
+    for ref, title in refs:
+        ref_by_title.setdefault(title, ref)
+    applied: dict = {
+        "adopted": [],
+        "rejected": [],
+        "missing": [],
+        "reason": decisions.get("reason", ""),
+    }
+    for decision in ("adopted", "rejected"):
+        for title in decisions.get(decision) or []:
+            ref = ref_by_title.get(title)
+            if not ref:
+                applied["missing"].append(f"{decision}:{title}")
+                continue
+            resp = _post(
+                client,
+                "/api/v1/version-tasks/knowledge/reuse-decisions",
+                json={"task_id": task_id, "suggestion_ref": ref, "decision": decision},
+                headers=headers,
+            )
+            if resp.status_code >= 400:
+                applied["missing"].append(f"{decision}:{title}:HTTP{resp.status_code}")
+                continue
+            applied[decision].append(title)
+    return applied
+
+
+def _write_report(path: str, payload: dict) -> None:
+    """C269-2：每完成一版就落盘一次，崩溃不再丢全部进度。"""
+    if not path:
+        return
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def run_versions(args, dataset: dict) -> list[dict]:
@@ -214,18 +349,53 @@ def run_versions(args, dataset: dict) -> list[dict]:
         "api": {"base_url": args.target_url, "cases": api_cases},
         "web": {"base_url": args.web_target_url or args.target_url, "cases": web_cases},
     }
+    decisions_cfg = _load_decisions(getattr(args, "decisions_json", ""))
+    reuse_mode = getattr(args, "reuse_mode", "version-task")
     versions: list[dict] = []
     with _api_client(args) as client:
         headers = _auth_headers(args)
         for index in range(args.versions):
             version_label = f"{args.version_prefix}{index + 1}"
             started = datetime.now()
+
+            # ① C269-1：**逐版本走版本任务流程**。建任务这一刻平台才会自动带出上版复用建议并写
+            #    `decision='suggested'` 事件——Batch 269 的教训是"只登记执行任务"会让被验收的版本
+            #    既没有版本记录、也不产生任何复用数据（命中率只能读到别的流程留下的旧数字）。
+            stats_before: dict = {}
+            task_id: int | None = None
+            suggested_self = adopted_self = rejected_self = 0
+            decisions_applied: dict = {}
+            if reuse_mode == "version-task":
+                stats_before = _reuse_stats_full(client, headers)
+                created_task = _post(
+                    client,
+                    "/api/v1/version-tasks",
+                    json={
+                        "title": f"{version_label} 连续验收（drill）",
+                        "version": version_label,
+                        "environment_id": args.environment_id,
+                    },
+                    headers=headers,
+                )
+                if created_task.status_code >= 400:
+                    # Batch 270 实跑命中：version_task 有 (project_id, version) 唯一约束，
+                    # 重复用同一版本号时平台返回 500（不是 409），裸栈很难读懂 → 这里给出可操作提示。
+                    raise SystemExit(
+                        f"建版本任务失败：HTTP {created_task.status_code} "
+                        f"（version={version_label}）。若该版本号已存在"
+                        "（version_task 的 project_id+version 唯一），请用 `--version-prefix` "
+                        "换一个版本系列后重跑；不要删既有版本记录来腾位置。"
+                    )
+                task_id = int((created_task.json() or {})["data"]["id"])
+
+            # ② 跑该版本的执行任务（接口 + Web）
             job_ids: list[int] = []
             for kind in ("api", "web"):
                 spec = payload[kind]
                 if not spec["cases"]:
                     continue
-                created = client.post(
+                created = _post(
+                    client,
                     "/api/v1/execution-jobs",
                     json={
                         "kind": kind,
@@ -242,36 +412,92 @@ def run_versions(args, dataset: dict) -> list[dict]:
             for job_id in job_ids:
                 deadline = time.time() + args.job_timeout
                 while time.time() < deadline:
-                    job = client.get(f"/api/v1/execution-jobs/{job_id}", headers=headers).json()["data"]
-                    if job["status"] in {"completed", "failed", "cancelled"}:
+                    job = _get(client, f"/api/v1/execution-jobs/{job_id}", headers=headers)
+                    state = (job.json() or {}).get("data") or {}
+                    if state.get("status") in {"completed", "failed", "cancelled"}:
                         break
                     time.sleep(5)
-                verified = client.get(
-                    f"/api/v1/execution-jobs/{job_id}/evidence/verify", headers=headers
-                ).json()["data"]
+                verified = (
+                    _get(client, f"/api/v1/execution-jobs/{job_id}/evidence/verify", headers=headers).json()
+                    or {}
+                ).get("data") or {}
                 evidence_complete = evidence_complete and bool(
-                    verified["verdict"] == "verified" and verified["completeness"]["complete"]
+                    verified.get("verdict") == "verified"
+                    and (verified.get("completeness") or {}).get("complete")
                 )
             execution_hours = round((datetime.now() - started).total_seconds() / 3600, 3)
-            reuse_suggested, reuse_adopted = args.reuse_suggested, args.reuse_adopted
-            reuse_source = "operator"
-            if not reuse_suggested and not reuse_adopted:
-                reuse_suggested, reuse_adopted = _platform_reuse_stats(client, headers)
-                reuse_source = "platform"
+
+            # ③ 复用决策（人工口径，逐版本）→ 读**本版本增量**
+            cumulative: dict = {}
+            if reuse_mode == "version-task" and task_id is not None:
+                stats_after_task = _reuse_stats_full(client, headers)
+                suggested_self = max(
+                    0,
+                    int(stats_after_task.get("suggested") or 0)
+                    - int(stats_before.get("suggested") or 0),
+                )
+                decisions_applied = _apply_decisions(
+                    client,
+                    headers,
+                    task_id,
+                    _suggestion_refs(client, headers),
+                    _decisions_for(decisions_cfg, version_label),
+                )
+                stats_after_decisions = _reuse_stats_full(client, headers)
+                cumulative = stats_after_decisions
+                adopted_self = max(
+                    0,
+                    int(stats_after_decisions.get("adopted") or 0)
+                    - int(stats_after_task.get("adopted") or 0),
+                )
+                rejected_self = max(
+                    0,
+                    int(stats_after_decisions.get("rejected") or 0)
+                    - int(stats_after_task.get("rejected") or 0),
+                )
+                reuse_suggested, reuse_adopted = suggested_self, adopted_self
+                reuse_source = "platform:version-task-delta"
+            else:
+                reuse_suggested, reuse_adopted = args.reuse_suggested, args.reuse_adopted
+                reuse_source = "operator"
+                if not reuse_suggested and not reuse_adopted:
+                    cumulative = _reuse_stats_full(client, headers)
+                    reuse_suggested, reuse_adopted = _platform_reuse_stats(client, headers)
+                    reuse_source = "platform:cumulative"
+
             versions.append(
                 {
                     "version": version_label,
+                    "version_task_id": task_id,
                     "job_ids": job_ids,
                     # 人工审核耗时无法自动测量 → 由执行者如实提供
                     "person_hours": args.person_hours_per_version,
                     "execution_hours": execution_hours,
                     "evidence_complete": evidence_complete,
+                    # ⑦ 的分子分母用**本版本自产**的数字（version-task 模式）
                     "reuse_suggested": reuse_suggested,
                     "reuse_adopted": reuse_adopted,
+                    "reuse_rejected": rejected_self,
                     "reuse_source": reuse_source,
+                    "decisions": decisions_applied,
+                    "cumulative_reuse": cumulative,
                 }
             )
-            print(f"[version {version_label}] jobs={job_ids} evidence_complete={evidence_complete}")
+            print(
+                f"[version {version_label}] task={task_id} jobs={job_ids} "
+                f"evidence_complete={evidence_complete} "
+                f"reuse={reuse_adopted}/{reuse_suggested} ({reuse_source})"
+            )
+            # ④ C269-2：每版落盘，崩溃不再丢全部进度
+            _write_report(
+                args.out,
+                {
+                    "status": "running",
+                    "partial": True,
+                    "reuse_mode": reuse_mode,
+                    "versions": versions,
+                },
+            )
     return versions
 
 
@@ -299,6 +525,23 @@ def main() -> int:
     parser.add_argument("--person-hours-per-version", type=float, default=None)
     parser.add_argument("--reuse-suggested", type=int, default=0)
     parser.add_argument("--reuse-adopted", type=int, default=0)
+    parser.add_argument(
+        "--reuse-mode",
+        choices=["version-task", "cumulative"],
+        default="version-task",
+        help=(
+            "复用口径：version-task（默认）= 逐版本建版本任务并按**本版本增量**取数与记决策；"
+            "cumulative = 旧行为（读平台累计读数或吃 --reuse-suggested/--reuse-adopted 人工输入）"
+        ),
+    )
+    parser.add_argument(
+        "--decisions-json",
+        default="",
+        help=(
+            '逐版本复用决策（人工口径）：{"<版本>": {"adopted": ["条目标题"], "rejected": [...], '
+            '"reason": "..."}}；未列出的条目保持 pending（不计入分子）'
+        ),
+    )
     parser.add_argument("--job-timeout", type=float, default=1800.0)
     parser.add_argument("--target-timeout", type=float, default=6.0)
     parser.add_argument("--out", default="", help="报告输出路径（JSON）")
@@ -324,6 +567,8 @@ def main() -> int:
     slo = pilot_slo_service.compute_slo(versions)
     report = {
         "status": "completed",
+        "partial": False,
+        "reuse_mode": args.reuse_mode,
         "checks": checks,
         "dataset": dataset,
         "versions": versions,
@@ -332,10 +577,14 @@ def main() -> int:
         "account_slot": args.account_slot,
     }
     if args.out:
-        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
-        Path(args.out).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        _write_report(args.out, report)
         print(f"报告已写入 {args.out}")
-    print(json.dumps({"meets_all": slo["meets_all"], "consecutive_passing": slo["consecutive_passing"]}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"meets_all": slo["meets_all"], "consecutive_passing": slo["consecutive_passing"]},
+            ensure_ascii=False,
+        )
+    )
     return EXIT_OK if slo["meets_all"] else EXIT_SLO_NOT_MET
 
 
