@@ -1,0 +1,70 @@
+# Batch 267 — QA 报告
+
+> **QA (🔍)** | Date: 2026-09-20 | Verdict: **PASS**
+> 档位：轻量批次（数据 + 证据）
+
+## 可执行门禁
+
+| 命令 | 结果 |
+|------|------|
+| 端点筛选（真实 Test5 匿名探测） | 10/10 端点 `http=200 且信封 code=200`（另 1 个候选因 15s 超时未入选，后按 40s 超时纳入并标记为慢端点） |
+| 冒烟集实跑（真实 Test5） | **passed 42 / failed 8 / total 50**，evidence_files **101** |
+| `pwsh scripts/git/scan-common-bugs.ps1` | HARD **0** / WARN 344（= 主干基线） |
+| `pwsh scripts/git/audit-cconditions.ps1` | hard errors 0 / warnings 0 |
+
+## 逐条验证
+
+### A1 通过率 ✅
+同一环境、同一执行链路下：自动生成集 **5/50** → 本冒烟集 **42/50**。差异来源是**端点选择**（选实测健康端点），不是执行链路。
+
+### A2 失败可归因 ✅
+8 条失败全部集中在两个慢端点：
+```
+/ee/sports_live/living_group_match   5 条 ReadTimeout（用例已给 40s 超时）
+/ee/sports_live/list_hot_team_match  2 条 ReadTimeout + 1 条 6048.8ms > 5000ms
+其余 8 个端点 40 条断言全部通过
+```
+
+### A3 无凭据 ✅
+全部为匿名 GET 端点；用例文件不含任何账号/令牌。
+
+### A4 门禁 ✅
+见上表。
+
+## 缺陷列表
+
+| # | 严重级 | 描述 | 状态 |
+|---|:------:|------|------|
+| D1 | P2 | 两个端点（`living_group_match` / `list_hot_team_match`）在真实环境上超时或 6s 级响应 | ⏳ 登记 `C267-1`（目标侧性能观察 + SLO 口径） |
+
+## bug-guard「未关闭已知风险」表核对（三问）
+
+**1) 本批是否新增清单中任一项？** 否——纯数据/证据，无代码路径变化。
+**2) 本批是否修复/关闭任一项？** 部分缓解 `C266-1`（用端点选择替代补参数），但 `C266-1` 保持 Open（自动生成集仍需真实参数才能全量执行）。
+**3) 新增路径是否过铁律？** 不适用。
+
+## 复盘卡
+
+## 追加发现（本批附带，直接解释 `C266-4`）：目标站 UI 间歇性极慢
+
+```
+浏览器：bball_home 16.3s OK → 0.37s OK ｜ live_home 两次 30s 超时 FAIL
+HTTP  ：live 首页 200/21.9s ｜ bball 首页 200/9.5s ｜ API 网关健康 200/0.095s
+结论  ：Web 用例波动的主因在**目标侧**（UI 站点 9~22s 甚至超时），非断言写法；已登记 C267-2
+证据  ：work-logs/evidence/batch-267/test5-ui-latency-degradation-20260920.json
+```
+
+## 追加发现 2（本批附带，直接改变 ⑦ 的判定）：复用命中率埋点未接线
+
+```
+代码：app/services/reuse_metrics_service.record_suggestion（写 decision='suggested'）——全仓无调用点
+     GET /version-tasks/knowledge/reuse 只带出建议、不写埋点；决策接口只接受 adopted|rejected
+     命中率 = adopted / suggested if suggested else 0.0  →  suggested 恒 0 ⇒ hit_rate 恒 0
+生产：reuse_suggestion_event = 0 行（同期 version_task=6、version_knowledge_record=1）→ 与代码结论一致
+结论：⑦ 的「复用命中率 ≥50%」在平台侧**无法被测出**，不是"缺真实数字"→ 登记 C267-3（P1）
+证据：work-logs/evidence/batch-267/reuse-metric-not-wired-20260920.json
+```
+
+| 计划耗时 | 缺陷(P0/P1/P2/P3) | 返工次数 | 根因分类 | 下次避免 |
+|----------|-------------------|----------|----------|----------|
+| 2h / ~1.5h | 0/0/1/0 | 1 | 外部依赖（目标端点性能不稳定）+ 环境（本地 JWT 过期、平台被清理） | 冒烟集选定前先做 3 次重复探测；本地跑之前确认平台/节点/JWT 三项都在 |

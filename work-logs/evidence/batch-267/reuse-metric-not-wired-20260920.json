@@ -1,0 +1,26 @@
+{
+  "captured_at": "2026-09-20",
+  "title": "B3-4 复用命中率埋点未接线：`record_suggestion` 无调用点 → 命中率恒为 0（含生产实证）",
+  "why": "§5 第 ⑦ 条的 SLO 有一项是「复用命中率 ≥50%」。此前（Batch 264/266）我把它当作'缺真实数字'登记为 C265-1；本轮排查发现平台侧**根本不会产生该数字**。",
+  "code_evidence": [
+    "`app/services/reuse_metrics_service.py` 定义了 `record_suggestion(...)`（写入 decision='suggested' 的事件）",
+    "全仓 grep：`record_suggestion` **只有定义、没有任何调用点**",
+    "`GET /version-tasks/knowledge/reuse`（带出建议的接口）只调用 `version_task_service.get_reuse_suggestions`，**不写埋点**",
+    "`POST /version-tasks/knowledge/reuse-decisions` 的入参 pattern 限定 `^(adopted|rejected)$`，**没有写 'suggested' 的入口**",
+    "命中率定义：`hit_rate = adopted / suggested if suggested else 0.0` → suggested 恒为 0 ⇒ hit_rate 恒为 0"
+  ],
+  "production_evidence": {
+    "query": "docker exec cameltv-tp-production-postgres-1 psql -U cameltv -d cameltv_production -qAtc \"select count(*) from reuse_suggestion_event\"",
+    "reuse_suggestion_event_rows": 0,
+    "version_knowledge_record_rows": 1,
+    "version_task_rows": 6,
+    "reading": "生产上已有 6 个版本任务与 1 条知识记录（即真实使用过版本流程），但复用埋点 0 行 → 与代码结论一致：建议事件从不写入"
+  },
+  "impact": [
+    "§5 第 ⑦ 条的『复用命中率 ≥50%』在本平台**无法被测出**（不是数据不足，而是埋点未接线）。",
+    "Batch 265 的演练驱动把 `--reuse-suggested/--reuse-adopted` 作为**操作者输入**，正是因为这个平台指标不可用（当时的判定与现在一致）。",
+    "要让 ⑦ 的该项可判定，需要：① 在'带出建议'的路径上写 `record_suggestion`（建议事件）；② 让演练驱动改为**读平台指标**而非人工输入；③ 用真实 3 个版本跑一遍。"
+  ],
+  "severity_suggestion": "P1（阻断 §5 第 ⑦ 条的一项 SLO 判定）",
+  "registered_as": "C267-3"
+}

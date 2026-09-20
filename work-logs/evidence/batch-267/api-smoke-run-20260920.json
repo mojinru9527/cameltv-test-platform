@@ -1,0 +1,20 @@
+{
+  "captured_at": "2026-09-20",
+  "title": "体育接口 P0 冒烟集实跑（真实 Test5）：42/50 通过，8 条失败全部归因于两个慢端点",
+  "method": "把 sports-api-smoke-cases.json 装进平台库（替换自动生成的 591 条）→ 按驱动同样的 payload 结构投递 api 任务（真实 Test5 匿名端点）",
+  "environment": {
+    "platform": "本机 uvicorn@8123（试点库，项目 1）",
+    "node": "本机 cameltv-node（pilot-node，逐用例上下文）",
+    "target_base": "http://camel-api-gateway05.svc.elelive.cn/camel-service"
+  },
+  "result": {"job_id": 35, "status": "failed", "total": 50, "passed": 42, "failed": 8, "evidence_files": 101},
+  "failures": [
+    {"endpoint": "/ee/sports_live/living_group_match", "cases": ["SP-API-036", "SP-API-037", "SP-API-038", "SP-API-039", "SP-API-040"], "reason": "ReadTimeout（用例已给 40s 超时仍超时）"},
+    {"endpoint": "/ee/sports_live/list_hot_team_match", "cases": ["SP-API-041", "SP-API-042", "SP-API-043"], "reason": "两条 ReadTimeout；一条 http=200 但响应时间 6048.8ms > 5000ms 阈值"}
+  ],
+  "comparison": "同一环境下，自动生成用例集（C266-1）为 5/50；本冒烟集 42/50 —— 差异来自'端点选择'而非执行链路",
+  "conclusion": [
+    "执行链路对接口用例完全可用：50 条真实请求、逐条断言、101 个证据文件、失败原因逐条可查。",
+    "剩余 8 条不是用例错误，而是**目标侧两个端点的真实性能特征**（超时 / 6s 级响应）——应作为体育平台侧的性能观察登记，或在本项目内明确 SLO 口径（是否把慢端点排除在 P0 冒烟之外）。"
+  ]
+}
