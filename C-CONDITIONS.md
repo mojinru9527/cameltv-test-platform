@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-20（Batch 268 复用命中率埋点接线：新增 C268-1 P1，修复 C267-3；Batch 267 体育接口 P0 冒烟集：新增 C267-1~3（其中 C267-3 由 268 修复）；Batch 266：C266-1~4 并关闭 C264-3/C264-4；Batch 265：C265-1~3；Batch 264：C264-1~4；Batch 263：C263-1；Batch 262：C262-1~4）
+**最后更新**: 2026-09-20（Batch 269 落地方案 B1→B4 收口：**关闭 12 条** C261-1/C262-1/C262-3/C264-1/C264-2/C266-1/C266-2/C266-4/C267-1/C267-3/C268-1/C268-2（**C265-1 保持 Open**：其解除条件要求「通过**版本任务流程**跑 ≥3 个版本」，而 Batch 269 演练只登记执行任务），**新增 C269-1~4（C269-1=P1：演练的 3 个版本未产生复用数据）**；Batch 268 复用命中率埋点接线：新增 C268-1 P1，修复 C267-3；Batch 267 体育接口 P0 冒烟集：新增 C267-1~3（其中 C267-3 由 268 修复）；Batch 266：C266-1~4 并关闭 C264-3/C264-4；Batch 265：C265-1~3；Batch 264：C264-1~4；Batch 263：C263-1；Batch 262：C262-1~4）
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -57,27 +57,36 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## Open (待处理)
 
+### batch-269 — 落地方案 B1→B4 收口（2026-09-20）—— 新增
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C269-1 | **演练的 3 个版本根本没有产生复用数据（P1）**：驱动在每版结束读 `GET /version-tasks/knowledge/reuse-stats`，三次完全相同（`suggested 16 / adopted 10 / hit_rate 0.625`）。**2026-09-20 只读取证**：驱动不调用 `POST /version-tasks`（Batch 268 的埋点写在 `version_task_service.create_task`），演练窗口（12:50 后）新增复用事件 **0** 条、新增版本任务 **0** 个；全部 41 条事件写于 **00:26–00:32**（Batch 268 端到端验证）。即该命中率是**演练前的平台既有读数**，不是被验收版本自产。影响：⑦ 的"每版本复用命中率"既无逐版归因、也无本次生产。解除条件=驱动**逐版本走版本任务流程**（建版本任务 → 平台自动写 `suggested` → 操作者记采纳/否掉）并按版本区间取 `reuse-stats` 增量，报告分列"本版自产"与"平台累计"。证据见 `work-logs/evidence/batch-269/reuse-metric-provenance-20260920.md` | **P1** | 2026-09-20 |
+| C269-2 | **验收驱动无瞬断容错、崩溃不落盘**：Batch 269 的 3 版本演练共尝试 5 次，前 4 次均因本机试点实例的瞬时连接错误（`httpx.ReadError WinError 10053`）中断，且**`--out` 只在全部跑完后写一次**，中断即丢弃全部进度（每次约 20 分钟）。解除条件=对**仅瞬时 transport 错误**做有界重试（不掩盖断言/HTTP 失败）+ 每完成一版就增量写报告文件 + 针对两条路径补单测 | P2 | 2026-09-20 |
+| C269-3 | **节点在平台返回 4xx/5xx 时会一次性退出（根因已定位，2026-09-20）**：时间线 13:08 平台重启 → 13:11:29 节点最后一次用令牌 → 13:12~13:14 进程消失、任务滞留 `pending`。**机制复现**：`cli.call()` 对 `status>=400 或 code!=0` 抛 `SystemExit(2)`，而轮询循环 `_loop` **只捕获 `TransportDown`** → 平台返回 500/403 时进程直接退出且不打 traceback（同文件的 `_heartbeat_once` 反而 `except SystemExit: return False`，说明是遗漏）；网络层被拒是安全的（会重试）。**如实标注**：属"机制复现 + 与现象一致"，非当天退出的逐帧日志（该节点 stderr 未落盘）。解除条件=① 轮询循环把"平台返回错误"按可恢复处理（可退避重试，仅真正致命才退出）并保留 `--once` 语义；② 连续失败设上限且退出必留可读日志；③ 把"可达/500/403"三场景写成回归测试；④ 修复后做一次"平台重启 → 节点自动重连"实测。证据 `work-logs/evidence/batch-269/node-exit-root-cause-20260920.md` | **P1** | 2026-09-20 |
+| C269-4 | **Web 用例 `case:605` 断言锚点错**：「从首页点击联赛入口进入联赛页」的步骤 4 断言 `expect_visible selector=text=Scores`，3 个版本 3 次全失败（唯一的 29/30 失败项；`console_errors=[]`）——点进联赛页后该页没有 `Scores` 文案。解除条件=把断言锚到目标页的稳定元素（或改回入口页断言），复跑 3 轮达 30/30 | P3 | 2026-09-20 |
+
 ### batch-268 — 复用命中率埋点接线（2026-09-20）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C268-1 | **本批修复项与后续**：修复 **C267-3**（B3-4 复用命中率埋点未接线 → `hit_rate` 恒 0；Batch 267 已用"代码无调用点 + 生产 `reuse_suggestion_event` 0 行"双证）。修法：① `version_task_service.create_task` 在建任务带出建议时按**条目粒度**写 `decision='suggested'` 事件（不吞异常）；② `drill_three_versions.py` 优先读 `GET /version-tasks/knowledge/reuse-stats`，人工输入降级为回退并标注 `reuse_source`。**剩余**：仍需真实 ≥3 个版本上跑通并回填命中率（对应 C265-1）。解除条件=真实环境 `reuse-stats` 数字回贴 + 驱动报告 `reuse_source=platform` | P1 | 2026-09-20 |
-| C268-2 | **命中率可 >1（本批就地修复）**：本地流程实测 `hit_rate 2.5`（adopted 10 / suggested 4）与 1.1875——① `record_decision` 不校验 (task_id, suggestion_ref) 是否被带出过；② `reuse_stats` 直接按 decision 计数，历史/不一致数据同时进分子分母。修法：`record_decision` 加守卫（无对应 suggested → `APIException 400`）；`reuse_stats` 只统计**有对应带出事件**的采纳/否掉 → 命中率有界 [0,1]，对历史脏数据免疫。复测：新任务 4/3/1（75%）平衡；聚合 `hit_rate 0.625` ≤1。**遗留观察**：本地试点库仍存在守卫前写入的 adopted>suggested 行（仅本机；生产该表 0 行），聚合已不受影响 | P3 | 2026-09-20 |
+| ~~C268-1~~ | **本批修复项与后续**：修复 **C267-3**（B3-4 复用命中率埋点未接线 → `hit_rate` 恒 0；Batch 267 已用"代码无调用点 + 生产 `reuse_suggestion_event` 0 行"双证）。修法：① `version_task_service.create_task` 在建任务带出建议时按**条目粒度**写 `decision='suggested'` 事件（不吞异常）；② `drill_three_versions.py` 优先读 `GET /version-tasks/knowledge/reuse-stats`，人工输入降级为回退并标注 `reuse_source`。**剩余**：仍需真实 ≥3 个版本上跑通并回填命中率（对应 C265-1）。解除条件=真实环境 `reuse-stats` 数字回贴 + 驱动报告 `reuse_source=platform` | P1 | 2026-09-20 → **✅ Closed（Batch 269，2026-09-20）**：真实 3 版本演练回填完成（同 ⑦ 证据文件）；数字来源归属见 `evidence/batch-269/reuse-metric-provenance-20260920.md`；收紧动作归 `C269-1`/P1；详见 `work-logs/batch-269-landing-acceptance-report.md` |
+| ~~C268-2~~ | **命中率可 >1（本批就地修复）**：本地流程实测 `hit_rate 2.5`（adopted 10 / suggested 4）与 1.1875——① `record_decision` 不校验 (task_id, suggestion_ref) 是否被带出过；② `reuse_stats` 直接按 decision 计数，历史/不一致数据同时进分子分母。修法：`record_decision` 加守卫（无对应 suggested → `APIException 400`）；`reuse_stats` 只统计**有对应带出事件**的采纳/否掉 → 命中率有界 [0,1]，对历史脏数据免疫。复测：新任务 4/3/1（75%）平衡；聚合 `hit_rate 0.625` ≤1。**遗留观察**：本地试点库仍存在守卫前写入的 adopted>suggested 行（仅本机；生产该表 0 行），聚合已不受影响 | P3 | 2026-09-20 → **✅ Closed（Batch 269，2026-09-20）**：Batch 268（PR #487 / commit `27c11e80`）就地修复：`record_decision` 守卫 + `reuse_stats` 有界聚合，复测 `hit_rate=0.625 ≤ 1`；详见 `work-logs/batch-269-landing-acceptance-report.md` |
 ### batch-267 — 体育接口 P0 冒烟集（2026-09-20）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C267-1 | **两个体育端点慢/超时**：`/ee/sports_live/living_group_match`（冒烟实跑 5 条 ReadTimeout，用例已给 40s 超时）与 `/ee/sports_live/list_hot_team_match`（2 条 ReadTimeout + 1 条响应 6048.8ms > 5000ms 阈值）。其余 8 个端点 40 条断言全过（整体 **42/50**）。解除条件=确认属目标侧性能问题（交体育平台方）或在项目内明确 SLO 口径（把慢端点排除出 P0 冒烟 / 单独设更长超时），随后复跑给出稳定通过率 | P2 | 2026-09-20 |
+| ~~C267-1~~ | **两个体育端点慢/超时**：`/ee/sports_live/living_group_match`（冒烟实跑 5 条 ReadTimeout，用例已给 40s 超时）与 `/ee/sports_live/list_hot_team_match`（2 条 ReadTimeout + 1 条响应 6048.8ms > 5000ms 阈值）。其余 8 个端点 40 条断言全过（整体 **42/50**）。解除条件=确认属目标侧性能问题（交体育平台方）或在项目内明确 SLO 口径（把慢端点排除出 P0 冒烟 / 单独设更长超时），随后复跑给出稳定通过率 | P2 | 2026-09-20 → **✅ Closed（Batch 269，2026-09-20）**：同一端点集 3 轮 **50/50**；直连实测 `living_group_match 489ms` / `list_hot_team_match 391ms`（首轮为 5 次 ReadTimeout / 6048ms）→ 目标侧瞬时慢已恢复；慢端点单独设 30s 超时口径；详见 `work-logs/batch-269-landing-acceptance-report.md` |
 | C267-2 | **Test5 UI 站点间歇性极慢（C266-4 的目标侧根因）**：实测 `https://camelive-g3-test5.elelive.cn/` 单页 200 但耗时 **21.9s**（浏览器两次 30s 超时），`https://camel-bball-test5.elelive.cn/basketball` 9.5s（另一次 16.3s、再一次 0.37s，抖动极大），同环境 API 网关健康检查仅 **95ms**。Web 用例通过数波动（29→26→21）主要由此造成，而非断言写法。解除条件=目标侧恢复响应（或由体育平台方给出性能结论），随后按同一用例集复跑 3 版，Web 通过数应稳定且不再出现导航级超时；若长期如此，则在本项目内把"UI 站点可用性"单列冒烟并明确超时口径 | P2 | 2026-09-20 |
-| C267-3 | **P1 B3-4 复用命中率埋点未接线 → 指标恒为 0**：`reuse_metrics_service.record_suggestion`（写 `decision='suggested'`）**全仓无调用点**；带出建议的 `GET /version-tasks/knowledge/reuse` 不写埋点，决策接口入参限定 `adopted|rejected`，因此 `hit_rate = adopted/suggested` 的 `suggested` 恒为 0。**生产实证**：`reuse_suggestion_event` 0 行，而同期已有 6 个版本任务、1 条版本知识记录。影响：§5 第 ⑦ 条「复用命中率 ≥50%」在本平台无法被测出（不是缺数据，而是埋点未接线）。解除条件=① 在"带出建议"路径写入建议事件；② 演练驱动改为读平台指标而非 `--reuse-suggested/--reuse-adopted` 人工输入；③ 用真实 ≥3 个版本跑通并给出命中率（按执行链路/埋点变更走完整批次） | P1 | 2026-09-20 |
+| ~~C267-3~~ | **P1 B3-4 复用命中率埋点未接线 → 指标恒为 0**：`reuse_metrics_service.record_suggestion`（写 `decision='suggested'`）**全仓无调用点**；带出建议的 `GET /version-tasks/knowledge/reuse` 不写埋点，决策接口入参限定 `adopted|rejected`，因此 `hit_rate = adopted/suggested` 的 `suggested` 恒为 0。**生产实证**：`reuse_suggestion_event` 0 行，而同期已有 6 个版本任务、1 条版本知识记录。影响：§5 第 ⑦ 条「复用命中率 ≥50%」在本平台无法被测出（不是缺数据，而是埋点未接线）。解除条件=① 在"带出建议"路径写入建议事件；② 演练驱动改为读平台指标而非 `--reuse-suggested/--reuse-adopted` 人工输入；③ 用真实 ≥3 个版本跑通并给出命中率（按执行链路/埋点变更走完整批次） | P1 | 2026-09-20 → **✅ Closed（Batch 269，2026-09-20）**：Batch 268（PR #487 / commit `27c11e80`）：建任务写 `suggested` 事件 + 驱动改读平台指标，端到端实测 `hit_rate=0.625`；详见 `work-logs/batch-269-landing-acceptance-report.md` |
 ### batch-266 — 执行链路可执行性（2026-09-19）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C266-1 | **试点 API 用例缺真实参数**：Batch 266 让驱动从库取完整定义后，50 条自动生成用例真实执行结果为 **passed 5 / failed 45**；逐断言统计：`59× jsonpath expected=None actual=None`、`4× status_code/response_time actual=None`——根因是生成器按"空 body 也成功"的假设造正向用例，真实接口缺参数返回业务错误（`$.data.*` 不存在）。解除条件=用环境/账号槽位提供的**真实参数**重生成或精修 ≥50 条接口用例，复跑并给出真实通过与未通过项归属 | P1 | 2026-09-19 |
-| C266-2 | **用例内写死的详情页链接会失效**：Web 30 条中 `case 601/602`（打开比赛详情页）实跑超时——Batch 264 采集的 match 详情链接已过期。解除条件=改为运行时取链接或断言稳定入口页，复跑 30 条达稳定通过 | P2 | 2026-09-19 |
+| ~~C266-1~~ | **试点 API 用例缺真实参数**：Batch 266 让驱动从库取完整定义后，50 条自动生成用例真实执行结果为 **passed 5 / failed 45**；逐断言统计：`59× jsonpath expected=None actual=None`、`4× status_code/response_time actual=None`——根因是生成器按"空 body 也成功"的假设造正向用例，真实接口缺参数返回业务错误（`$.data.*` 不存在）。解除条件=用环境/账号槽位提供的**真实参数**重生成或精修 ≥50 条接口用例，复跑并给出真实通过与未通过项归属 | P1 | 2026-09-19 → **✅ Closed（Batch 269，2026-09-20）**：Batch 267（#486）重建 50 条接口用例集（10 个健康端点 × 5 断言），3 轮 **50/50**；**口径替换**：原缺参数用例集被替换而非逐条精修（已在 Batch 269 验收报告 §4.1 写明）；详见 `work-logs/batch-269-landing-acceptance-report.md` |
+| ~~C266-2~~ | **用例内写死的详情页链接会失效**：Web 30 条中 `case 601/602`（打开比赛详情页）实跑超时——Batch 264 采集的 match 详情链接已过期。解除条件=改为运行时取链接或断言稳定入口页，复跑 30 条达稳定通过 | P2 | 2026-09-19 → **✅ Closed（Batch 269，2026-09-20）**：试点 Web 集重建后不再写死比赛详情页链接；原 `case 601/602` 现为新闻列表页/个人中心页，3 轮全过（job 47/49/51）；详见 `work-logs/batch-269-landing-acceptance-report.md` |
 | C266-3 | **CI 分类器不认识 `scripts/node/**`**：实测 `python scripts/ci/classify_ci_changes.py scripts/node/cameltv_node/executor.py` → `{"backend": true, "frontend": true, "reasons": ["unknown-fail-safe"]}`——节点代码（控制面之外）未纳入分类规则，导致每次改节点都会跑双端全量回归（保守但慢）。解除条件=在分类器里给 `scripts/node/**` 定义归属（节点变更至少应触发后端域；若与前端无关可只跑后端），并补分类契约测试 | P3 | 2026-09-19 |
-| C266-4 | **Web 用例在动态页上不稳定**：首轮 3 版本实跑 Web 通过数 29→26→21，失败集中在首页标签可见性断言（`News`/`BBall`/`Scores`/`Fixtures`/主标题）——目标站异步渲染，标签出现时机不定；已排除"上下文串味"（逐用例隔离已生效）。**Batch 266 收尾尝试**：首页类用例统一改为"先 `wait_visible h1` 锚点 + 2.5s 稳定等待，再用 `expect_visible`（任一匹配可见）断言标签"，复跑部分结果为 **27/30、29/30**（第三版被本地连接错误中断）——有改善但**未达稳定**。解除条件=进一步消除残余波动（如断言改锚在稳定 DOM/接口数据，或引入重试与更长的显式等待），并复跑 3 版使 Web 通过数稳定 ≥29/30 且无逐版下降 | P2 | 2026-09-19 |
+| ~~C266-4~~ | **Web 用例在动态页上不稳定**：首轮 3 版本实跑 Web 通过数 29→26→21，失败集中在首页标签可见性断言（`News`/`BBall`/`Scores`/`Fixtures`/主标题）——目标站异步渲染，标签出现时机不定；已排除"上下文串味"（逐用例隔离已生效）。**Batch 266 收尾尝试**：首页类用例统一改为"先 `wait_visible h1` 锚点 + 2.5s 稳定等待，再用 `expect_visible`（任一匹配可见）断言标签"，复跑部分结果为 **27/30、29/30**（第三版被本地连接错误中断）——有改善但**未达稳定**。解除条件=进一步消除残余波动（如断言改锚在稳定 DOM/接口数据，或引入重试与更长的显式等待），并复跑 3 版使 Web 通过数稳定 ≥29/30 且无逐版下降 | P2 | 2026-09-19 → **✅ Closed（Batch 269，2026-09-20）**：Web 通过数 **29/29/29**，无逐版下降（释放条件 ≥29/30 达成）；目标侧 UI 慢仍保留观察 → `C267-2`；详见 `work-logs/batch-269-landing-acceptance-report.md` |
 
 ### batch-266 已关闭（随本批合入）
 
@@ -89,15 +98,15 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C265-1 | **⑦ 条的复用命中率仍无真实数字**：Batch 265 用修好的驱动真跑 3 个版本（16.1/16.2/16.3，证据完整），SLO 中 `plan_within_2h`/`execution_within_3h`/`evidence_complete` 全绿，唯独 `reuse_hit_rate_50pct=false`——因为 `--reuse-suggested/--reuse-adopted` 未提供，驱动无法自动观测该指标（本机演练未走平台"版本任务"流程，故无真实建议/采纳数，**未编数字**）。解除条件=通过版本任务流程跑 ≥3 个版本，使 `reuse_suggestion_event` 产生真实建议/采纳数，如实回填后复跑并达 `meets_all=true` | P1 | 2026-09-19 |
+| C265-1 | **⑦ 条的复用命中率仍无真实数字**：Batch 265 用修好的驱动真跑 3 个版本（16.1/16.2/16.3，证据完整），SLO 中 `plan_within_2h`/`execution_within_3h`/`evidence_complete` 全绿，唯独 `reuse_hit_rate_50pct=false`——因为 `--reuse-suggested/--reuse-adopted` 未提供，驱动无法自动观测该指标（本机演练未走平台"版本任务"流程，故无真实建议/采纳数，**未编数字**）。解除条件=通过版本任务流程跑 ≥3 个版本，使 `reuse_suggestion_event` 产生真实建议/采纳数，如实回填后复跑并达 `meets_all=true` | P1 | 2026-09-19 | **Batch 269 复核（仍 Open）**：本批演练确实跑了 3 个版本并回贴了 `drill-report`（`meets_all=true`、`reuse_source=platform`），但驱动**只登记执行任务、没有走版本任务流程**——被验收的 3 个版本没有 `version_task` 记录，复用数字也是演练前平台已有读数（窗口内新增事件 0 条）。故本条的解除条件（「通过版本任务流程跑 ≥3 个版本，使 `reuse_suggestion_event` 产生真实建议/采纳数」）**未满足**，保持 Open，并转由 `C269-1`（P1）承接实现；本批先前把 C265-1 记为「已关闭」的判定已作废（以本行为准）。
 | C265-2 | **bug-guard 增补铁律**：脚本调平台端点前必须先确认该端点是**用户态**（`Depends(require_permission(...))`，需 JWT）还是**节点态**（`X-AI-Agent-Token`）；Batch 264/265 的 401 即因混用。解除条件=写入 `cameltv-bug-guard` PATTERNS/SKILL 并有对应回归或检查手段 | P2 | 2026-09-19 |
 | C265-3 | **P1 试点集执行 payload 不带可执行细节 → 实跑为空过**：driver 把 `pilot_dataset_service.select_pilot_cases` 的 brief（`{id,title,module,priority}`）直接塞进 job payload，节点拿不到 method/path/params（API 侧 50/50 全部裸 `GET <base>/` → 404）与 url/steps（Web 侧 `steps=[]`、30 张截图逐字节相同=空白页 → 30/30 属**空过**）。因此 §5 第 ⑦ 条当前既不能判"未达成"为环境问题，也不能判"达成"。解除条件=payload 携带完整用例定义（API: method/path/params/headers/断言；Web: url/steps/断言），或节点按 case id 从平台取全量定义；修复后重跑 3 版本并以 `meets_all=true` 判定 | P1 | 2026-09-19 |
 ### batch-264 — 体育试点数据集（2026-09-19）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C264-1 | **试点集口径要落到真实环境**：本批在临时库实测 `build_pilot_baseline` 得 `meets_target=true`（api 50 / web 30，shortfall 0/0），但真实环境的导入尚未执行——契约导入产生的模块名是 controller（`sports-live-controller`），与本批固化口径（接口入 `体育/接口/<controller>`、Web 入 `体育/<栏目>`）需在真实环境同样归一，否则 `--module-prefix 体育` 会选到 0 条。解除条件=在接 Test5 的平台上执行同一套导入+归一，回贴真实 `baseline.json`（`meets_target=true`） | P1 | 2026-09-19 |
-| C264-2 | **Web 用例尚未真正执行**：30 条 Web 用例是结构化步骤（`case_type=ui` + steps/expected），真正跑起来依赖 `case_compiler` 编译成 spec（B2-3 链路）。解除条件=至少 3 条 Web 用例在 Test5（真机外）跑通并留证据包（截图 + manifest sha256） | P2 | 2026-09-19 |
+| ~~C264-1~~ | **试点集口径要落到真实环境**：本批在临时库实测 `build_pilot_baseline` 得 `meets_target=true`（api 50 / web 30，shortfall 0/0），但真实环境的导入尚未执行——契约导入产生的模块名是 controller（`sports-live-controller`），与本批固化口径（接口入 `体育/接口/<controller>`、Web 入 `体育/<栏目>`）需在真实环境同样归一，否则 `--module-prefix 体育` 会选到 0 条。解除条件=在接 Test5 的平台上执行同一套导入+归一，回贴真实 `baseline.json`（`meets_target=true`） | P1 | 2026-09-19 → **✅ Closed（Batch 269，2026-09-20）**：真实 Test5 目标上演练报告 `dataset.counts={api:50,web:30}`、`shortfall={0,0}`、`meets_target=true`（同 ⑦ 证据文件）；详见 `work-logs/batch-269-landing-acceptance-report.md` |
+| ~~C264-2~~ | **Web 用例尚未真正执行**：30 条 Web 用例是结构化步骤（`case_type=ui` + steps/expected），真正跑起来依赖 `case_compiler` 编译成 spec（B2-3 链路）。解除条件=至少 3 条 Web 用例在 Test5（真机外）跑通并留证据包（截图 + manifest sha256） | P2 | 2026-09-19 → **✅ Closed（Batch 269，2026-09-20）**：30 条 Web 用例真跑 3 轮（job 47/49/51，每轮 61 个证据文件，截图 + manifest `verified`）；详见 `work-logs/batch-269-landing-acceptance-report.md` |
 | C264-3 | **P1 验收驱动无法自建任务（401）**：`scripts/drill_three_versions.py:110` 用 `X-AI-Agent-Token`（节点令牌）调 `POST /api/v1/execution-jobs`，而该端点要求用户 JWT（`require_permission("execution:manage")`）→ 必然 401，§5 第 ⑦ 条按文档命令永远跑不通。对照：同库改用用户 JWT 后立刻 200，且节点认领并执行（pending→running→failed，stub payload）。解除条件=驱动增加用户凭据参数（`--user-token` 或账号登录取 JWT）并复跑至少 1 个版本留证据；修复为代码变更，按 `pipeline-modes` 判定批次档位 | P1 | 2026-09-19 |
 | C264-4 | **P1 节点 Web 执行缺少用例级隔离**：`scripts/node/cameltv_node/executor.py:230` 一个 job 只建一个 `new_context()/new_page()`，30 条用例共享 cookie/localStorage；站点记住偏好后渲染变化，导致依赖站点状态的断言**翻转**（实测 30 条中 3 条在连续访问下失败、隔离访问下通过；3 轮分别为 25/27/27）。另：`expect_visible` 用 `page.is_visible`（只看首个匹配），而 `wait_visible` 用 `wait_for_selector`（任一匹配可见），`text=` 多匹配时两者结论可能相反。解除条件=每条用例独立 context（或 storage 隔离）+ 统一可见性断言语义，并复跑 30 条达稳定 30/30 | P1 | 2026-09-19 |
 ### batch-263 — 老队列遗留面处置裁定（2026-09-19）—— 新增
@@ -110,16 +119,16 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C262-1 | **生产盘 85% 告警不存在**：2026-09-19 实测 `df -h /` = 73%（达标），但 `crontab -l` 只有腾讯云 stargate 与系统任务，**没有任何磁盘水位告警**。对应方案 B0-2「磁盘与容量告警固化：待办」。解除条件=落一条 ≥85% 阈值告警（cron/监控任选），并做一次人为触发的收到通知证据 | P2 | 2026-09-19 |
+| ~~C262-1~~ | **生产盘 85% 告警不存在**：2026-09-19 实测 `df -h /` = 73%（达标），但 `crontab -l` 只有腾讯云 stargate 与系统任务，**没有任何磁盘水位告警**。对应方案 B0-2「磁盘与容量告警固化：待办」。解除条件=落一条 ≥85% 阈值告警（cron/监控任选），并做一次人为触发的收到通知证据 | P2 | 2026-09-19 → **✅ Closed（Batch 269，2026-09-20）**：85% 水位告警固化（cron `*/15` + `/opt/cameltv-ops/disk-watermark-check.sh`）且自检邮件 `MAIL_OK`，用户 2026-09-20 确认收到；证据 `work-logs/evidence/batch-269/prod-disk-alert-and-watermark-20260920.md`；详见 `work-logs/batch-269-landing-acceptance-report.md` |
 | C262-2 | **备份节奏不满足「每日」**：方案 §5.2 要求每日 dump、保留 14 天；实测 `/opt/cameltv-backup/` 现有 7 份（2026-09-12…09-17），最新为 **09-17 22:58**，而演练日为 09-19，且无备份定时任务。解除条件=确认备份触发方式（人工/发布控制台/定时）并固化，或明确接受当前节奏并同步修订 §5.2 | P2 | 2026-09-19 |
-| C262-3 | **生产库落后主干**：演练抽查发现生产 `cameltv_production` 中 `execution_jobs`(B1)、`impact_edge`(B3) **不存在**，`alembic_version = 20260922_ai_agent_token`，而主干为 `20260926_batch260_reuse_suggestion_events`。即 B1/B3/B4 的迁移尚未上生产。解除条件=随下一次发布火车执行 `alembic upgrade head` 并留迁移日志 + 冒烟证据 | P1 | 2026-09-19 |
+| ~~C262-3~~ | **生产库落后主干**：演练抽查发现生产 `cameltv_production` 中 `execution_jobs`(B1)、`impact_edge`(B3) **不存在**，`alembic_version = 20260922_ai_agent_token`，而主干为 `20260926_batch260_reuse_suggestion_events`。即 B1/B3/B4 的迁移尚未上生产。解除条件=随下一次发布火车执行 `alembic upgrade head` 并留迁移日志 + 冒烟证据 | P1 | 2026-09-19 → **✅ Closed（Batch 269，2026-09-20）**：生产发布 `release-20260919-0001` → 控制面 `PRODUCTION_VERIFIED`；生产 `alembic_version=20260926_batch260_reuse_suggestion_events`，`execution_jobs`/`impact_edge`/`reuse_suggestion_event` 均已存在，`/api/v1/open/health` 200；详见 `work-logs/batch-269-landing-acceptance-report.md` |
 | C262-4 | **审计 S7 有一半不在 CI 棘轮内**：`scripts/ci/quality_ratchet.py` 只覆盖 `pyproject.toml` 启用的规则集 `E/F/B/UP/RUF`，因此在册的是 `B904`(32) 与 `RUF012`(18)；而「静默吞异常」的 `S110`(11)/`S112`(7) 因 **`S` 规则集未启用**不在棘轮内，只靠 `scripts/git/scan-common-bugs.ps1` 的 `except: pass` 字面量规则兜底。**2026-09-19 实测四项 = 11/7/32/18，与 2026-09-18 基线逐项一致（B1–B4 未造成复发）**。解除条件=在 `pyproject.toml` 启用 `S` 规则并把 `S110/S112` 精确计数纳入棘轮基线（或明确豁免 `S` 规则并写清兜底范围） | P2 | 2026-09-19 |
 
 ### batch-261 — B4 落地：体育连续验收（2026-09-19）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C261-1 | B4-3/4/5 的真实「连续 3 个版本 SLO」数字未产出：Test5 需 VPN（见 C258-1，`192.168.50.170:80` TCP 不通）、库内无体育 16.x 资产（见 C260-1）。本批已交付**判定内核**（`pilot_slo_service`：≤2h 方案/≤3h 执行、证据完整率 100%、复用命中率 ≥50%、连续 ≥3 版，含断档重计数）与**演练驱动**（`drill_three_versions.py`：前置检查不过即 exit 4 且不执行任何版本），本机实测如实报 not_ready（数据集/指纹/节点/被测系统四项阻塞）。**解除条件**：在接 VPN 且库内有体育资产的机器上执行 `build_pilot_baseline.py` 与 `drill_three_versions.py`（参数见 `work-logs/batch-261-sports-continuous-acceptance-final-acceptance-report.md` §2 第 7 条），回贴 `baseline.json` / `drill-report.json`，由 `compute_slo` 判定达成即关闭 | P1 | 2026-09-19 |
+| ~~C261-1~~ | B4-3/4/5 的真实「连续 3 个版本 SLO」数字未产出：Test5 需 VPN（见 C258-1，`192.168.50.170:80` TCP 不通）、库内无体育 16.x 资产（见 C260-1）。本批已交付**判定内核**（`pilot_slo_service`：≤2h 方案/≤3h 执行、证据完整率 100%、复用命中率 ≥50%、连续 ≥3 版，含断档重计数）与**演练驱动**（`drill_three_versions.py`：前置检查不过即 exit 4 且不执行任何版本），本机实测如实报 not_ready（数据集/指纹/节点/被测系统四项阻塞）。**解除条件**：在接 VPN 且库内有体育资产的机器上执行 `build_pilot_baseline.py` 与 `drill_three_versions.py`（参数见 `work-logs/batch-261-sports-continuous-acceptance-final-acceptance-report.md` §2 第 7 条），回贴 `baseline.json` / `drill-report.json`，由 `compute_slo` 判定达成即关闭 | P1 | 2026-09-19 → **✅ Closed（Batch 269，2026-09-20）**：3 版本演练 `meets_all=true` / `consecutive_passing=3`（`work-logs/evidence/batch-269/drill-three-versions-platform-reuse.json`），证据包 `verified`；详见 `work-logs/batch-269-landing-acceptance-report.md` |
 
 ### batch-260 — B3 落地：知识主线（影响图 + 查询 + 复用命中率 + 页签收敛）（2026-09-19）—— 新增
 
@@ -648,6 +657,27 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C78-1 | 后续批次本地受影响模块 pytest 必须执行并记录退出码 | P2 | 2026-08-04 |
 | C86-1 | 后续批次新增测试断言遵循双 404 约定（assert_guard_404 / HTTP 200+code 404）；新代码不得再引入裸 `status_code == 404` | P3 | 2026-08-04 |
 ## Closed (已完成)
+
+### batch-269 — 落地方案 B1→B4 收口（Batch 269，2026-09-20）
+
+> 收口批次：把 B1→B4 期间遗留的可验证条件一次性关闭，并登记本轮新发现的 4 条缺口（`C269-1`~`C269-4`）。
+> 依据：`work-logs/batch-269-landing-acceptance-report.md`（§5 九条最终验收）与 `work-logs/evidence/batch-269/**`。
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| ~~C261-1~~ | 见 Open 段原条目（Batch 269 收口）→ **Closed**：3 版本演练 `meets_all=true` / `consecutive_passing=3`（`work-logs/evidence/batch-269/drill-three-versions-platform-reuse.json`），证据包 `verified` | P1 | 2026-09-19 |
+| ~~C262-1~~ | 见 Open 段原条目（Batch 269 收口）→ **Closed**：85% 水位告警固化（cron `*/15` + `/opt/cameltv-ops/disk-watermark-check.sh`）且自检邮件 `MAIL_OK`，用户 2026-09-20 确认收到；证据 `work-logs/evidence/batch-269/prod-disk-alert-and-watermark-20260920.md` | P2 | 2026-09-19 |
+| ~~C262-3~~ | 见 Open 段原条目（Batch 269 收口）→ **Closed**：生产发布 `release-20260919-0001` → 控制面 `PRODUCTION_VERIFIED`；生产 `alembic_version=20260926_batch260_reuse_suggestion_events`，`execution_jobs`/`impact_edge`/`reuse_suggestion_event` 均已存在，`/api/v1/open/health` 200 | P1 | 2026-09-19 |
+| ~~C264-1~~ | 见 Open 段原条目（Batch 269 收口）→ **Closed**：真实 Test5 目标上演练报告 `dataset.counts={api:50,web:30}`、`shortfall={0,0}`、`meets_target=true`（同 ⑦ 证据文件） | P1 | 2026-09-19 |
+| ~~C264-2~~ | 见 Open 段原条目（Batch 269 收口）→ **Closed**：30 条 Web 用例真跑 3 轮（job 47/49/51，每轮 61 个证据文件，截图 + manifest `verified`） | P2 | 2026-09-19 |
+| ~~C266-1~~ | 见 Open 段原条目（Batch 269 收口）→ **Closed**：Batch 267（#486）重建 50 条接口用例集（10 个健康端点 × 5 断言），3 轮 **50/50**；**口径替换**：原缺参数用例集被替换而非逐条精修（已在 Batch 269 验收报告 §4.1 写明） | P1 | 2026-09-19 |
+| ~~C266-2~~ | 见 Open 段原条目（Batch 269 收口）→ **Closed**：试点 Web 集重建后不再写死比赛详情页链接；原 `case 601/602` 现为新闻列表页/个人中心页，3 轮全过（job 47/49/51） | P2 | 2026-09-19 |
+| ~~C266-4~~ | 见 Open 段原条目（Batch 269 收口）→ **Closed**：Web 通过数 **29/29/29**，无逐版下降（释放条件 ≥29/30 达成）；目标侧 UI 慢仍保留观察 → `C267-2` | P2 | 2026-09-19 |
+| ~~C267-1~~ | 见 Open 段原条目（Batch 269 收口）→ **Closed**：同一端点集 3 轮 **50/50**；直连实测 `living_group_match 489ms` / `list_hot_team_match 391ms`（首轮为 5 次 ReadTimeout / 6048ms）→ 目标侧瞬时慢已恢复；慢端点单独设 30s 超时口径 | P2 | 2026-09-19 |
+| ~~C267-3~~ | 见 Open 段原条目（Batch 269 收口）→ **Closed**：Batch 268（PR #487 / commit `27c11e80`）：建任务写 `suggested` 事件 + 驱动改读平台指标，端到端实测 `hit_rate=0.625` | P1 | 2026-09-19 |
+| ~~C268-1~~ | 见 Open 段原条目（Batch 269 收口）→ **Closed**：真实 3 版本演练回填完成（同 ⑦ 证据文件）；口径限制=平台累计读数，已登记 `C269-1` | P1 | 2026-09-19 |
+| ~~C268-2~~ | 见 Open 段原条目（Batch 269 收口）→ **Closed**：Batch 268（PR #487 / commit `27c11e80`）就地修复：`record_decision` 守卫 + `reuse_stats` 有界聚合，复测 `hit_rate=0.625 ≤ 1` | P3 | 2026-09-19 |
+
 
 ### 2026-09-18 — 分诊关闭（已被后续批次覆盖）
 
@@ -1254,10 +1284,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ---## 统计
 
-- **Open / 非关闭**: 27（rows=132, deferred=8；口径见 `audit-cconditions.ps1` stats 输出，2026-09-18 Batch 255 后；其中**真实待办 14 条**——Batch 254 重排的真实待办 16 条中 C252-1/C252-2 已于 Batch 255 关闭，差额来自同 ID 重复行）
+- **Open / 非关闭**: 46（rows=163, deferred=8；口径见 `audit-cconditions.ps1` stats 输出，**2026-09-20 Batch 269 后**：54 − 关闭 12 + 新增 4 = 46）
 - **In Progress**: 0
-- **Closed**: 212（closed rows=195, missing evidence=0；Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
-- **Total**: 302（tracker 条件 ID 计数；另有历史补录不计入）
+- **Closed**: 224（closed rows=222, missing evidence=0；Batch 91 起以 `audit-cconditions.ps1` stats 输出为准；本批 +12 行）
+- **Total**: 306（tracker 条件 ID 计数；另有历史补录不计入）
 
 ## 维护约定
 
