@@ -1,0 +1,63 @@
+{
+  "captured_at": "2026-09-20",
+  "title": "复用命中率埋点接线前后对照（API 级端到端，batch-268 代码）",
+  "how": "用本批代码起平台（127.0.0.1:8124，试点库）→ 登录 → 建版本任务 → 读 reuse-stats → 记录一次 adopted → 再读 reuse-stats",
+  "seed": "试点库预置一条版本知识记录（16.0，plan_summary 含 4 项 adopted/modified：登录冒烟 / 赛事列表 / 直播入口 / 结算流程）",
+  "trace": [
+    {"step": "stats before（建任务前）", "result": {"suggested": 0, "adopted": 0, "rejected": 0, "hit_rate": 0.0, "meets_50pct": null, "pending": 0}},
+    {"step": "POST /version-tasks（建任务 16.1）", "result": "200"},
+    {"step": "GET /version-tasks/knowledge/reuse", "result": "[('16.0', ['登录冒烟', '赛事列表', '直播入口', '结算流程'])]"},
+    {"step": "stats after create", "result": {"suggested": 4, "adopted": 0, "hit_rate": 0.0, "pending": 4}, "note": "本批按**建议条目**记录（4 条），此前恒为 0"},
+    {"step": "POST /knowledge/reuse-decisions（adopted×1）", "result": "200"},
+    {"step": "stats after adopt", "result": {"suggested": 4, "adopted": 1, "rejected": 0, "hit_rate": 0.25, "meets_50pct": false, "pending": 3}}
+  ],
+  "first_run_note": "接线刚生效时的首轮观测为 suggested=1 → adopted=1 → hit_rate=1.0（当时按'知识记录'粒度）；随后改为按'建议条目'粒度（更贴合 B3-4 语义），本条 trace 为条目粒度下的最终观测。",
+  "conclusion": [
+    "接线前：suggested 恒为 0（生产实证 reuse_suggestion_event 0 行）→ hit_rate 恒 0，⑦ 的复用率不可测。",
+    "接线后：建任务即写入建议事件（条目粒度），记录 adopted/rejected 后 hit_rate = adopted/suggested 可计算、meets_50pct 可判定。",
+    "驱动侧同步改为**优先读平台指标**（`/version-tasks/knowledge/reuse-stats`），人工输入降级为回退（报告中会标注 reuse_source）。"
+  ],
+  "second_defect_found_and_fixed": {
+    "id": "C268-2",
+    "symptom": "命中率可以 >1：本地流程跑出 hit_rate 2.5（adopted 10 / suggested 4），随后又出现 1.1875",
+    "root_cause": [
+      "record_decision 不校验该 (task_id, suggestion_ref) 是否真的被带出过 -> adopted 可凭空增加",
+      "reuse_stats 直接按 decision 计数，历史/不一致数据会同时进入分子与分母"
+    ],
+    "fix": [
+      "record_decision 增加守卫：没有对应 suggested 事件就拒绝（APIException 400）",
+      "reuse_stats 改为只统计有对应带出事件的 adopted/rejected -> 命中率有界于 [0,1]（对历史脏数据免疫）"
+    ],
+    "verification": [
+      "守卫前写入的旧任务（task 3/4/5）仍为 adopted 3 > suggested 1，但已不计入聚合",
+      "守卫后写入的新任务（task 6/7/8）均为 suggested 4 / adopted 3 / rejected 1（75%）平衡",
+      "重启平台后聚合：suggested 16 / adopted 10 / rejected 3 / hit_rate 0.625（≤1）/ meets_50pct true"
+    ]
+  },
+  "driver_live_read": {
+    "captured_at": "2026-09-20",
+    "how": "用**真 httpx 客户端**（非 mock）加载本批驱动模块，调用 `_platform_reuse_stats` 打真实平台 8124",
+    "result": {"driver_read": {"suggested": 16, "adopted": 10}, "hit_rate": 0.625},
+    "platform_raw": {"suggested": 16, "adopted": 10, "rejected": 3, "hit_rate": 0.625, "meets_50pct": true},
+    "reading": "驱动读数与平台原始接口逐项一致 → 『复用数字来自平台埋点』这条链路成立（此前只有 mock 单测覆盖）。"
+  },
+  "local_full_run_note": {
+    "attempts": 2,
+    "outcome": "两次 `--versions 3/1` 全量演练均被本机连接重置中断（平台为单进程 uvicorn + SQLite，节点边跑边写时 httpx 读超时/连接被重置）",
+    "conclusion": "该中断属**本地试点环境**的资源问题（与 Batch 266 记录的本机 OOM 同源），不影响本批结论；正式 3 版本复用数字需在真实环境跑（C265-1/C268-1）"
+  },
+  "partial_full_run": {
+    "captured_at": "2026-09-20",
+    "attempt": "第 3 次尝试（环境已清理为 1 平台 + 1 节点，空闲 3.8~3.9GB）",
+    "completed_versions": [
+      {"version": "16.1", "api": {"job": 38, "passed": 45, "failed": 5, "total": 50}, "web": {"job": 37, "passed": 28, "failed": 2, "total": 30}},
+      {"version": "16.2", "api": {"job": 40, "passed": 45, "failed": 5, "total": 50}, "web": {"job": 39, "passed": 27, "failed": 3, "total": 30}}
+    ],
+    "interrupted": "版本 16.3（job 41）执行期间 httpx `ReadError WinError 10053`（连接被本机中止）；平台随后仍健康（/api/v2/health=200），节点进程仍在 → 属负载下的 localhost 连接中断，非崩溃",
+    "reading": [
+      "接口冒烟集本轮 45/50（较 Batch 267 首轮 42/50 更好——两个慢端点这次有响应），说明批量执行与断言链路稳定。",
+      "Web 28/30 与 27/30 的波动与 C267-2 的目标站 UI 慢一致。",
+      "**不把 2/3 版本当作『连续 3 版本达标』**：该项仍需一次完整 3 版本运行（本地或真实环境）。"
+    ]
+  }
+}

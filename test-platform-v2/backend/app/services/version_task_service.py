@@ -18,6 +18,7 @@ from app.models.notification import NotificationLog
 from app.models.requirement import RequirementDocument
 from app.models.version_knowledge import VersionKnowledgeRecord
 from app.core.exceptions import APIException, not_found
+from app.services import reuse_metrics_service
 
 logger = logging.getLogger("version_task")
 
@@ -80,6 +81,22 @@ def create_task(
     db.add(task)
     db.commit()
     db.refresh(task)
+
+    # B3-4 埋点接线（Batch 268 / C267-3）：建任务时"自动带出"上版复用建议，**这一刻**记录
+    # `decision='suggested'` 事件。此前 `reuse_metrics_service.record_suggestion` 只有定义、
+    # 没有任何调用点，导致 `hit_rate = adopted / suggested` 的 suggested 恒为 0（生产实测
+    # `reuse_suggestion_event` 0 行，而同期已有 6 个版本任务）。这里不吞异常：埋点失败即暴露。
+    for suggestion in get_reuse_suggestions(db, project_id):
+        # 粒度=**建议条目**（上版知识记录里被采纳/修改过的每一项），
+        # 这样 `hit_rate = adopted / suggested` 才是"带出的条目里有多少被复用"。
+        for title in suggestion.get("reuse") or []:
+            reuse_metrics_service.record_suggestion(
+                db,
+                project_id=project_id,
+                task_id=task.id,
+                suggestion_ref=f"knowledge:{suggestion.get('id')}:{title}",
+                title=str(title),
+            )
     return task
 
 

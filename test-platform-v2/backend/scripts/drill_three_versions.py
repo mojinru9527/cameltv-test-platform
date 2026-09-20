@@ -183,6 +183,22 @@ def _auth_headers(args) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}", "X-Project-Id": str(args.project_id)}
 
 
+def _platform_reuse_stats(client, headers: dict) -> tuple[int, int]:
+    """读平台埋点的复用建议命中率（Batch 268 / C267-3）。
+
+    B3-4 的 `reuse_suggestion_event` 现已在"建任务带出建议"时写入；驱动应**读平台指标**
+    而不是依赖人工输入（人工口径保留为回退）。返回 (suggested, adopted)。
+    """
+    try:
+        resp = client.get("/api/v1/version-tasks/knowledge/reuse-stats", headers=headers)
+    except httpx.HTTPError:
+        return 0, 0
+    if resp.status_code != 200:
+        return 0, 0
+    data = (resp.json() or {}).get("data") or {}
+    return int(data.get("suggested") or 0), int(data.get("adopted") or 0)
+
+
 def run_versions(args, dataset: dict) -> list[dict]:
     """逐版本：登记任务 → 等节点跑完 → 校验证据包 → 记录指标。"""
     api_cases, web_cases, unexecutable = _load_executable_cases(args, dataset)
@@ -237,6 +253,11 @@ def run_versions(args, dataset: dict) -> list[dict]:
                     verified["verdict"] == "verified" and verified["completeness"]["complete"]
                 )
             execution_hours = round((datetime.now() - started).total_seconds() / 3600, 3)
+            reuse_suggested, reuse_adopted = args.reuse_suggested, args.reuse_adopted
+            reuse_source = "operator"
+            if not reuse_suggested and not reuse_adopted:
+                reuse_suggested, reuse_adopted = _platform_reuse_stats(client, headers)
+                reuse_source = "platform"
             versions.append(
                 {
                     "version": version_label,
@@ -245,8 +266,9 @@ def run_versions(args, dataset: dict) -> list[dict]:
                     "person_hours": args.person_hours_per_version,
                     "execution_hours": execution_hours,
                     "evidence_complete": evidence_complete,
-                    "reuse_suggested": args.reuse_suggested,
-                    "reuse_adopted": args.reuse_adopted,
+                    "reuse_suggested": reuse_suggested,
+                    "reuse_adopted": reuse_adopted,
+                    "reuse_source": reuse_source,
                 }
             )
             print(f"[version {version_label}] jobs={job_ids} evidence_complete={evidence_complete}")
