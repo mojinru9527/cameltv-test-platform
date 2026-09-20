@@ -1,0 +1,5 @@
+[version 16.1] jobs=[46, 47] evidence_complete=True
+[version 16.2] jobs=[48, 49] evidence_complete=True
+[version 16.3] jobs=[50, 51] evidence_complete=True
+报告已写入 F:\CamelTv-worktrees\codex-batch-268-reuse-metric-wiring\work-logs\evidence\batch-268\drill-three-versions-platform-reuse.json
+{"meets_all": true, "consecutive_passing": 3}
