@@ -118,6 +118,11 @@ class TestExistingContractUnchanged:
         assert signature.parameters["limit"].default == 5
 
     def test_api_endpoints(self, db_session, client, auth_headers):
+        # Batch 268（C268-2）：决策必须对应**已带出**的建议，否则命中率会 >1。
+        # 因此这里先落一条 suggested 事件，再走 API 记采纳。
+        reuse_metrics_service.record_suggestion(
+            db_session, project_id=1, task_id=5, suggestion_ref="rec:api", title="上一版覆盖的体育模块"
+        )
         created = client.post(
             "/api/v1/version-tasks/knowledge/reuse-decisions",
             json={"task_id": 5, "suggestion_ref": "rec:api", "decision": "adopted"},
