@@ -1,0 +1,5 @@
+[version 20.1] task=10 jobs=[52, 53] evidence_complete=True reuse=2/4 (platform:version-task-delta)
+[version 20.2] task=11 jobs=[54, 55] evidence_complete=True reuse=2/4 (platform:version-task-delta)
+[version 20.3] task=12 jobs=[56, 57] evidence_complete=True reuse=2/4 (platform:version-task-delta)
+报告已写入 F:\CamelTv-worktrees\CamelTv-worktrees\CamelTv-worktrees\codex-batch-270-drill-version-task-flow\work-logs\evidence\batch-270\drill-three-versions-version-task-20260920.json
+{"meets_all": true, "consecutive_passing": 3}

@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -61,6 +62,15 @@ def test_run_versions_uses_auth_headers_not_agent_token():
 
 
 def test_report_path_parent_is_created(tmp_path):
-    """--out 指向不存在的子目录时不应崩（Batch 265 实跑时命中）。"""
-    source = SCRIPT.read_text(encoding="utf-8")
-    assert "Path(args.out).parent.mkdir(parents=True, exist_ok=True)" in source
+    """--out 指向不存在的子目录时不应崩（Batch 265 实跑时命中）。
+
+    Batch 270 把"建父目录 + 落盘"收敛进 `_write_report`（顺带支持每完成一版就增量落盘，
+    修 C269-2），所以本用例改为**验行为**而不是匹配源码字符串。
+    """
+    driver = _load_driver()
+    target = tmp_path / "nested" / "deeper" / "drill.json"
+    driver._write_report(str(target), {"status": "running", "versions": []})
+    assert target.exists()
+    assert json.loads(target.read_text(encoding="utf-8"))["status"] == "running"
+    # 空路径是 no-op（不写文件、不报错）
+    driver._write_report("", {"ignored": True})

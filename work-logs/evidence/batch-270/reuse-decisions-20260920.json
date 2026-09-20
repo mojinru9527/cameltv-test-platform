@@ -1,0 +1,8 @@
+{
+  "_comment": "逐版本复用决策（人工口径）。操作者=Codex 代执行；判定规则=该建议条目是否落在本版本实际执行的用例范围内；用户可覆盖本文件后复跑。",
+  "_default": {
+    "adopted": ["赛事列表", "直播入口"],
+    "rejected": ["登录冒烟", "结算流程"],
+    "reason": "赛事列表/直播入口=复用：本版本 50 条接口用例覆盖 list_faceoff / list_hot_team_match / living_group_match / v_stream / v_origin_stream / player-hot-players 等端点，30 条 Web 用例覆盖篮球站与直播站首页、联赛入口与新闻页；登录冒烟/结算流程=未复用：试点集内不含登录与结算（支付/下单）类用例，本版本没有执行到这两条建议覆盖的范围。"
+  }
+}

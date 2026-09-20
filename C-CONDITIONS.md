@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-20（Batch 269 落地方案 B1→B4 收口：**关闭 12 条** C261-1/C262-1/C262-3/C264-1/C264-2/C266-1/C266-2/C266-4/C267-1/C267-3/C268-1/C268-2（**C265-1 保持 Open**：其解除条件要求「通过**版本任务流程**跑 ≥3 个版本」，而 Batch 269 演练只登记执行任务），**新增 C269-1~4（C269-1=P1：演练的 3 个版本未产生复用数据）**；Batch 268 复用命中率埋点接线：新增 C268-1 P1，修复 C267-3；Batch 267 体育接口 P0 冒烟集：新增 C267-1~3（其中 C267-3 由 268 修复）；Batch 266：C266-1~4 并关闭 C264-3/C264-4；Batch 265：C265-1~3；Batch 264：C264-1~4；Batch 263：C263-1；Batch 262：C262-1~4）
+**最后更新**: 2026-09-20（Batch 270 演练驱动改走版本任务流程：**关闭 C269-1/C269-2/C265-1**，**新增 C270-1**（P2，版本号冲突返回 500）；Batch 269 落地方案 B1→B4 收口：**关闭 12 条** C261-1/C262-1/C262-3/C264-1/C264-2/C266-1/C266-2/C266-4/C267-1/C267-3/C268-1/C268-2（**C265-1 保持 Open**：其解除条件要求「通过**版本任务流程**跑 ≥3 个版本」，而 Batch 269 演练只登记执行任务），**新增 C269-1~4（C269-1=P1：演练的 3 个版本未产生复用数据）**；Batch 268 复用命中率埋点接线：新增 C268-1 P1，修复 C267-3；Batch 267 体育接口 P0 冒烟集：新增 C267-1~3（其中 C267-3 由 268 修复）；Batch 266：C266-1~4 并关闭 C264-3/C264-4；Batch 265：C265-1~3；Batch 264：C264-1~4；Batch 263：C263-1；Batch 262：C262-1~4）
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -57,12 +57,18 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## Open (待处理)
 
+### batch-270 — 演练驱动改走版本任务流程（2026-09-20）—— 新增
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C270-1 | **版本号冲突时平台返回 500（不是业务码）**：`version_task` 有 `(project_id, version)` 唯一约束，但 `version_task_service.create_task` 未把它转成业务错误——重复版本号时 `POST /api/v1/version-tasks` 返回 **HTTP 500 "Internal Server Error"**，平台日志是裸 `sqlalchemy.exc.IntegrityError: UNIQUE constraint failed`（Batch 270 真实演练第一次跑即因此中断；最小复现：对已存在的 `20.1` 再建一次 → 500）。影响：演练/复跑与平台"版本验收"页面重复提交都得到无业务码的 500，违反本仓 envelope 码约定。解除条件=`create_task` 捕获完整性冲突并返回 `APIException(code=409 或 400, msg="版本号已存在")` + 一条回归测试；驱动侧已加可操作提示（本批）。证据 `work-logs/evidence/batch-270/dup-version-500-finding-20260920.md` | P2 | 2026-09-20 |
+
 ### batch-269 — 落地方案 B1→B4 收口（2026-09-20）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C269-1 | **演练的 3 个版本根本没有产生复用数据（P1）**：驱动在每版结束读 `GET /version-tasks/knowledge/reuse-stats`，三次完全相同（`suggested 16 / adopted 10 / hit_rate 0.625`）。**2026-09-20 只读取证**：驱动不调用 `POST /version-tasks`（Batch 268 的埋点写在 `version_task_service.create_task`），演练窗口（12:50 后）新增复用事件 **0** 条、新增版本任务 **0** 个；全部 41 条事件写于 **00:26–00:32**（Batch 268 端到端验证）。即该命中率是**演练前的平台既有读数**，不是被验收版本自产。影响：⑦ 的"每版本复用命中率"既无逐版归因、也无本次生产。解除条件=驱动**逐版本走版本任务流程**（建版本任务 → 平台自动写 `suggested` → 操作者记采纳/否掉）并按版本区间取 `reuse-stats` 增量，报告分列"本版自产"与"平台累计"。证据见 `work-logs/evidence/batch-269/reuse-metric-provenance-20260920.md` | **P1** | 2026-09-20 |
-| C269-2 | **验收驱动无瞬断容错、崩溃不落盘**：Batch 269 的 3 版本演练共尝试 5 次，前 4 次均因本机试点实例的瞬时连接错误（`httpx.ReadError WinError 10053`）中断，且**`--out` 只在全部跑完后写一次**，中断即丢弃全部进度（每次约 20 分钟）。解除条件=对**仅瞬时 transport 错误**做有界重试（不掩盖断言/HTTP 失败）+ 每完成一版就增量写报告文件 + 针对两条路径补单测 | P2 | 2026-09-20 |
+| ~~C269-1~~ | **演练的 3 个版本根本没有产生复用数据（P1）**：驱动在每版结束读 `GET /version-tasks/knowledge/reuse-stats`，三次完全相同（`suggested 16 / adopted 10 / hit_rate 0.625`）。**2026-09-20 只读取证**：驱动不调用 `POST /version-tasks`（Batch 268 的埋点写在 `version_task_service.create_task`），演练窗口（12:50 后）新增复用事件 **0** 条、新增版本任务 **0** 个；全部 41 条事件写于 **00:26–00:32**（Batch 268 端到端验证）。即该命中率是**演练前的平台既有读数**，不是被验收版本自产。影响：⑦ 的"每版本复用命中率"既无逐版归因、也无本次生产。解除条件=驱动**逐版本走版本任务流程**（建版本任务 → 平台自动写 `suggested` → 操作者记采纳/否掉）并按版本区间取 `reuse-stats` 增量，报告分列"本版自产"与"平台累计"。证据见 `work-logs/evidence/batch-269/reuse-metric-provenance-20260920.md` | **P1** | 2026-09-20 → **✅ Closed（Batch 270，2026-09-20）**：逐版本建版本任务（`version_task` 10/11/12）+ 按本版本增量取数（`reuse_source=platform:version-task-delta`）+ `--decisions-json` 记录人工决策；实测每版自产 suggested 4 / adopted 2 → 本版命中率 0.5，窗口内新增建议事件 12 条 + 决策 12 条（Batch 269 同窗口为 0）。证据 `work-logs/evidence/batch-270/drill-three-versions-version-task-20260920.json`；PR 见 Batch 270 |
+| ~~C269-2~~ | **验收驱动无瞬断容错、崩溃不落盘**：Batch 269 的 3 版本演练共尝试 5 次，前 4 次均因本机试点实例的瞬时连接错误（`httpx.ReadError WinError 10053`）中断，且**`--out` 只在全部跑完后写一次**，中断即丢弃全部进度（每次约 20 分钟）。解除条件=对**仅瞬时 transport 错误**做有界重试（不掩盖断言/HTTP 失败）+ 每完成一版就增量写报告文件 + 针对两条路径补单测 | P2 | 2026-09-20 → **✅ Closed（Batch 270，2026-09-20）**：有界重试（仅瞬时传输错误 + 幂等 GET 5xx；POST 不重试）+ 每完成一版增量落盘（`partial: true`）+ 版本号冲突给出可操作提示；4 例单测，本批真实 3 版本演练一次跑通（Batch 269 曾 4 次白跑）。证据同上 + `work-logs/batch-270-drill-version-task-flow-qa-report.md` |
 | C269-3 | **节点在平台返回 4xx/5xx 时会一次性退出（根因已定位，2026-09-20）**：时间线 13:08 平台重启 → 13:11:29 节点最后一次用令牌 → 13:12~13:14 进程消失、任务滞留 `pending`。**机制复现**：`cli.call()` 对 `status>=400 或 code!=0` 抛 `SystemExit(2)`，而轮询循环 `_loop` **只捕获 `TransportDown`** → 平台返回 500/403 时进程直接退出且不打 traceback（同文件的 `_heartbeat_once` 反而 `except SystemExit: return False`，说明是遗漏）；网络层被拒是安全的（会重试）。**如实标注**：属"机制复现 + 与现象一致"，非当天退出的逐帧日志（该节点 stderr 未落盘）。解除条件=① 轮询循环把"平台返回错误"按可恢复处理（可退避重试，仅真正致命才退出）并保留 `--once` 语义；② 连续失败设上限且退出必留可读日志；③ 把"可达/500/403"三场景写成回归测试；④ 修复后做一次"平台重启 → 节点自动重连"实测。证据 `work-logs/evidence/batch-269/node-exit-root-cause-20260920.md` | **P1** | 2026-09-20 |
 | C269-4 | **Web 用例 `case:605` 断言锚点错**：「从首页点击联赛入口进入联赛页」的步骤 4 断言 `expect_visible selector=text=Scores`，3 个版本 3 次全失败（唯一的 29/30 失败项；`console_errors=[]`）——点进联赛页后该页没有 `Scores` 文案。解除条件=把断言锚到目标页的稳定元素（或改回入口页断言），复跑 3 轮达 30/30 | P3 | 2026-09-20 |
 
@@ -98,7 +104,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C265-1 | **⑦ 条的复用命中率仍无真实数字**：Batch 265 用修好的驱动真跑 3 个版本（16.1/16.2/16.3，证据完整），SLO 中 `plan_within_2h`/`execution_within_3h`/`evidence_complete` 全绿，唯独 `reuse_hit_rate_50pct=false`——因为 `--reuse-suggested/--reuse-adopted` 未提供，驱动无法自动观测该指标（本机演练未走平台"版本任务"流程，故无真实建议/采纳数，**未编数字**）。解除条件=通过版本任务流程跑 ≥3 个版本，使 `reuse_suggestion_event` 产生真实建议/采纳数，如实回填后复跑并达 `meets_all=true` | P1 | 2026-09-19 | **Batch 269 复核（仍 Open）**：本批演练确实跑了 3 个版本并回贴了 `drill-report`（`meets_all=true`、`reuse_source=platform`），但驱动**只登记执行任务、没有走版本任务流程**——被验收的 3 个版本没有 `version_task` 记录，复用数字也是演练前平台已有读数（窗口内新增事件 0 条）。故本条的解除条件（「通过版本任务流程跑 ≥3 个版本，使 `reuse_suggestion_event` 产生真实建议/采纳数」）**未满足**，保持 Open，并转由 `C269-1`（P1）承接实现；本批先前把 C265-1 记为「已关闭」的判定已作废（以本行为准）。
+| ~~C265-1~~ | **⑦ 条的复用命中率仍无真实数字**：Batch 265 用修好的驱动真跑 3 个版本（16.1/16.2/16.3，证据完整），SLO 中 `plan_within_2h`/`execution_within_3h`/`evidence_complete` 全绿，唯独 `reuse_hit_rate_50pct=false`——因为 `--reuse-suggested/--reuse-adopted` 未提供，驱动无法自动观测该指标（本机演练未走平台"版本任务"流程，故无真实建议/采纳数，**未编数字**）。解除条件=通过版本任务流程跑 ≥3 个版本，使 `reuse_suggestion_event` 产生真实建议/采纳数，如实回填后复跑并达 `meets_all=true` | P1 | 2026-09-19 | **Batch 269 复核（仍 Open）**：本批演练确实跑了 3 个版本并回贴了 `drill-report`（`meets_all=true`、`reuse_source=platform`），但驱动**只登记执行任务、没有走版本任务流程**——被验收的 3 个版本没有 `version_task` 记录，复用数字也是演练前平台已有读数（窗口内新增事件 0 条）。故本条的解除条件（「通过版本任务流程跑 ≥3 个版本，使 `reuse_suggestion_event` 产生真实建议/采纳数」）**未满足**，保持 Open，并转由 `C269-1`（P1）承接实现；本批先前把 C265-1 记为「已关闭」的判定已作废（以本行为准）。 → **✅ Closed（Batch 270，2026-09-20）**：解除条件（「通过版本任务流程跑 ≥3 个版本，使 `reuse_suggestion_event` 产生真实建议/采纳数，如实回填后复跑并达 meets_all=true」）本批满足：3 个版本各有版本记录与自产建议/采纳数，`meets_all=true` / `consecutive_passing=3` / 命中率 0.5（自产）。证据同上；旧读数（0.625，演练前平台既有）已在 Batch 269 作废并留痕 |
 | C265-2 | **bug-guard 增补铁律**：脚本调平台端点前必须先确认该端点是**用户态**（`Depends(require_permission(...))`，需 JWT）还是**节点态**（`X-AI-Agent-Token`）；Batch 264/265 的 401 即因混用。解除条件=写入 `cameltv-bug-guard` PATTERNS/SKILL 并有对应回归或检查手段 | P2 | 2026-09-19 |
 | C265-3 | **P1 试点集执行 payload 不带可执行细节 → 实跑为空过**：driver 把 `pilot_dataset_service.select_pilot_cases` 的 brief（`{id,title,module,priority}`）直接塞进 job payload，节点拿不到 method/path/params（API 侧 50/50 全部裸 `GET <base>/` → 404）与 url/steps（Web 侧 `steps=[]`、30 张截图逐字节相同=空白页 → 30/30 属**空过**）。因此 §5 第 ⑦ 条当前既不能判"未达成"为环境问题，也不能判"达成"。解除条件=payload 携带完整用例定义（API: method/path/params/headers/断言；Web: url/steps/断言），或节点按 case id 从平台取全量定义；修复后重跑 3 版本并以 `meets_all=true` 判定 | P1 | 2026-09-19 |
 ### batch-264 — 体育试点数据集（2026-09-19）—— 新增
@@ -657,6 +663,17 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C78-1 | 后续批次本地受影响模块 pytest 必须执行并记录退出码 | P2 | 2026-08-04 |
 | C86-1 | 后续批次新增测试断言遵循双 404 约定（assert_guard_404 / HTTP 200+code 404）；新代码不得再引入裸 `status_code == 404` | P3 | 2026-08-04 |
 ## Closed (已完成)
+
+### batch-270 — 演练驱动改走版本任务流程（Batch 270，2026-09-20）
+
+> 依据：`work-logs/batch-270-landing-acceptance-report-v3.md` 与 `work-logs/evidence/batch-270/**`。
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| ~~C269-1~~ | 见 Open 段原条目（Batch 270 收口）→ **Closed**：逐版本建版本任务（`version_task` 10/11/12）+ 按本版本增量取数（`reuse_source=platform:version-task-delta`）+ `--decisions-json` 记录人工决策；实测每版自产 suggested 4 / adopted 2 → 本版命中率 0.5，窗口内新增建议事件 12 条 + 决策 12 条（Batch 269 同窗口为 0）。证据 `work-logs/evidence/batch-270/drill-three-versions-version-task-20260920.json`；PR 见 Batch 270 | P1/P2 | 2026-09-20 |
+| ~~C269-2~~ | 见 Open 段原条目（Batch 270 收口）→ **Closed**：有界重试（仅瞬时传输错误 + 幂等 GET 5xx；POST 不重试）+ 每完成一版增量落盘（`partial: true`）+ 版本号冲突给出可操作提示；4 例单测，本批真实 3 版本演练一次跑通（Batch 269 曾 4 次白跑）。证据同上 + `work-logs/batch-270-drill-version-task-flow-qa-report.md` | P1/P2 | 2026-09-20 |
+| ~~C265-1~~ | 见 Open 段原条目（Batch 270 收口）→ **Closed**：解除条件（「通过版本任务流程跑 ≥3 个版本，使 `reuse_suggestion_event` 产生真实建议/采纳数，如实回填后复跑并达 meets_all=true」）本批满足：3 个版本各有版本记录与自产建议/采纳数，`meets_all=true` / `consecutive_passing=3` / 命中率 0.5（自产）。证据同上；旧读数（0.625，演练前平台既有）已在 Batch 269 作废并留痕 | P1/P2 | 2026-09-20 |
+
 
 ### batch-269 — 落地方案 B1→B4 收口（Batch 269，2026-09-20）
 
@@ -1284,9 +1301,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ---## 统计
 
-- **Open / 非关闭**: 46（rows=163, deferred=8；口径见 `audit-cconditions.ps1` stats 输出，**2026-09-20 Batch 269 后**：54 − 关闭 12 + 新增 4 = 46）
+- **Open / 非关闭**: 44（rows=164, deferred=8；口径见 `audit-cconditions.ps1` stats 输出，**2026-09-20 Batch 270 后**：46 − 关闭 3 + 新增 1 = 44）
 - **In Progress**: 0
-- **Closed**: 224（closed rows=222, missing evidence=0；Batch 91 起以 `audit-cconditions.ps1` stats 输出为准；本批 +12 行）
+- **Closed**: 227（closed rows=227, missing evidence=0；Batch 91 起以 `audit-cconditions.ps1` stats 输出为准；Batch 270 +3 行）
 - **Total**: 306（tracker 条件 ID 计数；另有历史补录不计入）
 
 ## 维护约定

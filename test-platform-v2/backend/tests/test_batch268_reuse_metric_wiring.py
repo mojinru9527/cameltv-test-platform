@@ -143,17 +143,23 @@ class _FakeClient:
         self._response = response
         self.paths: list[str] = []
 
-    def get(self, path, headers=None):
+    # Batch 270：驱动改用 `client.request(...)`（为瞬断重试留出统一入口），
+    # 这里补上同一入口，`get` 保留给其它用例。
+    def request(self, method, path, headers=None, **kwargs):  # noqa: ARG002
         self.paths.append(path)
         if isinstance(self._response, Exception):
             raise self._response
         return self._response
+
+    def get(self, path, headers=None):
+        return self.request("GET", path, headers=headers)
 
 
 def test_driver_reads_platform_reuse_stats():
     import httpx
 
     driver = _load_driver()
+    driver.RETRY_BACKOFF_SECONDS = 0  # 本用例只验语义，不真的等退避
     client = _FakeClient(_FakeResponse(200, {"data": {"suggested": 6, "adopted": 4, "hit_rate": 0.6667}}))
     assert driver._platform_reuse_stats(client, {}) == (6, 4)
     assert client.paths == ["/api/v1/version-tasks/knowledge/reuse-stats"]
