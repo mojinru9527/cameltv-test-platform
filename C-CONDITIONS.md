@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-09-20（Batch 268 复用命中率埋点接线：新增 C268-1 P1，修复 C267-3；Batch 266 执行链路可执行性：C266-1~4 并关闭 C264-3/C264-4；Batch 265：C265-1~3；Batch 264：C264-1~4；Batch 263：C263-1；Batch 262：C262-1~4）
+**最后更新**: 2026-09-20（Batch 268 复用命中率埋点接线：新增 C268-1 P1，修复 C267-3；Batch 267 体育接口 P0 冒烟集：新增 C267-1~3（其中 C267-3 由 268 修复）；Batch 266：C266-1~4 并关闭 C264-3/C264-4；Batch 265：C265-1~3；Batch 264：C264-1~4；Batch 263：C263-1；Batch 262：C262-1~4）
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -63,7 +63,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|--------|---------|
 | C268-1 | **本批修复项与后续**：修复 **C267-3**（B3-4 复用命中率埋点未接线 → `hit_rate` 恒 0；Batch 267 已用"代码无调用点 + 生产 `reuse_suggestion_event` 0 行"双证）。修法：① `version_task_service.create_task` 在建任务带出建议时按**条目粒度**写 `decision='suggested'` 事件（不吞异常）；② `drill_three_versions.py` 优先读 `GET /version-tasks/knowledge/reuse-stats`，人工输入降级为回退并标注 `reuse_source`。**剩余**：仍需真实 ≥3 个版本上跑通并回填命中率（对应 C265-1）。解除条件=真实环境 `reuse-stats` 数字回贴 + 驱动报告 `reuse_source=platform` | P1 | 2026-09-20 |
 | C268-2 | **命中率可 >1（本批就地修复）**：本地流程实测 `hit_rate 2.5`（adopted 10 / suggested 4）与 1.1875——① `record_decision` 不校验 (task_id, suggestion_ref) 是否被带出过；② `reuse_stats` 直接按 decision 计数，历史/不一致数据同时进分子分母。修法：`record_decision` 加守卫（无对应 suggested → `APIException 400`）；`reuse_stats` 只统计**有对应带出事件**的采纳/否掉 → 命中率有界 [0,1]，对历史脏数据免疫。复测：新任务 4/3/1（75%）平衡；聚合 `hit_rate 0.625` ≤1。**遗留观察**：本地试点库仍存在守卫前写入的 adopted>suggested 行（仅本机；生产该表 0 行），聚合已不受影响 | P3 | 2026-09-20 |
+### batch-267 — 体育接口 P0 冒烟集（2026-09-20）—— 新增
 
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C267-1 | **两个体育端点慢/超时**：`/ee/sports_live/living_group_match`（冒烟实跑 5 条 ReadTimeout，用例已给 40s 超时）与 `/ee/sports_live/list_hot_team_match`（2 条 ReadTimeout + 1 条响应 6048.8ms > 5000ms 阈值）。其余 8 个端点 40 条断言全过（整体 **42/50**）。解除条件=确认属目标侧性能问题（交体育平台方）或在项目内明确 SLO 口径（把慢端点排除出 P0 冒烟 / 单独设更长超时），随后复跑给出稳定通过率 | P2 | 2026-09-20 |
+| C267-2 | **Test5 UI 站点间歇性极慢（C266-4 的目标侧根因）**：实测 `https://camelive-g3-test5.elelive.cn/` 单页 200 但耗时 **21.9s**（浏览器两次 30s 超时），`https://camel-bball-test5.elelive.cn/basketball` 9.5s（另一次 16.3s、再一次 0.37s，抖动极大），同环境 API 网关健康检查仅 **95ms**。Web 用例通过数波动（29→26→21）主要由此造成，而非断言写法。解除条件=目标侧恢复响应（或由体育平台方给出性能结论），随后按同一用例集复跑 3 版，Web 通过数应稳定且不再出现导航级超时；若长期如此，则在本项目内把"UI 站点可用性"单列冒烟并明确超时口径 | P2 | 2026-09-20 |
+| C267-3 | **P1 B3-4 复用命中率埋点未接线 → 指标恒为 0**：`reuse_metrics_service.record_suggestion`（写 `decision='suggested'`）**全仓无调用点**；带出建议的 `GET /version-tasks/knowledge/reuse` 不写埋点，决策接口入参限定 `adopted|rejected`，因此 `hit_rate = adopted/suggested` 的 `suggested` 恒为 0。**生产实证**：`reuse_suggestion_event` 0 行，而同期已有 6 个版本任务、1 条版本知识记录。影响：§5 第 ⑦ 条「复用命中率 ≥50%」在本平台无法被测出（不是缺数据，而是埋点未接线）。解除条件=① 在"带出建议"路径写入建议事件；② 演练驱动改为读平台指标而非 `--reuse-suggested/--reuse-adopted` 人工输入；③ 用真实 ≥3 个版本跑通并给出命中率（按执行链路/埋点变更走完整批次） | P1 | 2026-09-20 |
 ### batch-266 — 执行链路可执行性（2026-09-19）—— 新增
 
 | ID | 内容 | 优先级 | 创建日期 |

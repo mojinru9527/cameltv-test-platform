@@ -1,0 +1,23 @@
+{
+  "captured_at": "2026-09-20",
+  "purpose": "为 P0 冒烟集筛选端点：只保留在真实 Test5 上**匿名可访问且信封 code=200** 的接口",
+  "base": "http://camel-api-gateway05.svc.elelive.cn/camel-service",
+  "probe_command": "Invoke-WebRequest <base><path> → 解析 JSON 信封 {traceId,timestamp,status,data,msg}",
+  "results": [
+    {"path": "/ee/version/version", "http": 200, "envelope_status": 200, "data": "value（打包时间字符串）", "selected": true},
+    {"path": "/ee/stream_stats/quality", "http": 200, "envelope_status": 200, "data": "array[0]", "selected": true},
+    {"path": "/ee/sports_live/v_stream", "http": 200, "envelope_status": 200, "data": "array[563]", "selected": true},
+    {"path": "/ee/sports_live/v_origin_stream", "http": 200, "envelope_status": 200, "data": "array[0]", "selected": true},
+    {"path": "/ee/sports_live/sync_team", "http": 200, "envelope_status": 200, "data": null, "selected": true},
+    {"path": "/ee/sports_live/sync_competition", "http": 200, "envelope_status": 200, "data": null, "selected": true},
+    {"path": "/ee/sports_live/player/hot-players", "http": 200, "envelope_status": 200, "data": "array[41]", "selected": true},
+    {"path": "/ee/sports_live/living_group_match", "http": "首次探测 15s 超时；复测成功但慢", "envelope_status": 200, "data": "array", "selected": true, "note": "慢端点：用例超时给到 40s，实测任务中仍 ReadTimeout → C267-1"},
+    {"path": "/ee/sports_live/list_hot_team_match", "http": 200, "envelope_status": 200, "data": "value", "selected": true, "note": "实测响应可达 6s 级 → C267-1"},
+    {"path": "/ee/sports_live/list_faceoff", "http": 200, "envelope_status": 200, "data": "value", "selected": true}
+  ],
+  "excluded_examples": [
+    {"path": "/ee/sports_live/u/push_state", "reason": "http=200 但信封 status=400（缺参数）"},
+    {"path": "/ee/sports_live/token", "reason": "http=200 但信封 status=400（缺参数）"},
+    {"path": "/ee/search/batchAddTeamToEs", "reason": "POST 且需真实参数（自动生成集失败主因，见 C266-1）"}
+  ]
+}
