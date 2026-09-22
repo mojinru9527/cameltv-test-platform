@@ -1,0 +1,226 @@
+{
+  "hidden_menu_codes": [
+    "menu:agent-workbench",
+    "menu:knowledge:artifacts",
+    "menu:knowledge:graph",
+    "menu:knowledge:platform",
+    "menu:knowledge:project",
+    "menu:mindmap",
+    "menu:organization",
+    "menu:perftest",
+    "menu:playground",
+    "menu:project",
+    "menu:special",
+    "menu:testplan",
+    "menu:trace"
+  ],
+  "before": {
+    "retired_codes": [
+      "menu:agent-workbench",
+      "menu:knowledge:artifacts",
+      "menu:knowledge:graph",
+      "menu:knowledge:platform",
+      "menu:knowledge:project",
+      "menu:mindmap",
+      "menu:organization",
+      "menu:perftest",
+      "menu:playground",
+      "menu:project",
+      "menu:special",
+      "menu:testplan",
+      "menu:trace"
+    ],
+    "permission_rows_present": true,
+    "bound_codes": [
+      {
+        "code": "menu:agent-workbench",
+        "roles": [
+          "tester"
+        ]
+      },
+      {
+        "code": "menu:knowledge:artifacts",
+        "roles": [
+          "tester",
+          "viewer"
+        ]
+      },
+      {
+        "code": "menu:knowledge:graph",
+        "roles": [
+          "tester",
+          "viewer"
+        ]
+      },
+      {
+        "code": "menu:knowledge:platform",
+        "roles": [
+          "tester",
+          "viewer"
+        ]
+      },
+      {
+        "code": "menu:knowledge:project",
+        "roles": [
+          "tester",
+          "viewer"
+        ]
+      },
+      {
+        "code": "menu:mindmap",
+        "roles": [
+          "tester"
+        ]
+      },
+      {
+        "code": "menu:organization",
+        "roles": [
+          "tester",
+          "viewer"
+        ]
+      },
+      {
+        "code": "menu:perftest",
+        "roles": [
+          "tester"
+        ]
+      },
+      {
+        "code": "menu:playground",
+        "roles": [
+          "tester"
+        ]
+      },
+      {
+        "code": "menu:special",
+        "roles": [
+          "tester"
+        ]
+      },
+      {
+        "code": "menu:testplan",
+        "roles": [
+          "tester"
+        ]
+      },
+      {
+        "code": "menu:trace",
+        "roles": [
+          "tester",
+          "viewer"
+        ]
+      }
+    ],
+    "pending_bindings": 18
+  },
+  "before_role_menu_counts": {
+    "tester": 21,
+    "viewer": 7
+  },
+  "applied": false,
+  "deleted": 0,
+  "after": {
+    "retired_codes": [
+      "menu:agent-workbench",
+      "menu:knowledge:artifacts",
+      "menu:knowledge:graph",
+      "menu:knowledge:platform",
+      "menu:knowledge:project",
+      "menu:mindmap",
+      "menu:organization",
+      "menu:perftest",
+      "menu:playground",
+      "menu:project",
+      "menu:special",
+      "menu:testplan",
+      "menu:trace"
+    ],
+    "permission_rows_present": true,
+    "bound_codes": [
+      {
+        "code": "menu:agent-workbench",
+        "roles": [
+          "tester"
+        ]
+      },
+      {
+        "code": "menu:knowledge:artifacts",
+        "roles": [
+          "tester",
+          "viewer"
+        ]
+      },
+      {
+        "code": "menu:knowledge:graph",
+        "roles": [
+          "tester",
+          "viewer"
+        ]
+      },
+      {
+        "code": "menu:knowledge:platform",
+        "roles": [
+          "tester",
+          "viewer"
+        ]
+      },
+      {
+        "code": "menu:knowledge:project",
+        "roles": [
+          "tester",
+          "viewer"
+        ]
+      },
+      {
+        "code": "menu:mindmap",
+        "roles": [
+          "tester"
+        ]
+      },
+      {
+        "code": "menu:organization",
+        "roles": [
+          "tester",
+          "viewer"
+        ]
+      },
+      {
+        "code": "menu:perftest",
+        "roles": [
+          "tester"
+        ]
+      },
+      {
+        "code": "menu:playground",
+        "roles": [
+          "tester"
+        ]
+      },
+      {
+        "code": "menu:special",
+        "roles": [
+          "tester"
+        ]
+      },
+      {
+        "code": "menu:testplan",
+        "roles": [
+          "tester"
+        ]
+      },
+      {
+        "code": "menu:trace",
+        "roles": [
+          "tester",
+          "viewer"
+        ]
+      }
+    ],
+    "pending_bindings": 18
+  },
+  "after_role_menu_counts": {
+    "tester": 21,
+    "viewer": 7
+  },
+  "residual_bindings": 18
+}
