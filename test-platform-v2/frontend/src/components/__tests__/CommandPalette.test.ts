@@ -98,3 +98,36 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
     expect(visiblePaths).toContain('/integration')
   })
 })
+
+/**
+ * batch-272（选项 B：按角色瘦身）：侧栏不再列出的模块，必须仍能**从命令面板搜到并直达**。
+ * 这些页面的菜单仍由 /system/menus 返回（后端按角色权限过滤），所以「瘦身 ≠ 下架」成立；
+ * 若哪天有人把某页从菜单里摘掉（硬/软下线），这里的负向断言会失败，提示同步处理。
+ */
+describe('batch-272 瘦身模块的搜索直达对账', () => {
+  const SLIMMED_OUT = [
+    '/dsh-tasks',
+    '/ai-config',
+    '/my-projects',
+    '/schedule',
+    '/system',
+    '/admin/workers',
+  ]
+
+  it('菜单仍在时：被瘦身出侧栏的模块全部可搜到', () => {
+    const menuPaths = new Set(ALL_COMMAND_ROUTES.map((route) => route.path))
+    const visible = filterCommandRoutes(ALL_COMMAND_ROUTES, () => true, menuPaths)
+    const visiblePaths = visible.map((route) => route.path)
+    for (const path of SLIMMED_OUT) {
+      expect(visiblePaths).toContain(path)
+    }
+  })
+
+  it('菜单被软/硬下线时：对应模块同步从命令面板消失（不会搜索到已下线页面）', () => {
+    const menuPaths = new Set(
+      ALL_COMMAND_ROUTES.map((route) => route.path).filter((p) => p !== '/dsh-tasks'),
+    )
+    const visible = filterCommandRoutes(ALL_COMMAND_ROUTES, () => true, menuPaths)
+    expect(visible.map((route) => route.path)).not.toContain('/dsh-tasks')
+  })
+})

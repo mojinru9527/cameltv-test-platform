@@ -169,8 +169,13 @@ export default function MainLayout() {
   const userInitials = (user?.nickname || user?.username || 'U')[0].toUpperCase()
 
   // (batch-259 / B2-6 收敛) 角色友好导航模型：4 个一级入口 + 专家区（二级 + 权限门禁）
+  // (batch-272 / 选项 B) 非管理员再瘦身：专家区只留 EXPERT_KEEP_CODES，其余转"搜索直达"
   // （事实源 docs/platform-refactor/01 §3.1 + 02 白名单；菜单数据仍按角色权限由后端过滤）。
-  const navigation = useMemo(() => buildNavigation(menus), [menus])
+  const isSuperAdmin = hasPerm('*')
+  const navigation = useMemo(
+    () => buildNavigation(menus, { slimExpert: !isSuperAdmin }),
+    [menus, isSuperAdmin],
+  )
 
   return (
     <SidebarProvider defaultOpen>
@@ -225,11 +230,13 @@ export default function MainLayout() {
             </SidebarMenu>
           </SidebarGroup>
 
-          {/* ── 专家区（二级容器，不占一级入口额度）：资产/引擎与配置/个人/系统分桶 ── */}
+          {/* ── 专家区（二级容器，不占一级入口额度）──
+              batch-272 / 选项 B：非管理员只渲染高频项，其余模块数经 searchOnlyCount 提示"⌘K 搜索直达" */}
           <AssetsMoreGroup
             sections={navigation.expertSections}
             pathname={location.pathname}
             onNavigate={navigateMenu}
+            searchOnlyCount={navigation.searchOnly.length}
           />
         </SidebarContent>
 
