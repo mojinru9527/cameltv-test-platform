@@ -27,10 +27,13 @@ export function AssetsMoreGroup({
   sections,
   pathname,
   onNavigate,
+  searchOnlyCount = 0,
 }: {
   sections: ExpertSection[]
   pathname: string
   onNavigate: (path: string, label: string) => void
+  /** batch-272 选项 B：侧栏不再列出、但可用命令面板搜到的模块数（>0 时给一行提示） */
+  searchOnlyCount?: number
 }) {
   const { state, isMobile } = useSidebar()
   const [open, setOpen] = useState<boolean>(() => readAssetsMoreOpen(window.localStorage))
@@ -79,6 +82,20 @@ export function AssetsMoreGroup({
             </span>
           </CollapsibleTrigger>
         </SidebarGroupLabel>
+        {/*
+          batch-272 选项 B：被瘦身出侧栏的模块仍可搜到。提示放在折叠标题下方而不是
+          CollapsibleContent 里——默认收起时用户也要能看到"其余模块去哪了"。
+        */}
+        {searchOnlyCount > 0 && (
+          <p
+            className="px-2 pb-1 text-[11px] leading-relaxed text-muted-foreground"
+            data-testid="expert-search-hint"
+          >
+            其余 {searchOnlyCount} 个模块已收进搜索：按{' '}
+            <kbd className="rounded border px-1 py-0.5 text-[10px]">Ctrl/⌘</kbd> +{' '}
+            <kbd className="rounded border px-1 py-0.5 text-[10px]">K</kbd> 输入名称直达
+          </p>
+        )}
         <CollapsibleContent>
           {sections.map((section) => (
             <div key={section.label} className="space-y-0.5">

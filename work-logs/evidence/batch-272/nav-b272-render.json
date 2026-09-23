@@ -1,0 +1,85 @@
+{
+  "tester": {
+    "username": "tester",
+    "apiMenuCount": 19,
+    "apiCodes": [
+      "menu:workbench",
+      "menu:requirement",
+      "menu:versionmission",
+      "menu:versiontask",
+      "menu:knowledge",
+      "menu:testcase",
+      "menu:apitest",
+      "menu:uitest",
+      "menu:schedule",
+      "menu:report",
+      "menu:myproject",
+      "menu:defect",
+      "menu:dataset",
+      "menu:environment",
+      "menu:dsh_tasks",
+      "menu:ai_config",
+      "menu:lanhu_evidence",
+      "menu:metrics",
+      "menu:onboarding"
+    ],
+    "expertBadgeCount": 1,
+    "hint": "其余 7 个模块已收进搜索：按 Ctrl/⌘ + K 输入名称直达",
+    "linkTexts": [
+      "版本验收任务",
+      "版本发布包",
+      "需求文档",
+      "缺陷管理",
+      "报告中心"
+    ],
+    "sidebarText": "CamelTv | 测试平台 | 导航菜单 | 工作台 | 版本验收 | 版本验收任务 | 版本发布包 | 需求文档 | 结果与缺陷 | 缺陷管理 | 报告中心 | 知识中心 | 专家区 | 5 | 其余 7 个模块已收进搜索：按 Ctrl/⌘ + K 输入名称直达 | 测 | 测试同学 | tester@cameltv.local",
+    "palette": {
+      "shortcut": "",
+      "matched": "定时任务",
+      "navigatedTo": "/schedule"
+    },
+    "screenshot": "F:\\CamelTv-worktrees\\codex-batch-272-nav-slim-and-search\\work-logs\\evidence\\batch-272/nav-b272-tester.png"
+  },
+  "admin": {
+    "username": "drill-admin",
+    "apiMenuCount": 20,
+    "apiCodes": [
+      "menu:workbench",
+      "menu:requirement",
+      "menu:versionmission",
+      "menu:versiontask",
+      "menu:knowledge",
+      "menu:testcase",
+      "menu:apitest",
+      "menu:uitest",
+      "menu:schedule",
+      "menu:report",
+      "menu:system",
+      "menu:myproject",
+      "menu:defect",
+      "menu:dataset",
+      "menu:environment",
+      "menu:dsh_tasks",
+      "menu:ai_config",
+      "menu:lanhu_evidence",
+      "menu:metrics",
+      "menu:onboarding"
+    ],
+    "expertBadgeCount": 1,
+    "hint": "",
+    "linkTexts": [
+      "版本验收任务",
+      "版本发布包",
+      "需求文档",
+      "缺陷管理",
+      "报告中心"
+    ],
+    "sidebarText": "CamelTv | 测试平台 | 导航菜单 | 工作台 | 版本验收 | 版本验收任务 | 版本发布包 | 需求文档 | 结果与缺陷 | 缺陷管理 | 报告中心 | 知识中心 | 专家区 | 13 | 超 | 超级管理员 | admin@cameltv.local",
+    "palette": {
+      "shortcut": "",
+      "matched": "",
+      "navigatedTo": ""
+    },
+    "screenshot": "F:\\CamelTv-worktrees\\codex-batch-272-nav-slim-and-search\\work-logs\\evidence\\batch-272/nav-b272-admin.png"
+  }
+}

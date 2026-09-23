@@ -40,12 +40,17 @@ function mockMatchMedia() {
   })
 }
 
-function renderGroup(pathname = '/workbench', sidebarOpen = true) {
+function renderGroup(pathname = '/workbench', sidebarOpen = true, searchOnlyCount = 0) {
   const onNavigate = vi.fn()
   render(
     <TooltipProvider>
       <SidebarProvider defaultOpen={sidebarOpen}>
-        <AssetsMoreGroup sections={SECTIONS} pathname={pathname} onNavigate={onNavigate} />
+        <AssetsMoreGroup
+          sections={SECTIONS}
+          pathname={pathname}
+          onNavigate={onNavigate}
+          searchOnlyCount={searchOnlyCount}
+        />
       </SidebarProvider>
     </TooltipProvider>,
   )
@@ -108,5 +113,20 @@ describe('AssetsMoreGroup（batch-259 专家区折叠容器）', () => {
     expect(screen.queryByText('专家区')).toBeNull()
     expect(screen.getByText('用例服务')).toBeTruthy()
     expect(screen.getByText('Durable Runtime')).toBeTruthy()
+  })
+
+  // ── batch-272（选项 B：按角色瘦身）──────────────────────────────
+  it('batch-272：有被瘦身模块时，**折叠收起状态也**显示"⌘K 搜索直达"提示', () => {
+    renderGroup('/workbench', true, 7)
+    const hint = screen.getByTestId('expert-search-hint')
+    expect(hint.textContent).toContain('其余 7 个模块')
+    expect(hint.textContent).toContain('K')
+    // 提示在折叠内容之外：此时分桶项仍未渲染
+    expect(screen.queryByText('用例服务')).toBeNull()
+  })
+
+  it('batch-272：无被瘦身模块（管理员/全量）时不显示提示', () => {
+    renderGroup()
+    expect(screen.queryByTestId('expert-search-hint')).toBeNull()
   })
 })

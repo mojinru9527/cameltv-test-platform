@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { MenuItem } from '@/types'
 import {
+  EXPERT_KEEP_CODES,
   EXPERT_AREA_STORAGE_KEY,
   PRIMARY_ENTRY_LIMIT,
   buildNavigation,
@@ -193,5 +194,51 @@ describe('batch-212 「资产与更多」展开状态持久化', () => {
     writeAssetsMoreOpen(storage, false)
     expect(store.get(EXPERT_AREA_STORAGE_KEY)).toBe('0')
     expect(readAssetsMoreOpen(storage)).toBe(false)
+  })
+})
+
+describe('batch-272 选项 B：按角色瘦身 + 搜索直达', () => {
+  const sidebarCodes = (model: NavigationModel): string[] => [
+    ...model.mainRows.flatMap((row) => (row.kind === 'link' ? [row.item.code] : row.items.map((i) => i.code))),
+    ...model.expertSections.flatMap((section) => section.items.map((i) => i.code)),
+  ]
+
+  it('非管理员：专家区只留 EXPERT_KEEP_CODES，其余进入 searchOnly', () => {
+    const menus = [...TESTER_MENUS, menu('menu:system', '/system', 40)]
+    const model = buildNavigation(menus, { slimExpert: true })
+
+    const kept = model.expertSections.flatMap((s) => s.items.map((i) => i.code))
+    expect(kept.length).toBeGreaterThan(0)
+    expect(kept.every((code) => EXPERT_KEEP_CODES.includes(code))).toBe(true)
+    expect(kept).toEqual(['menu:testcase', 'menu:apitest', 'menu:uitest', 'menu:dataset', 'menu:environment'])
+
+    const searchOnly = model.searchOnly.map((i) => i.code)
+    expect(searchOnly).toContain('menu:dsh_tasks')
+    expect(searchOnly).toContain('menu:ai_config')
+    expect(searchOnly).toContain('menu:system')
+    expect(searchOnly).not.toContain('menu:testcase')
+
+    // 对账：侧栏 + 搜索直达 = 全部菜单，且每个 code 恰好一次（瘦身 ≠ 下架）
+    const all = [...sidebarCodes(model), ...searchOnly]
+    expect(all).toHaveLength(menus.length)
+    expect(new Set(all).size).toBe(menus.length)
+  })
+
+  it('管理员：保持分桶全景，searchOnly 为空', () => {
+    const model = buildNavigation(TESTER_MENUS)
+    expect(model.searchOnly).toEqual([])
+    expect(model.expertSections.map((s) => s.label)).toEqual(['资产', '引擎与配置', '个人'])
+  })
+
+  it('fail-safe：瘦身模式下未知新 code 不渲染但可搜', () => {
+    const menus = [...TESTER_MENUS, menu('menu:future_feature', '/future', 99)]
+    const model = buildNavigation(menus, { slimExpert: true })
+    expect(sidebarCodes(model)).not.toContain('menu:future_feature')
+    expect(model.searchOnly.map((i) => i.code)).toContain('menu:future_feature')
+  })
+
+  it('瘦身不改变一级入口数量（仍 ≤4）', () => {
+    const model = buildNavigation(TESTER_MENUS, { slimExpert: true })
+    expect(model.mainRows).toHaveLength(PRIMARY_ENTRY_LIMIT)
   })
 })
