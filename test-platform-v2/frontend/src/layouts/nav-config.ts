@@ -24,6 +24,31 @@ import type { MenuItem } from '@/types'
 export const PRIMARY_ENTRY_LIMIT = 4
 
 /**
+ * batch-272（选项 B：按角色瘦身）—— 非管理员在专家区里**保留**的高频项。
+ *
+ * 其余模块不再出现在侧栏，但**没有下架**：它们仍由 `/system/menus` 返回（后端按角色权限过滤），
+ * 因此命令面板（⌘K / Ctrl+K）仍能搜到并直达——见 `CommandPalette` 的 `visibleMenuPaths` 与
+ * `buildNavigation().searchOnly`。这样"侧栏短"与"页面可达"不再互相牺牲。
+ *
+ * 保留口径：日常工作台面（资产桶）= 用例服务 / 接口测试 / UI 自动化 / 测试数据集 / 目标环境。
+ */
+export const EXPERT_KEEP_CODES: readonly string[] = [
+  'menu:testcase',
+  'menu:apitest',
+  'menu:uitest',
+  'menu:dataset',
+  'menu:environment',
+]
+
+export interface BuildNavigationOptions {
+  /**
+   * true = 按角色瘦身（非管理员）：专家区只渲染 `EXPERT_KEEP_CODES`，
+   * 其余菜单进入 `searchOnly`（不渲染、但可搜）；false/缺省 = 现状（全部进分桶）。
+   */
+  slimExpert?: boolean
+}
+
+/**
  * 专家区折叠容器展开状态 localStorage key（"1"=展开，其余/缺省=收起）。
  * 键名沿用 batch-212 的历史值，避免用户已保存的展开状态在本次收敛后失效。
  */
@@ -91,6 +116,11 @@ export interface NavigationModel {
   mainRows: MainNavRow[]
   /** 专家区分桶（仅非空）。 */
   expertSections: ExpertSection[]
+  /**
+   * 侧栏**不渲染**但仍在用户权限内的菜单（batch-272 瘦身后产生）。
+   * 它们必须在命令面板里可搜——这是"瘦身不丢功能"的对账口径。
+   */
+  searchOnly: MenuItem[]
 }
 
 const bySort = (a: MenuItem, b: MenuItem) => a.sort - b.sort
@@ -99,7 +129,10 @@ const bySort = (a: MenuItem, b: MenuItem) => a.sort - b.sort
  * 按 code 从用户可见菜单（后端已按角色权限过滤）组装 5 行 + 分桶。
  * fail-safe：新菜单 code 不会污染顶层，一律落入「更多」桶。
  */
-export function buildNavigation(menus: MenuItem[]): NavigationModel {
+export function buildNavigation(
+  menus: MenuItem[],
+  options: BuildNavigationOptions = {},
+): NavigationModel {
   const byCode = new Map<string, MenuItem>()
   for (const menu of menus) {
     if (menu.code && !byCode.has(menu.code)) byCode.set(menu.code, menu)
@@ -152,7 +185,25 @@ export function buildNavigation(menus: MenuItem[]): NavigationModel {
     expertSections.push({ label: '更多', items: leftover.sort(bySort) })
   }
 
-  return { mainRows, expertSections }
+  if (!options.slimExpert) {
+    return { mainRows, expertSections, searchOnly: [] }
+  }
+
+  // ── 选项 B：按角色瘦身（batch-272）────────────────────────────────
+  // 专家区只留 EXPERT_KEEP_CODES；其余（含 fail-safe 的「更多」）转 searchOnly：
+  // 不渲染 ≠ 下架，命令面板仍可搜到（MainLayout 把 /system/menus 的完整路径集传给面板）。
+  const keep = new Set(EXPERT_KEEP_CODES)
+  const slimSections: ExpertSection[] = []
+  const searchOnly: MenuItem[] = []
+  for (const section of expertSections) {
+    const kept: MenuItem[] = []
+    for (const item of section.items) {
+      if (keep.has(item.code)) kept.push(item)
+      else searchOnly.push(item)
+    }
+    if (kept.length > 0) slimSections.push({ label: section.label, items: kept })
+  }
+  return { mainRows, expertSections: slimSections, searchOnly: searchOnly.sort(bySort) }
 }
 
 /** 路径是否命中分桶任一项（命中时「资产与更多」自动展开）。查询串不参与比较。 */
