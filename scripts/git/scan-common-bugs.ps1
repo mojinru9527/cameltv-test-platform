@@ -80,6 +80,21 @@ function Test-File {
             @{ Name = "硬编码 SECRET_KEY"; Re = 'SECRET_KEY\s*=\s*["''][^"'']+["'']'; Sev = "WARN" },
             @{ Name = "硬编码 api_key/secret/token"; Re = '(?:api[_-]?key|secret|token)\s*=\s*["''][A-Za-z0-9_\-]{12,}["'']'; Sev = "WARN" }
         )
+        # 裸凭据形态（HARD，P0-2）：上面的赋值式规则抓不到「直接粘进文件」的凭据。
+        # 本仓真实事故：一个**仍然可用**的 tpat_ Token 被写进证据 JSON 并进入公开仓库。
+        # 两条设计约定：
+        #   ① 前缀守卫 (?<![A-Za-z0-9]) 必需——disk-/risk-/mask-/task- 等普通词都含 "sk-"，
+        #      不加守卫会在 minified JS 上刷出成片误报；
+        #   ② Redact = $true 让报告**不回显命中内容**，否则扫描报告自身成为第二个泄漏点。
+        # 注意：本脚本只扫 backend/*.py 与 frontend/*.ts(x)；证据类 JSON/MD 由 CI 的
+        # ai-delivery-policy 凭据门禁按「新增行」全类型兜底。
+        $patterns += @(
+            @{ Name = "裸凭据：DeepSeek/OpenAI 形态 Key"; Re = '(?<![A-Za-z0-9])sk-[A-Za-z0-9]{20,}'; Sev = "HARD"; Redact = $true },
+            @{ Name = "裸凭据：平台 API Token (tpat_)"; Re = '(?<![A-Za-z0-9])tpat_[A-Za-z0-9_-]{16,}'; Sev = "HARD"; Redact = $true },
+            @{ Name = "裸凭据：AI Agent Token (agt_)"; Re = '(?<![A-Za-z0-9])agt_[A-Za-z0-9_-]{16,}'; Sev = "HARD"; Redact = $true },
+            @{ Name = "裸凭据：GitHub PAT"; Re = 'ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}'; Sev = "HARD"; Redact = $true },
+            @{ Name = "裸凭据：私钥 PEM 头"; Re = '-----BEGIN (RSA|OPENSSH|EC|PGP) PRIVATE KEY-----'; Sev = "HARD"; Redact = $true }
+        )
     }
     if ($Role -eq "backend-app" -or $Role -eq "backend-scripts") {
         # 静默吞异常（Hard）
@@ -107,6 +122,10 @@ function Test-File {
         foreach ($m in [regex]::Matches($text, $p.Re)) {
             $lc = Get-LineCol -Text $text -Index $m.Index
             $snip = ($text.Substring($m.Index, [Math]::Min(70, $text.Length - $m.Index)) -replace "`r|`n", " ")
+            if ($p.ContainsKey('Redact') -and $p.Redact) {
+                # 凭据类命中不回显上下文：报告本身不得成为第二个泄漏点。
+                $snip = "<已隐去命中内容：请直接查看该文件第 $($lc[0]) 行>"
+            }
             $sev = $p.Sev
             if ($p.Name -like "except*") {
                 # 带注释的 except-pass 视为有意为之，降级为 WARN 复核

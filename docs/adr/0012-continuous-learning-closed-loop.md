@@ -1,3 +1,14 @@
+---
+title: "ADR-0012: 持续学习闭环架构"
+owner: "tech-lead"
+created: "2026-07-09"
+last_reviewed: "2026-07-09"
+status: "accepted"
+expires: "2027-07-09"
+tags: ["adr", "knowledge", "continuous-learning", "iteration", "impact-analysis"]
+related: ["0009-knowledge-center-agent-continuous-learning.md", "0010-knowledge-vector-embedding-hybrid-retrieval.md", "0013-llm-wiki-structured-knowledge-diff.md"]
+---
+
 # ADR-0012: 持续学习闭环架构
 
 **状态**: Accepted

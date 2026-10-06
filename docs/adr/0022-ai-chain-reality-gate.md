@@ -1,3 +1,14 @@
+---
+title: "ADR-0022: AI 全链路 Reality Gate"
+owner: "qa-team"
+created: "2026-09-02"
+last_reviewed: "2026-09-02"
+status: "accepted"
+expires: "2027-09-02"
+tags: ["adr", "aitde", "ai", "intelligence", "trust"]
+related: ["0021-aitde-v3-1-unified-execution.md", "0023-ai-chain-c-conditions.md"]
+---
+
 # ADR-0022 — AI 全链路 Reality Gate（Batch 207）
 
 > Status: Accepted (2026-09-02) | Owner: qa-team | Tags: aitde, ai, intelligence, trust

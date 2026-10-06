@@ -336,13 +336,23 @@ def list_execution_jobs(
 def triage_plan_failures(
     plan_id: int,
     req: Request,
+    use_llm: bool = False,
     current: CurrentUser = Depends(require_permission("testplan:execute")),
     db: Session = Depends(get_db),
 ):
+    """分析计划中的失败执行。
+
+    P1-7：HTTP 路径**默认只跑规则引擎**（``use_llm=False``）。
+    此前默认 ``use_llm=True``，任何持有 ``testplan:execute`` 的用户都能对整份计划的
+    全部失败用例触发一次 ``max_tokens=4096`` 的同步 LLM 调用，而平台既没有 AI 频率
+    限制也没有额度上限——可被循环调用无限消耗云端额度（本次 Key 泄漏事故的放大面之一）。
+    需要 LLM 深度分析时由调用方**显式**传 ``?use_llm=true``，并受 ``ai_guard`` 额度约束。
+    """
     result = triage_service.triage_failed_cases(
         db,
         plan_id,
         project_id=current.project_id or 0,
+        use_llm=use_llm,
     )
     if result.get("error"):
         return R(code=404, msg=result["error"])

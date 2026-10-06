@@ -1,3 +1,14 @@
+---
+title: "ADR-0019: 认领式任务队列统一与删除语义唯一约定"
+owner: "tech-lead"
+created: "2026-08-14"
+last_reviewed: "2026-08-14"
+status: "accepted"
+expires: "2027-08-14"
+tags: ["adr", "task-queue", "soft-delete", "toctou", "conventions"]
+related: ["0014-single-main-trunk-ai-worktrees.md", "0026-production-execution-resource-ownership.md"]
+---
+
 # ADR-0019：认领式任务队列统一与删除语义唯一约定
 
 - **状态**: Accepted（2026-08-16，Batch 181 / FIX-173-P2-06、P2-08）

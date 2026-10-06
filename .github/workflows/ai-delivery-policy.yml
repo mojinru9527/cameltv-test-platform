@@ -109,8 +109,21 @@ jobs:
             exit 1
           fi
 
-          if git diff --unified=0 "origin/$BASE_BRANCH...HEAD" | grep -E '^\+.*(ghp_[A-Za-z0-9]+|github_pat_[A-Za-z0-9_]+|AKIA[0-9A-Z]{16}|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY)'; then
-            echo "::error::Potential credential or private key found in added lines."
+          # 凭据扫描（P0-2）：必须覆盖本平台**实际使用**的凭据形态。
+          # 旧规则只有 ghp_/github_pat_/AKIA/私钥，漏掉了平台自己的 tpat_/agt_
+          # 与 DeepSeek 的 sk- Key——正因如此，一个**仍然可用**的 tpat_ Token 长期
+          # 留在公开仓库的证据文件里而没有被任何门禁拦下。
+          # `(^|[^A-Za-z0-9])` 前缀守卫是必需的：disk-/risk-/task-/mask- 等普通词
+          # 都含有 "sk-"，不加守卫会把 minified JS 与运维脚本刷成一片误报。
+          # 命中时只报告结论、不回显匹配内容（避免把密钥二次写进 CI 日志）。
+          CREDENTIAL_PATTERNS='ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}|BEGIN (RSA|OPENSSH|EC|PGP) PRIVATE KEY|(^|[^A-Za-z0-9])sk-[A-Za-z0-9]{20,}|(^|[^A-Za-z0-9])tpat_[A-Za-z0-9_-]{16,}|(^|[^A-Za-z0-9])agt_[A-Za-z0-9_-]{16,}'
+          PLACEHOLDER_ALLOWLIST='(sk-(test|xxx|your|example|placeholder|redacted)|tpat_XXXXXXXX|agt_XXXXXXXX|<REDACTED>|CHANGE_?ME|change-me)'
+
+          added_lines="$(git diff --unified=0 "origin/$BASE_BRANCH...HEAD" | grep -E '^\+' || true)"
+          if printf '%s\n' "$added_lines" \
+            | grep -vE "$PLACEHOLDER_ALLOWLIST" \
+            | grep -qE "$CREDENTIAL_PATTERNS"; then
+            echo "::error::Potential credential or private key found in added lines. Revoke/rotate it, keep it in a secret manager, and never commit it."
             exit 1
           fi
 

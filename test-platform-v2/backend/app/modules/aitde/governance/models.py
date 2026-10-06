@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String, Text
+from sqlalchemy import DateTime, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -76,6 +76,14 @@ class ModelUsageLedger(Base):
     """V40-015: per-operation model/runtime usage + cost accounting."""
 
     __tablename__ = "model_usage_ledger"
+    __table_args__ = (
+        # P1-6：AI 配额闸门（app/services/ai_guard.py）每次 LLM 调用都要按
+        # (project_id, created_at) 统计近 60s 行数与近 24h token 之和。
+        # 只有单列索引时，24h 求和必须扫该项目的全部历史行；而本表从 0 行开始、
+        # 每次 AI 调用 +1 行，长期增长必须给复合索引（与迁移里的同名索引一致，
+        # 保证 auto_create_tables 与 Alembic 两套建表路径不漂移）。
+        Index("ix_model_usage_project_created", "project_id", "created_at"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     project_id: Mapped[int] = mapped_column(Integer, default=0, index=True)

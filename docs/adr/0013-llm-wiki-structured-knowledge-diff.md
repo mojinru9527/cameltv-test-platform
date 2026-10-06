@@ -1,3 +1,14 @@
+---
+title: "ADR-0013: 自建 LLM-Wiki 结构化知识层与 RAG/Wiki 差异对比（VNext-1..3）"
+owner: "tech-lead"
+created: "2026-07-10"
+last_reviewed: "2026-07-10"
+status: "accepted"
+expires: "2027-07-10"
+tags: ["adr", "knowledge", "llm-wiki", "rag", "diff", "license-compliance"]
+related: ["0007-deepseek-llm-test-case-generation.md", "0009-knowledge-center-agent-continuous-learning.md", "0010-knowledge-vector-embedding-hybrid-retrieval.md"]
+---
+
 # ADR-0013: 自建 LLM-Wiki 结构化知识层与 RAG/Wiki 差异对比（VNext-1..3）
 
 - **状态**：已接受（accepted）—— batch-18 落地 VNext-1..3、batch-19 补齐 Leader 放行条件（RBAC/契约过滤/本 ADR）

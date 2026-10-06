@@ -1,3 +1,14 @@
+---
+title: "ADR-0024: 执行链专门批次（C1/C2/C6b）"
+owner: "qa-team"
+created: "2026-09-02"
+last_reviewed: "2026-09-02"
+status: "accepted"
+expires: "2027-09-02"
+tags: ["adr", "command-ir", "execution", "binding", "gate"]
+related: ["0021-aitde-v3-1-unified-execution.md", "0023-ai-chain-c-conditions.md", "0025-closeout-c1b-c2b-test-infra.md"]
+---
+
 # ADR-0024 — 执行链专门批次（C1/C2/C6b，Batch 209）
 
 > Status: Accepted (2026-09-02) | Owner: qa-team | Tags: command-ir, execution, binding, gate

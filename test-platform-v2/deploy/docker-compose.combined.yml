@@ -19,6 +19,11 @@ services:
       AI_GATEWAY_URL: ""
       RUNNER_HTTP_URL: ""
       WORKER_EXECUTION_ENABLED: "true"
+      # 凭据最小化（P0-4）的例外：回滚到合并镜像后本进程同时承担 API、AI 与
+      # DSH 执行，云端凭据必须回到这里；split 默认拓扑下这两项只存在于
+      # ai-gateway（AI_API_KEY）与 runner/aitde-worker（DSH_API_KEY）。
+      AI_API_KEY: ${AI_API_KEY:-}
+      DSH_API_KEY: ${DSH_API_KEY:-}
     depends_on: !reset
       postgres:
         condition: service_healthy

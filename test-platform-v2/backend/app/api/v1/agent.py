@@ -48,6 +48,10 @@ def _agent_unavailable_reason(
         if ai_client.is_configured(db, project_id):
             return ""
         return "当前项目未配置可用的 AI 提供方"
+    if settings.ai_gateway_delegated:
+        # P0-4：remote 角色已不再持有明文 AI_API_KEY，LLM 调用经 ai-gateway 委派；
+        # 委派链路配置完整即视为可用，不能因为本地没有 Key 就报不可用。
+        return ""
     if not settings.ai_api_key:
         return "AI_API_KEY 未配置"
     return ""

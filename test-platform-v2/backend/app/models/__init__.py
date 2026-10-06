@@ -37,6 +37,7 @@ from app.models.knowledge import (
     KnowledgeRelation,
     KnowledgeSnapshot,
     KnowledgeSource,
+    KnowledgeTriggerDebounce,
     KnowledgeVector,
 )
 from app.models.project import Project, ProjectMember
@@ -186,6 +187,7 @@ __all__ = [
     "AgentQueueItem",
     "KnowledgeIteration",
     "KnowledgeSnapshot",
+    "KnowledgeTriggerDebounce",
     "WikiRawSource",
     "WikiPage",
     "WikiLink",

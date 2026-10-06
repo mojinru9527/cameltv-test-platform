@@ -1,3 +1,14 @@
+---
+title: "ADR-0025: 收尾批次（C1b/C2b + 测试基建）"
+owner: "qa-team"
+created: "2026-09-02"
+last_reviewed: "2026-09-02"
+status: "accepted"
+expires: "2027-09-02"
+tags: ["adr", "browser", "binding", "test-infra"]
+related: ["0024-execution-chain-c1c2.md", "0026-production-execution-resource-ownership.md"]
+---
+
 # ADR-0025 — 收尾批次（C1b/C2b + 测试基建，Batch 210）
 
 > Status: Accepted (2026-09-02) | Owner: qa-team | Tags: browser, binding, test-infra

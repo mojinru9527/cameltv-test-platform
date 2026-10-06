@@ -28,13 +28,20 @@ _MAX_RAW = 20000  # 单条 raw_content 上限，避免超大文档撑爆
 
 
 def _post_ingest_hooks(project_id: int, source_id: int | None = None) -> None:
-    """入库后统一触发：向量嵌入 + 实体提取 + Agent 自动变更检测（均独立 Session，不阻塞）。"""
+    """入库后统一触发：向量嵌入 + 实体提取 + Agent 自动变更检测（均独立 Session，不阻塞）。
+
+    P1-9：自动触发 Agent 是**无人值守的出网 LLM 调用**（入库 → 变更检测 →
+    Agent），必须由 `knowledge_auto_agent_enabled` 显式开启。此前它挂在
+    `knowledge_graph_enabled`（默认 True）上，于是每一次 UI 执行失败、
+    每一次 Agent 产出物入库都会顺带烧一次 LLM，且 Agent 之间互相喂养。
+    知识图谱开关现在只负责图谱本身，不再连带触发 Agent。
+    """
     embed_pending_chunks_in_new_session(project_id, source_id=source_id)
     if settings.knowledge_graph_enabled:
         extract_and_build_graph_in_new_session(project_id, source_id=source_id, max_chunks=50)
-    if settings.knowledge_graph_enabled:
-        # 自动触发 Agent（变更检测 → 匹配规则 → 防抖）
-        _auto_trigger_agents(project_id, auto_trigger=settings.knowledge_graph_enabled)
+    if settings.knowledge_auto_agent_enabled:
+        # 自动触发 Agent（变更检测 → 匹配规则 → 持久化防抖 → 自喂环断路）
+        _auto_trigger_agents(project_id, auto_trigger=True)
 
 
 def _truncate(text: str) -> str:

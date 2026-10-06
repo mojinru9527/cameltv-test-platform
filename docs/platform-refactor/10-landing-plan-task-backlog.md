@@ -2,9 +2,9 @@
 title: "落地方案任务清单（有序，可直接作为目标执行）"
 owner: "qa-team"
 created: "2026-09-18"
-last_reviewed: "2026-09-18"
+last_reviewed: "2026-09-24"
 status: "active"
-expires: "2027-03-18"
+expires: "2027-03-24"
 tags: ["platform-refactor", "backlog", "task-order", "execution", "acceptance"]
 related:
   - "docs/platform-refactor/09-platform-landing-plan.md"
@@ -26,58 +26,63 @@ related:
 
 ## 2. 任务总表（按执行顺序）
 
+> **状态口径（2026-09-20，Batch 269/270 收口）**：B0–B4 全部完成并在主干。
+> B1–B4 各自一个批次合入：B1=#477 `2ced1baf`、B2=#478 `573f5c12`、B3=#479 `3788c66d`、B4=#480 `334748bf`（Batch 258–261）；
+> 逐条验收见 §5 九条清单与 `work-logs/batch-269-landing-acceptance-report.md`（v2）、`work-logs/batch-270-landing-acceptance-report-v3.md`（v3，九条全部达成，第 ③ 条限定"真机外"）。
+> 表中"✅"表示任务交付物存在且有可复核证据；随任务登记的 Open C 条件（如 `C269-3` 节点自愈、`C269-4` Web `case:605`）见 `C-CONDITIONS.md`。
+
 ### B0 — 保障项（已部分完成，可并行）
 
 | ID | 任务 | 依赖 | 交付物 | DoD / 证据 | 状态 |
 |----|------|------|--------|-----------|------|
 | B0-1 | 生产盘回收（已导入的发布 tar、批次构建残留、无标签/旧版本镜像、journal、用户缓存） | — | 清理记录 + df 前后对照 | 磁盘 79% → ≤75% | ✅ 已完成 2026-09-18（79%→73%，释放约 3.2G） |
-| B0-2 | 磁盘与容量告警固化（>85% 通知；发布前容量准入已有） | B0-1 | 告警配置 + 一次触发验证 | 人为造 85% 阈值可收到通知 | 待办 |
-| B0-3 | 备份恢复演练（PG dump → 临时库 → 抽查执行记录 → 证据可查） | — | `docs/ops/restore-drill.md` + 演练日志 | 演练可在 2h 内完成并留证 | 待办 |
+| B0-2 | 磁盘与容量告警固化（>85% 通知；发布前容量准入已有） | B0-1 | 告警配置 + 一次触发验证 | 人为造 85% 阈值可收到通知 | ✅ 已完成 2026-09-20（Batch 269 关闭 `C262-1`：cron `*/15` + `/opt/cameltv-ops/disk-watermark-check.sh`，自检邮件 `MAIL_OK`，用户确认收到） |
+| B0-3 | 备份恢复演练（PG dump → 临时库 → 抽查执行记录 → 证据可查） | — | `docs/ops/restore-drill.md` + 演练日志 | 演练可在 2h 内完成并留证 | ✅ 已完成 2026-09-19（Batch 262：手册 + 197 表 / 137,642 行抽查 / 20 秒；证据 `work-logs/batch-262-ops-restore-drill-evidence-*`；§5 第 ⑨ 条判定达成） |
 
 ### B1 — 出网/凭据收口 + 执行协议 + 节点骨架（轻量批次）
 
 > 目标：**让"外部输入"和"执行"两条链路第一次有边界**，并且本地节点能真正跑起来。
 
-| ID | 任务 | 依赖 | 交付物 | DoD / 证据 |
-|----|------|------|--------|-----------|
-| B1-1 | 抽公共 `assert_public_url()`（私网/回环/链路本地拒绝、重定向后二次校验、响应 ≤5MB）并接入需求抓取与发布包导入 | — | `app/core/url_guard.py` + 调用点 + 单测 | 5 个恶意 URL（127.0.0.1 / 169.254.169.254 / 内网域名 / 重定向跳转 / 大响应）全部被拒，单测通过 |
-| B1-2 | 凭据白名单：`classify_url` 改配置化根域白名单 + 解析 IP 校验；Token 只发白名单域名 | — | 配置项 + 代码改造 + 单测 | `pingcode.attacker.tld` 不会收到任何 Header；白名单域名正常 |
-| B1-3 | OCR 去 `shell=True`（改参数数组或默认内置 RapidOCR） | — | 改造 + 单测 | `rg "shell=True" app/` 为空；含空格/分号的图片路径可正常识别 |
-| B1-4 | `ExecutionJob` 协议：模型 + Alembic 迁移 + claim/heartbeat/report/stale 回收 + 权限点 | — | 模型/迁移/API + 测试 | 认领→心跳→上报→超时回收全链路测试通过；跨项目不可认领 |
-| B1-5 | `cameltv-node` CLI：`up`（注册+心跳+认领循环）、`run-api`、`run-web`、`upload` | B1-4 | `scripts/node/` + README | `cameltv-node up` 一条命令可用；断网 30s 后任务回 pending 并可再认领 |
-| B1-6 | 平台侧节点状态：在线/离线、队列长度、一键启动指引 | B1-4 | 首页/版本任务页组件 | 无节点时页面明确提示；节点上线后 10s 内状态刷新 |
-| B1-7 | B1 端到端证据：5 条接口 + 3 条 Web 用例真实执行 + 证据可查 | B1-1…B1-6 | QA 报告 + 证据链接 | 8/8 用例执行成功、证据可下载、失败用例有截图/请求回放 |
+| ID | 任务 | 依赖 | 交付物 | DoD / 证据 | 状态 |
+|----|------|------|--------|-----------|------|
+| B1-1 | 抽公共 `assert_public_url()`（私网/回环/链路本地拒绝、重定向后二次校验、响应 ≤5MB）并接入需求抓取与发布包导入 | — | `app/core/url_guard.py` + 调用点 + 单测 | 5 个恶意 URL（127.0.0.1 / 169.254.169.254 / 内网域名 / 重定向跳转 / 大响应）全部被拒，单测通过 | ✅ 已完成（Batch 258 / #477；`tests/test_url_guard.py` 17 例） |
+| B1-2 | 凭据白名单：`classify_url` 改配置化根域白名单 + 解析 IP 校验；Token 只发白名单域名 | — | 配置项 + 代码改造 + 单测 | `pingcode.attacker.tld` 不会收到任何 Header；白名单域名正常 | ✅ 已完成（Batch 258 / #477；`test_batch258_token_whitelist.py` 12 例） |
+| B1-3 | OCR 去 `shell=True`（改参数数组或默认内置 RapidOCR） | — | 改造 + 单测 | `rg "shell=True" app/` 为空；含空格/分号的图片路径可正常识别 | ✅ 已完成（Batch 258 / #477；`app/` 内 `shell=True` 实测 0 处，`test_batch258_ocr_command.py` 在测） |
+| B1-4 | `ExecutionJob` 协议：模型 + Alembic 迁移 + claim/heartbeat/report/stale 回收 + 权限点 | — | 模型/迁移/API + 测试 | 认领→心跳→上报→超时回收全链路测试通过；跨项目不可认领 | ✅ 已完成（Batch 258 / #477；`test_batch258_execution_job_protocol.py` 18 例） |
+| B1-5 | `cameltv-node` CLI：`up`（注册+心跳+认领循环）、`run-api`、`run-web`、`upload` | B1-4 | `scripts/node/` + README | `cameltv-node up` 一条命令可用；断网 30s 后任务回 pending 并可再认领 | ✅ 已完成（Batch 258 / #477；Batch 269 演练真机认领并跑完 6 个 job。**节点进程自愈仍缺 → `C269-3`（P1）**） |
+| B1-6 | 平台侧节点状态：在线/离线、队列长度、一键启动指引 | B1-4 | 首页/版本任务页组件 | 无节点时页面明确提示；节点上线后 10s 内状态刷新 | ✅ 已完成（Batch 258 / #477） |
+| B1-7 | B1 端到端证据：5 条接口 + 3 条 Web 用例真实执行 + 证据可查 | B1-1…B1-6 | QA 报告 + 证据链接 | 8/8 用例执行成功、证据可下载、失败用例有截图/请求回放 | ✅ 已完成（Batch 258 `scripts/node/drill_b1_e2e.py` 25/25；2026-09-19 在主干复跑，存档 `work-logs/evidence/batch-262/b1-drill-replay-20260919.txt`） |
 
 ### B2 — 执行沙箱 + 菜单收敛（轻量批次）
 
-| ID | 任务 | 依赖 | 交付物 | DoD / 证据 |
-|----|------|------|--------|-----------|
-| B2-1 | 本地节点执行沙箱（非 root、无平台 secret/DB 口令、无持久卷写、出网白名单） | B1-5 | 沙箱配置 + 说明 | 沙箱内读 `.env`/连内网/写卷**必须失败**，有回归用例 |
-| B2-2 | 危险 API 静态拦截（`child_process`/`fs` 写/`net`/`process.env`）覆盖"生成代码→执行"全链路 | B2-1 | 拦截器 + 单测 | 含 `execSync` 的 spec 在执行前被拒并给出可读原因 |
-| B2-3 | 纠正"dry-run = 沙箱"的错误定位：`case_compiler` 默认 `validate=True`、文档与注释同步 | B2-2 | 代码 + 文档 | 计划执行路径不再出现 `validate=False`；文档不再把 dry-run 称沙箱 |
-| B2-4 | 本地对象存储路径收敛（`is_relative_to`） | — | 改造 + 单测 | `../../etc/passwd` 形式 URI 被拒 |
-| B2-5 | 密钥派生统一到 `cipher.py` + 启动校验（无 SECRET_KEY 但有密文则 fail-fast） | — | 改造 + 单测 | `rg "sha256\(.*secret_key"` 只命中 `cipher.py` |
-| B2-6 | 菜单收敛：tester ≤4 入口 + 专家区；隐藏清单落地 | B1-6 | 前端改造 + E2E | 导航项 E2E 断言 ≤4；被隐藏页面仍可经权限+搜索访问 |
+| ID | 任务 | 依赖 | 交付物 | DoD / 证据 | 状态 |
+|----|------|------|--------|-----------|------|
+| B2-1 | 本地节点执行沙箱（非 root、无平台 secret/DB 口令、无持久卷写、出网白名单） | B1-5 | 沙箱配置 + 说明 | 沙箱内读 `.env`/连内网/写卷**必须失败**，有回归用例 | ✅ 已完成（Batch 259 / #478；`test_batch259_execution_sandbox_h1.py` 在测） |
+| B2-2 | 危险 API 静态拦截（`child_process`/`fs` 写/`net`/`process.env`）覆盖"生成代码→执行"全链路 | B2-1 | 拦截器 + 单测 | 含 `execSync` 的 spec 在执行前被拒并给出可读原因 | ✅ 已完成（Batch 259 / #478；`app/core/spec_guard.py` + `test_batch259_spec_guard.py` 20 例） |
+| B2-3 | 纠正"dry-run = 沙箱"的错误定位：`case_compiler` 默认 `validate=True`、文档与注释同步 | B2-2 | 代码 + 文档 | 计划执行路径不再出现 `validate=False`；文档不再把 dry-run 称沙箱 | ✅ 已完成（Batch 259 / #478；`test_batch259_dryrun_not_sandbox.py` 在测） |
+| B2-4 | 本地对象存储路径收敛（`is_relative_to`） | — | 改造 + 单测 | `../../etc/passwd` 形式 URI 被拒 | ✅ 已完成（Batch 259 / #478；`test_batch259_object_storage_containment.py` 在测） |
+| B2-5 | 密钥派生统一到 `cipher.py` + 启动校验（无 SECRET_KEY 但有密文则 fail-fast） | — | 改造 + 单测 | `rg "sha256\(.*secret_key"` 只命中 `cipher.py` | ✅ 已完成（Batch 259 / #478；`test_batch259_key_derivation_unification.py` 在测） |
+| B2-6 | 菜单收敛：tester ≤4 入口 + 专家区；隐藏清单落地 | B1-6 | 前端改造 + E2E | 导航项 E2E 断言 ≤4；被隐藏页面仍可经权限+搜索访问 | ✅ 已完成（Batch 259 / #478；`nav-config.test.ts` + `PRIMARY_ENTRY_LIMIT=4`。**口径**：`≤4` 为 vitest 模型层断言，仓库无浏览器级"数导航项"E2E，见 v2 验收报告 ①） |
 
 ### B3 — 知识主线（轻量批次）
 
-| ID | 任务 | 依赖 | 交付物 | DoD / 证据 |
-|----|------|------|--------|-----------|
-| B3-1 | `ImpactEdge` 模型 + 迁移（变更/覆盖/依赖三类边） | B1-4 | 模型/迁移 | 迁移单头、可离线校验 |
-| B3-2 | 关联构建：需求变更 → 模块 → 用例（功能/接口/UI） | B3-1 | 构建服务 + 回填脚本 | 体育试点模块关联覆盖率 ≥90% |
-| B3-3 | 查询 API：「改了 X 要跑哪些」+ 未覆盖缺口 | B3-2 | API + 前端视图 | 查询 ≤2s；每条结论可点回原始用例/执行记录 |
-| B3-4 | 复用建议（下版任务自动带出）+ 命中率埋点 | B3-3 | 服务 + 埋点 | 命中率可统计；≥50% 目标进入 B4 验收 |
-| B3-5 | 知识中心只读视图收敛（≤3 Tab，去掉管理负担） | B2-6 | 前端改造 | 普通用户 Tab ≤3 |
+| ID | 任务 | 依赖 | 交付物 | DoD / 证据 | 状态 |
+|----|------|------|--------|-----------|------|
+| B3-1 | `ImpactEdge` 模型 + 迁移（变更/覆盖/依赖三类边） | B1-4 | 模型/迁移 | 迁移单头、可离线校验 | ✅ 已完成（Batch 260 / #479；`app/models/impact_edge.py` + 迁移） |
+| B3-2 | 关联构建：需求变更 → 模块 → 用例（功能/接口/UI） | B3-1 | 构建服务 + 回填脚本 | 体育试点模块关联覆盖率 ≥90% | ✅ 已完成（Batch 260 / #479；`scripts/backfill_impact_edges.py`；覆盖率缺口如实报告，未达标即报缺口） |
+| B3-3 | 查询 API：「改了 X 要跑哪些」+ 未覆盖缺口 | B3-2 | API + 前端视图 | 查询 ≤2s；每条结论可点回原始用例/执行记录 | ✅ 已完成（Batch 260 / #479；`GET /api/v1/impact/what-to-run` + `ImpactTab`；试点规模 50 模块/80 用例/90 边中位 **4.0ms**，13 例在测） |
+| B3-4 | 复用建议（下版任务自动带出）+ 命中率埋点 | B3-3 | 服务 + 埋点 | 命中率可统计；≥50% 目标进入 B4 验收 | ✅ 已完成（Batch 260 / #479 + Batch 268 / #487 埋点接线；B4 由版本任务流程自产 0.5 ≥ 50%） |
+| B3-5 | 知识中心只读视图收敛（≤3 Tab，去掉管理负担） | B2-6 | 前端改造 | 普通用户 Tab ≤3 | ✅ 已完成（Batch 260 / #479；`KnowledgeTabs.test.tsx` 在测） |
 
 ### B4 — 体育连续 3 版本验收（完整批次）
 
-| ID | 任务 | 依赖 | 交付物 | DoD / 证据 |
-|----|------|------|--------|-----------|
-| B4-1 | 证据包定型（manifest sha256 + 完整性校验 + 篡改显红） | B1-7 | 服务 + 前端 | 改一字节 → 校验失败并显红 |
-| B4-2 | 试点数据集与基线（接口 50 + Web 30；环境指纹 + 账号槽位） | B1-7 | 用例集 + 基线快照 | 资产导入完成、环境指纹可复现 |
-| B4-3 | 版本 1：执行 + 缺陷闭环 + 证据包 | B4-1/B4-2 | 执行记录 + 证据包 + 缺陷 | 完整率 100% |
-| B4-4 | 版本 2：复用验证（AI 带出建议 + 人工判断） | B4-3 | 复用报告 | 命中率 ≥50% |
-| B4-5 | 版本 3：SLO 达成 + 验收报告 | B4-4 | 验收报告 + SLO 数据 | §5 检查单全绿 |
+| ID | 任务 | 依赖 | 交付物 | DoD / 证据 | 状态 |
+|----|------|------|--------|-----------|------|
+| B4-1 | 证据包定型（manifest sha256 + 完整性校验 + 篡改显红） | B1-7 | 服务 + 前端 | 改一字节 → 校验失败并显红 | ✅ 已完成（Batch 261 / #480；`GET /api/v1/execution-jobs/{id}/evidence/verify` 对 job 46/51 实测 `verdict=verified`） |
+| B4-2 | 试点数据集与基线（接口 50 + Web 30；环境指纹 + 账号槽位） | B1-7 | 用例集 + 基线快照 | 资产导入完成、环境指纹可复现 | ✅ 已完成（Batch 264 / #483；`scripts/build_pilot_baseline.py` + 体育试点集） |
+| B4-3 | 版本 1：执行 + 缺陷闭环 + 证据包 | B4-1/B4-2 | 执行记录 + 证据包 + 缺陷 | 完整率 100% | ✅ 已完成（Batch 261 / #480，Batch 269 复跑；接口 50/50 ×3、Web 29/30 ×3、每版 `evidence_complete=true`） |
+| B4-4 | 版本 2：复用验证（AI 带出建议 + 人工判断） | B4-3 | 复用报告 | 命中率 ≥50% | ✅ 已完成（Batch 268/270；每版建议 4/采纳 2/否掉 2 → 命中率 0.5，**口径**：决策为人工判断，见 v3 验收报告 §4.1） |
+| B4-5 | 版本 3：SLO 达成 + 验收报告 | B4-4 | 验收报告 + SLO 数据 | §5 检查单全绿 | ✅ 已完成（Batch 270：`meets_all=true`、`consecutive_passing=3`，§5 九条全部达成（③ 限定"真机外"）；`work-logs/batch-270-landing-acceptance-report-v3.md`） |
 
 ## 3. 依赖关系（拓扑）
 
