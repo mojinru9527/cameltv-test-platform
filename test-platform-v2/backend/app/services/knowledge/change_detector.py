@@ -15,7 +15,8 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Iterator
+from collections.abc import Iterator
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session

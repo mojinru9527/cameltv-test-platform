@@ -1,6 +1,15 @@
 fastapi>=0.110
 uvicorn[standard]>=0.27
-sqlalchemy>=2.0
+# 上界是必需的，别删：本仓所有 lock（requirements*.lock）与实际镜像都锁 sqlalchemy==2.0.51，
+# 但本文件此前写作 `sqlalchemy>=2.0` 不封顶 → CI 浮动到 2.1.x，同一个 PR 会同时踩两个坑：
+#   ① `postgresql://` 在 2.1 下解析到 psycopg(v3) 驱动 → CI 只装了 psycopg2-binary，
+#      于是 AITDE PostgreSQL Migration Drill 报 `ModuleNotFoundError: No module named 'psycopg'`；
+#   ② mypy 报错文案里的类型渲染从 `Result[Any]` 变成 `Result[*tuple[Any, ...]]`，而
+#      quality_ratchet.py 以**完整报错文案**为基线键 → 历史问题被判成「新增」，
+#      `QUALITY_RATCHET=FAIL`，任何后端 PR 都过不去。
+# 已用 A/B 证实与具体改动无关（未改动的 main 在同一环境下 ratchet=PASS）。
+# 升级请走「同时更新 4 个 lock + 重生成 ratchet 基线」的流程。
+sqlalchemy>=2.0,<2.1
 pydantic>=2.6
 pydantic-settings>=2.1
 pyjwt[crypto]>=2.13

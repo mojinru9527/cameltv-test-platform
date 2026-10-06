@@ -131,8 +131,8 @@ def enforce(db: Session, project_id: int, *, operation_type: str = "chat") -> No
             )
     except AIQuotaExceededError:
         raise
-    except Exception as exc:  # noqa: BLE001 - 台账查不出来就必须失败关闭
-        # 失败关闭：静默放行的配额检查等于没有检查（P1-6 明确要求）。
+    except Exception as exc:
+        # 宽泛捕获是有意的：台账查不出来就必须失败关闭，静默放行的配额检查等于没有检查。
         logger.exception(
             "AI 配额校验失败，按失败关闭拒绝本次调用: project=%s operation=%s",
             scope,
@@ -195,7 +195,8 @@ def record(
             )
         )
         session.commit()
-    except Exception:  # noqa: BLE001 - 记账永远不能打断业务调用
+    except Exception:
+        # 宽泛捕获是有意的：记账永远不能打断业务调用。
         logger.warning(
             "AI 用量记账失败（已忽略）: project=%s operation=%s",
             _project_scope(project_id),
@@ -205,11 +206,13 @@ def record(
         if session is not None:
             try:
                 session.rollback()
-            except Exception:  # noqa: BLE001 - 回滚失败也不再上抛
+            except Exception:
+                # 回滚失败也不再上抛。
                 logger.warning("AI 用量记账失败后回滚会话也失败（已忽略）", exc_info=True)
     finally:
         if session is not None:
             try:
                 session.close()
-            except Exception:  # noqa: BLE001 - 关闭失败同样不上抛
+            except Exception:
+                # 关闭失败同样不上抛。
                 logger.warning("AI 用量记账会话关闭失败（已忽略）", exc_info=True)
