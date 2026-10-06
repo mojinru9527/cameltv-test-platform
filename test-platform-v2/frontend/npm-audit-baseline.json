@@ -45,6 +45,7 @@
     "postcss-selector-parser|1241232",
     "proxy-agent|via:pac-proxy-agent",
     "puppeteer-core|via:@puppeteer/browsers",
+    "tailwindcss-animate|via:tailwindcss",
     "tailwindcss|via:chokidar",
     "tailwindcss|via:fast-glob",
     "tailwindcss|via:micromatch",
@@ -53,5 +54,6 @@
     "tmp|1109537",
     "tmp|1120654",
     "uuid|1119441"
-  ]
+  ],
+  "note": "基线为**并集**：Windows 本机（npm 11）与 CI Linux（npm 10）对同一锁文件的 npm audit 结果存在条目级差异（实测 tailwindcss-animate 仅在 Linux 侧被标记）。由于 ratchet 只在「新增」时失败、对「移除」容忍，取并集可让两侧同时通过，同时不降低对真正新增公告的拦截力。"
 }
