@@ -1,3 +1,14 @@
+---
+title: "ADR-0010: 知识切片向量化与混合检索（M2）"
+owner: "tech-lead"
+created: "2026-07-09"
+last_reviewed: "2026-07-09"
+status: "accepted"
+expires: "2027-07-09"
+tags: ["adr", "knowledge", "rag", "embedding", "hybrid-retrieval", "fastembed"]
+related: ["0009-knowledge-center-agent-continuous-learning.md", "0012-continuous-learning-closed-loop.md", "0013-llm-wiki-structured-knowledge-diff.md"]
+---
+
 # ADR-0010: 知识切片向量化与混合检索（M2）
 
 - **状态**：已接受（accepted）—— batch-12 实现落地并验证 D1–D4（35 用例绿；见下「验证」）

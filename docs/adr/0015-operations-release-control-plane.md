@@ -2,8 +2,8 @@
 title: "ADR-0015: 采用统一运维发布控制面交付测试平台"
 owner: "devops-team"
 created: "2026-07-30"
-last_reviewed: "2026-07-30"
-status: "proposed"
+last_reviewed: "2026-09-24"
+status: "accepted"
 expires: "2027-01-30"
 tags: ["adr", "deployment", "operations-platform", "release", "database-migration"]
 related:
@@ -16,7 +16,7 @@ related:
 
 ## 状态
 
-🟡 提议中
+✅ 已采纳（2026-09-24 改判；本 ADR 已是 test/production 的现行发布门禁，与 AGENTS.md §2.6、`docs/agent-team/release-cadence.md`、`docs/platform-refactor/10-landing-plan-task-backlog.md` 一致）
 
 ## 日期
 
@@ -135,6 +135,8 @@ production 只接受状态为 `TEST_VERIFIED` 的同一 release：
 deploy/release-control 已提供本地、无执行器依赖的核心：不可变 manifest 校验与 canonical SHA-256、JSON Schema 一致性检查、SQLite 追加写哈希事件链、test 环境锁/幂等和合法状态流转。它明确不接触 registry、Jenkins、Docker、数据库或目标环境；任何 production 请求在持久化前返回 PRODUCTION_NOT_CONFIGURED。
 
 这只是 Phase 1 的核心事实层，不改变本 ADR 的 proposed 状态，也不代表 test deployment、回滚演练、Phase 2 API/UI 或 Phase 3 production 已完成。后续适配器和 UI 必须消费该记录，而不能重新建立并行的发布事实源。
+
+> **2026-09-24 补注**：上句是 2026-08-02 当时的事实陈述。此后本 ADR 已改判为 **已采纳（accepted）**（见文首「状态」），并已成为 test/production 的现行发布门禁；此处保留原文以记录 Phase 1 当时的边界，不再代表当前状态。
 
 ### 7.2 2026-08-02 实施证据（Batch 62 Slice 5）
 

@@ -1,9 +1,9 @@
 ---
 title: "CamelTv 测试策略总纲"
 owner: "qa-team"
-last_reviewed: "2026-08-07"
+last_reviewed: "2026-09-24"
 status: "active"
-expires: "2026-12-26"
+expires: "2027-03-24"
 tags: ["testing", "strategy", "test-pyramid", "quality"]
 related: ["document-standards.md", "common-pitfalls.md", "repo-map.md", "../tests/CLAUDE.md"]
 ---
@@ -22,7 +22,7 @@ related: ["document-standards.md", "common-pitfalls.md", "repo-map.md", "../test
            ╱  (冒烟)   ╲         Playwright + 手动
           ╱─────────────╲
          ╱  集成/API 测试 ╲      中等 · 快 · 稳定
-        ╱  (pytest+httpx)  ╲      v2 pytest + v1 tp api
+        ╱  (pytest+httpx)  ╲      平台 pytest + 自包含回归脚本
        ╱───────────────────╲
       ╱     单元测试         ╲    大量 · 极快 · 最稳定
      ╱   (pytest / vitest)   ╲    核心业务逻辑
@@ -32,7 +32,7 @@ related: ["document-standards.md", "common-pitfalls.md", "repo-map.md", "../test
 | 层级 | 工具 | 覆盖目标 | 执行频率 | 失败即阻塞 |
 |------|------|---------|---------|-----------|
 | **单元测试** | pytest (BE) + vitest (FE) | 核心 Service 80%+ | 每次 PR | ✅ 是 |
-| **集成/API 测试** | pytest + httpx (BE) / tp api (v1 CLI) | 所有公开 API 90%+ | 每次 PR + 每日回归 | ✅ 是 (关键路径) |
+| **集成/API 测试** | pytest + httpx (BE) / Playwright API (TS) / `scripts/ci/api-regression.ps1` | 所有公开 API 90%+ | 每次 PR + 每日回归 | ✅ 是 (关键路径) |
 | **E2E / 冒烟** | Playwright / 手动 | P0 用户旅程 100% | 每日 + 部署后 + 生产验收 | ✅ P0 生产验收失败即阻塞 |
 
 ---
@@ -72,10 +72,12 @@ test-platform-v2/frontend/src/
 - 覆盖：入参校验 / 业务逻辑 / 返回值结构 / 权限校验
 - 参照 [tests/test-case-standards/API接口测试方案.md](../tests/test-case-standards/API接口测试方案.md)
 
-**v1 CLI (tp api)**：
-- Playwright 驱动的 API 测试引擎
-- 覆盖：v1 工具套件 (Swagger 自动生成 + 手动)
+**接口回归脚本（`scripts/ci/api-regression.ps1`）**：
+- 自包含 PowerShell 驱动（health / run / collect-elk 三个子命令），代替已退役的 v1 `tp api` CLI
+- 每日 API 回归（`.github/workflows/api-regression.yml`，02:03 UTC）与生产冒烟（`prod-smoke-test.yml`，08:07 UTC）均调用它，并跑 `tests/api-testing/generated/` 下的 Playwright API 用例
 - 参照 [tests/test-case-standards/接口测试规范.md](../tests/test-case-standards/接口测试规范.md)
+
+> ⚠️ v1（`test-platform/`）已于 Batch 100 退役；`tp api` 等命令不再存在，回归资产迁移至 `tests/api-testing/generated/`（见 [.claude/skills/cameltv-api-test/SKILL.md](../.claude/skills/cameltv-api-test/SKILL.md)）。
 
 **接口用例三要素**（每个 endpoint 必须覆盖）：
 1. **入参校验**：必填缺失、类型错误、边界值、特殊字符/SQL 注入
@@ -110,9 +112,9 @@ test-platform-v2/frontend/src/
 
 | 类型 | 工具 | 频率 | 说明 |
 |------|------|------|------|
-| **音视频质量** | v1 `av_checker` + v2 专项模块 | 版本发布前 | 清晰度/流畅度/延迟 |
-| **性能测试** | v1 `load_tester` | 大版本前 | 并发/响应时间 |
-| **安全测试** | 手动 + 工具 | 季度 | OWASP Top 10 |
+| **音视频质量** | 平台 v2 `/special` 专项模块（代码冻结为 API-only） | 授权设备就绪后 | 清晰度/流畅度/延迟；缺授权设备，已从菜单与文档宣称下架，见 [docs/platform-refactor/02-function-abc-whitelist.md](platform-refactor/02-function-abc-whitelist.md) §3 |
+| **性能测试** | 平台 v2 `/perftest` 性能监控（同上下架） | 授权设备就绪后 | 并发/响应时间；v1 `load_tester` 已随 v1 退役 |
+| **安全测试** | 手动 + 静态守卫（`app/core/url_guard.py`、`spec_guard.py`）+ 工具 | 季度 | OWASP Top 10；出网/生成代码路径由回归用例兜底 |
 
 ---
 
@@ -165,7 +167,7 @@ push main ──→ 主干合并冒烟（F821/导入/Alembic 单头/typecheck/bu
 |------|------|------|
 | **本地** | 开发自测、新用例调试 | 个人 SQLite / Mock |
 | **test** | CI 自动回归、集成测试 | 共享测试库（可重置） |
-| **staging** | 预发布验证、E2E | 脱敏生产数据 |
+| **staging** | **未单独启用**（以 test / 生产同构实例 + 本地全栈承担预发布验证） | 不适用（无独立实例/库）；见 [docs/agent-team/staging-environment.md](agent-team/staging-environment.md) |
 | **prod** | 仅冒烟（只读） | 生产数据 |
 
 ---

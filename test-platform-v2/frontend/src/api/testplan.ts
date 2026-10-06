@@ -68,7 +68,10 @@ export interface TriageResult {
 }
 
 export async function triagePlanFailures(planId: number): Promise<TriageResult> {
-  return api.post(`/test-plans/${planId}/triage`)
+  // P1-7：后端 /triage 默认只跑规则引擎（不再隐式触发 LLM）。用户在界面上点
+  // 「开始分诊」是一次明确动作，故这里显式传 use_llm=true；该调用同时受平台级
+  // AI 额度与频率限制（ai_guard）约束。
+  return api.post(`/test-plans/${planId}/triage`, null, { params: { use_llm: true } })
 }
 
 export interface TriageDefectDraft {

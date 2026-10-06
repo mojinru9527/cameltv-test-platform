@@ -189,7 +189,7 @@ related: ["CLAUDE.md", "docs/business-glossary.md", "docs/adr/README.md"]
 | 配置 CI/CD 流水线 | `Jenkinsfile` + `deploy/jenkins/` + `.github/workflows/` |
 | 提取蓝湖原型数据 | `lanhu-mcp/` → `python lanhu_mcp_server.py` |
 | 添加新的架构决策 | `docs/adr/template.md` → 创建新 ADR |
-| 了解 v1 CLI 工具 | `COMMANDS.md` 第 5 节 + `test-platform/tools/` |
+| 了解 v1 及历史 CLI 工具 | `COMMANDS.md` 第 2、5 节（仅历史参考；v1 已于 Batch 100 退役，`test-platform/tools/` 已删除，回归资产在 `tests/api-testing/` + `scripts/ci/api-regression.ps1`） |
 | 部署到测试环境 | `deploy/jenkins/` → Jenkins 自动触发或 `docker compose up -d` |
 
 ---

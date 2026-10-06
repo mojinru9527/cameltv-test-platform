@@ -10,7 +10,7 @@ related: ["test-platform-v2/backend/README.md", "test-platform-v2/frontend/READM
 
 # CamelTv 测试平台 v2（前后端分离重构）
 
-> 按《测试平台-前后端分离重构方案 v2.1》搭建的全新项目，与重构前的 `../test-platform/` 物理隔离。
+> 按《测试平台-前后端分离重构方案 v2.1》搭建的全新项目；重构前的 v1（`../test-platform/`）已于 Batch 100 退役移除。
 
 ## 架构
 

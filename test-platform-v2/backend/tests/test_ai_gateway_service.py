@@ -35,7 +35,7 @@ def test_chat_requires_internal_token(monkeypatch):
     assert response.status_code == 401
 
 
-def test_chat_delegates_to_shared_client(monkeypatch):
+def test_chat_delegates_to_shared_client(db_session, monkeypatch):
     monkeypatch.setattr(config.settings, "ai_gateway_token", "secret")
     monkeypatch.setattr(config.settings, "ai_gateway_role", "gateway")
     monkeypatch.setattr(
@@ -43,16 +43,27 @@ def test_chat_delegates_to_shared_client(monkeypatch):
         "chat_completions_full",
         lambda *a, **k: {"content": '{"ok":true}', "model_name": "m"},
     )
-    response = client.post(
-        "/internal/ai/v1/chat",
-        headers={"X-AI-Gateway-Token": "secret"},
-        json={
-            "project_id": 1,
-            "system_prompt": "s",
-            "user_message": "u",
-            "cache_namespace": "n",
-        },
-    )
+    # P1-6 起 chat handler 会先过平台配额闸门（查 model_usage_ledger）并写台账，
+    # 因此必须注入测试会话，不能再用进程默认的空库。
+    from app.core.db import get_db
+
+    def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        response = client.post(
+            "/internal/ai/v1/chat",
+            headers={"X-AI-Gateway-Token": "secret"},
+            json={
+                "project_id": 1,
+                "system_prompt": "s",
+                "user_message": "u",
+                "cache_namespace": "n",
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
     assert response.status_code == 200
     assert response.json()["data"]["model_name"] == "m"
 

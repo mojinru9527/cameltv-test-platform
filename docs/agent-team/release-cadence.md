@@ -1,7 +1,7 @@
 ---
 title: "版本发布节奏：合代码 ≠ 发版本"
 owner: "qa-team"
-last_reviewed: "2026-08-07"
+last_reviewed: "2026-09-24"
 status: "active"
 expires: "2026-12-31"
 tags: ["release", "cadence", "release-train", "deployment", "batch"]
@@ -50,13 +50,13 @@ main（已合入多个批次）
 | 环境 | 触发 | 说明 |
 |------|------|------|
 | test | 每日固定窗口自动部署最近 main | Jenkins 每日构建 + Deploy Test 阶段；合入 main 本身不触发部署 |
-| staging | 手动 / release 窗口 | 预发布验证 |
+| staging | —（未单独启用） | 不单独启用；以 test / 生产同构实例 + 本地全栈承担预发布验证（见 CLAUDE.md 环境速览、`staging-environment.md`） |
 | prod | 每周 release 窗口 + 审批 | ADR-0015 晋级：`TEST_VERIFIED` → 审批 → 备份 → 迁移 → 发布 → 冒烟 |
 
 ## 4. 批次粒度合并指引
 
 - **同域小修复合并**：多个同域小修复（如本周 UI 修复）归并为一个轻量批次，走一次六部门流水线，而不是每个修复一个批次。
-- **纯文档/证据合并**：README/ADP/work-logs 类改动合并提交，不单独开 PR。
+- **纯文档/证据合并**：README/ADR/work-logs 类改动合并提交，不单独开 PR。
 - **轻量批次判定不变**：是否引入新行为/新接口/新配置/新依赖仍是完整 vs 轻量的唯一标准（见 pipeline-modes.md）。
 
 ## 5. 与现有流程的关系
@@ -70,3 +70,4 @@ main（已合入多个批次）
 | 日期 | 批次 | 变更摘要 |
 |------|------|---------|
 | 2026-08-07 | Batch 115 | 新增发布节奏事实源：合代码 ≠ 发版本；发布火车 + 定时部署窗口 + 批次合并指引 |
+| 2026-09-24 | 文档纠偏 | §3 部署节奏：staging 不再列为独立环境（未单独启用，由 test/生产同构实例 + 本地全栈承担预发布验证，与根 `CLAUDE.md` 及 `staging-environment.md` 对齐）；§4 修正 `README/ADR/work-logs` 笔误 |

@@ -1,3 +1,14 @@
+---
+title: "ADR-0026: Production execution ownership and resource admission"
+owner: "qa-team"
+created: "2026-09-09"
+last_reviewed: "2026-09-09"
+status: "accepted"
+expires: "2027-09-09"
+tags: ["adr", "production", "runner", "resource-admission", "release-manifest"]
+related: ["0015-operations-release-control-plane.md", "0019-task-queue-and-soft-delete-conventions.md", "0020-os-level-sandbox-deployment-assessment.md"]
+---
+
 # ADR-0026: Production execution ownership and resource admission
 
 Date: 2026-09-08. Status: accepted for opt-in implementation; production cutover

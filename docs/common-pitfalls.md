@@ -1,9 +1,9 @@
 ---
 title: "CamelTv 常见陷阱与已知问题"
 owner: "qa-team"
-last_reviewed: "2026-08-10"
+last_reviewed: "2026-09-24"
 status: "active"
-expires: "2026-12-26"
+expires: "2027-03-24"
 tags: ["pitfalls", "troubleshooting", "known-issues", "debugging", "onboarding"]
 related: ["CLAUDE.md", "test-platform-v2/CLAUDE.md", "lanhu-mcp/CLAUDE.md", "tests/CLAUDE.md"]
 ---
@@ -160,7 +160,7 @@ if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not os.environ.get("ENVIRONM
 
 **现象**：Playground 批量编译回写的 UI 任务（`[Playground] ...`）在生产重新部署后全部执行失败，报「测试脚本不存在: generated/playground-case-*.spec.ts」，而打包的 `specs/production-*.spec.ts` 任务正常（2026-08-17 生产实测：134 个 UI 任务中 126 个受影响）。
 
-**根因**：`playground_service._write_spec_as_ui_job` 把生成 spec 写到 `tests/playwright/generated/`（容器内临时文件系统），Railway/Vercel 每次重部署（main push 自动触发）即清空该目录；任务行持久化在数据库里，但引用的 spec 文件没了。同类风险：一切「运行时生成 + 被持久化任务/记录引用」的文件（版本任务 UI draft 等）。
+**根因**：`playground_service._write_spec_as_ui_job` 把生成 spec 写到 `tests/playwright/generated/`（容器内临时文件系统），每次生产重部署（main 合入后重建镜像 + `docker compose up --force-recreate backend frontend`，2026-08-22 起为腾讯云单机）即清空该目录；任务行持久化在数据库里，但引用的 spec 文件没了。同类风险：一切「运行时生成 + 被持久化任务/记录引用」的文件（版本任务 UI draft 等）。
 
 **解决方案**：
 1. 写入口同步把生成文件复制到持久卷（`/app/storage/playground-specs`，即 `playwright_executor.GENERATED_SPECS_STORAGE`）。
@@ -184,7 +184,7 @@ if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not os.environ.get("ENVIRONM
 - 无对应的后端 API 调用（Network 面板无 `/api/v1/apitest` 等请求）
 - v2 CLAUDE.md 模块成熟度表中标记为 🧪 演示态
 
-**正确预期**：这三个模块不用于生产测试，不要误认为功能已完善。实际 API 测试使用 v1 的 `tp api` CLI，实际 UI 自动化使用 `tests/automation/ui/` 下的 Playwright 脚本。
+**正确预期**：这三个模块不用于生产测试，不要误认为功能已完善。实际 API 测试使用自包含回归脚本 `scripts/ci/api-regression.ps1`（`health` / `run` / `collect-elk`）与 `tests/api-testing/generated/` 下的 Playwright API 用例，实际 UI 自动化使用 `tests/automation/ui/` 下的 Playwright 脚本。v1 的 `tp api` CLI 已随 v1 于 Batch 100 退役，不再存在。
 
 **相关文件**：`test-platform-v2/CLAUDE.md`（功能模块成熟度表）
 
@@ -408,12 +408,16 @@ persist(
 3. 手写的接口请求代码没有类型守卫
 
 **解决方案**：
-1. API 测试开发迭代的标准流程：
+1. API 测试开发迭代的标准流程（接口契约与资产已随 v1 退役迁至 `tests/api-testing/`，不再有 `tp api` CLI）：
    ```bash
-   tp api pull --source "tests/api-testing/specs/cameltv-openapi.yaml"
+   # ① 更新契约 spec：tests/api-testing/specs/cameltv-openapi.yaml（手工维护或从 OpenAPI URL 导入）
+   # ② 安装依赖 + 类型检查（用例在 generated/ 下生成）
    cd tests/api-testing/generated
    npm install
    npx tsc --noEmit  # 0 错误才算通过
+   # ③ 打本地后端验证
+   cd ../../..
+   pwsh scripts/ci/api-regression.ps1 run -BaseUrl "http://localhost:8000" -AuthToken $env:CAMELTV_AUTH_TOKEN -ReportDir "artifacts"
    ```
 2. 前端类型同步：
    ```bash
@@ -426,7 +430,10 @@ persist(
 
 ---
 
-### 4.3 v1 和 v2 端口冲突
+### 4.3 v1 和 v2 端口冲突（历史条目，v1 已于 Batch 100 退役）
+
+> ⚠️ **历史条目**：v1（`test-platform/`）已于 Batch 100 整体移除，`test-platform/server/main.py` 不存在，
+> 本节不再可复现，保留原因是"同端口多实例互相冲突"的排查思路仍然通用。
 
 **现象**：启动第二个服务时报 `Address already in use`。
 
@@ -437,16 +444,16 @@ persist(
 同时启动 v1 和 v2 会导致端口冲突。
 
 **解决方案**：
-1. **不要同时启动 v1 和 v2**——优先使用 v2
-2. 如果需要同时运行，在启动命令中指定不同端口：
+1. **不要同时启动 v1 和 v2**——v1 已退役，只用 v2
+2. 现在同一风险来自**多 worktree 并行**：每个 worktree 必须使用独立的前后端端口。在启动命令中指定不同端口：
    ```bash
-   # v2 使用默认端口
+   # v2 默认端口
    uvicorn app.main:app --port 8000
-   # v1 使用备用端口
-   uvicorn server.main:app --port 8001
+   # 第二个 worktree 使用备用端口
+   uvicorn app.main:app --port 8001
    ```
 
-**相关文件**：`COMMANDS.md`、`test-platform-v2/backend/app/main.py`、`test-platform/server/main.py`
+**相关文件**：`COMMANDS.md`、`test-platform-v2/backend/app/main.py`、`scripts/git/start-agent-team-task.ps1`（`-FrontendPort` / `-BackendPort`）
 
 ---
 
@@ -667,7 +674,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 **解决方案**：
 1. 代码：可联网机器本地 `git clone`（含 `lanhu-mcp` 子模块）→ 打 tar → scp 到服务器。
 2. 镜像：**本机构建** `docker build` → `docker save` →（gzip）→ scp → `docker load`；不要在服务器上 `compose build`。
-3. lanhu-mcp 构建源：服务器本地构建用 `test-platform-v2/backend/Dockerfile.local`（COPY 子模块，不走 git clone）；云端构建（Railway/CI）仍用主 Dockerfile（clone 路径）。
+3. lanhu-mcp 构建源：服务器本地构建用 `test-platform-v2/backend/Dockerfile.local`（COPY 子模块，不走 git clone）；云端/CI 构建仍用主 Dockerfile（clone 路径）。
 
 **相关文件**：`test-platform-v2/backend/Dockerfile`、`test-platform-v2/backend/Dockerfile.local`、`docs/ops/tencent-cloud-migration.md` 附录 B1。
 
@@ -679,11 +686,11 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 **解决方案**：`ufw allow 80/tcp && ufw allow 443/tcp`（部署纪律：控制台 + ufw 双放行）。
 
-### 7.3 Dockerfile COPY 与 bind-mount 在云构建的兼容性
+### 7.3 Dockerfile COPY 与 bind-mount 在云构建的兼容性（历史根因：Railway，2026-08-22 已下线）
 
-**现象**：#300（COPY 本地优先、缺失回退）与 #302（BuildKit bind-mount）都在 Railway 构建失败（COPY 源缺失 / `other mount types are not supported`）。
+**现象**：#300（COPY 本地优先、缺失回退）与 #302（BuildKit bind-mount）当时都在 Railway 构建失败（COPY 源缺失 / `other mount types are not supported`）。
 
-**根因**：Railway builder 以 archive 发运仓库（子模块空目录被丢弃）；Metal builder 只支持 `type=cache` 挂载。
+**根因（历史）**：Railway builder 以 archive 发运仓库（子模块空目录被丢弃）；Metal builder 只支持 `type=cache` 挂载。该平台已于 2026-08-22 下线，但约束在现代 CI builder 上仍可能复现，故保留结论。
 
 **解决方案**：统一走「主 Dockerfile clone 路径」；本地/离线服务器用独立本地变体 `Dockerfile.local`（勿把 COPY 子模块的语句加回主 Dockerfile）。
 
@@ -691,9 +698,9 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 **现象**：迁移后 AI provider 报 `InvalidToken`（Fernet 解密失败）。
 
-**根因**：Fernet 密钥 = `sha256(SECRET_KEY)`；本地旧 production.env 的 SECRET_KEY 与 Railway 生产值不同，`api_key_encrypted` 无法解密。
+**根因**：Fernet 密钥 = `sha256(SECRET_KEY)`；本地旧 production.env 的 SECRET_KEY 与旧托管平台（Railway，已于 2026-08-22 下线）的生产值不同，`api_key_encrypted` 无法解密。
 
-**解决方案**：从旧生产环境（Railway variable / 密码管理器）拉取生产 SECRET_KEY 对齐；轮换 SECRET_KEY 会使所有加密 API Key 失效（需在「AI 配置」重新录入，见 backend/CLAUDE.md）。
+**解决方案**：从旧生产环境（迁移前的 Railway variable / 密码管理器）拉取生产 SECRET_KEY 对齐；轮换 SECRET_KEY 会使所有加密 API Key 失效（需在「AI 配置」重新录入，见 backend/CLAUDE.md）。
 
 ### 7.5 compose 改密码后容器不生效
 
@@ -721,7 +728,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 **现象**：无 dump 就无法做数据回滚。
 
-**解决方案**：迁移后固定保留 PG dump（`pg_dump -Fc`，`/opt/cameltv-backup/` + 本地 `F:\CamelTv-safe-backup\supabase-dump\cameltv-prod.dump`）；恢复用 `pg_restore --clean --if-exists`（仅空新库）。
+**解决方案**：生产固定保留 PG dump（`pg_dump -Fc`，腾讯云主机 `/opt/cameltv-backup/cameltv-prod-<日期>-<时间>.dump`，单份约 57–67MB，见 `docs/ops/restore-drill.md`）；恢复用 `pg_restore --clean --if-exists`（仅空新库）。**历史基线**：迁移前另有一份旧 Supabase 全库 dump（本地 `F:\CamelTv-safe-backup\supabase-dump\cameltv-prod.dump`），Supabase 已于 2026-08-22 下线，该文件只作迁移前对照，不再是恢复来源。
 
 ---
 

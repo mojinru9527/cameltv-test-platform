@@ -13,6 +13,10 @@ services:
       AI_GATEWAY_URL: http://ai-gateway:8100
       AI_GATEWAY_TOKEN: ${AI_GATEWAY_TOKEN:?AI_GATEWAY_TOKEN is required}
       AI_GATEWAY_ROLE: remote
+      # P1-8：Job 回收重试上限（认领 API 在本服务；到顶即 failed 终态，不再无限重排）。
+      AI_JOB_MAX_ATTEMPTS: ${AI_JOB_MAX_ATTEMPTS:-3}
+      # P1-9：入库 → 变更检测 → 自动 Agent（出网 LLM）的显式 opt-in，默认关。
+      KNOWLEDGE_AUTO_AGENT_ENABLED: ${KNOWLEDGE_AUTO_AGENT_ENABLED:-false}
     depends_on:
       runner:
         condition: service_healthy
@@ -38,6 +42,11 @@ services:
     environment:
       AI_GATEWAY_ROLE: gateway
       AI_GATEWAY_TOKEN: ${AI_GATEWAY_TOKEN:?AI_GATEWAY_TOKEN is required}
+      # P1-6：ai-gateway 是全部委派 LLM 调用的唯一咽喉，配额闸门在这里兜底；
+      # 显式声明便于在 split 拓扑下单独调整（backend / runner 继承同一组默认值）。
+      AI_GUARD_ENABLED: ${AI_GUARD_ENABLED:-true}
+      AI_RATE_LIMIT_PER_MINUTE: ${AI_RATE_LIMIT_PER_MINUTE:-60}
+      AI_DAILY_TOKEN_BUDGET: ${AI_DAILY_TOKEN_BUDGET:-2000000}
       WORKER_EXECUTION_ENABLED: "false"
     expose:
       - "8100"
@@ -71,6 +80,9 @@ services:
       ORCHESTRATION_BUDGET_CAPACITY: "1"
       HEAVY_TASK_BUDGET_DIR: /app/storage/resource-budget
       KNOWLEDGE_EMBEDDING_SCHEDULE_ENABLED: ${KNOWLEDGE_EMBEDDING_SCHEDULE_ENABLED:-false}
+      # P1-9：UI 执行失败 → 入库 → 变更检测 → 自动 Agent 这条链路的入口在 runner 进程
+      # （playwright_executor），必须和 backend 用同一个 opt-in 开关，否则关不干净。
+      KNOWLEDGE_AUTO_AGENT_ENABLED: ${KNOWLEDGE_AUTO_AGENT_ENABLED:-false}
     volumes:
       - tp-generated-specs:/app/tests/playwright/specs/generated
       - tp-generated-jobs:/app/tests/playwright/generated
@@ -90,6 +102,13 @@ services:
       AI_GATEWAY_URL: http://ai-gateway:8100
       AI_GATEWAY_TOKEN: ${AI_GATEWAY_TOKEN:?AI_GATEWAY_TOKEN is required}
       AI_GATEWAY_ROLE: remote
+      # 凭据最小化（P0-4）：本服务 WORKER_EXECUTION_ENABLED=true，会在进程内派生
+      # DSH 子进程，因此必须持有 DSH Key。这里必须**显式重复**声明：
+      # 本覆盖文件用 mapping 形式重写 environment，实测会把主 compose 里
+      # `- DSH_API_KEY=` 那条 list 形式条目挤掉（`docker compose config` 渲染结果
+      # 里 aitde-worker 拿不到该变量）——这正是 scripts/ops/verify-credential-isolation.py
+      # 用来兜底的场景。
+      DSH_API_KEY: ${DSH_API_KEY:-}
       HEAVY_TASK_BUDGET_ENABLED: "true"
       HEAVY_TASK_BUDGET_CAPACITY: "1"
       ORCHESTRATION_BUDGET_CAPACITY: "1"

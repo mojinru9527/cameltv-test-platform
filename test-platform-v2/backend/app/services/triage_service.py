@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 
 from sqlalchemy.orm import Session
 
@@ -245,11 +246,21 @@ def _rule_based_classify(failure: dict) -> dict:
 
 
 def _llm_deep_analyze(db, project_id: int, classified: list[dict]) -> list[dict]:
-    """使用 LLM 深度分析失败用例。如 LLM 不可用，返回原始分类。"""
+    """使用 LLM 深度分析失败用例。如 LLM 不可用，返回原始分类。
+
+    注意：本函数**直连 httpx** 调 DeepSeek，绕过了 ai-gateway 的统一咽喉，
+    因此必须自带 P1-6 配额闸门（调用前 enforce、调用后 record + 台账）。
+    闸门抛错时由调用方降级为纯规则分类（见 triage_failed_cases），不会白烧一次调用。
+    """
     if not classified:
         return classified
 
     import httpx
+
+    from app.services import ai_guard
+    from app.services.ai_client import normalize_token_usage
+
+    ai_guard.enforce(db, project_id, operation_type="triage_deep_analyze")
 
     cfg = ai_config_service.resolve(db, project_id)
 
@@ -277,6 +288,8 @@ def _llm_deep_analyze(db, project_id: int, classified: list[dict]) -> list[dict]
 
     user_msg = "请分析以下失败用例:\n\n" + "\n\n".join(cases_text)
 
+    started = time.perf_counter()
+    usage: dict = {}
     try:
         with httpx.Client(timeout=120.0) as client:
             resp = client.post(
@@ -298,6 +311,8 @@ def _llm_deep_analyze(db, project_id: int, classified: list[dict]) -> list[dict]
             )
             resp.raise_for_status()
             data = resp.json()
+            # 复用 ai_client 的口径解析 usage（OpenAI / DeepSeek 两种信封都能认）
+            usage = normalize_token_usage(data.get("usage"))
             content = data["choices"][0]["message"]["content"]
             llm_result = json.loads(content)
 
@@ -311,5 +326,14 @@ def _llm_deep_analyze(db, project_id: int, classified: list[dict]) -> list[dict]
                     classified[idx]["explanation"] = item.get("explanation", classified[idx]["explanation"])
                     classified[idx]["suggested_action"] = item.get("suggested_action", classified[idx]["suggested_action"])
         return classified
-    except Exception:
-        raise  # 让调用方降级
+    finally:
+        # 无论成败都记一行：失败（0 token）同样占用每分钟请求额度，避免异常路径绕过闸门
+        ai_guard.record(
+            db,
+            project_id,
+            operation_type="triage_deep_analyze",
+            model_ref=str(getattr(cfg, "model", "") or ""),
+            input_units=int(usage.get("input_tokens") or 0),
+            output_units=int(usage.get("output_tokens") or 0),
+            latency_ms=int((time.perf_counter() - started) * 1000),
+        )

@@ -26,7 +26,7 @@ related: ["template.md", "0001-use-python-fastapi-monostack.md", "../document-st
 | [0007](0007-deepseek-llm-test-case-generation.md) | DeepSeek LLM 驱动 AI 测试用例生成 | ✅ 已采纳 | 2026-03 |
 | [0008](0008-jenkins-github-actions-dual-cicd.md) | Jenkins + GitHub Actions 双通道 CI/CD | ✅ 已采纳 | 2026-01 |
 | [0013](0013-llm-wiki-structured-knowledge-diff.md) | 自建 LLM-Wiki 结构化知识层与 RAG/Wiki 差异对比 | ✅ 已采纳 | 2026-07 |
-| [0015](0015-operations-release-control-plane.md) | 采用统一运维发布控制面交付测试平台 | 🟡 提议中 | 2026-07 |
+| [0015](0015-operations-release-control-plane.md) | 采用统一运维发布控制面交付测试平台 | ✅ 已采纳 | 2026-07 |
 | [0016](0016-three-repository-separation.md) | 测试平台三仓分离（前端 / 后端 / 运维平台） | ✅ 已采纳 | 2026-08 |
 | [0017](0017-test5-runner-network-isolation.md) | Test5 验收执行器网络隔离（WSL/容器） | ✅ 已采纳 | 2026-08 |
 | [0018](0018-dsh-harness-integration.md) | 接入 DeepSeek Harness（dsh）执行型智能体能力 | ✅ 已采纳 | 2026-08 |

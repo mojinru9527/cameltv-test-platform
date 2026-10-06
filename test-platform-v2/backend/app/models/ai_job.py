@@ -22,6 +22,7 @@ class AiJob(Base, TimestampMixin):
     capability: Mapped[str] = mapped_column(String(128), default="", index=True)
     model_hint: Mapped[str] = mapped_column(String(128), default="")
     timeout_seconds: Mapped[int] = mapped_column(Integer, default=900)
+    attempt_count: Mapped[int] = mapped_column(Integer, default=0)
     agent_id: Mapped[str] = mapped_column(String(64), default="", index=True)
     result_json: Mapped[str] = mapped_column(Text, default="{}")
     summary: Mapped[str] = mapped_column(Text, default="")

@@ -1,3 +1,14 @@
+---
+title: "ADR-0023: AI 链 C 条件收敛（C3/C4/C5/C6/C7）"
+owner: "qa-team"
+created: "2026-09-02"
+last_reviewed: "2026-09-02"
+status: "accepted"
+expires: "2027-09-02"
+tags: ["adr", "ai", "llm-client", "evaluation", "loader"]
+related: ["0022-ai-chain-reality-gate.md", "0024-execution-chain-c1c2.md"]
+---
+
 # ADR-0023 — AI 链 C 条件收敛（C3/C4/C5/C6/C7，Batch 208）
 
 > Status: Accepted (2026-09-02) | Owner: qa-team | Tags: ai, llm-client, evaluation, loader

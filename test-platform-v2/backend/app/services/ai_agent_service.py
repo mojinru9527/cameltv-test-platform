@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import secrets
 from datetime import UTC, datetime
 
@@ -18,6 +19,8 @@ from app.core.config import settings
 from app.core.exceptions import APIException
 from app.models.ai_agent_token import AiAgentToken
 from app.models.ai_job import AiAgent, AiJob, AiResult
+
+logger = logging.getLogger("ai.agent")
 
 AGENT_TOKEN_PREFIX = "agt_"
 
@@ -155,22 +158,66 @@ def get_job(db: Session, *, project_id: int, job_id: int) -> AiJob | None:
 
 # ── 认领 / 心跳 / 上报 ─────────────────────────────────────────
 
+def _max_attempts() -> int:
+    """单个 Job 允许的最大认领次数（<=0 视为配置错误，按 1 处理，失败关闭）。"""
+    return max(1, int(settings.ai_job_max_attempts))
+
+
 def reclaim_stale_jobs(db: Session, *, stale_seconds: int | None = None) -> int:
-    """把心跳超时的 running 任务放回 pending，避免 Agent 崩溃后任务永久卡死。"""
+    """把心跳超时的 running 任务放回 pending，避免 Agent 崩溃后任务永久卡死。
+
+    P1-8：回收必须有界。原实现无条件 `status="pending"`，而本函数在**每次**认领时
+    都会执行（`claim_job`），于是「Agent 失联」或「timeout_seconds 大于
+    ai_job_stale_seconds」的任务会永远 认领 → 超时 → 再认领，每轮白烧一次 LLM。
+    现在按 `AiJob.attempt_count` 计数：未到上限才重排，到达/超过上限直接置为
+    `failed` 终态并写清原因，绝不再次入队。
+    """
     seconds = settings.ai_job_stale_seconds if stale_seconds is None else stale_seconds
     cutoff = _now().timestamp() - max(1, int(seconds))
+    cap = _max_attempts()
     reclaimed = 0
+    # 终态失败与重新入队都要落库，故单独记录「是否有行被改动」
+    changed = False
     rows = db.scalars(select(AiJob).where(AiJob.status == "running")).all()
     for job in rows:
         heartbeat = job.heartbeat_at or job.locked_at or job.started_at
         if heartbeat is None or heartbeat.timestamp() <= cutoff:
+            attempts = int(job.attempt_count or 0)
+            if attempts >= cap:
+                # 到顶：终态失败，不再重排（每次回收都要留下可追溯的原因）
+                job.status = "failed"
+                job.finished_at = _now()
+                job.error_message = (
+                    f"reclaimed {attempts} times, exceeded ai_job_max_attempts={cap}: "
+                    "agent heartbeat lost"
+                )
+                job.locked_at = None
+                job.heartbeat_at = None
+                changed = True
+                logger.warning(
+                    "AI Job %s 回收次数达上限（attempt %s/%s），标记为 failed 终态，不再重新入队 "
+                    "(agent_id=%s, job_type=%s)",
+                    job.id,
+                    attempts,
+                    cap,
+                    job.agent_id or "-",
+                    job.job_type,
+                )
+                continue
             job.status = "pending"
             job.agent_id = ""
             job.locked_at = None
             job.heartbeat_at = None
             job.error_message = "reclaimed: agent heartbeat lost"
             reclaimed += 1
-    if reclaimed:
+            changed = True
+            logger.info(
+                "AI Job %s 心跳丢失被回收重新入队（attempt %s/%s）",
+                job.id,
+                attempts,
+                cap,
+            )
+    if changed:
         db.commit()
     return reclaimed
 
@@ -197,6 +244,8 @@ def claim_job(db: Session, agent_id: str, capabilities: list[str], *, project_id
         job.locked_at = now
         job.heartbeat_at = now
         job.started_at = job.started_at or now
+        # P1-8：每次认领即一次 attempt，供 reclaim_stale_jobs 判断是否到顶
+        job.attempt_count = int(job.attempt_count or 0) + 1
         job.error_message = ""
         db.commit()
         db.refresh(job)

@@ -11,7 +11,8 @@
   "environment": { "id": 1, "name": "体育平台-生产", "env_type": "prod", "base_url": "https://www.camel1.tv" },
   "ui_job": { "id": 1, "name": "体育平台-生产只读冒烟", "test_spec": "specs/production-smoke.spec.ts" },
   "schedule": { "id": 1, "name": "体育平台-每日API回归", "enabled": false, "note": "Test5 内网服务从公网后端不可达；内网回归由 CI api-regression workflow 承担" },
-  "ci_token": "<REDACTED> (sports-ci, 请保存)",
+  "ci_token": "<REDACTED>",
+  "ci_token_note": "原值 tpat_*(sports-ci) 是**可用**的平台 API Token，曾随本证据文件进入公开仓库，已判定为凭据泄漏。明文只允许存放于密钥管理器 / CI Secret，禁止再次入库；本文档如需引用，只写 token_prefix（形如 tpat_XXXXXXXX）。",
   "ui_run": {
     "run_id": 4,
     "status": "fail",

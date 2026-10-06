@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import LargeBinary, String, Text
+from sqlalchemy import LargeBinary, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -193,6 +193,27 @@ class AgentQueueItem(Base):
     locked_at: Mapped[datetime | None] = mapped_column(default=None)
     locked_by: Mapped[str] = mapped_column(default="")
     finished_at: Mapped[datetime | None] = mapped_column(default=None)
+
+
+class KnowledgeTriggerDebounce(Base):
+    """知识变更 → Agent 自动触发的**持久化**防抖记录（P1-9）。
+
+    原实现是进程内 dict（`_last_trigger`）：进程一重启就清空、多进程各算各的，
+    等于「重启即可绕过防抖」重复触发。落库后跨重启/跨进程都生效。
+    """
+    __tablename__ = "knowledge_trigger_debounce"
+    __table_args__ = (
+        UniqueConstraint(
+            "project_id", "source_id", "agent_type",
+            name="uq_knowledge_trigger_debounce",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(index=True)
+    source_id: Mapped[int] = mapped_column(index=True)
+    agent_type: Mapped[str] = mapped_column(String(64), index=True)
+    triggered_at: Mapped[datetime] = mapped_column(default=datetime.now, index=True)
 
 
 class KnowledgeIteration(Base, TimestampMixin):

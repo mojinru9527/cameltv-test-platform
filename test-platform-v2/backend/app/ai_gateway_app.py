@@ -6,6 +6,7 @@ embeddings. The public API delegates to it through /internal/ai/v1/* when
 """
 from __future__ import annotations
 
+import time
 from typing import Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException
@@ -15,7 +16,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.db import get_db
 from app.schemas.common import R
-from app.services import ai_client
+from app.services import ai_client, ai_guard
 from app.services.knowledge.embedding_service import embedding_service
 
 app = FastAPI(title="CamelTv AI Gateway", version="1.0.0")
@@ -64,15 +65,49 @@ def health() -> dict[str, Any]:
 
 @app.post("/internal/ai/v1/chat", dependencies=[Depends(require_internal_token)])
 def chat(body: ChatRequest, db: Session = Depends(get_db)) -> dict[str, Any]:
-    summary = ai_client.chat_completions_full(
+    # P1-6：这里是**所有**委派 LLM 调用的唯一咽喉，平台级配额闸门挂在此处。
+    # 超限 → 429（把中文说明放进 detail）；台账查询本身失败 → enforce 失败关闭。
+    try:
+        ai_guard.enforce(db, body.project_id, operation_type="gateway_chat")
+    except ai_guard.AIQuotaExceededError as exc:
+        raise HTTPException(status_code=429, detail=exc.message) from exc
+
+    started = time.perf_counter()
+    usage: dict[str, Any] = {}
+    try:
+        summary = ai_client.chat_completions_full(
+            db,
+            body.project_id,
+            system_prompt=body.system_prompt,
+            user_message=body.user_message,
+            max_tokens=body.max_tokens,
+            temperature=body.temperature,
+            json_mode=body.json_mode,
+            cache_namespace=body.cache_namespace,
+        )
+    except Exception:
+        # 失败调用也记一行（0 token）：否则「反复失败重试」不消耗速率额度，
+        # 闸门在异常路径上形同虚设。
+        ai_guard.record(
+            db,
+            body.project_id,
+            operation_type="gateway_chat",
+            model_ref=settings.ai_model or "",
+            latency_ms=int((time.perf_counter() - started) * 1000),
+        )
+        raise
+
+    raw_usage = summary.get("usage")
+    if isinstance(raw_usage, dict):
+        usage = raw_usage
+    ai_guard.record(
         db,
         body.project_id,
-        system_prompt=body.system_prompt,
-        user_message=body.user_message,
-        max_tokens=body.max_tokens,
-        temperature=body.temperature,
-        json_mode=body.json_mode,
-        cache_namespace=body.cache_namespace,
+        operation_type="gateway_chat",
+        model_ref=str(summary.get("model_name") or settings.ai_model or ""),
+        input_units=int(usage.get("input_tokens") or 0),
+        output_units=int(usage.get("output_tokens") or 0),
+        latency_ms=int(summary.get("duration_ms") or (time.perf_counter() - started) * 1000),
     )
     return R.ok(summary).model_dump()
 

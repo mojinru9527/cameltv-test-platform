@@ -33,6 +33,28 @@ cameltv-node up --node-id my-pc          # 重启后接着干
 
 按 Ctrl+C 停止是安全的：心跳立即停止，任务由租约超时回收，而不是被误判为失败。
 
+## 平台故障自愈（C269-3）
+
+平台**可达但报错**（HTTP 4xx/5xx、业务码 != 0）与断网一样按**可恢复**处理：节点留日志、退避、继续跑，
+不再退出进程（Batch 269 的 `call()` 对 `status>=400 或 code!=0` 抛 `SystemExit(2)`，而轮询循环只捕
+`TransportDown` → 一次 500/403 就让节点无声消失、任务滞留 `pending`）。
+
+- **退避**：指数 + 抖动；`--backoff-base-seconds`（默认 5s）起，`--max-backoff-seconds`（默认 60s）封顶；
+- **连续失败上限**：`--max-consecutive-failures`（默认 10，`0` = 不限；也可用 `CAMELTV_NODE_MAX_FAILURES`），
+  达到即退出码 `4` 并把原因写进 stderr 与日志，交 supervisor 重启——不会静默空转；
+- **已认领的任务只重试不丢弃**：执行中途遇到平台错误会重试**同一任务**（心跳持续续租）；上报失败只重发结论、
+  不重跑用例；平台回 404（租约已回收/改派）才放手，此时任务已被平台放回 `pending`；
+- **`--once` 语义不变**：仍然只跑一轮；该轮平台失败返回 `4`，而任务结论为失败仍返回 `0`（CI/自检看退出码）。
+
+退出码：`0` 正常 / `1` 任务结论失败 / `2` 用法或配置错误 / `3` 执行器依赖缺失 / `4` 平台侧失败。
+
+## 日志落盘
+
+节点诊断输出**同时写 stderr 与日志文件**（默认 `~/.cameltv-node/logs/cameltv-node.log`，
+可用 `--log-file` 或 `CAMELTV_NODE_LOG_FILE` 覆盖；5 MB × 5 轮转，追加写入）。
+Batch 269 的退出事故无法逐帧回看，就是因为当时该节点的 stderr 没有落盘；日志目录不可写时自动降级为仅 stderr，
+不影响节点干活。
+
 ## 子命令
 
 | 命令 | 用途 |
@@ -40,7 +62,7 @@ cameltv-node up --node-id my-pc          # 重启后接着干
 | `login` | 登录平台，保存会话（注册节点用） |
 | `register` | 注册/复用节点并签发节点令牌 |
 | `doctor` | 自检：平台连通性、凭据、本项目节点与队列状态 |
-| `up` | 注册 + 心跳 + 认领循环（`--once` 只跑一轮） |
+| `up` | 注册 + 心跳 + 认领循环（`--once` 只跑一轮；平台故障退避重试，见下两节） |
 | `run-api` | 本地执行接口用例：`--job <id>` 或 `--job-file payload.json` |
 | `run-web` | 本地执行 Web 用例（Playwright） |
 | `upload` | 上传证据目录：`--job <id> --dir ./evidence` |
@@ -112,4 +134,4 @@ cameltv-node-evidence/job-12-attempt-1/
 
 - 未安装 Playwright → `run-web` 报 `failed` 并提示 `pip install playwright && playwright install chromium`；
 - 上传对账不一致 → 任务上报里带 `upload_error`，不静默吞掉；
-- 断网 → 不算失败，交给租约回收。
+- 断网 / 平台 4xx/5xx → 不算失败，退避重试（已认领任务继续持有，或交给租约回收）。

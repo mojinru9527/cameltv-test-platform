@@ -1,6 +1,8 @@
 fastapi>=0.110
 uvicorn[standard]>=0.27
-sqlalchemy>=2.0
+# 同上（requirements.txt）：与 lock / 镜像保持 2.0.x，避免 CI 浮动到 2.1 后
+# `postgresql://` 走 psycopg(v3) 驱动而镜像里只有 psycopg2-binary。
+sqlalchemy>=2.0,<2.1
 pydantic>=2.6
 pydantic-settings>=2.1
 pyjwt[crypto]>=2.13

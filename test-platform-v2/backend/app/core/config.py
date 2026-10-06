@@ -202,6 +202,22 @@ class Settings(BaseSettings):
     ai_platform_inference: bool = False
     # 本地 Agent 心跳丢失多少秒后，running 任务可被其他 Agent 回收认领。
     ai_job_stale_seconds: int = 300
+    # P1-8：单个 AiJob 允许被回收重试的最大次数。心跳丢失（或 timeout_seconds
+    # 大于 ai_job_stale_seconds）的任务此前会被无限次放回 pending，形成
+    # 「认领 → 超时 → 再认领」的死循环，每轮都烧一次 LLM；达到上限即置为 failed
+    # 终态，不再重排。
+    ai_job_max_attempts: int = 3
+    # ── P1-6：平台级 AI 配额闸门（app/services/ai_guard.py）──
+    # 此前平台对 LLM 调用既无速率限制也无 token 预算，任何一条自动链路失控都会
+    # 无限燃烧密钥；以下三项是平台级兜底（按项目维度统计 model_usage_ledger）。
+    ai_guard_enabled: bool = True               # 总开关；False = 关闭闸门（用量台账仍继续记账）
+    # 每项目每分钟 AI 请求上限。默认 60 而不是 10：一次「大文档生成用例」就是合法突发——
+    # ai_service 每 24000 字符抽一次（_EXTRACT_CHUNK_CHARS）、每 12 个功能点生成一块
+    # （_CHUNK_FP_LIMIT）、并发 5（_CHUNK_CONCURRENCY），截断还要重试，单次操作可发出
+    # 15~30 次调用；上限压到 10 会让抽取块被静默丢弃（用例缺失）而不是"更安全"。
+    # 60/分钟仍能拦住失控循环，真正的花费上限是下面 24h token 预算。
+    ai_rate_limit_per_minute: int = 60
+    ai_daily_token_budget: int = 2000000        # 每项目 24 小时 token 预算（input_units + output_units）
     ai_local_fallback_to_cloud: bool = True
     ai_local_base_url: str = "http://127.0.0.1:11434/v1"
     ai_local_api_key: str = ""
@@ -313,6 +329,10 @@ class Settings(BaseSettings):
     knowledge_ingest_enabled: bool = False       # M1 知识源入库总开关（默认关，显式开启）
     rag_enabled: bool = True                     # 是否启用 RAG 检索（M2）
     knowledge_graph_enabled: bool = True         # 是否启用知识图谱（M3）
+    # P1-9：入库 → 变更检测 → 自动跑 Agent（出网 LLM）这条无人值守链路必须**显式开启**。
+    # 此前它复用 knowledge_graph_enabled（默认 True），于是每一次 UI 执行失败、
+    # 每一次 Agent 产出物入库都会自动触发一次 LLM 调用，且 Agents 之间互相喂养。
+    knowledge_auto_agent_enabled: bool = False   # 知识变更是否自动触发 Agent（默认关，显式开启）
     ai_artifact_allow_batch_import: bool = False # AI 产物是否允许批量导入正式库
     knowledge_ingest_production_data: bool = False  # 生产环境执行结果是否允许进入知识库
 
@@ -412,6 +432,20 @@ class Settings(BaseSettings):
         return ""
 
     @property
+    def ai_gateway_delegated(self) -> bool:
+        """本进程是否把 LLM 调用委派给独立 ai-gateway。
+
+        P0-4 凭据最小化后，`AI_GATEWAY_ROLE=remote` 的进程**不再持有**明文
+        `AI_API_KEY`；判断「AI 是否可用」必须看委派链路是否配置完整，
+        而不是看本地是否存有 Key（否则会误报「AI 功能将不可用」）。
+        """
+        return bool(
+            self.ai_gateway_url
+            and self.ai_gateway_token
+            and self.ai_gateway_role != "gateway"
+        )
+
+    @property
     def dsh_api_key_effective(self) -> str:
         """DSH 凭据：优先 dsh_api_key，回退 ai_api_key。"""
         return self.dsh_api_key or self.ai_api_key
@@ -454,10 +488,26 @@ class Settings(BaseSettings):
                 issues.append("ADMIN_PASSWORD 未设置或仍为默认值，请设置强密码")
             if self.seed_demo_users and not self.tester_password:
                 issues.append("TESTER_PASSWORD 未设置，请为种子测试用户设置强密码")
-            if self.ai_enabled and not self.ai_api_key:
+            # P0-4 凭据最小化：remote 角色的进程不再持有明文 AI_API_KEY，
+            # LLM 调用经 AI_GATEWAY_URL 委派给 ai-gateway。只有真正自己做推理的
+            # 进程（embedded / gateway 角色）才要求本地 Key，否则会误报。
+            if (
+                self.ai_enabled
+                and not self.ai_api_key
+                and not self.ai_gateway_delegated
+                and self.ai_gateway_role != "gateway"
+            ):
                 issues.append("AI_API_KEY 未设置，AI 功能将不可用")
-            if self.dsh_enabled and not self.dsh_api_key_effective:
-                issues.append("DSH 已启用但缺少 DSH_API_KEY/AI_API_KEY，DSH 功能将不可用")
+            # DSH 子进程只在承担执行的服务里派生（worker_execution_enabled=true）；
+            # 纯 API 进程（split 拓扑下 worker_execution_enabled=false）不需要该 Key。
+            if (
+                self.dsh_enabled
+                and self.worker_execution_enabled
+                and not self.dsh_api_key_effective
+            ):
+                issues.append(
+                    "DSH 已启用且本进程承担执行，但缺少 DSH_API_KEY/AI_API_KEY，DSH 功能将不可用"
+                )
             if not self.cookie_secure:
                 issues.append("生产环境 cookie_secure 必须为 True（需要 HTTPS），否则 httpOnly cookie 以明文传输")
             if self.cookie_samesite == "none" and not self.cookie_secure:

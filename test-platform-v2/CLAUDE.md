@@ -10,7 +10,7 @@ related: ["backend/CLAUDE.md", "frontend/CLAUDE.md", "docs/CamelTv测试平台-�
 
 # test-platform-v2 — 测试平台 v2（前后端分离）
 
-> v2.1 重构版本，与 `../test-platform/`（旧版）物理隔离。按《测试平台-前后端分离重构方案 v2.1》搭建。
+> v2.1 重构版本。按《测试平台-前后端分离重构方案 v2.1》搭建；重构前的 v1（`test-platform/`）已于 Batch 100 整体退役移除，不再有需要物理隔离的并存目录。
 
 ## 架构概览
 

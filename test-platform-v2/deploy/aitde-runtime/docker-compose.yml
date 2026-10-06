@@ -77,8 +77,14 @@ services:
       - POSTGRES_PWD=${POSTGRES_PASSWORD:-temporal}
       - DBNAME=${POSTGRES_DB:-temporal}
     ports:
-      - "${TEMPORAL_GRPC_PORT:-7233}:7233"   # gRPC (SDK client)
-      - "${TEMPORAL_UI_PORT:-8080}:8080"     # Temporal Web UI
+      # P0-5：只绑定回环。此前写作 "${TEMPORAL_GRPC_PORT:-7233}:7233"，等价于
+      # 绑定 0.0.0.0，公网可直接连上未加密的 Temporal gRPC
+      # （配合 TEMPORAL_INSECURE_CHANNEL=true 即为无认证的工作流集群）。
+      # Worker 与后端都在同一 compose 网络内，按服务名 temporal:7233 访问，无需发布端口。
+      # 确需外部 Worker 接入时显式设置 TEMPORAL_GRPC_BIND=0.0.0.0，并同时启用 mTLS。
+      - "${TEMPORAL_GRPC_BIND:-127.0.0.1}:${TEMPORAL_GRPC_PORT:-7233}:7233"   # gRPC (SDK client)
+      # Temporal Web UI 同样只走回环（生产经 Caddy 反代时请加访问控制）。
+      - "${TEMPORAL_UI_BIND:-127.0.0.1}:${TEMPORAL_UI_PORT:-8080}:8080"        # Temporal Web UI
     volumes:
       - temporal-data:/data
       - ./config:/etc/temporal/config

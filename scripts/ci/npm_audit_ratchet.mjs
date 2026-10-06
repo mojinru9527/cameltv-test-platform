@@ -46,12 +46,24 @@ function advisoryKeys() {
     const viaEntries = Array.isArray(vulnerability.via) ? vulnerability.via : [vulnerability.via]
     for (const via of viaEntries) {
       if (typeof via === 'string') {
-        keys.push(`${name}|${severity}|via:${via}`)
+        // 传递依赖：只按「包名 + 传递来源包名」定键（两者都稳定）。
+        keys.push(`${name}|via:${via}`)
       } else if (via && typeof via === 'object') {
-        keys.push(`${name}|${severity}|${via.source ?? ''}|${via.name ?? ''}|${via.title ?? ''}`)
+        // 直接公告：**只用公告身份定键**（source 为 npm advisory ID，最稳定；
+        // 缺失时退回 url / title），刻意**不把 severity 与 title 放进键**。
+        //
+        // 原因（本批实测的随机失败）：上游会在事后**重分类严重级别**或微调标题，
+        // 而这些字段一旦进键，同一处历史问题就会被判成「新增」。Batch 273 实测：
+        // 本机刷新基线后约 20 分钟，CI 即报 `baseline=42 current=42 new=1 removed=1`
+        // ——总数未变（27），只是其中一条由 high 被上游改判为 moderate。
+        // 这会让**任何** PR 随机失败，与改动无关。
+        // 去掉这两个易变字段后，门禁仍然拦得住「真正新出现的公告」，但不再被
+        // 上游的重分类/改写误伤；severity 仍通过下方 counts 输出保留可观测性。
+        const identity = via.source ?? via.url ?? via.title ?? ''
+        keys.push(`${name}|${identity}`)
       }
     }
-    if (viaEntries.length === 0) keys.push(`${name}|${severity}|unknown`)
+    if (viaEntries.length === 0) keys.push(`${name}|unknown`)
   }
   return [...new Set(keys)].sort()
 }

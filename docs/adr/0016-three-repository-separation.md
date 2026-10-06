@@ -42,7 +42,7 @@ ADR-0003 实现了 `test-platform-v2/` 内 `backend/` 与 `frontend/` 的**目�
 
 | 仓库 | 内容 | 发布物 |
 |------|------|--------|
-| `cameltv-test-frontend` | `test-platform-v2/frontend/`（React + shadcn/ui + Vite） | Nginx/Vercel 静态站点 |
+| `cameltv-test-frontend` | `test-platform-v2/frontend/`（React + shadcn/ui + Vite） | Nginx 静态站点（腾讯云单机，`https://swiftbugs.cn`；旧 Vercel 已于 2026-08-22 下线） |
 | `cameltv-test-backend` | `test-platform-v2/backend/` + `lanhu-mcp/`（FastAPI + 执行引擎） | 后端镜像 |
 | `cameltv-ops-platform` | `deploy/` + release-control 事实层 + 发布 API/UI（ADR-0015 Phase 2） | 运维平台镜像 |
 

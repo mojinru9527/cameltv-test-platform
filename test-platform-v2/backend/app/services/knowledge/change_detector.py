@@ -3,20 +3,26 @@
 核心能力：
 - 检测知识源的 content_hash 变更
 - 按规则匹配事件类型 → 触发 Agent 类型
-- 防抖：同一 source 5 分钟内不重复触发
+- 防抖：同一 (项目, 源, Agent) 5 分钟内不重复触发；防抖状态**持久化在数据库**，
+  进程重启不能绕过（P1-9）
+- 自喂环断路器：Agent 运行期间的嵌套入库/变更检测不再触发新 Agent（P1-9）
 """
 from __future__ import annotations
 
 import hashlib
 import logging
-import time
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from collections.abc import Iterator
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
-from app.models.knowledge import KnowledgeSource
+from app.models.knowledge import KnowledgeSource, KnowledgeTriggerDebounce
 from app.services.knowledge.agent_orchestrator import run_agent_in_new_session
 
 logger = logging.getLogger("knowledge.change_detector")
@@ -118,11 +124,88 @@ def _source_type_to_event(source_type: str) -> str:
 
 # ── 自动触发调度 ──
 
-_last_trigger: dict[str, float] = {}  # key: "project_id:source_id:agent_type" → timestamp
+# P1-9 自喂环断路器。
+# 链路：入库 → 变更检测 → 触发 Agent（出网 LLM）→ Agent 产出物再入库 → 变更检测 → …
+# 若不在「已经在自动触发链路里」时断开，一次 UI 执行失败就能自我放大成无限 LLM 调用。
+# 用 ContextVar（而非模块全局变量）保证请求线程 / 定时线程 / 协程之间互不串味。
+_AGENT_TRIGGER_DEPTH: ContextVar[int] = ContextVar("knowledge_agent_trigger_depth", default=0)
+
+
+@contextmanager
+def agent_trigger_scope() -> Iterator[None]:
+    """标记「当前调用栈已处于自动 Agent 触发链路中」。"""
+    token = _AGENT_TRIGGER_DEPTH.set(_AGENT_TRIGGER_DEPTH.get() + 1)
+    try:
+        yield
+    finally:
+        _AGENT_TRIGGER_DEPTH.reset(token)
+
+
+def in_agent_trigger_scope() -> bool:
+    """当前是否处于自动 Agent 触发链路内（用于阻断自喂环）。"""
+    return _AGENT_TRIGGER_DEPTH.get() > 0
 
 
 def _debounce_key(project_id: int, source_id: int, agent_type: str) -> str:
     return f"{project_id}:{source_id}:{agent_type}"
+
+
+def _debounce_blocks(
+    project_id: int,
+    source_id: int,
+    agent_type: str,
+    *,
+    db: Session | None = None,
+) -> bool:
+    """持久化防抖：窗口内已触发过则返回 True（并且不刷新时间戳）。
+
+    选型说明：用 DB 行而不是存储目录下的文件——防抖状态天然是「(项目, 源, Agent)
+    三元组的唯一时间戳」，DB 唯一约束能直接表达，也跟随本仓库已有的
+    SQLite/PG 双栈与迁移体系（对比 `ai_gateway_cache`）；文件方案还要自己处理
+    并发写与清理。查询/写入异常一律**失败关闭**（返回 True 不触发）：
+    宁可漏触发一次，也不能因为防抖状态读不出来就重复烧钱。
+    """
+    own_session = db is None
+    session = db
+    key = _debounce_key(project_id, source_id, agent_type)
+    try:
+        if session is None:
+            session = SessionLocal()
+        row = session.scalar(
+            select(KnowledgeTriggerDebounce).where(
+                KnowledgeTriggerDebounce.project_id == project_id,
+                KnowledgeTriggerDebounce.source_id == source_id,
+                KnowledgeTriggerDebounce.agent_type == agent_type,
+            )
+        )
+        now = datetime.now()
+        if row is not None and row.triggered_at is not None:
+            if row.triggered_at > now - timedelta(seconds=_DEBOUNCE_SECONDS):
+                logger.debug("Debounced: %s (last=%s)", key, row.triggered_at)
+                return True
+            row.triggered_at = now
+        else:
+            session.add(
+                KnowledgeTriggerDebounce(
+                    project_id=project_id,
+                    source_id=source_id,
+                    agent_type=agent_type,
+                    triggered_at=now,
+                )
+            )
+        session.commit()
+        return False
+    except Exception:
+        logger.exception("防抖状态读写失败，按失败关闭跳过本次自动触发: %s", key)
+        if session is not None:
+            try:
+                session.rollback()
+            except Exception:
+                logger.warning("防抖状态回滚失败（已忽略）: %s", key, exc_info=True)
+        return True
+    finally:
+        if own_session and session is not None:
+            session.close()
 
 
 def handle_changes(project_id: int, auto_trigger: bool = False) -> dict[str, int]:
@@ -141,23 +224,28 @@ def handle_changes(project_id: int, auto_trigger: bool = False) -> dict[str, int
     if not auto_trigger or not events:
         return {"detected": len(events), "triggered": 0}
 
-    now = time.time()
+    # P1-9：Agent 运行期间产生的入库不许再触发 Agent（自喂环断路）
+    if in_agent_trigger_scope():
+        logger.info(
+            "检测到 %s 个变更，但当前处于自动 Agent 触发链路内，跳过触发以防自喂环",
+            len(events),
+        )
+        return {"detected": len(events), "triggered": 0}
+
     for event in events:
         agent_types = TRIGGER_RULES.get(event.event_type, [])
         for agent_type in agent_types:
-            key = _debounce_key(project_id, event.source_id, agent_type)
-            last = _last_trigger.get(key, 0)
-            if now - last < _DEBOUNCE_SECONDS:
-                logger.debug("Debounced: %s (last=%.0fs ago)", key, now - last)
+            if _debounce_blocks(project_id, event.source_id, agent_type):
                 continue
 
-            _last_trigger[key] = now
-            run_agent_in_new_session(
-                project_id=project_id,
-                agent_type=agent_type,
-                user_input=f"检测到变更: {event.title} ({event.event_type})",
-                params={"source_id": event.source_id, "event_type": event.event_type},
-            )
+            # 先登记防抖再触发：Agent 自己失败也不能立刻进入重试风暴
+            with agent_trigger_scope():
+                run_agent_in_new_session(
+                    project_id=project_id,
+                    agent_type=agent_type,
+                    user_input=f"检测到变更: {event.title} ({event.event_type})",
+                    params={"source_id": event.source_id, "event_type": event.event_type},
+                )
             triggered += 1
             logger.info("Auto-triggered %s for source#%s (event=%s)", agent_type, event.source_id, event.event_type)
 
