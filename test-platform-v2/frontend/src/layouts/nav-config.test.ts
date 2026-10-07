@@ -16,7 +16,7 @@ function menu(code: string, path: string, sort: number): MenuItem {
   return { code, name: code, path, icon: '', sort }
 }
 
-// tester 可见菜单（batch-259：menu:testplan 已删除；notify/integration 软下线默认不可见）
+// tester 可见菜单（平台简化批次：报告/数据集/DSH/智能测试任务/Runtime 已删除）
 const TESTER_MENUS: MenuItem[] = [
   menu('menu:workbench', '/workbench', 1),
   menu('menu:requirement', '/requirement', 3),
@@ -26,16 +26,11 @@ const TESTER_MENUS: MenuItem[] = [
   menu('menu:apitest', '/apitest', 9),
   menu('menu:uitest', '/uitest', 10),
   menu('menu:schedule', '/schedule', 12),
-  menu('menu:report', '/report', 13),
   menu('menu:myproject', '/my-projects', 15),
   menu('menu:defect', '/defect', 16),
-  menu('menu:dataset', '/dataset', 17),
   menu('menu:environment', '/environment', 20),
-  menu('menu:dsh_tasks', '/dsh-tasks', 22),
   menu('menu:ai_config', '/ai-config', 23),
   menu('menu:lanhu_evidence', '/lanhu-evidence', 23),
-  menu('menu:missions', '/missions', 24),
-  menu('menu:runtime', '/admin/workers', 25),
 ]
 
 function flattenMain(model: NavigationModel): string[] {
@@ -49,8 +44,8 @@ describe('batch-259 buildNavigation（4 入口 + 专家区）', () => {
     const model = buildNavigation(TESTER_MENUS)
     expect(flattenMain(model)).toEqual([
       'menu:workbench', // 1 工作台
-      '版本验收', 'menu:missions', 'menu:versionmission', 'menu:requirement',
-      '结果与缺陷', 'menu:defect', 'menu:report',
+      '版本验收', 'menu:versionmission', 'menu:requirement',
+      '结果与缺陷', 'menu:defect',
       'menu:knowledge', // 4
     ])
     expect(model.mainRows).toHaveLength(PRIMARY_ENTRY_LIMIT)
@@ -63,8 +58,6 @@ describe('batch-259 buildNavigation（4 入口 + 专家区）', () => {
     const adminMenus = [
       ...TESTER_MENUS,
       menu('menu:system', '/system', 14),
-      menu('menu:notify', '/notify', 19),
-      menu('menu:integration', '/integration', 18),
       menu('menu:versiontask', '/version-tasks', 30),
     ]
     for (const menus of [TESTER_MENUS, adminMenus, [], [menu('menu:workbench', '/workbench', 1)]]) {
@@ -72,16 +65,16 @@ describe('batch-259 buildNavigation（4 入口 + 专家区）', () => {
     }
   })
 
-  it('专家区分桶：资产含用例/接口/UI/数据集/环境；引擎与配置含 DSH/AI/蓝湖/Runtime/集成/通知；个人含定时/我的项目；tester 无系统桶', () => {
+  it('专家区分桶：资产含用例/接口/UI/环境；引擎与配置含 AI/蓝湖；个人含定时/我的项目；tester 无系统桶', () => {
     const model = buildNavigation(TESTER_MENUS)
     const labels = model.expertSections.map((s) => s.label)
     expect(labels).toEqual(['资产', '引擎与配置', '个人'])
     const byLabel = Object.fromEntries(model.expertSections.map((s) => [s.label, s.items.map((i) => i.code)]))
     expect(byLabel['资产']).toEqual([
-      'menu:testcase', 'menu:apitest', 'menu:uitest', 'menu:dataset', 'menu:environment',
+      'menu:testcase', 'menu:apitest', 'menu:uitest', 'menu:environment',
     ])
     expect(byLabel['引擎与配置']).toEqual([
-      'menu:dsh_tasks', 'menu:ai_config', 'menu:lanhu_evidence', 'menu:runtime',
+      'menu:ai_config', 'menu:lanhu_evidence',
     ])
     expect(byLabel['个人']).toEqual(['menu:schedule', 'menu:myproject'])
   })
@@ -96,28 +89,26 @@ describe('batch-259 buildNavigation（4 入口 + 专家区）', () => {
   })
 
   it('admin（含系统菜单）→ 出现系统分桶', () => {
-    const adminMenus = [...TESTER_MENUS, menu('menu:system', '/system', 14), menu('menu:notify', '/notify', 19), menu('menu:integration', '/integration', 18)]
+    const adminMenus = [...TESTER_MENUS, menu('menu:system', '/system', 14)]
     const model = buildNavigation(adminMenus)
     expect(model.expertSections.map((s) => s.label)).toEqual(['资产', '引擎与配置', '个人', '系统'])
     const system = model.expertSections.find((s) => s.label === '系统')!
     expect(system.items.map((i) => i.code)).toEqual(['menu:system'])
   })
 
-  it('只读角色只显示有权限的报告，不补出任务入口', () => {
+  it('只读角色只显示有权限的入口，不补出任务入口', () => {
     const viewerMenus: MenuItem[] = [
       menu('menu:workbench', '/workbench', 1),
       menu('menu:requirement', '/requirement', 3),
       menu('menu:knowledge', '/knowledge', 5),
-      menu('menu:report', '/report', 13),
       menu('menu:myproject', '/my-projects', 15),
       menu('menu:defect', '/defect', 16),
-      menu('menu:dataset', '/dataset', 17),
     ]
     const model = buildNavigation(viewerMenus)
     expect(flattenMain(model)).toEqual([
       'menu:workbench',
       '版本验收', 'menu:requirement',
-      '结果与缺陷', 'menu:defect', 'menu:report',
+      '结果与缺陷', 'menu:defect',
       'menu:knowledge',
     ])
   })
@@ -135,14 +126,14 @@ describe('batch-259 buildNavigation（4 入口 + 专家区）', () => {
     expect(model.expertSections).toEqual([])
   })
 
-  it('每个可见菜单恰好出现一次，保留历史 URL 和菜单权限（隐藏≠删除）', () => {
+  it('每个可见菜单恰好出现一次（隐藏≠删除）', () => {
     const menus = [...TESTER_MENUS, menu('menu:versiontask', '/version-tasks', 30)]
     const model = buildNavigation(menus)
     const group = model.mainRows.find((row) => row.kind === 'group' && row.label === '版本验收')
     expect(group?.kind).toBe('group')
-    if (group?.kind !== 'group') throw new Error('Missing task/report navigation')
+    if (group?.kind !== 'group') throw new Error('Missing task navigation')
     expect(group.items.map((item) => item.path)).toEqual([
-      '/version-tasks', '/missions', '/release-bundles', '/requirement',
+      '/version-tasks', '/release-bundles', '/requirement',
     ])
     const displayed = [
       ...model.mainRows.flatMap((row) => row.kind === 'link' ? [row.item] : row.items),
@@ -210,10 +201,9 @@ describe('batch-272 选项 B：按角色瘦身 + 搜索直达', () => {
     const kept = model.expertSections.flatMap((s) => s.items.map((i) => i.code))
     expect(kept.length).toBeGreaterThan(0)
     expect(kept.every((code) => EXPERT_KEEP_CODES.includes(code))).toBe(true)
-    expect(kept).toEqual(['menu:testcase', 'menu:apitest', 'menu:uitest', 'menu:dataset', 'menu:environment'])
+    expect(kept).toEqual(['menu:testcase', 'menu:apitest', 'menu:uitest', 'menu:environment'])
 
     const searchOnly = model.searchOnly.map((i) => i.code)
-    expect(searchOnly).toContain('menu:dsh_tasks')
     expect(searchOnly).toContain('menu:ai_config')
     expect(searchOnly).toContain('menu:system')
     expect(searchOnly).not.toContain('menu:testcase')

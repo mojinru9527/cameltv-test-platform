@@ -1,147 +1,111 @@
-"""存储保留期清理（生产磁盘防护）回归测试。
+"""存储保留期清理测试（保留面）。
 
-覆盖：
-- ui-runs 纯数字运行目录：过期删除、新目录保留、非数字目录（plan-sync）不动
-- dsh-sessions/workspaces 的 ws-* 工作区：过期删除、新目录保留
-- dsh-sessions 会话 jsonl：过期删除、新文件保留
-- 缺失根目录 / 空目录：安全返回 0，不抛错
+平台简化批次：DSH 任务体系删除后，原测试文件的 dsh-sessions 分支已随之移除；
+此处覆盖仍然生效的行为——ui-runs 数字目录按 mtime 清理、plan-sync 默认不清理、
+显式根目录优先、默认根与 playwright_executor 同源。
 """
 from __future__ import annotations
 
 import os
 import time
 from pathlib import Path
-from unittest.mock import patch
+
+import pytest
 
 from app.core.config import settings
-from app.services.storage_retention import cleanup_storage
-
-OLD = time.time() - 30 * 86400  # 30 天前（超过 7 天保留期）
-NEW = time.time() - 3600        # 1 小时前（保留）
+from app.services import storage_retention
 
 
-def _age(path: Path, ts: float) -> None:
-    os.utime(path, (ts, ts))
+def _make_dir(path: Path, *, age_days: float, size_bytes: int = 1024) -> Path:
+    path.mkdir(parents=True, exist_ok=True)
+    payload = path / "artifact.bin"
+    payload.write_bytes(b"x" * size_bytes)
+    stamp = time.time() - age_days * 86400
+    os.utime(payload, (stamp, stamp))
+    os.utime(path, (stamp, stamp))
+    return path
 
 
-def _make_dirs(*paths: Path) -> list[Path]:
-    for p in paths:
-        p.mkdir(parents=True, exist_ok=True)
-    return list(paths)
+@pytest.fixture()
+def retention_root(tmp_path, monkeypatch):
+    root = tmp_path / "storage"
+    (root / "ui-runs").mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(settings, "storage_retention_root", str(root), raising=False)
+    monkeypatch.setattr(settings, "storage_retention_days", 7, raising=False)
+    monkeypatch.setattr(settings, "storage_retention_enabled", True, raising=False)
+    monkeypatch.setattr(settings, "storage_retention_include_plan_sync", False, raising=False)
+    return root
 
 
-class TestUiRunsCleanup:
-    def test_old_numeric_runs_deleted_new_kept(self, tmp_path):
-        """过期纯数字运行目录删除，近期运行目录保留。"""
-        old_run = _make_dirs(tmp_path / "ui-runs" / "12")[0]
-        new_run = _make_dirs(tmp_path / "ui-runs" / "99")[0]
-        # 2MB 文件，保证 freed_mb 可断言
-        (old_run / "shot.png").write_bytes(b"x" * (2 * 1024 * 1024))
-        (new_run / "shot.png").write_bytes(b"x" * 1024)
-        _age(old_run, OLD)
-        _age(new_run, NEW)
+def test_default_root_shares_playwright_executor_convention(monkeypatch):
+    """未配置根目录时，必须落在 backend/storage（容器内 /app/storage）。"""
+    monkeypatch.setattr(settings, "storage_retention_root", "", raising=False)
+    from app.services.playwright_executor import STORAGE_DIR
 
-        with patch.object(settings, "storage_retention_root", str(tmp_path)), \
-                patch.object(settings, "storage_retention_days", 7):
-            stats = cleanup_storage()
-
-        assert stats["ui_runs_deleted"] == 1
-        assert stats["ui_runs_freed_mb"] > 0
-        assert not old_run.exists()
-        assert new_run.exists()
-
-    def test_plan_sync_untouched(self, tmp_path):
-        """plan-sync（计划执行逐用例产物，与历史计划关联）默认不清理。"""
-        plan = _make_dirs(tmp_path / "ui-runs" / "plan-sync" / "TC-10001")[0]
-        _age(plan, OLD)
-
-        with patch.object(settings, "storage_retention_root", str(tmp_path)), \
-                patch.object(settings, "storage_retention_days", 7):
-            stats = cleanup_storage()
-
-        assert stats["ui_runs_deleted"] == 0
-        assert stats["plan_sync_deleted"] == 0
-        assert plan.exists()
-
-    def test_plan_sync_cleanup_when_enabled(self, tmp_path):
-        """STORAGE_RETENTION_INCLUDE_PLAN_SYNC=true 时按同一保留期清理过期子目录。"""
-        old_plan = _make_dirs(tmp_path / "ui-runs" / "plan-sync" / "TC-10001")[0]
-        new_plan = _make_dirs(tmp_path / "ui-runs" / "plan-sync" / "SP-B130-XYZ")[0]
-        _age(old_plan, OLD)
-        _age(new_plan, NEW)
-
-        with patch.object(settings, "storage_retention_root", str(tmp_path)), \
-                patch.object(settings, "storage_retention_days", 7), \
-                patch.object(settings, "storage_retention_include_plan_sync", True):
-            stats = cleanup_storage()
-
-        assert stats["plan_sync_deleted"] == 1
-        assert not old_plan.exists()
-        assert new_plan.exists()
+    assert storage_retention._storage_root() == STORAGE_DIR.parent
 
 
-class TestDshSessionsCleanup:
-    def test_old_workspace_deleted_new_kept(self, tmp_path):
-        """过期 ws-* 工作区删除，近期工作区保留。"""
-        old_ws = _make_dirs(tmp_path / "dsh-sessions" / "workspaces" / "ws-aaaa1111")[0]
-        new_ws = _make_dirs(tmp_path / "dsh-sessions" / "workspaces" / "ws-bbbb2222")[0]
-        _age(old_ws, OLD)
-        _age(new_ws, NEW)
+def test_expired_numeric_run_dirs_are_removed_and_fresh_kept(retention_root):
+    old = _make_dir(retention_root / "ui-runs" / "101", age_days=10)
+    fresh = _make_dir(retention_root / "ui-runs" / "102", age_days=1)
 
-        with patch.object(settings, "storage_retention_root", str(tmp_path)), \
-                patch.object(settings, "storage_retention_days", 7):
-            stats = cleanup_storage()
+    stats = storage_retention.cleanup_storage()
 
-        assert stats["workspaces_deleted"] == 1
-        assert not old_ws.exists()
-        assert new_ws.exists()
-
-    def test_old_session_jsonl_deleted_new_kept(self, tmp_path):
-        """过期会话 jsonl 删除，近期会话保留；非 jsonl 文件不动。"""
-        sess = _make_dirs(tmp_path / "dsh-sessions")[0]
-        old_log = sess / "session-old.jsonl"
-        new_log = sess / "session-new.jsonl"
-        other = sess / "readme.txt"
-        old_log.write_text("x" * 512)
-        new_log.write_text("y" * 512)
-        other.write_text("keep")
-        _age(old_log, OLD)
-        _age(new_log, NEW)
-        _age(other, OLD)
-
-        with patch.object(settings, "storage_retention_root", str(tmp_path)), \
-                patch.object(settings, "storage_retention_days", 7):
-            stats = cleanup_storage()
-
-        assert stats["session_files_deleted"] == 1
-        assert not old_log.exists()
-        assert new_log.exists()
-        assert other.exists()
+    assert stats["ui_runs_deleted"] == 1
+    assert not old.exists()
+    assert fresh.exists()
+    assert stats["root"] == str(retention_root)
 
 
-class TestRobustness:
-    def test_missing_roots_safe(self, tmp_path):
-        """根目录缺失时安全返回 0，不抛错。"""
-        with patch.object(settings, "storage_retention_root", str(tmp_path / "nope")), \
-                patch.object(settings, "storage_retention_days", 7):
-            stats = cleanup_storage()
+def test_non_numeric_dirs_are_never_touched(retention_root):
+    """plan-sync 等非数字目录默认不清理（与历史计划记录关联）。"""
+    plan_sync = _make_dir(retention_root / "ui-runs" / "plan-sync" / "run-1", age_days=30)
+    notes = retention_root / "ui-runs" / "keep-me"
+    _make_dir(notes, age_days=30)
 
-        assert stats["ui_runs_deleted"] == 0
-        assert stats["workspaces_deleted"] == 0
-        assert stats["session_files_deleted"] == 0
-        assert stats["total_freed_mb"] == 0
+    stats = storage_retention.cleanup_storage()
 
-    def test_default_root_derived_from_dsh_session_root(self, tmp_path, monkeypatch):
-        """未配置 retention_root 时，根 = dsh_session_root 的父目录。"""
-        monkeypatch.setattr(settings, "storage_retention_root", "")
-        monkeypatch.setattr(
-            settings, "dsh_session_root", str(tmp_path / "dsh-sessions")
-        )
-        run_dir = _make_dirs(tmp_path / "ui-runs" / "5")[0]
-        _age(run_dir, OLD)
+    assert stats["ui_runs_deleted"] == 0
+    assert stats["plan_sync_deleted"] == 0
+    assert plan_sync.exists()
+    assert notes.exists()
 
-        stats = cleanup_storage()
 
-        assert stats["root"] == str(tmp_path)
-        assert stats["ui_runs_deleted"] == 1
-        assert not run_dir.exists()
+def test_plan_sync_cleanup_requires_explicit_opt_in(retention_root, monkeypatch):
+    stale = _make_dir(retention_root / "ui-runs" / "plan-sync" / "run-old", age_days=30)
+    fresh = _make_dir(retention_root / "ui-runs" / "plan-sync" / "run-new", age_days=1)
+    monkeypatch.setattr(settings, "storage_retention_include_plan_sync", True, raising=False)
+
+    stats = storage_retention.cleanup_storage()
+
+    assert stats["plan_sync_deleted"] == 1
+    assert not stale.exists()
+    assert fresh.exists()
+
+
+def test_explicit_root_wins_over_default(tmp_path, monkeypatch):
+    explicit = tmp_path / "custom-root"
+    (explicit / "ui-runs").mkdir(parents=True, exist_ok=True)
+    _make_dir(explicit / "ui-runs" / "7", age_days=30)
+    monkeypatch.setattr(settings, "storage_retention_root", str(explicit), raising=False)
+    monkeypatch.setattr(settings, "storage_retention_days", 7, raising=False)
+    monkeypatch.setattr(settings, "storage_retention_enabled", True, raising=False)
+    monkeypatch.setattr(settings, "storage_retention_include_plan_sync", False, raising=False)
+
+    stats = storage_retention.cleanup_storage()
+
+    assert stats["root"] == str(explicit)
+    assert stats["ui_runs_deleted"] == 1
+
+
+def test_missing_root_is_reported_without_raising(tmp_path, monkeypatch):
+    """根目录不存在时不得抛错（清理失败不阻断应用）。"""
+    monkeypatch.setattr(settings, "storage_retention_root", str(tmp_path / "nope"), raising=False)
+    monkeypatch.setattr(settings, "storage_retention_days", 7, raising=False)
+    monkeypatch.setattr(settings, "storage_retention_enabled", True, raising=False)
+    monkeypatch.setattr(settings, "storage_retention_include_plan_sync", False, raising=False)
+
+    stats = storage_retention.cleanup_storage()
+
+    assert stats["ui_runs_deleted"] == 0
+    assert "error" not in stats

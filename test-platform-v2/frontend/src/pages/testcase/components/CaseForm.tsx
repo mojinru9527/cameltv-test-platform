@@ -34,7 +34,7 @@ const STATUSES = [
   { value: 'archived', label: '归档' },
 ]
 
-export default function CaseForm({ register, control, errors, selType, domains, selModules, watch, setValue, datasets }: any) {
+export default function CaseForm({ register, control, errors, selType, domains, selModules, watch, setValue }: any) {
   const stepsValue = watch('steps') || ''
   const [stepsViewMode, setStepsViewMode] = useState<'formatted' | 'json'>('formatted')
 
@@ -207,34 +207,6 @@ export default function CaseForm({ register, control, errors, selType, domains, 
             <div>
               <label htmlFor="case-api-endpoint" className="mb-1 block text-sm font-medium">接口路径</label>
               <Input id="case-api-endpoint" placeholder="/api/v1/xxx" {...register('api_endpoint')} />
-            </div>
-          </div>
-
-          {/* C147-8: 数据集参数化绑定 */}
-          <div className="grid grid-cols-[180px_1fr] gap-4">
-            <div>
-              <label htmlFor="case-dataset" className="mb-1 block text-sm font-medium">默认数据集</label>
-              <Controller
-                name="dataset_id"
-                control={control}
-                render={({ field }: any) => (
-                  <Select
-                    value={field.value == null ? '__none__' : String(field.value)}
-                    onValueChange={(v) => field.onChange(v === '__none__' ? null : Number(v))}
-                  >
-                    <SelectTrigger id="case-dataset" size="sm"><SelectValue placeholder="未绑定（${列名} 替换需选数据集）" /></SelectTrigger>
-                    <SelectContent position="popper">
-                      <SelectItem value="__none__">未绑定</SelectItem>
-                      {datasets.map((d: any) => (
-                        <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-            <div className="flex items-end pb-1">
-              <p className="text-xs text-muted-foreground">执行时按数据集逐行替换请求中的 {'${列名}'} 变量</p>
             </div>
           </div>
 

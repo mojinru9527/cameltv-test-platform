@@ -11,6 +11,13 @@ related:
   - "docs/architecture/batch-96-v1-tools-deprecation.md"
 ---
 
+> ⚠️ **已被取代（2026-10-07）**：平台简化批次按用户定稿决策**整体删除** AITDE 智能测试任务、DSH 任务/Agent 与其余冗余模块，
+> 本文中「AITDE 为主线 / DSH 收编为执行引擎」的结论**不再成立**。当前有效事实源为
+> [11-platform-simplification-design.md](11-platform-simplification-design.md) 与
+> [../../work-logs/platform-simplification-production-eval-20261007.md](../../work-logs/platform-simplification-production-eval-20261007.md)；
+> 本文保留为历史设计记录。
+
+
 # 现有功能 ABCD 分级去留白名单（用户定稿）
 
 > 结论层事实源。代码入口收敛在 batch-212（B2）落地；死代码删除在 batch-215（B5）落地；

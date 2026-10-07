@@ -24,6 +24,10 @@ def upgrade() -> None:
     # Skip if column already exists (e.g. created by ORM auto-create)
     conn = op.get_bind()
     insp = sa.inspect(conn)
+    # 平台简化批次：test_report 表已随报告中心删除（新库 create_all 不再建），
+    # 迁移链在新库重跑时跳过（存量库不受影响）。
+    if "test_report" not in insp.get_table_names():
+        return
     existing = [c["name"] for c in insp.get_columns("test_report")]
     if "template_id" in existing:
         return

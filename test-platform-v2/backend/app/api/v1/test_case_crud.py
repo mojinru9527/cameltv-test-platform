@@ -299,21 +299,6 @@ class ReviewBody(BaseModel):
     comment: str = Field("", max_length=500)
 
 
-def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
-    """在独立 DB session 中发送通知（供 BackgroundTasks 调用）。"""
-    import logging
-    from app.core.db import SessionLocal
-    from app.services.notify_service import notify_sync
-    logger = logging.getLogger("review")
-    db2 = SessionLocal()
-    try:
-        notify_sync(db2, project_id, event, data)
-    except Exception:
-        logger.exception("Background notification failed")
-    finally:
-        db2.close()
-
-
 @router.post("/{case_id}/review", response_model=R[TestCaseOut], summary="用例评审操作")
 def review_case(
     case_id: int,
@@ -350,21 +335,6 @@ def review_case(
     db.commit()
 
     _audit(req, current, db, "case:review", f"#{case_id} {body.action}", body.comment)
-
-    # Background notification
-    action_labels = {"submit": "提交评审", "approve": "评审通过", "reject": "评审驳回", "withdraw": "撤回评审"}
-    background_tasks.add_task(
-        _run_notify_in_new_session,
-        current.project_id or 0,
-        "case_reviewed",
-        {
-            "case_title": row.get("title", f"#{case_id}"),
-            "action": action_labels.get(body.action, body.action),
-            "reviewer": current.user.nickname or current.user.username,
-            "comment": body.comment or "无",
-            "link": "",
-        },
-    )
 
     return R.ok(TestCaseOut(**row))
 

@@ -46,33 +46,6 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
     )
 
 
-# ── 旧数据只读兼容映射（VersionMission -> VersionTask 视图，不双写）──
-@router.get("/compat/missions", response_model=R[Page[dict]], summary="旧智能测试任务兼容列表")
-def compat_mission_list(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
-    current: CurrentUser = Depends(require_permission("mission:list")),
-    db: Session = Depends(get_db),
-):
-    items, total = version_task_service.compat_mission_list(
-        db, current.project_id or 0, page=page, page_size=page_size
-    )
-    return R.ok(Page(total=total, page=page, page_size=page_size, items=items))
-
-
-@router.get("/compat/missions/{mission_id}", response_model=R[dict], summary="旧智能测试任务兼容详情")
-def compat_mission_detail(
-    mission_id: int,
-    current: CurrentUser = Depends(require_permission("mission:detail")),
-    db: Session = Depends(get_db),
-):
-    return R.ok(
-        version_task_service.compat_mission_view(
-            db, mission_id, current.project_id or 0
-        )
-    )
-
-
 # ── CRUD ──
 @router.get("", response_model=R[Page[VersionTaskListItem]], summary="版本验收任务列表")
 def list_tasks(
@@ -103,7 +76,6 @@ def create_task(
         title=data.title,
         version=data.version,
         source=data.source,
-        source_mission_id=data.source_mission_id,
         source_bundle_id=data.source_bundle_id,
         requirement_doc_id=data.requirement_doc_id,
         release_bundle_id=data.release_bundle_id,

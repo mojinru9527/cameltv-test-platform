@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router'
 
 import { fetchNodeStatus, nodeStartCommand, NODE_STATUS_POLL_MS, type NodeStatus } from '@/api/executionJobs'
 import { AsyncState } from '@/components/state'
@@ -156,11 +155,7 @@ export function NodeStatusCard({ className }: NodeStatusCardProps) {
             )
           }}
         </AsyncState>
-        {data && Number(data.queue_length ?? 0) > 0 ? (
-          <Link to="/report" className="text-xs text-primary hover:underline">
-            查看排队中的执行任务
-          </Link>
-        ) : null}
+        {/* 平台简化批次：报告中心已删除，原「查看排队中的执行任务」跳转报告页链接随之移除 */}
       </CardContent>
     </Card>
   )

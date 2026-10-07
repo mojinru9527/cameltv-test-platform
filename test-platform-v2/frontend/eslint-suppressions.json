@@ -9,17 +9,7 @@
       "count": 1
     }
   },
-  "src/api/wiki.ts": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
   "src/components/DomainTree.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
-  "src/components/TriagePanel.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 1
     }
@@ -87,16 +77,6 @@
   "src/pages/knowledge/components/SearchTab.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 1
-    }
-  },
-  "src/pages/knowledge/components/WikiDiffDetailDrawer.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
-  "src/pages/knowledge/components/WikiLintPanel.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 2
     }
   },
   "src/pages/notify/index.tsx": {

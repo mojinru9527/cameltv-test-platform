@@ -30,6 +30,10 @@ def upgrade() -> None:
 
     # ── test_report: gate columns + template FK ──
     inspector = sa.inspect(op.get_bind())
+    # 平台简化批次：test_report 表已随报告中心删除（新库 create_all 不再建），
+    # 迁移链在新库重跑时跳过该段（存量库不受影响）。
+    if "test_report" not in inspector.get_table_names():
+        return
     report_columns = {col["name"] for col in inspector.get_columns("test_report")}
     report_fks = {fk.get("name") for fk in inspector.get_foreign_keys("test_report")}
     with op.batch_alter_table("test_report") as batch_op:

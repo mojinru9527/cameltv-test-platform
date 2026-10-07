@@ -19,8 +19,8 @@ from __future__ import annotations
 
 import hashlib
 
-from app.modules.aitde.assertion import completeness
-from app.modules.aitde.common.enums import AdapterType, EvidenceType, OracleType
+from app.modules.execution_runtime import completeness
+from app.modules.execution_runtime.enums import AdapterType, EvidenceType, OracleType
 from app.services import execution_evidence_store as store
 
 MANIFEST_NAME = store.MANIFEST_NAME

@@ -19,8 +19,6 @@ from app.services.knowledge import chunk_service
 from app.services.knowledge.sanitize import sanitize
 from app.services.knowledge.source_service import record_source
 from app.services.knowledge.vectorize import embed_pending_chunks_in_new_session
-from app.services.knowledge.entity_service import extract_and_build_graph_in_new_session
-from app.services.knowledge.change_detector import handle_changes as _auto_trigger_agents
 
 logger = logging.getLogger("knowledge.ingest")
 
@@ -28,20 +26,12 @@ _MAX_RAW = 20000  # 单条 raw_content 上限，避免超大文档撑爆
 
 
 def _post_ingest_hooks(project_id: int, source_id: int | None = None) -> None:
-    """入库后统一触发：向量嵌入 + 实体提取 + Agent 自动变更检测（均独立 Session，不阻塞）。
+    """入库后统一触发：向量嵌入（独立 Session，不阻塞）。
 
-    P1-9：自动触发 Agent 是**无人值守的出网 LLM 调用**（入库 → 变更检测 →
-    Agent），必须由 `knowledge_auto_agent_enabled` 显式开启。此前它挂在
-    `knowledge_graph_enabled`（默认 True）上，于是每一次 UI 执行失败、
-    每一次 Agent 产出物入库都会顺带烧一次 LLM，且 Agent 之间互相喂养。
-    知识图谱开关现在只负责图谱本身，不再连带触发 Agent。
+    平台简化批次：知识图谱与 Agent 自动变更检测已随模块删除，入库后仅保留
+    向量嵌入（项目知识检索底座）。
     """
     embed_pending_chunks_in_new_session(project_id, source_id=source_id)
-    if settings.knowledge_graph_enabled:
-        extract_and_build_graph_in_new_session(project_id, source_id=source_id, max_chunks=50)
-    if settings.knowledge_auto_agent_enabled:
-        # 自动触发 Agent（变更检测 → 匹配规则 → 持久化防抖 → 自喂环断路）
-        _auto_trigger_agents(project_id, auto_trigger=True)
 
 
 def _truncate(text: str) -> str:
@@ -422,54 +412,6 @@ def ingest_ui_test_failure_in_new_session(project_id: int, run_id: int) -> None:
 
 # ── Lanhu version diff sync (batch-26) ──
 
-def _ensure_iteration_for_version(
-    db,
-    project_id: int,
-    version: str,
-    diff_json: dict | None,
-) -> None:
-    """Auto-create or update a KnowledgeIteration when a version diff is ingested.
-
-    Idempotent: if an active iteration already exists for this project+version,
-    update its end_date. Otherwise create a new one.
-    """
-    from datetime import datetime
-
-    from app.models.knowledge import KnowledgeIteration
-    from app.services.knowledge.snapshot_service import create_iteration
-
-    try:
-        existing = db.scalar(
-            select(KnowledgeIteration).where(
-                KnowledgeIteration.project_id == project_id,
-                KnowledgeIteration.version == version,
-                KnowledgeIteration.status == "active",
-            )
-        )
-        if existing:
-            existing.end_date = datetime.utcnow()
-            logger.debug("Updated KnowledgeIteration #%s for version=%s", existing.id, version)
-        else:
-            summary = diff_json.get("summary", {}) if diff_json else {}
-            desc = (
-                f"版本差异自动创建 — "
-                f"新增 {summary.get('new_pages', 0)} / "
-                f"修改 {summary.get('modified_pages', 0)} / "
-                f"不变 {summary.get('unchanged_pages', 0)} / "
-                f"删除 {summary.get('deleted_pages', 0)}"
-            )
-            create_iteration(
-                db,
-                project_id=project_id,
-                iteration_name=f"版本 {version}",
-                version=version,
-                description=desc,
-            )
-            logger.info("Created KnowledgeIteration for version=%s", version)
-    except Exception:
-        logger.exception("Failed to auto-create KnowledgeIteration for version=%s", version)
-
-
 def ingest_lanhu_version_diff(
     project_id: int,
     doc_id: str,
@@ -573,9 +515,7 @@ def ingest_lanhu_version_diff(
 
         db.commit()
 
-        # ── Auto-create/update KnowledgeIteration (batch-28) ──
-        _ensure_iteration_for_version(db, project_id, version, diff_json)
-
+        # 平台简化批次：KnowledgeIteration（AI 审核台迭代）已删除，不再自动建档
         _post_ingest_hooks(project_id, source_id=src.id)
 
         logger.info(
@@ -736,70 +676,5 @@ def ingest_capture_in_new_session(
         logger.exception("ingest capture failed: %s", title)
         db.rollback()
         return CaptureIngestResult("error")
-    finally:
-        db.close()
-
-
-# ── 10. Agent 产出自动入库 ──
-
-def ingest_agent_task_completed_in_new_session(
-    project_id: int,
-    agent_run_id: int,
-) -> int | None:
-    """Agent 执行成功后，将输出物作为知识源入库。"""
-    if not settings.knowledge_ingest_enabled:
-        return None
-    db = SessionLocal()
-    try:
-        from app.models.knowledge import AgentRun, AiArtifact
-        from app.services.knowledge.agent_prompts import AGENT_META
-
-        run = db.get(AgentRun, agent_run_id)
-        if not run or run.status != "success":
-            return None
-        artifact = db.scalar(
-            select(AiArtifact).where(AiArtifact.agent_run_id == agent_run_id)
-        )
-        if not artifact:
-            return None
-
-        meta = AGENT_META.get(run.agent_type, {})
-        raw = sanitize(_truncate(artifact.content_json or ""))
-        src = record_source(
-            db,
-            project_id=project_id,
-            source_type=f"agent_{run.agent_type}",
-            source_id=artifact.id,
-            title=f"Agent产出: {meta.get('label', run.agent_type)} #{run.id}",
-            raw_content=raw,
-            metadata={
-                "agent_run_id": agent_run_id,
-                "agent_type": run.agent_type,
-                "confidence": artifact.confidence,
-                "para_category": "resource",
-                "knowledge_domain": "platform",
-            },
-        )
-        if src is None:
-            db.commit()
-            return None
-        src.para_category = "resource"
-        src.knowledge_domain = "platform"
-        chunks = [
-            {
-                "chunk_type": f"agent_output_{run.agent_type}",
-                "title": f"{meta.get('label', '')} #{run.id}",
-                "content": raw,
-                "tags": [run.agent_type, "agent_output"],
-            }
-        ]
-        chunk_service.make_chunks(db, src, chunks)
-        db.commit()
-        _post_ingest_hooks(project_id, source_id=src.id)
-        return src.id
-    except Exception:
-        logger.exception("ingest agent task completed run_id=%s failed", agent_run_id)
-        db.rollback()
-        return None
     finally:
         db.close()

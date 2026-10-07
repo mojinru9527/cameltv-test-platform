@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.schemas.common import R
-from app.modules.aitde.execution.mapper import run_to_dict
+from app.modules.execution_runtime.mapper import run_to_dict
 from app.modules.campaign_execution.contracts import (
     ExecutionCancelRequest,
     ExecutionClaimRequest,

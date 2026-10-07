@@ -274,7 +274,7 @@ def get_knowledge_overview(db: Session, project_id: int) -> dict:
     派生值由路由层组装（不在本函数内读 settings）。
     """
     from app.models.knowledge import (
-        AgentRun, AiArtifact, KnowledgeChunk, KnowledgeEntity, KnowledgeRelation,
+        KnowledgeChunk, KnowledgeEntity, KnowledgeRelation,
     )
 
     pid = project_id
@@ -286,7 +286,6 @@ def get_knowledge_overview(db: Session, project_id: int) -> dict:
     source_count = _count(KnowledgeSource, KnowledgeSource.is_deleted.is_(False))
     chunk_count = _count(KnowledgeChunk, KnowledgeChunk.is_deleted.is_(False))
     entity_count = _count(KnowledgeEntity)
-    pending_artifacts = _count(AiArtifact, AiArtifact.review_status == "pending")
     deprecated_sources = _count(KnowledgeSource, KnowledgeSource.is_deleted.is_(True))
 
     # 孤儿切片：引用了不存在知识源的切片
@@ -308,21 +307,6 @@ def get_knowledge_overview(db: Session, project_id: int) -> dict:
     low_confidence_relations = _count(KnowledgeRelation, KnowledgeRelation.confidence < 0.5)
     unreviewed_relations = _count(KnowledgeRelation, KnowledgeRelation.review_status == "pending")
 
-    # M4: Agent 执行指标
-    agent_total_runs = _count(AgentRun)
-    agent_avg_duration = db.scalar(
-        select(func.avg(AgentRun.duration_ms)).where(
-            AgentRun.project_id == pid,
-            AgentRun.status == "success",
-            AgentRun.duration_ms > 0,
-        )
-    ) or 0
-    # 采纳率 = approved / (approved + rejected)
-    approved_count = _count(AiArtifact, AiArtifact.review_status == "approved")
-    rejected_count = _count(AiArtifact, AiArtifact.review_status == "rejected")
-    total_reviewed = approved_count + rejected_count
-    agent_approval_rate = approved_count / total_reviewed if total_reviewed > 0 else 0.0
-
     # M2 RAG: embedding 覆盖率（已嵌入切片数）
     embedded_chunks = _count(
         KnowledgeChunk, KnowledgeChunk.is_deleted.is_(False), KnowledgeChunk.embedding_id != ""
@@ -332,15 +316,11 @@ def get_knowledge_overview(db: Session, project_id: int) -> dict:
         "source_count": source_count,
         "chunk_count": chunk_count,
         "entity_count": entity_count,
-        "pending_artifacts": pending_artifacts,
         "deprecated_sources": deprecated_sources,
         "sourceless": sourceless,
         "recent_sources": list(recent),
         "low_confidence_relations": low_confidence_relations,
         "unreviewed_relations": unreviewed_relations,
-        "agent_total_runs": agent_total_runs,
-        "agent_avg_duration": agent_avg_duration,
-        "agent_approval_rate": agent_approval_rate,
         "embedded_chunks": embedded_chunks,
     }
 

@@ -153,8 +153,9 @@ function Get-AlembicHead([string]$RepoRoot) {
 function Invoke-Release {
     if (-not $Tag) { throw "-Tag 必填（如 release-20260823-0003）" }
     if ($Tag -notmatch '^release-\d{8}-\d{4}$') { throw 'Use an immutable release-YYYYMMDD-NNNN tag' }
-    if ($RuntimeMode -eq 'split' -and (-not $ExecutionConfig -or -not (Test-Path -LiteralPath $ExecutionConfig -PathType Leaf))) {
-        throw 'Split release requires a reviewed execution Compose configuration'
+    # 平台简化批次：只有一套部署拓扑，compose 钉扎对两种 runtime_mode 都必需。
+    if (-not $ExecutionConfig -or -not (Test-Path -LiteralPath $ExecutionConfig -PathType Leaf)) {
+        throw 'Release requires a reviewed deploy Compose configuration (-ExecutionConfig)'
     }
     $gitSha = (git -C $repoRoot rev-parse HEAD).Trim()
     Write-Host "==> Git SHA: $gitSha" -ForegroundColor Cyan
@@ -164,8 +165,8 @@ function Invoke-Release {
     # ── DryRun（C249-1）：只计算 manifest/digest 预览，不构建 / 不登记 / 不上传 / 不发布 ──
     # 背景：QA 曾用真实脚本"实测"某个函数，误触完整发布构建流程。
     if ($DryRun) {
-        if ($RuntimeMode -eq 'split' -and (-not $ExecutionConfig -or -not (Test-Path -LiteralPath $ExecutionConfig -PathType Leaf))) {
-            throw 'DryRun 的 split 模式仍需 -ExecutionConfig 以计算 execution_config_sha256'
+        if (-not $ExecutionConfig -or -not (Test-Path -LiteralPath $ExecutionConfig -PathType Leaf)) {
+            throw 'DryRun 仍需 -ExecutionConfig 以计算 execution_config_sha256'
         }
         $zero64 = "0" * 64
         $preview = [ordered]@{
@@ -174,11 +175,8 @@ function Invoke-Release {
             database = @{ alembic_heads = @($alembicHead); target_revision = $alembicHead; rollback_mode = 'application-rollback-or-forward-fix' }
             frontend = @{ image = 'cameltv-tp-frontend'; digest = '<computed during build>'; sbom_sha256 = $zero64 }
             backend = @{ image = 'cameltv-tp-backend'; digest = '<computed during build>'; sbom_sha256 = $zero64; openapi_sha256 = $zero64 }
-        }
-        if ($RuntimeMode -eq 'split') {
-            $preview.runner = @{ image = 'cameltv-tp-runner'; digest = '<computed during build>'; sbom_sha256 = $zero64 }
-            $preview.'ai-gateway' = @{ image = 'cameltv-tp-ai-gateway'; digest = '<computed during build>'; sbom_sha256 = $zero64 }
-            $preview.execution_config_sha256 = (Get-FileHash -LiteralPath $ExecutionConfig -Algorithm SHA256).Hash.ToLowerInvariant()
+            runner = @{ image = 'cameltv-tp-runner'; digest = '<computed during build>'; sbom_sha256 = $zero64 }
+            execution_config_sha256 = (Get-FileHash -LiteralPath $ExecutionConfig -Algorithm SHA256).Hash.ToLowerInvariant()
         }
         New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
         $previewPath = Join-Path $OutputDir "$Tag-dryrun-manifest.json"
@@ -195,24 +193,20 @@ function Invoke-Release {
 
     # Export first: type=docker does not load the new tag into the local store.
     # Metadata binds the manifest to this build, even on a first clean release.
+    # 平台简化批次：部署面只有一套拓扑（backend(api) + frontend + runner），
+    # 因此三件制品与 compose 钉扎不再区分 runtime_mode，恒定为发布内容。
     New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
-    $backendTarget = if ($RuntimeMode -eq 'split') { 'api' } else { 'runtime' }
-    Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-backend:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Target $backendTarget -Dest "$OutputDir\$Tag-backend.tar"
+    Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-backend:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Target api -Dest "$OutputDir\$Tag-backend.tar"
     Invoke-BuildxExport -Cwd "$repoRoot\test-platform-v2\frontend" -Image "cameltv-tp-frontend:$Tag" -BuildArg "VITE_ICP_NUMBER=$IcpNumber" -Dest "$OutputDir\$Tag-frontend.tar"
     $feDigest = Get-ExportDigest "$OutputDir\$Tag-frontend.tar.metadata.json"
     $beDigest = Get-ExportDigest "$OutputDir\$Tag-backend.tar.metadata.json"
     $archives = @("$OutputDir\$Tag-backend.tar", "$OutputDir\$Tag-frontend.tar")
-    if ($RuntimeMode -eq 'split') {
-        Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-runner:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Target runner -Dest "$OutputDir\$Tag-runner.tar"
-        $runnerDigest = Get-ExportDigest "$OutputDir\$Tag-runner.tar.metadata.json"
-        $archives += "$OutputDir\$Tag-runner.tar"
-        Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-ai-gateway:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Target ai-gateway -Dest "$OutputDir\$Tag-ai-gateway.tar"
-        $gatewayDigest = Get-ExportDigest "$OutputDir\$Tag-ai-gateway.tar.metadata.json"
-        $archives += "$OutputDir\$Tag-ai-gateway.tar"
-        $configArtifact = "$OutputDir\$Tag-execution.yml"
-        Copy-Item -LiteralPath $ExecutionConfig -Destination $configArtifact
-        $executionChecksum = (Get-FileHash -LiteralPath $configArtifact -Algorithm SHA256).Hash.ToLowerInvariant()
-    }
+    Invoke-BuildxExport -Cwd $repoRoot -Image "cameltv-tp-runner:$Tag" -Dockerfile "test-platform-v2/backend/Dockerfile" -Target runner -Dest "$OutputDir\$Tag-runner.tar"
+    $runnerDigest = Get-ExportDigest "$OutputDir\$Tag-runner.tar.metadata.json"
+    $archives += "$OutputDir\$Tag-runner.tar"
+    $configArtifact = "$OutputDir\$Tag-deploy.yml"
+    Copy-Item -LiteralPath $ExecutionConfig -Destination $configArtifact
+    $executionChecksum = (Get-FileHash -LiteralPath $configArtifact -Algorithm SHA256).Hash.ToLowerInvariant()
     Write-Host "==> 前端 digest: $feDigest" -ForegroundColor Green
     Write-Host "==> 后端 digest: $beDigest" -ForegroundColor Green
 
@@ -230,12 +224,9 @@ function Invoke-Release {
         secret_refs = @("secret://production/cameltv/platform@v1")
         qa_evidence = @("artifact://release-platform/qa-e2e")
     }
-    if ($RuntimeMode -eq 'split') {
-        $manifest.runtime_mode = 'split'
-        $manifest.runner = @{ image = 'cameltv-tp-runner'; digest = "sha256:$runnerDigest"; sbom_sha256 = $zero64 }
-        $manifest.'ai-gateway' = @{ image = 'cameltv-tp-ai-gateway'; digest = "sha256:$gatewayDigest"; sbom_sha256 = $zero64 }
-        $manifest.execution_config_sha256 = $executionChecksum
-    }
+    $manifest.runtime_mode = $RuntimeMode
+    $manifest.runner = @{ image = 'cameltv-tp-runner'; digest = "sha256:$runnerDigest"; sbom_sha256 = $zero64 }
+    $manifest.execution_config_sha256 = $executionChecksum
     $manifest = $manifest | ConvertTo-Json -Depth 6
     [IO.File]::WriteAllText("$OutputDir\$Tag-manifest.json", $manifest, [Text.UTF8Encoding]::new($false))
 
@@ -270,8 +261,7 @@ function Invoke-Release {
         . $script
         Send-ReleaseArchive -KeyPath $key -Source $source -Destination $destination
     }
-    $artifacts = @($archives)
-    if ($RuntimeMode -eq 'split') { $artifacts += $configArtifact }
+    $artifacts = @($archives) + @($configArtifact)
     $upJobs = @(foreach ($artifact in $artifacts) {
         Start-Job -ScriptBlock $upload -ArgumentList $transferScript, $KeyPath, $artifact, "${UserName}@${HostName}:$ReleaseDir/"
     })
@@ -350,3 +340,4 @@ switch ($Command) {
     "rollback" { Invoke-Rollback }
     "backup" { Invoke-Backup }
 }
+

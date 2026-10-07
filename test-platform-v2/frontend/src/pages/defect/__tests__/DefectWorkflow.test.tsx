@@ -28,11 +28,6 @@ vi.mock('@/api/defect', () => ({
   updateDefect: apiMocks.updateDefect,
 }))
 
-vi.mock('@/api/integration', () => ({
-  pushDefect: vi.fn(),
-  pullDefect: vi.fn(),
-}))
-
 vi.mock('@/api/testcase', () => ({
   fetchTestCases: vi.fn().mockResolvedValue({ items: [] }),
 }))
@@ -90,8 +85,6 @@ describe('缺陷状态机', () => {
         open
         onClose={vi.fn()}
         onTransitioned={onTransitioned}
-        onMutated={vi.fn()}
-        canSync={false}
       />,
     )
 
@@ -141,3 +134,4 @@ describe('缺陷编辑', () => {
     expect(updateBody).not.toHaveProperty('status')
   })
 })
+

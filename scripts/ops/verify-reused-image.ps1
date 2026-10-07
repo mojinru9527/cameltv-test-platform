@@ -21,7 +21,7 @@ verify-reused-image.ps1 — C249-5：沿用旧镜像 / 打补丁镜像前的核�
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][string]$Image,
-    [Parameter(Mandatory)][ValidateSet('backend', 'runner', 'api', 'ai-gateway')][string]$Part,
+    [Parameter(Mandatory)][ValidateSet('backend', 'runner', 'api')][string]$Part,
     [string]$RepoRoot = '',
     [string]$AppRoot = '/app',
     [string]$SshHost = '',

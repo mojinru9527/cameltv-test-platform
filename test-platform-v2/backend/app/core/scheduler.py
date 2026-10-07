@@ -114,30 +114,8 @@ def _execute_schedule(schedule_id: int, run_id: int | None = None):
                 "pending": 1,
             }
         elif sched.job_type == "report":
-            # Batch 155 / P2-15：计划维度定时生成报告
-            from app.schemas.test_report import ReportCreate
-            from app.services.report_service import create_report
-
-            if not sched.plan_id:
-                raise ValueError("job_type=report 必须提供 plan_id")
-            report = create_report(
-                db,
-                ReportCreate(plan_id=sched.plan_id, name=f"定时报告-{sched.name or sched.id}"),
-                creator_id=0,
-                project_id=sched.project_id,
-            )
-            report_id = report.get("report_id") or report.get("id") or ""
-            # B2：调度结果状态回填真实产出，不得硬编码 passed
-            result = {
-                "report_id": report_id,
-                "status": "passed" if report_id else "failed",
-                "total": 0,
-                "pass_": 0,
-                "fail": 0,
-                "skip": 0,
-                "block": 0,
-                "pending": 0,
-            }
+            # 平台简化批次：报告中心已删除，job_type=report 的存量定时任务直接失败提示
+            raise ValueError("报告中心已下线，请删除或改用计划执行类型的定时任务")
         else:
             execution_result = execute_all_cases(
                 db,
@@ -180,46 +158,7 @@ def _execute_schedule(schedule_id: int, run_id: int | None = None):
             sched.name,
             result,
         )
-
-        # Success notification is best-effort and cannot change the completed
-        # execution result. notify_sync records its own delivery outcome.
-        try:
-            from app.services.notify_service import notify_sync
-
-            _ndb = SessionLocal()
-            try:
-                if sched.job_type == "report":
-                    notify_sync(
-                        _ndb,
-                        sched.project_id,
-                        "report_generated",
-                        {
-                            "report_name": f"定时报告-{sched.name or sched.id}",
-                            "pass_rate": "-",
-                            "link": "/report",
-                        },
-                    )
-                else:
-                    notify_sync(
-                        _ndb,
-                        sched.project_id,
-                        "plan_done",
-                        {
-                            "plan_name": sched.plan.name if sched.plan else sched.name,
-                            "result_summary": (
-                                f"通过 {result['pass_']} / 失败 {result['fail']} / "
-                                f"跳过 {result['skip']}"
-                            ),
-                            "link": "",
-                        },
-                    )
-            finally:
-                _ndb.close()
-        except Exception as notify_err:
-            logger.warning(
-                "[scheduler] Failed to send completion notification: %s",
-                notify_err,
-            )
+        # 平台简化批次：通知体系已删除，任务完成不再推送
 
         return {"triggered": True, "run_id": run_id, "result": result}
 
@@ -242,27 +181,7 @@ def _execute_schedule(schedule_id: int, run_id: int | None = None):
                 schedule_id,
             )
 
-        # Fire notification on schedule failure (with a fresh session)
-        try:
-            failed_sched = db.get(TestSchedule, schedule_id)
-            if failed_sched:
-                from app.services.notify_service import notify_sync
-                _ndb = SessionLocal()
-                try:
-                    notify_sync(
-                        _ndb,
-                        failed_sched.project_id,
-                        "schedule_failed",
-                        {
-                            "schedule_name": failed_sched.name,
-                            "error": str(e)[:200],
-                            "link": "",
-                        },
-                    )
-                finally:
-                    _ndb.close()
-        except Exception as notify_err:
-            logger.warning(f"[scheduler] Failed to send failure notification: {notify_err}")
+        # 平台简化批次：通知体系已删除
         return {
             "triggered": False,
             "reason": "execution_failed",
@@ -347,31 +266,7 @@ def poll_pending_schedule_runs() -> None:
         _execute_schedule(pending.schedule_id, pending.id)
 
 
-def refresh_integration_jobs() -> None:
-    from app.core.db import SessionLocal
-    from app.models.integration import IntegrationConfig
-    from app.services.sync.engine import run_scheduled_sync
-    from apscheduler.triggers.interval import IntervalTrigger
-    from sqlalchemy import select
-
-    desired = {}
-    if settings.sync_enabled:
-        with SessionLocal() as db:
-            desired = dict(db.execute(
-                select(IntegrationConfig.id, IntegrationConfig.sync_interval_minutes)
-                .where(IntegrationConfig.enabled, IntegrationConfig.sync_interval_minutes > 0)
-            ).all())
-    for job in scheduler.get_jobs():
-        suffix = job.id.removeprefix('sync_integration_')
-        if job.id.startswith('sync_integration_') and suffix.isdigit() and int(suffix) not in desired:
-            scheduler.remove_job(job.id)
-    for config_id, minutes in desired.items():
-        job_id = f'sync_integration_{config_id}'
-        current = scheduler.get_job(job_id)
-        trigger = IntervalTrigger(minutes=minutes)
-        if current is None or str(current.trigger) != str(trigger):
-            scheduler.add_job(run_scheduled_sync, trigger=trigger, args=[config_id],
-                              id=job_id, replace_existing=True, max_instances=1, coalesce=True)
+# 平台简化批次：集成配置/同步引擎已删除，refresh_integration_jobs 一并移除
 
 
 def _naive_utc(dt):
@@ -464,14 +359,9 @@ def init_scheduler():
     for job_id, callback, seconds in (
         ('schedule_registry_refresh', refresh_schedule_jobs, 5),
         ('manual_schedule_poll', poll_pending_schedule_runs, 2),
-        ('integration_registry_refresh', refresh_integration_jobs, 15),
     ):
         scheduler.add_job(callback, trigger=IntervalTrigger(seconds=seconds),
                           id=job_id, replace_existing=True, max_instances=1, coalesce=True)
-    try:
-        refresh_integration_jobs()
-    except Exception:
-        logger.exception('Initial integration schedule refresh failed')
     try:
         scheduler.add_job(
             func=poll_and_execute,
@@ -509,7 +399,7 @@ def init_scheduler():
     except Exception as e:
         logger.error(f"[scheduler] Failed to register freshness decay: {e}")
 
-    # ── 概念地图自演化（每天凌晨 4:00）──
+    # ── 向量嵌入补跑（知识检索底座；每天凌晨 3:31）──
     if settings.knowledge_embedding_schedule_enabled:
         from app.services.knowledge.vectorize import embed_pending_projects_in_new_session
 
@@ -520,35 +410,7 @@ def init_scheduler():
             coalesce=True,
         )
 
-    try:
-        from app.services.knowledge.entity_service import evolve_graph_in_new_session
-        if settings.knowledge_graph_enabled:
-            def _evolve_all_projects():
-                from app.core.db import SessionLocal
-                from app.models.knowledge import KnowledgeEntity
-                from sqlalchemy import select
-                db = SessionLocal()
-                try:
-                    pids = list(db.scalars(
-                        select(KnowledgeEntity.project_id).distinct()
-                    ).all())
-                    for pid in pids:
-                        try:
-                            evolve_graph_in_new_session(pid)
-                        except Exception as ex:
-                            logger.error(f"[scheduler] Graph evolve failed for project {pid}: {ex}")
-                finally:
-                    db.close()
-
-            scheduler.add_job(
-                func=_evolve_all_projects,
-                trigger=CronTrigger(hour=4, minute=13),
-                id="knowledge_graph_evolve",
-                replace_existing=True,
-            )
-            logger.info("[scheduler] Knowledge graph auto-evolution registered (daily 04:13)")
-    except Exception as e:
-        logger.error(f"[scheduler] Failed to register graph evolution: {e}")
+    # 平台简化批次：知识图谱自演化（entity_service/graph_builder）已随图谱模块删除
 
     # ── 存储保留期清理（每日定时 + 启动即跑；生产磁盘防护）──
     try:

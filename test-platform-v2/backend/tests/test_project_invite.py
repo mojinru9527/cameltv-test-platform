@@ -13,7 +13,6 @@ from app.core.security import hash_password
 from app.models.project import ProjectMember
 from app.models.rbac import Permission, Role, RolePermission, UserRole
 from app.models.user import User
-from app.services import organization_service
 
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
@@ -75,37 +74,6 @@ def _register(client, username: str, email: str, project_token: str | None = Non
     resp = client.post("/api/v1/auth/register", json=body)
     client.cookies.clear()
     return resp
-
-
-def test_migration_creates_project_invite_table(tmp_path: Path) -> None:
-    database_path = tmp_path / "batch106.db"
-    import sqlalchemy as sa
-    engine = sa.create_engine(f"sqlite:///{database_path.as_posix()}")
-    metadata = sa.MetaData()
-    sa.Table("sys_project", metadata, sa.Column("id", sa.Integer(), primary_key=True))
-    metadata.create_all(engine)
-    env = os.environ.copy()
-    env.update({
-        "DATABASE_URL": f"sqlite:///{database_path.as_posix()}",
-        "AUTO_CREATE_TABLES": "false",
-        "PYTHONPATH": str(BACKEND_ROOT),
-    })
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "stamp", PREVIOUS_HEAD],
-        cwd=BACKEND_ROOT, env=env, capture_output=True, check=True, text=True, timeout=60,
-    )
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "upgrade", "head"],
-        cwd=BACKEND_ROOT, env=env, capture_output=True, check=True, text=True, timeout=60,
-    )
-    with engine.connect() as connection:
-        tables = {
-            row[0]
-            for row in connection.execute(
-                sa.text("SELECT name FROM sqlite_master WHERE type='table'")
-            )
-        }
-        assert "sys_project_invite" in tables
 
 
 class TestProjectInvite:
@@ -193,10 +161,8 @@ class TestProjectInvite:
             )
         )
         assert member is not None
-        # 自动加入项目所属组织（alice 的个人组织）
+        # 平台简化批次：组织概念已删除，邀请注册直接入项目（不再自动加入个人/项目组织）
         newbie_headers = _login(client, "newbie")
-        orgs = client.get("/api/v1/organizations", headers=newbie_headers).json()["data"]
-        assert len(orgs) == 2  # 个人组织 + 项目所属组织
         projects = client.get("/api/v1/projects", headers=newbie_headers).json()["data"]
         assert any(p["id"] == project["id"] for p in projects)
 

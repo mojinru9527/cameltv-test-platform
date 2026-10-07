@@ -15,6 +15,13 @@ related:
   - "work-logs/reviews/2026-09-18-code-audit-baseline.md"
 ---
 
+> ⚠️ **已被取代（2026-10-07）**：平台简化批次按用户定稿决策**整体删除** AITDE 智能测试任务、DSH 任务/Agent 与其余冗余模块，
+> 本文中「AITDE 为主线 / DSH 收编为执行引擎」的结论**不再成立**。当前有效事实源为
+> [11-platform-simplification-design.md](11-platform-simplification-design.md) 与
+> [../../work-logs/platform-simplification-production-eval-20261007.md](../../work-logs/platform-simplification-production-eval-20261007.md)；
+> 本文保留为历史设计记录。
+
+
 # 落地方案：控制面 + 本地执行节点（2026-09）
 
 > 基线：`main@96cd5b65`（Batch 255）。输入是用户 2026-09-18 的四项决定。
@@ -228,3 +235,4 @@ RequirementVersion ──(变更)──▶ Module ──(覆盖)──▶ Case(�
 | R3 | 体育内网 + VPN 可达性 | 执行失败误判 | 环境指纹 + 失败分类；平台不下发内网凭据 |
 | R4 | 磁盘 94% | 发布/备份失败 | 证据分片 + 保留策略 + 告警（B1 前先清理） |
 | R5 | 流水线虽瘦身但仍有人写六件 | 速度恢复不明显 | PR 模板按批次类型校验工件数量 |
+

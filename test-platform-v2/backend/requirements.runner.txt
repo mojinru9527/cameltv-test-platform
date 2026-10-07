@@ -1,3 +1,4 @@
--r requirements.ai.txt
+-r requirements.api.txt
 playwright==1.61.0
 rapidocr_onnxruntime>=1.4.4
+

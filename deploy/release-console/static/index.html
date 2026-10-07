@@ -62,6 +62,7 @@
         <label>Alembic Head</label><input id="f-alembicHead" placeholder="真实 revision，如 20260922_ai_agent_token">
         <label>前端镜像 Digest</label><input id="f-feDigest" placeholder="64 位 sha256 hex">
         <label>后端镜像 Digest</label><input id="f-beDigest" placeholder="64 位 sha256 hex">
+        <label>Runner 镜像 Digest</label><input id="f-runnerDigest" placeholder="64 位 sha256 hex">
         <label>镜像 Tag</label><input id="f-tag" placeholder="release-20260823-0002">
         <button onclick="submitRelease()">提交登记</button>
       </div>
@@ -128,6 +129,8 @@
         git_sha:document.getElementById('f-gitSha').value,
         frontend:{ image:'cameltv-tp-frontend', digest:'sha256:'+document.getElementById('f-feDigest').value, sbom_sha256:'0'.repeat(64) },
         backend:{ image:'cameltv-tp-backend', digest:'sha256:'+document.getElementById('f-beDigest').value, sbom_sha256:'0'.repeat(64), openapi_sha256:'0'.repeat(64) },
+        // 平台简化：只有一套拓扑（backend + frontend + runner），runner 制品为必填。
+        runner:{ image:'cameltv-tp-runner', digest:'sha256:'+document.getElementById('f-runnerDigest').value, sbom_sha256:'0'.repeat(64) },
         // Batch 249（ADR-0015 §4）：必须是真实 alembic revision；占位值会被 validate 拒绝。
         // 从待发布版本取：cd test-platform-v2/backend && python -m alembic heads
         database:{ alembic_heads:[document.getElementById('f-alembicHead').value], target_revision:document.getElementById('f-alembicHead').value, rollback_mode:'application-rollback-or-forward-fix' },

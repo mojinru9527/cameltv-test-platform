@@ -45,8 +45,8 @@ def main():
                 created.append(reference)
                 docker('save', '-o', str(root / f'{tag}-{part}.tar'), reference)
                 manifest[part] = {'image': f'cameltv-tp-{part}', 'digest': 'sha256:' + expected[part]}
-            config = root / f'{tag}-execution.yml'
-            content = (ROOT / 'test-platform-v2/deploy/docker-compose.execution.yml').read_bytes()
+            config = root / f'{tag}-deploy.yml'
+            content = (ROOT / 'test-platform-v2/deploy/docker-compose.yml').read_bytes()
             config.write_bytes(content)
             manifest['execution_config_sha256'] = hashlib.sha256(content).hexdigest()
             verified = verify(str(root), tag, manifest)
@@ -71,3 +71,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

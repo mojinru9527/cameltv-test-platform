@@ -90,7 +90,6 @@ def create_project(
     r = project_service.create_project(
         db, body, current.user.id,
         is_super=current.is_super,
-        organization_id=body.organization_id,
     )
     db.commit()
     _audit(req, current, db, "project:create", f"#{r['id']} {r['name']}")
@@ -189,7 +188,7 @@ def get_quality_gate(
     db: Session = Depends(get_db),
 ):
     """获取项目的质量门禁配置。未配置时返回默认值。"""
-    from app.services.report_service import get_quality_gate_config
+    from app.services.quality_gate_service import get_quality_gate_config
 
     config = get_quality_gate_config(db, project_id)
     if not config:
@@ -216,7 +215,7 @@ def upsert_quality_gate(
     db: Session = Depends(get_db),
 ):
     """创建或更新项目的质量门禁配置。"""
-    from app.services.report_service import save_quality_gate_config
+    from app.services.quality_gate_service import save_quality_gate_config
 
     config = save_quality_gate_config(
         db, project_id, body.model_dump(exclude_none=True)

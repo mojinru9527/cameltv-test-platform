@@ -7,20 +7,17 @@ from __future__ import annotations
 
 import httpx
 from fastapi.routing import APIRoute
-from pydantic import ValidationError
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response, StreamingResponse
 
 from app.core.config import settings
 
 
+# 平台简化批次：dsh_tasks / open_knowledge / test_plan_execution 写入口已删除，
+# 注册表仅保留仍由 runner 承担执行的路由。
 RUNNER_ENDPOINTS = {
-    'app.api.v1.playground': {'batch_compile_endpoint', 'batch_run_endpoint', 'compile_endpoint', 'execute_endpoint'},
     'app.api.v1.ui_test': {'create_capture', 'get_capture', 'runner_health', 'create_jobs_from_cases'},
-    'app.api.v1.dsh_tasks': {'dsh_health'},
-    'app.api.v1.test_plan_execution': {'execute_all_cases'},
     'app.api.v1.knowledge_core': {'search_knowledge', 'search_health', 'reembed'},
-    'app.api.v1.open_knowledge': {'open_search_knowledge'},
     'app.api.v1.requirement_ai_generate': {'generate_test_cases'},
 }
 
@@ -92,12 +89,7 @@ class ExecutionRoute(APIRoute):
         names = RUNNER_ENDPOINTS.get(self.endpoint.__module__, set())
         if self.endpoint.__name__ in names:
             self.openapi_extra = {**(self.openapi_extra or {}), 'x-execution-owner': 'runner'}
-            if self._mixed_plan_route():
-                self.openapi_extra['x-async-submission-owner'] = 'api'
 
-    def _mixed_plan_route(self):
-        return (self.endpoint.__module__ == 'app.api.v1.test_plan_execution'
-                and self.endpoint.__name__ == 'execute_all_cases')
 
     def get_route_handler(self):
         local_handler = super().get_route_handler()
@@ -108,17 +100,8 @@ class ExecutionRoute(APIRoute):
         async def handler(request: Request):
             if settings.worker_execution_enabled:
                 return await local_handler(request)
-            if self._mixed_plan_route():
-                from app.api.v1.test_plan_execution import ExecuteAllBody
-                body = await request.body()
-                try:
-                    data = ExecuteAllBody.model_validate_json(body) if body and body.strip() != b'null' else ExecuteAllBody()
-                except ValidationError:
-                    # Preserve the framework's existing validation response.
-                    return await local_handler(request)
-                if data.async_mode:
-                    return await local_handler(request)
-                return _ForwardedResponse(body=body)
+            # 平台简化批次：计划混合路由（execute_all_cases）写入口已删除，
+            # 保留的转发路径不再需要按 body 判定 async 提交归属。
             return _ForwardedResponse()
 
         return handler
@@ -143,3 +126,4 @@ class _ForwardedResponse(Response):
             return await receive()
 
         await ExecutionDispatch(None)(scope, replay, send)
+

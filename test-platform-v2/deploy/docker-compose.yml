@@ -1,6 +1,9 @@
 # CamelTv 测试平台 v2 — 一键部署（前端 + 后端 + 可选 PostgreSQL）
 # 用法: docker-compose up -d  → 访问 http://localhost
 # PostgreSQL: 在 .env 中设置 DATABASE_URL，并由密码管理器注入数据库密码。
+#
+# 平台简化批次：ai-gateway 独立服务与 aitde-worker 已删除（AI 走平台直连，
+# AI_API_KEY 由 backend 持有；执行走本地节点 cameltv-node + runner）。
 services:
   postgres:
     image: postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777
@@ -36,11 +39,6 @@ services:
     pids_limit: 512
     environment:
       - ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT is required}
-      # Split default: backend is the slim API process and delegates AI to the
-      # ai-gateway service and browser work to the runner service.
-      - AI_GATEWAY_URL=${AI_GATEWAY_URL:-http://ai-gateway:8100}
-      - AI_GATEWAY_TOKEN=${AI_GATEWAY_TOKEN:-}
-      - AI_GATEWAY_ROLE=${AI_GATEWAY_ROLE:-remote}
       - RUNNER_HTTP_URL=${RUNNER_HTTP_URL:-http://runner:8000}
       - WORKER_EXECUTION_ENABLED=${WORKER_EXECUTION_ENABLED:-false}
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
@@ -70,14 +68,9 @@ services:
       - OUTBOUND_REQUEST_TIMEOUT_SECONDS=${OUTBOUND_REQUEST_TIMEOUT_SECONDS:-20}
       - OUTBOUND_MAX_REDIRECTS=${OUTBOUND_MAX_REDIRECTS:-5}
       - OUTBOUND_MAX_RESPONSE_BYTES=${OUTBOUND_MAX_RESPONSE_BYTES:-10485760}
-      - ELK_BASE_URL=${ELK_BASE_URL:-}
-      - ELK_INDEX=${ELK_INDEX:-*}
-      # ── AI / LLM ──
-      # 凭据最小化（P0-4）：`AI_API_KEY` **刻意不在此处注入**。
-      # 本服务是 `AI_GATEWAY_ROLE=remote`，LLM 调用一律经 `AI_GATEWAY_URL` 委派给
-      # ai-gateway，云端明文 Key 只允许存在于 ai-gateway 一个容器内。
-      # 真实推理用的 Key 来自 ai_provider 表（按项目加密存储），不经由本变量。
+      # ── AI / LLM（平台简化批次：直连模式，AI_API_KEY 由本进程持有）──
       - AI_ENABLED=${AI_ENABLED:-false}
+      - AI_API_KEY=${AI_API_KEY:-}
       - AI_API_BASE_URL=${AI_API_BASE_URL:-https://api.deepseek.com/v1}
       - AI_MODEL=${AI_MODEL:-deepseek-chat}
       - AI_MAX_TOKENS=${AI_MAX_TOKENS:-8192}
@@ -95,27 +88,9 @@ services:
       - AI_SHADOW_TIMEOUT_SECONDS=${AI_SHADOW_TIMEOUT_SECONDS:-60}
       - AI_SHADOW_MAX_OUTPUT_CHARS=${AI_SHADOW_MAX_OUTPUT_CHARS:-200000}
       # ── P1-6：平台级 AI 配额闸门（按项目统计 model_usage_ledger）──
-      # 声明在 backend 上，经 extends 继承给 ai-gateway / runner / aitde-worker；
-      # 闸门在 ai-gateway 的 /internal/ai/v1/chat 咽喉与分诊直连链路上生效。
       - AI_GUARD_ENABLED=${AI_GUARD_ENABLED:-true}
-      # 60/分钟：容得下「大文档生成用例」的合法突发（抽取块 + 生成块 + 截断重试 ≈ 30 次），
-      # 同时仍能拦住失控循环；真正的花费上限是 24h token 预算。
       - AI_RATE_LIMIT_PER_MINUTE=${AI_RATE_LIMIT_PER_MINUTE:-60}
       - AI_DAILY_TOKEN_BUDGET=${AI_DAILY_TOKEN_BUDGET:-2000000}
-      # P1-8：单个 AiJob 允许被回收重试的最大次数，到顶即置为 failed 终态（默认 3）。
-      - AI_JOB_MAX_ATTEMPTS=${AI_JOB_MAX_ATTEMPTS:-3}
-      # ── AITDE v3 (Mission/Source/Scope/Contract/Scenario ...) ──
-      - AITDE_V3_ENABLED=${AITDE_V3_ENABLED:-false}
-      # ── AITDE Durable Runtime / Temporal ──
-      - TEMPORAL_ENABLED=${TEMPORAL_ENABLED:-false}
-      - TEMPORAL_GRPC_ENDPOINT=${TEMPORAL_GRPC_ENDPOINT:-127.0.0.1:7233}
-      - TEMPORAL_NAMESPACE=${TEMPORAL_NAMESPACE:-default}
-      - TEMPORAL_TASK_QUEUE=${TEMPORAL_TASK_QUEUE:-worker-test}
-      - TEMPORAL_TLS_ENABLED=${TEMPORAL_TLS_ENABLED:-false}
-      - TEMPORAL_INSECURE_CHANNEL=${TEMPORAL_INSECURE_CHANNEL:-true}
-      - TEMPORAL_TLS_CA_PATH=${TEMPORAL_TLS_CA_PATH:-}
-      - TEMPORAL_TLS_CERT_PATH=${TEMPORAL_TLS_CERT_PATH:-}
-      - TEMPORAL_TLS_KEY_PATH=${TEMPORAL_TLS_KEY_PATH:-}
       # ── 蓝湖自动登录 ──
       - LANHU_COOKIE=${LANHU_COOKIE:-}
       - LANHU_USERNAME=${LANHU_USERNAME:-}
@@ -126,40 +101,20 @@ services:
       # ── 知识库 / RAG / Wiki 功能开关 ──
       - KNOWLEDGE_INGEST_ENABLED=${KNOWLEDGE_INGEST_ENABLED:-true}
       - RAG_ENABLED=${RAG_ENABLED:-true}
-      - KNOWLEDGE_GRAPH_ENABLED=${KNOWLEDGE_GRAPH_ENABLED:-true}
-      # P1-9：入库 → 变更检测 → 自动跑 Agent（出网 LLM）必须显式 opt-in，默认关。
-      # 这正是"可运维地开启"的开关：不注入它，运维只能重建镜像才能启用该链路。
-      - KNOWLEDGE_AUTO_AGENT_ENABLED=${KNOWLEDGE_AUTO_AGENT_ENABLED:-false}
       - WIKI_ENABLED=${WIKI_ENABLED:-true}
       - WIKI_AUTO_INGEST_ENABLED=${WIKI_AUTO_INGEST_ENABLED:-true}
-      - WIKI_DIFF_ENABLED=${WIKI_DIFF_ENABLED:-true}
       - KNOWLEDGE_INGEST_PRODUCTION_DATA=${KNOWLEDGE_INGEST_PRODUCTION_DATA:-false}
       - LANHU_MCP_ENABLED=${LANHU_MCP_ENABLED:-true}
       - EMBEDDING_CACHE_DIR=${EMBEDDING_CACHE_DIR:-/data/models/fastembed}
       # ── 蓝湖证据包 OCR ──
       - LANHU_EVIDENCE_ENABLED=${LANHU_EVIDENCE_ENABLED:-true}
       - LANHU_OCR_PROVIDER=${LANHU_OCR_PROVIDER:-local}
-      # ── SMTP（可选）──
+      # ── SMTP（可选，仅密码重置邮件）──
       - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASSWORD=${SMTP_PASSWORD:-}
       - SMTP_FROM=${SMTP_FROM:-}
-      # ── DeepSeek Harness（DSH 测试 Agent 框架）──
-      - DSH_ENABLED=${DSH_ENABLED:-false}
-      - DSH_RUNTIME=${DSH_RUNTIME:-python-sdk}
-      - DSH_MODEL=${DSH_MODEL:-deepseek-v4-flash}
-      - DSH_MODEL_POOL=${DSH_MODEL_POOL:-}
-      - DSH_BASE_URL=${DSH_BASE_URL:-}
-      # 凭据最小化（P0-4）：`DSH_API_KEY` 同理不在此注入。DSH 子进程只在
-      # `WORKER_EXECUTION_ENABLED=true` 的执行服务（runner / aitde-worker）里派生，
-      # 这两个服务各自显式注入；只提供 REST API 的 backend 无需持有该 Key。
-      - DSH_TEAM_TIMEOUT_SECONDS=${DSH_TEAM_TIMEOUT_SECONDS:-1800}
-      - DSH_TEAM_HEARTBEAT_SECONDS=${DSH_TEAM_HEARTBEAT_SECONDS:-60}
-      - DSH_MAX_CONCURRENT=${DSH_MAX_CONCURRENT:-1}
-      # 生产 Linux 用 node 运行时（镜像未内置 deepseek-harness-sdk，python-sdk 不可用）；
-      # NodeSource Node 22 全局包布局为 /usr/lib/node_modules/...（见 Dockerfile 注释）
-      - DSH_HARNESS_PATH=${DSH_HARNESS_PATH:-/usr/lib/node_modules/@deepseek-ai/dsh/lib/bin.js}
       # ── 存储保留期清理（生产磁盘防护）──
       - STORAGE_RETENTION_ENABLED=${STORAGE_RETENTION_ENABLED:-false}
       - STORAGE_RETENTION_DAYS=${STORAGE_RETENTION_DAYS:-7}
@@ -189,91 +144,6 @@ services:
       retries: 3
       start_period: 10s
 
-  aitde-worker:
-    profiles: ["aitde-worker"]
-    build:
-      context: ../..
-      dockerfile: test-platform-v2/backend/Dockerfile
-      target: runner
-    extends:
-      service: backend
-    command:
-      - /usr/local/bin/start-aitde-worker
-      - ${AITDE_WORKER_ZONE:-PROD_RO}
-      - ${AITDE_WORKER_CAPABILITIES:-HTTP,BROWSER}
-    environment:
-      - BACKEND_APP_DIR=/app
-      - BACKEND_URL=http://backend:8000/api/v2
-      - API_TOKEN=${AITDE_WORKER_API_TOKEN:-}
-      # 凭据最小化（P0-4）：本服务 WORKER_EXECUTION_ENABLED=true，会派生 DSH 子进程。
-      - DSH_API_KEY=${DSH_API_KEY:-}
-      - WORKER_KEY=${AITDE_WORKER_KEY:-aitde-worker}
-      - WORKER_NAME=${AITDE_WORKER_NAME:-aitde-worker}
-      - WORKER_VERSION=${AITDE_WORKER_VERSION:-1.0}
-      - MACHINE_IDENTITY=${AITDE_WORKER_MACHINE_IDENTITY:-aitde-worker}
-      - WORKER_HEARTBEAT_SECONDS=${AITDE_WORKER_HEARTBEAT_SECONDS:-60}
-      - TEMPORAL_ENABLED=${TEMPORAL_ENABLED:-false}
-      - TEMPORAL_GRPC_ENDPOINT=${TEMPORAL_GRPC_ENDPOINT:-127.0.0.1:7233}
-      - TEMPORAL_NAMESPACE=${TEMPORAL_NAMESPACE:-default}
-      - TEMPORAL_TASK_QUEUE=${TEMPORAL_TASK_QUEUE:-worker-test}
-      - TEMPORAL_TLS_ENABLED=${TEMPORAL_TLS_ENABLED:-false}
-      - TEMPORAL_INSECURE_CHANNEL=${TEMPORAL_INSECURE_CHANNEL:-true}
-      - TEMPORAL_TLS_CA_PATH=${TEMPORAL_TLS_CA_PATH:-}
-      - TEMPORAL_TLS_CERT_PATH=${TEMPORAL_TLS_CERT_PATH:-}
-      - TEMPORAL_TLS_KEY_PATH=${TEMPORAL_TLS_KEY_PATH:-}
-    depends_on:
-      backend:
-        condition: service_healthy
-    init: true
-    restart: unless-stopped
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - >-
-          test -s /tmp/aitde-worker/heartbeat.pid &&
-          kill -0 "$$(cat /tmp/aitde-worker/heartbeat.pid)" &&
-          test -s /tmp/aitde-worker/gateway.pid &&
-          kill -0 "$$(cat /tmp/aitde-worker/gateway.pid)"
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 15s
-
-  ai-gateway:
-    extends:
-      service: backend
-    image: ${AI_GATEWAY_IMAGE:-cameltv-tp-ai-gateway:latest}
-    build:
-      target: ai-gateway
-    command: ["uvicorn", "app.ai_gateway_app:app", "--host", "0.0.0.0", "--port", "8100"]
-    environment:
-      AI_GATEWAY_ROLE: gateway
-      AI_GATEWAY_TOKEN: ${AI_GATEWAY_TOKEN:-}
-      # 凭据最小化（P0-4）：ai-gateway 是全栈**唯一**持有云端明文 AI Key 的容器。
-      AI_API_KEY: ${AI_API_KEY:-}
-      WORKER_EXECUTION_ENABLED: "false"
-      DATA_DIR: /app/storage
-    expose:
-      - "8100"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      volume-permissions:
-        condition: service_completed_successfully
-    init: true
-    mem_limit: ${AI_GATEWAY_MEMORY_LIMIT:-1024m}
-    pids_limit: 128
-    security_opt:
-      - no-new-privileges:true
-    stop_grace_period: 60s
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/internal/ai/v1/health')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    restart: unless-stopped
-
   runner:
     extends:
       service: backend
@@ -281,13 +151,12 @@ services:
     build:
       target: runner
     environment:
-      AI_GATEWAY_ROLE: remote
       WORKER_EXECUTION_ENABLED: "true"
-      # 凭据最小化（P0-4）：DSH 子进程在本服务内派生，故只有执行服务持有 DSH Key。
-      DSH_API_KEY: ${DSH_API_KEY:-}
+      # 凭据最小化（P0-4）：runner 只跑执行（Playwright/节点任务），不需要云端 AI Key。
+      # 本服务 `extends: backend` 会继承 backend 的环境，因此必须在此显式清空，
+      # 否则 AI_API_KEY 会被复制进执行容器（由 scripts/ops/verify-credential-isolation.py 守卫）。
+      AI_API_KEY: ""
     depends_on:
-      ai-gateway:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       volume-permissions:
@@ -327,9 +196,6 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_ICP_NUMBER: ${VITE_ICP_NUMBER:-}
-        # 留空 = 前端运行时跟随后端 AITDE_V3_ENABLED（GET /api/v2/health）。
-        # 仅在需要强制开/关时显式设置 true/false；显式 false 会覆盖后端开关。
-        VITE_AITDE_V3_ENABLED: ${VITE_AITDE_V3_ENABLED:-}
     depends_on:
       backend:
         condition: service_healthy
@@ -350,6 +216,7 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 10s
 
 volumes:
   tp-data:
@@ -358,5 +225,3 @@ volumes:
     driver: local
   pg-data:
     driver: local
-
-

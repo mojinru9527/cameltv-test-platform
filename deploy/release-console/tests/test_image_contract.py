@@ -95,6 +95,13 @@ class VerifyImageTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             image_contract.required_paths("no-such-part")
 
+    def test_retired_service_part_is_rejected(self):
+        """平台简化删除了独立 AI 网关：沿用旧镜像核对不再接受该部件。"""
+        retired = "-".join(("ai", "gateway"))
+        self.assertNotIn(retired, image_contract.REQUIRED_IMAGE_PATHS)
+        with self.assertRaises(ValueError):
+            image_contract.required_paths(retired)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -8,7 +8,7 @@ from sqlalchemy import engine_from_config, pool
 from app.core.config import settings
 from app.core.db import Base
 import app.models  # noqa: F401
-import app.modules.aitde  # noqa: F401  (registers AITDE domain models on Base.metadata)
+# 平台简化批次：AITDE 域模型已删除；execution_runtime 模型经 app.models 统一注册
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)

@@ -9,9 +9,7 @@ from app.core.exceptions import APIException
 from app.models.audit import AuditLog
 from app.models.api_asset import ApiExecutionTask
 from app.models.environment import Environment
-from app.models.integration import IntegrationConfig
 from app.models.release_bundle import ReleaseBundle
-from app.models.sync_log import SyncLog
 from app.services.production_operation_guard import (
     ProductionOperation,
     require_allowed_operation,
@@ -246,34 +244,6 @@ def test_release_regression_rejects_unconfirmed_production_before_jobs(
     from app.models.ui_test import UiTestJob
 
     assert db_session.query(UiTestJob).count() == 0
-    assert db_session.query(AuditLog).count() == audit_before
-
-
-def test_integration_sync_rejects_unconfirmed_production_before_sync_logs(
-    client, auth_headers, db_session
-):
-    environment = _environment(db_session)
-    integration = IntegrationConfig(
-        project_id=1,
-        name="Guarded Jira",
-        provider_type="jira",
-        base_url="https://jira.example.invalid",
-        auth_json="encrypted",
-        sync_direction="bidirectional",
-    )
-    db_session.add(integration)
-    db_session.commit()
-    audit_before = db_session.query(AuditLog).count()
-
-    response = client.post(
-        f"/api/v1/integrations/{integration.id}/sync-now",
-        headers=auth_headers,
-        params={"environment_id": environment.id, "confirm_prod": False},
-    )
-
-    assert response.status_code == 400
-    assert "confirm_prod=true" in response.json()["msg"]
-    assert db_session.query(SyncLog).count() == 0
     assert db_session.query(AuditLog).count() == audit_before
 
 

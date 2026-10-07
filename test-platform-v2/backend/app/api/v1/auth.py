@@ -254,7 +254,7 @@ def forgot_password(body: ForgotPasswordRequest, request: Request, db: Session =
             f"{settings.frontend_url.rstrip('/')}/reset-password"
             f"?token={quote(reset_token, safe='')}"
         )
-        from app.services.notify_service import send_password_reset_email
+        from app.services.mail_service import send_password_reset_email
         send_password_reset_email(user.email, reset_url)
 
     _auth_audit(db, request, "auth.password_reset_request", f"forgot {user.username}",

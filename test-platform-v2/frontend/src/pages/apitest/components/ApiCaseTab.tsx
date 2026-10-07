@@ -14,7 +14,6 @@ import { fetchTestCases, fetchDomains } from '@/api/testcase'
 import CaseDrawer from '@/pages/testcase/CaseDrawer'
 import { executeApiCase, createApiExecutionTask } from '@/api/apitest'
 import { fetchEnvironments } from '@/api/environment'
-import { fetchDatasets } from '@/api/dataset'
 import { useAuthStore } from '@/stores/auth'
 import { ResponsePanel } from './DebugTab'
 import { groupApiCases } from './apiCaseGroups'
@@ -43,8 +42,6 @@ export default function ApiCaseTab() {
   const [responseModalOpen, setResponseModalOpen] = useState(false)
   const [envs, setEnvs] = useState<Environment[]>([])
   const [envId, setEnvId] = useState<number | undefined>()
-  const [datasets, setDatasets] = useState<any[]>([])
-  const [datasetId, setDatasetId] = useState<number | undefined>()
   const [pendingExecution, setPendingExecution] = useState<{
     source: Extract<ApiExecutionSource, 'single' | 'group' | 'batch'>
     cases: any[]
@@ -87,12 +84,6 @@ export default function ApiCaseTab() {
     return () => controller.abort()
   }, [])
 
-  useEffect(() => {
-    const controller = new AbortController()
-    fetchDatasets({ page_size: 100 }).then((d: any) => setDatasets(d?.items || [])).catch(() => {})
-    return () => controller.abort()
-  }, [])
-
   const toggleSelect = (id: number) => {
     setSelected(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next })
   }
@@ -126,7 +117,6 @@ export default function ApiCaseTab() {
       const request = buildApiExecutionRequest({
         source: operation.source,
         environmentId: envId,
-        datasetId,
         caseIds,
         request: null,
         confirmProd,
@@ -215,17 +205,6 @@ export default function ApiCaseTab() {
                 <SelectItem value="_none">不使用环境</SelectItem>
                 {envs.map((e) => (
                   <SelectItem key={e.id} value={e.id.toString()}>{e.name} ({e.env_type})</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          {datasets.length > 0 && (
-            <Select value={datasetId?.toString() || '_none'} onValueChange={(v) => setDatasetId(v === '_none' ? undefined : Number(v))}>
-              <SelectTrigger className="w-[180px] h-8 text-xs" aria-label="按数据集执行"><SelectValue placeholder="不使用数据集" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_none">不使用数据集（用例默认）</SelectItem>
-                {datasets.map((d: any) => (
-                  <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

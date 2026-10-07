@@ -11,12 +11,12 @@ from app.core.exceptions import APIException
 from app.models.environment import Environment
 from app.models.test_case import TestCase
 from app.models.test_plan import TestPlan, TestPlanCase
-from app.modules.aitde.execution import repository
-from app.modules.aitde.execution import service as execution_service
-from app.modules.aitde.execution.models import EnvironmentSnapshot, ExecutionRun, ScenarioAdapter
-from app.modules.aitde.legacy_cutover.enums import LegacyObjectType
-from app.modules.aitde.legacy_cutover.models import LegacyObjectMapping
-from app.modules.aitde.scenario.models import TestScenario, TestScenarioVersion
+from app.modules.execution_runtime import repository
+from app.modules.execution_runtime import service as execution_service
+from app.modules.execution_runtime.models import EnvironmentSnapshot, ExecutionRun, ScenarioAdapter
+from app.modules.execution_runtime.legacy_enums import LegacyObjectType
+from app.modules.execution_runtime.legacy_models import LegacyObjectMapping
+from app.modules.execution_runtime.scenario_models import TestScenario, TestScenarioVersion
 from app.modules.campaign_execution.models import CampaignItem, TestCampaign
 
 _API_SOURCE_ASSET_TYPES = ("TEST_CASE", "API_CASE", "api_case")

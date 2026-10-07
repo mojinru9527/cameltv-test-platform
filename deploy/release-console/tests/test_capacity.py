@@ -35,17 +35,42 @@ class CapacityTests(unittest.TestCase):
         self.assertNotIn('$(touch nope)', command)
         self.assertTrue(command.startswith('python3 -c '))
 
+    def test_import_admission_is_mode_independent(self):
+        """release.ps1 两种模式产物一致：导入准入恒要求三件非空 tar。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            for part in ('backend', 'frontend', 'runner'):
+                (root / f'release-20260907-0001-{part}.tar').write_bytes(b'archive')
+            for mode in ('combined', 'split'):
+                with self.subTest(mode=mode), \
+                        patch.object(capacity.subprocess, 'check_output', return_value=tmp), \
+                        patch.object(capacity.shutil, 'disk_usage',
+                                     return_value=SimpleNamespace(free=20 * capacity.GIB)), \
+                        patch.object(capacity.os, 'statvfs', create=True,
+                                     return_value=SimpleNamespace(f_favail=10000, f_files=100000)):
+                    result = capacity.check(tmp, 'import', tag='release-20260907-0001',
+                                            runtime_mode=mode)
+                self.assertEqual(result['archive_bytes'], 21)
+                self.assertTrue(result['ok'])
+            (root / 'release-20260907-0001-runner.tar').unlink()
+            for mode in ('combined', 'split'):
+                with self.subTest(mode=mode, missing='runner'), \
+                        self.assertRaises(ValueError), \
+                        patch.object(capacity.subprocess, 'check_output') as run:
+                    capacity.check(tmp, 'import', tag='release-20260907-0001', runtime_mode=mode)
+                run.assert_not_called()
+
     def test_real_archive_sizes_and_same_device_are_checked_once(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = pathlib.Path(tmp)
-            for part in ('backend', 'frontend'):
+            for part in ('backend', 'frontend', 'runner'):
                 (root / f'release-20260907-0001-{part}.tar').write_bytes(b'archive')
             with patch.object(capacity.subprocess, 'check_output', return_value=tmp), \
                     patch.object(capacity.shutil, 'disk_usage', return_value=SimpleNamespace(free=20 * capacity.GIB)), \
                     patch.object(capacity.os, 'statvfs', create=True,
                                  return_value=SimpleNamespace(f_favail=10000, f_files=100000)):
                 result = capacity.check(tmp, 'import', tag='release-20260907-0001')
-            self.assertEqual(result['archive_bytes'], 14)
+            self.assertEqual(result['archive_bytes'], 21)
             self.assertTrue(result['ok'])
             self.assertEqual(len(result['filesystems']), 1)
 

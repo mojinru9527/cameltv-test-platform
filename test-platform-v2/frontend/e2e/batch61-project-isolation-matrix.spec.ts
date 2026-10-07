@@ -4,16 +4,18 @@ const PROJECT_A = { id: 61, code: 'batch61-a', name: 'Batch 61 项目 A' }
 const PROJECT_B = { id: 62, code: 'batch61-b', name: 'Batch 61 项目 B' }
 const EMPTY_PAGE = { total: 0, page: 1, page_size: 20, items: [] }
 
+// (平台简化批次) 已删页面（/testplan、/report、/trace、/dataset、/integration、/mindmap、
+// /theme-lab …）不再进入隔离矩阵；矩阵形态保持 10 行，全部换成保留路由 + 其真实 API。
 const ROUTES = [
   { route: '/requirement', api: '/requirements' },
   { route: '/testcase', api: '/test-cases' },
-  { route: '/testplan', api: '/test-plans' },
-  { route: '/report', api: '/reports' },
+  { route: '/schedule', api: '/schedules' },
   { route: '/defect', api: '/defects' },
-  { route: '/trace', api: '/trace/coverage' },
+  { route: '/lanhu-evidence', api: '/lanhu-evidence/jobs' },
+  { route: '/release-bundles', api: '/release-bundles' },
   { route: '/environment', api: '/environments' },
-  { route: '/dataset', api: '/datasets' },
-  { route: '/integration', api: '/integrations' },
+  { route: '/version-tasks', api: '/version-tasks' },
+  { route: '/ai-config', api: '/ai-config/providers' },
   { route: '/uitest', api: '/ui-tests' },
 ] as const
 
@@ -28,38 +30,12 @@ function ok(route: Route, data: unknown) {
 function responseFor(apiPath: string, projectId: number) {
   if (apiPath === '/system/menus') return []
   if (apiPath === '/test-cases/domains') return []
-  if (apiPath === '/reports/trends') {
-    return {
-      points: [],
-      summary: {
-        total_reports: 0,
-        avg_pass_rate: 0,
-        best_pass_rate: 0,
-        worst_pass_rate: 0,
-        latest_open_defects: 0,
-      },
-    }
-  }
+  // 用例服务页把 taxonomy 当数组使用（taxonomy.find），返回对象会整页崩到 ErrorBoundary
+  if (apiPath === '/test-cases/taxonomy') return []
   if (apiPath === '/defects/stats') return { total: 0, by_severity: {}, by_status: {} }
-  if (apiPath === '/trace/coverage') {
-    return {
-      total_cases: 0,
-      cases_in_plans: 0,
-      cases_executed: 0,
-      cases_passed: 0,
-      cases_with_defects: 0,
-      by_type: {},
-      by_domain: {},
-      coverage_rate: 0,
-      execution_rate: 0,
-      pass_rate: 0,
-      requirement_count: 0,
-      requirements_with_cases: 0,
-      requirement_coverage_rate: 0,
-    }
-  }
   if (apiPath === '/environments') return []
-  if (apiPath === '/integrations') return { items: [], total: 0 }
+  if (apiPath === '/ai-config/providers') return []
+  if (apiPath === '/ai-config/resolve') return { configured: false }
   if (apiPath === '/lanhu-evidence/jobs') return { ...EMPTY_PAGE, page_size: 50 }
   if (apiPath === '/ui-tests/scripts') return { available_specs: [] }
   if (apiPath === '/test-cases') {

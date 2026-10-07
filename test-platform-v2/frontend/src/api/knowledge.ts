@@ -1,25 +1,13 @@
 import api from './client'
 import type {
-  AiArtifact,
-  EntityExtractResult,
-  GraphView,
   KnowledgeChunk,
-  KnowledgeEntityBrief,
-  KnowledgeEntityStats,
-  KnowledgeEntity,
-  KnowledgeIteration,
   KnowledgeOverview,
   KnowledgePage,
-  KnowledgeRelation,
-  KnowledgeSnapshot,
   KnowledgeSearchQuery,
   KnowledgeSearchResult,
   KnowledgeSource,
-  CompareSnapshots,
-  RegressionPrediction,
   ReembedResult,
   SearchHealth,
-  ProjectSphereView,
 } from '@/types'
 
 // 说明：axios 拦截器已拆包 {code,msg,data}，并自动附带 X-Project-Id 头，
@@ -79,15 +67,6 @@ export async function classifyKnowledgeSource(
   return api.patch(`/knowledge/sources/${sourceId}/classify`, body)
 }
 
-export async function fetchAiArtifacts(params: {
-  review_status?: string
-  artifact_type?: string
-  page?: number
-  page_size?: number
-}, signal?: AbortSignal): Promise<KnowledgePage<AiArtifact>> {
-  return api.get('/knowledge/ai-artifacts', { params, ...(signal ? { signal } : {}) })
-}
-
 // ── M2 混合检索 ──
 
 export async function searchKnowledge(
@@ -104,147 +83,6 @@ export async function fetchSearchHealth(): Promise<SearchHealth> {
   return api.get('/knowledge/search/health')
 }
 
-// ── M3 知识图谱 ──
-
-export async function fetchGraphView(
-  limit = 200,
-  knowledgeDomain?: string,
-  signal?: AbortSignal,
-): Promise<GraphView> {
-  return api.get('/knowledge/graph/view', {
-    params: { limit, ...(knowledgeDomain ? { knowledge_domain: knowledgeDomain } : {}) },
-    signal,
-  })
-}
-
-export async function triggerEntityExtract(sourceId?: number | null, maxChunks = 100): Promise<EntityExtractResult> {
-  return api.post('/knowledge/graph/extract', { source_id: sourceId ?? null, max_chunks: maxChunks })
-}
-
-export async function fetchEntities(params: {
-  entity_type?: string
-  keyword?: string
-  knowledge_domain?: string
-  limit?: number
-}, signal?: AbortSignal): Promise<KnowledgeEntityBrief[]> {
-  return api.get('/knowledge/graph/entities', { params, ...(signal ? { signal } : {}) })
-}
-
-export async function fetchEntityStats(params: {
-  entity_type?: string
-  keyword?: string
-  knowledge_domain?: string
-}, signal?: AbortSignal): Promise<KnowledgeEntityStats> {
-  return api.get('/knowledge/graph/entities/stats', {
-    params,
-    ...(signal ? { signal } : {}),
-  })
-}
-
-export async function fetchEntityDetail(id: number, signal?: AbortSignal): Promise<KnowledgeEntity> {
-  return api.get(`/knowledge/graph/entities/${id}`, signal ? { signal } : undefined)
-}
-
-export async function fetchRelations(params: {
-  entity_id?: number
-  relation_type?: string
-  limit?: number
-}, signal?: AbortSignal): Promise<KnowledgeRelation[]> {
-  return api.get('/knowledge/graph/relations', { params, ...(signal ? { signal } : {}) })
-}
-
-export async function approveRelation(id: number, comment?: string): Promise<KnowledgeRelation> {
-  return api.post(`/knowledge/graph/relations/${id}/approve`, { comment: comment ?? '' })
-}
-
-export async function rejectRelation(id: number, comment?: string): Promise<KnowledgeRelation> {
-  return api.post(`/knowledge/graph/relations/${id}/reject`, { comment: comment ?? '' })
-}
-
-// ── M4 AI 产物操作 ──
-
-export async function approveArtifact(id: number, comment?: string): Promise<AiArtifact> {
-  return api.post(`/knowledge/ai-artifacts/${id}/approve`, { comment: comment ?? '' })
-}
-
-export async function rejectArtifact(id: number, comment?: string): Promise<AiArtifact> {
-  return api.post(`/knowledge/ai-artifacts/${id}/reject`, { comment: comment ?? '' })
-}
-
-export async function importArtifact(id: number): Promise<{ case_id: number }> {
-  return api.post(`/knowledge/ai-artifacts/${id}/import-to-test-cases`, { comment: '' })
-}
-
-export async function batchApproveArtifacts(
-  ids: number[],
-  comment?: string,
-): Promise<{ approved: number[]; missing: number[] }> {
-  return api.post('/knowledge/ai-artifacts/batch-approve', { ids, comment: comment ?? '' })
-}
-
-export async function batchRejectArtifacts(
-  ids: number[],
-  comment?: string,
-): Promise<{ rejected: number[]; missing: number[] }> {
-  return api.post('/knowledge/ai-artifacts/batch-reject', { ids, comment: comment ?? '' })
-}
-
-export async function batchImportArtifacts(
-  ids: number[],
-): Promise<{ imported: Array<{ artifact_id: number; case_id: number }> }> {
-  return api.post('/knowledge/ai-artifacts/batch-import', { ids })
-}
-
-// ── M6 迭代知识包 ──
-
-export async function fetchIterations(params: {
-  status?: string
-  page?: number
-  page_size?: number
-}): Promise<KnowledgePage<KnowledgeIteration>> {
-  return api.get('/knowledge/iterations', { params })
-}
-
-export async function fetchIteration(id: number): Promise<KnowledgeIteration> {
-  return api.get(`/knowledge/iterations/${id}`)
-}
-
-export async function createIteration(body: {
-  iteration_name: string
-  version?: string
-  start_date?: string | null
-  end_date?: string | null
-  description?: string
-}): Promise<KnowledgeIteration> {
-  return api.post('/knowledge/iterations', body)
-}
-
-export async function closeIteration(id: number): Promise<{ success: boolean; iteration_id: number; status: string }> {
-  return api.post(`/knowledge/iterations/${id}/close`)
-}
-
-export async function fetchSnapshots(iterationId: number): Promise<KnowledgeSnapshot[]> {
-  return api.get(`/knowledge/iterations/${iterationId}/snapshots`)
-}
-
-export async function compareIterations(
-  iterationId: number,
-  baseIterationId: number,
-): Promise<CompareSnapshots> {
-  return api.get(`/knowledge/iterations/${iterationId}/compare`, {
-    params: { base_iteration_id: baseIterationId },
-  })
-}
-
-// ── M6 回归预测 ──
-
-export async function predictRegressionScope(body: {
-  changed_paths: string[]
-  changed_modules: string[]
-}): Promise<RegressionPrediction> {
-  return api.post('/knowledge/predict/regression-scope', body)
-}
-
 // ── 灵感捕获 ──
 
 export async function captureInsight(body: {
@@ -255,77 +93,3 @@ export async function captureInsight(body: {
 }): Promise<{ id: number; title: string; status: string }> {
   return api.post('/knowledge/capture', body)
 }
-
-// ── M7 项目球层级图谱 ──
-
-export async function fetchGraphHierarchy(params?: {
-  release_bundle_id?: number
-  max_depth?: number
-}, signal?: AbortSignal): Promise<ProjectSphereView> {
-  return api.get('/knowledge/graph/hierarchy', { params, signal })
-}
-
-// ── 概念地图自演化 ──
-
-export interface GraphEvolveResult {
-  merged: number
-  confidence_updates: number
-  new_relations: number
-  message: string
-  error?: string
-}
-
-export async function evolveGraph(): Promise<GraphEvolveResult> {
-  return api.post('/knowledge/graph/evolve')
-}
-
-// ── Skills 模板 ──
-
-export interface SkillTemplate {
-  name: string
-  label: string
-  description: string
-  icon: string
-  category: string
-  input_params: SkillParam[]
-  available: boolean
-  unavailable_reason: string
-}
-
-export interface SkillParam {
-  key: string
-  label: string
-  type: string
-  required: boolean
-  default?: unknown
-  description?: string
-  options?: string[]
-}
-
-export interface SkillApplyResult {
-  success: boolean
-  skill: string
-  result?: string
-  agent_run_id?: number
-  knowledge_context?: string
-  prompt?: string
-  params?: Record<string, unknown>
-  note?: string
-  error?: string
-}
-
-export async function fetchSkills(): Promise<SkillTemplate[]> {
-  return api.get('/knowledge/skills')
-}
-
-export async function applySkill(
-  skillName: string,
-  params?: Record<string, unknown>,
-): Promise<SkillApplyResult> {
-  return api.post(`/knowledge/skills/${skillName}/apply`, { params })
-}
-
-// ── 类型重导出（供组件直接使用） ──
-
-export type { KnowledgeIteration, KnowledgeSnapshot, CompareSnapshots } from '@/types'
-

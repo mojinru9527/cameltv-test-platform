@@ -1,5 +1,8 @@
 # LLM Wiki 知识库差异对比能力落地方案
 
+> ⚠️ **本能力已在平台简化批次（2026-10-07）整体删除**（代码 + 数据库表）。本文保留为历史设计记录；
+> 当前有效事实源见 [docs/platform-refactor/11-platform-simplification-design.md](../../docs/platform-refactor/11-platform-simplification-design.md)。
+
 > 版本：v1.0  
 > 日期：2026-07-10  
 > 适用范围：测试平台 v2 知识中心、需求文档、Agent 工作台、蓝湖需求解析链路  

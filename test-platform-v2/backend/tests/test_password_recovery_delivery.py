@@ -4,7 +4,7 @@ from __future__ import annotations
 from urllib.parse import parse_qs, urlparse
 
 from app.core.config import settings
-from app.services import notify_service
+from app.services import mail_service
 
 
 def test_public_access_reports_password_reset_email_availability(client, monkeypatch):
@@ -38,7 +38,7 @@ def test_forgot_password_queues_frontend_reset_link(client, admin_user, db_sessi
 
     calls: list[tuple[str, str]] = []
     monkeypatch.setattr(
-        notify_service,
+        mail_service,
         "send_password_reset_email",
         lambda to_addr, reset_url: calls.append((to_addr, reset_url)) or True,
     )
@@ -61,7 +61,7 @@ def test_forgot_password_keeps_generic_response_for_missing_user(client, monkeyp
     monkeypatch.setattr(settings, "frontend_url", "https://app.example.com")
     calls: list[tuple[str, str]] = []
     monkeypatch.setattr(
-        notify_service,
+        mail_service,
         "send_password_reset_email",
         lambda to_addr, reset_url: calls.append((to_addr, reset_url)) or True,
     )
@@ -71,3 +71,4 @@ def test_forgot_password_keeps_generic_response_for_missing_user(client, monkeyp
     assert response.status_code == 200
     assert response.json()["code"] == 0
     assert calls == []
+

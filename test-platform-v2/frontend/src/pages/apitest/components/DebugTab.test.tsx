@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuthStore } from '@/stores/auth'
 
 const fetchEnvironments = vi.fn()
-const fetchDatasets = vi.fn()
 const quickExecute = vi.fn()
 
 vi.mock('@/api/apitest', () => ({
@@ -11,9 +10,6 @@ vi.mock('@/api/apitest', () => ({
 }))
 vi.mock('@/api/environment', () => ({
   fetchEnvironments: (...args: any[]) => fetchEnvironments(...args),
-}))
-vi.mock('@/api/dataset', () => ({
-  fetchDatasets: (...args: any[]) => fetchDatasets(...args),
 }))
 
 import DebugTab from './DebugTab'
@@ -41,7 +37,6 @@ describe('快速调试资产预填', () => {
         base_url: 'https://staging.example.com',
       },
     ])
-    fetchDatasets.mockReset().mockResolvedValue({ items: [] })
     quickExecute.mockReset()
   })
 

@@ -16,15 +16,6 @@ WORKDIR /app
 COPY test-platform-v2/backend/requirements.api.txt test-platform-v2/backend/requirements.api.lock ./
 RUN --mount=type=cache,target=/root/.cache/pip pip install --require-hashes -r requirements.api.lock
 
-# AI dependencies: FastEmbed/ONNX/NumPy, still no browser package.
-FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de AS builder-ai
-ENV VIRTUAL_ENV=/opt/venv
-RUN python -m venv /opt/venv
-ENV PATH=/opt/venv/bin:$PATH
-WORKDIR /app
-COPY test-platform-v2/backend/requirements.api.txt test-platform-v2/backend/requirements.api.lock test-platform-v2/backend/requirements.ai.txt test-platform-v2/backend/requirements.ai.lock ./
-RUN --mount=type=cache,target=/root/.cache/pip pip install --require-hashes -r requirements.ai.lock
-
 # Fetch the provider without requiring local submodule contents in cloud builds.
 FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de AS provider
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
@@ -53,25 +44,6 @@ RUN groupadd --gid "${APP_GID}" cameltv \
     && mkdir -p /app/storage /app/storage/lanhu-data \
     && chown -R cameltv:cameltv /app /home/cameltv
 COPY --from=provider --chown=cameltv:cameltv /app/lanhu-mcp /app/lanhu-mcp
-
-# AI Gateway runtime: FastEmbed/ONNX/NumPy, no browser package.
-FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de AS runtime-ai-base
-ARG APP_UID=10001
-ARG APP_GID=10001
-WORKDIR /app
-COPY --from=builder-ai /opt/venv /opt/venv
-ENV VIRTUAL_ENV=/opt/venv \
-    PATH=/opt/venv/bin:$PATH \
-    PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    WORKSPACE_ROOT=/app \
-    DATA_DIR=/app/storage \
-    HOME=/home/cameltv \
-    XDG_CACHE_HOME=/home/cameltv/.cache
-RUN groupadd --gid "${APP_GID}" cameltv \
-    && useradd --uid "${APP_UID}" --gid "${APP_GID}" --create-home --home-dir /home/cameltv --shell /usr/sbin/nologin cameltv \
-    && mkdir -p /app/storage \
-    && chown -R cameltv:cameltv /app /home/cameltv
 
 # Shared Python layers occupy disk once when API and runner are deployed together.
 FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de AS runtime-base
@@ -239,14 +211,6 @@ COPY --chown=cameltv:cameltv test-platform-v2/backend/tests/playwright ./tests/p
 USER cameltv:cameltv
 EXPOSE 8000
 CMD ["sh", "-c", "test \"$(alembic heads | grep -c ' (head)$')\" -eq 1 && alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --proxy-headers --forwarded-allow-ips=\"${FORWARDED_ALLOW_IPS:-*}\" --port \"${PORT:-8000}\""]
-
-# AI Gateway is an internal Python service: no Node, DSH or Chromium.
-FROM runtime-ai-base AS ai-gateway
-ENV AI_GATEWAY_ROLE=gateway
-COPY --chown=cameltv:cameltv test-platform-v2/backend/app ./app
-USER cameltv:cameltv
-EXPOSE 8100
-CMD ["uvicorn", "app.ai_gateway_app:app", "--host", "0.0.0.0", "--port", "8100"]
 
 # Preserve the combined image for existing release/rollback callers until cutover.
 FROM runner AS runtime

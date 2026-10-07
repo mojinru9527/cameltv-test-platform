@@ -18,11 +18,11 @@ def _manifest() -> dict:
         "git_sha": "a" * 40,
         "runtime_mode": "split",
         "database": {"alembic_heads": [HEAD], "target_revision": HEAD},
+        # split 仍然要求钉扎部署 compose 的校验和（简化不放松该门禁）。
         "execution_config_sha256": "b" * 64,
         "backend": {"image": "cameltv-tp-backend", "digest": "sha256:" + "c" * 64},
         "frontend": {"image": "cameltv-tp-frontend", "digest": "sha256:" + "d" * 64},
         "runner": {"image": "cameltv-tp-runner", "digest": "sha256:" + "e" * 64},
-        "ai-gateway": {"image": "cameltv-tp-ai-gateway", "digest": "sha256:" + "f" * 64},
     }
 
 

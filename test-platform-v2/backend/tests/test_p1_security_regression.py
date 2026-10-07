@@ -306,21 +306,10 @@ class TestRBACPermissions:
         )
         assert resp.status_code == 401, f"Expected 401, got {resp.status_code}"
 
-    def test_notify_list_requires_permission(self, client, admin_user):
-        """S3b: GET /api/v1/notify/channels requires authentication."""
-        # 真实的通知列表端点是 /notify/channels（需 notify:list 权限）；根路径 /notify/ 从不存在。
-        resp = client.get("/api/v1/notify/channels", headers={"X-Project-Id": "1"})
-        assert resp.status_code == 401, f"Expected 401, got {resp.status_code}"
-
     def test_admin_can_access_token_list(self, client, auth_headers):
         """S3d: Admin user (with '*' permission) can access token list."""
         resp = client.get("/api/v1/tokens/", headers=auth_headers)
         assert resp.status_code == 200, f"Admin denied token list: {resp.status_code}"
-
-    def test_admin_can_access_notify_list(self, client, auth_headers):
-        """S3d: Admin user can access notify list."""
-        resp = client.get("/api/v1/notify/channels", headers=auth_headers)
-        assert resp.status_code == 200, f"Admin denied notify list: {resp.status_code}"
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -449,15 +438,9 @@ class TestSecurityHeaders:
 
 @pytest.mark.integration
 class TestBackgroundTasks:
-    """Batch B: No bare asyncio.create_task; BackgroundTasks used instead."""
-
-    def test_notify_executor_singleton(self):
-        """C2: ThreadPoolExecutor is a module-level singleton."""
-        from app.services.notify_service import _get_notify_executor
-        pool1 = _get_notify_executor()
-        pool2 = _get_notify_executor()
-        assert pool1 is pool2
-        assert pool1._max_workers == 2
+    """Batch B: No bare asyncio.create_task; BackgroundTasks used instead.
+    平台简化批次：通知服务已删除，executor 单例用例随模块移除。"""
+    pass
 
 
 # ═══════════════════════════════════════════════════════════════════════════

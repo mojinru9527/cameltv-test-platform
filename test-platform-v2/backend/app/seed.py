@@ -22,9 +22,6 @@ _MENUS = [
     ("menu:versionmission", "版本发布包", "", "/release-bundles", "GitBranchOutlined", 4),
     # (B6-F03) 版本验收主链路唯一事实源入口（batch-216+）；testplan 数据只读归档后独立入口
     ("menu:versiontask", "版本验收任务", "", "/version-tasks", "CheckCircleOutlined", 4),
-    # (B13/B15-F05) 运营指标 / 新业务接入 入口
-    ("menu:metrics", "运营指标", "", "/metrics", "BarChartOutlined", 26),
-    ("menu:onboarding", "新业务接入", "", "/onboarding", "RocketOutlined", 27),
     # ── 知识中心 ──
     ("menu:knowledge", "知识中心", "", "/knowledge", "BrainCircuitOutlined", 5),
     # (c165-3 入口收敛) 知识中心四个子项与页内 Tab 完全同源（/knowledge?tab=xxx），
@@ -48,28 +45,13 @@ _MENUS = [
     # 不再生成菜单；menu_service.HIDDEN_MENU_CODES 继续拦截存量库中的旧权限行。
     # ("menu:playground", "Playground", "", "/playground", "PlayCircleOutlined", 10),
     ("menu:schedule", "定时任务", "", "/schedule", "ClockCircleOutlined", 12),
-    ("menu:report", "报告中心", "", "/report", "BarChartOutlined", 13),
     ("menu:system", "系统管理", "", "/system", "SettingOutlined", 14),
     ("menu:myproject", "我的项目", "", "/my-projects", "AppstoreOutlined", 15),
     ("menu:defect", "缺陷管理", "", "/defect", "BugOutlined", 16),
-    ("menu:dataset", "测试数据集", "", "/dataset", "DatabaseOutlined", 17),
-    ("menu:integration", "集成配置", "", "/integration", "LinkOutlined", 18),
-    ("menu:notify", "通知配置", "", "/notify", "NotificationOutlined", 19),
     ("menu:environment", "目标环境", "", "/environment", "EnvironmentOutlined", 20),
-    # (P1b 入口收敛) Agent 工作台已收敛进 DSH 任务（/agent-workbench → /dsh-tasks 重定向），
-    # 不再生成菜单；menu_service.HIDDEN_MENU_CODES 继续拦截存量库中的旧权限行。
-    # ("menu:agent-workbench", "Agent 工作台", "", "/agent-workbench", "SparklesOutlined", 21),
-    # (batch-172) DSH 任务执行模块
-    ("menu:dsh_tasks", "DSH 任务", "", "/dsh-tasks", "TerminalOutlined", 22),
     # (batch A) AI 模型配置中心
     ("menu:ai_config", "AI 配置", "", "/ai-config", "SettingOutlined", 23),
     ("menu:lanhu_evidence", "蓝湖证据包", "", "/lanhu-evidence", "FileTextOutlined", 23),
-    # (v331-gap B1) AITDE V3.0 智能测试任务入口（V30-103）；AITDE_V3 关闭时由
-    # menu_service 按 flag 隐藏，前端路由同样有 AITDE_V3_ENABLED 兜底。
-    ("menu:missions", "智能测试任务", "", "/missions", "SparklesOutlined", 24),
-    # (V3.4 Durable Runtime) Worker / Workflow / Policy / Secret / Approval 管理入口；
-    # AITDE_V3 关闭时由 menu_service 隐藏；页内按权限分 Tab。
-    ("menu:runtime", "Durable Runtime", "", "/admin/workers", "ClusterOutlined", 25),
 ]
 
 # 操作权限点（按模块分组）：(code, name, type)
@@ -102,11 +84,6 @@ _ACTIONS = [
     ("testplan:update", "编辑计划", "button"),
     ("testplan:delete", "删除计划", "button"),
     ("testplan:execute", "执行用例", "button"),
-    # 报告中心
-    ("report:list", "查看报告", "button"),
-    ("report:detail", "查看报告详情", "button"),
-    ("report:create", "生成报告", "button"),
-    ("report:delete", "删除报告", "button"),
     # 定时任务
     ("schedule:list", "查看定时任务", "button"),
     ("schedule:create", "创建定时任务", "button"),
@@ -154,54 +131,24 @@ _ACTIONS = [
     ("requirement:upload", "上传需求文档", "button"),
     ("requirement:generate", "AI生成用例", "button"),
     ("requirement:import", "导入生成用例", "button"),
-    # 版本测试任务
+    # 版本验收任务
     ("mission:list", "查看版本测试任务", "button"),
     ("mission:detail", "查看版本测试任务详情", "button"),
     ("mission:create", "创建版本测试任务", "button"),
     ("mission:update", "编辑版本测试任务", "button"),
-    ("mission:delete", "删除版本测试任务", "button"),
-    ("mission:log", "记录Agent部门日志", "button"),
     ("mission:generate", "生成版本测试资产", "button"),
-    # (v331-remediation-2 B2 / V30-085) AI Debug Drawer 权限点：
-    # 仅门控 model/prompt version/status/duration/token 的只读展示，
-    # 不展示 secret / hidden chain-of-thought。
-    ("mission:ai_view_debug", "查看 AI 调试信息", "button"),
-    # 数据源（AITDE V3.2 Data + DB Runtime）
-    ("data_source:list", "查看数据源", "button"),
-    ("data_source:manage", "管理数据源", "button"),
     # API Token 管理 (P1-6/S3)
     ("token:list", "查看 API Token", "button"),
     ("token:manage", "管理 API Token", "button"),
-    # 通知配置 (P1-6/S3)
-    ("notify:list", "查看通知配置", "button"),
-    ("notify:manage", "管理通知配置", "button"),
     # 用例评审 (C3)
     ("review:submit", "提交评审", "button"),
     ("review:approve", "审批评审", "button"),
-    # 测试数据集 (V2.5)
-    ("dataset:list", "查看数据集", "button"),
-    ("dataset:create", "新建数据集", "button"),
-    ("dataset:update", "编辑数据集", "button"),
-    ("dataset:delete", "删除数据集", "button"),
-    # 集成配置 (V2.6)
-    ("integration:list", "查看集成配置", "button"),
-    ("integration:manage", "管理集成配置", "button"),
-    ("integration:sync", "执行同步操作", "button"),
-    ("integration:sync_prod", "执行生产环境同步操作", "button"),
-    # 知识中心 (RAG / Agent 持续学习 — M0)
+    # 知识中心 (项目知识库)
     ("knowledge:view", "查看知识中心", "button"),
     ("knowledge:manage", "管理知识源（重解析/废弃）", "button"),
-    ("knowledge:approve", "审核知识与 AI 产物", "button"),
-    ("agent:view", "查看 Agent 执行记录", "button"),
-    ("agent:list", "查看 Agent 执行记录（已弃用，请使用 agent:view）", "button"),
-    ("agent:run", "手动触发 Agent", "button"),
-    ("agent:admin", "管理 Agent 配置", "button"),
-    ("ai_artifact:import", "导入 AI 产物到正式资产", "button"),
-    # LLM-Wiki 知识库 / 差异对比 (VNext-1..3) — 收在知识中心，不新增菜单
-    ("wiki:view", "查看 Wiki 页面与差异报告", "button"),
+    # Wiki 知识库（收在知识中心，不新增菜单）
+    ("wiki:view", "查看 Wiki 页面", "button"),
     ("wiki:manage", "导入来源、触发编译、重试任务", "button"),
-    ("wiki:approve", "审核 Wiki 页面与差异处理", "button"),
-    ("wiki:diff", "发起知识库对比", "button"),
     # 蓝湖证据包 OCR — 收在知识中心/需求，不新增菜单
     ("lanhu_evidence:view", "查看蓝湖证据包", "button"),
     ("lanhu_evidence:run", "创建蓝湖证据包", "button"),
@@ -210,20 +157,6 @@ _ACTIONS = [
     # AI 配置中心（Batch A）
     ("ai_config:view", "查看 AI 配置", "button"),
     ("ai_config:manage", "管理 AI 配置", "button"),
-    # ── AITDE V3.4 Durable Runtime（Temporal + Network Worker + Security Plane）──
-    ("workers:list", "查看运行时 Worker", "button"),
-    ("workers:register", "注册/心跳 Worker", "button"),
-    ("workers:manage", "管理 Worker（drain/disable）", "button"),
-    ("workflow:list", "查看 Durable Run", "button"),
-    ("workflow:detail", "查看 Run 详情", "button"),
-    ("workflow:resume", "恢复 Durable Run", "button"),
-    ("policy:evaluate", "政策网关判定", "button"),
-    ("policy:list", "查看 Policy Profile", "button"),
-    ("policy:manage", "管理 Policy Profile", "button"),
-    ("secret:list", "查看 SecretRef metadata", "button"),
-    ("secret:manage", "管理 SecretRef metadata", "button"),
-    ("approval:list", "查看审批请求", "button"),
-    ("approval:resolve", "批准/拒绝审批", "button"),
 ]
 
 # 测试人员可见的菜单子集
@@ -233,31 +166,20 @@ _TESTER_ACTIONS = {
     # 用例服务（B87-Q1 核心缺口）
     "testcase:list", "testcase:detail", "testcase:create", "testcase:update",
     "testcase:delete", "testcase:export",
-    # 测试计划
-    "testplan:list", "testplan:detail", "testplan:create", "testplan:update",
-    "testplan:delete", "testplan:execute",
-    # 报告中心（删除留管理员）
-    "report:list", "report:detail", "report:create",
+    # 测试计划（平台简化批次：写入口已删，仅保留只读）
+    "testplan:list", "testplan:detail",
     # 定时任务
     "schedule:list", "schedule:create", "schedule:update", "schedule:delete",
     "schedule:trigger",
-    # 缺陷管理（删除留管理员）
+    # 缺陷管理
     "defect:list", "defect:detail", "defect:create", "defect:update",
     # 需求文档（上传/生成/导入）
     "requirement:upload", "requirement:generate", "requirement:import",
-    # 测试数据集
-    "dataset:list", "dataset:create", "dataset:update", "dataset:delete",
     # 用例评审
     "review:submit", "review:approve",
-    # 版本测试任务（删除留管理员；AI 方案生成为主链路必要能力，授予 tester——F-04）
+    # 版本验收任务（AI 方案生成为主链路必要能力，授予 tester——F-04）
     "mission:list", "mission:detail", "mission:create", "mission:update",
-    "mission:generate", "mission:log",
-    # (v331-remediation-2 B2 / V30-085) AI Debug Drawer（只读调试信息）
-    "mission:ai_view_debug",
-    # 数据源（AITDE V3.2；只读+创建/编辑）
-    "data_source:list", "data_source:manage",
-    # 通知配置
-    "notify:list", "notify:manage",
+    "mission:generate",
     # UI 自动化（生产触发留管理员）
     "uitest:list", "uitest:detail", "uitest:create", "uitest:update",
     "uitest:delete", "uitest:trigger",
@@ -268,56 +190,44 @@ _TESTER_ACTIONS = {
     "execution:view",
     # 知识主线（Batch 260 / B3-3）：tester 可查询影响面；重建关联留管理员
     "impact:view",
-    # 知识 / Wiki / Agent（只读视角；管理/审核留管理员）
+    # 知识 / Wiki（只读视角；管理/审核留管理员）
     "knowledge:view",
-    "agent:view", "agent:list",
-    "menu:dsh_tasks",
-    "wiki:view", "wiki:diff",
+    "wiki:view",
     # AI 配置中心（查看权限；管理留管理员）
     "menu:ai_config", "ai_config:view",
     # 蓝湖证据包（采集可发起；导入/审核留管理员）
     "lanhu_evidence:view", "lanhu_evidence:run",
-    # (V3.4 Durable Runtime) Worker / Workflow 只读 + 恢复；Policy/Secret/Approval 管理员专属
-    "workers:list", "workflow:list", "workflow:detail", "workflow:resume",
 }
 
 # 运营只读角色（C31-3）：仅查看，无任何写操作
 _VIEWER_MENUS = {
-    "menu:workbench", "menu:requirement", "menu:report", "menu:defect",
-    "menu:dataset", "menu:knowledge",  # (c165-3) menu:knowledge:* 子项已收敛进页内 Tab
+    "menu:workbench", "menu:requirement", "menu:defect",
+    "menu:knowledge",  # (c165-3) menu:knowledge:* 子项已收敛进页内 Tab
     "menu:myproject",
 }
 
 _VIEWER_ACTIONS = {
     "testcase:list", "testcase:detail",
     "testplan:list", "testplan:detail",
-    "report:list", "report:detail",
     "defect:list", "defect:detail",
     "schedule:list",
-    "dataset:list",
     "knowledge:view",
     "wiki:view",
     "lanhu_evidence:view",
     "apitest:view",
     "uitest:list",
     "mission:list",
-    "data_source:list",
 }
 
 _TESTER_MENUS = {
     "menu:workbench", "menu:requirement", "menu:versionmission", "menu:testcase",  # (batch-212) menu:testplan 已删独立入口
-    "menu:apitest", "menu:uitest", "menu:schedule", "menu:report",  # (batch-165) menu:special 已隐藏
-    "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge",
-    "menu:notify", "menu:environment",  # (batch-165) menu:perftest 已隐藏
+    "menu:apitest", "menu:uitest", "menu:schedule",
+    "menu:defect", "menu:knowledge", "menu:environment",
     # (c165-3) menu:knowledge:* 子项已收敛进页内 Tab，不再分配菜单权限
     "menu:lanhu_evidence",
     "menu:myproject",
-    # (v331-gap B1) 智能测试任务入口
-    "menu:missions",
-    # (B6-F03) 版本验收主链路 / 运营指标 / 新业务接入
-    "menu:versiontask", "menu:metrics", "menu:onboarding",
-    # (V3.4 Durable Runtime) Worker / Workflow 只读入口（Policy/Secret/Approval 在页内按权限显示）
-    "menu:runtime",
+    # (B6-F03) 版本验收主链路
+    "menu:versiontask",
 }
 
 

@@ -129,11 +129,10 @@ export default function DefectPage() {
             if (routeDefectId) navigate('/defect')
           }}
           onTransitioned={(updated) => { setDetail(updated); refetchAll() }}
-          onMutated={list.refetch}
-          canSync={hasPerm('integration:sync')}
-        />
+          />
       )}
     </div>
     </PageShell>
   )
 }
+

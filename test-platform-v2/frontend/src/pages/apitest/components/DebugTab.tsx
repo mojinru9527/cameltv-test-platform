@@ -13,12 +13,11 @@ import {
 import ProductionOperationDialog from '@/components/ProductionOperationDialog'
 import { quickExecute } from '@/api/apitest'
 import { fetchEnvironments } from '@/api/environment'
-import { fetchDatasets } from '@/api/dataset'
 import AssertionEditor from './AssertionEditor'
 import { buildSampleBody, formatBody, defaultAssertions } from './utils'
 import { composeAssetUrl, splitAssetRoute } from './assetRoute'
 import { buildApiExecutionRequest } from '../apiExecutionRequest'
-import type { ApiEndpoint, ApiExecutionResult, ApiAssertionResult, BatchExecutionResult, DatasetListItem, Environment } from '@/types'
+import type { ApiEndpoint, ApiExecutionResult, ApiAssertionResult, BatchExecutionResult, Environment } from '@/types'
 
 /** A组：参数预填取契约真实值（example → default → enum[0]），无契约值时留空不造假。 */
 function prefillParamValue(p: Record<string, any>): string {
@@ -78,8 +77,6 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
   const [envId, setEnvId] = useState<number | undefined>()
   const [envs, setEnvs] = useState<Environment[]>([])
   const executionInFlightRef = useRef(false)
-  const [datasetId, setDatasetId] = useState<number | undefined>()
-  const [datasets, setDatasets] = useState<DatasetListItem[]>([])
   const [operationDialogOpen, setOperationDialogOpen] = useState(false)
 
   function isProductionEnv(env: Environment): boolean {
@@ -97,7 +94,6 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
       if (cancelled) return
       setEnvs(data)
     }).catch(() => {})
-    fetchDatasets({ page_size: 100 }).then(d => { if (!cancelled) setDatasets(d.items || []) }).catch(() => {})
     return () => { cancelled = true }
   }, [])
 
@@ -192,7 +188,6 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
       const lastResult = await quickExecute(buildApiExecutionRequest({
         source: endpoint ? 'asset' : 'quick',
         environmentId: envId,
-        datasetId,
         request: {
           method,
           url: buildUrl(),
@@ -268,20 +263,6 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
                 <SelectItem value="_none">不使用环境变量</SelectItem>
                 {envs.map((e) => (
                   <SelectItem key={e.id} value={e.id.toString()}>{e.name} ({e.env_type})</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        {datasets.length > 0 && (
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium whitespace-nowrap">测试数据:</label>
-            <Select value={datasetId?.toString() || '_none'} onValueChange={(v) => setDatasetId(v === '_none' ? undefined : Number(v))}>
-              <SelectTrigger className="w-full sm:w-[220px]" aria-label="选择测试数据集"><SelectValue placeholder="不使用测试数据" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_none">不使用测试数据</SelectItem>
-                {datasets.map((d) => (
-                  <SelectItem key={d.id} value={d.id.toString()}>{d.name} ({d.row_count} 行)</SelectItem>
                 ))}
               </SelectContent>
             </Select>

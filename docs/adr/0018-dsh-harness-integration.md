@@ -1,8 +1,8 @@
 ---
 title: "ADR-0018: 接入 DeepSeek Harness（dsh）执行型智能体能力"
 owner: "tech-lead"
-last_reviewed: "2026-08-14"
-status: "active"
+last_reviewed: "2026-10-07"
+status: "superseded"
 expires: "2027-02-14"
 tags: ["adr", "ai", "deepseek", "harness", "agent"]
 related: ["0007-deepseek-llm-test-case-generation.md", "0014-single-main-trunk-ai-worktrees.md"]
@@ -11,6 +11,14 @@ related: ["0007-deepseek-llm-test-case-generation.md", "0014-single-main-trunk-a
 # ADR-0018: 接入 DeepSeek Harness（dsh）执行型智能体能力
 
 ## 状态
+
+**已被平台简化批次（2026-10-07）取代。** DSH 执行型智能体（`app/services/dsh/`、`/dsh-tasks`、
+Agent 工作台执行型 Agent、`dsh_task` 表与全部 `DSH_*` 配置）整体删除，本 ADR 的 A/B/C 三条接入决策
+（harness 模式用例生成、Agent 工作台执行型 Agent、DSH 任务执行模块）连同 Batch 191 团队模式扩展一并失效；
+AI 能力收敛为「需求文档 → AI 生成用例」+ AI 配置中心（平台直连 LLM）。原文保留为历史记录。
+当前有效事实源见 [平台全面简化设计：删除清单与实施](../platform-refactor/11-platform-simplification-design.md)。
+
+## 状态（历史）
 
 ✅ 已采纳（Batch 172，首版 A/B/C 落地）
 ✅ 扩展（Batch 191，/dsh-tasks 支持 AgentTeams 团队模式，方案 B1）

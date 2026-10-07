@@ -35,12 +35,9 @@ class VersionTask(Base, TimestampMixin):
     # ── 标识 ──
     title: Mapped[str] = mapped_column(String(300), default="")
     version: Mapped[str] = mapped_column(String(80), default="", index=True)
-    # 来源：manual（新建）/ mission（旧智能测试任务导入兼容）/ bundle（发布包派生）
+    # 来源：manual（新建）/ bundle（发布包派生）；平台简化批次：mission 兼容来源已随
+    # version_mission 删除
     source: Mapped[str] = mapped_column(String(20), default="manual", index=True)
-    # 旧数据只读兼容映射指针（不双写）
-    source_mission_id: Mapped[int | None] = mapped_column(
-        ForeignKey("version_mission.id", ondelete="SET NULL"), default=None, index=True
-    )
     source_bundle_id: Mapped[int | None] = mapped_column(
         ForeignKey("release_bundle.id", ondelete="SET NULL"), default=None, index=True
     )

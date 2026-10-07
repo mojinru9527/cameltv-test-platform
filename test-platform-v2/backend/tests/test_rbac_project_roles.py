@@ -17,23 +17,28 @@ from app.models.rbac import Permission, Role, RolePermission
 from app.models.project import Project, ProjectMember
 from app.models.user import User
 
-# tester 矩阵契约（与 Design Spec §1.2 对齐）
+# tester 矩阵契约（与 Design Spec §1.2 对齐；平台简化批次：已删模块的权限点移除）
 REQUIRED_TESTER_CODES = {
     "testcase:list", "testcase:detail", "testcase:create", "testcase:update",
     "testcase:delete", "testcase:export",
-    "testplan:list", "testplan:detail", "testplan:create", "testplan:update",
-    "testplan:delete", "testplan:execute",
-    "report:list", "report:detail", "report:create",
-    "schedule:create", "schedule:update", "schedule:delete", "schedule:trigger",
+    "testplan:list", "testplan:detail",
+    "schedule:list", "schedule:create", "schedule:update", "schedule:delete", "schedule:trigger",
     "defect:list", "defect:detail", "defect:create", "defect:update",
     "requirement:upload", "requirement:generate", "requirement:import",
-    "dataset:list", "dataset:create", "dataset:update", "dataset:delete",
     "review:submit", "review:approve",
     "mission:list", "mission:detail", "mission:create", "mission:update",
-    "mission:log",
-    "notify:list", "notify:manage",
+    "mission:generate",
     "uitest:list", "uitest:detail", "uitest:create", "uitest:update",
     "uitest:delete", "uitest:trigger",
+    "apitest:execute", "apitest:view", "apitest:import", "apitest:generate",
+    "apitest:task", "apitest:asset_manage",
+    "execution:view",
+    "impact:view",
+    "knowledge:view",
+    "wiki:view",
+    "ai_config:view",
+    "lanhu_evidence:view", "lanhu_evidence:run",
+    "project:self_create",
 }
 
 # 明确不授予 tester 的管理/生产/系统权限
@@ -45,11 +50,10 @@ FORBIDDEN_TESTER_CODES = {
     "token:manage",
     "knowledge:manage", "knowledge:approve",
     "wiki:manage", "wiki:approve",
-    "agent:run", "agent:admin",
-    "ai_artifact:import",
+    "ai_config:manage",
     "lanhu_evidence:import", "lanhu_evidence:review",
-    "integration:sync_prod", "apitest:execute_prod", "uitest:trigger_prod", "uitest:code_execute",
-    "report:delete", "defect:delete", "mission:delete",
+    "apitest:execute_prod", "uitest:trigger_prod", "uitest:code_execute",
+    "defect:delete", "mission:delete",
 }
 
 

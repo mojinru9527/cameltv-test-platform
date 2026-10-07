@@ -117,11 +117,6 @@ def test_legacy_wiki_lanhu_import_cannot_bypass_evidence_gate(
     assert "证据包质量门禁" in response.json()["msg"]
 
 
-def test_diff_gated_when_diff_off(client, auth_headers, wiki_off):
-    r = client.post("/api/v1/wiki/diff/tasks", headers=auth_headers,
-                    json={"query": "比赛推送"})
-    assert r.status_code == 503
-
 
 def test_raw_sources_list_empty(client, auth_headers):
     r = client.get("/api/v1/wiki/raw-sources", headers=auth_headers)
@@ -133,64 +128,6 @@ def test_requires_auth(client):
     r = client.get("/api/v1/wiki/config")
     assert r.status_code in (401, 403)
 
-
-def test_wiki_lint_rejects_cross_project_override_for_non_superuser(
-    client, wiki_manager_headers, wiki_lint_on, db_session
-):
-    """P0: a project wiki manager cannot lint another project via request override."""
-    response = client.post(
-        "/api/v1/wiki/lint",
-        headers=wiki_manager_headers,
-        json={"project_id_override": 999},
-    )
-
-    assert response.status_code == 403
-    assert "super administrator" in response.json()["msg"]
-    from app.models.wiki import WikiLintReport
-    assert db_session.query(WikiLintReport).count() == 0
-
-
-def test_wiki_lint_allows_current_project_override_for_non_superuser(
-    client, wiki_manager_headers, wiki_lint_on
-):
-    """P1: explicitly selecting the active project remains valid for a wiki manager."""
-    response = client.post(
-        "/api/v1/wiki/lint",
-        headers=wiki_manager_headers,
-        json={"project_id_override": 1},
-    )
-
-    assert response.status_code == 200
-    assert response.json()["data"]["project_id"] == 1
-
-
-def test_wiki_lint_allows_cross_project_override_for_superuser(
-    client, auth_headers, wiki_lint_on
-):
-    """P0: a super administrator may deliberately lint another project."""
-    response = client.post(
-        "/api/v1/wiki/lint",
-        headers=auth_headers,
-        json={"project_id_override": 999},
-    )
-
-    assert response.status_code == 200
-    assert response.json()["data"]["project_id"] == 999
-
-
-def test_wiki_lint_rejects_cross_project_override_for_project_wildcard_role(
-    client, project_wildcard_headers, wiki_lint_on, db_session
-):
-    """P0: project-level '*' permission must not impersonate a system super-admin."""
-    response = client.post(
-        "/api/v1/wiki/lint",
-        headers=project_wildcard_headers,
-        json={"project_id_override": 999},
-    )
-
-    assert response.status_code == 403
-    from app.models.wiki import WikiLintReport
-    assert db_session.query(WikiLintReport).count() == 0
 
 
 def test_permission_codes_exclude_wildcard_role_from_another_project(db_session):

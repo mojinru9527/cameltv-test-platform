@@ -12,7 +12,7 @@ import shutil
 import subprocess
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import Any
 
@@ -244,52 +244,9 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
                 return {"status": _current_run_status(db, run_id), "run_id": run_id}
         if not _claim_pending_run(db, run_id):
             return {"status": _current_run_status(db, run_id), "run_id": run_id}
-        from app.models.ui_test import UiTestJob
-        from app.services.notify_service import queue_notification
-
-        job = db.get(UiTestJob, job_id)
-        task_name = job.name if job else f"UI 任务 #{job_id}"
-        queue_notification(
-            project_id,
-            "task_started",
-            {
-                "task_type": "UI 自动化",
-                "task_name": task_name,
-                "triggered_by": f"user#{job.creator_id}" if job else "-",
-                "link": "/uitest",
-            },
-        )
+        # 平台简化批次：通知体系已删除，任务开始/结束事件不再推送，也不再
+        # 为推送统计 job/passed/failed/total；执行结果直接返回。
         output = _run_playwright_test(db, run_id, job_id, project_id)
-        result = output.get("result") or {}
-        passed = int(result.get("pass_", 0) or 0)
-        failed = int(result.get("fail", 0) or 0)
-        skipped = int(result.get("skip", 0) or 0)
-        total = int(result.get("total", passed + failed + skipped) or 0)
-        status = output.get("status", "failed")
-        queue_notification(
-            project_id,
-            "task_finished",
-            {
-                "task_type": "UI 自动化",
-                "task_name": task_name,
-                "status": status,
-                "result_summary": f"通过 {passed} / 失败 {failed} / 跳过 {skipped}",
-                "link": "/uitest",
-            },
-        )
-        queue_notification(
-            project_id,
-            "test_result",
-            {
-                "task_name": task_name,
-                "passed": passed,
-                "failed": failed,
-                "skipped": skipped,
-                "pass_rate": f"{round(passed * 100 / total, 1)}%" if total else "0%",
-                "conclusion": "通过" if total and failed == 0 else status,
-                "link": "/uitest",
-            },
-        )
         return output
     finally:
         try:
@@ -454,7 +411,7 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
                 stdout_text = process_output["stdout"]
                 stderr_text = process_output["stderr"]
                 run.status = "cancelled"
-                run.finished_at = datetime.now(timezone.utc)
+                run.finished_at = datetime.now(UTC)
                 run.error_message = "用户手动取消"
                 run.stdout = stdout_text or ""
                 run.stderr = (stderr_text or "")[:5000]
@@ -631,7 +588,7 @@ def _safe_communicate(proc: subprocess.Popen) -> tuple[str, str]:
 def _fail_run(db: Session, run, message: str, job=None) -> dict:
     """标记 run 为失败并落库 error_message。所有失败路径必须调用此函数。"""
     run.status = "failed"
-    run.finished_at = datetime.now(timezone.utc)
+    run.finished_at = datetime.now(UTC)
     run.error_message = message
     run.result = json.dumps({"error": message, "total": 0, "pass_": 0, "fail": 0, "skip": 0, "duration": 0}, ensure_ascii=False)
     if job:
@@ -678,7 +635,7 @@ def _complete_run(
 
     run.result = json.dumps(result, ensure_ascii=False)
     run.status = status
-    run.finished_at = datetime.now(timezone.utc)
+    run.finished_at = datetime.now(UTC)
     run.error_message = error or ""
     run.screenshots = json.dumps(screenshots or [], ensure_ascii=False)
     if videos:

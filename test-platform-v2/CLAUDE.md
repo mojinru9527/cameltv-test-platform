@@ -28,29 +28,28 @@ test-platform-v2/
 
 ## 功能模块成熟度
 
-> `✅` 仅表示本地受控链路已有可复核证据；`🟡` 表示真实实现但生产级矩阵不完整；`⛔` 表示缺外部条件或明确延期。Batch 60 总体判定为 `NEEDS WORK`，production 发布为 `DEFERRED`，不得把单模块实现直接写成“生产可用”。
+> `✅` 仅表示本地受控链路已有可复核证据；`🟡` 表示真实实现但生产级矩阵不完整；`⛔` 表示缺外部条件或明确延期。
+> **平台简化批次（2026-10-07）**：AITDE（智能测试任务/场景/契约/Durable Runtime/愈合/Flaky/生产证据）、DSH 任务、报告中心、测试数据集、通知、集成、组织管理、主题实验室、知识图谱/AI 审核台/平台研发等已**整体删除**（代码 + 库表 + 迁移），详见 `docs/platform-refactor/11-platform-simplification-design.md` 与 `work-logs/platform-simplification-production-eval-20261007.md`。
 
 | 模块 | 路由 | 成熟度 | 说明 |
 |------|------|--------|------|
 | 登录鉴权 / 项目切换 | `/login` | 🟡 | Cookie 主会话 + Bearer 兼容回退；全模块项目切换、会话失效和强制改密门禁仍待矩阵验收 |
 | 用户/角色/权限 RBAC | `/system` | 🟡 | 三级数据范围与审计存在；admin/tester/viewer 全能力矩阵未完成 |
-| 项目管理 | `/project` | ✅ | 多项目、成员、主题与停用语义已有本地证据 |
-| 工作台 / 用例 / 计划 / 报告 | `/workbench` `/testcase` `/testplan` `/report` | 🟡 | 核心本地闭环真实可用；跨页查询、批量破坏操作、全路由权限和可访问性仍需回归 |
+| 项目管理 | `/my-projects` | ✅ | 多项目、成员、主题与停用语义；组织概念已删除（项目成员直管） |
+| 工作台 / 用例 | `/workbench` `/testcase` | 🟡 | 核心本地闭环真实可用；跨页查询、批量破坏操作、全路由权限和可访问性仍需回归 |
+| 测试计划（只读归档） | `/test-plans`（仅 GET） | 🟡 | 前端入口已删（batch-212）；后端只读 API + 历史表保留（工作台/缺陷统计底座），写入口已删除 |
 | 缺陷 / 定时 | `/defect` `/schedule` | 🟡 | 状态流和定时存在；全量 UI/API/DB/审计一致性与三身份矩阵未完成 |
-| 质量追溯 | `/report?tab=trace` | 🟡 | P2c 起并入报告中心 Tab（`/trace` 重定向，菜单种子移除）；后端 `/api/v1/trace` API 保留 |
-| 需求 | `/requirement` | 🟡 | 本地持久化与展示可用；真实 LLM、蓝湖与旧 PostgreSQL 快照验收受外部输入阻塞 |
-| 用例脑图 | `/testcase?tab=mindmap` | 🟡 | P2a 起并入用例服务「脑图视图」Tab（`/mindmap` 重定向，菜单种子移除）；脑图内容实际为用例 taxonomy 聚合 |
-| API 测试 | `/apitest` | 🟡 | OpenAPI/Swagger 导入、httpx 执行、任务/快照已实现；五入口一致性、生产保护与 Test5 当前契约待验收 |
+| 需求 | `/requirement` | 🟡 | 本地持久化 + AI 生成用例（平台直连 LLM）+ 蓝湖证据面板 |
+| 用例脑图 | `/testcase?tab=mindmap` | 🟡 | P2a 起并入用例服务「脑图视图」Tab；脑图内容为用例 taxonomy 聚合 |
+| API 测试 | `/apitest` | 🟡 | OpenAPI/Swagger 导入、httpx 执行、任务/快照已实现；智能生成用例/泛化保留 |
 | UI 自动化 | `/uitest` | 🟡 | 本地 Runner、环境注入和产物闭环已验证；不能替代体育 Test5/生产业务 E2E |
-| ~~音视频专项~~ | ~~`/special`~~ | 已移除 | batch-165 隐藏菜单后，代码已随死代码清理批次整体删除（路由/服务/模型/页面）；如需恢复从 git 历史取回 |
-| 环境 / 数据集 | `/environment` `/dataset` | 🟡 | 项目级数据和变量链可用；生产目标防误触发仍需统一验证 |
-| 通知 / 集成 | `/notify` `/integration` | ⛔（默认隐藏） | 本地模型和错误路径存在；真实 SMTP/Webhook/Jira/TAPD/ELK 缺非生产凭据与端点。P1a 起入口默认经 `DISABLED_MENUS` 软下线（侧边栏+访客目录+命令面板隐藏，页面路由保留可直达），恢复：`DISABLED_MENUS=` 置空 |
-| 知识 / 发布包 | `/knowledge` `/release-bundles` | 🟡 | 无 AI/Wiki/活动发布包时已 fail closed；外部链路和交互标注回归未全部完成。~~Agent 工作台~~：P1b 起入口收敛进 DSH 任务（页面删除，`/agent-workbench` 重定向 `/dsh-tasks`；`/api/v1/agent` 后端 API 保留供知识/排障链路与调试调用）。知识中心子项（项目知识/平台研发/知识图谱/AI审核台）c165-3 起不再单列菜单，页内 Tab 与 `/knowledge?tab=xxx` 深链保留 |
-| AI 配置 / DSH 任务 | `/ai-config` `/dsh-tasks` | 🟡 | 项目级 AI 提供方池（Batch A）+ DSH 执行入口（Batch 172/191/202）；无配置即禁用 AI，未配置引导入口已接入 |
-| 开放 API | API-only `/api/v1/open` | 🟡 | 独立 API Token Bearer 鉴权；属于 API-only 能力，前端入口和生产级契约验收不完整 |
-| ~~性能监控~~ | ~~`/perftest`~~ | 已移除 | 缺 SoloX/真机等外部条件从未可用；代码已随死代码清理批次整体删除（含 WebSocket 采集）；如需恢复从 git 历史取回 |
-| 主题实验室 | `/theme-lab` | ✅ | 本地设计/响应式验证工具，不是业务生产能力 |
-| 运维发布控制 | 独立项目，无产品路由 | ⛔ | Batch 61 在 `../deploy/release-control/` 建设 test-only CLI/领域库；生产适配拒绝，控制面 API/UI 延后到 Batch 62 |
+| 环境 | `/environment` | 🟡 | 项目级数据和变量链可用；生产目标防误触发仍需统一验证 |
+| 版本发布包 / 版本验收任务 | `/release-bundles` `/version-tasks` | 🟡 | 版本唯一事实源（Batch 216/269/270 试点证据）；执行走 ExecutionJob 协议 + cameltv-node 本地节点 |
+| 知识中心（项目知识库） | `/knowledge` | 🟡 | 影响面/项目知识/检索 + 维护面（概览/知识源/版本记录/复用建议/Wiki）；知识图谱/AI 审核台已删除 |
+| AI 配置 | `/ai-config` | 🟡 | 项目级 AI 提供方池（Batch A）；需求 AI 生成与版本任务 AI 方案经此解析 |
+| 蓝湖证据包 | `/lanhu-evidence` | 🟡 | 采集/OCR/人工审核 |
+| 开放 API | API-only `/api/v1/open` | 🟡 | 独立 API Token Bearer 鉴权；CI 回归回写入口 |
+| ~~AITDE / DSH / 报告 / 数据集 / 通知 / 集成 / 组织 / 主题实验室 / 性能监控 / 音视频专项~~ | 已删除 | 已移除 | 平台简化批次整体删除（见顶部说明）；如需恢复从 git 历史取回 |
 
 ## 契约与测试证据边界
 

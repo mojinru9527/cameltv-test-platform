@@ -22,7 +22,7 @@ const PUBLIC_ACCESS = {
       sort: 1,
       children: [
         { code: 'testcase', name: '用例服务', path: '/testcase', icon: '', sort: 1 },
-        { code: 'report', name: '报告中心', path: '/report', icon: '', sort: 2 },
+        { code: 'defect', name: '缺陷管理', path: '/defect', icon: '', sort: 2 },
       ],
     },
   ],

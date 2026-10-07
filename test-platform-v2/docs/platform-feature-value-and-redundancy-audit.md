@@ -1,5 +1,9 @@
 # CamelTv 测试平台 — 全平台功能价值与冗余度评估
 
+> ⚠️ **本审计结论已由 2026-10-07 简化批次落地**——文中的删除建议已成为既成事实，
+> 删除清单与实施见 [docs/platform-refactor/11-platform-simplification-design.md](../../docs/platform-refactor/11-platform-simplification-design.md)；
+> 本文保留为本次简化的输入审计历史记录。
+
 > 版本：v1.0 | 日期：2026-08-13 | 批次：batch-165（value-audit-ui-fixes）
 > 评估人：Agent Team（Product/QA） | 数据来源：源码（test-platform-v2）、使用手册 v2.7、
 > 2026-08-12 生产浏览器审计证据（`work-logs/evidence/browser-audit-2026-08-12/`）、

@@ -15,6 +15,7 @@ from app.core.deps import CurrentUser, require_permission
 from app.core.exceptions import APIException, not_found
 from app.schemas.common import R
 from app.schemas.release_bundle import (
+    WikiSyncAvailabilityOut,
     WikiSyncRequest,
     WikiSyncResultOut,
     WikiTreeDiffOut,
@@ -24,6 +25,7 @@ from app.services.wiki.sync_service import (
     build_wiki_tree,
     diff_module_tree_vs_wiki,
     get_project_bundle,
+    get_sync_availability,
     get_sync_coverage as get_coverage,
     sync_to_wiki,
 )
@@ -45,6 +47,35 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
 def _require_wiki_enabled() -> None:
     if not settings.wiki_enabled:
         raise APIException(code=503, msg="Wiki 知识库未启用（wiki_enabled=False）", http_status=503)
+
+
+@router.get(
+    "/sync/availability",
+    response_model=R[WikiSyncAvailabilityOut],
+    summary="Wiki 同步前置条件",
+)
+def get_wiki_sync_availability(
+    current: CurrentUser = Depends(require_permission("wiki:view")),
+    db: Session = Depends(get_db),
+):
+    """只读检查当前项目是否存在可用于 Wiki 同步的启用发布包。
+
+    平台简化批次：原实现位于已删除的 `wiki_external.py`（与差异对比/lint/外部连接器同文件）；
+    该端点是**保留功能**（Wiki 同步入口）的前置检查，服务函数与 Schema 均保留，
+    故随同步域一起归位到本文件。
+    """
+    availability = get_sync_availability(
+        db,
+        project_id=current.project_id or 0,
+        wiki_enabled=settings.wiki_enabled,
+    )
+    return R.ok(WikiSyncAvailabilityOut(
+        available=availability.available,
+        reason=availability.reason,
+        release_bundle_id=availability.release_bundle_id,
+        release_bundle_name=availability.release_bundle_name,
+        release_bundle_status=availability.release_bundle_status,
+    ))
 
 
 @router.post("/sync/bundle/{bundle_id}", response_model=R[WikiSyncResultOut], summary="模块树同步到 Wiki Raw Source")

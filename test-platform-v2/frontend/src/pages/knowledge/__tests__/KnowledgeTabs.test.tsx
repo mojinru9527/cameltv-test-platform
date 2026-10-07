@@ -27,19 +27,14 @@ expect.extend({
   },
 })
 
-// 12 个 tab 组件全部 mock 为带 data-testid 的占位，避免真实组件拉 API
+// 保留页签组件全部 mock 为带 data-testid 的占位，避免真实组件拉 API
+// 平台简化批次：PlatformTab / ArtifactReviewTab / GraphTab / EntityTab / IterationTab /
+// WikiDiffTab / SkillsTab 随知识 AI 子能力删除，对应 mock 与断言一并移除
 vi.mock('@/pages/knowledge/components/OverviewTab', () => ({ default: () => <div data-testid="tab-overview">概览内容</div> }))
 vi.mock('@/pages/knowledge/components/ProjectTab', () => ({ default: () => <div data-testid="tab-project">项目知识内容</div> }))
-vi.mock('@/pages/knowledge/components/PlatformTab', () => ({ default: () => <div data-testid="tab-platform">平台研发内容</div> }))
 vi.mock('@/pages/knowledge/components/SearchTab', () => ({ default: () => <div data-testid="tab-search">检索内容</div> }))
 vi.mock('@/pages/knowledge/components/SourceListTab', () => ({ default: () => <div data-testid="tab-sources">知识源内容</div> }))
-vi.mock('@/pages/knowledge/components/ArtifactReviewTab', () => ({ default: () => <div data-testid="tab-artifacts">AI 审核台内容</div> }))
-vi.mock('@/pages/knowledge/components/GraphTab', () => ({ default: () => <div data-testid="tab-graph">图谱内容</div> }))
-vi.mock('@/pages/knowledge/components/EntityTab', () => ({ default: () => <div data-testid="tab-entities">实体内容</div> }))
-vi.mock('@/pages/knowledge/components/IterationTab', () => ({ default: () => <div data-testid="tab-iterations">迭代内容</div> }))
 vi.mock('@/pages/knowledge/components/WikiTab', () => ({ default: () => <div data-testid="tab-wiki">Wiki 知识库内容</div> }))
-vi.mock('@/pages/knowledge/components/WikiDiffTab', () => ({ default: () => <div data-testid="tab-wikidiff">知识差异对比内容</div> }))
-vi.mock('@/pages/knowledge/components/SkillsTab', () => ({ default: () => <div data-testid="tab-skills">Skills 内容</div> }))
 vi.mock('@/pages/knowledge/components/ImpactTab', () => ({ default: () => <div data-testid="tab-impact">影响面内容</div> }))
 vi.mock('@/pages/knowledge/components/CaptureDialog', () => ({ default: () => null }))
 
@@ -106,12 +101,16 @@ describe('知识中心 tab 收敛（batch-260 / B3-5：3 入口 = 影响面/项�
     expect(screen.getByTestId('tab-impact')).not.toBeVisible()
   })
 
-  it('维护者/管理员可见全部 Tab，默认概览', () => {
+  it('维护者/管理员可见全部保留 Tab，默认概览', () => {
     authStub.hasPerm = () => true
     renderPage()
     expect(screen.getByTestId('tab-overview')).toBeVisible()
-    for (const name of [/影响面/, /项目知识/, /平台研发/, /检索/, /AI 审核台/, /图谱/, /知识源/, /实体/, /迭代/, /Wiki 知识库/, /知识差异对比/, /Skills/]) {
+    for (const name of [/影响面/, /项目知识/, /检索/, /知识源/, /版本记录/, /复用建议/, /Wiki 知识库/, /概览/]) {
       expect(screen.getByRole('tab', { name })).toBeTruthy()
+    }
+    // 平台简化批次：已删除的 AI 子能力 Tab 不再出现
+    for (const name of [/平台研发/, /AI 审核台/, /图谱/, /实体/, /迭代/, /知识差异对比/, /Skills/]) {
+      expect(screen.queryByRole('tab', { name })).toBeNull()
     }
   })
 

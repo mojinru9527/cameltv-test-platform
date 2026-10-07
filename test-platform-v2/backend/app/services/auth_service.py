@@ -18,9 +18,7 @@ from app.models.rbac import Role, UserRole
 from app.models.project import Project, ProjectMember
 from app.models.user import User
 from app.schemas.auth import LoginOut, ProjectBrief, UserBrief
-from app.schemas.organization import OrganizationBrief
 from app.services import project_service, rbac_service
-from app.services import organization_service
 from app.services import project_invite_service
 from app.services.invite_service import consume_invite_code
 
@@ -42,9 +40,6 @@ def login(db: Session, username: str, password: str) -> LoginOut:
     codes = rbac_service.permission_codes(db, user.id)
     is_super = "*" in codes
     projects = project_service.projects_for_user(db, user.id, is_superadmin=is_super)
-    organizations = organization_service.organizations_for_user(
-        db, user.id, is_superadmin=is_super
-    )
 
     token = create_access_token(
         user.id,
@@ -59,7 +54,6 @@ def login(db: Session, username: str, password: str) -> LoginOut:
         projects=[ProjectBrief.model_validate(p) for p in projects],
         permissions=codes,
         must_change_password=user.must_change_password,
-        organizations=[OrganizationBrief(**o) for o in organizations],
     )
 
 
@@ -111,8 +105,7 @@ def register(
     role = db.scalar(select(Role).where(Role.code == role_code))
     if role:
         db.add(UserRole(user_id=user.id, role_id=role.id, project_id=0))
-    # Batch 105：注册即拥有个人组织
-    organization_service.ensure_personal_organization(db, user.id)
+    # 平台简化批次：组织概念已删除，注册不再创建个人组织，仅项目邀请时直接入项目
     if project_invite:
         proj = db.get(Project, project_invite.project_id)
         if proj and proj.status == 1:
@@ -121,14 +114,5 @@ def register(
                 user_id=user.id,
                 role_id=role.id if role else 0,
             ))
-            if proj.organization_id and not organization_service.is_member(
-                db, user.id, proj.organization_id
-            ):
-                from app.models.organization import OrganizationMember
-                db.add(OrganizationMember(
-                    organization_id=proj.organization_id,
-                    user_id=user.id,
-                    role_id=3,
-                ))
     db.commit()
     return user

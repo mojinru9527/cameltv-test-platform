@@ -23,21 +23,22 @@ test-platform-v2/
 
 ## 功能清单与成熟度
 
-> 成熟度只描述当前证据，不等同于发布准入：✅ 为本地/生产受控链路已验证；🟡 为真实实现但验收不完整；⛔ 为缺外部条件或明确延期。Batch 127 已完成生产只读全路由走查与本地真实后端矩阵；外部设备、Test5、通知/集成凭据仍按各自条件管理。
+> 成熟度只描述当前证据，不等同于发布准入：✅ 为本地/生产受控链路已验证；🟡 为真实实现但验收不完整；⛔ 为缺外部条件或明确延期。Batch 127 已完成生产只读全路由走查与本地真实后端矩阵；外部设备、Test5、蓝湖凭据仍按各自条件管理。
 
 | 模块 | 路由 | 成熟度 | 当前事实 |
 |------|------|--------|----------|
-| 登录、项目、组织、系统管理 | `/login` `/register` `/change-password` `/my-projects` `/organizations` `/project` `/system` | 🟡 | Cookie 主会话、首次强制改密、组织/项目上下文和 RBAC 已实现；高风险系统写操作仍以自动化权限矩阵为准 |
-| 工作台、用例、报告、缺陷、定时、追溯（报告页内 Tab） | `/workbench` `/testcase` `/report` `/defect` `/schedule` | 🟡 | 本地真实 CRUD/状态流/审计主链及生产只读路由矩阵已验证；外部回写与破坏性流程不在生产只读验收范围 |
-| 需求、脑图、知识、Agent、Playground、发布包 | `/requirement` `/mindmap` `/knowledge` `/agent-workbench` `/playground` `/release-bundles` | 🟡 / ⛔ | 本地持久化链和动态详情存在；真实 LLM、蓝湖、Wiki 等依赖缺授权凭据时必须 fail closed，不能据本地回归宣称外部链路通过 |
-| DSH 任务执行（Batch 172 / Batch 191 团队模式） | `/dsh-tasks` | 🟡 | 提交自然语言任务由 DeepSeek Harness 执行，状态/输出/会话目录可追溯，Agent 工作台含执行型 Agent；Batch 191 起支持团队模式（`mode=team`：DSH 船长自组织多成员团队，详情实时展示团队进度树）；默认 `DSH_ENABLED=false` 时不可用并明确提示 |
-| API 测试 | `/apitest` | 🟡 | OpenAPI/Swagger 预览与导入、httpx 真实执行、任务和快照已实现；五入口一致性、生产保护、当前 Test5 六服务契约与业务回归仍待验收 |
+| 登录、项目、系统管理 | `/login` `/register` `/change-password` `/my-projects` `/system` | 🟡 | Cookie 主会话、首次强制改密、项目上下文和 RBAC 已实现；高风险系统写操作仍以自动化权限矩阵为准（组织概念已删除，项目成员直管） |
+| 工作台、用例、缺陷、定时 | `/workbench` `/testcase` `/defect` `/schedule` | 🟡 | 本地真实 CRUD/状态流/审计主链及生产只读路由矩阵已验证；外部回写与破坏性流程不在生产只读验收范围 |
+| 需求、脑图、知识中心 | `/requirement` `/mindmap` `/knowledge` | 🟡 | 本地持久化链和动态详情存在；需求→AI 生成用例走平台直连 LLM，未配置有效 Key 时必须 fail closed |
+| 版本验收任务与发布包 | `/version-tasks` `/release-bundles` | 🟡 | 版本唯一事实源（Batch 216/269/270）；执行走 ExecutionJob 协议 + cameltv-node 本地节点 |
+| API 测试 | `/apitest` | 🟡 | OpenAPI/Swagger 预览与导入、httpx 真实执行、任务和快照、智能生成用例/泛化已实现；五入口一致性、生产保护、当前 Test5 六服务契约与业务回归仍待验收 |
 | UI 自动化 | `/uitest` | 🟡 | 本地 Runner 可启动真实 Playwright 并持久化结果/产物；这不等于 `tests/automation/ui/` 的体育 Test5/生产业务 E2E 已通过 |
-| 环境、数据集、通知、集成 | `/environment` `/dataset` `/notify` `/integration` | 🟡 / ⛔ | 本地数据模型和错误路径可用；SMTP/Webhook/Jira/TAPD/ELK 等真实链路缺非生产端点与凭据时保持阻塞 |
-| 蓝湖证据 | `/lanhu-evidence` `/lanhu-evidence/:id` | 🟡 / ⛔ | 列表、详情与恢复状态已实现；真实采集/OCR 取决于 Provider、登录态与外部页面授权 |
-| 运维发布控制 | `/operations-release`（只读） | 🟡 / ⛔ | 只读展示受控发布存储中的发布事实和事件；store 未配置时显示产品化未启用态，不提供发布、审批或回滚按钮 |
+| 环境、AI 配置、蓝湖证据 | `/environment` `/ai-config` `/lanhu-evidence` | 🟡 / ⛔ | 环境变量链与项目级 AI 提供方池可用；蓝湖真实采集/OCR 取决于 Provider、登录态与外部页面授权 |
+| 运维发布控制 | **独立控制台**（无平台路由） | 🟡 / ⛔ | 发布事实与状态机在 `deploy/release-console/`（自带只读页面）；平台前端从未实现 `/operations-release` 路由（原文档条目为陈旧描述，平台简化批次已更正） |
 
-> (batch-212) 音视频专项 `/special` 与性能监控 `/perftest` 已从菜单与文档宣称下架（缺授权设备，代码冻结为 API-only，详见 `docs/platform-refactor/02-function-abc-whitelist.md` §3）；Playground 独立 Tab 亦已下架。
+> (平台简化批次 2026-10-07) AITDE 智能测试任务、DSH 任务、报告中心、测试数据集、通知、集成、组织管理、主题实验室、音视频专项、性能监控、Playground 与知识图谱/AI 审核台已整体删除（代码 + 库表）；**测试计划仅保留只读 API 与历史表**（工作台/缺陷统计底座，写入口已删除）。评估与删除清单见
+> [../work-logs/platform-simplification-production-eval-20261007.md](../work-logs/platform-simplification-production-eval-20261007.md)、
+> [../docs/platform-refactor/11-platform-simplification-design.md](../docs/platform-refactor/11-platform-simplification-design.md)。
 
 ## 技术栈
 
@@ -101,52 +102,6 @@ npm run dev
 
 浏览器打开 http://localhost:5173，使用管理员分配的账号登录。平台不预填或公开通用默认密码。
 
-## DSH 团队模式（Batch 191）
-
-`/dsh-tasks` 支持两种任务形态：
-
-- **标准模式（single，默认）**：单 DSH 会话执行，现状不变。
-- **团队模式（team）**：用户提交单一自然语言目标 + 批次模式（`full` 完整五成员
-  product/pm/design/dev/qa；`light` 轻量两成员 product/qa），DSH 船长会话用
-  `agent_teams_*` 九件套自组织团队执行；任务详情实时展示团队/成员/任务进度树
-  （3s 粒度轮询），`team_json` 快照为插件 `team.json` 原文（平台只读、全量幂等覆盖）。
-
-### 团队模式配置项（backend .env）
-
-| 变量 | 默认 | 说明 |
-|------|------|------|
-| `DSH_TEAM_TIMEOUT_SECONDS` | 1800 | 团队任务超时（覆盖单任务 600s），超时 → failed + 可读 error |
-| `DSH_TEAM_POLL_SECONDS` | 3 | 后端进度轮询间隔（前端详情轮询粒度对齐） |
-| `DSH_TEAM_HEARTBEAT_SECONDS` | 60 | 团队执行心跳间隔（`locked_at` 续期，防 stale 误回收；R-1 冒烟修复） |
-| `DSH_TEAM_PROFILE` | agent-team | node runtime 团队 profile 名（`$DSH_HOME/profiles/agent-team`） |
-| `DSH_TEAM_CORDIS_CONFIG` | 空 | python-sdk 团队 cordis 路径；空 = 内置 `team.cordis.yml` |
-| `DSH_TEAM_HARNESS_PATH` | 空 | 团队 profile 的 **DSH_HOME 覆盖**（非 bin.js 路径）；空 = CLI 默认 `$DSH_HOME` |
-
-### agent-team profile 安装
-
-团队模式 node runtime 需要 `$DSH_HOME/profiles/agent-team`（本机
-`C:\Users\26029\.dsh\profiles\agent-team`，**不入库**）：
-
-```powershell
-dsh plugin --profile agent-team add @nanmicoder/dsh-agent-teams
-dsh --profile agent-team --dump-config   # 自检：组合树含 agent-teams 插件
-```
-
-> **R-1 冒烟踩坑**：CLI 方式 A 生成的 `dsh.profile.bundles` **缺
-> `@deepseek-ai/dsh-headless`**（任务执行器），缺失时任务 boot 后静默挂起。
-> 安装后必须校验 `package.json` bundles 含 dsh-headless（缺则手工补），
-> 详见 `backend/app/services/dsh/agent-team/README.md`。
-
-模板与手工安装说明见 `backend/app/services/dsh/agent-team/README.md`。
-
-### 排队 / deferred 语义
-
-- **排队（R-6）**：团队任务与单任务共用全局并发闸门（`DSH_MAX_CONCURRENT`，默认 1），
-  超出上限排队等待，不丢任务。
-- **python-sdk（C191-1 已关闭）**：SDK bundled runtime 加载 npm bundle 插件实测通过
-  （`team.cordis.yml` 含 subagent 提供者，SDK node carrier 45s 团队组合 completed）；
-  生产 Linux exe carrier 需把 agent-teams 打进闭包 → C191-3，失败不静默 fallback 到单任务（US-7）。
-- **取消（C191-2）**：running 团队任务取消延后（仅 pending 可取消，现状语义）。
 
 ## 生产部署边界
 
@@ -200,9 +155,10 @@ API 测试资产导入支持 OpenAPI 3.x 与 Swagger 2.0 的 JSON/YAML 文本或
 
 ## 运维发布项目边界
 
-`deploy/release-control/` 是发布事实与状态机实现；测试平台通过 `/operations-release` 提供只读观察页。
-页面不会执行发布、审批或回滚。未配置 release-control store 时返回受控 503，并在 UI 说明配置条件，
-不得用空列表或模拟记录伪装为发布控制已启用。
+`deploy/release-console/` 是发布事实、状态机与执行器的实现，并自带只读控制台页面；
+**测试平台前端不提供 `/operations-release` 路由**（从未实现，平台简化批次更正了原描述）。
+发布控制台不会执行未经审批的发布、审批或回滚；未配置 release-control store 时返回受控 503，
+并在 UI 说明配置条件，不得用空列表或模拟记录伪装为发布控制已启用。
 
 ## 凭据管理
 

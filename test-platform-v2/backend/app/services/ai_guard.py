@@ -29,7 +29,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.db import SessionLocal
-from app.modules.aitde.governance.models import ModelUsageLedger
+from app.models.model_usage import ModelUsageLedger
 
 logger = logging.getLogger("ai.guard")
 

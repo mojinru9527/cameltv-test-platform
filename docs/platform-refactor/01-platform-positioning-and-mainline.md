@@ -12,6 +12,13 @@ related:
   - "docs/aitde/architecture/01_Overall_Upgrade_Blueprint.md"
 ---
 
+> ⚠️ **已被取代（2026-10-07）**：平台简化批次按用户定稿决策**整体删除** AITDE 智能测试任务、DSH 任务/Agent 与其余冗余模块，
+> 本文中「AITDE 为主线 / DSH 收编为执行引擎」的结论**不再成立**。当前有效事实源为
+> [11-platform-simplification-design.md](11-platform-simplification-design.md) 与
+> [../../work-logs/platform-simplification-production-eval-20261007.md](../../work-logs/platform-simplification-production-eval-20261007.md)；
+> 本文保留为历史设计记录。
+
+
 # 平台定位与主链路产品化方案
 
 ## 1. 一句话定位

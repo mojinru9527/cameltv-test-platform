@@ -1,10 +1,10 @@
-"""Unit tests for report_aggregator service — uses db_session fixture."""
+"""Unit tests for dashboard_summary service — uses db_session fixture."""
 
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from app.services.report_aggregator import get_aggregated_summary
+from app.services.dashboard_summary import get_aggregated_summary
 
 
 # ═══════════════════════════════════════════════════════════
@@ -417,3 +417,4 @@ class TestCombinedSummary:
         assert c["total_failed"] == 2
         # 3 / (3+2) * 100 = 60.0
         assert c["pass_rate"] == 60.0
+

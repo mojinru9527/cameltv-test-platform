@@ -5,7 +5,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 const indexHtml = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8')
 const themeBootstrap = readFileSync(resolve(process.cwd(), 'public/theme-bootstrap.js'), 'utf8')
 const appMain = readFileSync(resolve(process.cwd(), 'src/main.tsx'), 'utf8')
-const themeLabMain = readFileSync(resolve(process.cwd(), 'src/theme-lab/main.tsx'), 'utf8')
 
 function getThemeBootstrapScript(): string {
   expect(indexHtml).toContain('<script src="/theme-bootstrap.js"></script>')
@@ -76,8 +75,8 @@ describe('initial theme paint', () => {
 })
 
 describe('Theme Lab stylesheet loading', () => {
-  it('keeps Theme Lab CSS out of the production entry and in the lab entry', () => {
+  // 平台简化批次：theme-lab 已整体删除，生产入口不再存在 lab 样式引用
+  it('keeps Theme Lab CSS out of the production entry', () => {
     expect(appMain).not.toContain("import './theme-lab/theme-lab.css'")
-    expect(themeLabMain).toContain("import './theme-lab.css'")
   })
 })
