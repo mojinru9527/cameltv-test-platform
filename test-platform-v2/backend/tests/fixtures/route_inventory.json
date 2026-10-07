@@ -1,42 +1,6 @@
 {
-  "count": 685,
+  "count": 322,
   "routes": [
-    {
-      "path": "/api/v1/agents/queue",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/agents/queue/stats",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/agents/queue/{item_id}/cancel",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/agents/run/{agent_type}",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/agents/runs",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/agents/runs/{run_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/agents/triggers/check",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/agents/triggers/rules",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/agents/types",
-      "method": "GET"
-    },
     {
       "path": "/api/v1/ai-config/cache",
       "method": "DELETE"
@@ -90,43 +54,11 @@
       "method": "GET"
     },
     {
-      "path": "/api/v1/ai/agents/health",
-      "method": "GET"
-    },
-    {
       "path": "/api/v1/ai/agents/register",
       "method": "POST"
     },
     {
       "path": "/api/v1/ai/agents/tokens/revoke",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/ai/jobs",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/ai/jobs",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/ai/jobs/claim",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/ai/jobs/{job_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/ai/jobs/{job_id}/heartbeat",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/ai/jobs/{job_id}/import",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/ai/jobs/{job_id}/report",
       "method": "POST"
     },
     {
@@ -274,18 +206,6 @@
       "method": "GET"
     },
     {
-      "path": "/api/v1/convergence/assets",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/convergence/data-assets",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/convergence/test-plan/{test_plan_id}/archive",
-      "method": "POST"
-    },
-    {
       "path": "/api/v1/dashboard/cross-project",
       "method": "GET"
     },
@@ -300,34 +220,6 @@
     {
       "path": "/api/v1/dashboard/todo",
       "method": "GET"
-    },
-    {
-      "path": "/api/v1/datasets",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/datasets",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/datasets/preview",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/datasets/upload",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/datasets/{dataset_id}",
-      "method": "DELETE"
-    },
-    {
-      "path": "/api/v1/datasets/{dataset_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/datasets/{dataset_id}",
-      "method": "PUT"
     },
     {
       "path": "/api/v1/defects",
@@ -378,52 +270,12 @@
       "method": "POST"
     },
     {
-      "path": "/api/v1/defects/{defect_id}/sync-pull",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/defects/{defect_id}/sync-push",
-      "method": "POST"
-    },
-    {
       "path": "/api/v1/defects/{defect_id}/transition",
       "method": "POST"
     },
     {
       "path": "/api/v1/defects/{defect_id}/transitions",
       "method": "GET"
-    },
-    {
-      "path": "/api/v1/dsh-tasks",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/dsh-tasks",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/dsh-tasks/health",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/dsh-tasks/model-pool",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/dsh-tasks/upload-image",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/dsh-tasks/{task_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/dsh-tasks/{task_id}/artifacts",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/dsh-tasks/{task_id}/cancel",
-      "method": "POST"
     },
     {
       "path": "/api/v1/environments",
@@ -542,38 +394,6 @@
       "method": "GET"
     },
     {
-      "path": "/api/v1/integrations",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/integrations",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/integrations/test-connection",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/integrations/{integration_id}",
-      "method": "DELETE"
-    },
-    {
-      "path": "/api/v1/integrations/{integration_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/integrations/{integration_id}",
-      "method": "PUT"
-    },
-    {
-      "path": "/api/v1/integrations/{integration_id}/sync-logs",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/integrations/{integration_id}/sync-now",
-      "method": "POST"
-    },
-    {
       "path": "/api/v1/interaction-coverage/gaps",
       "method": "POST"
     },
@@ -586,38 +406,6 @@
       "method": "GET"
     },
     {
-      "path": "/api/v1/knowledge/ai-artifacts",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/knowledge/ai-artifacts/batch-approve",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/knowledge/ai-artifacts/batch-import",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/knowledge/ai-artifacts/batch-reject",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/knowledge/ai-artifacts/{artifact_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/knowledge/ai-artifacts/{artifact_id}/approve",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/knowledge/ai-artifacts/{artifact_id}/import-to-test-cases",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/knowledge/ai-artifacts/{artifact_id}/reject",
-      "method": "POST"
-    },
-    {
       "path": "/api/v1/knowledge/capture",
       "method": "POST"
     },
@@ -626,100 +414,8 @@
       "method": "GET"
     },
     {
-      "path": "/api/v1/knowledge/design-assets/import",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/knowledge/design-assets/{source_id}/{filename}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/knowledge/graph/auto-build",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/knowledge/graph/backfill-source",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/knowledge/graph/entities",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/knowledge/graph/entities/stats",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/knowledge/graph/entities/{entity_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/knowledge/graph/evolve",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/knowledge/graph/extract",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/knowledge/graph/hierarchy",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/knowledge/graph/module-associations",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/knowledge/graph/relations",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/knowledge/graph/relations/{relation_id}/approve",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/knowledge/graph/relations/{relation_id}/reject",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/knowledge/graph/sync-test-cases",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/knowledge/graph/view",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/knowledge/iterations",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/knowledge/iterations",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/knowledge/iterations/{iteration_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/knowledge/iterations/{iteration_id}/close",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/knowledge/iterations/{iteration_id}/compare",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/knowledge/iterations/{iteration_id}/snapshots",
-      "method": "GET"
-    },
-    {
       "path": "/api/v1/knowledge/overview",
       "method": "GET"
-    },
-    {
-      "path": "/api/v1/knowledge/predict/regression-scope",
-      "method": "POST"
     },
     {
       "path": "/api/v1/knowledge/reembed",
@@ -732,14 +428,6 @@
     {
       "path": "/api/v1/knowledge/search/health",
       "method": "GET"
-    },
-    {
-      "path": "/api/v1/knowledge/skills",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/knowledge/skills/{skill_name}/apply",
-      "method": "POST"
     },
     {
       "path": "/api/v1/knowledge/sources",
@@ -826,88 +514,12 @@
       "method": "POST"
     },
     {
-      "path": "/api/v1/metrics/operations",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/notify/channels",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/notify/channels",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/notify/channels/{ch_id}",
-      "method": "DELETE"
-    },
-    {
-      "path": "/api/v1/notify/channels/{ch_id}",
-      "method": "PUT"
-    },
-    {
-      "path": "/api/v1/notify/test",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/onboarding/businesses",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/onboarding/businesses",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/onboarding/businesses/{onboarding_id}/steps/{step}",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/onboarding/readiness",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/open/defects",
-      "method": "POST"
-    },
-    {
       "path": "/api/v1/open/health",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/open/knowledge/modules",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/open/knowledge/search",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/open/knowledge/sources",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/open/plans",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/open/plans/{plan_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/open/plans/{plan_id}/executions",
       "method": "GET"
     },
     {
       "path": "/api/v1/open/plans/{plan_id}/trigger",
       "method": "POST"
-    },
-    {
-      "path": "/api/v1/open/reports/{report_id}/gate/check",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/open/requirements",
-      "method": "GET"
     },
     {
       "path": "/api/v1/open/results",
@@ -918,71 +530,11 @@
       "method": "GET"
     },
     {
-      "path": "/api/v1/open/test-cases",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/open/test-cases",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/open/ui-tests",
-      "method": "GET"
-    },
-    {
       "path": "/api/v1/open/ui-tests/runs/{run_id}",
       "method": "GET"
     },
     {
       "path": "/api/v1/open/ui-tests/{job_id}/trigger",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/organizations",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/organizations",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/organizations/{organization_id}",
-      "method": "DELETE"
-    },
-    {
-      "path": "/api/v1/organizations/{organization_id}",
-      "method": "PUT"
-    },
-    {
-      "path": "/api/v1/organizations/{organization_id}/members",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/organizations/{organization_id}/members",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/organizations/{organization_id}/members/{user_id}",
-      "method": "DELETE"
-    },
-    {
-      "path": "/api/v1/organizations/{organization_id}/projects",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/playground/batch-compile",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/playground/batch-run",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/playground/compile",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/playground/execute",
       "method": "POST"
     },
     {
@@ -1091,58 +643,6 @@
     },
     {
       "path": "/api/v1/release-bundles/{bundle_id}/version-chain",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/report-templates",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/report-templates",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/report-templates/{template_id}",
-      "method": "DELETE"
-    },
-    {
-      "path": "/api/v1/report-templates/{template_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/report-templates/{template_id}",
-      "method": "PUT"
-    },
-    {
-      "path": "/api/v1/reports",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/reports",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/reports/trends",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/reports/{report_id}",
-      "method": "DELETE"
-    },
-    {
-      "path": "/api/v1/reports/{report_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/reports/{report_id}/export",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/reports/{report_id}/gate",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/reports/{report_id}/gate/check",
       "method": "GET"
     },
     {
@@ -1502,52 +1002,8 @@
       "method": "GET"
     },
     {
-      "path": "/api/v1/test-plans",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/test-plans/{plan_id}",
-      "method": "DELETE"
-    },
-    {
       "path": "/api/v1/test-plans/{plan_id}",
       "method": "GET"
-    },
-    {
-      "path": "/api/v1/test-plans/{plan_id}",
-      "method": "PUT"
-    },
-    {
-      "path": "/api/v1/test-plans/{plan_id}/auto-execute",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/test-plans/{plan_id}/batch-execute",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/test-plans/{plan_id}/cases",
-      "method": "DELETE"
-    },
-    {
-      "path": "/api/v1/test-plans/{plan_id}/cases",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/test-plans/{plan_id}/cases/assign",
-      "method": "PUT"
-    },
-    {
-      "path": "/api/v1/test-plans/{plan_id}/cases/{pcase_id}/execute",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/test-plans/{plan_id}/cases/{pcase_id}/sort",
-      "method": "PUT"
-    },
-    {
-      "path": "/api/v1/test-plans/{plan_id}/execute-all",
-      "method": "POST"
     },
     {
       "path": "/api/v1/test-plans/{plan_id}/execution-jobs",
@@ -1562,14 +1018,6 @@
       "method": "GET"
     },
     {
-      "path": "/api/v1/test-plans/{plan_id}/triage",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/test-plans/{plan_id}/triage/{execution_id}/draft-defect",
-      "method": "POST"
-    },
-    {
       "path": "/api/v1/tokens",
       "method": "GET"
     },
@@ -1584,22 +1032,6 @@
     {
       "path": "/api/v1/tokens/{token_id}",
       "method": "PUT"
-    },
-    {
-      "path": "/api/v1/trace/case/{case_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/trace/coverage",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/trace/requirement/{doc_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/trace/trend",
-      "method": "GET"
     },
     {
       "path": "/api/v1/ui-tests",
@@ -1682,50 +1114,6 @@
       "method": "POST"
     },
     {
-      "path": "/api/v1/version-missions",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/version-missions",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/version-missions/{mission_id}",
-      "method": "DELETE"
-    },
-    {
-      "path": "/api/v1/version-missions/{mission_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/version-missions/{mission_id}",
-      "method": "PUT"
-    },
-    {
-      "path": "/api/v1/version-missions/{mission_id}/generate/api-openapi",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/version-missions/{mission_id}/generate/api-traffic",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/version-missions/{mission_id}/generate/ui-draft",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/version-missions/{mission_id}/logs",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/version-missions/{mission_id}/logs",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/version-missions/{mission_id}/quality-gate",
-      "method": "GET"
-    },
-    {
       "path": "/api/v1/version-tasks",
       "method": "GET"
     },
@@ -1735,14 +1123,6 @@
     },
     {
       "path": "/api/v1/version-tasks/compare",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/version-tasks/compat/missions",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/version-tasks/compat/missions/{mission_id}",
       "method": "GET"
     },
     {
@@ -1838,66 +1218,6 @@
       "method": "GET"
     },
     {
-      "path": "/api/v1/wiki/diff/items/{item_id}/accept",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/wiki/diff/items/{item_id}/create-artifact",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/wiki/diff/items/{item_id}/reject",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/wiki/diff/tasks",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/wiki/diff/tasks",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/wiki/diff/tasks/{task_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/wiki/external-connections",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/wiki/external-connections",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/wiki/external-connections/{conn_id}",
-      "method": "DELETE"
-    },
-    {
-      "path": "/api/v1/wiki/external-connections/{conn_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/wiki/external-connections/{conn_id}",
-      "method": "PUT"
-    },
-    {
-      "path": "/api/v1/wiki/external-connections/{conn_id}/files/content",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/wiki/external-connections/{conn_id}/graph",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/wiki/external-connections/{conn_id}/health-check",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/wiki/external-connections/{conn_id}/search",
-      "method": "POST"
-    },
-    {
       "path": "/api/v1/wiki/import/lanhu",
       "method": "POST"
     },
@@ -1915,22 +1235,6 @@
     },
     {
       "path": "/api/v1/wiki/ingest-jobs/{job_id}/retry",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/wiki/lint",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/wiki/lint/reports",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/wiki/lint/reports/{report_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/wiki/lint/reports/{report_id}/convert",
       "method": "POST"
     },
     {
@@ -1966,10 +1270,6 @@
       "method": "GET"
     },
     {
-      "path": "/api/v1/wiki/sync/availability",
-      "method": "GET"
-    },
-    {
       "path": "/api/v1/wiki/sync/bundle/{bundle_id}",
       "method": "POST"
     },
@@ -1983,758 +1283,6 @@
     },
     {
       "path": "/api/v1/wiki/sync/bundle/{bundle_id}/tree",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/action-plans/{version_id}/approve",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/action-plans/{version_id}/validate",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/ai-operations",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/ai-operations/{operation_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/ai-suggestions",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/ai-suggestions/{suggestion_id}/review",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/ambiguities/{ambiguity_id}/resolve",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/approvals",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/approvals/{approval_id}/approve",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/approvals/{approval_id}/reject",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/browser-sessions",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/browser-sessions/{session_id}/derive-action-plan",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/browser-sessions/{session_id}/events",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/browser-sessions/{session_id}/stop",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/build-observations/{build_observation_id}/diff",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/campaigns",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/campaigns/{campaign_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/campaigns/{campaign_id}/run",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/change-sets/{change_set_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/change-sets/{change_set_id}/impact",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/contracts/{contract_id}/change-proposals",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/contracts/{contract_id}/diff",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/contracts/{contract_id}/freeze",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/contracts/{contract_id}/versions",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/contracts/{contract_version_id}/scenarios/generate",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/data-plans/{plan_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/data-plans/{plan_id}/approve",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/data-requirements/{requirement_id}",
-      "method": "PATCH"
-    },
-    {
-      "path": "/api/v2/data-sources",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/data-sources",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/data-sources/{data_source_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/data-sources/{data_source_id}/test",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/environments/{environment_id}/fingerprints/capture",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/environments/{environment_id}/snapshots",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/environments/{environment_id}/snapshots/latest",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/feedback",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/feedback",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/fixtures",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/fixtures/{fixture_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/fixtures/{fixture_id}/cleanup",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/fixtures/{fixture_id}/lease",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/fixtures/{fixture_id}/release",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/fixtures/{fixture_id}/snapshots",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/fixtures/{fixture_id}/snapshots",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/flaky",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/governance/acceptance-report",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/governance/backup",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/governance/cost",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/governance/dr",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/governance/encryption",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/governance/models/check",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/governance/rbac/cross-project",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/governance/readiness",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/governance/retention/evaluate",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/governance/sso",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/healing-proposals",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/healing-proposals/{proposal_id}/apply",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/healing-proposals/{proposal_id}/approve",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/healing-proposals/{proposal_id}/reject",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/health",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/hypotheses/{hypothesis_id}/review",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/impact-runs/{impact_run_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/impact-runs/{impact_run_id}/scenarios/{scenario_id}/explanation",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/impact-runs/{impact_run_id}/selections",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/intents/{intent_id}/review",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/legacy-executions/{legacy_type}/{legacy_id}/link",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/legacy/case-migrations",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/legacy/case-migrations/enqueue",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/legacy/case-migrations/{migration_id}/draft",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/legacy/case-migrations/{migration_id}/promote",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/legacy/case-migrations/{migration_id}/review",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/legacy/cutover-batches",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/legacy/cutover-batches/{batch_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/legacy/cutover-batches/{batch_id}/run",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/legacy/mappings",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/legacy/mappings",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/legacy/mappings/{mapping_id}/verify",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/legacy/resolve",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/legacy/usage",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/legacy/usage/record",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/legacy/usage/unknown",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}",
-      "method": "PATCH"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/acceptance",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/ambiguities",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/ambiguities/analyze",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/archive",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/builds",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/campaigns",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/change-sets",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/changes/detect",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/changes/detect-risk",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/contract",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/contracts/generate",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/executions",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/impact-runs",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/intents",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/lifecycle",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/lineage",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/lineage/backfill",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/lineage/edges",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/quality-gates/evaluate",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/scenario-gaps",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/scenarios",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/scope",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/scope/analyze",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/scope/complete",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/scope/reviews",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/sources",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/sources",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/sources/{source_id}/fragments",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/missions/{mission_id}/sources/{source_id}/parse",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/model-evaluations",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/model-evaluations",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/model-evaluations/regression-check",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/oracles/{oracle_id}/review",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/policy-profiles",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/policy-profiles",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/policy/evaluate",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/production/data/inspect",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/production/entity-graphs/extract",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/production/evidence/{journey_id}/analyze-gaps",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/production/journeys",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/production/journeys/{journey_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/production/observation-sessions",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/production/observation-sessions/{session_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/production/observation-sessions/{session_id}/stop",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/production/templates",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/production/templates/{template_id}/materialize",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/production/templates/{template_id}/validate",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/quality-gate-results/{result_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/quality-gate-results/{result_id}/override",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/regression-selections/{selection_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/regression-selections/{selection_id}/campaign",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/regression-selections/{selection_id}/guard",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/run-profiles",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/run-profiles",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/runs/{run_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/runs/{run_id}/assertions",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/runs/{run_id}/audit",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/runs/{run_id}/audit",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/runs/{run_id}/cancel",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/runs/{run_id}/defects",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/runs/{run_id}/evidence",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/runs/{run_id}/finish",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/runs/{run_id}/hypotheses",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/runs/{run_id}/replay",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/runs/{run_id}/resume",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/runs/{run_id}/retry",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/runs/{run_id}/steps",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/runs/{run_id}/triage",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/scenario-gaps/{gap_id}/convert",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/scenarios/adapters/{adapter_id}",
-      "method": "PATCH"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}/action-plans",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}/action-plans/generate",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}/adapters",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}/adapters",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}/functional-projection",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}/hybrid-runs",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}/manual-sessions",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}/manual-sessions/{session_id}/steps",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}/manual-sessions/{session_id}/steps",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}/manual-sessions/{session_id}/steps/{step_id}/complete",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}/oracle-bindings",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}/oracle-bindings",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}/review",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}/runs",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_id}/stability",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_version_id}/data-plans",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_version_id}/data-requirements",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/scenarios/{scenario_version_id}/data-requirements/derive",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/secret-refs",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/secret-refs",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/sources/{source_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/triggers",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/triggers",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/triggers/{trigger_id}/fire",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/triggers/{trigger_id}/webhook",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/workers",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/workers/heartbeat",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/workers/{worker_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/workers/{worker_id}/disable",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/workers/{worker_id}/drain",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v2/workflows",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v2/workflows/{workflow_run_id}",
       "method": "GET"
     },
     {

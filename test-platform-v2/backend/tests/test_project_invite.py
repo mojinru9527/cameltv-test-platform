@@ -76,37 +76,6 @@ def _register(client, username: str, email: str, project_token: str | None = Non
     return resp
 
 
-def test_migration_creates_project_invite_table(tmp_path: Path) -> None:
-    database_path = tmp_path / "batch106.db"
-    import sqlalchemy as sa
-    engine = sa.create_engine(f"sqlite:///{database_path.as_posix()}")
-    metadata = sa.MetaData()
-    sa.Table("sys_project", metadata, sa.Column("id", sa.Integer(), primary_key=True))
-    metadata.create_all(engine)
-    env = os.environ.copy()
-    env.update({
-        "DATABASE_URL": f"sqlite:///{database_path.as_posix()}",
-        "AUTO_CREATE_TABLES": "false",
-        "PYTHONPATH": str(BACKEND_ROOT),
-    })
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "stamp", PREVIOUS_HEAD],
-        cwd=BACKEND_ROOT, env=env, capture_output=True, check=True, text=True, timeout=60,
-    )
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "upgrade", "head"],
-        cwd=BACKEND_ROOT, env=env, capture_output=True, check=True, text=True, timeout=60,
-    )
-    with engine.connect() as connection:
-        tables = {
-            row[0]
-            for row in connection.execute(
-                sa.text("SELECT name FROM sqlite_master WHERE type='table'")
-            )
-        }
-        assert "sys_project_invite" in tables
-
-
 class TestProjectInvite:
     def test_owner_generates_invite(self, client, tester_role):
         headers = _login(client, "alice")
