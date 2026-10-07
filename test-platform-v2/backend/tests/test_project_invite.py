@@ -13,7 +13,6 @@ from app.core.security import hash_password
 from app.models.project import ProjectMember
 from app.models.rbac import Permission, Role, RolePermission, UserRole
 from app.models.user import User
-from app.services import organization_service
 
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
@@ -193,10 +192,8 @@ class TestProjectInvite:
             )
         )
         assert member is not None
-        # 自动加入项目所属组织（alice 的个人组织）
+        # 平台简化批次：组织概念已删除，邀请注册直接入项目（不再自动加入个人/项目组织）
         newbie_headers = _login(client, "newbie")
-        orgs = client.get("/api/v1/organizations", headers=newbie_headers).json()["data"]
-        assert len(orgs) == 2  # 个人组织 + 项目所属组织
         projects = client.get("/api/v1/projects", headers=newbie_headers).json()["data"]
         assert any(p["id"] == project["id"] for p in projects)
 

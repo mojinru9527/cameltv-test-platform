@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.modules.aitde.execution.models import ExecutionRun
+from app.modules.execution_runtime.models import ExecutionRun
 from app.modules.campaign_execution import service
 
 
@@ -63,3 +63,4 @@ def test_cancel_only_active_run(db_session) -> None:
     cancelled = service.cancel_execution_run(db_session, run_id=run.id, project_id=1)
     assert cancelled is not None and cancelled.runtime_status == "CANCELLED"
     assert service.cancel_execution_run(db_session, run_id=run.id, project_id=1) is None
+

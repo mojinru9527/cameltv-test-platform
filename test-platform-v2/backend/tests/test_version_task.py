@@ -1,4 +1,4 @@
-"""Batch 216 / B6 — VersionTask 唯一事实源 + 状态机 + API + 旧数据兼容映射。"""
+"""Batch 216 / B6 — VersionTask 唯一事实源 + 状态机 + API（平台简化批次：旧数据兼容映射已随 version_mission 删除）。"""
 from __future__ import annotations
 
 import json
@@ -6,7 +6,6 @@ from datetime import datetime
 
 import pytest
 
-from app.models.version_mission import VersionMission
 from app.models.version_task import VersionTask, VersionTaskDefect, VersionTaskExecution
 from app.services import version_task_service
 from app.core.exceptions import APIException
@@ -68,22 +67,6 @@ def test_execution_and_defect_links(db_session):
     assert dlink.task_id == task.id
     task = version_task_service.get_task(db_session, task.id)
     assert len(task.defects) == 1
-
-
-def test_compat_mission_view_no_double_write(db_session):
-    mission = VersionMission(
-        project_id=1, mission_key="m-1", title="旧智能任务", version="3.0.0",
-        summary="old", created_by=1, qa_owner_id=2, scope='{"modules":[]}',
-    )
-    db_session.add(mission)
-    db_session.commit()
-
-    view = version_task_service.compat_mission_view(db_session, mission.id)
-    assert view["source"] == "mission"
-    assert view["source_mission_id"] == mission.id
-    assert view["legacy"] is True
-    # 兼容映射不写库：db 中不存在来自 mission 的 version_task 行
-    assert db_session.query(VersionTask).filter_by(source="mission").count() == 0
 
 
 # ────────────────────────────── API ──────────────────────────────
@@ -1010,25 +993,3 @@ def test_api_task_routes_hide_cross_project_resources(
     assert task.title == "project 13 only"
     assert item.status == "draft"
 
-
-def test_api_compat_mission_detail_hides_cross_project_resource(
-    client, auth_headers, db_session,
-):
-    from app.models.version_mission import VersionMission
-
-    mission = VersionMission(
-        project_id=13,
-        mission_key="private-13",
-        title="project 13 mission",
-        version="1.0",
-    )
-    db_session.add(mission)
-    db_session.commit()
-
-    response = client.get(
-        f"/api/v1/version-tasks/compat/missions/{mission.id}",
-        headers=auth_headers,
-    )
-
-    assert response.status_code == 404
-    assert response.json()["code"] == 404

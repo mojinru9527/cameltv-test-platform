@@ -106,12 +106,16 @@ describe('知识中心 tab 收敛（batch-260 / B3-5：3 入口 = 影响面/项�
     expect(screen.getByTestId('tab-impact')).not.toBeVisible()
   })
 
-  it('维护者/管理员可见全部 Tab，默认概览', () => {
+  it('维护者/管理员可见全部保留 Tab，默认概览', () => {
     authStub.hasPerm = () => true
     renderPage()
     expect(screen.getByTestId('tab-overview')).toBeVisible()
-    for (const name of [/影响面/, /项目知识/, /平台研发/, /检索/, /AI 审核台/, /图谱/, /知识源/, /实体/, /迭代/, /Wiki 知识库/, /知识差异对比/, /Skills/]) {
+    for (const name of [/影响面/, /项目知识/, /检索/, /知识源/, /版本记录/, /复用建议/, /Wiki 知识库/, /概览/]) {
       expect(screen.getByRole('tab', { name })).toBeTruthy()
+    }
+    // 平台简化批次：已删除的 AI 子能力 Tab 不再出现
+    for (const name of [/平台研发/, /AI 审核台/, /图谱/, /实体/, /迭代/, /知识差异对比/, /Skills/]) {
+      expect(screen.queryByRole('tab', { name })).toBeNull()
     }
   })
 

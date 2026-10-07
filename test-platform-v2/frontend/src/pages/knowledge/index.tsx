@@ -12,20 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/ui'
-import { LayoutDashboard, Database, FileCheck, Search, GitBranch, Layers, Calendar, BookOpen, GitCompare, FolderOpen, Sparkles, Zap, Target } from '@/lib/icons'
+import { LayoutDashboard, Database, Search, Calendar, BookOpen, FolderOpen, Layers, Target } from '@/lib/icons'
 import type { LucideIcon } from '@/lib/icons'
 import OverviewTab from './components/OverviewTab'
 import SourceListTab from './components/SourceListTab'
-import ArtifactReviewTab from './components/ArtifactReviewTab'
 import SearchTab from './components/SearchTab'
-import GraphTab from './components/GraphTab'
-import EntityTab from './components/EntityTab'
-import IterationTab from './components/IterationTab'
 import WikiTab from './components/WikiTab'
-import WikiDiffTab from './components/WikiDiffTab'
 import ProjectTab from './components/ProjectTab'
-import PlatformTab from './components/PlatformTab'
-import SkillsTab from './components/SkillsTab'
 import VersionKnowledgeTab from './components/VersionKnowledgeTab'
 import ImpactTab from './components/ImpactTab'
 import CaptureDialog from './components/CaptureDialog'
@@ -34,34 +27,25 @@ import { useAuthStore } from '@/stores/auth'
 
 
 /**
- * 知识中心 Tab 目录（Batch 260 / B3-5 收敛）。
+ * 知识中心 Tab 目录（平台简化批次收敛）。
  *
  * 普通用户（tester）视图**恰好 3 Tab**：影响面 / 项目知识 / 检索。
- *   - 「影响面」是 09 §2.4 唯一知识问题的落点（改了 X 要跑哪些 + 未覆盖缺口）；
- *   - 版本记录与复用建议不再单独占页签，其数据经由影响面与任务侧复用建议呈现。
- * 其余为维护/专家 Tab（概览/知识源/AI 审核台/图谱/实体/迭代/Wiki/知识差异对比/Skills/平台研发），
- * 需知识维护权限才可见（02 白名单 §3「知识中心普通用户多余 Tab 收维护入口」）。
+ * 维护/专家 Tab（概览/知识源/版本记录/复用建议/Wiki）需知识维护权限才可见。
  *
- * 这条"3 Tab"由 `NORMAL_KNOWLEDGE_TABS` 固化，并有测试断言守着（防止回涨）。
+ * 平台简化批次：平台研发/图谱/实体/迭代/AI 审核台/知识差异对比/Skills 已随
+ * 知识 AI 子能力删除。
  */
 type KnowledgeTabDef = { value: string; label: string; icon: LucideIcon }
 
 const KNOWLEDGE_TAB_DEFS: KnowledgeTabDef[] = [
   { value: 'impact', label: '影响面', icon: Target },
   { value: 'project', label: '项目知识', icon: FolderOpen },
-  { value: 'platform', label: '平台研发', icon: Sparkles },
   { value: 'versionrecords', label: '版本记录', icon: Calendar },
   { value: 'reuse', label: '复用建议', icon: Layers },
   { value: 'search', label: '检索', icon: Search },
   { value: 'overview', label: '概览', icon: LayoutDashboard },
   { value: 'sources', label: '知识源', icon: Database },
-  { value: 'artifacts', label: 'AI 审核台', icon: FileCheck },
-  { value: 'graph', label: '图谱', icon: GitBranch },
-  { value: 'entities', label: '实体', icon: Layers },
-  { value: 'iterations', label: '迭代', icon: Calendar },
   { value: 'wiki', label: 'Wiki 知识库', icon: BookOpen },
-  { value: 'wikidiff', label: '知识差异对比', icon: GitCompare },
-  { value: 'skills', label: 'Skills', icon: Zap },
 ]
 
 /** 普通用户可见页签上限与清单（Batch 260 / B3-5：收敛到 3 个，与上面的 docblock 一致）。 */
@@ -74,7 +58,7 @@ function visibleKnowledgeTabs(canMaintain: boolean): KnowledgeTabDef[] {
 }
 
 /**
- * 知识中心 — PARA 视角（项目知识 / 平台研发） + RAG 技术视图。
+ * 知识中心 — 项目知识库（知识源/检索/版本记录/复用建议/影响面）。
  */
 export default function KnowledgePage() {
   useDocumentTitle('知识中心')
@@ -115,7 +99,7 @@ export default function KnowledgePage() {
     <div className="min-w-0 space-y-4">
       <PageHeader
         title="知识中心"
-        description="项目知识（需求/接口/用例）+ 平台研发知识（踩坑记录/设计决策/最佳实践）统一沉淀、可检索、可复用。"
+        description="项目知识（需求/接口/用例）统一沉淀、可检索、可复用。"
       />
 
       {/* ── 常驻搜索栏（所有 Tab 可见）── */}
@@ -169,9 +153,6 @@ export default function KnowledgePage() {
         <TabsContent value="project" className={cn('mt-4', tab !== 'project' && 'hidden')} forceMount={visitedTabs.has('project') ? true : undefined}>
           <ProjectTab />
         </TabsContent>
-        <TabsContent value="platform" className={cn('mt-4', tab !== 'platform' && 'hidden')} forceMount={visitedTabs.has('platform') ? true : undefined}>
-          <PlatformTab />
-        </TabsContent>
         <TabsContent value="versionrecords" className={cn('mt-4', tab !== 'versionrecords' && 'hidden')} forceMount={visitedTabs.has('versionrecords') ? true : undefined}>
           <VersionKnowledgeTab mode="records" />
         </TabsContent>
@@ -187,26 +168,8 @@ export default function KnowledgePage() {
         <TabsContent value="sources" className={cn('mt-4', tab !== 'sources' && 'hidden')} forceMount={visitedTabs.has('sources') ? true : undefined}>
           <SourceListTab />
         </TabsContent>
-        <TabsContent value="artifacts" className={cn('mt-4', tab !== 'artifacts' && 'hidden')} forceMount={visitedTabs.has('artifacts') ? true : undefined}>
-          <ArtifactReviewTab />
-        </TabsContent>
-        <TabsContent value="graph" className={cn('mt-4', tab !== 'graph' && 'hidden')} forceMount={visitedTabs.has('graph') ? true : undefined}>
-          <GraphTab />
-        </TabsContent>
-        <TabsContent value="entities" className={cn('mt-4', tab !== 'entities' && 'hidden')} forceMount={visitedTabs.has('entities') ? true : undefined}>
-          <EntityTab />
-        </TabsContent>
-        <TabsContent value="iterations" className={cn('mt-4', tab !== 'iterations' && 'hidden')} forceMount={visitedTabs.has('iterations') ? true : undefined}>
-          <IterationTab />
-        </TabsContent>
         <TabsContent value="wiki" className={cn('mt-4', tab !== 'wiki' && 'hidden')} forceMount={visitedTabs.has('wiki') ? true : undefined}>
           <WikiTab />
-        </TabsContent>
-        <TabsContent value="wikidiff" className={cn('mt-4', tab !== 'wikidiff' && 'hidden')} forceMount={visitedTabs.has('wikidiff') ? true : undefined}>
-          <WikiDiffTab />
-        </TabsContent>
-        <TabsContent value="skills" className={cn('mt-4', tab !== 'skills' && 'hidden')} forceMount={visitedTabs.has('skills') ? true : undefined}>
-          <SkillsTab />
         </TabsContent>
       </Tabs>
 

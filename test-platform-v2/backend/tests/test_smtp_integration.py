@@ -22,7 +22,7 @@ from unittest import mock
 
 import pytest
 
-from app.services.notify_service import _sync_send_email
+from app.services.mail_service import _sync_send_email
 
 
 # ── Helper ──────────────────────────────────────────────────
@@ -291,7 +291,7 @@ class TestSMTPIntegration:
         with mock.patch("smtplib.SMTP", return_value=mock_smtp):
             with mock.patch("app.core.config.settings.smtp_verify_cert", False):
                 with mock.patch("app.core.config.settings.smtp_ca_bundle", ""):
-                    with caplog.at_level(logging.WARNING, logger="notify"):
+                    with caplog.at_level(logging.WARNING, logger="mail"):
                         _sync_send_email("localhost", 587, "", "", msg)
 
         assert "SMTP 证书验证已关闭" in caplog.text
@@ -312,7 +312,7 @@ class TestSMTPIntegration:
         with mock.patch("smtplib.SMTP", return_value=mock_smtp):
             with mock.patch("app.core.config.settings.smtp_verify_cert", True):
                 with mock.patch("app.core.config.settings.smtp_ca_bundle", ""):
-                    with caplog.at_level(logging.WARNING, logger="notify"):
+                    with caplog.at_level(logging.WARNING, logger="mail"):
                         _sync_send_email("localhost", 587, "", "", msg)
 
         assert "SMTP 证书验证已关闭" not in caplog.text
@@ -354,3 +354,4 @@ class TestSMTPIntegration:
         # load_verify_locations should have been called with the CA bundle path
         mock_load.assert_called()
         assert mock_load.call_args.args == ("/etc/ssl/custom-ca.pem",)
+

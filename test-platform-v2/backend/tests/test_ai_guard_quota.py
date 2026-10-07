@@ -1,7 +1,8 @@
 """P1-6 — 平台级 AI 配额闸门与用量台账（app/services/ai_guard.py）。
 
 覆盖：每分钟请求上限 / 24h token 预算 / 未超限放行 / 关闭开关即 no-op /
-台账查询失败必须失败关闭 / record 写台账且吞掉 DB 异常 / 网关超限返回 429。
+台账查询失败必须失败关闭 / record 写台账且吞掉 DB 异常 / 直连分诊链路超限拦截。
+平台简化批次：ai-gateway 独立服务已删除，网关咽喉用例移除。
 """
 from __future__ import annotations
 
@@ -9,14 +10,11 @@ from types import SimpleNamespace
 
 import pytest
 import httpx
-from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
 
-from app.ai_gateway_app import app as gateway_app
 from app.core import config
 from app.core.config import Settings
-from app.core.db import get_db
-from app.modules.aitde.governance.models import ModelUsageLedger
+from app.models.model_usage import ModelUsageLedger
 from app.services import ai_client, ai_guard, triage_service
 
 
@@ -206,76 +204,6 @@ def test_record_never_touches_the_caller_session(db_session) -> None:
     assert spy.calls == []
     row = db_session.query(ModelUsageLedger).filter(ModelUsageLedger.project_id == 7).one()
     assert (row.input_units, row.output_units) == (3, 4)
-
-
-# ── 网关咽喉：429 与记账 ────────────────────────────────────────
-
-def _gateway_client(db_session):
-    def override_get_db():
-        yield db_session
-
-    gateway_app.dependency_overrides[get_db] = override_get_db
-    return TestClient(gateway_app)
-
-
-def test_gateway_returns_429_when_quota_exceeded(db_session, monkeypatch) -> None:
-    monkeypatch.setattr(config.settings, "ai_gateway_token", "secret")
-    monkeypatch.setattr(config.settings, "ai_guard_enabled", True)
-    monkeypatch.setattr(config.settings, "ai_rate_limit_per_minute", 1)
-    ai_guard.record(db_session, 7, operation_type="seed")
-
-    called: list[int] = []
-    monkeypatch.setattr(
-        ai_client,
-        "chat_completions_full",
-        lambda *a, **k: called.append(1) or {"content": "{}"},
-    )
-
-    client = _gateway_client(db_session)
-    try:
-        response = client.post(
-            "/internal/ai/v1/chat",
-            headers={"X-AI-Gateway-Token": "secret"},
-            json={"project_id": 7, "system_prompt": "s", "user_message": "u"},
-        )
-    finally:
-        gateway_app.dependency_overrides.clear()
-
-    assert response.status_code == 429
-    assert "每分钟上限" in response.json()["detail"]
-    assert called == []  # 被闸门拦下，模型调用根本没发生
-
-
-def test_gateway_records_usage_from_model_response(db_session, monkeypatch) -> None:
-    monkeypatch.setattr(config.settings, "ai_gateway_token", "secret")
-    monkeypatch.setattr(config.settings, "ai_guard_enabled", True)
-    monkeypatch.setattr(
-        ai_client,
-        "chat_completions_full",
-        lambda *a, **k: {
-            "content": '{"ok":true}',
-            "model_name": "deepseek-v4-pro",
-            "usage": {"input_tokens": 11, "output_tokens": 5},
-            "duration_ms": 42,
-        },
-    )
-
-    client = _gateway_client(db_session)
-    try:
-        response = client.post(
-            "/internal/ai/v1/chat",
-            headers={"X-AI-Gateway-Token": "secret"},
-            json={"project_id": 7, "system_prompt": "s", "user_message": "u"},
-        )
-    finally:
-        gateway_app.dependency_overrides.clear()
-
-    assert response.status_code == 200
-    row = db_session.query(ModelUsageLedger).filter(ModelUsageLedger.project_id == 7).one()
-    assert row.operation_type == "gateway_chat"
-    assert row.model_ref == "deepseek-v4-pro"
-    assert (row.input_units, row.output_units) == (11, 5)
-    assert row.latency_ms == 42
 
 
 # ── 绕过网关的直连链路（分诊 httpx）也必须被闸门拦住 ─────────────
