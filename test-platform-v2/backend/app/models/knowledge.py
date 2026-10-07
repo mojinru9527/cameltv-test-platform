@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import LargeBinary, String, Text, UniqueConstraint
+from sqlalchemy import LargeBinary, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -122,5 +122,6 @@ class KnowledgeRelation(Base):
     review_status: Mapped[str] = mapped_column(default="pending", index=True)
     metadata_json: Mapped[str] = mapped_column(Text, default="{}")
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+
 
 

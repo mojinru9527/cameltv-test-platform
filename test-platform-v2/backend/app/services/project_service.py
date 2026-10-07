@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.base_service import batch_user_names
 from app.core.config import settings
-from app.core.exceptions import APIException, forbidden, not_found
+from app.core.exceptions import APIException
 from app.models.project import Project, ProjectMember
 from app.models.rbac import Role
 from app.models.user import User

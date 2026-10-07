@@ -14,14 +14,28 @@ import sys
 import time
 
 TAG = r'release-\d{8}-\d{4}'
+# 简化后只有一套拓扑：每个发布都带 backend/frontend/runner 三件镜像。
 IMAGE = re.compile(rf'cameltv-tp-(backend|frontend|runner):({TAG})')
 ARCHIVE = re.compile(rf'({TAG})-(backend|frontend|runner)\.tar')
-EXECUTION_CONFIG = re.compile(rf'({TAG})-execution\.yml')
+# 发布包里钉扎的部署 compose（新命名，兼容历史 {tag}-execution.yml）：只进清单、
+# 从不作为删除候选，但其存在会影响审批摘要。
+EXECUTION_CONFIG = re.compile(rf'({TAG})-(?:deploy|execution)\.yml')
+# 钉扎证据的命名优先级：两份都在时以 {tag}-deploy.yml 为准（与 verify() 一致）。
+PINNED_CONFIG_SUFFIXES = ('deploy.yml', 'execution.yml')
 LOCK_PATH = '/run/lock/cameltv-release-capacity.lock'
 
 
 def docker(*args: str) -> str:
     return subprocess.check_output(['docker', *args], text=True, timeout=120)
+
+
+def pinned_config(archives: list, tag: str) -> str | None:
+    """钉扎版本随包的部署 compose 文件名；两份命名都不在时返回 None。"""
+    names = {a['name'] for a in archives if a['regular'] and a['size'] > 0}
+    return next(
+        (f'{tag}-{suffix}' for suffix in PINNED_CONFIG_SUFFIXES if f'{tag}-{suffix}' in names),
+        None,
+    )
 
 
 def snapshot(release_dir: Path) -> tuple[list, list, list]:
@@ -50,20 +64,20 @@ def build_plan(images: list, containers: list, archives: list,
     if len(keep) < 2 or any(not re.fullmatch(TAG, tag) for tag in keep):
         raise ValueError('pin at least two distinct release tags: current and verified rollback')
     refs = {tag: i['Id'] for i in images for tag in i['RepoTags']}
-    split_tags = {m[2] for ref in refs if (m := IMAGE.fullmatch(ref)) and m[1] == 'runner'}
-    for item in archives:
-        config = EXECUTION_CONFIG.fullmatch(item['name'])
-        archive = ARCHIVE.fullmatch(item['name'])
-        if config or (archive and archive[2] == 'runner'):
-            split_tags.add((config or archive)[1])
+    # 简化后每个发布都带 backend/frontend/runner 三件镜像：钉扎版本缺任何一件
+    # 都不是完整回滚锚点，直接 fail-closed（不再区分 combined/split）。
+    pinned_configs: dict[str, str] = {}
     for tag in keep:
-        for part in ('backend', 'frontend', 'runner') if tag in split_tags else ('backend', 'frontend'):
+        for part in ('backend', 'frontend', 'runner'):
             if f'cameltv-tp-{part}:{tag}' not in refs:
                 raise ValueError(f'pinned release pair missing: {tag} {part}')
-        if tag in split_tags and not any(
-            a['name'] == f'{tag}-execution.yml' and a['regular'] and a['size'] > 0 for a in archives
-        ):
-            raise ValueError(f'pinned split release configuration missing: {tag}')
+        # 钉扎版本还必须留有钉扎证据（随包部署 compose）：两种命名都缺即视为
+        # 不完整钉扎，fail-closed——否则「钉扎证据缺失」会静默通过。
+        # 该文件只进清单、永不作为删除候选（见下方 files 候选判定）。
+        config = pinned_config(archives, tag)
+        if config is None:
+            raise ValueError(f'pinned release compose artifact missing: {tag}')
+        pinned_configs[tag] = config
     releases = {m[2] for ref in refs if (m := IMAGE.fullmatch(ref))}
     keep.update(sorted(releases, reverse=True)[:2])
     for tag in releases:
@@ -88,6 +102,7 @@ def build_plan(images: list, containers: list, archives: list,
                 and now - item['mtime_ns'] / 10**9 >= 48 * 3600):
             files.append(item)
     plan = {'keep_tags': sorted(keep), 'image_tags': candidates, 'archives': files,
+            'pinned_configs': pinned_configs,
             'archive_bytes': sum(f['size'] for f in files)}
     # Include the entire inspected reference/file inventory to reject changed approvals.
     payload = {'plan': plan, 'images': sorted(images, key=lambda i: i['Id']),

@@ -17,11 +17,11 @@ RUNNER_ENDPOINTS_FILE = "app/core/execution_dispatch.py"
 RUNNER_ENDPOINTS_NAME = "RUNNER_ENDPOINTS"
 
 # 镜像内必须存在的路径（相对 /app）；沿用时逐项核对
+# 平台简化批次：独立 AI 网关服务已删除，只剩 backend/frontend/runner（+ api target）。
 REQUIRED_IMAGE_PATHS: dict[str, tuple[str, ...]] = {
     "backend": ("alembic", "alembic/versions", "alembic.ini"),
     "runner": ("alembic", "alembic/versions", "alembic.ini", RUNNER_ENDPOINTS_FILE),
     "api": ("alembic", "alembic/versions", "alembic.ini"),
-    "ai-gateway": (),
 }
 
 

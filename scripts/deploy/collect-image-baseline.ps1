@@ -61,7 +61,7 @@ $payload = [ordered]@{
         backend_targets = @($targets)
         backend_cache_mounts = ([regex]::Matches($dockerfile, "--mount=type=cache").Count)
         frontend_cache_mounts = ([regex]::Matches($frontendDockerfile, "--mount=type=cache").Count)
-        execution_overlay = Test-Path -LiteralPath (Join-Path $root "test-platform-v2/deploy/docker-compose.execution.yml")
+        deploy_compose = Test-Path -LiteralPath (Join-Path $root "test-platform-v2/deploy/docker-compose.yml")
     }
 }
 
@@ -72,3 +72,4 @@ if ($Output) {
     $json | Set-Content -Encoding UTF8 -LiteralPath $outputPath
 }
 $json
+

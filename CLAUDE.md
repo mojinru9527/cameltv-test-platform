@@ -15,18 +15,20 @@ related: ["test-platform-v2/CLAUDE.md", "docs/adr/README.md", "COMMANDS.md"]
 ## 项目定位
 
 为 **CamelTv 体育平台**（用户端 + 运营后台）提供全链路测试能力的一体化测试平台。覆盖：
-- **管理闭环**：需求 → AI 生成用例 → 用例库 → 测试计划 → 执行 → 报告/缺陷
-- **专项测试**：API 测试、UI 自动化、音视频质量检测
+- **管理闭环**：需求 → AI 生成用例 → 用例库 → 执行 → 缺陷；版本验收任务（VersionTask）为版本唯一事实源
+- **专项测试**：API 测试、UI 自动化、环境管理、项目知识库（含蓝湖证据包）
 - **CI/CD 集成**：Jenkins Pipeline + GitHub Actions 双通道
+
+> 平台简化批次（2026-10-07）：AITDE 智能测试任务、DSH 测试 Agent、报告中心、测试数据集、通知、集成、组织管理、主题实验室、音视频专项、知识图谱/AI 审核台等已整体删除（代码 + 库表）。详见 [docs/platform-refactor/11-platform-simplification-design.md](docs/platform-refactor/11-platform-simplification-design.md) 与 [work-logs/platform-simplification-production-eval-20261007.md](work-logs/platform-simplification-production-eval-20261007.md)。
 
 ## 仓库地图
 
 | 路径 | 模块 | 技术栈 | 状态 | 说明 |
 |------|------|--------|------|------|
-| [test-platform-v2/](test-platform-v2/CLAUDE.md) | 测试平台 v2 主力 | FastAPI + React 18 | **活跃开发** | 前后端分离，RBAC，AI 驱动 |
+| [test-platform-v2/](test-platform-v2/CLAUDE.md) | 测试平台 v2 主力 | FastAPI + React 19 | **活跃开发** | 前后端分离，RBAC，需求 AI 生成用例 |
 | ~~test-platform/~~ | 测试平台 v1 旧版 | FastAPI + React 18 | ✅ 已退役（Batch 100） | 整体移除；API 回归资产迁移至 tests/api-testing/ |
 | [lanhu-mcp/](lanhu-mcp/CLAUDE.md) | 蓝湖 MCP 服务 | FastMCP + Playwright | 稳定 | 桥接蓝湖原型与 AI 编码助手 |
-| [knowledge-mcp/](knowledge-mcp/README.md) | 知识中心 MCP 服务 | FastMCP + httpx | 新增（Batch 202） | 桥接测试平台知识中心与 DSH 测试 Agent（查询/执行/回写） |
+| ~~knowledge-mcp/~~ | 知识中心 MCP 服务 | FastMCP + httpx | ✅ 已删除（平台简化批次） | 随 DSH 测试 Agent 一并移除；如需恢复从 git 历史取回 |
 | [tests/](tests/CLAUDE.md) | 测试资产 | Markdown + Playwright | 持续积累 | 功能用例 + API 测试 + 自动化 |
 | [deploy/](deploy/CLAUDE.md) | CI/CD 部署 | Jenkins + Docker + GitHub Actions | 稳定 | 11 阶段 Pipeline |
 

@@ -28,13 +28,17 @@ from migrations import (
     target_revision,
 )
 import os
-import re
 import shlex
 import tempfile
 from pathlib import Path
 
 from capacity import remote_check_command
-from release_artifacts import remote_verify_command, runtime_mode
+from release_artifacts import PARTS, remote_verify_command, runtime_mode
+
+# 平台简化后只有一套发布拓扑：独立 AI 网关与旧执行 Worker 已删除，
+# 每个版本都交付 backend（API）、frontend、runner 三件镜像。
+# 制品清单由 release_artifacts.PARTS 单点定义，这里只做别名。
+RELEASE_PARTS: tuple[str, ...] = PARTS
 
 
 @dataclasses.dataclass(frozen=True)
@@ -53,16 +57,18 @@ class ExecutorConfig:
     command_timeout_seconds: int = 600
     keep_backups: int = 7
     image_runner: str = 'cameltv-tp-runner:main'
-    image_ai_gateway: str = 'cameltv-tp-ai-gateway:main'
 
 
 def release_parts(mode: str) -> tuple[str, ...]:
-    """Image parts shipped for a runtime mode; split adds the AI gateway."""
-    return ('backend', 'frontend', 'runner', 'ai-gateway') if mode == 'split' else ('backend', 'frontend')
+    """Image parts shipped by every release.
+
+    ``mode`` 仅为兼容既有发布脚本/调用方保留：简化后两种模式交付同一套制品。
+    """
+    return RELEASE_PARTS
 
 
 def image_target(config: 'ExecutorConfig', part: str) -> str:
-    """Map a release part ("ai-gateway") to its configured image target."""
+    """Map a release part ("backend"/"frontend"/"runner") to its image target."""
     return getattr(config, f"image_{part.replace('-', '_')}")
 
 
@@ -102,22 +108,14 @@ def rollback_runtime_override(mode: str) -> dict:
 
     Old Alembic trees cannot resolve a newer revision. Operational rollback must
     start the compatible application directly, never migrate the database down.
+
+    简化后 backend 与 runner 都来自同一镜像、默认入口会先跑迁移，因此两种模式
+    都为这两个服务写显式命令兜底（``mode`` 仅为兼容既有调用方保留）。
     """
     if mode not in ('combined', 'split'):
         raise ValueError('invalid rollback runtime mode')
     api_command = ['uvicorn', 'app.main:app', '--host', '0.0.0.0', '--port', '8000']
-    owners = ('backend', 'runner') if mode == 'split' else ('backend',)
-    services = {owner: {'command': api_command} for owner in owners}
-    if mode == 'split':
-        # The gateway keeps serving AI during a rollback, so it must not
-        # inherit the public API entrypoint command.
-        services['ai-gateway'] = {
-            'command': [
-                'uvicorn', 'app.ai_gateway_app:app',
-                '--host', '0.0.0.0', '--port', '8100',
-            ]
-        }
-    return {'services': services}
+    return {'services': {owner: {'command': api_command} for owner in ('backend', 'runner')}}
 
 
 class TencentSshExecutor:
@@ -199,24 +197,16 @@ class TencentSshExecutor:
                     pass
 
     def _compose(self, *args: str, mode: str = 'combined', tag: str = '', rollback: bool = False) -> str:
-        extra, environment = '', ''
-        if mode == 'split':
-            if not re.fullmatch(r'release-\d{8}-\d{4}', tag):
-                raise ExecutorCommandFailed('invalid split release tag')
-            extra = ('-f docker-compose.yml -f docker-compose.override.yml '
-                     f'-f docker-compose.execution.{tag}.yml ')
-            environment = (f'API_IMAGE={shlex.quote(self.config.image_backend)} '
-                           f'RUNNER_IMAGE={shlex.quote(self.config.image_runner)} '
-                           f'AI_GATEWAY_IMAGE={shlex.quote(self.config.image_ai_gateway)} ')
-        else:
-            # The repository default topology is split; combined releases and
-            # rollbacks layer the combined overlay back on top of it.
-            extra = ('-f docker-compose.yml -f docker-compose.override.yml '
-                     '-f docker-compose.combined.yml ')
+        """Render one docker compose invocation for the single deploy topology.
+
+        简化后只有 base + override（回滚时再叠加控制面生成的 rollback overlay）；
+        ``mode`` / ``tag`` 仅为兼容既有调用方保留，不再改变渲染出的文件。
+        """
+        extra = '-f docker-compose.yml -f docker-compose.override.yml '
         if rollback:
             extra += '-f docker-compose.rollback-runtime.yml '
         return (
-            f"cd {shlex.quote(self.config.compose_dir)} && {environment}"
+            f"cd {shlex.quote(self.config.compose_dir)} && "
             f"docker compose --project-name {shlex.quote(self.config.compose_project)} "
             f"--env-file ../config/runtime/production.env {extra}{' '.join(shlex.quote(arg) for arg in args)}"
         )
@@ -240,28 +230,14 @@ class TencentSshExecutor:
                 lambda *args: self._compose(*args, mode=mode, tag=tag),
                 target=migration_target,
             ))
-        commands.append(self._compose('stop', '--timeout', '60', 'backend', 'aitde-worker', 'runner', 'ai-gateway'))
+        services = ('backend', 'frontend', 'runner')
+        commands.append(self._compose('stop', '--timeout', '60', *services))
         project = shlex.quote(f'label=com.docker.compose.project={self.config.compose_project}')
         commands.append(f'docker ps -q --filter {project} --filter label=com.docker.compose.service=runner | xargs -r docker stop --time 60')
-        services = ('runner', 'ai-gateway', 'backend', 'frontend', 'aitde-worker') if mode == 'split' else ('backend', 'frontend', 'aitde-worker')
         commands.append(self._compose('up', '-d', '--no-build', '--force-recreate', '--wait',
                                       '--wait-timeout', '180', *services, mode=mode, tag=tag,
                                       rollback=rollback))
         commands.append("curl -fsS -o /dev/null http://127.0.0.1:8080/api/v1/open/health")
-        return commands
-
-    def _split_config(self, tag: str, checksum: str, *, install: bool) -> list[str]:
-        if not re.fullmatch(r'[0-9a-f]{64}', checksum):
-            raise ExecutorCommandFailed('invalid execution config checksum')
-        source = shlex.quote(f'{self.config.release_dir}/{tag}-execution.yml')
-        target = shlex.quote(f'{self.config.compose_dir}/docker-compose.execution.{tag}.yml')
-        commands = []
-        if install:
-            commands.extend([f'test ! -L {target}', f'( test ! -e {target} || cmp -s -- {source} {target} )',
-                             f'cp -- {source} {target}'])
-        commands.append(f'test -f {target} && test ! -L {target}')
-        commands.append(f'test "$(sha256sum -- {target} | cut -d " " -f 1)" = {checksum}')
-        commands.append(self._compose('config', '--quiet', mode='split', tag=tag))
         return commands
 
     # ── public actions ───────────────────────────────────────────────────
@@ -281,8 +257,6 @@ class TencentSshExecutor:
         ]
         if manifest is not None:
             commands.append(remote_verify_command(self.config.release_dir, image_tag, manifest))
-        if mode == 'split':
-            commands.extend(self._split_config(image_tag, manifest['execution_config_sha256'], install=True))
         parts = release_parts(mode)
         for part in parts:
             commands.append(f'docker load -i {shlex.quote(f"{self.config.release_dir}/{image_tag}-{part}.tar")}')
@@ -319,8 +293,6 @@ class TencentSshExecutor:
         for part in parts:
             repo = image_target(self.config, part).rsplit(':', 1)[0]
             commands.append(f'docker image inspect {shlex.quote(f"{repo}:{image_tag}")} >/dev/null')
-        if mode == 'split':
-            commands.extend(self._split_config(image_tag, manifest['execution_config_sha256'], install=False))
         for part in parts:
             target = image_target(self.config, part)
             repo = target.rsplit(':', 1)[0]
@@ -400,10 +372,5 @@ def build_executor_from_settings(settings_like: object) -> TencentSshExecutor:
         command_timeout_seconds=getattr(settings_like, "tencent_executor_timeout", 600),
         keep_backups=getattr(settings_like, "tencent_executor_keep_backups", 7),
         image_runner=getattr(settings_like, 'tencent_executor_image_runner', 'cameltv-tp-runner:main'),
-        image_ai_gateway=getattr(
-            settings_like,
-            'tencent_executor_image_ai_gateway',
-            'cameltv-tp-ai-gateway:main',
-        ),
     )
     return TencentSshExecutor(config)

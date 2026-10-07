@@ -4,7 +4,7 @@
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 def get_aggregated_summary(db: Session, project_id: int, *, days: int = 7) -> dict:
     """获取项目最近 N 天的测试全景摘要（API + UI）。"""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    cutoff = datetime.now(UTC) - timedelta(days=days)
 
     api_summary = _api_summary(db, project_id, cutoff)
     ui_summary = _ui_summary(db, project_id, cutoff)
@@ -31,7 +31,7 @@ def get_aggregated_summary(db: Session, project_id: int, *, days: int = 7) -> di
             "total_failed": total_failed,
             "pass_rate": round(total_passed / max(total_passed + total_failed, 1) * 100, 1),
         },
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
     }
 
 
@@ -51,7 +51,7 @@ def _api_summary(db: Session, project_id: int, cutoff: datetime) -> dict:
     total_failed = sum(t.failed or 0 for t in tasks)
 
     # 最近 5 个任务的趋势
-    recent_tasks = sorted(tasks, key=lambda t: t.created_at or datetime.min.replace(tzinfo=timezone.utc), reverse=True)[:5]
+    recent_tasks = sorted(tasks, key=lambda t: t.created_at or datetime.min.replace(tzinfo=UTC), reverse=True)[:5]
     trend = [
         {
             "task_id": t.task_id,
@@ -125,7 +125,7 @@ def _ui_summary(db: Session, project_id: int, cutoff: datetime) -> dict:
         total_failed += res.get("fail", 0)
 
     # 最近 5 个运行的趋势
-    recent_runs = sorted(runs, key=lambda r: r.started_at or datetime.min.replace(tzinfo=timezone.utc), reverse=True)[:5]
+    recent_runs = sorted(runs, key=lambda r: r.started_at or datetime.min.replace(tzinfo=UTC), reverse=True)[:5]
     trend = []
     for r in recent_runs:
         try:

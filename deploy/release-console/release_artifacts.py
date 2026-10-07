@@ -9,26 +9,67 @@ import re
 import shlex
 import tarfile
 
+# 平台简化后只有一套发布拓扑：独立 AI 网关与旧执行 Worker 已删除，
+# 每个版本都交付 backend（API）、frontend、runner 三件镜像。
+PARTS: tuple[str, ...] = ('backend', 'frontend', 'runner')
+
+# 发布包里钉扎的部署 compose：简化后是新命名 {tag}-deploy.yml，兼容历史
+# {tag}-execution.yml（split overlay 时代的制品）。
+CONFIG_ARTIFACT_SUFFIXES: tuple[str, ...] = ('deploy.yml', 'execution.yml')
+
 
 def runtime_mode(manifest: dict) -> str:
+    """发布拓扑模式（combined|split）。
+
+    简化后两种模式交付同一套制品（backend/frontend/runner）；split 仍然要求
+    携带被钉扎的部署 compose 校验和。``combined`` 不再禁用 runner 制品——
+    runner 现在是每个版本都必须交付的执行角色。
+    """
     mode = manifest.get('runtime_mode', 'combined')
     if mode not in ('combined', 'split'):
         raise ValueError('invalid runtime mode')
-    if mode == 'combined' and (manifest.get('runner') is not None or manifest.get('execution_config_sha256') is not None):
-        raise ValueError('combined release includes split artifacts')
-    if mode == 'split':
-        if not isinstance(manifest.get('runner'), dict):
-            raise ValueError('split release requires runner artifact')
-        if not isinstance(manifest.get('ai-gateway'), dict):
-            raise ValueError('split release requires ai-gateway artifact')
-        if not re.fullmatch(r'[0-9a-f]{64}', str(manifest.get('execution_config_sha256', ''))):
-            raise ValueError('split release requires execution config checksum')
+    reject_retired_artifacts(manifest)
+    if not isinstance(manifest.get('runner'), dict):
+        raise ValueError('release requires runner artifact')
+    if mode == 'split' and not re.fullmatch(r'[0-9a-f]{64}', str(manifest.get('execution_config_sha256', ''))):
+        raise ValueError('split release requires execution config checksum')
     return mode
+
+
+def _declared_artifacts(manifest: dict) -> set[str]:
+    """manifest 里形如 ``{image, digest}`` 的制品条目键。"""
+    return {
+        key for key, value in manifest.items()
+        if isinstance(value, dict) and 'image' in value and 'digest' in value
+    }
+
+
+def reject_retired_artifacts(manifest: dict) -> None:
+    """拒绝已退役服务的制品条目（fail-closed，不静默忽略）。
+
+    平台简化批次删除了独立 AI 网关与旧执行 Worker 服务：旧 manifest 若还带着
+    这些制品，说明它指向已不存在的服务，必须报错而不是照常发布。
+    """
+    retired = sorted(_declared_artifacts(manifest) - set(PARTS))
+    if retired:
+        raise ValueError(
+            f'retired release artifact(s) {retired}: these services were deleted '
+            f'from the platform, only {list(PARTS)} are deployable'
+        )
 
 
 def _regular(path: Path) -> None:
     if path.is_symlink() or not path.is_file() or path.stat().st_size == 0:
         raise ValueError(f'nonempty regular artifact required: {path.name}')
+
+
+def _config_artifact(root: Path, tag: str) -> Path:
+    """定位发布包里钉扎的部署 compose（新命名优先，其次历史命名）。"""
+    for suffix in CONFIG_ARTIFACT_SUFFIXES:
+        candidate = root / f'{tag}-{suffix}'
+        if candidate.exists():
+            return candidate
+    return root / f'{tag}-{CONFIG_ARTIFACT_SUFFIXES[0]}'
 
 
 def _read_member(archive, name, max_bytes):
@@ -44,9 +85,8 @@ def verify(release_dir: str, tag: str, manifest: dict) -> dict:
         raise ValueError('release tag must match registered manifest')
     mode = runtime_mode(manifest)
     root = Path(release_dir).resolve(strict=True)
-    parts = ('backend', 'frontend', 'runner', 'ai-gateway') if mode == 'split' else ('backend', 'frontend')
     digests = {}
-    for part in parts:
+    for part in PARTS:
         artifact = manifest.get(part)
         if not isinstance(artifact, dict) or artifact.get('image') != f'cameltv-tp-{part}':
             raise ValueError(f'unexpected {part} repository')
@@ -67,12 +107,16 @@ def verify(release_dir: str, tag: str, manifest: dict) -> dict:
             if actual != expected:
                 raise ValueError(f'{part} archive digest does not match manifest')
             digests[part] = actual
-    if mode == 'split':
-        config_path = root / f'{tag}-execution.yml'
+    # 声明了钉扎校验和就必须核对文件与哈希（combined/split 同一套规则）。
+    expected_config = str(manifest.get('execution_config_sha256') or '')
+    if expected_config:
+        if not re.fullmatch(r'[0-9a-f]{64}', expected_config):
+            raise ValueError('invalid execution config checksum')
+        config_path = _config_artifact(root, tag)
         _regular(config_path)
         if config_path.stat().st_size > 1024 * 1024:
             raise ValueError('execution configuration too large')
-        if hashlib.sha256(config_path.read_bytes()).hexdigest() != manifest['execution_config_sha256']:
+        if hashlib.sha256(config_path.read_bytes()).hexdigest() != expected_config:
             raise ValueError('execution configuration checksum mismatch')
     return {'ok': True, 'runtime_mode': mode, 'config_digests': digests}
 

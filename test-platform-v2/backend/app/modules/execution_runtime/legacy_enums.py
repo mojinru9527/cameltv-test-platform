@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class LegacyObjectType(str, Enum):
+class LegacyObjectType(StrEnum):
     """A legacy (v1) fact table object type being cut over."""
 
     VERSION_MISSION = "VERSION_MISSION"
@@ -17,7 +17,7 @@ class LegacyObjectType(str, Enum):
     AGENT_WORKBENCH = "AGENT_WORKBENCH"
 
 
-class MigrationStatus(str, Enum):
+class MigrationStatus(StrEnum):
     """Migration lifecycle of a single legacy object."""
 
     PENDING = "PENDING"

@@ -9,7 +9,6 @@ import {
   Link2,
   Loader2,
   Plus,
-  RefreshCw,
   Send,
   Trash2,
 } from '@/lib/icons'
@@ -50,7 +49,6 @@ interface DefectDetailSheetProps {
   open: boolean
   onClose: () => void
   onTransitioned: (updated: DefectItem) => void
-  onMutated: () => void
 }
 
 export default function DefectDetailSheet({
@@ -58,7 +56,6 @@ export default function DefectDetailSheet({
   open,
   onClose,
   onTransitioned,
-  onMutated,
 }: DefectDetailSheetProps) {
   // ── Transitions ──
   const [transitionOpen, setTransitionOpen] = useState(false)
@@ -399,3 +396,4 @@ export default function DefectDetailSheet({
     </>
   )
 }
+

@@ -28,7 +28,7 @@ from app.models.base import TimestampMixin
 from app.modules.execution_runtime.enums import (
     AdapterStatus,
     AdapterType,
-    AssertionResult,
+    AssertionResult as AssertionResultStatus,
     AssertionTrustStatus,
     EvidenceIntegrityStatus,
     EvidenceStatus,
@@ -170,7 +170,7 @@ class AssertionResult(Base):
     oracle_snapshot_json: Mapped[str] = mapped_column(Text, default="{}")
     expected_json: Mapped[str] = mapped_column(Text, default="{}")
     actual_json: Mapped[str] = mapped_column(Text, default="{}")
-    result: Mapped[str] = mapped_column(String(16), default=AssertionResult.NOT_EVALUATED.value, index=True)
+    result: Mapped[str] = mapped_column(String(16), default=AssertionResultStatus.NOT_EVALUATED.value, index=True)
     reason_code: Mapped[str] = mapped_column(String(64), default="")
     evidence_refs_json: Mapped[str] = mapped_column(Text, default="[]")
     evaluated_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)

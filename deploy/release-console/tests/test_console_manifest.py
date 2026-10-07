@@ -30,15 +30,17 @@ class ConsoleManifestTests(unittest.TestCase):
         executor_patch.start()
         self.addCleanup(executor_patch.stop)
 
-    def register(self, tag='release-20260908-0001', split=False):
+    def register(self, tag='release-20260908-0001', mode='combined'):
         # Batch 249（ADR-0015 §4）：发布必须携带真实 alembic revision，
         # 占位值 see-verified-head 会被 validate 拒绝。
+        # 平台简化后只有一套拓扑，release.ps1 两种模式产物一致：
+        # 恒定三件制品（backend/frontend/runner）+ 钉扎部署 compose 校验和。
         manifest = dict(schema_version='1.0', release_id=tag, git_sha='a' * 40,
+                        runtime_mode=mode,
                         database=dict(target_revision='20260922_ai_agent_token'))
-        for part in ('backend', 'frontend', 'runner', 'ai-gateway') if split else ('backend', 'frontend'):
+        for part in ('backend', 'frontend', 'runner'):
             manifest[part] = dict(image=f'cameltv-tp-{part}', digest='sha256:' + 'b' * 64)
-        if split:
-            manifest.update(runtime_mode='split', execution_config_sha256='c' * 64)
+        manifest['execution_config_sha256'] = 'c' * 64
         body = dict(release_id=tag, image_tag=tag, manifest_json=json.dumps(manifest))
         response = self.client.post('/api/deployments', json=body)
         self.assertEqual(response.status_code, 200, response.text)
@@ -51,13 +53,23 @@ class ConsoleManifestTests(unittest.TestCase):
             return conn.execute('SELECT state FROM deployments WHERE id = ?', (identifier,)).fetchone()[0]
 
     def test_publish_binds_manifest_and_claims_before_remote_work(self):
-        identifier, manifest, body = self.register(split=True)
+        identifier, manifest, body = self.register(mode='split')
         def deploy(tag, *, manifest):
             self.assertEqual(self.state(identifier), 'PROD_DEPLOYING')
             duplicate = self.client.post(f'/api/deployments/{identifier}/publish', json={'image_tag': tag})
             self.assertEqual(duplicate.status_code, 409)
             return SimpleNamespace(summary='deployed', logs='')
         self.executor.deploy.side_effect = deploy
+        response = self.client.post(f'/api/deployments/{identifier}/publish', json={'image_tag': body['image_tag']})
+        self.assertEqual(response.status_code, 200, response.text)
+        self.executor.deploy.assert_called_once_with(body['image_tag'], manifest=manifest)
+        self.assertEqual(self.state(identifier), 'PROD_OBSERVING')
+
+    def test_combined_mode_with_runner_and_pinned_compose_is_accepted(self):
+        """release.ps1 新产物：combined 也带 runner + 钉扎校验和，不得被判互斥拒绝。"""
+        identifier, manifest, body = self.register(mode='combined')
+        self.assertIn('runner', manifest)
+        self.assertIn('execution_config_sha256', manifest)
         response = self.client.post(f'/api/deployments/{identifier}/publish', json={'image_tag': body['image_tag']})
         self.assertEqual(response.status_code, 200, response.text)
         self.executor.deploy.assert_called_once_with(body['image_tag'], manifest=manifest)
@@ -132,7 +144,7 @@ class ConsoleManifestTests(unittest.TestCase):
         self.assertEqual(self.executor.deploy.call_count, 1)
 
     def test_rollback_resolves_target_topology(self):
-        _, target, previous = self.register('release-20260907-0001', split=True)
+        _, target, previous = self.register('release-20260907-0001')
         current, _, body = self.register()
         self.assertEqual(self.client.post(f'/api/deployments/{current}/publish', json={'image_tag': body['image_tag']}).status_code, 200)
         response = self.client.post(f'/api/deployments/{current}/rollback', json={'image_tag': previous['image_tag']})
@@ -140,12 +152,28 @@ class ConsoleManifestTests(unittest.TestCase):
         self.executor.rollback.assert_called_once_with(previous['image_tag'], manifest=target)
         self.assertEqual(self.state(current), 'PROD_ROLLED_BACK')
 
-    def test_unknown_rollback_and_broken_split_rejected(self):
+    def test_unknown_rollback_and_incomplete_manifest_rejected(self):
         current, _, body = self.register()
         self.client.post(f'/api/deployments/{current}/publish', json={'image_tag': body['image_tag']})
         self.assertEqual(self.client.post(f'/api/deployments/{current}/rollback', json={'image_tag': 'release-20260901-0001'}).status_code, 404)
         self.executor.rollback.assert_not_called()
-        manifest = json.loads(body['manifest_json'])
-        manifest['runtime_mode'] = 'split'
-        body['manifest_json'] = json.dumps(manifest)
-        self.assertEqual(self.client.post('/api/deployments', json=body).status_code, 422)
+        # 声明 split 却不带执行角色/部署 compose 钉扎的 manifest 必须被拒（422）。
+        for missing in ('runner', 'execution_config_sha256'):
+            candidate = json.loads(body['manifest_json'])
+            candidate['runtime_mode'] = 'split'
+            candidate.pop(missing, None)
+            body['manifest_json'] = json.dumps(candidate)
+            with self.subTest(missing=missing):
+                self.assertEqual(self.client.post('/api/deployments', json=body).status_code, 422)
+
+    def test_retired_service_artifact_is_rejected(self):
+        """旧 manifest 带着已删服务的制品时必须明确拒绝，而不是静默忽略。"""
+        # 现场拼接已退役服务的制品键：控制面代码/测试里不再出现该服务的字面量。
+        retired = '-'.join(('ai', 'gateway'))
+        candidate = json.loads(self.register()[2]['manifest_json'])
+        candidate[retired] = dict(image=f'cameltv-tp-{retired}', digest='sha256:' + 'd' * 64)
+        body = dict(release_id=candidate['release_id'], image_tag=candidate['release_id'],
+                    manifest_json=json.dumps(candidate))
+        response = self.client.post('/api/deployments', json=body)
+        self.assertEqual(response.status_code, 422)
+        self.assertIn(retired, response.text)

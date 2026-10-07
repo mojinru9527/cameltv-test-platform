@@ -86,9 +86,12 @@ python3 release_cleanup.py --keep-tag release-20260907-0001 --keep-tag release-2
 # 复核 JSON 中的对象后，用相同参数追加 --apply-digest <本次 digest> 执行。
 ```
 
-工具只操作 `/opt/cameltv-release` 的历史镜像包及两个平台镜像仓库的历史发布标签。
-默认保护最近两次发布、48 小时内的发布、指定的完整镜像对、所有容器引用的镜像
-和带特殊别名的镜像；不删除容器、卷、数据库、备份或目录。镜像共享层使虚拟大小
+工具只操作 `/opt/cameltv-release` 的历史镜像包及三个平台镜像仓库的历史发布标签。
+默认保护最近两次发布、48 小时内的发布、指定的完整三件镜像（backend/frontend/runner）、
+所有容器引用的镜像和带特殊别名的镜像；不删除容器、卷、数据库、备份或目录。
+钉扎版本还必须留有随包部署 compose（`{tag}-deploy.yml`，兼容历史
+`{tag}-execution.yml`），两种命名都缺即视为不完整钉扎并 fail-closed；该文件只进
+清单、永不参与删除，但其存在会影响审批摘要。镜像共享层使虚拟大小
 不可直接相加；以执行前后的磁盘可用字节数验证实际收益。
 保留工具默认仅预览，执行必须匹配清单摘要；失败后重新预览，禁止重放旧摘要。
 发布/回滚与清理使用同一个主机锁，维护期间暂停绕过控制台的其他发布操作。
@@ -107,8 +110,9 @@ python3 release_cleanup.py --keep-tag release-20260907-0001 --keep-tag release-2
 Operational rollback preserves the newer additive schema. The executor supplies
 an explicit `docker-compose.rollback-runtime.yml` command override so old images
 start Uvicorn directly instead of rerunning an Alembic tree that cannot resolve
-the newer revision. Split rollback overrides both API and runner launch commands;
-the dedicated Temporal gateway keeps its own launcher. Regular deploys still run
+the newer revision. 平台简化后只有一套拓扑（`backend` + `frontend` + `runner`），
+`combined` / `split` 只是兼容标签：两者渲染同样的 compose 文件、发布同样的三件
+制品，回滚同样为 `backend` 与 `runner` 写显式启动命令。Regular deploys still run
 migrations. Every release must verify the previous image against the new schema;
 this mechanism cannot make destructive/incompatible migrations safe to roll back.
 
@@ -138,5 +142,5 @@ pwsh scripts/ops/verify-reused-image.ps1 -Image cameltv-tp-runner:release-202609
 
 ```
 OK    cameltv-tp-runner:release-20260917-0007             → 7 个模块 / 路径齐全（exit 0）
-BLOCK cameltv-tp-ai-gateway:release-20260917-0007（当 runner 用）→ 缺 alembic 三件套（exit 1）
+BLOCK cameltv-tp-frontend:release-20260917-0007（当 runner 用）→ 缺 alembic 三件套（exit 1）
 ```

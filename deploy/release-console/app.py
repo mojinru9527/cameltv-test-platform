@@ -72,9 +72,6 @@ class ConsoleSettings:
         self.tencent_executor_image_backend = _env("TENCENT_EXECUTOR_IMAGE_BACKEND", "cameltv-tp-backend:latest")
         self.tencent_executor_image_frontend = _env("TENCENT_EXECUTOR_IMAGE_FRONTEND", "cameltv-tp-frontend:latest")
         self.tencent_executor_image_runner = _env("TENCENT_EXECUTOR_IMAGE_RUNNER", "cameltv-tp-runner:main")
-        self.tencent_executor_image_ai_gateway = _env(
-            "TENCENT_EXECUTOR_IMAGE_AI_GATEWAY", "cameltv-tp-ai-gateway:main"
-        )
         self.tencent_executor_compose_project = _env("TENCENT_EXECUTOR_COMPOSE_PROJECT", "cameltv-tp-production")
         self.tencent_executor_timeout = int(_env("TENCENT_EXECUTOR_TIMEOUT", "600"))
         self.tencent_executor_keep_backups = int(_env("TENCENT_EXECUTOR_KEEP_BACKUPS", "7"))
@@ -297,8 +294,9 @@ def _registered_manifest(release_id: str, raw: str, digest: str) -> dict:
             raise ValueError('invalid release tag')
         if not re.fullmatch(r'[0-9a-f]{40}', str(manifest.get('git_sha', ''))):
             raise ValueError('invalid git_sha')
-        mode = runtime_mode(manifest)
-        for part in ('backend', 'frontend', 'runner') if mode == 'split' else ('backend', 'frontend'):
+        # 简化后只有一套拓扑：每个版本都必须交付 backend/frontend/runner 三件制品。
+        runtime_mode(manifest)
+        for part in ('backend', 'frontend', 'runner'):
             artifact = manifest.get(part)
             if not isinstance(artifact, dict) or artifact.get('image') != f'cameltv-tp-{part}':
                 raise ValueError(f'invalid {part} repository')

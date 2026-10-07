@@ -85,7 +85,6 @@ describe('缺陷状态机', () => {
         open
         onClose={vi.fn()}
         onTransitioned={onTransitioned}
-        onMutated={vi.fn()}
       />,
     )
 
@@ -135,3 +134,4 @@ describe('缺陷编辑', () => {
     expect(updateBody).not.toHaveProperty('status')
   })
 })
+

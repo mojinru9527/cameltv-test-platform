@@ -24,10 +24,10 @@ related: ["CLAUDE.md", "AGENTS.md", "COMMANDS.md", "docs/adr/README.md"]
 
 | 路径 | 模块 | 技术栈 | 状态 | 说明 |
 |------|------|--------|------|------|
-| [test-platform-v2/](test-platform-v2/README.md) | 测试平台 v2 主力 | FastAPI + React | **活跃开发** | 前后端分离，RBAC，AI 驱动 |
+| [test-platform-v2/](test-platform-v2/README.md) | 测试平台 v2 主力 | FastAPI + React | **活跃开发** | 前后端分离，RBAC，需求 AI 生成用例 |
 | ~~test-platform/~~ | 测试平台 v1 旧版 | FastAPI + React | ✅ 已退役（Batch 100） | 整体移除；API 回归资产迁移至 [tests/api-testing/](tests/api-testing/README.md) |
 | [lanhu-mcp/](lanhu-mcp/) | 蓝湖 MCP 服务 | FastMCP + Playwright | 稳定 | 桥接蓝湖原型与 AI 编码助手 |
-| [knowledge-mcp/](knowledge-mcp/README.md) | 知识中心 MCP 服务 | FastMCP + httpx | 新增（Batch 202） | 桥接测试平台知识中心与 DSH 测试 Agent（查询/执行/回写） |
+| ~~knowledge-mcp/~~ | 知识中心 MCP 服务 | FastMCP + httpx | ✅ 已删除（平台简化批次） | 随 DSH 测试 Agent 一并移除 |
 | [tests/](tests/README.md) | 测试资产 | Markdown + Playwright | 持续积累 | 功能用例 + API 测试 + 自动化 |
 | [deploy/](deploy/CLAUDE.md) | CI/CD 部署 | Jenkins + Docker + GitHub Actions | 稳定 | 11 阶段 Pipeline |
 

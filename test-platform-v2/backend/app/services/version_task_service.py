@@ -3,12 +3,11 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
-from app.models.release_bundle import ReleaseBundle
 from app.models.version_task import VersionTask, VersionTaskDefect, VersionTaskExecution
 from app.models.version_task_plan import VersionTaskPlanItem
 from app.models.version_task_run import VersionTaskRun
@@ -289,7 +288,7 @@ FAILURE_KIND_LABEL = {
 
 
 def _now():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def list_runs(db: Session, task_id: int) -> list[VersionTaskRun]:

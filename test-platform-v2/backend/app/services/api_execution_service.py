@@ -1,14 +1,13 @@
 """API 测试执行引擎 — 服务端 HTTP 请求 + 变量替换 + 断言。"""
 from __future__ import annotations
 
-import copy
 import ipaddress
 import json
 import re
 import socket
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
 
@@ -430,7 +429,7 @@ def _do_execute(
         "execution_id": execution_id,
         "request_snapshot": request_snapshot,
         "response_snapshot": response_snapshot,
-        "executed_at": datetime.now(timezone.utc).isoformat(),
+        "executed_at": datetime.now(UTC).isoformat(),
     }
 
 # ── 断言引擎 ──────────────────────────────────────────
@@ -1293,7 +1292,7 @@ def _error_result(
         "execution_id": execution_id or f"APIEXEC-{uuid.uuid4().hex[:12].upper()}",
         "request_snapshot": request_snapshot or {},
         "response_snapshot": {},
-        "executed_at": datetime.now(timezone.utc).isoformat(),
+        "executed_at": datetime.now(UTC).isoformat(),
     }
 
 def _build_request_snapshot(

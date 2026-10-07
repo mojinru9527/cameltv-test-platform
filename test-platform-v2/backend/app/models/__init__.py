@@ -65,7 +65,7 @@ from app.models.wiki import (
 )
 
 # 执行运行时（从 AITDE 抽离的最小执行模型，表名与迁移历史保持一致）
-from app.modules.execution_runtime.models import (  # noqa: E402
+from app.modules.execution_runtime.models import (
     AssertionResult,
     EnvironmentSnapshot,
     EvidenceArtifact,
@@ -76,7 +76,7 @@ from app.modules.execution_runtime.models import (  # noqa: E402
     ScenarioAdapter,
     ShadowAuditFeedback,
 )
-from app.modules.execution_runtime.scenario_models import (  # noqa: E402
+from app.modules.execution_runtime.scenario_models import (
     ScenarioOracleBinding,
     TestOracle,
     TestScenario,
@@ -173,3 +173,4 @@ __all__ = [
     "ScenarioOracleBinding",
     "LegacyObjectMapping",
 ]
+

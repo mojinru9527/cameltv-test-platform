@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, Text
+from sqlalchemy import Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -97,5 +97,6 @@ class WikiIngestJob(Base):
     operator_id: Mapped[int] = mapped_column(default=0)
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
     finished_at: Mapped[datetime | None] = mapped_column(default=None)
+
 
 
