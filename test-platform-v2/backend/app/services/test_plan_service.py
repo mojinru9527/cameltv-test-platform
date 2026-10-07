@@ -22,9 +22,16 @@ from app.core.resource_budget import configured_budget
 
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
-from app.services.elk_service import build_kibana_link, extract_trace_id
 
 logger = logging.getLogger(__name__)
+
+
+def _extract_trace_id_local(text: str) -> str | None:
+    """Extract traceId from text（平台简化批次：原 elk_service.extract_trace_id 就地保留）。"""
+    if not text:
+        return None
+    m = re.search(r'trace[_-]?id[=:\s"]+([a-zA-Z0-9\-]+)', text, re.IGNORECASE)
+    return m.group(1) if m else None
 
 
 def _load_test_case_map(db: Session, case_ids: list[int]) -> dict[int, TestCase]:
@@ -259,7 +266,8 @@ def execute_case(
         return None
 
     now = datetime.now()
-    trace_id = extract_trace_id(actual_result) or extract_trace_id(notes) or ""
+    # 平台简化批次：ELK 集成已删除，trace_id 仅作原样落库（不再生成 Kibana 链接）
+    trace_id = _extract_trace_id_local(actual_result) or _extract_trace_id_local(notes) or ""
     # Batch 182（P1-06）：统一词表兜底（调用方可能传旧值）
     status = canonical_exec_status(status)
     exec_row = TestExecution(
@@ -1104,19 +1112,13 @@ def run_failure_auto_chain(
     project_id: int = 0,
     creator_id: int = 0,
 ) -> dict:
-    """C147-6（Batch 155 实现）：计划失败自动转缺陷/报告/通知。
+    """C147-6（Batch 155 实现）：计划失败自动转缺陷。
 
-    开关（auto_defect_on_fail）关闭时直接跳过；开启时对失败执行做规则分诊
-    （use_llm=False，避免后台任务依赖 LLM 造成延迟），将 bug/case_defect 类
-    生成缺陷草稿并入库，再生成失败报告，最后推送 plan_failed 通知。
-
-    必须在独立 DB session 中调用（后台任务），不污染请求事务。
+    平台简化批次：报告中心与通知配置已删除，本链路只保留「失败 → 缺陷草稿」段；
+    开关（auto_defect_on_fail）关闭时直接跳过。必须在独立 DB session 中调用（后台任务）。
     """
     from app.schemas.defect import DefectCreate
-    from app.schemas.test_report import ReportCreate
     from app.services.defect_service import create_defect
-    from app.services.notify_service import notify_sync
-    from app.services.report_service import create_report
     from app.services.triage_service import generate_defect_draft, triage_failed_cases
 
     plan = db.scalar(
@@ -1154,35 +1156,7 @@ def run_failure_auto_chain(
             defect_errors.append(str(e)[:200])
             logger.warning("失败自动转缺陷跳过: plan=%s exec=%s err=%s", plan_id, item.get("execution_id"), e)
 
-    report = None
-    try:
-        report = create_report(
-            db,
-            ReportCreate(plan_id=plan_id, name=f"失败自动报告-{plan.name or plan_id}"),
-            creator_id=creator_id,
-            project_id=project_id,
-        )
-    except Exception as e:  # 报告生成失败不阻断缺陷与通知
-        logger.warning("失败自动报告生成失败: plan=%s err=%s", plan_id, e)
-
-    try:
-        notify_sync(
-            db,
-            project_id,
-            "plan_failed",
-            {
-                "plan_name": plan.name or "",
-                "failed": triage.get("total_failures", 0),
-                "defects": len(defects),
-                "report": (report or {}).get("report_id") or (report or {}).get("id") or "-",
-                "link": f"/testplan/{plan_id}",
-            },
-        )
-    except Exception as e:
-        logger.warning("plan_failed 通知失败: plan=%s err=%s", plan_id, e)
-
-    # Batch 161 follow-up3：create_defect/create_report 只 flush 不 commit，
-    # 后台独立会话关闭即回滚 → 生产缺陷/报告从未落库。这里统一提交持久化。
+    # 平台简化批次：报告/通知段已随模块删除，只保留缺陷段
     try:
         db.commit()
     except Exception as e:  # noqa: BLE001 - 提交失败也要记录
@@ -1194,8 +1168,8 @@ def run_failure_auto_chain(
         "total_failures": triage.get("total_failures", 0),
         "defects_created": len(defects),
         "defect_errors": defect_errors,
-        "report_id": (report or {}).get("report_id") or (report or {}).get("id") or None,
-        "notified": True,
+        "report_id": None,
+        "notified": False,
     }
 
 def _plan_to_dict(r: TestPlan) -> dict:
@@ -1252,7 +1226,8 @@ def _execution_to_dict(r: TestExecution, case: TestCase | None) -> dict:
         "actual_result": r.actual_result,
         "notes": r.notes,
         "trace_id": trace_id,
-        "kibana_link": build_kibana_link(trace_id) if trace_id else "",
+        # 平台简化批次：ELK 集成已删除，不再生成 Kibana 链接
+        "kibana_link": "",
         "status_code": status_code,
         "error_type": error_type,
         "error_message": error_message,

@@ -132,12 +132,9 @@ def execute_api_case(
 
     if dep_responses:
         request_def = _apply_dependency_variables(request_def, dep_responses)
+    # 平台简化批次：测试数据集模块已删除，参数化批量执行下线
     if dataset_id:
-        return _execute_with_dataset(db, request_def, assertions, environment_id, dataset_id,
-                                     project_id=project_id,
-                                     confirm_prod=confirm_prod, has_execute_prod=has_execute_prod,
-                                     actor_user_id=actor_user_id,
-                                     require_release_assertions=case.review_status == "approved")
+        raise ValueError("测试数据集功能已下线，请移除数据集绑定后重试")
     return _do_execute(db, request_def, assertions, environment_id=environment_id,
                        project_id=project_id,
                        confirm_prod=confirm_prod, has_execute_prod=has_execute_prod,
@@ -157,13 +154,10 @@ def quick_execute(
     require_release_assertions: bool = False,
     actor_user_id: int = 0,
 ) -> dict:
-    """即时执行（不依赖已保存用例），用于调试面板。若提供 dataset_id 则批量执行。"""
+    """即时执行（不依赖已保存用例），用于调试面板。"""
+    # 平台简化批次：测试数据集模块已删除
     if dataset_id:
-        return _execute_with_dataset(db, request_def, assertions or [], environment_id, dataset_id,
-                                     project_id=project_id,
-                                     confirm_prod=confirm_prod, has_execute_prod=has_execute_prod,
-                                     actor_user_id=actor_user_id,
-                                     require_release_assertions=require_release_assertions)
+        raise ValueError("测试数据集功能已下线，请移除数据集绑定后重试")
     return _do_execute(db, request_def, assertions or [], environment_id=environment_id,
                        project_id=project_id,
                        confirm_prod=confirm_prod, has_execute_prod=has_execute_prod,
@@ -1450,89 +1444,6 @@ def _check_prod_protection(
             f"请设置 confirm_prod=true。"
         )
     return True, ""
-
-# ── 参数化批量执行 ──────────────────────────────────────
-
-def _execute_with_dataset(
-    db: Session,
-    request_def: dict,
-    assertions: list[dict],
-    environment_id: int | None,
-    dataset_id: int,
-    project_id: int = 0,
-    confirm_prod: bool = False,
-    has_execute_prod: bool = False,
-    require_release_assertions: bool = False,
-    actor_user_id: int = 0,
-) -> dict:
-    """遍历数据集每一行，逐行替换 ${column_name} 并执行，返回批量结果。"""
-    from app.services.dataset_service import get_dataset_rows, get_dataset
-
-    rows = get_dataset_rows(db, dataset_id, project_id=project_id)
-    dataset = get_dataset(db, dataset_id, project_id=project_id)
-    columns = json.loads(dataset["columns_meta"]) if dataset else []
-
-    per_row_results = []
-    for row_idx, row in enumerate(rows):
-        # Deep-copy request_def to avoid mutation across iterations
-        row_req = copy.deepcopy(request_def)
-        row_assertions = copy.deepcopy(assertions)
-
-        # Substitute ${column_name} in url, headers, body
-        row_req["url"] = _substitute_columns(row_req.get("url", ""), row)
-        row_req["body"] = _substitute_columns(row_req.get("body", ""), row)
-        query_params = row_req.get("query_params", {})
-        if isinstance(query_params, dict):
-            row_req["query_params"] = {
-                key: _substitute_query_value(value, row)
-                for key, value in query_params.items()
-            }
-        headers = row_req.get("headers", {})
-        if isinstance(headers, dict):
-            for k, v in headers.items():
-                headers[k] = _substitute_columns(str(v), row)
-
-        # Execute
-        result = _do_execute(db, row_req, row_assertions, environment_id=environment_id,
-                            project_id=project_id, dataset_row_index=row_idx,
-                            confirm_prod=confirm_prod,
-                            has_execute_prod=has_execute_prod,
-                            actor_user_id=actor_user_id,
-                            require_release_assertions=require_release_assertions)
-        per_row_results.append({
-            "row_index": row_idx,
-            "row_data": _redact_evidence(row),
-            "result": result,
-        })
-
-    total = len(per_row_results)
-    passed = sum(1 for r in per_row_results if r["result"].get("all_pass", False))
-    failed = total - passed
-
-    return {
-        "status": "ok",
-        "batch_mode": True,
-        "dataset_id": dataset_id,
-        "columns": columns,
-        "total_rows": total,
-        "passed": passed,
-        "failed": failed,
-        "per_row": per_row_results,
-        "executed_at": datetime.now(timezone.utc).isoformat(),
-    }
-
-def _substitute_columns(template: str, row: dict) -> str:
-    """Replace ${column_name} in template with values from the current data row."""
-    def _replacer(m: re.Match) -> str:
-        return str(row.get(m.group(1), m.group(0)))
-    return _COL_VAR_PATTERN.sub(_replacer, template)
-
-def _substitute_query_value(value: Any, row: dict) -> Any:
-    if isinstance(value, str):
-        return _substitute_columns(value, row)
-    if isinstance(value, list):
-        return [_substitute_query_value(item, row) for item in value]
-    return value
 
 # ── curl 复现命令生成 ────────────────────────────────────
 

@@ -90,17 +90,6 @@ def ci_trigger_plan(
 
     db.commit()
 
-    # Background notification
-    try:
-        from app.services.notify_service import notify_sync
-        notify_sync(db, token.project_id, "plan_done", {
-            "plan_name": plan.name,
-            "result_summary": f"CI 触发 {executed} 条用例已入队",
-            "link": "",
-        })
-    except Exception:
-        logger.exception("CI 触发通知失败: plan_id=%s", plan_id)
-
     return R.ok({
         "triggered": True,
         "plan_id": plan_id,
@@ -184,18 +173,6 @@ def ci_post_results(
     exec_row.executed_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(exec_row)
-
-    # Notify on terminal status（Batch 182：接受新旧双值）
-    if canonical_exec_status(body.get("status", "")) in ("passed", "failed"):
-        try:
-            from app.services.notify_service import notify_sync
-            notify_sync(db, token.project_id, "plan_done", {
-                "plan_name": getattr(plan_case.plan, "name", ""),
-                "result_summary": f"执行 #{run_id}: {body['status']}",
-                "link": "",
-            })
-        except Exception:
-            logger.exception("CI 结果回写通知失败: run_id=%s", getattr(exec_row, "id", None))
 
     return R.ok({
         "run_id": exec_row.id,
@@ -285,36 +262,3 @@ def ci_get_ui_run(
         "started_at": run.started_at.isoformat() if run.started_at else None,
         "finished_at": run.finished_at.isoformat() if run.finished_at else None,
     })
-
-
-# ── 质量门禁检查 (CI/CD) ──────────────────────────────
-
-@router.get("/reports/{report_id}/gate/check", summary="CI/CD 质量门禁检查")
-def ci_check_report_gate(
-    report_id: int,
-    token: "ApiToken" = Depends(verify_api_token),
-    db: Session = Depends(get_db),
-):
-    """CI/CD pipeline 质量门禁检查（API Token 鉴权）。
-
-    门禁不通过时返回 HTTP 409 Conflict 阻止构建流水线。
-    返回: {"blocked": bool, "details": [...], "gate_status": "pass"|"fail"|"warn"}
-    """
-    from fastapi.responses import JSONResponse
-
-    from app.services.report_service import get_report_gate
-
-    gate = get_report_gate(db, report_id, token.project_id)
-    if not gate:
-        raise APIException(code=404, msg="报告不存在")
-
-    status = gate.get("gate_status", "unknown")
-    details = gate.get("gate_details", [])
-    blocked = status == "fail"
-
-    if blocked:
-        return JSONResponse(
-            status_code=409,
-            content={"blocked": True, "details": details, "gate_status": status},
-        )
-    return {"blocked": False, "details": details, "gate_status": status}

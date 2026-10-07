@@ -174,7 +174,7 @@ def execute_item(db: Session, item: VersionTaskPlanItem, base_url: str) -> dict[
     # 脱敏证据（复用 AITDE snapshot_sanitizer；失败时不再额外落敏感头）
     evidence = []
     try:
-        from app.modules.aitde.evidence.snapshot_sanitizer import snapshot_sanitizer
+        from app.modules.execution_runtime.snapshot_sanitizer import snapshot_sanitizer
 
         req_clean = snapshot_sanitizer.sanitize_http_snapshot(
             method=method, url=url, headers=headers, params=meta.get("params") or {}, body=body

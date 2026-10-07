@@ -32,26 +32,6 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
     db.commit()
 
 
-def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
-    """P1-4/S4a: 在独立 DB session 中发送通知（供 BackgroundTasks 调用）。
-
-    必须使用独立的 SessionLocal()，因为 BackgroundTasks 在响应返回后执行，
-    原请求的 db session 可能已关闭。
-    Batch 182（C181-1）路由层禁 ORM 豁免：SessionLocal() 仅用于此
-    BackgroundTasks 独立会话模式，不含查询；查询已收敛至 services。
-    """
-    from app.core.db import SessionLocal
-    from app.services.notify_service import notify_sync
-
-    db = SessionLocal()
-    try:
-        notify_sync(db, project_id, event, data)
-    except Exception:
-        logger.exception("Background notification failed: event=%s project=%s", event, project_id)
-    finally:
-        db.close()
-
-
 @router.get("/stats", response_model=R[DefectStats])
 def get_defect_stats(
     current: CurrentUser = Depends(require_permission("defect:list")),
@@ -104,24 +84,6 @@ def create_defect(
     background_tasks.add_task(
         ingest_service.ingest_defect_in_new_session, current.project_id or 0, r["id"]
     )
-
-    # P1-4/S4a: Background notification via FastAPI BackgroundTasks
-    # (replaces fire-and-forget asyncio.create_task — task is tracked and
-    # runs in its own DB session to avoid session-closed errors).
-    if body.assignee_id and body.assignee_id > 0:
-        assignee_name = defect_service.get_user_display_name(db, body.assignee_id)
-        background_tasks.add_task(
-            _run_notify_in_new_session,
-            current.project_id or 0,
-            "defect_assigned",
-            {
-                "title": body.title,
-                "severity": body.severity,
-                "assignee": assignee_name,
-                "status": "open",
-                "link": "",
-            },
-        )
 
     return R.ok(DefectOut(**r))
 

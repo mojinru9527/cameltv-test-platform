@@ -245,20 +245,9 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
         if not _claim_pending_run(db, run_id):
             return {"status": _current_run_status(db, run_id), "run_id": run_id}
         from app.models.ui_test import UiTestJob
-        from app.services.notify_service import queue_notification
 
         job = db.get(UiTestJob, job_id)
-        task_name = job.name if job else f"UI 任务 #{job_id}"
-        queue_notification(
-            project_id,
-            "task_started",
-            {
-                "task_type": "UI 自动化",
-                "task_name": task_name,
-                "triggered_by": f"user#{job.creator_id}" if job else "-",
-                "link": "/uitest",
-            },
-        )
+        # 平台简化批次：通知体系已删除，任务开始/结束事件不再推送
         output = _run_playwright_test(db, run_id, job_id, project_id)
         result = output.get("result") or {}
         passed = int(result.get("pass_", 0) or 0)
@@ -266,30 +255,7 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
         skipped = int(result.get("skip", 0) or 0)
         total = int(result.get("total", passed + failed + skipped) or 0)
         status = output.get("status", "failed")
-        queue_notification(
-            project_id,
-            "task_finished",
-            {
-                "task_type": "UI 自动化",
-                "task_name": task_name,
-                "status": status,
-                "result_summary": f"通过 {passed} / 失败 {failed} / 跳过 {skipped}",
-                "link": "/uitest",
-            },
-        )
-        queue_notification(
-            project_id,
-            "test_result",
-            {
-                "task_name": task_name,
-                "passed": passed,
-                "failed": failed,
-                "skipped": skipped,
-                "pass_rate": f"{round(passed * 100 / total, 1)}%" if total else "0%",
-                "conclusion": "通过" if total and failed == 0 else status,
-                "link": "/uitest",
-            },
-        )
+        # 平台简化批次：通知体系已删除
         return output
     finally:
         try:

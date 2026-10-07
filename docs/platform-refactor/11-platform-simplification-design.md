@@ -149,31 +149,22 @@ related:
 - `requirements.txt`：删 temporalio（+ DSH/本地 AI 专属依赖，按子代理结论）。
 - 前端 `config/aitde.ts` 删除；`package.json` 清 AITDE 专属依赖。
 
-## 6. 待用户确认的决策点（子代理盘点后收敛版）
+## 6. 决策点（2026-10-07 用户已全部确认 ✅）
 
-- **D1 版本验收任务 + 执行链**：version-tasks（版本任务唯一事实源，batch-269/270 试点证据）+
-  ExecutionJob/cameltv-node 节点协议 + 影响图（ImpactTab 在知识中心页）+ campaign_execution
-  （计划/接口执行运行时，需从 AITDE 抽离最小执行模型）。建议**全部保留**。
-- **D2 需求 AI 生成执行方式**：生产默认走 AiJob 本地 Agent 派发（重）；建议**切回平台直连 LLM**
-  （ai_client + ai_config_service + ai_guard 直连），删除 ai_job_dispatch/AiJob/ai_agent jobs/ai_gateway 影子缓存。
-  保留 AiAgentToken/AiAgent（节点注册鉴权，cameltv-node 依赖）。
-- **D3 密码重置邮件**：`/forgot-password` 依赖 notify_service 的 SMTP。建议**保留 env 级 SMTP 最小发送**
-  （无配置页），或整体删除密码重置。请裁定。
-- **D4 运营指标 metrics / 新业务接入 onboarding**：batch-272 新增菜单，生产无使用证据。
-  建议**删除**（YAGNI，可从 git 历史恢复）。
-- **D5 接口用例 AI 生成/泛化**（api_case_generation_service/api_generalization_service）：属接口测试
-  智能能力（schema→用例、手工用例→API 用例），与「需求→AI生成用例」并列的第二 AI 面。
-  建议**删除**（严格 AI 边界）或保留（接口测试常用），请裁定。
-- **D6 测试计划旧体系**：前端已删；后端 test_plan_* 只读 API + 历史表（test_execution 137,642 行）
-  是工作台统计/缺陷追溯底座。建议**保留只读、删除写面**；或全删。请裁定。
-- **D7 旧版本任务体系 version_mission**：V1_DEPRECATIONS 已标 2027-01-01 sunset，前端重定向
-  /release-bundles。建议**删除**（含 case_generation_service；注意 release_bundles 页面数据源已切新 API）。
-- **D8 死代码**：pilot_dataset_service/pilot_slo_service（仅单测引用）、openvpn_service/ffmpeg_service/
-  tencent_executor（app 零调用者）、convergence.py（无前端无菜单）、report_aggregator（dashboard 引用需先抽离）。
-  建议**删除**（report_aggregator 的 dashboard 汇总改由 statistics_service/dashboard_service 承接）。
-- **D9 生产 AI 停摆修复**：batch-273 取证——生产 4 个 DeepSeek Key 全部 401、任务表近 3 天零新增、
-  ai-gateway 12 天零推理。保留的需求 AI 生成在删除完成后需**重录有效 Key** 才能恢复可用
-  （结构完好、配置层失效；与本次删除无依赖，但必须在验收时一并处理）。
+- **D1 ✅ 保留**：版本验收任务 + ExecutionJob/cameltv-node + 影响图（知识中心 ImpactTab）+ campaign_execution
+  （抽离最小执行模型为独立模块，计划/接口执行不回归）。
+- **D2 ✅ 切回平台直连**：需求 AI 生成改走 ai_client + ai_config_service + ai_guard 直连；
+  删除 ai_job_dispatch/AiJob/AiResult/ai_agent jobs/ai_gateway 影子缓存/ai-jobs 页；
+  保留 AiAgentToken/AiAgent（cameltv-node 节点鉴权）。
+- **D3 ✅ 保留最小邮件**：env 级 SMTP 发送最小函数（`send_password_reset_email` 迁移到独立 mail util，
+  无配置页）；忘记/重置密码页保留；通知渠道/订阅体系删除。
+- **D4 ✅ 删除**：metrics/onboarding/pilot_dataset_service/pilot_slo_service/openvpn_service/ffmpeg_service/
+  tencent_executor/convergence/report_aggregator（dashboard 汇总抽离到 statistics/dashboard_service）。
+- **D5 ✅ 保留**：接口用例 AI 生成/泛化（api_case_generation_service/api_generalization_service）。
+- **D6 ✅ 保留只读**：test_plan 只读 API + 历史表保留（137,642 行执行历史是统计底座）；删除写入口面。
+- **D7 ✅ 删除**：旧版本任务体系 version_mission + case_generation_service + 相关模型。
+- **D8 ✅ 删除**：死代码（见 §2.5）。
+- **D9 ✅ 验收时处理**：生产重录有效 DeepSeek Key（batch-273 取证 4 Key 全 401）。
 
 ## 7. 回归与验收（PR 内完成）
 
