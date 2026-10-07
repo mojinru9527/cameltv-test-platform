@@ -21,18 +21,15 @@ def task_consumers():
     import app.models  # noqa: F401
     from app.core.scheduler import init_scheduler, shutdown_scheduler, scheduler
     from app.services import ai_tasks
-    from app.services.dsh import dsh_task_service
-    from app.services.knowledge import agent_queue
     from app.services.ui_runner_queue import shutdown_processor
 
     with ExitStack() as cleanup:
         cleanup.callback(lambda: shutdown_scheduler() if scheduler.running else None)
         init_scheduler()
         cleanup.callback(shutdown_processor)
+        # 平台简化批次：DSH 任务消费者与知识 Agent 处理器已随模块删除
         for start, shutdown in (
             (ai_tasks.ensure_worker_running, ai_tasks.shutdown_worker),
-            (dsh_task_service.ensure_worker_running, dsh_task_service.shutdown_worker),
-            (agent_queue.ensure_processor_running, agent_queue.shutdown_processor),
         ):
             cleanup.callback(shutdown)
             start()
@@ -41,9 +38,7 @@ def task_consumers():
         cleanup.callback(lambda: shutdown_scheduler() if scheduler.running else None)
 
         def healthy():
-            return (scheduler.running and ai_tasks._loop.is_running()
-                    and dsh_task_service._loop.is_running()
-                    and agent_queue.processor_is_running())
+            return (scheduler.running and ai_tasks._loop.is_running())
 
         yield healthy
 

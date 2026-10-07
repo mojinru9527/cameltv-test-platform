@@ -47,14 +47,9 @@ def decrypt_value(ciphertext: str) -> str:
 
 # ── 启动兜底：无 SECRET_KEY 但库中已有密文 → fail-fast（Batch 259 / B2-5）──
 # (模型路径, 类名, 表名, 密文列名)
+# 平台简化批次：ExternalWikiConnection（LLM-Wiki 外部连接）已删除
 _CIPHERTEXT_SOURCES: tuple[tuple[str, str, str, str], ...] = (
     ("app.models.ai_provider", "AiProvider", "ai_provider", "api_key_encrypted"),
-    (
-        "app.models.wiki",
-        "ExternalWikiConnection",
-        "external_wiki_connection",
-        "token_encrypted",
-    ),
 )
 
 

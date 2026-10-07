@@ -10,7 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.api.v1.router import api_router
-from app.api.v2.router import router as v2_router
 from app.core.config import settings
 from app.core.db import Base, engine
 from app.core.exceptions import APIException, api_exception_handler
@@ -214,7 +213,6 @@ app.add_middleware(V1DeprecationMiddleware)
 app.add_exception_handler(APIException, api_exception_handler)
 
 app.include_router(api_router)
-app.include_router(v2_router)
 
 
 @app.get("/health", tags=["system"], summary="Health check")

@@ -90,7 +90,6 @@ def create_project(
     r = project_service.create_project(
         db, body, current.user.id,
         is_super=current.is_super,
-        organization_id=body.organization_id,
     )
     db.commit()
     _audit(req, current, db, "project:create", f"#{r['id']} {r['name']}")

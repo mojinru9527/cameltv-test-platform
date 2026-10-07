@@ -1,11 +1,7 @@
-"""Wiki 编译流水线 —— 两阶段：LLM 分析(Analysis) → 确定性生成(Generation)。
+"""Wiki 编译流水线 —— 确定性生成。
 
-阶段1：调用 LLM 把 raw source 分析为结构化 JSON（模块/需求/规则/字段/接口/连接/待审）。
-阶段2：从分析结果确定性生成 Wiki 页面（source/module/requirement/rule/index）与页面链接，
-       全部带来源引用，默认 review_status=pending（未审核不参与正式用例生成）。
-
-自带 Session（由 BackgroundTasks 调度，post-commit，失败不影响主流程）。LLM 不可用时
-退化为最小确定性分析，保证链路可跑通与可测试。
+平台简化批次：原「LLM 分析 + 确定性生成」两阶段中的 LLM 分析（Agent 体系）已删除，
+分析一律走最小确定性分析（来源摘要 + 单模块 + 单需求），生成链路保持可跑通与可测试。
 """
 from __future__ import annotations
 
@@ -17,28 +13,16 @@ from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
 from app.models.wiki import WikiIngestJob, WikiRawSource
-from app.services.knowledge.agent_orchestrator import _call_llm_sync
-from app.services.knowledge.agent_prompts import build_system_prompt
 from app.services.wiki import link_service, page_service
 
 logger = logging.getLogger("wiki.ingest")
 
 
-# ── 阶段1：分析 ──
+# ── 阶段1：分析（确定性）──
 
 def _run_analysis(db, project_id: int, raw: WikiRawSource) -> dict:
     meta = json.loads(raw.metadata_json or "{}")
-    user_msg = (
-        f"来源标题：{raw.title}\n"
-        f"客户端范围：{meta.get('client_scope') or '未标注'}\n"
-        f"immutable_version：{raw.immutable_version}\n\n"
-        f"来源内容：\n{raw.content_md}"
-    )
-    res = _call_llm_sync(db, project_id, build_system_prompt("wiki_ingest"), user_msg)
-    result = res.get("result")
-    if isinstance(result, dict) and result.get("requirements") is not None:
-        return result
-    # 退化：LLM 不可用/解析失败 → 最小确定性分析，保证链路可跑
+    # 平台简化批次：LLM 分析已删除，直接走最小确定性分析
     return {
         "source_summary": (raw.content_md or "")[:200],
         "detected_modules": [raw.title] if raw.title else [],

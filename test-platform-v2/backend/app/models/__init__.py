@@ -1,10 +1,14 @@
-"""统一导出所有模型，确保 Base.metadata 能感知全部表。"""
+"""统一导出所有模型，确保 Base.metadata 能感知全部表。
+
+平台简化批次：AITDE/DSH/报告/数据集/通知/集成/组织/AI 本地管线/知识图谱 UI 域
+的模型已随模块删除；保留模型清单如下。
+"""
 
 from app.models.ai_gateway_cache import AiResponseCache
 from app.models.ai_shadow_run import AiShadowRun
 from app.models.ai_provider import AiProvider
 from app.models.ai_task import AiTask
-from app.models.ai_job import AiAgent, AiJob, AiResult
+from app.models.ai_job import AiAgent
 from app.models.ai_agent_token import AiAgentToken
 from app.models.execution_job import ExecutionJob
 from app.models.impact_edge import ImpactEdge
@@ -15,11 +19,8 @@ from app.models.api_asset import ApiEndpoint, ApiExecutionTask, ApiExecutionTask
 from app.models.api_token import ApiToken
 from app.modules.campaign_execution.models import CampaignItem, TestCampaign
 from app.models.audit import AuditLog
-from app.models.dataset import Dataset
-from app.models.dsh_task import DshTask
 from app.models.defect import Defect
 from app.models.environment import Environment, EnvironmentVariable
-from app.models.integration import IntegrationConfig
 from app.models.invite_code import InviteCode
 from app.models.lanhu_evidence import (
     LanhuEvidenceAsset,
@@ -28,69 +29,64 @@ from app.models.lanhu_evidence import (
     LanhuOcrBlock,
 )
 from app.models.knowledge import (
-    AgentQueueItem,
-    AgentRun,
-    AiArtifact,
     KnowledgeChunk,
     KnowledgeEntity,
-    KnowledgeIteration,
     KnowledgeRelation,
-    KnowledgeSnapshot,
     KnowledgeSource,
-    KnowledgeTriggerDebounce,
     KnowledgeVector,
 )
+from app.models.model_usage import ModelUsageLedger
 from app.models.project import Project, ProjectMember
 from app.models.project_invite import ProjectInvite
-from app.models.notification import NotificationChannel, NotificationLog
-from app.models.organization import Organization, OrganizationMember
-from app.models.production_evidence import (
-    EntityGraphSnapshot,
-    MaskingProfile,
-    MaskingRule,
-    ObservedJourney,
-    ObservedJourneyStep,
-    ProdDataTemplate,
-    ProductionObservationSession,
-    ProductionQueryAudit,
-    TemplateMaterialization,
-)
 from app.models.quality_gate import QualityGateConfig
-from app.models.report_template import ReportTemplate
 from app.models.release_bundle import ReleaseBundle
 from app.models.requirement import RequirementDocument
 from app.models.requirement_module import ModuleAdminLink, RequirementModule
 from app.models.requirement_review import RequirementReview
 from app.models.runner_execution import RunnerExecutionTask
 from app.models.rbac import Permission, Role, RolePermission, UserRole
-from app.models.sync_log import SyncLog
 from app.models.test_case import TestCase
 from app.models.test_case_category import TestCaseDomain, TestCaseModule
 from app.models.test_case_review import TestCaseReviewTransition
 from app.models.test_case_version import TestCaseVersion
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
-from app.models.test_report import TestReport
 from app.models.test_schedule import TestSchedule, TestScheduleRun
 from app.models.ui_test import UiTestJob, UiTestRun, UiTestScript
 from app.models.user import User
-from app.models.version_mission import AgentWorkLog, GeneratedArtifact, VersionMission
 from app.models.version_task import VersionTask, VersionTaskDefect, VersionTaskExecution
 from app.models.version_task_plan import VersionTaskPlanItem
 from app.models.version_task_run import VersionTaskRun
 from app.models.version_knowledge import VersionKnowledgeRecord
-from app.models.business_onboarding import BusinessOnboarding
 from app.models.wiki import (
-    ExternalWikiConnection,
-    WikiDiffItem,
-    WikiDiffTask,
     WikiIngestJob,
     WikiLink,
-    WikiLintIssue,
-    WikiLintReport,
     WikiPage,
     WikiRawSource,
-    WikiReviewContradiction,
-    WikiReviewItem,
+)
+
+# 执行运行时（从 AITDE 抽离的最小执行模型，表名与迁移历史保持一致）
+from app.modules.execution_runtime.models import (  # noqa: E402
+    AssertionResult,
+    EnvironmentSnapshot,
+    EvidenceArtifact,
+    ExecutionRun,
+    ExecutionStep,
+    LegacyExecutionLink,
+    ReplayManifest,
+    ScenarioAdapter,
+    ShadowAuditFeedback,
+)
+from app.modules.execution_runtime.scenario_models import (  # noqa: E402
+    ScenarioOracleBinding,
+    TestOracle,
+    TestScenario,
+    TestScenarioVersion,
+)
+from app.modules.execution_runtime.legacy_models import (  # noqa: E402
+    CutoverBatch,
+    LegacyCaseMigration,
+    LegacyObjectMapping,
+    LegacyUsageRecord,
 )
 
 __all__ = [
@@ -100,8 +96,7 @@ __all__ = [
     "AiTask",
     "AiAgent",
     "AiAgentToken",
-    "AiJob",
-    "AiResult",
+    "ModelUsageLedger",
     "PlanExecutionJob",
     "ExecutionJob",
     "ImpactEdge",
@@ -126,21 +121,7 @@ __all__ = [
     "AuditLog",
     "Environment",
     "EnvironmentVariable",
-    "NotificationChannel",
-    "NotificationLog",
-    "Organization",
-    "OrganizationMember",
-    "ProductionObservationSession",
-    "ObservedJourney",
-    "ObservedJourneyStep",
-    "ProductionQueryAudit",
-    "MaskingProfile",
-    "MaskingRule",
-    "EntityGraphSnapshot",
-    "ProdDataTemplate",
-    "TemplateMaterialization",
     "QualityGateConfig",
-    "ReportTemplate",
     "TestCase",
     "TestCaseDomain",
     "TestCaseModule",
@@ -149,11 +130,8 @@ __all__ = [
     "TestPlan",
     "TestPlanCase",
     "TestExecution",
-    "TestReport",
     "TestSchedule",
     "TestScheduleRun",
-    "Dataset",
-    "DshTask",
     "Defect",
     "UiTestJob",
     "UiTestRun",
@@ -164,43 +142,42 @@ __all__ = [
     "RequirementModule",
     "ModuleAdminLink",
     "ReleaseBundle",
-    "IntegrationConfig",
     "InviteCode",
-    "SyncLog",
-    "VersionMission",
     "VersionTask",
     "VersionTaskDefect",
     "VersionTaskExecution",
     "VersionTaskPlanItem",
     "VersionTaskRun",
     "VersionKnowledgeRecord",
-    "BusinessOnboarding",
-    "AgentWorkLog",
-    "GeneratedArtifact",
     "KnowledgeSource",
     "KnowledgeChunk",
     "KnowledgeEntity",
     "KnowledgeRelation",
     "KnowledgeVector",
-    "AiArtifact",
-    "AgentRun",
-    "AgentQueueItem",
-    "KnowledgeIteration",
-    "KnowledgeSnapshot",
-    "KnowledgeTriggerDebounce",
     "WikiRawSource",
     "WikiPage",
     "WikiLink",
     "WikiIngestJob",
-    "WikiDiffTask",
-    "WikiDiffItem",
-    "WikiReviewItem",
-    "WikiReviewContradiction",
-    "ExternalWikiConnection",
-    "WikiLintReport",
-    "WikiLintIssue",
     "LanhuEvidenceJob",
     "LanhuEvidencePage",
     "LanhuEvidenceAsset",
     "LanhuOcrBlock",
+    # execution_runtime（保留执行事实表）
+    "ScenarioAdapter",
+    "EnvironmentSnapshot",
+    "ExecutionRun",
+    "ExecutionStep",
+    "AssertionResult",
+    "EvidenceArtifact",
+    "ReplayManifest",
+    "LegacyExecutionLink",
+    "ShadowAuditFeedback",
+    "TestScenario",
+    "TestScenarioVersion",
+    "TestOracle",
+    "ScenarioOracleBinding",
+    "LegacyUsageRecord",
+    "LegacyCaseMigration",
+    "LegacyObjectMapping",
+    "CutoverBatch",
 ]

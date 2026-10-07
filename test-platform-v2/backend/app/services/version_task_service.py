@@ -1,4 +1,4 @@
-"""VersionTask service — 版本验收任务唯一事实源 + 状态机 + 旧数据只读兼容映射（B6）。"""
+"""VersionTask service — 版本验收任务唯一事实源 + 状态机（B6；平台简化批次：旧数据兼容映射已随 version_mission 删除）。"""
 from __future__ import annotations
 
 import json
@@ -9,12 +9,10 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models.release_bundle import ReleaseBundle
-from app.models.version_mission import VersionMission
 from app.models.version_task import VersionTask, VersionTaskDefect, VersionTaskExecution
 from app.models.version_task_plan import VersionTaskPlanItem
 from app.models.version_task_run import VersionTaskRun
 from app.models.defect import Defect
-from app.models.notification import NotificationLog
 from app.models.requirement import RequirementDocument
 from app.models.version_knowledge import VersionKnowledgeRecord
 from app.core.exceptions import APIException, not_found
@@ -185,58 +183,6 @@ def add_defect(db: Session, task_id: int, defect_id: int) -> VersionTaskDefect:
     db.commit()
     db.refresh(link)
     return link
-
-
-def _mission_to_task_dict(mission: VersionMission, release: ReleaseBundle | None) -> dict:
-    """旧数据（VersionMission）只读兼容映射到 VersionTask 视图。不写库、不双写。"""
-    return {
-        "id": f"mission:{mission.id}",
-        "project_id": mission.project_id,
-        "title": mission.title,
-        "version": mission.version,
-        "source": "mission",
-        "source_mission_id": mission.id,
-        "source_bundle_id": release.id if release else mission.test_plan_id,
-        "requirement_doc_id": mission.requirement_doc_id,
-        "release_bundle_id": release.id if release else None,
-        "environment_id": mission.environment_id,
-        "status": "draft",
-        "verdict": "",
-        "summary": mission.summary,
-        "scope": _to_int_dict(mission.scope),
-        "created_by": mission.created_by,
-        "qa_owner_id": mission.qa_owner_id,
-        "legacy": True,
-    }
-
-
-def compat_mission_view(
-    db: Session, mission_id: int, project_id: int | None = None
-) -> dict:
-    """VersionMission -> VersionTask 只读视图（兼容映射，绝无双写）。"""
-    query = select(VersionMission).where(VersionMission.id == mission_id)
-    if project_id is not None:
-        query = query.where(VersionMission.project_id == project_id)
-    mission = db.scalar(query)
-    if mission is None:
-        raise not_found("旧智能测试任务不存在")
-    release = db.get(ReleaseBundle, mission.test_plan_id) if mission.test_plan_id else None
-    return _mission_to_task_dict(mission, release)
-
-
-def compat_mission_list(db: Session, project_id: int, page: int = 1, page_size: int = 20) -> tuple[list[dict], int]:
-    q = select(VersionMission).where(VersionMission.project_id == project_id)
-    total = db.scalar(select(func.count()).select_from(q.subquery())) or 0
-    rows = (
-        db.execute(q.order_by(VersionMission.id.desc()).offset((page - 1) * page_size).limit(page_size))
-        .scalars()
-        .all()
-    )
-    items = []
-    for r in rows:
-        release = db.get(ReleaseBundle, r.test_plan_id) if r.test_plan_id else None
-        items.append(_mission_to_task_dict(r, release))
-    return items, total
 
 
 PLAN_ACTIONS = {"adopt", "modify", "remove", "ask", "confirm"}
@@ -575,16 +521,8 @@ def release_task(
 
 
 def notify_release(db: Session, task_id: int, message: str) -> None:
-    """B9 通知：放行/打回后写一条系统通知。"""
-    task = get_task(db, task_id)
-    log = NotificationLog(
-        project_id=task.project_id,
-        event="version_release",
-        status="sent",
-        error=message or f"{task.title} 已放行：{task.verdict}",
-    )
-    db.add(log)
-    db.commit()
+    """平台简化批次：通知体系已删除，放行/打回不再写系统通知（保留空实现兼容调用方）。"""
+    return None
 
 
 def record_version_knowledge(db: Session, task_id: int) -> VersionKnowledgeRecord:
@@ -687,7 +625,7 @@ def recommend_regression_set(db: Session, task_id: int) -> list[dict]:
 
 
 def sync_defect_notification(db: Session, task_id: int, defect_id: int) -> dict:
-    """B12 缺陷一键同步到通知/缺陷库（写 NotificationLog + 返回已同步状态）。"""
+    """B12 缺陷一键同步到缺陷库（平台简化批次：NotificationLog 已删除）。"""
     task = get_task(db, task_id)
     linked = db.query(VersionTaskDefect).filter_by(task_id=task.id, defect_id=defect_id).first()
     if linked is None:
@@ -695,9 +633,6 @@ def sync_defect_notification(db: Session, task_id: int, defect_id: int) -> dict:
         link = VersionTaskDefect(task_id=task.id, defect_id=defect_id)
         db.add(link)
         db.commit()
-    log = NotificationLog(project_id=task.project_id, event="defect_sync", status="sent", error=f"defect:{defect_id}")
-    db.add(log)
-    db.commit()
     return {"synced": True, "defect_id": defect_id}
 
 

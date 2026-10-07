@@ -278,7 +278,7 @@ def get_requirement_coverage(
     db: Session = Depends(get_db),
 ):
     """返回单个需求文档的用例覆盖情况：已生成用例数、纳入计划数、执行/通过数、缺陷关联数。"""
-    from app.services.trace_service import get_requirement_coverage as _cov
+    from app.services.requirement_coverage_service import get_requirement_coverage as _cov
 
     result = _cov(db, document_id, current.project_id or 0)
     if result is None:
