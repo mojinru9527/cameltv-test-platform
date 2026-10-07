@@ -1,11 +1,10 @@
-"""LLM-Wiki 知识库模型 —— Raw Source / Wiki 页面 / 链接 / 编译任务 / 差异任务 / 差异项 / 外部连接。
+"""LLM-Wiki 知识库模型 —— Raw Source / Wiki 页面 / 链接 / 编译任务。
 
-对应《LLM-Wiki 知识库差异对比能力落地方案》§6。落地 VNext-1..5：
+平台简化批次：差异对比（wiki_diff_task / wiki_diff_item）、lint、外部连接器
+（external_wiki_connection）与审查相关表已删除；保留 Wiki 核心页表：
   - wiki_raw_source：蓝湖等原始来源（不可变、可 supersede），可绑 knowledge_source。
   - wiki_page / wiki_link：LLM 编译出的结构化 Wiki 页面与页面级链接。
   - wiki_ingest_job：两阶段编译任务（analysis→generation）状态。
-  - wiki_diff_task / wiki_diff_item：同一需求在两知识库之间的差异任务与差异项。
-  - external_wiki_connection：外部 LLM-Wiki 连接器（只读）。
 
 设计沿用知识中心约定：project_id 松散作用域（无 FK）、枚举以 str + 注释、JSON 存 Text。
 """

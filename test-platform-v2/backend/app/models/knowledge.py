@@ -1,8 +1,7 @@
-"""知识中心模型 — 知识源 / 切片 / 图谱实体 / 图谱关系 / AI 产物 / Agent 执行记录。
+"""知识中心模型 — 知识源 / 切片 / 图谱实体 / 图谱关系。
 
-对应《RAG 知识图谱与 Agent 持续学习能力落地执行文档》§6。
-本期（M0+M1）仅接线 knowledge_source / knowledge_chunk / ai_artifact / agent_run；
-knowledge_entity / knowledge_relation 建表留给 M3 知识图谱。
+平台简化批次：知识 AI 子能力（ai_artifact / agent_run / 迭代 / 快照 / 防抖）已删除，
+本模块只保留项目知识库所需的存储面：知识源、切片、实体、关系。
 """
 from __future__ import annotations
 
