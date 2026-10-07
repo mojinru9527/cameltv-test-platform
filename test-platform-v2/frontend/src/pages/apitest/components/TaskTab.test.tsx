@@ -72,7 +72,8 @@ describe('API execution task controls', () => {
 
     expect(await screen.findByText('夜间回归')).toBeTruthy()
     expect(screen.getByText('历史执行记录只读')).toBeTruthy()
-    expect(screen.getByRole('button', { name: '前往执行中心' })).toBeTruthy()
+    // 平台简化批次：执行中心（/executions）已删除，只读提示不再提供跳转按钮
+    expect(screen.queryByRole('button', { name: '前往执行中心' })).toBeNull()
     expect(screen.queryByRole('button', { name: /取消.*夜间回归/ })).toBeNull()
     expect(screen.queryByRole('button', { name: /重跑.*夜间回归/ })).toBeNull()
     expect(screen.queryByRole('button', { name: /删除.*夜间回归/ })).toBeNull()

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
-import { Search, FileUp, RefreshCw, FlaskConical, Zap, ChevronLeft, ChevronRight, MessageSquare } from '@/lib/icons'
+import { Search, FileUp, RefreshCw, FlaskConical, Zap, ChevronLeft, ChevronRight } from '@/lib/icons'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
 import { Badge } from '@/ui'
@@ -27,7 +26,6 @@ interface Props {
 }
 
 export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: Props) {
-  const navigate = useNavigate()
   const [services, setServices] = useState<ApiService[]>([])
   const [selectedService, setSelectedService] = useState<number | undefined>()
   const [endpoints, setEndpoints] = useState<ApiEndpoint[]>([])
@@ -175,67 +173,6 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
     const segments = (ep.path || '/').split('/').filter(Boolean)
     if (segments.length === 0) return '/'
     return displaySegment(segments[segments.length - 1])
-  }
-
-  /** Render endpoint rows for a given list */
-  function renderEndpointRows(eps: ApiEndpoint[], serviceName: string = '') {
-    return eps.map(ep => (
-      <div
-        key={ep.id}
-        className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer pl-10"
-        onClick={() => setSelectedEndpoint(ep)}
-      >
-        <Badge className={METHOD_COLORS[ep.method] || ''}>{ep.method}</Badge>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <code className="text-sm font-medium truncate" title={ep.path}>{displayPath(ep)}</code>
-            {ep.deprecated && <Badge tone="neutral" className="text-xs text-status-warning">已废弃</Badge>}
-          </div>
-          <p className="text-xs text-muted-foreground truncate">
-            {ep.summary || '-'}
-          </p>
-        </div>
-        {ep.remark && (
-          <span className="text-xs text-muted-foreground italic truncate max-w-[140px]" title={ep.remark}>
-            备注: {ep.remark}
-          </span>
-        )}
-        <div className="flex items-center gap-1 shrink-0">
-          {onDebugEndpoint && (
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              aria-label={`调试接口 ${ep.summary || ep.path}`}
-              onClick={(e) => { e.stopPropagation(); onDebugEndpoint(ep, serviceName) }}
-            >
-              <FlaskConical className="size-4" />
-            </Button>
-          )}
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            aria-label={`为接口 ${ep.summary || ep.path} 生成用例`}
-            onClick={(e) => { e.stopPropagation(); handleGenerate(ep) }}
-            disabled={generating.has(ep.id) || !aiConfigured}
-            title={!aiConfigured ? '当前项目未配置 AI 提供方' : undefined}
-          >
-            <Zap className={`size-4 ${generating.has(ep.id) ? 'animate-pulse' : ''}`} />
-          </Button>
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            aria-label={`用 DSH 生成接口用例 ${ep.summary || ep.path}`}
-            title="用 DSH 场景向导生成接口用例"
-            onClick={(e) => {
-              e.stopPropagation()
-              navigate(`/dsh-tasks?scene=api&hint=${encodeURIComponent(`${ep.method || 'GET'} ${ep.path}`)}`)
-            }}
-          >
-            <MessageSquare className="size-4" />
-          </Button>
-        </div>
-      </div>
-    ))
   }
 
   const handleGenerateService = async (svcId: number, svcName: string) => {

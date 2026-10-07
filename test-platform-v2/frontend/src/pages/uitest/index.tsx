@@ -8,10 +8,8 @@ import {
   Search,
   Trash2,
   FileText,
-  MessageSquare,
 } from '@/lib/icons'
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
 import { createUiJob, deleteUiJob, fetchUiJob, fetchUiJobs, fetchUiRuns, triggerUiJob, updateUiJob, fetchScripts, fetchRunDetail, cancelRun, fetchRunArtifacts } from '@/api/uitest'
 import { fetchEnvironments } from '@/api/environment'
 import { fetchTestCases } from '@/api/testcase'
@@ -67,7 +65,6 @@ import UiRunDetailDialog from './components/UiRunDetailDialog'
 export { ProtectedArtifactMedia } from './components/ProtectedArtifactMedia'
 
 export default function UiTestPage() {
-  const navigate = useNavigate()
   // (batch-165) 用例/脚本资产可见性
   const [pageTab, setPageTab] = useState<'jobs' | 'assets'>('jobs')
   const [uiScripts, setUiScripts] = useState<string[]>([])
@@ -526,15 +523,7 @@ export default function UiTestPage() {
                           >
                             以此用例新建任务
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            title="用 DSH 场景向导生成 UI 自动化用例"
-                            onClick={() => navigate(`/dsh-tasks?scene=ui&hint=${encodeURIComponent(c.title || '')}`)}
-                          >
-                            <MessageSquare className="size-3.5" />
-                            用 DSH 生成
-                          </Button>
+                          {/* 平台简化批次：DSH 场景向导（/dsh-tasks）已删除，原「用 DSH 生成」入口随之移除 */}
                         </TableCell>
                       </TableRow>
                     ))}

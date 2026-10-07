@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { RefreshCw, XCircle, CheckCircle2, Clock, Loader2, Eye, ChevronDown, ChevronRight, ClipboardCheck } from '@/lib/icons'
 import { Button } from '@/ui'
@@ -26,7 +25,6 @@ function statusBadgeClass(status?: string): string {
 }
 
 export default function TaskTab() {
-  const navigate = useNavigate()
   const [tasks, setTasks] = useState<ApiExecutionTask[]>([])
   const [total, setTotal] = useState(0)
   const [statusFilter, setStatusFilter] = useState<string>('')
@@ -73,15 +71,14 @@ export default function TaskTab() {
 
       <div className="rounded-lg border bg-muted/40 px-4 py-3">
         <p className="text-sm font-medium">历史执行记录只读</p>
-        <p className="mt-1 text-xs text-muted-foreground">仅用于审计与排障。新执行或失败重跑请使用 canonical ExecutionRun。</p>
-        <Button variant="secondary" size="sm" className="mt-2" onClick={() => navigate('/executions')}>前往执行中心</Button>
+        <p className="mt-1 text-xs text-muted-foreground">仅用于审计与排障。新执行请回到「接口用例」页发起（原执行中心已随智能测试任务一并删除）。</p>
       </div>
 
       <div className="border rounded-lg divide-y">
         {tasks.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground">
             <p className="text-sm">暂无历史执行任务</p>
-            <p className="text-xs mt-1">新批量执行请使用接口用例页或执行中心</p>
+            <p className="text-xs mt-1">新批量执行请在「接口用例」页发起</p>
           </div>
         ) : (
           tasks.map(task => (

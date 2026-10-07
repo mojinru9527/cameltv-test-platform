@@ -304,12 +304,7 @@ export default function AiConfigPage() {
           <RefreshCw className={`size-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
           刷新
         </Button>
-        <Button variant="outline" asChild>
-          <a href="/ai-jobs">
-            <Zap className="size-4 mr-1" />
-            AI 任务
-          </a>
-        </Button>
+        {/* 平台简化批次：AI 任务页（/ai-jobs）与 AiJob 派发链已删除，入口随之移除 */}
       </PageHeader>
 
       {resolved && (
