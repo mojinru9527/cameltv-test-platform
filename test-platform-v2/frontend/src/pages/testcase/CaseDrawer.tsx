@@ -16,7 +16,6 @@ import {
 } from '@/ui'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui'
 import { createTestCase, updateTestCase, reviewCase, fetchReviewHistory } from '@/api/testcase'
-import { fetchDatasets } from '@/api/dataset'
 import CaseForm from './components/CaseForm'
 import ApiDataPanel from './components/ApiDataPanel'
 import ReviewPanel from './components/ReviewPanel'
@@ -33,7 +32,6 @@ const formSchema = z.object({
   api_endpoint: z.string().optional().or(z.literal('')),
   api_body: z.string().optional().or(z.literal('')),
   api_assertions: z.string().optional().or(z.literal('')),
-  dataset_id: z.number().nullable().optional().default(null),
   case_design_method: z.string().optional().or(z.literal('')),
   positive_negative: z.string().optional().or(z.literal('')),
   test_data_note: z.string().optional().or(z.literal('')),
@@ -78,23 +76,20 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
       module: '',
       steps: '',
       expected_result: '',
-      dataset_id: null,
     },
   })
 
   const selDomain = watch('domain')
   const selType = watch('case_type')
-  const [datasets, setDatasets] = useState<any[]>([])
 
   useEffect(() => {
     if (!open) return
     let cancelled = false
-    fetchDatasets({ page_size: 100 }).then((d: any) => { if (!cancelled) setDatasets(d?.items || []) }).catch(() => {})
     if (editing) {
       const vals: Record<string, any> = {}
       for (const key of Object.keys(formSchema.shape)) {
         if (editing[key] !== undefined && editing[key] !== null) {
-          vals[key] = key === 'dataset_id' ? editing[key] : String(editing[key])
+          vals[key] = String(editing[key])
         }
       }
       reset(vals)
@@ -213,7 +208,7 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
                 selDomain={selDomain} selType={selType}
                 domains={domains} selModules={selModules}
                 watch={watch} setValue={setValue}
-              datasets={datasets} />
+              />
             </TabsContent>
 
             <TabsContent value="review">

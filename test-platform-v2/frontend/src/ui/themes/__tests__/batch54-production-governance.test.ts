@@ -50,9 +50,9 @@ function formatDebt(title: string, matches: string[]): string {
 }
 
 function collectProductionStyles(): string[] {
+  // 平台简化批次：theme-lab 已删除，样式来源仅保留全局样式与主题包
   return [
     resolve(sourceRoot, 'globals.css'),
-    resolve(sourceRoot, 'theme-lab/theme-lab.css'),
     ...readdirSync(resolve(sourceRoot, 'ui/themes'))
       .filter((name) => name.endsWith('.css'))
       .map((name) => resolve(sourceRoot, 'ui/themes', name)),

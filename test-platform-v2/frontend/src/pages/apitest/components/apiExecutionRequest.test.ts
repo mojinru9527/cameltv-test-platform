@@ -9,7 +9,6 @@ describe('ApiExecutionRequest builder', () => {
       const request = buildApiExecutionRequest({
         source,
         environmentId: 7,
-        datasetId: 11,
         caseIds: source === 'quick' || source === 'asset' ? [] : source === 'single' ? [21] : [21, 22],
         request: source === 'quick' || source === 'asset'
           ? {
@@ -26,7 +25,6 @@ describe('ApiExecutionRequest builder', () => {
 
       expect(request.source).toBe(source)
       expect(request.environment_id).toBe(7)
-      expect(request.dataset_id).toBe(11)
       expect(request.case_ids).toEqual(
         source === 'quick' || source === 'asset' ? [] : source === 'single' ? [21] : [21, 22],
       )
@@ -38,7 +36,7 @@ describe('ApiExecutionRequest builder', () => {
     },
   )
 
-  it('uses explicit nulls instead of silently dropping environment and dataset selection', () => {
+  it('uses explicit nulls instead of silently dropping environment selection', () => {
     const request = buildApiExecutionRequest({
       source: 'single',
       caseIds: [8],
@@ -47,7 +45,6 @@ describe('ApiExecutionRequest builder', () => {
 
     expect(request).toMatchObject({
       environment_id: null,
-      dataset_id: null,
       confirm_prod: false,
     })
   })

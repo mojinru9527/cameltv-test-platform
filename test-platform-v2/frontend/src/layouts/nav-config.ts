@@ -30,13 +30,13 @@ export const PRIMARY_ENTRY_LIMIT = 4
  * 因此命令面板（⌘K / Ctrl+K）仍能搜到并直达——见 `CommandPalette` 的 `visibleMenuPaths` 与
  * `buildNavigation().searchOnly`。这样"侧栏短"与"页面可达"不再互相牺牲。
  *
- * 保留口径：日常工作台面（资产桶）= 用例服务 / 接口测试 / UI 自动化 / 测试数据集 / 目标环境。
+ * 保留口径：日常工作台面（资产桶）= 用例服务 / 接口测试 / UI 自动化 / 目标环境。
+ * 平台简化批次：测试数据集已删除，从保留集合移除。
  */
 export const EXPERT_KEEP_CODES: readonly string[] = [
   'menu:testcase',
   'menu:apitest',
   'menu:uitest',
-  'menu:dataset',
   'menu:environment',
 ]
 
@@ -58,15 +58,15 @@ export type MainRowLinkDef = { kind: 'link'; code: string }
 export type MainRowGroupDef = { kind: 'group'; label: string; codes: readonly string[] }
 export type MainRowDef = MainRowLinkDef | MainRowGroupDef
 
-/** 顶层 4 个一级入口蓝图（顺序即展示顺序）。 */
+/** 顶层 4 个一级入口蓝图（顺序即展示顺序）。平台简化批次：AITDE/报告已删除。 */
 export const MAIN_ROW_DEFS: readonly MainRowDef[] = [
   { kind: 'link', code: 'menu:workbench' }, // ① 我的待办
   {
     kind: 'group',
     label: '版本验收', // ②
-    codes: ['menu:versiontask', 'menu:missions', 'menu:versionmission', 'menu:requirement'],
+    codes: ['menu:versiontask', 'menu:versionmission', 'menu:requirement'],
   },
-  { kind: 'group', label: '结果与缺陷', codes: ['menu:defect', 'menu:report'] }, // ③
+  { kind: 'group', label: '结果与缺陷', codes: ['menu:defect'] }, // ③
   { kind: 'link', code: 'menu:knowledge' }, // ④ 知识库
 ]
 
@@ -83,22 +83,17 @@ export const EXPERT_BUCKET_DEFS: readonly ExpertBucketDef[] = [
       'menu:testcase',    // 用例服务：资产库保留（用户定稿）
       'menu:apitest',     // 接口测试：资产库 + 执行能力（保留）
       'menu:uitest',      // UI 自动化：资产库 + 执行能力（保留）
-      'menu:dataset',     // 测试数据集：资产（向导自动带出）
       'menu:environment', // 目标环境：资产（向导自动带出）
     ],
   },
   {
     label: '引擎与配置',
     codes: [
-      'menu:dsh_tasks',      // DSH 任务：执行引擎（02 §2 B）
       'menu:ai_config',      // AI 配置：专家/管理员
       'menu:lanhu_evidence', // 蓝湖证据包：专家/管理员
-      'menu:runtime',        // Durable Runtime：引擎专家
-      'menu:integration',    // 集成
-      'menu:notify',         // 通知
     ],
   },
-  { label: '个人', codes: ['menu:schedule', 'menu:myproject', 'menu:metrics', 'menu:onboarding'] },
+  { label: '个人', codes: ['menu:schedule', 'menu:myproject'] },
   { label: '系统', codes: ['menu:system'] },
 ]
 

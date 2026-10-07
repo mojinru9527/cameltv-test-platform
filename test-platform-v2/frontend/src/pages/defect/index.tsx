@@ -130,7 +130,6 @@ export default function DefectPage() {
           }}
           onTransitioned={(updated) => { setDetail(updated); refetchAll() }}
           onMutated={list.refetch}
-          canSync={hasPerm('integration:sync')}
         />
       )}
     </div>

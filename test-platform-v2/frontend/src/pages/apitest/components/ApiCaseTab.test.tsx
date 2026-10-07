@@ -96,7 +96,6 @@ describe('接口用例列表', () => {
     await waitFor(() => expect(executeApiCase).toHaveBeenCalledWith({
       source: 'single',
       environment_id: null,
-      dataset_id: null,
       case_ids: [1],
       request: null,
       confirm_prod: false,

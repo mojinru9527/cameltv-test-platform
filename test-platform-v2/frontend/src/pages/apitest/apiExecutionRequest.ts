@@ -23,7 +23,6 @@ export type ApiRequestDefinition = {
 export type ApiExecutionRequest = {
   source: ApiExecutionSource
   environment_id: number | null
-  dataset_id: number | null
   case_ids: number[]
   request: ApiRequestDefinition | null
   confirm_prod: boolean
@@ -41,7 +40,6 @@ type RequestDefinitionInput = {
 type BuildApiExecutionRequestInput = {
   source: ApiExecutionSource
   environmentId?: number | null
-  datasetId?: number | null
   caseIds?: number[]
   request: RequestDefinitionInput | null
   confirmProd?: boolean
@@ -110,7 +108,6 @@ export function buildApiExecutionRequest(input: BuildApiExecutionRequestInput): 
   return {
     source: input.source,
     environment_id: input.environmentId ?? null,
-    dataset_id: input.datasetId ?? null,
     case_ids: caseIds,
     request,
     confirm_prod: input.confirmProd ?? false,

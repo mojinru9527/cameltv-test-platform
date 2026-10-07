@@ -34,7 +34,6 @@ import {
   getAttachmentUrl,
   deleteAttachment,
 } from '@/api/defect'
-import { pushDefect, pullDefect } from '@/api/integration'
 import type { DefectItem, DefectTransition, DefectComment, DefectAttachment } from '@/types'
 import {
   SEVERITY_MAP,
@@ -52,7 +51,6 @@ interface DefectDetailSheetProps {
   onClose: () => void
   onTransitioned: (updated: DefectItem) => void
   onMutated: () => void
-  canSync: boolean
 }
 
 export default function DefectDetailSheet({
@@ -61,7 +59,6 @@ export default function DefectDetailSheet({
   onClose,
   onTransitioned,
   onMutated,
-  canSync,
 }: DefectDetailSheetProps) {
   // ── Transitions ──
   const [transitionOpen, setTransitionOpen] = useState(false)
@@ -233,43 +230,6 @@ export default function DefectDetailSheet({
                     查看外部链接
                   </a>
                 </p>
-              )}
-
-              {/* Sync buttons */}
-              {canSync && (
-                <div className="flex items-center gap-2 mt-4 pt-3 border-t">
-                  <span className="text-xs text-muted-foreground">同步:</span>
-                  <Button
-                    variant="secondary" size="sm"
-                    onClick={async () => {
-                      const iid = prompt('请输入集成配置 ID (可在集成配置页查看):')
-                      if (!iid) return
-                      try {
-                        await pushDefect(detail.id, Number(iid))
-                        toast.success('推送成功')
-                        onMutated()
-                      } catch (e: any) { toast.error(e?.message || '推送失败') }
-                    }}
-                  >
-                    <RefreshCw className="size-3 mr-1" />推送
-                  </Button>
-                  {detail.external_id && (
-                    <Button
-                      variant="secondary" size="sm"
-                      onClick={async () => {
-                        const iid = prompt('请输入集成配置 ID:')
-                        if (!iid) return
-                        try {
-                          await pullDefect(detail.id, Number(iid))
-                          toast.success('拉取成功')
-                          onMutated()
-                        } catch (e: any) { toast.error(e?.message || '拉取失败') }
-                      }}
-                    >
-                      <RefreshCw className="size-3 mr-1" />拉取
-                    </Button>
-                  )}
-                </div>
               )}
 
               {detail.description && (

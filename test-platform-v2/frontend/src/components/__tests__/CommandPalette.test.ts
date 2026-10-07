@@ -6,55 +6,61 @@ import {
 } from '../CommandPalette'
 
 describe('CommandPalette 路由对账（B60-P1-002）', () => {
-  it('覆盖全部成熟模块路由', () => {
+  it('覆盖全部保留模块路由', () => {
     const paths = ALL_COMMAND_ROUTES.map((route) => route.path)
     for (const expected of [
       '/workbench',
       '/testcase',
       '/requirement',
-      '/report',
       '/schedule',
       '/defect',
-      '/report?tab=trace',
       '/testcase?tab=mindmap',
       '/release-bundles',
+      '/version-tasks',
       '/knowledge',
-      '/dataset',
-      '/integration',
       '/environment',
-      '/notify',
       '/my-projects',
       '/system',
       '/apitest',
       '/uitest',
+      '/ai-config',
+      '/lanhu-evidence',
     ]) {
       expect(paths).toContain(expected)
     }
   })
 
-  it('P1b：Agent 工作台已收敛进 DSH 任务，入口不再单列', () => {
+  it('平台简化批次：已删除模块入口不再出现', () => {
     const paths = ALL_COMMAND_ROUTES.map((route) => route.path)
-    expect(paths).not.toContain('/agent-workbench')
-  })
-
-  it('P2a：思维导图并入用例服务脑图视图 Tab，旧独立路径不再出现', () => {
-    const paths = ALL_COMMAND_ROUTES.map((route) => route.path)
-    expect(paths).not.toContain('/mindmap')
-    expect(paths).toContain('/testcase?tab=mindmap')
-  })
-
-  it('batch-212：测试计划/Playground 独立入口已下架，命令面板不再收录', () => {
-    const paths = ALL_COMMAND_ROUTES.map((route) => route.path)
-    expect(paths).not.toContain('/testplan')
-    expect(paths).not.toContain('/playground')
-    expect(paths).not.toContain('/testcase?tab=playground')
-    expect(paths).not.toContain('/testcase?tab=playground')
-  })
-
-  it('P2c：质量追溯并入报告中心 Tab，旧独立路径不再出现', () => {
-    const paths = ALL_COMMAND_ROUTES.map((route) => route.path)
-    expect(paths).not.toContain('/trace')
-    expect(paths).toContain('/report?tab=trace')
+    for (const gone of [
+      '/agent-workbench',
+      '/report',
+      '/report?tab=trace',
+      '/trace',
+      '/dataset',
+      '/integration',
+      '/notify',
+      '/dsh-tasks',
+      '/missions',
+      '/executions',
+      '/healing',
+      '/flaky',
+      '/data-sources',
+      '/fixtures',
+      '/admin/workers',
+      '/ai-suggestions',
+      '/metrics',
+      '/onboarding',
+      '/special',
+      '/perftest',
+      '/project',
+      '/organizations',
+      '/testplan',
+      '/playground',
+      '/mindmap',
+    ]) {
+      expect(paths).not.toContain(gone)
+    }
   })
 
   it('batch-165：专项测试/性能监控入口已隐藏', () => {
@@ -66,7 +72,7 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
     expect(paths).toContain('/my-projects')
   })
 
-  it('无 release:view 权限时隐藏需要权限的入口', () => {
+  it('无权限时隐藏需要权限的入口', () => {
     const hasPerm = (code: string) => code !== 'release:view'
     const visible = filterCommandRoutes(ALL_COMMAND_ROUTES, hasPerm)
     expect(visible.length).toBeGreaterThan(0)
@@ -79,23 +85,20 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
   })
 
   it('P1a：menuBacked 入口随菜单软下线隐藏（DISABLED_MENUS）', () => {
-    // 模拟菜单中已不含 notify/integration（后端 DISABLED_MENUS 默认隐藏）
+    // 模拟菜单中已不含 ai-config（软下线示例）
     const menuPaths = new Set(
-      ALL_COMMAND_ROUTES.map((route) => route.path).filter((p) => p !== '/notify' && p !== '/integration'),
+      ALL_COMMAND_ROUTES.map((route) => route.path).filter((p) => p !== '/ai-config'),
     )
     const visible = filterCommandRoutes(ALL_COMMAND_ROUTES, () => true, menuPaths)
     const visiblePaths = visible.map((route) => route.path)
-    expect(visiblePaths).not.toContain('/notify')
-    expect(visiblePaths).not.toContain('/integration')
+    expect(visiblePaths).not.toContain('/ai-config')
     // 非 menuBacked 条目不受菜单集合影响
     expect(visiblePaths).toContain('/workbench')
   })
 
   it('P1a：不传菜单集合时保持旧行为（仅按权限过滤）', () => {
     const visible = filterCommandRoutes(ALL_COMMAND_ROUTES, () => true)
-    const visiblePaths = visible.map((route) => route.path)
-    expect(visiblePaths).toContain('/notify')
-    expect(visiblePaths).toContain('/integration')
+    expect(visible.map((route) => route.path)).toContain('/ai-config')
   })
 })
 
@@ -106,12 +109,10 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
  */
 describe('batch-272 瘦身模块的搜索直达对账', () => {
   const SLIMMED_OUT = [
-    '/dsh-tasks',
     '/ai-config',
     '/my-projects',
     '/schedule',
     '/system',
-    '/admin/workers',
   ]
 
   it('菜单仍在时：被瘦身出侧栏的模块全部可搜到', () => {
@@ -125,9 +126,9 @@ describe('batch-272 瘦身模块的搜索直达对账', () => {
 
   it('菜单被软/硬下线时：对应模块同步从命令面板消失（不会搜索到已下线页面）', () => {
     const menuPaths = new Set(
-      ALL_COMMAND_ROUTES.map((route) => route.path).filter((p) => p !== '/dsh-tasks'),
+      ALL_COMMAND_ROUTES.map((route) => route.path).filter((p) => p !== '/ai-config'),
     )
     const visible = filterCommandRoutes(ALL_COMMAND_ROUTES, () => true, menuPaths)
-    expect(visible.map((route) => route.path)).not.toContain('/dsh-tasks')
+    expect(visible.map((route) => route.path)).not.toContain('/ai-config')
   })
 })

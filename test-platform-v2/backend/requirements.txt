@@ -39,6 +39,5 @@ numpy>=1.26               # 向量存储（float32 blob）+ 暴力余弦
 rapidocr_onnxruntime>=1.4.4
 # AI 配置中心：Fernet 加密 AI 提供方 Key（lock 已含 cryptography==49.0.0，此处补直接依赖声明）
 cryptography>=42.0
-temporalio>=1.32
 # Shared same-host task admission; already pinned in requirements.lock.
 filelock>=3.32
