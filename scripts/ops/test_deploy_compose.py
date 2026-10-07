@@ -31,6 +31,10 @@ class DeployComposeTests(unittest.TestCase):
             'COOKIE_SECURE': 'false', 'DATABASE_URL': 'sqlite:////data/compose-test.db',
             'API_IMAGE': 'cameltv-tp-api:capacity-local', 'RUNNER_IMAGE': 'cameltv-tp-runner:capacity-local',
             'API_MEMORY_LIMIT': '512m', 'RUNNER_MEMORY_LIMIT': '1536m',
+            # 凭据探针：必须给非空值，否则 `AI_API_KEY=` 渲染为空串，
+            # 「Key 只在 backend」的断言会因两边都为空而**假通过**。
+            'AI_API_KEY': 'sk-compose-validation-only',
+            'DSH_API_KEY': 'sk-compose-validation-retired',
         })
         result = subprocess.run(
             ['docker', 'compose', '--env-file', os.devnull, '-f', 'docker-compose.yml', 'config', '--format', 'json'],
@@ -64,6 +68,25 @@ class DeployComposeTests(unittest.TestCase):
         self.assertIn('AI_API_KEY', api['environment'])
         self.assertNotIn('AI_GATEWAY_URL', api['environment'])
         self.assertNotIn('AI_GATEWAY_ROLE', api['environment'])
+
+    def test_cloud_ai_key_is_not_inherited_by_runner(self):
+        """P0-4 凭据最小化：`runner` 经 `extends` 继承 backend 环境，必须显式清空 AI Key。
+
+        这是渲染后拓扑的断言（而非原始 YAML）：只有校验 merge/extends 结果，才能发现
+        「Key 被悄悄复制进执行容器」这类回归。
+        """
+        holders = {
+            name
+            for name, service in self.services.items()
+            if (service.get('environment') or {}).get('AI_API_KEY')
+        }
+        self.assertEqual(holders, {'backend'})
+        retired = {
+            name
+            for name, service in self.services.items()
+            if (service.get('environment') or {}).get('DSH_API_KEY')
+        }
+        self.assertEqual(retired, set(), 'DSH 已删除，其 Key 不得出现在任何服务')
 
     def test_single_database_and_shared_volumes(self):
         for name in ('backend', 'runner', 'volume-permissions'):

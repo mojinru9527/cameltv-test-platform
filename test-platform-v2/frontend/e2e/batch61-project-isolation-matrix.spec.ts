@@ -30,6 +30,8 @@ function ok(route: Route, data: unknown) {
 function responseFor(apiPath: string, projectId: number) {
   if (apiPath === '/system/menus') return []
   if (apiPath === '/test-cases/domains') return []
+  // 用例服务页把 taxonomy 当数组使用（taxonomy.find），返回对象会整页崩到 ErrorBoundary
+  if (apiPath === '/test-cases/taxonomy') return []
   if (apiPath === '/defects/stats') return { total: 0, by_severity: {}, by_status: {} }
   if (apiPath === '/environments') return []
   if (apiPath === '/ai-config/providers') return []

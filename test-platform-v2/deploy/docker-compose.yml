@@ -152,6 +152,10 @@ services:
       target: runner
     environment:
       WORKER_EXECUTION_ENABLED: "true"
+      # 凭据最小化（P0-4）：runner 只跑执行（Playwright/节点任务），不需要云端 AI Key。
+      # 本服务 `extends: backend` 会继承 backend 的环境，因此必须在此显式清空，
+      # 否则 AI_API_KEY 会被复制进执行容器（由 scripts/ops/verify-credential-isolation.py 守卫）。
+      AI_API_KEY: ""
     depends_on:
       postgres:
         condition: service_healthy
