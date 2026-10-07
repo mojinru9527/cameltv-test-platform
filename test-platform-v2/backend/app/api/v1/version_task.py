@@ -76,7 +76,6 @@ def create_task(
         title=data.title,
         version=data.version,
         source=data.source,
-        source_mission_id=data.source_mission_id,
         source_bundle_id=data.source_bundle_id,
         requirement_doc_id=data.requirement_doc_id,
         release_bundle_id=data.release_bundle_id,

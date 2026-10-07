@@ -29,11 +29,16 @@ depends_on = None
 
 def _column_exists(conn, table: str, column: str) -> bool:
     insp = sa.inspect(conn)
+    # 平台简化批次：dsh_task 表已删除（新库 create_all 不再建），迁移链重跑时跳过
+    if not insp.has_table(table):
+        return True
     return column in [c["name"] for c in insp.get_columns(table)]
 
 
 def _index_exists(conn, table: str, index: str) -> bool:
     insp = sa.inspect(conn)
+    if not insp.has_table(table):
+        return True
     return index in [i["name"] for i in insp.get_indexes(table)]
 
 

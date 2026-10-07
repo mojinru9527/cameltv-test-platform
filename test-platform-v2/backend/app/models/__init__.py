@@ -82,12 +82,7 @@ from app.modules.execution_runtime.scenario_models import (  # noqa: E402
     TestScenario,
     TestScenarioVersion,
 )
-from app.modules.execution_runtime.legacy_models import (  # noqa: E402
-    CutoverBatch,
-    LegacyCaseMigration,
-    LegacyObjectMapping,
-    LegacyUsageRecord,
-)
+from app.modules.execution_runtime.legacy_models import LegacyObjectMapping
 
 __all__ = [
     "AiProvider",
@@ -176,8 +171,5 @@ __all__ = [
     "TestScenarioVersion",
     "TestOracle",
     "ScenarioOracleBinding",
-    "LegacyUsageRecord",
-    "LegacyCaseMigration",
     "LegacyObjectMapping",
-    "CutoverBatch",
 ]

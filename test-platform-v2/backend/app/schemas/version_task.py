@@ -36,7 +36,6 @@ class VersionTaskCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=300)
     version: str = Field(..., min_length=1, max_length=80)
     source: str = Field(default="manual", max_length=20)
-    source_mission_id: int | None = None
     source_bundle_id: int | None = None
     requirement_doc_id: int | None = None
     release_bundle_id: int | None = None
@@ -104,7 +103,6 @@ class VersionTaskOut(BaseModel):
     title: str = ""
     version: str = ""
     source: str = "manual"
-    source_mission_id: int | None = None
     source_bundle_id: int | None = None
     requirement_doc_id: int | None = None
     release_bundle_id: int | None = None
