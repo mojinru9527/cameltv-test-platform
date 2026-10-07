@@ -1,5 +1,8 @@
 # DSH 测试 Agent — 测试工程师使用手册
 
+> ⚠️ **本能力已在平台简化批次（2026-10-07）整体删除**（代码 + 数据库表）。本文保留为历史设计记录；
+> 当前有效事实源见 [docs/platform-refactor/11-platform-simplification-design.md](../../docs/platform-refactor/11-platform-simplification-design.md)。
+
 > 版本：v1.0 | 日期：2026-08-17 | 适用：CamelTv 测试自动化平台
 > 关联：`DSH测试Agent框架设计.md`（架构）· `知识中心-用户使用手册.md`（知识中心）· `docs/agent-team/dsh-agent-teams.md`（DSH 船长模式）
 

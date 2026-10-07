@@ -20,12 +20,8 @@ const {
   fetchKnowledgeSources,
   fetchKnowledgeSource,
   fetchSourceChunks,
-  fetchAiArtifacts,
   searchKnowledge,
   reembedKnowledge,
-  fetchGraphView,
-  fetchEntityStats,
-  triggerEntityExtract,
 } = await import('@/api/knowledge')
 
 describe('Knowledge API functions', () => {
@@ -75,16 +71,6 @@ describe('Knowledge API functions', () => {
     })
   })
 
-  describe('fetchAiArtifacts', () => {
-    it('calls GET /knowledge/ai-artifacts with review params', async () => {
-      mockGet.mockResolvedValue({ total: 2, items: [], page: 1, page_size: 20 })
-      await fetchAiArtifacts({ review_status: 'pending', artifact_type: 'test_case' })
-      expect(mockGet).toHaveBeenCalledWith('/knowledge/ai-artifacts', {
-        params: { review_status: 'pending', artifact_type: 'test_case' },
-      })
-    })
-  })
-
   describe('searchKnowledge', () => {
     it('calls POST /knowledge/search with query body', async () => {
       mockPost.mockResolvedValue([{ chunk_id: 1, snippet: 'match', score: 0.95 }])
@@ -108,53 +94,6 @@ describe('Knowledge API functions', () => {
       const result = await reembedKnowledge()
       expect(mockPost).toHaveBeenCalledWith('/knowledge/reembed')
       expect(result.embedded).toBe(8)
-    })
-  })
-
-  describe('fetchGraphView', () => {
-    it('calls GET /knowledge/graph/view with default limit', async () => {
-      mockGet.mockResolvedValue({ nodes: [], edges: [] })
-      await fetchGraphView()
-      expect(mockGet).toHaveBeenCalledWith('/knowledge/graph/view', { params: { limit: 200 } })
-    })
-
-    it('passes custom limit', async () => {
-      mockGet.mockResolvedValue({ nodes: [], edges: [] })
-      await fetchGraphView(50)
-      expect(mockGet).toHaveBeenCalledWith('/knowledge/graph/view', { params: { limit: 50 } })
-    })
-  })
-
-  describe('triggerEntityExtract', () => {
-    it('calls POST /knowledge/graph/extract with payload', async () => {
-      mockPost.mockResolvedValue({ extracted: 12, relations: 5, skipped: 0, message: 'OK' })
-      const result = await triggerEntityExtract(3, 50)
-      expect(mockPost).toHaveBeenCalledWith('/knowledge/graph/extract', { source_id: 3, max_chunks: 50 })
-      expect(result.extracted).toBe(12)
-    })
-
-    it('sends null source_id and default max_chunks when omitted', async () => {
-      mockPost.mockResolvedValue({ extracted: 0, relations: 0, skipped: 0, message: 'nothing' })
-      await triggerEntityExtract()
-      expect(mockPost).toHaveBeenCalledWith('/knowledge/graph/extract', { source_id: null, max_chunks: 100 })
-    })
-  })
-
-  describe('fetchEntityStats', () => {
-    it('calls the project-wide entity stats endpoint with filters and signal', async () => {
-      const controller = new AbortController()
-      mockGet.mockResolvedValue({ total: 970, by_type: { module: 419 }, missing_source: 970 })
-
-      const result = await fetchEntityStats(
-        { entity_type: 'module', keyword: '首页' },
-        controller.signal,
-      )
-
-      expect(mockGet).toHaveBeenCalledWith('/knowledge/graph/entities/stats', {
-        params: { entity_type: 'module', keyword: '首页' },
-        signal: controller.signal,
-      })
-      expect(result.total).toBe(970)
     })
   })
 })

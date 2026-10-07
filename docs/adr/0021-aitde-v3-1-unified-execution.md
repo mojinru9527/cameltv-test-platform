@@ -1,8 +1,8 @@
 ---
 title: "ADR-0021: AITDE V3.1 统一执行 + Proof Replay（确定性结论、无 AI 裁决）"
 owner: "qa-team"
-last_reviewed: "2026-08-29"
-status: "已采纳"
+last_reviewed: "2026-10-07"
+status: "superseded"
 tags: ["adr", "aitde", "v3.1", "execution"]
 related: ["docs/aitde/versions/V3.1_Detailed_Development_Implementation_Plan.md"]
 ---
@@ -10,6 +10,15 @@ related: ["docs/aitde/versions/V3.1_Detailed_Development_Implementation_Plan.md"
 # ADR-0021: AITDE V3.1 统一执行 + Proof Replay
 
 ## 状态
+
+**已被平台简化批次（2026-10-07）取代。** AITDE 全家（`modules/aitde/`、`api/v2/`、
+`Scenario → ExecutionRun → ExecutionStep → AssertionResult → EvidenceArtifact → ReplayManifest`
+执行链及其全部表）随平台简化整体删除，本 ADR 确立的统一执行/证明回放模型不再存在；
+测试执行改由保留的 ExecutionJob 协议 + `cameltv-node` 本地节点与版本验收任务承接。
+原文保留为历史记录。当前有效事实源见
+[平台全面简化设计：删除清单与实施](../platform-refactor/11-platform-simplification-design.md)。
+
+## 状态（历史）
 
 已采纳
 

@@ -1,7 +1,7 @@
 ---
 title: "测试平台 v2 现状功能 PRD"
 owner: "qa-team"
-last_reviewed: "2026-08-09"
+last_reviewed: "2026-10-07"
 status: "active"
 expires: "2026-12-26"
 tags: ["PRD", "现状", "功能清单", "基线"]
@@ -12,8 +12,13 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 
 > 文档性质：**现状反向 PRD**——逆向梳理平台「当前已实现」的功能，逐模块给出目标 / 用户故事 / 功能点 / 字段 / 状态机 / 业务规则 / 接口 / 成熟度标注。
 > 用途：作为后续功能增 / 删 / 改的**基线**。每节末尾「现状与局限」即改进入口。
+> **平台简化批次同步（2026-10-07）**：AITDE 智能测试任务、DSH 任务/Agent 工作台、报告中心（含质量追溯）、
+> 测试数据集、通知配置、集成配置、组织管理、主题实验室、音视频专项、性能监控、Playground、知识图谱/AI 审核台、
+> Wiki 差异对比、接入向导、运营指标等能力已整体删除（代码 + 数据库表）。本文中对应条目已标注
+> **「已删除（2026-10-07）」**，不再代表平台现状；删除清单见
+> [docs/platform-refactor/11-platform-simplification-design.md](../../docs/platform-refactor/11-platform-simplification-design.md)。
 > 依据：当前 worktree 的锁文件、FastAPI 路由/认证实现、React 路由、Batch 127 生产只读走查、本地真实后端矩阵与自动化资产核对；历史截图、脚本存在或候选用例数均不单独构成通过证据。
-> 版本：后端应用版本 `2.3.0`；依赖基线 FastAPI `0.140.13`、React `19.2.8`　日期：2026-08-09
+> 版本：后端应用版本 `2.3.0`；依赖基线 FastAPI `0.140.13`、React `19.2.8`　日期：2026-08-09（2026-10-07 依简化批次修订）
 
 ---
 
@@ -28,17 +33,19 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 ## 1. 产品概述
 
 ### 1.1 定位
-一体化**测试管理平台**：覆盖「需求 → AI 生成用例 → 用例库 → 测试计划 → 执行 → 报告 / 缺陷」主链路，并提供工作台看板、定时任务、以及音视频 / UI / API 三个专项测试入口。支持多项目隔离与 RBAC 权限。
+一体化**测试管理平台**：覆盖「需求 → AI 生成用例 → 用例库 → 执行（接口/UI/版本验收任务）→ 缺陷」主链路，
+并提供工作台看板、定时任务、知识中心（项目知识库）与蓝湖证据包。支持多项目隔离与 RBAC 权限。
+音视频专项、性能监控、报告中心、测试数据集、通知配置、集成配置等模块已删除（2026-10-07）。
 
 ### 1.2 目标用户与角色
 | 角色 | 默认账号 | 典型职责 |
 |------|---------|---------|
 | 超级管理员 | 由部署环境创建 | 全局配置、用户角色、项目、所有数据（权限码 `*`） |
-| 测试人员 | 由管理员创建 | 需求/用例/计划/执行/缺陷/报告日常操作 |
+| 测试人员 | 由管理员创建 | 需求/用例/执行（接口、UI、版本验收）/缺陷日常操作 |
 | 自定义角色 | — | 按权限点 + 数据范围（global/project/self）灵活配置 |
 
 ### 1.3 技术架构（一句话）
-前端 React 19.2.8 + React Router 8.3.0 + TS + shadcn/ui（SPA），后端 FastAPI 0.140.13 + SQLAlchemy 2.0.51 + SQLite（可升 PostgreSQL）；浏览器会话以承载 JWT 的 httpOnly Cookie 为主，Bearer 仅作过渡回退，APScheduler 调度，外接 DeepSeek LLM / ELK / 蓝湖。
+前端 React 19.2.8 + React Router 8.3.0 + TS + shadcn/ui（SPA），后端 FastAPI 0.140.13 + SQLAlchemy 2.0.51 + SQLite（可升 PostgreSQL）；浏览器会话以承载 JWT 的 httpOnly Cookie 为主，Bearer 仅作过渡回退，APScheduler 调度，外接 DeepSeek LLM（平台直连，原 ai-gateway 独立服务已删除）/ 蓝湖。
 
 ### 1.4 模块全景与成熟度
 | # | 模块 | 路由 | 成熟度与证据边界 |
@@ -49,22 +56,24 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 | 4 | 系统管理（用户/角色/权限/审计） | `/system` | 🟡 RBAC/审计存在；admin/tester/viewer 全能力矩阵待补 |
 | 5 | 需求管理 + AI 用例生成 | `/requirement` | 🟡 / ⛔ 本地持久化链可用；真实 LLM、蓝湖和旧 PostgreSQL 快照受外部输入阻塞 |
 | 6 | 用例管理 / 脑图 | `/testcase` `/mindmap` | 🟡 CRUD、批量、导入导出与版本能力存在；破坏性操作、权限与全浏览器证据待补 |
-| 7 | 测试计划与执行 | `/testplan` `/testplan/:id` | 🟡 本地状态流可用；批量、并发、权限和外部回写矩阵不完整 |
-| 8 | 测试报告 | `/report` | 🟡 快照/导出可用；全量分页、响应式与权限验收待补 |
+| 7 | 测试计划与执行 | `/testplan` `/testplan/:id` | **已删除（2026-10-07）写入口面**：仅保留只读 API 与历史执行数据（统计底座），前端入口重定向到 `/testcase` |
+| 8 | 测试报告 | `/report` | **已删除（2026-10-07）**：报告中心 + 质量追溯整体删除（代码 + 表 `test_report` / `report_template`） |
 | 9 | 定时任务 | `/schedule` | 🟡 调度、空状态与部分 RBAC 有证据；生产环境保护待统一 |
 | 10 | 缺陷管理 | `/defect` `/defect/:id` | 🟡 内建状态流、评论、附件与深链存在；全权限/原子性矩阵待补 |
 | 11 | API 测试 | `/apitest` | 🟡 OpenAPI/Swagger 导入和 httpx 真实执行存在；五入口一致性、生产保护与 Test5 当前契约待验收 |
 | 12 | UI 自动化 | `/uitest` | 🟡 本地 Runner 真实执行和产物链可用；不代表体育业务 E2E 通过 |
-| 13 | 音视频专项 | `/special` | 🟡 真实样本/ffprobe 指标链已取代随机数；外部真实流矩阵未完成 |
-| 14 | 环境 / 数据集 | `/environment` `/dataset` | 🟡 项目级数据与加密变量存在；跨项目和生产目标安全矩阵待补 |
-| 15 | 通知 / 集成 | `/notify` `/integration` | ⛔ 本地模型与错误路径可验；真实 SMTP/Webhook/Jira/TAPD/ELK 缺凭据和非生产端点 |
-| 16 | 知识 / 发布包 | `/knowledge` `/release-bundles` | 🟡 前置条件缺失时已 fail closed；真实外部链和交互标注回归待补。Agent 工作台自 P1b 起收敛进 DSH 任务（页面删除，`/agent-workbench` → `/dsh-tasks` 重定向） |
-| 17 | 性能监控 | `/perftest` | ⛔ 缺 SoloX、授权真机和采集窗口，页面存在不等于验收通过 |
+| 13 | 音视频专项 | `/special` | **已删除（2026-10-07）**：`/av_check` 路由、模型与前端页面整体删除 |
+| 14 | 环境 / 数据集 | `/environment` `/dataset` | 目标环境保留（🟡 跨项目和生产目标安全矩阵待补）；**测试数据集已删除（2026-10-07）** |
+| 15 | 通知 / 集成 | `/notify` `/integration` | **已删除（2026-10-07）**：通知配置、集成配置（Jira/TAPD/Webhook/ELK）整体删除；仅保留 env 级 SMTP 密码重置邮件 |
+| 16 | 知识 / 发布包 | `/knowledge` `/release-bundles` | 🟡 发布包与项目知识保留；知识图谱/实体/关系/迭代/AI 审核台/Skills 已删除（2026-10-07） |
+| 17 | 性能监控 | `/perftest` | **已删除（2026-10-07）**：性能监控模块整体删除 |
 | 18 | 开放 API | API-only `/api/v1/open` | 🟡 独立 API Token Bearer 鉴权；前端入口和生产级契约证据不完整 |
-| 19 | 主题实验室 | `/theme-lab` | ✅ 本地设计/响应式验证工具，不是业务生产能力 |
-| 20 | 运维发布控制 | `/operations-release` | 🟡 只读控制面已存在；store 未配置时为受控 503/未启用态，不提供发布、审批或回滚操作 |
-| 21 | 我的项目 / 组织 | `/my-projects` `/organizations` | 🟡 项目加入、邀请与组织层已实现；跨组织管理写路径继续由 RBAC/隔离测试约束 |
-| 22 | Playground / 蓝湖证据 | `/playground` `/lanhu-evidence` `/lanhu-evidence/:id` | 🟡 / ⛔ 页面、任务和详情存在；AI、蓝湖登录态、采集与 OCR 仍受真实 Provider 条件约束 |
+| 19 | 主题实验室 | `/theme-lab` | **已删除（2026-10-07）**：主题实验室页面整体删除 |
+| 20 | 运维发布控制 | `/operations-release` | **已删除（2026-10-07）**：控制面页面随简化批次移除，发布/审批仍由外部流程承担 |
+| 21 | 我的项目 / 组织 | `/my-projects` `/organizations` | 我的项目保留（🟡 项目加入与邀请已实现）；**组织管理已删除（2026-10-07）**，`projects.organization_id` 列已 DROP |
+| 22 | Playground / 蓝湖证据 | `/playground` `/lanhu-evidence` `/lanhu-evidence/:id` | 蓝湖证据包保留（🟡 / ⛔ 受真实 Provider 条件约束）；**Playground 页面已删除（2026-10-07）** |
+| 23 | 版本验收任务 / AI 配置 | `/version-tasks` `/ai-config` | 🟡 版本验收主链路（方案生成/一键运行/证据回放/放行）与 AI 配置（提供方池）为当前保留面 |
+| 24 | DSH 任务 / Agent 工作台 | `/dsh-tasks` `/agent-workbench` | **已删除（2026-10-07）**：DSH 执行型智能体与 Agent 工作台整体删除（代码 + `dsh_task` 表） |
 
 ---
 
@@ -212,7 +221,12 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 
 ---
 
-### 模块 7　测试计划与执行 ✅（管理闭环核心）
+### 模块 7　测试计划与执行　**已删除（2026-10-07）写入口面**
+> 本节描述的写入口面（计划编排、计划内用例管理、手工执行）已在平台简化批次中删除，
+> 仅保留只读 API（`GET /test_plan`、`GET /test_plan/{id}`、`GET /test_plan/{id}/stats`、
+> `GET /test_plan/{id}/executions`）与历史执行数据作为统计底座；前端 `/testplan` 重定向到 `/testcase`。
+> 以下为历史实现记录。
+
 **目标**：组织用例成计划、逐条执行、沉淀执行记录与统计。
 **7.1 计划管理**
 | 操作 | 接口 |
@@ -234,13 +248,20 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 | 执行记录（分页） | `GET /test_plan/{id}/executions` |
 | 计划统计 | `GET /test_plan/{id}/stats` |
 - 执行结果状态：**pass / fail / skip / block**；记录 actual_result、notes、executor、executed_at。
-- **ELK 联动**：执行记录自动提取 `trace_id` 并生成 `kibana_link`（便于排障）。
+- **ELK 联动（已删除 2026-10-07）**：原实现为执行记录自动提取 `trace_id` 并生成 `kibana_link`；
+  集成配置（ELK）删除后该联动已摘除。
 - 统计 `PlanStats`：total / pending / pass / fail / skip / block。
 **现状与局限**：执行为手工逐条；无批量执行、无执行指派/分配、无关联自动化用例自动回填结果。
 
 ---
 
-### 模块 8　测试报告 ✅
+### 模块 8　测试报告　**已删除（2026-10-07）**
+> 报告中心（含质量追溯 Tab）已整体删除：`api/v1/report.py`、`trace.py`、`report_service.py`、
+> `report_aggregator.py`、前端 `pages/report` 与模型 `test_report` / `report_template`
+> 均已移除（需求覆盖率 `coverage_report.py` 属保留面）；执行结论改由用例、版本验收任务与缺陷承接
+> （质量门禁配置抽到 `quality_gate_service` 保留）。
+> 以下为历史实现记录。
+
 **目标**：基于测试计划生成执行结果快照报告。
 **功能点**
 | 操作 | 接口 |
@@ -266,7 +287,7 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 - 字段：name、plan_id（绑定计划）、cron_expression（**后端校验合法性**）、enabled、next_run、last_run。
 - 运行记录：status、result、error_message、started/finished_at。
 - 引擎：APScheduler，应用启动随生命周期初始化。
-**现状与局限**：失败无重试/无告警通知；执行动作受限于计划本身能力。
+**现状与局限**：失败无重试；告警通知随通知配置模块删除（2026-10-07）不再适用；执行动作受限于计划本身能力。
 
 ---
 
@@ -281,7 +302,7 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 - 字段：defect_id（自动编号）、title、description、severity(**P0/P1/P2/P3**)、status(默认 **open**)、case_id、execution_id、assignee、external_id、external_url、creator、resolved_at。
 - 内建状态机：`open → confirmed → fixing → pending_review → closed`，支持合法的 `rejected` 与 reopen；每次流转记录前后状态、操作人、备注与时间。
 - 关联：可挂到具体用例与执行记录；提供评论、附件上传/下载/删除和深链详情。
-**现状与局限**：内建流转与本地评论/附件已实现，但批量破坏性操作的原子性、全角色权限和外部 Jira/TAPD 真实双向链仍未完成生产级验收。
+**现状与局限**：内建流转与本地评论/附件已实现，但批量破坏性操作的原子性和全角色权限仍未完成生产级验收；外部 Jira/TAPD 双向同步随集成配置模块删除（2026-10-07）不再适用。
 
 ---
 
@@ -321,7 +342,10 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 
 ---
 
-### 模块 13　音视频专项 🟡（真实样本链，验收待完整）
+### 模块 13　音视频专项　**已删除（2026-10-07）**
+> 音视频专项已整体删除：`api/v1/av_check.py`、`ffmpeg_service.py`、前端 `/special` 页面与相关模型均已移除。
+> 以下为历史实现记录。
+
 **目标**：对流地址做音视频质量检测。
 **功能点**
 | 操作 | 接口 |
@@ -350,7 +374,7 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 | 缺陷状态 defect.status | open / confirmed / fixing / pending_review / closed / rejected（closed/rejected 可 reopen 至 open） |
 | 角色数据范围 data_scope | global / project / self |
 | 权限点类型 permission.type | menu / button / api |
-| 音视频协议 protocol | HLS / FLV / WebRTC / DASH / HTTP / HTTPS |
+| 音视频协议 protocol（已删除 2026-10-07） | HLS / FLV / WebRTC / DASH / HTTP / HTTPS |
 | 浏览器 browser | chromium / firefox / webkit |
 | 需求解析类型 parsed_type | requirement / test_cases |
 | 需求项类型 | functional / ui / data / integration |
@@ -360,13 +384,15 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 ## 5. 现状总结与改进基线
 
 ### 5.1 已有的本地真实链
-需求/资产 → 用例库 → 测试计划 → 执行 → 报告/缺陷/追溯的本地链存在，RBAC、多项目和审计也有真实实现。API 测试是后端 httpx 真实执行，UI Runner 是真实 Playwright 子进程，音视频已有真实媒体样本指标链。这些结论仅限具体已执行的 R1/本地证据。
+需求/资产 → 用例库 → 执行（接口 httpx / UI Playwright / 版本验收任务）→ 缺陷的本地链存在，RBAC、多项目和审计也有真实实现。
+API 测试是后端 httpx 真实执行，UI Runner 是真实 Playwright 子进程。测试计划写入口面、报告中心、质量追溯、
+音视频专项等原链路已删除（2026-10-07）。这些结论仅限具体已执行的 R1/本地证据。
 
 ### 5.2 生产级结论与边界
-Batch 60 最终结论是 `NEEDS WORK`，production 发布是 `DEFERRED`。平台本地 Runner 成功不是体育业务 E2E；OpenAPI 导入成功不是 Test5 六服务契约回归；脚本可收集、历史截图、892 个资产或 1323 条候选用例也不是本轮通过数。真实 LLM/蓝湖/通知/集成/真机/旧 PostgreSQL 快照缺授权输入时必须保持 `BLOCKED` 或 fail closed。
+Batch 60 最终结论是 `NEEDS WORK`，production 发布是 `DEFERRED`。平台本地 Runner 成功不是体育业务 E2E；OpenAPI 导入成功不是 Test5 六服务契约回归；脚本可收集、历史截图、892 个资产或 1323 条候选用例也不是本轮通过数。真实 LLM/蓝湖/旧 PostgreSQL 快照缺授权输入时必须保持 `BLOCKED` 或 fail closed（通知/集成模块已删除，不再作为阻塞项）。
 
 ### 5.3 Batch 61 事实源对应的待闭环项
-1. 统一 API/UI/发布包/集成等执行入口的目标环境、请求性质、生产拒绝与审计语义。
+1. 统一 API/UI/发布包等执行入口的目标环境、请求性质、生产拒绝与审计语义。
 2. 完成全模块 A→B→A 项目隔离和 admin/tester/viewer 能力矩阵，补破坏性操作、强制改密、无障碍与响应式证据。
 3. 将运行时数据库、备份、Playwright 结果/报告和原始流量产物排除在版本库外，已跟踪产物需在明确授权后单独移除。
 4. 取得当前 Test5 六服务契约、最小权限账号、稳定数据和清理授权后，才能单独签发体育 API/UI R2 结论。
@@ -380,6 +406,8 @@ Batch 60 最终结论是 `NEEDS WORK`，production 发布是 `DEFERRED`。平台
 ## 6. Batch 167 能力增补（版本级三类型覆盖主链路 Phase 0–3）
 
 > 状态：已落地（本分支），生产走查待真实版本数据（见 C167-2）。
+> **平台简化批次（2026-10-07）提示**：本节涉及的测试计划写入口面（含 `execute-all`/`auto_ui`）与报告侧出口
+> 已随简化批次删除，本节保留为历史增补记录；版本覆盖矩阵、需求源适配、接口真实绑定等发布包相关能力仍保留。
 
 - **版本覆盖矩阵（Phase 0）**：`GET /release-bundles/{id}/coverage` 按模块 × 功能/接口/UI × 执行状态计算覆盖。口径：模块被覆盖 = 三类用例同时存在；执行覆盖 = API 与 UI 均已执行；分母 = 版本全部模块，60% 门禁，P0/P1 单独统计。
 - **需求源适配（Phase 1）**：`/requirements/upload` 新增 `source_url`（generic HTML / PingCode / Confluence），token 走环境变量、缺凭据 fail closed；`GET /requirements/{id}/extraction-quality` 透出 分块/截断/降级 状态；大文档自动分块提取合并。

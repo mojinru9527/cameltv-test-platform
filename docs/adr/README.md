@@ -29,16 +29,22 @@ related: ["template.md", "0001-use-python-fastapi-monostack.md", "../document-st
 | [0015](0015-operations-release-control-plane.md) | 采用统一运维发布控制面交付测试平台 | ✅ 已采纳 | 2026-07 |
 | [0016](0016-three-repository-separation.md) | 测试平台三仓分离（前端 / 后端 / 运维平台） | ✅ 已采纳 | 2026-08 |
 | [0017](0017-test5-runner-network-isolation.md) | Test5 验收执行器网络隔离（WSL/容器） | ✅ 已采纳 | 2026-08 |
-| [0018](0018-dsh-harness-integration.md) | 接入 DeepSeek Harness（dsh）执行型智能体能力 | ✅ 已采纳 | 2026-08 |
+| [0018](0018-dsh-harness-integration.md) | 接入 DeepSeek Harness（dsh）执行型智能体能力 | ❌ 已被平台简化批次取代（2026-10-07） | 2026-08 |
 | [0019](0019-task-queue-and-soft-delete-conventions.md) | 认领式任务队列统一与删除语义唯一约定 | ✅ 已采纳 | 2026-08 |
 | [0020](0020-os-level-sandbox-deployment-assessment.md) | OS 级沙箱（seccomp/nsjail）部署层评估结论 | ✅ 已采纳 | 2026-08 |
-| [0021](0021-aitde-v3-1-unified-execution.md) | AITDE V3.1 统一执行 + Proof Replay（确定性结论、无 AI 裁决） | ✅ 已采纳 | 2026-08 |
+| [0021](0021-aitde-v3-1-unified-execution.md) | AITDE V3.1 统一执行 + Proof Replay（确定性结论、无 AI 裁决） | ❌ 已被平台简化批次取代（2026-10-07） | 2026-08 |
 | [0026](0026-production-execution-resource-ownership.md) | 生产执行资源归属、持久队列与完整版本回滚 | ✅ 已采纳（生产待验收） | 2026-09 |
 | [0027](0027-ai-local-first-gateway.md) | 本地优先 AI Gateway 与精确响应缓存 | ✅ 已采纳（Phase 1） | 2026-09 |
 | [0028](0028-local-ai-runtime-shadow-mode.md) | 独立本地 AI Runtime 与 Shadow Mode | ✅ 已采纳（Phase 2） | 2026-09 |
 | [0029](0029-local-first-routing-fallback.md) | 本地优先路由与云端失败兜底 | ✅ 已采纳（Phase 3） | 2026-09 |
 | [0030](0030-image-split-build-cache.md) | AI 镜像拆分与 BuildKit 缓存 | ✅ 已采纳（Phase 4） | 2026-09 |
-| [0031](0031-ai-rag-python-dependency-layers.md) | AI/RAG Python 依赖分层 | ✅ 已采纳 | 2026-09 |
+| [0031](0031-ai-rag-python-dependency-layers.md) | AI/RAG Python 依赖分层 | ❌ 已被平台简化批次取代（2026-10-07） | 2026-09 |
+
+> **平台简化批次（2026-10-07）取代的 ADR**：除上表标注的 0018 / 0021 / 0031 外，未列入本索引的
+> [0009](0009-knowledge-center-agent-continuous-learning.md)（知识中心与 Agent 持续学习）与
+> [0022](0022-ai-chain-reality-gate.md)（AI 全链路 Reality Gate）同样被本次批次取代。
+> 取代原因是相关能力被整体删除（代码 + 数据库表），不是被后续 ADR 替代；
+> 删除清单见 [平台全面简化设计](../platform-refactor/11-platform-simplification-design.md)。
 
 ## ADR 状态
 

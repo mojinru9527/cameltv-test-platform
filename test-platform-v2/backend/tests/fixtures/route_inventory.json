@@ -1,5 +1,5 @@
 {
-  "count": 322,
+  "count": 323,
   "routes": [
     {
       "path": "/api/v1/ai-config/cache",
@@ -1267,6 +1267,10 @@
     },
     {
       "path": "/api/v1/wiki/search",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/wiki/sync/availability",
       "method": "GET"
     },
     {

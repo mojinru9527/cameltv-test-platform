@@ -231,79 +231,8 @@ export async function syncDefect(taskId: number, defectId: number): Promise<{ sy
 }
 
 
-export interface OperationsMetrics {
-  regression_person_days: number
-  regression_person_days_recorded: boolean
-  cycle_avg_days: number
-  missed_defects: number
-  weekly_active: number
-  released_count: number
-  total_tasks: number
-}
-
-export async function getOperationsMetrics(): Promise<OperationsMetrics> {
-  return (await v1.get('/metrics/operations')) as unknown as OperationsMetrics
-}
-
 export async function compareVersions(versionA: string, versionB: string): Promise<{ a: Record<string, unknown>; b: Record<string, unknown> }> {
   const p2 = new URLSearchParams({ version_a: versionA, version_b: versionB })
   return (await v1.get(`/version-tasks/compare?${p2.toString()}`)) as unknown as { a: Record<string, unknown>; b: Record<string, unknown> }
 }
 
-
-export interface Onboarding {
-  id: number
-  name: string
-  service_key: string
-  version: string
-  requirement_text: string
-  status: string
-  step: number
-  version_task_id: number | null
-  api_spec_url: string
-  base_url: string
-  baseline: string
-}
-
-export interface OnboardingServiceReadiness {
-  status: 'ready' | 'unknown' | 'blocked'
-  message: string
-  managed_by: 'platform' | 'project_admin'
-  provider?: { id: number; name: string; model: string } | null
-  online_count?: number
-}
-
-export interface OnboardingReadiness {
-  project_id: number
-  checked_at: string
-  baseline_ready: boolean
-  durable_ready: boolean
-  services: {
-    ai_provider: OnboardingServiceReadiness
-    temporal: OnboardingServiceReadiness
-    runtime_worker: OnboardingServiceReadiness
-  }
-}
-
-export async function createOnboarding(body: {
-  name: string
-  service_key: string
-  version: string
-  requirement_text: string
-  api_spec_url: string
-  base_url: string
-}): Promise<Onboarding> {
-  return (await v1.post('/onboarding/businesses', body)) as unknown as Onboarding
-}
-
-export async function listOnboardings(signal?: AbortSignal): Promise<Onboarding[]> {
-  return (await v1.get('/onboarding/businesses', { signal })) as unknown as Onboarding[]
-}
-
-export async function getOnboardingReadiness(signal?: AbortSignal): Promise<OnboardingReadiness> {
-  return (await v1.get('/onboarding/readiness', { signal })) as unknown as OnboardingReadiness
-}
-
-export async function advanceOnboarding(id: number, step: number): Promise<Onboarding> {
-  return (await v1.post(`/onboarding/businesses/${id}/steps/${step}`)) as unknown as Onboarding
-}

@@ -1,5 +1,8 @@
 # DSH 测试 Agent 框架设计
 
+> ⚠️ **本能力已在平台简化批次（2026-10-07）整体删除**（代码 + 数据库表）。本文保留为历史设计记录；
+> 当前有效事实源见 [docs/platform-refactor/11-platform-simplification-design.md](../../docs/platform-refactor/11-platform-simplification-design.md)。
+
 > 版本：v1.1 | 日期：2026-08-17 | 状态：三阶段已落地（评审确认 2026-08-17）
 > 执行器：DeepSeek Harness（feature/dsh-test-agent-framework）
 > 关联：ADR-0009（知识中心）、ADR-0010（向量检索）、docs/agent-team/dsh-agent-teams.md（船长手册）、RAG知识图谱与Agent持续学习能力落地执行文档.md（M0-M4 路线图）

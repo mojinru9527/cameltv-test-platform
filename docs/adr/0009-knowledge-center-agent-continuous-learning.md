@@ -1,8 +1,8 @@
 ---
 title: "ADR-0009: 知识中心与 Agent 持续学习子系统（治理优先，分阶段落地）"
 owner: "tech-lead"
-last_reviewed: "2026-07-09"
-status: "active"
+last_reviewed: "2026-10-07"
+status: "superseded"
 tags: ["adr", "knowledge", "rag", "agent", "governance"]
 related: ["README.md", "0002-sqlite-with-postgresql-upgrade-path.md", "0007-deepseek-llm-test-case-generation.md"]
 ---
@@ -10,6 +10,14 @@ related: ["README.md", "0002-sqlite-with-postgresql-upgrade-path.md", "0007-deep
 # ADR-0009: 引入知识中心与 Agent 持续学习子系统（治理优先，M0→M6 分阶段）
 
 ## 状态
+
+**已被平台简化批次（2026-10-07）取代。** 本 ADR 决策的「知识图谱（实体/关系）+ AI 产物审核台 +
+Agent 编排/持续学习（M2-M6）」随平台简化整体删除（代码 + 数据库表：`knowledge_entity` / `knowledge_relation` /
+`ai_artifact` / `agent_run` 等），知识中心只保留「项目知识」检索面（知识源/切片/检索/Wiki 页面核心）。
+原文保留为历史记录。当前有效事实源见
+[平台全面简化设计：删除清单与实施](../platform-refactor/11-platform-simplification-design.md)。
+
+## 状态（历史）
 
 已采纳（M0+M1 已落地；M2-M6 规划中）
 

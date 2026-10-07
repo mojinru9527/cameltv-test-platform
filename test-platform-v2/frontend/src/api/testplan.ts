@@ -18,79 +18,7 @@ export async function fetchPlan(id: number, signal?: AbortSignal) {
   return api.get(`/test-plans/${id}`)
 }
 
-export async function createPlan(body: Record<string, unknown>) {
-  return api.post('/test-plans', body)
-}
-
-export async function updatePlan(id: number, body: Record<string, unknown>) {
-  return api.put(`/test-plans/${id}`, body)
-}
-
-export async function deletePlan(id: number) {
-  return api.delete(`/test-plans/${id}`)
-}
-
-// ── Cases ──
-
-export async function addCasesToPlan(planId: number, caseIds: number[]) {
-  return api.post(`/test-plans/${planId}/cases`, { case_ids: caseIds })
-}
-
-export async function removeCasesFromPlan(planId: number, caseIds: number[]) {
-  return api.delete(`/test-plans/${planId}/cases`, { data: { case_ids: caseIds } })
-}
-
 // ── Execution ──
-
-// ── Triage ──
-
-export interface TriageClassified {
-  execution_id: number
-  case_id: number
-  case_title: string
-  case_type: string
-  priority: string
-  category: 'bug' | 'flaky_env' | 'case_defect' | 'known_issue'
-  confidence: number
-  explanation: string
-  suggested_action: string
-  notes: string
-  result_data: Record<string, unknown>
-  executed_at: string
-}
-
-export interface TriageResult {
-  plan_id: number
-  total_failures: number
-  classified: TriageClassified[]
-  summary: Record<string, number>
-  analysis_method: 'llm' | 'rule_only'
-}
-
-export async function triagePlanFailures(planId: number): Promise<TriageResult> {
-  // P1-7：后端 /triage 默认只跑规则引擎（不再隐式触发 LLM）。用户在界面上点
-  // 「开始分诊」是一次明确动作，故这里显式传 use_llm=true；该调用同时受平台级
-  // AI 额度与频率限制（ai_guard）约束。
-  return api.post(`/test-plans/${planId}/triage`, null, { params: { use_llm: true } })
-}
-
-export interface TriageDefectDraft {
-  title: string
-  description: string
-  severity: string
-  priority: string
-  execution_id: number
-}
-
-export async function triageDraftDefect(planId: number, executionId: number): Promise<TriageDefectDraft> {
-  return api.post(`/test-plans/${planId}/triage/${executionId}/draft-defect`)
-}
-
-// ── Execution ──
-
-export async function executeCase(planId: number, pcaseId: number, body: { status: string; actual_result?: string; notes?: string }) {
-  return api.post(`/test-plans/${planId}/cases/${pcaseId}/execute`, body)
-}
 
 export async function fetchExecutions(planId: number, pcaseId?: number, signal?: AbortSignal) {
   return api.get(`/test-plans/${planId}/executions`, {
@@ -98,21 +26,3 @@ export async function fetchExecutions(planId: number, pcaseId?: number, signal?:
     ...(signal ? { signal } : {}),
   })
 }
-
-// ── Batch execution ──
-
-export async function executeAllCases(planId: number, environmentId?: number, autoUi: boolean = true, uiEnvironmentId?: number, asyncMode: boolean = true) {
-  return api.post(`/test-plans/${planId}/execute-all`, {
-    environment_id: environmentId || null,
-    auto_ui: autoUi,
-    ui_environment_id: uiEnvironmentId || null,
-    async_mode: asyncMode,
-  })
-}
-
-export async function autoExecutePlan(planId: number, environmentId?: number) {
-  return api.post(`/test-plans/${planId}/auto-execute`, { environment_id: environmentId || null })
-}
-
-
-

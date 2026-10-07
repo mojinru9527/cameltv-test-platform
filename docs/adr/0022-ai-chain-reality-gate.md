@@ -2,8 +2,8 @@
 title: "ADR-0022: AI 全链路 Reality Gate"
 owner: "qa-team"
 created: "2026-09-02"
-last_reviewed: "2026-09-02"
-status: "accepted"
+last_reviewed: "2026-10-07"
+status: "superseded"
 expires: "2027-09-02"
 tags: ["adr", "aitde", "ai", "intelligence", "trust"]
 related: ["0021-aitde-v3-1-unified-execution.md", "0023-ai-chain-c-conditions.md"]
@@ -12,6 +12,15 @@ related: ["0021-aitde-v3-1-unified-execution.md", "0023-ai-chain-c-conditions.md
 # ADR-0022 — AI 全链路 Reality Gate（Batch 207）
 
 > Status: Accepted (2026-09-02) | Owner: qa-team | Tags: aitde, ai, intelligence, trust
+
+## 状态
+
+**已被平台简化批次（2026-10-07）取代。** 本 ADR 的 D1-D12 全部落在 AITDE 评审链
+（`app/modules/aitde/intelligence/`、ActionPlanner、Oracle binding、AI 溯源/歧义/闭环）上，
+该链路随平台简化整体删除（代码 + 数据库表），因此「AI 全链路 Reality Gate」的决策对象已不存在；
+平台保留的 AI 能力（需求 → AI 生成用例、AI 配置中心、蓝湖证据采集）改由平台直连 LLM + ai_guard 守卫。
+原文保留为历史记录。当前有效事实源见
+[平台全面简化设计：删除清单与实施](../platform-refactor/11-platform-simplification-design.md)。
 
 ## 背景
 

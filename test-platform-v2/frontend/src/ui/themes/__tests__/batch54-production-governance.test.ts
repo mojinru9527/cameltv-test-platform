@@ -8,7 +8,7 @@ const rawColorAllowlist = new Set([
   // Theme swatches and data visualisations need stable categorical palettes; product surfaces also expose text/table data.
   'hooks/use-chart-colors.ts',
   'lib/themes.ts',
-  'pages/knowledge/components/GraphTab.tsx',
+  // 平台简化批次：知识图谱 Tab（pages/knowledge/components/GraphTab.tsx）已删除
   // Obsidian-only visual shells are intentionally isolated behind the theme adapter.
   'ui/components/MetricStrip.tsx',
   'ui/patterns/ObsidianListPage.tsx',

@@ -1,7 +1,7 @@
 ---
 title: "测试平台 v2 改进任务 Backlog"
 owner: "qa-team"
-last_reviewed: "2026-07-30"
+last_reviewed: "2026-10-07"
 status: "active"
 expires: "2026-12-26"
 tags: ["backlog", "改进任务", "开发任务", "issue"]
@@ -17,6 +17,15 @@ related: ["test-platform-v2/docs/现状功能PRD.md", "test-platform-v2/docs/代
 > 说明：本工程未配置 issue tracker，故以本地 backlog 形式呈现；每条结构对齐标准 issue 模板，可直接复制到 GitHub Issues / Linear / 禅道。
 > 标记：**AFK**=可独立实现合并｜**HITL**=需人工决策/评审。优先级 T0>T1>T2>T3（P1 批次安全基线）; P0>P1>P2（原批次功能增强）。
 > 日期：2026-07-01（更新）
+
+> **平台简化批次（2026-10-07）作废说明**：以下切片指向的模块已随平台简化批次整体删除（代码 + 数据库表），
+> 相应待办**已随模块删除，不再适用**——S3b / S3c（Notify 部分）/ S3d / S3e、Epic S4、Epic S5、
+> S7d 与 S7e 中的报告中心 / 质量追溯 / 通知配置页、G2 中的 `av_check`、Epic T 的追溯矩阵、
+> Epic N（通知中心 N1–N4）、Epic R 的 R1 / R2 / R4、I3 的通知触发、Epic PERF-OPT（性能监控）、
+> Epic SPORT-INT 中的 Wiki 差异对比与知识图谱实体/关系。保留面（工作台 / 需求 / 用例 / 缺陷 / 接口测试 /
+> UI 自动化 / 目标环境 / 定时任务 / 版本发布包 / 版本验收任务 / 知识中心项目知识 / AI 配置 / 蓝湖证据 /
+> 系统管理）的条目不受影响。删除清单见
+> [docs/platform-refactor/11-platform-simplification-design.md](../../docs/platform-refactor/11-platform-simplification-design.md)。
 
 ---
 
@@ -197,6 +206,8 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 **预估工时**：3h
 
 ### S3b　Notify 路由权限　`AFK`　`T1`
+> **已随模块删除，不再适用（2026-10-07）**：通知配置（`api/v1/notify.py`、`notify_service.py`、通知渠道）
+> 已随平台简化批次整体删除，不再有 Notify 路由需要补权限。
 **What**：`notify.py` 所有端点增加 `require_permission` 依赖注入。
 **AC**
 - [ ] POST/PUT/DELETE 操作增加 `Depends(require_permission("notify:manage"))`
@@ -206,6 +217,7 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 **预估工时**：3h
 
 ### S3c　审计日志补全　`AFK`　`T1`
+> **部分不再适用（2026-10-07）**：`notify.py` 相关条目随通知模块删除作废；`token.py` 的审计补全仍适用。
 **What**：Token 和 Notify 模块的写操作增加审计日志。
 **AC**
 - [ ] `token.py` 的 POST/PUT/DELETE 增加 `write_audit` 调用
@@ -215,6 +227,7 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 **预估工时**：2h
 
 ### S3d　数据库迁移与权限种子　`AFK`　`T1`
+> **部分不再适用（2026-10-07）**：`notify:list` / `notify:manage` 随通知模块删除取消，仅保留 `token:list` / `token:manage`。
 **What**：新增权限码注册到 permission 表，现有 admin 角色自动获得新权限。
 **AC**
 - [ ] Alembic 迁移脚本：`permission` 表插入 `token:list`、`token:manage`、`notify:list`、`notify:manage`
@@ -224,6 +237,7 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 **预估工时**：2h
 
 ### S3e　前端权限常量同步　`AFK`　`T1`
+> **部分不再适用（2026-10-07）**：通知配置页面已删除，`notify:list` / `notify:manage` 无需同步；Token 管理部分仍适用。
 **What**：前端权限类型定义和常量同步新增权限码。
 **AC**
 - [ ] 前端权限常量/类型定义文件增加 `token:list`、`token:manage`、`notify:list`、`notify:manage`
@@ -235,6 +249,9 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 ---
 
 ## Epic S4　fire-and-forget 任务修复（P1-4）　`AFK`　`T1`
+
+> **已随模块删除，不再适用（2026-10-07）**：`notify_service.py` 与整条通知链路已随平台简化批次删除，
+> `defect.py` 中的 `notify(...)` 调用也已摘除（失败自动链路只留「转缺陷」），本 Epic 三条切片不再实施。
 
 **What**：将所有 `asyncio.create_task` fire-and-forget 调用替换为 FastAPI BackgroundTasks，消除任务丢失和 DB session 生命周期问题。
 **模块**：backend
@@ -271,6 +288,10 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 ---
 
 ## Epic S5　SMTP TLS 证书验证（P1-3）　`AFK`　`T2`
+
+> **已随模块删除，不再适用（2026-10-07）**：原目标文件 `notify_service.py::_sync_send_email` 已删除；
+> 平台仅保留 env 级 SMTP 密码重置邮件（`services/mail_service.py::send_password_reset_email`，无配置页）。
+> 如仍需邮件 TLS 加固，请针对 `mail_service.py` 另开条目。
 
 **What**：`_sync_send_email` 函数增加 SSL 证书验证，消除 SMTP MITM 攻击面。
 **模块**：backend
@@ -391,18 +412,20 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 **预估工时**：3h
 
 ### S7d　页面替换（批次一：核心页面 5 个）　`AFK`　`T3`
+> **范围已收缩（2026-10-07）**：报告中心（`report`）页面已随模块删除，从本项范围移除；其余 4 个页面仍适用。
 **What**：用 `useApi` + `AsyncState` 替换核心页面手动状态管理。
 **AC**
-- [ ] 逐个替换：工作台 (`workbench`)、用例管理 (`testcase`)、测试计划 (`testplan`)、需求管理 (`requirement`)、报告中心 (`report`)
+- [ ] 逐个替换：工作台 (`workbench`)、用例管理 (`testcase`)、测试计划 (`testplan`)、需求管理 (`requirement`)、~~报告中心 (`report`)~~（已删除，2026-10-07）
 - [ ] 每个页面替换后功能回归通过（列表加载/筛选/分页/CRUD）
 - [ ] 验证 Loading 态、Empty 态、Error 态均正确展示
 **Blocked by**：S7c
 **预估工时**：8h
 
 ### S7e　页面替换（批次二：其余页面 7 个）　`AFK`　`T3`
+> **范围已收缩（2026-10-07）**：质量追溯（`trace`）与通知配置页面已随模块删除，从本项范围移除。
 **What**：剩余页面统一迁移。
 **AC**
-- [ ] 逐个替换：缺陷管理 (`defect`)、项目管理 (`project`)、系统管理 (`system`)、定时任务 (`schedule`)、质量追溯 (`trace`)、脑图视图 (`mindmap`)、通知配置 (新增)
+- [ ] 逐个替换：缺陷管理 (`defect`)、项目管理 (`project`)、系统管理 (`system`)、定时任务 (`schedule`)、~~质量追溯 (`trace`)~~、脑图视图 (`mindmap`)、~~通知配置 (新增)~~（两项已删除，2026-10-07）
 - [ ] 每个页面替换后功能回归通过
 - [ ] 全平台无残留的页面级手动 loading/error 状态管理
 **Blocked by**：S7c
@@ -492,7 +515,7 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 **What**：抽取通用分页器与列表查询基类，把循环内逐条 `db.get(User)` 改为批量 `in_()`。
 **AC**
 - [ ] 新增 `paginate()` 工具与 `BaseService.list_paginated()`
-- [ ] defect/av_check/ui_test/test_plan 列表改用批量取关联人，消除 N+1
+- [ ] defect/ui_test/test_plan 列表改用批量取关联人，消除 N+1（`av_check` 已随音视频专项删除，2026-10-07 从范围移除）
 - [ ] 至少 4 处列表接口改造完成，行为不变（回归通过）
 **Blocked by**：None
 
@@ -523,15 +546,20 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 
 ## Epic T　追溯矩阵（改进项 ①）
 
+> **部分不再适用（2026-10-07）**：质量追溯（`/trace`、`trace.py`）随报告中心一并删除，
+> 项目级 `GET /trace/matrix` 与 T2 可视化页作废；需求维度的覆盖率接口保留在需求侧
+> （`GET /requirements/{id}/coverage`）。
+
 ### T1　需求覆盖率聚合接口　`AFK`　`P0`
 **What**：以需求为维度聚合「关联用例数 / 已执行 / 通过 / 失败 / 关联缺陷 / 覆盖率%」。
 **AC**
-- [ ] 新增 `GET /requirement/{id}/coverage` 与项目级 `GET /trace/matrix`
+- [ ] 新增 `GET /requirement/{id}/coverage`（保留面）与 ~~项目级 `GET /trace/matrix`~~（已随质量追溯删除，2026-10-07）
 - [ ] 正确聚合 requirement↔testcase↔execution↔defect 关系
 - [ ] 含分页与项目隔离
 **Blocked by**：None（数据模型已具备）
 
 ### T2　追溯矩阵可视化页　`AFK`　`P1`
+> **已随模块删除，不再适用（2026-10-07）**：质量追溯页（`/trace`）随报告中心（含质量追溯 Tab）整体删除。
 **What**：质量追溯页，需求×覆盖指标矩阵 + 下钻到用例/缺陷。
 **AC**
 - [ ] 新增 `/trace` 路由与菜单项
@@ -569,6 +597,10 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 
 ## Epic N　通知中心（改进项 ③）
 
+> **已随模块删除，不再适用（2026-10-07）**：通知配置 / 渠道 / 事件订阅体系（`notify.py`、`notify_service.py`、
+> `notification` 模型、前端通知配置页）已随平台简化批次整体删除，N1–N4 全部作废；
+> 平台只保留 env 级 SMTP 密码重置邮件（见 Epic S5 说明）。
+
 ### N1　通知事件与渠道方案　`HITL`　`P1`
 **What**：定义可通知事件清单与渠道优先级、消息模板。
 **AC**
@@ -602,6 +634,11 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 ---
 
 ## Epic R　报告增强（改进项 ④）
+
+> **大部分已随模块删除（2026-10-07）**：报告中心（`report.py` / `report_service.py` / `test_report`、
+> `report_template`、前端 `pages/report`）整体删除，R1（报告导出）、R2（多计划趋势）、R4（报告模板）
+> **不再适用**；R3 的质量门禁配置保留在 `quality_gate_service`（项目质量门禁 API），
+> 原「报告生成时计算门禁并标红/绿」出口不再适用。
 
 ### R1　报告导出 PDF/Excel　`✅ DONE`　`P1`
 **What**：报告详情一键导出 PDF 与 Excel。
@@ -705,6 +742,8 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 **交付**：PR #11，2026-07-02 — 补全 `GET /open/runs/{run_id}` 端点，Token 鉴权+项目隔离
 
 ### I3　结果回写与报告生成　`AFK`　`P1`
+> **部分不再适用（2026-10-07）**：回写结果与更新 `plan_case.last_status` 仍适用；
+> 「终态自动触发通知（plan_done）」与报告生成随通知/报告模块删除作废。
 **What**：外部执行结果回写平台并自动生成报告 + 通知。
 **AC**
 - [x] `POST /open/results` 回写结果 ✅ (PR #11)
@@ -791,6 +830,9 @@ graph LR
 
 ## Epic PERF-OPT　性能采集功能优化（Batch 99 真机验收标记，C99-1）
 
+> **已随模块删除，不再适用（2026-10-07）**：性能监控（SoloX 真机采集）模块已随平台简化批次整体删除，
+> P1–P4 优化项不再排期；本节保留为历史登记记录。
+
 > **标记**：2026-08-06 Batch 99 真机验收（安卓双视频场景各 10 分钟）后由用户明确要求登记。
 > 性能采集链路已可用且数据真实，但存在以下需要优化的点，供后续批次排期。
 
@@ -809,6 +851,9 @@ graph LR
 
 > **标记**：2026-08-06 Batch 102 体育平台功能梳理过程中发现（用户要求「平台使用较少或测试使用有障碍的地方都标记一下，后续一一迭代」）。
 > 关联交付：`docs/体育平台-功能模块地图.md`、`work-logs/batch-102-sports-functional-mapping-*`。
+> **平台简化批次（2026-10-07）影响**：B2 备注中的知识图谱实体/关系、B6 的 Wiki 差异对比与外部连接器
+> 已随知识中心收敛删除（`WIKI_DIFF_ENABLED` / `WIKI_AUTO_INGEST` 等开关已无生效链路），相应目标不再适用；
+> B1/B3/B5/B7/B8/B10 与 B9 的 `/knowledge/capture`（知识中心项目知识）属保留面。
 
 | # | 障碍 | 实测证据（Batch 102） | 目标 | 优先级 |
 |---|------|---------------------|------|:----:|
@@ -911,6 +956,9 @@ graph LR
   N2-->I3
 ```
 
+> **平台简化批次（2026-10-07）提示**：图中 N（通知中心）、R（报告增强）、T2（追溯矩阵）以及
+> S3b/S4/S5 相关节点已随模块删除作废，节点保留仅用于呈现历史依赖关系。
+
 ---
 
 ## 建议交付节奏
@@ -936,6 +984,10 @@ graph LR
 - 前端 1 人（全职 6 周，覆盖 S7~S8 + S1/S2/S3 前端部分，约 57h）
 
 ### 交付日志
+
+> 本节为历史交付记录，按当时事实保留。其中音视频专项（批次五）、测试数据集与多项目数据集参数化（批次七）、
+> Jira/TAPD 外部集成（批次八）、通知中心（批次二）、报告增强与追溯矩阵（批次二/批次 F）等交付物
+> 已在 2026-10-07 平台简化批次中删除。
 
 | 日期 | 批次 | 内容 | PR/Commit | 状态 |
 |------|------|------|-----------|------|
@@ -970,8 +1022,10 @@ graph LR
 ### 批次四（V2.3 HITL 补齐）：✅ 已完成 — C3 评审流 + C5 脑图 + I1 CI 协议 + R3 质量门禁。
 
 ### 下一步推进 (V2.6+)
-- **近期**：OPS0 release manifest/runbook、微服务拆分、AI 失败根因分析
-- **中期**：OPS1/OPS2 不可变 test 发布与控制面、多集群支持、自定义报告模板引擎
+> **平台简化批次（2026-10-07）提示**：原「自定义报告模板引擎」「AI 失败根因分析（AITDE 方向）」随模块删除作废；
+> OPS 系列仍走 `deploy/release-control` 独立项目（与已删除的 `/operations-release` 页面无关）。
+- **近期**：OPS0 release manifest/runbook、微服务拆分
+- **中期**：OPS1/OPS2 不可变 test 发布与控制面、多集群支持
 - **长期**：OPS3 production 同 digest 晋级（基础设施就绪后）、测试平台 SaaS 化、多租户架构
 
 ---
