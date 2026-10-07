@@ -52,8 +52,10 @@ class DeployComposeTests(unittest.TestCase):
         self.assertEqual(runner['build']['target'], 'runner')
         self.assertEqual(api['environment']['WORKER_EXECUTION_ENABLED'], 'false')
         self.assertEqual(runner['environment']['WORKER_EXECUTION_ENABLED'], 'true')
-        self.assertEqual(api['command'][0], 'uvicorn')
-        self.assertIsNone(runner.get('command'))  # Image default performs migrations first.
+        # 平台简化批次：compose 不再覆盖启动命令，两个角色都用镜像默认 CMD
+        # （先 alembic upgrade head 再起服务），避免命令在两处漂移。
+        self.assertIsNone(api.get('command'))
+        self.assertIsNone(runner.get('command'))
         self.assertNotIn('ports', runner)
 
     def test_ai_runs_in_platform_process(self):

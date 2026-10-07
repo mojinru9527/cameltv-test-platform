@@ -98,37 +98,28 @@ const pcThemeModes: readonly ThemeContext[] = [
 ]
 
 const desktopRoutes: RouteExpectation[] = [
-  { path: '/', expectedPath: '/workbench', heading: '工作台', navLabel: '工作台' },
+  { path: '/', expectedPath: '/workbench', heading: '我的待办', navLabel: '工作台' },
   { path: '/my-projects', heading: '我的项目' },
-  { path: '/organizations', heading: '组织管理' },
-  { path: '/workbench', heading: '工作台', navLabel: '工作台' },
-  { path: '/trace', heading: '质量追溯', navLabel: '质量追溯' },
+  // (平台简化批次) '/organizations'（组织管理）已删除，改用保留的版本验收任务补齐主链路
+  { path: '/version-tasks', heading: '版本验收任务' },
+  { path: '/workbench', heading: '我的待办', navLabel: '工作台' },
   { path: '/requirement', heading: '需求文档', navLabel: '需求文档' },
   { path: '/testcase', heading: '用例服务', navLabel: '用例服务' },
-  { path: '/testplan', heading: '测试计划', navLabel: '测试计划' },
-  { path: '/mindmap', heading: '脑图视图', navLabel: '用例脑图' },
+  // (batch-212) 旧测试计划独立入口已删除；URL 不 404，重定向到用例服务
+  { path: '/testplan', expectedPath: '/testcase', heading: '用例服务' },
   { path: '/apitest', heading: '接口测试', navLabel: '接口测试' },
   { path: '/uitest', heading: 'UI 测试', navLabel: 'UI 自动化' },
   // (batch-165) 专项测试已隐藏：不再进入路由验收矩阵
   { path: '/schedule', heading: '定时任务', navLabel: '定时任务' },
   { path: '/defect', heading: '缺陷管理', navLabel: '缺陷管理' },
-  { path: '/report', heading: '报告中心', navLabel: '报告中心' },
   { path: '/system', heading: '系统管理', navLabel: '系统管理' },
-  { path: '/project', heading: '项目管理', navLabel: '项目管理' },
-  { path: '/notify', heading: '通知配置' },
   { path: '/environment', heading: '环境与变量管理' },
-  { path: '/dataset', heading: '测试数据集', navLabel: '测试数据集' },
-  { path: '/integration', heading: '集成配置', navLabel: '集成配置' },
+  // (平台简化批次) '/trace'、'/report'、'/notify'、'/dataset'、'/integration'、'/project'、
+  // '/playground'、'/agent-workbench'、'/theme-lab'、'/version-mission' 已删除或退役，
+  // 不再进入路由矩阵；同类覆盖由保留的 AI 配置 / 蓝湖证据包 / 版本发布包承担。
+  { path: '/ai-config', heading: 'AI 配置（AITDE 大模型）' },
   { path: '/knowledge', heading: '知识中心', navLabel: '知识中心' },
-  { path: '/playground', heading: 'Playground' },
-  {
-    path: '/version-mission',
-    expectedPath: '/release-bundles',
-    heading: '版本发布包',
-  },
-  { path: '/release-bundles', heading: '版本发布包', navLabel: '版本测试任务' },
-  { path: '/agent-workbench', heading: 'Agent 工作台', navLabel: 'Agent 工作台' },
-  // (batch-165) 性能监控已隐藏：不再进入路由验收矩阵
+  { path: '/release-bundles', heading: '版本发布包', navLabel: '版本发布包' },
   { path: '/lanhu-evidence', heading: '蓝湖证据包' },
   {
     path: '/operations-release',
@@ -142,22 +133,17 @@ const desktopRoutes: RouteExpectation[] = [
       blocker: '发布控制存储未配置；页面保持只读并呈现受控未启用状态',
     },
   },
-  {
-    path: '/theme-lab',
-    mainId: 'theme-lab-workspace',
-  },
-  { path: '/batch56-route-not-found', heading: '页面建设中' },
+  { path: '/batch56-route-not-found', heading: '页面不存在' },
 ]
 
 const mobileRoutePaths = new Set([
   '/workbench',
   '/requirement',
   '/testcase',
-  '/testplan',
   '/apitest',
   '/uitest',
+  '/version-tasks',
   '/defect',
-  '/report',
   '/system',
   '/environment',
   '/knowledge',
@@ -528,9 +514,10 @@ function dynamicRoutes(fixtures: DynamicFixtures): RouteExpectation[] {
   return [
     requirementRoute,
     {
+      // (batch-212) 旧测试计划详情入口已删除：URL 不外抛 404，重定向到用例服务
       path: `/testplan/${fixtures.testPlanId}`,
-      heading: fixtures.testPlanName,
-      navLabel: '测试计划',
+      expectedPath: '/testcase',
+      heading: '用例服务',
     },
     {
       path: `/release-bundles/${fixtures.releaseBundleId}`,

@@ -11,9 +11,9 @@ const SURFACES = [
   { path: '/login', heading: 'CamelTv 测试平台', authenticated: false },
   { path: '/apitest', heading: '接口测试', authenticated: true },
   { path: '/uitest', heading: 'UI 测试', authenticated: true },
-  { path: '/report', heading: '报告中心', authenticated: true },
+  // 平台简化批次：报告中心 / 通知配置已删除，改用保留的核心页面覆盖键盘与 axe 基线
+  { path: '/defect', heading: '缺陷管理', authenticated: true },
   { path: '/schedule', heading: '定时任务', authenticated: true },
-  { path: '/notify', heading: '通知配置', authenticated: true },
   { path: '/release-bundles', heading: '版本发布包', authenticated: true },
 ] as const
 
@@ -34,22 +34,10 @@ function responseFor(path: string) {
   if (path === '/ui-tests') return EMPTY_PAGE
   if (path === '/ui-tests/scripts') return { available_specs: [] }
   if (path === '/environments') return []
-  if (path === '/reports') return EMPTY_PAGE
-  if (path === '/reports/trends') {
-    return {
-      points: [],
-      summary: {
-        total_reports: 0,
-        avg_pass_rate: 0,
-        best_pass_rate: 0,
-        worst_pass_rate: 0,
-        latest_open_defects: 0,
-      },
-    }
-  }
+  // 平台简化批次：/reports* 与 /notify/channels 随报告中心/通知配置删除，mock 分支一并移除
   if (path === '/schedules') return EMPTY_PAGE
   if (path === '/test-plans') return EMPTY_PAGE
-  if (path === '/notify/channels') return []
+  if (path === '/defects') return EMPTY_PAGE
   if (path === '/release-bundles') return { ...EMPTY_PAGE, page_size: 200 }
   return []
 }

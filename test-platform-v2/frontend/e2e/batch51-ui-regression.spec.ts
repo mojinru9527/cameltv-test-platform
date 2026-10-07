@@ -7,7 +7,6 @@ type PageSpec = {
   id: string
   path: string
   heading: string
-  ownsTheme?: boolean
 }
 
 type RuntimeSignals = {
@@ -27,22 +26,19 @@ const CORE_PAGES: PageSpec[] = [
   { id: 'defect', path: '/defect', heading: '缺陷管理' },
   { id: 'testcase', path: '/testcase', heading: '用例服务' },
   // (batch-212) '/testplan' 已重定向 /testcase
-  { id: 'report', path: '/report', heading: '报告中心' },
-  { id: 'trace', path: '/trace', heading: '质量追溯' },
+  // (平台简化批次) '/report'（报告中心）已删除 → 定时任务；'/trace'（质量追溯）已删除 → AI 配置
+  { id: 'schedule', path: '/schedule', heading: '定时任务' },
+  { id: 'ai-config', path: '/ai-config', heading: 'AI 配置（AITDE 大模型）' },
   { id: 'requirement', path: '/requirement', heading: '需求文档' },
 ]
 
 const SCREENSHOT_PAGES: PageSpec[] = [
-  { id: 'workbench', path: '/workbench', heading: '工作台' },
-  { id: 'trace', path: '/trace', heading: '质量追溯' },
+  { id: 'workbench', path: '/workbench', heading: '我的待办' },
+  // (平台简化批次) '/trace' 已删除 → 缺陷管理；'/theme-lab'（主题实验室）已删除 → 定时任务
+  { id: 'defect', path: '/defect', heading: '缺陷管理' },
   { id: 'testcase', path: '/testcase', heading: '用例服务' },
   { id: 'environment', path: '/environment', heading: '环境与变量管理' },
-  {
-    id: 'theme-lab',
-    path: '/theme-lab',
-    heading: '把测试从页面集合，变成一条可操作的质量链。',
-    ownsTheme: true,
-  },
+  { id: 'schedule', path: '/schedule', heading: '定时任务' },
 ]
 
 const EMPTY_PAGE = { total: 0, page: 1, page_size: 20, items: [] }
@@ -50,11 +46,12 @@ const EMPTY_PAGE = { total: 0, page: 1, page_size: 20, items: [] }
 const API_RESPONSES: Record<string, unknown> = {
   '/system/menus': [
     { id: 1, code: 'menu:workbench', name: '工作台', path: '/workbench', icon: 'DashboardOutlined', sort: 1 },
-    { id: 2, code: 'menu:trace', name: '质量追溯', path: '/trace', icon: 'NodeIndexOutlined', sort: 2 },
+    // (平台简化批次) menu:trace / menu:report 已随页面删除，改用保留菜单项
+    { id: 2, code: 'menu:schedule', name: '定时任务', path: '/schedule', icon: 'ClockCircleOutlined', sort: 2 },
     { id: 3, code: 'menu:requirement', name: '需求文档', path: '/requirement', icon: 'FileTextOutlined', sort: 3 },
     { id: 4, code: 'menu:testcase', name: '用例服务', path: '/testcase', icon: 'ProfileOutlined', sort: 4 },
     // (batch-212) menu:testplan 已下架
-    { id: 6, code: 'menu:report', name: '报告中心', path: '/report', icon: 'BarChartOutlined', sort: 6 },
+    { id: 6, code: 'menu:defect', name: '缺陷管理', path: '/defect', icon: 'BugOutlined', sort: 6 },
   ],
   '/environments': [],
   '/defects': EMPTY_PAGE,
@@ -62,32 +59,9 @@ const API_RESPONSES: Record<string, unknown> = {
   '/test-cases': EMPTY_PAGE,
   '/test-cases/domains': [],
   '/test-plans': EMPTY_PAGE,
-  '/reports': EMPTY_PAGE,
-  '/reports/trends': {
-    points: [],
-    summary: {
-      total_reports: 0,
-      avg_pass_rate: 0,
-      best_pass_rate: 0,
-      worst_pass_rate: 0,
-      latest_open_defects: 0,
-    },
-  },
-  '/trace/coverage': {
-    total_cases: 0,
-    cases_in_plans: 0,
-    cases_executed: 0,
-    cases_passed: 0,
-    cases_with_defects: 0,
-    by_type: {},
-    by_domain: {},
-    coverage_rate: 0,
-    execution_rate: 0,
-    pass_rate: 0,
-    requirement_count: 0,
-    requirements_with_cases: 0,
-    requirement_coverage_rate: 0,
-  },
+  '/schedules': EMPTY_PAGE,
+  '/ai-config/providers': [],
+  '/ai-config/resolve': { configured: false },
   '/requirements': { ...EMPTY_PAGE, page_size: 10 },
   '/lanhu-evidence/jobs': { ...EMPTY_PAGE, page_size: 50 },
   '/dashboard/stats': {
@@ -164,9 +138,7 @@ async function openStablePage(page: Page, spec: PageSpec) {
   const heading = page.getByRole('heading', { level: 1, name: spec.heading, exact: true })
   await expect(heading).toHaveCount(1)
   await expect(heading).toBeVisible()
-  if (!spec.ownsTheme) {
-    await expect(page.locator('html')).toHaveAttribute('data-ui-theme', 'obsidian-flow')
-  }
+  await expect(page.locator('html')).toHaveAttribute('data-ui-theme', 'obsidian-flow')
   await page.waitForLoadState('networkidle')
 }
 

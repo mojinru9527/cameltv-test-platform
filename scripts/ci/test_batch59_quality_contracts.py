@@ -144,13 +144,14 @@ class BackendImageGateContractTests(unittest.TestCase):
 
         self.assertIn("--require-hashes", step)
         self.assertIn("--dry-run", step)
+        # 平台简化批次：ai-gateway 层删除后，锁文件由三份收敛为两份。
         for lock in (
             "requirements.api.lock",
-            "requirements.ai.lock",
             "requirements.runner.lock",
         ):
             with self.subTest(lock=lock):
                 self.assertIn(lock, step)
+        self.assertNotIn("requirements.ai.lock", step)
         self.assertNotIn("continue-on-error", step)
         self.assertNotRegex(step, r"\|\|\s*(?:true|echo)")
 

@@ -23,13 +23,16 @@ const PAGES = [
   // (batch-212) '/testplan' 已重定向 /testcase，独立页不再断言
   { path: '/requirement', title: '需求管理' },
   { path: '/apitest', title: 'API 测试' },
-  { path: '/report', title: '测试报告' },
+  // (平台简化批次) '/report'（报告中心）已删除，改用保留的版本验收任务覆盖主链路
+  { path: '/version-tasks', title: '版本验收任务' },
   { path: '/defect', title: '缺陷管理' },
-  { path: '/trace', title: '链路追踪' },
+  // (平台简化批次) '/trace'（质量追溯）已删除，改用保留的 AI 配置页
+  { path: '/ai-config', title: 'AI 配置' },
   { path: '/knowledge', title: '知识中心' },
   { path: '/environment', title: '环境配置' },
   { path: '/schedule', title: '定时任务' },
-  { path: '/project', title: '项目管理' },
+  // (平台简化批次) '/project' 入口已退役（重定向 /my-projects），直接断言真实页面
+  { path: '/my-projects', title: '我的项目' },
   { path: '/system', title: '系统管理' },
 ]
 
@@ -96,10 +99,12 @@ test.describe('Smoke: Knowledge center tabs', () => {
     await expect(page).toHaveURL(/\/workbench/, { timeout: 15_000 })
   })
 
-  test('all 5 knowledge tabs are present', async ({ page }) => {
+  test('all retained knowledge tabs are present', async ({ page }) => {
     await page.goto('/knowledge')
 
-    const tabs = ['概览', '检索', '知识源', 'AI 审核台', '图谱']
+    // 平台简化批次：AI 审核台 / 图谱 / 实体 / 迭代 / 知识差异对比 / Skills / 平台研发
+    // 已随知识 AI 子能力删除；维护者可见的保留页签如下。
+    const tabs = ['概览', '检索', '知识源', '项目知识', '影响面', 'Wiki 知识库']
     for (const tab of tabs) {
       await expect(page.locator(`button:has-text("${tab}")`)).toBeVisible({ timeout: 5_000 })
     }

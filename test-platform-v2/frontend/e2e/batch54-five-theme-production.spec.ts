@@ -9,9 +9,10 @@ const VIEWPORTS = [
   { id: 'desktop', width: 1440, height: 900, hasTouch: false },
 ] as const
 const SURFACES = [
-  { path: '/workbench', heading: '工作台' },
+  { path: '/workbench', heading: '我的待办' },
   { path: '/testcase', heading: '用例服务' },
-  { path: '/integration', heading: '集成配置' },
+  // (平台简化批次) '/integration'（集成配置）已删除，改用保留的缺陷管理覆盖生产主题门禁
+  { path: '/defect', heading: '缺陷管理' },
   { path: '/knowledge?tab=graph', heading: '知识中心' },
 ] as const
 
@@ -91,7 +92,8 @@ async function installProductionFixture(page: Page, theme: string, mode: string)
       return ok(route, [
         { id: 1, code: 'menu:workbench', name: '工作台', path: '/workbench', icon: 'DashboardOutlined', sort: 1 },
         { id: 2, code: 'menu:testcase', name: '用例服务', path: '/testcase', icon: 'ProfileOutlined', sort: 2 },
-        { id: 3, code: 'menu:integration', name: '集成配置', path: '/integration', icon: 'ApiOutlined', sort: 3 },
+        // (平台简化批次) menu:integration 已随页面删除，改用保留的缺陷管理菜单
+        { id: 3, code: 'menu:defect', name: '缺陷管理', path: '/defect', icon: 'BugOutlined', sort: 3 },
         { id: 4, code: 'menu:knowledge', name: '知识中心', path: '/knowledge', icon: 'BookOutlined', sort: 4 },
       ])
     }
@@ -106,7 +108,11 @@ async function installProductionFixture(page: Page, theme: string, mode: string)
       const start = (pageNumber - 1) * pageSize
       return ok(route, { total: TEST_CASES.length, page: pageNumber, page_size: pageSize, items: TEST_CASES.slice(start, start + pageSize) })
     }
-    if (apiPath === '/integrations') return ok(route, { items: [], total: 0 })
+    // (平台简化批次) '/integrations' 接口已删除，改为缺陷管理所需的列表与统计
+    if (apiPath === '/defects') {
+      return ok(route, { total: 0, page: 1, page_size: 20, items: [] })
+    }
+    if (apiPath === '/defects/stats') return ok(route, { total: 0, by_severity: {}, by_status: {} })
     if (apiPath === '/requirements') return ok(route, { items: [], total: 0, page: 1, page_size: 20 })
     if (apiPath === '/knowledge/graph/view') {
       return ok(route, {
@@ -182,52 +188,8 @@ for (const theme of THEMES) {
             await assertSurface(page, surface.heading, viewport.hasTouch)
           }
 
-          await page.goto('/theme-lab')
-          await page.waitForLoadState('networkidle')
-          expect(runtimeErrors, 'Theme Lab 运行时错误').toEqual([])
-          await expect(page.locator('#theme-lab-workspace')).toBeVisible()
-          await expect(page.locator('.theme-lab')).toHaveAttribute('data-theme', theme)
-          if (viewport.hasTouch) {
-            const undersizedLabTargets = await page.locator(
-              '.theme-lab button:visible, .theme-lab input:visible, .theme-lab select:visible, .theme-lab [role="tab"]:visible',
-            ).evaluateAll((elements) => elements
-              .filter((element) => !element.hasAttribute('disabled'))
-              .map((element) => {
-                const rect = element.getBoundingClientRect()
-                return { label: element.getAttribute('aria-label') || element.textContent?.trim(), width: Math.round(rect.width), height: Math.round(rect.height) }
-              })
-              .filter((target) => target.width < 44 || target.height < 44))
-            expect(undersizedLabTargets, 'Theme Lab 触控目标小于 44×44px').toEqual([])
-          }
-          const labOverflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
-          const overflowSources = labOverflow > 1
-            ? await page.locator('body *').evaluateAll((elements) => elements.flatMap((element) => {
-                const rect = element.getBoundingClientRect()
-                return rect.right > document.documentElement.clientWidth + 1 || rect.left < -1
-                  ? [{ tag: element.tagName, className: element.className, left: Math.round(rect.left), right: Math.round(rect.right), width: Math.round(rect.width) }]
-                  : []
-              }).slice(0, 12))
-            : []
-          const layoutDiagnostics = labOverflow > 1
-            ? await page.locator('.lab-workspace, .overview-layout, .run-table-panel, .data-table-wrap').evaluateAll((elements) => elements.map((element) => {
-                const rect = element.getBoundingClientRect()
-                return {
-                  className: element.className,
-                  left: Math.round(rect.left),
-                  right: Math.round(rect.right),
-                  width: Math.round(rect.width),
-                  clientWidth: element.clientWidth,
-                  scrollWidth: element.scrollWidth,
-                  overflowX: getComputedStyle(element).overflowX,
-                }
-              }))
-            : []
-          expect(labOverflow, `Theme Lab 页面级横向溢出: ${JSON.stringify({ overflowSources, layoutDiagnostics })}`).toBeLessThanOrEqual(1)
-          const labAxe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
-          expect(labAxe.violations.map(({ id, nodes }) => ({
-            id,
-            targets: nodes.map((node) => ({ target: node.target, detail: node.any[0]?.data })),
-          })), 'Theme Lab WCAG A/AA 违规').toEqual([])
+          // (平台简化批次) '/theme-lab'（主题实验室）已删除：其触摸目标/溢出/axe 门禁
+          // 由上面保留表面循环的 assertSurface 覆盖，此处只保留运行时零错误断言。
           expect(runtimeErrors, '运行时错误').toEqual([])
         } finally {
           await closeContext(context)
@@ -258,18 +220,20 @@ for (const theme of THEMES) {
       await page.getByRole('button', { name: '下一页' }).click()
       await expect(tableRegion.getByText('Batch 54 生产用例 021')).toBeVisible()
 
-      await page.goto('/theme-lab')
-      const runTrigger = page.getByRole('button', { name: '启动回归' })
-      await runTrigger.focus()
+      // (平台简化批次) '/theme-lab'（主题实验室）已删除：键盘打开破坏性确认、
+      // 焦点囚禁与 Escape 归还焦点的不变式改由保留的用例服务页覆盖。
+      const deleteTrigger = page.getByRole('button', {
+        name: `删除用例：${TEST_CASES[20].title}`,
+      })
+      await deleteTrigger.focus()
       await page.keyboard.press('Enter')
-      const dialog = page.getByRole('dialog', { name: '启动回归确认' })
-      await expect(dialog).toBeVisible()
-      expect(await dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true)
+      const confirmDialog = page.getByRole('alertdialog')
+      await expect(confirmDialog).toBeVisible()
+      await expect(confirmDialog).toContainText('确定删除？')
+      expect(await confirmDialog.evaluate((element) => element.contains(document.activeElement))).toBe(true)
       await page.keyboard.press('Escape')
-      await expect(dialog).toBeHidden()
-      await expect(runTrigger).toBeFocused()
-      await expect(page.locator('.status-pill').filter({ hasText: '失败' }).first()).toBeVisible()
-      await expect(page.getByRole('img', { name: /当前回归批次进度/ })).toBeVisible()
+      await expect(confirmDialog).toBeHidden()
+      await expect(deleteTrigger).toBeFocused()
     } finally {
       await closeContext(context)
     }

@@ -133,7 +133,7 @@ jobs:
           # linux-only transitives (secretstorage / jeepney / uvloop) and made
           # the api and ai-gateway images unbuildable. A full-resolution dry-run
           # on linux is the cheapest guard for that defect class.
-          for lock in requirements.api.lock requirements.ai.lock requirements.runner.lock; do
+          for lock in requirements.api.lock requirements.runner.lock; do
             echo "::group::resolve $lock"
             python -m pip install --dry-run --quiet --require-hashes --ignore-installed -r "$lock"
             echo "::endgroup::"
@@ -273,3 +273,4 @@ jobs:
         if: ${{ needs.detect_changes.outputs.frontend == 'true' }}
         working-directory: test-platform-v2/frontend
         run: npm run lighthouse:a11y
+

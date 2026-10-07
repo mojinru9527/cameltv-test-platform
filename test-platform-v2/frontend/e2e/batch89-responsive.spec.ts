@@ -23,7 +23,8 @@ const PAGES = [
   { name: 'workbench', path: '/workbench' },
   { name: 'testcase', path: '/testcase' },
   // (batch-212) '/testplan' 已重定向 /testcase
-  { name: 'report', path: '/report' },
+  // 平台简化批次：报告中心已删除，改用版本验收任务覆盖响应式
+  { name: 'version-tasks', path: '/version-tasks' },
   { name: 'defect', path: '/defect' },
   { name: 'schedule', path: '/schedule' },
   { name: 'knowledge', path: '/knowledge' },

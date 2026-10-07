@@ -22,5 +22,9 @@ psycopg2-binary>=2.9
 pyyaml>=6.0
 pytest-cov>=5.0
 cryptography>=42.0
-temporalio>=1.32
 filelock>=3.32
+# 平台简化批次：ai-gateway 独立服务已删除，AI/嵌入在本进程内完成，
+# 因此原本只装在 ai 层的本地嵌入运行时必须进入 api 镜像，
+# 否则知识库 RAG 向量检索会在生产静默降级为仅关键词。
+fastembed>=0.3
+numpy>=1.26

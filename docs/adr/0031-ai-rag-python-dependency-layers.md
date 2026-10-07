@@ -1,8 +1,8 @@
 ---
 title: "ADR-0031: AI/RAG Python 依赖分层"
 owner: "tech-lead"
-last_reviewed: "2026-09-14"
-status: "active"
+last_reviewed: "2026-10-07"
+status: "superseded"
 expires: "2027-09-14"
 tags: ["adr", "docker", "dependencies", "fastembed", "onnx", "image-size"]
 related: ["0030-image-split-build-cache.md"]
@@ -11,6 +11,22 @@ related: ["0030-image-split-build-cache.md"]
 # ADR-0031: AI/RAG Python 依赖分层
 
 ## 状态
+
+**已被平台简化批次（2026-10-07）取代。** 原决策为「API / AI Gateway / Runner 三层依赖 + 三套 lock」；
+简化批次删除了 ai-gateway 独立服务（AI 改平台直连），因此：
+
+1. `requirements.api.lock` **现在包含** FastEmbed / ONNX Runtime / NumPy（本地嵌入随 API 进程交付，
+   否则知识库 RAG 向量检索会静默降级为仅关键词）；同时移除了已删除的 Temporal 运行时。
+2. `requirements.ai.lock` 与 `builder-ai` / `runtime-ai-base` 阶段**已删除**。
+3. `requirements.runner.lock` 由 `-r requirements.api.txt` + Playwright + rapidocr 生成
+   （与 `requirements.lock` 版本集合一致）。
+4. 三套 lock 收敛为**两套**；平台正确性守卫（Linux dry-run 解析 + `docker build --target api`）
+   仍由 required 后端 job 执行，只是锁定对象变为 `requirements.api.lock` 与 `requirements.runner.lock`。
+5. 原第 7/8 条关于 split 拓扑与 AI Gateway 健康门禁的决策随服务删除而失效。
+
+以下原文保留为历史记录。
+
+## 状态（历史）
 
 已采纳。Batch 240 将 API、AI Gateway、Runner 的 Python 依赖拆成独立 hash lock 与 Docker base；Batch 241 修复锁的平台解析缺陷并把 split 拓扑切为默认。
 

@@ -28,6 +28,20 @@ const TEST_CASES = Array.from({ length: 24 }, (_, index) => {
   }
 })
 
+// (平台简化批次) 集成配置页已删除，表单/破坏性操作契约改由保留的定时任务页承载
+const SCHEDULE_ITEM = {
+  id: 53,
+  name: 'Batch 53 定时回归',
+  job_type: 'plan',
+  plan_id: 53,
+  plan_name: 'Batch 53 回归计划',
+  cron_expression: '0 9 * * 1-5',
+  enabled: true,
+  environment_id: null,
+  last_run: null,
+  disabled_reason: '',
+}
+
 const DASHBOARD_STATS = {
   total_cases: 128,
   total_plans: 12,
@@ -136,8 +150,7 @@ async function installFixtures(
   options: {
     menuFailureOnce?: boolean
     dashboardFailureOnce?: boolean
-    integrationItem?: boolean
-    integrationCreate?: boolean
+    scheduleItem?: boolean
     slowTestcaseKeyword?: string
   } = {},
 ) {
@@ -167,29 +180,22 @@ async function installFixtures(
 
   let menuAttempts = 0
   let dashboardAttempts = 0
-  let integrationDeleted = false
-  let integrationCreated = false
+  let scheduleName = SCHEDULE_ITEM.name
+  let scheduleDeleted = false
+  let scheduleSaved = false
   await page.route('**/api/v1/**', async (route) => {
     const request = route.request()
     const url = new URL(request.url())
     const apiPath = url.pathname.replace(/^\/api\/v1/, '')
-    if (request.method() === 'DELETE' && apiPath === '/integrations/53') {
-      integrationDeleted = true
+    if (request.method() === 'DELETE' && apiPath === '/schedules/53') {
+      scheduleDeleted = true
       return ok(route, { deleted: true })
     }
-    if (request.method() === 'POST' && apiPath === '/integrations' && options.integrationCreate) {
-      integrationCreated = true
-      await new Promise((resolve) => setTimeout(resolve, 250))
-      return ok(route, {
-        id: 54,
-        name: 'Batch 53 新建集成',
-        provider_type: 'jira',
-        base_url: 'https://jira.example.invalid',
-        auth_json: '{}',
-        sync_direction: 'bidirectional',
-        sync_interval_minutes: 0,
-        enabled: true,
-      })
+    if (request.method() === 'PUT' && apiPath === '/schedules/53') {
+      scheduleSaved = true
+      scheduleName = 'Batch 53 更新调度'
+      await new Promise((resolve) => setTimeout(resolve, 400))
+      return ok(route, { ...SCHEDULE_ITEM, name: scheduleName })
     }
     if (request.method() !== 'GET') return route.abort('blockedbyclient')
     if (apiPath === '/system/menus') {
@@ -374,32 +380,16 @@ async function installFixtures(
         }],
       })
     }
-    if (apiPath === '/integrations') {
-      const items = options.integrationItem && !integrationDeleted
-        ? [{
-            id: 53,
-            name: 'Batch 53 Jira',
-            provider_type: 'jira',
-            base_url: 'https://jira.example.invalid',
-            auth_json: '{}',
-            sync_direction: 'bidirectional',
-            sync_interval_minutes: 0,
-            enabled: true,
-          }]
-        : integrationCreated
-          ? [{
-              id: 54,
-              name: 'Batch 53 新建集成',
-              provider_type: 'jira',
-              base_url: 'https://jira.example.invalid',
-              auth_json: '{}',
-              sync_direction: 'bidirectional',
-              sync_interval_minutes: 0,
-              enabled: true,
-            }]
-          : []
-      return ok(route, { items, total: items.length })
+    if (apiPath === '/schedules') {
+      const items = (options.scheduleItem || scheduleSaved) && !scheduleDeleted
+        ? [{ ...SCHEDULE_ITEM, name: scheduleName }]
+        : []
+      return ok(route, { total: items.length, page: 1, page_size: 20, items })
     }
+    if (apiPath === '/test-plans') {
+      return ok(route, { total: 0, page: 1, page_size: 200, items: [] })
+    }
+    if (apiPath === '/environments') return ok(route, [])
     if (apiPath === '/requirements') {
       return ok(route, { total: 0, page: 1, page_size: 20, items: [] })
     }
@@ -625,63 +615,61 @@ test.describe('Batch 53 populated Obsidian production contract', () => {
     await expect(error).toHaveCount(0)
   })
 
-  test('integration form exposes inline errors and focuses the first invalid field', async ({
+  test('schedule form exposes inline errors and focuses the first invalid field', async ({
     page,
   }) => {
     await installFixtures(page)
     await page.setViewportSize(VIEWPORTS[0])
-    await openPage(page, '/integration', '集成配置')
-    await page.getByRole('button', { name: '新建集成' }).click()
-    await page.getByRole('button', { name: '创建', exact: true }).click()
+    await openPage(page, '/schedule', '定时任务')
+    await page.getByRole('button', { name: '新建调度' }).click()
+    await page.getByRole('button', { name: '保存', exact: true }).click()
 
-    const name = page.getByLabel('名称 *')
-    const baseUrl = page.getByLabel('Base URL *')
+    const name = page.getByPlaceholder('如：每日回归测试')
+    const cron = page.getByPlaceholder('0 9 * * 1-5')
     await expect(name).toHaveAttribute('aria-invalid', 'true')
-    await expect(baseUrl).toHaveAttribute('aria-invalid', 'true')
-    await expect(page.getByText('名称不能为空', { exact: true })).toBeVisible()
-    await expect(page.getByText('Base URL 不能为空', { exact: true })).toBeVisible()
+    await expect(cron).toHaveAttribute('aria-invalid', 'true')
+    await expect(page.getByText('请输入名称', { exact: true })).toBeVisible()
+    await expect(page.getByText('请输入 Cron 表达式', { exact: true })).toBeVisible()
     await expect(name).toBeFocused()
   })
 
-  test('valid integration submit is single-shot, disabled while saving and refreshes the card', async ({ page }) => {
-    await installFixtures(page, { integrationCreate: true })
-    const createRequests: string[] = []
+  test('valid schedule save is single-shot, disabled while saving and refreshes the list', async ({ page }) => {
+    await installFixtures(page, { scheduleItem: true })
+    const saveRequests: string[] = []
     page.on('request', (request) => {
-      if (request.method() === 'POST' && request.url().endsWith('/api/v1/integrations')) {
-        createRequests.push(request.url())
+      if (request.method() === 'PUT' && request.url().endsWith('/api/v1/schedules/53')) {
+        saveRequests.push(request.url())
       }
     })
 
-    await openPage(page, '/integration', '集成配置')
-    await page.getByRole('button', { name: '新建集成' }).click()
-    await page.getByLabel('名称 *').fill('Batch 53 新建集成')
-    await page.getByLabel('Base URL *').fill('https://jira.example.invalid')
+    await openPage(page, '/schedule', '定时任务')
+    await page.getByRole('button', { name: '编辑', exact: true }).click()
+    await page.getByPlaceholder('如：每日回归测试').fill('Batch 53 更新调度')
 
-    const submit = page.getByRole('button', { name: '创建', exact: true })
+    const submit = page.getByRole('dialog').getByRole('button', { name: /^保存/ })
     await submit.click()
     await expect(submit).toBeDisabled()
-    await expect(page.getByText('Batch 53 新建集成', { exact: true })).toBeVisible()
-    expect(createRequests).toHaveLength(1)
+    await expect(page.getByText('Batch 53 更新调度', { exact: true })).toBeVisible()
+    expect(saveRequests).toHaveLength(1)
   })
 
-  test('destructive integration action requires an accessible in-product confirmation', async ({ page }) => {
-    await installFixtures(page, { integrationItem: true })
-    await openPage(page, '/integration', '集成配置')
+  test('destructive schedule action requires an accessible in-product confirmation', async ({ page }) => {
+    await installFixtures(page, { scheduleItem: true })
+    await openPage(page, '/schedule', '定时任务')
 
-    const deleteButton = page.getByRole('button', { name: '删除集成配置 Batch 53 Jira' })
+    const deleteButton = page.getByRole('button', { name: '删除', exact: true })
     await deleteButton.click()
     const dialog = page.getByRole('alertdialog')
     await expect(dialog).toBeVisible()
-    await expect(dialog).toContainText('删除集成配置')
-    await expect(dialog).toContainText('Batch 53 Jira')
+    await expect(dialog).toContainText('确定删除？')
 
     await dialog.getByRole('button', { name: '取消' }).click()
-    await expect(page.getByText('Batch 53 Jira')).toBeVisible()
+    await expect(page.getByText(SCHEDULE_ITEM.name)).toBeVisible()
     await expect(deleteButton).toBeFocused()
 
     await deleteButton.click()
-    await page.getByRole('alertdialog').getByRole('button', { name: '确认删除' }).click()
-    await expect(page.getByText('暂无集成配置')).toBeVisible()
+    await page.getByRole('alertdialog').getByRole('button', { name: '删除', exact: true }).click()
+    await expect(page.getByText('暂无定时任务')).toBeVisible()
   })
 
   test('professional graph workspaces adapt without clipping and expose text alternatives', async ({ page }) => {

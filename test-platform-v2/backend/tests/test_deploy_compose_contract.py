@@ -149,18 +149,23 @@ def test_backend_image_installs_locked_ui_lanhu_and_media_runtime() -> None:
     assert "python -m playwright install chromium" in dockerfile
     assert "playwright install --with-deps chromium" in dockerfile
     assert "PLAYWRIGHT_BROWSERS_PATH=/ms-playwright" in dockerfile
-    for stage in ('builder-runner', 'builder-api', 'builder-ai', 'provider', 'runtime-base', 'runtime-api-base', 'runtime-ai-base'):
+    for stage in ('builder-runner', 'builder-api', 'provider', 'runtime-base', 'runtime-api-base'):
         assert re.search(rf'^FROM python:3\.12-slim@sha256:[0-9a-f]{{64}} AS {stage}$',
                          dockerfile, re.MULTILINE)
     # Batch 242: the runner/combined stage installs its own lock, matching
-    # ADR-0031's three-lock layout instead of reusing requirements.lock.
+    # ADR-0031's lock layout instead of reusing requirements.lock.
+    # 平台简化批次：ai-gateway 层已删除（嵌入依赖并入 api 层），锁文件由三份收敛为两份。
     assert (
         "COPY test-platform-v2/backend/requirements.runner.txt "
         "test-platform-v2/backend/requirements.runner.lock ./"
     ) in dockerfile
     assert "pip install --require-hashes -r requirements.runner.lock" in dockerfile
     assert "pip install --require-hashes -r requirements.api.lock" in dockerfile
-    assert "pip install --require-hashes -r requirements.ai.lock" in dockerfile
+    assert "requirements.ai.lock" not in dockerfile
+    # 本地嵌入运行时（fastembed）必须随 api 镜像交付，否则 RAG 向量检索静默降级。
+    assert "fastembed" in (
+        BACKEND_ROOT / "requirements.api.txt"
+    ).read_text(encoding="utf-8")
     assert "--mount=type=cache,target=/root/.cache/pip" in dockerfile
     assert (
         'pip install --no-cache-dir --no-deps --force-reinstall '
@@ -205,7 +210,8 @@ def test_backend_runtime_uses_non_root_user_and_writable_paths() -> None:
     assert dockerfile.index(chown) < dockerfile.index(runtime_user)
     assert dockerfile.index("npm ci") < dockerfile.index(runtime_user)
     assert dockerfile.index("lanhu_mcp_server.py") < dockerfile.index(runtime_user)
-    for base, target in (('runtime-base', 'runner'), ('runtime-api-base', 'api'), ('runtime-ai-base', 'ai-gateway')):
+    # 平台简化批次：ai-gateway 独立服务已删除，非 root 运行契约覆盖保留的两个运行目标。
+    for base, target in (('runtime-base', 'runner'), ('runtime-api-base', 'api')):
         stage = next(stage for stage in re.split(r'^FROM ', dockerfile, flags=re.MULTILINE)
                      if stage.startswith(f'{base} AS {target}\n'))
         assert [line.strip() for line in stage.splitlines()
