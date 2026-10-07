@@ -92,7 +92,7 @@ def get_test_summary(
     days: int = Query(7, ge=1, le=90, description="统计最近 N 天"),
 ):
     """获取项目 API 测试 + UI 自动化的全景摘要（含错误分类和趋势）。"""
-    from app.services.report_aggregator import get_aggregated_summary
+    from app.services.dashboard_summary import get_aggregated_summary
     summary = get_aggregated_summary(db, current.project_id or 0, days=days)
     return R.ok(summary)
 
