@@ -121,18 +121,8 @@ const desktopRoutes: RouteExpectation[] = [
   { path: '/knowledge', heading: '知识中心', navLabel: '知识中心' },
   { path: '/release-bundles', heading: '版本发布包', navLabel: '版本发布包' },
   { path: '/lanhu-evidence', heading: '蓝湖证据包' },
-  {
-    path: '/operations-release',
-    heading: '运维发布控制',
-    controlledUnavailable: {
-      method: 'GET',
-      pathname: '/api/v1/ops/deployments',
-      status: 503,
-      uiHeading: '当前环境未启用发布控制数据源',
-      uiDescription: '未配置不代表服务异常',
-      blocker: '发布控制存储未配置；页面保持只读并呈现受控未启用状态',
-    },
-  },
+  // 平台简化批次：'/operations-release' 从不是平台前端路由（运维发布控制是独立控制台
+  // deploy/release-console，无平台路由），原条目必然 404，故移除。
   { path: '/batch56-route-not-found', heading: '页面不存在' },
 ]
 

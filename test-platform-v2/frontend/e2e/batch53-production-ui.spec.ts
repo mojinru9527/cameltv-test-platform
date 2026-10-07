@@ -506,7 +506,7 @@ test.describe('Batch 53 populated Obsidian production contract', () => {
   }) => {
     await installFixtures(page)
     await page.setViewportSize(VIEWPORTS[0])
-    await openPage(page, '/workbench', '工作台')
+    await openPage(page, '/workbench', '我的待办')
     await expectNoGlobalOverflow(page)
 
     await expect(page.getByRole('figure', { name: '项目概览' })).toBeVisible()
@@ -536,7 +536,7 @@ test.describe('Batch 53 populated Obsidian production contract', () => {
     })
 
     await page.goto('/workbench')
-    await expect(page.getByRole('heading', { level: 1, name: '工作台' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: '我的待办' })).toBeVisible()
     await expect(page.locator('[aria-busy="true"][aria-label="加载中"]').first()).toBeVisible()
     const error = page.getByRole('alert')
     await expect(error).toContainText('统计服务暂时不可用')
@@ -583,7 +583,7 @@ test.describe('Batch 53 populated Obsidian production contract', () => {
   test('mobile navigation exposes current page and closes after route change', async ({ page }) => {
     await installFixtures(page)
     await page.setViewportSize(VIEWPORTS[0])
-    await openPage(page, '/workbench', '工作台')
+    await openPage(page, '/workbench', '我的待办')
 
     await page.getByRole('button', { name: 'Toggle Sidebar' }).click()
     const current = page.getByRole('button', { name: '工作台', exact: true })
@@ -605,7 +605,7 @@ test.describe('Batch 53 populated Obsidian production contract', () => {
   test('navigation load failure stays in context and can be retried', async ({ page }) => {
     await installFixtures(page, { menuFailureOnce: true })
     await page.setViewportSize(VIEWPORTS[0])
-    await openPage(page, '/workbench', '工作台')
+    await openPage(page, '/workbench', '我的待办')
     await page.getByRole('button', { name: 'Toggle Sidebar' }).click()
 
     const error = page.getByRole('alert')
@@ -621,7 +621,7 @@ test.describe('Batch 53 populated Obsidian production contract', () => {
     await installFixtures(page)
     await page.setViewportSize(VIEWPORTS[0])
     await openPage(page, '/schedule', '定时任务')
-    await page.getByRole('button', { name: '新建调度' }).click()
+    await page.getByRole('button', { name: '新建调度' }).first().click()
     await page.getByRole('button', { name: '保存', exact: true }).click()
 
     const name = page.getByPlaceholder('如：每日回归测试')
@@ -729,7 +729,7 @@ test.describe('Batch 53 populated Obsidian production contract', () => {
     await expect(page.getByRole('button', { name: `删除用例：${TEST_CASES[0].title}` })).toBeVisible()
 
     await page.setViewportSize({ width: 844, height: 390 })
-    await openPage(page, '/workbench', '工作台')
+    await openPage(page, '/workbench', '我的待办')
     await expectNoGlobalOverflow(page)
     await expect(page.getByRole('figure', { name: /项目概览/ })).toBeVisible()
   })
@@ -739,7 +739,7 @@ test.describe('Batch 53 populated Obsidian production contract', () => {
       await installFixtures(page)
       await page.setViewportSize(viewport)
       for (const [path, heading] of [
-        ['/workbench', '工作台'],
+        ['/workbench', '我的待办'],
         ['/testcase', '用例服务'],
       ] as const) {
         await openPage(page, path, heading)

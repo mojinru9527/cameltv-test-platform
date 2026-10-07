@@ -70,7 +70,7 @@ const RUN_STATUS_BADGE: Record<string, string> = {
 
 const scheduleSchema = z.object({
   name: z.string().min(1, '请输入名称'),
-  job_type: z.enum(['plan', 'report']).default('plan'),
+  job_type: z.enum(['plan']).default('plan'),
   plan_id: z.string({ required_error: '请选择计划' }).min(1, '请选择计划'),
   cron_expression: z.string().min(1, '请输入 Cron 表达式'),
   enabled: z.boolean().default(true),
@@ -145,7 +145,8 @@ export default function SchedulePage() {
     setEditing(row)
     form.reset({
       name: row.name || '',
-      job_type: row.job_type === 'report' ? 'report' : 'plan',
+      // 平台简化批次：报告调度已删除，历史 job_type=report 行编辑时归一到 plan
+      job_type: 'plan',
       plan_id: row.plan_id != null ? String(row.plan_id) : '',
       cron_expression: row.cron_expression || '',
       enabled: row.enabled ?? true,
@@ -473,24 +474,21 @@ export default function SchedulePage() {
               )}
             </div>
 
-            {/* Job type select（Batch 155 / P2-15） */}
+            {/* 平台简化批次：报告中心已删除，调度类型收敛为「定时执行计划」单一形态 */}
             <div>
               <label className="text-sm font-medium mb-1.5 block">调度类型</label>
               <Select
                 value={form.watch('job_type')}
-                onValueChange={(v) => form.setValue('job_type', v as 'plan' | 'report', { shouldValidate: true })}
+                onValueChange={(v) => form.setValue('job_type', v as 'plan', { shouldValidate: true })}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="plan">定时执行计划</SelectItem>
-                  <SelectItem value="report">定时生成报告</SelectItem>
                 </SelectContent>
               </Select>
-              {form.watch('job_type') === 'report' && (
-                <p className="text-xs text-muted-foreground mt-1">按计划维度定时生成测试报告并推送通知</p>
-              )}
+              <p className="text-xs text-muted-foreground mt-1">按 Cron 表达式定时触发测试计划执行</p>
             </div>
 
             {/* Plan select */}

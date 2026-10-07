@@ -34,7 +34,7 @@ test-platform-v2/
 | API 测试 | `/apitest` | 🟡 | OpenAPI/Swagger 预览与导入、httpx 真实执行、任务和快照、智能生成用例/泛化已实现；五入口一致性、生产保护、当前 Test5 六服务契约与业务回归仍待验收 |
 | UI 自动化 | `/uitest` | 🟡 | 本地 Runner 可启动真实 Playwright 并持久化结果/产物；这不等于 `tests/automation/ui/` 的体育 Test5/生产业务 E2E 已通过 |
 | 环境、AI 配置、蓝湖证据 | `/environment` `/ai-config` `/lanhu-evidence` | 🟡 / ⛔ | 环境变量链与项目级 AI 提供方池可用；蓝湖真实采集/OCR 取决于 Provider、登录态与外部页面授权 |
-| 运维发布控制 | `/operations-release`（只读） | 🟡 / ⛔ | 只读展示受控发布存储中的发布事实和事件；store 未配置时显示产品化未启用态，不提供发布、审批或回滚按钮 |
+| 运维发布控制 | **独立控制台**（无平台路由） | 🟡 / ⛔ | 发布事实与状态机在 `deploy/release-console/`（自带只读页面）；平台前端从未实现 `/operations-release` 路由（原文档条目为陈旧描述，平台简化批次已更正） |
 
 > (平台简化批次 2026-10-07) AITDE 智能测试任务、DSH 任务、报告中心、测试数据集、通知、集成、组织管理、主题实验室、音视频专项、性能监控、Playground 与知识图谱/AI 审核台已整体删除（代码 + 库表）；**测试计划仅保留只读 API 与历史表**（工作台/缺陷统计底座，写入口已删除）。评估与删除清单见
 > [../work-logs/platform-simplification-production-eval-20261007.md](../work-logs/platform-simplification-production-eval-20261007.md)、
@@ -155,9 +155,10 @@ API 测试资产导入支持 OpenAPI 3.x 与 Swagger 2.0 的 JSON/YAML 文本或
 
 ## 运维发布项目边界
 
-`deploy/release-control/` 是发布事实与状态机实现；测试平台通过 `/operations-release` 提供只读观察页。
-页面不会执行发布、审批或回滚。未配置 release-control store 时返回受控 503，并在 UI 说明配置条件，
-不得用空列表或模拟记录伪装为发布控制已启用。
+`deploy/release-console/` 是发布事实、状态机与执行器的实现，并自带只读控制台页面；
+**测试平台前端不提供 `/operations-release` 路由**（从未实现，平台简化批次更正了原描述）。
+发布控制台不会执行未经审批的发布、审批或回滚；未配置 release-control store 时返回受控 503，
+并在 UI 说明配置条件，不得用空列表或模拟记录伪装为发布控制已启用。
 
 ## 凭据管理
 
