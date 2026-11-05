@@ -38,7 +38,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install deps
-        run: python -m pip install --quiet pyyaml jsonschema pytest
+        run: python -m pip install --quiet pyyaml jsonschema pytest cryptography requests
 
       - name: Toolchain unit tests
         run: python -m pytest scripts/test-asset-map -q
