@@ -139,3 +139,17 @@ gh run download <run-id> -n asset-map-live   # 下载 runtime/ 证据
 ## 8. 与标准的关系
 
 本文件是 `docs/standards/test-asset-map-standard.md` §12「CI 接入」的凭据与 runner 细则；口径、阶段门禁、覆盖率定义仍以该标准为准。
+
+
+## 9. 断言规则覆盖现状（live 门禁口径）
+
+`live` 的 `--require-rules` 只要求**夹具里真实存在**的规则，避免"规则名写了但没实测"：
+
+| 规则 | 是否在 `fixtures/http-checks.json` | 说明 |
+|---|---|---|
+| R05 幂等 / R06 参数校验 / R08 空态接口 / R11 权限 / R15 上传 / R18 状态机 / R19 一致性 / R20 错误语义 / R24 导出 | ✅ | 共 13 条 check |
+| **R12 对象级越权（IDOR）** | ❌ **待补** | 需要"他人资源 ID"作为夹具；当前由人工用例覆盖（见 `work-logs/asset-map-20261106/`），补夹具后再纳入门禁 |
+| R01–R04 / R07 / R09–R10 / R13–R14 / R16–R17 / R21–R23 | — | web/chain 侧执行，不在 http 夹具内 |
+
+> 补 R12 的方式：在 `http-checks.json` 增加一条用 `${ASSET_MAP_OTHER_USER_RESOURCE_ID}` 的 check，
+> 并在 env.json 里带上该 ID（或用夹具链先造出他人资源）。

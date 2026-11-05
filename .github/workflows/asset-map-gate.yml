@@ -137,7 +137,7 @@ jobs:
         run: python scripts/test-asset-map/report_chains.py --summary runtime/chains/summary.csv --out runtime/chains/chain-report.md
 
       - name: Gate (real thresholds)
-        run: python scripts/test-asset-map/gate.py --summary docs/standards/project-adapters/out/futurewayu/summary.json --assertions runtime/http-assertions.csv --min-page-coverage 0.95 --max-unassigned 0.05 --min-assert-pass "${{ github.event.inputs.min_assert_pass }}" --require-rules R05,R06,R11,R12,R19,R20,R24 --out runtime/gate-report.json
+        run: python scripts/test-asset-map/gate.py --summary docs/standards/project-adapters/out/futurewayu/summary.json --assertions runtime/http-assertions.csv --min-page-coverage 0.95 --max-unassigned 0.05 --min-assert-pass "${{ github.event.inputs.min_assert_pass }}" --require-rules R05,R06,R08,R11,R15,R18,R19,R20,R24 --out runtime/gate-report.json
 
       - uses: actions/upload-artifact@v4
         if: always()
