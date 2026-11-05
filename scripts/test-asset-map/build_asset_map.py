@@ -183,6 +183,9 @@ def load_cases(adapter: dict, base: Path):
     if not cfg.get("path"):
         return []
     path = resolve(base, cfg["path"])
+    if not path.exists():
+        print(f"[warn] cases 基线缺失，按空基线继续: {path.name}")
+        return []
     data = json.loads(path.read_text(encoding="utf-8"))
     if isinstance(data, dict):
         fun = data.get("functional") or data.get("cases") or []
