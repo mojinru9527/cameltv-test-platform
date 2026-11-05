@@ -1,0 +1,85 @@
+﻿rule_id,page,assertion,status,metric,evidence
+R07,款,A07,PASS,overflow=0,
+R21,款,A21,FAIL,worst=3.43 low=25,"{""ratio"": 3.43, ""need"": 4.5, ""text"": ""全部"", ""size"": 14}"
+R22,款,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,组件,A07,PASS,overflow=0,
+R21,组件,A21,FAIL,worst=3.43 low=33,"{""ratio"": 3.43, ""need"": 4.5, ""text"": ""全部"", ""size"": 14}"
+R22,组件,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,系列,A07,PASS,overflow=0,
+R21,系列,A21,FAIL,worst=3.83 low=12,"{""ratio"": 3.83, ""need"": 4.5, ""text"": ""操作"", ""size"": 12}"
+R22,系列,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,店铺,A07,PASS,overflow=0,
+R21,店铺,A21,FAIL,worst=2.46 low=14,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""新增店铺"", ""size"": 14}"
+R22,店铺,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,门店设备,A07,PASS,overflow=0,
+R21,门店设备,A21,FAIL,worst=2.46 low=27,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""新增设备"", ""size"": 14}"
+R22,门店设备,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,订单,A07,PASS,overflow=0,
+R21,订单,A21,FAIL,worst=3.43 low=21,"{""ratio"": 3.43, ""need"": 4.5, ""text"": ""全部"", ""size"": 14}"
+R22,订单,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,导购业绩,A07,PASS,overflow=0,
+R21,导购业绩,A21,FAIL,worst=3.43 low=27,"{""ratio"": 3.43, ""need"": 4.5, ""text"": ""全部"", ""size"": 14}"
+R22,导购业绩,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,帖子,A07,PASS,overflow=0,
+R21,帖子,A21,FAIL,worst=3.43 low=29,"{""ratio"": 3.43, ""need"": 4.5, ""text"": ""全部"", ""size"": 14}"
+R22,帖子,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,板块,A07,PASS,overflow=0,
+R21,板块,A21,FAIL,worst=2.46 low=13,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""新增板块"", ""size"": 14}"
+R22,板块,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,轮播图,A07,PASS,overflow=0,
+R21,轮播图,A21,FAIL,worst=2.46 low=17,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""新增轮播图"", ""size"": 14}"
+R22,轮播图,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,小程序消息,A07,PASS,overflow=0,
+R21,小程序消息,A21,FAIL,worst=2.46 low=15,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""新增消息"", ""size"": 14}"
+R22,小程序消息,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,活动优惠,A07,PASS,overflow=0,
+R21,活动优惠,A21,FAIL,worst=2.46 low=20,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""新增活动"", ""size"": 14}"
+R22,活动优惠,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,身份卡,A07,PASS,overflow=0,
+R21,身份卡,A21,FAIL,worst=2.17 low=14,"{""ratio"": 2.17, ""need"": 4.5, ""text"": ""保存"", ""size"": 14}"
+R22,身份卡,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,操作日志,A07,PASS,overflow=0,
+R21,操作日志,A21,FAIL,worst=2.46 low=1,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""返回首页"", ""size"": 14}"
+R22,操作日志,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,AI 精修方案,A07,PASS,overflow=0,
+R21,AI 精修方案,A21,FAIL,worst=2.46 low=1,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""返回首页"", ""size"": 14}"
+R22,AI 精修方案,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,AI 模型流程,A07,PASS,overflow=0,
+R21,AI 模型流程,A21,FAIL,worst=2.46 low=1,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""返回首页"", ""size"": 14}"
+R22,AI 模型流程,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,/redirect,A07,PASS,overflow=0,
+R21,/redirect,A21,FAIL,worst=3.83 low=7,"{""ratio"": 3.83, ""need"": 4.5, ""text"": ""搜索或执行…"", ""size"": 13}"
+R22,/redirect,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,/redirect/:path(.*),A07,PASS,overflow=0,
+R21,/redirect/:path(.*),A21,FAIL,worst=2.46 low=1,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""返回首页"", ""size"": 14}"
+R22,/redirect/:path(.*),A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,/social-callback,A07,PASS,overflow=0,
+R21,/social-callback,A21,FAIL,worst=None low=0,
+R22,/social-callback,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,/login,A07,PASS,overflow=0,
+R21,/login,A21,FAIL,worst=3.83 low=16,"{""ratio"": 3.83, ""need"": 4.5, ""text"": ""每位导购的订单金额"", ""size"": 12}"
+R22,/login,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,/register,A07,PASS,overflow=0,
+R21,/register,A21,FAIL,worst=2.46 low=1,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""返回首页"", ""size"": 14}"
+R22,/register,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,/forgot-password,A07,PASS,overflow=0,
+R21,/forgot-password,A21,FAIL,worst=2.46 low=1,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""返回首页"", ""size"": 14}"
+R22,/forgot-password,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,/:pathMatch(.*)*,A07,PASS,overflow=0,
+R21,/:pathMatch(.*)*,A21,FAIL,worst=2.46 low=1,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""返回首页"", ""size"": 14}"
+R22,/:pathMatch(.*)*,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,/401,A07,PASS,overflow=0,
+R21,/401,A21,FAIL,worst=2.46 low=1,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""返回首页"", ""size"": 14}"
+R22,/401,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,/index,A07,PASS,overflow=0,
+R21,/index,A21,FAIL,worst=3.83 low=16,"{""ratio"": 3.83, ""need"": 4.5, ""text"": ""每位导购的订单金额"", ""size"": 12}"
+R22,/index,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,/user,A07,PASS,overflow=0,
+R21,/user,A21,FAIL,worst=2.46 low=1,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""返回首页"", ""size"": 14}"
+R22,/user,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,profile,A07,PASS,overflow=0,
+R21,profile,A21,FAIL,worst=2.46 low=1,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""返回首页"", ""size"": 14}"
+R22,profile,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]
+R07,workbench/:componentId,A07,PASS,overflow=0,
+R21,workbench/:componentId,A21,FAIL,worst=2.46 low=1,"{""ratio"": 2.46, ""need"": 4.5, ""text"": ""返回首页"", ""size"": 14}"
+R22,workbench/:componentId,A22,PASS,1280:1280/1280 1440:1440/1440 1920:1920/1920,溢出视口=[]

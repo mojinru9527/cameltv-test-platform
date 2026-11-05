@@ -93,6 +93,80 @@ P0_TEMPLATES = {
 }
 
 
+
+P1_TEMPLATES = {
+    "认证": {
+        "chain_id": "CHAIN-AUTH-READONLY",
+        "name": "认证域内链：验证码→租户列表→非法登录被拒→再次取码（不锁定真实账号）",
+        "priority": "P1",
+        "fixtures": [
+            {"id": "f1", "name": "取验证码", "method": "GET", "path": "/auth/code",
+             "expect": {"code": 200}, "extract": {"uuid": "data.uuid"}},
+        ],
+        "entry_gate": ["f1"],
+        "steps": [
+            {"no": 1, "name": "租户下拉", "method": "GET", "path": "/auth/tenant/list", "expect": {"code": 200}},
+            {"no": 2, "name": "不存在的账号登录（不得返回 token）", "method": "POST", "path": "/auth/login",
+             "body": {"username": "__QA_NO_SUCH_USER__", "password": "x", "code": "0000", "uuid": "{uuid}"},
+             "expect": {"code_not_in": [200]}},
+            {"no": 3, "name": "空 body 登录（不得返回 token）", "method": "POST", "path": "/auth/login",
+             "body": {}, "expect": {"code_not_in": [200]}},
+            {"no": 4, "name": "再次取码（限流内）", "method": "GET", "path": "/auth/code", "expect": {"code": 200}},
+        ],
+        "cleanup": [],
+        "note": "使用不存在的用户名，避免锁定真实账号；4 次请求在 IP 限流阈值内",
+    },
+    "消息": {
+        "chain_id": "CHAIN-MESSAGE-READONLY",
+        "name": "消息域内链：C 端列表/未读数 → 后台列表 → 后台详情（不标记已读）",
+        "priority": "P1",
+        "fixtures": [
+            {"id": "f1", "name": "C 端消息列表", "method": "GET",
+             "path": "/client/message/list?pageNum=1&pageSize=5", "auth": "client",
+             "expect": {"code": 200}, "extract": {"mid": "data.rows[0].id"}},
+            {"id": "f2", "name": "后台消息列表", "method": "GET",
+             "path": "/system/message/list?pageNum=1&pageSize=5", "auth": "admin",
+             "expect": {"code": 200}, "extract": {"aid": "rows[0].id"}},
+        ],
+        "entry_gate": ["f1", "f2"],
+        "steps": [
+            {"no": 1, "name": "C 端未读数", "method": "GET", "path": "/client/message/unread/count",
+             "auth": "client", "expect": {"code": 200}},
+            {"no": 2, "name": "后台消息详情", "method": "GET", "path": "/system/message/{aid}",
+             "auth": "admin", "expect": {"code": 200}},
+            {"no": 3, "name": "后台消息列表分页一致性", "method": "GET",
+             "path": "/system/message/list?pageNum=1&pageSize=2", "auth": "admin", "expect": {"code": 200}},
+        ],
+        "cleanup": [],
+        "note": "不调用 C 端消息详情（会标记已读，产生副作用）",
+    },
+    "社区-帖子": {
+        "chain_id": "CHAIN-COMMUNITY-READONLY",
+        "name": "社区域内链：帖子列表→详情→评论列表→我的点赞（读只）",
+        "priority": "P1",
+        "fixtures": [
+            {"id": "f1", "name": "帖子列表", "method": "GET",
+             "path": "/client/post/list?pageNum=1&pageSize=1", "auth": "client",
+             "expect": {"code": 200}, "extract": {"pid": "data.rows[0].id"}},
+        ],
+        "entry_gate": ["f1"],
+        "steps": [
+            {"no": 1, "name": "帖子详情", "method": "GET", "path": "/client/post/{pid}",
+             "auth": "client", "expect": {"code": 200}, "present": True,
+             "absent_fields": ["sessionKey"]},
+            {"no": 2, "name": "帖子列表", "method": "GET",
+             "path": "/client/post/list?pageNum=1&pageSize=5", "auth": "client", "expect": {"code": 200}},
+            {"no": 3, "name": "评论列表", "method": "GET",
+             "path": "/client/comment/list?postId={pid}&pageNum=1&pageSize=5", "auth": "client",
+             "expect": {"code": 200}},
+            {"no": 4, "name": "我的点赞", "method": "GET", "path": "/client/post/me/likes",
+             "auth": "client", "expect": {"code": 200}},
+        ],
+        "cleanup": [],
+        "note": "评论列表若 data=null 而不返回空列表，需在报告中标注为口径问题",
+    },
+}
+
 def slugify(domain: str) -> str:
     table = {"资产-组件": "asset-component", "订单-C端": "order-client", "有赞-交易": "youzan-trade"}
     if domain in table:
@@ -148,8 +222,8 @@ def main() -> int:
 
     manifest = []
     for domain, chain in graph["chains"].items():
-        if domain in P0_TEMPLATES:
-            spec = dict(P0_TEMPLATES[domain])
+        if domain in P0_TEMPLATES or domain in P1_TEMPLATES:
+            spec = dict(P0_TEMPLATES.get(domain) or P1_TEMPLATES[domain])
             spec["status"] = "ready"
             spec["domain"] = domain
             spec["api_count"] = chain["api_count"]

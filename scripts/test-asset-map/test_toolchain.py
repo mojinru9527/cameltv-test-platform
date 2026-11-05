@@ -140,3 +140,39 @@ def test_gen_chain_specs_marks_ready_and_skeleton(tmp_path: Path):
     assert statuses["订单-C端"] == "ready"
     assert statuses["某新域"] == "skeleton"
     assert (out / "CHAIN-ORDER-C-READONLY.json").exists()
+
+
+def test_capability_matrix_marks_blocked(tmp_path: Path):
+    import yaml as _yaml
+    caps = {
+        "project": "t",
+        "capabilities": [
+            {"id": "web-admin", "available": True},
+            {"id": "mini", "available": False, "reason": "无运行态"},
+            {"id": "pay", "available": False, "reason": "red line"},
+        ],
+        "page_requirements": {"by_platform": {"管理后台": ["web-admin"], "小程序": ["mini"]}},
+        "chain_requirements": {"default": ["web-admin"],
+                               "by_domain_keyword": [{"keyword": "退款", "caps": ["pay"]}]},
+    }
+    (tmp_path / "caps.yaml").write_text(_yaml.safe_dump(caps, allow_unicode=True), encoding="utf-8")
+    pages = [{"page_id": "A1", "platform": "管理后台", "name": "款", "path": "/a"},
+             {"page_id": "M1", "platform": "小程序", "name": "首页", "path": "/m"}]
+    (tmp_path / "pages.json").write_text(json.dumps({"pages": pages}, ensure_ascii=False), encoding="utf-8")
+    chains = {"chains": [
+        {"chain_id": "C1", "domain": "订单-C端", "status": "ready", "priority": "P0"},
+        {"chain_id": "C2", "domain": "退款", "status": "ready", "priority": "P0"},
+        {"chain_id": "C3", "domain": "其它", "status": "skeleton", "priority": "P2"},
+    ]}
+    (tmp_path / "chains.json").write_text(json.dumps(chains, ensure_ascii=False), encoding="utf-8")
+    out = tmp_path / "matrix.json"
+    r = run(HERE / "build_capability_matrix.py", "--capabilities", tmp_path / "caps.yaml",
+            "--pages", tmp_path / "pages.json", "--chains", tmp_path / "chains.json", "--out", out)
+    assert r.returncode == 0, r.stderr
+    m = json.loads(out.read_text(encoding="utf-8"))
+    assert m["pages"]["executable"] == 1
+    assert m["pages"]["blocked_by"] == {"mini": 1}
+    assert m["chains"]["executable"] == 1          # 只有 C1：ready + 能力齐备
+    row = {r["chain_id"]: r for r in m["chain_matrix"]}
+    assert row["C2"]["blocked_by"] == ["pay"]
+    assert "spec-skeleton" in row["C3"]["blocked_by"]

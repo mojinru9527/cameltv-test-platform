@@ -29,6 +29,33 @@
    "file": "CHAIN-YOUZAN-TRADE-READONLY.json"
   },
   {
+   "chain_id": "CHAIN-AUTH-READONLY",
+   "domain": "认证",
+   "priority": "P1",
+   "status": "ready",
+   "api_count": 21,
+   "steps": 4,
+   "file": "CHAIN-AUTH-READONLY.json"
+  },
+  {
+   "chain_id": "CHAIN-COMMUNITY-READONLY",
+   "domain": "社区-帖子",
+   "priority": "P1",
+   "status": "ready",
+   "api_count": 14,
+   "steps": 4,
+   "file": "CHAIN-COMMUNITY-READONLY.json"
+  },
+  {
+   "chain_id": "CHAIN-MESSAGE-READONLY",
+   "domain": "消息",
+   "priority": "P1",
+   "status": "ready",
+   "api_count": 12,
+   "steps": 3,
+   "file": "CHAIN-MESSAGE-READONLY.json"
+  },
+  {
    "chain_id": "CHAIN-DOM-系统-用户角色",
    "domain": "系统-用户角色",
    "priority": "P2",
@@ -54,15 +81,6 @@
    "api_count": 36,
    "steps": 1,
    "file": "CHAIN-DOM-系统-配置.json"
-  },
-  {
-   "chain_id": "CHAIN-DOM-认证",
-   "domain": "认证",
-   "priority": "P2",
-   "status": "skeleton",
-   "api_count": 21,
-   "steps": 2,
-   "file": "CHAIN-DOM-认证.json"
   },
   {
    "chain_id": "CHAIN-DOM-用户-C端",
@@ -110,15 +128,6 @@
    "file": "CHAIN-DOM-监控.json"
   },
   {
-   "chain_id": "CHAIN-DOM-社区-帖子",
-   "domain": "社区-帖子",
-   "priority": "P2",
-   "status": "skeleton",
-   "api_count": 14,
-   "steps": 3,
-   "file": "CHAIN-DOM-社区-帖子.json"
-  },
-  {
    "chain_id": "CHAIN-DOM-订单-C端-其他",
    "domain": "订单-C端-其他",
    "priority": "P2",
@@ -135,15 +144,6 @@
    "api_count": 12,
    "steps": 1,
    "file": "CHAIN-DOM-订单-后台.json"
-  },
-  {
-   "chain_id": "CHAIN-DOM-消息",
-   "domain": "消息",
-   "priority": "P2",
-   "status": "skeleton",
-   "api_count": 12,
-   "steps": 2,
-   "file": "CHAIN-DOM-消息.json"
   },
   {
    "chain_id": "CHAIN-DOM-日记",

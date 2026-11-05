@@ -192,7 +192,7 @@ python scripts/test-asset-map/gate.py --summary out/futurewayu/summary.json \
 | 链路执行器 + 34 条域内链 | ✅ 已关闭 | 生成 34 条规格（3 ready / 31 skeleton）；3 条 P0 只读链全部 PASS |
 | CI 门禁 | ✅ 已关闭 | `.github/workflows/asset-map-gate.yml`：static（PR 必跑）+ live（self-hosted 手动）；golden 全 PASS、真实数据按预期 FAIL |
 | 域映射候选生成 | ✅ 已关闭 | `suggest_domains.py`：24 候选覆盖 485 唯一路径，2 个兜底域带成员提示，人工从"从零划"变"确认" |
-| 执行载体/能力矩阵 | ❌ 未做 | 用例尚未声明所需环境，阻塞率仍靠事后统计 |
+| 执行载体/能力矩阵 | ✅ 已关闭 | `futurewayu.capabilities.yaml` + `build_capability_matrix.py`：页面 46/84 可执行，链路 5/34（28 条因骨架、5 条因能力） |
 | 31 条骨架链细化 | ❌ 未做 | 需按 P1/P2 优先级逐条补夹具与写阶段断言 |
 | 断言稳定性 | 🟡 部分 | 响应时间单次采样不稳（冷 4317ms / 热 906ms），应改多采样 P95 |
 
@@ -223,3 +223,46 @@ python scripts/test-asset-map/gate.py --summary docs/standards/project-adapters/
 ```
 
 实测：单测 12 项通过；static 门禁 **PASS（exit 0）**；live 真实数据 **FAIL（断言通过率不达标）**——两者行为都符合预期。
+
+
+## 13. 能力矩阵（哪些能跑、为什么不能跑）
+
+`futurewayu.capabilities.yaml` + `build_capability_matrix.py` 把「页面/链路」与「环境能力」对齐：
+
+| 能力 | 可用 | 依据 |
+|---|---|---|
+| web-admin / admin-token / c-end-token / db-readonly / redis-read / server-log | ✅ | 本轮实测可用 |
+| mini-program-runtime | ❌ | 无该小程序开发者权限，开发者工具导入被拦 |
+| pad-device / screen-device | ❌ | 无 1.3.26 安装包；有 PICKUP_SCREEN 记录但无设备令牌 |
+| payment-sandbox / youzan-buyer / callback-signature | ❌ | 生产资金红线；无买家账号与商户证书 |
+
+实测：**页面 46/84 可执行（54.8%）**（后台 46/46，小程序 0/27、平板 0/5、叫号屏 0/2、有赞 0/4）；
+**链路 5/34 可执行（14.7%）**，阻塞 28 条为骨架未细化、5 条为能力缺失。
+
+## 14. 链路就绪度
+
+| 优先级 | ready | skeleton |
+|---|---:|---:|
+| P0 | 3（资产-组件 / 订单-C端 / 有赞-交易） | — |
+| P1 | 3（认证 / 消息 / 社区-帖子） | — |
+| 其余 | — | 28 |
+
+6 条 ready 链实测 **全部 PASS**（共 29 个步骤）。其中：
+- 认证链使用**不存在的用户名**验证非法登录被拒，避免锁定真实账号；实测返回 403（非 200，未发 token）。
+- 消息链刻意**不调用 C 端消息详情**（会标记已读，产生副作用）。
+- 有赞-交易链因 `payment-sandbox` + `callback-signature` 能力缺失，无法进入资金环节，只覆盖只读配置段。
+
+## 15. 全量扫描与缺陷聚合（R21）
+
+28 个后台页面 × R07/R21/R22 = 84 行：
+
+| 准则 | 结果 |
+|---|---|
+| R07 文本溢出 | **28/28 PASS** |
+| R22 三档视口 | **28/28 PASS** |
+| R21 对比度 | **27/28 有测量值且全部低于 4.5:1**；最低 **2.17:1**，中位 **2.46:1**，违规文本元素合计 **317 处** |
+
+**聚合为 1 条缺陷**（不是 28 条）：同一套主题色 token 不达标。典型违规为次级按钮（「新增店铺/新增设备/新增轮播图」2.46:1）与筛选标签（3.43:1）。
+关闭标准：`run_assertions.py web --rules R21` 全量 28 页 **28/28 PASS**。
+
+> 附：本轮"跑通一次 CI"发现真实问题——`futurewayu.endpoints.json` 被 gitignore 导致干净检出必挂；已将接口清单入库、用例基线改为缺失时降级，修复后干净检出 static job 全绿（12 单测 + 双项目 + golden 门禁 exit 0）。
