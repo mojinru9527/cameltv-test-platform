@@ -127,29 +127,17 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: HTTP assertions
-        run: |
-          python scripts/test-asset-map/run_assertions.py http \
-            --spec docs/standards/project-adapters/fixtures/http-checks.json \
-            --env runtime/env.json --out runtime/http-assertions.csv
+        # Windows runner 默认 pwsh，不能用 bash 的 \ 续行，统一写单行
+        run: python scripts/test-asset-map/run_assertions.py http --spec docs/standards/project-adapters/fixtures/http-checks.json --env runtime/env.json --out runtime/http-assertions.csv
 
       - name: Run all ready chains (read-only)
-        run: |
-          python scripts/test-asset-map/run_all_chains.py \
-            --manifest docs/standards/project-adapters/chains/futurewayu/manifest.json \
-            --env runtime/env.json --out-dir runtime/chains \
-            --statuses ready,ready-readonly --spacing-ms 250
-          python scripts/test-asset-map/report_chains.py \
-            --summary runtime/chains/summary.csv --out runtime/chains/chain-report.md
+        run: python scripts/test-asset-map/run_all_chains.py --manifest docs/standards/project-adapters/chains/futurewayu/manifest.json --env runtime/env.json --out-dir runtime/chains --statuses ready,ready-readonly --spacing-ms 250
+
+      - name: Chain report
+        run: python scripts/test-asset-map/report_chains.py --summary runtime/chains/summary.csv --out runtime/chains/chain-report.md
 
       - name: Gate (real thresholds)
-        run: |
-          python scripts/test-asset-map/gate.py \
-            --summary docs/standards/project-adapters/out/futurewayu/summary.json \
-            --assertions runtime/http-assertions.csv \
-            --min-page-coverage 0.95 --max-unassigned 0.05 \
-            --min-assert-pass "${{ github.event.inputs.min_assert_pass }}" \
-            --require-rules R05,R06,R11,R12,R19,R20,R24 \
-            --out runtime/gate-report.json
+        run: python scripts/test-asset-map/gate.py --summary docs/standards/project-adapters/out/futurewayu/summary.json --assertions runtime/http-assertions.csv --min-page-coverage 0.95 --max-unassigned 0.05 --min-assert-pass "${{ github.event.inputs.min_assert_pass }}" --require-rules R05,R06,R11,R12,R19,R20,R24 --out runtime/gate-report.json
 
       - uses: actions/upload-artifact@v4
         if: always()
