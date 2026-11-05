@@ -1,0 +1,311 @@
+{
+ "project": "futurewayu",
+ "chains": [
+  {
+   "chain_id": "CHAIN-ASSET-COMPONENT-READONLY",
+   "domain": "资产-组件",
+   "priority": "P0",
+   "status": "ready",
+   "api_count": 85,
+   "steps": 4,
+   "file": "CHAIN-ASSET-COMPONENT-READONLY.json"
+  },
+  {
+   "chain_id": "CHAIN-ORDER-C-READONLY",
+   "domain": "订单-C端",
+   "priority": "P0",
+   "status": "ready",
+   "api_count": 34,
+   "steps": 4,
+   "file": "CHAIN-ORDER-C-READONLY.json"
+  },
+  {
+   "chain_id": "CHAIN-YOUZAN-TRADE-READONLY",
+   "domain": "有赞-交易",
+   "priority": "P0",
+   "status": "ready",
+   "api_count": 9,
+   "steps": 4,
+   "file": "CHAIN-YOUZAN-TRADE-READONLY.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-系统-用户角色",
+   "domain": "系统-用户角色",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 62,
+   "steps": 3,
+   "file": "CHAIN-DOM-系统-用户角色.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-资产-AI-精修",
+   "domain": "资产-AI/精修",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 48,
+   "steps": 2,
+   "file": "CHAIN-DOM-资产-AI-精修.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-系统-配置",
+   "domain": "系统-配置",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 36,
+   "steps": 1,
+   "file": "CHAIN-DOM-系统-配置.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-认证",
+   "domain": "认证",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 21,
+   "steps": 2,
+   "file": "CHAIN-DOM-认证.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-用户-C端",
+   "domain": "用户-C端",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 21,
+   "steps": 0,
+   "file": "CHAIN-DOM-用户-C端.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-设备",
+   "domain": "设备",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 20,
+   "steps": 1,
+   "file": "CHAIN-DOM-设备.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-有赞-店铺",
+   "domain": "有赞-店铺",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 17,
+   "steps": 1,
+   "file": "CHAIN-DOM-有赞-店铺.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-资产-娃体",
+   "domain": "资产-娃体",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 16,
+   "steps": 2,
+   "file": "CHAIN-DOM-资产-娃体.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-监控",
+   "domain": "监控",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 15,
+   "steps": 1,
+   "file": "CHAIN-DOM-监控.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-社区-帖子",
+   "domain": "社区-帖子",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 14,
+   "steps": 3,
+   "file": "CHAIN-DOM-社区-帖子.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-订单-C端-其他",
+   "domain": "订单-C端-其他",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 13,
+   "steps": 1,
+   "file": "CHAIN-DOM-订单-C端-其他.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-订单-后台",
+   "domain": "订单-后台",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 12,
+   "steps": 1,
+   "file": "CHAIN-DOM-订单-后台.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-消息",
+   "domain": "消息",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 12,
+   "steps": 2,
+   "file": "CHAIN-DOM-消息.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-日记",
+   "domain": "日记",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 12,
+   "steps": 0,
+   "file": "CHAIN-DOM-日记.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-营销-轮播",
+   "domain": "营销-轮播",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 11,
+   "steps": 1,
+   "file": "CHAIN-DOM-营销-轮播.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-资产-身份卡",
+   "domain": "资产-身份卡",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 10,
+   "steps": 2,
+   "file": "CHAIN-DOM-资产-身份卡.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-发版",
+   "domain": "发版",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 8,
+   "steps": 1,
+   "file": "CHAIN-DOM-发版.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-社区-板块",
+   "domain": "社区-板块",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 7,
+   "steps": 1,
+   "file": "CHAIN-DOM-社区-板块.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-资产-背景图",
+   "domain": "资产-背景图",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 7,
+   "steps": 1,
+   "file": "CHAIN-DOM-资产-背景图.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-其他",
+   "domain": "其他",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 7,
+   "steps": 1,
+   "file": "CHAIN-DOM-其他.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-商品-C端",
+   "domain": "商品-C端",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 6,
+   "steps": 0,
+   "file": "CHAIN-DOM-商品-C端.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-社区-评论",
+   "domain": "社区-评论",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 5,
+   "steps": 1,
+   "file": "CHAIN-DOM-社区-评论.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-文件",
+   "domain": "文件",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 5,
+   "steps": 0,
+   "file": "CHAIN-DOM-文件.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-资产-质检",
+   "domain": "资产-质检",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 4,
+   "steps": 0,
+   "file": "CHAIN-DOM-资产-质检.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-导购业绩",
+   "domain": "导购业绩",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 4,
+   "steps": 0,
+   "file": "CHAIN-DOM-导购业绩.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-资产-换装",
+   "domain": "资产-换装",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 4,
+   "steps": 1,
+   "file": "CHAIN-DOM-资产-换装.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-回调",
+   "domain": "回调",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 3,
+   "steps": 0,
+   "file": "CHAIN-DOM-回调.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-有赞-商品",
+   "domain": "有赞-商品",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 3,
+   "steps": 1,
+   "file": "CHAIN-DOM-有赞-商品.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-社区-互动",
+   "domain": "社区-互动",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 2,
+   "steps": 0,
+   "file": "CHAIN-DOM-社区-互动.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-身份卡-C端",
+   "domain": "身份卡-C端",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 1,
+   "steps": 0,
+   "file": "CHAIN-DOM-身份卡-C端.json"
+  },
+  {
+   "chain_id": "CHAIN-DOM-搜索",
+   "domain": "搜索",
+   "priority": "P2",
+   "status": "skeleton",
+   "api_count": 1,
+   "steps": 1,
+   "file": "CHAIN-DOM-搜索.json"
+  }
+ ]
+}

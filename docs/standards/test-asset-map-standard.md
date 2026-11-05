@@ -185,11 +185,41 @@ python scripts/test-asset-map/gate.py --summary out/futurewayu/summary.json \
 
 ## 11. 剩余缺口状态
 
-| 缺口 | 状态 | 说明 |
+| 缺口 | 状态 | 证据 |
 |---|---|---|
-| 页面源适配器（爬取/源码/小程序/PRD） | ✅ 已补 | 4 个来源 + merge；PRD 需人工裁决 |
-| 断言脚本化（A01–A24） | 🟡 部分 | Web 4 条 + HTTP 6 条可执行；其余仍是文本口径，按需扩 |
-| 链路执行器 | ✅ 已补 | 声明式执行器可跑通；域内链仍需逐条写规格 |
-| CI 门禁 | ✅ 已补 | 退出码 + 报告；尚未接入 `.github/workflows` |
-| 域映射/闭环半自动化 | ❌ 未做 | 仍靠人工；下一步可用接口 tag + 调用链日志生成候选 |
+| 页面源适配器（爬取/源码/小程序/PRD） | ✅ 已关闭 | 4 源 + merge：爬取 13/7/5/2、源码 94、小程序 27、PRD 54 → 合并 120 条 / PRD-only 缺口 21 |
+| 断言脚本化（24 条准则） | ✅ 已关闭 | 24/24 有可执行路径：web 12 + http 8 + chain 2 + N/A 1 + web/http 1；实测 web 72 行（53 PASS / 6 FAIL / 13 N/A）、http 13 条（7 PASS / 6 FAIL） |
+| 链路执行器 + 34 条域内链 | ✅ 已关闭 | 生成 34 条规格（3 ready / 31 skeleton）；3 条 P0 只读链全部 PASS |
+| CI 门禁 | ✅ 已关闭 | `.github/workflows/asset-map-gate.yml`：static（PR 必跑）+ live（self-hosted 手动）；golden 全 PASS、真实数据按预期 FAIL |
+| 域映射候选生成 | ✅ 已关闭 | `suggest_domains.py`：24 候选覆盖 485 唯一路径，2 个兜底域带成员提示，人工从"从零划"变"确认" |
 | 执行载体/能力矩阵 | ❌ 未做 | 用例尚未声明所需环境，阻塞率仍靠事后统计 |
+| 31 条骨架链细化 | ❌ 未做 | 需按 P1/P2 优先级逐条补夹具与写阶段断言 |
+| 断言稳定性 | 🟡 部分 | 响应时间单次采样不稳（冷 4317ms / 热 906ms），应改多采样 P95 |
+
+
+## 12. CI 接入
+
+工作流：`.github/workflows/asset-map-gate.yml`
+
+| Job | 触发 | 内容 | 失败处理 |
+|---|---|---|---|
+| `static` | PR（路径：`docs/standards/**`、`scripts/test-asset-map/**`、skill 目录） | 工具链单测 → 双项目底图构建 → 域候选 → 链路规格 → **golden 断言门禁自检** | 阻断 PR |
+| `live` | 仅 `workflow_dispatch`（self-hosted runner） | 恢复 `ASSET_MAP_ENV_JSON` 凭据 → HTTP 断言 → 3 条 P0 只读链 → 真实阈值门禁 | 阻断并上传 `runtime/` 证据 |
+
+设计要点：
+1. **静态门禁用 golden 断言**（全 PASS）验证管线本身，不受环境与数据影响；真实阈值只在 live 跑。
+2. 凭据只从 secrets 注入，落盘 `runtime/env.json` 后 `chmod 600`，不进 artifact 的敏感明文（仅结果 CSV）。
+3. `static` 同时构建两个项目适配器，**换项目复用性每次 PR 都被验证**。
+
+本地等价校验：
+
+```powershell
+python -m pytest scripts/test-asset-map -q
+python scripts/test-asset-map/build_asset_map.py docs/standards/project-adapters/futurewayu.adapter.yaml
+python scripts/test-asset-map/gate.py --summary docs/standards/project-adapters/out/futurewayu/summary.json \
+  --assertions docs/standards/project-adapters/fixtures/golden-assertions.csv \
+  --min-page-coverage 0.95 --max-unassigned 0.05 --min-assert-pass 0.9 \
+  --require-rules R01,R07,R11,R19,R20,R21,R22 --out gate-report.json
+```
+
+实测：单测 12 项通过；static 门禁 **PASS（exit 0）**；live 真实数据 **FAIL（断言通过率不达标）**——两者行为都符合预期。

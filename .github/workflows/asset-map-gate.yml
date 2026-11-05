@@ -1,0 +1,129 @@
+name: asset-map-gate
+
+# 测试资产底图门禁：标准见 docs/standards/test-asset-map-standard.md
+# - static：适配器/引擎/工具链单测 + 门禁管线自检（无需外网，PR 必跑）
+# - live  ：真实环境断言（需在 self-hosted runner 上配置 secrets，手动触发）
+
+on:
+  pull_request:
+    paths:
+      - "docs/standards/**"
+      - "scripts/test-asset-map/**"
+      - ".claude/skills/interaction-case-augmenter/**"
+      - ".github/workflows/asset-map-gate.yml"
+  workflow_dispatch:
+    inputs:
+      min_assert_pass:
+        description: "断言通过率阈值（0-1）"
+        required: false
+        default: "0.9"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: asset-map-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    name: static-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: python -m pip install --quiet pyyaml jsonschema pytest
+
+      - name: Toolchain unit tests
+        run: python -m pytest scripts/test-asset-map -q
+
+      - name: Build asset map (two projects, proves reusability)
+        run: |
+          python scripts/test-asset-map/build_asset_map.py docs/standards/project-adapters/futurewayu.adapter.yaml
+          python scripts/test-asset-map/build_asset_map.py docs/standards/project-adapters/cameltv-sports.adapter.yaml
+
+      - name: Domain candidate generation
+        run: |
+          python scripts/test-asset-map/suggest_domains.py \
+            --endpoints docs/standards/project-adapters/sources/futurewayu.endpoints.json \
+            --pages docs/standards/project-adapters/sources/futurewayu.pages.json \
+            --min-size 8 \
+            --out docs/standards/project-adapters/out/futurewayu/domain-suggest.json || true
+
+      - name: Generate chain specs
+        run: |
+          python scripts/test-asset-map/gen_chain_specs.py \
+            --graph docs/standards/project-adapters/out/futurewayu/interface-chain-graph.json \
+            --out-dir docs/standards/project-adapters/chains/futurewayu
+
+      - name: Gate self-check (golden assertions, must pass)
+        run: |
+          python scripts/test-asset-map/gate.py \
+            --summary docs/standards/project-adapters/out/futurewayu/summary.json \
+            --assertions docs/standards/project-adapters/fixtures/golden-assertions.csv \
+            --min-page-coverage 0.95 --max-unassigned 0.05 --min-assert-pass 0.9 \
+            --require-rules R01,R07,R11,R19,R20,R21,R22 \
+            --out asset-map-gate-report.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: asset-map-static
+          path: |
+            asset-map-gate-report.json
+            docs/standards/project-adapters/out/*/summary.json
+            docs/standards/project-adapters/chains/futurewayu/manifest.json
+
+  live:
+    name: live-assertions
+    # 只在手动触发时跑；需 self-hosted runner + ASSET_MAP_ENV_JSON secret
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: [self-hosted, linux]
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore runtime credentials
+        env:
+          ASSET_MAP_ENV_JSON: ${{ secrets.ASSET_MAP_ENV_JSON }}
+        run: |
+          if [ -z "$ASSET_MAP_ENV_JSON" ]; then echo "缺少 ASSET_MAP_ENV_JSON"; exit 1; fi
+          mkdir -p runtime
+          printf '%s' "$ASSET_MAP_ENV_JSON" > runtime/env.json
+          chmod 600 runtime/env.json
+
+      - name: HTTP assertions
+        run: |
+          python scripts/test-asset-map/run_assertions.py http \
+            --spec docs/standards/project-adapters/fixtures/http-checks.json \
+            --env runtime/env.json --out runtime/http-assertions.csv
+
+      - name: Chain execution (P0 read-only)
+        run: |
+          for c in CHAIN-ASSET-COMPONENT-READONLY CHAIN-ORDER-C-READONLY CHAIN-YOUZAN-TRADE-READONLY; do
+            python scripts/test-asset-map/run_chain.py \
+              --spec "docs/standards/project-adapters/chains/futurewayu/$c.json" \
+              --env runtime/env.json --out "runtime/chain-$c.csv" || true
+          done
+
+      - name: Gate (real thresholds)
+        run: |
+          python scripts/test-asset-map/gate.py \
+            --summary docs/standards/project-adapters/out/futurewayu/summary.json \
+            --assertions runtime/http-assertions.csv \
+            --min-page-coverage 0.95 --max-unassigned 0.05 \
+            --min-assert-pass "${{ github.event.inputs.min_assert_pass }}" \
+            --require-rules R05,R06,R11,R12,R19,R20,R24 \
+            --out runtime/gate-report.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: asset-map-live
+          path: runtime/

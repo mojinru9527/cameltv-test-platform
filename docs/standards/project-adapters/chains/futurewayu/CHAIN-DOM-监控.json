@@ -1,0 +1,28 @@
+{
+ "chain_id": "CHAIN-DOM-监控",
+ "name": "监控 域内链（骨架，只读步骤已生成）",
+ "priority": "P2",
+ "status": "skeleton",
+ "fixtures": [],
+ "entry_gate": [],
+ "steps": [
+  {
+   "no": 1,
+   "name": "list:/monitor/operlog/list",
+   "method": "GET",
+   "path": "/monitor/operlog/list",
+   "auth": "admin",
+   "expect": {
+    "code": 200
+   }
+  }
+ ],
+ "cleanup": [],
+ "todo": [
+  "补充前置夹具（造数链：上游实体 → 本域）",
+  "补充写阶段步骤与状态/数据/幂等断言",
+  "补充失败注入（并发/重复/乱序）与清理契约"
+ ],
+ "domain": "监控",
+ "api_count": 15
+}

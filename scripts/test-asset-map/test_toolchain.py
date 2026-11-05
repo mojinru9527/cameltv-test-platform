@@ -105,3 +105,38 @@ def test_gate_passes_when_all_ok(tmp_path: Path):
     r = run(HERE / "gate.py", "--summary", tmp_path / "summary.json",
             "--assertions", tmp_path / "a.csv", "--out", tmp_path / "g.json")
     assert r.returncode == 0
+
+
+def test_suggest_domains_covers_all_paths(tmp_path: Path):
+    eps = ([{"method": "GET", "path": f"/system/component/item{i}"} for i in range(10)]
+           + [{"method": "GET", "path": f"/client/mall/cart{i}"} for i in range(10)]
+           + [{"method": "POST", "path": "/auth/login"}, {"method": "GET", "path": "/auth/code"}])
+    src = tmp_path / "eps.json"
+    src.write_text(json.dumps(eps), encoding="utf-8")
+    out = tmp_path / "suggest.json"
+    r = run(HERE / "suggest_domains.py", "--endpoints", src, "--min-size", "3", "--out", out)
+    assert r.returncode == 0, r.stderr
+    report = json.loads(out.read_text(encoding="utf-8"))
+    assert report["candidate_domains"] >= 2
+    covered = sum(c["api_count"] for c in report["candidates"])
+    assert covered <= report["endpoints"]
+    assert report["coverage_by_prefix"].split("/")[0].isdigit()
+
+
+def test_gen_chain_specs_marks_ready_and_skeleton(tmp_path: Path):
+    graph = {"chains": {
+        "订单-C端": {"domain": "订单-C端", "api_count": 3, "stages": ["list"],
+                     "nodes": [{"stage": "list", "apis": ["GET /client/mall/orders"]}]},
+        "某新域": {"domain": "某新域", "api_count": 2, "stages": ["detail"],
+                    "nodes": [{"stage": "detail", "apis": ["GET /system/foo/detail"]}]},
+    }}
+    g = tmp_path / "graph.json"
+    g.write_text(json.dumps(graph, ensure_ascii=False), encoding="utf-8")
+    out = tmp_path / "chains"
+    r = run(HERE / "gen_chain_specs.py", "--graph", g, "--out-dir", out, "--project", "t")
+    assert r.returncode == 0, r.stderr
+    manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+    statuses = {m["domain"]: m["status"] for m in manifest["chains"]}
+    assert statuses["订单-C端"] == "ready"
+    assert statuses["某新域"] == "skeleton"
+    assert (out / "CHAIN-ORDER-C-READONLY.json").exists()
