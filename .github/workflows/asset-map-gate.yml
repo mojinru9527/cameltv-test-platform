@@ -91,7 +91,7 @@ jobs:
     name: live-assertions
     # 只在手动触发时跑；需 self-hosted runner + ASSET_MAP_ENV_JSON secret
     if: github.event_name == 'workflow_dispatch'
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -99,6 +99,7 @@ jobs:
       - name: Restore runtime credentials
         # 方式 A：直接注入 ASSET_MAP_ENV_JSON；方式 B：只给账号口令 + Redis，运行时自动换取令牌
         # 详见 docs/standards/asset-map-live-ci.md
+        shell: pwsh
         env:
           ASSET_MAP_ENV_JSON: ${{ secrets.ASSET_MAP_ENV_JSON }}
           ASSET_MAP_BASE_URL: ${{ secrets.ASSET_MAP_BASE_URL }}
@@ -113,29 +114,23 @@ jobs:
           ASSET_MAP_LOGIN_MODE: ${{ vars.ASSET_MAP_LOGIN_MODE || 'http' }}
           ASSET_MAP_RSA_PUBLIC_KEY: ${{ secrets.ASSET_MAP_RSA_PUBLIC_KEY }}
         run: |
-          mkdir -p runtime
-          if [ -n "$ASSET_MAP_ENV_JSON" ]; then
-            printf '%s' "$ASSET_MAP_ENV_JSON" > runtime/env.json
-          else
-            echo "未提供 ASSET_MAP_ENV_JSON，尝试用账号口令 + Redis 自动换取令牌"
+          New-Item -ItemType Directory -Force -Path runtime | Out-Null
+          if ($env:ASSET_MAP_ENV_JSON) {
+            Write-Host "使用 ASSET_MAP_ENV_JSON（静态令牌）"
+            [IO.File]::WriteAllText((Join-Path $PWD "runtime/env.json"), $env:ASSET_MAP_ENV_JSON)
+          } else {
+            Write-Host "未提供 ASSET_MAP_ENV_JSON，用账号口令 + Redis 自动换取令牌"
             python scripts/test-asset-map/refresh_env.py --out runtime/env.json
-          fi
-          chmod 600 runtime/env.json
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
           python scripts/test-asset-map/refresh_env.py --check runtime/env.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: HTTP assertions
         run: |
           python scripts/test-asset-map/run_assertions.py http \
             --spec docs/standards/project-adapters/fixtures/http-checks.json \
             --env runtime/env.json --out runtime/http-assertions.csv
-
-      - name: Chain execution (P0 read-only)
-        run: |
-          for c in CHAIN-ASSET-COMPONENT-READONLY CHAIN-ORDER-C-READONLY CHAIN-YOUZAN-TRADE-READONLY; do
-            python scripts/test-asset-map/run_chain.py \
-              --spec "docs/standards/project-adapters/chains/futurewayu/$c.json" \
-              --env runtime/env.json --out "runtime/chain-$c.csv" || true
-          done
 
       - name: Run all ready chains (read-only)
         run: |
