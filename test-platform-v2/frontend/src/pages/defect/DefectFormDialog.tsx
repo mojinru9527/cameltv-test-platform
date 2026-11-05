@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/utils/zodFormResolver'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2 } from '@/lib/icons'
@@ -53,7 +53,7 @@ export default function DefectFormDialog({ open, editing, onClose, onSaved }: De
   const [cases, setCases] = useState<any[]>([])
 
   const form = useForm<DefectFormValues>({
-    resolver: zodResolver(defectFormSchema),
+    resolver: zodFormResolver(defectFormSchema),
     defaultValues: { title: '', description: '', severity: 'P2', assignee_id: null, case_id: null, external_id: '', external_url: '' },
   })
 

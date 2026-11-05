@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/utils/zodFormResolver'
 import { z } from 'zod'
 import { toast } from 'sonner'
 
@@ -66,7 +66,7 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
     setValue,
     formState: { errors },
   } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodFormResolver(formSchema),
     defaultValues: {
       title: '',
       case_type: 'manual',

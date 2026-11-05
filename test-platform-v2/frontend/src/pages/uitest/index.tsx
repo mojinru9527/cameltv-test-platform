@@ -18,7 +18,7 @@ import useAbortableEffect from '@/hooks/useAbortableEffect'
 import type { Environment, UiJobItem, UiRunItem, UiRunArtifact } from '@/types'
 import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/utils/zodFormResolver'
 
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import { ErrorState } from '@/components/state'
@@ -158,7 +158,7 @@ export default function UiTestPage() {
   }, [selectedRunId, selectedRunStatus, runDetailOpen])
 
   const form = useForm<UiJobFormValues>({
-    resolver: zodResolver(uiJobFormSchema),
+    resolver: zodFormResolver(uiJobFormSchema),
     defaultValues: { name: '', description: '', test_spec: '', browser: 'chromium', environment_id: null, case_id: null, cron_expression: '', schedule_enabled: false },
   })
 

@@ -1,7 +1,7 @@
 import { useState, type KeyboardEvent } from 'react'
 import { Link } from 'react-router'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/utils/zodFormResolver'
 import { z } from 'zod'
 import { toast } from 'sonner'
 
@@ -33,7 +33,7 @@ export default function LoginForm({ onSuccess, submitLabel = '登录' }: LoginFo
     handleSubmit,
     formState: { errors },
   } = useForm<LoginValues>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodFormResolver(loginSchema),
     defaultValues: { username: '', password: '' },
   })
   const passwordRegistration = register('password')

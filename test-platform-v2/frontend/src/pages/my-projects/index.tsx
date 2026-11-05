@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/utils/zodFormResolver'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import api from '@/api/client'
@@ -71,8 +71,8 @@ const projectSchema = z.object({
 type ProjectFormData = z.infer<typeof projectSchema>
 
 const memberSchema = z.object({
-  user_id: z.coerce.number({ invalid_type_error: '请选择用户' }),
-  role_id: z.coerce.number({ invalid_type_error: '请选择角色' }),
+  user_id: z.coerce.number({ error: '请选择用户' }),
+  role_id: z.coerce.number({ error: '请选择角色' }),
 })
 
 type MemberFormData = z.infer<typeof memberSchema>
@@ -110,7 +110,7 @@ export default function MyProjectsPage() {
     formState: { errors },
     reset,
   } = useForm<ProjectFormData>({
-    resolver: zodResolver(projectSchema),
+    resolver: zodFormResolver(projectSchema),
   })
 
   const {
@@ -120,7 +120,7 @@ export default function MyProjectsPage() {
     setValue: setMemberValue,
     watch: watchMember,
   } = useForm<MemberFormData>({
-    resolver: zodResolver(memberSchema),
+    resolver: zodFormResolver(memberSchema),
   })
   const memberUserId = watchMember('user_id')
   const memberRoleId = watchMember('role_id')

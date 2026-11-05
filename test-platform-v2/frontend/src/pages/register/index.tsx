@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/utils/zodFormResolver'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { fetchPublicAccess, register as registerApi } from '@/api/auth'
@@ -51,7 +51,7 @@ export default function RegisterPage() {
     setError,
     formState: { errors },
   } = useForm<RegisterForm>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodFormResolver(registerSchema),
     defaultValues: {
       username: '',
       nickname: '',

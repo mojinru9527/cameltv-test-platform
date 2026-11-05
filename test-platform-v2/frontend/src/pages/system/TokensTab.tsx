@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useSearchParams } from 'react-router'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/utils/zodFormResolver'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import {
@@ -78,7 +78,7 @@ export default function TokensTab() {
   const [deleting, setDeleting] = useState<TokenRow | null>(null)
   const { data, isLoading, isError, error, refetch } = useApi<TokenRow[]>(() => fetchTokens(), [])
   const { control, register, handleSubmit, reset, watch, formState: { errors } } = useForm<TokenFormData>({
-    resolver: zodResolver(tokenSchema),
+    resolver: zodFormResolver(tokenSchema),
     defaultValues: { name: '', purpose: initialPurpose },
   })
   const selectedPurpose = watch('purpose')

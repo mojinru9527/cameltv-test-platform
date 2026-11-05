@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/utils/zodFormResolver'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { createRole, deleteRole, fetchPermissions, fetchRoles, updateRole } from '@/api/system'
@@ -66,7 +66,7 @@ export default function RolesTab() {
     setValue,
     watch,
   } = useForm<RoleFormData>({
-    resolver: zodResolver(roleSchema),
+    resolver: zodFormResolver(roleSchema),
   })
   const watchDataScope = watch('data_scope')
 

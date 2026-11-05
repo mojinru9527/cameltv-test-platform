@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/utils/zodFormResolver'
 import { z } from 'zod'
 
 import { fetchPublicAccess, forgotPassword } from '@/api/auth'
@@ -27,7 +27,7 @@ export default function ForgotPasswordPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<ForgotValues>({
-    resolver: zodResolver(forgotSchema),
+    resolver: zodFormResolver(forgotSchema),
     defaultValues: { username: '' },
   })
 
