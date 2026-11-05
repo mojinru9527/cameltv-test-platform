@@ -57,7 +57,7 @@ def main() -> int:
         rows.append({"chain_id": ch["chain_id"], "domain": ch["domain"],
                      "priority": ch.get("priority"), "spec_status": ch.get("status"),
                      "result": status, "steps": len(steps), "passed": passed,
-                     "failed": len(failed), "failed_detail": json.dumps(failed, ensure_ascii=False)[:300]})
+                     "failed": len(failed), "failed_detail": json.dumps(failed, ensure_ascii=False)[:2000]})
         print(f"[{status:7s}] {ch['chain_id'][:46]:46s} {passed}/{len(steps)}")
         time.sleep(args.spacing_ms / 1000.0)
 

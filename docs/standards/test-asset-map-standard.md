@@ -295,7 +295,9 @@ CI 已加该步骤，invalid 直接阻断。
 | 步骤 | **87/98 PASS（88.8%）** |
 | 失败归因 | 8 条**全部**为 `product-500`，无规格噪声 |
 
-**8 条失败收敛为 1 条缺陷**：缺参/内部异常返回 500 兜底，命中 8 个接口（`/client/wx/subscription/templates`、`/statuses`、`/client/bannerActivity/enabledList`、`/client/appVersion/latest`、`/client/oss/user-image/audit-status`、`/client/search`、`/system/pickupOrder/station/screen|orders`、`/system/youzan/store/goods/channel/batches`、`/system/youzan/goods/alert/detail`）。关闭标准：缺参返回 400/422 且 msg 指明字段；复跑 **31/31 PASS**。
+**8 条失败收敛为 1 条缺陷**：缺参/内部异常返回 500 兜底，命中 **11 个接口**（订阅消息 templates/statuses/status、banner enabledList、appVersion/latest、oss audit-status、search、pickupOrder station/screen 与 station/orders、youzan channel/batches、youzan goods alert/detail）。
+
+关闭标准：缺参返回 400/422 且 msg 指明缺失字段；复跑 **31/31 PASS**。
 
 ### 16.4 踩坑记录（都已修）
 
