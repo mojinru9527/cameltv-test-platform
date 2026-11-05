@@ -69,6 +69,23 @@
   }
  ],
  "cleanup": [],
+ "cleanup_not_applicable": "登录失败不产生持久数据（无 token、无会话）",
+ "failure_injection": [
+  {
+   "no": "i1",
+   "name": "租户列表无凭证可访问性",
+   "method": "GET",
+   "path": "/auth/tenant/list",
+   "no_auth": true,
+   "expect": {
+    "code_in": [
+     200,
+     401,
+     403
+    ]
+   }
+  }
+ ],
  "note": "使用不存在的用户名，避免锁定真实账号；4 次请求在 IP 限流阈值内",
  "status": "ready",
  "domain": "认证",

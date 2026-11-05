@@ -1,17 +1,15 @@
 {
  "chain_id": "CHAIN-DOM-回调",
- "name": "回调 域内链（骨架，只读步骤已生成）",
+ "name": "回调 域内链（只读就绪：0 步 + 无凭证拒绝注入）",
+ "domain": "回调",
  "priority": "P2",
- "status": "skeleton",
  "fixtures": [],
  "entry_gate": [],
  "steps": [],
+ "failure_injection": [],
  "cleanup": [],
- "todo": [
-  "补充前置夹具（造数链：上游实体 → 本域）",
-  "补充写阶段步骤与状态/数据/幂等断言",
-  "补充失败注入（并发/重复/乱序）与清理契约"
- ],
- "domain": "回调",
+ "note": "只读链：admin 接口 403 视为有效权限结果；写阶段与夹具待按需补充",
+ "status": "skeleton",
+ "blocked_reason": "该域全部为写接口（无安全只读端点），需夹具链与写权限批准",
  "api_count": 3
 }

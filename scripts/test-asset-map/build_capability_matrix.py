@@ -69,7 +69,7 @@ def main() -> int:
                     req += list(rule.get("caps") or [])
             req = sorted(set(req))
             missing = [c for c in req if c not in available]
-            ready = ch.get("status") == "ready"
+            ready = ch.get("status") in ("ready", "ready-readonly")
             chain_rows.append({
                 "chain_id": ch.get("chain_id"), "domain": ch.get("domain"),
                 "priority": ch.get("priority"), "status": ch.get("status"),

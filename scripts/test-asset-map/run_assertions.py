@@ -309,6 +309,8 @@ def http_assertions(args) -> int:
                 j = r.json()
             except Exception:
                 j = {"_raw": r.text[:200]}
+            if isinstance(j, list):
+                j = {"code": 200, "data": {"list": j}, "_raw_list": True}
         except Exception as e:
             rows.append({"rule_id": rule, "page": chk.get("id", path), "assertion": chk.get("assertion", ""),
                          "status": "BLOCKED", "metric": "", "evidence": str(e)[:160]})

@@ -1,0 +1,32 @@
+﻿chain_id,domain,priority,spec_status,result,steps,passed,failed,failed_detail
+CHAIN-ASSET-COMPONENT-READONLY,资产-组件,P0,ready,PASS,4,4,0,[]
+CHAIN-ORDER-C-READONLY,订单-C端,P0,ready,PASS,4,4,0,[]
+CHAIN-YOUZAN-TRADE-READONLY,有赞-交易,P0,ready,PASS,4,4,0,[]
+CHAIN-DOM-系统-用户角色,系统-用户角色,P1,ready-readonly,PASS,6,6,0,[]
+CHAIN-DOM-资产-AI-精修,资产-AI/精修,P1,ready-readonly,PASS,6,6,0,[]
+CHAIN-DOM-系统-配置,系统-配置,P1,ready-readonly,PASS,6,6,0,[]
+CHAIN-AUTH-READONLY,认证,P1,ready,PASS,4,4,0,[]
+CHAIN-DOM-用户-C端,用户-C端,P1,ready-readonly,FAIL,4,1,3,"[{""no"": 1, ""status"": ""FAIL"", ""path"": ""/client/wx/subscription/templates"", ""fails"": [""code=500!in [200]""]}, {""no"": 2, ""status"": ""FAIL"", ""path"": ""/client/wx/subscription/statuses"", ""fails"": [""code=500!in [200]""]}, {""no"": 3, ""status"": ""FAIL"", ""path"": ""/client/wx/subscription/status"", ""fails"": [""code=50"
+CHAIN-DOM-设备,设备,P1,ready-readonly,PASS,4,4,0,[]
+CHAIN-DOM-有赞-店铺,有赞-店铺,P1,ready-readonly,FAIL,4,3,1,"[{""no"": 4, ""status"": ""FAIL"", ""path"": ""/system/youzan/store/goods/channel/batches"", ""fails"": [""code=500!in [200, 403]""]}]"
+CHAIN-DOM-监控,监控,P1,ready-readonly,PASS,5,5,0,[]
+CHAIN-COMMUNITY-READONLY,社区-帖子,P1,ready,PASS,4,4,0,[]
+CHAIN-DOM-订单-后台,订单-后台,P1,ready-readonly,FAIL,5,3,2,"[{""no"": 3, ""status"": ""FAIL"", ""path"": ""/system/pickupOrder/station/screen"", ""fails"": [""code=500!in [200, 403]""]}, {""no"": 4, ""status"": ""FAIL"", ""path"": ""/system/pickupOrder/station/orders"", ""fails"": [""code=500!in [200, 403]""]}]"
+CHAIN-MESSAGE-READONLY,消息,P1,ready,PASS,3,3,0,[]
+CHAIN-DOM-营销-轮播,营销-轮播,P1,ready-readonly,FAIL,6,5,1,"[{""no"": 5, ""status"": ""FAIL"", ""path"": ""/client/bannerActivity/enabledList"", ""fails"": [""code=500!in [200]""]}]"
+CHAIN-DOM-资产-娃体,资产-娃体,P2,ready-readonly,PASS,2,2,0,[]
+CHAIN-DOM-订单-C端-其他,订单-C端-其他,P2,ready-readonly,PASS,4,4,0,[]
+CHAIN-DOM-日记,日记,P2,ready-readonly,PASS,1,1,0,[]
+CHAIN-DOM-资产-身份卡,资产-身份卡,P2,ready-readonly,PASS,2,2,0,[]
+CHAIN-DOM-发版,发版,P2,ready-readonly,FAIL,2,1,1,"[{""no"": 1, ""status"": ""FAIL"", ""path"": ""/client/appVersion/latest"", ""fails"": [""code=500!in [200]""]}]"
+CHAIN-DOM-社区-板块,社区-板块,P2,ready-readonly,PASS,2,2,0,[]
+CHAIN-DOM-资产-背景图,资产-背景图,P2,ready-readonly,PASS,2,2,0,[]
+CHAIN-DOM-其他,其他,P2,ready-readonly,PASS,2,2,0,[]
+CHAIN-DOM-商品-C端,商品-C端,P2,ready-readonly,PASS,3,3,0,[]
+CHAIN-DOM-社区-评论,社区-评论,P2,ready-readonly,PASS,1,1,0,[]
+CHAIN-DOM-文件,文件,P2,ready-readonly,FAIL,1,0,1,"[{""no"": 1, ""status"": ""FAIL"", ""path"": ""/client/oss/user-image/audit-status"", ""fails"": [""code=500!in [200]""]}]"
+CHAIN-DOM-资产-质检,资产-质检,P2,ready-readonly,PASS,1,1,0,[]
+CHAIN-DOM-导购业绩,导购业绩,P2,ready-readonly,PASS,2,2,0,[]
+CHAIN-DOM-资产-换装,资产-换装,P2,ready-readonly,PASS,1,1,0,[]
+CHAIN-DOM-有赞-商品,有赞-商品,P2,ready-readonly,FAIL,2,1,1,"[{""no"": 1, ""status"": ""FAIL"", ""path"": ""/system/youzan/goods/alert/detail"", ""fails"": [""code=500!in [200, 403]""]}]"
+CHAIN-DOM-搜索,搜索,P2,ready-readonly,FAIL,1,0,1,"[{""no"": 1, ""status"": ""FAIL"", ""path"": ""/client/search"", ""fails"": [""code=500!in [200]""]}]"

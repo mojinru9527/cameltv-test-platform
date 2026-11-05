@@ -71,7 +71,23 @@
    "present": true
   }
  ],
+ "failure_injection": [
+  {
+   "no": "i1",
+   "name": "无凭证访问订单详情被拒",
+   "method": "GET",
+   "path": "/client/mall/orders/{bno}",
+   "no_auth": true,
+   "expect": {
+    "code_in": [
+     401,
+     403
+    ]
+   }
+  }
+ ],
  "cleanup": [],
+ "note": "只读链：夹具为 C 端最近订单；无凭证注入验证鉴权",
  "priority": "P0",
  "status": "ready",
  "domain": "订单-C端",

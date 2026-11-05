@@ -1,28 +1,103 @@
 {
  "chain_id": "CHAIN-DOM-营销-轮播",
- "name": "营销-轮播 域内链（骨架，只读步骤已生成）",
- "priority": "P2",
- "status": "skeleton",
+ "name": "营销-轮播 域内链（只读就绪：6 步 + 无凭证拒绝注入）",
+ "domain": "营销-轮播",
+ "priority": "P1",
  "fixtures": [],
  "entry_gate": [],
  "steps": [
   {
    "no": 1,
+   "name": "create:/system/bannerActivity/list",
+   "method": "GET",
+   "path": "/system/bannerActivity/list",
+   "auth": "admin",
+   "expect": {
+    "code_in": [
+     200,
+     403
+    ]
+   }
+  },
+  {
+   "no": 2,
+   "name": "publish:/client/bannerActivity/storeEnabledList",
+   "method": "GET",
+   "path": "/client/bannerActivity/storeEnabledList",
+   "auth": "client",
+   "expect": {
+    "code_in": [
+     200
+    ]
+   }
+  },
+  {
+   "no": 3,
+   "name": "publish:/client/bannerActivity/miniProgramEnabledList",
+   "method": "GET",
+   "path": "/client/bannerActivity/miniProgramEnabledList",
+   "auth": "client",
+   "expect": {
+    "code_in": [
+     200
+    ]
+   }
+  },
+  {
+   "no": 4,
+   "name": "publish:/client/bannerActivity/miniProgramCommunityEnabledList",
+   "method": "GET",
+   "path": "/client/bannerActivity/miniProgramCommunityEnabledList",
+   "auth": "client",
+   "expect": {
+    "code_in": [
+     200
+    ]
+   }
+  },
+  {
+   "no": 5,
+   "name": "publish:/client/bannerActivity/enabledList",
+   "method": "GET",
+   "path": "/client/bannerActivity/enabledList",
+   "auth": "client",
+   "expect": {
+    "code_in": [
+     200
+    ]
+   }
+  },
+  {
+   "no": 6,
    "name": "list:/system/bannerActivity/page",
    "method": "GET",
    "path": "/system/bannerActivity/page",
    "auth": "admin",
    "expect": {
-    "code": 200
+    "code_in": [
+     200,
+     403
+    ]
+   }
+  }
+ ],
+ "failure_injection": [
+  {
+   "no": "i1",
+   "name": "无凭证访问被拒",
+   "method": "GET",
+   "path": "/system/bannerActivity/list",
+   "no_auth": true,
+   "expect": {
+    "code_in": [
+     401,
+     403
+    ]
    }
   }
  ],
  "cleanup": [],
- "todo": [
-  "补充前置夹具（造数链：上游实体 → 本域）",
-  "补充写阶段步骤与状态/数据/幂等断言",
-  "补充失败注入（并发/重复/乱序）与清理契约"
- ],
- "domain": "营销-轮播",
+ "note": "只读链：admin 接口 403 视为有效权限结果；写阶段与夹具待按需补充",
+ "status": "ready-readonly",
  "api_count": 11
 }

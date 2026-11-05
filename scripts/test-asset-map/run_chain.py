@@ -66,7 +66,7 @@ def run_chain(args) -> int:
 
     def call(node, phase: str, no=None):
         headers = dict(node.get("headers") or {})
-        auth = node.get("auth")
+        auth = None if node.get("no_auth") else node.get("auth")
         if auth == "admin":
             headers["Authorization"] = "Bearer " + env["admin_token"]
             headers["clientid"] = env.get("clientid", "")
@@ -88,6 +88,8 @@ def run_chain(args) -> int:
                 j = r.json()
             except Exception:
                 j = {"_raw": r.text[:200]}
+            if isinstance(j, list):          # 裸数组响应：视为 200 成功体
+                j = {"code": 200, "data": {"list": j}, "_raw_list": True}
         except Exception as e:
             rows.append({"chain": spec.get("chain_id"), "phase": phase, "no": no or "",
                          "step": node.get("name") or path, "status": "BLOCKED",
@@ -147,6 +149,17 @@ def run_chain(args) -> int:
                     any_fail = True
             if any_fail:
                 verdict["status"] = "FAIL"
+
+    # 失败注入（只读：无凭证访问应被拒）
+    if verdict["status"] != "BLOCKED":
+        verdict.setdefault("injection", [])
+        any_fail_i = False
+        for idx, inj in enumerate(spec.get("failure_injection") or [], 1):
+            ok = call(inj, "injection", inj.get("no") or idx)
+            if not ok:
+                any_fail_i = True
+        if any_fail_i and verdict["status"] == "PASS":
+            verdict["status"] = "FAIL"
 
     # cleanup always
     for c in spec.get("cleanup") or []:

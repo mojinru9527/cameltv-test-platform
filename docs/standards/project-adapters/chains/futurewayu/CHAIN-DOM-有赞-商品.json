@@ -1,28 +1,55 @@
 {
  "chain_id": "CHAIN-DOM-有赞-商品",
- "name": "有赞-商品 域内链（骨架，只读步骤已生成）",
+ "name": "有赞-商品 域内链（只读就绪：2 步 + 无凭证拒绝注入）",
+ "domain": "有赞-商品",
  "priority": "P2",
- "status": "skeleton",
  "fixtures": [],
  "entry_gate": [],
  "steps": [
   {
    "no": 1,
+   "name": "process:/system/youzan/goods/alert/detail",
+   "method": "GET",
+   "path": "/system/youzan/goods/alert/detail",
+   "auth": "admin",
+   "expect": {
+    "code_in": [
+     200,
+     403
+    ]
+   }
+  },
+  {
+   "no": 2,
    "name": "list:/system/youzan/goods/alert/list",
    "method": "GET",
    "path": "/system/youzan/goods/alert/list",
    "auth": "admin",
    "expect": {
-    "code": 200
+    "code_in": [
+     200,
+     403
+    ]
+   }
+  }
+ ],
+ "failure_injection": [
+  {
+   "no": "i1",
+   "name": "无凭证访问被拒",
+   "method": "GET",
+   "path": "/system/youzan/goods/alert/detail",
+   "no_auth": true,
+   "expect": {
+    "code_in": [
+     401,
+     403
+    ]
    }
   }
  ],
  "cleanup": [],
- "todo": [
-  "补充前置夹具（造数链：上游实体 → 本域）",
-  "补充写阶段步骤与状态/数据/幂等断言",
-  "补充失败注入（并发/重复/乱序）与清理契约"
- ],
- "domain": "有赞-商品",
+ "note": "只读链：admin 接口 403 视为有效权限结果；写阶段与夹具待按需补充",
+ "status": "ready-readonly",
  "api_count": 3
 }

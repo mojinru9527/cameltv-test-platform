@@ -62,6 +62,12 @@ jobs:
             --graph docs/standards/project-adapters/out/futurewayu/interface-chain-graph.json \
             --out-dir docs/standards/project-adapters/chains/futurewayu
 
+      - name: Validate chain specs (readiness gate)
+        run: |
+          python scripts/test-asset-map/validate_chains.py \
+            --dir docs/standards/project-adapters/chains/futurewayu \
+            --out docs/standards/project-adapters/out/futurewayu/chain-readiness.json
+
       - name: Gate self-check (golden assertions, must pass)
         run: |
           python scripts/test-asset-map/gate.py \
@@ -79,6 +85,7 @@ jobs:
             asset-map-gate-report.json
             docs/standards/project-adapters/out/*/summary.json
             docs/standards/project-adapters/chains/futurewayu/manifest.json
+            docs/standards/project-adapters/out/futurewayu/chain-readiness.json
 
   live:
     name: live-assertions
@@ -111,6 +118,15 @@ jobs:
               --spec "docs/standards/project-adapters/chains/futurewayu/$c.json" \
               --env runtime/env.json --out "runtime/chain-$c.csv" || true
           done
+
+      - name: Run all ready chains (read-only)
+        run: |
+          python scripts/test-asset-map/run_all_chains.py \
+            --manifest docs/standards/project-adapters/chains/futurewayu/manifest.json \
+            --env runtime/env.json --out-dir runtime/chains \
+            --statuses ready,ready-readonly --spacing-ms 250
+          python scripts/test-asset-map/report_chains.py \
+            --summary runtime/chains/summary.csv --out runtime/chains/chain-report.md
 
       - name: Gate (real thresholds)
         run: |

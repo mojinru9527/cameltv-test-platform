@@ -241,11 +241,11 @@ python scripts/test-asset-map/gate.py --summary docs/standards/project-adapters/
 
 ## 14. 链路就绪度
 
-| 优先级 | ready | skeleton |
-|---|---:|---:|
-| P0 | 3（资产-组件 / 订单-C端 / 有赞-交易） | — |
-| P1 | 3（认证 / 消息 / 社区-帖子） | — |
-| 其余 | — | 28 |
+| 状态 | 数量 | 含义 |
+|---|---:|---|
+| `ready` | 6 | 含夹具/注入的完整规格（3 P0 + 3 P1） |
+| `ready-readonly` | 25 | 只读步骤 + 无凭证拒绝注入，可直接执行 |
+| `skeleton` | 3 | 纯写域（回调/社区-互动/身份卡-C端），需夹具与写权限批准 |
 
 6 条 ready 链实测 **全部 PASS**（共 29 个步骤）。其中：
 - 认证链使用**不存在的用户名**验证非法登录被拒，避免锁定真实账号；实测返回 403（非 200，未发 token）。
@@ -266,3 +266,43 @@ python scripts/test-asset-map/gate.py --summary docs/standards/project-adapters/
 关闭标准：`run_assertions.py web --rules R21` 全量 28 页 **28/28 PASS**。
 
 > 附：本轮"跑通一次 CI"发现真实问题——`futurewayu.endpoints.json` 被 gitignore 导致干净检出必挂；已将接口清单入库、用例基线改为缺失时降级，修复后干净检出 static job 全绿（12 单测 + 双项目 + golden 门禁 exit 0）。
+
+
+## 16. 28 条骨架链→就绪（本轮）
+
+### 16.1 就绪度提升
+
+| 指标 | 上一轮 | 本轮 |
+|---|---:|---:|
+| ready | 6 | 6 |
+| ready-readonly | 0 | **25** |
+| skeleton | 28 | **3** |
+| 校验器 invalid | 4 | **0** |
+| 能力可执行链路 | 5/34（14.7%） | **29/34（85.3%）** |
+
+做法：`gen_chain_specs.py` 按接口依赖图自动取**安全只读步骤**（排除 `{}` 路径、写动词、含 read/refresh/print 等副作用词的 GET），每步带 `expect`，每条链追加一条**无凭证拒绝注入**（鉴权断言）。纯写域不硬凑，写 `blocked_reason`。
+
+### 16.2 校验器（validate_chains.py）
+
+把"就绪"变成机器可校验，5 条规则：step 必须有 expect；变量引用必须可被 fixture 提取；写步骤必须有 cleanup（或 `cleanup_not_applicable` 理由）；ready 链必须有 ≥1 步且带注入/说明；零步骤必须写 blocked_reason。
+CI 已加该步骤，invalid 直接阻断。
+
+### 16.3 批量只读执行结果
+
+| 指标 | 结果 |
+|---|---|
+| 链路 | **23/31 PASS**（74.2%） |
+| 步骤 | **87/98 PASS（88.8%）** |
+| 失败归因 | 8 条**全部**为 `product-500`，无规格噪声 |
+
+**8 条失败收敛为 1 条缺陷**：缺参/内部异常返回 500 兜底，命中 8 个接口（`/client/wx/subscription/templates`、`/statuses`、`/client/bannerActivity/enabledList`、`/client/appVersion/latest`、`/client/oss/user-image/audit-status`、`/client/search`、`/system/pickupOrder/station/screen|orders`、`/system/youzan/store/goods/channel/batches`、`/system/youzan/goods/alert/detail`）。关闭标准：缺参返回 400/422 且 msg 指明字段；复跑 **31/31 PASS**。
+
+### 16.4 踩坑记录（都已修）
+
+| 问题 | 现象 | 修法 |
+|---|---|---|
+| 裸数组响应 | `/system/aiProcessRecord/list` 返回 JSON 数组 → runner `AttributeError` | 数组视为 200 成功体 |
+| `/monitor` 前缀漏判 | 运营访问监控接口 403 被判 FAIL | 管理员前缀补 `/monitor`、`/tool` |
+| 公开接口注入误判 | banner/bgImage 无凭证本就 200 | 公开前缀注入口径 [200,401,403] |
+| 设备接口 401 | `/device/**` 需设备令牌 | 非缺陷，按能力缺口登记 |
+| 旧规格残留 | domain 改名后旧 JSON 仍在 | 生成前清理 `CHAIN-*.json` |

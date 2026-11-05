@@ -66,7 +66,23 @@
    ]
   }
  ],
+ "failure_injection": [
+  {
+   "no": "i1",
+   "name": "无凭证访问组件详情被拒",
+   "method": "GET",
+   "path": "/system/component/{cid}",
+   "no_auth": true,
+   "expect": {
+    "code_in": [
+     401,
+     403
+    ]
+   }
+  }
+ ],
  "cleanup": [],
+ "note": "只读链：夹具为后台列表取 ID；无凭证注入验证鉴权",
  "priority": "P0",
  "status": "ready",
  "domain": "资产-组件",

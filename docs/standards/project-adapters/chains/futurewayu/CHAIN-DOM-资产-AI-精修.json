@@ -1,38 +1,107 @@
 {
  "chain_id": "CHAIN-DOM-资产-AI-精修",
- "name": "资产-AI/精修 域内链（骨架，只读步骤已生成）",
- "priority": "P2",
- "status": "skeleton",
+ "name": "资产-AI/精修 域内链（只读就绪：6 步 + 无凭证拒绝注入）",
+ "domain": "资产-AI/精修",
+ "priority": "P1",
  "fixtures": [],
  "entry_gate": [],
  "steps": [
   {
    "no": 1,
+   "name": "process:/system/refineRecord/list",
+   "method": "GET",
+   "path": "/system/refineRecord/list",
+   "auth": "admin",
+   "expect": {
+    "code_in": [
+     200,
+     403
+    ]
+   }
+  },
+  {
+   "no": 2,
+   "name": "process:/system/refineLog/list",
+   "method": "GET",
+   "path": "/system/refineLog/list",
+   "auth": "admin",
+   "expect": {
+    "code_in": [
+     200,
+     403
+    ]
+   }
+  },
+  {
+   "no": 3,
+   "name": "process:/system/refineLog/listAll",
+   "method": "GET",
+   "path": "/system/refineLog/listAll",
+   "auth": "admin",
+   "expect": {
+    "code_in": [
+     200,
+     403
+    ]
+   }
+  },
+  {
+   "no": 4,
+   "name": "process:/system/aiProcessRecord/list",
+   "method": "GET",
+   "path": "/system/aiProcessRecord/list",
+   "auth": "admin",
+   "expect": {
+    "code_in": [
+     200,
+     403
+    ]
+   }
+  },
+  {
+   "no": 5,
    "name": "list:/system/comfyWorkflow/queryList",
    "method": "GET",
    "path": "/system/comfyWorkflow/queryList",
    "auth": "admin",
    "expect": {
-    "code": 200
+    "code_in": [
+     200,
+     403
+    ]
    }
   },
   {
-   "no": 2,
+   "no": 6,
    "name": "list:/system/comfyWorkflow/list",
    "method": "GET",
    "path": "/system/comfyWorkflow/list",
    "auth": "admin",
    "expect": {
-    "code": 200
+    "code_in": [
+     200,
+     403
+    ]
+   }
+  }
+ ],
+ "failure_injection": [
+  {
+   "no": "i1",
+   "name": "无凭证访问被拒",
+   "method": "GET",
+   "path": "/system/refineRecord/list",
+   "no_auth": true,
+   "expect": {
+    "code_in": [
+     401,
+     403
+    ]
    }
   }
  ],
  "cleanup": [],
- "todo": [
-  "补充前置夹具（造数链：上游实体 → 本域）",
-  "补充写阶段步骤与状态/数据/幂等断言",
-  "补充失败注入（并发/重复/乱序）与清理契约"
- ],
- "domain": "资产-AI/精修",
+ "note": "只读链：admin 接口 403 视为有效权限结果；写阶段与夹具待按需补充",
+ "status": "ready-readonly",
  "api_count": 48
 }

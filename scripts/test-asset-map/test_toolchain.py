@@ -123,12 +123,15 @@ def test_suggest_domains_covers_all_paths(tmp_path: Path):
     assert report["coverage_by_prefix"].split("/")[0].isdigit()
 
 
-def test_gen_chain_specs_marks_ready_and_skeleton(tmp_path: Path):
+def test_gen_chain_specs_marks_ready_readonly_and_writeonly(tmp_path: Path):
     graph = {"chains": {
         "订单-C端": {"domain": "订单-C端", "api_count": 3, "stages": ["list"],
                      "nodes": [{"stage": "list", "apis": ["GET /client/mall/orders"]}]},
         "某新域": {"domain": "某新域", "api_count": 2, "stages": ["detail"],
                     "nodes": [{"stage": "detail", "apis": ["GET /system/foo/detail"]}]},
+        "纯写域": {"domain": "纯写域", "api_count": 2, "stages": ["create", "delete"],
+                   "nodes": [{"stage": "create", "apis": ["POST /system/foo"]},
+                             {"stage": "delete", "apis": ["DELETE /system/foo/{id}"]}]},
     }}
     g = tmp_path / "graph.json"
     g.write_text(json.dumps(graph, ensure_ascii=False), encoding="utf-8")
@@ -138,8 +141,50 @@ def test_gen_chain_specs_marks_ready_and_skeleton(tmp_path: Path):
     manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
     statuses = {m["domain"]: m["status"] for m in manifest["chains"]}
     assert statuses["订单-C端"] == "ready"
-    assert statuses["某新域"] == "skeleton"
-    assert (out / "CHAIN-ORDER-C-READONLY.json").exists()
+    assert statuses["某新域"] == "ready-readonly"
+    assert statuses["纯写域"] == "skeleton"
+    wr = json.loads((out / "CHAIN-DOM-某新域.json").read_text(encoding="utf-8"))
+    assert wr["failure_injection"], "只读链必须带无凭证拒绝注入"
+    wo = json.loads((out / "CHAIN-DOM-纯写域.json").read_text(encoding="utf-8"))
+    assert wo.get("blocked_reason"), "纯写域必须写明 blocked_reason"
+
+
+def test_validate_chains_flags_missing_expect(tmp_path: Path):
+    bad = {"chain_id": "C-BAD", "domain": "d", "status": "ready",
+           "steps": [{"no": 1, "method": "GET", "path": "/a", "expect": {}}]}
+    (tmp_path / "CHAIN-BAD.json").write_text(json.dumps(bad), encoding="utf-8")
+    out = tmp_path / "r.json"
+    r = run(HERE / "validate_chains.py", "--dir", tmp_path, "--out", out)
+    assert r.returncode == 1
+    rep = json.loads(out.read_text(encoding="utf-8"))
+    assert rep["invalid"] == ["C-BAD"]
+    assert any("缺少 expect" in i for i in rep["chains"][0]["issues"])
+
+
+def test_validate_chains_accepts_singleton_with_injection(tmp_path: Path):
+    good = {"chain_id": "C-OK", "domain": "d", "status": "ready-readonly",
+            "steps": [{"no": 1, "method": "GET", "path": "/a", "expect": {"code_in": [200]}}],
+            "failure_injection": [{"no": "i1", "method": "GET", "path": "/a", "no_auth": True,
+                                   "expect": {"code_in": [401, 403]}}]}
+    (tmp_path / "CHAIN-OK.json").write_text(json.dumps(good), encoding="utf-8")
+    out = tmp_path / "r.json"
+    r = run(HERE / "validate_chains.py", "--dir", tmp_path, "--out", out)
+    assert r.returncode == 0, r.stdout + r.stderr
+    rep = json.loads(out.read_text(encoding="utf-8"))
+    assert rep["grades"] == {"ready": 1}
+
+
+def test_validate_chains_requires_cleanup_for_write_steps(tmp_path: Path):
+    spec = {"chain_id": "C-W", "domain": "d", "status": "ready",
+            "steps": [{"no": 1, "method": "POST", "path": "/a", "expect": {"code": 200}}],
+            "failure_injection": [{"no": "i1", "method": "GET", "path": "/a", "no_auth": True,
+                                   "expect": {"code_in": [401]}}]}
+    (tmp_path / "CHAIN-W.json").write_text(json.dumps(spec), encoding="utf-8")
+    out = tmp_path / "r.json"
+    r = run(HERE / "validate_chains.py", "--dir", tmp_path, "--out", out)
+    assert r.returncode == 1
+    rep = json.loads(out.read_text(encoding="utf-8"))
+    assert any("cleanup" in i for i in rep["chains"][0]["issues"])
 
 
 def test_capability_matrix_marks_blocked(tmp_path: Path):
@@ -160,7 +205,7 @@ def test_capability_matrix_marks_blocked(tmp_path: Path):
              {"page_id": "M1", "platform": "小程序", "name": "首页", "path": "/m"}]
     (tmp_path / "pages.json").write_text(json.dumps({"pages": pages}, ensure_ascii=False), encoding="utf-8")
     chains = {"chains": [
-        {"chain_id": "C1", "domain": "订单-C端", "status": "ready", "priority": "P0"},
+        {"chain_id": "C1", "domain": "订单-C端", "status": "ready-readonly", "priority": "P0"},
         {"chain_id": "C2", "domain": "退款", "status": "ready", "priority": "P0"},
         {"chain_id": "C3", "domain": "其它", "status": "skeleton", "priority": "P2"},
     ]}
@@ -172,7 +217,7 @@ def test_capability_matrix_marks_blocked(tmp_path: Path):
     m = json.loads(out.read_text(encoding="utf-8"))
     assert m["pages"]["executable"] == 1
     assert m["pages"]["blocked_by"] == {"mini": 1}
-    assert m["chains"]["executable"] == 1          # 只有 C1：ready + 能力齐备
-    row = {r["chain_id"]: r for r in m["chain_matrix"]}
+    assert m["chains"]["executable"] == 1
+    row = {x["chain_id"]: x for x in m["chain_matrix"]}
     assert row["C2"]["blocked_by"] == ["pay"]
     assert "spec-skeleton" in row["C3"]["blocked_by"]
