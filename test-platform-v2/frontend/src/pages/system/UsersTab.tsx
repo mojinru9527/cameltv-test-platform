@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/utils/zodFormResolver'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { createUser, deleteUser, fetchRoles, fetchUsers, updateUser } from '@/api/system'
@@ -59,7 +59,7 @@ export default function UsersTab() {
     reset,
     control,
   } = useForm<UserFormData>({
-    resolver: zodResolver(userSchema),
+    resolver: zodFormResolver(userSchema),
     defaultValues: { status: true, username: '', password: '', nickname: '', email: '' },
   })
 

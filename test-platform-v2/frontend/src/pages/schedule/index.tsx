@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/utils/zodFormResolver'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Plus, Edit, Trash2, Zap } from '@/lib/icons'
@@ -71,7 +71,7 @@ const RUN_STATUS_BADGE: Record<string, string> = {
 const scheduleSchema = z.object({
   name: z.string().min(1, '请输入名称'),
   job_type: z.enum(['plan']).default('plan'),
-  plan_id: z.string({ required_error: '请选择计划' }).min(1, '请选择计划'),
+  plan_id: z.string({ error: '请选择计划' }).min(1, '请选择计划'),
   cron_expression: z.string().min(1, '请输入 Cron 表达式'),
   enabled: z.boolean().default(true),
   description: z.string().optional(),
@@ -105,7 +105,7 @@ export default function SchedulePage() {
   useEffect(() => { loadEnvironments() }, [])
 
   const form = useForm<ScheduleFormValues>({
-    resolver: zodResolver(scheduleSchema),
+    resolver: zodFormResolver(scheduleSchema),
     defaultValues: { job_type: 'plan', plan_id: '', enabled: true, description: '', disabled_reason: '' },
   })
 

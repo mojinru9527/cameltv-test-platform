@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/utils/zodFormResolver'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import {
@@ -67,7 +67,7 @@ export default function InviteCodesTab() {
     reset,
     formState: { errors },
   } = useForm<InviteFormData>({
-    resolver: zodResolver(inviteSchema),
+    resolver: zodFormResolver(inviteSchema),
     defaultValues: { usage_limit: 1, expires_at: '' },
   })
 
