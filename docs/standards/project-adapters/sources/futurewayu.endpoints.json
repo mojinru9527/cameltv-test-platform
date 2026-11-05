@@ -1,0 +1,3747 @@
+[
+  {
+    "id": 527871299,
+    "method": "GET",
+    "path": "/system/component/workbench/component/list",
+    "name": "工作台组件列表",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871300,
+    "method": "POST",
+    "path": "/system/component/workbench/component/list",
+    "name": "工作台组件列表",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871301,
+    "method": "PUT",
+    "path": "/system/component",
+    "name": "修改组件",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871302,
+    "method": "POST",
+    "path": "/system/component",
+    "name": "新增组件",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871303,
+    "method": "PUT",
+    "path": "/system/component/series",
+    "name": "批量设置组件系列：mode = replace 整组替换（seriesIds 可传空数组清空）/ append 追加 / remove 移除",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871304,
+    "method": "PUT",
+    "path": "/system/component/aiProcessImage",
+    "name": "修改组件 AI 处理图",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871305,
+    "method": "POST",
+    "path": "/system/component/workbench/unbind",
+    "name": "组件解绑娃体接口",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871306,
+    "method": "POST",
+    "path": "/system/component/workbench/component",
+    "name": "工作台组件详情",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871307,
+    "method": "POST",
+    "path": "/system/component/workbench/bind",
+    "name": "组件绑定娃体接口",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871308,
+    "method": "POST",
+    "path": "/system/component/uploadMaterial",
+    "name": "组件上传素材",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871309,
+    "method": "POST",
+    "path": "/system/component/youzan/unbind",
+    "name": "组件解绑有赞商品。",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871310,
+    "method": "POST",
+    "path": "/system/component/unboundProduct",
+    "name": "组件解绑有赞商品。",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871311,
+    "method": "POST",
+    "path": "/system/component/skin/youzan/unbind",
+    "name": "脸片组件按娃体肤色解绑有赞商品。",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871312,
+    "method": "POST",
+    "path": "/system/component/skin/youzan/bind",
+    "name": "脸片组件按娃体肤色绑定有赞商品。",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871313,
+    "method": "POST",
+    "path": "/system/component/reviewRejected",
+    "name": "组件审核驳回",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871314,
+    "method": "POST",
+    "path": "/system/component/reviewPass/{id}",
+    "name": "组件质检审核通过",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871315,
+    "method": "POST",
+    "path": "/system/component/review/reject/{componentId}",
+    "name": "审核退回：退回这件组件所有待审核的提交，组件回到待精修",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871316,
+    "method": "POST",
+    "path": "/system/component/review/approve/{componentId}",
+    "name": "审核通过：通过这件组件所有待审核的提交，并在对应娃体上架；可带审核意见（记下的问题）",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871317,
+    "method": "POST",
+    "path": "/system/component/removeSale/{id}",
+    "name": "组件下架销售",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871318,
+    "method": "POST",
+    "path": "/system/component/qualityCheck/submit",
+    "name": "提交精修(提交审核)",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871319,
+    "method": "POST",
+    "path": "/system/component/putOnSale/{id}",
+    "name": "组件上线",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871320,
+    "method": "POST",
+    "path": "/system/component/getWorkflow",
+    "name": "组件流程操作状态节点记录：AI 记录、精修记录、质检记录、组件状态流转日志",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871321,
+    "method": "POST",
+    "path": "/system/component/getComponentRefineInfo",
+    "name": "根据娃体+组件，获取当前组件渲染图(精修二次编辑基本信息回显--质检审核驳回)",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871322,
+    "method": "POST",
+    "path": "/system/component/export",
+    "name": "导出组件列表",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871323,
+    "method": "POST",
+    "path": "/system/component/delete",
+    "name": "删除组件",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871324,
+    "method": "POST",
+    "path": "/system/component/boundProduct",
+    "name": "组件直接绑定有赞商品。",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871325,
+    "method": "POST",
+    "path": "/system/component/youzan/bind",
+    "name": "组件直接绑定有赞商品。",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871326,
+    "method": "POST",
+    "path": "/system/component/body/removeSale",
+    "name": "bodyRemoveSale",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871327,
+    "method": "POST",
+    "path": "/system/component/body/putOnSale",
+    "name": "bodyPutOnSale",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871328,
+    "method": "POST",
+    "path": "/system/component/batchRemoveSale",
+    "name": "组件批量下架",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871329,
+    "method": "POST",
+    "path": "/system/component/batchPutOnSale",
+    "name": "组件批量上架",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871330,
+    "method": "POST",
+    "path": "/system/component/ai/submit",
+    "name": "提交AI处理",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871331,
+    "method": "POST",
+    "path": "/system/component/ai/process",
+    "name": "根据组件ID发起AI处理请求",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871332,
+    "method": "POST",
+    "path": "/system/component/ai/process/multiBody",
+    "name": "aiProcessMultiBody",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871333,
+    "method": "POST",
+    "path": "/system/component/ai/abort",
+    "name": "根据组件ID中断正在执行的AI处理请求",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871334,
+    "method": "GET",
+    "path": "/system/component/{id}",
+    "name": "获取组件主详细信息",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871335,
+    "method": "GET",
+    "path": "/system/component/youzan/goods/{youzanGoodsId}",
+    "name": "从门店已同步的商品快照查询商品（主门店网店渠道优先），支持选择具体规格。",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871336,
+    "method": "GET",
+    "path": "/system/component/youzan/goods/search",
+    "name": "搜索各启用门店已同步的商品快照。",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871337,
+    "method": "GET",
+    "path": "/system/component/youzan/goods/search/page",
+    "name": "分页搜索有赞商品。",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871338,
+    "method": "GET",
+    "path": "/system/component/styleTags",
+    "name": "获取组件信息中的全部风格标签。",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871339,
+    "method": "GET",
+    "path": "/system/component/styleGroups",
+    "name": "按款查看：按款名分组分页（同款不同日期合并成一组），筛选条件同 /list，另支持 styleName 按款名模糊筛选。\n pageNum / pageSize / total 都按组计。",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871340,
+    "method": "GET",
+    "path": "/system/component/styleGroups/items",
+    "name": "按款查看：展开一组，返回该款名（styleKey）下符合筛选条件的全部组件，VO 与 /list 相同。",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871341,
+    "method": "GET",
+    "path": "/system/component/skin/youzan/list",
+    "name": "脸片组件在某个娃体下的肤色绑定列表（每个启用肤色一行）。",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871342,
+    "method": "GET",
+    "path": "/system/component/review/config",
+    "name": "上新是否需要审核：前端据此显示「保存并上架」或「提交审核」、是否显示「待审核」",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871343,
+    "method": "GET",
+    "path": "/system/component/list",
+    "name": "查询组件主列表",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871344,
+    "method": "GET",
+    "path": "/system/component/getWorkBabyList/{id}",
+    "name": "根据组件，获取所有娃体集合",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871345,
+    "method": "GET",
+    "path": "/system/component/getDefaultComponentList/{templateId}",
+    "name": "根据娃体获取默认组件列表",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871346,
+    "method": "GET",
+    "path": "/system/component/getCategoryList/{id}",
+    "name": "根据组件，获取需要显示的分类列表",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871347,
+    "method": "GET",
+    "path": "/system/component/ai/bodyResults/{componentId}",
+    "name": "getBodyResults",
+    "folder": "未来娃屿接口文档 / 数字资产_组件模块接口"
+  },
+  {
+    "id": 527871348,
+    "method": "PUT",
+    "path": "/system/youzan/store",
+    "name": "edit",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871349,
+    "method": "POST",
+    "path": "/system/youzan/store",
+    "name": "add",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871350,
+    "method": "PUT",
+    "path": "/system/youzan/store/{id}/main",
+    "name": "setMain",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871351,
+    "method": "PUT",
+    "path": "/system/youzan/store/point-payment",
+    "name": "保存一个自提点的微信 / 支付宝收款设置，以及是否收快递单的钱。",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871352,
+    "method": "POST",
+    "path": "/system/youzan/store/{id}/goods/sync",
+    "name": "syncGoods",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871353,
+    "method": "POST",
+    "path": "/system/youzan/store/youzan-info",
+    "name": "按有赞店铺 ID 拉店铺名称，给表单「更新店铺信息」回填，不直接保存。",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871354,
+    "method": "POST",
+    "path": "/system/youzan/store/self-fetch/sync",
+    "name": "手动触发有赞连锁组织与自提点全量同步。",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871355,
+    "method": "POST",
+    "path": "/system/youzan/store/goods/channel/tasks/{taskId}/replay",
+    "name": "replayChannelGoodsTask",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871356,
+    "method": "POST",
+    "path": "/system/youzan/store/goods/channel/sync",
+    "name": "手动全量同步单个目标组织的指定渠道，结果包含部分成功状态。",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871357,
+    "method": "GET",
+    "path": "/system/youzan/store/{id}",
+    "name": "getInfo",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871358,
+    "method": "GET",
+    "path": "/system/youzan/store/{id}/self-fetch-points",
+    "name": "门店在有赞配的自提点（本地同步数据），就是顾客到店取货的地址。",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871359,
+    "method": "GET",
+    "path": "/system/youzan/store/{id}/point-payments",
+    "name": "门店（整条连锁）的自提点和各自的收款设置。",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871360,
+    "method": "GET",
+    "path": "/system/youzan/store/point-payment/{selfFetchPointId}",
+    "name": "getPointPayment",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871361,
+    "method": "GET",
+    "path": "/system/youzan/store/list",
+    "name": "list_1",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871362,
+    "method": "GET",
+    "path": "/system/youzan/store/goods/channel/tasks",
+    "name": "channelGoodsTasks",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871363,
+    "method": "GET",
+    "path": "/system/youzan/store/goods/channel/targets",
+    "name": "channelGoodsTargets",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871364,
+    "method": "GET",
+    "path": "/system/youzan/store/goods/channel/batches",
+    "name": "channelGoodsBatches",
+    "folder": "未来娃屿接口文档 / 后台有赞店铺配置接口。"
+  },
+  {
+    "id": 527871365,
+    "method": "PUT",
+    "path": "/system/user",
+    "name": "修改用户",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871366,
+    "method": "POST",
+    "path": "/system/user",
+    "name": "新增用户",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871367,
+    "method": "PUT",
+    "path": "/system/user/resetPwd",
+    "name": "重置密码",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871368,
+    "method": "PUT",
+    "path": "/system/user/changeStatus",
+    "name": "状态修改",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871369,
+    "method": "PUT",
+    "path": "/system/user/authRole",
+    "name": "用户授权角色",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871370,
+    "method": "POST",
+    "path": "/system/user/importTemplate",
+    "name": "获取导入模板",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871371,
+    "method": "POST",
+    "path": "/system/user/importData",
+    "name": "导入数据",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871372,
+    "method": "POST",
+    "path": "/system/user/export",
+    "name": "导出用户列表",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871373,
+    "method": "GET",
+    "path": "/system/user/self-fetch-point-options",
+    "name": "账号页「负责的自提点」选项（门店店员用），按门店分组",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871374,
+    "method": "GET",
+    "path": "/system/user/optionselect",
+    "name": "根据用户ID串批量获取用户基础信息",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871375,
+    "method": "GET",
+    "path": "/system/user/list",
+    "name": "获取用户列表",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871376,
+    "method": "GET",
+    "path": "/system/user/list/dept/{deptId}",
+    "name": "获取部门下的所有用户信息",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871377,
+    "method": "GET",
+    "path": "/system/user/getInfo",
+    "name": "获取用户信息",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871378,
+    "method": "GET",
+    "path": "/system/user/deptTree",
+    "name": "获取部门树列表",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871379,
+    "method": "GET",
+    "path": "/system/user/authRole/{userId}",
+    "name": "根据用户编号获取授权角色",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871380,
+    "method": "GET",
+    "path": "/system/user/{userId}",
+    "name": "根据用户编号获取详细信息",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871381,
+    "method": "GET",
+    "path": "/system/user/",
+    "name": "根据用户编号获取详细信息",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871382,
+    "method": "DELETE",
+    "path": "/system/user/{userIds}",
+    "name": "删除用户",
+    "folder": "未来娃屿接口文档 / 用户信息"
+  },
+  {
+    "id": 527871383,
+    "method": "GET",
+    "path": "/system/user/profile",
+    "name": "个人信息",
+    "folder": "未来娃屿接口文档 / 个人信息 业务处理"
+  },
+  {
+    "id": 527871384,
+    "method": "PUT",
+    "path": "/system/user/profile",
+    "name": "修改用户信息",
+    "folder": "未来娃屿接口文档 / 个人信息 业务处理"
+  },
+  {
+    "id": 527871385,
+    "method": "PUT",
+    "path": "/system/user/profile/updatePwd",
+    "name": "重置密码",
+    "folder": "未来娃屿接口文档 / 个人信息 业务处理"
+  },
+  {
+    "id": 527871386,
+    "method": "POST",
+    "path": "/system/user/profile/avatar",
+    "name": "头像上传",
+    "folder": "未来娃屿接口文档 / 个人信息 业务处理"
+  },
+  {
+    "id": 527871387,
+    "method": "PUT",
+    "path": "/system/role",
+    "name": "修改保存角色",
+    "folder": "未来娃屿接口文档 / 角色信息"
+  },
+  {
+    "id": 527871388,
+    "method": "POST",
+    "path": "/system/role",
+    "name": "新增角色",
+    "folder": "未来娃屿接口文档 / 角色信息"
+  },
+  {
+    "id": 527871389,
+    "method": "PUT",
+    "path": "/system/role/dataScope",
+    "name": "修改保存数据权限",
+    "folder": "未来娃屿接口文档 / 角色信息"
+  },
+  {
+    "id": 527871390,
+    "method": "PUT",
+    "path": "/system/role/changeStatus",
+    "name": "状态修改",
+    "folder": "未来娃屿接口文档 / 角色信息"
+  },
+  {
+    "id": 527871391,
+    "method": "PUT",
+    "path": "/system/role/authUser/selectAll",
+    "name": "批量选择用户授权",
+    "folder": "未来娃屿接口文档 / 角色信息"
+  },
+  {
+    "id": 527871392,
+    "method": "PUT",
+    "path": "/system/role/authUser/cancel",
+    "name": "取消授权用户",
+    "folder": "未来娃屿接口文档 / 角色信息"
+  },
+  {
+    "id": 527871393,
+    "method": "PUT",
+    "path": "/system/role/authUser/cancelAll",
+    "name": "批量取消授权用户",
+    "folder": "未来娃屿接口文档 / 角色信息"
+  },
+  {
+    "id": 527871394,
+    "method": "POST",
+    "path": "/system/role/export",
+    "name": "导出角色信息列表",
+    "folder": "未来娃屿接口文档 / 角色信息"
+  },
+  {
+    "id": 527871395,
+    "method": "GET",
+    "path": "/system/role/{roleId}",
+    "name": "根据角色编号获取详细信息",
+    "folder": "未来娃屿接口文档 / 角色信息"
+  },
+  {
+    "id": 527871396,
+    "method": "GET",
+    "path": "/system/role/optionselect",
+    "name": "获取角色选择框列表",
+    "folder": "未来娃屿接口文档 / 角色信息"
+  },
+  {
+    "id": 527871397,
+    "method": "GET",
+    "path": "/system/role/list",
+    "name": "获取角色信息列表",
+    "folder": "未来娃屿接口文档 / 角色信息"
+  },
+  {
+    "id": 527871398,
+    "method": "GET",
+    "path": "/system/role/deptTree/{roleId}",
+    "name": "获取对应角色部门树列表",
+    "folder": "未来娃屿接口文档 / 角色信息"
+  },
+  {
+    "id": 527871399,
+    "method": "GET",
+    "path": "/system/role/authUser/unallocatedList",
+    "name": "查询未分配用户角色列表",
+    "folder": "未来娃屿接口文档 / 角色信息"
+  },
+  {
+    "id": 527871400,
+    "method": "GET",
+    "path": "/system/role/authUser/allocatedList",
+    "name": "查询已分配用户角色列表",
+    "folder": "未来娃屿接口文档 / 角色信息"
+  },
+  {
+    "id": 527871401,
+    "method": "DELETE",
+    "path": "/system/role/{roleIds}",
+    "name": "删除角色",
+    "folder": "未来娃屿接口文档 / 角色信息"
+  },
+  {
+    "id": 527871402,
+    "method": "PUT",
+    "path": "/system/refineRecord",
+    "name": "修改精修记录",
+    "folder": "未来娃屿接口文档 / 数字资产_精修记录"
+  },
+  {
+    "id": 527871403,
+    "method": "POST",
+    "path": "/system/refineRecord",
+    "name": "新增精修记录",
+    "folder": "未来娃屿接口文档 / 数字资产_精修记录"
+  },
+  {
+    "id": 527871404,
+    "method": "POST",
+    "path": "/system/refineRecord/rollback/{id}",
+    "name": "精修记录指定历史版本回退",
+    "folder": "未来娃屿接口文档 / 数字资产_精修记录"
+  },
+  {
+    "id": 527871405,
+    "method": "POST",
+    "path": "/system/refineRecord/queryList",
+    "name": "根据组件+娃体查询精修记录",
+    "folder": "未来娃屿接口文档 / 数字资产_精修记录"
+  },
+  {
+    "id": 527871406,
+    "method": "GET",
+    "path": "/system/refineRecord/{id}",
+    "name": "获取精修记录详细信息",
+    "folder": "未来娃屿接口文档 / 数字资产_精修记录"
+  },
+  {
+    "id": 527871407,
+    "method": "GET",
+    "path": "/system/refineRecord/list",
+    "name": "查询精修记录列表",
+    "folder": "未来娃屿接口文档 / 数字资产_精修记录"
+  },
+  {
+    "id": 527871408,
+    "method": "PUT",
+    "path": "/system/refineLog",
+    "name": "修改前端精修日志",
+    "folder": "未来娃屿接口文档 / 前端精修日志"
+  },
+  {
+    "id": 527871409,
+    "method": "POST",
+    "path": "/system/refineLog",
+    "name": "新增前端精修日志",
+    "folder": "未来娃屿接口文档 / 前端精修日志"
+  },
+  {
+    "id": 527871410,
+    "method": "POST",
+    "path": "/system/refineLog/export",
+    "name": "导出前端精修日志列表",
+    "folder": "未来娃屿接口文档 / 前端精修日志"
+  },
+  {
+    "id": 527871411,
+    "method": "GET",
+    "path": "/system/refineLog/{id}",
+    "name": "获取前端精修日志详细信息",
+    "folder": "未来娃屿接口文档 / 前端精修日志"
+  },
+  {
+    "id": 527871412,
+    "method": "GET",
+    "path": "/system/refineLog/list",
+    "name": "查询前端精修日志列表",
+    "folder": "未来娃屿接口文档 / 前端精修日志"
+  },
+  {
+    "id": 527871413,
+    "method": "GET",
+    "path": "/system/refineLog/listAll",
+    "name": "查询全部的前端精修日志列表",
+    "folder": "未来娃屿接口文档 / 前端精修日志"
+  },
+  {
+    "id": 527871414,
+    "method": "DELETE",
+    "path": "/system/refineLog/{ids}",
+    "name": "删除前端精修日志",
+    "folder": "未来娃屿接口文档 / 前端精修日志"
+  },
+  {
+    "id": 527871415,
+    "method": "PUT",
+    "path": "/system/qualityCheck",
+    "name": "修改质检记录",
+    "folder": "未来娃屿接口文档 / 数字资产_质检记录模块接口"
+  },
+  {
+    "id": 527871416,
+    "method": "POST",
+    "path": "/system/qualityCheck",
+    "name": "新增质检记录",
+    "folder": "未来娃屿接口文档 / 数字资产_质检记录模块接口"
+  },
+  {
+    "id": 527871417,
+    "method": "GET",
+    "path": "/system/qualityCheck/{id}",
+    "name": "获取质检记录详细信息",
+    "folder": "未来娃屿接口文档 / 数字资产_质检记录模块接口"
+  },
+  {
+    "id": 527871418,
+    "method": "GET",
+    "path": "/system/qualityCheck/list",
+    "name": "查询质检记录列表",
+    "folder": "未来娃屿接口文档 / 数字资产_质检记录模块接口"
+  },
+  {
+    "id": 527871419,
+    "method": "PUT",
+    "path": "/system/post",
+    "name": "修改岗位",
+    "folder": "未来娃屿接口文档 / 岗位信息操作处理"
+  },
+  {
+    "id": 527871420,
+    "method": "POST",
+    "path": "/system/post",
+    "name": "新增岗位",
+    "folder": "未来娃屿接口文档 / 岗位信息操作处理"
+  },
+  {
+    "id": 527871421,
+    "method": "POST",
+    "path": "/system/post/export",
+    "name": "导出岗位列表",
+    "folder": "未来娃屿接口文档 / 岗位信息操作处理"
+  },
+  {
+    "id": 527871422,
+    "method": "GET",
+    "path": "/system/post/{postId}",
+    "name": "根据岗位编号获取详细信息",
+    "folder": "未来娃屿接口文档 / 岗位信息操作处理"
+  },
+  {
+    "id": 527871423,
+    "method": "GET",
+    "path": "/system/post/optionselect",
+    "name": "获取岗位选择框列表",
+    "folder": "未来娃屿接口文档 / 岗位信息操作处理"
+  },
+  {
+    "id": 527871424,
+    "method": "GET",
+    "path": "/system/post/list",
+    "name": "获取岗位列表",
+    "folder": "未来娃屿接口文档 / 岗位信息操作处理"
+  },
+  {
+    "id": 527871425,
+    "method": "GET",
+    "path": "/system/post/deptTree",
+    "name": "获取部门树列表",
+    "folder": "未来娃屿接口文档 / 岗位信息操作处理"
+  },
+  {
+    "id": 527871426,
+    "method": "DELETE",
+    "path": "/system/post/{postIds}",
+    "name": "删除岗位",
+    "folder": "未来娃屿接口文档 / 岗位信息操作处理"
+  },
+  {
+    "id": 527871427,
+    "method": "PUT",
+    "path": "/system/plate",
+    "name": "修改板块",
+    "folder": "未来娃屿接口文档 / 板块模块代码接口"
+  },
+  {
+    "id": 527871428,
+    "method": "POST",
+    "path": "/system/plate",
+    "name": "新增板块",
+    "folder": "未来娃屿接口文档 / 板块模块代码接口"
+  },
+  {
+    "id": 527871429,
+    "method": "POST",
+    "path": "/system/plate/export",
+    "name": "导出板块列表",
+    "folder": "未来娃屿接口文档 / 板块模块代码接口"
+  },
+  {
+    "id": 527871430,
+    "method": "GET",
+    "path": "/system/plate/{id}",
+    "name": "获取板块详细信息",
+    "folder": "未来娃屿接口文档 / 板块模块代码接口"
+  },
+  {
+    "id": 527871431,
+    "method": "GET",
+    "path": "/system/plate/list",
+    "name": "查询板块列表",
+    "folder": "未来娃屿接口文档 / 板块模块代码接口"
+  },
+  {
+    "id": 527871432,
+    "method": "DELETE",
+    "path": "/system/plate/{ids}",
+    "name": "删除板块",
+    "folder": "未来娃屿接口文档 / 板块模块代码接口"
+  },
+  {
+    "id": 527871433,
+    "method": "PUT",
+    "path": "/system/pickupOrder/{ticketId}/ready",
+    "name": "改为请取货，门店叫号大屏开始叫号；不回写有赞。",
+    "folder": "未来娃屿接口文档 / 后台订单管理：门店平板和小程序下的订单；自提单可代店员点「备货完成」或撤回。"
+  },
+  {
+    "id": 527871434,
+    "method": "PUT",
+    "path": "/system/pickupOrder/{ticketId}/picking",
+    "name": "撤回到备货中。",
+    "folder": "未来娃屿接口文档 / 后台订单管理：门店平板和小程序下的订单；自提单可代店员点「备货完成」或撤回。"
+  },
+  {
+    "id": 527871435,
+    "method": "GET",
+    "path": "/system/pickupOrder/station/screen",
+    "name": "叫号大屏：自提点上备货中、请取货的号码，同门店叫号屏设备看到的。",
+    "folder": "未来娃屿接口文档 / 后台订单管理：门店平板和小程序下的订单；自提单可代店员点「备货完成」或撤回。"
+  },
+  {
+    "id": 527871436,
+    "method": "GET",
+    "path": "/system/pickupOrder/station/points",
+    "name": "叫号大屏、店员备货页能选的自提点：门店店员是自己负责的，管理员等不受限的账号是全部启用门店的自提点。\n 收快递单的自提点不接自提单，不列出。",
+    "folder": "未来娃屿接口文档 / 后台订单管理：门店平板和小程序下的订单；自提单可代店员点「备货完成」或撤回。"
+  },
+  {
+    "id": 527871437,
+    "method": "GET",
+    "path": "/system/pickupOrder/station/orders",
+    "name": "店员备货页：自提点上备货中、请取货的订单和商品明细，手机号打码（同叫号屏设备）。",
+    "folder": "未来娃屿接口文档 / 后台订单管理：门店平板和小程序下的订单；自提单可代店员点「备货完成」或撤回。"
+  },
+  {
+    "id": 527871438,
+    "method": "GET",
+    "path": "/system/pickupOrder/my-points",
+    "name": "当前账号负责的自提点；管理员等不受限的账号返回空数组。",
+    "folder": "未来娃屿接口文档 / 后台订单管理：门店平板和小程序下的订单；自提单可代店员点「备货完成」或撤回。"
+  },
+  {
+    "id": 527871439,
+    "method": "GET",
+    "path": "/system/pickupOrder/list",
+    "name": "list_11",
+    "folder": "未来娃屿接口文档 / 后台订单管理：门店平板和小程序下的订单；自提单可代店员点「备货完成」或撤回。"
+  },
+  {
+    "id": 527871440,
+    "method": "PUT",
+    "path": "/system/notice",
+    "name": "修改通知公告",
+    "folder": "未来娃屿接口文档 / 公告 信息操作处理"
+  },
+  {
+    "id": 527871441,
+    "method": "POST",
+    "path": "/system/notice",
+    "name": "新增通知公告",
+    "folder": "未来娃屿接口文档 / 公告 信息操作处理"
+  },
+  {
+    "id": 527871442,
+    "method": "GET",
+    "path": "/system/notice/{noticeId}",
+    "name": "根据通知公告编号获取详细信息",
+    "folder": "未来娃屿接口文档 / 公告 信息操作处理"
+  },
+  {
+    "id": 527871443,
+    "method": "GET",
+    "path": "/system/notice/list",
+    "name": "获取通知公告列表",
+    "folder": "未来娃屿接口文档 / 公告 信息操作处理"
+  },
+  {
+    "id": 527871444,
+    "method": "DELETE",
+    "path": "/system/notice/{noticeIds}",
+    "name": "删除通知公告",
+    "folder": "未来娃屿接口文档 / 公告 信息操作处理"
+  },
+  {
+    "id": 527871445,
+    "method": "PUT",
+    "path": "/system/message",
+    "name": "修改系统消息",
+    "folder": "未来娃屿接口文档 / 系统消息控制器"
+  },
+  {
+    "id": 527871446,
+    "method": "POST",
+    "path": "/system/message",
+    "name": "新增系统消息",
+    "folder": "未来娃屿接口文档 / 系统消息控制器"
+  },
+  {
+    "id": 527871447,
+    "method": "GET",
+    "path": "/system/message/{id}",
+    "name": "获取系统消息详细信息",
+    "folder": "未来娃屿接口文档 / 系统消息控制器"
+  },
+  {
+    "id": 527871448,
+    "method": "GET",
+    "path": "/system/message/list",
+    "name": "查询系统消息列表",
+    "folder": "未来娃屿接口文档 / 系统消息控制器"
+  },
+  {
+    "id": 527871449,
+    "method": "DELETE",
+    "path": "/system/message/{ids}",
+    "name": "删除系统消息",
+    "folder": "未来娃屿接口文档 / 系统消息控制器"
+  },
+  {
+    "id": 527871450,
+    "method": "PUT",
+    "path": "/system/menu",
+    "name": "修改菜单",
+    "folder": "未来娃屿接口文档 / 菜单信息"
+  },
+  {
+    "id": 527871451,
+    "method": "POST",
+    "path": "/system/menu",
+    "name": "新增菜单",
+    "folder": "未来娃屿接口文档 / 菜单信息"
+  },
+  {
+    "id": 527871452,
+    "method": "GET",
+    "path": "/system/menu/{menuId}",
+    "name": "根据菜单编号获取详细信息",
+    "folder": "未来娃屿接口文档 / 菜单信息"
+  },
+  {
+    "id": 527871453,
+    "method": "DELETE",
+    "path": "/system/menu/{menuId}",
+    "name": "删除菜单",
+    "folder": "未来娃屿接口文档 / 菜单信息"
+  },
+  {
+    "id": 527871454,
+    "method": "GET",
+    "path": "/system/menu/treeselect",
+    "name": "获取菜单下拉树列表",
+    "folder": "未来娃屿接口文档 / 菜单信息"
+  },
+  {
+    "id": 527871455,
+    "method": "GET",
+    "path": "/system/menu/tenantPackageMenuTreeselect/{packageId}",
+    "name": "加载对应租户套餐菜单列表树",
+    "folder": "未来娃屿接口文档 / 菜单信息"
+  },
+  {
+    "id": 527871456,
+    "method": "GET",
+    "path": "/system/menu/roleMenuTreeselect/{roleId}",
+    "name": "加载对应角色菜单列表树",
+    "folder": "未来娃屿接口文档 / 菜单信息"
+  },
+  {
+    "id": 527871457,
+    "method": "GET",
+    "path": "/system/menu/list",
+    "name": "获取菜单列表",
+    "folder": "未来娃屿接口文档 / 菜单信息"
+  },
+  {
+    "id": 527871458,
+    "method": "GET",
+    "path": "/system/menu/getRouters",
+    "name": "获取路由信息",
+    "folder": "未来娃屿接口文档 / 菜单信息"
+  },
+  {
+    "id": 527871459,
+    "method": "DELETE",
+    "path": "/system/menu/cascade/{menuIds}",
+    "name": "批量级联删除菜单",
+    "folder": "未来娃屿接口文档 / 菜单信息"
+  },
+  {
+    "id": 527871460,
+    "method": "GET",
+    "path": "/system/idCardSetting/personality",
+    "name": "性格标签列表与最多可选数",
+    "folder": "未来娃屿接口文档 / 设置 › 身份卡：性格标签与娃娃名字屏蔽词"
+  },
+  {
+    "id": 527871461,
+    "method": "PUT",
+    "path": "/system/idCardSetting/personality",
+    "name": "renamePersonality",
+    "folder": "未来娃屿接口文档 / 设置 › 身份卡：性格标签与娃娃名字屏蔽词"
+  },
+  {
+    "id": 527871462,
+    "method": "POST",
+    "path": "/system/idCardSetting/personality",
+    "name": "addPersonality",
+    "folder": "未来娃屿接口文档 / 设置 › 身份卡：性格标签与娃娃名字屏蔽词"
+  },
+  {
+    "id": 527871463,
+    "method": "PUT",
+    "path": "/system/idCardSetting/personality/maxCount",
+    "name": "updateMaxCount",
+    "folder": "未来娃屿接口文档 / 设置 › 身份卡：性格标签与娃娃名字屏蔽词"
+  },
+  {
+    "id": 527871464,
+    "method": "PUT",
+    "path": "/system/idCardSetting/personality/batchSort",
+    "name": "拖动排序后整批保存",
+    "folder": "未来娃屿接口文档 / 设置 › 身份卡：性格标签与娃娃名字屏蔽词"
+  },
+  {
+    "id": 527871465,
+    "method": "PUT",
+    "path": "/system/idCardSetting/blockWord",
+    "name": "editBlockWord",
+    "folder": "未来娃屿接口文档 / 设置 › 身份卡：性格标签与娃娃名字屏蔽词"
+  },
+  {
+    "id": 527871466,
+    "method": "POST",
+    "path": "/system/idCardSetting/blockWord",
+    "name": "addBlockWord",
+    "folder": "未来娃屿接口文档 / 设置 › 身份卡：性格标签与娃娃名字屏蔽词"
+  },
+  {
+    "id": 527871467,
+    "method": "POST",
+    "path": "/system/idCardSetting/personality/delete",
+    "name": "removePersonality",
+    "folder": "未来娃屿接口文档 / 设置 › 身份卡：性格标签与娃娃名字屏蔽词"
+  },
+  {
+    "id": 527871468,
+    "method": "POST",
+    "path": "/system/idCardSetting/blockWord/delete",
+    "name": "removeBlockWord",
+    "folder": "未来娃屿接口文档 / 设置 › 身份卡：性格标签与娃娃名字屏蔽词"
+  },
+  {
+    "id": 527871469,
+    "method": "GET",
+    "path": "/system/idCardSetting/blockWord/list",
+    "name": "娃娃名字屏蔽词分页",
+    "folder": "未来娃屿接口文档 / 设置 › 身份卡：性格标签与娃娃名字屏蔽词"
+  },
+  {
+    "id": 527871470,
+    "method": "PUT",
+    "path": "/system/dollTemplate",
+    "name": "修改娃体模板",
+    "folder": "未来娃屿接口文档 / 数字资产_娃体模板模块接口"
+  },
+  {
+    "id": 527871471,
+    "method": "POST",
+    "path": "/system/dollTemplate",
+    "name": "新增娃体模板",
+    "folder": "未来娃屿接口文档 / 数字资产_娃体模板模块接口"
+  },
+  {
+    "id": 527871472,
+    "method": "PUT",
+    "path": "/system/dollTemplate/skin/{skinId}/checkout/{checkoutId}/invalidate",
+    "name": "使引用该肤色且尚未下单的指定结算单立即失效。",
+    "folder": "未来娃屿接口文档 / 数字资产_娃体模板模块接口"
+  },
+  {
+    "id": 527871473,
+    "method": "PUT",
+    "path": "/system/dollTemplate/batchSort",
+    "name": "拖动排序后整批保存（只记一条操作日志）",
+    "folder": "未来娃屿接口文档 / 数字资产_娃体模板模块接口"
+  },
+  {
+    "id": 527871474,
+    "method": "POST",
+    "path": "/system/dollTemplate/skin/youzan/unbind",
+    "name": "娃体肤色解除有赞商品绑定。",
+    "folder": "未来娃屿接口文档 / 数字资产_娃体模板模块接口"
+  },
+  {
+    "id": 527871475,
+    "method": "POST",
+    "path": "/system/dollTemplate/skin/youzan/bind",
+    "name": "娃体肤色绑定主店铺有赞商品。",
+    "folder": "未来娃屿接口文档 / 数字资产_娃体模板模块接口"
+  },
+  {
+    "id": 527871476,
+    "method": "POST",
+    "path": "/system/dollTemplate/skin/recolor",
+    "name": "按指定肤色即时重着色，返回这一档的娃体图。\n\n ",
+    "folder": "未来娃屿接口文档 / 数字资产_娃体模板模块接口"
+  },
+  {
+    "id": 527871477,
+    "method": "POST",
+    "path": "/system/dollTemplate/export",
+    "name": "导出娃体模板列表",
+    "folder": "未来娃屿接口文档 / 数字资产_娃体模板模块接口"
+  },
+  {
+    "id": 527871478,
+    "method": "POST",
+    "path": "/system/dollTemplate/delete",
+    "name": "删除娃体模板",
+    "folder": "未来娃屿接口文档 / 数字资产_娃体模板模块接口"
+  },
+  {
+    "id": 527871479,
+    "method": "GET",
+    "path": "/system/dollTemplate/{id}",
+    "name": "获取娃体模板详细信息",
+    "folder": "未来娃屿接口文档 / 数字资产_娃体模板模块接口"
+  },
+  {
+    "id": 527871480,
+    "method": "GET",
+    "path": "/system/dollTemplate/list",
+    "name": "查询娃体模板列表",
+    "folder": "未来娃屿接口文档 / 数字资产_娃体模板模块接口"
+  },
+  {
+    "id": 527871481,
+    "method": "PUT",
+    "path": "/system/dollTemplate/skin",
+    "name": "edit_12",
+    "folder": "未来娃屿接口文档 / 娃体肤色管理接口"
+  },
+  {
+    "id": 527871482,
+    "method": "POST",
+    "path": "/system/dollTemplate/skin",
+    "name": "add_12",
+    "folder": "未来娃屿接口文档 / 娃体肤色管理接口"
+  },
+  {
+    "id": 527871483,
+    "method": "DELETE",
+    "path": "/system/dollTemplate/skin",
+    "name": "remove",
+    "folder": "未来娃屿接口文档 / 娃体肤色管理接口"
+  },
+  {
+    "id": 527871484,
+    "method": "GET",
+    "path": "/system/dollTemplate/skin/{id}",
+    "name": "getInfo_14",
+    "folder": "未来娃屿接口文档 / 娃体肤色管理接口"
+  },
+  {
+    "id": 527871485,
+    "method": "GET",
+    "path": "/system/dollTemplate/skin/list",
+    "name": "list_15",
+    "folder": "未来娃屿接口文档 / 娃体肤色管理接口"
+  },
+  {
+    "id": 527871486,
+    "method": "PUT",
+    "path": "/system/dict/type",
+    "name": "修改字典类型",
+    "folder": "未来娃屿接口文档 / 数据字典信息"
+  },
+  {
+    "id": 527871487,
+    "method": "POST",
+    "path": "/system/dict/type",
+    "name": "新增字典类型",
+    "folder": "未来娃屿接口文档 / 数据字典信息"
+  },
+  {
+    "id": 527871488,
+    "method": "PUT",
+    "path": "/system/dict/data",
+    "name": "修改保存字典数据",
+    "folder": "未来娃屿接口文档 / 数据字典信息"
+  },
+  {
+    "id": 527871489,
+    "method": "POST",
+    "path": "/system/dict/data",
+    "name": "新增字典数据",
+    "folder": "未来娃屿接口文档 / 数据字典信息"
+  },
+  {
+    "id": 527871490,
+    "method": "POST",
+    "path": "/system/dict/type/export",
+    "name": "导出字典类型列表",
+    "folder": "未来娃屿接口文档 / 数据字典信息"
+  },
+  {
+    "id": 527871491,
+    "method": "POST",
+    "path": "/system/dict/data/export",
+    "name": "导出字典数据列表",
+    "folder": "未来娃屿接口文档 / 数据字典信息"
+  },
+  {
+    "id": 527871492,
+    "method": "GET",
+    "path": "/system/dict/type/{dictId}",
+    "name": "查询字典类型详细",
+    "folder": "未来娃屿接口文档 / 数据字典信息"
+  },
+  {
+    "id": 527871493,
+    "method": "GET",
+    "path": "/system/dict/type/optionselect",
+    "name": "获取字典选择框列表",
+    "folder": "未来娃屿接口文档 / 数据字典信息"
+  },
+  {
+    "id": 527871494,
+    "method": "GET",
+    "path": "/system/dict/type/list",
+    "name": "查询字典类型列表",
+    "folder": "未来娃屿接口文档 / 数据字典信息"
+  },
+  {
+    "id": 527871495,
+    "method": "GET",
+    "path": "/system/dict/data/{dictCode}",
+    "name": "查询字典数据详细",
+    "folder": "未来娃屿接口文档 / 数据字典信息"
+  },
+  {
+    "id": 527871496,
+    "method": "GET",
+    "path": "/system/dict/data/type/{dictType}",
+    "name": "根据字典类型查询字典数据信息",
+    "folder": "未来娃屿接口文档 / 数据字典信息"
+  },
+  {
+    "id": 527871497,
+    "method": "GET",
+    "path": "/system/dict/data/list",
+    "name": "查询字典数据列表",
+    "folder": "未来娃屿接口文档 / 数据字典信息"
+  },
+  {
+    "id": 527871498,
+    "method": "DELETE",
+    "path": "/system/dict/type/{dictIds}",
+    "name": "删除字典类型",
+    "folder": "未来娃屿接口文档 / 数据字典信息"
+  },
+  {
+    "id": 527871499,
+    "method": "DELETE",
+    "path": "/system/dict/type/refreshCache",
+    "name": "刷新字典缓存",
+    "folder": "未来娃屿接口文档 / 数据字典信息"
+  },
+  {
+    "id": 527871500,
+    "method": "DELETE",
+    "path": "/system/dict/data/{dictCodes}",
+    "name": "删除字典数据",
+    "folder": "未来娃屿接口文档 / 数据字典信息"
+  },
+  {
+    "id": 527871501,
+    "method": "PUT",
+    "path": "/system/device",
+    "name": "edit_15",
+    "folder": "未来娃屿接口文档 / 后台线下门店设备台账接口。"
+  },
+  {
+    "id": 527871502,
+    "method": "POST",
+    "path": "/system/device",
+    "name": "新增设备，SN 和密钥由服务端生成，明文密钥只返回这一次。",
+    "folder": "未来娃屿接口文档 / 后台线下门店设备台账接口。"
+  },
+  {
+    "id": 527871503,
+    "method": "PUT",
+    "path": "/system/device/{id}/store",
+    "name": "绑定门店并同时指定自提点；storeId 传空表示解绑。解绑后设备下一次请求即被拒绝。",
+    "folder": "未来娃屿接口文档 / 后台线下门店设备台账接口。"
+  },
+  {
+    "id": 527871504,
+    "method": "POST",
+    "path": "/system/device/{id}/secret/reset",
+    "name": "重置设备密钥，旧密钥立即失效，该设备已签发的设备 Token 同时被撤销，需重新交付设备。",
+    "folder": "未来娃屿接口文档 / 后台线下门店设备台账接口。"
+  },
+  {
+    "id": 527871505,
+    "method": "GET",
+    "path": "/system/device/{id}",
+    "name": "getInfo_17",
+    "folder": "未来娃屿接口文档 / 后台线下门店设备台账接口。"
+  },
+  {
+    "id": 527871506,
+    "method": "GET",
+    "path": "/system/device/stores/{storeId}/self-fetch-points",
+    "name": "listSelfFetchPoints_1",
+    "folder": "未来娃屿接口文档 / 后台线下门店设备台账接口。"
+  },
+  {
+    "id": 527871507,
+    "method": "GET",
+    "path": "/system/device/list",
+    "name": "list_19",
+    "folder": "未来娃屿接口文档 / 后台线下门店设备台账接口。"
+  },
+  {
+    "id": 527871508,
+    "method": "DELETE",
+    "path": "/system/device/{ids}",
+    "name": "remove_25",
+    "folder": "未来娃屿接口文档 / 后台线下门店设备台账接口。"
+  },
+  {
+    "id": 527871509,
+    "method": "PUT",
+    "path": "/system/dept",
+    "name": "修改部门",
+    "folder": "未来娃屿接口文档 / 部门信息"
+  },
+  {
+    "id": 527871510,
+    "method": "POST",
+    "path": "/system/dept",
+    "name": "新增部门",
+    "folder": "未来娃屿接口文档 / 部门信息"
+  },
+  {
+    "id": 527871511,
+    "method": "GET",
+    "path": "/system/dept/{deptId}",
+    "name": "根据部门编号获取详细信息",
+    "folder": "未来娃屿接口文档 / 部门信息"
+  },
+  {
+    "id": 527871512,
+    "method": "DELETE",
+    "path": "/system/dept/{deptId}",
+    "name": "删除部门",
+    "folder": "未来娃屿接口文档 / 部门信息"
+  },
+  {
+    "id": 527871513,
+    "method": "GET",
+    "path": "/system/dept/optionselect",
+    "name": "获取部门选择框列表",
+    "folder": "未来娃屿接口文档 / 部门信息"
+  },
+  {
+    "id": 527871514,
+    "method": "GET",
+    "path": "/system/dept/list",
+    "name": "获取部门列表",
+    "folder": "未来娃屿接口文档 / 部门信息"
+  },
+  {
+    "id": 527871515,
+    "method": "GET",
+    "path": "/system/dept/list/exclude/{deptId}",
+    "name": "查询部门列表（排除节点）",
+    "folder": "未来娃屿接口文档 / 部门信息"
+  },
+  {
+    "id": 527871516,
+    "method": "PUT",
+    "path": "/system/config",
+    "name": "修改参数配置",
+    "folder": "未来娃屿接口文档 / 参数配置 信息操作处理"
+  },
+  {
+    "id": 527871517,
+    "method": "POST",
+    "path": "/system/config",
+    "name": "新增参数配置",
+    "folder": "未来娃屿接口文档 / 参数配置 信息操作处理"
+  },
+  {
+    "id": 527871518,
+    "method": "PUT",
+    "path": "/system/config/updateByKey",
+    "name": "根据参数键名修改参数配置",
+    "folder": "未来娃屿接口文档 / 参数配置 信息操作处理"
+  },
+  {
+    "id": 527871519,
+    "method": "POST",
+    "path": "/system/config/export",
+    "name": "导出参数配置列表",
+    "folder": "未来娃屿接口文档 / 参数配置 信息操作处理"
+  },
+  {
+    "id": 527871520,
+    "method": "GET",
+    "path": "/system/config/{configId}",
+    "name": "根据参数编号获取详细信息",
+    "folder": "未来娃屿接口文档 / 参数配置 信息操作处理"
+  },
+  {
+    "id": 527871521,
+    "method": "GET",
+    "path": "/system/config/list",
+    "name": "获取参数配置列表",
+    "folder": "未来娃屿接口文档 / 参数配置 信息操作处理"
+  },
+  {
+    "id": 527871522,
+    "method": "GET",
+    "path": "/system/config/configKey/{configKey}",
+    "name": "根据参数键名查询参数值",
+    "folder": "未来娃屿接口文档 / 参数配置 信息操作处理"
+  },
+  {
+    "id": 527871523,
+    "method": "DELETE",
+    "path": "/system/config/{configIds}",
+    "name": "删除参数配置",
+    "folder": "未来娃屿接口文档 / 参数配置 信息操作处理"
+  },
+  {
+    "id": 527871524,
+    "method": "DELETE",
+    "path": "/system/config/refreshCache",
+    "name": "刷新参数缓存",
+    "folder": "未来娃屿接口文档 / 参数配置 信息操作处理"
+  },
+  {
+    "id": 527871525,
+    "method": "PUT",
+    "path": "/system/componentStyle",
+    "name": "修改款（seriesIds 不为 null 时整组替换系列并同步到款内组件）",
+    "folder": "未来娃屿接口文档 / 上新_款接口"
+  },
+  {
+    "id": 527871526,
+    "method": "POST",
+    "path": "/system/componentStyle",
+    "name": "新增款",
+    "folder": "未来娃屿接口文档 / 上新_款接口"
+  },
+  {
+    "id": 527871527,
+    "method": "PUT",
+    "path": "/system/componentStyle/series",
+    "name": "设置款的系列：整组替换，并同步替换款内全部组件的系列",
+    "folder": "未来娃屿接口文档 / 上新_款接口"
+  },
+  {
+    "id": 527871528,
+    "method": "POST",
+    "path": "/system/componentStyle/move",
+    "name": "移动组件到已有的款（targetStyleId）或新建的款（newStyleName），脸妆跟着脸片走；返回目标款ID",
+    "folder": "未来娃屿接口文档 / 上新_款接口"
+  },
+  {
+    "id": 527871529,
+    "method": "POST",
+    "path": "/system/componentStyle/merge",
+    "name": "合并款：来源款的组件移到目标款，系列取并集，来源款删除",
+    "folder": "未来娃屿接口文档 / 上新_款接口"
+  },
+  {
+    "id": 527871530,
+    "method": "POST",
+    "path": "/system/componentStyle/autoAssign",
+    "name": "存量组件按名称自动归款（只处理还没归款的组件，可重复执行）",
+    "folder": "未来娃屿接口文档 / 上新_款接口"
+  },
+  {
+    "id": 527871531,
+    "method": "GET",
+    "path": "/system/componentStyle/{id}",
+    "name": "款详情：汇总 + 款内组件（带娃体、有赞绑定、系列和「还差什么」checks）",
+    "folder": "未来娃屿接口文档 / 上新_款接口"
+  },
+  {
+    "id": 527871532,
+    "method": "GET",
+    "path": "/system/componentStyle/todo",
+    "name": "运营首页待办计数",
+    "folder": "未来娃屿接口文档 / 上新_款接口"
+  },
+  {
+    "id": 527871533,
+    "method": "GET",
+    "path": "/system/componentStyle/list",
+    "name": "款列表：keyword（款名或款内组件名称）、seriesId、categoryId（含子分类）、\n need（ai_failed / unplaced / unbound / unbuyable / ready）筛选，按款内组件最近修改时间从新到旧分页",
+    "folder": "未来娃屿接口文档 / 上新_款接口"
+  },
+  {
+    "id": 527871534,
+    "method": "DELETE",
+    "path": "/system/componentStyle/{ids}",
+    "name": "删除款（款里还有组件时不能删）",
+    "folder": "未来娃屿接口文档 / 上新_款接口"
+  },
+  {
+    "id": 527871535,
+    "method": "PUT",
+    "path": "/system/componentSeries",
+    "name": "修改系列",
+    "folder": "未来娃屿接口文档 / 数字资产_组件系列接口"
+  },
+  {
+    "id": 527871536,
+    "method": "POST",
+    "path": "/system/componentSeries",
+    "name": "新增系列",
+    "folder": "未来娃屿接口文档 / 数字资产_组件系列接口"
+  },
+  {
+    "id": 527871537,
+    "method": "PUT",
+    "path": "/system/componentSeries/batchSort",
+    "name": "拖动排序后整批保存（只记一条操作日志）",
+    "folder": "未来娃屿接口文档 / 数字资产_组件系列接口"
+  },
+  {
+    "id": 527871538,
+    "method": "GET",
+    "path": "/system/componentSeries/{id}",
+    "name": "系列详情",
+    "folder": "未来娃屿接口文档 / 数字资产_组件系列接口"
+  },
+  {
+    "id": 527871539,
+    "method": "GET",
+    "path": "/system/componentSeries/optionselect",
+    "name": "启用的系列下拉选项（组件表单、组件列表筛选用），按排序值、ID 升序。\n 组件页面在用，有组件查看 / 编辑权限或系列管理权限任一即可。",
+    "folder": "未来娃屿接口文档 / 数字资产_组件系列接口"
+  },
+  {
+    "id": 527871540,
+    "method": "GET",
+    "path": "/system/componentSeries/list",
+    "name": "分页查询系列（seriesName 模糊、status 精确）",
+    "folder": "未来娃屿接口文档 / 数字资产_组件系列接口"
+  },
+  {
+    "id": 527871541,
+    "method": "DELETE",
+    "path": "/system/componentSeries/{ids}",
+    "name": "删除系列（同时去掉组件与这些系列的关联）",
+    "folder": "未来娃屿接口文档 / 数字资产_组件系列接口"
+  },
+  {
+    "id": 527871542,
+    "method": "PUT",
+    "path": "/system/componentFlowLog",
+    "name": "修改组件状态流转日志",
+    "folder": "未来娃屿接口文档 / 组件状态流转日志"
+  },
+  {
+    "id": 527871543,
+    "method": "POST",
+    "path": "/system/componentFlowLog",
+    "name": "新增组件状态流转日志",
+    "folder": "未来娃屿接口文档 / 组件状态流转日志"
+  },
+  {
+    "id": 527871544,
+    "method": "POST",
+    "path": "/system/componentFlowLog/export",
+    "name": "导出组件状态流转日志列表",
+    "folder": "未来娃屿接口文档 / 组件状态流转日志"
+  },
+  {
+    "id": 527871545,
+    "method": "GET",
+    "path": "/system/componentFlowLog/{id}",
+    "name": "获取组件状态流转日志详细信息",
+    "folder": "未来娃屿接口文档 / 组件状态流转日志"
+  },
+  {
+    "id": 527871546,
+    "method": "GET",
+    "path": "/system/componentFlowLog/list",
+    "name": "查询组件状态流转日志列表",
+    "folder": "未来娃屿接口文档 / 组件状态流转日志"
+  },
+  {
+    "id": 527871547,
+    "method": "DELETE",
+    "path": "/system/componentFlowLog/{ids}",
+    "name": "删除组件状态流转日志",
+    "folder": "未来娃屿接口文档 / 组件状态流转日志"
+  },
+  {
+    "id": 527871548,
+    "method": "PUT",
+    "path": "/system/componentCategory",
+    "name": "修改组件分类",
+    "folder": "未来娃屿接口文档 / 数字资产_组件分类模块接口"
+  },
+  {
+    "id": 527871549,
+    "method": "POST",
+    "path": "/system/componentCategory",
+    "name": "新增组件分类",
+    "folder": "未来娃屿接口文档 / 数字资产_组件分类模块接口"
+  },
+  {
+    "id": 527871550,
+    "method": "PUT",
+    "path": "/system/componentCategory/batchSort",
+    "name": "批量保存显示顺序 / 图层层级（排序抽屉一次提交，只记一条操作日志）",
+    "folder": "未来娃屿接口文档 / 数字资产_组件分类模块接口"
+  },
+  {
+    "id": 527871551,
+    "method": "POST",
+    "path": "/system/componentCategory/removeSale/{id}",
+    "name": "下架组件分类",
+    "folder": "未来娃屿接口文档 / 数字资产_组件分类模块接口"
+  },
+  {
+    "id": 527871552,
+    "method": "POST",
+    "path": "/system/componentCategory/putOnSale/{id}",
+    "name": "上架组件分类",
+    "folder": "未来娃屿接口文档 / 数字资产_组件分类模块接口"
+  },
+  {
+    "id": 527871553,
+    "method": "POST",
+    "path": "/system/componentCategory/export",
+    "name": "导出组件分类列表",
+    "folder": "未来娃屿接口文档 / 数字资产_组件分类模块接口"
+  },
+  {
+    "id": 527871554,
+    "method": "POST",
+    "path": "/system/componentCategory/delete",
+    "name": "删除组件分类",
+    "folder": "未来娃屿接口文档 / 数字资产_组件分类模块接口"
+  },
+  {
+    "id": 527871555,
+    "method": "GET",
+    "path": "/system/componentCategory/{id}",
+    "name": "获取组件分类详细信息",
+    "folder": "未来娃屿接口文档 / 数字资产_组件分类模块接口"
+  },
+  {
+    "id": 527871556,
+    "method": "GET",
+    "path": "/system/componentCategory/list",
+    "name": "查询组件分类列表",
+    "folder": "未来娃屿接口文档 / 数字资产_组件分类模块接口"
+  },
+  {
+    "id": 527871557,
+    "method": "GET",
+    "path": "/system/componentCategory/getTreeList",
+    "name": "查询组件分类树集合",
+    "folder": "未来娃屿接口文档 / 数字资产_组件分类模块接口"
+  },
+  {
+    "id": 527871558,
+    "method": "GET",
+    "path": "/system/componentCategory/getGrouping",
+    "name": "查询组件分类集合(Name/Code 数据集)",
+    "folder": "未来娃屿接口文档 / 数字资产_组件分类模块接口"
+  },
+  {
+    "id": 527871559,
+    "method": "PUT",
+    "path": "/system/comfyWorkflow",
+    "name": "修改ComfyUI工作流配置",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流配置控制器"
+  },
+  {
+    "id": 527871560,
+    "method": "POST",
+    "path": "/system/comfyWorkflow",
+    "name": "新增ComfyUI工作流配置",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流配置控制器"
+  },
+  {
+    "id": 527871561,
+    "method": "POST",
+    "path": "/system/comfyWorkflow/run",
+    "name": "调用ComfyUI工作流生成图片",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流配置控制器"
+  },
+  {
+    "id": 527871562,
+    "method": "POST",
+    "path": "/system/comfyWorkflow/delete",
+    "name": "删除ComfyUI工作流配置",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流配置控制器"
+  },
+  {
+    "id": 527871563,
+    "method": "GET",
+    "path": "/system/comfyWorkflow/{id}",
+    "name": "查询ComfyUI工作流配置详情",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流配置控制器"
+  },
+  {
+    "id": 527871564,
+    "method": "GET",
+    "path": "/system/comfyWorkflow/{id}/nodes",
+    "name": "查询ComfyUI工作流已配置的节点列表",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流配置控制器"
+  },
+  {
+    "id": 527871565,
+    "method": "GET",
+    "path": "/system/comfyWorkflow/queryList",
+    "name": "查询ComfyUI工作流配置列表（不分页）",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流配置控制器"
+  },
+  {
+    "id": 527871566,
+    "method": "GET",
+    "path": "/system/comfyWorkflow/list",
+    "name": "查询ComfyUI工作流配置分页列表",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流配置控制器"
+  },
+  {
+    "id": 527871567,
+    "method": "PUT",
+    "path": "/system/comfyWorkflowRecord",
+    "name": "修改ComfyUI工作流执行记录",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流执行记录控制器"
+  },
+  {
+    "id": 527871568,
+    "method": "POST",
+    "path": "/system/comfyWorkflowRecord",
+    "name": "新增ComfyUI工作流执行记录",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流执行记录控制器"
+  },
+  {
+    "id": 527871569,
+    "method": "POST",
+    "path": "/system/comfyWorkflowRecord/delete",
+    "name": "删除ComfyUI工作流执行记录",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流执行记录控制器"
+  },
+  {
+    "id": 527871570,
+    "method": "GET",
+    "path": "/system/comfyWorkflowRecord/{id}",
+    "name": "查询ComfyUI工作流执行记录详情",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流执行记录控制器"
+  },
+  {
+    "id": 527871571,
+    "method": "GET",
+    "path": "/system/comfyWorkflowRecord/queryList",
+    "name": "查询ComfyUI工作流执行记录列表（不分页）",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流执行记录控制器"
+  },
+  {
+    "id": 527871572,
+    "method": "GET",
+    "path": "/system/comfyWorkflowRecord/list",
+    "name": "查询ComfyUI工作流执行记录分页列表",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流执行记录控制器"
+  },
+  {
+    "id": 527871573,
+    "method": "PUT",
+    "path": "/system/comfyWorkflowNode",
+    "name": "修改ComfyUI工作流节点关系",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流节点关系控制器"
+  },
+  {
+    "id": 527871574,
+    "method": "POST",
+    "path": "/system/comfyWorkflowNode",
+    "name": "新增ComfyUI工作流节点关系",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流节点关系控制器"
+  },
+  {
+    "id": 527871575,
+    "method": "PUT",
+    "path": "/system/comfyWorkflowNode/steps/{workflowId}",
+    "name": "一次保存某个工作流的全部步骤（编排弹窗用，事务内完成，失败不会只存一半）",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流节点关系控制器"
+  },
+  {
+    "id": 527871576,
+    "method": "POST",
+    "path": "/system/comfyWorkflowNode/delete",
+    "name": "删除ComfyUI工作流节点关系",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流节点关系控制器"
+  },
+  {
+    "id": 527871577,
+    "method": "GET",
+    "path": "/system/comfyWorkflowNode/{id}",
+    "name": "查询ComfyUI工作流节点关系详情",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流节点关系控制器"
+  },
+  {
+    "id": 527871578,
+    "method": "GET",
+    "path": "/system/comfyWorkflowNode/list",
+    "name": "查询ComfyUI工作流节点关系分页列表",
+    "folder": "未来娃屿接口文档 / ComfyUI工作流节点关系控制器"
+  },
+  {
+    "id": 527871579,
+    "method": "PUT",
+    "path": "/system/comfyNode",
+    "name": "修改ComfyUI节点配置",
+    "folder": "未来娃屿接口文档 / ComfyUI节点配置控制器"
+  },
+  {
+    "id": 527871580,
+    "method": "POST",
+    "path": "/system/comfyNode",
+    "name": "新增ComfyUI节点配置",
+    "folder": "未来娃屿接口文档 / ComfyUI节点配置控制器"
+  },
+  {
+    "id": 527871581,
+    "method": "POST",
+    "path": "/system/comfyNode/run",
+    "name": "直接调用ComfyUI节点生成图片",
+    "folder": "未来娃屿接口文档 / ComfyUI节点配置控制器"
+  },
+  {
+    "id": 527871582,
+    "method": "POST",
+    "path": "/system/comfyNode/delete",
+    "name": "删除ComfyUI节点配置",
+    "folder": "未来娃屿接口文档 / ComfyUI节点配置控制器"
+  },
+  {
+    "id": 527871583,
+    "method": "POST",
+    "path": "/system/comfyNode/batchReplaceBaseUrl",
+    "name": "批量替换所有 ComfyUI 节点服务地址",
+    "folder": "未来娃屿接口文档 / ComfyUI节点配置控制器"
+  },
+  {
+    "id": 527871584,
+    "method": "GET",
+    "path": "/system/comfyNode/{id}",
+    "name": "查询ComfyUI节点配置详情",
+    "folder": "未来娃屿接口文档 / ComfyUI节点配置控制器"
+  },
+  {
+    "id": 527871585,
+    "method": "GET",
+    "path": "/system/comfyNode/queryList",
+    "name": "查询ComfyUI节点配置列表（不分页）",
+    "folder": "未来娃屿接口文档 / ComfyUI节点配置控制器"
+  },
+  {
+    "id": 527871586,
+    "method": "GET",
+    "path": "/system/comfyNode/list",
+    "name": "查询ComfyUI节点配置分页列表",
+    "folder": "未来娃屿接口文档 / ComfyUI节点配置控制器"
+  },
+  {
+    "id": 527871587,
+    "method": "PUT",
+    "path": "/system/client",
+    "name": "修改客户端管理",
+    "folder": "未来娃屿接口文档 / 客户端管理"
+  },
+  {
+    "id": 527871588,
+    "method": "POST",
+    "path": "/system/client",
+    "name": "新增客户端管理",
+    "folder": "未来娃屿接口文档 / 客户端管理"
+  },
+  {
+    "id": 527871589,
+    "method": "PUT",
+    "path": "/system/client/changeStatus",
+    "name": "状态修改",
+    "folder": "未来娃屿接口文档 / 客户端管理"
+  },
+  {
+    "id": 527871590,
+    "method": "POST",
+    "path": "/system/client/export",
+    "name": "导出客户端管理列表",
+    "folder": "未来娃屿接口文档 / 客户端管理"
+  },
+  {
+    "id": 527871591,
+    "method": "GET",
+    "path": "/system/client/{id}",
+    "name": "获取客户端管理详细信息",
+    "folder": "未来娃屿接口文档 / 客户端管理"
+  },
+  {
+    "id": 527871592,
+    "method": "GET",
+    "path": "/system/client/list",
+    "name": "查询客户端管理列表",
+    "folder": "未来娃屿接口文档 / 客户端管理"
+  },
+  {
+    "id": 527871593,
+    "method": "DELETE",
+    "path": "/system/client/{ids}",
+    "name": "删除客户端管理",
+    "folder": "未来娃屿接口文档 / 客户端管理"
+  },
+  {
+    "id": 527871594,
+    "method": "PUT",
+    "path": "/system/bgImage",
+    "name": "edit_28",
+    "folder": "未来娃屿接口文档 / 小程序背景图管理"
+  },
+  {
+    "id": 527871595,
+    "method": "POST",
+    "path": "/system/bgImage",
+    "name": "add_28",
+    "folder": "未来娃屿接口文档 / 小程序背景图管理"
+  },
+  {
+    "id": 527871596,
+    "method": "PUT",
+    "path": "/system/bgImage/batchSort",
+    "name": "拖动排序后整批保存（只记一条操作日志）",
+    "folder": "未来娃屿接口文档 / 小程序背景图管理"
+  },
+  {
+    "id": 527871597,
+    "method": "POST",
+    "path": "/system/bgImage/delete",
+    "name": "remove_9",
+    "folder": "未来娃屿接口文档 / 小程序背景图管理"
+  },
+  {
+    "id": 527871598,
+    "method": "GET",
+    "path": "/system/bgImage/{id}",
+    "name": "getInfo_30",
+    "folder": "未来娃屿接口文档 / 小程序背景图管理"
+  },
+  {
+    "id": 527871599,
+    "method": "GET",
+    "path": "/system/bgImage/list",
+    "name": "list_34",
+    "folder": "未来娃屿接口文档 / 小程序背景图管理"
+  },
+  {
+    "id": 527871600,
+    "method": "PUT",
+    "path": "/system/bannerActivity",
+    "name": "edit_29",
+    "folder": "未来娃屿接口文档 / PC 管理后台-banner 轮播活动"
+  },
+  {
+    "id": 527871601,
+    "method": "POST",
+    "path": "/system/bannerActivity",
+    "name": "add_29",
+    "folder": "未来娃屿接口文档 / PC 管理后台-banner 轮播活动"
+  },
+  {
+    "id": 527871602,
+    "method": "PUT",
+    "path": "/system/bannerActivity/batchSort",
+    "name": "拖动排序后整批保存（只记一条操作日志）",
+    "folder": "未来娃屿接口文档 / PC 管理后台-banner 轮播活动"
+  },
+  {
+    "id": 527871603,
+    "method": "POST",
+    "path": "/system/bannerActivity/delete",
+    "name": "remove_10",
+    "folder": "未来娃屿接口文档 / PC 管理后台-banner 轮播活动"
+  },
+  {
+    "id": 527871604,
+    "method": "GET",
+    "path": "/system/bannerActivity/{id}",
+    "name": "getInfo_31",
+    "folder": "未来娃屿接口文档 / PC 管理后台-banner 轮播活动"
+  },
+  {
+    "id": 527871605,
+    "method": "GET",
+    "path": "/system/bannerActivity/page",
+    "name": "page",
+    "folder": "未来娃屿接口文档 / PC 管理后台-banner 轮播活动"
+  },
+  {
+    "id": 527871606,
+    "method": "GET",
+    "path": "/system/bannerActivity/list",
+    "name": "平板开屏轮播图（平板免登录调用）：只返回正在展示的，即启用且在生效时间内的，返回格式不变",
+    "folder": "未来娃屿接口文档 / PC 管理后台-banner 轮播活动"
+  },
+  {
+    "id": 527871607,
+    "method": "PUT",
+    "path": "/system/appVersion",
+    "name": "edit_30",
+    "folder": "未来娃屿接口文档 / 安装包版本管理"
+  },
+  {
+    "id": 527871608,
+    "method": "PUT",
+    "path": "/system/appVersion/{id}/release",
+    "name": "release",
+    "folder": "未来娃屿接口文档 / 安装包版本管理"
+  },
+  {
+    "id": 527871609,
+    "method": "PUT",
+    "path": "/system/appVersion/{id}/offline",
+    "name": "offline",
+    "folder": "未来娃屿接口文档 / 安装包版本管理"
+  },
+  {
+    "id": 527871610,
+    "method": "POST",
+    "path": "/system/appVersion/upload",
+    "name": "upload",
+    "folder": "未来娃屿接口文档 / 安装包版本管理"
+  },
+  {
+    "id": 527871611,
+    "method": "POST",
+    "path": "/system/appVersion/delete",
+    "name": "remove_11",
+    "folder": "未来娃屿接口文档 / 安装包版本管理"
+  },
+  {
+    "id": 527871612,
+    "method": "GET",
+    "path": "/system/appVersion/{id}",
+    "name": "getInfo_32",
+    "folder": "未来娃屿接口文档 / 安装包版本管理"
+  },
+  {
+    "id": 527871613,
+    "method": "GET",
+    "path": "/system/appVersion/list",
+    "name": "list_36",
+    "folder": "未来娃屿接口文档 / 安装包版本管理"
+  },
+  {
+    "id": 527871614,
+    "method": "PUT",
+    "path": "/system/aiProcessRecord",
+    "name": "修改AI处理记录",
+    "folder": "未来娃屿接口文档 / 数字资产_AI处理记录"
+  },
+  {
+    "id": 527871615,
+    "method": "POST",
+    "path": "/system/aiProcessRecord",
+    "name": "新增AI处理记录",
+    "folder": "未来娃屿接口文档 / 数字资产_AI处理记录"
+  },
+  {
+    "id": 527871616,
+    "method": "POST",
+    "path": "/system/aiProcessRecord/image-slim/migrate",
+    "name": "对指定业务场景的存量图片执行腾讯 COS 极智压缩。",
+    "folder": "未来娃屿接口文档 / 数字资产_AI处理记录"
+  },
+  {
+    "id": 527871617,
+    "method": "POST",
+    "path": "/system/aiProcessRecord/export",
+    "name": "导出AI处理记录列表",
+    "folder": "未来娃屿接口文档 / 数字资产_AI处理记录"
+  },
+  {
+    "id": 527871618,
+    "method": "POST",
+    "path": "/system/aiProcessRecord/delete",
+    "name": "删除AI处理记录",
+    "folder": "未来娃屿接口文档 / 数字资产_AI处理记录"
+  },
+  {
+    "id": 527871619,
+    "method": "GET",
+    "path": "/system/aiProcessRecord/{id}",
+    "name": "获取AI处理记录详细信息",
+    "folder": "未来娃屿接口文档 / 数字资产_AI处理记录"
+  },
+  {
+    "id": 527871620,
+    "method": "GET",
+    "path": "/system/aiProcessRecord/list",
+    "name": "查询AI处理记录列表",
+    "folder": "未来娃屿接口文档 / 数字资产_AI处理记录"
+  },
+  {
+    "id": 527871621,
+    "method": "PUT",
+    "path": "/resource/oss/config",
+    "name": "修改对象存储配置",
+    "folder": "未来娃屿接口文档 / 对象存储配置"
+  },
+  {
+    "id": 527871622,
+    "method": "POST",
+    "path": "/resource/oss/config",
+    "name": "新增对象存储配置",
+    "folder": "未来娃屿接口文档 / 对象存储配置"
+  },
+  {
+    "id": 527871623,
+    "method": "PUT",
+    "path": "/resource/oss/config/changeStatus",
+    "name": "状态修改",
+    "folder": "未来娃屿接口文档 / 对象存储配置"
+  },
+  {
+    "id": 527871624,
+    "method": "GET",
+    "path": "/resource/oss/config/{ossConfigId}",
+    "name": "获取对象存储配置详细信息",
+    "folder": "未来娃屿接口文档 / 对象存储配置"
+  },
+  {
+    "id": 527871625,
+    "method": "GET",
+    "path": "/resource/oss/config/list",
+    "name": "查询对象存储配置列表",
+    "folder": "未来娃屿接口文档 / 对象存储配置"
+  },
+  {
+    "id": 527871626,
+    "method": "DELETE",
+    "path": "/resource/oss/config/{ossConfigIds}",
+    "name": "删除对象存储配置",
+    "folder": "未来娃屿接口文档 / 对象存储配置"
+  },
+  {
+    "id": 527871627,
+    "method": "PUT",
+    "path": "/device/pickup/{ticketId}/ready",
+    "name": "备货完成：改为请取货，大屏开始叫号。",
+    "folder": "未来娃屿接口文档 / 门店叫号屏（浏览器打开的叫号大屏和店员操作页）。"
+  },
+  {
+    "id": 527871628,
+    "method": "PUT",
+    "path": "/device/pickup/{ticketId}/picking",
+    "name": "撤回到备货中。",
+    "folder": "未来娃屿接口文档 / 门店叫号屏（浏览器打开的叫号大屏和店员操作页）。"
+  },
+  {
+    "id": 527871629,
+    "method": "GET",
+    "path": "/device/pickup/screen",
+    "name": "叫号大屏：备货中、请取货的号码，不带顾客信息。",
+    "folder": "未来娃屿接口文档 / 门店叫号屏（浏览器打开的叫号大屏和店员操作页）。"
+  },
+  {
+    "id": 527871630,
+    "method": "GET",
+    "path": "/device/pickup/orders",
+    "name": "店员操作页：备货中、请取货的订单和商品明细，手机号打码。",
+    "folder": "未来娃屿接口文档 / 门店叫号屏（浏览器打开的叫号大屏和店员操作页）。"
+  },
+  {
+    "id": 527871631,
+    "method": "PUT",
+    "path": "/client/post/edit",
+    "name": "编辑帖子",
+    "folder": "未来娃屿接口文档 / C端-帖子接口"
+  },
+  {
+    "id": 527871632,
+    "method": "POST",
+    "path": "/client/post",
+    "name": "新增帖子（直接发布）",
+    "folder": "未来娃屿接口文档 / C端-帖子接口"
+  },
+  {
+    "id": 527871633,
+    "method": "POST",
+    "path": "/client/post/publish",
+    "name": "发布帖子（从草稿发布或直接发布）",
+    "folder": "未来娃屿接口文档 / C端-帖子接口"
+  },
+  {
+    "id": 527871634,
+    "method": "POST",
+    "path": "/client/post/draft",
+    "name": "保存草稿",
+    "folder": "未来娃屿接口文档 / C端-帖子接口"
+  },
+  {
+    "id": 527871635,
+    "method": "GET",
+    "path": "/client/post/{id}",
+    "name": "获取帖子详细信息",
+    "folder": "未来娃屿接口文档 / C端-帖子接口"
+  },
+  {
+    "id": 527871636,
+    "method": "GET",
+    "path": "/client/post/users/search",
+    "name": "根据关键词搜索用户",
+    "folder": "未来娃屿接口文档 / C端-帖子接口"
+  },
+  {
+    "id": 527871637,
+    "method": "GET",
+    "path": "/client/post/user/posts",
+    "name": "分页获取用户发布的帖子（支持指定用户或当前登录用户）",
+    "folder": "未来娃屿接口文档 / C端-帖子接口"
+  },
+  {
+    "id": 527871638,
+    "method": "GET",
+    "path": "/client/post/user/collects",
+    "name": "分页获取用户收藏的帖子（支持指定用户或当前登录用户）",
+    "folder": "未来娃屿接口文档 / C端-帖子接口"
+  },
+  {
+    "id": 527871639,
+    "method": "GET",
+    "path": "/client/post/me/likes",
+    "name": "分页获取当前用户已点赞的帖子",
+    "folder": "未来娃屿接口文档 / C端-帖子接口"
+  },
+  {
+    "id": 527871640,
+    "method": "GET",
+    "path": "/client/post/me/collects",
+    "name": "分页获取当前用户已收藏的帖子",
+    "folder": "未来娃屿接口文档 / C端-帖子接口"
+  },
+  {
+    "id": 527871641,
+    "method": "GET",
+    "path": "/client/post/list",
+    "name": "获取帖子列表（支持多种查询方式）",
+    "folder": "未来娃屿接口文档 / C端-帖子接口"
+  },
+  {
+    "id": 527871642,
+    "method": "GET",
+    "path": "/client/post/drafts",
+    "name": "获取当前用户的草稿列表",
+    "folder": "未来娃屿接口文档 / C端-帖子接口"
+  },
+  {
+    "id": 527871643,
+    "method": "DELETE",
+    "path": "/client/post/{ids}",
+    "name": "删除帖子",
+    "folder": "未来娃屿接口文档 / C端-帖子接口"
+  },
+  {
+    "id": 527871644,
+    "method": "DELETE",
+    "path": "/client/post/drafts/{ids}",
+    "name": "删除草稿",
+    "folder": "未来娃屿接口文档 / C端-帖子接口"
+  },
+  {
+    "id": 527871645,
+    "method": "PUT",
+    "path": "/client/message/read/type/{type}",
+    "name": "标记指定类型的消息为已读",
+    "folder": "未来娃屿接口文档 / C端-消息接口"
+  },
+  {
+    "id": 527871646,
+    "method": "PUT",
+    "path": "/client/message/read/all",
+    "name": "标记所有消息为已读",
+    "folder": "未来娃屿接口文档 / C端-消息接口"
+  },
+  {
+    "id": 527871647,
+    "method": "GET",
+    "path": "/client/message/{id}",
+    "name": "查看消息详情（标记为已读）",
+    "folder": "未来娃屿接口文档 / C端-消息接口"
+  },
+  {
+    "id": 527871648,
+    "method": "GET",
+    "path": "/client/message/unread/count",
+    "name": "获取未读消息数量",
+    "folder": "未来娃屿接口文档 / C端-消息接口"
+  },
+  {
+    "id": 527871649,
+    "method": "GET",
+    "path": "/client/message/list",
+    "name": "分页获取消息列表",
+    "folder": "未来娃屿接口文档 / C端-消息接口"
+  },
+  {
+    "id": 527871650,
+    "method": "DELETE",
+    "path": "/client/message/{ids}",
+    "name": "删除消息",
+    "folder": "未来娃屿接口文档 / C端-消息接口"
+  },
+  {
+    "id": 527871651,
+    "method": "GET",
+    "path": "/client/mall/checkout/{checkoutId}",
+    "name": "查询属于当前用户的结算草稿。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871652,
+    "method": "PUT",
+    "path": "/client/mall/checkout/{checkoutId}",
+    "name": "更新确认订单页的店铺、履约及收货信息。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871653,
+    "method": "PUT",
+    "path": "/client/mall/cart/selection",
+    "name": "全选或取消全选当前用户购物车。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871654,
+    "method": "PUT",
+    "path": "/client/mall/cart/items/{cartItemId}",
+    "name": "修改购物车商品数量或选中状态。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871655,
+    "method": "DELETE",
+    "path": "/client/mall/cart/items/{cartItemId}",
+    "name": "删除单个购物车商品。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871656,
+    "method": "PUT",
+    "path": "/client/mall/addresses/{addressId}",
+    "name": "修改属于当前用户的收货地址；并发置默认时由数据库唯一键兜底并自动重试一次。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871657,
+    "method": "DELETE",
+    "path": "/client/mall/addresses/{addressId}",
+    "name": "删除属于当前用户的收货地址。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871658,
+    "method": "POST",
+    "path": "/client/mall/orders/{businessNo}/payment/prepare",
+    "name": "通过我方微信支付商户创建小程序支付交易并返回调起参数。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871659,
+    "method": "POST",
+    "path": "/client/mall/orders/{businessNo}/payment/native",
+    "name": "为当前用户的待支付订单生成微信NATIVE支付二维码，供小程序内扫码支付。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871660,
+    "method": "POST",
+    "path": "/client/mall/orders/{businessNo}/payment/alipay",
+    "name": "为待支付订单生成支付宝付款码（当面付），顾客用支付宝扫码付款，钱进订单所属门店的支付宝。\n 返回结构和微信收款码一样：codeUrl 是支付宝二维码内容，qrCodeDataUrl 是渲染好的二维码图片。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871661,
+    "method": "POST",
+    "path": "/client/mall/orders/{businessNo}/cancel",
+    "name": "取消当前用户尚未支付的商城订单。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871662,
+    "method": "POST",
+    "path": "/client/mall/orders/{businessNo}/address",
+    "name": "修改当前用户订单的收货地址：有赞每单只让改一次，不重算运费。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871663,
+    "method": "POST",
+    "path": "/client/mall/checkout/{checkoutId}/submit",
+    "name": "提交结算；业务流水号由后端生成并保持幂等。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871664,
+    "method": "POST",
+    "path": "/client/mall/checkout/preview",
+    "name": "从购物车或商品详情创建结算预览。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871665,
+    "method": "POST",
+    "path": "/client/mall/cart/items",
+    "name": "加入购物车；相同规格会合并数量。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871666,
+    "method": "GET",
+    "path": "/client/mall/addresses",
+    "name": "查询当前用户收货地址。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871667,
+    "method": "POST",
+    "path": "/client/mall/addresses",
+    "name": "新增收货地址；并发置默认时由数据库唯一键兜底并自动重试一次。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871668,
+    "method": "GET",
+    "path": "/client/mall/products/{componentId}",
+    "name": "查询单个组件对应的商品详情；脸片需传 dollTemplateId 与 dollSkinId 按肤色解析。\n 顾客选了到店自提时传 selfFetchPointId，价格库存按这家门店。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871669,
+    "method": "GET",
+    "path": "/client/mall/pickup-points",
+    "name": "换装前选取货方式时可选的门店自提点（还没搭配，不看商品）。传顾客位置（国测局坐标）时带距离、由近到远排。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871670,
+    "method": "GET",
+    "path": "/client/mall/orders",
+    "name": "查询当前用户的订单列表。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871671,
+    "method": "GET",
+    "path": "/client/mall/orders/{businessNo}",
+    "name": "按后端业务流水号查询属于当前用户的订单详情。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871672,
+    "method": "DELETE",
+    "path": "/client/mall/orders/{businessNo}",
+    "name": "从当前用户的订单列表删掉一单（已取消、已关闭、下单失败的）；订单数据照常保留。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871673,
+    "method": "GET",
+    "path": "/client/mall/orders/{businessNo}/self-fetch-code",
+    "name": "查询属于当前用户的线下自提订单自提码。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871674,
+    "method": "GET",
+    "path": "/client/mall/orders/{businessNo}/logistics",
+    "name": "实时查询有赞发货单及物流摘要。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871675,
+    "method": "GET",
+    "path": "/client/mall/dolls/{templateId}/skins/{skinId}",
+    "name": "查询娃体模板指定肤色的商品详情；顾客选了到店自提时传 selfFetchPointId，价格库存按这家门店。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871676,
+    "method": "GET",
+    "path": "/client/mall/checkout/{checkoutId}/salesmen",
+    "name": "结算页可选的导购：这单所在门店的有赞内部销售员；查不到时为空列表，前端不显示这一行。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871677,
+    "method": "GET",
+    "path": "/client/mall/checkout/{checkoutId}/points",
+    "name": "结算页积分：买家积分余额，以及这单最多能用多少积分抵现。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871678,
+    "method": "GET",
+    "path": "/client/mall/checkout/{checkoutId}/pickup-times",
+    "name": "自提单可选的到店时间；快递单、平板单、还没选自提门店的返回不必选、没有时段。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871679,
+    "method": "GET",
+    "path": "/client/mall/checkout/{checkoutId}/pickup-points",
+    "name": "结算页「到店自提」可选的门店自提点。传顾客位置（国测局坐标）时带距离、由近到远排；\n 这单在某家门店买不齐时该门店 available=false。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871680,
+    "method": "GET",
+    "path": "/client/mall/checkout/{checkoutId}/coupons",
+    "name": "查询当前用户在结算单下的可用与不可用优惠券。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871681,
+    "method": "GET",
+    "path": "/client/mall/checkout/{checkoutId}/coupons/{couponId}/applicable-products",
+    "name": "查询优惠券在当前结算单内适用的商品列表。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871682,
+    "method": "GET",
+    "path": "/client/mall/checkout/{checkoutId}/confirm-coupons",
+    "name": "使用有赞下单确认接口查询可直接用于建单的优惠券 ID 和类型。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871683,
+    "method": "GET",
+    "path": "/client/mall/cart",
+    "name": "查询当前用户购物车。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871684,
+    "method": "DELETE",
+    "path": "/client/mall/cart/items/selected",
+    "name": "删除当前用户已选中的购物车商品。",
+    "folder": "未来娃屿接口文档 / 小程序商城接口。"
+  },
+  {
+    "id": 527871685,
+    "method": "PUT",
+    "path": "/client/comment/{id}/top",
+    "name": "置顶评论",
+    "folder": "未来娃屿接口文档 / C端-评论接口"
+  },
+  {
+    "id": 527871686,
+    "method": "DELETE",
+    "path": "/client/comment/{id}/top",
+    "name": "取消置顶评论",
+    "folder": "未来娃屿接口文档 / C端-评论接口"
+  },
+  {
+    "id": 527871687,
+    "method": "POST",
+    "path": "/client/comment",
+    "name": "新增评论",
+    "folder": "未来娃屿接口文档 / C端-评论接口"
+  },
+  {
+    "id": 527871688,
+    "method": "GET",
+    "path": "/client/comment/list",
+    "name": "查询评论列表",
+    "folder": "未来娃屿接口文档 / C端-评论接口"
+  },
+  {
+    "id": 527871689,
+    "method": "DELETE",
+    "path": "/client/comment/{ids}",
+    "name": "删除评论",
+    "folder": "未来娃屿接口文档 / C端-评论接口"
+  },
+  {
+    "id": 527871690,
+    "method": "PUT",
+    "path": "/client/bodyJournal",
+    "name": "修改日记",
+    "folder": "未来娃屿接口文档 / C端-日记接口"
+  },
+  {
+    "id": 527871691,
+    "method": "POST",
+    "path": "/client/bodyJournal",
+    "name": "新增日记",
+    "folder": "未来娃屿接口文档 / C端-日记接口"
+  },
+  {
+    "id": 527871692,
+    "method": "GET",
+    "path": "/client/bodyJournal/{id}",
+    "name": "查询日记表详细",
+    "folder": "未来娃屿接口文档 / C端-日记接口"
+  },
+  {
+    "id": 527871693,
+    "method": "GET",
+    "path": "/client/bodyJournal/share/{id}",
+    "name": "分享日记详情，允许未登录访问",
+    "folder": "未来娃屿接口文档 / C端-日记接口"
+  },
+  {
+    "id": 527871694,
+    "method": "GET",
+    "path": "/client/bodyJournal/body/{bodyId}",
+    "name": "分页获取某个娃娃的日记",
+    "folder": "未来娃屿接口文档 / C端-日记接口"
+  },
+  {
+    "id": 527871695,
+    "method": "DELETE",
+    "path": "/client/bodyJournal/{ids}",
+    "name": "删除日记",
+    "folder": "未来娃屿接口文档 / C端-日记接口"
+  },
+  {
+    "id": 527871696,
+    "method": "PUT",
+    "path": "/client/body/name",
+    "name": "修改娃娃名称",
+    "folder": "未来娃屿接口文档 / C端-娃娃接口"
+  },
+  {
+    "id": 527871697,
+    "method": "PUT",
+    "path": "/client/body/dress",
+    "name": "更新娃娃换装记录",
+    "folder": "未来娃屿接口文档 / C端-娃娃接口"
+  },
+  {
+    "id": 527871698,
+    "method": "POST",
+    "path": "/client/body/dress",
+    "name": "保存娃娃换装记录",
+    "folder": "未来娃屿接口文档 / C端-娃娃接口"
+  },
+  {
+    "id": 527871699,
+    "method": "GET",
+    "path": "/client/body/my",
+    "name": "获取我的所有娃娃数据",
+    "folder": "未来娃屿接口文档 / C端-娃娃接口"
+  },
+  {
+    "id": 527871700,
+    "method": "GET",
+    "path": "/client/body/dress/latest/{bodyId}",
+    "name": "获取某个娃娃最新一次的换装记录及组件数据",
+    "folder": "未来娃屿接口文档 / C端-娃娃接口"
+  },
+  {
+    "id": 527871701,
+    "method": "DELETE",
+    "path": "/client/body/{bodyId}",
+    "name": "Delete my body.",
+    "folder": "未来娃屿接口文档 / C端-娃娃接口"
+  },
+  {
+    "id": 527871702,
+    "method": "POST",
+    "path": "/youzan/message",
+    "name": "接收有赞无容器应用 JSON 消息推送。\n\n ",
+    "folder": "未来娃屿接口文档 / 有赞消息推送入口。"
+  },
+  {
+    "id": 527871703,
+    "method": "POST",
+    "path": "/wechat/pay/notify",
+    "name": "notify",
+    "folder": "未来娃屿接口文档 / 微信支付服务端通知入口，不使用小程序登录令牌。"
+  },
+  {
+    "id": 527871704,
+    "method": "POST",
+    "path": "/system/youzan/trade/refund",
+    "name": "商家主动退款。相同退款流水号重复提交时返回原任务。",
+    "folder": "未来娃屿接口文档 / 有赞订单、退款和优惠券核销后台接口。"
+  },
+  {
+    "id": 527871705,
+    "method": "POST",
+    "path": "/system/youzan/trade/order/sync",
+    "name": "保存或更新有赞订单镜像。",
+    "folder": "未来娃屿接口文档 / 有赞订单、退款和优惠券核销后台接口。"
+  },
+  {
+    "id": 527871706,
+    "method": "POST",
+    "path": "/system/youzan/trade/coupon/revert",
+    "name": "资金退款成功后撤回优惠券核销。",
+    "folder": "未来娃屿接口文档 / 有赞订单、退款和优惠券核销后台接口。"
+  },
+  {
+    "id": 527871707,
+    "method": "GET",
+    "path": "/system/youzan/trade/order",
+    "name": "门店 APP 查询支付及订单回显信息。",
+    "folder": "未来娃屿接口文档 / 有赞订单、退款和优惠券核销后台接口。"
+  },
+  {
+    "id": 527871708,
+    "method": "POST",
+    "path": "/system/youzan/refund/retry",
+    "name": "retry",
+    "folder": "未来娃屿接口文档 / 微信退款后台管理接口。"
+  },
+  {
+    "id": 527871709,
+    "method": "POST",
+    "path": "/system/youzan/payment/retry",
+    "name": "retry_1",
+    "folder": "未来娃屿接口文档 / 有赞支付后台管理接口。"
+  },
+  {
+    "id": 527871710,
+    "method": "POST",
+    "path": "/system/youzan/payment-test/refund",
+    "name": "refund_1",
+    "folder": "未来娃屿接口文档 / 微信支付后台联调入口。"
+  },
+  {
+    "id": 527871711,
+    "method": "POST",
+    "path": "/system/youzan/payment-test/native/prepare",
+    "name": "prepareNative",
+    "folder": "未来娃屿接口文档 / 微信支付后台联调入口。"
+  },
+  {
+    "id": 527871712,
+    "method": "POST",
+    "path": "/system/youzan/identity/refresh",
+    "name": "受控刷新指定小程序用户的有赞身份。",
+    "folder": "未来娃屿接口文档 / 小程序用户有赞身份后台管理接口。"
+  },
+  {
+    "id": 527871713,
+    "method": "POST",
+    "path": "/system/youzan/goods/alert/recheck",
+    "name": "重新检测：实时查询有赞并重算条码状态。",
+    "folder": "未来娃屿接口文档 / 后台有赞商品条码异常告警接口。"
+  },
+  {
+    "id": 527871714,
+    "method": "GET",
+    "path": "/system/youzan/goods/alert/list",
+    "name": "分页查询条码为空、条码重复或最近刷新失败的商品的告警。",
+    "folder": "未来娃屿接口文档 / 后台有赞商品条码异常告警接口。"
+  },
+  {
+    "id": 527871715,
+    "method": "GET",
+    "path": "/system/youzan/goods/alert/detail",
+    "name": "查询单条告警详情及同条码冲突商品。",
+    "folder": "未来娃屿接口文档 / 后台有赞商品条码异常告警接口。"
+  },
+  {
+    "id": 527871716,
+    "method": "POST",
+    "path": "/system/youzan/debug",
+    "name": "execute",
+    "folder": "未来娃屿接口文档 / 有赞接口调试。"
+  },
+  {
+    "id": 527871717,
+    "method": "POST",
+    "path": "/system/salesmanCommission/summary/export",
+    "name": "exportSummary",
+    "folder": "未来娃屿接口文档 / 后台导购业绩：按导购汇总付款订单的金额（不算提成），汇总 / 明细与导出。金额单位为分。"
+  },
+  {
+    "id": 527871718,
+    "method": "POST",
+    "path": "/system/salesmanCommission/records/export",
+    "name": "exportRecords",
+    "folder": "未来娃屿接口文档 / 后台导购业绩：按导购汇总付款订单的金额（不算提成），汇总 / 明细与导出。金额单位为分。"
+  },
+  {
+    "id": 527871719,
+    "method": "GET",
+    "path": "/system/salesmanCommission/summary",
+    "name": "导购业绩汇总：有赞上的导购都列出来（含没订单的），净额为订单金额扣掉已退款。",
+    "folder": "未来娃屿接口文档 / 后台导购业绩：按导购汇总付款订单的金额（不算提成），汇总 / 明细与导出。金额单位为分。"
+  },
+  {
+    "id": 527871720,
+    "method": "GET",
+    "path": "/system/salesmanCommission/records",
+    "name": "导购业绩明细：已付款的订单，一个门店子单一行。",
+    "folder": "未来娃屿接口文档 / 后台导购业绩：按导购汇总付款订单的金额（不算提成），汇总 / 明细与导出。金额单位为分。"
+  },
+  {
+    "id": 527871721,
+    "method": "POST",
+    "path": "/system/pickupOrder/{orderId}/refunds/{refundNo}/retry",
+    "name": "微信 / 支付宝退款失败（如商户余额不足）后重新退款，按原退款单号重发，不会重复退。",
+    "folder": "未来娃屿接口文档 / 后台订单详情里的退款：退款记录、可退商品、商家主动退款；顺带给详情里的商品展示图。"
+  },
+  {
+    "id": 527871722,
+    "method": "POST",
+    "path": "/system/pickupOrder/{orderId}/refund",
+    "name": "refund_2",
+    "folder": "未来娃屿接口文档 / 后台订单详情里的退款：退款记录、可退商品、商家主动退款；顺带给详情里的商品展示图。"
+  },
+  {
+    "id": 527871723,
+    "method": "GET",
+    "path": "/system/pickupOrder/{orderId}/refunds",
+    "name": "records_1",
+    "folder": "未来娃屿接口文档 / 后台订单详情里的退款：退款记录、可退商品、商家主动退款；顺带给详情里的商品展示图。"
+  },
+  {
+    "id": 527871724,
+    "method": "GET",
+    "path": "/system/pickupOrder/{orderId}/refundable",
+    "name": "refundable",
+    "folder": "未来娃屿接口文档 / 后台订单详情里的退款：退款记录、可退商品、商家主动退款；顺带给详情里的商品展示图。"
+  },
+  {
+    "id": 527871725,
+    "method": "GET",
+    "path": "/system/pickupOrder/{orderId}/itemImages",
+    "name": "订单详情里每件商品的展示图（后景、透明外框和小程序订单一样），只查本地库。",
+    "folder": "未来娃屿接口文档 / 后台订单详情里的退款：退款记录、可退商品、商家主动退款；顺带给详情里的商品展示图。"
+  },
+  {
+    "id": 527871726,
+    "method": "POST",
+    "path": "/system/message/send/{id}",
+    "name": "一键发送系统消息给所有小程序用户",
+    "folder": "未来娃屿接口文档 / 系统消息发送控制器（后台管理）"
+  },
+  {
+    "id": 527871727,
+    "method": "POST",
+    "path": "/system/imageBounds/query",
+    "name": "按 ossId 批量查外框，没算过的不返回",
+    "folder": "未来娃屿接口文档 / 商品图透明外框（后台组件列表、工作台缩略图放大小件用），只读。"
+  },
+  {
+    "id": 527871728,
+    "method": "POST",
+    "path": "/system/componentRenderConfig/skin/generate",
+    "name": "重新生成肤色图。\n\n ",
+    "folder": "未来娃屿接口文档 / 组件渲染配置-肤色图"
+  },
+  {
+    "id": 527871729,
+    "method": "GET",
+    "path": "/system/componentRenderConfig/skin/list",
+    "name": "查询组件在指定娃体下的肤色配图清单",
+    "folder": "未来娃屿接口文档 / 组件渲染配置-肤色图"
+  },
+  {
+    "id": 527871730,
+    "method": "POST",
+    "path": "/resource/oss/upload",
+    "name": "上传OSS对象存储",
+    "folder": "未来娃屿接口文档 / 文件上传 控制层"
+  },
+  {
+    "id": 527871731,
+    "method": "GET",
+    "path": "/resource/oss/list",
+    "name": "查询OSS对象存储列表",
+    "folder": "未来娃屿接口文档 / 文件上传 控制层"
+  },
+  {
+    "id": 527871732,
+    "method": "GET",
+    "path": "/resource/oss/listByIds/{ossIds}",
+    "name": "查询OSS对象基于id串",
+    "folder": "未来娃屿接口文档 / 文件上传 控制层"
+  },
+  {
+    "id": 527871733,
+    "method": "GET",
+    "path": "/resource/oss/download/{ossId}",
+    "name": "下载OSS对象",
+    "folder": "未来娃屿接口文档 / 文件上传 控制层"
+  },
+  {
+    "id": 527871734,
+    "method": "DELETE",
+    "path": "/resource/oss/{ossIds}",
+    "name": "删除OSS对象存储",
+    "folder": "未来娃屿接口文档 / 文件上传 控制层"
+  },
+  {
+    "id": 527871735,
+    "method": "POST",
+    "path": "/monitor/operlog/restore/{operId}",
+    "name": "根据高危操作日志整批恢复数据。",
+    "folder": "未来娃屿接口文档 / 操作日志记录"
+  },
+  {
+    "id": 527871736,
+    "method": "POST",
+    "path": "/monitor/operlog/export",
+    "name": "导出操作日志记录列表",
+    "folder": "未来娃屿接口文档 / 操作日志记录"
+  },
+  {
+    "id": 527871737,
+    "method": "GET",
+    "path": "/monitor/operlog/list",
+    "name": "获取操作日志记录列表",
+    "folder": "未来娃屿接口文档 / 操作日志记录"
+  },
+  {
+    "id": 527871738,
+    "method": "DELETE",
+    "path": "/monitor/operlog/{operIds}",
+    "name": "批量删除操作日志记录",
+    "folder": "未来娃屿接口文档 / 操作日志记录"
+  },
+  {
+    "id": 527871739,
+    "method": "DELETE",
+    "path": "/monitor/operlog/clean",
+    "name": "清理操作日志记录",
+    "folder": "未来娃屿接口文档 / 操作日志记录"
+  },
+  {
+    "id": 527871740,
+    "method": "POST",
+    "path": "/monitor/logininfor/export",
+    "name": "导出系统访问记录列表",
+    "folder": "未来娃屿接口文档 / 系统访问记录"
+  },
+  {
+    "id": 527871741,
+    "method": "GET",
+    "path": "/monitor/logininfor/unlock/{userName}",
+    "name": "unlock",
+    "folder": "未来娃屿接口文档 / 系统访问记录"
+  },
+  {
+    "id": 527871742,
+    "method": "GET",
+    "path": "/monitor/logininfor/list",
+    "name": "获取系统访问记录列表",
+    "folder": "未来娃屿接口文档 / 系统访问记录"
+  },
+  {
+    "id": 527871743,
+    "method": "DELETE",
+    "path": "/monitor/logininfor/{infoIds}",
+    "name": "批量删除登录日志",
+    "folder": "未来娃屿接口文档 / 系统访问记录"
+  },
+  {
+    "id": 527871744,
+    "method": "DELETE",
+    "path": "/monitor/logininfor/clean",
+    "name": "清理系统访问记录",
+    "folder": "未来娃屿接口文档 / 系统访问记录"
+  },
+  {
+    "id": 527871745,
+    "method": "POST",
+    "path": "/device/orders/{businessNo}/miniapp-code",
+    "name": "为已提交的本设备订单生成小程序订单详情码。\n ",
+    "folder": "未来娃屿接口文档 / 设备接入接口。"
+  },
+  {
+    "id": 527871746,
+    "method": "POST",
+    "path": "/device/logout",
+    "name": "注销当前设备令牌。",
+    "folder": "未来娃屿接口文档 / 设备接入接口。"
+  },
+  {
+    "id": 527871747,
+    "method": "POST",
+    "path": "/device/heartbeat",
+    "name": "设备心跳：携带 Device Token 上报在线状态。",
+    "folder": "未来娃屿接口文档 / 设备接入接口。"
+  },
+  {
+    "id": 527871748,
+    "method": "POST",
+    "path": "/device/buyer-scan",
+    "name": "创建小程序扫码登录码。",
+    "folder": "未来娃屿接口文档 / 设备接入接口。"
+  },
+  {
+    "id": 527871749,
+    "method": "POST",
+    "path": "/device/buyer-scan/{scanId}/renew",
+    "name": "平板上顾客点「继续」时续期扫码登录，再给 5 分钟；返回续期后的状态，EXPIRED 表示已失效、要重新扫码。",
+    "folder": "未来娃屿接口文档 / 设备接入接口。"
+  },
+  {
+    "id": 527871750,
+    "method": "POST",
+    "path": "/device/activate",
+    "name": "设备激活：SN + Device Secret 换取 Device Token。\n ",
+    "folder": "未来娃屿接口文档 / 设备接入接口。"
+  },
+  {
+    "id": 527871751,
+    "method": "GET",
+    "path": "/device/payment-methods",
+    "name": "这台平板能用的线上付款方式：按设备绑定的自提点的收款设置。\n 微信没配好时不显示微信支付和扫码支付（扫码后也是在小程序里用微信付），支付宝没配好时不显示支付宝；现金不用配置，平板自己显示。",
+    "folder": "未来娃屿接口文档 / 设备接入接口。"
+  },
+  {
+    "id": 527871752,
+    "method": "GET",
+    "path": "/device/buyer-scan/{scanId}",
+    "name": "轮询扫码标识状态：UNBOUND、BOUND、EXPIRED。",
+    "folder": "未来娃屿接口文档 / 设备接入接口。"
+  },
+  {
+    "id": 527871753,
+    "method": "POST",
+    "path": "/client/youzan/trade/order/prepare",
+    "name": "申请由后端生成的订单业务流水号。",
+    "folder": "未来娃屿接口文档 / 小程序端有赞交易接口（旧扫码链路兼容）。"
+  },
+  {
+    "id": 527871754,
+    "method": "POST",
+    "path": "/client/youzan/trade/order/create",
+    "name": "创建有赞结算下单页。实际订单在用户提交结算页后生成。",
+    "folder": "未来娃屿接口文档 / 小程序端有赞交易接口（旧扫码链路兼容）。"
+  },
+  {
+    "id": 527871755,
+    "method": "GET",
+    "path": "/client/youzan/trade/order",
+    "name": "查询支付及订单回显信息；只允许查询当前登录用户自己的订单。",
+    "folder": "未来娃屿接口文档 / 小程序端有赞交易接口（旧扫码链路兼容）。"
+  },
+  {
+    "id": 527871756,
+    "method": "POST",
+    "path": "/client/wx/user/{appid}/updateBaseInfo",
+    "name": "更新当前用户基础信息",
+    "folder": "未来娃屿接口文档 / 微信小程序用户接口"
+  },
+  {
+    "id": 527871757,
+    "method": "GET",
+    "path": "/client/wx/user/{appid}/phone",
+    "name": "获取用户绑定手机号信息\n 基础库2.21.2以下使用",
+    "folder": "未来娃屿接口文档 / 微信小程序用户接口"
+  },
+  {
+    "id": 527871758,
+    "method": "GET",
+    "path": "/client/wx/user/{appid}/phoneNumber",
+    "name": "绑定手机号信息(code)",
+    "folder": "未来娃屿接口文档 / 微信小程序用户接口"
+  },
+  {
+    "id": 527871759,
+    "method": "GET",
+    "path": "/client/wx/user/{appid}/login",
+    "name": "登陆接口",
+    "folder": "未来娃屿接口文档 / 微信小程序用户接口"
+  },
+  {
+    "id": 527871760,
+    "method": "GET",
+    "path": "/client/wx/user/{appid}/info",
+    "name": "获取用户信息接口",
+    "folder": "未来娃屿接口文档 / 微信小程序用户接口"
+  },
+  {
+    "id": 527871761,
+    "method": "GET",
+    "path": "/client/wx/user/{appid}/getLoginUser",
+    "name": "获取当前登录用户信息",
+    "folder": "未来娃屿接口文档 / 微信小程序用户接口"
+  },
+  {
+    "id": 527871762,
+    "method": "POST",
+    "path": "/client/wx/subscription/rid/query",
+    "name": "查询微信接口调用失败的 rid 诊断信息。",
+    "folder": "未来娃屿接口文档 / C 端小程序微信订阅消息接口。"
+  },
+  {
+    "id": 527871763,
+    "method": "POST",
+    "path": "/client/wx/subscription/results",
+    "name": "result",
+    "folder": "未来娃屿接口文档 / C 端小程序微信订阅消息接口。"
+  },
+  {
+    "id": 527871764,
+    "method": "POST",
+    "path": "/client/wx/subscription/requests",
+    "name": "request",
+    "folder": "未来娃屿接口文档 / C 端小程序微信订阅消息接口。"
+  },
+  {
+    "id": 527871765,
+    "method": "GET",
+    "path": "/client/wx/subscription/templates",
+    "name": "获取微信公众平台中当前小程序已添加的订阅消息模板。",
+    "folder": "未来娃屿接口文档 / C 端小程序微信订阅消息接口。"
+  },
+  {
+    "id": 527871766,
+    "method": "GET",
+    "path": "/client/wx/subscription/statuses",
+    "name": "statuses",
+    "folder": "未来娃屿接口文档 / C 端小程序微信订阅消息接口。"
+  },
+  {
+    "id": 527871767,
+    "method": "GET",
+    "path": "/client/wx/subscription/status",
+    "name": "status",
+    "folder": "未来娃屿接口文档 / C 端小程序微信订阅消息接口。"
+  },
+  {
+    "id": 527871768,
+    "method": "GET",
+    "path": "/client/wx/subscription/scenes/{scene}",
+    "name": "scene",
+    "folder": "未来娃屿接口文档 / C 端小程序微信订阅消息接口。"
+  },
+  {
+    "id": 527871769,
+    "method": "GET",
+    "path": "/client/wx/message/{appid}",
+    "name": "微信消息服务器配置校验",
+    "folder": "未来娃屿接口文档 / 微信小程序消息回调接口"
+  },
+  {
+    "id": 527871770,
+    "method": "POST",
+    "path": "/client/wx/message/{appid}",
+    "name": "接收微信异步审核结果",
+    "folder": "未来娃屿接口文档 / 微信小程序消息回调接口"
+  },
+  {
+    "id": 527871771,
+    "method": "POST",
+    "path": "/client/qrCode/scanBodyQrCode",
+    "name": "扫描门店分享码：存进顾客日记；顾客已有同名娃娃时不存，返回 duplicateBodyId 让顾客选覆盖或重命名",
+    "folder": "未来娃屿接口文档 / 小程序-二维码生成"
+  },
+  {
+    "id": 527871772,
+    "method": "POST",
+    "path": "/client/qrCode/saveBody",
+    "name": "门店分享码改名后保存：保存成功才把码记为已用",
+    "folder": "未来娃屿接口文档 / 小程序-二维码生成"
+  },
+  {
+    "id": 527871773,
+    "method": "POST",
+    "path": "/client/qrCode/createQrCode",
+    "name": "创建通用小程序二维码",
+    "folder": "未来娃屿接口文档 / 小程序-二维码生成"
+  },
+  {
+    "id": 527871774,
+    "method": "POST",
+    "path": "/client/qrCode/createBodyQrCode",
+    "name": "创建娃娃二维码",
+    "folder": "未来娃屿接口文档 / 小程序-二维码生成"
+  },
+  {
+    "id": 527871775,
+    "method": "GET",
+    "path": "/client/qrCode/body/{qrCodeId}",
+    "name": "门店分享码里的娃娃（不用掉码），顾客选「重命名」后换装页据此恢复搭配",
+    "folder": "未来娃屿接口文档 / 小程序-二维码生成"
+  },
+  {
+    "id": 527871776,
+    "method": "POST",
+    "path": "/client/oss/user-image/{ossId}/audit-retry",
+    "name": "retry_3",
+    "folder": "未来娃屿接口文档 / 微信小程序文件接口"
+  },
+  {
+    "id": 527871777,
+    "method": "POST",
+    "path": "/client/oss/user-image/upload",
+    "name": "自上传日记照片：仅支持 JOURNAL_PHOTO，上传后仍需查询结果。",
+    "folder": "未来娃屿接口文档 / 微信小程序文件接口"
+  },
+  {
+    "id": 527871778,
+    "method": "POST",
+    "path": "/client/oss/upload",
+    "name": "上传文件",
+    "folder": "未来娃屿接口文档 / 微信小程序文件接口"
+  },
+  {
+    "id": 527871779,
+    "method": "POST",
+    "path": "/client/oss/avatar/upload",
+    "name": "自上传头像：同步审核通过后才返回可保存的图片。",
+    "folder": "未来娃屿接口文档 / 微信小程序文件接口"
+  },
+  {
+    "id": 527871780,
+    "method": "GET",
+    "path": "/client/oss/user-image/audit-status",
+    "name": "auditStatus",
+    "folder": "未来娃屿接口文档 / 微信小程序文件接口"
+  },
+  {
+    "id": 527871781,
+    "method": "POST",
+    "path": "/client/mall/refunds/{refundNo}/return-logistics",
+    "name": "买家填写退货物流信息。",
+    "folder": "未来娃屿接口文档 / 小程序买家售后接口。"
+  },
+  {
+    "id": 527871782,
+    "method": "POST",
+    "path": "/client/mall/refunds/{refundNo}/refresh",
+    "name": "refresh_1",
+    "folder": "未来娃屿接口文档 / 小程序买家售后接口。"
+  },
+  {
+    "id": 527871783,
+    "method": "POST",
+    "path": "/client/mall/refunds/{refundNo}/exchange-confirm",
+    "name": "买家换货确认收货。",
+    "folder": "未来娃屿接口文档 / 小程序买家售后接口。"
+  },
+  {
+    "id": 527871784,
+    "method": "GET",
+    "path": "/client/mall/orders/{businessNo}/refunds",
+    "name": "list",
+    "folder": "未来娃屿接口文档 / 小程序买家售后接口。"
+  },
+  {
+    "id": 527871785,
+    "method": "POST",
+    "path": "/client/mall/orders/{businessNo}/refunds",
+    "name": "apply",
+    "folder": "未来娃屿接口文档 / 小程序买家售后接口。"
+  },
+  {
+    "id": 527871786,
+    "method": "POST",
+    "path": "/client/mall/orders/{businessNo}/refunds/batch",
+    "name": "applyOrder",
+    "folder": "未来娃屿接口文档 / 小程序买家售后接口。"
+  },
+  {
+    "id": 527871787,
+    "method": "GET",
+    "path": "/client/mall/refunds/{refundNo}",
+    "name": "detail_1",
+    "folder": "未来娃屿接口文档 / 小程序买家售后接口。"
+  },
+  {
+    "id": 527871788,
+    "method": "GET",
+    "path": "/client/mall/refunds/reasons",
+    "name": "reasons",
+    "folder": "未来娃屿接口文档 / 小程序买家售后接口。"
+  },
+  {
+    "id": 527871789,
+    "method": "GET",
+    "path": "/client/mall/refunds/expresses",
+    "name": "查询填写退货物流时可选的有赞物流公司。",
+    "folder": "未来娃屿接口文档 / 小程序买家售后接口。"
+  },
+  {
+    "id": 527871790,
+    "method": "GET",
+    "path": "/client/mall/orders/{businessNo}/refundable",
+    "name": "查询订单当前可退金额，含可退运费与商品行可退明细。",
+    "folder": "未来娃屿接口文档 / 小程序买家售后接口。"
+  },
+  {
+    "id": 527871791,
+    "method": "POST",
+    "path": "/client/likeRecord",
+    "name": "点赞/取消",
+    "folder": "未来娃屿接口文档 / C端-点赞记录接口"
+  },
+  {
+    "id": 527871792,
+    "method": "POST",
+    "path": "/client/idCard/render",
+    "name": "按娃娃合成图 + 名字 + 性格出一张身份卡（诞生日 = 今天），每次都是新编号；预览与最终落库用同一张",
+    "folder": "未来娃屿接口文档 / 小程序-娃娃身份卡"
+  },
+  {
+    "id": 527871793,
+    "method": "POST",
+    "path": "/client/focusRecord",
+    "name": "关注/取消",
+    "folder": "未来娃屿接口文档 / C端-关注记录接口"
+  },
+  {
+    "id": 527871794,
+    "method": "POST",
+    "path": "/client/dressShare",
+    "name": "创建不可变的换装分享快照，需登录。",
+    "folder": "未来娃屿接口文档 / 小程序换装分享快照接口。"
+  },
+  {
+    "id": 527871795,
+    "method": "GET",
+    "path": "/client/dressShare/{shareCode}",
+    "name": "查询换装分享快照，允许跨用户和未登录读取。",
+    "folder": "未来娃屿接口文档 / 小程序换装分享快照接口。"
+  },
+  {
+    "id": 527871796,
+    "method": "POST",
+    "path": "/client/dollRecord/add",
+    "name": "添加用户娃体记录",
+    "folder": "未来娃屿接口文档 / C端-娃体记录接口"
+  },
+  {
+    "id": 527871797,
+    "method": "GET",
+    "path": "/client/dollRecord/getLastRecord",
+    "name": "获取最新一条娃体记录",
+    "folder": "未来娃屿接口文档 / C端-娃体记录接口"
+  },
+  {
+    "id": 527871798,
+    "method": "POST",
+    "path": "/client/device-buyer-scan/confirm",
+    "name": "confirm",
+    "folder": "未来娃屿接口文档 / 小程序确认与门店设备的扫码关联。"
+  },
+  {
+    "id": 527871799,
+    "method": "POST",
+    "path": "/client/collectRecord",
+    "name": "新增/取消收藏",
+    "folder": "未来娃屿接口文档 / C端-收藏记录接口"
+  },
+  {
+    "id": 527871800,
+    "method": "POST",
+    "path": "/auth/social/callback",
+    "name": "前端回调绑定授权(需要token)",
+    "folder": "未来娃屿接口文档 / 认证"
+  },
+  {
+    "id": 527871801,
+    "method": "POST",
+    "path": "/auth/register",
+    "name": "用户注册",
+    "folder": "未来娃屿接口文档 / 认证"
+  },
+  {
+    "id": 527871802,
+    "method": "POST",
+    "path": "/auth/logout",
+    "name": "退出登录",
+    "folder": "未来娃屿接口文档 / 认证"
+  },
+  {
+    "id": 527871803,
+    "method": "POST",
+    "path": "/auth/login",
+    "name": "登录方法",
+    "folder": "未来娃屿接口文档 / 认证"
+  },
+  {
+    "id": 527871804,
+    "method": "GET",
+    "path": "/auth/tenant/list",
+    "name": "登录页面租户下拉框",
+    "folder": "未来娃屿接口文档 / 认证"
+  },
+  {
+    "id": 527871805,
+    "method": "GET",
+    "path": "/auth/binding/{source}",
+    "name": "获取跳转URL",
+    "folder": "未来娃屿接口文档 / 认证"
+  },
+  {
+    "id": 527871806,
+    "method": "DELETE",
+    "path": "/auth/unlock/{socialId}",
+    "name": "取消授权(需要token)",
+    "folder": "未来娃屿接口文档 / 认证"
+  },
+  {
+    "id": 527871807,
+    "method": "POST",
+    "path": "/alipay/notify",
+    "name": "notify_1",
+    "folder": "未来娃屿接口文档 / 支付宝异步通知入口，不使用小程序登录令牌。"
+  },
+  {
+    "id": 527871808,
+    "method": "GET",
+    "path": "/system/social/list",
+    "name": "查询社会化关系列表",
+    "folder": "未来娃屿接口文档 / 社会化关系"
+  },
+  {
+    "id": 527871809,
+    "method": "GET",
+    "path": "/resource/sms/code",
+    "name": "短信验证码",
+    "folder": "未来娃屿接口文档 / 验证码操作处理"
+  },
+  {
+    "id": 527871810,
+    "method": "GET",
+    "path": "/resource/email/code",
+    "name": "邮箱验证码",
+    "folder": "未来娃屿接口文档 / 验证码操作处理"
+  },
+  {
+    "id": 527871811,
+    "method": "GET",
+    "path": "/auth/code",
+    "name": "生成验证码",
+    "folder": "未来娃屿接口文档 / 验证码操作处理"
+  },
+  {
+    "id": 527871812,
+    "method": "GET",
+    "path": "/monitor/online",
+    "name": "获取当前用户登录在线设备",
+    "folder": "未来娃屿接口文档 / 在线用户监控"
+  },
+  {
+    "id": 527871813,
+    "method": "GET",
+    "path": "/monitor/online/list",
+    "name": "获取在线用户监控列表",
+    "folder": "未来娃屿接口文档 / 在线用户监控"
+  },
+  {
+    "id": 527871814,
+    "method": "DELETE",
+    "path": "/monitor/online/{tokenId}",
+    "name": "强退用户",
+    "folder": "未来娃屿接口文档 / 在线用户监控"
+  },
+  {
+    "id": 527871815,
+    "method": "DELETE",
+    "path": "/monitor/online/myself/{tokenId}",
+    "name": "强退当前在线设备",
+    "folder": "未来娃屿接口文档 / 在线用户监控"
+  },
+  {
+    "id": 527871816,
+    "method": "GET",
+    "path": "/monitor/cache",
+    "name": "获取缓存监控列表",
+    "folder": "未来娃屿接口文档 / 缓存监控"
+  },
+  {
+    "id": 527871817,
+    "method": "GET",
+    "path": "/client/user/stats",
+    "name": "获取用户统计信息",
+    "folder": "未来娃屿接口文档 / C端-用户接口"
+  },
+  {
+    "id": 527871818,
+    "method": "GET",
+    "path": "/client/search",
+    "name": "按帖子或用户分类进行模糊搜索",
+    "folder": "未来娃屿接口文档 / 小程序搜索接口"
+  },
+  {
+    "id": 527871819,
+    "method": "GET",
+    "path": "/client/plate",
+    "name": "获取板块信息",
+    "folder": "未来娃屿接口文档 / C端-板块接口"
+  },
+  {
+    "id": 527871820,
+    "method": "GET",
+    "path": "/client/component/series",
+    "name": "启用的组件系列（换装面板一级分类左侧的系列侧边栏），按排序值、ID 升序。\n 组件列表里每个组件的 seriesIds 对应这里的 id。",
+    "folder": "未来娃屿接口文档 / C端-资产组件接口"
+  },
+  {
+    "id": 527871821,
+    "method": "GET",
+    "path": "/client/component/getDefaultComponentList/{templateId}",
+    "name": "根据娃体获取默认组件列表",
+    "folder": "未来娃屿接口文档 / C端-资产组件接口"
+  },
+  {
+    "id": 527871822,
+    "method": "GET",
+    "path": "/client/component/doll/{templateId}/components",
+    "name": "根据娃体模板ID获取所有兼容的组件",
+    "folder": "未来娃屿接口文档 / C端-资产组件接口"
+  },
+  {
+    "id": 527871823,
+    "method": "GET",
+    "path": "/client/component/doll/{templateId}/category/components",
+    "name": "根据娃体模板ID和分类ID获取兼容的组件",
+    "folder": "未来娃屿接口文档 / C端-资产组件接口"
+  },
+  {
+    "id": 527871824,
+    "method": "GET",
+    "path": "/client/component/doll/list",
+    "name": "获取所有启用的娃体模板列表",
+    "folder": "未来娃屿接口文档 / C端-资产组件接口"
+  },
+  {
+    "id": 527871825,
+    "method": "GET",
+    "path": "/client/component/category/tree",
+    "name": "获取资产分类树形结构",
+    "folder": "未来娃屿接口文档 / C端-资产分类接口"
+  },
+  {
+    "id": 527871826,
+    "method": "GET",
+    "path": "/client/common/personality/options",
+    "name": "可选性格标签与数量上限（免登录，分享落地页也会用）",
+    "folder": "未来娃屿接口文档 / 小程序-娃娃性格标签"
+  },
+  {
+    "id": 527871827,
+    "method": "GET",
+    "path": "/client/bgImage/enabledList",
+    "name": "当前有效的背景图集合（启用状态，按排序值升序）",
+    "folder": "未来娃屿接口文档 / 小程序-背景图"
+  },
+  {
+    "id": 527871828,
+    "method": "GET",
+    "path": "/client/bannerActivity/storeEnabledList",
+    "name": "门店轮播：启用、platform=store、当前在展示时间内，按 sort_order 升序",
+    "folder": "未来娃屿接口文档 / C 端 banner 轮播"
+  },
+  {
+    "id": 527871829,
+    "method": "GET",
+    "path": "/client/bannerActivity/miniProgramEnabledList",
+    "name": "小程序首页轮播：启用、platform=mini_program、当前在展示时间内。",
+    "folder": "未来娃屿接口文档 / C 端 banner 轮播"
+  },
+  {
+    "id": 527871830,
+    "method": "GET",
+    "path": "/client/bannerActivity/miniProgramCommunityEnabledList",
+    "name": "小程序社区轮播：启用、platform=mini_program_community、当前在展示时间内。",
+    "folder": "未来娃屿接口文档 / C 端 banner 轮播"
+  },
+  {
+    "id": 527871831,
+    "method": "GET",
+    "path": "/client/bannerActivity/enabledList",
+    "name": "通用轮播：按一个或多个平台查询已启用且当前在展示时间内的轮播图。\n platform 参数支持逗号分隔或重复传递。",
+    "folder": "未来娃屿接口文档 / C 端 banner 轮播"
+  },
+  {
+    "id": 527871832,
+    "method": "GET",
+    "path": "/client/appVersion/latest",
+    "name": "查询指定平台的最新已发布版本，可按更新类型筛选。\n ",
+    "folder": "未来娃屿接口文档 / C端安装包版本接口"
+  },
+  {
+    "id": 527871833,
+    "method": "GET",
+    "path": "/",
+    "name": "访问首页，提示语",
+    "folder": "未来娃屿接口文档 / 首页"
+  }
+]

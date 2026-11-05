@@ -1,0 +1,90 @@
+{
+ "chain_id": "CHAIN-ASSET-COMPONENT-READONLY",
+ "name": "资产-组件域内链：列表→详情→分类/系列字典→C 端商品可见",
+ "fixtures": [
+  {
+   "id": "f1",
+   "name": "后台取一个组件",
+   "method": "GET",
+   "path": "/system/component/list?pageNum=1&pageSize=1",
+   "auth": "admin",
+   "expect": {
+    "code": 200
+   },
+   "extract": {
+    "cid": "rows[0].id"
+   }
+  }
+ ],
+ "entry_gate": [
+  "f1"
+ ],
+ "steps": [
+  {
+   "no": 1,
+   "name": "组件详情",
+   "method": "GET",
+   "path": "/system/component/{cid}",
+   "auth": "admin",
+   "expect": {
+    "code": 200
+   }
+  },
+  {
+   "no": 2,
+   "name": "组件分类树",
+   "method": "GET",
+   "path": "/system/componentCategory/getTreeList",
+   "auth": "admin",
+   "expect": {
+    "code": 200
+   }
+  },
+  {
+   "no": 3,
+   "name": "系列下拉",
+   "method": "GET",
+   "path": "/system/componentSeries/optionselect",
+   "auth": "admin",
+   "expect": {
+    "code": 200
+   }
+  },
+  {
+   "no": 4,
+   "name": "C 端商品详情可见",
+   "method": "GET",
+   "path": "/client/mall/products/{cid}",
+   "auth": "client",
+   "expect": {
+    "code": 200
+   },
+   "present": true,
+   "absent_fields": [
+    "openid",
+    "sessionKey"
+   ]
+  }
+ ],
+ "failure_injection": [
+  {
+   "no": "i1",
+   "name": "无凭证访问组件详情被拒",
+   "method": "GET",
+   "path": "/system/component/{cid}",
+   "no_auth": true,
+   "expect": {
+    "code_in": [
+     401,
+     403
+    ]
+   }
+  }
+ ],
+ "cleanup": [],
+ "note": "只读链：夹具为后台列表取 ID；无凭证注入验证鉴权",
+ "priority": "P0",
+ "status": "ready",
+ "domain": "资产-组件",
+ "api_count": 85
+}

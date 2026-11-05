@@ -1,0 +1,14 @@
+﻿rule_id,page,assertion,status,metric,evidence
+R20,component-404,A20,FAIL,http=200 code=200 110ms,"code=200!in [400, 404]"
+R20,invalid-json,A06,FAIL,http=200 code=500 95ms,"code=500!in [400, 415]"
+R06,missing-param,A06,FAIL,http=200 code=200 116ms,"code=200!in [400, 422]"
+R06,num-param,A06,FAIL,http=200 code=500 96ms,code=500!in [400]
+R08,banner-no-param,A08,FAIL,http=200 code=500 93ms,code=500!=200
+R11,operator-role,A11,PASS,http=200 code=403 90ms,
+R19,pageSize-limit,A19,PASS,http=200 code=200 923ms,
+R20,userinfo-leak,A20,FAIL,http=200 code=200 117ms,leaked:phoneNumber;leaked:openid
+R05,repeat-cart,A05,PASS,http=200 code=200 111ms,
+R05,repeat-cart-2,A05,PASS,http=200 code=200 101ms,
+R15,upload-no-file,A15,PASS,http=200 code=403 100ms,
+R18,order-invalid-status,A18,PASS,http=200 code=200 124ms,
+R24,export-operlog,A24,PASS,http=200 code=403 107ms,

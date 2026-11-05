@@ -1,0 +1,93 @@
+{
+ "chain_id": "CHAIN-AUTH-READONLY",
+ "name": "认证域内链：验证码→租户列表→非法登录被拒→再次取码（不锁定真实账号）",
+ "priority": "P1",
+ "fixtures": [
+  {
+   "id": "f1",
+   "name": "取验证码",
+   "method": "GET",
+   "path": "/auth/code",
+   "expect": {
+    "code": 200
+   },
+   "extract": {
+    "uuid": "data.uuid"
+   }
+  }
+ ],
+ "entry_gate": [
+  "f1"
+ ],
+ "steps": [
+  {
+   "no": 1,
+   "name": "租户下拉",
+   "method": "GET",
+   "path": "/auth/tenant/list",
+   "expect": {
+    "code": 200
+   }
+  },
+  {
+   "no": 2,
+   "name": "不存在的账号登录（不得返回 token）",
+   "method": "POST",
+   "path": "/auth/login",
+   "body": {
+    "username": "__QA_NO_SUCH_USER__",
+    "password": "x",
+    "code": "0000",
+    "uuid": "{uuid}"
+   },
+   "expect": {
+    "code_not_in": [
+     200
+    ]
+   }
+  },
+  {
+   "no": 3,
+   "name": "空 body 登录（不得返回 token）",
+   "method": "POST",
+   "path": "/auth/login",
+   "body": {},
+   "expect": {
+    "code_not_in": [
+     200
+    ]
+   }
+  },
+  {
+   "no": 4,
+   "name": "再次取码（限流内）",
+   "method": "GET",
+   "path": "/auth/code",
+   "expect": {
+    "code": 200
+   }
+  }
+ ],
+ "cleanup": [],
+ "cleanup_not_applicable": "登录失败不产生持久数据（无 token、无会话）",
+ "failure_injection": [
+  {
+   "no": "i1",
+   "name": "租户列表无凭证可访问性",
+   "method": "GET",
+   "path": "/auth/tenant/list",
+   "no_auth": true,
+   "expect": {
+    "code_in": [
+     200,
+     401,
+     403
+    ]
+   }
+  }
+ ],
+ "note": "使用不存在的用户名，避免锁定真实账号；4 次请求在 IP 限流阈值内",
+ "status": "ready",
+ "domain": "认证",
+ "api_count": 21
+}

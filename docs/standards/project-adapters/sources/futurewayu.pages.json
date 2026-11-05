@@ -1,0 +1,793 @@
+[
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-100",
+  "group": "系统（开发）",
+  "name": "用户管理",
+  "path": "/user",
+  "component": "system/user/index",
+  "perms": "system:user:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-131",
+  "group": "系统（开发）",
+  "name": "分配角色",
+  "path": "/user-auth/role/:userId",
+  "component": "system/user/authRole",
+  "perms": "system:user:edit",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-101",
+  "group": "系统（开发）",
+  "name": "角色管理",
+  "path": "/role",
+  "component": "system/role/index",
+  "perms": "system:role:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-130",
+  "group": "系统（开发）",
+  "name": "分配用户",
+  "path": "/role-auth/user/:roleId",
+  "component": "system/role/authUser",
+  "perms": "system:role:edit",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-102",
+  "group": "系统（开发）",
+  "name": "菜单管理",
+  "path": "/menu",
+  "component": "system/menu/index",
+  "perms": "system:menu:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-103",
+  "group": "系统（开发）",
+  "name": "部门管理",
+  "path": "/dept",
+  "component": "system/dept/index",
+  "perms": "system:dept:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-104",
+  "group": "系统（开发）",
+  "name": "岗位管理",
+  "path": "/post",
+  "component": "system/post/index",
+  "perms": "system:post:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-105",
+  "group": "系统（开发）",
+  "name": "字典管理",
+  "path": "/dict",
+  "component": "system/dict/index",
+  "perms": "system:dict:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-132",
+  "group": "系统（开发）",
+  "name": "字典数据",
+  "path": "/dict-data/index/:dictId",
+  "component": "system/dict/data",
+  "perms": "system:dict:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-106",
+  "group": "系统（开发）",
+  "name": "参数设置",
+  "path": "/config",
+  "component": "system/config/index",
+  "perms": "system:config:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-107",
+  "group": "系统（开发）",
+  "name": "通知公告",
+  "path": "/notice",
+  "component": "system/notice/index",
+  "perms": "system:notice:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-133",
+  "group": "系统（开发）",
+  "name": "文件配置管理",
+  "path": "/oss-config/index",
+  "component": "system/oss/config",
+  "perms": "system:ossConfig:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-118",
+  "group": "系统（开发）",
+  "name": "文件管理",
+  "path": "/oss",
+  "component": "system/oss/index",
+  "perms": "system:oss:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-123",
+  "group": "系统（开发）",
+  "name": "客户端管理",
+  "path": "/client",
+  "component": "system/client/index",
+  "perms": "system:client:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-109",
+  "group": "系统监控",
+  "name": "在线用户",
+  "path": "/online",
+  "component": "monitor/online/index",
+  "perms": "monitor:online:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-113",
+  "group": "系统监控",
+  "name": "缓存监控",
+  "path": "/cache",
+  "component": "monitor/cache/index",
+  "perms": "monitor:cache:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-117",
+  "group": "系统监控",
+  "name": "Admin监控",
+  "path": "/Admin",
+  "component": "monitor/admin/index",
+  "perms": "monitor:admin:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-120",
+  "group": "系统监控",
+  "name": "任务调度中心",
+  "path": "/snailjob",
+  "component": "monitor/snailjob/index",
+  "perms": "monitor:snailjob:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-116",
+  "group": "系统工具",
+  "name": "修改生成配置",
+  "path": "/gen-edit/index/:tableId",
+  "component": "tool/gen/editTable",
+  "perms": "tool:gen:edit",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-115",
+  "group": "系统工具",
+  "name": "代码生成",
+  "path": "/gen",
+  "component": "tool/gen/index",
+  "perms": "tool:gen:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-121",
+  "group": "租户管理",
+  "name": "租户管理",
+  "path": "/tenant",
+  "component": "system/tenant/index",
+  "perms": "system:tenant:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-122",
+  "group": "租户管理",
+  "name": "租户套餐管理",
+  "path": "/tenantPackage",
+  "component": "system/tenantPackage/index",
+  "perms": "system:tenantPackage:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-500",
+  "group": "日志管理",
+  "name": "操作日志",
+  "path": "/operlog",
+  "component": "monitor/operlog/index",
+  "perms": "monitor:operlog:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-501",
+  "group": "日志管理",
+  "name": "登录日志",
+  "path": "/logininfor",
+  "component": "monitor/logininfor/index",
+  "perms": "monitor:logininfor:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2102251082338304108",
+  "group": "上新",
+  "name": "款",
+  "path": "/style",
+  "component": "asset-management/style/index",
+  "perms": "system:componentStyle:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2042232417673994242",
+  "group": "上新",
+  "name": "组件",
+  "path": "/component",
+  "component": "asset-management/component/index",
+  "perms": "system:component:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2102251082338304004",
+  "group": "上新",
+  "name": "系列",
+  "path": "/component-series",
+  "component": "asset-management/component-series/index",
+  "perms": "system:componentSeries:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2098662551894560770",
+  "group": "门店",
+  "name": "店铺",
+  "path": "/youzan-store",
+  "component": "asset-management/youzan-store/index",
+  "perms": "system:youzanStore:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2102251082338304001",
+  "group": "门店",
+  "name": "门店设备",
+  "path": "/device",
+  "component": "asset-management/device/index",
+  "perms": "system:device:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2102251082338304002",
+  "group": "门店",
+  "name": "订单",
+  "path": "/order",
+  "component": "asset-management/order/index",
+  "perms": "system:pickupOrder:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2102251082338304009",
+  "group": "门店",
+  "name": "导购业绩",
+  "path": "/salesman-commission",
+  "component": "asset-management/salesman-commission/index",
+  "perms": "system:salesmanCommission:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2055180189385613314",
+  "group": "营销",
+  "name": "轮播图",
+  "path": "/banner-activity",
+  "component": "asset-management/banner-activity/index",
+  "perms": "system:bannerActivity:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2065758845939466242",
+  "group": "营销",
+  "name": "小程序消息",
+  "path": "/message",
+  "component": "system/message/index",
+  "perms": "system:message:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2102251082338304119",
+  "group": "营销",
+  "name": "活动优惠",
+  "path": "/youzan-activity",
+  "component": "asset-management/youzan-activity/index",
+  "perms": "system:youzanActivity:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2044419355206197249",
+  "group": "设置",
+  "name": "组件分类",
+  "path": "/component-category",
+  "component": "asset-management/component-category/index",
+  "perms": "system:componentCategory:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2047561281380003841",
+  "group": "设置",
+  "name": "娃体",
+  "path": "/doll-template",
+  "component": "asset-management/doll-template/index",
+  "perms": "system:dollTemplate:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2054888376019959809",
+  "group": "设置",
+  "name": "换装背景",
+  "path": "/bg-image",
+  "component": "asset-management/bg-image/index",
+  "perms": "system:bgImage:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2102251082338304017",
+  "group": "设置",
+  "name": "账号",
+  "path": "/account",
+  "component": "system/user/index",
+  "perms": "system:user:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2102251082338304116",
+  "group": "设置",
+  "name": "身份卡",
+  "path": "/id-card-setting",
+  "component": "asset-management/id-card-setting/index",
+  "perms": "system:idCardSetting:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2102251082338304114",
+  "group": "高级",
+  "name": "有赞同步中心",
+  "path": "/youzan-sync",
+  "component": "asset-management/youzan-sync/index",
+  "perms": "system:youzanStore:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2059487882889363458",
+  "group": "高级",
+  "name": "AI 精修方案",
+  "path": "/ai-workflow",
+  "component": "asset-management/comfy-workflow/index",
+  "perms": "system:comfyWorkflow:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2059488130135195650",
+  "group": "高级",
+  "name": "AI 模型流程",
+  "path": "/ai-node",
+  "component": "asset-management/comfy-node/index",
+  "perms": "system:comfyNode:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2089342536196214786",
+  "group": "高级",
+  "name": "平板 App 发版",
+  "path": "/app-version",
+  "component": "system/app-version/index",
+  "perms": "system:appVersion:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2081373351566569473",
+  "group": "高级",
+  "name": "操作日志",
+  "path": "/operation-log",
+  "component": "asset-management/operation-log/index",
+  "perms": "monitor:operlog:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2102251082338304125",
+  "group": "社区",
+  "name": "帖子",
+  "path": "/community-post",
+  "component": "asset-management/community-post/index",
+  "perms": "system:communityPost:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "管理后台",
+  "page_id": "ADM-2043543221010644994",
+  "group": "社区",
+  "name": "板块",
+  "path": "/community-plate",
+  "component": "asset-management/community-plate/index",
+  "perms": "system:plate:list",
+  "page_kind": "list"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-01",
+  "group": "小程序",
+  "name": "首页-搭配选购",
+  "path": "pages/home/home",
+  "component": "",
+  "page_kind": "tab"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-02",
+  "group": "小程序",
+  "name": "选娃",
+  "path": "pages/doll-select/doll-select",
+  "component": "",
+  "page_kind": "list"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-03",
+  "group": "小程序",
+  "name": "换装",
+  "path": "pages/dressup/dressup",
+  "component": "",
+  "page_kind": "editor"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-04",
+  "group": "小程序",
+  "name": "社区列表",
+  "path": "pages/community/community",
+  "component": "",
+  "page_kind": "list"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-05",
+  "group": "小程序",
+  "name": "日记列表",
+  "path": "pages/diary/diary",
+  "component": "",
+  "page_kind": "list"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-06",
+  "group": "小程序",
+  "name": "我的",
+  "path": "pages/my/my",
+  "component": "",
+  "page_kind": "tab"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-07",
+  "group": "小程序",
+  "name": "社区搜索",
+  "path": "pages-sub/community/search-result",
+  "component": "",
+  "page_kind": "list"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-08",
+  "group": "小程序",
+  "name": "帖子详情",
+  "path": "pages-sub/community/post-detail",
+  "component": "",
+  "page_kind": "detail"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-09",
+  "group": "小程序",
+  "name": "发帖",
+  "path": "pages-sub/community/post-publish",
+  "component": "",
+  "page_kind": "form"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-10",
+  "group": "小程序",
+  "name": "消息",
+  "path": "pages-sub/community/messages",
+  "component": "",
+  "page_kind": "list"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-11",
+  "group": "小程序",
+  "name": "日记发布",
+  "path": "pages-sub/diary/diary-publish",
+  "component": "",
+  "page_kind": "form"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-12",
+  "group": "小程序",
+  "name": "日记详情",
+  "path": "pages-sub/diary/diary-detail",
+  "component": "",
+  "page_kind": "detail"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-13",
+  "group": "小程序",
+  "name": "新增娃娃",
+  "path": "pages-sub/diary/doll-add",
+  "component": "",
+  "page_kind": "form"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-14",
+  "group": "小程序",
+  "name": "我的收藏",
+  "path": "pages-sub/my/my-collect",
+  "component": "",
+  "page_kind": "list"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-15",
+  "group": "小程序",
+  "name": "我的点赞",
+  "path": "pages-sub/my/my-liked",
+  "component": "",
+  "page_kind": "list"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-16",
+  "group": "小程序",
+  "name": "个人资料",
+  "path": "pages-sub/my/my-profile",
+  "component": "",
+  "page_kind": "form"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-17",
+  "group": "小程序",
+  "name": "他人主页",
+  "path": "pages-sub/my/user-profile",
+  "component": "",
+  "page_kind": "detail"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-18",
+  "group": "小程序",
+  "name": "商品详情",
+  "path": "pages-sub/shop/product-detail",
+  "component": "",
+  "page_kind": "detail"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-19",
+  "group": "小程序",
+  "name": "订单列表",
+  "path": "pages-sub/order/order-list",
+  "component": "",
+  "page_kind": "list"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-20",
+  "group": "小程序",
+  "name": "订单详情",
+  "path": "pages-sub/order/order-detail",
+  "component": "",
+  "page_kind": "detail"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-21",
+  "group": "小程序",
+  "name": "物流",
+  "path": "pages-sub/order/order-logistics",
+  "component": "",
+  "page_kind": "detail"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-22",
+  "group": "小程序",
+  "name": "扫码订单",
+  "path": "pages-sub/order/scan-order",
+  "component": "",
+  "page_kind": "action"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-23",
+  "group": "小程序",
+  "name": "结算/确认订单",
+  "path": "pages-sub/order/order-checkout",
+  "component": "",
+  "page_kind": "form"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-24",
+  "group": "小程序",
+  "name": "选自提门店",
+  "path": "pages-sub/order/pickup-store",
+  "component": "",
+  "page_kind": "list"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-25",
+  "group": "小程序",
+  "name": "订单地址",
+  "path": "pages-sub/order/order-address",
+  "component": "",
+  "page_kind": "form"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-26",
+  "group": "小程序",
+  "name": "地址列表",
+  "path": "pages-sub/order/address-list",
+  "component": "",
+  "page_kind": "list"
+ },
+ {
+  "platform": "微信小程序",
+  "page_id": "MP-27",
+  "group": "小程序",
+  "name": "地址编辑",
+  "path": "pages-sub/order/address-edit",
+  "component": "",
+  "page_kind": "form"
+ },
+ {
+  "platform": "门店平板",
+  "page_id": "PAD-01",
+  "group": "平板",
+  "name": "平板-搭配选购",
+  "path": "/pad/dressup",
+  "page_kind": "editor"
+ },
+ {
+  "platform": "门店平板",
+  "page_id": "PAD-02",
+  "group": "平板",
+  "name": "平板-确认购买/会员码",
+  "path": "/pad/confirm",
+  "page_kind": "form"
+ },
+ {
+  "platform": "门店平板",
+  "page_id": "PAD-03",
+  "group": "平板",
+  "name": "平板-支付（微信/支付宝/现金/扫码）",
+  "path": "/pad/pay",
+  "page_kind": "action"
+ },
+ {
+  "platform": "门店平板",
+  "page_id": "PAD-04",
+  "group": "平板",
+  "name": "平板-小票打印",
+  "path": "/pad/print",
+  "page_kind": "action"
+ },
+ {
+  "platform": "门店平板",
+  "page_id": "PAD-05",
+  "group": "平板",
+  "name": "平板-订单结果",
+  "path": "/pad/result",
+  "page_kind": "detail"
+ },
+ {
+  "platform": "叫号屏",
+  "page_id": "SCR-01",
+  "group": "叫号屏",
+  "name": "叫号大屏",
+  "path": "/screen",
+  "page_kind": "board"
+ },
+ {
+  "platform": "叫号屏",
+  "page_id": "SCR-02",
+  "group": "叫号屏",
+  "name": "店员备货操作页",
+  "path": "/screen/station",
+  "page_kind": "list"
+ },
+ {
+  "platform": "有赞商城",
+  "page_id": "YZ-01",
+  "group": "有赞",
+  "name": "店铺首页",
+  "path": "/wscshop",
+  "page_kind": "list"
+ },
+ {
+  "platform": "有赞商城",
+  "page_id": "YZ-02",
+  "group": "有赞",
+  "name": "商品详情",
+  "path": "/wscshop/goods",
+  "page_kind": "detail"
+ },
+ {
+  "platform": "有赞商城",
+  "page_id": "YZ-03",
+  "group": "有赞",
+  "name": "下单/支付",
+  "path": "/wscshop/order",
+  "page_kind": "form"
+ },
+ {
+  "platform": "有赞商城",
+  "page_id": "YZ-04",
+  "group": "有赞",
+  "name": "我的订单/售后",
+  "path": "/wscshop/user/order",
+  "page_kind": "list"
+ }
+]

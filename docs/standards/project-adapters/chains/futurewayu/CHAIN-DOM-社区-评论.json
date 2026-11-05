@@ -1,0 +1,41 @@
+{
+ "chain_id": "CHAIN-DOM-社区-评论",
+ "name": "社区-评论 域内链（只读就绪：1 步 + 无凭证拒绝注入）",
+ "domain": "社区-评论",
+ "priority": "P2",
+ "fixtures": [],
+ "entry_gate": [],
+ "steps": [
+  {
+   "no": 1,
+   "name": "list:/client/comment/list",
+   "method": "GET",
+   "path": "/client/comment/list",
+   "auth": "client",
+   "expect": {
+    "code_in": [
+     200
+    ]
+   }
+  }
+ ],
+ "failure_injection": [
+  {
+   "no": "i1",
+   "name": "无凭证访问被拒",
+   "method": "GET",
+   "path": "/client/comment/list",
+   "no_auth": true,
+   "expect": {
+    "code_in": [
+     401,
+     403
+    ]
+   }
+  }
+ ],
+ "cleanup": [],
+ "note": "单只读步骤 + 无凭证拒绝注入，共 2 个可观察断言",
+ "status": "ready-readonly",
+ "api_count": 5
+}

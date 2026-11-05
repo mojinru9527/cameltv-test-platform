@@ -1,0 +1,15 @@
+{
+ "chain_id": "CHAIN-DOM-身份卡-C端",
+ "name": "身份卡-C端 域内链（只读就绪：0 步 + 无凭证拒绝注入）",
+ "domain": "身份卡-C端",
+ "priority": "P2",
+ "fixtures": [],
+ "entry_gate": [],
+ "steps": [],
+ "failure_injection": [],
+ "cleanup": [],
+ "note": "只读链：admin 接口 403 视为有效权限结果；写阶段与夹具待按需补充",
+ "status": "skeleton",
+ "blocked_reason": "该域全部为写接口（无安全只读端点），需夹具链与写权限批准",
+ "api_count": 1
+}

@@ -1,0 +1,81 @@
+{
+ "chain_id": "CHAIN-DOM-有赞-店铺",
+ "name": "有赞-店铺 域内链（只读就绪：4 步 + 无凭证拒绝注入）",
+ "domain": "有赞-店铺",
+ "priority": "P1",
+ "fixtures": [],
+ "entry_gate": [],
+ "steps": [
+  {
+   "no": 1,
+   "name": "list:/system/youzan/store/list",
+   "method": "GET",
+   "path": "/system/youzan/store/list",
+   "auth": "admin",
+   "expect": {
+    "code_in": [
+     200,
+     403
+    ]
+   }
+  },
+  {
+   "no": 2,
+   "name": "detail:/system/youzan/store/goods/channel/targets",
+   "method": "GET",
+   "path": "/system/youzan/store/goods/channel/targets",
+   "auth": "admin",
+   "expect": {
+    "code_in": [
+     200,
+     403
+    ]
+   }
+  },
+  {
+   "no": 3,
+   "name": "other:/system/youzan/store/goods/channel/tasks",
+   "method": "GET",
+   "path": "/system/youzan/store/goods/channel/tasks",
+   "auth": "admin",
+   "expect": {
+    "code_in": [
+     200,
+     403
+    ]
+   }
+  },
+  {
+   "no": 4,
+   "name": "other:/system/youzan/store/goods/channel/batches",
+   "method": "GET",
+   "path": "/system/youzan/store/goods/channel/batches",
+   "auth": "admin",
+   "expect": {
+    "code_in": [
+     200,
+     403
+    ]
+   }
+  }
+ ],
+ "failure_injection": [
+  {
+   "no": "i1",
+   "name": "无凭证访问被拒",
+   "method": "GET",
+   "path": "/system/youzan/store/list",
+   "no_auth": true,
+   "expect": {
+    "code_in": [
+     401,
+     403
+    ]
+   }
+  }
+ ],
+ "cleanup": [],
+ "note": "只读链：admin 接口 403 视为有效权限结果；写阶段与夹具待按需补充",
+ "status": "ready-readonly",
+ "api_count": 17
+}

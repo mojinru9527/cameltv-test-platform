@@ -1,0 +1,507 @@
+{
+ "project": "futurewayu",
+ "pages": 84,
+ "pages_with_path": 84,
+ "pages_by_platform": {
+  "管理后台": 46,
+  "微信小程序": 27,
+  "门店平板": 5,
+  "叫号屏": 2,
+  "有赞商城": 4
+ },
+ "rules": 24,
+ "matrix_cells": 2016,
+ "applicable_cells": 1541,
+ "covered_cells": 266,
+ "coverage_pct": 17.3,
+ "zero_coverage_pages": 47,
+ "zero_coverage_page_list": [
+  "管理后台/用户管理",
+  "管理后台/分配角色",
+  "管理后台/角色管理",
+  "管理后台/分配用户",
+  "管理后台/菜单管理",
+  "管理后台/部门管理",
+  "管理后台/岗位管理",
+  "管理后台/字典管理",
+  "管理后台/字典数据",
+  "管理后台/参数设置",
+  "管理后台/通知公告",
+  "管理后台/文件配置管理",
+  "管理后台/文件管理",
+  "管理后台/客户端管理",
+  "管理后台/在线用户",
+  "管理后台/缓存监控",
+  "管理后台/Admin监控",
+  "管理后台/任务调度中心",
+  "管理后台/修改生成配置",
+  "管理后台/代码生成",
+  "管理后台/租户管理",
+  "管理后台/租户套餐管理",
+  "管理后台/登录日志",
+  "管理后台/款",
+  "管理后台/门店设备",
+  "管理后台/导购业绩",
+  "管理后台/小程序消息",
+  "管理后台/活动优惠",
+  "管理后台/板块",
+  "微信小程序/首页-搭配选购",
+  "微信小程序/社区列表",
+  "微信小程序/日记列表",
+  "微信小程序/我的",
+  "微信小程序/社区搜索",
+  "微信小程序/帖子详情",
+  "微信小程序/日记发布",
+  "微信小程序/新增娃娃",
+  "微信小程序/我的收藏",
+  "微信小程序/我的点赞",
+  "微信小程序/他人主页",
+  "微信小程序/物流",
+  "微信小程序/选自提门店",
+  "微信小程序/订单地址",
+  "微信小程序/地址列表",
+  "微信小程序/地址编辑",
+  "叫号屏/店员备货操作页",
+  "有赞商城/店铺首页"
+ ],
+ "worst_rules": [
+  {
+   "rule_id": "R22",
+   "applicable": 84,
+   "covered": 0,
+   "pct": 0.0
+  },
+  {
+   "rule_id": "R23",
+   "applicable": 17,
+   "covered": 0,
+   "pct": 0.0
+  },
+  {
+   "rule_id": "R05",
+   "applicable": 84,
+   "covered": 1,
+   "pct": 1.2
+  },
+  {
+   "rule_id": "R24",
+   "applicable": 59,
+   "covered": 2,
+   "pct": 3.4
+  },
+  {
+   "rule_id": "R16",
+   "applicable": 63,
+   "covered": 4,
+   "pct": 6.3
+  },
+  {
+   "rule_id": "R12",
+   "applicable": 76,
+   "covered": 5,
+   "pct": 6.6
+  },
+  {
+   "rule_id": "R21",
+   "applicable": 84,
+   "covered": 6,
+   "pct": 7.1
+  },
+  {
+   "rule_id": "R11",
+   "applicable": 84,
+   "covered": 7,
+   "pct": 8.3
+  }
+ ],
+ "endpoints": 535,
+ "unique_paths": 485,
+ "domains": 34,
+ "unassigned_endpoints": [
+  "POST /system/youzan/debug",
+  "POST /system/imageBounds/query",
+  "POST /client/focusRecord",
+  "POST /client/device-buyer-scan/confirm",
+  "GET /system/social/list",
+  "GET /client/common/personality/options",
+  "GET /"
+ ],
+ "chains": [
+  {
+   "domain": "资产-组件",
+   "api_count": 85,
+   "stages": [
+    "create",
+    "process",
+    "review",
+    "publish",
+    "list",
+    "detail",
+    "transact",
+    "update",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "系统-用户角色",
+   "api_count": 62,
+   "stages": [
+    "create",
+    "list",
+    "detail",
+    "transact",
+    "update",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "资产-AI/精修",
+   "api_count": 48,
+   "stages": [
+    "create",
+    "process",
+    "list",
+    "detail",
+    "update",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "系统-配置",
+   "api_count": 36,
+   "stages": [
+    "create",
+    "list",
+    "detail",
+    "update",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "订单-C端",
+   "api_count": 34,
+   "stages": [
+    "create",
+    "process",
+    "list",
+    "detail",
+    "transact",
+    "update",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "认证",
+   "api_count": 21,
+   "stages": [
+    "create",
+    "process",
+    "publish",
+    "list",
+    "transact",
+    "update",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "用户-C端",
+   "api_count": 21,
+   "stages": [
+    "create",
+    "review",
+    "publish",
+    "detail",
+    "other"
+   ]
+  },
+  {
+   "domain": "设备",
+   "api_count": 20,
+   "stages": [
+    "create",
+    "process",
+    "publish",
+    "list",
+    "detail",
+    "update",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "有赞-店铺",
+   "api_count": 17,
+   "stages": [
+    "create",
+    "process",
+    "list",
+    "detail",
+    "transact",
+    "update",
+    "other"
+   ]
+  },
+  {
+   "domain": "资产-娃体",
+   "api_count": 16,
+   "stages": [
+    "create",
+    "publish",
+    "list",
+    "detail",
+    "transact",
+    "update",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "监控",
+   "api_count": 15,
+   "stages": [
+    "create",
+    "list",
+    "detail",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "社区-帖子",
+   "api_count": 14,
+   "stages": [
+    "create",
+    "publish",
+    "list",
+    "update",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "订单-C端-其他",
+   "api_count": 13,
+   "stages": [
+    "create",
+    "process",
+    "detail",
+    "transact",
+    "other"
+   ]
+  },
+  {
+   "domain": "订单-后台",
+   "api_count": 12,
+   "stages": [
+    "publish",
+    "list",
+    "detail",
+    "transact",
+    "other"
+   ]
+  },
+  {
+   "domain": "消息",
+   "api_count": 12,
+   "stages": [
+    "create",
+    "list",
+    "detail",
+    "update",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "日记",
+   "api_count": 12,
+   "stages": [
+    "create",
+    "list",
+    "detail",
+    "update",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "营销-轮播",
+   "api_count": 11,
+   "stages": [
+    "create",
+    "publish",
+    "list",
+    "detail",
+    "update",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "资产-身份卡",
+   "api_count": 10,
+   "stages": [
+    "create",
+    "list",
+    "update",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "有赞-交易",
+   "api_count": 9,
+   "stages": [
+    "process",
+    "detail",
+    "transact",
+    "other"
+   ]
+  },
+  {
+   "domain": "发版",
+   "api_count": 8,
+   "stages": [
+    "create",
+    "publish",
+    "list",
+    "detail",
+    "update",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "社区-板块",
+   "api_count": 7,
+   "stages": [
+    "create",
+    "list",
+    "update",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "资产-背景图",
+   "api_count": 7,
+   "stages": [
+    "create",
+    "publish",
+    "list",
+    "detail",
+    "update",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "其他",
+   "api_count": 7,
+   "stages": [
+    "create",
+    "list",
+    "transact",
+    "other"
+   ]
+  },
+  {
+   "domain": "商品-C端",
+   "api_count": 6,
+   "stages": [
+    "publish",
+    "list",
+    "other"
+   ]
+  },
+  {
+   "domain": "社区-评论",
+   "api_count": 5,
+   "stages": [
+    "create",
+    "list",
+    "transact",
+    "delete",
+    "other"
+   ]
+  },
+  {
+   "domain": "文件",
+   "api_count": 5,
+   "stages": [
+    "create",
+    "review"
+   ]
+  },
+  {
+   "domain": "资产-质检",
+   "api_count": 4,
+   "stages": [
+    "create",
+    "review"
+   ]
+  },
+  {
+   "domain": "导购业绩",
+   "api_count": 4,
+   "stages": [
+    "transact",
+    "other"
+   ]
+  },
+  {
+   "domain": "资产-换装",
+   "api_count": 4,
+   "stages": [
+    "create",
+    "detail"
+   ]
+  },
+  {
+   "domain": "回调",
+   "api_count": 3,
+   "stages": [
+    "transact",
+    "other"
+   ]
+  },
+  {
+   "domain": "有赞-商品",
+   "api_count": 3,
+   "stages": [
+    "process",
+    "list",
+    "detail"
+   ]
+  },
+  {
+   "domain": "社区-互动",
+   "api_count": 2,
+   "stages": [
+    "create",
+    "transact"
+   ]
+  },
+  {
+   "domain": "身份卡-C端",
+   "api_count": 1,
+   "stages": [
+    "other"
+   ]
+  },
+  {
+   "domain": "搜索",
+   "api_count": 1,
+   "stages": [
+    "list"
+   ]
+  }
+ ],
+ "cases_loaded": 1230
+}

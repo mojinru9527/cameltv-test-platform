@@ -1,0 +1,88 @@
+# 项目能力矩阵 — 未来娃屿 V4.0
+# 用来说明「哪些页面/链路当前环境能执行、哪些被能力阻塞」。
+# available 必须来自实测证据，不得凭推测写 true。
+project: futurewayu
+display_name: 未来娃屿 V4.0
+
+capabilities:
+  - id: web-admin
+    label: 管理后台浏览器自动化
+    available: true
+    evidence: "Playwright + 4 角色登录态；本轮 28 页扫描可用"
+  - id: admin-token
+    label: 后台接口 Bearer Token
+    available: true
+    evidence: "重新登录成功，/system/user/getInfo code=200"
+  - id: c-end-token
+    label: C 端用户 token
+    available: true
+    evidence: "Redis USER_OPENID_TOKEN_KEY 实时取用（A/B 两个测试号）"
+  - id: db-readonly
+    label: MySQL 只读
+    available: true
+    evidence: "SSH + docker exec mysql，hz 库 123 表"
+  - id: redis-read
+    label: Redis 只读
+    available: true
+    evidence: "6377 可读会话与验证码"
+  - id: server-log
+    label: 服务端日志
+    available: true
+    evidence: "/data/hz/ruoyi.log 与 /data/hz/logs/"
+  - id: mini-program-runtime
+    label: 小程序运行态
+    available: false
+    reason: "无该小程序开发者权限，微信开发者工具导入被拦（登录用户不是该小程序的开发者）"
+  - id: pad-device
+    label: 门店平板 1.3.x
+    available: false
+    reason: "未提供 1.3.26 安装包与绑定设备"
+  - id: screen-device
+    label: 叫号屏设备令牌
+    available: false
+    reason: "设备表有 PICKUP_SCREEN 记录，但无对应设备令牌/激活凭据"
+  - id: payment-sandbox
+    label: 支付/退款沙箱
+    available: false
+    reason: "生产资金红线，禁止真实支付/退款；无沙箱环境"
+  - id: youzan-buyer
+    label: 有赞买家账号
+    available: false
+    reason: "仅有店铺侧配置，无买家账号与真实下单条件"
+  - id: callback-signature
+    label: 第三方回调有效签名
+    available: false
+    reason: "无商户证书/密钥，只能做无签名与错签名负向"
+
+# 页面 → 所需能力（按平台给默认，少量页面覆盖）
+page_requirements:
+  by_platform:
+    管理后台: [web-admin]
+    微信小程序: [mini-program-runtime]
+    门店平板: [pad-device]
+    叫号屏: [screen-device]
+    有赞商城: [youzan-buyer]
+  overrides:
+    - match: "/store/order"
+      caps: [web-admin, admin-token, db-readonly]
+    - match: "/marketing/banner-activity"
+      caps: [web-admin, admin-token]
+    - match: "/advanced/ai-workflow"
+      caps: [web-admin, admin-token]
+
+# 链路 → 所需能力（按域关键词追加）
+chain_requirements:
+  default: [admin-token, c-end-token]
+  by_domain_keyword:
+    - keyword: "退款"
+      caps: [payment-sandbox]
+    - keyword: "有赞-交易"
+      caps: [payment-sandbox, callback-signature]
+    - keyword: "支付"
+      caps: [payment-sandbox]
+    - keyword: "设备"
+      caps: [pad-device, screen-device]
+    - keyword: "认证"
+      caps: [admin-token]
+    - keyword: "回调"
+      caps: [callback-signature]

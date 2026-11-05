@@ -1,0 +1,42 @@
+{
+ "chain_id": "CHAIN-DOM-资产-质检",
+ "name": "资产-质检 域内链（只读就绪：1 步 + 无凭证拒绝注入）",
+ "domain": "资产-质检",
+ "priority": "P2",
+ "fixtures": [],
+ "entry_gate": [],
+ "steps": [
+  {
+   "no": 1,
+   "name": "review:/system/qualityCheck/list",
+   "method": "GET",
+   "path": "/system/qualityCheck/list",
+   "auth": "admin",
+   "expect": {
+    "code_in": [
+     200,
+     403
+    ]
+   }
+  }
+ ],
+ "failure_injection": [
+  {
+   "no": "i1",
+   "name": "无凭证访问被拒",
+   "method": "GET",
+   "path": "/system/qualityCheck/list",
+   "no_auth": true,
+   "expect": {
+    "code_in": [
+     401,
+     403
+    ]
+   }
+  }
+ ],
+ "cleanup": [],
+ "note": "单只读步骤 + 无凭证拒绝注入，共 2 个可观察断言",
+ "status": "ready-readonly",
+ "api_count": 4
+}

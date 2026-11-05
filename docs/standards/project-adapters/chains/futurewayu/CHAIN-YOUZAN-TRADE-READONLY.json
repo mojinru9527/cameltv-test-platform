@@ -1,0 +1,91 @@
+{
+ "chain_id": "CHAIN-YOUZAN-TRADE-READONLY",
+ "name": "有赞-交易域内链：门店支付配置→退款记录→退款可退金额→商品条码告警",
+ "fixtures": [
+  {
+   "id": "f1",
+   "name": "有赞店铺列表",
+   "method": "GET",
+   "path": "/system/youzan/store/list",
+   "auth": "admin",
+   "expect": {
+    "code": 200
+   },
+   "extract": {
+    "sid": "rows[0].id"
+   }
+  }
+ ],
+ "entry_gate": [
+  "f1"
+ ],
+ "steps": [
+  {
+   "no": 1,
+   "name": "店铺详情",
+   "method": "GET",
+   "path": "/system/youzan/store/{sid}",
+   "auth": "admin",
+   "expect": {
+    "code": 200
+   }
+  },
+  {
+   "no": 2,
+   "name": "自提点收款配置",
+   "method": "GET",
+   "path": "/system/youzan/store/{sid}/point-payments",
+   "auth": "admin",
+   "expect": {
+    "code": 200
+   }
+  },
+  {
+   "no": 3,
+   "name": "商品条码告警列表",
+   "method": "GET",
+   "path": "/system/youzan/goods/alert/list?pageNum=1&pageSize=5",
+   "auth": "admin",
+   "expect": {
+    "code": 200
+   }
+  },
+  {
+   "no": 4,
+   "name": "身份刷新接口鉴权（无 body 应为业务错误而非 500）",
+   "method": "POST",
+   "path": "/system/youzan/identity/refresh",
+   "auth": "admin",
+   "body": {},
+   "expect": {
+    "code_in": [
+     400,
+     403,
+     200
+    ]
+   }
+  }
+ ],
+ "failure_injection": [
+  {
+   "no": "i1",
+   "name": "无凭证访问店铺详情被拒",
+   "method": "GET",
+   "path": "/system/youzan/store/{sid}",
+   "no_auth": true,
+   "expect": {
+    "code_in": [
+     401,
+     403
+    ]
+   }
+  }
+ ],
+ "cleanup": [],
+ "cleanup_not_applicable": "identity/refresh 为幂等只读式刷新，失败时不产生数据",
+ "note": "只读链；资金段因能力缺失未纳入",
+ "priority": "P0",
+ "status": "ready",
+ "domain": "有赞-交易",
+ "api_count": 9
+}

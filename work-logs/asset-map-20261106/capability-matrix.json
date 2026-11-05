@@ -1,0 +1,1621 @@
+{
+ "project": "futurewayu",
+ "capabilities": [
+  {
+   "id": "web-admin",
+   "label": "管理后台浏览器自动化",
+   "available": true,
+   "evidence": "Playwright + 4 角色登录态；本轮 28 页扫描可用"
+  },
+  {
+   "id": "admin-token",
+   "label": "后台接口 Bearer Token",
+   "available": true,
+   "evidence": "重新登录成功，/system/user/getInfo code=200"
+  },
+  {
+   "id": "c-end-token",
+   "label": "C 端用户 token",
+   "available": true,
+   "evidence": "Redis USER_OPENID_TOKEN_KEY 实时取用（A/B 两个测试号）"
+  },
+  {
+   "id": "db-readonly",
+   "label": "MySQL 只读",
+   "available": true,
+   "evidence": "SSH + docker exec mysql，hz 库 123 表"
+  },
+  {
+   "id": "redis-read",
+   "label": "Redis 只读",
+   "available": true,
+   "evidence": "6377 可读会话与验证码"
+  },
+  {
+   "id": "server-log",
+   "label": "服务端日志",
+   "available": true,
+   "evidence": "/data/hz/ruoyi.log 与 /data/hz/logs/"
+  },
+  {
+   "id": "mini-program-runtime",
+   "label": "小程序运行态",
+   "available": false,
+   "reason": "无该小程序开发者权限，微信开发者工具导入被拦（登录用户不是该小程序的开发者）"
+  },
+  {
+   "id": "pad-device",
+   "label": "门店平板 1.3.x",
+   "available": false,
+   "reason": "未提供 1.3.26 安装包与绑定设备"
+  },
+  {
+   "id": "screen-device",
+   "label": "叫号屏设备令牌",
+   "available": false,
+   "reason": "设备表有 PICKUP_SCREEN 记录，但无对应设备令牌/激活凭据"
+  },
+  {
+   "id": "payment-sandbox",
+   "label": "支付/退款沙箱",
+   "available": false,
+   "reason": "生产资金红线，禁止真实支付/退款；无沙箱环境"
+  },
+  {
+   "id": "youzan-buyer",
+   "label": "有赞买家账号",
+   "available": false,
+   "reason": "仅有店铺侧配置，无买家账号与真实下单条件"
+  },
+  {
+   "id": "callback-signature",
+   "label": "第三方回调有效签名",
+   "available": false,
+   "reason": "无商户证书/密钥，只能做无签名与错签名负向"
+  }
+ ],
+ "available": [
+  "admin-token",
+  "c-end-token",
+  "db-readonly",
+  "redis-read",
+  "server-log",
+  "web-admin"
+ ],
+ "pages": {
+  "total": 84,
+  "executable": 46,
+  "ratio": 54.8,
+  "blocked_by": {
+   "mini-program-runtime": 27,
+   "pad-device": 5,
+   "screen-device": 2,
+   "youzan-buyer": 4
+  }
+ },
+ "chains": {
+  "total": 34,
+  "executable": 5,
+  "ratio": 14.7,
+  "blocked_by": {
+   "callback-signature": 2,
+   "payment-sandbox": 1,
+   "spec-skeleton": 28,
+   "pad-device": 1,
+   "screen-device": 1
+  }
+ },
+ "page_matrix": [
+  {
+   "page_id": "ADM-100",
+   "platform": "管理后台",
+   "name": "用户管理",
+   "path": "/user",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-131",
+   "platform": "管理后台",
+   "name": "分配角色",
+   "path": "/user-auth/role/:userId",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-101",
+   "platform": "管理后台",
+   "name": "角色管理",
+   "path": "/role",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-130",
+   "platform": "管理后台",
+   "name": "分配用户",
+   "path": "/role-auth/user/:roleId",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-102",
+   "platform": "管理后台",
+   "name": "菜单管理",
+   "path": "/menu",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-103",
+   "platform": "管理后台",
+   "name": "部门管理",
+   "path": "/dept",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-104",
+   "platform": "管理后台",
+   "name": "岗位管理",
+   "path": "/post",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-105",
+   "platform": "管理后台",
+   "name": "字典管理",
+   "path": "/dict",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-132",
+   "platform": "管理后台",
+   "name": "字典数据",
+   "path": "/dict-data/index/:dictId",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-106",
+   "platform": "管理后台",
+   "name": "参数设置",
+   "path": "/config",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-107",
+   "platform": "管理后台",
+   "name": "通知公告",
+   "path": "/notice",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-133",
+   "platform": "管理后台",
+   "name": "文件配置管理",
+   "path": "/oss-config/index",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-118",
+   "platform": "管理后台",
+   "name": "文件管理",
+   "path": "/oss",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-123",
+   "platform": "管理后台",
+   "name": "客户端管理",
+   "path": "/client",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-109",
+   "platform": "管理后台",
+   "name": "在线用户",
+   "path": "/online",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-113",
+   "platform": "管理后台",
+   "name": "缓存监控",
+   "path": "/cache",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-117",
+   "platform": "管理后台",
+   "name": "Admin监控",
+   "path": "/Admin",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-120",
+   "platform": "管理后台",
+   "name": "任务调度中心",
+   "path": "/snailjob",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-116",
+   "platform": "管理后台",
+   "name": "修改生成配置",
+   "path": "/gen-edit/index/:tableId",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-115",
+   "platform": "管理后台",
+   "name": "代码生成",
+   "path": "/gen",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-121",
+   "platform": "管理后台",
+   "name": "租户管理",
+   "path": "/tenant",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-122",
+   "platform": "管理后台",
+   "name": "租户套餐管理",
+   "path": "/tenantPackage",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-500",
+   "platform": "管理后台",
+   "name": "操作日志",
+   "path": "/operlog",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-501",
+   "platform": "管理后台",
+   "name": "登录日志",
+   "path": "/logininfor",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2102251082338304108",
+   "platform": "管理后台",
+   "name": "款",
+   "path": "/style",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2042232417673994242",
+   "platform": "管理后台",
+   "name": "组件",
+   "path": "/component",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2102251082338304004",
+   "platform": "管理后台",
+   "name": "系列",
+   "path": "/component-series",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2098662551894560770",
+   "platform": "管理后台",
+   "name": "店铺",
+   "path": "/youzan-store",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2102251082338304001",
+   "platform": "管理后台",
+   "name": "门店设备",
+   "path": "/device",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2102251082338304002",
+   "platform": "管理后台",
+   "name": "订单",
+   "path": "/order",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2102251082338304009",
+   "platform": "管理后台",
+   "name": "导购业绩",
+   "path": "/salesman-commission",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2055180189385613314",
+   "platform": "管理后台",
+   "name": "轮播图",
+   "path": "/banner-activity",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2065758845939466242",
+   "platform": "管理后台",
+   "name": "小程序消息",
+   "path": "/message",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2102251082338304119",
+   "platform": "管理后台",
+   "name": "活动优惠",
+   "path": "/youzan-activity",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2044419355206197249",
+   "platform": "管理后台",
+   "name": "组件分类",
+   "path": "/component-category",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2047561281380003841",
+   "platform": "管理后台",
+   "name": "娃体",
+   "path": "/doll-template",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2054888376019959809",
+   "platform": "管理后台",
+   "name": "换装背景",
+   "path": "/bg-image",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2102251082338304017",
+   "platform": "管理后台",
+   "name": "账号",
+   "path": "/account",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2102251082338304116",
+   "platform": "管理后台",
+   "name": "身份卡",
+   "path": "/id-card-setting",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2102251082338304114",
+   "platform": "管理后台",
+   "name": "有赞同步中心",
+   "path": "/youzan-sync",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2059487882889363458",
+   "platform": "管理后台",
+   "name": "AI 精修方案",
+   "path": "/ai-workflow",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2059488130135195650",
+   "platform": "管理后台",
+   "name": "AI 模型流程",
+   "path": "/ai-node",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2089342536196214786",
+   "platform": "管理后台",
+   "name": "平板 App 发版",
+   "path": "/app-version",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2081373351566569473",
+   "platform": "管理后台",
+   "name": "操作日志",
+   "path": "/operation-log",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2102251082338304125",
+   "platform": "管理后台",
+   "name": "帖子",
+   "path": "/community-post",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "ADM-2043543221010644994",
+   "platform": "管理后台",
+   "name": "板块",
+   "path": "/community-plate",
+   "required": [
+    "web-admin"
+   ],
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "page_id": "MP-01",
+   "platform": "微信小程序",
+   "name": "首页-搭配选购",
+   "path": "pages/home/home",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-02",
+   "platform": "微信小程序",
+   "name": "选娃",
+   "path": "pages/doll-select/doll-select",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-03",
+   "platform": "微信小程序",
+   "name": "换装",
+   "path": "pages/dressup/dressup",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-04",
+   "platform": "微信小程序",
+   "name": "社区列表",
+   "path": "pages/community/community",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-05",
+   "platform": "微信小程序",
+   "name": "日记列表",
+   "path": "pages/diary/diary",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-06",
+   "platform": "微信小程序",
+   "name": "我的",
+   "path": "pages/my/my",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-07",
+   "platform": "微信小程序",
+   "name": "社区搜索",
+   "path": "pages-sub/community/search-result",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-08",
+   "platform": "微信小程序",
+   "name": "帖子详情",
+   "path": "pages-sub/community/post-detail",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-09",
+   "platform": "微信小程序",
+   "name": "发帖",
+   "path": "pages-sub/community/post-publish",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-10",
+   "platform": "微信小程序",
+   "name": "消息",
+   "path": "pages-sub/community/messages",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-11",
+   "platform": "微信小程序",
+   "name": "日记发布",
+   "path": "pages-sub/diary/diary-publish",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-12",
+   "platform": "微信小程序",
+   "name": "日记详情",
+   "path": "pages-sub/diary/diary-detail",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-13",
+   "platform": "微信小程序",
+   "name": "新增娃娃",
+   "path": "pages-sub/diary/doll-add",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-14",
+   "platform": "微信小程序",
+   "name": "我的收藏",
+   "path": "pages-sub/my/my-collect",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-15",
+   "platform": "微信小程序",
+   "name": "我的点赞",
+   "path": "pages-sub/my/my-liked",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-16",
+   "platform": "微信小程序",
+   "name": "个人资料",
+   "path": "pages-sub/my/my-profile",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-17",
+   "platform": "微信小程序",
+   "name": "他人主页",
+   "path": "pages-sub/my/user-profile",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-18",
+   "platform": "微信小程序",
+   "name": "商品详情",
+   "path": "pages-sub/shop/product-detail",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-19",
+   "platform": "微信小程序",
+   "name": "订单列表",
+   "path": "pages-sub/order/order-list",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-20",
+   "platform": "微信小程序",
+   "name": "订单详情",
+   "path": "pages-sub/order/order-detail",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-21",
+   "platform": "微信小程序",
+   "name": "物流",
+   "path": "pages-sub/order/order-logistics",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-22",
+   "platform": "微信小程序",
+   "name": "扫码订单",
+   "path": "pages-sub/order/scan-order",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-23",
+   "platform": "微信小程序",
+   "name": "结算/确认订单",
+   "path": "pages-sub/order/order-checkout",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-24",
+   "platform": "微信小程序",
+   "name": "选自提门店",
+   "path": "pages-sub/order/pickup-store",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-25",
+   "platform": "微信小程序",
+   "name": "订单地址",
+   "path": "pages-sub/order/order-address",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-26",
+   "platform": "微信小程序",
+   "name": "地址列表",
+   "path": "pages-sub/order/address-list",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "MP-27",
+   "platform": "微信小程序",
+   "name": "地址编辑",
+   "path": "pages-sub/order/address-edit",
+   "required": [
+    "mini-program-runtime"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "mini-program-runtime"
+   ]
+  },
+  {
+   "page_id": "PAD-01",
+   "platform": "门店平板",
+   "name": "平板-搭配选购",
+   "path": "/pad/dressup",
+   "required": [
+    "pad-device"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "pad-device"
+   ]
+  },
+  {
+   "page_id": "PAD-02",
+   "platform": "门店平板",
+   "name": "平板-确认购买/会员码",
+   "path": "/pad/confirm",
+   "required": [
+    "pad-device"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "pad-device"
+   ]
+  },
+  {
+   "page_id": "PAD-03",
+   "platform": "门店平板",
+   "name": "平板-支付（微信/支付宝/现金/扫码）",
+   "path": "/pad/pay",
+   "required": [
+    "pad-device"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "pad-device"
+   ]
+  },
+  {
+   "page_id": "PAD-04",
+   "platform": "门店平板",
+   "name": "平板-小票打印",
+   "path": "/pad/print",
+   "required": [
+    "pad-device"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "pad-device"
+   ]
+  },
+  {
+   "page_id": "PAD-05",
+   "platform": "门店平板",
+   "name": "平板-订单结果",
+   "path": "/pad/result",
+   "required": [
+    "pad-device"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "pad-device"
+   ]
+  },
+  {
+   "page_id": "SCR-01",
+   "platform": "叫号屏",
+   "name": "叫号大屏",
+   "path": "/screen",
+   "required": [
+    "screen-device"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "screen-device"
+   ]
+  },
+  {
+   "page_id": "SCR-02",
+   "platform": "叫号屏",
+   "name": "店员备货操作页",
+   "path": "/screen/station",
+   "required": [
+    "screen-device"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "screen-device"
+   ]
+  },
+  {
+   "page_id": "YZ-01",
+   "platform": "有赞商城",
+   "name": "店铺首页",
+   "path": "/wscshop",
+   "required": [
+    "youzan-buyer"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "youzan-buyer"
+   ]
+  },
+  {
+   "page_id": "YZ-02",
+   "platform": "有赞商城",
+   "name": "商品详情",
+   "path": "/wscshop/goods",
+   "required": [
+    "youzan-buyer"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "youzan-buyer"
+   ]
+  },
+  {
+   "page_id": "YZ-03",
+   "platform": "有赞商城",
+   "name": "下单/支付",
+   "path": "/wscshop/order",
+   "required": [
+    "youzan-buyer"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "youzan-buyer"
+   ]
+  },
+  {
+   "page_id": "YZ-04",
+   "platform": "有赞商城",
+   "name": "我的订单/售后",
+   "path": "/wscshop/user/order",
+   "required": [
+    "youzan-buyer"
+   ],
+   "executable": false,
+   "blocked_by": [
+    "youzan-buyer"
+   ]
+  }
+ ],
+ "chain_matrix": [
+  {
+   "chain_id": "CHAIN-ASSET-COMPONENT-READONLY",
+   "domain": "资产-组件",
+   "priority": "P0",
+   "status": "ready",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "chain_id": "CHAIN-ORDER-C-READONLY",
+   "domain": "订单-C端",
+   "priority": "P0",
+   "status": "ready",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "chain_id": "CHAIN-YOUZAN-TRADE-READONLY",
+   "domain": "有赞-交易",
+   "priority": "P0",
+   "status": "ready",
+   "required": [
+    "admin-token",
+    "c-end-token",
+    "callback-signature",
+    "payment-sandbox"
+   ],
+   "capability_ok": false,
+   "executable": false,
+   "blocked_by": [
+    "callback-signature",
+    "payment-sandbox"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-AUTH-READONLY",
+   "domain": "认证",
+   "priority": "P1",
+   "status": "ready",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "chain_id": "CHAIN-COMMUNITY-READONLY",
+   "domain": "社区-帖子",
+   "priority": "P1",
+   "status": "ready",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "chain_id": "CHAIN-MESSAGE-READONLY",
+   "domain": "消息",
+   "priority": "P1",
+   "status": "ready",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": true,
+   "blocked_by": []
+  },
+  {
+   "chain_id": "CHAIN-DOM-系统-用户角色",
+   "domain": "系统-用户角色",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-资产-AI-精修",
+   "domain": "资产-AI/精修",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-系统-配置",
+   "domain": "系统-配置",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-用户-C端",
+   "domain": "用户-C端",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-设备",
+   "domain": "设备",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token",
+    "pad-device",
+    "screen-device"
+   ],
+   "capability_ok": false,
+   "executable": false,
+   "blocked_by": [
+    "pad-device",
+    "screen-device",
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-有赞-店铺",
+   "domain": "有赞-店铺",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-资产-娃体",
+   "domain": "资产-娃体",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-监控",
+   "domain": "监控",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-订单-C端-其他",
+   "domain": "订单-C端-其他",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-订单-后台",
+   "domain": "订单-后台",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-日记",
+   "domain": "日记",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-营销-轮播",
+   "domain": "营销-轮播",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-资产-身份卡",
+   "domain": "资产-身份卡",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-发版",
+   "domain": "发版",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-社区-板块",
+   "domain": "社区-板块",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-资产-背景图",
+   "domain": "资产-背景图",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-其他",
+   "domain": "其他",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-商品-C端",
+   "domain": "商品-C端",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-社区-评论",
+   "domain": "社区-评论",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-文件",
+   "domain": "文件",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-资产-质检",
+   "domain": "资产-质检",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-导购业绩",
+   "domain": "导购业绩",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-资产-换装",
+   "domain": "资产-换装",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-回调",
+   "domain": "回调",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token",
+    "callback-signature"
+   ],
+   "capability_ok": false,
+   "executable": false,
+   "blocked_by": [
+    "callback-signature",
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-有赞-商品",
+   "domain": "有赞-商品",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-社区-互动",
+   "domain": "社区-互动",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-身份卡-C端",
+   "domain": "身份卡-C端",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  },
+  {
+   "chain_id": "CHAIN-DOM-搜索",
+   "domain": "搜索",
+   "priority": "P2",
+   "status": "skeleton",
+   "required": [
+    "admin-token",
+    "c-end-token"
+   ],
+   "capability_ok": true,
+   "executable": false,
+   "blocked_by": [
+    "spec-skeleton"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,74 @@
+{
+ "chain_id": "CHAIN-MESSAGE-READONLY",
+ "name": "消息域内链：C 端列表/未读数 → 后台列表 → 后台详情（不标记已读）",
+ "priority": "P1",
+ "fixtures": [
+  {
+   "id": "f1",
+   "name": "C 端消息列表",
+   "method": "GET",
+   "path": "/client/message/list?pageNum=1&pageSize=5",
+   "auth": "client",
+   "expect": {
+    "code": 200
+   },
+   "extract": {
+    "mid": "data.rows[0].id"
+   }
+  },
+  {
+   "id": "f2",
+   "name": "后台消息列表",
+   "method": "GET",
+   "path": "/system/message/list?pageNum=1&pageSize=5",
+   "auth": "admin",
+   "expect": {
+    "code": 200
+   },
+   "extract": {
+    "aid": "rows[0].id"
+   }
+  }
+ ],
+ "entry_gate": [
+  "f1",
+  "f2"
+ ],
+ "steps": [
+  {
+   "no": 1,
+   "name": "C 端未读数",
+   "method": "GET",
+   "path": "/client/message/unread/count",
+   "auth": "client",
+   "expect": {
+    "code": 200
+   }
+  },
+  {
+   "no": 2,
+   "name": "后台消息详情",
+   "method": "GET",
+   "path": "/system/message/{aid}",
+   "auth": "admin",
+   "expect": {
+    "code": 200
+   }
+  },
+  {
+   "no": 3,
+   "name": "后台消息列表分页一致性",
+   "method": "GET",
+   "path": "/system/message/list?pageNum=1&pageSize=2",
+   "auth": "admin",
+   "expect": {
+    "code": 200
+   }
+  }
+ ],
+ "cleanup": [],
+ "note": "不调用 C 端消息详情（会标记已读，产生副作用）",
+ "status": "ready",
+ "domain": "消息",
+ "api_count": 12
+}

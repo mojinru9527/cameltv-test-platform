@@ -1,0 +1,74 @@
+{
+ "chain_id": "CHAIN-COMMUNITY-READONLY",
+ "name": "社区域内链：帖子列表→详情→评论列表→我的点赞（读只）",
+ "priority": "P1",
+ "fixtures": [
+  {
+   "id": "f1",
+   "name": "帖子列表",
+   "method": "GET",
+   "path": "/client/post/list?pageNum=1&pageSize=1",
+   "auth": "client",
+   "expect": {
+    "code": 200
+   },
+   "extract": {
+    "pid": "data.rows[0].id"
+   }
+  }
+ ],
+ "entry_gate": [
+  "f1"
+ ],
+ "steps": [
+  {
+   "no": 1,
+   "name": "帖子详情",
+   "method": "GET",
+   "path": "/client/post/{pid}",
+   "auth": "client",
+   "expect": {
+    "code": 200
+   },
+   "present": true,
+   "absent_fields": [
+    "sessionKey"
+   ]
+  },
+  {
+   "no": 2,
+   "name": "帖子列表",
+   "method": "GET",
+   "path": "/client/post/list?pageNum=1&pageSize=5",
+   "auth": "client",
+   "expect": {
+    "code": 200
+   }
+  },
+  {
+   "no": 3,
+   "name": "评论列表",
+   "method": "GET",
+   "path": "/client/comment/list?postId={pid}&pageNum=1&pageSize=5",
+   "auth": "client",
+   "expect": {
+    "code": 200
+   }
+  },
+  {
+   "no": 4,
+   "name": "我的点赞",
+   "method": "GET",
+   "path": "/client/post/me/likes",
+   "auth": "client",
+   "expect": {
+    "code": 200
+   }
+  }
+ ],
+ "cleanup": [],
+ "note": "评论列表若 data=null 而不返回空列表，需在报告中标注为口径问题",
+ "status": "ready",
+ "domain": "社区-帖子",
+ "api_count": 14
+}

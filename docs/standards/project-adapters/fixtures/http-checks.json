@@ -1,0 +1,167 @@
+[
+ {
+  "id": "component-404",
+  "rule": "R20",
+  "assertion": "A20",
+  "method": "GET",
+  "path": "/system/component/999999999",
+  "auth": "admin",
+  "expect": {
+   "code_in": [
+    400,
+    404
+   ]
+  }
+ },
+ {
+  "id": "invalid-json",
+  "rule": "R20",
+  "assertion": "A06",
+  "method": "POST",
+  "path": "/client/likeRecord",
+  "auth": "client",
+  "body": "{invalid",
+  "expect": {
+   "code_in": [
+    400,
+    415
+   ]
+  }
+ },
+ {
+  "id": "missing-param",
+  "rule": "R06",
+  "assertion": "A06",
+  "method": "POST",
+  "path": "/client/likeRecord",
+  "auth": "client",
+  "body": {},
+  "expect": {
+   "code_in": [
+    400,
+    422
+   ]
+  }
+ },
+ {
+  "id": "num-param",
+  "rule": "R06",
+  "assertion": "A06",
+  "method": "GET",
+  "path": "/system/component/list?pageNum=abc&pageSize=10",
+  "auth": "admin",
+  "expect": {
+   "code_in": [
+    400
+   ]
+  }
+ },
+ {
+  "id": "banner-no-param",
+  "rule": "R08",
+  "assertion": "A08",
+  "method": "GET",
+  "path": "/client/bannerActivity/enabledList",
+  "expect": {
+   "code": 200
+  }
+ },
+ {
+  "id": "operator-role",
+  "rule": "R11",
+  "assertion": "A11",
+  "method": "GET",
+  "path": "/system/role/list",
+  "auth": "admin",
+  "expect": {
+   "code": 403
+  }
+ },
+ {
+  "id": "pageSize-limit",
+  "rule": "R19",
+  "assertion": "A19",
+  "method": "GET",
+  "path": "/system/component/list?pageNum=1&pageSize=10000",
+  "auth": "admin",
+  "expect": {
+   "code": 200
+  },
+  "max_ms": 2000
+ },
+ {
+  "id": "userinfo-leak",
+  "rule": "R20",
+  "assertion": "A20",
+  "method": "GET",
+  "path": "/client/wx/user/wx1e30ddefda705614/getLoginUser",
+  "auth": "client",
+  "expect": {
+   "code": 200
+  },
+  "absent_fields": [
+   "phoneNumber",
+   "openid"
+  ]
+ },
+ {
+  "id": "repeat-cart",
+  "rule": "R05",
+  "assertion": "A05",
+  "method": "GET",
+  "path": "/client/mall/cart",
+  "auth": "client",
+  "expect": {
+   "code": 200
+  }
+ },
+ {
+  "id": "repeat-cart-2",
+  "rule": "R05",
+  "assertion": "A05",
+  "method": "GET",
+  "path": "/client/mall/cart",
+  "auth": "client",
+  "expect": {
+   "code": 200
+  }
+ },
+ {
+  "id": "upload-no-file",
+  "rule": "R15",
+  "assertion": "A15",
+  "method": "POST",
+  "path": "/system/component/uploadMaterial",
+  "auth": "admin",
+  "body": "not-a-file",
+  "expect": {
+   "code_not_in": [
+    200
+   ]
+  }
+ },
+ {
+  "id": "order-invalid-status",
+  "rule": "R18",
+  "assertion": "A18",
+  "method": "GET",
+  "path": "/system/pickupOrder/list?pageNum=1&pageSize=5&orderStatus=__QA_INVALID__",
+  "auth": "admin",
+  "expect": {
+   "code": 200
+  }
+ },
+ {
+  "id": "export-operlog",
+  "rule": "R24",
+  "assertion": "A24",
+  "method": "POST",
+  "path": "/monitor/operlog/export",
+  "auth": "admin",
+  "expect": {
+   "code_not_in": [
+    500
+   ]
+  }
+ }
+]

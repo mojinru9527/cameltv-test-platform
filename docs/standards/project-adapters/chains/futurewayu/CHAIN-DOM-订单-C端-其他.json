@@ -1,0 +1,77 @@
+{
+ "chain_id": "CHAIN-DOM-订单-C端-其他",
+ "name": "订单-C端-其他 域内链（只读就绪：4 步 + 无凭证拒绝注入）",
+ "domain": "订单-C端-其他",
+ "priority": "P2",
+ "fixtures": [],
+ "entry_gate": [],
+ "steps": [
+  {
+   "no": 1,
+   "name": "create:/client/mall/addresses",
+   "method": "GET",
+   "path": "/client/mall/addresses",
+   "auth": "client",
+   "expect": {
+    "code_in": [
+     200
+    ]
+   }
+  },
+  {
+   "no": 2,
+   "name": "detail:/client/mall/refunds/expresses",
+   "method": "GET",
+   "path": "/client/mall/refunds/expresses",
+   "auth": "client",
+   "expect": {
+    "code_in": [
+     200
+    ]
+   }
+  },
+  {
+   "no": 3,
+   "name": "transact:/client/mall/refunds/reasons",
+   "method": "GET",
+   "path": "/client/mall/refunds/reasons",
+   "auth": "client",
+   "expect": {
+    "code_in": [
+     200
+    ]
+   }
+  },
+  {
+   "no": 4,
+   "name": "other:/client/mall/pickup-points",
+   "method": "GET",
+   "path": "/client/mall/pickup-points",
+   "auth": "client",
+   "expect": {
+    "code_in": [
+     200
+    ]
+   }
+  }
+ ],
+ "failure_injection": [
+  {
+   "no": "i1",
+   "name": "无凭证访问被拒",
+   "method": "GET",
+   "path": "/client/mall/addresses",
+   "no_auth": true,
+   "expect": {
+    "code_in": [
+     401,
+     403
+    ]
+   }
+  }
+ ],
+ "cleanup": [],
+ "note": "只读链：admin 接口 403 视为有效权限结果；写阶段与夹具待按需补充",
+ "status": "ready-readonly",
+ "api_count": 13
+}

@@ -1,0 +1,15 @@
+rule_id,page,assertion,status,metric,evidence
+R01,golden-page,01,PASS,seeded,plumbing-check
+R02,golden-page,02,PASS,seeded,plumbing-check
+R03,golden-page,03,PASS,seeded,plumbing-check
+R07,golden-page,07,PASS,seeded,plumbing-check
+R08,golden-page,08,PASS,seeded,plumbing-check
+R09,golden-page,09,PASS,seeded,plumbing-check
+R10,golden-page,10,PASS,seeded,plumbing-check
+R11,golden-page,11,PASS,seeded,plumbing-check
+R17,golden-page,17,PASS,seeded,plumbing-check
+R19,golden-page,19,PASS,seeded,plumbing-check
+R20,golden-page,20,PASS,seeded,plumbing-check
+R21,golden-page,21,PASS,seeded,plumbing-check
+R22,golden-page,22,PASS,seeded,plumbing-check
+R23,golden-page,23,PASS,seeded,plumbing-check

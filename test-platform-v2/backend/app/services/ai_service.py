@@ -63,15 +63,20 @@ def _load_skill_context_for(kind: str) -> str:
 
     kind = "functional": SKILL.md + case-template.md + functional-checklist.md
                          + 功能测试输出用例要求.md（权威输出要求，7 份功能用例文档）
+                         + interaction-checklist.md + bug-pattern-digest.md
+                           （cameltv-qa-skill-pack v1.1.0 适配层：交互增强 + 历史缺陷模式）
     kind = "api":        api-checklist.md + 接口测试输出用例要求.md（权威输出要求，接口测试.xmind）
                          + 接口测试考虑点【辅助作用】.md（兜底）+ SKILL.md
+                         + api-interaction-checklist.md + bug-pattern-digest.md
     """
     standards_dir = _resolve_workspace_root() / "tests" / "test-case-standards"
     parts: list[str] = []
 
     if kind == "api":
         # 1) 权威输出要求：接口测试输出用例要求.md（skill 目录或规范中心）
-        for fname in ["api-checklist.md", "接口测试输出用例要求.md", "接口测试考虑点【辅助作用】.md"]:
+        # 2) 交互增强层：api-interaction-checklist.md + 历史缺陷模式摘要（v1.1.0）
+        for fname in ["api-checklist.md", "接口测试输出用例要求.md", "接口测试考虑点【辅助作用】.md",
+                      "api-interaction-checklist.md", "bug-pattern-digest.md"]:
             fpath = _skill_dir() / fname
             if not fpath.exists():
                 alt = standards_dir / fname
@@ -85,11 +90,14 @@ def _load_skill_context_for(kind: str) -> str:
         return "\n\n---\n\n".join(parts)
 
     # functional：SKILL.md + case-template.md + functional-checklist.md + 功能测试输出用例要求.md
+    #             + interaction-checklist.md + bug-pattern-digest.md（交互增强 + 历史缺陷模式）
     for fname in [
         "SKILL.md",
         "case-template.md",
         "functional-checklist.md",
         "功能测试输出用例要求.md",
+        "interaction-checklist.md",
+        "bug-pattern-digest.md",
     ]:
         fpath = _skill_dir() / fname
         if not fpath.exists():

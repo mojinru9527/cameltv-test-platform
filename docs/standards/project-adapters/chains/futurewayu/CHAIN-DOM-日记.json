@@ -1,0 +1,41 @@
+{
+ "chain_id": "CHAIN-DOM-日记",
+ "name": "日记 域内链（只读就绪：1 步 + 无凭证拒绝注入）",
+ "domain": "日记",
+ "priority": "P2",
+ "fixtures": [],
+ "entry_gate": [],
+ "steps": [
+  {
+   "no": 1,
+   "name": "other:/client/body/my",
+   "method": "GET",
+   "path": "/client/body/my",
+   "auth": "client",
+   "expect": {
+    "code_in": [
+     200
+    ]
+   }
+  }
+ ],
+ "failure_injection": [
+  {
+   "no": "i1",
+   "name": "无凭证访问被拒",
+   "method": "GET",
+   "path": "/client/body/my",
+   "no_auth": true,
+   "expect": {
+    "code_in": [
+     401,
+     403
+    ]
+   }
+  }
+ ],
+ "cleanup": [],
+ "note": "单只读步骤 + 无凭证拒绝注入，共 2 个可观察断言",
+ "status": "ready-readonly",
+ "api_count": 12
+}
