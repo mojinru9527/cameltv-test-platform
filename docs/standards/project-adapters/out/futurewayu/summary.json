@@ -1,6 +1,7 @@
 {
  "project": "futurewayu",
  "pages": 84,
+ "pages_with_path": 84,
  "pages_by_platform": {
   "管理后台": 46,
   "微信小程序": 27,

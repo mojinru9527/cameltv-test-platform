@@ -282,6 +282,7 @@ def main() -> int:
     summary = {
         "project": adapter.get("project"),
         "pages": len(pages),
+        "pages_with_path": len([p for p in pages if p.get("path") and not str(p["path"]).startswith("/__view__")]),
         "pages_by_platform": dict(Counter(p["platform"] for p in pages)),
         "rules": len(rules),
         "matrix_cells": len(rows),

@@ -126,3 +126,70 @@ output_dir: out/<project>
 4. 看 `summary.json`：未归类接口是否 ≤5%、零覆盖页面清单是否符合预期；
 5. 人工校准域映射与闭环（唯一需要脑力的部分）；
 6. 把 `summary.json` 的缺口清单排进 P2 用例设计。
+
+## 7. 页面源适配器（以可访问环境 + 源码 + PRD 为准）
+
+> 页面清单不得从数据库字段倒推。统一由 `scripts/test-asset-map/adapters.py` 从四类权威源生成。
+
+| 子命令 | 输入 | 适用场景 | 实测（未来娃屿） |
+|---|---|---|---|
+| `crawl-web` | 已登录态 + 入口 URL | 环境已可访问的 Web/后台；**按角色**爬取可见菜单 | operator 13 / auditor 7 / launcher 5 / clerk 2 页 |
+| `scan-source` | 前端源码目录 | 拿到源码时最全（含隐藏/超管页、路由参数页） | 94 条（静态路由 + views 目录） |
+| `scan-mp` | 小程序 `app.json` | 小程序/分包页面 | 27 页（6 主包 + 21 分包） |
+| `parse-prd` | 需求/PRD 文本 | 补"需求有、实现未找到"的候选 | 54 条候选（需人工确认） |
+| `merge` | 多来源 `label=path` | 交叉验证 + 缺口清单 | 合并 152 条；PRD-only 缺口 53 |
+
+**关键结论**：单一来源必然不全——爬虫只看到角色可见菜单（超管页看不到），源码能看到隐藏路由（如 `/forgot-password`），PRD 能看到尚未实现或命名不同的页面。**必须三源交叉 + 人工裁决**。
+
+## 8. 可执行断言（A01–A24 脚本化）
+
+`scripts/test-asset-map/run_assertions.py`：
+
+- `web`：Playwright 逐页测量 —— A07 溢出（scrollWidth）、A21 对比度（WCAG）、A22 三档视口、A23 键盘焦点
+- `http`：声明式 spec —— A05 幂等、A06 参数、A11 权限、A12 越权、A19 一致性、A20 错误语义
+
+**校准是必须的工序**（否则产生假失败）。本轮经过 3 轮校准：
+
+| 假失败类别 | 现象 | 处理 |
+|---|---|---|
+| 设计内的横向滚动 | 表格 `overflow-x:auto` 被误判溢出 | 排除 `auto/scroll` 容器 |
+| 省略号截断 | `text-overflow:ellipsis` 被误判溢出 | 排除 ellipsis/nowrap |
+| 媒体/装饰盒 | 56×56 图片容器 scrollWidth 70 | 只检查有文本的容器 |
+| 断言器自身 spec 透传 bug | `max_ms`/`absent_fields` 未生效 → 2 条误判 PASS | 修 runner，同时支持节点级与 expect 级 |
+
+校准后实测（6 个后台页面）：**R07 6/6 PASS、R21 6/6 FAIL（最低 2.46:1）、R22 6/6 PASS**；HTTP 断言 8 条中 6 条 FAIL（对应上一轮发现的问题）。
+
+> 已知限制：响应时间单次采样不稳定（同一接口冷 4317ms / 热 906ms），应改为多次采样取 P95。
+
+## 9. 链路执行器（fixtures → entry_gate → steps → cleanup）
+
+`scripts/test-asset-map/run_chain.py` + 声明式 JSON 规格：
+
+```
+fixtures（造数，可跨角色）→ entry_gate（前置不成立即 BLOCKED）→ steps（状态/数据/幂等断言）→ cleanup（必执行）
+```
+
+实测 `CHAIN-CART-ORDER-READONLY`：后台取组件 → C 端商品详情 → 购物车 → 订单详情（校验不泄露 openid）→ 可退金额 → 退款记录，**7/7 通过**；其中 `/refundable` 返回业务码 4100（不可退），说明链路用例能暴露"单接口看不见的业务语义"，需业务确认文案。
+
+## 10. 覆盖率门禁（CI 可执行）
+
+`scripts/test-asset-map/gate.py` 读取 `summary.json` + 断言 CSV，按阈值返回退出码：
+
+```powershell
+python scripts/test-asset-map/gate.py --summary out/futurewayu/summary.json \
+  --assertions all-assertions.csv --min-page-coverage 0.95 --max-unassigned 0.05 \
+  --min-assert-pass 0.90 --require-rules R07,R11,R19,R20,R21,R22
+```
+
+本轮实测：页面清单 84/84 ✅、接口未归类 7/535 ✅、必需规则齐备 ✅、**断言通过率 53.8% ❌（14/26）→ exit 1**。门禁按预期阻断了当前质量水平。
+
+## 11. 剩余缺口状态
+
+| 缺口 | 状态 | 说明 |
+|---|---|---|
+| 页面源适配器（爬取/源码/小程序/PRD） | ✅ 已补 | 4 个来源 + merge；PRD 需人工裁决 |
+| 断言脚本化（A01–A24） | 🟡 部分 | Web 4 条 + HTTP 6 条可执行；其余仍是文本口径，按需扩 |
+| 链路执行器 | ✅ 已补 | 声明式执行器可跑通；域内链仍需逐条写规格 |
+| CI 门禁 | ✅ 已补 | 退出码 + 报告；尚未接入 `.github/workflows` |
+| 域映射/闭环半自动化 | ❌ 未做 | 仍靠人工；下一步可用接口 tag + 调用链日志生成候选 |
+| 执行载体/能力矩阵 | ❌ 未做 | 用例尚未声明所需环境，阻塞率仍靠事后统计 |
