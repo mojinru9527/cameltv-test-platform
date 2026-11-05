@@ -221,3 +221,45 @@ def test_capability_matrix_marks_blocked(tmp_path: Path):
     row = {x["chain_id"]: x for x in m["chain_matrix"]}
     assert row["C2"]["blocked_by"] == ["pay"]
     assert "spec-skeleton" in row["C3"]["blocked_by"]
+
+
+def test_validate_env_rejects_bad_input():
+    sys.path.insert(0, str(HERE))
+    from refresh_env import validate_env
+
+    errs = validate_env({})
+    assert any("base_url" in e for e in errs)
+    assert any("admin_token" in e for e in errs)
+
+    errs = validate_env({"base_url": "https://x.com/prod-api/", "admin_token": "a" * 40,
+                         "client_token": "b" * 40})
+    assert any("结尾" in e for e in errs)
+
+    errs = validate_env({"base_url": "http://example.com", "admin_token": "a" * 40,
+                         "client_token": "b" * 40})
+    assert any("明文 http" in e for e in errs)
+
+
+def test_validate_env_accepts_valid():
+    sys.path.insert(0, str(HERE))
+    from refresh_env import validate_env
+
+    env = {"base_url": "https://xinyuwadao.com/prod-api",
+           "admin_token": "eyJhbGciOiJIUzI1NiJ9.payload.signature",
+           "client_token": "aVNZbGhsF0abcdef0123456789",
+           "clientid": "e5cd7e48"}
+    assert validate_env(env) == []
+
+
+def test_refresh_env_check_mode(tmp_path: Path):
+    good = tmp_path / "env.json"
+    good.write_text(json.dumps({"base_url": "https://example.com/prod-api",
+                                "admin_token": "eyJhbGciOiJIUzI1NiJ9.a.b",
+                                "client_token": "abcdefgh12345678"}), encoding="utf-8")
+    r = run(HERE / "refresh_env.py", "--check", good)
+    assert r.returncode == 0, r.stdout + r.stderr
+
+    bad = tmp_path / "bad.json"
+    bad.write_text(json.dumps({"base_url": "https://example.com/prod-api"}), encoding="utf-8")
+    r = run(HERE / "refresh_env.py", "--check", bad)
+    assert r.returncode == 2
