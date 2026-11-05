@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cameltv/historical-bug-pattern.schema.json",
+  "title": "Historical Bug Pattern consumed by Functional Case Generator",
+  "type": "object",
+  "required": [
+    "pattern_id",
+    "pattern_name",
+    "source_bug_ids",
+    "symptom",
+    "confidence",
+    "trigger_signature",
+    "detection_point",
+    "test_oracle",
+    "coverage_strength",
+    "generation_action"
+  ],
+  "properties": {
+    "pattern_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "pattern_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_bug_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "source_evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "symptom": {
+      "type": "string"
+    },
+    "mechanism": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "confirmed",
+        "probable",
+        "unknown"
+      ]
+    },
+    "applicability": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "trigger_signature": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "detection_point": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "test_oracle": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "variants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "existing_test_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "coverage_strength": {
+      "type": "string",
+      "enum": [
+        "strong",
+        "partial",
+        "none",
+        "unknown"
+      ]
+    },
+    "generation_action": {
+      "type": "string",
+      "enum": [
+        "skip",
+        "enhance-existing",
+        "add-minimal-case",
+        "not-applicable",
+        "confirm"
+      ]
+    },
+    "last_reviewed": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

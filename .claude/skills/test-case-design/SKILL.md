@@ -38,8 +38,8 @@ description: Use when asked to write, output, design, or supplement test cases o
 
 | 被测类型 | 必读检查清单 |
 | --- | --- |
-| 功能用例 | [functional-checklist.md](functional-checklist.md) + **权威输出要求** `tests/test-case-standards/功能测试输出用例要求.md`(用户提供的 7 份功能用例文档)+ 源文档 `功能测试用例规范.md`、`测试的具体体现.md`、`功能测试检查点【辅助】.md`、`测试用例具体用法.md`、`界面测试的方法要点.md` |
-| 接口/API 用例 | [api-checklist.md](api-checklist.md) + **权威输出要求** `tests/test-case-standards/接口测试输出用例要求.md`(用户重新整理,接口测试.xmind)+ 源文档 `API接口测试方案.md`、`接口测试考虑点【辅助作用】.md` |
+| 功能用例 | [functional-checklist.md](functional-checklist.md) + [interaction-checklist.md](interaction-checklist.md) + **权威输出要求** `tests/test-case-standards/功能测试输出用例要求.md`(用户提供的 7 份功能用例文档)+ 源文档 `功能测试用例规范.md`、`测试的具体体现.md`、`功能测试检查点【辅助】.md`、`测试用例具体用法.md`、`界面测试的方法要点.md` |
+| 接口/API 用例 | [api-checklist.md](api-checklist.md) + [api-interaction-checklist.md](api-interaction-checklist.md) + **权威输出要求** `tests/test-case-standards/接口测试输出用例要求.md`(用户重新整理,接口测试.xmind)+ 源文档 `API接口测试方案.md`、`接口测试考虑点【辅助作用】.md` |
 | 界面用例 | 源文档 `界面测试的方法要点.md`、`测试用例标准.md` 第 4.2 节 |
 
 设计方法综合运用:**等价类划分、边界值分析、场景法、因果图、正交表、错误推测**(详见 `功能测试用例规范.md`「用例设计方法」)。
@@ -64,6 +64,18 @@ description: Use when asked to write, output, design, or supplement test cases o
 - **接口用例深度层**(见 api-checklist.md 末章):业务状态机 × 跨接口闭环串联 × 数据一致性 × 权限与端差异 × 异常边界。
 - 深度用例同样带完整字段(编号/模块/标题/重要程度/前提条件/操作步骤/预期结果),并打 `闭环` / `状态机` / `关联` 标签便于追踪。
 
+### 第 7 步:交互校验增强 + 历史缺陷模式检索(强制,interaction-case-augmenter)
+
+在基础用例与深度用例之后、去重与序列化之前执行:
+
+1. **交互扫描**:按 `interaction-checklist.md` 第 1 节 12 个维度逐对象选取适用项,把缺失的交互断言**并入原用例**(前提/步骤/预期)。
+2. **模式检索**:读 `bug-pattern-digest.md` 与 `.claude/skills/interaction-case-augmenter/references/historical-bug-pattern-library.json`,按 `模块/页面/控件/操作序列/数据/状态/角色/平台/依赖` 匹配;**不按标题关键词直接判覆盖**。
+3. **覆盖判定**(每个模式只能选一个):`COVERED_STRONG` 只关联不新增;`COVERED_PARTIAL` 增强原用例;`GAP` 新增一条最小可判定用例;`NOT_APPLICABLE` 跳过并写理由;`NEEDS_CONFIRMATION` 标 `OPEN`。
+4. **去重与预算**:不设用例增长目标;输出 `保留 / 增强 / 新增 / 强覆盖跳过 / 不适用 / 待确认` 数量与原因。
+5. **台账**:Bug/Pattern 关联写入既有备注/标签或 `bug-pattern-coverage.csv`,**不得新增导入字段**。
+
+> 完整方法:`../interaction-case-augmenter/SKILL.md`;交互规范中心:`tests/test-case-standards/interaction-testing/`。
+
 ## 用例级别速查
 
 - **P0**:关键路径、最常用功能、基本流、界面数据有效性校验 → 全过则功能稳定
@@ -76,6 +88,8 @@ description: Use when asked to write, output, design, or supplement test cases o
 - 用例只有正面、没有负面/异常用例 → 覆盖不全
 - 接口用例缺少返回值校验或业务逻辑校验 → 违反必选项
 - 没有叠加深度用例补充层(状态机/闭环/关联/权限) → 覆盖不全,回到第 6 步
+- 没有做第 7 步交互增强与历史缺陷模式覆盖判定 → 覆盖不全,回到第 7 步
+- 按历史 Bug 数量机械加用例,或强覆盖模式仍新增用例 → 违反交互增强规则
 - 预期结果只写「成功」「报错」无具体判断标准 → 不可执行
 - 不套检查清单、凭记忆写 → 必然遗漏
 
