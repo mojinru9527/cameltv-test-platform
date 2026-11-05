@@ -263,3 +263,59 @@ def test_refresh_env_check_mode(tmp_path: Path):
     bad.write_text(json.dumps({"base_url": "https://example.com/prod-api"}), encoding="utf-8")
     r = run(HERE / "refresh_env.py", "--check", bad)
     assert r.returncode == 2
+
+
+def _gen_keypair(size=2048):
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
+
+    key = rsa.generate_private_key(public_exponent=65537, key_size=size)
+    pem_pub = key.public_key().public_bytes(
+        serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo).decode()
+    return key, pem_pub
+
+
+def test_login_crypto_aes_roundtrip():
+    sys.path.insert(0, str(HERE))
+    from login_crypto import aes_encrypt, gen_aes_key
+
+    key = gen_aes_key()
+    assert len(key) == 32 and key.decode().isalnum()
+    body = aes_encrypt('{"username":"u","password":"p"}', key)
+
+    import base64
+    from cryptography.hazmat.primitives import padding
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
+    raw = base64.b64decode(body)
+    dec = Cipher(algorithms.AES(key), modes.ECB()).decryptor()
+    padded = dec.update(raw) + dec.finalize()
+    unpadder = padding.PKCS7(128).unpadder()
+    assert unpadder.update(padded) + unpadder.finalize() == b'{"username":"u","password":"p"}'
+
+
+def test_login_crypto_rsa_roundtrip_and_parse():
+    sys.path.insert(0, str(HERE))
+    import base64
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import padding
+    from login_crypto import parse_public_key, rsa_encrypt
+
+    priv, pem_pub = _gen_keypair()
+    pub = parse_public_key(pem_pub)
+    cipher = base64.b64decode(rsa_encrypt(b"hello-aes-key", pub))
+    assert priv.decrypt(cipher, padding.PKCS1v15()) == b"hello-aes-key"
+
+    # 裸 base64（去掉 PEM 头尾）也能解析
+    body = "".join(pem_pub.splitlines()[1:-1])
+    assert parse_public_key(body).key_size == 2048
+
+
+def test_login_crypto_prefers_explicit_key(monkeypatch):
+    sys.path.insert(0, str(HERE))
+    from login_crypto import discover_public_key
+
+    _, pem_pub = _gen_keypair()
+    pub, source = discover_public_key("https://example.invalid/prod-api", explicit=pem_pub)
+    assert source == "env/explicit"
+    assert pub.key_size == 2048

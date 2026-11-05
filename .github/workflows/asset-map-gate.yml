@@ -110,6 +110,8 @@ jobs:
           REDIS_PORT: ${{ secrets.REDIS_PORT }}
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           REDIS_DB: ${{ secrets.REDIS_DB }}
+          ASSET_MAP_LOGIN_MODE: ${{ vars.ASSET_MAP_LOGIN_MODE || 'http' }}
+          ASSET_MAP_RSA_PUBLIC_KEY: ${{ secrets.ASSET_MAP_RSA_PUBLIC_KEY }}
         run: |
           mkdir -p runtime
           if [ -n "$ASSET_MAP_ENV_JSON" ]; then

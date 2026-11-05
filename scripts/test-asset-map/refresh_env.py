@@ -77,8 +77,8 @@ def write_env(env: dict, out: Path, chmod: bool = True) -> None:
 
 
 # ----------------------------------------------------------------- Redis
-def redis_get(key: str, host: str, port: int, password: str, db: int, timeout: float = 10.0):
-    """最小 RESP 客户端（避免引入 redis 依赖）。返回 str/None。"""
+def redis_cmd(*args, host: str, port: int, password: str, db: int, timeout: float = 10.0):
+    """最小 RESP 客户端（避免引入 redis 依赖）。执行任意命令并返回原始回复。"""
     s = socket.create_connection((host, port), timeout=timeout)
     f = s.makefile("rb")
 
@@ -112,15 +112,21 @@ def redis_get(key: str, host: str, port: int, password: str, db: int, timeout: f
             reply()
         send("SELECT", db)
         reply()
-        send("GET", key)
+        send(*args)
         return reply()
     finally:
         s.close()
 
 
+def redis_get(key: str, host: str, port: int, password: str, db: int, timeout: float = 10.0):
+    """读取单个 key。"""
+    return redis_cmd("GET", key, host=host, port=port, password=password, db=db, timeout=timeout)
+
+
 def fetch_client_token(phone: str, host: str, port: int, password: str, db: int) -> str:
     """按手机号在 Redis 里找到 openid，再取该 openid 的 token。"""
-    keys = redis_get("KEYS", host, port, password, db) or []
+    keys = redis_cmd("KEYS", "USER_TOKEN_KEY:*", host=host, port=port,
+                     password=password, db=db) or []
     for k in keys:
         kb = k.decode() if isinstance(k, bytes) else str(k)
         if not kb.startswith("USER_TOKEN_KEY:"):
@@ -147,8 +153,13 @@ def fetch_client_token(phone: str, host: str, port: int, password: str, db: int)
 
 # ----------------------------------------------------------------- 登录
 def login_admin(base_url: str, username: str, password: str, clientid: str,
-                redis_host: str, redis_port: int, redis_pwd: str, redis_db: int) -> str:
-    """走「取验证码 → Redis 读答案 → 登录」拿 admin token。"""
+                redis_host: str, redis_port: int, redis_pwd: str, redis_db: int,
+                rsa_public_key: str = "", mode: str = "http") -> str:
+    """取验证码 → Redis 读答案 → 登录。
+
+    mode=http   : 走前端同款加密（RSA 保护 AES 密钥 + AES-ECB 请求体），纯 HTTP，CI 友好。
+    mode=browser: 用 Playwright 真实登录并从 localStorage 读 Admin-Token（需 Chromium）。
+    """
     import requests
     import urllib3
     urllib3.disable_warnings()
@@ -165,14 +176,45 @@ def login_admin(base_url: str, username: str, password: str, clientid: str,
         ans = ans.decode()
     if not ans:
         raise RuntimeError("Redis 中未找到验证码答案（检查 REDIS_DB / 前缀 global:captcha_codes）")
-    payload = {"username": username, "password": password, "code": str(ans).strip('"'),
-               "uuid": uuid, "clientId": clientid, "grantType": "password"}
-    r = sess.post(base_url.rstrip("/") + "/auth/login", json=payload, timeout=30, verify=False)
-    j = r.json()
-    tok = j.get("data") if isinstance(j.get("data"), str) else None
-    if not tok:
-        raise RuntimeError(f"登录失败: code={j.get('code')} msg={j.get('msg')}")
-    return tok
+    captcha = str(ans).strip('"')
+
+    if mode == "browser":
+        return _login_via_browser(base_url, username, password, captcha, uuid)
+
+    from login_crypto import encrypted_login  # 同目录模块
+    return encrypted_login(base_url, username, password, clientid, captcha, uuid,
+                           public_key_text=rsa_public_key)
+
+
+def _login_via_browser(base_url: str, username: str, password: str,
+                       captcha: str, uuid: str) -> str:
+    """Playwright 兜底：真实登录后从 localStorage 取 Admin-Token。"""
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError as e:
+        raise RuntimeError("browser 模式需要 playwright + chromium") from e
+
+    origin = base_url.split("/prod-api")[0].rstrip("/")
+    with sync_playwright() as p:
+        b = p.chromium.launch(headless=True)
+        ctx = b.new_context(viewport={"width": 1440, "height": 900}, locale="zh-CN")
+        page = ctx.new_page()
+        page.goto(origin + "/login", wait_until="domcontentloaded", timeout=60000)
+        page.wait_for_timeout(2000)
+        inputs = page.query_selector_all("input")
+        if len(inputs) < 3:
+            b.close()
+            raise RuntimeError("登录页元素不足，无法自动填充")
+        inputs[0].fill(username)
+        inputs[1].fill(password)
+        inputs[2].fill(captcha)
+        page.get_by_role("button", name="登录").click()
+        page.wait_for_timeout(5000)
+        tok = page.evaluate("() => localStorage.getItem('Admin-Token')")
+        b.close()
+        if not tok:
+            raise RuntimeError("浏览器登录后未取到 Admin-Token")
+        return tok.strip('"')
 
 
 # ----------------------------------------------------------------- CLI
@@ -191,6 +233,10 @@ def main() -> int:
     ap.add_argument("--redis-port", type=int, default=int(os.getenv("REDIS_PORT", "6379")))
     ap.add_argument("--redis-password", default=os.getenv("REDIS_PASSWORD", ""))
     ap.add_argument("--redis-db", type=int, default=int(os.getenv("REDIS_DB", "5")))
+    ap.add_argument("--login-mode", choices=["http", "browser"], default=os.getenv("ASSET_MAP_LOGIN_MODE", "http"),
+                    help="http=加密登录（默认，CI 友好）；browser=Playwright 兜底")
+    ap.add_argument("--rsa-public-key", default=os.getenv("ASSET_MAP_RSA_PUBLIC_KEY", ""),
+                    help="可选：显式提供 RSA 公钥（PEM 或裸 base64），默认从线上 bundle 自动发现")
     args = ap.parse_args()
 
     if args.check:
@@ -216,7 +262,8 @@ def main() -> int:
             t0 = time.time()
             env["admin_token"] = login_admin(env["base_url"], args.admin_user, args.admin_password,
                                              env["clientid"], args.redis_host, args.redis_port,
-                                             args.redis_password, args.redis_db)
+                                             args.redis_password, args.redis_db,
+                                             rsa_public_key=args.rsa_public_key, mode=args.login_mode)
             print(f"admin token 获取成功（{int(time.time()-t0)}s）")
         except Exception as e:
             print(f"admin token 获取失败: {e}", file=sys.stderr)
