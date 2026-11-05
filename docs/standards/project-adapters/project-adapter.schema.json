@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cameltv.local/project-adapter.schema.json",
+  "title": "Test Asset Map — Project Adapter",
+  "type": "object",
+  "required": ["project", "pages", "interfaces"],
+  "additionalProperties": true,
+  "properties": {
+    "project": {"type": "string", "minLength": 1},
+    "display_name": {"type": "string"},
+    "platforms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key"],
+        "properties": {"key": {"type": "string"}, "label": {"type": "string"}}
+      }
+    },
+    "pages": {
+      "type": "object",
+      "required": ["source"],
+      "properties": {
+        "source": {"enum": ["file", "openapi_tags", "static"]},
+        "path": {"type": "string"},
+        "default_platform": {"type": "string"},
+        "kind_keywords": {"type": "object"},
+        "items": {"type": "array"}
+      }
+    },
+    "interfaces": {
+      "type": "object",
+      "required": ["source", "path"],
+      "properties": {
+        "source": {"enum": ["endpoints_json", "openapi"]},
+        "path": {"type": "string"},
+        "default_domain": {"type": "string"},
+        "domain_map": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "prefixes"],
+            "properties": {
+              "name": {"type": "string"},
+              "prefixes": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+            }
+          }
+        },
+        "stage_keywords": {"type": "object"}
+      }
+    },
+    "cases": {
+      "type": "object",
+      "properties": {"path": {"type": "string"}}
+    },
+    "business_closures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "chain"],
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "chain": {"type": "array", "items": {"type": "string"}, "minItems": 2}
+        }
+      }
+    },
+    "output_dir": {"type": "string"}
+  }
+}

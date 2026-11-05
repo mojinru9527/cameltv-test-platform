@@ -1,0 +1,3 @@
+# 抽取产物（可由项目系统导出重建，不入库）
+*.endpoints.json
+*.cases.json

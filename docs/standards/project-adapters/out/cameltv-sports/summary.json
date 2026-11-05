@@ -1,0 +1,104 @@
+{
+ "project": "cameltv-sports",
+ "pages": 4,
+ "pages_by_platform": {
+  "api": 4
+ },
+ "rules": 24,
+ "matrix_cells": 96,
+ "applicable_cells": 76,
+ "covered_cells": 0,
+ "coverage_pct": 0.0,
+ "zero_coverage_pages": 4,
+ "zero_coverage_page_list": [
+  "api/Auth",
+  "api/Client",
+  "api/Sports",
+  "api/Ads"
+ ],
+ "worst_rules": [
+  {
+   "rule_id": "R01",
+   "applicable": 4,
+   "covered": 0,
+   "pct": 0.0
+  },
+  {
+   "rule_id": "R02",
+   "applicable": 4,
+   "covered": 0,
+   "pct": 0.0
+  },
+  {
+   "rule_id": "R03",
+   "applicable": 4,
+   "covered": 0,
+   "pct": 0.0
+  },
+  {
+   "rule_id": "R05",
+   "applicable": 4,
+   "covered": 0,
+   "pct": 0.0
+  },
+  {
+   "rule_id": "R07",
+   "applicable": 4,
+   "covered": 0,
+   "pct": 0.0
+  },
+  {
+   "rule_id": "R08",
+   "applicable": 4,
+   "covered": 0,
+   "pct": 0.0
+  },
+  {
+   "rule_id": "R09",
+   "applicable": 4,
+   "covered": 0,
+   "pct": 0.0
+  },
+  {
+   "rule_id": "R10",
+   "applicable": 4,
+   "covered": 0,
+   "pct": 0.0
+  }
+ ],
+ "endpoints": 5,
+ "unique_paths": 5,
+ "domains": 4,
+ "unassigned_endpoints": [],
+ "chains": [
+  {
+   "domain": "广告",
+   "api_count": 2,
+   "stages": [
+    "create"
+   ]
+  },
+  {
+   "domain": "账户",
+   "api_count": 1,
+   "stages": [
+    "create"
+   ]
+  },
+  {
+   "domain": "客户端",
+   "api_count": 1,
+   "stages": [
+    "other"
+   ]
+  },
+  {
+   "domain": "赛事",
+   "api_count": 1,
+   "stages": [
+    "other"
+   ]
+  }
+ ],
+ "cases_loaded": 0
+}

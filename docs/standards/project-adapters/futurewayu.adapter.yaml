@@ -1,0 +1,87 @@
+# 项目适配器 — 未来娃屿 V4.0
+# 说明：本文件只声明「项目差异」，不含任何通用准则；准则库见 interaction-rules.json。
+project: futurewayu
+display_name: 未来娃屿 V4.0（全域 AI 数字资产交互平台）
+
+platforms:
+  - { key: admin, label: 管理后台 }
+  - { key: mini_program, label: 微信小程序 }
+  - { key: pad, label: 门店平板 }
+  - { key: screen, label: 叫号屏 }
+  - { key: youzan, label: 有赞商城 }
+
+# 页面源：由 sys_menu(menu_type=C) + app.json(pages/subPackages) + 业务面推导导出
+pages:
+  source: file
+  path: sources/futurewayu.pages.json
+
+# 接口源：Apifox 导出的端点清单（可从 OpenAPI 重新导出）
+interfaces:
+  source: endpoints_json
+  path: sources/futurewayu.endpoints.json
+  default_domain: 其他
+  domain_map:
+    - { name: 资产-组件, prefixes: ["/system/component"] }
+    - { name: 资产-款, prefixes: ["/system/componentStyle"] }
+    - { name: 资产-系列, prefixes: ["/system/componentSeries"] }
+    - { name: 资产-分类, prefixes: ["/system/componentCategory"] }
+    - { name: 资产-娃体, prefixes: ["/system/dollTemplate"] }
+    - { name: 资产-身份卡, prefixes: ["/system/idCard", "/system/dollName", "/system/personality"] }
+    - { name: 资产-AI/精修, prefixes: ["/system/comfy", "/system/refine", "/advanced", "/system/ai"] }
+    - { name: 资产-背景图, prefixes: ["/system/bgImage", "/client/bgImage"] }
+    - { name: 资产-质检, prefixes: ["/system/qualityCheck"] }
+    - { name: 有赞-店铺, prefixes: ["/system/youzan/store"] }
+    - { name: 有赞-商品, prefixes: ["/system/youzan/goods"] }
+    - { name: 有赞-交易, prefixes: ["/system/youzan/trade", "/system/youzan/payment", "/system/youzan/refund", "/system/youzan/identity"] }
+    - { name: 订单-后台, prefixes: ["/system/pickupOrder"] }
+    - { name: 订单-C端, prefixes: ["/client/mall/orders", "/client/mall/checkout", "/client/mall/cart", "/client/youzan/trade"] }
+    - { name: 订单-C端-其他, prefixes: ["/client/mall"] }
+    - { name: 商品-C端, prefixes: ["/client/mall/products", "/client/mall/dolls", "/client/mall/pickup-points", "/client/component"] }
+    - { name: 社区-帖子, prefixes: ["/client/post"] }
+    - { name: 社区-评论, prefixes: ["/client/comment"] }
+    - { name: 社区-互动, prefixes: ["/client/likeRecord", "/client/collect", "/client/follow"] }
+    - { name: 社区-板块, prefixes: ["/system/plate", "/client/plate"] }
+    - { name: 社区-后台, prefixes: ["/community"] }
+    - { name: 日记, prefixes: ["/client/bodyJournal", "/client/body"] }
+    - { name: 身份卡-C端, prefixes: ["/client/idCard"] }
+    - { name: 资产-换装, prefixes: ["/client/dressShare", "/client/dollRecord"] }
+    - { name: 用户-C端, prefixes: ["/client/wx/user", "/client/user", "/client/wx", "/client/qrCode"] }
+    - { name: 消息, prefixes: ["/system/message", "/client/message", "/client/wx/subscription"] }
+    - { name: 营销-轮播, prefixes: ["/system/bannerActivity", "/client/bannerActivity"] }
+    - { name: 发版, prefixes: ["/system/appVersion", "/client/appVersion"] }
+    - { name: 设备, prefixes: ["/device", "/system/device"] }
+    - { name: 文件, prefixes: ["/client/oss", "/system/oss"] }
+    - { name: 导购业绩, prefixes: ["/system/salesmanCommission"] }
+    - { name: 搜索, prefixes: ["/client/search"] }
+    - { name: 回调, prefixes: ["/youzan/message", "/wechat/pay/notify", "/alipay/notify", "/callback"] }
+    - { name: 系统-用户角色, prefixes: ["/system/user", "/system/role", "/system/menu", "/system/dept", "/system/post"] }
+    - { name: 系统-配置, prefixes: ["/system/dict", "/system/config", "/system/notice", "/system/tenant", "/system/client"] }
+    - { name: 监控, prefixes: ["/monitor"] }
+    - { name: 认证, prefixes: ["/auth", "/resource"] }
+
+# 用例基线（用于计算准则×页面覆盖；可为空 = 首轮接入）
+cases:
+  path: sources/futurewayu.cases.json
+
+# 业务闭环（跨域链，供链路用例设计引用；L3 补偿链由 failure_injection 定义）
+business_closures:
+  - id: CLOSURE-ORDER
+    name: 商城下单闭环
+    chain: [资产-组件, 商品-C端, 订单-C端, 有赞-交易, 订单-后台]
+  - id: CLOSURE-PICKUP
+    name: 到店自提闭环
+    chain: [订单-C端, 订单-后台, 设备]
+  - id: CLOSURE-REFUND
+    name: 退款闭环
+    chain: [订单-C端, 订单-后台, 有赞-交易, 回调]
+  - id: CLOSURE-ASSET
+    name: 资产上架闭环
+    chain: [资产-组件, 资产-AI/精修, 有赞-商品, 营销-轮播]
+  - id: CLOSURE-COMMUNITY
+    name: 社区内容闭环
+    chain: [社区-帖子, 社区-评论, 社区-互动, 社区-后台]
+  - id: CLOSURE-DEVICE
+    name: 门店设备闭环
+    chain: [设备, 订单-后台, 订单-C端]
+
+output_dir: out/futurewayu

@@ -1,0 +1,37 @@
+# 项目适配器 — CamelTv 体育平台（第二个项目，用于验证跨项目复用）
+# 特点：没有 RuoYi 菜单库、没有小程序 app.json，页面从 OpenAPI tags 推导，
+#      接口来自 tests/api-testing/specs/cameltv-openapi.yaml，用例基线为空（首轮接入）。
+project: cameltv-sports
+display_name: CamelTv 体育平台（用户端 + 运营后台）
+
+platforms:
+  - { key: api, label: 接口域 }
+
+pages:
+  source: openapi_tags          # 页面 = 业务域 tag（首轮粗粒度，后续可替换为前端路由扫描）
+  path: ../../../tests/api-testing/specs/cameltv-openapi.yaml
+  default_platform: api
+
+interfaces:
+  source: openapi
+  path: ../../../tests/api-testing/specs/cameltv-openapi.yaml
+  default_domain: 其他
+  domain_map:
+    # 更具体的前缀必须排在前面：该规格里广告/客户端挂在 /account-service/ee/ 下
+    - { name: 广告, prefixes: ["/account-service/ee/ads"] }
+    - { name: 客户端, prefixes: ["/account-service/ee/client"] }
+    - { name: 账户, prefixes: ["/account-service"] }
+    - { name: 赛事, prefixes: ["/camel-service", "/sports-service"] }
+
+cases:
+  path: ""                      # 首轮无基线：矩阵全部标 NONE，直接产出缺口清单
+
+business_closures:
+  - id: CLOSURE-LOGIN-PREDICT
+    name: 匿名登录→赛事列表→下注→预测记录
+    chain: [账户, 赛事]
+  - id: CLOSURE-ADS
+    name: 广告配置→C 端展示
+    chain: [广告, 客户端]
+
+output_dir: out/cameltv-sports
