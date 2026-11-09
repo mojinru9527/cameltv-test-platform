@@ -78,7 +78,7 @@ Week 18 ~ 20  └─ M6 Dogfood Acceptance (TC-AIQE-001..010)  Week 33 ~ 40
 | **batch-275** | 轻量（docs-only） | W-1 | 修 13 号 7 条 P0 → status: active |
 | batch-276 | 轻量（docs-only） | W0 | 修 13 号 12 条 P1 |
 | **batch-277** | 完整 | W0 ~ W1 | §0 P0-1..5 清零（真实代码/运维） |
-| batch-278 | 完整（docs） | W1 ~ W2 | TA-001 代码审计产出 baseline.md |
+| batch-278 | 完整（docs） | W1 ~ W2 | TA-001 代码审计产出 baseline.md ✅（PR #499） |
 | **batch-279 ~ 282** | 完整 | W3 ~ W4 | M1 Run/Event/Artifact + M1 Dogfood |
 | batch-283 ~ 288 | 完整 | W5 ~ W7 | M2 DAG + Driver + M2 Dogfood |
 | batch-289 ~ 294 | 完整 | W8 ~ W10 | M3 Agent + M3 Dogfood |
@@ -177,24 +177,24 @@ Week 18 ~ 20  └─ M6 Dogfood Acceptance (TC-AIQE-001..010)  Week 33 ~ 40
 
 **产出** `docs/aiqe/baseline.md`，含：
 
-1. **22 张目标表 × 现有 app/models/ 43 张真实表**完整映射；
+1. **25 张目标表（22 净新建 + 3 扩展）× 现有 43 个模型文件 / 73 张真实表**完整映射（实测口径，见基线 §2/C-10）；
 2. 每张表明示：
    - 现有类/字段一览；
    - 目标字段一览；
    - 差异列表；
    - 迁移策略（ALTER 扩字段 / 新表迁移 / 废旧建新 / 兼容层）；
    - 预估迁移脚本行数。
-3. **服务层对账**：13 号 §18.5 列的 8 个接入点 vs `app/services/*.py` 实际 60+ 文件；
-4. **路由层对账**：§15 REST 20+ endpoint vs `app/api/v1/*.py` 实际路由；
-5. **前端对账**：§18.2 目录 vs `frontend/src/pages/*` 实际页面；
+3. **服务层对账**：13 号 §18.5 列的 8 个接入点 vs `app/services/*.py` 实际 **71 顶层 / 123 递归**文件；
+4. **路由层对账**：§15 的 **30 个** endpoint vs `app/api/v1/*.py` 实测 **265 paths / 323 operations**；
+5. **前端对账**：§18.2 目录 vs `frontend/src/pages/*` 实际页面（19 域 / 153 组件 / 30 路由）；
 6. **Driver 现状**：`playwright_executor.py` + `openapi_import_service.py` + `cameltv-node` 真实能力表。
 
-**DoD**：`baseline.md` 产出 + 用户阅读确认 + 不冲突项打钩。
+**DoD**：`baseline.md` 产出 ✅（PR #499，`7f205829c`）；用户已确认 D-278-1..3（2026-11-09）；不冲突项打钩 ✅。决策回写 13 号见 `v1.3-baseline-aligned`。
 
 #### M0 Gate
 
 ```
-✅ 13 号 v1.1 active
+✅ 13 号 v1.3-baseline-aligned active
 ✅ §0 P0-1..5 真实证据入库
 ✅ docs/aiqe/baseline.md 产出
 ✅ TA-001.5 CI 守卫启用
