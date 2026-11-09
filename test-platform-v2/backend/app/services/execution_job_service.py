@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.exceptions import APIException
-from app.models.ai_job import AiAgent
+from app.models.execution_node import ExecutionNode
 from app.models.execution_job import ExecutionJob
 
 JOB_KINDS = frozenset({"api", "web"})
@@ -59,7 +59,7 @@ def _lease_ttl() -> timedelta:
     return timedelta(seconds=max(1, int(settings.execution_job_lease_seconds)))
 
 
-def _node_capabilities(agent: AiAgent) -> list[str]:
+def _node_capabilities(agent: ExecutionNode) -> list[str]:
     caps = _loads(agent.capabilities_json, [])
     return [str(cap) for cap in caps] if isinstance(caps, list) else []
 
@@ -169,7 +169,7 @@ def reclaim_stale(db: Session, *, now_ts: datetime | None = None) -> int:
 def claim_job(db: Session, *, node_id: str, project_id: int) -> ExecutionJob | None:
     """节点认领本项目任务。节点必须已注册且在线；`kind` 必须在其能力声明内。"""
     agent = db.scalar(
-        select(AiAgent).where(AiAgent.agent_id == node_id, AiAgent.status == "online")
+        select(ExecutionNode).where(ExecutionNode.agent_id == node_id, ExecutionNode.status == "online")
     )
     if agent is None:
         raise APIException(code=404, msg="执行节点未注册或离线", http_status=404)
@@ -257,8 +257,8 @@ def report(
 def node_status(db: Session, *, project_id: int) -> dict:
     online_nodes = db.scalar(
         select(func.count())
-        .select_from(AiAgent)
-        .where(AiAgent.status == "online", AiAgent.project_scope == project_id)
+        .select_from(ExecutionNode)
+        .where(ExecutionNode.status == "online", ExecutionNode.project_scope == project_id)
     ) or 0
     pending = db.scalar(
         select(func.count())
@@ -292,7 +292,7 @@ def node_status(db: Session, *, project_id: int) -> dict:
 
 def list_nodes(db: Session, *, project_id: int) -> list[dict]:
     rows = db.scalars(
-        select(AiAgent).where(AiAgent.project_scope == project_id).order_by(AiAgent.id.asc())
+        select(ExecutionNode).where(ExecutionNode.project_scope == project_id).order_by(ExecutionNode.id.asc())
     ).all()
     return [
         {

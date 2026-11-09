@@ -1,6 +1,6 @@
 """执行节点凭据路由（平台简化批次，原「AI Agent 控制面」收敛）。
 
-AI 本地管线（AiJob 派发/认领/上报）已删除；仅保留节点注册/令牌吊销两个端点，
+旧的本地 AI 任务派发/认领/上报管线已删除；仅保留节点注册/令牌吊销两个端点，
 供 `cameltv-node`（scripts/node）注册并获取 `X-AI-Agent-Token`。
 """
 from __future__ import annotations

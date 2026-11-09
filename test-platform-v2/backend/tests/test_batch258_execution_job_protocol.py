@@ -1,7 +1,7 @@
 """Batch 258 / B1-4 — ExecutionJob 协议：认领 → 心跳 → 上报 → 超时回收。
 
-方案口径（09-platform-landing-plan.md §3.2）：`ExecutionJob` 与 `AiJob` **并列、不合并**；
-租约沿用 AiJob 的 claim/heartbeat/stale 语义（因此不另建 job_leases 表，避免双份记账）。
+方案口径（09-platform-landing-plan.md §3.2）：`ExecutionJob` 独立承载本地测试执行，不与任何
+AI 任务表合并；租约沿用 claim/heartbeat/stale 语义（因此不另建 job_leases 表，避免双份记账）。
 
 DoD（backlog B1-4）：全链路测试通过；跨项目不可认领；权限点独立。
 """

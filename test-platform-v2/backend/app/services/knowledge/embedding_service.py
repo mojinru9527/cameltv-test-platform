@@ -21,7 +21,8 @@ logger = logging.getLogger("knowledge.embedding")
 
 
 def _local_embedding_allowed() -> bool:
-    return bool(settings.worker_execution_enabled or settings.ai_gateway_role == "gateway")
+    # batch-277 P0-5：ai-gateway 已删除，嵌入只在持有 worker 执行权的进程内本地计算
+    return bool(settings.worker_execution_enabled)
 
 
 class EmbeddingService:
@@ -71,10 +72,6 @@ class EmbeddingService:
 
     def available(self) -> bool:
         """模型是否就绪（会触发首次加载/下载）。"""
-        from app.services.ai_gateway import remote
-
-        if remote.remote_requested():
-            return True
         if not _local_embedding_allowed():
             return False
         budget = configured_budget()
@@ -95,21 +92,6 @@ class EmbeddingService:
         """批量嵌入，返回 np.ndarray[float32, (n, dim)]（已 L2 归一化）；不可用/异常返回 None。"""
         if not texts:
             return None
-        from app.services.ai_gateway import remote
-
-        if remote.remote_requested():
-            try:
-                import numpy as np
-
-                arr = np.asarray(remote.embed(texts), dtype=np.float32)
-                if arr.ndim != 2 or arr.shape[0] != len(texts):
-                    return None
-                norms = np.linalg.norm(arr, axis=1, keepdims=True)
-                norms[norms == 0] = 1.0
-                return arr / norms
-            except Exception:  # noqa: BLE001 - remote embedding degrades like local embedding
-                logger.exception("远程嵌入计算失败")
-                return None
         if not _local_embedding_allowed():
             return None
         budget = configured_budget()
@@ -168,3 +150,4 @@ class EmbeddingService:
 
 # 进程级单例（懒加载，导入无副作用）
 embedding_service = EmbeddingService()
+

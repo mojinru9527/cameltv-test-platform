@@ -4,11 +4,9 @@
 的模型已随模块删除；保留模型清单如下。
 """
 
-from app.models.ai_gateway_cache import AiResponseCache
-from app.models.ai_shadow_run import AiShadowRun
 from app.models.ai_provider import AiProvider
 from app.models.ai_task import AiTask
-from app.models.ai_job import AiAgent
+from app.models.execution_node import ExecutionNode
 from app.models.ai_agent_token import AiAgentToken
 from app.models.execution_job import ExecutionJob
 from app.models.impact_edge import ImpactEdge
@@ -87,9 +85,8 @@ from app.modules.execution_runtime.legacy_models import LegacyObjectMapping
 __all__ = [
     "AiProvider",
     "AiResponseCache",
-    "AiShadowRun",
     "AiTask",
-    "AiAgent",
+    "ExecutionNode",
     "AiAgentToken",
     "ModelUsageLedger",
     "PlanExecutionJob",

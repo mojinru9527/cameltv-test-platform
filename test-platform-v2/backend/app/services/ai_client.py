@@ -18,16 +18,13 @@ from urllib.parse import urlparse
 import httpx
 
 from app.core.config import settings
-from app.services.ai_gateway.cache import lookup_exact_cache, store_exact_cache
-from app.services.ai_gateway.keys import build_cache_key, sha256_text
-from app.services.ai_gateway.router import resolve_route
 from app.services.ai_config_service import (
     AIProviderUnconfiguredError,
     ai_config_service,
 )
 
 
-logger = logging.getLogger("ai_gateway.client")
+logger = logging.getLogger("ai_client")
 
 
 class AiClientUnavailableError(RuntimeError):
@@ -53,13 +50,8 @@ def resolve_config(db, project_id: int) -> Any | None:
 
 
 def is_configured(db, project_id: int) -> bool:
-    """True when the active runtime route has a usable primary config."""
-    from app.services.ai_gateway.router import LocalRuntimeUnavailableError
-
-    try:
-        return resolve_route(db, project_id) is not None
-    except LocalRuntimeUnavailableError:
-        return False
+    """True when the project has a usable AI provider config."""
+    return resolve_config(db, project_id) is not None
 
 
 def parse_json_object(raw: str) -> dict[str, Any]:
@@ -216,169 +208,14 @@ def _parse_result(content: str, json_mode: bool) -> Any:
     return parse_json_object(content) if json_mode else content
 
 
-def _effective_temperature(temperature: float | None) -> float:
-    return settings.ai_temperature if temperature is None else float(temperature)
 
 
-def _exact_cache_key(
-    db,
-    *,
-    project_id: int,
-    cfg: Any,
-    system_prompt: str,
-    user_message: str,
-    max_tokens: int,
-    temperature: float,
-    json_mode: bool,
-    cache_namespace: str | None,
-) -> str | None:
-    if not settings.ai_exact_cache_enabled or db is None or not cache_namespace:
-        return None
-    return build_cache_key(
-        project_id=project_id,
-        provider_id=int(getattr(cfg, "provider_id", 0) or 0),
-        model=str(cfg.model),
-        namespace=cache_namespace,
-        system_prompt=system_prompt,
-        user_message=user_message,
-        json_mode=json_mode,
-        max_tokens=max_tokens,
-        temperature=temperature,
-    )
 
 
-def _cache_hit(summary: dict[str, Any], cache_key: str) -> dict[str, Any]:
-    """Return a truthful current-call summary with zero new token usage."""
-    cached = dict(summary)
-    saved_usage = cached.get("usage") or {}
-    cached.update(
-        {
-            "usage": {},
-            "cache_saved_usage": saved_usage,
-            "cache_status": "hit",
-            "cache_key": cache_key[:16],
-        }
-    )
-    return cached
 
 
-def _finish_with_cache(
-    summary: dict[str, Any],
-    *,
-    db,
-    project_id: int,
-    cfg: Any,
-    cache_namespace: str | None,
-    cache_key: str | None,
-    system_prompt: str,
-    user_message: str,
-    max_tokens: int,
-    temperature: float | None,
-    json_mode: bool,
-    shadow_config: Any | None = None,
-    shadow_origin: str = "",
-) -> dict[str, Any]:
-    summary["cache_key"] = cache_key[:16] if cache_key else ""
-    if cache_key is None:
-        summary["cache_status"] = "disabled"
-        _schedule_shadow_safely(
-            project_id=project_id,
-            cfg=cfg,
-            cache_namespace=cache_namespace,
-            system_prompt=system_prompt,
-            user_message=user_message,
-            primary=summary,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            json_mode=json_mode,
-            shadow_config=shadow_config,
-            shadow_origin=shadow_origin,
-        )
-        return summary
-    if summary.get("truncated"):
-        summary["cache_status"] = "bypass_truncated"
-        _schedule_shadow_safely(
-            project_id=project_id,
-            cfg=cfg,
-            cache_namespace=cache_namespace,
-            system_prompt=system_prompt,
-            user_message=user_message,
-            primary=summary,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            json_mode=json_mode,
-            shadow_config=shadow_config,
-            shadow_origin=shadow_origin,
-        )
-        return summary
-    try:
-        store_exact_cache(
-            db,
-            project_id=project_id,
-            namespace=cache_namespace or "",
-            cache_key=cache_key,
-            provider_id=int(getattr(cfg, "provider_id", 0) or 0),
-            provider_type=str(getattr(cfg, "provider_type", "")),
-            model=str(cfg.model),
-            prompt_hash=sha256_text(system_prompt),
-            input_hash=sha256_text(user_message),
-            response=summary,
-            usage=summary.get("usage") or {},
-        )
-        summary["cache_status"] = "write"
-    except Exception:  # noqa: BLE001 - cache must never break the model call
-        logger.exception("Exact AI cache write wrapper failed")
-        summary["cache_status"] = "bypass_error"
-    _schedule_shadow_safely(
-        project_id=project_id,
-        cfg=cfg,
-        cache_namespace=cache_namespace,
-        system_prompt=system_prompt,
-        user_message=user_message,
-        primary=summary,
-        max_tokens=max_tokens,
-        temperature=temperature,
-        json_mode=json_mode,
-        shadow_config=shadow_config,
-        shadow_origin=shadow_origin,
-    )
-    return summary
 
 
-def _schedule_shadow_safely(
-    *,
-    project_id: int,
-    cfg: Any,
-    cache_namespace: str | None,
-    system_prompt: str,
-    user_message: str,
-    primary: dict[str, Any],
-    max_tokens: int,
-    temperature: float | None,
-    json_mode: bool,
-    shadow_config: Any | None = None,
-    shadow_origin: str = "",
-) -> None:
-    if shadow_config is None:
-        return
-    try:
-        from app.services.ai_gateway.shadow import schedule_shadow_run
-
-        schedule_shadow_run(
-            project_id=project_id,
-            primary_config=cfg,
-            namespace=cache_namespace or "",
-            system_prompt=system_prompt,
-            user_message=user_message,
-            primary=primary,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            json_mode=json_mode,
-            shadow_config=shadow_config,
-            shadow_origin=shadow_origin,
-        )
-    except Exception:  # noqa: BLE001 - shadow is observational only
-        logger.exception("Shadow scheduling failed")
 
 
 def _call_configured_full(
@@ -516,7 +353,7 @@ def call_configured_full(
     cache_namespace: str | None = None,
     timeout_seconds: float | None = None,
 ) -> dict[str, Any]:
-    """Public configured-config transport used by shadow evaluation."""
+    """Public configured-config transport used by tests and one-off callers."""
     return _call_configured_full(
         cfg,
         project_id=project_id,
@@ -541,90 +378,27 @@ def chat_completions_full(
     json_mode: bool = True,
     cache_namespace: str | None = None,
 ) -> dict[str, Any]:
-    """Sync call returning content, finish state and normalized usage."""
-    from app.services.ai_gateway import remote as gateway_remote
+    """Sync call returning content, finish state and normalized usage.
 
-    if gateway_remote.remote_requested():
-        try:
-            return gateway_remote.chat_full(
-                project_id=project_id,
-                system_prompt=system_prompt,
-                user_message=user_message,
-                max_tokens=max_tokens or settings.ai_max_tokens,
-                temperature=temperature,
-                json_mode=json_mode,
-                cache_namespace=cache_namespace,
-            )
-        except gateway_remote.AiGatewayRemoteError as exc:
-            raise AiClientUnavailableError(str(exc)) from exc
-    route = resolve_route(db, project_id, namespace=cache_namespace or "")
-    if route is None:
+    batch-277 P0-5：ai-gateway 已删除，控制面直连项目级 provider
+    （无本地路由 / exact cache / shadow 副本，失败不再降级到本地）。
+    """
+    cfg = resolve_config(db, project_id)
+    if cfg is None:
         raise AiClientUnavailableError("AI service is not configured")
-    cfg = route.primary_config
-    effective_max_tokens = max_tokens or settings.ai_max_tokens
-    effective_temperature = _effective_temperature(temperature)
-    cache_key = _exact_cache_key(
-        db,
+    summary = _call_configured_full(
+        cfg,
         project_id=project_id,
-        cfg=cfg,
         system_prompt=system_prompt,
         user_message=user_message,
-        max_tokens=effective_max_tokens,
-        temperature=effective_temperature,
-        json_mode=json_mode,
-        cache_namespace=cache_namespace,
-    )
-    if cache_key:
-        cached = lookup_exact_cache(db, project_id=project_id, cache_key=cache_key)
-        if cached is not None:
-            return _cache_hit(cached, cache_key)
-
-    try:
-        summary = _call_configured_full(
-            cfg,
-            project_id=project_id,
-            system_prompt=system_prompt,
-            user_message=user_message,
-            max_tokens=effective_max_tokens,
-            temperature=temperature,
-            json_mode=json_mode,
-            cache_namespace=cache_namespace,
-        )
-        summary["route_status"] = "primary"
-        summary["route_origin"] = route.primary_origin
-    except AiClientUnavailableError:
-        if route.fallback_config is None:
-            raise
-        summary = _call_configured_full(
-            route.fallback_config,
-            project_id=project_id,
-            system_prompt=system_prompt,
-            user_message=user_message,
-            max_tokens=effective_max_tokens,
-            temperature=temperature,
-            json_mode=json_mode,
-            cache_namespace=cache_namespace,
-        )
-        summary["route_status"] = "fallback"
-        summary["route_origin"] = route.fallback_origin
-        summary["route_fallback_from"] = route.primary_origin
-        cfg = route.fallback_config
-        cache_key = None
-    return _finish_with_cache(
-        summary,
-        db=db,
-        project_id=project_id,
-        cfg=cfg,
-        cache_namespace=cache_namespace,
-        cache_key=cache_key,
-        system_prompt=system_prompt,
-        user_message=user_message,
-        max_tokens=effective_max_tokens,
+        max_tokens=max_tokens or settings.ai_max_tokens,
         temperature=temperature,
         json_mode=json_mode,
-        shadow_config=route.shadow_config,
-        shadow_origin=route.shadow_origin,
+        cache_namespace=cache_namespace,
     )
+    summary["route_status"] = "primary"
+    summary["route_origin"] = "project"
+    return summary
 
 
 async def achat_completions_full(
@@ -638,90 +412,26 @@ async def achat_completions_full(
     json_mode: bool = True,
     cache_namespace: str | None = None,
 ) -> dict[str, Any]:
-    """Async call returning content, finish state and normalized usage."""
-    from app.services.ai_gateway import remote as gateway_remote
+    """Async call returning content, finish state and normalized usage.
 
-    if gateway_remote.remote_requested():
-        try:
-            return await gateway_remote.achat_full(
-                project_id=project_id,
-                system_prompt=system_prompt,
-                user_message=user_message,
-                max_tokens=max_tokens or settings.ai_max_tokens,
-                temperature=temperature,
-                json_mode=json_mode,
-                cache_namespace=cache_namespace,
-            )
-        except gateway_remote.AiGatewayRemoteError as exc:
-            raise AiClientUnavailableError(str(exc)) from exc
-    route = resolve_route(db, project_id, namespace=cache_namespace or "")
-    if route is None:
+    batch-277 P0-5：同 sync 版本，直连项目级 provider。
+    """
+    cfg = resolve_config(db, project_id)
+    if cfg is None:
         raise AiClientUnavailableError("AI service is not configured")
-    cfg = route.primary_config
-    effective_max_tokens = max_tokens or settings.ai_max_tokens
-    effective_temperature = _effective_temperature(temperature)
-    cache_key = _exact_cache_key(
-        db,
+    summary = await _acall_configured_full(
+        cfg,
         project_id=project_id,
-        cfg=cfg,
         system_prompt=system_prompt,
         user_message=user_message,
-        max_tokens=effective_max_tokens,
-        temperature=effective_temperature,
-        json_mode=json_mode,
-        cache_namespace=cache_namespace,
-    )
-    if cache_key:
-        cached = lookup_exact_cache(db, project_id=project_id, cache_key=cache_key)
-        if cached is not None:
-            return _cache_hit(cached, cache_key)
-
-    try:
-        summary = await _acall_configured_full(
-            cfg,
-            project_id=project_id,
-            system_prompt=system_prompt,
-            user_message=user_message,
-            max_tokens=effective_max_tokens,
-            temperature=temperature,
-            json_mode=json_mode,
-            cache_namespace=cache_namespace,
-        )
-        summary["route_status"] = "primary"
-        summary["route_origin"] = route.primary_origin
-    except AiClientUnavailableError:
-        if route.fallback_config is None:
-            raise
-        summary = await _acall_configured_full(
-            route.fallback_config,
-            project_id=project_id,
-            system_prompt=system_prompt,
-            user_message=user_message,
-            max_tokens=effective_max_tokens,
-            temperature=temperature,
-            json_mode=json_mode,
-            cache_namespace=cache_namespace,
-        )
-        summary["route_status"] = "fallback"
-        summary["route_origin"] = route.fallback_origin
-        summary["route_fallback_from"] = route.primary_origin
-        cfg = route.fallback_config
-        cache_key = None
-    return _finish_with_cache(
-        summary,
-        db=db,
-        project_id=project_id,
-        cfg=cfg,
-        cache_namespace=cache_namespace,
-        cache_key=cache_key,
-        system_prompt=system_prompt,
-        user_message=user_message,
-        max_tokens=effective_max_tokens,
+        max_tokens=max_tokens or settings.ai_max_tokens,
         temperature=temperature,
         json_mode=json_mode,
-        shadow_config=route.shadow_config,
-        shadow_origin=route.shadow_origin,
+        cache_namespace=cache_namespace,
     )
+    summary["route_status"] = "primary"
+    summary["route_origin"] = "project"
+    return summary
 
 
 def chat_completions(

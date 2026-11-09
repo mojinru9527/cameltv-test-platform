@@ -2,7 +2,7 @@
 title: "ADR-0027: 本地优先 AI Gateway 与精确响应缓存"
 owner: "tech-lead"
 last_reviewed: "2026-09-13"
-status: "active"
+status: "superseded"
 expires: "2027-09-13"
 tags: ["adr", "ai", "local-first", "cache", "gateway"]
 related: ["0022-ai-chain-reality-gate.md", "0010-knowledge-vector-embedding-hybrid-retrieval.md"]
@@ -10,9 +10,11 @@ related: ["0022-ai-chain-reality-gate.md", "0010-knowledge-vector-embedding-hybr
 
 # ADR-0027: 本地优先 AI Gateway 与精确响应缓存
 
+> **superseded（2026-11-09，batch-277 P0-5）**：ai-gateway / 本地 runtime / Shadow / 本地优先路由兜底已随平台简化批次删除；LLM 由控制面**直连项目级 provider**（见 `docs/aiqe/baseline.md` C-06 与 13 号 §0 P0-5）。本 ADR 仅作历史决策记录。
+
 ## 状态
 
-已采纳。Phase 0 基线与 Phase 1 精确缓存已在 Batch 235 落地；Phase 2–4 由后续批次继续。
+**已废弃（superseded）**。Batch 235–237 曾落地精确缓存 / Shadow / 本地优先路由；batch-277 P0-5 起 ai-gateway 与其配置、模型、迁移全部删除，控制面直连 provider。
 
 ## 日期
 

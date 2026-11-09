@@ -69,9 +69,10 @@ def upgrade() -> None:
     conn = op.get_bind()
     inspector = sa.inspect(conn)
     existing = set(inspector.get_table_names())
+    # batch-277 P0-2：DROP 统一走 IF EXISTS + 存在性守卫（幂等，可重跑）
     for table in _DROP_TABLES:
         if table in existing:
-            op.drop_table(table)
+            op.execute(f'DROP TABLE IF EXISTS "{table}"')
 
     # 组织概念删除：sys_project.organization_id 列 DROP
     columns = [c['name'] for c in inspector.get_columns('sys_project')]
