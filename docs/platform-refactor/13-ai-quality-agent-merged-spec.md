@@ -4,7 +4,7 @@ owner: "qa-team"
 created: "2026-11-09"
 last_reviewed: "2026-11-09"
 status: "active"
-version: "v1.1-p0-fixed"
+version: "v1.2-p1-fixed"
 tags: ["platform-refactor", "ai-agent", "engineering-spec", "developer-ready"]
 related:
   - "docs/platform-refactor/09-platform-landing-plan.md"
@@ -33,7 +33,21 @@ related:
 > - D-3 §4.12 加对象存储选型（dev 本地 FS / prod 三选一 TA-007 前定）；
 > - D-9 §21.0 加 benchmark 数据集来源 + 准备进度。
 >
-> 剩余 12 条 P1 由 batch-276 承接；13 条 P2 由后续批次陆续处理。
+> **v1.2-p1-fixed 变更**（2026-11-09 batch-276）：修完 batch-274 Leader verdict 的 12 条 P1（M-6/M-12/M-13/M-15/M-18/M-19/M-20/D-1/D-4/D-5/D-6/D-7）：
+> - M-6 §4 + 附录 B.1 统一 project_id 隔离口径（Run 子表继承 `run.project_id`，全局表逐张明示）；
+> - M-12 §24 ADR-AIQE-008 加 PR 模板强制问答（AITDE 翻版自检）；
+> - M-13 §11.2 `UI_OVERLAY` 加 `requires_ui_surface: true` 元数据 + adapter capability 层声明启停；
+> - M-15 §4.20 + §11.9 噪音规则 90 天上限可被 Owner 显式续期（续期另生成审计行）；
+> - M-18 §14.4 PoC 矩阵加"失败回退方案"列；
+> - M-19 §23 加 2-3 人团队放大线（MVP 16-20 周 / V1 32-40 周）；
+> - M-20 §19 每条 TA 加"优先级档"列（MVP / V1 / V1.1+）；
+> - D-1 §8.3 + 附录 C 按 DB 方言拆 seq 分配（SQLite 自增 + 唯一索引 / Postgres advisory lock）；
+> - D-4 §16.2 定脱敏实现（复用 knowledge sanitize 正则 + YAML 规则表；presidio 为 V1.1+ 升级路径）；
+> - D-5 §4.12 划清 `lanhu_evidence` 与 `run_artifacts` 边界（互不迁移，按 `linked_evidence_type` 并集查询）；
+> - D-6 §18.2 前端路由决策（保留 `/version-tasks` 业务入口，新增 `/runs` 通用 Run 列表）；
+> - D-7 §6.4 记录 `task_queue.py` 现状预检（无 advisory lock / 无独立 heartbeat 表 → TA-010.3 自实现）。
+>
+> 剩余 13 条 P2 由后续批次陆续处理。
 
 ---
 
@@ -66,6 +80,7 @@ related:
 - [§24 ADR 清单](#24-adr-清单)
 - [附录 A：开源组件版本锁](#附录-a开源组件版本锁)
 - [附录 B：术语表](#附录-b术语表)
+- [附录 C：Durability 分 DB 兼容表](#附录-cdurability-分-db-兼容表)
 
 
 ---
@@ -243,7 +258,7 @@ Requirement (v) ──► RequirementContract (frozen) ──► AcceptanceCrite
 > 本章是**权威目标模型**。所有表由 Alembic 迁移产出。
 > **关键规则**：
 > - 所有 JSON 字段必须有 Pydantic Schema + `schema_version`，schema 冲突由 CI 守卫（TA-004.2）拒 PR。
-> - 所有表必须带 `project_id` 做数据隔离（对项目无关的 `agent_executions` 等除外）。
+> - **Project 隔离**（batch-276 M-6，细则唯一出处见 **附录 B.1**）：业务主表必须带 `project_id`；Run 子表（`node_runs / step_attempts / assertion_results / run_events / event_outbox / run_artifacts / interference_observations / triage_cases / triage_hypotheses / regression_requests`）**不重复存 `project_id`**，一律继承 `run.project_id`，查询必须 join `test_runs` 并带 project 过滤；`test_cases` 经 `test_scenarios` 继承；全局表（`node_capability_manifests / learning_candidates / bug_patterns` 等）在附录 B.1 逐张明示。
 > - 所有时间字段使用 UTC `timestamp with time zone`。
 > - 所有 ID 使用 `UUID v4`。
 > - **写之前必须完成 TA-001 代码审计**：若现有 SQLAlchemy Model 已有同义实体，优先 ALTER 扩展，不新建。
@@ -275,7 +290,7 @@ Requirement ──► RequirementContract ──► AcceptanceCriterion
 AgentExecution  (任意 Agent 调用审计)
 LearningCandidate ──► BugPattern (approved)
 ExecutionProfile  (Run 启动前选择)
-TargetEnvironment (被测系统环境)
+Environment (扩展现有 environment 表，见 §4.14)
 NodeCapabilityManifest (节点自描述)
 NoiseSuppressionRule (已知干扰规则)
 ProjectAdapter (多项目支持)
@@ -357,7 +372,7 @@ ProjectAdapter (多项目支持)
 | automation_level | enum | `manual / assisted / deterministic / agentic` |
 | review_status | enum | `draft / needs_review / approved / rejected` |
 | version | integer | 不覆盖已发布版本 |
-| source_json | JSON | `{generated_by: "ai"|"human", rule_refs: [...], bug_pattern_refs: [...]}` |
+| source_json | JSON | `{generated_by: "ai" \| "human", rule_refs: [...], bug_pattern_refs: [...]}` |
 | schema_version | varchar(20) | case JSON schema |
 | created_at / updated_at | timestamp | — |
 
@@ -530,6 +545,8 @@ TA-001 产出 `docs/aiqe/baseline.md` 后在 M1 开工前决定。本规格的 `
 | mime_type | varchar(100) | — |
 | redaction_status | enum | `pending / sanitized / rejected` |
 | metadata_json | JSON | 浏览器/viewport/页码等 |
+| linked_evidence_type | enum | nullable；跨源证据引用类型 `lanhu_evidence / defect / external_url`（batch-276 D-5） |
+| linked_evidence_id | varchar(64) | nullable；与 `linked_evidence_type` 成对使用 |
 | created_at | timestamp | — |
 
 **对象存储选型**（batch-275 D-3 补充）：
@@ -543,6 +560,14 @@ TA-001 产出 `docs/aiqe/baseline.md` 后在 M1 开工前决定。本规格的 `
 
 **TA-007 的 driver 接口必须屏蔽后端差异**（`ArtifactStorageBackend` 抽象）；选型变更不影响业务代码。
 
+**与 `lanhu_evidence` 的证据边界**（batch-276 D-5）：
+
+- `lanhu_evidence_job / page / asset / ocr_block`（现有 `app/models/lanhu_evidence.py`）承接**蓝湖专项证据包**（原型截图、页面树、OCR、Word/JSON 导出），检索键是 `project_id + doc_id/version_id`；
+- `run_artifacts` 承接 **Run 执行证据**（截图 / trace / HAR / 日志 / 请求响应 / DB 快照），检索键是 `run_id`；
+- **两者互不迁移**：不把蓝湖证据复制进 `run_artifacts`，也不把 Run 证据写进 `lanhu_evidence`；各自保留原始表结构与权限（均按 `project_id` RBAC）；
+- 需要跨源引用时，在 `run_artifacts.linked_evidence_type + linked_evidence_id` 落引用（不复制文件），Evidence 聚合查询按 `linked_evidence_type` 做并集；
+- TA-007 验收必须覆盖"一条 Run 的 Artifact 列表 + 它引用的蓝湖证据"能在同一 EvidenceBundle 视图中出现且权限一致。
+
 ### 4.13 `execution_profiles`
 
 | 字段 | 类型 | 说明 |
@@ -551,7 +576,7 @@ TA-001 产出 `docs/aiqe/baseline.md` 后在 M1 开工前决定。本规格的 `
 | project_id | FK | — |
 | name | varchar(100) | — |
 | purpose | enum | `core_isolated / integration / external_live` |
-| config_json | JSON | feature flags / 外部依赖 mode / 网络路由 / 浏览器矩阵 / 数据 namespace / 固定时钟 / locale|timezone / 广告弹窗插件开关 / 请求记录策略 |
+| config_json | JSON | feature flags / 外部依赖 mode / 网络路由 / 浏览器矩阵 / 数据 namespace / 固定时钟 / locale 与 timezone / 广告弹窗插件开关 / 请求记录策略 |
 | version | integer | — |
 | checksum | varchar(128) | — |
 | approval_status | enum | — |
@@ -691,7 +716,7 @@ open ─► confirmed ─► fixing ─► pending_review ─► closed
 
 这三张表承载的"shadow run 对比 / gateway cache / job 分发"等能力**在 11 号简化批次 + batch-277 P0-5 一并删除**。`agent_executions` 单独承载所有 Agent 调用审计，**不恢复**旧字段。旧数据如需追溯归档至 `work-logs/platform-simplification-production-eval-20261007.md`。
 
-**`agent_executions`**（Agent 审计，不加 project_id 不行——放 nullable 全局表）：
+**`agent_executions`**（Agent 审计；**全局表**：`project_id` nullable，按调用方项目写入但不强制隔离，见附录 B.1）：
 
 | 字段 | 类型 | 说明 |
 |-----|------|------|
@@ -760,8 +785,9 @@ open ─► confirmed ─► fixing ─► pending_review ─► closed
 | evidence_refs_json | JSON | — |
 | action | enum | `suppress_alert_only / block_execution` |
 | last_reviewed_at | timestamp | nullable |
+| renewal_of_rule_id | FK noise_suppression_rules | nullable；续期时新建一行并指向被续期规则，旧行原样保留（batch-276 M-15） |
 
-**硬规则**：不允许永久 quarantine；每条规则必须有 `effective_until` 不超过 90 天，到期强制复核。
+**硬规则**（batch-276 M-15）：不允许永久 quarantine；单次授权窗口 `effective_until - effective_from` **≤ 90 天**，到期强制复核。Owner 可在到期前**显式重新审批续期**：续期**不修改旧行**的 `effective_until`，而是新建一行（`renewal_of_rule_id` 指向旧行、新的 ≤ 90 天窗口），保留完整审计链。到期未续期的规则自动失效（既不再 `suppress_alert_only`，也不再 `block_execution`），并由提醒任务计入 `quarantine_expiry_overdue_count`（§11.10）。
 
 ### 4.21 `project_adapters`
 
@@ -991,7 +1017,10 @@ async def schedule_ready_nodes(run_id: UUID) -> None:
 
 - 锁粒度：`project / environment / fixture:<id> / account:<id> / device:<id> / resource:<business-key>`。
 - 锁必须有 **TTL + heartbeat + fencing token**，避免 Worker 崩溃后锁死或旧 Worker 恢复后继续写。
-- 锁实现复用 `task_queue.py` 的 Postgres advisory lock + heartbeat 表（TA-010.3 产出）。
+- 锁实现**不能**简单标一句"复用 `task_queue.py`"（batch-276 D-7 预检，2026-11-09）：
+  - **现状**：`app/core/task_queue.py` 提供 `atomic_claim`（条件 UPDATE + rowcount 校验）与 `reap_stale`（按 `locked_at` / `heartbeat_at` 列回收），**没有 Postgres advisory lock，也没有独立 heartbeat 表**；
+  - **要求**：TA-001 代码审计必须复核上述结论并给出文件行号；确认无 advisory lock + 独立 heartbeat 记录后，**TA-010.3 必须自实现** `aiqe/services/resource_lock.py`——Postgres 走 `pg_try_advisory_xact_lock(hashtextextended(lock_key, 0))`，SQLite（dev/test）走条件 UPDATE / 事务串行 + TTL 列，两者统一暴露 `acquire / renew / release` 与 fencing token；
+  - **边界**：现有队列认领锁是"任务所有权"，资源锁是"跨 Run 的业务资源互斥"，**不得直接复用**。
 
 ### 6.5 Cleanup 协调
 
@@ -1164,7 +1193,7 @@ async def append_event(ev: EventCreate) -> RunEvent:
         # 1) 幂等
         if await repo.exists_producer_event(ev.run_id, ev.producer_event_id):
             return await repo.get_by_producer_event(ev.run_id, ev.producer_event_id)
-        # 2) 分配 seq（Postgres 内 SELECT ... FOR UPDATE 最大 seq +1，或 advisory lock）
+        # 2) 分配 seq（方言相关，见 §8.3.1 与附录 C）
         seq = await repo.next_seq(ev.run_id)
         # 3) 写 run_events
         row = await repo.insert_event(ev, seq=seq)
@@ -1176,6 +1205,18 @@ async def append_event(ev: EventCreate) -> RunEvent:
     await dispatcher.notify(row.run_id)
     return row
 ```
+
+#### 8.3.1 `seq` 分配：SQLite vs PostgreSQL（batch-276 D-1）
+
+**单 Run 严格递增**是协议硬约束，两种方言必须用不同机制，但对外语义一致（唯一索引 `(run_id, seq)` 兜底，冲突即回滚重试 ≤ 3 次）：
+
+| 方言 | 机制 | 说明 |
+|------|------|------|
+| SQLite（dev/test） | `run_seq_counters(run_id PK, last_seq bigint)` 计数器行 `INSERT ... ON CONFLICT(run_id) DO UPDATE SET last_seq = last_seq + 1 RETURNING last_seq` | SQLite 单写者语义天然串行；`(run_id, seq)` 唯一索引兜底；不依赖 advisory lock |
+| PostgreSQL（prod） | 事务内先 `pg_advisory_xact_lock(hashtextextended(run_id::text, 0))`，再对计数器行 `UPDATE ... RETURNING last_seq`（首事件 `INSERT ... ON CONFLICT DO NOTHING`） | 事务提交自动释放咨询锁；不用裸 `MAX(seq)+1`，避免并发撞号 |
+
+**禁止**：应用层 `max(seq) + 1` 后直接插入（无锁时并发必撞）；把 `event_outbox.id`（全局自增）当作 Run 内 seq。
+**TA-006 验收追加**：SQLite 与 PostgreSQL 各跑 1000 条并发事件，seq 连续、无重复、无跳号。
 
 ### 8.4 SSE 订阅
 
@@ -1484,10 +1525,19 @@ Agent 版本由 `agent_key + prompt_version + schema_version + tools_version + m
 | NETWORK | DNS 失败、RST、丢包、TLS 错误 | 网络指标 / DNS / TLS / HAR | 固定网络 Profile；替换节点 |
 | TIME | 时区、赛事状态、定时任务、缓存过期 | UTC / clock offset / scheduler logs | 可控时钟；固定赛事时间；eventually assertion |
 | CROSS_FEATURE | 公共 Header、广告、弹窗、支付 SDK、权限组件 | 代码变更 / 页面层级 / 请求 / DOM 事件 | Feature Profile 对照；专项集成测试 |
-| UI_OVERLAY | overlay、焦点抢占、滚动、动画、异步渲染 | DOM / A11y / 截图 / hit target / 时间线 | 禁用动画；等业务状态；复核真实点击区域 |
+| UI_OVERLAY | overlay、焦点抢占、滚动、动画、异步渲染 | DOM / A11y / 截图 / hit target / 时间线 | 禁用动画；等业务状态；复核真实点击区域。分类元数据 **`requires_ui_surface: true`**（batch-276 M-13） |
 | AUTOMATION | locator 失效、浏览器崩溃、脚本异常、资源耗尽 | Stack / Trace / Runner log / 浏览器版本 | 重建 Worker；脚本自检；先证实产品状态 |
 | REQUIREMENT_AMBIGUITY | PRD / 原型 / 接口描述冲突 | 需求版本 / 变更记录 / 评审记录 | 标记 NEEDS_PRODUCT_DECISION，不猜测预期 |
 | UNKNOWN | — | — | 转人工 |
+
+**分类元数据与 adapter capability 启停**（batch-276 M-13）：
+
+- 干扰目录中 `UI_OVERLAY` 带 `requires_ui_surface: true`，含义：该类**检测与复跑**必须有真实 UI 表面（浏览器 / 移动端 / 小程序），纯 API / DB / 事件 Driver 不得声称支持；
+- Driver 必须在 §7.1 `DriverCapabilities.capabilities` 声明 **`ui.overlay.observe`**（能检测浮层干扰）与 **`ui.overlay.control`**（能禁用动画 / 关闭浮层）。两条独立声明，不合并成一个 capability；
+- 调度器分配"UI_OVERLAY 检测 / 复跑"节点前校验目标 Driver capability：
+  - 缺 `ui.overlay.observe` → **不派发**，事件记 `unsupported`（不造假字段、不降级为 PASS）；
+  - 只有 observe 无 control → 允许"观察 + 人工复核"路径，不执行"禁用动画"动作；
+- capability 声明必须对应 §4.22 `node_capability_manifests.last_evidence_ref` 的真实 run 证据，**不接受手写声明**。
 
 ### 11.3 Run 开始前的预防（比失败后猜测更重要）
 
@@ -1647,7 +1697,7 @@ Deterministic Assertion FAIL / Runner Error
 **严禁**：
 - 全局忽略某域名/错误类型而不记账；
 - 把"已知问题"直接改为 PASS；
-- 永久 quarantine（必须有 `effective_until` ≤ 90 天）；
+- 永久 quarantine（单次授权 `effective_until - effective_from ≤ 90 天`；到期前 Owner 必须**显式重新审批续期**，续期新建规则行并经 `renewal_of_rule_id` 指向旧行，旧行不改——见 §4.20，batch-276 M-15）；
 - 因为"是其他需求负责"就不报告跨功能影响。
 
 ### 11.10 噪音指标（周报）
@@ -1892,12 +1942,14 @@ oss_admission:
 
 ### 14.4 PoC 选择矩阵（第一轮 2 周）
 
-| PoC | 场景 | 通过条件 |
-|-----|------|---------|
-| **Playwright MCP** | 登录 → 导航 → 检查前台赛事实体页 | 操作可审计；权限隔离；输出 A11y/DOM；不能访问未授权域名 |
-| **TesterArmy e2e** | 一个现有 CamelTv 业务流程混合 agent.act + expect | 固定版本可靠完成 + 重放；导出 trace/artifact 能被 Adapter 收集；不依赖云 SaaS 完成基础场景 |
-| **Keploy** | 捕获一个 Test5 API 依赖链 + 隔离一个不稳定第三方 API | 录制 + 隔离环境重放；DB/消息录制范围 + 脱敏通过；eBPF 部署限制已评估 |
-| **TestZeus Hercules** | Gherkin → E2E → 证据 | **先决条件（batch-275 M-16）**：法务书面评估完成且结论为"可采"。满足后 PoC 通过条件：AGPL 隔离部署方案成立 + 依赖安全 + Playwright 兼容 + 输出映射通过。**法务未通过前不启动 PoC**。 |
+| PoC | 场景 | 通过条件 | 失败回退方案（batch-276 M-18） |
+|-----|------|---------|------------------------------|
+| **Playwright MCP** | 登录 → 导航 → 检查前台赛事实体页 | 操作可审计；权限隔离；输出 A11y/DOM；不能访问未授权域名 | 回退现有 Playwright Runner 内置 locator（TA-013）；"AI 探索模式"本阶段不接，不影响主链路 |
+| **TesterArmy e2e** | 一个现有 CamelTv 业务流程混合 agent.act + expect | 固定版本可靠完成 + 重放；导出 trace/artifact 能被 Adapter 收集；不依赖云 SaaS 完成基础场景 | 回退**纯 Playwright**（TA-013 扩展）；不引入外部 agent 执行器，Workflow 编排仍由 §6 DAG 承担 |
+| **Keploy** | 捕获一个 Test5 API 依赖链 + 隔离一个不稳定第三方 API | 录制 + 隔离环境重放；DB/消息录制范围 + 脱敏通过；eBPF 部署限制已评估 | 回退**手写 mock/fixture + HTTP Driver**（TA-012）；录制能力降级为 V1.1+ 可选项 |
+| **TestZeus Hercules** | Gherkin → E2E → 证据 | **先决条件（batch-275 M-16）**：法务书面评估完成且结论为"可采"。满足后 PoC 通过条件：AGPL 隔离部署方案成立 + 依赖安全 + Playwright 兼容 + 输出映射通过。**法务未通过前不启动 PoC**。 | **直接删除候选**（法务不通过 / 隔离方案不成立）；Gherkin 输入由 TA-009 Workflow Validator 自研承接 |
+
+**回退不是失败**：任一 PoC 不通过即按上表回退，**不阻塞 M2 开工**；回退决策记录进 `work-logs/` 与对应 ADR，PoC 结论必须写"通过 / 回退 / 删除候选"三态之一，不允许"待定"。
 
 **原则**：**不以 stars 为唯一标准**；以可运行性 / 最近维护 / 许可证 / 可观察性 / 可靠复现 / 适配成本为标准。
 
@@ -2109,6 +2161,14 @@ mcp://cameltv-aiqe/
 - HAR / DOM / 截图 / 视频在采集时 **inline 遮罩**：手机号 / 身份证 / 银行卡 / token / 密码 / 邮箱局部脱敏；
 - Redaction 失败的 artifact `redaction_status=rejected` 不入库；
 - 原始敏感内容如需保留 → 加密 + 更严格权限（审批日志）。
+
+**实现选型（batch-276 D-4）**：
+
+- **默认实现（V1）＝ 自写正则引擎，不引入 presidio**：把 `app/services/knowledge/sanitize.py` 已上线的规则集（鉴权头 / 裸 JWT / 敏感键值 / 手机号 / 邮箱 / 身份证）抽成独立模块 `app/aiqe/redaction/`，对外暴露 `RedactionEngine.redact(text|bytes, mime, scope) -> RedactionResult`；knowledge 入库与 Run 证据共用同一引擎，避免两套规则漂移；
+- **规则外置 YAML**：`test-platform-v2/backend/app/aiqe/redaction/rules.yaml`（`schema_version: 1`；每条规则 `id / pattern / replace / applies_to(mime|field) / severity`）；改规则必须同时加 fixture 用例，PR 评审看 diff；
+- **升级路径（V1.1+，需 ADR）**：只有出现"姓名 / 地址 / 自由文本 PII"这类 NER 级需求时才评估 `presidio`（依赖 spacy 模型，镜像体积与启动时间显著增加），且必须先过 §14.3 OSS 准入 12 项 + 独立 ADR，**不得直接替换默认引擎**；
+- **明确不选**：`faker` / `faker-sensitive` 类库是"造数据"而非"脱敏"，输出不可回归比对，不作为实现；
+- **验收**：TA-007 用 10 组真实 HAR / DOM 样本跑红队用例，`redaction_status=sanitized` 且无 PII 残留；误报率 / 漏报率与规则版本记录进 `docs/aiqe/ops.md`。
 
 ### 16.3 DB Driver 安全
 
@@ -2425,6 +2485,14 @@ test-platform-v2/frontend/src/
       pages/ExecutionProfilePage.tsx
 ```
 
+**路由决策**（batch-276 D-6）：
+
+- **保留 `/version-tasks` 作为业务入口**：现有 `frontend/src/router/index.tsx` 已挂 `version-tasks`、`version-tasks/new`、`version-tasks/:taskId`，继续承载"版本任务 → 执行 → 报告"的业务语义；
+- **新增 `/runs` 作为通用 Run 列表**：`/runs`、`/runs/:runId`、`/runs/:runId/compare`，服务 `source_type = manual / defect_regression / pr / github_action / schedule / agent` 等非版本任务来源的 Run；
+- **详情页组件复用**：`RunHeader / RunGraph / RunTimeline / ArtifactViewer / useRunEvents` 只实现一份；`/version-tasks/:taskId` 在 M1 迁到同一套组件（URL 与业务交互不变）；
+- **兼容**：不删除现有 `version-tasks` 路由；M4 起版本任务列表可跳转 `/runs/:runId` 看通用 Run 详情；
+- **导航去重**：侧边栏只加"Run 中心"一个入口，不把 `/runs` 与"版本任务"并列成两个执行入口。
+
 ### 18.3 Pydantic schema 骨架
 
 ```python
@@ -2531,105 +2599,106 @@ class RunContext:
 
 > **工期口径**：5-6 名工程人员（1 TL + 2 后端 + 1 前端 + 1 Runner/自动化 + 1 AI/平台，DevOps/QA 共享）。MVP 约 8-10 周，V1 (Web/API/DB) 16-20 周。
 > **每个 TA 必须满足 §22 Definition of Done**。
+> **优先级档（batch-276 M-20）**：`MVP` = M0-M2 必需；`V1` = M3-M6 补齐；`V1.1+` = 可延后到 V1 之后。每张 TA 表的最后一列即裁剪依据：**MVP 未全绿不得启动 V1.1+ 任务**；2-3 人团队按 §23 放大线执行，优先保 MVP。
 
 ### Phase 0（第 1-2 周）：代码审计 + OSS 准入 + P0
 
-| ID | 任务 | 责任 | 文件 | 验收 |
-|----|------|------|------|------|
-| **TA-000** | P0 阻塞清零（§0） | DevOps + TL | `production.env`、迁移、`scripts/ci/check-p0-ready.ps1` | P0-1..5 全部拿证据；CI 守卫通过 |
-| **TA-001** | 当前执行链审计 | TL + 后端 + Runner | 产出 `docs/aiqe/baseline.md` | 实际 VersionTask → ExecutionJob → Node → Runner → Artifact 时序图；状态/心跳/取消/错误路径标注 |
-| **TA-001.5** | P0 守卫脚本 | DevOps | `scripts/ci/check-p0-ready.ps1` | 跑脚本返回 0 当且仅当 P0-1..5 全绿 |
-| **TA-002** | OSS SBOM/License 准入 | Runner + DevOps | `docs/aiqe/oss-adoption-register.md` | 10 个候选项目每个 fixed commit + LICENSE + CVE 扫描；未批准不入 image |
-| **TA-003** | Test 环境就绪 | DevOps + 后端 | `deploy/`、test adapter | Test env 对生产 DB/凭据零写权限；Run 只在允许环境执行；健康检查失败 → `BLOCKED` |
-| **TA-004** | ADR + 模型映射表 | TL + 后端 | `docs/aiqe/model-mapping.md`、`docs/adr/0031..0038-*.md` | 本规格每张表 → 现有类/表/路由/组件 映射表；无同义重复 |
-| **TA-004.2** | JSON schema CI 守卫 | 后端 | `scripts/ci/check-json-schema-version.ps1` | 所有 JSON 字段必须有 schema_version + Pydantic 校验；无就拒 PR |
+| ID | 任务 | 责任 | 文件 | 验收 | 优先级档 |
+|----|------|------|------|------|------|
+| **TA-000** | P0 阻塞清零（§0） | DevOps + TL | `production.env`、迁移、`scripts/ci/check-p0-ready.ps1` | P0-1..5 全部拿证据；CI 守卫通过 | MVP |
+| **TA-001** | 当前执行链审计 | TL + 后端 + Runner | 产出 `docs/aiqe/baseline.md` | 实际 VersionTask → ExecutionJob → Node → Runner → Artifact 时序图；状态/心跳/取消/错误路径标注 | MVP |
+| **TA-001.5** | P0 守卫脚本 | DevOps | `scripts/ci/check-p0-ready.ps1` | 跑脚本返回 0 当且仅当 P0-1..5 全绿 | MVP |
+| **TA-002** | OSS SBOM/License 准入 | Runner + DevOps | `docs/aiqe/oss-adoption-register.md` | 10 个候选项目每个 fixed commit + LICENSE + CVE 扫描；未批准不入 image | MVP |
+| **TA-003** | Test 环境就绪 | DevOps + 后端 | `deploy/`、test adapter | Test env 对生产 DB/凭据零写权限；Run 只在允许环境执行；健康检查失败 → `BLOCKED` | MVP |
+| **TA-004** | ADR + 模型映射表 | TL + 后端 | `docs/aiqe/model-mapping.md`、`docs/adr/0031..0038-*.md` | 本规格每张表 → 现有类/表/路由/组件 映射表；无同义重复 | MVP |
+| **TA-004.2** | JSON schema CI 守卫 | 后端 | `scripts/ci/check-json-schema-version.ps1` | 所有 JSON 字段必须有 schema_version + Pydantic 校验；无就拒 PR | MVP |
 
 ### Phase 1（第 3-4 周）：Run / Event / Artifact 底座
 
-| ID | 任务 | 责任 | 文件 | 验收 |
-|----|------|------|------|------|
-| **TA-005** | Run 模型 + 状态机 | 后端 | `aiqe/models/run.py`、`services/run_state.py`、Alembic | 合法转换单测全绿；非法转换抛异常；旧 ExecutionJob 能关联 run_id |
-| **TA-006** | Run Event Collector（Outbox） | 后端 | `aiqe/services/event_service.py`、`models/event.py` | 1000 事件 seq 无重复；worker 重发同 producer_event_id 不入库；事件 + 投影在同事务 |
-| **TA-007** | Artifact Manager | 后端 + DevOps | `aiqe/services/artifact_service.py`、对象存储适配 | 图/trace 上传下载；越权 403；同 hash 去重；redaction_status 全链路 |
-| **TA-008** | React Run Console MVP | 前端 | `features/runs/pages/RunListPage.tsx`、`RunDetailPage.tsx`、`useRunEvents.ts` | 刷新后状态 + 事件不丢；Run 完成可回放；SSE 断线补拉 |
+| ID | 任务 | 责任 | 文件 | 验收 | 优先级档 |
+|----|------|------|------|------|------|
+| **TA-005** | Run 模型 + 状态机 | 后端 | `aiqe/models/run.py`、`services/run_state.py`、Alembic | 合法转换单测全绿；非法转换抛异常；旧 ExecutionJob 能关联 run_id | MVP |
+| **TA-006** | Run Event Collector（Outbox） | 后端 | `aiqe/services/event_service.py`、`models/event.py` | 1000 事件 seq 无重复；worker 重发同 producer_event_id 不入库；事件 + 投影在同事务 | MVP |
+| **TA-007** | Artifact Manager | 后端 + DevOps | `aiqe/services/artifact_service.py`、对象存储适配 | 图/trace 上传下载；越权 403；同 hash 去重；redaction_status 全链路 | MVP |
+| **TA-008** | React Run Console MVP | 前端 | `features/runs/pages/RunListPage.tsx`、`RunDetailPage.tsx`、`useRunEvents.ts` | 刷新后状态 + 事件不丢；Run 完成可回放；SSE 断线补拉 | MVP |
 
 ### Phase 2（第 5-7 周）：DAG + Driver + 变量传递
 
-| ID | 任务 | 责任 | 文件 | 验收 |
-|----|------|------|------|------|
-| **TA-009** | Workflow Schema / Validator | 后端 | `aiqe/services/workflow_validator.py`、`models/workflow.py` | 循环依赖 / 未注册 Driver / 悬空变量 / 非幂等重试全部被拒 |
-| **TA-010** | DAG Scheduler | 后端 | `aiqe/services/dag_scheduler.py`、`workers/dispatch.py` | 串行/并行/失败阻断/条件分支通过；Worker 重启可恢复；资源锁带 fencing token |
-| **TA-010.3** | 资源锁（fencing token） | 后端 | `aiqe/services/resource_lock.py` | 7 粒度锁 + TTL + heartbeat；Worker 崩溃后锁自动释放 |
-| **TA-011** | RunContext / Variable Store | 后端 | `aiqe/services/run_context.py` | 动态变量跨节点传递；secret ref 不落明文；Run scope 隔离 |
-| **TA-012** | HTTP Driver Adapter | 后端 | `aiqe/drivers/httpx_driver.py` | 多接口链真实执行；request/response 证据完整；首次失败不被 retry 覆盖 |
-| **TA-013** | Playwright Driver Adapter | Runner | `scripts/node/cameltv_node/drivers/playwright_driver.py` | 后台登录 + 配置实体 + 前台查询 全链路同 Run 执行；trace / dom / a11y / console 齐全 |
-| **TA-014** | DB Read-only Assertion Driver | 后端 + Runner | `aiqe/drivers/db_readonly_driver.py` | SELECT 通过；INSERT/UPDATE/DELETE/DDL 全被拒；行数超限 → 错误 |
-| **TA-015** | Driver Registry + Capability | 后端 | `aiqe/services/capability_registry.py` | 节点自描述 + 实测 evidence；缺 WebKit 的 Node 不会收到 WebKit 任务 |
+| ID | 任务 | 责任 | 文件 | 验收 | 优先级档 |
+|----|------|------|------|------|------|
+| **TA-009** | Workflow Schema / Validator | 后端 | `aiqe/services/workflow_validator.py`、`models/workflow.py` | 循环依赖 / 未注册 Driver / 悬空变量 / 非幂等重试全部被拒 | MVP |
+| **TA-010** | DAG Scheduler | 后端 | `aiqe/services/dag_scheduler.py`、`workers/dispatch.py` | 串行/并行/失败阻断/条件分支通过；Worker 重启可恢复；资源锁带 fencing token | MVP |
+| **TA-010.3** | 资源锁（fencing token） | 后端 | `aiqe/services/resource_lock.py` | 7 粒度锁 + TTL + heartbeat；Worker 崩溃后锁自动释放 | MVP |
+| **TA-011** | RunContext / Variable Store | 后端 | `aiqe/services/run_context.py` | 动态变量跨节点传递；secret ref 不落明文；Run scope 隔离 | MVP |
+| **TA-012** | HTTP Driver Adapter | 后端 | `aiqe/drivers/httpx_driver.py` | 多接口链真实执行；request/response 证据完整；首次失败不被 retry 覆盖 | MVP |
+| **TA-013** | Playwright Driver Adapter | Runner | `scripts/node/cameltv_node/drivers/playwright_driver.py` | 后台登录 + 配置实体 + 前台查询 全链路同 Run 执行；trace / dom / a11y / console 齐全 | MVP |
+| **TA-014** | DB Read-only Assertion Driver | 后端 + Runner | `aiqe/drivers/db_readonly_driver.py` | SELECT 通过；INSERT/UPDATE/DELETE/DDL 全被拒；行数超限 → 错误 | MVP |
+| **TA-015** | Driver Registry + Capability | 后端 | `aiqe/services/capability_registry.py` | 节点自描述 + 实测 evidence；缺 WebKit 的 Node 不会收到 WebKit 任务 | MVP |
 
 ### Phase 3（第 7-10 周，并行）：OSS PoC + Agent 接入
 
-| ID | 任务 | 责任 | 文件 | 验收 |
-|----|------|------|------|------|
-| **TA-016** | Playwright MCP Explorer PoC | AI + Runner | `scripts/node/cameltv_node/mcp/playwright_mcp/` | AI 定位测试页输出 DOM/A11y + 动作日志；越权域名被拒 |
-| **TA-017** | TesterArmy e2e Adapter PoC | Runner | 独立 Node Runner image + `aiqe/drivers/external_e2e_driver.py` | 固定版本执行 + 二次重放；trace/artifact 转 CamelTv 格式；退出码与 assertion 一致 |
-| **TA-018** | Keploy Record/Replay PoC | Runner + DevOps | `aiqe/drivers/keploy_driver.py` | 录制 1 条上下游依赖；回放稳定；脱敏通过；eBPF 权限审计完 |
-| **TA-019** | Agent Service + A0/A1 | AI + 后端 | `aiqe/agents/base.py`、`orchestrator.py`、`requirement_agent.py`、`agent_executions` 表 | 30 份需求评估集；AC 有来源引用；schema 错拒；Key 无效 fail-closed |
-| **TA-020** | A2 Test Design / Review | AI | `aiqe/agents/test_design_agent.py` | 50 份需求评估集；P0 无验收断言不得批；旧用例覆盖充分时不重复新增 |
-| **TA-020.3** | Oracle 来源守卫 CI | DevOps | `scripts/ci/check-oracle-layer.ps1` | assertion 缺 `oracle_layer` 全部拒 PR |
-| **TA-021** | A3 Workflow Planner | AI + 后端 | `aiqe/agents/workflow_planner_agent.py` | 20 个已标注业务工作流依赖关系正确；未批准不能执行 |
+| ID | 任务 | 责任 | 文件 | 验收 | 优先级档 |
+|----|------|------|------|------|------|
+| **TA-016** | Playwright MCP Explorer PoC | AI + Runner | `scripts/node/cameltv_node/mcp/playwright_mcp/` | AI 定位测试页输出 DOM/A11y + 动作日志；越权域名被拒 | V1 |
+| **TA-017** | TesterArmy e2e Adapter PoC | Runner | 独立 Node Runner image + `aiqe/drivers/external_e2e_driver.py` | 固定版本执行 + 二次重放；trace/artifact 转 CamelTv 格式；退出码与 assertion 一致 | V1 |
+| **TA-018** | Keploy Record/Replay PoC | Runner + DevOps | `aiqe/drivers/keploy_driver.py` | 录制 1 条上下游依赖；回放稳定；脱敏通过；eBPF 权限审计完 | V1 |
+| **TA-019** | Agent Service + A0/A1 | AI + 后端 | `aiqe/agents/base.py`、`orchestrator.py`、`requirement_agent.py`、`agent_executions` 表 | 30 份需求评估集；AC 有来源引用；schema 错拒；Key 无效 fail-closed | V1 |
+| **TA-020** | A2 Test Design / Review | AI | `aiqe/agents/test_design_agent.py` | 50 份需求评估集；P0 无验收断言不得批；旧用例覆盖充分时不重复新增 | V1 |
+| **TA-020.3** | Oracle 来源守卫 CI | DevOps | `scripts/ci/check-oracle-layer.ps1` | assertion 缺 `oracle_layer` 全部拒 PR | V1 |
+| **TA-021** | A3 Workflow Planner | AI + 后端 | `aiqe/agents/workflow_planner_agent.py` | 20 个已标注业务工作流依赖关系正确；未批准不能执行 | V1 |
 
 ### Phase 4（第 10-13 周）：失败归因 + 噪音治理 + 回归
 
-| ID | 任务 | 责任 | 文件 | 验收 |
-|----|------|------|------|------|
-| **TA-022** | Execution Profile / 数据隔离 | 后端 | `aiqe/models/profile.py`、`services/run_service.py` | `core_isolated / integration / external_live` 三档；两个并发 Run 无法误改同一共享 fixture；profile checksum 可复现 |
-| **TA-023** | Interference Detectors | 后端 + Runner | `aiqe/services/interference_service.py` + 节点侧 detectors | 10 类预置故障检测信号正确；检测本身不改 Run 状态 |
-| **TA-024** | A4 Failure & Triage Agent | AI + 后端 | `aiqe/agents/failure_triage_agent.py` | 100 标注样本（§21.4）；未知归因返 `UNKNOWN`；不凭模型 confidence 自动关缺陷 |
-| **TA-024.2** | Noise Hint Agent（§10.4 Skill） | AI | `.claude/skills/noise-hint-agent/SKILL.md` | 对真实"广告抖动"样本输出疑似 hint + 证据引用 |
-| **TA-025** | Counterfactual Replay Coordinator | 后端 | `aiqe/services/triage_service.py::run_experiment()` | E1-E6 每个单变量实验落 verification_run_id；双变量实验被拒；幂等检查通过 |
-| **TA-026** | Defect Draft + Link | 后端 + 前端 | `defect_service.py`（扩）、`frontend/src/pages/defect/*` | 失败一键转缺陷带结构化复现步骤 + 证据跳转；详情页展示 linked_execution + AC |
-| **TA-027** | 一键回归 | 后端 + 前端 | `POST /defects/:id/regressions`、`<RegressionDialog />`、`<RunComparison />` | 制造 Bug → Run Fail → Defect Draft → 修复 SHA → 点回归 → 新 Run PASS；旧 Run 保留；对比视图可用 |
-| **TA-027.3** | Noise Suppression Rules | 后端 + 前端 | `aiqe/services/noise_rule_service.py`、规则 CRUD 页 | 规则 90 天强制复核；永久 quarantine 被拒 |
+| ID | 任务 | 责任 | 文件 | 验收 | 优先级档 |
+|----|------|------|------|------|------|
+| **TA-022** | Execution Profile / 数据隔离 | 后端 | `aiqe/models/profile.py`、`services/run_service.py` | `core_isolated / integration / external_live` 三档；两个并发 Run 无法误改同一共享 fixture；profile checksum 可复现 | V1 |
+| **TA-023** | Interference Detectors | 后端 + Runner | `aiqe/services/interference_service.py` + 节点侧 detectors | 10 类预置故障检测信号正确；检测本身不改 Run 状态 | V1 |
+| **TA-024** | A4 Failure & Triage Agent | AI + 后端 | `aiqe/agents/failure_triage_agent.py` | 100 标注样本（§21.4）；未知归因返 `UNKNOWN`；不凭模型 confidence 自动关缺陷 | V1 |
+| **TA-024.2** | Noise Hint Agent（§10.4 Skill） | AI | `.claude/skills/noise-hint-agent/SKILL.md` | 对真实"广告抖动"样本输出疑似 hint + 证据引用 | V1 |
+| **TA-025** | Counterfactual Replay Coordinator | 后端 | `aiqe/services/triage_service.py::run_experiment()` | E1-E6 每个单变量实验落 verification_run_id；双变量实验被拒；幂等检查通过 | V1 |
+| **TA-026** | Defect Draft + Link | 后端 + 前端 | `defect_service.py`（扩）、`frontend/src/pages/defect/*` | 失败一键转缺陷带结构化复现步骤 + 证据跳转；详情页展示 linked_execution + AC | V1 |
+| **TA-027** | 一键回归 | 后端 + 前端 | `POST /defects/:id/regressions`、`<RegressionDialog />`、`<RunComparison />` | 制造 Bug → Run Fail → Defect Draft → 修复 SHA → 点回归 → 新 Run PASS；旧 Run 保留；对比视图可用 | V1 |
+| **TA-027.3** | Noise Suppression Rules | 后端 + 前端 | `aiqe/services/noise_rule_service.py`、规则 CRUD 页 | 规则 90 天强制复核；永久 quarantine 被拒 | V1 |
 
 ### Phase 5（第 13-17 周）：跨端 + 学习 + 质量门禁
 
-| ID | 任务 | 责任 | 文件 | 验收 |
-|----|------|------|------|------|
-| **TA-028** | Platform Acceptance Matrix | 前端 | `<PlatformMatrix />` | 同 AC 对应多端 Binding；每端独立 build/device/profile/actual/evidence；跨端语义类型展示 |
-| **TA-029** | A5 Change Impact | AI + 后端 | `aiqe/agents/change_impact_agent.py` | PR diff → 候选回归并集强制 suite；公共权限/登录变化时强制用例不漏选 |
-| **TA-030** | A6 Learning Curator | AI | `aiqe/agents/learning_curator_agent.py`、`learning_candidates / bug_patterns` 表 | 候选规则 → benchmark 评估 → 人审 → ACTIVE；误报/重复增加不能无提示发布 |
-| **TA-031** | VersionTask Quality Gate | 后端 + 前端 | `aiqe/services/quality_gate.py`、版本任务详情页 | P0 未执行/未知/失败 → 门禁不显示 PASS |
-| **TA-032** | MCP Gateway | 后端 | `scripts/mcp-server/aiqe_mcp/` | Codex 可查 Run；写动作需审批；三类外部 Agent 能从 Skill + MCP 合作 |
-| **TA-032.5** | Agent Skills 开放标准封装 | AI + 平台 | `.claude/skills/<agent-key>/SKILL.md` × 6 | Claude Code / Codex / Cursor 三处加载同一 skill 跑通，截图存证 |
+| ID | 任务 | 责任 | 文件 | 验收 | 优先级档 |
+|----|------|------|------|------|------|
+| **TA-028** | Platform Acceptance Matrix | 前端 | `<PlatformMatrix />` | 同 AC 对应多端 Binding；每端独立 build/device/profile/actual/evidence；跨端语义类型展示 | V1 |
+| **TA-029** | A5 Change Impact | AI + 后端 | `aiqe/agents/change_impact_agent.py` | PR diff → 候选回归并集强制 suite；公共权限/登录变化时强制用例不漏选 | V1 |
+| **TA-030** | A6 Learning Curator | AI | `aiqe/agents/learning_curator_agent.py`、`learning_candidates / bug_patterns` 表 | 候选规则 → benchmark 评估 → 人审 → ACTIVE；误报/重复增加不能无提示发布 | V1 |
+| **TA-031** | VersionTask Quality Gate | 后端 + 前端 | `aiqe/services/quality_gate.py`、版本任务详情页 | P0 未执行/未知/失败 → 门禁不显示 PASS | V1 |
+| **TA-032** | MCP Gateway | 后端 | `scripts/mcp-server/aiqe_mcp/` | Codex 可查 Run；写动作需审批；三类外部 Agent 能从 Skill + MCP 合作 | V1 |
+| **TA-032.5** | Agent Skills 开放标准封装 | AI + 平台 | `.claude/skills/<agent-key>/SKILL.md` × 6 | Claude Code / Codex / Cursor 三处加载同一 skill 跑通，截图存证 | V1 |
 
 ### Phase 6（第 17-20 周）：硬化 + 生产试点
 
-| ID | 任务 | 责任 | 文件 | 验收 |
-|----|------|------|------|------|
-| **TA-033** | Reliability + Security Hardening | DevOps + 后端 | 压测脚本 / Worker 故障注入 | 强杀 Worker 后 Run 可恢复或受控失败；不产生重复扣款 / 造数；RBAC 审计 |
-| **TA-034** | CamelTv Sports 纵向验收 | QA + 后端 + Runner | `cameltv-sports` adapter 完整版 | TC-AIQE-001..010 全部通过；至少制造并修复一个真实缺陷 |
-| **TA-034.2** | Asset-map 接入平台 | 前端 + 后端 | `aiqe/services/asset_map_integration.py` | 版本任务 step 2 展示页面地图；24 准则 assertion 结果进 EvidenceBundle；覆盖率三指标进判定页 |
-| **TA-035** | 文档 / Ops / Rollback | TL + QA | `docs/aiqe/ops.md`、`docs/aiqe/rollback.md` | 新开发按文档可空环境起服务跑通最小 E2E；版本锁 + 升级/回滚脚本 |
+| ID | 任务 | 责任 | 文件 | 验收 | 优先级档 |
+|----|------|------|------|------|------|
+| **TA-033** | Reliability + Security Hardening | DevOps + 后端 | 压测脚本 / Worker 故障注入 | 强杀 Worker 后 Run 可恢复或受控失败；不产生重复扣款 / 造数；RBAC 审计 | V1 |
+| **TA-034** | CamelTv Sports 纵向验收 | QA + 后端 + Runner | `cameltv-sports` adapter 完整版 | TC-AIQE-001..010 全部通过；至少制造并修复一个真实缺陷 | V1 |
+| **TA-034.2** | Asset-map 接入平台 | 前端 + 后端 | `aiqe/services/asset_map_integration.py` | 版本任务 step 2 展示页面地图；24 准则 assertion 结果进 EvidenceBundle；覆盖率三指标进判定页 | V1 |
+| **TA-035** | 文档 / Ops / Rollback | TL + QA | `docs/aiqe/ops.md`、`docs/aiqe/rollback.md` | 新开发按文档可空环境起服务跑通最小 E2E；版本锁 + 升级/回滚脚本 | V1 |
 
 ### Phase 7（持续）：Agent 可移植
 
-| ID | 任务 | 文件 | 验收 |
-|----|------|------|------|
-| **TA-036** | 内网 MCP Server | `scripts/mcp-server/*` | Codex CLI 在公司网内 `mcp add cameltv-aiqe ...` 调通 |
-| **TA-037** | AGENTS.md 规整 | `AGENTS.md` | Codex 新 session 能读并按此行动 |
-| **TA-038** | Skill 跨 Agent 验证 | 任选 3 个 skill | Claude Code / Codex / Cursor 三处跑通 |
+| ID | 任务 | 文件 | 验收 | 优先级档 |
+|----|------|------|------|------|
+| **TA-036** | 内网 MCP Server | `scripts/mcp-server/*` | Codex CLI 在公司网内 `mcp add cameltv-aiqe ...` 调通 | V1.1+ |
+| **TA-037** | AGENTS.md 规整 | `AGENTS.md` | Codex 新 session 能读并按此行动 | V1.1+ |
+| **TA-038** | Skill 跨 Agent 验证 | 任选 3 个 skill | Claude Code / Codex / Cursor 三处跑通 | V1.1+ |
 
 ### 预留扩展
 
-| ID | 任务 | 描述 |
-|----|------|------|
-| **TA-039** | Mobile Device Broker | 真机池管理（Android 优先，iOS 解 C84-1 后） |
-| **TA-040** | 小程序 Adapter | `minium` / `weapp-dev-mcp` 接入 + 微信版本兼容矩阵 |
-| **TA-041** | Desktop Driver | Electron / Windows UIA / AppleScript |
-| **TA-042** | 硬件 / IoT Driver | 单设备协议一套 Adapter |
-| **TA-043** | Domain Pack - E-commerce | future-wayu 项目接入 |
-| **TA-044** | Domain Pack - SaaS | Tenant/RBAC/Audit |
-| **TA-045** | Domain Pack - IoT | Device shadow / telemetry |
+| ID | 任务 | 描述 | 优先级档 |
+|----|------|------|------|
+| **TA-039** | Mobile Device Broker | 真机池管理（Android 优先，iOS 解 C84-1 后） | V1.1+ |
+| **TA-040** | 小程序 Adapter | `minium` / `weapp-dev-mcp` 接入 + 微信版本兼容矩阵 | V1.1+ |
+| **TA-041** | Desktop Driver | Electron / Windows UIA / AppleScript | V1.1+ |
+| **TA-042** | 硬件 / IoT Driver | 单设备协议一套 Adapter | V1.1+ |
+| **TA-043** | Domain Pack - E-commerce | future-wayu 项目接入 | V1.1+ |
+| **TA-044** | Domain Pack - SaaS | Tenant/RBAC/Audit | V1.1+ |
+| **TA-045** | Domain Pack - IoT | Device shadow / telemetry | V1.1+ |
 
 
 ---
@@ -2897,6 +2966,22 @@ CI 守卫（PR 合并前）：改 prompt / 工具 / 模型配置 → **必须跑
 
 每个里程碑的进入条件 = 前一个里程碑的 DoD 全绿。
 
+**团队规模换算**（batch-276 M-19，口径与 14 号排期 §2.1 一致）：
+
+| 里程碑 | 5-6 人基准（周） | 2-3 人放大（周） |
+|-------|----------------|-----------------|
+| M0 | 2 | 3-4 |
+| M1 | 4 | 5-7 |
+| M2 | 7 | 8-13 |
+| M3 | 10 | 14-19 |
+| M4 | 13 | 20-25 |
+| M5 | 17 | 26-32 |
+| M6 | 20 | 33-40 |
+| **MVP（M0-M2）** | **8-10** | **16-20** |
+| **V1（M0-M6）** | **20** | **32-40（≈ ×2）** |
+
+小团队不得靠"压缩 M0"省时间：M0 的 P0 清零 / 代码审计 / OSS 准入是后续所有里程碑的前提，只延长不缩短。
+
 ---
 
 ## §24 ADR 清单
@@ -2912,9 +2997,19 @@ CI 守卫（PR 合并前）：改 prompt / 工具 / 模型配置 → **必须跑
 | **ADR-AIQE-005** | 噪音是否作为 PASS/SKIP | **否**；归因类别与执行结果分开，`NOISE_SUSPECTED / BLOCKED` 不计 PASS |
 | **ADR-AIQE-006** | 是否允许 AI 自动关闭 Bug | **不允许**；AI 仅建议，缺陷关闭有固定规则 + 人审 |
 | **ADR-AIQE-007** | DB 能否由 Agent 任意 SQL | **不允许**；登记连接 + 只读事务 + 参数化模板 + 超时/行数/脱敏 |
-| **ADR-AIQE-008** | WorkflowDefinition vs AITDE 的区别 | WorkflowDefinition 是**人审 + checksum 锁定 + Validator 过关**的 DAG；AITDE 建模层（Mission/Contract/Scenario/Oracle）**不恢复**。护栏：Workflow 必须绑 scenario_id 和 contract_version；禁止平行建模实体；禁止 AI 临场改已批 Workflow |
+| **ADR-AIQE-008** | WorkflowDefinition vs AITDE 的区别 | WorkflowDefinition 是**人审 + checksum 锁定 + Validator 过关**的 DAG；AITDE 建模层（Mission/Contract/Scenario/Oracle）**不恢复**。护栏：Workflow 必须绑 scenario_id 和 contract_version；禁止平行建模实体；禁止 AI 临场改已批 Workflow；**新建带 checksum + approval_status 的实体必须在 PR 回答"AITDE 翻版自检"**（见本节末） |
 | **ADR-AIQE-009** | Agent Skills 开放标准 vs 自定 skill 格式 | 采用 **Anthropic Agent Skills 开放标准**；跨 Claude/Codex/Cursor 可移植 |
 | **ADR-AIQE-010** | 多端测试统一抽象 | **Platform Binding + Driver Adapter**；AC 保持平台无关，各端 workflow_ref 映射 |
+
+**PR 模板强制问答（batch-276 M-12，ADR-AIQE-008 的落地护栏）**
+
+任何新建"带 `checksum` + `approval_status`（或同义审批字段）"实体的 PR，description 必须逐条回答：
+
+1. **本 PR 新建的实体是否是 AITDE `Scenario / Mission / Contract / Oracle` 的翻版？**（是 / 否）
+2. 若"是"：列出与 AITDE 的字段级差异，并说明现有 `WorkflowDefinition`（或对应已批准实体）为什么无法承载。**未回答 = Block PR**；
+3. 若"否"：给出与 11 号方案 §2 删除清单不冲突的证据（`rg` 命中 0 / 现有表无同义字段截图或命令输出）。
+
+该问答同时写入 `.github/pull_request_template.md` 的"架构护栏"节；QA 在批次验收时逐 PR 检查，缺失即打回。
 
 
 ---
@@ -2970,6 +3065,41 @@ CI 守卫（PR 合并前）：改 prompt / 工具 / 模型配置 → **必须跑
 | **Snapshot** | Run 启动时固化的环境/依赖/数据状态 |
 | **Triage** | 失败归因流程 |
 | **Workflow** | WorkflowDefinition，已批准的 DAG |
+
+### B.1 数据隔离与全局表（batch-276 M-6）
+
+**一条规则**：Run 子表**不存** `project_id`，一律继承 `run.project_id`；跨表查询必须 join `test_runs` 并带 `project_id` 过滤。下表"归属"列是唯一口径。
+
+| 表 | project 归属 | 查询约束 |
+|----|-------------|---------|
+| `requirement_contracts / test_scenarios / workflow_definitions / test_runs / execution_profiles / environments / defects / project_adapters` | 自带 `project_id`（直接过滤） | 相关索引首列必须是 `project_id` |
+| `acceptance_criteria` | 继承 `requirement_contracts.project_id` | join `requirement_contracts` |
+| `test_cases` | 继承 `test_scenarios.project_id`（无 `project_id` 列） | join `test_scenarios` |
+| `node_runs / step_attempts / assertion_results / run_events / event_outbox / run_artifacts / interference_observations / triage_cases / triage_hypotheses / regression_requests` | 继承 `test_runs.project_id` | join `test_runs`（`regression_requests` 经 `defects` 或 `test_runs.retest_of`） |
+| `agent_executions` | **全局表**：`project_id` nullable，按调用方项目写入但不强制隔离 | 可选按 `project_id` 过滤；跨项目审计仅 TL / 管理员 |
+| `learning_candidates / bug_patterns / node_capability_manifests` | **全局表**：无 `project_id`，用 `applicable_scope_json` / `node_id` 表达作用域 | 只按 scope 过滤；跨项目写入必须人审 |
+| `noise_suppression_rules` | 半全局：`scope = project` 时 `scope_ref` 即 project_id | 先按 project 精确匹配，再回落全局规则 |
+| `lanhu_evidence_job / page / asset / ocr_block`（现有） | 自带 `project_id`（不并入本规格表） | 见 §4.12 证据边界 |
+
+**禁止**：Run 子表加 `project_id` 冗余列（会与 `run.project_id` 漂移）；用 `agent_executions.project_id = NULL` 冒充"全项目可见"。
+
+## 附录 C：Durability 分 DB 兼容表
+
+> batch-276 D-1 补充：seq 分配（§8.3.1）与迁移 / 锁 / JSON 的方言差异集中在本表；其余章节不写方言分支。
+
+| 能力 | SQLite（dev / test） | PostgreSQL（prod） | 代码约束 |
+|------|---------------------|-------------------|---------|
+| 主键 | 整数 PK / UUID 以 CHAR(36) 存 | `uuid` 类型 | 业务模型统一 UUID v4；Alembic 按方言分支 |
+| 时间 | `DATETIME`，**naive UTC** | `timestamptz` | 全链路 UTC；与 `task_queue.utcnow()` 口径一致 |
+| JSON | `TEXT` 存 JSON 字符串 | `jsonb` | SQLAlchemy `JSON` 类型 + Pydantic `schema_version` |
+| 行锁 | 无（单写者） | `SELECT ... FOR UPDATE` | 仓储层封装，业务代码不写方言分支 |
+| 咨询锁 | 无 → 事务串行 | `pg_try_advisory_xact_lock(hashtextextended(k, 0))` | 仅 `resource_lock` 与 seq 分配使用 |
+| 队列认领 | 条件 UPDATE + rowcount | 同左（或 `FOR UPDATE SKIP LOCKED`） | 复用 `app/core/task_queue.py::atomic_claim` |
+| 单 Run 事件 seq | 计数器行 UPDATE（单写者串行） | advisory lock + 计数器行 `UPDATE ... RETURNING` | 唯一索引 `(run_id, seq)` 兜底（§8.3.1） |
+| 迁移 | `alembic upgrade head` | 同左 | CI 双端都跑：SQLite 每次 PR，PG 每日 `pr-check` |
+| 降级 | ALTER 能力受限 | 完整 | DROP / ALTER 必须带存在性守卫（§0 P0-2） |
+
+**结论**：V1 不依赖 PG-only 能力（排他约束、`LISTEN/NOTIFY` 作为唯一事件通道等）；方言差异只允许收敛在 `repository` / `resource_lock` / `seq` 三处。
 
 ---
 
