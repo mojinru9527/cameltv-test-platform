@@ -440,9 +440,9 @@ def _safe_rel_path(name: str) -> str:
 
 
 def _playwright_root() -> Path | None:
-    """仓库内 tests/playwright（含 playwright 配置与 node_modules）优先。"""
+    """仓库内 backend/tests/playwright（含 playwright 配置与 node_modules）优先。"""
     root = Path(__file__).resolve().parents[3]
-    candidate = root / "test-platform-v2" / "tests" / "playwright"
+    candidate = root / "test-platform-v2" / "backend" / "tests" / "playwright"
     return candidate if candidate.is_dir() else None
 
 
@@ -455,6 +455,8 @@ def _default_spec_runner(cmd: list[str], *, cwd: Path, env: dict[str, str], time
         env=env,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=timeout,
     )
     return proc.returncode, proc.stdout, proc.stderr
@@ -485,6 +487,15 @@ def _spec_cases(report: dict) -> list[dict]:
     for suite in report.get("suites") or []:
         walk(suite)
     return cases
+
+
+def _node_spec_name(name: str, slug: str) -> str:
+    """在保留 Playwright 识别后缀（.spec.ts / .test.ts …）的前提下加唯一后缀。"""
+    for suffix in (".spec.ts", ".spec.js", ".spec.mts", ".spec.mjs", ".test.ts", ".test.js", ".test.mts", ".test.mjs"):
+        if name.endswith(suffix):
+            return f"{name[: -len(suffix)]}.node{slug}{suffix}"
+    stem, dot, ext = name.rpartition(".")
+    return f"{stem}.node{slug}.{ext}" if dot else f"{name}.node{slug}"
 
 
 def run_spec_files(
@@ -523,15 +534,30 @@ def run_spec_files(
     if not rel_files:
         return {"total": 0, "passed": 0, "failed": 0, "all_pass": False, "cases": [], "error": "任务载荷不含 spec 文件"}
 
+    written: dict[str, Path] = {}
     for original, rel in rel_files:
-        target = spec_base / rel
-        target.parent.mkdir(parents=True, exist_ok=True)
         content = next((str(f.get("content") or "") for f in files if f.get("name") == original), "")
+        if pw_root:
+            # 保留原目录深度（相对导入 ../support 仍可解析），文件名加后缀避免覆盖仓库现网 spec
+            target_dir = pw_root / Path(rel).parent
+            target_dir.mkdir(parents=True, exist_ok=True)
+            target = target_dir / _node_spec_name(Path(rel).name, _slug(directory.name))
+        else:
+            target = spec_base / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content, encoding="utf-8")
+        written[original] = target
 
     entry_rel = _safe_rel_path(entry) if entry else rel_files[0][1]
-    cwd = pw_root if pw_root else spec_base
-    spec_arg = str((spec_base / entry_rel).resolve()) if pw_root else entry_rel
+    if pw_root:
+        entry_target = written.get(entry) or next(iter(written.values()))
+        cwd = pw_root
+        spec_arg = entry_target.relative_to(pw_root).as_posix()
+        config_args = ["--config", str((pw_root / "playwright.config.ts").resolve())]
+    else:
+        cwd = spec_base
+        spec_arg = entry_rel
+        config_args = []
 
     child_env = {
         k: v for k, v in os.environ.items() if not k.upper().startswith(("SECRET", "TOKEN", "PASSWORD"))
@@ -546,7 +572,12 @@ def run_spec_files(
         }
     )
     npx = shutil.which("npx") or "npx"
-    cmd = [npx, "playwright", "test", spec_arg, "--output", str(results_dir)]
+    cmd = [
+        npx, "playwright", "test", spec_arg, *config_args,
+        "--project", browser,
+        "--reporter", "json",
+        "--output", str(results_dir),
+    ]
     run = runner or _default_spec_runner
     try:
         code, stdout, stderr = run(cmd, cwd=cwd, env=child_env, timeout=float(timeout_seconds))
