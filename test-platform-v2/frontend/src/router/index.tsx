@@ -34,6 +34,8 @@ const LanhuEvidenceJobDetail = lazy(() => import('@/pages/lanhu-evidence/JobDeta
 const VersionTaskListPage = lazy(() => import('@/pages/version-tasks/list'))
 const VersionTasksPage = lazy(() => import('@/pages/version-tasks'))
 const VersionTaskRunPage = lazy(() => import('@/pages/version-tasks/[taskId]'))
+const RunListPage = lazy(() => import('@/pages/runs'))
+const RunDetailPage = lazy(() => import('@/pages/runs/detail'))
 
 function PageLoader({ children }: { children: ReactNode }) {
   return (
@@ -209,6 +211,8 @@ export const router = createBrowserRouter([
       { path: 'version-tasks', element: <PageLoader><VersionTaskListPage /></PageLoader> },
       { path: 'version-tasks/new', element: <PageLoader><VersionTasksPage /></PageLoader> },
       { path: 'version-tasks/:taskId', element: <PageLoader><VersionTaskRunPage /></PageLoader> },
+      { path: 'runs', element: <PageLoader><RunListPage /></PageLoader> },
+      { path: 'runs/:runId', element: <PageLoader><RunDetailPage /></PageLoader> },
       { path: 'release-bundles', element: <PageLoader><ReleaseBundlesPage /></PageLoader> },
       { path: 'release-bundles/:id', element: <PageLoader><BundleDetailPage /></PageLoader> },
       { path: 'release-bundles/:id/panorama', element: <PageLoader><VersionPanoramaPage /></PageLoader> },
