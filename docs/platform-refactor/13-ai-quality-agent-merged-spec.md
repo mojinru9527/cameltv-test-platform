@@ -3,8 +3,8 @@ title: "CamelTv AI Quality Engineering Platform — 工程规格书（合并版 
 owner: "qa-team"
 created: "2026-11-09"
 last_reviewed: "2026-11-09"
-status: "proposal"
-version: "spec-v1.0-merged"
+status: "active"
+version: "v1.1-p0-fixed"
 tags: ["platform-refactor", "ai-agent", "engineering-spec", "developer-ready"]
 related:
   - "docs/platform-refactor/09-platform-landing-plan.md"
@@ -23,6 +23,17 @@ related:
 > 本文合并了 [12 号落地方案（本仓）](12-ai-quality-agent-landing-plan.md) 与"另一 Agent 的 v2.0 Spec"两份输入的强项：
 > - **数据模型 / 状态机 / Workflow DAG / Event 协议 / 噪音治理 / E2E 验收 / OSS 准入 / 安全治理** 来自 v2.0；
 > - **P0 先修 / 不做清单（AITDE 教训） / 现有代码接缝 / 24 准则+asset-map 复用 / Agent Skills 开放标准** 来自 12 号。
+>
+> **v1.1-p0-fixed 变更**（2026-11-09 batch-275）：修完 batch-274 Leader verdict 的 7 条 P0：
+> - M-2 §4.7 加 `version_task_run` 对账；
+> - M-3 §4.8 加 `execution_job_id` 字段 + execution_job/plan_execution_job 关系说明；
+> - M-4 §4.14 删 target_environments 新表，改为扩现有 `environment.py`；
+> - M-5 §4.19 + §0 P0-5 明示 `ai_job / ai_shadow_run / ai_gateway_cache` 一并删；
+> - M-16 §14 TestZeus AGPL 升级为法务书面评估硬门禁；
+> - D-3 §4.12 加对象存储选型（dev 本地 FS / prod 三选一 TA-007 前定）；
+> - D-9 §21.0 加 benchmark 数据集来源 + 准备进度。
+>
+> 剩余 12 条 P1 由 batch-276 承接；13 条 P2 由后续批次陆续处理。
 
 ---
 
@@ -69,7 +80,7 @@ related:
 | P0-2 | 简化批次将 DROP 104 张表（不可逆） | 11 号 §2 | ① 跑一次完整备份恢复演练（复用 batch-262 脚本）；② 所有 DROP 迁移改用 `op.execute("DROP TABLE IF EXISTS ...")` 带存在性守卫；③ `alembic downgrade -1` 必须可逆 | 备份→恢复→抽行一致；`alembic upgrade head && alembic downgrade -1 && alembic upgrade head` 可执行 |
 | P0-3 | 生产磁盘 96% | 11 号 §5 | 清理冷数据 + 扩盘；盘水位告警确认已送达 | 水位 ≤ 80% 维持 48 小时；告警平台收条 |
 | P0-4 | `/uitest` 控制面内置浏览器（C263-1） | `services/ui_test_service.py` | 把 `playwright_executor` 的内置浏览器路径从控制面剥离，走 `cameltv-node` | 控制面镜像 `docker image inspect` 验证无 Chromium；`/uitest` 执行走 node |
-| P0-5 | `app/services/ai_gateway/` 残留清理 | 11 号 §6 D2 已决策 | 删除目录 + 相关 import；`ai_client` 直连；更新 `docs/ai/local-ai-agent.md` 与 `scripts/ai_agent/README.md` 去掉"平台零推理"口径 | `rg "ai_gateway"` 命中 0；文档 PR 合入 |
+| P0-5 | `app/services/ai_gateway/` + 相关 models 残留清理（batch-275 M-5 扩写） | 11 号 §6 D2 已决策 | 删除 `app/services/ai_gateway/` 目录 + `app/models/ai_job.py` + `app/models/ai_shadow_run.py` + `app/models/ai_gateway_cache.py` + 对应 Alembic 迁移（downgrade 再 drop）；`ai_client` 直连；更新 `docs/ai/local-ai-agent.md` 与 `scripts/ai_agent/README.md` 去掉"平台零推理"口径；ADR-0027/0028/0029 标 `superseded by 11 号方案 + batch-275/277 P0 清理` | `rg "ai_gateway\|AiJob\|AiShadowRun\|AiGatewayCache"` 命中 0；Alembic revision 已 downgrade 并删除；3 个 ADR 状态更新；文档口径更新 |
 
 **门禁**：上述 5 条全部拿到真实证据并入 PR 之前，`§19 Phase 1` 的 CI 守卫（`scripts/ci/check-p0-ready.ps1`，TA-001.5 产出）直接 fail-closed。
 
@@ -384,7 +395,7 @@ ProjectAdapter (多项目支持)
 | workflow_definition_id | FK | 冻结 Workflow |
 | build_ref | varchar(255) | build/version |
 | commit_sha | varchar(64) | 被测代码 SHA |
-| target_environment_id | FK | — |
+| environment_id | FK environments | — |
 | execution_profile_id | FK | — |
 | environment_snapshot_json | JSON | 浏览器/服务版本/flags/地区/时间/依赖健康 |
 | retest_of | FK test_runs | nullable；回归指向被回归的 run |
@@ -397,6 +408,17 @@ ProjectAdapter (多项目支持)
 
 索引：`(project_id, created_at desc)`、`(scenario_id, created_at desc)`、`(commit_sha)`、`(retest_of)`。
 **关键规则**：`status` 和 `outcome` 独立，`BLOCKED / CANCELED` 永远不算 PASS。
+
+**与现有 `version_task_run.py` 的关系**（batch-275 M-2 补充）：
+
+现有 `app/models/version_task_run.py` 承接"版本任务的一次执行"。本规格 `test_runs` 是**通用执行实例**，`version_task_run` 为其**派生场景**（`source_type = 'version_task'` 的 `test_runs`）。
+
+**迁移策略**（在 TA-001 代码审计后定案）：
+
+- 候选 A：废弃 `version_task_run`，将其字段 ALTER 并入 `test_runs`（`source_type` 区分）；
+- 候选 B：保留 `version_task_run` 作为视图/关联表，`test_runs` 为底层事实源。
+
+TA-001 产出 `docs/aiqe/baseline.md` 后在 M1 开工前决定。本规格的 `test_runs` 字段表以通用执行实例为准，开发时**不得**创建与 `version_task_run` 字段完全重复的新表。
 
 ### 4.8 `node_runs`
 
@@ -412,10 +434,18 @@ ProjectAdapter (多项目支持)
 | output_ref | JSON | 变量名 → JSONPath/Artifact ref |
 | error_class | varchar(80) | nullable |
 | resource_keys_json | JSON | 占用锁 keys（见 §6） |
+| execution_job_id | FK execution_jobs | nullable；一对一关联调度派发工作单元（现有 `app/models/execution_job.py`） |
 | started_at / finished_at | timestamp | — |
 | attempt_count | integer | — |
 
 唯一索引：`(run_id, node_key)`。
+
+**与现有 `execution_job.py / plan_execution_job.py` 的关系**（batch-275 M-3 补充）：
+
+- `execution_jobs` 是**派发工作单元**（现有）：承载"节点侧要做什么、给哪个 worker"；
+- `node_runs` 是 **DAG 节点执行事实**（本规格新增）：承载"这个节点现在跑到哪一步、结果是什么"；
+- 二者 **1:1 绑定**。创建 `node_runs` 时若尚未派发，`execution_job_id = null`；派发后回填。
+- `plan_execution_job` 是旧的"测试计划执行派发"。11 号方案 §2 已声明"老队列 `api_task_worker` 和 `plan_execution_queue` 删除"；若 `plan_execution_job` 属于该队列则 **在 batch-277 清 P0 时一并核实并删除**；若否 → 作为 `execution_job` 的历史别名保留，不参与新 DAG。
 
 ### 4.9 `step_attempts`
 
@@ -502,6 +532,17 @@ ProjectAdapter (多项目支持)
 | metadata_json | JSON | 浏览器/viewport/页码等 |
 | created_at | timestamp | — |
 
+**对象存储选型**（batch-275 D-3 补充）：
+
+- **dev 环境**：**本地文件系统**（`storage_uri = file://<data-dir>/artifacts/<sha256-prefix>/<sha256>`），默认目录 `test-platform-v2/backend/storage/artifacts/`；
+- **test 环境**：同 dev，或走 docker volume；
+- **production 环境**：候选三选一，由 **TA-007 开工前业务 PoC** 后定：
+  - **A. 腾讯云 COS**（统一服务商；Server-Side Encryption + 签名 URL）；
+  - **B. MinIO 自托管**（制品不出站 + 省钱；需多维护一个服务 + 磁盘容量规划）；
+  - **C. 本地 FS**（延续 dev 做法；dogfood 跟不上生产水位）。
+
+**TA-007 的 driver 接口必须屏蔽后端差异**（`ArtifactStorageBackend` 抽象）；选型变更不影响业务代码。
+
 ### 4.13 `execution_profiles`
 
 | 字段 | 类型 | 说明 |
@@ -520,18 +561,28 @@ ProjectAdapter (多项目支持)
 
 密钥只能是 Vault / env var 引用。
 
-### 4.14 `target_environments`
+### 4.14 `environments`（**扩现有 `environment.py`**，不新建表）
+
+**batch-275 M-4 修正**：原 §4.14 提议新建 `target_environments` 表，与现有 `app/models/environment.py` 字段完全重复。改为**扩展现有表**，不新建。
+
+**扩展规则**：在现有 `environments` 基础上新增以下字段：
 
 | 字段 | 类型 | 说明 |
 |-----|------|------|
-| id | UUID | PK |
-| project_id | FK | — |
-| name | varchar(100) | 如 `sports-test5` |
-| base_urls_json | JSON | `{admin, consumer_web, consumer_h5, api}` |
-| data_sources_json | JSON | DB/Redis/MongoDB/Kafka connection slot（env var ref） |
+| base_urls_json | JSON | `{admin, consumer_web, consumer_h5, api}` 多端 base URL |
+| data_sources_json | JSON | DB/Redis/MongoDB/Kafka 连接 slot（env var ref） |
 | build_check_endpoint | varchar(500) | 健康检查 URL |
 | allowed_actions | enum | `read_only / limited_write / full_write` |
-| created_at | timestamp | — |
+
+现有 `environments` 的所有字段（`id / name / project_id / 鉴权 slot` 等）保留不变。
+
+**迁移策略**（Alembic）：
+
+- `op.add_column('environments', sa.Column('base_urls_json', postgresql.JSONB, nullable=True))` × 4 字段；
+- 老数据 `base_urls_json` 从 `name` 推断或人工补；
+- `allowed_actions` 默认 `read_only`，production 环境显式升为 `limited_write`。
+
+**全文引用约定**：本规格其他章节出现 `target_environment_id` 均等价于 `environment_id`（引用 `environments.id`）。
 
 ### 4.15 `interference_observations`
 
@@ -635,6 +686,10 @@ open ─► confirmed ─► fixing ─► pending_review ─► closed
 | created_at / completed_at | timestamp | — |
 
 ### 4.19 `agent_executions` / `learning_candidates` / `bug_patterns`
+
+**与已删 `ai_job / ai_shadow_run / ai_gateway_cache` 的关系**（batch-275 M-5 补充）：
+
+这三张表承载的"shadow run 对比 / gateway cache / job 分发"等能力**在 11 号简化批次 + batch-277 P0-5 一并删除**。`agent_executions` 单独承载所有 Agent 调用审计，**不恢复**旧字段。旧数据如需追溯归档至 `work-logs/platform-simplification-production-eval-20261007.md`。
 
 **`agent_executions`**（Agent 审计，不加 project_id 不行——放 nullable 全局表）：
 
@@ -1799,7 +1854,7 @@ Domain Pack 与 Project Adapter 分开：前者是领域能力，后者是当前
 | **Keploy** | API 流量录制 / 依赖回放 / DB&MQ 捕获 | **上下游噪音 PoC**；eBPF 权限审计 | Apache-2.0；采集内容必须脱敏 |
 | **browser-use** | 复杂浏览流 / 表单 / 多站 | 作为 `kind=web` 子策略 | MIT；77k⭐ 活跃 |
 | **Midscene.js** | 跨端视觉自动化（iOS/Android/HarmonyOS/桌面/Web） | 作为 Playwright locator 失败时的 fallback | MIT；字节 Web Infra |
-| **TestZeus Hercules** | Gherkin → E2E Agent；LangGraph planner / executor | ⚠️ **AGPL-3.0**：对闭源商业分发有网络服务源码披露义务；**法务评估后仅在完全隔离的独立服务中使用**，不深度合并 | AGPL-3.0 |
+| **TestZeus Hercules** | Gherkin → E2E Agent；LangGraph planner / executor | ⚠️ **硬门禁（batch-275 M-16）**：采用前必须经**法务书面评估**（AGPL-3.0 对闭源商业分发 / SaaS 网络服务源码披露义务）；评估不通过或 SaaS 化计划在 1 年内触发 → **直接从候选清单剔除，不走 PoC**。评估通过且仅在完全隔离的独立服务中使用时方可 PoC。 | AGPL-3.0 |
 | **ReportPortal** | 失败 ML Auto-Analysis（Product Bug / Automation Bug / System Issue） | 可选投影，非主平台事实源 | Apache 2.0；26.0.3+ 接 Agentic Results |
 | **Allure Report** | 多语言静态报告 | 可选导出 | Apache 2.0 |
 | **Wopee MCP** | SaaS crawl / 生成测试工件 | 仅做竞品验证；接受外部 SaaS + 数据出境 + 费用后再评估 | 需 UUID/Key |
@@ -1842,7 +1897,7 @@ oss_admission:
 | **Playwright MCP** | 登录 → 导航 → 检查前台赛事实体页 | 操作可审计；权限隔离；输出 A11y/DOM；不能访问未授权域名 |
 | **TesterArmy e2e** | 一个现有 CamelTv 业务流程混合 agent.act + expect | 固定版本可靠完成 + 重放；导出 trace/artifact 能被 Adapter 收集；不依赖云 SaaS 完成基础场景 |
 | **Keploy** | 捕获一个 Test5 API 依赖链 + 隔离一个不稳定第三方 API | 录制 + 隔离环境重放；DB/消息录制范围 + 脱敏通过；eBPF 部署限制已评估 |
-| **TestZeus Hercules** | Gherkin → E2E → 证据 | AGPL 影响评估通过，或完全隔离的独立服务中使用 |
+| **TestZeus Hercules** | Gherkin → E2E → 证据 | **先决条件（batch-275 M-16）**：法务书面评估完成且结论为"可采"。满足后 PoC 通过条件：AGPL 隔离部署方案成立 + 依赖安全 + Playwright 兼容 + 输出映射通过。**法务未通过前不启动 PoC**。 |
 
 **原则**：**不以 stars 为唯一标准**；以可运行性 / 最近维护 / 许可证 / 可观察性 / 可靠复现 / 适配成本为标准。
 
@@ -1974,7 +2029,7 @@ mcp://cameltv-aiqe/
 // POST /api/v1/aiqe/runs
 {
   "workflow_definition_id": "uuid",
-  "target_environment_id": "uuid",
+  "environment_id": "uuid",
   "execution_profile_id": "uuid",
   "build_ref": "test5-2026.11.09.3",
   "commit_sha": "40-hex-sha",
@@ -2415,7 +2470,7 @@ class EventCreate(BaseModel):
 class RunCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     workflow_definition_id: UUID
-    target_environment_id: UUID
+    environment_id: UUID
     execution_profile_id: UUID
     build_ref: str = Field(min_length=1, max_length=255)
     commit_sha: str | None = Field(default=None, min_length=7, max_length=64)
@@ -2686,6 +2741,40 @@ class RunContext:
 ## §21 Agent 评估基准集
 
 > 每个 Agent 必须跑过对应 benchmark 才能发布。评估集位于 `test-platform-v2/backend/app/aiqe/agents/evals/`。
+
+### 21.0 数据集准备（batch-275 D-9 补充 — **TA-001 并行子任务，不是 Agent 开工时才找**）
+
+**强制规则**：Agent 评估集的数据收集**在 batch-278 TA-001 代码审计阶段并行启动**，不能等 M3 开工才临时拼凑。否则 Agent 开发会卡在"schema 跑通但没真实样本"阶段。
+
+**A1 Requirement 的 30 份需求**：
+
+- 从 `app/models/requirement.py` 现有数据抽样 15 份（覆盖清晰/歧义/冲突/非功能各类）；
+- 从 `lanhu_evidence` 包抽 10 份（含原型）；
+- 从历史 batch PRD 抽 5 份（`test-platform-v2/work-logs/batch-*-prd-*.md`）。
+
+**A2 Test Design 的 50 份 PRD**：
+
+- 从 `app/models/test_case.py` + `test_case_version.py` 已采纳用例中抽样 50 份作为"PRD → case"对照；
+- 必须已有人工审核的 case 作为"黄金答案"。
+
+**A4 Triage 的 100 标注失败样本**：
+
+- 从 `app/models/defect.py` 历史真实缺陷 × 50 条（含修复 commit、分类标签）；
+- 从 batch-274 评审期间收集的 M-* + D-* 条目 × 20 条（documentation defect）；
+- 从 M4 Dogfood 7 类注入 + 对照实验 × 30 条（本 session 产生）。
+
+**A5 Impact 的 20 PR**：
+
+- 从 origin/main 近 100 PR 中挑 20 个带明确回归记录的（如 batch-240..273 的 PR）；
+- 必须已有"本 PR 应跑哪些用例"的人工标签。
+
+**数据集版本锁**：所有 benchmark 存 `test-platform-v2/backend/app/aiqe/agents/evals/<agent_key>/`，每份样本 YAML + schema_version + 来源 ref。
+
+**数据集准备进度**（每周在 kanban 跟踪）：
+
+- batch-278 结束时（W2）：A1 已 30/30，A2 已 25/50，A4 已 50/100；
+- M2 结束时（W7）：A1 已 30/30，A2 已 50/50，A4 已 100/100，A5 已 20/20；
+- M3 开工（W8）：100% 就绪。
 
 ### 21.1 A1 Requirement Assurance
 
