@@ -105,6 +105,8 @@ related:
 | P0-4 | `/uitest` 控制面内置浏览器（C263-1） | `services/ui_test_service.py` | 把 `playwright_executor` 的内置浏览器路径从控制面剥离，走 `cameltv-node`。**batch-277b-1 已落地代码侧**：新增 `uitest_execution_mode=node`（默认 `local`）→ `ExecutionJob(kind="ui")` 派发（`app/services/ui_job_dispatch.py` + `ui_test_run.execution_job_id`），节点侧新增 `run_spec_files` 执行 Playwright spec 并按 sha256 回传证据；**277b-2 待做**：真机节点验收 → 默认切 node → 控制面 Dockerfile 去 Chromium | 控制面镜像 `docker image inspect` 验证无 Chromium；`/uitest` 执行走 node；P0-4 evidence JSON |
 | P0-5 | `app/services/ai_gateway/` + 相关 models 残留清理（batch-275 M-5 扩写） | 11 号 §6 D2 已决策 | **batch-277 已执行（代码侧）**：删除 `app/services/ai_gateway/`（8 文件）+ `app/models/ai_job.py`（`AiAgent` 迁移为 `app/models/execution_node.py::ExecutionNode`，表 `ai_agents` 保留为节点注册表）+ `ai_shadow_run.py` + `ai_gateway_cache.py`；新增 migration `20261109_b277_drop_retired_tables`（`DROP TABLE IF EXISTS` + downgrade 可重建）；`ai_client` 直连、嵌入本地化；`docs/ai/local-ai-agent.md` 重写、`scripts/ai_agent/` 删除、ADR-0027/0028/0029 标 `superseded` | `rg "ai_gateway\|AiJob\|AiShadowRun\|AiGatewayCache" test-platform-v2/backend/{app,tests,scripts}` 命中 0（历史 migration 除外）；`alembic upgrade head → downgrade -1 → upgrade head` 退出码 0；3 个 ADR `status: superseded`；文档已重写 |
 
+> **2026-11-10 M1 状态**：batch-279（TA-005 Run 模型 + 状态机）已开发完成，四表迁移 + 37 单测 + 全量 1376 passed，待合入；后续 batch-280/281/282 依次进行。
+
 > **2026-11-09 batch-277 状态（已完成）**：P0-1..5 全部 pass。P0-1 生产 3 条 provider 换新 Key，平台 `ai_client` 真实调用返回 OK；P0-2 备份演练 + DROP 守卫（downgrade 可执行）；P0-3 磁盘 87%→77%（用户豁免 48h，cron 每小时记录）；P0-4 控制面镜像无 Chromium，生产 `/uitest` 由节点执行（run 481，1/1 pass）；P0-5 ai_gateway 容器已停止删除、代码零残留。生产 2026-11-09 23:49 完成 104 表 DROP 迁移（alembic head `20261110_b277b_ui_run_exec_job`，public 表 94），部署前备份 `pre-deploy-20261109-233841.dump`。
 
 **门禁**：上述 5 条全部拿到真实证据并入 PR 之前，`§19 Phase 1` 的 CI 守卫（`scripts/ci/check-p0-ready.ps1`，TA-001.5 产出）直接 fail-closed。
@@ -509,6 +511,13 @@ ProjectAdapter (多项目支持)
 | diff_json | JSON | nullable |
 | evidence_refs_json | JSON | Artifact IDs / Event seq |
 | evaluated_by | enum | `deterministic / ai_assisted / human` |
+
+> **batch-279（TA-005）落地决策**：
+> - **D-279-1**：既有 `assertion_results` 属 AITDE `execution_runtime`（7654 行、INT id、schema 不同），新表命名 **`run_assertion_results`**，避免同名冲突；
+> - **D-279-2**：`test_runs.scenario_id` 按现有 `test_scenarios.id`（INT）使用 **BIGINT 外键**，与本文件字段表的 UUID 假设不同（遵循“旧表外键 BIGINT”规则）；
+> - **D-279-3**：初始迁移 `Base.metadata.create_all` 会在新库预建全量表，迁移检测到 M1 schema 已存在时跳过；
+> - **D-279-5**：`workflow_definition_id / execution_profile_id` 在 M2 建表前不建 FK。
+> 详见 `work-logs/batch-279-design.md`。
 
 ### 4.11 `run_events` + `event_outbox`
 
