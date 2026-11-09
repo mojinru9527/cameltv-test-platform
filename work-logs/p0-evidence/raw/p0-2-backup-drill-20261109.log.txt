@@ -1,0 +1,30 @@
+=== P0-2 backup drill 20261109-221328 user=cameltv db=cameltv_production ===
+--- db size ---
+681 MB
+--- dump ---
+pg_dump rc=0
+-rw-r--r-- 1 root root 168M Nov  9 22:13 /root/backups/cameltv_production-20261109-221328.dump
+8f100def15b06cb7e53e4a2a1e35ff90bba065005c19bfd4afd2c43871f962ee  /root/backups/cameltv_production-20261109-221328.dump
+--- create scratch cameltv_production_restore_drill_20261109_221328 ---
+CREATE DATABASE
+--- restore ---
+pg_restore rc=0
+table | prod | restored
+sys_user | 14 | 14
+test_case | 15099 | 15099
+test_plan | 18 | 18
+defect | 80 | 80
+execution_jobs | 0 | 0
+ui_test_run | 479 | 479
+ai_provider | 3 | 3
+model_usage_ledger | 0 | 0
+version_task | 6 | 6
+lanhu_evidence_job | 5 | 5
+--- alembic current (prod) ---
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+20260927_ai_guard_and_job_attempts (head)
+--- drop scratch ---
+DROP DATABASE
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda2        40G   26G   12G  69% /
+LOG=/root/p0-2-backup-drill-20261109-221328.log
