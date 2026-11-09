@@ -1,0 +1,35 @@
+{
+  "id": "P0-4",
+  "status": "pass",
+  "checked_at": "2026-11-09T23:20:49+08:00",
+  "summary": "控制面镜像 cameltv-tp-backend:b277b4 构建成功且无 Chromium；/uitest 由 cameltv-node 本地端到端执行（run done / 1-1 pass / 证据上传）",
+  "evidence": [
+    {
+      "type": "image",
+      "ref": "cameltv-tp-backend:b277b4",
+      "id": "sha256:de4d963bf7eeb939a3f91160d4375e8586aa9192ac4a2cfc42a7ac1843e9748c",
+      "size_bytes": 811859174
+    },
+    {
+      "type": "env",
+      "CONTROL_PLANE_BROWSER_ENABLED": "false",
+      "UITEST_EXECUTION_MODE": "node",
+      "PLAYWRIGHT_BROWSERS_PATH": "absent"
+    },
+    {
+      "type": "no_browser",
+      "command": "find / -maxdepth 6 \\( -iname '*chromium*' -o -iname 'chrome' -o -iname 'headless_shell' \\)",
+      "result": "no output"
+    },
+    {
+      "type": "dockerfile",
+      "playwright_install": "absent"
+    },
+    {
+      "type": "node_e2e",
+      "ref": "work-logs/p0-evidence/P0-4-local-e2e.md",
+      "result": "ExecutionJob(kind=ui) -> node --once -> 1/1 pass -> UiTestRun.status=done"
+    }
+  ],
+  "notes": "本地 Docker Desktop 构建（host proxy 127.0.0.1:7688）；生产部署后需用同一 Dockerfile 重建并复核 digest。另：main 缺 test-platform-v2/deploy/aitde-runtime/scripts/start-worker.sh（Dockerfile 引用），本次构建从 AITDE 工作分支临时补入，属既有缺口，已登记待修。"
+}

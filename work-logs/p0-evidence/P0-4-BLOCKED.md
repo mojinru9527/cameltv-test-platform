@@ -1,6 +1,6 @@
 # P0-4 阻塞分析：控制面浏览器不止 `/uitest`，且生产有未执行的可逆性缺口
 
-> 状态：**PARTIAL**（277b-1 契约/执行器已合入；277b-2 未闭环）
+> 状态：**SUPERSEDED**（后续批次已闭环：P0-4-control-plane-no-browser.json + P0-4-image-verify.md；本文件保留为过程分析）
 > 日期：2026-11-09
 
 ## 1. 已完成
