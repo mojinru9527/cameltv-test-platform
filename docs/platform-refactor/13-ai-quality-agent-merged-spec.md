@@ -105,7 +105,7 @@ related:
 | P0-4 | `/uitest` 控制面内置浏览器（C263-1） | `services/ui_test_service.py` | 把 `playwright_executor` 的内置浏览器路径从控制面剥离，走 `cameltv-node`。**batch-277b-1 已落地代码侧**：新增 `uitest_execution_mode=node`（默认 `local`）→ `ExecutionJob(kind="ui")` 派发（`app/services/ui_job_dispatch.py` + `ui_test_run.execution_job_id`），节点侧新增 `run_spec_files` 执行 Playwright spec 并按 sha256 回传证据；**277b-2 待做**：真机节点验收 → 默认切 node → 控制面 Dockerfile 去 Chromium | 控制面镜像 `docker image inspect` 验证无 Chromium；`/uitest` 执行走 node；P0-4 evidence JSON |
 | P0-5 | `app/services/ai_gateway/` + 相关 models 残留清理（batch-275 M-5 扩写） | 11 号 §6 D2 已决策 | **batch-277 已执行（代码侧）**：删除 `app/services/ai_gateway/`（8 文件）+ `app/models/ai_job.py`（`AiAgent` 迁移为 `app/models/execution_node.py::ExecutionNode`，表 `ai_agents` 保留为节点注册表）+ `ai_shadow_run.py` + `ai_gateway_cache.py`；新增 migration `20261109_b277_drop_retired_tables`（`DROP TABLE IF EXISTS` + downgrade 可重建）；`ai_client` 直连、嵌入本地化；`docs/ai/local-ai-agent.md` 重写、`scripts/ai_agent/` 删除、ADR-0027/0028/0029 标 `superseded` | `rg "ai_gateway\|AiJob\|AiShadowRun\|AiGatewayCache" test-platform-v2/backend/{app,tests,scripts}` 命中 0（历史 migration 除外）；`alembic upgrade head → downgrade -1 → upgrade head` 退出码 0；3 个 ADR `status: superseded`；文档已重写 |
 
-> **2026-11-10 M1 状态**：batch-279（TA-005 Run 模型 + 状态机）与 batch-280（TA-006 Event/Outbox）已开发完成，四表 + 事件/Outbox 迁移 + 47 单测 + 全量 1386 passed；后续 batch-281/282 依次进行。
+> **2026-11-10 M1 状态**：batch-279（TA-005）、batch-280（TA-006）与 batch-281（TA-007 Artifact）已开发完成，四表 + 事件/Outbox + Artifact 迁移 + 53 单测 + 全量 1392 passed；batch-282（Console）进行中。
 
 > **2026-11-09 batch-277 状态（已完成）**：P0-1..5 全部 pass。P0-1 生产 3 条 provider 换新 Key，平台 `ai_client` 真实调用返回 OK；P0-2 备份演练 + DROP 守卫（downgrade 可执行）；P0-3 磁盘 87%→77%（用户豁免 48h，cron 每小时记录）；P0-4 控制面镜像无 Chromium，生产 `/uitest` 由节点执行（run 481，1/1 pass）；P0-5 ai_gateway 容器已停止删除、代码零残留。生产 2026-11-09 23:49 完成 104 表 DROP 迁移（alembic head `20261110_b277b_ui_run_exec_job`，public 表 94），部署前备份 `pre-deploy-20261109-233841.dump`。
 
@@ -597,6 +597,14 @@ ProjectAdapter (多项目支持)
 - **两者互不迁移**：不把蓝湖证据复制进 `run_artifacts`，也不把 Run 证据写进 `lanhu_evidence`；各自保留原始表结构与权限（均按 `project_id` RBAC）；
 - 需要跨源引用时，在 `run_artifacts.linked_evidence_type + linked_evidence_id` 落引用（不复制文件），Evidence 聚合查询按 `linked_evidence_type` 做并集；
 - TA-007 验收必须覆盖"一条 Run 的 Artifact 列表 + 它引用的蓝湖证据"能在同一 EvidenceBundle 视图中出现且权限一致。
+
+> **batch-281（TA-007）落地决策**：
+> - **D-281-1**：`storage_uri = file://<root>/<sha256[:2]>/<sha256[2:4]>/<sha256>`，内容寻址天然去重；
+> - **D-281-2**：`settings.storage_dir` 未声明，用 `getattr(...,"storage")` 回退；
+> - **D-281-3**：`redaction_status` 只允许 pending → sanitized / rejected；
+> - **D-281-4**：生产 COS/MinIO 后端等 TA-007 PoC 选型，业务只依赖 `ArtifactStorageBackend`；
+> - **D-281-5**：HTTP 上传/下载端点推迟到 batch-282 与 Console 联调。
+> 详见 `work-logs/batch-281-design.md`。
 
 ### 4.13 `execution_profiles`
 
