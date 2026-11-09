@@ -1,0 +1,60 @@
+=== P0-3 disk cleanup start 2026-11-09T22:12:52+08:00 ===
+--- before ---
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda2        40G   33G  5.1G  87% /
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          18        7         15.95GB   8.074GB (50%)
+Containers      11        8         663.4MB   20.48kB (0%)
+Local Volumes   5         5         1.171GB   0B (0%)
+Build Cache     27        27        3.769GB   0B
+--- remove old release images (keep :main + running images) ---
+Untagged: cameltv-tp-backend:release-20260919-0001
+Deleted: sha256:ed0306852e502f186e5ff22f011c8fcd1aa2d83df582e6de87b23499a727a0d5
+Untagged: cameltv-tp-frontend:release-20260919-0001
+Deleted: sha256:9cb36f6793462c134851f9b1a67cad244e0c889ed67dca0afb41d3dae407a26c
+Untagged: cameltv-tp-ai-gateway:release-20260919-0001
+Deleted: sha256:4cf7f6014fddc75487f73affd9c815f3702195c71f135bbb7f7180b73e6615e4
+Untagged: cameltv-tp-runner:release-20260919-0001
+Deleted: sha256:0db05684c2bbc704cf77c25371e0872751582f326305ad7615d3ef4833041246
+Untagged: cameltv-tp-backend:release-20260924-0001
+Deleted: sha256:748549a5dbe2a827f2e24785dfccf113cd4c809f481539395c11d736a14f70e9
+Untagged: cameltv-tp-frontend:release-20260924-0001
+Deleted: sha256:64dc15ae3f52d295c8080722916331a5661b294f42e25694908881380f755d83
+Untagged: cameltv-tp-ai-gateway:release-20260924-0001
+Deleted: sha256:5ce9c573541abd8e4e34a5325fa0cbfb98d0c9e10cfc62e344eedd5f2ff4764f
+Untagged: cameltv-tp-runner:release-20260924-0001
+Deleted: sha256:b12d389f8b7a0618502e53a7c3ab0fc53bd277a91c556e14dcae247cf3af6712
+Untagged: cameltv-tp-backend:release-20261007-0001
+Untagged: cameltv-tp-frontend:release-20261007-0001
+Untagged: cameltv-tp-ai-gateway:release-20261007-0001
+Untagged: cameltv-tp-runner:release-20261007-0001
+--- builder prune ---
+Total:	0B
+--- journal vacuum to 100M ---
+Vacuuming done, freed 0B of archived journals from /run/log/journal.
+Vacuuming done, freed 0B of archived journals from /var/log/journal.
+Deleted archived journal /var/log/journal/fd410411419d40079742fdbc36dec028/system@ad1a48b9a4da4a62b004e8cfaec12e06-00000000000a695f-00065b4c2e49827c.journal (40.8M).
+Deleted archived journal /var/log/journal/fd410411419d40079742fdbc36dec028/system@ad1a48b9a4da4a62b004e8cfaec12e06-00000000000b56a3-00065b91e863735d.journal (42.0M).
+Deleted archived journal /var/log/journal/fd410411419d40079742fdbc36dec028/system@ad1a48b9a4da4a62b004e8cfaec12e06-00000000000c3d26-00065bbf22499bdc.journal (40.7M).
+Deleted archived journal /var/log/journal/fd410411419d40079742fdbc36dec028/system@ad1a48b9a4da4a62b004e8cfaec12e06-00000000000d1838-00065bf0c0de1c80.journal (40.5M).
+Deleted archived journal /var/log/journal/fd410411419d40079742fdbc36dec028/system@ad1a48b9a4da4a62b004e8cfaec12e06-00000000000df5c3-00065c2d901abd64.journal (38.2M).
+Deleted archived journal /var/log/journal/fd410411419d40079742fdbc36dec028/system@ad1a48b9a4da4a62b004e8cfaec12e06-00000000000ec697-00065c6f944929d1.journal (40.0M).
+Deleted archived journal /var/log/journal/fd410411419d40079742fdbc36dec028/system@ad1a48b9a4da4a62b004e8cfaec12e06-00000000000f9d7a-00065ca317550538.journal (40.0M).
+Deleted archived journal /var/log/journal/fd410411419d40079742fdbc36dec028/system@ad1a48b9a4da4a62b004e8cfaec12e06-000000000010896f-00065cf9cd558ee0.journal (41.4M).
+Deleted archived journal /var/log/journal/fd410411419d40079742fdbc36dec028/system@ad1a48b9a4da4a62b004e8cfaec12e06-0000000000117da0-00065d5a116a63f1.journal (41.6M).
+Deleted archived journal /var/log/journal/fd410411419d40079742fdbc36dec028/system@ad1a48b9a4da4a62b004e8cfaec12e06-0000000000127a7e-00065daec0d6190c.journal (40.8M).
+Deleted archived journal /var/log/journal/fd410411419d40079742fdbc36dec028/system@ad1a48b9a4da4a62b004e8cfaec12e06-0000000000136b63-00065dfa02a6f6fb.journal (42.0M).
+Deleted archived journal /var/log/journal/fd410411419d40079742fdbc36dec028/system@ad1a48b9a4da4a62b004e8cfaec12e06-0000000000146a0a-00065e4b339d613d.journal (41.4M).
+Deleted archived journal /var/log/journal/fd410411419d40079742fdbc36dec028/system@ad1a48b9a4da4a62b004e8cfaec12e06-0000000000155fbc-00065e8ef81b78ee.journal (41.5M).
+Deleted archived journal /var/log/journal/fd410411419d40079742fdbc36dec028/system@ad1a48b9a4da4a62b004e8cfaec12e06-0000000000165541-00065ed57275a9b1.journal (41.2M).
+Vacuuming done, freed 572.9M of archived journals from /var/log/journal/fd410411419d40079742fdbc36dec028.
+--- after ---
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda2        40G   25G   13G  67% /
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          10        7         8.476GB   597.3MB (7%)
+Containers      11        8         663.4MB   20.48kB (0%)
+Local Volumes   5         5         1.171GB   0B (0%)
+Build Cache     27        27        3.769GB   0B
+=== P0-3 cleanup done 2026-11-09T22:13:10+08:00 ===
+LOG=/root/p0-3-cleanup-20261109-221252.log

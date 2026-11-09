@@ -1,0 +1,40 @@
+{
+  "id": "P0-2",
+  "status": "pass",
+  "checked_at": "2026-11-09T22:13:28+08:00",
+  "summary": "生产 cameltv_production 全量 pg_dump（168MB，sha256 8f100def…）+ 恢复到 scratch DB，10 张抽样表行数完全一致，scratch 已删除",
+  "evidence": [
+    {
+      "type": "log",
+      "ref": "work-raw/p0-evidence/raw/p0-2-backup-drill-20261109.log.txt"
+    },
+    {
+      "type": "dump",
+      "ref": "server:/root/backups/cameltv_production-20261109-221328.dump",
+      "sha256": "8f100def15b06cb7e53e4a2a1e35ff90bba065005c19bfd4afd2c43871f962ee",
+      "size": "168M"
+    },
+    {
+      "type": "restore",
+      "result": "pg_restore rc=0; scratch DB created/restored/dropped"
+    },
+    {
+      "type": "row_counts",
+      "sample": {
+        "sys_user": "14/14",
+        "test_case": "15099/15099",
+        "test_plan": "18/18",
+        "defect": "80/80",
+        "ui_test_run": "479/479",
+        "ai_provider": "3/3",
+        "version_task": "6/6",
+        "lanhu_evidence_job": "5/5"
+      }
+    },
+    {
+      "type": "alembic",
+      "prod_current": "20260927_ai_guard_and_job_attempts"
+    }
+  ],
+  "notes": "生产尚未执行 20261007 简化批次 DROP（104 张表）。部署当前 main 会触发该不可逆迁移，必须先由用户确认并在窗口内执行；备份已就绪。"
+}
