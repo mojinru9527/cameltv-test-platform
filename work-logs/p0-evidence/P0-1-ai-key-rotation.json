@@ -1,0 +1,29 @@
+{
+  "id": "P0-1",
+  "status": "pass",
+  "checked_at": "2026-11-09T23:53:00+08:00",
+  "summary": "生产 3 条 ai_provider 全部替换为新 Key 并启用；通过平台 ai_client 真实调用 DeepSeek 返回 OK；AI_API_KEY 已写入 production.env 并注入 backend 容器",
+  "evidence": [
+    {
+      "type": "provider_update",
+      "count": 3,
+      "note": "用户仅提供 1 把新 Key，复用到 3 条 DeepSeek provider；后续可再拆成 4 把独立 Key"
+    },
+    {
+      "type": "real_call",
+      "via": "app.services.ai_client.chat_completions",
+      "project_id": 1,
+      "result": "OK"
+    },
+    {
+      "type": "env",
+      "AI_API_KEY": "set（36 bytes 含换行）"
+    },
+    {
+      "type": "runtime",
+      "image": "sha256:23c02e8894f766cb7ca3f6229686cb9ae84931da1fa28ae40c2fcd460403b2ab",
+      "health": "200"
+    }
+  ],
+  "notes": "旧 4 把 Key 均 401；新 Key 单把复用。model_usage_ledger 在直连 ai_client 路径不记账（由上层 ai_guard/服务写入）。"
+}

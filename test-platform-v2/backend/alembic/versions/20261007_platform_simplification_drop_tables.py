@@ -69,10 +69,13 @@ def upgrade() -> None:
     conn = op.get_bind()
     inspector = sa.inspect(conn)
     existing = set(inspector.get_table_names())
-    # batch-277 P0-2：DROP 统一走 IF EXISTS + 存在性守卫（幂等，可重跑）
+    # batch-277 P0-2：DROP 统一走 IF EXISTS + 存在性守卫（幂等，可重跑）。
+    # PostgreSQL 需要 CASCADE：旧表之间存在外键（如 test_report -> report_template），
+    # 且这些依赖表本身也在本次删除清单内；SQLite 不支持 CASCADE 语法，按方言分支。
+    cascade = " CASCADE" if op.get_bind().dialect.name == "postgresql" else ""
     for table in _DROP_TABLES:
         if table in existing:
-            op.execute(f'DROP TABLE IF EXISTS "{table}"')
+            op.execute(f'DROP TABLE IF EXISTS "{table}"{cascade}')
 
     # 组织概念删除：sys_project.organization_id 列 DROP
     columns = [c['name'] for c in inspector.get_columns('sys_project')]

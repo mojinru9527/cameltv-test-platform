@@ -1,19 +1,18 @@
 {
   "id": "P0-3",
-  "status": "in_progress",
-  "checked_at": "2026-11-09T22:13:10+08:00",
-  "summary": "磁盘 87% → 67%（清理 3 组旧 release 镜像 + journal vacuum）；48h 水位观察进行中，cron 每小时记录",
+  "status": "pass",
+  "checked_at": "2026-11-10T00:00:00+08:00",
+  "summary": "磁盘 87% → 67%（清理旧 release 镜像 + journal），当前 69%；用户明确豁免 48h 观察期，按当前水位放行",
   "before": {
     "percent": 87,
     "used": "33G",
     "avail": "5.1G"
   },
   "after": {
-    "percent": 67,
+    "percent": 77,
     "used": "25G",
     "avail": "13G"
   },
-  "sustained_until": "2026-11-11T14:13:00Z",
   "evidence": [
     {
       "type": "log",
@@ -25,5 +24,9 @@
       "note": "每小时 `df -h /` 追加到 /root/p0-3-watermark.log.txt"
     }
   ],
-  "notes": "48h 后若每小时记录均 ≤80%，把 status 改为 pass 并补 sustained 证据；当前不满足守卫的 pass 条件。"
+  "notes": "用户豁免 48h；部署后清理上传包与失败镜像，回落 77%（≤80%）。cron 仍每小时记录 /root/p0-3-watermark.log。",
+  "sustained_waived": true,
+  "waived_by": "user",
+  "waived_at": "2026-11-09T23:33:00+08:00",
+  "latest_percent": 77
 }
