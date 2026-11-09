@@ -1,12 +1,12 @@
 """Batch 258 / B1-4 — 本地执行节点任务协议（ExecutionJob）。
 
-与 `AiJob` **并列、不合并**（09-platform-landing-plan.md §3.2）：`AiJob` 承载「本地 AI 推理」，
+与已删除的旧 AI 任务表**不合并**（09-platform-landing-plan.md §3.2）：旧表承载「本地 AI 推理」，
 `ExecutionJob` 承载「本地测试执行」（接口 httpx / Web Playwright）。控制面只做
 登记 · 调度 · 聚合证据，不执行（ADR-0026 §3.1 职责边界）。
 
 租约字段**内联在本表**（`node_id` / `claimed_at` / `lease_expires_at` / `heartbeat_at`），
-沿用 `AiJob` 的 claim/heartbeat/stale 语义；不另建 `job_leases` 表——同一份租约两处记账
-是双栈漂移的经典来源，而 `AiJob` 的先例也是内联。
+沿用 claim/heartbeat/stale 语义；不另建 `job_leases` 表——同一份租约两处记账
+是双栈漂移的经典来源，内联是既有先例。
 """
 from __future__ import annotations
 

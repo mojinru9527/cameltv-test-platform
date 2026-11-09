@@ -103,7 +103,9 @@ related:
 | P0-2 | 简化批次将 DROP 104 张表（不可逆） | 11 号 §2 | ① 跑一次完整备份恢复演练（复用 batch-262 脚本）；② 所有 DROP 迁移改用 `op.execute("DROP TABLE IF EXISTS ...")` 带存在性守卫；③ `alembic downgrade -1` 必须可逆 | 备份→恢复→抽行一致；`alembic upgrade head && alembic downgrade -1 && alembic upgrade head` 可执行 |
 | P0-3 | 生产磁盘 96% | 11 号 §5 | 清理冷数据 + 扩盘；盘水位告警确认已送达 | 水位 ≤ 80% 维持 48 小时；告警平台收条 |
 | P0-4 | `/uitest` 控制面内置浏览器（C263-1） | `services/ui_test_service.py` | 把 `playwright_executor` 的内置浏览器路径从控制面剥离，走 `cameltv-node` | 控制面镜像 `docker image inspect` 验证无 Chromium；`/uitest` 执行走 node |
-| P0-5 | `app/services/ai_gateway/` + 相关 models 残留清理（batch-275 M-5 扩写） | 11 号 §6 D2 已决策 | 删除 `app/services/ai_gateway/` 目录 + `app/models/ai_job.py` + `app/models/ai_shadow_run.py` + `app/models/ai_gateway_cache.py` + 对应 Alembic 迁移（downgrade 再 drop）；`ai_client` 直连；更新 `docs/ai/local-ai-agent.md` 与 `scripts/ai_agent/README.md` 去掉"平台零推理"口径；ADR-0027/0028/0029 标 `superseded by 11 号方案 + batch-275/277 P0 清理` | `rg "ai_gateway\|AiJob\|AiShadowRun\|AiGatewayCache"` 命中 0；Alembic revision 已 downgrade 并删除；3 个 ADR 状态更新；文档口径更新 |
+| P0-5 | `app/services/ai_gateway/` + 相关 models 残留清理（batch-275 M-5 扩写） | 11 号 §6 D2 已决策 | **batch-277 已执行（代码侧）**：删除 `app/services/ai_gateway/`（8 文件）+ `app/models/ai_job.py`（`AiAgent` 迁移为 `app/models/execution_node.py::ExecutionNode`，表 `ai_agents` 保留为节点注册表）+ `ai_shadow_run.py` + `ai_gateway_cache.py`；新增 migration `20261109_b277_drop_retired_tables`（`DROP TABLE IF EXISTS` + downgrade 可重建）；`ai_client` 直连、嵌入本地化；`docs/ai/local-ai-agent.md` 重写、`scripts/ai_agent/` 删除、ADR-0027/0028/0029 标 `superseded` | `rg "ai_gateway\|AiJob\|AiShadowRun\|AiGatewayCache" test-platform-v2/backend/{app,tests,scripts}` 命中 0（历史 migration 除外）；`alembic upgrade head → downgrade -1 → upgrade head` 退出码 0；3 个 ADR `status: superseded`；文档已重写 |
+
+> **2026-11-09 batch-277 状态**：P0-5 代码侧完成（见本行证据）；P0-2 的 DROP 守卫 + downgrade 已完成代码侧（备份恢复演练待运维执行）；P0-4 待 `/uitest` 剥离；P0-1 / P0-3 待生产操作（Key 轮换 / 磁盘清理）。
 
 **门禁**：上述 5 条全部拿到真实证据并入 PR 之前，`§19 Phase 1` 的 CI 守卫（`scripts/ci/check-p0-ready.ps1`，TA-001.5 产出）直接 fail-closed。
 

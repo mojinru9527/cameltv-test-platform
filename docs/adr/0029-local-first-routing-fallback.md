@@ -2,13 +2,15 @@
 title: "ADR-0029: 本地优先路由与云端失败兜底"
 owner: "tech-lead"
 last_reviewed: "2026-09-13"
-status: "active"
+status: "superseded"
 expires: "2027-09-13"
 tags: ["adr", "ai", "routing", "fallback", "local-first"]
 related: ["0027-ai-local-first-gateway.md", "0028-local-ai-runtime-shadow-mode.md"]
 ---
 
 # ADR-0029: 本地优先路由与云端失败兜底
+
+> **superseded（2026-11-09，batch-277 P0-5）**：ai-gateway / 本地 runtime / Shadow / 本地优先路由兜底已随平台简化批次删除；LLM 由控制面**直连项目级 provider**（见 `docs/aiqe/baseline.md` C-06 与 13 号 §0 P0-5）。本 ADR 仅作历史决策记录。
 
 ## 状态
 

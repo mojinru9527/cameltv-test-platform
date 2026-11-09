@@ -2,19 +2,14 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.schemas.common import R
 from app.services.ai_config_service import ai_config_service
-from app.services.ai_gateway.cache import clear_exact_cache, exact_cache_stats
-from app.services.ai_gateway.policy import evaluate_shadow_policy
-from app.services.ai_gateway.runtime import check_local_runtime, runtime_status
-from app.services.ai_gateway.shadow import list_shadow_runs
 
 router = APIRouter(prefix="/ai-config", tags=["AI 配置"])
 
@@ -129,86 +124,14 @@ def resolve_config(
     return R.ok(ai_config_service.resolve_out(db, current.project_id or 0))
 
 
-@router.get(
-    "/runtime",
-    response_model=R[dict],
-    summary="本地 AI Runtime 状态",
-)
-def local_runtime_status(
-    current: CurrentUser = Depends(require_permission("ai_config:view")),
-):
-    return R.ok(runtime_status())
 
 
-@router.post(
-    "/runtime/health-check",
-    response_model=R[dict],
-    summary="探测本地 AI Runtime",
-)
-def local_runtime_health(
-    current: CurrentUser = Depends(require_permission("ai_config:manage")),
-):
-    return R.ok(check_local_runtime())
 
 
-@router.get(
-    "/shadow-policy",
-    response_model=R[dict],
-    summary="基于 Shadow 证据的路由建议",
-)
-def shadow_policy(
-    namespace: str | None = Query(default=None, max_length=128),
-    min_samples: int = Query(default=20, ge=1, le=500),
-    current: CurrentUser = Depends(require_permission("ai_config:view")),
-    db: Session = Depends(get_db),
-):
-    return R.ok(
-        evaluate_shadow_policy(
-            db,
-            current.project_id or 0,
-            namespace=namespace,
-            min_samples=min_samples,
-        )
-    )
 
 
-@router.get(
-    "/shadow-runs",
-    response_model=R[dict],
-    summary="本地模型 Shadow 对比记录",
-)
-def shadow_runs(
-    limit: int = Query(default=50, ge=1, le=200),
-    current: CurrentUser = Depends(require_permission("ai_config:view")),
-    db: Session = Depends(get_db),
-):
-    return R.ok({"items": list_shadow_runs(db, current.project_id or 0, limit=limit)})
 
 
-@router.get(
-    "/cache-stats",
-    response_model=R[dict],
-    summary="当前项目 AI 精确缓存统计",
-)
-def cache_stats(
-    current: CurrentUser = Depends(require_permission("ai_config:view")),
-    db: Session = Depends(get_db),
-):
-    stats = exact_cache_stats(db, current.project_id or 0)
-    stats["project_id"] = current.project_id or 0
-    stats["ttl_seconds"] = max(0, int(settings.ai_exact_cache_ttl_seconds))
-    return R.ok(stats)
 
 
-@router.delete(
-    "/cache",
-    response_model=R[dict],
-    summary="清理当前项目 AI 精确缓存",
-)
-def clear_cache(
-    namespace: str | None = Query(default=None, max_length=128),
-    current: CurrentUser = Depends(require_permission("ai_config:manage")),
-    db: Session = Depends(get_db),
-):
-    deleted = clear_exact_cache(db, current.project_id or 0, namespace=namespace)
-    return R.ok({"deleted": deleted, "namespace": namespace or ""})
+

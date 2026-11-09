@@ -173,16 +173,7 @@ class Settings(BaseSettings):
     ai_max_tokens: int = 16384                 # requested maximum output per sub-call
     ai_temperature: float = 0.3
     ai_split_calls: bool = True                # split generation into functional + API parallel calls to avoid truncation
-    # Phase 1 exact-response cache: opt-in only; namespace + model/prompt/input/params form the key.
-    ai_exact_cache_enabled: bool = False
-    ai_exact_cache_ttl_seconds: int = 86400
 
-    # ── Phase 2: 独立本地 OpenAI-compatible Runtime + Shadow Mode ──
-    ai_local_runtime_enabled: bool = False
-    ai_gateway_url: str = ""
-    ai_gateway_token: str = ""
-    ai_gateway_role: str = "embedded"  # embedded | remote | gateway
-    ai_runtime_mode: str = "cloud_only"  # cloud_only | shadow | local_preferred | local_only
     # ── P1-6：平台级 AI 配额闸门（app/services/ai_guard.py）──
     # 此前平台对 LLM 调用既无速率限制也无 token 预算，任何一条自动链路失控都会
     # 无限燃烧密钥；以下三项是平台级兜底（按项目维度统计 model_usage_ledger）。
@@ -194,14 +185,6 @@ class Settings(BaseSettings):
     # 60/分钟仍能拦住失控循环，真正的花费上限是下面 24h token 预算。
     ai_rate_limit_per_minute: int = 60
     ai_daily_token_budget: int = 2000000        # 每项目 24 小时 token 预算（input_units + output_units）
-    ai_local_fallback_to_cloud: bool = True
-    ai_local_base_url: str = "http://127.0.0.1:11434/v1"
-    ai_local_api_key: str = ""
-    ai_local_model: str = ""
-    ai_shadow_enabled: bool = False
-    ai_shadow_sample_rate: float = 0.0
-    ai_shadow_timeout_seconds: float = 60.0
-    ai_shadow_max_output_chars: int = 200000
 
     # ── 存储保留期清理（生产磁盘防护）──
     # 生产卷曾被 ui-runs 等累积写满；按 mtime 清理超期旧产物。
@@ -340,20 +323,6 @@ class Settings(BaseSettings):
             return key
         return ""
 
-    @property
-    def ai_gateway_delegated(self) -> bool:
-        """本进程是否把 LLM 调用委派给独立 ai-gateway。
-
-        P0-4 凭据最小化后，`AI_GATEWAY_ROLE=remote` 的进程**不再持有**明文
-        `AI_API_KEY`；判断「AI 是否可用」必须看委派链路是否配置完整，
-        而不是看本地是否存有 Key（否则会误报「AI 功能将不可用」）。
-        """
-        return bool(
-            self.ai_gateway_url
-            and self.ai_gateway_token
-            and self.ai_gateway_role != "gateway"
-        )
-
     def validate_security(self) -> list[str]:
         """Return a list of security misconfigurations; empty list = ok."""
         issues: list[str] = []
@@ -365,15 +334,9 @@ class Settings(BaseSettings):
                 issues.append("ADMIN_PASSWORD 未设置或仍为默认值，请设置强密码")
             if self.seed_demo_users and not self.tester_password:
                 issues.append("TESTER_PASSWORD 未设置，请为种子测试用户设置强密码")
-            # P0-4 凭据最小化：remote 角色的进程不再持有明文 AI_API_KEY，
-            # LLM 调用经 AI_GATEWAY_URL 委派给 ai-gateway。只有真正自己做推理的
-            # 进程（embedded / gateway 角色）才要求本地 Key，否则会误报。
-            if (
-                self.ai_enabled
-                and not self.ai_api_key
-                and not self.ai_gateway_delegated
-                and self.ai_gateway_role != "gateway"
-            ):
+            # batch-277 P0-5：ai-gateway 已删除，LLM 由控制面直连 provider，
+            # 因此生产进程必须持有自己的 Key（不再有 remote 委派豁免）。
+            if self.ai_enabled and not self.ai_api_key:
                 issues.append("AI_API_KEY 未设置，AI 功能将不可用")
             if not self.cookie_secure:
                 issues.append("生产环境 cookie_secure 必须为 True（需要 HTTPS），否则 httpOnly cookie 以明文传输")

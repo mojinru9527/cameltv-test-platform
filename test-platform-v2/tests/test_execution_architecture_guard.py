@@ -138,5 +138,6 @@ def test_local_agent_control_plane_has_no_platform_llm_calls() -> None:
         "backend/app/services/ai_job_dispatch.py",
     ):
         source = (ROOT / rel).read_text(encoding="utf-8")
-        for token in ("ai_service", "AiProvider", "default_model", "ai_gateway"):
+        for token in ("ai_service", "AiProvider", "default_model"):
             assert token not in source, f"{rel} must not reference {token}"
+
