@@ -113,7 +113,7 @@ RUN apt-get update \
 # 仅保留 npm 锁定的 @playwright/test 包（不含浏览器），供节点侧 spec 依赖解析。
 COPY test-platform-v2/backend/tests/playwright/package*.json ./tests/playwright/
 RUN --mount=type=cache,target=/root/.npm \
-    && cd /app/tests/playwright \
+    cd /app/tests/playwright \
     && npm ci --ignore-scripts \
     && npm cache clean --force \
     && rm -rf /var/lib/apt/lists/*
