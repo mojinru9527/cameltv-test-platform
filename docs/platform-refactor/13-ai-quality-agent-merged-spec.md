@@ -4,7 +4,7 @@ owner: "qa-team"
 created: "2026-11-09"
 last_reviewed: "2026-11-09"
 status: "active"
-version: "v1.2-p1-fixed"
+version: "v1.3-baseline-aligned"
 tags: ["platform-refactor", "ai-agent", "engineering-spec", "developer-ready"]
 related:
   - "docs/platform-refactor/09-platform-landing-plan.md"
@@ -13,6 +13,7 @@ related:
   - "work-logs/platform-simplification-production-eval-20261007.md"
   - "docs/standards/test-asset-map-standard.md"
   - "tests/test-case-standards/interaction-testing/interaction-methodology.md"
+  - "docs/aiqe/baseline.md"
 ---
 
 # CamelTv AI Quality Engineering Platform — 工程规格书（合并版 v1）
@@ -46,6 +47,13 @@ related:
 > - D-5 §4.12 划清 `lanhu_evidence` 与 `run_artifacts` 边界（互不迁移，按 `linked_evidence_type` 并集查询）；
 > - D-6 §18.2 前端路由决策（保留 `/version-tasks` 业务入口，新增 `/runs` 通用 Run 列表）；
 > - D-7 §6.4 记录 `task_queue.py` 现状预检（无 advisory lock / 无独立 heartbeat 表 → TA-010.3 自实现）。
+>
+> **v1.3-baseline-aligned 变更**（2026-11-09 batch-278 决策回写）：TA-001 代码审计产出 [`docs/aiqe/baseline.md`](../aiqe/baseline.md)，用户确认 D-278-1..3 后回写本规格：
+> - **D-278-1**：§4 关键规则改为"新建实体 UUID v4 / 跨接现有表的外键 BIGINT"（现有 73 表里 72 张是 INT 自增主键）；
+> - **D-278-2**：§4.7 采用**候选 B** —— `version_task_run` 保留 + `test_run_id BIGINT` 回填，M2 后只读，V1.1 删表；
+> - **D-278-3**：§18.2 前端目录改用现有 `pages/<domain>/`，不新建 `features/`；
+> - 同步修正 4 处口径：模型 **43 文件 / 73 表**、目标表 **25 张（22 净新建 + 3 扩展）**、服务 **71 顶层 / 123 递归**、现有路由 **265 paths / 323 operations**；
+> - §4.8 `node_runs.execution_job_id`、§4.7 `environment_id` 明确为 BIGINT；§15.2 标注 30 个端点中 29 个净新增。
 >
 > 剩余 13 条 P2 由后续批次陆续处理。
 
@@ -259,8 +267,10 @@ Requirement (v) ──► RequirementContract (frozen) ──► AcceptanceCrite
 > **关键规则**：
 > - 所有 JSON 字段必须有 Pydantic Schema + `schema_version`，schema 冲突由 CI 守卫（TA-004.2）拒 PR。
 > - **Project 隔离**（batch-276 M-6，细则唯一出处见 **附录 B.1**）：业务主表必须带 `project_id`；Run 子表（`node_runs / step_attempts / assertion_results / run_events / event_outbox / run_artifacts / interference_observations / triage_cases / triage_hypotheses / regression_requests`）**不重复存 `project_id`**，一律继承 `run.project_id`，查询必须 join `test_runs` 并带 project 过滤；`test_cases` 经 `test_scenarios` 继承；全局表（`node_capability_manifests / learning_candidates / bug_patterns` 等）在附录 B.1 逐张明示。
-> - 所有时间字段使用 UTC `timestamp with time zone`。
-> - 所有 ID 使用 `UUID v4`。
+> - 所有时间字段使用 **naive UTC**（`datetime.now(UTC).replace(tzinfo=None)`，与 `app/core/task_queue.py::utcnow` 一致；PG 列可用 `timestamptz`，SQLite 天然 naive）。batch-278 C-02。
+> - **ID 类型**（batch-278 D-278-1）：**新建实体一律 `UUID v4`**；**跨接现有表的外键一律 `BIGINT`**（现有 73 张表里 72 张为 `INTEGER` 自增主键，仅 `ai_task` 为 str；详见 [`docs/aiqe/baseline.md`](../aiqe/baseline.md) C-01）。新表 ↔ 新表用 UUID。
+> - **JSON 类型**（batch-278 C-03）：新表用 `sa.JSON`（SQLite 存 TEXT / PG 存 jsonb）；现有 `*_json` 为 `Mapped[str]` 的旧表**不做类型迁移**。
+> - **规模口径**（batch-278）：本章 **25 张表（22 净新建 + 3 扩展）**，对照现有 **43 个模型文件 / 73 张表**；完整对账见 [`docs/aiqe/baseline.md`](../aiqe/baseline.md)。
 > - **写之前必须完成 TA-001 代码审计**：若现有 SQLAlchemy Model 已有同义实体，优先 ALTER 扩展，不新建。
 
 ### 4.1 实体关系总图
@@ -402,21 +412,21 @@ ProjectAdapter (多项目支持)
 | 字段 | 类型 | 说明 |
 |-----|------|------|
 | id | UUID | PK |
-| project_id | FK | — |
+| project_id | BIGINT FK | 指向现有 `sys_project.id`（INT，batch-278 D-278-1） |
 | run_key | varchar(100) | 可读执行编号 `RUN-YYYYMMDD-NNNNN` |
 | source_type | enum | `manual / version_task / defect_regression / pr / github_action / schedule / agent` |
-| source_id | UUID/string | nullable；指向触发源 |
-| scenario_id | FK | nullable |
-| workflow_definition_id | FK | 冻结 Workflow |
+| source_id | UUID/string | nullable；指向触发源（`version_task` 来源为旧表 INT，存字符串或加 `legacy_task_id BIGINT`） |
+| scenario_id | UUID FK | nullable；指向 `test_scenarios` |
+| workflow_definition_id | UUID FK | 冻结 Workflow |
 | build_ref | varchar(255) | build/version |
 | commit_sha | varchar(64) | 被测代码 SHA |
-| environment_id | FK environments | — |
-| execution_profile_id | FK | — |
+| environment_id | BIGINT FK environments | 现有 `environment.id`（INT） |
+| execution_profile_id | UUID FK | 指向 `execution_profiles` |
 | environment_snapshot_json | JSON | 浏览器/服务版本/flags/地区/时间/依赖健康 |
-| retest_of | FK test_runs | nullable；回归指向被回归的 run |
+| retest_of | UUID FK test_runs | nullable；回归指向被回归的 run |
 | status | enum | `DRAFT / VALIDATING / QUEUED / RUNNING / WAITING_HUMAN / TRIAGING / COMPLETED / BLOCKED / CANCELED / ERROR` |
 | outcome | enum | nullable；`PASS / FAIL / INCOMPLETE / UNKNOWN`（仅 COMPLETED 时写） |
-| trigger_user_id | FK | nullable |
+| trigger_user_id | BIGINT FK | nullable；现有 `sys_user.id` |
 | started_at / finished_at | timestamp | nullable |
 | duration_ms | bigint | nullable |
 | created_at | timestamp | — |
@@ -428,19 +438,21 @@ ProjectAdapter (多项目支持)
 
 现有 `app/models/version_task_run.py` 承接"版本任务的一次执行"。本规格 `test_runs` 是**通用执行实例**，`version_task_run` 为其**派生场景**（`source_type = 'version_task'` 的 `test_runs`）。
 
-**迁移策略**（在 TA-001 代码审计后定案）：
+**迁移策略**（batch-278 D-278-2 **已定案：候选 B**）：
 
-- 候选 A：废弃 `version_task_run`，将其字段 ALTER 并入 `test_runs`（`source_type` 区分）；
-- 候选 B：保留 `version_task_run` 作为视图/关联表，`test_runs` 为底层事实源。
+- `version_task_run` **保留**，新增 `test_run_id BIGINT`（nullable）指向 `test_runs.id`；`test_runs` 是事实源，旧表是兼容关联；
+- **M1-M2 双写**：版本任务执行时同时写 `test_runs(source_type='version_task')` 与旧 `version_task_run`，并回填 `test_run_id`；
+- **M2 结束后旧表只读**（历史查询走 join）；**V1.1 删表**，删除前 `test_run_id` 回填率必须 100%（C-278-2）；
+- **不采用候选 A**（直接 ALTER 并入）：会同时改版本任务前端 + `version_task_service` / `version_task_exec_service` / `execution_job_service` 三处，M1 风险不可接受。
 
-TA-001 产出 `docs/aiqe/baseline.md` 后在 M1 开工前决定。本规格的 `test_runs` 字段表以通用执行实例为准，开发时**不得**创建与 `version_task_run` 字段完全重复的新表。
+本规格的 `test_runs` 字段表以通用执行实例为准，开发时**不得**创建与 `version_task_run` 字段完全重复的新表。
 
 ### 4.8 `node_runs`
 
 | 字段 | 类型 | 说明 |
 |-----|------|------|
 | id | UUID | PK |
-| run_id | FK | — |
+| run_id | UUID FK test_runs | — |
 | node_key | varchar(100) | Workflow 节点 key |
 | driver_key | varchar(80) | `http / playwright / db / event / mobile / miniapp / device / external_e2e` |
 | worker_id | varchar(128) | nullable；执行节点 |
@@ -449,7 +461,7 @@ TA-001 产出 `docs/aiqe/baseline.md` 后在 M1 开工前决定。本规格的 `
 | output_ref | JSON | 变量名 → JSONPath/Artifact ref |
 | error_class | varchar(80) | nullable |
 | resource_keys_json | JSON | 占用锁 keys（见 §6） |
-| execution_job_id | FK execution_jobs | nullable；一对一关联调度派发工作单元（现有 `app/models/execution_job.py`） |
+| execution_job_id | BIGINT FK execution_jobs | nullable；一对一关联调度派发工作单元（现有 `app/models/execution_job.py`，INT 主键） |
 | started_at / finished_at | timestamp | — |
 | attempt_count | integer | — |
 
@@ -1994,6 +2006,8 @@ oss_admission:
 
 ### 15.2 REST 清单
 
+**现状对齐**（batch-278，详见 [`docs/aiqe/baseline.md`](../aiqe/baseline.md) §7）：现有 `/api/v1/*` 实测 **265 paths / 323 operations**（27 个业务段）；下表 30 个 AIQE 端点中只有 `POST /test-cases/{id}/review` 可直接复用，其余 **29 个为净新增**。
+
 #### 需求契约
 
 | Method | Path | 用途 |
@@ -2447,12 +2461,11 @@ test-platform-v2/backend/app/
 
 ```text
 test-platform-v2/frontend/src/
-  features/
+  pages/                          # 沿用现有 19 个域目录（153 个页面组件）
     runs/
-      pages/
-        RunListPage.tsx
-        RunDetailPage.tsx
-        RunComparePage.tsx       # 回归对比
+      RunListPage.tsx
+      RunDetailPage.tsx
+      RunComparePage.tsx         # 回归对比
       components/
         RunHeader.tsx
         RunGraph.tsx             # DAG 可视化
@@ -2466,7 +2479,7 @@ test-platform-v2/frontend/src/
       api.ts
       types.ts
     triage/
-      pages/TriagePage.tsx
+      TriagePage.tsx
       components/
         HypothesisList.tsx
         ExperimentPanel.tsx      # E1-E6 对照
@@ -2476,14 +2489,15 @@ test-platform-v2/frontend/src/
         RegressionDialog.tsx
         RunComparison.tsx
     workflows/
-      pages/
-        WorkflowListPage.tsx
-        WorkflowDetailPage.tsx   # 可视化 + approve
+      WorkflowListPage.tsx
+      WorkflowDetailPage.tsx     # 可视化 + approve
     requirement-contracts/
-      pages/RequirementContractPage.tsx
+      RequirementContractPage.tsx
     profiles/
-      pages/ExecutionProfilePage.tsx
+      ExecutionProfilePage.tsx
 ```
+
+**目录决策**（batch-278 D-278-3）：现有 `frontend/src/pages/` 已按域分 **19 个目录 / 153 个页面组件**（`version-tasks`、`testcase`、`apitest`、`uitest`…），**沿用该结构**，新增 `pages/runs`、`pages/triage`、`pages/regressions`、`pages/workflows`、`pages/requirement-contracts`、`pages/profiles`；**不新建 `features/`**（会形成两套导入路径）。通用组件下沉 `src/ui/`，页面级组件留在各自 `pages/<domain>/components/`。
 
 **路由决策**（batch-276 D-6）：
 
@@ -3105,14 +3119,14 @@ CI 守卫（PR 合并前）：改 prompt / 工具 / 模型配置 → **必须跑
 
 ## 使用说明
 
-- 本规格是 **目标模型 + 契约 + 落地任务**。**不是**对现有仓库逐文件验证过的补丁。
-- 实施前必须 **TA-001 代码审计**：建立"本规格实体 → 现有类/表/路由/组件 → 扩展方式"的映射表。
+- 本规格是 **目标模型 + 契约 + 落地任务**；**已完成 TA-001 代码审计**（[`docs/aiqe/baseline.md`](../aiqe/baseline.md)，batch-278），与现状冲突处以基线为准（C-01..C-10）。
+- 实施前必须读 baseline 的**映射矩阵**（25 表）、**冲突登记**与**迁移批次**；D-278-1..3 已确认并写入 v1.3（ID 类型 / `version_task_run` 兼容 / 前端目录）。
 - 如果现有稳定代码与本文建议冲突，**以现有稳定代码为准**；但必须保留本文的**事实源边界、执行证据、噪音归因、安全约束**。
 - 逐个 GitHub Issue 实施：**先开分支 → 读 Issue 与本规格相关章节 → 更新 ADR/schema → 编码 → 单测 + 集成 + 负向 → Driver Contract Tests → PR → CI + 负责人验收**。
 - 禁止一个 PR 同时引入**多套 Run 或 Agent Runtime**。
 
 ---
 
-> 本文件是 proposal，进 Agent Team 门禁评审（`.claude/skills/cameltv-agent-team`）后以 Leader verdict 为准。
-> 合入后作为 CamelTv AIQE 的 **权威工程规格 v1**。
+> 本文件 **status: active / v1.3-baseline-aligned**；任何修改走 Agent Team 门禁（批次与里程碑见 [`14-aiqe-dev-schedule-and-dogfood-plan.md`](14-aiqe-dev-schedule-and-dogfood-plan.md)）。
+> 本文 + `docs/aiqe/baseline.md` 共同构成 CamelTv AIQE 的**权威工程规格**。
 

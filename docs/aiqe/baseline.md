@@ -4,7 +4,7 @@ owner: "qa-team"
 created: "2026-11-09"
 last_reviewed: "2026-11-09"
 status: "active"
-version: "v1.0"
+version: "v1.1-decisions-confirmed"
 tags: ["platform-refactor", "aiqe", "baseline", "code-audit"]
 related:
   - "docs/platform-refactor/13-ai-quality-agent-merged-spec.md"
@@ -824,13 +824,13 @@ POST /ui-tests/jobs → UiTestJob → UiTestRun(status=running)
 
 ## 13. 待用户确认的决策（3 条）
 
-| ID | 决策点 | 建议 | 不确认的后果 |
-|----|-------|------|-------------|
-| **D-278-1** | ID 类型口径 | **新建实体 UUID + 现有表外键 BIGINT**（§3 C-01） | 开发者会在 UUID 与 INT 之间来回转换，或给现有表加 UUID 列，产生双主键债务 |
-| **D-278-2** | `version_task_run` 迁移路径 | **候选 B：保留旧表 + `test_run_id` 回填，M2 后只读，V1.1 删表** | 若选候选 A（直接 ALTER 并入），会同时动版本任务前端与 3 个服务，M1 风险放大 |
-| **D-278-3** | 前端目录 | **沿用 `pages/<domain>/`，不建 `features/`** | 新建 `features/` 会与现有 153 个页面组件的导入路径并存两套 |
+| ID | 决策点 | 决定（2026-11-09 用户确认） | 落地位置 |
+|----|-------|---------------------------|---------|
+| **D-278-1** | ID 类型口径 | **新建实体 UUID + 现有表外键 BIGINT**（§3 C-01） | 13 号 §4 关键规则（v1.3） |
+| **D-278-2** | `version_task_run` 迁移路径 | **候选 B：保留旧表 + `test_run_id BIGINT` 回填，M2 后只读，V1.1 删表** | 13 号 §4.7 迁移策略（v1.3） |
+| **D-278-3** | 前端目录 | **沿用 `pages/<domain>/`，不建 `features/`** | 13 号 §18.2 目录树 + 目录决策（v1.3） |
 
-> 三条都不改变 13 号的业务模型，只改"类型/路径"口径；确认后写入 13 号 §4 / §18.2 的下一版（batch-279 开工前）。
+> 三条决策已确认并回写 13 号 `v1.3-baseline-aligned`（batch-278 决策回写批次）；C-278-1（模型 ID 类型守卫）/ C-278-2（`test_run_id` 回填率 100% 才可切只读）随 batch-279 登记。
 
 ---
 
