@@ -1,5 +1,5 @@
 {
-  "count": 317,
+  "count": 322,
   "routes": [
     {
       "path": "/api/v1/ai-config/providers",
@@ -36,6 +36,26 @@
     {
       "path": "/api/v1/ai/agents/tokens/revoke",
       "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/runs",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/runs/{run_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/runs/{run_id}/artifacts",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/runs/{run_id}/events",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/runs/{run_id}/events/stream",
+      "method": "GET"
     },
     {
       "path": "/api/v1/apitest/api-execute",
