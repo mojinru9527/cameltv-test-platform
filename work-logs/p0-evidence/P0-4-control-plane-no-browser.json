@@ -1,35 +1,34 @@
 {
   "id": "P0-4",
   "status": "pass",
-  "checked_at": "2026-11-09T23:20:49+08:00",
-  "summary": "控制面镜像 cameltv-tp-backend:b277b4 构建成功且无 Chromium；/uitest 由 cameltv-node 本地端到端执行（run done / 1-1 pass / 证据上传）",
+  "checked_at": "2026-11-09T23:53:17+08:00",
+  "summary": "生产控制面镜像无 Chromium；/uitest 由生产节点真实执行（run 481 / 1-1 pass / 3 个证据文件）",
   "evidence": [
     {
       "type": "image",
-      "ref": "cameltv-tp-backend:b277b4",
-      "id": "sha256:de4d963bf7eeb939a3f91160d4375e8586aa9192ac4a2cfc42a7ac1843e9748c",
-      "size_bytes": 811859174
+      "ref": "cameltv-tp-backend:release-20261109-b277b (production :main)",
+      "id": "sha256:23c02e8894f766cb7ca3f6229686cb9ae84931da1fa28ae40c2fcd460403b2ab",
+      "size_bytes": 811859285
     },
     {
       "type": "env",
       "CONTROL_PLANE_BROWSER_ENABLED": "false",
       "UITEST_EXECUTION_MODE": "node",
-      "PLAYWRIGHT_BROWSERS_PATH": "absent"
-    },
-    {
-      "type": "no_browser",
-      "command": "find / -maxdepth 6 \\( -iname '*chromium*' -o -iname 'chrome' -o -iname 'headless_shell' \\)",
-      "result": "no output"
-    },
-    {
-      "type": "dockerfile",
-      "playwright_install": "absent"
+      "note": "/ms-playwright 目录存在但为空（0 项）；command -v chromium/google-chrome 均为空"
     },
     {
       "type": "node_e2e",
-      "ref": "work-logs/p0-evidence/P0-4-local-e2e.md",
-      "result": "ExecutionJob(kind=ui) -> node --once -> 1/1 pass -> UiTestRun.status=done"
+      "environment": "production",
+      "run_id": 481,
+      "job_id": 3255,
+      "result": "1/1 pass, evidence_files=3, status=done",
+      "artifact_dir": "/app/storage/execution-evidence/job-2/attempt-1"
+    },
+    {
+      "type": "alembic",
+      "prod_current": "20261110_b277b_ui_run_exec_job"
     }
   ],
-  "notes": "本地 Docker Desktop 构建（host proxy 127.0.0.1:7688）；生产部署后需用同一 Dockerfile 重建并复核 digest。另：main 缺 test-platform-v2/deploy/aitde-runtime/scripts/start-worker.sh（Dockerfile 引用），本次构建从 AITDE 工作分支临时补入，属既有缺口，已登记待修。"
+  "notes": "生产部署 2026-11-09 23:49（含 104 表 DROP，备份 pre-deploy-20261109-233841.dump）；镜像由 main+本批修复构建。",
+  "environment": "production (swiftbugs.cn)"
 }

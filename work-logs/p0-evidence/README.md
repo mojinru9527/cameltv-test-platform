@@ -7,10 +7,10 @@
 
 | P0 | 状态 | 证据 | 剩余 |
 |----|------|------|------|
-| P0-1 Key 轮换 | ❌ BLOCKED | `P0-1-BLOCKED.md`（生产 3 条 provider 全 401，本地 Key 也 401） | 需要有效 DeepSeek Key 或控制台账号 |
+| P0-1 Key 轮换 | ✅ pass | `P0-1-ai-key-rotation.json`（3 条 provider 更新 + 真实调用 OK） | 可选：拆成 4 把独立 Key |
 | P0-2 备份 + DROP 守卫 | ✅ pass | `P0-2-backup-restore.json` + `raw/p0-2-backup-drill-20261109.log.txt` | 生产尚未执行 20261007 的 104 表 DROP（需发布窗口确认） |
 | P0-3 磁盘 | 🟡 in_progress | `P0-3-disk-watermark.json` + `raw/p0-3-cleanup-20261109.log.txt` | 87%→67%，48h 观察至 2026-11-11 14:13Z |
-| P0-4 /uitest 剥离 | ✅ pass | `P0-4-control-plane-no-browser.json` + `P0-4-image-verify.md` + `P0-4-local-e2e.md` | 生产部署后复核 digest（同一 Dockerfile） |
+| P0-4 /uitest 剥离 | ✅ pass（生产） | `P0-4-control-plane-no-browser.json`（镜像 digest + 生产 run 481） | 已完成生产复核 |
 
 ## 校验
 
