@@ -60,6 +60,14 @@ def spec_dir(tmp_path, monkeypatch):
     return directory
 
 
+@pytest.fixture()
+def node_executor(monkeypatch):
+    """加载节点执行器，并禁用仓库内 playwright root（单测写临时目录，不污染仓库）。"""
+    module = _load_node_executor()
+    monkeypatch.setattr(module, "_playwright_root", lambda: None)
+    return module
+
+
 def test_build_payload_reads_spec_and_env(db_session, spec_dir):
     (spec_dir / "ok.spec.ts").write_text("test('ok', async () => {});", encoding="utf-8")
     job = _mk_job(db_session)
@@ -156,8 +164,8 @@ def test_report_hook_syncs_linked_run(db_session):
     assert run.finished_at is not None
 
 
-def test_node_run_spec_files_parses_report(tmp_path):
-    executor = _load_node_executor()
+def test_node_run_spec_files_parses_report(node_executor, tmp_path):
+    executor = node_executor
 
     def fake_runner(cmd, *, cwd, env, timeout):
         report = Path(env["PLAYWRIGHT_JSON_OUTPUT_NAME"])
@@ -192,8 +200,8 @@ def test_node_run_spec_files_parses_report(tmp_path):
     assert {c["name"] for c in result["cases"]} == {"a", "b"}
 
 
-def test_node_run_spec_files_rejects_unsafe_name(tmp_path):
-    executor = _load_node_executor()
+def test_node_run_spec_files_rejects_unsafe_name(node_executor, tmp_path):
+    executor = node_executor
     result = executor.run_spec_files(
         [{"name": "../evil.spec.ts", "content": "x"}],
         entry="../evil.spec.ts",
@@ -203,8 +211,8 @@ def test_node_run_spec_files_rejects_unsafe_name(tmp_path):
     assert "非法 spec 文件名" in result["error"]
 
 
-def test_node_run_spec_files_timeout(tmp_path):
-    executor = _load_node_executor()
+def test_node_run_spec_files_timeout(node_executor, tmp_path):
+    executor = node_executor
 
     def timeout_runner(cmd, *, cwd, env, timeout):
         raise subprocess.TimeoutExpired(cmd, timeout)
@@ -219,8 +227,8 @@ def test_node_run_spec_files_timeout(tmp_path):
     assert "超时" in result["error"]
 
 
-def test_node_run_spec_files_without_report(tmp_path):
-    executor = _load_node_executor()
+def test_node_run_spec_files_without_report(node_executor, tmp_path):
+    executor = node_executor
 
     def no_report_runner(cmd, *, cwd, env, timeout):
         return 2, "", "npx: command failed"

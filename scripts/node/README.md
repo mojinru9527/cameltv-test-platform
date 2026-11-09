@@ -145,5 +145,8 @@ cameltv-node-evidence/job-12-attempt-1/
    用 `npx playwright test <spec> --output <证据目录>/test-results` 执行，生成 `report.json`；
 3. 节点上传证据（sha256 manifest）并上报；控制面把结果投影回 `UiTestRun`（状态/结果/产物目录）。
 
+> 节点能力声明必须含 `ui`（否则 claim 会跳过 `kind=ui` 任务）：
+> `cameltv-node up --node-id my-pc --capabilities api web ui`。
+
 前置：节点机器需能解析 `npx playwright`（仓库 `test-platform-v2/tests/playwright` 已装依赖最佳）。
 默认仍为 `local`（控制面 subprocess）；切换前先在测试环境用真实节点跑通一次 `/uitest`。
