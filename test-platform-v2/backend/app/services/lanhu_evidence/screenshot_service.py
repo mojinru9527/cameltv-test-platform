@@ -163,6 +163,10 @@ async def capture_page_segments(page_url: str, output_dir: Path, page_key: str) 
 
     需要 Playwright（`playwright` + chromium）。失败以 CaptureResult.error 表达，绝不裸抛。
     """
+    if not settings.control_plane_browser_enabled:
+        return CaptureResult(
+            error="控制面浏览器已禁用（CONTROL_PLANE_BROWSER_ENABLED=false）：蓝湖截图需迁移到节点或启用浏览器"
+        )
     output_dir.mkdir(parents=True, exist_ok=True)
     try:
         from playwright.async_api import async_playwright

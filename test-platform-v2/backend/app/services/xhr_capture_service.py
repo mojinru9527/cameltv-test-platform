@@ -47,6 +47,14 @@ def _allowed(method: str, url: str) -> bool:
 
 
 def create_capture_task(*, pages: list[str], project_id: int) -> dict:
+    if not settings.control_plane_browser_enabled:
+        from app.core.exceptions import APIException
+
+        raise APIException(
+            code=503,
+            msg="控制面浏览器已禁用（CONTROL_PLANE_BROWSER_ENABLED=false）：页面采集需迁移到节点或启用浏览器",
+            http_status=503,
+        )
     task_id = f"cap-{uuid.uuid4().hex[:10]}"
     budget = configured_budget()
     lease = budget.try_acquire('xhr', task_id) if budget is not None else None

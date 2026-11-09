@@ -279,6 +279,17 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
         _fail_run(db, run, f"任务 #{job_id} 不存在")
         return {"error": f"任务 #{job_id} 不存在"}
 
+    from app.core.config import settings as _settings
+
+    if not _settings.control_plane_browser_enabled:
+        return _fail_run(
+            db,
+            run,
+            "控制面浏览器已禁用（CONTROL_PLANE_BROWSER_ENABLED=false）："
+            "请在节点执行（UITEST_EXECUTION_MODE=node）或迁移该功能",
+            job,
+        )
+
     # 2. The wrapper already claimed this run; create its isolated artifact directory.
     artifact_dir = STORAGE_DIR / str(run_id)
     artifact_dir.mkdir(parents=True, exist_ok=True)

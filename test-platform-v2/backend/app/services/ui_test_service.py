@@ -346,7 +346,10 @@ def trigger_job(
         return _run_to_dict(run, job)
 
     # 检查 Playwright 可用性并记录（local 模式）
-    pw_ok, pw_msg = _check_playwright_installed()
+    if not settings.control_plane_browser_enabled:
+        pw_ok, pw_msg = False, "控制面浏览器已禁用（CONTROL_PLANE_BROWSER_ENABLED=false），请使用节点模式"
+    else:
+        pw_ok, pw_msg = _check_playwright_installed()
 
     now = datetime.now(timezone.utc)
     job.status = "running"
