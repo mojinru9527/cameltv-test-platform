@@ -50,6 +50,7 @@ class UiTestRun(Base):
     trace_id: Mapped[str] = mapped_column(String(100), default="")
     base_url: Mapped[str] = mapped_column(String(500), default="")        # 执行时 BASE_URL 快照
     artifact_dir: Mapped[str] = mapped_column(String(500), default="")    # 产物目录路径
+    execution_job_id: Mapped[int | None] = mapped_column(default=None, index=True)  # batch-277b：节点派发的 ExecutionJob（node 模式）
     report_json_path: Mapped[str] = mapped_column(String(500), default="")  # report.json 路径
     html_report_path: Mapped[str] = mapped_column(String(500), default="")  # HTML 报告路径
     error_message: Mapped[str] = mapped_column(Text, default="")          # 错误信息

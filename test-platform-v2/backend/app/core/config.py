@@ -203,6 +203,10 @@ class Settings(BaseSettings):
     requirement_url_timeout_seconds: float = 30.0   # 需求 URL 抓取超时
     ui_run_timeout_seconds: float = 90.0            # batch-169: 单条 UI 用例执行超时（env UI_RUN_TIMEOUT_SECONDS）
     ui_runner_timeout_seconds: float = 900.0        # Batch 187: UI Runner 整任务超时（env UI_RUNNER_TIMEOUT_SECONDS；默认 15min，覆盖 10 条用例多 spec 回归）
+    # batch-277b / P0-4：/uitest 执行模式。local = 控制面 subprocess（现状）；node = 派发
+    # ExecutionJob(kind="ui") 由 cameltv-node 执行。切 node 前必须先有一个在线的 web 节点。
+    uitest_execution_mode: str = "local"            # local | node
+    uitest_node_timeout_seconds: int = 1800         # node 模式整任务超时
     ui_test_runner_dir: str = ""                    # C-UI-PROD-001: Playwright 运行根目录（空=默认 backend/tests/playwright；可配 tests/automation/ui 跑体育 E2E）
     # ── 性能采集（Batch 185 / C99-1）──
     perf_cpu_report_mode: str = "raw"            # raw=聚合可>100%（多核如实）| per_core=除以核数归一（0-100%）

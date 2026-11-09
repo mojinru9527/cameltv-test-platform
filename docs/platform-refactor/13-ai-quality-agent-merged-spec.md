@@ -102,10 +102,10 @@ related:
 | P0-1 | 生产 4 个 DeepSeek Key 实测全 401，ai-gateway 12 天零推理 | `work-logs/platform-simplification-production-eval-20261007.md` §3 | ① 轮换新 Key → 入 `production.env`；② `ai_config_service` 重连探测写 `ai_operation_records`；③ 真实发一次 `requirement→cases` LLM 调用 | `ai_operation_records` 新增一条 `status=success`；curl 返回 200 的 shell 记录入证据包 |
 | P0-2 | 简化批次将 DROP 104 张表（不可逆） | 11 号 §2 | ① 跑一次完整备份恢复演练（复用 batch-262 脚本）；② 所有 DROP 迁移改用 `op.execute("DROP TABLE IF EXISTS ...")` 带存在性守卫；③ `alembic downgrade -1` 必须可逆 | 备份→恢复→抽行一致；`alembic upgrade head && alembic downgrade -1 && alembic upgrade head` 可执行 |
 | P0-3 | 生产磁盘 96% | 11 号 §5 | 清理冷数据 + 扩盘；盘水位告警确认已送达 | 水位 ≤ 80% 维持 48 小时；告警平台收条 |
-| P0-4 | `/uitest` 控制面内置浏览器（C263-1） | `services/ui_test_service.py` | 把 `playwright_executor` 的内置浏览器路径从控制面剥离，走 `cameltv-node` | 控制面镜像 `docker image inspect` 验证无 Chromium；`/uitest` 执行走 node |
+| P0-4 | `/uitest` 控制面内置浏览器（C263-1） | `services/ui_test_service.py` | 把 `playwright_executor` 的内置浏览器路径从控制面剥离，走 `cameltv-node`。**batch-277b-1 已落地代码侧**：新增 `uitest_execution_mode=node`（默认 `local`）→ `ExecutionJob(kind="ui")` 派发（`app/services/ui_job_dispatch.py` + `ui_test_run.execution_job_id`），节点侧新增 `run_spec_files` 执行 Playwright spec 并按 sha256 回传证据；**277b-2 待做**：真机节点验收 → 默认切 node → 控制面 Dockerfile 去 Chromium | 控制面镜像 `docker image inspect` 验证无 Chromium；`/uitest` 执行走 node；P0-4 evidence JSON |
 | P0-5 | `app/services/ai_gateway/` + 相关 models 残留清理（batch-275 M-5 扩写） | 11 号 §6 D2 已决策 | **batch-277 已执行（代码侧）**：删除 `app/services/ai_gateway/`（8 文件）+ `app/models/ai_job.py`（`AiAgent` 迁移为 `app/models/execution_node.py::ExecutionNode`，表 `ai_agents` 保留为节点注册表）+ `ai_shadow_run.py` + `ai_gateway_cache.py`；新增 migration `20261109_b277_drop_retired_tables`（`DROP TABLE IF EXISTS` + downgrade 可重建）；`ai_client` 直连、嵌入本地化；`docs/ai/local-ai-agent.md` 重写、`scripts/ai_agent/` 删除、ADR-0027/0028/0029 标 `superseded` | `rg "ai_gateway\|AiJob\|AiShadowRun\|AiGatewayCache" test-platform-v2/backend/{app,tests,scripts}` 命中 0（历史 migration 除外）；`alembic upgrade head → downgrade -1 → upgrade head` 退出码 0；3 个 ADR `status: superseded`；文档已重写 |
 
-> **2026-11-09 batch-277 状态**：P0-5 代码侧完成（见本行证据）；P0-2 的 DROP 守卫 + downgrade 已完成代码侧（备份恢复演练待运维执行）；P0-4 待 `/uitest` 剥离；P0-1 / P0-3 待生产操作（Key 轮换 / 磁盘清理）。
+> **2026-11-09 batch-277 状态**：P0-5 代码侧完成（见本行证据）；P0-2 的 DROP 守卫 + downgrade 已完成代码侧（备份恢复演练待运维执行）；P0-4 派发契约与节点执行器已完成（`uitest_execution_mode=node`，默认仍 `local`；真机验收 + Dockerfile 去 Chromium 留 277b-2）；P0-1 / P0-3 待生产操作（Key 轮换 / 磁盘清理）。
 
 **门禁**：上述 5 条全部拿到真实证据并入 PR 之前，`§19 Phase 1` 的 CI 守卫（`scripts/ci/check-p0-ready.ps1`，TA-001.5 产出）直接 fail-closed。
 
