@@ -15,7 +15,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Callable
 
-SUPPORTED_KINDS = ("api", "web")
+SUPPORTED_KINDS = ("api", "web", "ui")
 RESULT_FILE = "results.json"
 _INDEX = re.compile(r"\[(\d+)\]")
 
@@ -424,3 +424,162 @@ def _summarize(case_results: list[dict]) -> dict:
         "cases": case_results,
         "finished_at": _now(),
     }
+
+# ── ui 模式：执行控制面下发的 Playwright spec（batch-277b / P0-4）─────────
+_SPEC_ENTRY = re.compile(r"^[A-Za-z0-9._/-]+$")
+
+
+def _safe_rel_path(name: str) -> str:
+    """只接受相对、无 .. 的 spec 文件名（防路径穿越）。"""
+    cleaned = (name or "").replace("\\", "/").strip()
+    if not cleaned or cleaned.startswith("/") or ".." in cleaned.split("/"):
+        raise ValueError(f"非法 spec 文件名: {name!r}")
+    if not _SPEC_ENTRY.fullmatch(cleaned):
+        raise ValueError(f"spec 文件名含非法字符: {name!r}")
+    return cleaned
+
+
+def _playwright_root() -> Path | None:
+    """仓库内 tests/playwright（含 playwright 配置与 node_modules）优先。"""
+    root = Path(__file__).resolve().parents[3]
+    candidate = root / "test-platform-v2" / "tests" / "playwright"
+    return candidate if candidate.is_dir() else None
+
+
+def _default_spec_runner(cmd: list[str], *, cwd: Path, env: dict[str, str], timeout: float):
+    import subprocess
+
+    proc = subprocess.run(
+        cmd,
+        cwd=str(cwd),
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+    )
+    return proc.returncode, proc.stdout, proc.stderr
+
+
+def _spec_cases(report: dict) -> list[dict]:
+    """把 Playwright JSON report 拍平成用例列表。"""
+    cases: list[dict] = []
+
+    def walk(suite: dict) -> None:
+        for spec in suite.get("specs") or []:
+            statuses = []
+            for test in spec.get("tests") or []:
+                for result in test.get("results") or []:
+                    statuses.append(str(result.get("status") or ""))
+            passed = bool(statuses) and all(s in ("passed", "skipped") for s in statuses)
+            cases.append(
+                {
+                    "id": spec.get("id") or spec.get("title") or "spec",
+                    "name": spec.get("title") or spec.get("file") or "spec",
+                    "passed": passed,
+                    "statuses": statuses,
+                }
+            )
+        for child in suite.get("suites") or []:
+            walk(child)
+
+    for suite in report.get("suites") or []:
+        walk(suite)
+    return cases
+
+
+def run_spec_files(
+    files: list[dict],
+    *,
+    entry: str,
+    evidence_dir: str | Path,
+    base_url: str = "",
+    browser: str = "chromium",
+    env: dict[str, str] | None = None,
+    timeout_seconds: float = 1800,
+    runner=None,
+) -> dict:
+    """把 spec 文件落到节点本地并用 Playwright CLI 执行，产出 JSON 报告 + 证据目录。
+
+    `runner(cmd, cwd=, env=, timeout=) -> (returncode, stdout, stderr)` 可注入，便于单测。
+    """
+    import json
+    import os
+    import shutil
+    import subprocess
+
+    directory = Path(evidence_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+    report_path = directory / "report.json"
+    results_dir = directory / "test-results"
+
+    pw_root = _playwright_root()
+    spec_base = (pw_root / "generated" / f"node-{directory.name}") if pw_root else (directory / "spec")
+    spec_base.mkdir(parents=True, exist_ok=True)
+
+    try:
+        rel_files = [(name, _safe_rel_path(name)) for name in (f.get("name") for f in files)]
+    except ValueError as exc:
+        return {"total": 0, "passed": 0, "failed": 0, "all_pass": False, "cases": [], "error": str(exc)}
+    if not rel_files:
+        return {"total": 0, "passed": 0, "failed": 0, "all_pass": False, "cases": [], "error": "任务载荷不含 spec 文件"}
+
+    for original, rel in rel_files:
+        target = spec_base / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        content = next((str(f.get("content") or "") for f in files if f.get("name") == original), "")
+        target.write_text(content, encoding="utf-8")
+
+    entry_rel = _safe_rel_path(entry) if entry else rel_files[0][1]
+    cwd = pw_root if pw_root else spec_base
+    spec_arg = str((spec_base / entry_rel).resolve()) if pw_root else entry_rel
+
+    child_env = {
+        k: v for k, v in os.environ.items() if not k.upper().startswith(("SECRET", "TOKEN", "PASSWORD"))
+    }
+    child_env.update({str(k): str(v) for k, v in (env or {}).items()})
+    child_env.update(
+        {
+            "BASE_URL": base_url,
+            "CAMELTV_BASE_URL": base_url,
+            "BROWSER": browser,
+            "PLAYWRIGHT_JSON_OUTPUT_NAME": str(report_path),
+        }
+    )
+    npx = shutil.which("npx") or "npx"
+    cmd = [npx, "playwright", "test", spec_arg, "--output", str(results_dir)]
+    run = runner or _default_spec_runner
+    try:
+        code, stdout, stderr = run(cmd, cwd=cwd, env=child_env, timeout=float(timeout_seconds))
+    except subprocess.TimeoutExpired:
+        return {"total": 0, "passed": 0, "failed": 0, "all_pass": False, "cases": [], "error": f"执行超时（{timeout_seconds}s）"}
+    except FileNotFoundError as exc:
+        return {"total": 0, "passed": 0, "failed": 0, "all_pass": False, "cases": [], "error": f"Playwright 不可用: {exc}"}
+
+    if not report_path.exists():
+        tail = (stderr or stdout or "")[-500:]
+        return {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "all_pass": False,
+            "cases": [],
+            "error": f"未生成 Playwright JSON 报告（exit={code}）: {tail}".strip(),
+        }
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return {"total": 0, "passed": 0, "failed": 0, "all_pass": False, "cases": [], "error": f"报告解析失败: {exc}"}
+
+    cases = _spec_cases(report)
+    passed = sum(1 for c in cases if c["passed"])
+    failed = len(cases) - passed
+    return {
+        "total": len(cases),
+        "passed": passed,
+        "failed": failed,
+        "all_pass": len(cases) > 0 and failed == 0,
+        "cases": cases,
+        "exit_code": code,
+        "error": "" if cases else "报告中没有用例",
+    }
+

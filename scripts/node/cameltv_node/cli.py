@@ -406,8 +406,20 @@ def _upload_evidence(cfg: dict, job_id: int, directory: Path) -> dict:
 
 def _execute(cfg: dict, job: dict, payload: dict, work_dir: Path) -> dict:
     kind = job.get("kind")
-    cases = (payload.get("payload") or {}).get("cases") or []
-    base_url = (payload.get("payload") or {}).get("base_url") or ""
+    body = payload.get("payload") or {}
+    cases = body.get("cases") or []
+    base_url = body.get("base_url") or ""
+    # batch-277b / P0-4：/uitest 以 Playwright spec 下发，节点侧用 CLI 跑真实 spec。
+    if kind == "ui" and body.get("mode") == "spec":
+        return executor.run_spec_files(
+            body.get("files") or [],
+            entry=body.get("entry") or "",
+            evidence_dir=work_dir,
+            base_url=base_url,
+            browser=body.get("browser") or "chromium",
+            env=body.get("env") or {},
+            timeout_seconds=float(body.get("timeout_seconds") or 1800),
+        )
     if not cases:
         return {
             "total": 0,

@@ -16,7 +16,7 @@ from app.core.exceptions import APIException
 from app.models.execution_node import ExecutionNode
 from app.models.execution_job import ExecutionJob
 
-JOB_KINDS = frozenset({"api", "web"})
+JOB_KINDS = frozenset({"api", "web", "ui"})
 REPORT_STATUSES = frozenset({"completed", "failed", "cancelled"})
 
 
@@ -249,6 +249,18 @@ def report(
     job.lease_expires_at = None
     db.commit()
     db.refresh(job)
+    # batch-277b / P0-4：node 模式的 /uitest 通过 ExecutionJob 执行，
+    # 上报后投影回 UiTestRun（失败只记日志，不影响节点上报结果）。
+    try:
+        from app.services.ui_job_dispatch import sync_run_from_job
+
+        sync_run_from_job(db, job)
+    except Exception:  # 投影失败不吞节点结果
+        import logging
+
+        logging.getLogger("execution_jobs").exception(
+            "sync ui run from execution job #%s failed", job.id
+        )
     return job
 
 

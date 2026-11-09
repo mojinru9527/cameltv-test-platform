@@ -135,3 +135,15 @@ cameltv-node-evidence/job-12-attempt-1/
 - 未安装 Playwright → `run-web` 报 `failed` 并提示 `pip install playwright && playwright install chromium`；
 - 上传对账不一致 → 任务上报里带 `upload_error`，不静默吞掉；
 - 断网 / 平台 4xx/5xx → 不算失败，退避重试（已认领任务继续持有，或交给租约回收）。
+
+## UI 测试（/uitest）node 模式（batch-277b / P0-4）
+
+控制面设置 `UITEST_EXECUTION_MODE=node` 后，`/uitest` 不再在控制面起浏览器，而是：
+
+1. 控制面读取 spec、静态安全拦截、解析环境变量，创建 `ExecutionJob(kind="ui")`；
+2. 节点认领任务，`executor.run_spec_files()` 把 spec 落到本地 `test-platform-v2/tests/playwright/generated/node-*`，
+   用 `npx playwright test <spec> --output <证据目录>/test-results` 执行，生成 `report.json`；
+3. 节点上传证据（sha256 manifest）并上报；控制面把结果投影回 `UiTestRun`（状态/结果/产物目录）。
+
+前置：节点机器需能解析 `npx playwright`（仓库 `test-platform-v2/tests/playwright` 已装依赖最佳）。
+默认仍为 `local`（控制面 subprocess）；切换前先在测试环境用真实节点跑通一次 `/uitest`。

@@ -52,7 +52,11 @@ def _recover_pending_runs() -> None:
 
     db = SessionLocal()
     try:
-        pending = db.query(UiTestRun).filter(UiTestRun.status == "pending").all()
+        pending = (
+            db.query(UiTestRun)
+            .filter(UiTestRun.status == "pending", UiTestRun.execution_job_id.is_(None))
+            .all()
+        )
         if pending:
             logger.info("Recovering %d pending UI run(s) after restart", len(pending))
             for run in pending:

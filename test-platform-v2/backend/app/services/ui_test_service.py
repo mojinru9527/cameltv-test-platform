@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from typing import Any
 
 from sqlalchemy import func, select
@@ -299,11 +299,54 @@ def trigger_job(
         if not confirm_prod:
             raise ValueError("生产环境 UI 自动化需要 confirm_prod=true 确认")
 
-    # 检查 Playwright 可用性并记录
-    pw_ok, pw_msg = _check_playwright_installed()
-
     # 解析环境的 base_url
     base_url = environment.base_url if environment else ""
+
+    # batch-277b / P0-4：node 模式 → 派发 ExecutionJob(kind="ui")，控制面不再起浏览器
+    from app.core.config import settings
+
+    if (settings.uitest_execution_mode or "local").strip().lower() == "node":
+        from app.services import ui_job_dispatch
+
+        try:
+            payload = ui_job_dispatch.build_payload(
+                db, job, project_id=project_id, base_url=base_url
+            )
+        except ValueError as exc:
+            now = datetime.now(UTC)
+            run = UiTestRun(
+                job_id=job_id,
+                status="failed",
+                base_url=base_url,
+                started_at=now,
+                finished_at=now,
+                error_message=str(exc),
+                result=json.dumps({"error": str(exc)}, ensure_ascii=False),
+            )
+            job.status = "failed"
+            job.last_result = json.dumps({"error": str(exc)}, ensure_ascii=False)
+            db.add(run)
+            db.commit()
+            db.refresh(run)
+            return _run_to_dict(run, job)
+
+        job.status = "running"
+        job.last_result = json.dumps({}, ensure_ascii=False)
+        run = UiTestRun(
+            job_id=job_id,
+            status="pending",
+            base_url=base_url,
+            started_at=datetime.now(UTC),
+            result=json.dumps({}, ensure_ascii=False),
+        )
+        db.add(run)
+        db.commit()
+        db.refresh(run)
+        ui_job_dispatch.dispatch(db, job, run, project_id=project_id, payload=payload)
+        return _run_to_dict(run, job)
+
+    # 检查 Playwright 可用性并记录（local 模式）
+    pw_ok, pw_msg = _check_playwright_installed()
 
     now = datetime.now(timezone.utc)
     job.status = "running"
