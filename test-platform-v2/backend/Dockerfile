@@ -38,7 +38,9 @@ ENV VIRTUAL_ENV=/opt/venv \
     LANHU_MCP_DIR=/app/lanhu-mcp \
     DATA_DIR=/app/storage/lanhu-data \
     HOME=/home/cameltv \
-    XDG_CACHE_HOME=/home/cameltv/.cache
+    XDG_CACHE_HOME=/home/cameltv/.cache \
+    CONTROL_PLANE_BROWSER_ENABLED=false \
+    UITEST_EXECUTION_MODE=node
 RUN groupadd --gid "${APP_GID}" cameltv \
     && useradd --uid "${APP_UID}" --gid "${APP_GID}" --create-home --home-dir /home/cameltv --shell /usr/sbin/nologin cameltv \
     && mkdir -p /app/storage /app/storage/lanhu-data \
@@ -58,12 +60,13 @@ ENV VIRTUAL_ENV=/opt/venv \
     PATH=/opt/venv/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
     WORKSPACE_ROOT=/app \
     LANHU_MCP_DIR=/app/lanhu-mcp \
     DATA_DIR=/app/storage/lanhu-data \
     HOME=/home/cameltv \
-    XDG_CACHE_HOME=/home/cameltv/.cache
+    XDG_CACHE_HOME=/home/cameltv/.cache \
+    CONTROL_PLANE_BROWSER_ENABLED=false \
+    UITEST_EXECUTION_MODE=node
 
 RUN groupadd --gid "${APP_GID}" cameltv \
     && useradd --uid "${APP_UID}" --gid "${APP_GID}" --create-home --home-dir /home/cameltv --shell /usr/sbin/nologin cameltv \
@@ -104,16 +107,14 @@ RUN apt-get update \
     && npm --version >/dev/null \
     && echo "node $(node --version) / npm $(npm --version)"
 
-# Install the npm-locked UI runner before copying specs so source edits retain
-# the dependency/browser cache layer. Align Python Playwright to the same
-# release so Lanhu screenshots and UI jobs share one Chromium installation.
+# batch-277b-4 / P0-4：控制面镜像不再安装 Chromium。
+# /uitest 由 cameltv-node 执行（ExecutionJob kind=ui）；XHR 采集 / 蓝湖截图 /
+# Playground 在 CONTROL_PLANE_BROWSER_ENABLED=false 下显式失败并提示迁移。
+# 仅保留 npm 锁定的 @playwright/test 包（不含浏览器），供节点侧 spec 依赖解析。
 COPY test-platform-v2/backend/tests/playwright/package*.json ./tests/playwright/
-RUN --mount=type=cache,target=/root/.npm PLAYWRIGHT_VERSION="$(node -p "require('./tests/playwright/package-lock.json').packages['node_modules/playwright'].version")" \
-    && pip install --no-cache-dir --no-deps --force-reinstall "playwright==${PLAYWRIGHT_VERSION}" \
+RUN --mount=type=cache,target=/root/.npm \
     && cd /app/tests/playwright \
-    && npm ci \
-    && ./node_modules/.bin/playwright install --with-deps chromium \
-    && python -m playwright install chromium \
+    && npm ci --ignore-scripts \
     && npm cache clean --force \
     && rm -rf /var/lib/apt/lists/*
 

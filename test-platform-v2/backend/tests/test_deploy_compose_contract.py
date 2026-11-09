@@ -115,7 +115,7 @@ def test_backend_build_context_contains_runner_and_root_lanhu_submodule() -> Non
     assert LANHU_MODULE_PATH.is_file()
 
 
-def test_backend_image_installs_locked_ui_lanhu_and_media_runtime() -> None:
+def test_backend_image_keeps_locked_ui_lanhu_runtime_without_browser() -> None:
     dockerfile = DOCKERFILE_PATH.read_text(encoding="utf-8")
     package_lock = json.loads(
         (PLAYWRIGHT_ROOT / "package-lock.json").read_text(encoding="utf-8")
@@ -146,9 +146,11 @@ def test_backend_image_installs_locked_ui_lanhu_and_media_runtime() -> None:
     assert "nodejs" in dockerfile
     assert "npm" in dockerfile
     assert "ffmpeg" in dockerfile
-    assert "python -m playwright install chromium" in dockerfile
-    assert "playwright install --with-deps chromium" in dockerfile
-    assert "PLAYWRIGHT_BROWSERS_PATH=/ms-playwright" in dockerfile
+    # batch-277b-4 / P0-4：控制面镜像不装 Chromium；/uitest 由 cameltv-node 执行。
+    assert "playwright install" not in dockerfile
+    assert "PLAYWRIGHT_BROWSERS_PATH" not in dockerfile
+    assert "CONTROL_PLANE_BROWSER_ENABLED=false" in dockerfile
+    assert "UITEST_EXECUTION_MODE=node" in dockerfile
     for stage in ('builder-runner', 'builder-api', 'provider', 'runtime-base', 'runtime-api-base'):
         assert re.search(rf'^FROM python:3\.12-slim@sha256:[0-9a-f]{{64}} AS {stage}$',
                          dockerfile, re.MULTILINE)
@@ -167,10 +169,7 @@ def test_backend_image_installs_locked_ui_lanhu_and_media_runtime() -> None:
         BACKEND_ROOT / "requirements.api.txt"
     ).read_text(encoding="utf-8")
     assert "--mount=type=cache,target=/root/.cache/pip" in dockerfile
-    assert (
-        'pip install --no-cache-dir --no-deps --force-reinstall '
-        '"playwright==${PLAYWRIGHT_VERSION}"'
-    ) in dockerfile
+    assert "npm ci --ignore-scripts" in dockerfile
     lock = PYTHON_LOCK_PATH.read_text(encoding="utf-8")
     assert "playwright==1.61.0" in lock
     assert "--hash=sha256:" in lock

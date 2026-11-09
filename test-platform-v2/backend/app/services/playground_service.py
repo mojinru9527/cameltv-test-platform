@@ -252,6 +252,14 @@ def _playground_runner_dir() -> Path | None:
 
 
 def execute_spec(req: ExecuteRequest) -> ExecuteResponse:
+    if not settings.control_plane_browser_enabled:
+        from app.core.exceptions import APIException
+
+        raise APIException(
+            code=503,
+            msg="控制面浏览器已禁用（CONTROL_PLANE_BROWSER_ENABLED=false）：Playground 执行需迁移到节点",
+            http_status=503,
+        )
     if not settings.worker_execution_enabled:
         raise HTTPException(503, 'Execution service required', headers={'Retry-After': '5'})
     budget = configured_budget()

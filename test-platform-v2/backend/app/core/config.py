@@ -207,6 +207,9 @@ class Settings(BaseSettings):
     # ExecutionJob(kind="ui") 由 cameltv-node 执行。切 node 前必须先有一个在线的 web 节点。
     uitest_execution_mode: str = "local"            # local | node
     uitest_node_timeout_seconds: int = 1800         # node 模式整任务超时
+    # batch-277b-4 / P0-4：控制面浏览器总开关。生产镜像默认关闭；关闭后
+    # /uitest 本地模式、XHR 采集、蓝湖截图、Playground 执行都必须走节点或显式失败。
+    control_plane_browser_enabled: bool = True
     ui_test_runner_dir: str = ""                    # C-UI-PROD-001: Playwright 运行根目录（空=默认 backend/tests/playwright；可配 tests/automation/ui 跑体育 E2E）
     # ── 性能采集（Batch 185 / C99-1）──
     perf_cpu_report_mode: str = "raw"            # raw=聚合可>100%（多核如实）| per_core=除以核数归一（0-100%）
