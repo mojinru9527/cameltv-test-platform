@@ -1,7 +1,7 @@
 ---
 title: "PR 模板"
 owner: "qa-team"
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-11-09"
 status: "active"
 tags: ["template", "pull-request", "code-review"]
 ---
@@ -37,6 +37,15 @@ tags: ["template", "pull-request", "code-review"]
 - Issue: #
 - ADR: 
 - 相关文档: 
+
+## 架构护栏（ADR-AIQE-008 / batch-276 M-12）
+
+> 仅当本 PR **新建带 `checksum` + `approval_status`（或同义审批字段）的实体**时必须回答；不适用请勾"不适用"。
+
+- [ ] 不适用（本 PR 未新建此类实体）
+- 本 PR 新建的实体是否是 AITDE `Scenario / Mission / Contract / Oracle` 的翻版？（是 / 否）
+  - 若"是"：列出与 AITDE 的字段级差异，并说明现有 `WorkflowDefinition`（或对应已批准实体）为什么无法承载：
+  - 若"否"：给出与 `docs/platform-refactor/11-platform-simplification-design.md` §2 删除清单不冲突的证据（`rg` 命中 0 的命令与输出）：
 
 ---
 
