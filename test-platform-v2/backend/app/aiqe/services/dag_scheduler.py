@@ -7,7 +7,7 @@
 """
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from typing import Any
 
@@ -201,6 +201,7 @@ def complete_node(
     graph: dict[str, Any],
     *,
     error_class: str | None = None,
+    outputs: Mapping[str, Any] | None = None,
 ) -> TestRun:
     if status not in NODE_TERMINAL:
         raise ValueError(f"非法节点终态: {status}")
@@ -213,6 +214,8 @@ def complete_node(
     row.finished_at = datetime.now(UTC)
     if error_class:
         row.error_class = error_class
+    if outputs:
+        row.output_ref = {**(row.output_ref or {}), **dict(outputs)}
 
     for resource in row.resource_keys_json or []:
         try:
