@@ -5,7 +5,7 @@
 
 | # | 来源 | 遗留项 | 状态 | 计划 / 建议 |
 |---|------|--------|:----:|-------------|
-| 1 | M1 TA-007 | 生产对象存储后端（COS / MinIO / FS 三选一） | **decision-needed** | 当前 FS 可用；若 Artifact 量级上来建议 MinIO 自托管（成本可控、数据不出站）；需业务拍板 |
+| 1 | M1 TA-007 | 生产对象存储后端 | **partial（用户选 MinIO）** | 代码已支持（batch-285：MinIO + SigV4 + compose）；生产容器/env/ensure_bucket 待窗口 |
 | 2 | M1 TA-008 | Console 菜单/RBAC 入口（`menu:aiqe_runs`） | open | 需权限 seed + 导航；放 M2 后段 UI 批次，当前 URL `/runs` 直达 |
 | 3 | M1 TA-008 | SSE 长连接 / Redis PubSub | open | 当前 30s SSE + 轮询兜底；M2 接 outbox dispatcher 后改长连接 |
 | 4 | M1 TA-008 | Console 浏览器 E2E | open | 依赖可造 Run 的 DAG 执行链；TA-012/013 后补 Playwright 用例 |
@@ -15,7 +15,7 @@
 | 8 | M2 TA-010 | 条件边（`edges.condition`） | open | 当前只支持成功边；failure/always 分支随 TA-010 后续 |
 | 9 | M2 TA-010 | 调度器接 ExecutionJob / Worker | open | dispatch 目前是回调；TA-012+ 接入真实执行 |
 | 10 | M2 TA-015 | capability 注册表 | open | 校验器已预留 `registered_capabilities` 参数 |
-| 11 | 部署 | batch-283/284 生产部署 | open | 20261114 两表；与 M2 收口窗口一起执行 |
+| 11 | 部署 | batch-283/284 生产部署 | **done** | 2026-11-11 00:01 已部署（20261114，103 表） |
 | 12 | 运维 | `start-worker.sh` 已在 main（batch-277b-6 修复） | done | — |
 
 ## 本轮已顺手处理
