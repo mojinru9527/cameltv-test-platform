@@ -107,7 +107,7 @@ related:
 
 > **2026-11-10 M1 完成**：batch-279（TA-005 Run 模型/状态机）、batch-280（TA-006 Event/Outbox）、batch-281（TA-007 Artifact）与 batch-282（TA-008 Run Console + 只读 API）全部开发完成并合入 main；新增 7 表（test_runs / node_runs / step_attempts / run_assertion_results / run_events / event_outbox / run_artifacts）、5 个只读 API、/runs 前端；后端 1398 passed / 43 skipped、前端 550 tests、ratchet PASS。生产迁移（20261111..13）留窗口执行；M2 可启动（TA-009 Workflow Validator / TA-010 DAG Scheduler）。收口报告：`work-logs/M1-phase1-closeout.md`。
 
-> **2026-11-10 M2 进度**：batch-283（TA-009 Workflow Validator）已完成——覆盖环/悬空依赖/未注册 driver/悬空变量/非幂等重试/断言 expected/edges 一致性，并附 canonical checksum；16 单测；batch-284（TA-010 DAG Scheduler + TA-010.3 资源锁）已完成——workflow_definitions / resource_locks 两表、调度/并行/fail_fast/恢复、15 单测；全量 1429 passed。生产 20261114 两表待窗口部署；遗留项见 `work-logs/M1-M2-leftovers.md`。
+> **2026-11-10 M2 进度**：batch-283（TA-009 Workflow Validator）已完成——覆盖环/悬空依赖/未注册 driver/悬空变量/非幂等重试/断言 expected/edges 一致性，并附 canonical checksum；16 单测；batch-284（TA-010 DAG Scheduler + TA-010.3 资源锁）已完成——workflow_definitions / resource_locks 两表、调度/并行/fail_fast/恢复、15 单测；全量 1429 passed。生产 20261114 两表待窗口部署；遗留项见 `work-logs/M1-M2-leftovers.md`；batch-285 已补 MinIO 自托管 Artifact 后端（SigV4/URI 路由/compose，生产容器待窗口）。
 
 > **2026-11-09 batch-277 状态（已完成）**：P0-1..5 全部 pass。P0-1 生产 3 条 provider 换新 Key，平台 `ai_client` 真实调用返回 OK；P0-2 备份演练 + DROP 守卫（downgrade 可执行）；P0-3 磁盘 87%→77%（用户豁免 48h，cron 每小时记录）；P0-4 控制面镜像无 Chromium，生产 `/uitest` 由节点执行（run 481，1/1 pass）；P0-5 ai_gateway 容器已停止删除、代码零残留。生产 2026-11-09 23:49 完成 104 表 DROP 迁移（alembic head `20261110_b277b_ui_run_exec_job`，public 表 94），部署前备份 `pre-deploy-20261109-233841.dump`。
 

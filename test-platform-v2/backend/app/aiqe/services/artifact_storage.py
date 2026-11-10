@@ -53,3 +53,21 @@ class LocalArtifactStorage:
         if not path.is_file():
             raise ArtifactStorageError("artifact file missing")
         return path.read_bytes()
+
+
+def get_storage_backend() -> ArtifactStorageBackend:
+    """按配置选择存储后端（fs 默认；minio 自托管）。"""
+    from app.core.config import settings
+
+    backend = str(getattr(settings, "artifact_storage_backend", "fs") or "fs").lower()
+    if backend == "minio":
+        from app.aiqe.services.artifact_storage_minio import MinioArtifactStorage
+
+        return MinioArtifactStorage(
+            endpoint=str(getattr(settings, "minio_endpoint", "") or ""),
+            access_key=str(getattr(settings, "minio_access_key", "") or ""),
+            secret_key=str(getattr(settings, "minio_secret_key", "") or ""),
+            bucket=str(getattr(settings, "minio_bucket", "cameltv-artifacts") or "cameltv-artifacts"),
+            region=str(getattr(settings, "minio_region", "us-east-1") or "us-east-1"),
+        )
+    return LocalArtifactStorage()

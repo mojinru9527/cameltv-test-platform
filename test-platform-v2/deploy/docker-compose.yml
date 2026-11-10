@@ -69,6 +69,13 @@ services:
       - OUTBOUND_MAX_REDIRECTS=${OUTBOUND_MAX_REDIRECTS:-5}
       - OUTBOUND_MAX_RESPONSE_BYTES=${OUTBOUND_MAX_RESPONSE_BYTES:-10485760}
       # ── AI / LLM（平台简化批次：直连模式，AI_API_KEY 由本进程持有）──
+      # ── Artifact 存储（batch-285：MinIO 自托管 / 本地 FS）──
+      - ARTIFACT_STORAGE_BACKEND=${ARTIFACT_STORAGE_BACKEND:-fs}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-}
+      - MINIO_BUCKET=${MINIO_BUCKET:-cameltv-artifacts}
+      - MINIO_REGION=${MINIO_REGION:-us-east-1}
       - AI_ENABLED=${AI_ENABLED:-false}
       - AI_API_KEY=${AI_API_KEY:-}
       - AI_API_BASE_URL=${AI_API_BASE_URL:-https://api.deepseek.com/v1}
@@ -190,6 +197,25 @@ services:
       - tp-artifacts:/app/storage
     restart: "no"
 
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY required}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:?MINIO_SECRET_KEY required}
+    volumes:
+      - minio-data:/data
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
   frontend:
     build:
       context: ../frontend
@@ -224,4 +250,6 @@ volumes:
   tp-artifacts:
     driver: local
   pg-data:
+    driver: local
+  minio-data:
     driver: local

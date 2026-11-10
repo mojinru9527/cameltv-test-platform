@@ -20,6 +20,7 @@ from app.aiqe.services.artifact_storage import (
     ArtifactStorageBackend,
     ArtifactStorageError,
     LocalArtifactStorage,
+    get_storage_backend,
 )
 
 ARTIFACT_TYPES: frozenset[str] = frozenset(
@@ -92,7 +93,7 @@ def put_artifact(
         raise InvalidArtifact(f"artifact 超过 {MAX_ARTIFACT_BYTES} bytes 限制")
 
     digest = hashlib.sha256(content).hexdigest()
-    backend = storage or LocalArtifactStorage()
+    backend = storage or get_storage_backend()
     uri = backend.put(content, digest)
     row = RunArtifact(
         run_id=run_id,
@@ -143,7 +144,10 @@ def read_artifact(
     storage: ArtifactStorageBackend | None = None,
 ) -> bytes:
     row = get_artifact(db, artifact_id, project_id)
-    backend = storage or LocalArtifactStorage()
+    if storage is None:
+        backend = LocalArtifactStorage() if row.storage_uri.startswith("file://") else get_storage_backend()
+    else:
+        backend = storage
     try:
         return backend.read(row.storage_uri)
     except ArtifactStorageError:

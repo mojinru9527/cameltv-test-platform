@@ -210,6 +210,14 @@ class Settings(BaseSettings):
     # batch-277b-4 / P0-4：控制面浏览器总开关。生产镜像默认关闭；关闭后
     # /uitest 本地模式、XHR 采集、蓝湖截图、Playground 执行都必须走节点或显式失败。
     control_plane_browser_enabled: bool = True
+
+    # batch-285：Artifact 存储后端选择（fs / minio）；MinIO 自托管走 S3 兼容 API。
+    artifact_storage_backend: str = "fs"
+    minio_endpoint: str = ""
+    minio_access_key: str = ""
+    minio_secret_key: str = ""
+    minio_bucket: str = "cameltv-artifacts"
+    minio_region: str = "us-east-1"
     ui_test_runner_dir: str = ""                    # C-UI-PROD-001: Playwright 运行根目录（空=默认 backend/tests/playwright；可配 tests/automation/ui 跑体育 E2E）
     # ── 性能采集（Batch 185 / C99-1）──
     perf_cpu_report_mode: str = "raw"            # raw=聚合可>100%（多核如实）| per_core=除以核数归一（0-100%）
