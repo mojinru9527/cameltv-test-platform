@@ -10,6 +10,7 @@ from app.models.ai_provider import AiProvider
 from app.aiqe.models import run as aiqe_run_models  # noqa: F401
 from app.aiqe.models import event as aiqe_event_models  # noqa: F401
 from app.aiqe.models import artifact as aiqe_artifact_models  # noqa: F401
+from app.aiqe.models import workflow as aiqe_workflow_models  # noqa: F401
 from app.models.ai_task import AiTask
 from app.models.execution_node import ExecutionNode
 from app.models.ai_agent_token import AiAgentToken
