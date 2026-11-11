@@ -3,6 +3,7 @@ from app.aiqe.models.agent import AgentExecution
 from app.aiqe.models.artifact import RunArtifact
 from app.aiqe.models.capability import NodeCapabilityManifest
 from app.aiqe.models.event import EventOutbox, RunEvent
+from app.aiqe.models.noise_rule import NoiseRule
 from app.aiqe.models.profile import ExecutionProfile
 from app.aiqe.models.triage import TriageExperiment
 from app.aiqe.models.run import NodeRun, RunAssertionResult, StepAttempt, TestRun
@@ -14,6 +15,7 @@ __all__ = [
     "ExecutionProfile",
     "NodeCapabilityManifest",
     "NodeRun",
+    "NoiseRule",
     "ResourceLock",
     "RunArtifact",
     "RunAssertionResult",
