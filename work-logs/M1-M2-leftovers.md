@@ -14,8 +14,8 @@
 | 7 | M2 TA-009 | 规则 7 审批 API/UI | partial | 存储层冻结已实现（`approve_workflow` / `update_graph` 拒绝）；HTTP API/审批流待补 |
 | 8 | M2 TA-010 | 条件边（`edges.condition`） | open | 当前只支持成功边；failure/always 分支随 TA-010 后续 |
 | 9 | M2 TA-010 | 调度器接 ExecutionJob / Worker | open | dispatch 目前是回调；TA-012+ 接入真实执行 |
-| 10 | M2 TA-015 | capability 注册表 | open | 校验器已预留 `registered_capabilities` 参数 |
-| 11 | 部署 | batch-283/284 生产部署 | **done** | 2026-11-11 00:01 已部署（20261114，103 表） |
+| 10 | M2 TA-015 | capability 注册表 | done | `capability_registry` + 迁移 20261115（生产待窗口） |
+| 11 | 部署 | batch-283/284 生产部署 | **done** | 2026-11-11 已部署（20261114，103 表）；M2 代码已 delta 部署，20261115 待窗口 |
 | 12 | 运维 | `start-worker.sh` 已在 main（batch-277b-6 修复） | done | — |
 
 ## 本轮已顺手处理
