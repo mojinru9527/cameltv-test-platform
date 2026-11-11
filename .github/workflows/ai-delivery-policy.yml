@@ -98,6 +98,10 @@ jobs:
           pwsh -NoProfile -File scripts/ci/check-oracle-layer.ps1 -SelfTest
           pwsh -NoProfile -File scripts/ci/check-oracle-layer.ps1 -RepositoryPath . -BaseRef ("origin/" + $env:BASE_BRANCH)
 
+      - name: Validate AIQE agent skills (TA-032.5)
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/ci/check-aiqe-skills.ps1 -RepositoryPath .
+
       - name: Validate branch, local-only files, and secrets
         shell: bash
         env:
