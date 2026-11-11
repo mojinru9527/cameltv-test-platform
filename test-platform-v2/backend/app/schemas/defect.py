@@ -67,3 +67,11 @@ class DefectStats(BaseModel):
     total: int = 0
     by_severity: dict = {}
     by_status: dict = {}
+
+
+class RegressionCreate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    fixed_sha: str
+    previous_run_id: str | None = None
+    verification_run_id: str | None = None
