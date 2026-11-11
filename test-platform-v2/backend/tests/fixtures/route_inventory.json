@@ -1,5 +1,5 @@
 {
-  "count": 322,
+  "count": 323,
   "routes": [
     {
       "path": "/api/v1/ai-config/providers",
@@ -1288,6 +1288,10 @@
     {
       "path": "/health",
       "method": "GET"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}/regressions",
+      "method": "POST"
     }
   ]
 }

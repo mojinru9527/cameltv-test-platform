@@ -13,7 +13,13 @@ from sqlalchemy.orm import Session
 
 from app.core.base_service import batch_field_map, batch_user_names, paginate
 from app.core.config import settings
-from app.models.defect import Defect, DefectAttachment, DefectComment, DefectTransition
+from app.models.defect import (
+    Defect,
+    DefectAttachment,
+    DefectComment,
+    DefectRegression,
+    DefectTransition,
+)
 
 logger = logging.getLogger(__name__)
 from app.models.test_case import TestCase
@@ -675,3 +681,52 @@ def create_draft_from_failure(
     db.add(row)
     db.flush()
     return row
+
+
+# ── 一键回归（TA-027）─────────────────────────────────────
+
+def create_regression(
+    db: Session,
+    *,
+    defect_id: int,
+    fixed_sha: str,
+    previous_run_id: str | None = None,
+    verification_run_id: str | None = None,
+) -> DefectRegression:
+    defect = db.get(Defect, defect_id)
+    if defect is None:
+        raise ValueError(f"缺陷不存在: {defect_id}")
+    sha = (fixed_sha or "").strip()
+    if len(sha) < 7:
+        raise ValueError("fixed_sha 至少 7 位")
+    row = DefectRegression(
+        defect_id=defect_id,
+        fixed_sha=sha,
+        previous_run_id=previous_run_id,
+        verification_run_id=verification_run_id,
+        status="pending" if verification_run_id is None else "passed",
+    )
+    db.add(row)
+    db.flush()
+    return row
+
+
+def compare_runs(
+    previous_results: list[dict],
+    current_results: list[dict],
+) -> dict:
+    """对比旧/新 Run 的 assertion 状态；纯函数，不改旧 Run。"""
+    prev = {str(r.get("assertion_key")): str(r.get("status")) for r in previous_results}
+    curr = {str(r.get("assertion_key")): str(r.get("status")) for r in current_results}
+    fixed = sorted(k for k, v in prev.items() if v != "PASS" and curr.get(k) == "PASS")
+    regressed = sorted(k for k, v in prev.items() if v == "PASS" and curr.get(k) not in (None, "PASS"))
+    still_failing = sorted(k for k, v in prev.items() if v != "PASS" and curr.get(k) not in (None, "PASS"))
+    new_assertions = sorted(k for k in curr if k not in prev)
+    return {
+        "fixed": fixed,
+        "regressed": regressed,
+        "still_failing": still_failing,
+        "new_assertions": new_assertions,
+        "total_previous": len(prev),
+        "total_current": len(curr),
+    }

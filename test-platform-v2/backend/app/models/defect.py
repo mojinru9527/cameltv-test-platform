@@ -1,7 +1,7 @@
 """Defect ORM model + transition history."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from typing import Optional
 
 from sqlalchemy import JSON, Boolean, ForeignKey, String, Text
@@ -91,4 +91,19 @@ class DefectAttachment(Base):
     mime_type: Mapped[str] = mapped_column(String(100), default="")
     uploader_id: Mapped[int] = mapped_column(default=0)
     uploader_name: Mapped[str] = mapped_column(String(100), default="")
+    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(UTC))
+
+
+class DefectRegression(Base):
+    """缺陷一键回归记录（TA-027）。"""
+    __tablename__ = "defect_regressions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    defect_id: Mapped[int] = mapped_column(
+        ForeignKey("defect.id", ondelete="CASCADE"), index=True
+    )
+    fixed_sha: Mapped[str] = mapped_column(String(40), default="")
+    previous_run_id: Mapped[str | None] = mapped_column(String(36), default=None)
+    verification_run_id: Mapped[str | None] = mapped_column(String(36), default=None, index=True)
+    status: Mapped[str] = mapped_column(String(20), default="pending")
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))

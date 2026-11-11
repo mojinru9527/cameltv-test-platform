@@ -3,13 +3,19 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request, UploadFile, File
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, UploadFile, File
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.core.deps import CurrentUser, get_db, require_permission
 from app.schemas.common import R
-from app.schemas.defect import DefectCreate, DefectOut, DefectStats, DefectUpdate
+from app.schemas.defect import (
+    DefectCreate,
+    DefectOut,
+    DefectStats,
+    DefectUpdate,
+    RegressionCreate,
+)
 from app.services import defect_service
 from app.services.audit_service import write_audit
 from app.services.knowledge import ingest_service
@@ -319,3 +325,34 @@ def delete_attachment(
     db.commit()
     _audit(req, current, db, "defect:attachment:delete", f"#{defect_id}", f"attachment #{attachment_id}")
     return R.ok({"deleted": True})
+
+
+@router.post("/{defect_id}/regressions", response_model=R[dict], summary="缺陷一键回归")
+def create_regression(
+    defect_id: int,
+    body: RegressionCreate,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("defect:update")),
+    db: Session = Depends(get_db),
+):
+    try:
+        row = defect_service.create_regression(
+            db,
+            defect_id=defect_id,
+            fixed_sha=body.fixed_sha,
+            previous_run_id=body.previous_run_id,
+            verification_run_id=body.verification_run_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    _audit(req, current, db, "defect:regression", f"defect:{defect_id}", row.fixed_sha)
+    return R.ok(
+        {
+            "id": row.id,
+            "defect_id": row.defect_id,
+            "fixed_sha": row.fixed_sha,
+            "previous_run_id": row.previous_run_id,
+            "verification_run_id": row.verification_run_id,
+            "status": row.status,
+        }
+    )
