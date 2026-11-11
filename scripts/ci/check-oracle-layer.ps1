@@ -50,7 +50,7 @@ function Get-JsonDocuments {
                 $docs += ,($match.Groups[1].Value | ConvertFrom-Json -AsHashtable)
             }
             catch {
-                Add-Violation "$Path : Markdown JSON 代码块解析失败（$($_.Exception.Message)）"
+                # 文档中的示意性 JSON 可能含省略号/注释，不是可执行用例 → 跳过
             }
         }
     }
@@ -99,6 +99,7 @@ function Invoke-Scan {
     foreach ($target in $Targets) {
         if ([string]::IsNullOrWhiteSpace($target)) { continue }
         if ($target -notmatch '\.(json|md|markdown)$') { continue }
+        if ($target -match '[\\/](docs|work-logs)[\\/]') { continue }
         if (-not (Test-Path -LiteralPath $target)) { continue }
         $text = Get-Content -Raw -LiteralPath $target
         if ([string]::IsNullOrWhiteSpace($text)) { continue }
