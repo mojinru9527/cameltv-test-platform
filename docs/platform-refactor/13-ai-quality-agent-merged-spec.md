@@ -3157,4 +3157,4 @@ CI 守卫（PR 合并前）：改 prompt / 工具 / 模型配置 → **必须跑
 
 > 本文件 **status: active / v1.3-baseline-aligned**；任何修改走 Agent Team 门禁（批次与里程碑见 [`14-aiqe-dev-schedule-and-dogfood-plan.md`](14-aiqe-dev-schedule-and-dogfood-plan.md)）。
 > 本文 + `docs/aiqe/baseline.md` 共同构成 CamelTv AIQE 的**权威工程规格**。
-
+batch-311（TA-031 Quality Gate）已完成——P0 未执行/未知/失败均不显示 PASS。
