@@ -356,6 +356,12 @@ export interface DefectItem {
   status: string
   case_id: number | null
   execution_id: number | null
+  aiqe_run_id?: string | null
+  aiqe_node_run_id?: string | null
+  reproduction_steps?: Array<{ action: string; expected: string; evidence_ref?: string }> | null
+  evidence_refs?: string[] | null
+  ac_refs?: string[] | null
+  is_draft?: boolean
   assignee_id: number
   assignee_name: string
   external_id: string

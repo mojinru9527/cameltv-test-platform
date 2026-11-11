@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import ForeignKey, String, Text
+from sqlalchemy import JSON, Boolean, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
@@ -24,6 +24,12 @@ class Defect(Base):
     #   rejected / closed → open (reopen)
     case_id: Mapped[Optional[int]] = mapped_column(default=None, index=True)
     execution_id: Mapped[Optional[int]] = mapped_column(default=None)
+    aiqe_run_id: Mapped[str | None] = mapped_column(String(36), default=None, index=True)
+    aiqe_node_run_id: Mapped[str | None] = mapped_column(String(36), default=None)
+    reproduction_steps_json: Mapped[list | None] = mapped_column(JSON, default=None)
+    evidence_refs_json: Mapped[list | None] = mapped_column(JSON, default=None)
+    ac_refs_json: Mapped[list | None] = mapped_column(JSON, default=None)
+    is_draft: Mapped[bool] = mapped_column(Boolean, default=False)
     aitde_run_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("execution_runs.id", ondelete="SET NULL"), default=None, index=True
     )
