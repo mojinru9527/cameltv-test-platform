@@ -90,6 +90,14 @@ jobs:
           pip install -e . pytest >/dev/null 2>&1
           python -m pytest -q
 
+      - name: Validate oracle layer guard (TA-020.3)
+        shell: pwsh
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+        run: |
+          pwsh -NoProfile -File scripts/ci/check-oracle-layer.ps1 -SelfTest
+          pwsh -NoProfile -File scripts/ci/check-oracle-layer.ps1 -RepositoryPath . -BaseRef ("origin/" + $env:BASE_BRANCH)
+
       - name: Validate branch, local-only files, and secrets
         shell: bash
         env:
