@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import logging
+import re
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -54,6 +55,12 @@ def _defect_to_dict(r: Defect, creator_name: str = "", assignee_name: str = "", 
         "case_id": r.case_id,
         "execution_id": r.execution_id,
         "aitde_run_id": r.aitde_run_id,
+        "aiqe_run_id": r.aiqe_run_id,
+        "aiqe_node_run_id": r.aiqe_node_run_id,
+        "reproduction_steps": r.reproduction_steps_json or [],
+        "evidence_refs": r.evidence_refs_json or [],
+        "ac_refs": r.ac_refs_json or [],
+        "is_draft": bool(r.is_draft),
         "assignee_id": r.assignee_id,
         "external_id": r.external_id,
         "external_url": r.external_url,
@@ -583,3 +590,88 @@ def _guess_mime(filename: str) -> str:
     import mimetypes
     mime, _ = mimetypes.guess_type(filename)
     return mime or "application/octet-stream"
+
+
+# ── AIQE 失败一键转缺陷（TA-026）────────────────────────────
+
+EVIDENCE_PREFIXES = ("artifact:", "event:", "run:", "node:", "signal:")
+AC_REF_PATTERN = re.compile(r"^AC[A-Za-z0-9_-]*$")
+
+
+def validate_reproduction(
+    reproduction_steps: list[dict] | None,
+    evidence_refs: list[str] | None,
+    ac_refs: list[str] | None,
+) -> None:
+    if not reproduction_steps:
+        raise ValueError("结构化复现步骤不能为空")
+    for index, step in enumerate(reproduction_steps, start=1):
+        if not isinstance(step, dict):
+            raise ValueError(f"复现步骤 #{index} 必须是对象")
+        if not str(step.get("action") or "").strip():
+            raise ValueError(f"复现步骤 #{index} 缺少 action")
+        if not str(step.get("expected") or "").strip():
+            raise ValueError(f"复现步骤 #{index} 缺少 expected")
+    if not evidence_refs:
+        raise ValueError("证据引用不能为空")
+    for ref in evidence_refs:
+        if not any(str(ref).startswith(prefix) for prefix in EVIDENCE_PREFIXES):
+            raise ValueError(f"非法证据引用（需 artifact:/event:/run:/node:/signal:）: {ref}")
+    if not ac_refs:
+        raise ValueError("必须关联至少 1 条验收标准（AC）")
+    for ref in ac_refs:
+        if not AC_REF_PATTERN.match(str(ref)):
+            raise ValueError(f"非法 AC 引用: {ref}")
+
+
+def create_draft_from_failure(
+    db: Session,
+    *,
+    project_id: int,
+    title: str,
+    run_id: str,
+    reproduction_steps: list[dict],
+    evidence_refs: list[str],
+    ac_refs: list[str],
+    node_run_id: str | None = None,
+    description: str = "",
+    severity: str = "P2",
+    creator_id: int = 0,
+    assignee_id: int = 0,
+) -> Defect:
+    """失败一键转 Defect Draft：结构化复现步骤 + 证据跳转 + AC 关联。
+
+    同一 Run + 标题重复调用返回已有草稿（幂等）。
+    """
+    if not str(title or "").strip():
+        raise ValueError("缺陷标题不能为空")
+    validate_reproduction(reproduction_steps, evidence_refs, ac_refs)
+    existing = db.scalar(
+        select(Defect).where(
+            Defect.project_id == project_id,
+            Defect.aiqe_run_id == run_id,
+            Defect.title == title,
+            Defect.is_draft.is_(True),
+        )
+    )
+    if existing is not None:
+        return existing
+    row = Defect(
+        project_id=project_id,
+        defect_id=_generate_defect_id(db, project_id),
+        title=title.strip(),
+        description=description,
+        severity=severity,
+        status="open",
+        aiqe_run_id=run_id,
+        aiqe_node_run_id=node_run_id,
+        reproduction_steps_json=reproduction_steps,
+        evidence_refs_json=evidence_refs,
+        ac_refs_json=ac_refs,
+        is_draft=True,
+        creator_id=creator_id,
+        assignee_id=assignee_id,
+    )
+    db.add(row)
+    db.flush()
+    return row

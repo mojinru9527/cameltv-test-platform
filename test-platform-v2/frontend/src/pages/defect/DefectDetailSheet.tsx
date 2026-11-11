@@ -43,6 +43,7 @@ import {
   statusBadgeClass,
 } from './constants'
 import DefectTransitionDialog from './DefectTransitionDialog'
+import AiqaLinkSection from './AiqaLinkSection'
 
 interface DefectDetailSheetProps {
   detail: DefectItem
@@ -237,6 +238,8 @@ export default function DefectDetailSheet({
                   </CardContent>
                 </Card>
               )}
+
+              <AiqaLinkSection defect={detail} />
             </TabsContent>
 
             {/* ── Tab 2: 评论 ── */}
