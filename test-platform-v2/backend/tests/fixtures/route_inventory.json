@@ -1,5 +1,5 @@
 {
-  "count": 337,
+  "count": 338,
   "routes": [
     {
       "path": "/api/v1/ai-config/providers",
@@ -1348,6 +1348,10 @@
     {
       "path": "/api/v1/aiqe/admin/noise-rules/{rule_id}",
       "method": "PATCH"
+    },
+    {
+      "path": "/api/v1/aiqe/platform-matrix",
+      "method": "GET"
     }
   ]
 }

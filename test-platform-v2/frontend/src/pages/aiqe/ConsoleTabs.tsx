@@ -8,6 +8,7 @@ const TABS = [
   { to: '/aiqe/workflows', label: 'Workflow 审批' },
   { to: '/aiqe/quality-gate', label: '质量门禁' },
   { to: '/aiqe/noise-rules', label: '噪音规则' },
+  { to: '/aiqe/platform-matrix', label: '平台矩阵' },
 ] as const
 
 export default function ConsoleTabs() {

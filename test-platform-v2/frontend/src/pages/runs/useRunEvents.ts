@@ -3,21 +3,34 @@ import { API_BASE_URL } from '@/api/baseUrl'
 import { listRunEvents } from '@/api/aiqeRuns'
 import type { AiqeRunEvent } from '@/types/aiqe'
 
+export type RunEventConnection = 'connecting' | 'live' | 'polling' | 'idle'
+
 /**
- * 订阅 Run 事件：先补拉 after_seq，再走 SSE；断线自动降级为 3s 轮询。
- * 刷新页面后从 0 重放，保证事件不丢（TA-008 验收）。
+ * 订阅 Run 事件（batch-339 长连接增强）：
+ * - 先按 `after_seq` 补拉，再建立 SSE；
+ * - SSE 断线不主动关闭：浏览器按 `retry:` 自动重连，并携带 `Last-Event-ID` 续传；
+ * - 重连期间降级为 3s 轮询兜底，`onopen` 后停止轮询；
+ * - 返回连接状态供页面展示「实时/轮询中」。
  */
-export function useRunEvents(runId: string | undefined): AiqeRunEvent[] {
+export function useRunEvents(runId: string | undefined): {
+  events: AiqeRunEvent[]
+  connection: RunEventConnection
+} {
   const [events, setEvents] = useState<AiqeRunEvent[]>([])
+  const [connection, setConnection] = useState<RunEventConnection>('idle')
   const lastSeq = useRef(0)
 
   useEffect(() => {
-    if (!runId) return
+    if (!runId) {
+      setConnection('idle')
+      return
+    }
     let cancelled = false
     let source: EventSource | null = null
     let timer: number | undefined
     setEvents([])
     lastSeq.current = 0
+    setConnection('connecting')
 
     const append = (items: AiqeRunEvent[]) => {
       if (cancelled || !items.length) return
@@ -36,12 +49,28 @@ export function useRunEvents(runId: string | undefined): AiqeRunEvent[] {
       }
     }
 
+    const startPolling = () => {
+      if (timer) return
+      timer = window.setInterval(() => void poll(), 3000)
+    }
+
+    const stopPolling = () => {
+      if (!timer) return
+      window.clearInterval(timer)
+      timer = undefined
+    }
+
     void poll()
     try {
       source = new EventSource(
         `${API_BASE_URL}/aiqe/runs/${runId}/events/stream?after_seq=${lastSeq.current}`,
         { withCredentials: true },
       )
+      source.onopen = () => {
+        if (cancelled) return
+        setConnection('live')
+        stopPolling()
+      }
       source.onmessage = (event) => {
         try {
           append([JSON.parse(event.data) as AiqeRunEvent])
@@ -50,20 +79,22 @@ export function useRunEvents(runId: string | undefined): AiqeRunEvent[] {
         }
       }
       source.onerror = () => {
-        source?.close()
-        source = null
-        if (!timer) timer = window.setInterval(() => void poll(), 3000)
+        if (cancelled) return
+        // 不 close：让浏览器按 retry 自动重连并携带 Last-Event-ID
+        setConnection('polling')
+        startPolling()
       }
     } catch {
-      timer = window.setInterval(() => void poll(), 3000)
+      setConnection('polling')
+      startPolling()
     }
 
     return () => {
       cancelled = true
       source?.close()
-      if (timer) window.clearInterval(timer)
+      stopPolling()
     }
   }, [runId])
 
-  return events
+  return { events, connection }
 }

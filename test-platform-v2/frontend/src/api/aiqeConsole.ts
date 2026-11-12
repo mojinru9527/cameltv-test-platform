@@ -124,3 +124,34 @@ export async function renewNoiseRule(ruleId: number): Promise<NoiseRule> {
 export async function deleteNoiseRule(ruleId: number): Promise<void> {
   await client.delete(`/aiqe/admin/noise-rules/${ruleId}`)
 }
+
+// ── batch-339：平台矩阵（真实节点能力） ──
+
+export interface PlatformMatrixCell {
+  available: boolean
+  node_count: number
+  nodes: string[]
+}
+
+export interface PlatformMatrixNode {
+  node_id: string
+  driver_key: string
+  driver_version: string
+  platforms: string[]
+  capabilities: string[]
+  available: boolean
+  last_evidence_ref: string
+  last_heartbeat_at: string | null
+}
+
+export interface PlatformMatrix {
+  platforms: string[]
+  capabilities: string[]
+  rows: { capability: string; cells: Record<string, PlatformMatrixCell> }[]
+  nodes: PlatformMatrixNode[]
+  available_nodes: number
+}
+
+export async function getPlatformMatrix(): Promise<PlatformMatrix> {
+  return (await client.get('/aiqe/platform-matrix')) as unknown as PlatformMatrix
+}
