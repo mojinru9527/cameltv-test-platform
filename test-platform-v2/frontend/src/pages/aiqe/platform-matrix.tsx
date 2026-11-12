@@ -76,7 +76,7 @@ export default function PlatformMatrixPage() {
                             <td className="px-3 py-2" key={platform}>
                               {cell?.available ? (
                                 <span className="text-status-success" title={cell.nodes.join(', ')}>
-                                  ✓ {cell.node_count}
+                                  {cell.node_count} 节点
                                 </span>
                               ) : (
                                 <span className="text-muted-foreground">—</span>

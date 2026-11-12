@@ -61,7 +61,7 @@ describe('平台矩阵页面（batch-339）', () => {
 
     expect(await screen.findByText('browser.chromium')).toBeTruthy()
     expect(screen.getByText('device.android')).toBeTruthy()
-    expect(screen.getByText('✓ 1')).toBeTruthy()
+    expect(screen.getByText('1 节点')).toBeTruthy()
     expect(screen.getByText('可用节点 1/1')).toBeTruthy()
     expect(screen.getByText('平台 2')).toBeTruthy()
     expect(screen.getByText('能力 2')).toBeTruthy()
