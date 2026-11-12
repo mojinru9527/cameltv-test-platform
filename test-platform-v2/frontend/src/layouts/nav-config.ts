@@ -66,7 +66,7 @@ export const MAIN_ROW_DEFS: readonly MainRowDef[] = [
     label: '版本验收', // ②
     codes: ['menu:versiontask', 'menu:versionmission', 'menu:requirement'],
   },
-  { kind: 'group', label: '结果与缺陷', codes: ['menu:defect'] }, // ③
+  { kind: 'group', label: '结果与缺陷', codes: ['menu:defect', 'menu:aiqe_runs'] }, // ③
   { kind: 'link', code: 'menu:knowledge' }, // ④ 知识库
 ]
 

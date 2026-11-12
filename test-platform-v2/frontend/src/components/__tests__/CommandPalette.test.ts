@@ -14,6 +14,7 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
       '/requirement',
       '/schedule',
       '/defect',
+      '/runs',
       '/testcase?tab=mindmap',
       '/release-bundles',
       '/version-tasks',
@@ -77,6 +78,14 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
     const visible = filterCommandRoutes(ALL_COMMAND_ROUTES, hasPerm)
     expect(visible.length).toBeGreaterThan(0)
     expect(visible.some((route) => route.path === '/workbench')).toBe(true)
+  })
+
+  it('batch-336：执行中心命令仅在具备 menu:aiqe_runs 时出现', () => {
+    const withoutPerm = filterCommandRoutes(ALL_COMMAND_ROUTES, (code) => code !== 'menu:aiqe_runs')
+    expect(withoutPerm.some((route) => route.path === '/runs')).toBe(false)
+
+    const withPerm = filterCommandRoutes(ALL_COMMAND_ROUTES, (code) => code === 'menu:aiqe_runs')
+    expect(withPerm.some((route) => route.path === '/runs')).toBe(true)
   })
 
   it('超级权限可见全部入口', () => {
