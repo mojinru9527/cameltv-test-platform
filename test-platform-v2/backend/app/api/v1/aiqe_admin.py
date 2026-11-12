@@ -1,4 +1,9 @@
-"""AIQE Console 管理 API（P1）：质量门禁、噪音规则、Profile、Artifact GC。"""
+"""AIQE Console 管理 API（P1）：质量门禁、噪音规则、Profile、Artifact GC。
+
+batch-336：Console 统一门禁 `menu:aiqe_runs`（菜单权限点 = 执行中心入口权限）。
+- 无该权限 → 403（不再依赖 defect:list 才能读管理页）；
+- 写操作继续叠加 `defect:update`，避免只读角色凭菜单权限获得写能力。
+"""
 from __future__ import annotations
 
 from datetime import datetime
@@ -27,6 +32,9 @@ from app.core.exceptions import APIException
 from app.schemas.common import R
 
 router = APIRouter(prefix="/aiqe/admin", tags=["AIQE 管理"])
+
+# 执行中心菜单权限点：Console 页面与 API 的唯一入口门禁（batch-336）
+_console_access = require_permission("menu:aiqe_runs")
 
 
 class QualityGateIn(BaseModel):
@@ -70,6 +78,7 @@ def _profile_out(row) -> dict:
 @router.post("/quality-gate", response_model=R[dict], summary="质量门禁判定")
 def quality_gate(
     body: QualityGateIn,
+    _console: CurrentUser = Depends(_console_access),
     _current: CurrentUser = Depends(require_permission("defect:list")),
 ):
     return R.ok(evaluate_stats(body.model_dump()))
@@ -78,6 +87,7 @@ def quality_gate(
 @router.get("/noise-rules", response_model=R[list], summary="噪音规则列表")
 def get_noise_rules(
     include_expired: bool = Query(default=True),
+    _console: CurrentUser = Depends(_console_access),
     current: CurrentUser = Depends(require_permission("defect:list")),
     db: Session = Depends(get_db),
 ):
@@ -100,6 +110,7 @@ def get_noise_rules(
 @router.post("/noise-rules", response_model=R[dict], summary="创建噪音规则")
 def post_noise_rule(
     body: NoiseRuleIn,
+    _console: CurrentUser = Depends(_console_access),
     current: CurrentUser = Depends(require_permission("defect:update")),
     db: Session = Depends(get_db),
 ):
@@ -117,6 +128,7 @@ def post_noise_rule(
 @router.post("/noise-rules/{rule_id}/renew", response_model=R[dict], summary="续期噪音规则")
 def post_renew_rule(
     rule_id: int,
+    _console: CurrentUser = Depends(_console_access),
     _current: CurrentUser = Depends(require_permission("defect:update")),
     db: Session = Depends(get_db),
 ):
@@ -127,6 +139,7 @@ def post_renew_rule(
 @router.delete("/noise-rules/{rule_id}", response_model=R[dict], summary="删除噪音规则")
 def remove_noise_rule(
     rule_id: int,
+    _console: CurrentUser = Depends(_console_access),
     _current: CurrentUser = Depends(require_permission("defect:update")),
     db: Session = Depends(get_db),
 ):
@@ -137,6 +150,7 @@ def remove_noise_rule(
 @router.post("/artifacts/gc", response_model=R[dict], summary="Artifact 留存清理")
 def run_artifact_gc(
     retention_days: int = Query(default=30, ge=1),
+    _console: CurrentUser = Depends(_console_access),
     _current: CurrentUser = Depends(require_permission("defect:update")),
     db: Session = Depends(get_db),
 ):
@@ -145,6 +159,7 @@ def run_artifact_gc(
 
 @router.get("/profiles", response_model=R[list], summary="Execution Profile 列表")
 def get_profiles(
+    _console: CurrentUser = Depends(_console_access),
     current: CurrentUser = Depends(require_permission("defect:list")),
     db: Session = Depends(get_db),
 ):
