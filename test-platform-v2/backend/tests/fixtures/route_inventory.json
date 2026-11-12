@@ -1,5 +1,5 @@
 {
-  "count": 330,
+  "count": 336,
   "routes": [
     {
       "path": "/api/v1/ai-config/providers",
@@ -1320,6 +1320,30 @@
     {
       "path": "/api/v1/aiqe/admin/profiles",
       "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/profiles",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/profiles/{profile_id}",
+      "method": "PATCH"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/profiles/{profile_id}/approve",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/workflows",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/workflows/{workflow_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/workflows/{workflow_id}/approve",
+      "method": "POST"
     }
   ]
 }
