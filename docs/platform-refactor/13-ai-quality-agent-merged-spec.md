@@ -3163,3 +3163,4 @@ batch-313（TA-032.5 Agent Skills）已完成——6 个 skill 统一契约 + CI
 **M5 生产部署完成**（20261122，111 表，health 200）；收口报告 work-logs/M5-phase5-closeout.md。
 **M6 启动**：batch-315（TA-033 Hardening）已完成——强杀恢复/幂等账本/RBAC 审计。
 batch-316（TA-034 Sports 纵向验收）已完成——TC-AIQE-001..010 全通过，造 Bug→修复演示。
+batch-317（TA-034.2 Asset-map）已完成——页面地图、24 准则分组、覆盖率三指标、EvidenceBundle。
