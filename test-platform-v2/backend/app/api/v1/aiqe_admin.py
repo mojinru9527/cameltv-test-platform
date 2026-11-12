@@ -14,10 +14,13 @@ from sqlalchemy.orm import Session
 
 from app.aiqe.services.artifact_gc import purge_expired_artifacts
 from app.aiqe.services.noise_rule_service import (
+    NoiseRuleError,
     create_rule,
     delete_rule,
+    is_effective,
     list_rules,
     renew_rule,
+    update_rule,
 )
 from app.aiqe.services.profile_service import (
     ProfileError,
@@ -50,6 +53,24 @@ class NoiseRuleIn(BaseModel):
     action: str = "suppress"
     scope: str = "run"
     expires_at: datetime | None = None
+
+
+class NoiseRulePatchIn(BaseModel):
+    pattern: str | None = None
+    action: str | None = None
+    expires_at: datetime | None = None
+
+
+def _noise_rule_out(row) -> dict:
+    return {
+        "id": row.id,
+        "pattern": row.pattern,
+        "action": row.action,
+        "scope": row.scope,
+        "expires_at": row.expires_at,
+        "status": row.status,
+        "effective": is_effective(row),
+    }
 
 
 class ProfileIn(BaseModel):
@@ -92,19 +113,7 @@ def get_noise_rules(
     db: Session = Depends(get_db),
 ):
     rows = list_rules(db, current.project_id or 0, include_expired=include_expired)
-    return R.ok(
-        [
-            {
-                "id": row.id,
-                "pattern": row.pattern,
-                "action": row.action,
-                "scope": row.scope,
-                "expires_at": row.expires_at,
-                "status": row.status,
-            }
-            for row in rows
-        ]
-    )
+    return R.ok([_noise_rule_out(row) for row in rows])
 
 
 @router.post("/noise-rules", response_model=R[dict], summary="创建噪音规则")
@@ -114,15 +123,41 @@ def post_noise_rule(
     current: CurrentUser = Depends(require_permission("defect:update")),
     db: Session = Depends(get_db),
 ):
-    row = create_rule(
-        db,
-        project_id=current.project_id or 0,
-        pattern=body.pattern,
-        action=body.action,
-        scope=body.scope,
-        expires_at=body.expires_at,
-    )
-    return R.ok({"id": row.id, "expires_at": row.expires_at, "status": row.status})
+    try:
+        row = create_rule(
+            db,
+            project_id=current.project_id or 0,
+            pattern=body.pattern,
+            action=body.action,
+            scope=body.scope,
+            expires_at=body.expires_at,
+            created_by=current.user.id,
+        )
+    except NoiseRuleError as exc:
+        raise APIException(code=400, msg=str(exc), http_status=400) from None
+    return R.ok(_noise_rule_out(row))
+
+
+@router.patch("/noise-rules/{rule_id}", response_model=R[dict], summary="更新噪音规则")
+def patch_noise_rule(
+    rule_id: int,
+    body: NoiseRulePatchIn,
+    _current: CurrentUser = Depends(require_permission("defect:update")),
+    db: Session = Depends(get_db),
+):
+    try:
+        row = update_rule(
+            db,
+            rule_id,
+            pattern=body.pattern,
+            action=body.action,
+            expires_at=body.expires_at,
+        )
+    except NoiseRuleError as exc:
+        message = str(exc)
+        status = 404 if "不存在" in message else 400
+        raise APIException(code=status, msg=message, http_status=status) from None
+    return R.ok(_noise_rule_out(row))
 
 
 @router.post("/noise-rules/{rule_id}/renew", response_model=R[dict], summary="续期噪音规则")
@@ -132,8 +167,11 @@ def post_renew_rule(
     _current: CurrentUser = Depends(require_permission("defect:update")),
     db: Session = Depends(get_db),
 ):
-    row = renew_rule(db, rule_id)
-    return R.ok({"id": row.id, "expires_at": row.expires_at, "status": row.status})
+    try:
+        row = renew_rule(db, rule_id)
+    except NoiseRuleError as exc:
+        raise APIException(code=404, msg=str(exc), http_status=404) from None
+    return R.ok(_noise_rule_out(row))
 
 
 @router.delete("/noise-rules/{rule_id}", response_model=R[dict], summary="删除噪音规则")
@@ -143,7 +181,10 @@ def remove_noise_rule(
     _current: CurrentUser = Depends(require_permission("defect:update")),
     db: Session = Depends(get_db),
 ):
-    delete_rule(db, rule_id)
+    try:
+        delete_rule(db, rule_id)
+    except NoiseRuleError as exc:
+        raise APIException(code=404, msg=str(exc), http_status=404) from None
     return R.ok({"id": rule_id, "deleted": True})
 
 

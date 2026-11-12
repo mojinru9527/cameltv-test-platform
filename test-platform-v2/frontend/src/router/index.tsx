@@ -28,6 +28,8 @@ const KnowledgePage = lazy(() => import('@/pages/knowledge'))
 const AiConfigPage = lazy(() => import('@/pages/ai-config'))
 const ProfilesPage = lazy(() => import('@/pages/aiqe/profiles'))
 const WorkflowsPage = lazy(() => import('@/pages/aiqe/workflows'))
+const QualityGatePage = lazy(() => import('@/pages/aiqe/quality-gate'))
+const NoiseRulesPage = lazy(() => import('@/pages/aiqe/noise-rules'))
 const ReleaseBundlesPage = lazy(() => import('@/pages/release-bundles'))
 const BundleDetailPage = lazy(() => import('@/pages/release-bundles/BundleDetail'))
 const VersionPanoramaPage = lazy(() => import('@/pages/release-bundles/VersionPanorama'))
@@ -223,6 +225,23 @@ export const router = createBrowserRouter([
         element: (
           <RequirePermission code="menu:aiqe_runs">
             <PageLoader><WorkflowsPage /></PageLoader>
+          </RequirePermission>
+        ),
+      },
+      // (batch-338) 质量门禁 / 噪音规则
+      {
+        path: 'aiqe/quality-gate',
+        element: (
+          <RequirePermission code="menu:aiqe_runs">
+            <PageLoader><QualityGatePage /></PageLoader>
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'aiqe/noise-rules',
+        element: (
+          <RequirePermission code="menu:aiqe_runs">
+            <PageLoader><NoiseRulesPage /></PageLoader>
           </RequirePermission>
         ),
       },
