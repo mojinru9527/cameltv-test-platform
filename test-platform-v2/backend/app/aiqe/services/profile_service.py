@@ -138,3 +138,13 @@ def acquire_fixture_locks(
 def release_fixture_locks(db: Session, tokens: dict[str, int]) -> None:
     for key, token in tokens.items():
         resource_lock.release(db, key, token)
+
+
+def list_profiles(db: Session, project_id: int) -> list[ExecutionProfile]:
+    return list(
+        db.scalars(
+            select(ExecutionProfile)
+            .where(ExecutionProfile.project_id == project_id)
+            .order_by(ExecutionProfile.created_at.desc())
+        )
+    )

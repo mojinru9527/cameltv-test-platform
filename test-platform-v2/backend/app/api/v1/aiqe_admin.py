@@ -5,10 +5,8 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.aiqe.models.profile import ExecutionProfile
 from app.aiqe.services.artifact_gc import purge_expired_artifacts
 from app.aiqe.services.noise_rule_service import (
     create_rule,
@@ -16,6 +14,7 @@ from app.aiqe.services.noise_rule_service import (
     list_rules,
     renew_rule,
 )
+from app.aiqe.services.profile_service import list_profiles
 from app.aiqe.services.quality_gate import evaluate_stats
 from app.core.deps import CurrentUser, get_db, require_permission
 from app.schemas.common import R
@@ -119,13 +118,7 @@ def get_profiles(
     current: CurrentUser = Depends(require_permission("defect:list")),
     db: Session = Depends(get_db),
 ):
-    rows = list(
-        db.scalars(
-            select(ExecutionProfile)
-            .where(ExecutionProfile.project_id == (current.project_id or 0))
-            .order_by(ExecutionProfile.created_at.desc())
-        )
-    )
+    rows = list_profiles(db, current.project_id or 0)
     return R.ok(
         [
             {
