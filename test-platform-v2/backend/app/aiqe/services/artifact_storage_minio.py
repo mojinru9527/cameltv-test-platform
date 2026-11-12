@@ -164,3 +164,25 @@ class MinioArtifactStorage:
                 f"MinIO get 失败: {resp.status_code} {resp.text[:200]}"
             )
         return resp.content
+
+    def delete(self, uri: str) -> None:
+        prefix = f"s3://{self.bucket}/"
+        if not uri.startswith(prefix):
+            raise ArtifactStorageError(f"不支持的 uri: {uri[:60]}")
+        key = uri[len(prefix) :]
+        url = self._url(key)
+        resp = self._client.delete(
+            url,
+            headers=sigv4_headers(
+                "DELETE",
+                url,
+                b"",
+                access_key=self.access_key,
+                secret_key=self.secret_key,
+                region=self.region,
+            ),
+        )
+        if resp.status_code not in (200, 204, 404):
+            raise ArtifactStorageError(
+                f"MinIO delete 失败: {resp.status_code} {resp.text[:200]}"
+            )
