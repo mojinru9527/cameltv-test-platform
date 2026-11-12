@@ -22,7 +22,7 @@ from app.api.v1 import (
     ui_test,
     interaction_coverage,
 )
-from app.api.v1 import aiqe_runs
+from app.api.v1 import aiqe_admin, aiqe_runs
 from app.api.v1 import ai_config
 from app.api.v1 import ai_agent
 from app.api.v1 import test_case_taxonomy, test_case_crud, test_case_files
@@ -87,3 +87,4 @@ api_router.include_router(lanhu_evidence_review.router)
 api_router.include_router(version_task.router)
 api_router.include_router(campaign_execution_router.router)
 api_router.include_router(aiqe_runs.router)
+api_router.include_router(aiqe_admin.router)

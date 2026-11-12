@@ -1,5 +1,5 @@
 {
-  "count": 323,
+  "count": 330,
   "routes": [
     {
       "path": "/api/v1/ai-config/providers",
@@ -1292,6 +1292,34 @@
     {
       "path": "/api/v1/defects/{defect_id}/regressions",
       "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/quality-gate",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/noise-rules",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/noise-rules",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/noise-rules/{rule_id}/renew",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/noise-rules/{rule_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/artifacts/gc",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/profiles",
+      "method": "GET"
     }
   ]
 }
