@@ -86,3 +86,38 @@ def get_workflow(db: Session, workflow_id: str) -> WorkflowDefinition:
     if row is None:
         raise WorkflowNotFound(workflow_id)
     return row
+
+
+def get_workflow_for_project(
+    db: Session, workflow_id: str, project_id: int
+) -> WorkflowDefinition:
+    """batch-337：按项目隔离读取，跨项目一律按不存在处理（不泄露存在性）。"""
+    row = db.get(WorkflowDefinition, workflow_id)
+    if row is None or row.project_id != project_id:
+        raise WorkflowNotFound(workflow_id)
+    return row
+
+
+def list_workflows(
+    db: Session,
+    project_id: int,
+    *,
+    limit: int = 50,
+    offset: int = 0,
+    approval_status: str | None = None,
+) -> tuple[list[WorkflowDefinition], int]:
+    """batch-337：Workflow 审批页列表（项目隔离 + 审批状态过滤）。"""
+    conditions = [WorkflowDefinition.project_id == project_id]
+    if approval_status:
+        conditions.append(WorkflowDefinition.approval_status == approval_status)
+    total = db.scalar(
+        select(func.count()).select_from(WorkflowDefinition).where(*conditions)
+    )
+    rows = db.scalars(
+        select(WorkflowDefinition)
+        .where(*conditions)
+        .order_by(WorkflowDefinition.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    ).all()
+    return list(rows), int(total or 0)

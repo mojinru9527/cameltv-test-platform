@@ -19,9 +19,16 @@ from app.aiqe.services.noise_rule_service import (
     list_rules,
     renew_rule,
 )
-from app.aiqe.services.profile_service import list_profiles
+from app.aiqe.services.profile_service import (
+    ProfileError,
+    approve_profile,
+    create_profile,
+    list_profiles,
+    update_config,
+)
 from app.aiqe.services.quality_gate import evaluate_stats
 from app.core.deps import CurrentUser, get_db, require_permission
+from app.core.exceptions import APIException
 from app.schemas.common import R
 
 router = APIRouter(prefix="/aiqe/admin", tags=["AIQE 管理"])
@@ -43,6 +50,29 @@ class NoiseRuleIn(BaseModel):
     action: str = "suppress"
     scope: str = "run"
     expires_at: datetime | None = None
+
+
+class ProfileIn(BaseModel):
+    name: str
+    purpose: str = "core_isolated"
+    config: dict = {}
+
+
+class ProfileConfigIn(BaseModel):
+    config: dict
+
+
+def _profile_out(row) -> dict:
+    return {
+        "id": row.id,
+        "name": row.name,
+        "purpose": row.purpose,
+        "version": row.version,
+        "approval_status": row.approval_status,
+        "checksum": row.checksum,
+        "owner_id": row.owner_id,
+        "frozen": row.approval_status == "approved",
+    }
 
 
 @router.post("/quality-gate", response_model=R[dict], summary="质量门禁判定")
@@ -134,16 +164,56 @@ def get_profiles(
     db: Session = Depends(get_db),
 ):
     rows = list_profiles(db, current.project_id or 0)
-    return R.ok(
-        [
-            {
-                "id": row.id,
-                "name": row.name,
-                "purpose": row.purpose,
-                "version": row.version,
-                "approval_status": row.approval_status,
-                "checksum": row.checksum,
-            }
-            for row in rows
-        ]
-    )
+    return R.ok([_profile_out(row) for row in rows])
+
+
+@router.post("/profiles", response_model=R[dict], summary="创建 Execution Profile")
+def post_profile(
+    body: ProfileIn,
+    _console: CurrentUser = Depends(require_permission("menu:aiqe_runs")),
+    current: CurrentUser = Depends(require_permission("defect:update")),
+    db: Session = Depends(get_db),
+):
+    try:
+        row = create_profile(
+            db,
+            project_id=current.project_id or 0,
+            name=body.name,
+            purpose=body.purpose,
+            config=body.config,
+            owner_id=current.user.id,
+        )
+    except ProfileError as exc:
+        raise APIException(code=400, msg=str(exc), http_status=400) from None
+    return R.ok(_profile_out(row))
+
+
+@router.post("/profiles/{profile_id}/approve", response_model=R[dict], summary="审批 Execution Profile（approved 冻结）")
+def post_approve_profile(
+    profile_id: str,
+    _console: CurrentUser = Depends(require_permission("menu:aiqe_runs")),
+    _current: CurrentUser = Depends(require_permission("defect:update")),
+    db: Session = Depends(get_db),
+):
+    try:
+        row = approve_profile(db, profile_id)
+    except ProfileError as exc:
+        raise APIException(code=404, msg=str(exc), http_status=404) from None
+    return R.ok(_profile_out(row))
+
+
+@router.patch("/profiles/{profile_id}", response_model=R[dict], summary="更新 Execution Profile 配置")
+def patch_profile(
+    profile_id: str,
+    body: ProfileConfigIn,
+    _console: CurrentUser = Depends(require_permission("menu:aiqe_runs")),
+    _current: CurrentUser = Depends(require_permission("defect:update")),
+    db: Session = Depends(get_db),
+):
+    try:
+        row = update_config(db, profile_id, body.config)
+    except ProfileError as exc:
+        message = str(exc)
+        status = 409 if "approved" in message else 404
+        raise APIException(code=status, msg=message, http_status=status) from None
+    return R.ok(_profile_out(row))

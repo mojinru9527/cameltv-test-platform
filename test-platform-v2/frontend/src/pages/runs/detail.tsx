@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router'
 import { getAiqeRun } from '@/api/aiqeRuns'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import type { AiqeRun, AiqeRunArtifact } from '@/types/aiqe'
+import ConsoleTabs from '@/pages/aiqe/ConsoleTabs'
 import { useRunEvents } from './useRunEvents'
 
 export default function RunDetailPage() {
@@ -33,11 +34,12 @@ export default function RunDetailPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <header className="space-y-1">
+      <header className="space-y-3">
         <Link className="text-sm text-primary hover:underline" to="/runs">
           ← 返回执行中心
         </Link>
         <h1 className="font-mono text-2xl font-semibold">{run?.run_key ?? runId}</h1>
+        <ConsoleTabs />
       </header>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
