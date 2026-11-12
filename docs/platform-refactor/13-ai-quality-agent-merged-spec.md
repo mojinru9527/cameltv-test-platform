@@ -3171,3 +3171,4 @@ batch-321（TA-037 AGENTS.md）已完成——AIQE 入口/门禁/MCP/Skill 规�
 batch-322（TA-038 Skill 跨 Agent）已完成——三客户端清单 + 6 skill 契约校验（SKILL_COMPAT=PASS）。**M7 全部完成**。
 **M7 收口**：TA-036/037/038 完成，生产保持 20261123（112 表，health 200），版本锁 release-m6-20261112。
 **M8 启动**：batch-324（TA-039 Device Broker）已完成——Android 优先、能力匹配、iOS C84-1 门禁。
+batch-325（TA-040 小程序 Adapter）已完成——微信版本矩阵 + minium/weapp-dev-mcp 回退 + 5 用例。
