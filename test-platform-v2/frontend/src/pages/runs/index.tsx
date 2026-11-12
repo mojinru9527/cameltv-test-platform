@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { listAiqeRuns } from '@/api/aiqeRuns'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import type { AiqeRun } from '@/types/aiqe'
+import ConsoleTabs from '@/pages/aiqe/ConsoleTabs'
 
 export default function RunListPage() {
   useDocumentTitle('执行中心')
@@ -28,12 +29,15 @@ export default function RunListPage() {
 
   return (
     <div className="space-y-4 p-6">
-      <header className="flex items-baseline justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">执行中心</h1>
-          <p className="text-sm text-muted-foreground">Run 列表（M1 Run Console）</p>
+      <header className="space-y-3">
+        <div className="flex items-baseline justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold">执行中心</h1>
+            <p className="text-sm text-muted-foreground">Run 列表（M1 Run Console）</p>
+          </div>
+          <span className="text-sm text-muted-foreground">共 {total} 条</span>
         </div>
-        <span className="text-sm text-muted-foreground">共 {total} 条</span>
+        <ConsoleTabs />
       </header>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}

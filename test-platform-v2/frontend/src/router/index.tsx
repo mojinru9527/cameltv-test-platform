@@ -3,7 +3,7 @@ import { createBrowserRouter, Navigate, useNavigate } from 'react-router'
 import { Loader2 } from '@/lib/icons'
 import MainLayout from '@/layouts/MainLayout'
 import NotFound from '@/pages/NotFound'
-import RequireAuth from './guard'
+import RequireAuth, { RequirePermission } from './guard'
 import client from '@/api/client'
 import { logoutApi } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
@@ -26,6 +26,8 @@ const ApiTestPage = lazy(() => import('@/pages/apitest'))
 const EnvironmentPage = lazy(() => import('@/pages/environment'))
 const KnowledgePage = lazy(() => import('@/pages/knowledge'))
 const AiConfigPage = lazy(() => import('@/pages/ai-config'))
+const ProfilesPage = lazy(() => import('@/pages/aiqe/profiles'))
+const WorkflowsPage = lazy(() => import('@/pages/aiqe/workflows'))
 const ReleaseBundlesPage = lazy(() => import('@/pages/release-bundles'))
 const BundleDetailPage = lazy(() => import('@/pages/release-bundles/BundleDetail'))
 const VersionPanoramaPage = lazy(() => import('@/pages/release-bundles/VersionPanorama'))
@@ -207,6 +209,23 @@ export const router = createBrowserRouter([
       { path: 'environment', element: <PageLoader><EnvironmentPage /></PageLoader> },
       { path: 'knowledge', element: <PageLoader><KnowledgePage /></PageLoader> },
       { path: 'ai-config', element: <PageLoader><AiConfigPage /></PageLoader> },
+      // (batch-337) AIQE Console：Profile / Workflow 审批页（沿用执行中心菜单权限）
+      {
+        path: 'aiqe/profiles',
+        element: (
+          <RequirePermission code="menu:aiqe_runs">
+            <PageLoader><ProfilesPage /></PageLoader>
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'aiqe/workflows',
+        element: (
+          <RequirePermission code="menu:aiqe_runs">
+            <PageLoader><WorkflowsPage /></PageLoader>
+          </RequirePermission>
+        ),
+      },
       // DEF-20260905-002：列表页与建任务向导拆为独立路由
       { path: 'version-tasks', element: <PageLoader><VersionTaskListPage /></PageLoader> },
       { path: 'version-tasks/new', element: <PageLoader><VersionTasksPage /></PageLoader> },
