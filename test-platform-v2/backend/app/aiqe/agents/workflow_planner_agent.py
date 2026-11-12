@@ -48,6 +48,7 @@ class WorkflowPlannerAgent(BaseAgent):
         '{"workflow":{"schema_version":"1.0","scenario_key":str,"nodes":[...],"edges":[...],'
         '"run_policy":{...}},"rationale":str}。节点必须声明 key/driver/depends_on；'
         "依赖必须无环且变量只能引用祖先节点输出；不得自行批准。"
+        "nodes[].driver 只能取 http/playwright/db/event/mobile/miniapp/device/external_e2e，不得使用角色名。"
     )
 
     def __init__(self, llm, *, registered_drivers=None, registered_capabilities=None) -> None:
