@@ -3176,3 +3176,7 @@ batch-326（TA-041/042 Desktop + IoT Drivers）已完成——OS 后端映射、
 batch-327（TA-043/044/045 Domain Packs）已完成——E-commerce/SaaS/IoT 三域 Pack + 必备检查门禁。
 **M8 收口**：TA-039..045 完成，生产 release-m8-20261112（112 表，health 200），版本锁已更新。
 **P0 代码收口**：batch-329——NodeRun→ExecutionJob 桥接、条件边、Artifact GC、Dogfood M1–M8 留档（339 passed）、TC-AIQE E2E 入口。
+**P1 启动**：batch-336（执行中心菜单 `menu:aiqe_runs` + API 统一门禁 + 路由守卫/403）已完成。
+batch-337（Workflow 列表/详情/审批 + Profile 创建/审批/更新 + Console 页面）已完成。
+batch-338（质量门禁页 + 噪音规则页 + 规则错误码/`PATCH`/`effective`）已完成。
+batch-339（PlatformMatrix 真实 API + SSE 长连接 `id`/`retry`/`Last-Event-ID`）已完成；P1 收口见 `work-logs/P1-closeout.md`。
