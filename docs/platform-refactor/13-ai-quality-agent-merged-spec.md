@@ -3167,3 +3167,4 @@ batch-317（TA-034.2 Asset-map）已完成——页面地图、24 准则分组�
 batch-318（TA-035 Ops/Rollback）已完成——空环境启动文档、版本锁/升级/回滚脚本。**M6（TA-033..035）全部完成**。
 **M6 生产部署完成**（20261123，112 表，health 200）；收口报告 work-logs/M6-phase6-closeout.md。
 **M7 启动**：batch-320（TA-036 MCP Server）已完成——stdio JSON-RPC、tools/list/call、写审批。
+batch-321（TA-037 AGENTS.md）已完成——AIQE 入口/门禁/MCP/Skill 规范 + AGENTS_GUARD=PASS。

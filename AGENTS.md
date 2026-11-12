@@ -253,6 +253,45 @@ pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor 
 **风险**: 无 / 低 / 中 / 高（说明）
 ```
 
+## 5.5 AIQE 专项规范（M1-M7 后）
+
+> 适用：AIQE（AI Quality Engine）相关批次。与上文通用规则叠加，不替代。
+
+### 5.5.1 入口文档
+
+| 内容 | 路径 |
+|------|------|
+| 合并规格（§0/§4/§19） | `docs/platform-refactor/13-ai-quality-agent-merged-spec.md` |
+| 启动与最小 E2E | `docs/aiqe/ops.md` |
+| 备份 / 回滚 / 版本锁 | `docs/aiqe/rollback.md` |
+| MCP Server 注册 | `scripts/mcp-server/README.md` |
+| Agent Skills | `.claude/skills/<agent-key>/SKILL.md` |
+
+Codex 新 session：先读本文件 → 再读 `docs/aiqe/ops.md`；不得跳过门禁直接改 AIQE 表结构。
+
+### 5.5.2 AIQE 批次门禁
+
+```powershell
+# 后端
+python -m pytest -q
+python scripts/ci/quality_ratchet.py
+python -m alembic heads          # 必须单头
+# 守卫
+pwsh scripts/ci/check-oracle-layer.ps1 -SelfTest
+pwsh scripts/ci/check-aiqe-skills.ps1 -RepositoryPath .
+```
+
+- 新迁移必须可重跑（`upgrade/downgrade/upgrade`）；
+- 新 assertion 必须带 `oracle_layer`（REQ/STD/PATTERN）；
+- 新 Agent 必须提供 `SKILL.md`（输入/输出/安全边界）；
+- AI 不得自动关缺陷、不得自行批准 Workflow。
+
+### 5.5.3 MCP / Skill 使用
+
+- 本地 MCP：`codex mcp add cameltv-aiqe -- python <repo>/scripts/mcp-server/aiqe_mcp/server.py`；
+- 写工具必须携带审批 token；只读工具不得要求写权限；
+- Skill 与后端规则冲突时，以后端 fail-closed 规则为准。
+
 ## 6. 关联资源
 
 - 仓库入口: [CLAUDE.md](CLAUDE.md)
