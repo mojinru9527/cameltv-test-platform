@@ -20,6 +20,7 @@ import {
   Sparkles,
   Globe,
   Terminal,
+  Play,
   type LucideIcon,
 } from '@/lib/icons'
 import { useAuthStore } from '@/stores/auth'
@@ -48,6 +49,7 @@ export const ALL_COMMAND_ROUTES: CommandRoute[] = [
   { label: '需求文档', menuBacked: true, path: '/requirement', icon: GitBranch, group: '页面', keywords: ['prd', '需求', 'ai 拆分', '生成用例'] },
   { label: '定时任务', menuBacked: true, path: '/schedule', icon: Clock, group: '页面', keywords: ['cron', '定时'] },
   { label: '缺陷管理', menuBacked: true, path: '/defect', icon: Bug, group: '页面', keywords: ['bug', '缺陷'] },
+  { label: '执行中心', menuBacked: true, path: '/runs', icon: Play, group: '页面', permission: 'menu:aiqe_runs', keywords: ['run', 'aiqe', '执行', '证据', '时间线'] },
   // (P2a) 思维导图并入用例服务「脑图视图」Tab，入口指向带参路径
   { label: '思维导图', path: '/testcase?tab=mindmap', icon: Share2, group: '页面', keywords: ['mindmap', '脑图'] },
   { label: '版本发布包', menuBacked: true, path: '/release-bundles', icon: GitBranch, group: '页面', keywords: ['release', '发布'] },

@@ -60,7 +60,7 @@ describe('Execution Profiles 页面（batch-337）', () => {
     fireEvent.click(screen.getByRole('button', { name: '审批' }))
 
     await waitFor(() => expect(api.approveProfile).toHaveBeenCalledWith('p1'))
-    expect(await screen.findByText('已冻结')).toBeTruthy()
+    await waitFor(() => expect(screen.getAllByText('已冻结').length).toBe(2))
     expect(api.listProfiles).toHaveBeenCalledTimes(1)
   })
 

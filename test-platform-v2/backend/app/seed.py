@@ -52,6 +52,9 @@ _MENUS = [
     # (batch A) AI 模型配置中心
     ("menu:ai_config", "AI 配置", "", "/ai-config", "SettingOutlined", 23),
     ("menu:lanhu_evidence", "蓝湖证据包", "", "/lanhu-evidence", "FileTextOutlined", 23),
+    # (batch-336 P1) AIQE 执行中心：Run Console 入口；该权限点同时是 Console API 的门禁，
+    # 无此权限 → 侧边栏不可见、/runs 路由守卫拦截、/api/v1/aiqe/* 返回 403。
+    ("menu:aiqe_runs", "执行中心", "", "/runs", "PlayCircleOutlined", 24),
 ]
 
 # 操作权限点（按模块分组）：(code, name, type)
@@ -228,6 +231,8 @@ _TESTER_MENUS = {
     "menu:myproject",
     # (B6-F03) 版本验收主链路
     "menu:versiontask",
+    # (batch-336 P1) 执行中心 / Run Console：tester 默认可见；viewer 不分配（只读角色无执行台）
+    "menu:aiqe_runs",
 }
 
 

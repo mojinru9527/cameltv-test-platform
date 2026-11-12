@@ -259,8 +259,23 @@ export const router = createBrowserRouter([
       { path: 'version-tasks', element: <PageLoader><VersionTaskListPage /></PageLoader> },
       { path: 'version-tasks/new', element: <PageLoader><VersionTasksPage /></PageLoader> },
       { path: 'version-tasks/:taskId', element: <PageLoader><VersionTaskRunPage /></PageLoader> },
-      { path: 'runs', element: <PageLoader><RunListPage /></PageLoader> },
-      { path: 'runs/:runId', element: <PageLoader><RunDetailPage /></PageLoader> },
+      // (batch-336) 执行中心 = 菜单权限点 menu:aiqe_runs 的门禁页面；无权限渲染 403
+      {
+        path: 'runs',
+        element: (
+          <RequirePermission code="menu:aiqe_runs">
+            <PageLoader><RunListPage /></PageLoader>
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'runs/:runId',
+        element: (
+          <RequirePermission code="menu:aiqe_runs">
+            <PageLoader><RunDetailPage /></PageLoader>
+          </RequirePermission>
+        ),
+      },
       { path: 'release-bundles', element: <PageLoader><ReleaseBundlesPage /></PageLoader> },
       { path: 'release-bundles/:id', element: <PageLoader><BundleDetailPage /></PageLoader> },
       { path: 'release-bundles/:id/panorama', element: <PageLoader><VersionPanoramaPage /></PageLoader> },
