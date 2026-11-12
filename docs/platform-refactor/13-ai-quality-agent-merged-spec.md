@@ -3164,3 +3164,4 @@ batch-313（TA-032.5 Agent Skills）已完成——6 个 skill 统一契约 + CI
 **M6 启动**：batch-315（TA-033 Hardening）已完成——强杀恢复/幂等账本/RBAC 审计。
 batch-316（TA-034 Sports 纵向验收）已完成——TC-AIQE-001..010 全通过，造 Bug→修复演示。
 batch-317（TA-034.2 Asset-map）已完成——页面地图、24 准则分组、覆盖率三指标、EvidenceBundle。
+batch-318（TA-035 Ops/Rollback）已完成——空环境启动文档、版本锁/升级/回滚脚本。**M6（TA-033..035）全部完成**。
