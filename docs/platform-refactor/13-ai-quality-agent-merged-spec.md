@@ -3161,3 +3161,4 @@ batch-311（TA-031 Quality Gate）已完成——P0 未执行/未知/失败均�
 batch-312（TA-032 MCP Gateway）已完成——只读查询、写动作审批门禁、3 类外部 Agent 声明。
 batch-313（TA-032.5 Agent Skills）已完成——6 个 skill 统一契约 + CI 校验。
 **M5 生产部署完成**（20261122，111 表，health 200）；收口报告 work-logs/M5-phase5-closeout.md。
+**M6 启动**：batch-315（TA-033 Hardening）已完成——强杀恢复/幂等账本/RBAC 审计。

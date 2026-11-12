@@ -3,6 +3,7 @@ from app.aiqe.models.agent import AgentExecution
 from app.aiqe.models.artifact import RunArtifact
 from app.aiqe.models.capability import NodeCapabilityManifest
 from app.aiqe.models.event import EventOutbox, RunEvent
+from app.aiqe.models.hardening import MutationLedger
 from app.aiqe.models.learning import BugPattern, LearningCandidate
 from app.aiqe.models.noise_rule import NoiseRule
 from app.aiqe.models.profile import ExecutionProfile
@@ -16,6 +17,7 @@ __all__ = [
     "EventOutbox",
     "ExecutionProfile",
     "LearningCandidate",
+    "MutationLedger",
     "NodeCapabilityManifest",
     "NodeRun",
     "NoiseRule",

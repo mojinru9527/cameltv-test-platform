@@ -17,6 +17,7 @@ from app.aiqe.models import profile as aiqe_profile_models  # noqa: F401
 from app.aiqe.models import triage as aiqe_triage_models  # noqa: F401
 from app.aiqe.models import noise_rule as aiqe_noise_rule_models  # noqa: F401
 from app.aiqe.models import learning as aiqe_learning_models  # noqa: F401
+from app.aiqe.models import hardening as aiqe_hardening_models  # noqa: F401
 from app.models.ai_task import AiTask
 from app.models.execution_node import ExecutionNode
 from app.models.ai_agent_token import AiAgentToken
