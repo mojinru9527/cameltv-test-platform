@@ -69,3 +69,58 @@ export async function approveWorkflow(workflowId: string): Promise<WorkflowSumma
     `/aiqe/workflows/${workflowId}/approve`,
   )) as unknown as WorkflowSummary
 }
+
+// ── batch-338：QualityGate / NoiseRules ──
+
+export interface QualityGateResult {
+  gate_status: 'PASS' | 'FAIL' | 'BLOCKED'
+  p0_total: number
+  p0_passed: number
+  p0_failed: number
+  p0_unknown: number
+  p0_not_run: number
+  reasons: string[]
+}
+
+export interface NoiseRule {
+  id: number
+  pattern: string
+  action: string
+  scope: string
+  expires_at: string
+  status: string
+  effective: boolean
+}
+
+export async function evaluateQualityGate(body: {
+  p0_total: number
+  p0_passed: number
+  p0_failed: number
+  p0_unknown: number
+  p0_not_run: number
+}): Promise<QualityGateResult> {
+  return (await client.post('/aiqe/admin/quality-gate', body)) as unknown as QualityGateResult
+}
+
+export async function listNoiseRules(): Promise<NoiseRule[]> {
+  return (await client.get('/aiqe/admin/noise-rules')) as unknown as NoiseRule[]
+}
+
+export async function createNoiseRule(body: {
+  pattern: string
+  action?: string
+  scope?: string
+  expires_at?: string
+}): Promise<NoiseRule> {
+  return (await client.post('/aiqe/admin/noise-rules', body)) as unknown as NoiseRule
+}
+
+export async function renewNoiseRule(ruleId: number): Promise<NoiseRule> {
+  return (await client.post(
+    `/aiqe/admin/noise-rules/${ruleId}/renew`,
+  )) as unknown as NoiseRule
+}
+
+export async function deleteNoiseRule(ruleId: number): Promise<void> {
+  await client.delete(`/aiqe/admin/noise-rules/${ruleId}`)
+}

@@ -6,6 +6,8 @@ const TABS = [
   { to: '/runs', label: '执行记录' },
   { to: '/aiqe/profiles', label: 'Execution Profiles' },
   { to: '/aiqe/workflows', label: 'Workflow 审批' },
+  { to: '/aiqe/quality-gate', label: '质量门禁' },
+  { to: '/aiqe/noise-rules', label: '噪音规则' },
 ] as const
 
 export default function ConsoleTabs() {
