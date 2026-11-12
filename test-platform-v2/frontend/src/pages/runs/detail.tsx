@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { getAiqeRun } from '@/api/aiqeRuns'
+import { Badge } from '@/ui'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import type { AiqeRun, AiqeRunArtifact } from '@/types/aiqe'
 import ConsoleTabs from '@/pages/aiqe/ConsoleTabs'
@@ -13,7 +14,7 @@ export default function RunDetailPage() {
   const [run, setRun] = useState<AiqeRun | null>(null)
   const [artifacts, setArtifacts] = useState<AiqeRunArtifact[]>([])
   const [error, setError] = useState('')
-  const events = useRunEvents(runId)
+  const { events, connection } = useRunEvents(runId)
 
   useEffect(() => {
     if (!runId) return
@@ -39,6 +40,16 @@ export default function RunDetailPage() {
           ← 返回执行中心
         </Link>
         <h1 className="font-mono text-2xl font-semibold">{run?.run_key ?? runId}</h1>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">事件通道：</span>
+          {connection === 'live' ? (
+            <Badge tone="success">实时</Badge>
+          ) : connection === 'polling' ? (
+            <Badge tone="warning">轮询中</Badge>
+          ) : (
+            <Badge tone="neutral">{connection === 'connecting' ? '连接中' : '未连接'}</Badge>
+          )}
+        </div>
         <ConsoleTabs />
       </header>
 

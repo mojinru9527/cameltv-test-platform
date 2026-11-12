@@ -10,11 +10,12 @@ import json
 import time
 from collections.abc import Iterator
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Header, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.aiqe.services.event_service import list_events
+from app.aiqe.services.run_state import TERMINAL_STATUSES
 from app.aiqe.services.run_query_service import (
     RunNotFoundError,
     get_artifacts,
@@ -117,16 +118,26 @@ def get_artifacts_api(
 
 
 def _sse_payload(event) -> str:
-    return "data: " + json.dumps(
+    """SSE 帧：带 `id`（断线重连 Last-Event-ID）与 `retry`（3s 重连）。"""
+    data = json.dumps(
         RunEventOut.model_validate(event).model_dump(mode="json"), ensure_ascii=False
-    ) + "\n\n"
+    )
+    return f"id: {event.seq}\nretry: 3000\ndata: {data}\n\n"
 
 
-@router.get("/{run_id}/events/stream", summary="事件流（SSE）")
+def _parse_last_event_id(value: str | None) -> int:
+    try:
+        return max(0, int(value or 0))
+    except (TypeError, ValueError):
+        return 0
+
+
+@router.get("/{run_id}/events/stream", summary="事件流（SSE 长连接）")
 def stream_events(
     run_id: str,
     after_seq: int = Query(default=0, ge=0),
     once: bool = Query(default=False),
+    last_event_id: str | None = Header(default=None, alias="Last-Event-ID"),
     current: CurrentUser = Depends(require_project),
     db: Session = Depends(get_db),
 ):
@@ -135,19 +146,29 @@ def stream_events(
     except RunNotFoundError:
         raise _not_found(run_id) from None
 
+    # 浏览器 EventSource 重连时携带 Last-Event-ID；与 after_seq 取较大值，确保不丢事件。
+    start_seq = max(after_seq, _parse_last_event_id(last_event_id))
+
     def generate() -> Iterator[str]:
-        seq = after_seq
-        rounds = 1 if once else 30
-        for _ in range(rounds):
-            rows = list_events(db, run_id, after_seq=seq, limit=100)
+        seq = start_seq
+        # 长连接：最多 30 分钟；Run 进入终态且已无新事件后主动关闭；每 15s 心跳一次。
+        max_rounds = 1 if once else 1800
+        for index in range(max_rounds):
+            rows = list_events(db, run_id, after_seq=seq, limit=200)
             for row in rows:
                 seq = row.seq
                 yield _sse_payload(row)
-            db.expire_all()
             if once:
                 break
+            if not rows and index % 5 == 0:
+                fresh = get_run(db, run_id, current.project_id or 0)
+                if fresh.status in TERMINAL_STATUSES:
+                    break
+            if index and index % 15 == 0:
+                yield ": keep-alive\n\n"
+            db.expire_all()
             time.sleep(1)
-        yield ": keep-alive\n\n"
+        yield ": stream-end\n\n"
 
     return StreamingResponse(
         generate(),
