@@ -1,6 +1,6 @@
 """M1 / TA-008：Run Console 只读 API + SSE 事件流。
 
-- 全部按 `X-Project-Id` 隔离（`require_project`）；
+- 全部按 `X-Project-Id` 隔离，并统一要求执行中心权限 `menu:aiqe_runs`（batch-336）；
 - 事件流支持 `after_seq` 断线补拉；`once=1` 时只推一批（测试/调试用）；
 - 路由层禁止 ORM：查询全部走 `run_query_service`。
 """
@@ -23,7 +23,7 @@ from app.aiqe.services.run_query_service import (
     get_run_detail,
     list_runs,
 )
-from app.core.deps import CurrentUser, get_db, require_project
+from app.core.deps import CurrentUser, get_db, require_permission
 from app.core.exceptions import APIException
 from app.schemas.aiqe_run import RunArtifactOut, RunEventOut, RunOut
 from app.schemas.common import R
@@ -40,7 +40,7 @@ def list_runs_api(
     status: str | None = Query(default=None, max_length=24),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
-    current: CurrentUser = Depends(require_project),
+    current: CurrentUser = Depends(require_permission("menu:aiqe_runs")),
     db: Session = Depends(get_db),
 ):
     rows, total = list_runs(
@@ -57,7 +57,7 @@ def list_runs_api(
 @router.get("/{run_id}", response_model=R[dict], summary="Run 详情")
 def get_run_api(
     run_id: str,
-    current: CurrentUser = Depends(require_project),
+    current: CurrentUser = Depends(require_permission("menu:aiqe_runs")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -84,7 +84,7 @@ def get_events_api(
     run_id: str,
     after_seq: int = Query(default=0, ge=0),
     limit: int = Query(default=500, ge=1, le=2000),
-    current: CurrentUser = Depends(require_project),
+    current: CurrentUser = Depends(require_permission("menu:aiqe_runs")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -104,7 +104,7 @@ def get_events_api(
 @router.get("/{run_id}/artifacts", response_model=R[dict], summary="Artifact 列表")
 def get_artifacts_api(
     run_id: str,
-    current: CurrentUser = Depends(require_project),
+    current: CurrentUser = Depends(require_permission("menu:aiqe_runs")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -127,7 +127,7 @@ def stream_events(
     run_id: str,
     after_seq: int = Query(default=0, ge=0),
     once: bool = Query(default=False),
-    current: CurrentUser = Depends(require_project),
+    current: CurrentUser = Depends(require_permission("menu:aiqe_runs")),
     db: Session = Depends(get_db),
 ):
     try:

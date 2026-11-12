@@ -28,6 +28,7 @@ const TESTER_MENUS: MenuItem[] = [
   menu('menu:schedule', '/schedule', 12),
   menu('menu:myproject', '/my-projects', 15),
   menu('menu:defect', '/defect', 16),
+  menu('menu:aiqe_runs', '/runs', 24),
   menu('menu:environment', '/environment', 20),
   menu('menu:ai_config', '/ai-config', 23),
   menu('menu:lanhu_evidence', '/lanhu-evidence', 23),
@@ -45,7 +46,7 @@ describe('batch-259 buildNavigation（4 入口 + 专家区）', () => {
     expect(flattenMain(model)).toEqual([
       'menu:workbench', // 1 工作台
       '版本验收', 'menu:versionmission', 'menu:requirement',
-      '结果与缺陷', 'menu:defect',
+      '结果与缺陷', 'menu:defect', 'menu:aiqe_runs',
       'menu:knowledge', // 4
     ])
     expect(model.mainRows).toHaveLength(PRIMARY_ENTRY_LIMIT)
