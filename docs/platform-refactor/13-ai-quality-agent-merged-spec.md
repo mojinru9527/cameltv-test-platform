@@ -3168,3 +3168,4 @@ batch-318（TA-035 Ops/Rollback）已完成——空环境启动文档、版本�
 **M6 生产部署完成**（20261123，112 表，health 200）；收口报告 work-logs/M6-phase6-closeout.md。
 **M7 启动**：batch-320（TA-036 MCP Server）已完成——stdio JSON-RPC、tools/list/call、写审批。
 batch-321（TA-037 AGENTS.md）已完成——AIQE 入口/门禁/MCP/Skill 规范 + AGENTS_GUARD=PASS。
+batch-322（TA-038 Skill 跨 Agent）已完成——三客户端清单 + 6 skill 契约校验（SKILL_COMPAT=PASS）。**M7 全部完成**。

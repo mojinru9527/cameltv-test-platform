@@ -1,0 +1,15 @@
+{
+  "clients": [
+    {"id": "claude-code", "load": "auto-discover", "path": ".claude/skills"},
+    {"id": "codex", "load": "agents-md + mcp stdio", "path": "AGENTS.md"},
+    {"id": "cursor", "load": "mcp / rule reference", "path": ".claude/skills"}
+  ],
+  "skills": [
+    "a0-requirement",
+    "a2-test-design",
+    "a3-workflow-planner",
+    "a4-failure-triage",
+    "a5-change-impact",
+    "a6-learning-curator"
+  ]
+}
