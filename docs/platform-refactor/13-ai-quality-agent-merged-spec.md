@@ -3175,3 +3175,4 @@ batch-325（TA-040 小程序 Adapter）已完成——微信版本矩阵 + miniu
 batch-326（TA-041/042 Desktop + IoT Drivers）已完成——OS 后端映射、失败即停、IoT 只读守卫。
 batch-327（TA-043/044/045 Domain Packs）已完成——E-commerce/SaaS/IoT 三域 Pack + 必备检查门禁。
 **M8 收口**：TA-039..045 完成，生产 release-m8-20261112（112 表，health 200），版本锁已更新。
+**P0 代码收口**：batch-329——NodeRun→ExecutionJob 桥接、条件边、Artifact GC、Dogfood M1–M8 留档（339 passed）、TC-AIQE E2E 入口。

@@ -23,6 +23,8 @@ class ArtifactStorageBackend(Protocol):
 
     def read(self, uri: str) -> bytes: ...
 
+    def delete(self, uri: str) -> None: ...
+
 
 class LocalArtifactStorage:
     """本地文件系统后端（dev/test 默认）。"""
@@ -53,6 +55,15 @@ class LocalArtifactStorage:
         if not path.is_file():
             raise ArtifactStorageError("artifact file missing")
         return path.read_bytes()
+
+    def delete(self, uri: str) -> None:
+        if not uri.startswith("file://"):
+            raise ArtifactStorageError(f"unsupported uri: {uri[:40]}")
+        path = Path(uri.removeprefix("file://")).resolve()
+        if not path.is_relative_to(self.root):
+            raise ArtifactStorageError("artifact path escapes storage root")
+        if path.is_file():
+            path.unlink()
 
 
 def get_storage_backend() -> ArtifactStorageBackend:

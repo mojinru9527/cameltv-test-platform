@@ -37,6 +37,16 @@ def _deps(graph: dict[str, Any]) -> dict[str, list[str]]:
     }
 
 
+def _edge_conditions(graph: dict[str, Any]) -> dict[tuple[str, str], str]:
+    conditions: dict[tuple[str, str], str] = {}
+    for edge in graph.get("edges") or []:
+        source = str(edge.get("from") or "")
+        target = str(edge.get("to") or "")
+        if source and target:
+            conditions[(source, target)] = str(edge.get("condition") or "success").lower()
+    return conditions
+
+
 def _policy(graph: dict[str, Any]) -> tuple[int, bool, str | None]:
     policy = graph.get("run_policy") or {}
     try:
@@ -68,12 +78,23 @@ def create_node_runs(db: Session, run_id: str, graph: dict[str, Any]) -> list[No
     return list(existing.values())
 
 
+def _condition_satisfied(condition: str, status: str) -> bool:
+    if condition == "success":
+        return status == "PASSED"
+    if condition == "failure":
+        return status in NODE_FAILED
+    if condition == "always":
+        return status in NODE_TERMINAL
+    return False
+
+
 def _satisfied(
     key: str,
     defs: dict[str, dict[str, Any]],
     deps: dict[str, list[str]],
     statuses: dict[str, str],
     cleanup: str | None,
+    conditions: dict[tuple[str, str], str] | None = None,
 ) -> bool:
     node = defs[key]
     if node.get("type") == "cleanup" or node.get("depends_on_terminal") or key == cleanup:
@@ -82,7 +103,12 @@ def _satisfied(
             for other in defs
             if other != key
         )
-    return all(statuses.get(dep, "PENDING") == "PASSED" for dep in deps.get(key, []))
+    edge_conditions = conditions or {}
+    for dep in deps.get(key, []):
+        condition = edge_conditions.get((dep, key), "success")
+        if not _condition_satisfied(condition, statuses.get(dep, "PENDING")):
+            return False
+    return True
 
 
 def _block_downstream(
@@ -136,6 +162,7 @@ def schedule(
     defs = _node_defs(graph)
     deps = _deps(graph)
     parallel, _fail_fast, cleanup = _policy(graph)
+    conditions = _edge_conditions(graph)
 
     progressed = True
     while progressed:
@@ -147,7 +174,7 @@ def schedule(
                 break
             if row.status != "PENDING":
                 continue
-            if not _satisfied(key, defs, deps, statuses, cleanup):
+            if not _satisfied(key, defs, deps, statuses, cleanup, conditions):
                 continue
             acquired: list[tuple[str, int]] = []
             try:
