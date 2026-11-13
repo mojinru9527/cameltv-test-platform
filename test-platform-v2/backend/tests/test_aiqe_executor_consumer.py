@@ -109,7 +109,7 @@ def test_non_aiqe_job_not_claimed(db_session):
 def test_blocked_driver_marks_node_blocked(db_session, monkeypatch):
     graph = {
         "schema_version": "1.0",
-        "nodes": [{"key": "ui", "driver": "playwright", "input": {}}],
+        "nodes": [{"key": "ui", "driver": "iot", "input": {}}],
         "edges": [],
     }
     run, job = _seed_run(db_session, graph=graph, key="RUN-EXEC-0004")
