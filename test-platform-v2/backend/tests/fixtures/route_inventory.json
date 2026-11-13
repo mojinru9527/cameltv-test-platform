@@ -1,5 +1,5 @@
 {
-  "count": 344,
+  "count": 350,
   "routes": [
     {
       "path": "/api/v1/ai-config/providers",
@@ -1376,6 +1376,30 @@
     {
       "path": "/api/v1/aiqe/workflows/{workflow_id}",
       "method": "PATCH"
+    },
+    {
+      "path": "/api/v1/aiqe/learning/bug-patterns",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/learning/candidates",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/learning/candidates",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/learning/candidates/{candidate_id}/activate",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/learning/candidates/{candidate_id}/approve",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/learning/candidates/{candidate_id}/evaluate",
+      "method": "POST"
     }
   ]
 }

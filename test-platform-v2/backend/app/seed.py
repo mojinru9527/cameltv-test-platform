@@ -162,6 +162,8 @@ _ACTIONS = [
     ("ai_config:manage", "管理 AI 配置", "button"),
     # batch-342（M9-3）：AIQE Workflow 审批与编辑解耦（审批默认仅管理员，经 * 放行）
     ("aiqe:workflow:approve", "审批 AIQE Workflow", "button"),
+    # batch-349（M10-4）：学习候选人工批准（误报率门禁 + 状态机）
+    ("aiqe:learning:approve", "批准 AIQE 学习候选", "button"),
 ]
 
 # 测试人员可见的菜单子集
