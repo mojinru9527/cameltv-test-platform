@@ -1,0 +1,54 @@
+# npm audit 新公告 triage：basic-ftp（2026-11-13）
+
+## 1. 事实
+
+`npm audit ratchet` 在 PR #569 上失败，新增 2 条公告：
+
+```
+basic-ftp|1246355
+basic-ftp|1246367
+```
+
+依赖路径（纯开发依赖）：
+
+```
+@lhci/cli@0.15.1 → proxy-agent@6.5.0 → pac-proxy-agent@7.2.0
+  → get-uri@6.0.5 → basic-ftp@5.3.1
+```
+
+## 2. 验证过的修复路径
+
+| 方案 | 结果 |
+|------|------|
+| 升级 `@lhci/cli` 0.15.1 → 0.16.1 | ❌ 仍解析 `get-uri@8.0.1 → basic-ftp@5.3.1`，两条公告仍在（总公告 68→54，但不解决 basic-ftp） |
+| 升级 `basic-ftp` 5.x | ❌ 无 5.3.2；6.x 为大版本，`get-uri` 未声明兼容 |
+| `overrides` 强制 basic-ftp@6 | ⚠️ 可能破坏 `get-uri` FTP 分支（无上游验证），不做未验证覆盖 |
+
+## 3. 决策
+
+- 该依赖仅用于 Lighthouse CI 的代理解析（FTP 场景不会在 CI 触发），**不进入生产依赖**；
+- 按仓库 ratchet 的既定机制执行 `--update` 登记（68 → 69 条），并保留本次 triage 证据；
+- **生产依赖审计仍为零**（`npm audit --omit=dev --audit-level=high` 独立门禁不变）；
+- 后续（M9 batch-344 / M10 349）：跟踪 `get-uri`/`proxy-agent` 上游升级；若仍无修复，评估替换 `@lhci/cli` 或移除 FTP 传输依赖，而不是永久保留豁免。
+
+## 4. npm 版本差异（复现要点）
+
+CI 使用 Node 22 自带 npm 10，本地 Node 24 自带 npm 11；两者 `npm audit` 对传递依赖的 `via`
+形态不同，会产生不同的 ratchet key（npm 10 额外产出
+`@typescript-eslint/eslint-plugin|via:@typescript-eslint/parser` 等链式 key）。
+
+因此基线按 **npm 10 输出**生成（与 CI 一致）；本地 npm 11 复核会出现 `removed=1`，属预期。
+生成命令：
+
+```bash
+npx -y npm@10.9.4 audit --json --registry=https://registry.npmjs.org > audit10.json
+# 用与 ratchet 相同的 key 逻辑写入 npm-audit-baseline.json
+```
+
+## 5. 复现
+
+```bash
+cd test-platform-v2/frontend
+node ../../scripts/ci/npm_audit_ratchet.mjs            # new=0 removed=0
+node ../../scripts/ci/npm_audit_ratchet.mjs --update   # 重新登记（仅 triage 后）
+```
