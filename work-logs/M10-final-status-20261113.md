@@ -92,3 +92,9 @@ python scripts/qa/m10_env_preflight.py     # 期望 exit 0
 - 347：设备侧 READY，剩余仅"AIQE 设备/UI 节点执行分支"（代码）；
 - TC-004：业务 Web 目标已可用，但需要 UI runner 节点才能注入浮层并回写 AIQE；
 - 346/348：等待上述确认。
+
+## 6. TC-004 链路验证（2026-11-14）
+
+- 本地 fixture 已通过真实 AIQE 链路验证 Core PASS / Integration FAIL（`OVERLAY_INTERCEPTED`），
+  证据见 `work-logs/aiqe/tc-004-ui-pipeline-20261114.md`；
+- 真实 camel1.tv 仍受 WAF 限制（403/reset），白名单或内部 Test 入口就绪后替换 URL 即可复用。
