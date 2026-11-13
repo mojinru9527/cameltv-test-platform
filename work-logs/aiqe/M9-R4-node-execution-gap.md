@@ -1,4 +1,4 @@
-# M9-R4：AIQE 节点执行消费者缺口（2026-11-13 发现）
+# M9-R4：AIQE 节点执行消费者缺口（2026-11-13 发现；http 部分已由 batch-347 解决）
 
 > **结论**：Test 实例开启 `WORKER_EXECUTION_ENABLED=true` 只启动了平台任务消费者（scheduler/ai_tasks），
 > **没有 AIQE NodeRun 的消费者**；AIQE DAG 派生的 `ExecutionJob(kind=api)` 无人认领（Test 库现有 3 条 pending）。
