@@ -14,7 +14,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.aiqe.models.run import NodeRun, TestRun
+from app.aiqe.models.run import NodeRun, StepAttempt, TestRun
 from app.aiqe.models.workflow import ResourceLock
 from app.aiqe.services import resource_lock
 from app.aiqe.services.run_state import apply_transition
@@ -55,6 +55,48 @@ def _policy(graph: dict[str, Any]) -> tuple[int, bool, str | None]:
         parallel = 3
     cleanup = policy.get("cleanup_node")
     return parallel, bool(policy.get("fail_fast", False)), cleanup
+
+
+def _retry_limit(graph: dict[str, Any]) -> int:
+    """节点最大尝试次数（batch-340）：`retry.max_attempts`，默认 1（不重试）。"""
+    retry = graph.get("retry") or {}
+    try:
+        value = int(retry.get("max_attempts", 1))
+    except (TypeError, ValueError):
+        value = 1
+    return max(1, min(value, 5))
+
+
+def _finalize_attempt(
+    db: Session,
+    node_row: NodeRun,
+    status: str,
+    error_class: str | None = None,
+    outputs: Mapping[str, Any] | None = None,
+) -> StepAttempt:
+    """把当前 StepAttempt 收口（batch-340）：失败也保留，供 attempt 时间线查询。"""
+    attempt = db.scalar(
+        select(StepAttempt)
+        .where(StepAttempt.node_run_id == node_row.id)
+        .order_by(StepAttempt.attempt_no.desc())
+    )
+    now = datetime.now(UTC)
+    if attempt is None:
+        attempt = StepAttempt(
+            node_run_id=node_row.id,
+            step_key=node_row.node_key,
+            attempt_no=max(1, int(node_row.attempt_count or 1)),
+            started_at=node_row.started_at or now,
+        )
+        db.add(attempt)
+    attempt.status = status
+    attempt.finished_at = now
+    if error_class:
+        attempt.error_json = {"class": error_class}
+    if outputs:
+        attempt.output_summary_json = dict(outputs)
+    db.flush()
+    return attempt
 
 
 def create_node_runs(db: Session, run_id: str, graph: dict[str, Any]) -> list[NodeRun]:
@@ -216,6 +258,25 @@ def mark_running(db: Session, run_id: str, node_key: str) -> NodeRun:
     if row.status == "READY":
         row.status = "RUNNING"
         row.started_at = row.started_at or datetime.now(UTC)
+        # batch-340：每次节点启动落一条 StepAttempt（重试追加 attempt_no）。
+        attempt_no = max(1, int(row.attempt_count or 1))
+        existing = db.scalar(
+            select(StepAttempt).where(
+                StepAttempt.node_run_id == row.id,
+                StepAttempt.attempt_no == attempt_no,
+            )
+        )
+        if existing is None:
+            db.add(
+                StepAttempt(
+                    node_run_id=row.id,
+                    step_key=row.node_key,
+                    attempt_no=attempt_no,
+                    status="RUNNING",
+                    started_at=row.started_at,
+                    external_execution_ref=str(row.execution_job_id or ""),
+                )
+            )
         db.flush()
     return row
 
@@ -243,6 +304,8 @@ def complete_node(
         row.error_class = error_class
     if outputs:
         row.output_ref = {**(row.output_ref or {}), **dict(outputs)}
+    # batch-340：attempt 终态先落库（失败 attempt 永久保留，重试追加新 attempt）。
+    _finalize_attempt(db, row, status, error_class, outputs)
 
     for resource in row.resource_keys_json or []:
         try:
@@ -259,6 +322,20 @@ def complete_node(
 
     deps = _deps(graph)
     _parallel, fail_fast, _cleanup = _policy(graph)
+
+    # batch-340：失败但仍有重试额度 → 节点回 PENDING（等下一次 schedule），Run 保持 RUNNING；
+    # 失败 attempt 已在 StepAttempt 中保留，不会被重试覆盖。fail_fast 时保持既有阻断语义。
+    if (
+        status in NODE_FAILED
+        and not fail_fast
+        and run.status == "RUNNING"
+        and int(row.attempt_count or 0) < _retry_limit(graph)
+    ):
+        row.status = "PENDING"
+        row.finished_at = None
+        row.error_class = ""
+        db.flush()
+        return run
 
     if status in NODE_FAILED and fail_fast:
         for other in rows:
