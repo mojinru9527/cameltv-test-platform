@@ -38,6 +38,8 @@ def enqueue_node_run(
                 "run_id": node_run.run_id,
                 "node_run_id": node_run.id,
                 "node_key": node_run.node_key,
+                "driver": node_run.driver_key,
+                "input": node_run.input_ref or {},
                 **({"graph": graph} if graph else {}),
             }
         ),

@@ -68,6 +68,16 @@ def _node_scope(
     return token.project_id
 
 
+def _is_aiqe_job(job) -> bool:
+    import json
+
+    try:
+        payload = json.loads(job.payload_json or "{}")
+    except (TypeError, ValueError):
+        return False
+    return bool(payload.get("node_run_id"))
+
+
 @router.post("", response_model=R[dict], summary="登记执行任务（控制面只登记，不执行）")
 def create_job(
     body: JobCreateRequest,
@@ -188,6 +198,17 @@ def report(
     )
     if job is None:
         raise HTTPException(404, "任务不存在或不属于当前节点")
+    # batch-347c：AIQE 节点由外部 runner（浏览器/设备）执行时，回报后必须回写节点状态。
+    if _is_aiqe_job(job):
+        from app.aiqe.services.job_consumer import complete_from_report
+
+        complete_from_report(
+            db,
+            job_id=job.id,
+            status=body.status,
+            result=body.result,
+            error_message=body.error_message,
+        )
     return R.ok(execution_job_service.job_dict(job))
 
 
