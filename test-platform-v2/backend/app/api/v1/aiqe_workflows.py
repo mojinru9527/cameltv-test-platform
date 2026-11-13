@@ -7,13 +7,22 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.aiqe.services.capability_registry import known_capabilities
 from app.aiqe.services.workflow_service import (
+    WorkflowImmutableError,
     WorkflowNotFound,
     approve_workflow,
+    create_workflow,
     get_workflow_for_project,
     list_workflows,
+    update_graph,
+)
+from app.aiqe.services.workflow_validator import (
+    WorkflowValidationError,
+    validate_workflow,
 )
 from app.core.deps import CurrentUser, get_db, require_permission
 from app.core.exceptions import APIException
@@ -22,6 +31,31 @@ from app.schemas.common import R
 router = APIRouter(prefix="/aiqe/workflows", tags=["AIQE Workflow"])
 
 _console_access = require_permission("menu:aiqe_runs")
+
+DEFAULT_DRIVERS = frozenset(
+    {"http", "playwright", "db", "event", "mobile", "miniapp", "device", "external_e2e"}
+)
+
+
+class WorkflowCreateIn(BaseModel):
+    graph: dict
+    scenario_id: int | None = None
+    version: int | None = None
+
+
+class WorkflowPatchIn(BaseModel):
+    graph: dict
+
+
+def _validate(graph: dict) -> None:
+    try:
+        validate_workflow(
+            graph,
+            registered_drivers=set(DEFAULT_DRIVERS),
+            registered_capabilities=set(known_capabilities()),
+        )
+    except WorkflowValidationError as exc:
+        raise APIException(code=400, msg=f"Workflow 校验失败: {exc}", http_status=400) from None
 
 
 def _not_found(workflow_id: str) -> APIException:
@@ -81,11 +115,51 @@ def get_workflow_api(
     return R.ok(data)
 
 
+@router.post("", response_model=R[dict], summary="创建 Workflow 定义（校验 + checksum）")
+def create_workflow_api(
+    body: WorkflowCreateIn,
+    _console: CurrentUser = Depends(_console_access),
+    current: CurrentUser = Depends(require_permission("defect:update")),
+    db: Session = Depends(get_db),
+):
+    _validate(body.graph)
+    row = create_workflow(
+        db,
+        project_id=current.project_id or 0,
+        graph=body.graph,
+        scenario_id=body.scenario_id,
+        version=body.version,
+    )
+    return R.ok(_workflow_out(row))
+
+
+@router.patch("/{workflow_id}", response_model=R[dict], summary="更新 Workflow graph（approved 后 409）")
+def patch_workflow_api(
+    workflow_id: str,
+    body: WorkflowPatchIn,
+    _console: CurrentUser = Depends(_console_access),
+    current: CurrentUser = Depends(require_permission("defect:update")),
+    db: Session = Depends(get_db),
+):
+    try:
+        get_workflow_for_project(db, workflow_id, current.project_id or 0)
+    except WorkflowNotFound:
+        raise _not_found(workflow_id) from None
+    _validate(body.graph)
+    try:
+        row = update_graph(db, workflow_id, body.graph)
+    except WorkflowImmutableError as exc:
+        raise APIException(code=409, msg=str(exc), http_status=409) from None
+    except WorkflowNotFound:
+        raise _not_found(workflow_id) from None
+    return R.ok(_workflow_out(row))
+
+
 @router.post("/{workflow_id}/approve", response_model=R[dict], summary="审批 Workflow（approved 冻结）")
 def approve_workflow_api(
     workflow_id: str,
     _console: CurrentUser = Depends(_console_access),
-    current: CurrentUser = Depends(require_permission("defect:update")),
+    current: CurrentUser = Depends(require_permission("aiqe:workflow:approve")),
     db: Session = Depends(get_db),
 ):
     try:
