@@ -1,0 +1,113 @@
+{
+  "passed": 7,
+  "blocked": 3,
+  "failed": 0,
+  "results": [
+    {
+      "id": "TC-AIQE-001",
+      "title": "需求契约冻结 + 变更影响（定义冻结代理）",
+      "status": "PASS",
+      "detail": {
+        "workflow": "4daca965-9cff-4b78-8e70-d4f1c3ac038d",
+        "checksum": "ccbb6d922060",
+        "frozen": true
+      }
+    },
+    {
+      "id": "TC-AIQE-002",
+      "title": "统一 Run（DAG + 事件时间线）",
+      "status": "PASS",
+      "detail": {
+        "run": "TC-AIQE-002-ce855daa",
+        "status": "COMPLETED",
+        "outcome": "PASS",
+        "events": 1
+      }
+    },
+    {
+      "id": "TC-AIQE-003",
+      "title": "首次失败 + 重试成功 → 不掩盖失败",
+      "status": "BLOCKED",
+      "reason": "首次失败+重试的 attempt 时间线由 executor/worker（真实 driver 执行）产生；Test 实例 WORKER_EXECUTION_ENABLED=false，服务层无 attempt 重试 API，需真实执行引擎"
+    },
+    {
+      "id": "TC-AIQE-004",
+      "title": "广告浮层交叉干扰",
+      "status": "BLOCKED",
+      "reason": "广告浮层交叉干扰需要业务 Web Test 目标 + integration profile 注入；当前 Test 实例无被测业务账号（Web 端此前因反爬阻断），无法真实注入"
+    },
+    {
+      "id": "TC-AIQE-005",
+      "title": "并发数据污染（fixture 锁互斥）",
+      "status": "PASS",
+      "detail": {
+        "mutex": true,
+        "key": "fixture:tc-e2e-a681f554"
+      }
+    },
+    {
+      "id": "TC-AIQE-006",
+      "title": "上游第三方故障（5xx → BLOCKED）",
+      "status": "PASS",
+      "detail": {
+        "signal": "dependency_5xx",
+        "run_outcome": "INCOMPLETE"
+      }
+    },
+    {
+      "id": "TC-AIQE-007",
+      "title": "UI Runner 自身故障（worker lost）",
+      "status": "PASS",
+      "detail": {
+        "node": "BLOCKED",
+        "error_class": "WORKER_LOST",
+        "run": {
+          "run_id": "fded960c-3552-4a21-b544-f363f8bc221c",
+          "recovered": true,
+          "status": "COMPLETED",
+          "outcome": "INCOMPLETE",
+          "blocked_nodes": 1
+        }
+      }
+    },
+    {
+      "id": "TC-AIQE-008",
+      "title": "开发修复后一键回归",
+      "status": "BLOCKED",
+      "reason": "缺陷草稿→人工确认→一键回归需要 UI/缺陷链路与指定 SHA 部署；AIQE 当前 HTTP 面未暴露 RegressionRequest 创建端点（P1 仅读 Console）"
+    },
+    {
+      "id": "TC-AIQE-009",
+      "title": "多端 AC 对照（能力×平台矩阵）",
+      "status": "PASS",
+      "detail": {
+        "platforms": [
+          "android",
+          "web"
+        ],
+        "web": {
+          "available": true,
+          "node_count": 1,
+          "nodes": [
+            "tc-e2e-web-9e0109"
+          ]
+        },
+        "android": {
+          "available": false,
+          "node_count": 0,
+          "nodes": []
+        }
+      }
+    },
+    {
+      "id": "TC-AIQE-010",
+      "title": "学习候选发布（状态机）",
+      "status": "PASS",
+      "detail": {
+        "candidate": "d3e3de61-ea02-4ceb-b026-275d40bb39d6",
+        "status": "active",
+        "pattern": "tc-e2e-pattern-9ed542dc"
+      }
+    }
+  ]
+}
