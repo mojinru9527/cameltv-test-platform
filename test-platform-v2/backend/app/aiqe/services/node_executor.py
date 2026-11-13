@@ -10,8 +10,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from sqlalchemy.orm import Session
-
 from app.aiqe.drivers.httpx_driver import HttpDriver, HttpRequestSpec
 from app.aiqe.models.run import NodeRun
 
@@ -55,7 +53,7 @@ def execute_node(node: NodeRun) -> NodeExecution:
     )
     try:
         result = HttpDriver().execute(spec)
-    except Exception as exc:  # noqa: BLE001 — 执行异常必须回写为失败，不得悬挂节点
+    except Exception as exc:  # 执行异常必须回写为失败，不得悬挂节点
         return NodeExecution(
             status="FAILED",
             error_class="DRIVER_ERROR",

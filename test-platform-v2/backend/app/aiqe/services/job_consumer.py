@@ -68,7 +68,7 @@ def claim_aiqe_jobs(db: Session, *, limit: int = 5) -> list[int]:
                 lease_expires_at=now + timedelta(seconds=LEASE_SECONDS),
             )
         )
-        if result.rowcount:
+        if int(getattr(result, "rowcount", 0) or 0):
             claimed.append(int(job.id))
     db.commit()
     return claimed
@@ -130,7 +130,7 @@ def consume_once(*, limit: int = 5) -> int:
         db = SessionLocal()
         try:
             run_job(db, job_id)
-        except Exception as exc:  # noqa: BLE001 — 消费失败必须落库，不能悬挂 running
+        except Exception as exc:  # 消费失败必须落库，不能悬挂 running
             db.rollback()
             job = db.get(ExecutionJob, job_id)
             if job is not None:
@@ -155,7 +155,7 @@ def start_aiqe_consumer(poll_seconds: float | None = None) -> None:
         while not _stop.is_set():
             try:
                 consume_once()
-            except Exception:  # noqa: BLE001 — 线程不能退出
+            except Exception:  # 线程不能退出
                 logger.exception("aiqe consumer loop error")
             _stop.wait(max(0.5, interval))
 
