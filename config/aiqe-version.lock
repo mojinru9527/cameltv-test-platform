@@ -1,6 +1,6 @@
 {
-  "commit": "268150486",
-  "image_tag": "release-m13-20261113",
+  "commit": "503d0e07c",
+  "image_tag": "release-m14-20261113",
   "migration_head": "20261123_ta033_mutation_ledger",
-  "written_at": "2026-11-13T04:38:15.0977625Z"
+  "written_at": "2026-11-13T13:11:28.6863040Z"
 }
