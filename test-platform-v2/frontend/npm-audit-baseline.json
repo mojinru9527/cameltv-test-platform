@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-05T18:23:27.228Z",
+  "generated_at": "2026-11-13T04:47:40.795Z",
   "policy": "full npm audit ratchet; production audit must still be zero",
   "counts": {
     "info": 0,
@@ -22,7 +22,6 @@
     "@puppeteer/browsers|via:extract-zip",
     "@puppeteer/browsers|via:proxy-agent",
     "@redocly/openapi-core|via:minimatch",
-    "@typescript-eslint/eslint-plugin|via:@typescript-eslint/parser",
     "@typescript-eslint/eslint-plugin|via:@typescript-eslint/type-utils",
     "@typescript-eslint/eslint-plugin|via:@typescript-eslint/utils",
     "@typescript-eslint/parser|via:@typescript-eslint/typescript-estree",
@@ -34,6 +33,8 @@
     "@vitest/mocker|1242767",
     "@vitest/mocker|1242769",
     "basic-ftp|1240853",
+    "basic-ftp|1246355",
+    "basic-ftp|1246367",
     "body-parser|1243073",
     "brace-expansion|1240103",
     "brace-expansion|1240107",
