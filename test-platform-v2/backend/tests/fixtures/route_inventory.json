@@ -1,5 +1,5 @@
 {
-  "count": 339,
+  "count": 342,
   "routes": [
     {
       "path": "/api/v1/ai-config/providers",
@@ -1355,6 +1355,18 @@
     },
     {
       "path": "/api/v1/aiqe/runs/{run_id}/attempts",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/regressions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/regressions",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/regressions/{regression_id}",
       "method": "GET"
     }
   ]
