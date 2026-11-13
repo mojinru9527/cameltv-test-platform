@@ -60,7 +60,7 @@ def _make_client(db: Session, permissions: list[str]) -> TestClient:
 @pytest.fixture()
 def api(db_session: Session) -> Iterator[TestClient]:
     _seed(db_session)
-    client = _make_client(db_session, ["menu:aiqe_runs", "defect:list", "defect:update"])
+    client = _make_client(db_session, ["menu:aiqe_runs", "defect:list", "defect:update", "aiqe:workflow:approve"])
     yield client
     from app.main import app
 
