@@ -4,7 +4,7 @@ from __future__ import annotations
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.aiqe.models.run import TestRun
+from app.aiqe.models.run import NodeRun, StepAttempt, TestRun
 from app.aiqe.services.artifact_service import list_artifacts
 from app.aiqe.services.event_service import list_events
 
@@ -57,3 +57,27 @@ def get_events(
 def get_artifacts(db: Session, run_id: str, project_id: int):
     get_run(db, run_id, project_id)
     return list_artifacts(db, run_id, project_id)
+
+def get_run_attempts(
+    db: Session, run_id: str, project_id: int
+) -> tuple[TestRun, list[tuple[NodeRun, list[StepAttempt]]]]:
+    """batch-340：节点执行尝试时间线（失败 attempt 与重试都保留）。"""
+    run = get_run(db, run_id, project_id)
+    nodes = list(
+        db.scalars(
+            select(NodeRun).where(NodeRun.run_id == run.id).order_by(NodeRun.node_key)
+        )
+    )
+    attempts: list[StepAttempt] = []
+    if nodes:
+        attempts = list(
+            db.scalars(
+                select(StepAttempt)
+                .where(StepAttempt.node_run_id.in_([node.id for node in nodes]))
+                .order_by(StepAttempt.attempt_no)
+            )
+        )
+    by_node: dict[str, list[StepAttempt]] = {}
+    for attempt in attempts:
+        by_node.setdefault(attempt.node_run_id, []).append(attempt)
+    return run, [(node, by_node.get(node.id, [])) for node in nodes]

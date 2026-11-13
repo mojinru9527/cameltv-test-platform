@@ -21,6 +21,7 @@ from app.aiqe.services.run_query_service import (
     get_artifacts,
     get_events,
     get_run,
+    get_run_attempts,
     get_run_detail,
     list_runs,
 )
@@ -114,6 +115,47 @@ def get_artifacts_api(
         raise _not_found(run_id) from None
     return R.ok(
         {"items": [RunArtifactOut.model_validate(a).model_dump(mode="json") for a in rows]}
+    )
+
+
+@router.get("/{run_id}/attempts", response_model=R[dict], summary="节点 attempt 列表（重试时间线）")
+def get_attempts_api(
+    run_id: str,
+    current: CurrentUser = Depends(require_permission("menu:aiqe_runs")),
+    db: Session = Depends(get_db),
+):
+    """batch-340：返回每个节点的全部 StepAttempt（含失败 attempt 与重试）。"""
+    try:
+        run, node_attempts = get_run_attempts(db, run_id, current.project_id or 0)
+    except RunNotFoundError:
+        raise _not_found(run_id) from None
+    return R.ok(
+        {
+            "run_id": run.id,
+            "items": [
+                {
+                    "node_key": node.node_key,
+                    "driver_key": node.driver_key,
+                    "status": node.status,
+                    "attempt_count": node.attempt_count,
+                    "error_class": node.error_class,
+                    "started_at": node.started_at,
+                    "finished_at": node.finished_at,
+                    "attempts": [
+                        {
+                            "attempt_no": attempt.attempt_no,
+                            "status": attempt.status,
+                            "started_at": attempt.started_at,
+                            "finished_at": attempt.finished_at,
+                            "error": attempt.error_json,
+                            "output": attempt.output_summary_json,
+                        }
+                        for attempt in attempts
+                    ],
+                }
+                for node, attempts in node_attempts
+            ],
+        }
     )
 
 
