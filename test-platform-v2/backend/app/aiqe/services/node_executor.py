@@ -103,6 +103,48 @@ def _execute_http(spec_input: dict[str, Any]) -> NodeExecution:
     return NodeExecution(status="FAILED", error_class=error_class, detail=detail)
 
 
+def _mouse_click(page, target, detail: dict[str, Any]) -> bool:
+    """真实鼠标点击（move→down→up），并记录点击落点是否被浮层拦截。"""
+    box = target.bounding_box()
+    if not box:
+        detail["click_error"] = "目标无可见位置"
+        return False
+    cx = box["x"] + box["width"] / 2
+    cy = box["y"] + box["height"] / 2
+    detail["click_point"] = [round(cx, 1), round(cy, 1)]
+    detail["top_at_point"] = page.evaluate(
+        "({x, y}) => { const el = document.elementFromPoint(x, y);"
+        " return el ? {tag: el.tagName, id: el.id || '', cls: String(el.className || '').slice(0, 80)} : null; }",
+        {"x": cx, "y": cy},
+    )
+    url_before = page.url
+    page.evaluate(
+        "() => { window.__aiqeClicks = [];"
+        " document.addEventListener('click', (e) => {"
+        " const t = e.target;"
+        " window.__aiqeClicks.push({tag: t.tagName, id: t.id || '',"
+        " overlay: t.id === 'aiqe-injected-overlay'}); }, true); }"
+    )
+    page.mouse.move(cx, cy, steps=12)
+    page.mouse.down()
+    page.mouse.up()
+    page.wait_for_timeout(400)
+    try:
+        clicks = page.evaluate("() => window.__aiqeClicks || []")
+    except Exception:  # 点击触发导航时上下文销毁，按成功处理
+        return True
+    detail["clicks"] = clicks[-3:]
+    if clicks:
+        if clicks[-1].get("overlay"):
+            detail["click_error"] = "浮层拦截了点击"
+            return False
+        return True
+    if page.url != url_before:
+        return True
+    detail["click_error"] = "未捕获到点击事件"
+    return False
+
+
 def _execute_playwright(spec_input: dict[str, Any]) -> NodeExecution:
     url = str(spec_input.get("url") or "").strip()
     if not url:
@@ -143,6 +185,8 @@ def _execute_playwright(spec_input: dict[str, Any]) -> NodeExecution:
                 if inject_overlay:
                     detail["overlay_id"] = page.evaluate(OVERLAY_JS)
 
+                click_mode = str(spec_input.get("click_mode") or "trial").lower()
+                detail["click_mode"] = click_mode
                 clickable: bool | None = None
                 if click_text or click_selector:
                     target = (
@@ -150,12 +194,15 @@ def _execute_playwright(spec_input: dict[str, Any]) -> NodeExecution:
                         if click_text
                         else page.locator(click_selector).first
                     )
-                    try:
-                        target.click(trial=True, timeout=4000)
-                        clickable = True
-                    except Exception as exc:
-                        clickable = False
-                        detail["click_error"] = str(exc).splitlines()[0][:300]
+                    if click_mode == "mouse":
+                        clickable = _mouse_click(page, target, detail)
+                    else:
+                        try:
+                            target.click(trial=True, timeout=4000)
+                            clickable = True
+                        except Exception as exc:
+                            clickable = False
+                            detail["click_error"] = str(exc).splitlines()[0][:300]
                 detail["clickable"] = clickable
 
                 body_text = page.locator("body").inner_text()[:4000]
