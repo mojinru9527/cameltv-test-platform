@@ -33,7 +33,7 @@
 | 项 | 状态 | 前置 |
 |----|:----:|------|
 | Test 实例部署本批镜像 | ✅ 2026-11-13 完成 | 镜像 `release-m13-20261113`（delta）；登录/菜单/新接口实测通过，见 `work-logs/aiqe/test-deploy-20261113.md` |
-| 真实 TC-AIQE-001..010 | ⚠️ 服务层 7/10 PASS、3 BLOCKED（2026-11-13） | 见 `work-logs/aiqe/tc-aiqe-test-20261113.md`；剩余需执行引擎 + 业务 Test 账号 + RegressionRequest API |
+| 真实 TC-AIQE-001..010 | ⚠️ 9/10 PASS、1 BLOCKED（2026-11-13，Test 实例） | 003/008 已解除（batch-340/341 + `tc-aiqe-unblocked-20261113.md`）；仅 004 受业务 Web 反爬阻塞 |
 | 真机 / minium / UIA / MQTT | 未执行 | 设备与协议网关 |
 | 第二项目 future-wayu | 未执行 | 真实项目环境 |
 | 独立审批权限点 | 待排期 | 权限模型变更（需完整批次） |

@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-13",
+  "environment": "aiqe-test-backend (release-m13-b341) / aiqe_test PostgreSQL",
+  "results": [
+    {
+      "id": "TC-AIQE-003",
+      "title": "首次失败 + 重试成功 → 不得掩盖失败",
+      "status": "PASS",
+      "detail": {
+        "attempts": ["FAILED", "PASSED"],
+        "api_attempts": ["FAILED", "PASSED"],
+        "run_outcome": "PASS"
+      }
+    },
+    {
+      "id": "TC-AIQE-008",
+      "title": "开发修复后一键回归",
+      "status": "PASS",
+      "detail": {
+        "verification_run": "REG-abc1234-141aca2f",
+        "old_run_untouched": true
+      }
+    }
+  ],
+  "summary": {"passed": 2, "blocked": 0, "failed": 0}
+}
