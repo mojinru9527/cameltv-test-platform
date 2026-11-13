@@ -155,7 +155,7 @@ def complete_from_report(
     if node.status == "READY":
         dag_scheduler.mark_running(db, run_id, node.node_key)
 
-    passed = str(status).lower() in {"success", "passed", "pass", "ok"}
+    passed = str(status).lower() in {"completed", "success", "passed", "pass", "ok"}
     node_status = "PASSED" if passed else "FAILED"
     payload_result = result or {}
     error_class = str(payload_result.get("error_class") or "").strip()

@@ -77,7 +77,7 @@ def _report(
         headers=headers,
         json={
             "node_id": node_id,
-            "status": "success" if ok else "failed",
+            "status": "completed" if ok else "failed",
             "summary": "aiqe local runner",
             "result": result,
             "error_message": error,
