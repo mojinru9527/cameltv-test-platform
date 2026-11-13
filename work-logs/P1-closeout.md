@@ -32,7 +32,7 @@
 
 | 项 | 状态 | 前置 |
 |----|:----:|------|
-| Test 实例部署本批镜像 | 未执行 | 本机无服务器 publickey 权限（`root@111.230.155.116` Permission denied）；需 Jenkins/运维凭据 |
+| Test 实例部署本批镜像 | ✅ 2026-11-13 完成 | 镜像 `release-m13-20261113`（delta）；登录/菜单/新接口实测通过，见 `work-logs/aiqe/test-deploy-20261113.md` |
 | 真实 TC-AIQE-001..010 | 未执行 | 隔离 Test 实例 + 被测业务账号 |
 | 真机 / minium / UIA / MQTT | 未执行 | 设备与协议网关 |
 | 第二项目 future-wayu | 未执行 | 真实项目环境 |
