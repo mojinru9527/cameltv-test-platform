@@ -25,6 +25,8 @@ logger = logging.getLogger(__name__)
 NODE_ID = "aiqe-inprocess"
 LEASE_SECONDS = 300
 MARKER = '"node_run_id"'
+# 进程内消费者只处理 http 节点；playwright/appium 留给具备浏览器/设备的 runner 节点。
+HTTP_DRIVERS = frozenset({"http", "httpx", "api", ""})
 
 _stop = threading.Event()
 _thread: threading.Thread | None = None
@@ -55,6 +57,12 @@ def claim_aiqe_jobs(db: Session, *, limit: int = 5) -> list[int]:
     )
     claimed: list[int] = []
     for job in rows:
+        try:
+            driver = str(json.loads(job.payload_json or "{}").get("driver") or "").lower()
+        except (TypeError, ValueError):
+            driver = ""
+        if driver not in HTTP_DRIVERS:
+            continue
         result = db.execute(
             update(ExecutionJob)
             .where(ExecutionJob.id == job.id, ExecutionJob.status == "pending")
@@ -116,6 +124,60 @@ def run_job(db: Session, job_id: int) -> dict:
         "node_status": result.status,
         "job_status": job.status,
         "error_class": result.error_class,
+    }
+
+
+def complete_from_report(
+    db: Session,
+    *,
+    job_id: int,
+    status: str,
+    result: dict | None = None,
+    error_message: str = "",
+) -> dict:
+    """外部 runner（浏览器/设备）上报后，把 AIQE 节点状态回写到 DAG。
+
+    进程内消费者直接执行并回写；外部节点执行 UI/设备节点时必须走本函数，
+    否则 ExecutionJob 成功但 NodeRun 永远 RUNNING。
+    """
+    job = db.get(ExecutionJob, job_id)
+    if job is None:
+        return {"skipped": True, "reason": "job missing"}
+    payload = json.loads(job.payload_json or "{}")
+    run_id = str(payload.get("run_id") or "")
+    node_run_id = str(payload.get("node_run_id") or "")
+    node = db.get(NodeRun, node_run_id) if node_run_id else None
+    run = db.get(TestRun, run_id) if run_id else None
+    if node is None or run is None:
+        return {"skipped": True, "reason": "node/run missing"}
+
+    graph = payload.get("graph") or _synthesize_graph(db, run_id)
+    if node.status == "READY":
+        dag_scheduler.mark_running(db, run_id, node.node_key)
+
+    passed = str(status).lower() in {"completed", "success", "passed", "pass", "ok"}
+    node_status = "PASSED" if passed else "FAILED"
+    payload_result = result or {}
+    error_class = str(payload_result.get("error_class") or "").strip()
+    if not passed and not error_class:
+        error_class = (error_message or "")[:80] or "EXTERNAL_RUNNER_FAILED"
+
+    dag_scheduler.complete_node(
+        db,
+        run_id,
+        node.node_key,
+        node_status,
+        graph,
+        error_class=error_class or None,
+        outputs={"execution": payload_result},
+    )
+    db.commit()
+    return {
+        "job_id": job_id,
+        "run_id": run_id,
+        "node": node.node_key,
+        "node_status": node_status,
+        "error_class": error_class,
     }
 
 

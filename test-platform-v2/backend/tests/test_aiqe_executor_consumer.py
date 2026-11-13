@@ -113,7 +113,8 @@ def test_blocked_driver_marks_node_blocked(db_session, monkeypatch):
         "edges": [],
     }
     run, job = _seed_run(db_session, graph=graph, key="RUN-EXEC-0004")
-    job_consumer.claim_aiqe_jobs(db_session)
+    job.status = "running"
+    db_session.commit()
     out = job_consumer.run_job(db_session, job.id)
 
     db_session.expire_all()
