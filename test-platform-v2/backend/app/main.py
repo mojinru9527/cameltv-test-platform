@@ -169,6 +169,15 @@ async def lifespan(application: FastAPI):
             from app.worker import task_consumers
 
             application.state.consumers_healthy = runtime.enter_context(task_consumers())
+        if settings.aiqe_inprocess_executor_enabled:
+            # M10-347：AIQE NodeRun 进程内执行器（http driver），默认关闭
+            from app.aiqe.services.job_consumer import (
+                start_aiqe_consumer,
+                stop_aiqe_consumer,
+            )
+
+            start_aiqe_consumer()
+            runtime.callback(stop_aiqe_consumer)
         yield
 
 

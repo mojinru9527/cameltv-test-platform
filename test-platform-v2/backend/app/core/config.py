@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     # Same-host admission; enable only with a shared local volume across runners.
     heavy_task_budget_enabled: bool = False
     worker_execution_enabled: bool = True
+    # M10-347：AIQE NodeRun 进程内执行器（仅 http driver；默认关闭，Test/CI 显式开启）
+    aiqe_inprocess_executor_enabled: bool = False
+    aiqe_inprocess_poll_seconds: float = 2.0
     runner_http_url: str = ""
     # Security boundary for user-influenced Playwright/Node execution. This is
     # defense in depth, not a substitute for a dedicated sandbox container.

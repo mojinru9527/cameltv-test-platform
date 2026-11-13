@@ -14,7 +14,12 @@ class DispatchError(ValueError):
 
 
 def enqueue_node_run(
-    db: Session, node_run: NodeRun, *, kind: str = "api", timeout_seconds: int = 1800
+    db: Session,
+    node_run: NodeRun,
+    *,
+    kind: str = "api",
+    timeout_seconds: int = 1800,
+    graph: dict | None = None,
 ) -> ExecutionJob:
     if node_run.execution_job_id:
         existing = db.get(ExecutionJob, node_run.execution_job_id)
@@ -33,6 +38,7 @@ def enqueue_node_run(
                 "run_id": node_run.run_id,
                 "node_run_id": node_run.id,
                 "node_key": node_run.node_key,
+                **({"graph": graph} if graph else {}),
             }
         ),
         env_ref=str(run.environment_id or ""),
