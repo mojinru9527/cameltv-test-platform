@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-05T18:23:27.228Z",
+  "generated_at": "2026-11-13T04:58:28.770Z",
   "policy": "full npm audit ratchet; production audit must still be zero",
   "counts": {
     "info": 0,
@@ -34,6 +34,8 @@
     "@vitest/mocker|1242767",
     "@vitest/mocker|1242769",
     "basic-ftp|1240853",
+    "basic-ftp|1246355",
+    "basic-ftp|1246367",
     "body-parser|1243073",
     "brace-expansion|1240103",
     "brace-expansion|1240107",

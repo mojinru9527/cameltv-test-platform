@@ -42,3 +42,10 @@
 
 P1 完成后，AIQE Console 具备完整操作面（执行记录 / Profiles / Workflow 审批 / 质量门禁 / 噪音规则 / 平台矩阵），
 AIQE 按"对外可用"口径约 **85%**；剩余 15% 全部为环境/外部依赖，代码侧无阻塞。
+
+## 6. 生产发布（2026-11-13）
+
+- 镜像：`cameltv-tp-backend:release-m13-20261113`、`cameltv-tp-frontend:release-m13-20261113`；
+- 生产 health 200，OpenAPI 新接口与 `menu:aiqe_runs` 种子已验证，无迁移；
+- 版本锁更新为 commit `268150486` / `release-m13`；
+- 详细证据与回滚步骤：`work-logs/aiqe/production-release-20261113.md`。
