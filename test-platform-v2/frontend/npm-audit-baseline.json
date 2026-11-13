@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-13T04:53:07.902Z",
+  "generated_at": "2026-11-13T04:58:28.770Z",
   "policy": "full npm audit ratchet; production audit must still be zero",
   "counts": {
     "info": 0,
@@ -22,6 +22,7 @@
     "@puppeteer/browsers|via:extract-zip",
     "@puppeteer/browsers|via:proxy-agent",
     "@redocly/openapi-core|via:minimatch",
+    "@typescript-eslint/eslint-plugin|via:@typescript-eslint/parser",
     "@typescript-eslint/eslint-plugin|via:@typescript-eslint/type-utils",
     "@typescript-eslint/eslint-plugin|via:@typescript-eslint/utils",
     "@typescript-eslint/parser|via:@typescript-eslint/typescript-estree",
