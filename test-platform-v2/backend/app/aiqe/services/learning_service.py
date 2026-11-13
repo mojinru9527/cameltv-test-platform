@@ -124,3 +124,12 @@ def list_candidates(db: Session, project_id: int) -> list[LearningCandidate]:
             .order_by(LearningCandidate.created_at.desc())
         )
     )
+
+def list_bug_patterns(
+    db: Session, *, status: str | None = "active", limit: int = 100
+) -> list[BugPattern]:
+    """batch-349：BugPattern 只读查询（Console 学习页）。"""
+    stmt = select(BugPattern).order_by(BugPattern.created_at.desc()).limit(limit)
+    if status:
+        stmt = stmt.where(BugPattern.status == status)
+    return list(db.scalars(stmt))
