@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
+import uuid
 
 import pytest
 from fastapi.testclient import TestClient
@@ -63,19 +64,84 @@ def api(db_session: Session) -> Iterator[TestClient]:
 
 
 @pytest.mark.parametrize(
-    ("payload", "expected"),
+    ("statuses", "expected"),
     [
-        ({"p0_total": 2, "p0_passed": 2}, "PASS"),
-        ({"p0_total": 2, "p0_passed": 1, "p0_failed": 1}, "FAIL"),
-        ({"p0_total": 2, "p0_passed": 1, "p0_not_run": 1}, "BLOCKED"),
-        ({"p0_total": 2, "p0_passed": 1, "p0_unknown": 1}, "BLOCKED"),
-        ({"p0_total": 0}, "BLOCKED"),
+        (["PASS", "PASS"], "PASS"),
+        (["PASS", "FAIL"], "FAIL"),
+        (["PASS", "NOT_EVALUATED"], "BLOCKED"),
+        (["PASS", "ERROR"], "BLOCKED"),
+        (["PASS", "BLOCKED"], "BLOCKED"),
     ],
 )
-def test_quality_gate_status(api: TestClient, payload: dict, expected: str) -> None:
-    resp = api.post(f"{BASE}/quality-gate", json=payload)
+def test_quality_gate_status(
+    api: TestClient, db_session: Session, statuses: list[str], expected: str
+) -> None:
+    run_id = _seed_p0_run(db_session, statuses)
+    resp = api.post(f"{BASE}/quality-gate", json={"run_ids": [run_id]})
     assert resp.status_code == 200, resp.text
-    assert resp.json()["data"]["gate_status"] == expected
+    data = resp.json()["data"]
+    assert data["gate_status"] == expected
+    assert data["immutable"] is True
+    assert data["rule_version"].startswith("v1.4")
+
+
+def test_quality_gate_without_p0_is_blocked(
+    api: TestClient, db_session: Session
+) -> None:
+    run_id = _seed_p0_run(db_session, ["PASS"], severity="P1")
+    resp = api.post(f"{BASE}/quality-gate", json={"run_ids": [run_id]})
+    assert resp.status_code == 200
+    assert resp.json()["data"]["gate_status"] == "BLOCKED"
+
+
+def test_quality_gate_rejects_foreign_run(
+    api: TestClient, db_session: Session
+) -> None:
+    resp = api.post(f"{BASE}/quality-gate", json={"run_ids": ["missing-run"]})
+    assert resp.status_code == 404
+
+
+def _seed_p0_run(
+    db: Session, statuses: list[str], *, severity: str = "P0"
+) -> str:
+    from app.aiqe.models.run import (
+        NodeRun,
+        RunAssertionResult,
+        StepAttempt,
+        TestRun,
+    )
+
+    run = TestRun(
+        project_id=1,
+        run_key=f"RUN-GATE-{uuid.uuid4().hex[:8]}",
+        source_type="manual",
+        status="COMPLETED",
+        outcome="PASS",
+    )
+    db.add(run)
+    db.flush()
+    node = NodeRun(run_id=run.id, node_key="n1", driver_key="http", status="PASSED")
+    db.add(node)
+    db.flush()
+    attempt = StepAttempt(
+        node_run_id=node.id, step_key="n1", attempt_no=1, status="PASSED"
+    )
+    db.add(attempt)
+    db.flush()
+    for index, status in enumerate(statuses):
+        db.add(
+            RunAssertionResult(
+                step_attempt_id=attempt.id,
+                assertion_key=f"a{index}",
+                assertion_type="http_status",
+                oracle_layer="STD",
+                oracle_ref=f"STD-{index}",
+                status=status,
+                severity=severity,
+            )
+        )
+    db.commit()
+    return run.id
 
 
 def test_noise_rule_crud(api: TestClient) -> None:

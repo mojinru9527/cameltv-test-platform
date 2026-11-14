@@ -1,8 +1,10 @@
-"""M10-347：AIQE ExecutionJob 进程内消费者（解决 M9-R4）。
+"""M10-347 + v1.4：AIQE ExecutionJob 进程内消费者。
 
 - 仅认领 payload 含 `node_run_id` 的 ExecutionJob（AIQE DAG 节点）；
-- 原子认领（status pending → running + 租约），执行 `node_executor`，回写 `complete_node`；
-- 默认关闭（`AIQE_INPROCESS_EXECUTOR_ENABLED=true` 时由 lifespan 启动线程），避免控制面意外执行。
+- 原子认领（status pending → running + 租约）；
+- http / db 节点可在进程内执行；playwright/appium 只由具备浏览器/设备的 Runner 执行；
+- 执行收口统一走 `execution_service`（断言、outputs、证据、事件）；
+- 默认关闭（`AIQE_INPROCESS_EXECUTOR_ENABLED=true` 时由 lifespan 启动线程）。
 """
 from __future__ import annotations
 
@@ -14,8 +16,7 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from app.aiqe.models.run import NodeRun, TestRun
-from app.aiqe.services import dag_scheduler, node_executor
+from app.aiqe.services import execution_service
 from app.core.config import settings
 from app.core.db import SessionLocal
 from app.models.execution_job import ExecutionJob
@@ -25,8 +26,10 @@ logger = logging.getLogger(__name__)
 NODE_ID = "aiqe-inprocess"
 LEASE_SECONDS = 300
 MARKER = '"node_run_id"'
-# 进程内消费者只处理 http 节点；playwright/appium 留给具备浏览器/设备的 runner 节点。
-HTTP_DRIVERS = frozenset({"http", "httpx", "api", ""})
+# 进程内消费者可执行的 driver；浏览器/设备节点仍必须由外部 Runner 执行。
+INPROCESS_DRIVERS = frozenset(
+    {"http", "httpx", "api", "", "db", "db_readonly", "database"}
+)
 
 _stop = threading.Event()
 _thread: threading.Thread | None = None
@@ -34,11 +37,6 @@ _thread: threading.Thread | None = None
 
 def _now() -> datetime:
     return datetime.now(UTC)
-
-
-def _synthesize_graph(db: Session, run_id: str) -> dict:
-    rows = list(db.scalars(select(NodeRun).where(NodeRun.run_id == run_id)))
-    return {"nodes": [{"key": row.node_key} for row in rows], "edges": []}
 
 
 def claim_aiqe_jobs(db: Session, *, limit: int = 5) -> list[int]:
@@ -61,7 +59,7 @@ def claim_aiqe_jobs(db: Session, *, limit: int = 5) -> list[int]:
             driver = str(json.loads(job.payload_json or "{}").get("driver") or "").lower()
         except (TypeError, ValueError):
             driver = ""
-        if driver not in HTTP_DRIVERS:
+        if driver not in INPROCESS_DRIVERS:
             continue
         result = db.execute(
             update(ExecutionJob)
@@ -83,48 +81,7 @@ def claim_aiqe_jobs(db: Session, *, limit: int = 5) -> list[int]:
 
 
 def run_job(db: Session, job_id: int) -> dict:
-    job = db.get(ExecutionJob, job_id)
-    if job is None or job.status != "running":
-        return {"job_id": job_id, "skipped": True}
-    payload = json.loads(job.payload_json or "{}")
-    run_id = str(payload.get("run_id") or "")
-    node_run_id = str(payload.get("node_run_id") or "")
-    node = db.get(NodeRun, node_run_id) if node_run_id else None
-    run = db.get(TestRun, run_id) if run_id else None
-    if node is None or run is None:
-        job.status = "failed"
-        job.error_message = "node_run/run not found"
-        job.finished_at = _now()
-        db.commit()
-        return {"job_id": job_id, "status": "failed", "reason": "missing node/run"}
-
-    graph = payload.get("graph") or _synthesize_graph(db, run_id)
-    if node.status == "READY":
-        dag_scheduler.mark_running(db, run_id, node.node_key)
-
-    result = node_executor.execute_node(node)
-    dag_scheduler.complete_node(
-        db,
-        run_id,
-        node.node_key,
-        result.status,
-        graph,
-        error_class=result.error_class or None,
-        outputs={"execution": result.detail},
-    )
-    job.status = "success" if result.status == "PASSED" else "failed"
-    job.result_json = json.dumps(result.detail, ensure_ascii=False, default=str)[:20000]
-    job.summary = f"{node.node_key}:{result.status}"
-    job.error_message = result.error_class
-    job.finished_at = _now()
-    db.commit()
-    return {
-        "job_id": job_id,
-        "node": node.node_key,
-        "node_status": result.status,
-        "job_status": job.status,
-        "error_class": result.error_class,
-    }
+    return execution_service.execute_inprocess_job(db, job_id)
 
 
 def complete_from_report(
@@ -137,48 +94,22 @@ def complete_from_report(
 ) -> dict:
     """外部 runner（浏览器/设备）上报后，把 AIQE 节点状态回写到 DAG。
 
-    进程内消费者直接执行并回写；外部节点执行 UI/设备节点时必须走本函数，
-    否则 ExecutionJob 成功但 NodeRun 永远 RUNNING。
+    保留旧返回字段 `node_status`，内部走统一断言/证据/状态收口。
     """
-    job = db.get(ExecutionJob, job_id)
-    if job is None:
-        return {"skipped": True, "reason": "job missing"}
-    payload = json.loads(job.payload_json or "{}")
-    run_id = str(payload.get("run_id") or "")
-    node_run_id = str(payload.get("node_run_id") or "")
-    node = db.get(NodeRun, node_run_id) if node_run_id else None
-    run = db.get(TestRun, run_id) if run_id else None
-    if node is None or run is None:
-        return {"skipped": True, "reason": "node/run missing"}
-
-    graph = payload.get("graph") or _synthesize_graph(db, run_id)
-    if node.status == "READY":
-        dag_scheduler.mark_running(db, run_id, node.node_key)
-
-    passed = str(status).lower() in {"completed", "success", "passed", "pass", "ok"}
-    node_status = "PASSED" if passed else "FAILED"
-    payload_result = result or {}
-    error_class = str(payload_result.get("error_class") or "").strip()
-    if not passed and not error_class:
-        error_class = (error_message or "")[:80] or "EXTERNAL_RUNNER_FAILED"
-
-    dag_scheduler.complete_node(
+    summary = execution_service.complete_from_external_report(
         db,
-        run_id,
-        node.node_key,
-        node_status,
-        graph,
-        error_class=error_class or None,
-        outputs={"execution": payload_result},
+        job_id=job_id,
+        status=status,
+        result=result,
+        error_message=error_message,
     )
-    db.commit()
-    return {
-        "job_id": job_id,
-        "run_id": run_id,
-        "node": node.node_key,
-        "node_status": node_status,
-        "error_class": error_class,
-    }
+    if summary.get("skipped"):
+        return summary
+    node_status = summary.get("status")
+    summary.setdefault("node_status", node_status)
+    summary.setdefault("node", summary.get("node_key"))
+    summary.setdefault("error_class", "")
+    return summary
 
 
 def consume_once(*, limit: int = 5) -> int:

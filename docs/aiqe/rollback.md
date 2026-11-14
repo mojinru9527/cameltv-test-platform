@@ -49,3 +49,15 @@ docker ps --format '{{.Names}} {{.Status}}' | grep backend
 ```
 
 期望：health=200、`alembic current` 为回滚目标 head、backend healthy。
+
+## 5. v1.4 执行边界回滚
+
+1. **先关闭生产 Run 创建**：从部署环境移除或置 `AIQE_PROD_RUN_CREATE_ENABLED=false`；
+2. **关闭进程内执行器**：`AIQE_INPROCESS_EXECUTOR_ENABLED=false`，并重启 backend；
+3. **停止外部 Runner**：`aiqe_local_runner.py` 进程退出；确认没有未完成的 AIQE ExecutionJob；
+4. **保留历史**：Run/NodeRun/StepAttempt/Assertion/Artifact 是审计事实，回滚不回写、不删除；只把状态收敛（`AIQE_RECONCILER` 或 `scripts/qa/aiqe_reconcile.py`）；
+5. **迁移回滚**：`20261124_aiqe_pr595_execution` 为追加字段 + 新表；PostgreSQL 可 `alembic downgrade -1`，SQLite 本地保留追加列（见 `ops.md`）；
+6. **验证**：`/api/v1/open/health` 200；`/api/v1/aiqe/runs/{id}` 仍可读；新建 Run 被 403 拒绝（生产默认关闭）；
+7. **重新启用**：仅在 Test 环境验证 Preflight/断言/证据后，再按发布窗口打开生产开关，并记录版本锁。
+
+> PR #595 的 `prod-aiqe-inprocess` HTTP health smoke 只作为受控运维验证，不得在回滚后自动恢复为“生产可执行任意 API”。

@@ -2,9 +2,9 @@
 title: "CamelTv AIQE 代码基线审计（TA-001）"
 owner: "qa-team"
 created: "2026-11-09"
-last_reviewed: "2026-11-09"
+last_reviewed: "2026-11-14"
 status: "active"
-version: "v1.1-decisions-confirmed"
+version: "v1.4-post-pr595"
 tags: ["platform-refactor", "aiqe", "baseline", "code-audit"]
 related:
   - "docs/platform-refactor/13-ai-quality-agent-merged-spec.md"
@@ -18,6 +18,8 @@ related:
 > **口径**：本文件是 **TA-001 的唯一事实源**；与 13 号冲突时，**以本文件的现状事实为准**，规格按本文件收窄。
 > **证据**：所有数字来自 AST 解析 `app/models/`、导入 `app.main` 导出 OpenAPI、以及 `app/services/` / `frontend/src/` 目录统计（命令见 §14）。
 > **审计基线**：`origin/main @ 0af75a821`（batch-276 合入后）。
+>
+> **v1.4 刷新（2026-11-14）**：审计基线已刷新为 `origin/main @ b0f6cdd4c`（PR #596 后）；新增内容见 §15，原 §0–§14 保留为 2026-11-09 历史快照，不回写。
 
 ---
 
@@ -856,3 +858,64 @@ python -c "from app.main import app; s=app.openapi(); print(len(s['paths']))"   
 **审计产物**：本文件 + batch-278 六件工件（PRD / PM / Design / Dev / QA / Leader verdict）+ 看板。
 
 **已知缺口**（不在 TA-001 范围）：`app/services/` 123 个文件只按 8 个接入点抽查，未做逐文件依赖图；前端 153 个页面组件未做逐页归属；这两项留给 TA-004（模型映射表）/ M5 前端改造时补。
+
+---
+
+## 15. v1.4 刷新基线（PR #595 后，2026-11-14）
+
+> **事实优先级**：本节数字来自当前 main 的代码、OpenAPI 导出、Alembic 与测试运行结果；与 §0–§14（2026-11-09 快照）冲突时以本节为准。
+
+### 15.1 基线事件与 SHA
+
+| 项 | 值 |
+|---|---|
+| 刷新时间 | 2026-11-14（Asia/Shanghai） |
+| 仓库 | `mojinru9527/cameltv-test-platform` |
+| 远端基线 | `origin/main @ b0f6cdd4c`（`docs(aiqe): 使用与项目接入指南 + 引导脚本 (#596)`） |
+| 上一基线 | `origin/main @ 0af75a821`（2026-11-09） |
+| PR #595 | 2026-11-13 合并，仅新增 `work-logs/aiqe/production-aiqe-execution-20261114.md`；生产 Run 为单条 `GET /api/v1/open/health` HTTP health smoke，**不代表**业务 HTTP Chain / Playwright / DB-RO / 噪音归因 / 缺陷回归 / Agent 已生产可用 |
+
+### 15.2 刷新后的数字
+
+| 指标 | 2026-11-09 | 2026-11-14 | 说明 |
+|---|---:|---:|---|
+| 模型文件（含 `app/aiqe/models`、`app/modules/**/models.py`） | 43 | **55** | AIQE 17 张表已注册到 `Base.metadata` |
+| ORM 真实表 | 73 | **106** | 含 M1–M10 新增 Run/Event/Artifact/Workflow/Capability/Profile/Triage/Noise/Learning/Hardening/Gate |
+| 服务文件（递归） | 123 | **111** | 平台简化批次删除了 AITDE/DSH/报告/通知等域；AIQE 服务 36 个 |
+| API 模块 | 45 | **49** | 新增 `aiqe_runs/admin/workflows/platform/regressions/learning` |
+| OpenAPI paths / operations | 265 / 323 | **289 / 355** | `app.openapi()` 导出 |
+| Alembic revisions | 118 | **134** | 当前单 head：`20261124_aiqe_pr595_execution` |
+| AIQE 新表 | — | **17** | `test_runs`、`node_runs`、`step_attempts`、`run_assertion_results`、`run_events`、`event_outbox`、`run_artifacts`、`workflow_definitions`、`resource_locks`、`node_capability_manifests`、`agent_executions`、`execution_profiles`、`triage_experiments`、`noise_rules`、`learning_candidates`、`bug_patterns`、`aiqe_quality_gate_snapshots` |
+
+### 15.3 v1.4 修复项落地状态
+
+| 修复项 | 状态 | 代码入口 | 验收证据 |
+|---|---|---|---|
+| FIX-001 RunContext Resolver | ✅ 已实现 | `app/aiqe/services/run_context.py` | `tests/test_aiqe_run_context_v2.py`、`test_aiqe_execution_pipeline.py` |
+| FIX-002 Assertion Runtime | ✅ 已实现 | `app/aiqe/services/assertion_service.py` | `tests/test_aiqe_assertion_runtime.py` |
+| FIX-003 HTTP Driver 业务化 | ✅ 已实现 | `app/aiqe/drivers/httpx_driver.py` | `tests/test_aiqe_http_driver_v2.py` |
+| FIX-004 Playwright 真实动作/证据 | ✅ 已实现 | `app/aiqe/drivers/playwright_driver.py` | `tests/test_aiqe_playwright_driver_v2.py` |
+| FIX-005 Capability Preflight | ✅ 已实现 | `app/aiqe/services/preflight.py` | `tests/test_aiqe_run_launch.py` |
+| FIX-006 Run Launch / 对账 | ✅ 已实现 | `app/aiqe/services/run_launch.py`、`reconciler.py`、`scripts/qa/aiqe_reconcile.py` | `test_aiqe_run_launch.py`、`test_aiqe_reconciler.py` |
+| FIX-007 DB Read-only Driver | ✅ 已加固 | `app/aiqe/drivers/db_readonly_driver.py` | `tests/test_aiqe_db_readonly_driver_v2.py` |
+| FIX-008 Evidence Redaction | ✅ 已实现 | `app/aiqe/services/evidence_redactor.py`、`artifact_service.py` | `tests/test_aiqe_evidence_redactor.py` |
+| FIX-009 Run Console 细节 | ✅ 已实现 | `frontend/src/pages/runs/detail.tsx`、`api/aiqeRuns.ts` | `frontend/src/pages/runs/__tests__/detail.test.tsx` |
+| FIX-010 Defect Draft | ✅ 既有能力（batch-304） | `app/services/defect_service.py` | 既有测试 |
+| FIX-011 Regression 真实派发 | ✅ 已修复 | `app/aiqe/services/regression_service.py` | `tests/test_aiqe_regression_api.py` |
+| FIX-012 Quality Gate Facts-only | ✅ 已修复 | `app/aiqe/services/quality_gate_service.py` | `tests/test_aiqe_run_api_v14.py`、`test_aiqe_console_admin_api.py` |
+| FIX-013 Tenant Scope / 写权限 | ✅ 已加固（Noise/Learning/Artifact/Regression） | `noise_rule_service.py`、`learning_service.py`、`artifact_service.py` | `tests/test_aiqe_tenant_scope.py` |
+| FIX-014 Environment / Profile Snapshot | ✅ 既有 + Run 字段 | `test_runs.environment_snapshot_json`、`capability_snapshot_json`、`ExecutionProfile` | 既有 profile 测试 + launch 测试 |
+| FIX-015 Production Execution Policy | ✅ 已实现 | `settings.aiqe_prod_run_create_enabled`、`run_launch.py` | `tests/test_aiqe_run_launch.py` |
+
+### 15.4 刷新命令（可复现）
+
+```powershell
+cd test-platform-v2/backend
+python -c "import app.models; from app.core.db import Base; from app.main import app; s=app.openapi(); print(len(Base.metadata.tables), len(s['paths']), sum(1 for p in s['paths'].values() for m in p if m in ('get','post','put','patch','delete')))"
+python -m alembic heads
+$env:DATABASE_URL='sqlite:///./data/ta001-v14.db'; python -m alembic upgrade head
+python -m alembic downgrade -1; python -m alembic upgrade head
+python -m pytest tests -k aiqe -q
+```
+
+**结论**：PR #595 后的 main 已经具备 M1–M10 的 AIQE 骨架；v1.4 的价值在于把"定义已写、执行接缝未闭环"的 15 个 FIX 项补成可执行、可断言、可回滚的代码，并把 PR #595 的生产证据严格限定为 HTTP health smoke。
