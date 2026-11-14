@@ -122,6 +122,8 @@ def test_pipeline_variable_assertion_outputs_and_evidence(db_session, monkeypatc
     db_session.expire_all()
     login = db_session.get(NodeRun, login.id)
     query = db_session.get(NodeRun, query.id)
+    first_job = db_session.get(ExecutionJob, claimed[0])
+    assert "tok-1" not in (first_job.result_json or "")
     assert login.status == "PASSED"
     assert login.outputs_json["token"] == "tok-1"
     assert query.status == "READY"
@@ -170,6 +172,43 @@ def test_pipeline_variable_assertion_outputs_and_evidence(db_session, monkeypatc
         ),
     )
     assert len(artifacts) == 2
+
+
+def test_blocked_node_blocks_downstream_and_closes_run(db_session, monkeypatch):
+    monkeypatch.setenv("AIQE_SECRET_API_KEY", "s3cr3t")
+    workflow = _setup(db_session)
+    run = launch_run(
+        db_session,
+        project_id=1,
+        user_id=1,
+        workflow_definition_id=workflow.id,
+        launch_key="pipeline-blocked",
+    )
+    db_session.commit()
+
+    def fake_blocked(node, *, input_override=None, db_engine=None):
+        return node_executor.NodeExecution(
+            status="BLOCKED",
+            error_class="BROWSER_UNAVAILABLE",
+            detail={"reason": "no browser"},
+            data={},
+        )
+
+    monkeypatch.setattr(execution_service, "execute_node", fake_blocked)
+    claimed = job_consumer.claim_aiqe_jobs(db_session)
+    job_consumer.run_job(db_session, claimed[0])
+    db_session.expire_all()
+    login = db_session.scalar(
+        select(NodeRun).where(NodeRun.run_id == run.id, NodeRun.node_key == "login")
+    )
+    query = db_session.scalar(
+        select(NodeRun).where(NodeRun.run_id == run.id, NodeRun.node_key == "query")
+    )
+    run = db_session.get(TestRun, run.id)
+    assert login.status == "BLOCKED"
+    assert query.status == "BLOCKED"
+    assert run.status == "COMPLETED"
+    assert run.outcome == "INCOMPLETE"
 
 
 def test_probe_only_execution_never_passes(db_session, monkeypatch):

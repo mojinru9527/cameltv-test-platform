@@ -652,8 +652,16 @@ def execute_inprocess_job(db: Session, job_id: int) -> dict[str, Any]:
         artifact_ids=artifact_ids,
     )
     job.status = "success" if summary["status"] == "PASSED" else "failed"
+    safe_result = evidence_redactor.redact(
+        {
+            "detail": execution.detail,
+            "data": execution.data,
+            "summary": summary,
+        },
+        known_secrets=list(known_secrets),
+    )
     job.result_json = json.dumps(
-        {"detail": execution.detail, "data": execution.data, "summary": summary},
+        safe_result,
         ensure_ascii=False,
         default=str,
     )[:20000]

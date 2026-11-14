@@ -375,7 +375,7 @@ def complete_node(
         db.flush()
         return run
 
-    if status in NODE_FAILED:
+    if status in NODE_FAILED or status in {"BLOCKED", "CANCELED"}:
         _block_downstream(node_key, deps, by_key, {node_key})
 
     _finalize(db, run, rows, graph)

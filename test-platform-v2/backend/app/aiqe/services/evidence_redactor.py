@@ -56,10 +56,11 @@ VALUE_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"(?i)\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{6,}"), MASK),
     (
         re.compile(
-            r"(?i)\b(password|passwd|pwd|token|access_token|refresh_token|api[_-]?key|secret)"
-            r"\s*[=:]\s*([^\s,;&'\"]{3,})"
+            r"(?i)([\"']?(?:password|passwd|pwd|token|access_token|refresh_token|"
+            r"api[_-]?key|secret)[\"']?\s*[=:]\s*[\"']?)"
+            r"([^\s,;&\"']{3,})"
         ),
-        r"\1=***",
+        r"\1***",
     ),
     (re.compile(r"(?<!\d)1[3-9]\d{9}(?!\d)"), "***"),
     (re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"), "***"),

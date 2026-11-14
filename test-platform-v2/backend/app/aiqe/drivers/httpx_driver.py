@@ -298,7 +298,8 @@ class HttpDriver:
                     "status_code": response.status_code,
                     "headers": safe_headers,
                     "body_text": _truncate(body_text, self._max_body_bytes),
-                    "json": redact(parsed, known_secrets=[]),
+                    # 执行/变量提取需要原始 JSON；证据正文已单独脱敏（response.body）。
+                    "json": parsed,
                     "url": _redact_url(str(response.url)),
                     "duration_ms": duration_ms,
                     "correlation_id": prepared["correlation_id"],

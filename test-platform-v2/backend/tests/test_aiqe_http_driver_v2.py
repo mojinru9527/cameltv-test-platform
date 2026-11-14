@@ -78,6 +78,21 @@ def test_correlation_id_and_json_data():
     assert result.request["correlation_id"] == "corr-1"
 
 
+def test_execution_json_preserved_but_evidence_redacted():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"token": "tok-1", "ok": True})
+
+    driver = HttpDriver(
+        httpx.Client(transport=httpx.MockTransport(handler)),
+        enforce_ssrf=False,
+    )
+    result = driver.execute(HttpRequestSpec("POST", "https://api.test/login"))
+    # 执行/变量提取需要真实 token；证据正文必须脱敏。
+    assert result.data["json"]["token"] == "tok-1"
+    assert "tok-1" not in result.response["body"]
+    assert "***" in result.response["body"]
+
+
 def test_query_values_redacted_in_evidence():
     driver = HttpDriver(
         httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200))),

@@ -622,6 +622,11 @@ class PlaywrightDriver:
                     "text": last.text,
                 }
             }
+        try:
+            if self._page is not None:
+                data["body_text"] = self._page.locator("body").inner_text()[:4000]
+        except Exception:
+            data["body_text"] = ""
         return DriverResult(
             driver_key="playwright",
             status="FAILED" if error_class else "SUCCEEDED",
