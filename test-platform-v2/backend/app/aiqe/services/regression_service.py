@@ -1,10 +1,11 @@
-"""batch-341（M9-2）：AIQE 缺陷修复回归请求（DefectRegression + 新 TestRun）。
+"""batch-341 + v1.4 FIX-011：缺陷修复回归请求 → 真实新 Run 派发。
 
-与既有 `POST /defects/{id}/regressions` 的区别：
-- 本服务一次调用同时创建 **verification TestRun**（`source_type=regression`，`retest_of=旧 Run`，
-  `commit_sha=fixed_sha`），并回填 `defect_regressions.verification_run_id`；
-- 旧 Run 只读引用，不被修改；
-- 项目隔离：缺陷/旧 Run 必须属于当前项目。
+与旧实现的区别：
+- 不再只插入一条 QUEUED Run 冒充“回归已启动”；
+- 固定原失败 Run 的 Workflow 快照/checksum，不随当前最新版本漂移；
+- 必须验证 `deployed_sha == fixed_sha`，否则 Run BLOCKED（不执行）；
+- 复用正常 `launch_run` 路径创建 NodeRun/ExecutionJob，旧 Run 只读不变；
+- 没有可执行 Workflow 快照时创建 BLOCKED Run 并给出明确 reason，绝不 QUEUED 悬挂。
 """
 from __future__ import annotations
 
@@ -15,6 +16,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.aiqe.models.run import TestRun
+from app.aiqe.models.workflow import WorkflowDefinition
+from app.aiqe.services.run_launch import LaunchError, launch_run
+from app.aiqe.services.workflow_validator import workflow_checksum
 from app.models.defect import Defect, DefectRegression
 
 
@@ -26,6 +30,20 @@ class RegressionNotFound(LookupError):
     pass
 
 
+def _workflow_snapshot(db: Session, previous: TestRun) -> tuple[dict | None, str, str | None]:
+    graph = dict(previous.workflow_snapshot_json or {})
+    checksum = previous.workflow_checksum or ""
+    workflow_id = previous.workflow_definition_id
+    if not graph and workflow_id:
+        workflow = db.get(WorkflowDefinition, workflow_id)
+        if workflow is not None and int(workflow.project_id or 0) == int(previous.project_id or 0):
+            graph = dict(workflow.graph_json or {})
+            checksum = checksum or workflow.checksum
+    if graph and not checksum:
+        checksum = workflow_checksum(graph)
+    return (graph or None), checksum, workflow_id
+
+
 def create_regression(
     db: Session,
     *,
@@ -33,7 +51,9 @@ def create_regression(
     defect_id: int,
     fixed_sha: str,
     previous_run_id: str | None = None,
+    deployed_sha: str = "",
     environment_snapshot: dict | None = None,
+    launch_key: str = "",
 ) -> tuple[DefectRegression, TestRun]:
     sha = (fixed_sha or "").strip()
     if len(sha) < 7:
@@ -49,30 +69,126 @@ def create_regression(
             raise RegressionError(f"旧 Run 不存在: {previous_run_id}")
 
     now = datetime.now(UTC)
-    run = TestRun(
-        project_id=project_id,
-        run_key=f"REG-{sha[:7]}-{uuid.uuid4().hex[:8]}",
-        source_type="regression",
-        retest_of=previous_run_id or None,
-        commit_sha=sha,
-        status="QUEUED",
-        environment_snapshot_json={
-            "fixed_sha": sha,
-            "defect_id": defect_id,
-            "previous_run_id": previous_run_id,
-            **(environment_snapshot or {}),
-        },
-        created_at=now,
-    )
-    db.add(run)
-    db.flush()
+    snapshot = {
+        "fixed_sha": sha,
+        "deployed_sha": deployed_sha,
+        "defect_id": defect_id,
+        "previous_run_id": previous_run_id,
+        **(environment_snapshot or {}),
+    }
+
+    if previous is None:
+        run = TestRun(
+            project_id=project_id,
+            run_key=f"REG-{sha[:7]}-{uuid.uuid4().hex[:8]}",
+            source_type="regression",
+            retest_of=None,
+            commit_sha=sha,
+            status="BLOCKED",
+            environment_snapshot_json={
+                **snapshot,
+                "reason": "REGRESSION_PREVIOUS_RUN_REQUIRED",
+            },
+            created_at=now,
+        )
+        db.add(run)
+        db.flush()
+    else:
+        graph, checksum, workflow_id = _workflow_snapshot(db, previous)
+        if not graph:
+            run = TestRun(
+                project_id=project_id,
+                run_key=f"REG-{sha[:7]}-{uuid.uuid4().hex[:8]}",
+                source_type="regression",
+                retest_of=previous.id,
+                commit_sha=sha,
+                status="BLOCKED",
+                workflow_definition_id=workflow_id,
+                workflow_checksum=checksum,
+                environment_snapshot_json={
+                    **snapshot,
+                    "reason": "REGRESSION_WORKFLOW_MISSING",
+                },
+                created_at=now,
+            )
+            db.add(run)
+            db.flush()
+        else:
+            if not deployed_sha:
+                run = TestRun(
+                    project_id=project_id,
+                    run_key=f"REG-{sha[:7]}-{uuid.uuid4().hex[:8]}",
+                    source_type="regression",
+                    retest_of=previous.id,
+                    commit_sha=sha,
+                    status="BLOCKED",
+                    workflow_definition_id=workflow_id,
+                    workflow_checksum=checksum,
+                    workflow_snapshot_json=graph,
+                    environment_snapshot_json={
+                        **snapshot,
+                        "reason": "FIXED_SHA_NOT_VERIFIED",
+                    },
+                    created_at=now,
+                )
+                db.add(run)
+                db.flush()
+            elif not (
+                deployed_sha == sha
+                or deployed_sha.startswith(sha)
+                or sha.startswith(deployed_sha)
+            ):
+                run = TestRun(
+                    project_id=project_id,
+                    run_key=f"REG-{sha[:7]}-{uuid.uuid4().hex[:8]}",
+                    source_type="regression",
+                    retest_of=previous.id,
+                    commit_sha=sha,
+                    status="BLOCKED",
+                    workflow_definition_id=workflow_id,
+                    workflow_checksum=checksum,
+                    workflow_snapshot_json=graph,
+                    environment_snapshot_json={
+                        **snapshot,
+                        "reason": "FIXED_SHA_MISMATCH",
+                    },
+                    created_at=now,
+                )
+                db.add(run)
+                db.flush()
+            else:
+                try:
+                    run = launch_run(
+                        db,
+                        project_id=project_id,
+                        user_id=None,
+                        workflow_definition_id=workflow_id,
+                        graph_override=graph,
+                        expected_checksum=checksum,
+                        retest_of=previous.id,
+                        commit_sha=sha,
+                        launch_key=launch_key or f"regression-{defect_id}-{sha[:7]}-{uuid.uuid4().hex[:8]}",
+                        source_type="regression",
+                        source_id=str(defect_id),
+                        environment_snapshot={
+                            **snapshot,
+                            "fixture_strategy": (environment_snapshot or {}).get(
+                                "fixture_strategy", "isolated"
+                            ),
+                            "selection_reason": "failed_scenario+p0_smoke+impact_set",
+                        },
+                    )
+                except LaunchError as exc:
+                    raise RegressionError(f"{exc.code}: {exc}") from exc
 
     row = DefectRegression(
         defect_id=defect_id,
         fixed_sha=sha,
         previous_run_id=previous_run_id or None,
         verification_run_id=run.id,
-        status="pending",
+        status=(
+            "pending" if run.status in {"RUNNING", "QUEUED"} else "blocked"
+        ),
         created_at=now,
     )
     db.add(row)
@@ -103,6 +219,7 @@ def list_regressions(
     if defect_id is not None:
         stmt = stmt.where(DefectRegression.defect_id == defect_id)
     return list(db.scalars(stmt))
+
 
 def get_verification_run(db: Session, row: DefectRegression) -> TestRun | None:
     if not row.verification_run_id:

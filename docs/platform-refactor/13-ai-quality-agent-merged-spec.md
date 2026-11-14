@@ -3157,6 +3157,59 @@ CI 守卫（PR 合并前）：改 prompt / 工具 / 模型配置 → **必须跑
 
 > 本文件 **status: active / v1.3-baseline-aligned**；任何修改走 Agent Team 门禁（批次与里程碑见 [`14-aiqe-dev-schedule-and-dogfood-plan.md`](14-aiqe-dev-schedule-and-dogfood-plan.md)）。
 > 本文 + `docs/aiqe/baseline.md` 共同构成 CamelTv AIQE 的**权威工程规格**。
+
+---
+
+## v1.4 实施校准（PR #595 后，2026-11-14）
+
+> 本节是执行包 v1.4 的规格回写；不替代上文，只把新增契约、字段和状态规则显式化。
+> 代码事实以 `origin/main @ b0f6cdd4c` + 本分支实现为准；证据见 `work-logs/aiqe/pr595-v1.4-implementation-20261114.md`。
+
+### A. 新增/变更字段
+
+| 表 | 字段 | 作用 |
+|---|---|---|
+| `test_runs` | `workflow_checksum`、`workflow_snapshot_json` | Run 冻结自己的执行合同，Workflow 后续版本漂移不影响历史 |
+| `test_runs` | `launch_key`（`(project_id, launch_key)` 唯一） | 启动幂等；重复提交返回同一 Run |
+| `test_runs` | `preflight_json`、`capability_snapshot_json` | 启动时能力快照与阻断原因 |
+| `node_runs` | `outputs_json`、`resolved_input_json`、`secret_keys_json`、`source_refs_json` | 结构化输出 + 可审计的脱敏输入 |
+| `node_runs` | `assertions_json`、`outputs_spec_json`、`output_schema_json`、`capability` | 节点级冻结的断言/输出契约（外部 Runner 不依赖最新 Workflow） |
+| `run_assertion_results` | `schema_version`、`oracle_layer`、`oracle_ref`、`actual_source`、`severity`、`timeout_ms`、`duration_ms`、`error_message`、`artifact_refs_json` | Oracle 可追踪、证据可引用 |
+| `aiqe_quality_gate_snapshots` | 新表 | 门禁 append-only 快照，不允许回写历史 |
+
+### B. 版本化协议（`app/aiqe/schemas/contracts.py`）
+
+- `ResolvedInput`：`values` + `source_refs` + `secret_keys`；**secret 明文不落库**。
+- 变量语法：`${nodes.<key>.outputs.<name>}`、`${FIXTURE:<key>}`、`${SECRET:<key>}`、`${ENV:<key>}`；兼容旧 `${secrets.<NAME>}`。
+- `AssertionSpec`：必须带 `oracle_layer`（REQ/STD/PATTERN）与 `oracle_ref`；STD/PATTERN 无 ref 判 ERROR。
+- MVP 断言类型：`http_status`、`jsonpath`、`json_schema`、`text_contains`、`text_equals`、`locator_visible`、`locator_count`、`url_equals`、`url_contains`、`db_value_eq`、`db_row_exists`、`db_row_count`、`event_received`、`eventually`。
+- `DriverResult`：Driver 只给事实与证据，**业务 PASS 只由 Assertion Runtime 判定**。
+- JSONPath 使用内置严格子集（`$`、`.`、`[]`、`[*]`、`..`），非法语法显式报错；JSON Schema 使用 lock 文件中的 `jsonschema==4.26.0`。
+
+### C. 状态与安全规则（v1.4 强制）
+
+1. `probe_actionability` 只返回 READY/NOT_READY，**不能**触发业务断言 PASS；只有真实 action dispatch 才能进入业务断言。
+2. HTTP 200 不是 PASS；必须有断言，或由 legacy `expected_status` 合成一条 `http_status` 断言。
+3. `NOT_EVALUATED / BLOCKED / ERROR / UNKNOWN` 永不折算为 PASS。
+4. Preflight 在任何 Job 入队前完成；缺能力 → Run `BLOCKED` 并列出 `node_key / required_capability / available_nodes`。
+5. Run Launch 的 DB 事务只写 Run / NodeRun / ExecutionJob / Event；不同步等待整条 Workflow。
+6. 一个 NodeRun 最多一个 ExecutionJob；retry 生成新 Job + 新 StepAttempt，旧失败 attempt 永久保留。
+7. Reconciler 收敛过期租约/丢失 Job/永久 RUNNING；`COMPLETED` 必须有 outcome。
+8. 生产 Run 创建默认关闭（`AIQE_PROD_RUN_CREATE_ENABLED=false`）；PR #595 的 HTTP health smoke 不等于生产任意 API 执行。
+9. Regression 必须固定原 Run 的 Workflow 快照/checksum，验证 `deployed_sha == fixed_sha`，并走正常 launch 生成新 NodeRun/Job；旧 Run 只读不变。
+10. Quality Gate 只接受 `run_ids` / `version_task_id` 等事实定位参数，不接受前端 `p0_total/p0_passed`；每次计算写不可变快照。
+
+### D. 与 PR #595 的边界
+
+PR #595 仅证明生产 `GET /api/v1/open/health` 的 in-process HTTP 执行腿可工作。以下仍未由它证明，必须由 v1.4 的 Dogfood/Test 环境证据补齐：
+
+- 业务 HTTP Chain、动态变量传递、`match_id/token` 跨节点；
+- Playwright 真实点击 + Trace/截图/DOM/A11y；
+- DB-RO 断言；
+- 跨系统 DAG、噪音归因、Defect Draft、一键回归；
+- A0–A6 Agent 的真实 Provider 调用与 Benchmark。
+
+**结论**：v1.4 把上述能力做成可执行代码，但生产可用性仍按每个 Gate 的真实 Dogfood Run 单独判定，不以文档或单测替代。
 batch-311（TA-031 Quality Gate）已完成——P0 未执行/未知/失败均不显示 PASS。
 batch-312（TA-032 MCP Gateway）已完成——只读查询、写动作审批门禁、3 类外部 Agent 声明。
 batch-313（TA-032.5 Agent Skills）已完成——6 个 skill 统一契约 + CI 校验。

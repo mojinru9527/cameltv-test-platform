@@ -26,6 +26,8 @@ class RegressionIn(BaseModel):
     defect_id: int
     fixed_sha: str = Field(min_length=7, max_length=64)
     previous_run_id: str | None = None
+    deployed_sha: str = Field(default="", max_length=64)
+    launch_key: str = Field(default="", max_length=128)
     environment_snapshot: dict = Field(default_factory=dict)
 
 
@@ -70,6 +72,8 @@ def post_regression(
             defect_id=body.defect_id,
             fixed_sha=body.fixed_sha,
             previous_run_id=body.previous_run_id,
+            deployed_sha=body.deployed_sha,
+            launch_key=body.launch_key,
             environment_snapshot=body.environment_snapshot,
         )
     except RegressionError as exc:

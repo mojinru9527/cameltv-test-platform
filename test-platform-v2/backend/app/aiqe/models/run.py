@@ -53,6 +53,13 @@ class TestRun(Base):
         Integer, ForeignKey("test_scenarios.id", ondelete="SET NULL"), nullable=True
     )
     workflow_definition_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    # v1.4 / PR-6：Run 把自己的执行合同冻结在本地，后续 Workflow 版本漂移不影响历史。
+    workflow_checksum: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    workflow_snapshot_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    # 幂等 launch key：同一项目重复提交只产生一条 Run（唯一索引见 __table_args__）。
+    launch_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    preflight_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    capability_snapshot_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     build_ref: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     commit_sha: Mapped[str] = mapped_column(String(64), nullable=False, default="")
     environment_id: Mapped[int | None] = mapped_column(
@@ -81,6 +88,7 @@ class TestRun(Base):
 
     __table_args__ = (
         UniqueConstraint("project_id", "run_key", name="uq_test_runs_project_run_key"),
+        UniqueConstraint("project_id", "launch_key", name="uq_test_runs_project_launch_key"),
         Index("ix_test_runs_project_created", "project_id", "created_at"),
         Index("ix_test_runs_scenario_created", "scenario_id", "created_at"),
         Index("ix_test_runs_commit_sha", "commit_sha"),
@@ -102,6 +110,16 @@ class NodeRun(Base):
     status: Mapped[str] = mapped_column(String(24), nullable=False, default="PENDING", index=True)
     input_ref: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     output_ref: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    # v1.4：结构化输出（只放声明过的 output），以及可审计但脱敏后的解析输入。
+    outputs_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    resolved_input_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    secret_keys_json: Mapped[list[str]] = mapped_column(JSON, default=list)
+    source_refs_json: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    # 图快照：外部 Runner / Reconciler 不依赖当前 Workflow 版本。
+    assertions_json: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    outputs_spec_json: Mapped[dict[str, str]] = mapped_column(JSON, default=dict)
+    output_schema_json: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    capability: Mapped[str] = mapped_column(String(64), nullable=False, default="")
     error_class: Mapped[str] = mapped_column(String(80), nullable=False, default="")
     resource_keys_json: Mapped[list[str]] = mapped_column(JSON, default=list)
     execution_job_id: Mapped[int | None] = mapped_column(
@@ -116,7 +134,11 @@ class NodeRun(Base):
         back_populates="node_run", cascade="all, delete-orphan"
     )
 
-    __table_args__ = (UniqueConstraint("run_id", "node_key", name="uq_node_runs_run_node"),)
+    __table_args__ = (
+        UniqueConstraint("run_id", "node_key", name="uq_node_runs_run_node"),
+        # 一个节点最多关联一个 ExecutionJob；重复 dispatch 由 DB 兜底（FIX-006）。
+        UniqueConstraint("execution_job_id", name="uq_node_runs_execution_job"),
+    )
 
 
 class StepAttempt(Base):
@@ -159,12 +181,22 @@ class RunAssertionResult(Base):
     )
     assertion_key: Mapped[str] = mapped_column(String(100), nullable=False)
     assertion_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    schema_version: Mapped[str] = mapped_column(String(20), nullable=False, default="1.0")
     rule_id: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    # Oracle 来源：REQ / STD / PATTERN + 具体 rule ref（oracle_ref）。
+    oracle_layer: Mapped[str] = mapped_column(String(8), nullable=False, default="STD")
+    oracle_ref: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="NOT_EVALUATED")
     expected_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     actual_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     diff_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    actual_source: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    severity: Mapped[str] = mapped_column(String(8), nullable=False, default="P1")
+    timeout_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    duration_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    error_message: Mapped[str] = mapped_column(String(500), nullable=False, default="")
     evidence_refs_json: Mapped[list[str]] = mapped_column(JSON, default=list)
+    artifact_refs_json: Mapped[list[str]] = mapped_column(JSON, default=list)
     evaluated_by: Mapped[str] = mapped_column(String(20), nullable=False, default="deterministic")
 
     step_attempt: Mapped[StepAttempt] = relationship(back_populates="assertion_results")

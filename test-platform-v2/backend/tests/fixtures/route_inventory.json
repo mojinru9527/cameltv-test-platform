@@ -1,5 +1,5 @@
 {
-  "count": 350,
+  "count": 355,
   "routes": [
     {
       "path": "/api/v1/ai-config/providers",
@@ -1400,6 +1400,26 @@
     {
       "path": "/api/v1/aiqe/learning/candidates/{candidate_id}/evaluate",
       "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/runs",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/runs/{run_id}/cancel",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/runs/{run_id}/nodes",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/runs/{run_id}/assertions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/quality-gate/latest",
+      "method": "GET"
     }
   ]
 }

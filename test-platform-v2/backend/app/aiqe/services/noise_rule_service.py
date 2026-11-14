@@ -71,9 +71,12 @@ def create_rule(
     return row
 
 
-def get_rule(db: Session, rule_id: int) -> NoiseRule:
+def get_rule(db: Session, rule_id: int, *, project_id: int | None = None) -> NoiseRule:
     row = db.get(NoiseRule, rule_id)
-    if row is None:
+    if row is None or (
+        project_id is not None and int(row.project_id or 0) != int(project_id)
+    ):
+        # 跨项目按不存在处理，不泄露存在性。
         raise NoiseRuleError(f"规则不存在: {rule_id}")
     return row
 
@@ -85,8 +88,9 @@ def update_rule(
     pattern: str | None = None,
     action: str | None = None,
     expires_at: datetime | None = None,
+    project_id: int | None = None,
 ) -> NoiseRule:
-    row = get_rule(db, rule_id)
+    row = get_rule(db, rule_id, project_id=project_id)
     now = _utcnow()
     next_action = action or row.action
     if next_action not in ACTIONS:
@@ -107,8 +111,10 @@ def update_rule(
     return row
 
 
-def renew_rule(db: Session, rule_id: int) -> NoiseRule:
-    row = get_rule(db, rule_id)
+def renew_rule(
+    db: Session, rule_id: int, *, project_id: int | None = None
+) -> NoiseRule:
+    row = get_rule(db, rule_id, project_id=project_id)
     now = _utcnow()
     row.expires_at = now + timedelta(days=MAX_DAYS)
     row.status = "active"
@@ -135,7 +141,9 @@ def list_rules(db: Session, project_id: int, *, include_expired: bool = True) ->
     return [row for row in rows if is_effective(row)]
 
 
-def delete_rule(db: Session, rule_id: int) -> None:
-    row = get_rule(db, rule_id)
+def delete_rule(
+    db: Session, rule_id: int, *, project_id: int | None = None
+) -> None:
+    row = get_rule(db, rule_id, project_id=project_id)
     db.delete(row)
     db.flush()
