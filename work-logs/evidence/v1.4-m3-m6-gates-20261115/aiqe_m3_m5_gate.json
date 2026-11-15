@@ -1,0 +1,371 @@
+{
+  "generated_at": "2026-11-15T12:15:51.256546+00:00",
+  "project_id": 1,
+  "provider": {
+    "model": "deepseek-v4-flash",
+    "base_url": "https://api.deepseek.com"
+  },
+  "M3": {
+    "requirement": "Test 环境验收需求：1) GET /api/v1/open/health 返回 200 且 data.status=ok；2) 登录页有“忘记密码”入口，点击后进入 /forgot-password 并显示“找回密码”；3) PostgreSQL sys_project 至少存在 1 个项目。",
+    "A0": {
+      "summary": "Test 环境需验收三项内容：开放健康检查接口返回 200 且 data.status=ok；登录页提供“忘记密码”入口并可跳转至 /forgot-password 且显示“找回密码”；PostgreSQL 的 sys_project 表至少存在 1 条项目数据。",
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "text": "在 Test 环境请求 GET /api/v1/open/health，HTTP 状态码为 200，且响应体中 data.status 的值为 ok。",
+          "source_ref": "1) GET /api/v1/open/health 返回 200 且 data.status=ok"
+        },
+        {
+          "id": "AC-2",
+          "text": "登录页存在“忘记密码”入口；点击该入口后进入 /forgot-password 页面，并且页面显示“找回密码”。",
+          "source_ref": "2) 登录页有“忘记密码”入口，点击后进入 /forgot-password 并显示“找回密码”"
+        },
+        {
+          "id": "AC-3",
+          "text": "在 Test 环境的 PostgreSQL 数据库中，sys_project 表至少存在 1 个项目记录。",
+          "source_ref": "3) PostgreSQL sys_project 至少存在 1 个项目"
+        }
+      ],
+      "risks": [
+        "Test 环境可用性、网络连通性及接口鉴权策略未说明，可能影响 GET /api/v1/open/health 验证。",
+        "需求未说明 data.status 的完整响应结构及 ok 的大小写/类型，存在断言歧义。",
+        "登录页“忘记密码”入口可能受前端版本、灰度或特性开关影响，Test 环境部署版本不一致会导致验收失败。",
+        "/forgot-password 路由与“找回密码”文案可能依赖前端构建或国际化配置，需确认 Test 环境已部署对应版本。",
+        "sys_project 数据可能被清理、重置或初始化脚本未执行，导致“至少 1 个项目”不满足，且未说明项目状态/逻辑删除条件。",
+        "数据库连接信息、schema 与表名大小写未明确，需确认 PostgreSQL 实际库与 sys_project 表位置。"
+      ]
+    },
+    "A2": {
+      "decision": "approve",
+      "cases": [
+        {
+          "title": "Test 环境健康检查接口返回 200 且 data.status=ok",
+          "priority": "P0",
+          "steps": [
+            "在 Test 环境向 GET /api/v1/open/health 发起请求",
+            "确认 HTTP 响应状态码为 200",
+            "解析响应体，确认 data.status 的值为 ok"
+          ],
+          "acceptance_refs": [
+            "AC-1"
+          ]
+        },
+        {
+          "title": "登录页“忘记密码”入口可跳转至 /forgot-password 并显示“找回密码”",
+          "priority": "P0",
+          "steps": [
+            "打开 Test 环境登录页",
+            "确认页面存在“忘记密码”入口",
+            "点击“忘记密码”入口",
+            "确认页面跳转至 /forgot-password",
+            "确认页面显示“找回密码”文案"
+          ],
+          "acceptance_refs": [
+            "AC-2"
+          ]
+        },
+        {
+          "title": "Test 环境 PostgreSQL 的 sys_project 表至少存在 1 条项目记录",
+          "priority": "P0",
+          "steps": [
+            "连接 Test 环境 PostgreSQL 数据库",
+            "确认目标 schema 下存在 sys_project 表",
+            "执行查询统计 sys_project 表记录数",
+            "确认记录数 >= 1"
+          ],
+          "acceptance_refs": [
+            "AC-3"
+          ]
+        },
+        {
+          "title": "直接访问 /forgot-password 页面显示“找回密码”",
+          "priority": "P1",
+          "steps": [
+            "在 Test 环境浏览器中直接访问 /forgot-password",
+            "确认页面可正常加载",
+            "确认页面显示“找回密码”文案"
+          ],
+          "acceptance_refs": [
+            "AC-2"
+          ]
+        },
+        {
+          "title": "健康检查响应 data.status 字段类型与取值严格校验",
+          "priority": "P2",
+          "steps": [
+            "请求 GET /api/v1/open/health 并获取响应体",
+            "检查 data.status 字段存在",
+            "确认 data.status 为字符串类型且值等于 ok（区分大小写）"
+          ],
+          "acceptance_refs": [
+            "AC-1"
+          ]
+        }
+      ],
+      "coverage_notes": "已有用例为空，覆盖不充分。新增用例覆盖 AC-1 健康检查接口状态码与 data.status、AC-2 登录页忘记密码入口及 /forgot-password 页面文案、AC-3 sys_project 表至少 1 条记录；并补充直接访问路由与字段类型严格校验用例以降低风险。需关注 Test 环境可用性、前端版本/特性开关、数据库连接与表名大小写、sys_project 数据清理或逻辑删除条件。",
+      "reject_reason": "",
+      "duplicate_of": []
+    },
+    "A3": {
+      "workflow": {
+        "schema_version": "1.0",
+        "scenario_key": "test-health-forgot-db",
+        "nodes": [
+          {
+            "key": "check_health",
+            "driver": "http",
+            "depends_on": [],
+            "description": "在 Test 环境请求 GET /api/v1/open/health，断言 HTTP 状态码为 200 且 data.status=ok",
+            "params": {
+              "base_url_env": "TEST_BASE_URL",
+              "method": "GET",
+              "path": "/api/v1/open/health",
+              "assertions": [
+                {
+                  "type": "status_code",
+                  "expected": 200
+                },
+                {
+                  "type": "json_path",
+                  "path": "$.data.status",
+                  "expected": "ok"
+                }
+              ]
+            }
+          },
+          {
+            "key": "verify_forgot_password_ui",
+            "driver": "playwright",
+            "depends_on": [],
+            "description": "打开登录页，验证“忘记密码”入口存在；点击后进入 /forgot-password 页面并显示“找回密码”",
+            "params": {
+              "base_url_env": "TEST_BASE_URL",
+              "start_path": "/login",
+              "steps": [
+                {
+                  "action": "goto",
+                  "path": "/login"
+                },
+                {
+                  "action": "expect_visible",
+                  "selector": "text=忘记密码"
+                },
+                {
+                  "action": "click",
+                  "selector": "text=忘记密码"
+                },
+                {
+                  "action": "expect_url",
+                  "url_pattern": "**/forgot-password"
+                },
+                {
+                  "action": "expect_visible",
+                  "selector": "text=找回密码"
+                }
+              ]
+            }
+          },
+          {
+            "key": "verify_sys_project_exists",
+            "driver": "db",
+            "depends_on": [],
+            "description": "在 Test 环境 PostgreSQL 中查询 sys_project 表，断言至少存在 1 条项目记录",
+            "params": {
+              "connection_env": "TEST_POSTGRES_DSN",
+              "db_type": "postgresql",
+              "query": "SELECT COUNT(*) AS cnt FROM sys_project",
+              "assertions": [
+                {
+                  "type": "expression",
+                  "expr": "cnt >= 1"
+                }
+              ]
+            }
+          }
+        ],
+        "edges": [],
+        "run_policy": {
+          "mode": "parallel",
+          "fail_fast": false,
+          "max_concurrency": 3,
+          "timeout_seconds": 300
+        }
+      },
+      "rationale": "三个验收标准相互独立：AC-1 通过 http 节点直接调用健康检查接口并校验状态码与 data.status；AC-2 通过 playwright 节点操作登录页并验证路由及文案；AC-3 通过 db 节点查询 PostgreSQL sys_project 记录数。三个节点均无前置依赖，因此 edges 为空，并以并行策略执行以减少总耗时；所有节点均不引用其他节点输出，仅使用环境变量占位配置，满足无环与变量引用约束。",
+      "approval_required": true,
+      "approval_status": "pending"
+    },
+    "A3_validator_pass": true,
+    "human_adapted_workflow_id": "a35f0100-05e9-4630-b953-0b674ea1fbb0",
+    "human_adapted_test_run_id": "1dd2184e-c505-4464-808f-98df7c1193e4"
+  },
+  "M4": {
+    "A4": [
+      {
+        "context": "http_business_500",
+        "classification": [
+          "PRODUCT_DEFECT",
+          "ENVIRONMENT",
+          "THIRD_PARTY",
+          "FLAKY"
+        ],
+        "attribution_status": "NEEDS_EXPERIMENT",
+        "human_review_required": true,
+        "auto_close_defect": false
+      },
+      {
+        "context": "http_timeout",
+        "classification": [
+          "UNKNOWN"
+        ],
+        "attribution_status": "UNKNOWN",
+        "human_review_required": true,
+        "auto_close_defect": false
+      },
+      {
+        "context": "playwright_locator_not_visible",
+        "classification": [
+          "AUTOMATION",
+          "PRODUCT_DEFECT",
+          "TIME",
+          "REQUIREMENT_GAP"
+        ],
+        "attribution_status": "NEEDS_EXPERIMENT",
+        "human_review_required": true,
+        "auto_close_defect": false
+      },
+      {
+        "context": "db_row_missing",
+        "classification": [
+          "UNKNOWN"
+        ],
+        "attribution_status": "UNKNOWN",
+        "human_review_required": true,
+        "auto_close_defect": false
+      },
+      {
+        "context": "network_reset",
+        "classification": [
+          "NETWORK",
+          "ENVIRONMENT",
+          "PRODUCT_DEFECT"
+        ],
+        "attribution_status": "NEEDS_EXPERIMENT",
+        "human_review_required": true,
+        "auto_close_defect": false
+      },
+      {
+        "context": "test_data_missing",
+        "classification": [
+          "TEST_DATA"
+        ],
+        "attribution_status": "NEEDS_EXPERIMENT",
+        "human_review_required": true,
+        "auto_close_defect": false
+      },
+      {
+        "context": "concurrency_lock",
+        "classification": [
+          "CONCURRENCY",
+          "TEST_DATA",
+          "AUTOMATION"
+        ],
+        "attribution_status": "NEEDS_EXPERIMENT",
+        "human_review_required": true,
+        "auto_close_defect": false
+      }
+    ],
+    "E1_E6": [
+      {
+        "key": "E1",
+        "changed": "var_e1",
+        "status": "completed"
+      },
+      {
+        "key": "E2",
+        "changed": "var_e2",
+        "status": "completed"
+      },
+      {
+        "key": "E3",
+        "changed": "var_e3",
+        "status": "completed"
+      },
+      {
+        "key": "E4",
+        "changed": "var_e4",
+        "status": "completed"
+      },
+      {
+        "key": "E5",
+        "changed": "var_e5",
+        "status": "completed"
+      },
+      {
+        "key": "E6",
+        "changed": "var_e6",
+        "status": "completed"
+      }
+    ],
+    "idempotency_same_row": true,
+    "double_variable_rejected": true
+  },
+  "M5": {
+    "A5": {
+      "impacted_areas": [
+        "api",
+        "auth",
+        "frontend"
+      ],
+      "candidate_suites": [
+        "api-suite",
+        "auth-suite",
+        "smoke-suite"
+      ],
+      "forced_suites": [
+        "auth-suite",
+        "smoke-suite"
+      ],
+      "rationale": "PR changes authentication API, session service, and login page, affecting public login/permission behavior. Auth-suite is mandatory for auth/session validation, and smoke-suite is mandatory because login is a critical user flow."
+    },
+    "A5_rule_baseline": {
+      "impacted_areas": [
+        "api",
+        "auth"
+      ],
+      "candidate_suites": [
+        "api-suite",
+        "auth-suite",
+        "smoke-suite"
+      ],
+      "forced_suites": [
+        "auth-suite",
+        "smoke-suite"
+      ]
+    },
+    "A6": {
+      "candidate_id": "d2545440-2333-46be-a4f9-e263392bd143",
+      "status": "active",
+      "benchmark": {
+        "false_positive_rate": 0.1,
+        "sample_size": 50
+      },
+      "pattern_id": "9e1e5da6-687e-4669-83f1-b01e0d9a12d4"
+    },
+    "platform_matrix": {
+      "platforms": [
+        "android",
+        "linux",
+        "windows"
+      ],
+      "capabilities": [
+        "aiqe:db",
+        "aiqe:http",
+        "aiqe:playwright",
+        "device.android",
+        "mobile.app"
+      ],
+      "available_nodes": 4
+    }
+  }
+}

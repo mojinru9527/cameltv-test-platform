@@ -1,0 +1,249 @@
+{
+  "provider": {
+    "model": "deepseek-v4-flash",
+    "base": "https://api.deepseek.com"
+  },
+  "requirement": "Test 环境验收需求：\n1) GET /api/v1/open/health 必须返回 HTTP 200，且 data.status=ok；\n2) 登录页必须提供 忘记密码入口，点击后进入 /forgot-password，并显示找回密码；\n3) 项目列表必须至少存在 1 个项目（PostgreSQL sys_project）。",
+  "A0": {
+    "summary": "Test 环境需验收三项：健康检查接口返回成功状态、登录页忘记密码入口及跳转展示正常、PostgreSQL 中项目列表至少存在 1 个项目。",
+    "acceptance_criteria": [
+      {
+        "id": "AC-1",
+        "text": "GET /api/v1/open/health 返回 HTTP 200，且响应中 data.status=ok。",
+        "source_ref": "GET /api/v1/open/health 必须返回 HTTP 200，且 data.status=ok；"
+      },
+      {
+        "id": "AC-2",
+        "text": "登录页提供“忘记密码”入口，点击后进入 /forgot-password，并显示“找回密码”。",
+        "source_ref": "登录页必须提供 忘记密码入口，点击后进入 /forgot-password，并显示找回密码；"
+      },
+      {
+        "id": "AC-3",
+        "text": "项目列表至少存在 1 个项目，数据来源为 PostgreSQL 的 sys_project 表。",
+        "source_ref": "项目列表必须至少存在 1 个项目（PostgreSQL sys_project）。"
+      }
+    ],
+    "risks": [
+      "Test 环境 PostgreSQL 的 sys_project 表可能无数据或不可访问，导致 AC-3 失败。",
+      "健康检查接口可能受服务未启动、依赖异常或返回结构变化影响，导致 HTTP 状态或 data.status 不符合预期。",
+      "登录页路由或“忘记密码”入口可能未部署到 Test 环境，导致 AC-2 无法验证。",
+      "若 Test 环境数据被清理或重置，项目列表数量可能不满足至少 1 个项目的要求。"
+    ]
+  },
+  "A2": {
+    "decision": "approve",
+    "cases": [
+      {
+        "title": "健康检查接口 GET /api/v1/open/health 返回 HTTP 200 且 data.status=ok",
+        "priority": "P0",
+        "steps": [
+          "确认 Test 环境服务已启动，获取环境 Base URL",
+          "发送请求：curl -i -s -o resp.txt -w '%{http_code}' {BASE_URL}/api/v1/open/health",
+          "断言 HTTP 状态码为 200",
+          "解析响应体 JSON，断言字段 data.status 存在且值为 \"ok\"",
+          "断言响应 Content-Type 为 application/json，记录完整响应体用于验收留痕"
+        ],
+        "acceptance_refs": [
+          "AC-1"
+        ]
+      },
+      {
+        "title": "登录页提供“忘记密码”入口，点击跳转 /forgot-password 并显示“找回密码”",
+        "priority": "P0",
+        "steps": [
+          "打开 Test 环境登录页 {BASE_URL}/login",
+          "断言页面上“忘记密码”入口可见且可点击",
+          "点击“忘记密码”入口",
+          "断言浏览器地址变更为 {BASE_URL}/forgot-password",
+          "断言忘记密码页面展示文案“找回密码”"
+        ],
+        "acceptance_refs": [
+          "AC-2"
+        ]
+      },
+      {
+        "title": "PostgreSQL sys_project 表至少存在 1 个项目数据",
+        "priority": "P0",
+        "steps": [
+          "使用只读账号连接 Test 环境 PostgreSQL 实例",
+          "执行 SELECT COUNT(*) FROM sys_project;",
+          "断言查询结果 count >= 1",
+          "执行 SELECT id, name FROM sys_project LIMIT 5; 保存结果作为验收证据",
+          "若 count = 0，标记 AC-3 不通过并阻断验收"
+        ],
+        "acceptance_refs": [
+          "AC-3"
+        ]
+      },
+      {
+        "title": "项目列表接口/页面返回的项目数据与 sys_project 表一致（非空）",
+        "priority": "P1",
+        "steps": [
+          "查询 PostgreSQL：SELECT COUNT(*) FROM sys_project; 记录数值 N",
+          "调用项目列表接口或打开项目列表页面",
+          "断言列表返回的项目数量 > 0，且与数据库 N 一致（或分页总数一致）",
+          "抽查 1 条项目名称与数据库中记录比对一致"
+        ],
+        "acceptance_refs": [
+          "AC-3"
+        ]
+      },
+      {
+        "title": "健康检查接口响应结构稳定性校验（依赖异常场景不产生非 200 以外断言误判）",
+        "priority": "P1",
+        "steps": [
+          "重复调用 GET /api/v1/open/health 3 次，记录每次 HTTP 状态与 data.status",
+          "断言 3 次结果一致为 HTTP 200 且 data.status=ok（无偶发 5xx/超时）",
+          "校验响应 JSON 中 data 字段为对象结构，未因版本变化导致 data.status 路径失效"
+        ],
+        "acceptance_refs": [
+          "AC-1"
+        ]
+      },
+      {
+        "title": "直接访问 /forgot-password 路由可用（不依赖登录页点击）",
+        "priority": "P2",
+        "steps": [
+          "在未登录状态下直接访问 {BASE_URL}/forgot-password",
+          "断言返回页面正常渲染（HTTP 200，非 404/白屏）",
+          "断言页面展示“找回密码”文案"
+        ],
+        "acceptance_refs": [
+          "AC-2"
+        ]
+      }
+    ],
+    "coverage_notes": "3 条验收标准各被 P0 用例正向直接覆盖：AC-1→用例1，AC-2→用例2，AC-3→用例3。补充用例 4 覆盖“项目列表页/接口与 PostgreSQL 数据一致性”（AC-3 的展示侧闭环），用例 5 覆盖健康检查的稳定性与响应结构（对应风险：服务未启动/依赖异常/返回结构变化），用例 6 覆盖忘记密码路由部署可用性（对应风险：路由未部署）。用例 3 同时可作为风险“sys_project 无数据或不可访问”的探测点，若失败应阻断后续 UI 验收。未覆盖项（建议后续补充，非本次验收阻塞）：项目数据被清理/重置后的回归策略（需环境数据快照或初始化脚本验证），忘记密码页面的实际提交与邮件发送链路（超出本次需求范围）。",
+    "reject_reason": "",
+    "duplicate_of": []
+  },
+  "A3": {
+    "workflow": {
+      "schema_version": "1.0",
+      "scenario_key": "test-health-forgot-db",
+      "nodes": [
+        {
+          "key": "check_health",
+          "driver": "http",
+          "depends_on": [],
+          "title": "验证健康检查接口返回 HTTP 200 且 data.status=ok",
+          "request": {
+            "method": "GET",
+            "path": "/api/v1/open/health"
+          },
+          "assertions": [
+            {
+              "type": "status_code",
+              "operator": "equals",
+              "expected": 200
+            },
+            {
+              "type": "json_path",
+              "path": "$.data.status",
+              "operator": "equals",
+              "expected": "ok"
+            }
+          ]
+        },
+        {
+          "key": "check_forgot_password_ui",
+          "driver": "playwright",
+          "depends_on": [],
+          "title": "验证登录页忘记密码入口可进入 /forgot-password 并显示找回密码",
+          "steps": [
+            {
+              "action": "goto",
+              "path": "/login"
+            },
+            {
+              "action": "expect_visible",
+              "locator": {
+                "type": "text",
+                "value": "忘记密码"
+              }
+            },
+            {
+              "action": "click",
+              "locator": {
+                "type": "text",
+                "value": "忘记密码"
+              }
+            },
+            {
+              "action": "expect_url",
+              "path": "/forgot-password"
+            },
+            {
+              "action": "expect_visible",
+              "locator": {
+                "type": "text",
+                "value": "找回密码"
+              }
+            }
+          ],
+          "assertions": [
+            {
+              "type": "url_contains",
+              "expected": "/forgot-password"
+            },
+            {
+              "type": "text_visible",
+              "expected": "找回密码"
+            }
+          ]
+        },
+        {
+          "key": "check_project_count",
+          "driver": "db",
+          "depends_on": [],
+          "title": "验证 PostgreSQL sys_project 表至少存在 1 个项目",
+          "database": {
+            "engine": "postgresql"
+          },
+          "query": "SELECT COUNT(*) AS project_count FROM sys_project;",
+          "assertions": [
+            {
+              "type": "query_scalar",
+              "field": "project_count",
+              "operator": "gte",
+              "expected": 1
+            }
+          ]
+        }
+      ],
+      "edges": [],
+      "run_policy": {
+        "mode": "parallel",
+        "max_parallel": 3,
+        "fail_fast": false,
+        "timeout_seconds": 300
+      }
+    },
+    "rationale": "三项验收标准分别由 HTTP 健康检查、Playwright 登录页 UI 检查、PostgreSQL 数据查询独立覆盖；节点之间无数据依赖，可并行执行。未设置自动批准动作，仅执行验证与断言。",
+    "approval_required": true,
+    "approval_status": "pending"
+  },
+  "agent_executions": [
+    {
+      "id": "7ce5ba36-2af4-4e94-92a5-5a5de3313771",
+      "agent": "A3",
+      "status": "succeeded",
+      "model": "deepseek-chat",
+      "error": ""
+    },
+    {
+      "id": "3df52011-76af-4ee6-9833-63292c5e56b5",
+      "agent": "A2",
+      "status": "succeeded",
+      "model": "deepseek-v4-flash",
+      "error": ""
+    },
+    {
+      "id": "64a00630-fb91-472e-8170-3d2ad32c082f",
+      "agent": "A0",
+      "status": "succeeded",
+      "model": "deepseek-v4-flash",
+      "error": ""
+    }
+  ]
+}

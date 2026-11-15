@@ -1,0 +1,8 @@
+{
+  "final": {
+    "COMPLETED": 30
+  },
+  "elapsed_polls": 1,
+  "restart_note": "30 runs launched, Test backend docker restart, all 30 COMPLETED; no RUNNING stuck",
+  "run_count": 30
+}
