@@ -96,3 +96,8 @@ def test_hundred_labeled_samples():
         assert result["hypotheses"][0]["classification"] == label
         assert result["attribution_status"] == status
         assert result["auto_close_defect"] is False
+
+def test_prompt_declares_unknown_attribution_consistency():
+    assert "attribution_status=UNKNOWN" in FailureTriageAgent.system_prompt
+    assert "classification=UNKNOWN" in FailureTriageAgent.system_prompt
+    assert "NEEDS_EXPERIMENT" in FailureTriageAgent.system_prompt

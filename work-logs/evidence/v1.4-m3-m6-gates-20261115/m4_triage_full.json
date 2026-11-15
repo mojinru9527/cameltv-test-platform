@@ -1,0 +1,338 @@
+{
+  "provider": {
+    "model": "deepseek-v4-flash"
+  },
+  "context": {
+    "scope": "M4 real fault injection in Test",
+    "failures": [
+      {
+        "run": "eb4feb88",
+        "node": "db_forbidden_table",
+        "driver": "db",
+        "status": "BLOCKED",
+        "error_class": "UNSAFE_SQL",
+        "attempts": [
+          {
+            "no": 1,
+            "status": "BLOCKED",
+            "error": "{'class': 'UNSAFE_SQL'}"
+          }
+        ],
+        "assertions": [
+          {
+            "key": "db_forbidden",
+            "type": "db_row_count",
+            "status": "BLOCKED",
+            "expected": "1",
+            "actual": "None",
+            "error": "Driver BLOCKED"
+          }
+        ]
+      },
+      {
+        "run": "eb4feb88",
+        "node": "http_timeout",
+        "driver": "http",
+        "status": "FAILED",
+        "error_class": "NETWORK_ERROR",
+        "attempts": [
+          {
+            "no": 1,
+            "status": "FAILED",
+            "error": "{'class': 'NETWORK_ERROR'}"
+          }
+        ],
+        "assertions": [
+          {
+            "key": "http_timeout_status",
+            "type": "http_status",
+            "status": "NOT_EVALUATED",
+            "expected": "200",
+            "actual": "None",
+            "error": "无 HTTP status"
+          }
+        ]
+      },
+      {
+        "run": "eb4feb88",
+        "node": "http_refused",
+        "driver": "http",
+        "status": "FAILED",
+        "error_class": "NETWORK_ERROR",
+        "attempts": [
+          {
+            "no": 1,
+            "status": "FAILED",
+            "error": "{'class': 'NETWORK_ERROR'}"
+          }
+        ],
+        "assertions": [
+          {
+            "key": "http_refused_status",
+            "type": "http_status",
+            "status": "NOT_EVALUATED",
+            "expected": "200",
+            "actual": "None",
+            "error": "无 HTTP status"
+          }
+        ]
+      },
+      {
+        "run": "eb4feb88",
+        "node": "http_json_mismatch",
+        "driver": "http",
+        "status": "FAILED",
+        "error_class": "ASSERTION_FAILED",
+        "attempts": [
+          {
+            "no": 1,
+            "status": "FAILED",
+            "error": "{'class': 'ASSERTION_FAILED'}"
+          }
+        ],
+        "assertions": [
+          {
+            "key": "http_json_mismatch",
+            "type": "jsonpath",
+            "status": "FAIL",
+            "expected": "M4_NOT_EXIST",
+            "actual": "ok",
+            "error": ""
+          }
+        ]
+      },
+      {
+        "run": "eb4feb88",
+        "node": "http_404",
+        "driver": "http",
+        "status": "FAILED",
+        "error_class": "STATUS_MISMATCH",
+        "attempts": [
+          {
+            "no": 1,
+            "status": "FAILED",
+            "error": "{'class': 'STATUS_MISMATCH'}"
+          }
+        ],
+        "assertions": [
+          {
+            "key": "http_404_status",
+            "type": "http_status",
+            "status": "FAIL",
+            "expected": "200",
+            "actual": "404",
+            "error": ""
+          }
+        ]
+      },
+      {
+        "run": "eb4feb88",
+        "node": "db_zero",
+        "driver": "db",
+        "status": "PASSED",
+        "error_class": "",
+        "attempts": [
+          {
+            "no": 1,
+            "status": "PASSED",
+            "error": "None"
+          }
+        ],
+        "assertions": [
+          {
+            "key": "db_zero",
+            "type": "db_row_count",
+            "status": "PASS",
+            "expected": "1",
+            "actual": "1",
+            "error": ""
+          }
+        ]
+      },
+      {
+        "run": "eb4feb88",
+        "node": "ui_locator_missing",
+        "driver": "playwright",
+        "status": "FAILED",
+        "error_class": "ACTION_TIMEOUT",
+        "attempts": [
+          {
+            "no": 1,
+            "status": "FAILED",
+            "error": "{'class': 'ACTION_TIMEOUT'}"
+          }
+        ],
+        "assertions": [
+          {
+            "key": "ui_locator_missing",
+            "type": "locator_visible",
+            "status": "NOT_EVALUATED",
+            "expected": "True",
+            "actual": "None",
+            "error": "无 locator 实际值"
+          }
+        ]
+      },
+      {
+        "run": "eb4feb88",
+        "node": "ui_text_mismatch",
+        "driver": "playwright",
+        "status": "FAILED",
+        "error_class": "TEXT_MISMATCH",
+        "attempts": [
+          {
+            "no": 1,
+            "status": "FAILED",
+            "error": "{'class': 'TEXT_MISMATCH'}"
+          }
+        ],
+        "assertions": [
+          {
+            "key": "ui_text_mismatch",
+            "type": "text_contains",
+            "status": "FAIL",
+            "expected": "M4_NOT_EXIST",
+            "actual": "CamelTv 测试平台\n前后端分离 · 多项目测试管理\n用户名\n密码\n登录\n忘记密码？\n\n还没有账号？免费注册\n\n先浏览平台模块",
+            "error": ""
+          }
+        ]
+      },
+      {
+        "run": "6c2f873a",
+        "node": "db_zero_rows",
+        "driver": "db",
+        "status": "FAILED",
+        "error_class": "ASSERTION_FAILED",
+        "attempts": [
+          {
+            "no": 1,
+            "status": "FAILED",
+            "error": "{'class': 'ASSERTION_FAILED'}"
+          }
+        ],
+        "assertions": [
+          {
+            "key": "db_zero_rows",
+            "type": "db_row_count",
+            "status": "FAIL",
+            "expected": "1",
+            "actual": "0",
+            "error": ""
+          }
+        ]
+      }
+    ]
+  },
+  "status": "VALID",
+  "raw": "{\"execution_outcome\":\"FAIL\",\"attribution_status\":\"UNKNOWN\",\"hypotheses\":[{\"classification\":\"REQUIREMENT_GAP\",\"summary\":\"M4 故障注入用例的预期与注入故障不一致：超时、拒绝、404、缺失 locator 等被期望为成功或可见，导致按注入故障运行时被判失败。\",\"supporting_evidence\":[\"http_timeout/http_refused 为 NETWORK_ERROR 且无 HTTP status，但断言期望 200\",\"http_404 实际 404、期望 200\",\"ui_locator_missing 为 ACTION_TIMEOUT，断言仍期望 locator_visible=True\",\"db_forbidden_table 被 UNSAFE_SQL 阻断，断言仍期望 db_row_count=1\"],\"contradicting_evidence\":[\"http_json_mismatch 实际返回 ok，说明并非所有失败都可由预期不一致解释\",\"db_zero 节点期望 1 实际 1 并通过\"],\"missing_evidence\":[\"M4 故障注入用例的 oracle/spec 与注入配置\",\"各节点预期失败还是预期成功的定义\"]},{\"classification\":\"AUTOMATION\",\"summary\":\"测试驱动/自动化框架在故障注入场景下阻断或未正确评估断言，例如 UNSAFE_SQL 阻断和 NOT_EVALUATED。\",\"supporting_evidence\":[\"db_forbidden_table status=BLOCKED, error_class=UNSAFE_SQL, actual=None\",\"http_timeout/http_refused/ui_locator_missing 的断言为 NOT_EVALUATED\",\"错误信息显示 Driver BLOCKED、无 HTTP status、无 locator 实际值\"],\"contradicting_evidence\":[\"http_json_mismatch/http_404/ui_text_mismatch/db_zero_rows 有明确 FAIL 断言值\",\"db_zero 节点正常 PASS\"],\"missing_evidence\":[\"驱动层 UNSAFE_SQL 规则是否按设计触发\",\"NOT_EVALUATED 的断言是否应计入失败\"]},{\"classification\":\"ENVIRONMENT\",\"summary\":\"网络、服务、数据库环境或测试数据准备异常，可能导致超时、拒绝、404、空结果或登录页状态。\",\"supporting_evidence\":[\"http_timeout/http_refused 为 NETWORK_ERROR\",\"http_404 实际 404\",\"db_zero_rows 期望 1 实际 0\",\"ui_text_mismatch 实际为登录页文本，可能未登录或导航未到目标页\"],\"contradicting_evidence\":[\"db_zero 期望 1 实际 1 通过\",\"http_json_mismatch 实际返回 ok，说明部分 HTTP 服务可达\",\"失败节点名称表明这些可能是主动注入故障\"],\"missing_evidence\":[\"注入代理/网络策略日志\",\"数据库种子数据与 SQL 查询\",\"登录会话/导航日志\"]},{\"classification\":\"PRODUCT_DEFECT\",\"summary\":\"若去掉故障注入后仍出现 404、DB 行缺失或页面停留在登录页，则可能是产品/服务/数据层缺陷。\",\"supporting_evidence\":[\"http_404 实际 404 而期望 200\",\"db_zero_rows 实际 0 而期望 1\",\"ui_text_mismatch 实际为登录页文本而非目标文本\"],\"contradicting_evidence\":[\"当前 scope 为 M4 真实故障注入，失败可能来自注入而非产品\",\"多个节点名直接对应故障类型（timeout/refused/404/locator_missing）\",\"db_zero 节点通过\"],\"missing_evidence\":[\"关闭故障注入后的对照运行\",\"产品接口/DB/UI 的基线状态\",\"复现步骤与产品日志\"]},{\"classification\":\"UNKNOWN\",\"summary\":\"现有证据无法唯一归因；需区分故障注入预期、测试框架阻断、环境准备与真实产品缺陷。\",\"supporting_evidence\":[\"同一 run 中同时存在 BLOCKED、NETWORK_ERROR、ASSERTION_FAILED、STATUS_MISMATCH、ACTION_TIMEOUT、PASSED\",\"部分断言 NOT_EVALUATED，部分有明确实际值\",\"缺少注入配置与基线对照\"],\"contradicting_evidence\":[\"部分失败与节点名和注入类型高度一致，提示并非完全未知\"],\"missing_evidence\":[\"M4 故障注入设计文档\",\"各节点预期结果\",\"注入开关与执行日志\",\"无注入基线运行\"]}],\"human_review_required\":true,\"auto_close_defect\":false,\"confidence\":null}",
+  "triage": {
+    "execution_outcome": "FAIL",
+    "attribution_status": "UNKNOWN",
+    "hypotheses": [
+      {
+        "classification": "REQUIREMENT_GAP",
+        "summary": "M4 故障注入用例的预期与注入故障不一致：超时、拒绝、404、缺失 locator 等被期望为成功或可见，导致按注入故障运行时被判失败。",
+        "supporting_evidence": [
+          "http_timeout/http_refused 为 NETWORK_ERROR 且无 HTTP status，但断言期望 200",
+          "http_404 实际 404、期望 200",
+          "ui_locator_missing 为 ACTION_TIMEOUT，断言仍期望 locator_visible=True",
+          "db_forbidden_table 被 UNSAFE_SQL 阻断，断言仍期望 db_row_count=1"
+        ],
+        "contradicting_evidence": [
+          "http_json_mismatch 实际返回 ok，说明并非所有失败都可由预期不一致解释",
+          "db_zero 节点期望 1 实际 1 并通过"
+        ],
+        "missing_evidence": [
+          "M4 故障注入用例的 oracle/spec 与注入配置",
+          "各节点预期失败还是预期成功的定义"
+        ],
+        "confidence": null,
+        "status": "PROPOSED"
+      },
+      {
+        "classification": "AUTOMATION",
+        "summary": "测试驱动/自动化框架在故障注入场景下阻断或未正确评估断言，例如 UNSAFE_SQL 阻断和 NOT_EVALUATED。",
+        "supporting_evidence": [
+          "db_forbidden_table status=BLOCKED, error_class=UNSAFE_SQL, actual=None",
+          "http_timeout/http_refused/ui_locator_missing 的断言为 NOT_EVALUATED",
+          "错误信息显示 Driver BLOCKED、无 HTTP status、无 locator 实际值"
+        ],
+        "contradicting_evidence": [
+          "http_json_mismatch/http_404/ui_text_mismatch/db_zero_rows 有明确 FAIL 断言值",
+          "db_zero 节点正常 PASS"
+        ],
+        "missing_evidence": [
+          "驱动层 UNSAFE_SQL 规则是否按设计触发",
+          "NOT_EVALUATED 的断言是否应计入失败"
+        ],
+        "confidence": null,
+        "status": "PROPOSED"
+      },
+      {
+        "classification": "ENVIRONMENT",
+        "summary": "网络、服务、数据库环境或测试数据准备异常，可能导致超时、拒绝、404、空结果或登录页状态。",
+        "supporting_evidence": [
+          "http_timeout/http_refused 为 NETWORK_ERROR",
+          "http_404 实际 404",
+          "db_zero_rows 期望 1 实际 0",
+          "ui_text_mismatch 实际为登录页文本，可能未登录或导航未到目标页"
+        ],
+        "contradicting_evidence": [
+          "db_zero 期望 1 实际 1 通过",
+          "http_json_mismatch 实际返回 ok，说明部分 HTTP 服务可达",
+          "失败节点名称表明这些可能是主动注入故障"
+        ],
+        "missing_evidence": [
+          "注入代理/网络策略日志",
+          "数据库种子数据与 SQL 查询",
+          "登录会话/导航日志"
+        ],
+        "confidence": null,
+        "status": "PROPOSED"
+      },
+      {
+        "classification": "PRODUCT_DEFECT",
+        "summary": "若去掉故障注入后仍出现 404、DB 行缺失或页面停留在登录页，则可能是产品/服务/数据层缺陷。",
+        "supporting_evidence": [
+          "http_404 实际 404 而期望 200",
+          "db_zero_rows 实际 0 而期望 1",
+          "ui_text_mismatch 实际为登录页文本而非目标文本"
+        ],
+        "contradicting_evidence": [
+          "当前 scope 为 M4 真实故障注入，失败可能来自注入而非产品",
+          "多个节点名直接对应故障类型（timeout/refused/404/locator_missing）",
+          "db_zero 节点通过"
+        ],
+        "missing_evidence": [
+          "关闭故障注入后的对照运行",
+          "产品接口/DB/UI 的基线状态",
+          "复现步骤与产品日志"
+        ],
+        "confidence": null,
+        "status": "PROPOSED"
+      },
+      {
+        "classification": "UNKNOWN",
+        "summary": "现有证据无法唯一归因；需区分故障注入预期、测试框架阻断、环境准备与真实产品缺陷。",
+        "supporting_evidence": [
+          "同一 run 中同时存在 BLOCKED、NETWORK_ERROR、ASSERTION_FAILED、STATUS_MISMATCH、ACTION_TIMEOUT、PASSED",
+          "部分断言 NOT_EVALUATED，部分有明确实际值",
+          "缺少注入配置与基线对照"
+        ],
+        "contradicting_evidence": [
+          "部分失败与节点名和注入类型高度一致，提示并非完全未知"
+        ],
+        "missing_evidence": [
+          "M4 故障注入设计文档",
+          "各节点预期结果",
+          "注入开关与执行日志",
+          "无注入基线运行"
+        ],
+        "confidence": null,
+        "status": "PROPOSED"
+      }
+    ],
+    "human_review_required": true,
+    "auto_close_defect": false
+  }
+}
