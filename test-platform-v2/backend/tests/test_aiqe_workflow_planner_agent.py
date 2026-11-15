@@ -14,7 +14,21 @@ from app.aiqe.agents.workflow_planner_agent import (
 
 def graph(deps: dict[str, list[str]], *, driver="http", scenario="SPORT-1") -> dict:
     nodes = [
-        {"key": key, "driver": driver, "depends_on": values}
+        {
+            "key": key,
+            "driver": driver,
+            "depends_on": values,
+            "input": {"url": "http://example.test/health", "method": "GET"},
+            "assertions": [
+                {
+                    "assertion_key": f"{key}_status",
+                    "type": "http_status",
+                    "oracle_layer": "STD",
+                    "oracle_ref": "TC-A3-001",
+                    "expected": 200,
+                }
+            ],
+        }
         for key, values in deps.items()
     ]
     edges = [
@@ -73,6 +87,19 @@ def test_unknown_driver_rejected():
     # 用未知 driver 重新构造
     bad = plan_payload(deps)
     bad["workflow"]["nodes"][0]["driver"] = "quantum"
+    with pytest.raises(AgentSchemaError):
+        agent_returning(bad).plan({"summary": "x"})
+
+
+def test_non_executable_steps_query_plan_rejected():
+    bad = plan_payload({"a": []})
+    bad["workflow"]["nodes"][0] = {
+        "key": "a",
+        "driver": "http",
+        "depends_on": [],
+        "steps": [{"action": "goto", "path": "/"}],
+        "assertions": [{"type": "text_visible", "expected": "ok"}],
+    }
     with pytest.raises(AgentSchemaError):
         agent_returning(bad).plan({"summary": "x"})
 

@@ -224,6 +224,14 @@ def test_real_click_is_default(driver):
     assert result.data["probe_only"] is False
 
 
+def test_observe_action_exposes_locator_value(driver):
+    # wait_visible 不是 dispatched 业务动作，但仍是 locator_visible 断言的有效实际值来源。
+    driver.perform(PlaywrightAction(type="wait_visible", selector="#target"))
+    result = driver.result()
+    assert result.data["business_action_dispatched"] is False
+    assert result.data["locators"]["#target"]["visible"] is True
+
+
 def test_probe_never_dispatches(driver):
     record = driver.perform(
         PlaywrightAction(type="probe_actionability", selector="#save")

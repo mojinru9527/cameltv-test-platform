@@ -613,15 +613,19 @@ class PlaywrightDriver:
             "page_errors": self._page_errors,
             "network": self._network,
         }
-        if dispatched:
-            last = dispatched[-1]
-            data["locators"] = {
-                last.selector: {
-                    "visible": last.visible,
-                    "count": last.count,
-                    "text": last.text,
-                }
+        locators: dict[str, dict[str, Any]] = {}
+        for record in self._records:
+            if not record.selector:
+                continue
+            # 观察型动作（wait_visible/assert_visible）也产生可断言的实际值；
+            # 只从 dispatched 取会导致 locator_visible 断言被误判 BLOCKED。
+            locators[record.selector] = {
+                "visible": record.visible,
+                "count": record.count,
+                "text": record.text,
             }
+        if locators:
+            data["locators"] = locators
         try:
             if self._page is not None:
                 data["body_text"] = self._page.locator("body").inner_text()[:4000]
