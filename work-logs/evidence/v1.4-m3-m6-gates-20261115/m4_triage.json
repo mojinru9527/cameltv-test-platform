@@ -1,0 +1,113 @@
+{
+  "provider": {
+    "model": "deepseek-v4-flash"
+  },
+  "context": {
+    "scope": "M4 actual Test fault subset",
+    "failures": [
+      {
+        "node": "http_404",
+        "driver": "http",
+        "status": "FAILED",
+        "error_class": "STATUS_MISMATCH",
+        "assertions": [
+          {
+            "key": "http_404_status",
+            "status": "FAIL",
+            "actual": 404,
+            "expected": 200
+          }
+        ]
+      },
+      {
+        "node": "ui_locator_missing",
+        "driver": "playwright",
+        "status": "FAILED",
+        "error_class": "ACTION_TIMEOUT",
+        "assertions": [
+          {
+            "key": "ui_locator_missing",
+            "status": "NOT_EVALUATED"
+          }
+        ]
+      },
+      {
+        "node": "db_forbidden_table",
+        "driver": "db",
+        "status": "BLOCKED",
+        "error_class": "UNSAFE_SQL",
+        "assertions": [
+          {
+            "key": "db_forbidden",
+            "status": "BLOCKED"
+          }
+        ]
+      }
+    ]
+  },
+  "triage": {
+    "execution_outcome": "FAIL",
+    "attribution_status": "UNKNOWN",
+    "hypotheses": [
+      {
+        "classification": "UNKNOWN",
+        "summary": "HTTP 404 节点失败：实际状态码为 404，期望为 200；当前证据不足以判断是接口契约、测试期望、路由/代理环境还是自动化配置导致。",
+        "supporting_evidence": [
+          "http_404_status 断言 FAIL",
+          "actual=404",
+          "expected=200"
+        ],
+        "contradicting_evidence": [],
+        "missing_evidence": [
+          "请求 URL、方法和请求头",
+          "接口契约或 OpenAPI 定义",
+          "服务端访问日志和错误日志",
+          "环境路由/代理配置",
+          "测试基线 URL 配置"
+        ],
+        "confidence": null,
+        "status": "PROPOSED"
+      },
+      {
+        "classification": "UNKNOWN",
+        "summary": "Playwright UI locator 缺失导致 ACTION_TIMEOUT，断言未评估；无法判断是选择器/等待策略问题、页面未渲染、懒加载时序还是环境问题。",
+        "supporting_evidence": [
+          "ui_locator_missing 节点状态 FAILED",
+          "error_class=ACTION_TIMEOUT",
+          "ui_locator_missing 断言 NOT_EVALUATED"
+        ],
+        "contradicting_evidence": [],
+        "missing_evidence": [
+          "locator 定义和等待策略",
+          "页面 DOM snapshot",
+          "Playwright trace/screenshot",
+          "浏览器控制台和网络日志",
+          "页面加载状态与应用健康检查"
+        ],
+        "confidence": null,
+        "status": "PROPOSED"
+      },
+      {
+        "classification": "UNKNOWN",
+        "summary": "DB 测试被 UNSAFE_SQL 安全策略阻断，未执行到断言；无法判断是测试 SQL 违规、测试数据选择错误、安全策略配置过严还是环境问题。",
+        "supporting_evidence": [
+          "db_forbidden_table 节点状态 BLOCKED",
+          "error_class=UNSAFE_SQL",
+          "db_forbidden 断言 BLOCKED"
+        ],
+        "contradicting_evidence": [],
+        "missing_evidence": [
+          "实际 SQL 语句",
+          "SQL 安全策略定义",
+          "测试意图和允许访问的表清单",
+          "数据库 schema 与权限配置",
+          "阻断日志和策略匹配规则"
+        ],
+        "confidence": null,
+        "status": "PROPOSED"
+      }
+    ],
+    "human_review_required": true,
+    "auto_close_defect": false
+  }
+}
