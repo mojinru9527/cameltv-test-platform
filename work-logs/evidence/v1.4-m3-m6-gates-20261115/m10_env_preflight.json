@@ -1,0 +1,33 @@
+{
+  "status": "BLOCKED",
+  "blocked_count": 4,
+  "results": [
+    {
+      "id": "future_wayu",
+      "name": "future-wayu �ڶ���Ŀ",
+      "status": "BLOCKED",
+      "reason": "δ���� FUTURE_WAYU_BASE_URL / FUTURE_WAYU_USERNAME / FUTURE_WAYU_PASSWORD"
+    },
+    {
+      "id": "android",
+      "name": "Android ���",
+      "status": "BLOCKED",
+      "reason": "δ��װ adb����δ���� APPIUM_URL"
+    },
+    {
+      "id": "iot",
+      "name": "IoT/MQTT ʵ��",
+      "status": "BLOCKED",
+      "reason": "δ���� MQTT_HOST / MQTT_PORT / MQTT_USERNAME"
+    },
+    {
+      "id": "business_web",
+      "name": "ҵ�� Web��TC-004��",
+      "status": "BLOCKED",
+      "reason": "TCP ����ʧ��: timed out��DNS ָ��������ַ 192.168.50.170��",
+      "resolved": [
+        "192.168.50.170"
+      ]
+    }
+  ]
+}

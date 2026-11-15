@@ -35,7 +35,7 @@ pwsh scripts/ops/aiqe-rollback.ps1 -TargetTag prev-m6 -Execute
 步骤：
 
 1. 记录当前 `alembic current` 与镜像 tag；
-2. 回滚镜像（`docker tag <prev> main` + compose up backend）；
+2. 回滚镜像（`docker tag <prev> main` + compose up backend）；**回滚镜像必须携带当前 `alembic/versions` 迁移文件**（v1.4 实测：纯旧镜像会在 CMD 启动时因 `Can't locate revision 20261124_aiqe_pr595_execution` 循环重启，必须先构建 compat 回滚镜像，或先 `alembic downgrade` 再切旧镜像）；
 3. 迁移回滚：**仅当**新迁移无数据依赖时执行 `alembic downgrade -1`；否则保留 schema，代码兼容旧表；
 4. 健康检查 `https://swiftbugs.cn/api/v1/open/health`；
 5. 校验版本锁（commit 与镜像一致）。

@@ -1,0 +1,63 @@
+{
+  "environment": "production",
+  "host": "111.230.155.116",
+  "public_url": "https://swiftbugs.cn",
+  "released_at": "2026-11-15T12:22:00Z",
+  "main_commit": "1052facd461cae1dd925ccd34e108a7002b8a00a",
+  "alembic_head": "20261124_aiqe_pr595_execution",
+  "prod_run_create_enabled": false,
+  "images": {
+    "backend_new": "sha256:2e880192ce0fc425ce691fda4bee9d35e0ef2e7b37c14f74698a4c3c3ab45e97",
+    "backend_previous": "sha256:5d683bdd936906799f1d515a337536537bdc0147473a9f0455d469f6831962eb",
+    "backend_rollback_compatible": "sha256:7c661412a3fc58e78ab546168be055a1552bce365b725e72fb0b33a727d0142e",
+    "frontend_new": "sha256:b0e1662e11b05a92069c28292fd11dce1d3ebcb98f3f8b6c4af62f85f735efba",
+    "frontend_previous": "sha256:3fd462f7830170d57318a3fbcdb1d92e565d3678c295c2b195706a4b90b0b852"
+  },
+  "backup": {
+    "path": "/root/v14/prod/pre-v14.dump",
+    "size": "183M",
+    "sha256_file": "/root/v14/prod/pre-v14.dump.sha256"
+  },
+  "checks": [
+    {
+      "name": "public_health",
+      "status": "PASS",
+      "detail": "HTTP 200 data.status=ok"
+    },
+    {
+      "name": "public_ui",
+      "status": "PASS",
+      "detail": "HTTP 200, title CamelTv 测试平台"
+    },
+    {
+      "name": "backend_health",
+      "status": "PASS",
+      "detail": "healthy"
+    },
+    {
+      "name": "frontend_health",
+      "status": "PASS",
+      "detail": "healthy"
+    },
+    {
+      "name": "migration",
+      "status": "PASS",
+      "detail": "20261124 applied; gate table exists"
+    },
+    {
+      "name": "prod_run_create_disabled",
+      "status": "PASS",
+      "detail": "settings.aiqe_prod_run_create_enabled=False"
+    }
+  ],
+  "rollback_drill": {
+    "first_attempt": "FAILED: pure old image cannot locate alembic revision 20261124; backend restart-loop, public 502",
+    "recovery": "immediately retagged new image and compose up; health restored",
+    "corrected_attempt": "PASSED: built prev-v14-prod-compat by adding 20261124 migration file to old image; switched old code + new schema; health 200; then retagged new image",
+    "final_state": "new backend/frontend active; health 200; migration head 20261124"
+  },
+  "notes": [
+    "Rollback image MUST carry the current alembic migration files (or DB downgrade first), otherwise old CMD fails before app start.",
+    "Production Run creation remains disabled; no production AIQE Run was launched."
+  ]
+}
