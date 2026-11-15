@@ -39,6 +39,13 @@ def test_resolve_node_outputs_secret_fixture_env(monkeypatch):
     }
 
 
+def test_local_runner_declares_api_kind():
+    module = _load()
+    # AIQE NodeRun 默认以 kind=api 入队；外部 Runner 必须声明 api 才能认领。
+    assert "api" in module.CAPABILITIES
+    assert "aiqe:playwright" in module.CAPABILITIES
+
+
 def test_resolve_missing_secret_raises_without_echoing_value(monkeypatch):
     module = _load()
     monkeypatch.delenv("AIQE_SECRET_MISSING", raising=False)
