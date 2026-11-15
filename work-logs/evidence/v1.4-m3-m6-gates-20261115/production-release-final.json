@@ -1,0 +1,19 @@
+{
+  "environment": "production",
+  "public_url": "https://swiftbugs.cn",
+  "released_at": "2026-11-15T13:35:00Z",
+  "main_commit": "d2de4bb04911b33e7a23cf3fd2d402cc9ac8bd7d",
+  "backend_image": "sha256:2cd901f492816553e042fb54b5d5614220553321997434d0f519cca8fe5cdf7f",
+  "backend_previous": "sha256:2e880192ce0fc425ce691fda4bee9d35e0ef2e7b37c14f74698a4c3c3ab45e97",
+  "frontend_image": "sha256:b0e1662e11b05a92069c28292fd11dce1d3ebcb98f3f8b6c4af62f85f735efba",
+  "alembic_head": "20261124_aiqe_pr595_execution",
+  "checks": [
+    {"name": "public_health", "status": "PASS", "detail": "HTTP 200"},
+    {"name": "public_ui", "status": "PASS", "detail": "HTTP 200"},
+    {"name": "backend_health", "status": "PASS", "detail": "healthy"},
+    {"name": "migration", "status": "PASS", "detail": "20261124 head"},
+    {"name": "prod_run_create_disabled", "status": "PASS", "detail": "False"}
+  ],
+  "contains": ["M3 planner runtime contract + Playwright observe locators", "A4 UNKNOWN consistency prompt"],
+  "notes": ["Frontend unchanged from previous v14-prod release.", "No production AIQE Run created."]
+}
