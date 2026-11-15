@@ -1,0 +1,19 @@
+{
+  "environment": "test",
+  "host": "111.230.155.116",
+  "started_at": "2026-11-15T13:33:00Z",
+  "pid": 2841830,
+  "workflow_id": "635ffc59-e2b2-41a0-a330-bafb4dff893f",
+  "target_cycles": 1440,
+  "interval_seconds": 55,
+  "status": "RUNNING",
+  "note": "24h has not elapsed; this file records a real detached soak start, not completion. Completion/failure counts must be read from /root/v14/soak-24h.jsonl after 24h.",
+  "first_runs": [
+    {"run_id": "9150b092-9933-4cf2-a984-c4253fcd5252", "status": 200, "run_status": "RUNNING"},
+    {"run_id": "0897b3e7-e756-47f3-b421-89c32915cfbe", "status": 200, "run_status": "RUNNING"}
+  ],
+  "commands": [
+    "nohup bash /root/v14/soak_24h.sh > /root/v14/soak-24h.out 2>&1 &",
+    "tail -f /root/v14/soak-24h.jsonl"
+  ]
+}
