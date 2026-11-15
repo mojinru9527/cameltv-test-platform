@@ -1,0 +1,743 @@
+{
+  "run": {
+    "id": "eb4feb88-df7d-44a5-878c-76b79a47f1f0",
+    "run_key": "RUN-82a81c13",
+    "source_type": "manual",
+    "status": "COMPLETED",
+    "outcome": "FAIL",
+    "workflow_definition_id": "97c253a7-b198-49fc-b57d-dca7d3d88087",
+    "workflow_checksum": "6968626885ea8be49e0b6814922aac76e64684e4dcb59fbca587b07e0e373d61",
+    "build_ref": "test-v14-m4-faults",
+    "commit_sha": "e4408546d",
+    "created_at": "2026-11-15T13:07:02.700426Z",
+    "started_at": "2026-11-15T13:07:02.713760Z",
+    "finished_at": "2026-11-15T13:08:11.337107Z",
+    "duration_ms": null
+  },
+  "nodes": [
+    {
+      "node": {
+        "id": "be0ca3e2-add0-4ca9-bac4-58022d16c80f",
+        "node_key": "db_forbidden_table",
+        "driver_key": "db",
+        "status": "BLOCKED",
+        "error_class": "UNSAFE_SQL",
+        "attempt_count": 1,
+        "inputs": {
+          "query_key": "forbidden",
+          "allowed_tables": [
+            "sys_project"
+          ],
+          "query_registry": {
+            "forbidden": {
+              "sql": "SELECT count(*) AS n FROM pg_catalog.pg_class",
+              "allowed_tables": [
+                "sys_project"
+              ]
+            }
+          }
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T13:07:10.048128+00:00",
+        "finished_at": "2026-11-15T13:07:10.056676+00:00"
+      },
+      "attempts": [
+        {
+          "id": "b5b902d8-5718-487f-a1de-c2a7635fa218",
+          "attempt_no": 1,
+          "status": "BLOCKED",
+          "started_at": "2026-11-15T13:07:10.048128+00:00",
+          "finished_at": "2026-11-15T13:07:10.057314+00:00",
+          "error": {
+            "class": "UNSAFE_SQL"
+          },
+          "output": {},
+          "assertions": [
+            {
+              "id": "24d39265-bcc5-4eb0-b050-099f7e16b368",
+              "assertion_key": "db_forbidden",
+              "type": "db_row_count",
+              "status": "BLOCKED",
+              "schema_version": "1.0",
+              "oracle_layer": "STD",
+              "oracle_ref": "M4-FAULT-DB-FORBIDDEN",
+              "severity": "P1",
+              "expected": 1,
+              "actual": null,
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "Driver BLOCKED",
+              "artifact_refs": []
+            }
+          ]
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "node": {
+        "id": "6d484bf4-2d0e-45b7-bdbf-6d2c54874a3c",
+        "node_key": "db_zero",
+        "driver_key": "db",
+        "status": "PASSED",
+        "error_class": "",
+        "attempt_count": 1,
+        "inputs": {
+          "query_key": "zero_rows",
+          "allowed_tables": [
+            "sys_project"
+          ],
+          "query_registry": {
+            "zero_rows": {
+              "sql": "SELECT count(*) AS n FROM sys_project WHERE 1=0",
+              "allowed_tables": [
+                "sys_project"
+              ]
+            }
+          }
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T13:07:10.019407+00:00",
+        "finished_at": "2026-11-15T13:07:10.032985+00:00"
+      },
+      "attempts": [
+        {
+          "id": "959adc84-0a4e-400a-b9ff-6b4dbad96fd2",
+          "attempt_no": 1,
+          "status": "PASSED",
+          "started_at": "2026-11-15T13:07:10.019407+00:00",
+          "finished_at": "2026-11-15T13:07:10.033610+00:00",
+          "error": null,
+          "output": {},
+          "assertions": [
+            {
+              "id": "255e0fd3-9215-4e80-9c09-509f0984b91a",
+              "assertion_key": "db_zero",
+              "type": "db_row_count",
+              "status": "PASS",
+              "schema_version": "1.0",
+              "oracle_layer": "STD",
+              "oracle_ref": "M4-FAULT-DB-ZERO",
+              "severity": "P1",
+              "expected": 1,
+              "actual": 1,
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "",
+              "artifact_refs": [
+                "7a944e3a-20aa-455b-af67-f1efc0803dd6"
+              ]
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": "7a944e3a-20aa-455b-af67-f1efc0803dd6",
+          "artifact_type": "db_snapshot",
+          "sha256": "62a11ef2db2bb753b524ded075143a633bf483db4042922a18077c7ff7e40e39",
+          "size_bytes": 121,
+          "mime_type": "application/json",
+          "redaction_status": "sanitized",
+          "metadata": {
+            "redacted": true,
+            "source": "execution_service"
+          },
+          "created_at": "2026-11-15T13:07:10.028206+00:00"
+        }
+      ]
+    },
+    {
+      "node": {
+        "id": "4bebf735-d5ed-4644-998b-dd99c0cb7466",
+        "node_key": "http_404",
+        "driver_key": "http",
+        "status": "FAILED",
+        "error_class": "STATUS_MISMATCH",
+        "attempt_count": 1,
+        "inputs": {
+          "url": "http://aiqe-test-nginx:80/api/v1/does-not-exist",
+          "method": "GET",
+          "timeout_ms": 5000
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T13:07:04.025492+00:00",
+        "finished_at": "2026-11-15T13:07:04.090652+00:00"
+      },
+      "attempts": [
+        {
+          "id": "e9fa7256-2f32-4bd9-bfdb-95f6616f88b2",
+          "attempt_no": 1,
+          "status": "FAILED",
+          "started_at": "2026-11-15T13:07:04.025492+00:00",
+          "finished_at": "2026-11-15T13:07:04.091345+00:00",
+          "error": {
+            "class": "STATUS_MISMATCH"
+          },
+          "output": {},
+          "assertions": [
+            {
+              "id": "4bbfb973-b352-475e-9470-132bddde8fff",
+              "assertion_key": "http_404_status",
+              "type": "http_status",
+              "status": "FAIL",
+              "schema_version": "1.0",
+              "oracle_layer": "STD",
+              "oracle_ref": "M4-FAULT-404",
+              "severity": "P1",
+              "expected": 200,
+              "actual": 404,
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "",
+              "artifact_refs": [
+                "d1869296-fe2d-40d8-b1aa-2c6d83b6c6c9",
+                "538f77e1-9e80-46a8-bf0a-fc4e7cb23c39"
+              ]
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": "538f77e1-9e80-46a8-bf0a-fc4e7cb23c39",
+          "artifact_type": "response",
+          "sha256": "54e4263114c3da89685f6009164e9a7ff0f7f77713ec982cd4c00175d8402b0a",
+          "size_bytes": 711,
+          "mime_type": "application/json",
+          "redaction_status": "sanitized",
+          "metadata": {
+            "redacted": true,
+            "source": "execution_service"
+          },
+          "created_at": "2026-11-15T13:07:04.084532+00:00"
+        },
+        {
+          "id": "d1869296-fe2d-40d8-b1aa-2c6d83b6c6c9",
+          "artifact_type": "request",
+          "sha256": "3665276950fb2d25d12a268aa4705991c88f2edf40fccff075aa693713d791ad",
+          "size_bytes": 254,
+          "mime_type": "application/json",
+          "redaction_status": "sanitized",
+          "metadata": {
+            "redacted": true,
+            "source": "execution_service"
+          },
+          "created_at": "2026-11-15T13:07:04.082492+00:00"
+        }
+      ]
+    },
+    {
+      "node": {
+        "id": "97074c3d-70ff-4bc2-8af6-50770c776004",
+        "node_key": "http_json_mismatch",
+        "driver_key": "http",
+        "status": "FAILED",
+        "error_class": "ASSERTION_FAILED",
+        "attempt_count": 1,
+        "inputs": {
+          "url": "http://aiqe-test-nginx:80/api/v1/open/health",
+          "method": "GET",
+          "timeout_ms": 5000
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T13:07:07.958244+00:00",
+        "finished_at": "2026-11-15T13:07:07.986261+00:00"
+      },
+      "attempts": [
+        {
+          "id": "f06df20d-f0a3-461d-b114-266ede12e2eb",
+          "attempt_no": 1,
+          "status": "FAILED",
+          "started_at": "2026-11-15T13:07:07.958244+00:00",
+          "finished_at": "2026-11-15T13:07:07.986910+00:00",
+          "error": {
+            "class": "ASSERTION_FAILED"
+          },
+          "output": {},
+          "assertions": [
+            {
+              "id": "10b126c1-3568-4d45-821c-9067f4406825",
+              "assertion_key": "http_json_mismatch",
+              "type": "jsonpath",
+              "status": "FAIL",
+              "schema_version": "1.0",
+              "oracle_layer": "STD",
+              "oracle_ref": "M4-FAULT-JSON",
+              "severity": "P1",
+              "expected": "M4_NOT_EXIST",
+              "actual": "ok",
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "",
+              "artifact_refs": [
+                "c1afba45-f735-400d-8463-474c15e75e68",
+                "9deeb7a9-1ef2-419f-9bdc-bba8a1cda31d"
+              ]
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": "9deeb7a9-1ef2-419f-9bdc-bba8a1cda31d",
+          "artifact_type": "response",
+          "sha256": "65e5869b289a086408e0fb7a627ddc764a670937d28d09d21563f3bc983b3bf9",
+          "size_bytes": 766,
+          "mime_type": "application/json",
+          "redaction_status": "sanitized",
+          "metadata": {
+            "redacted": true,
+            "source": "execution_service"
+          },
+          "created_at": "2026-11-15T13:07:07.981281+00:00"
+        },
+        {
+          "id": "c1afba45-f735-400d-8463-474c15e75e68",
+          "artifact_type": "request",
+          "sha256": "eaf587de517871f311e5573ea92ff09625d21c4138ffd37d0b2ecf1f18711dce",
+          "size_bytes": 251,
+          "mime_type": "application/json",
+          "redaction_status": "sanitized",
+          "metadata": {
+            "redacted": true,
+            "source": "execution_service"
+          },
+          "created_at": "2026-11-15T13:07:07.979164+00:00"
+        }
+      ]
+    },
+    {
+      "node": {
+        "id": "dadfac9b-05a5-41a6-8193-291ad587425d",
+        "node_key": "http_refused",
+        "driver_key": "http",
+        "status": "FAILED",
+        "error_class": "NETWORK_ERROR",
+        "attempt_count": 1,
+        "inputs": {
+          "url": "http://127.0.0.1:9/",
+          "method": "GET",
+          "timeout_ms": 2000
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T13:07:07.913002+00:00",
+        "finished_at": "2026-11-15T13:07:07.933712+00:00"
+      },
+      "attempts": [
+        {
+          "id": "3257bb3d-4fc0-427f-9112-460d72ae9291",
+          "attempt_no": 1,
+          "status": "FAILED",
+          "started_at": "2026-11-15T13:07:07.913002+00:00",
+          "finished_at": "2026-11-15T13:07:07.934358+00:00",
+          "error": {
+            "class": "NETWORK_ERROR"
+          },
+          "output": {},
+          "assertions": [
+            {
+              "id": "fa69ab9a-d95b-46b9-ba0e-f9efb1152d40",
+              "assertion_key": "http_refused_status",
+              "type": "http_status",
+              "status": "NOT_EVALUATED",
+              "schema_version": "1.0",
+              "oracle_layer": "STD",
+              "oracle_ref": "M4-FAULT-REFUSED",
+              "severity": "P1",
+              "expected": 200,
+              "actual": null,
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "无 HTTP status",
+              "artifact_refs": [
+                "26e1c1ed-1db9-4123-89ff-b3980c8a3cd1"
+              ]
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": "26e1c1ed-1db9-4123-89ff-b3980c8a3cd1",
+          "artifact_type": "request",
+          "sha256": "6e5e8c253588adf824e60345ba3fcc74c46ac0d149677cbf98cb3ab8de594fab",
+          "size_bytes": 226,
+          "mime_type": "application/json",
+          "redaction_status": "sanitized",
+          "metadata": {
+            "redacted": true,
+            "source": "execution_service"
+          },
+          "created_at": "2026-11-15T13:07:07.928674+00:00"
+        }
+      ]
+    },
+    {
+      "node": {
+        "id": "30e30092-b955-4296-b5e9-162ea8b48fef",
+        "node_key": "http_timeout",
+        "driver_key": "http",
+        "status": "FAILED",
+        "error_class": "NETWORK_ERROR",
+        "attempt_count": 1,
+        "inputs": {
+          "url": "https://httpbin.org/delay/10",
+          "method": "GET",
+          "timeout_ms": 3000
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T13:07:04.118896+00:00",
+        "finished_at": "2026-11-15T13:07:07.878357+00:00"
+      },
+      "attempts": [
+        {
+          "id": "1b72e3a4-fdd0-4764-a2e1-bfe7b33236e1",
+          "attempt_no": 1,
+          "status": "FAILED",
+          "started_at": "2026-11-15T13:07:04.118896+00:00",
+          "finished_at": "2026-11-15T13:07:07.879148+00:00",
+          "error": {
+            "class": "NETWORK_ERROR"
+          },
+          "output": {},
+          "assertions": [
+            {
+              "id": "1b4bb601-a226-43dd-b97a-64a136c9bdbf",
+              "assertion_key": "http_timeout_status",
+              "type": "http_status",
+              "status": "NOT_EVALUATED",
+              "schema_version": "1.0",
+              "oracle_layer": "STD",
+              "oracle_ref": "M4-FAULT-TIMEOUT",
+              "severity": "P1",
+              "expected": 200,
+              "actual": null,
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "无 HTTP status",
+              "artifact_refs": [
+                "408e3a91-4db0-459c-9763-b1dc94b8aa13"
+              ]
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": "408e3a91-4db0-459c-9763-b1dc94b8aa13",
+          "artifact_type": "request",
+          "sha256": "caa149d53a953922d22ef5e504ea82570f079eec31264d179babca83d1499d1f",
+          "size_bytes": 235,
+          "mime_type": "application/json",
+          "redaction_status": "sanitized",
+          "metadata": {
+            "redacted": true,
+            "source": "execution_service"
+          },
+          "created_at": "2026-11-15T13:07:07.867951+00:00"
+        }
+      ]
+    },
+    {
+      "node": {
+        "id": "47d9fe15-3bc1-4450-b18b-66a405c41c4e",
+        "node_key": "ui_locator_missing",
+        "driver_key": "playwright",
+        "status": "FAILED",
+        "error_class": "ACTION_TIMEOUT",
+        "attempt_count": 1,
+        "inputs": {
+          "url": "http://127.0.0.1:28080/login",
+          "timeout_ms": 5000,
+          "actions": [
+            {
+              "type": "wait_visible",
+              "selector": "#m4-does-not-exist",
+              "timeout_ms": 3000
+            }
+          ]
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T13:08:04.603840+00:00",
+        "finished_at": "2026-11-15T13:08:04.609865+00:00"
+      },
+      "attempts": [
+        {
+          "id": "fd3d75e6-7e5c-441f-b128-add983c76bb8",
+          "attempt_no": 1,
+          "status": "FAILED",
+          "started_at": "2026-11-15T13:08:04.603840+00:00",
+          "finished_at": "2026-11-15T13:08:04.610570+00:00",
+          "error": {
+            "class": "ACTION_TIMEOUT"
+          },
+          "output": {},
+          "assertions": [
+            {
+              "id": "8253bcf8-61b6-4bc2-903f-eeb06f4349c4",
+              "assertion_key": "ui_locator_missing",
+              "type": "locator_visible",
+              "status": "NOT_EVALUATED",
+              "schema_version": "1.0",
+              "oracle_layer": "STD",
+              "oracle_ref": "M4-FAULT-LOCATOR",
+              "severity": "P1",
+              "expected": true,
+              "actual": null,
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "无 locator 实际值",
+              "artifact_refs": []
+            }
+          ]
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "node": {
+        "id": "a99771a1-9865-4bc3-aac4-9b93d1f61b60",
+        "node_key": "ui_text_mismatch",
+        "driver_key": "playwright",
+        "status": "FAILED",
+        "error_class": "TEXT_MISMATCH",
+        "attempt_count": 1,
+        "inputs": {
+          "url": "http://127.0.0.1:28080/login",
+          "timeout_ms": 45000,
+          "actions": [
+            {
+              "type": "wait_visible",
+              "selector": "a[href=\"/forgot-password\"]",
+              "timeout_ms": 45000
+            },
+            {
+              "type": "assert_text",
+              "selector": "body",
+              "expected": "M4_NOT_EXIST",
+              "timeout_ms": 45000
+            }
+          ]
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T13:08:11.325597+00:00",
+        "finished_at": "2026-11-15T13:08:11.333291+00:00"
+      },
+      "attempts": [
+        {
+          "id": "8a556757-845c-430d-956a-f81a75915aac",
+          "attempt_no": 1,
+          "status": "FAILED",
+          "started_at": "2026-11-15T13:08:11.325597+00:00",
+          "finished_at": "2026-11-15T13:08:11.334137+00:00",
+          "error": {
+            "class": "TEXT_MISMATCH"
+          },
+          "output": {},
+          "assertions": [
+            {
+              "id": "9f1217ed-6179-4392-b3c8-fb39e29b28eb",
+              "assertion_key": "ui_text_mismatch",
+              "type": "text_contains",
+              "status": "FAIL",
+              "schema_version": "1.0",
+              "oracle_layer": "STD",
+              "oracle_ref": "M4-FAULT-TEXT",
+              "severity": "P1",
+              "expected": "M4_NOT_EXIST",
+              "actual": "CamelTv 测试平台\n前后端分离 · 多项目测试管理\n用户名\n密码\n登录\n忘记密码？\n\n还没有账号？免费注册\n\n先浏览平台模块",
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "",
+              "artifact_refs": []
+            }
+          ]
+        }
+      ],
+      "artifacts": []
+    }
+  ],
+  "assertions": [
+    {
+      "node_key": "db_forbidden_table",
+      "node_status": "BLOCKED",
+      "attempt_no": 1,
+      "attempt_status": "BLOCKED",
+      "assertion_key": "db_forbidden",
+      "type": "db_row_count",
+      "status": "BLOCKED",
+      "oracle_layer": "STD",
+      "oracle_ref": "M4-FAULT-DB-FORBIDDEN",
+      "severity": "P1",
+      "expected": 1,
+      "actual": null,
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "Driver BLOCKED",
+      "artifact_refs": []
+    },
+    {
+      "node_key": "db_zero",
+      "node_status": "PASSED",
+      "attempt_no": 1,
+      "attempt_status": "PASSED",
+      "assertion_key": "db_zero",
+      "type": "db_row_count",
+      "status": "PASS",
+      "oracle_layer": "STD",
+      "oracle_ref": "M4-FAULT-DB-ZERO",
+      "severity": "P1",
+      "expected": 1,
+      "actual": 1,
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "",
+      "artifact_refs": [
+        "7a944e3a-20aa-455b-af67-f1efc0803dd6"
+      ]
+    },
+    {
+      "node_key": "http_404",
+      "node_status": "FAILED",
+      "attempt_no": 1,
+      "attempt_status": "FAILED",
+      "assertion_key": "http_404_status",
+      "type": "http_status",
+      "status": "FAIL",
+      "oracle_layer": "STD",
+      "oracle_ref": "M4-FAULT-404",
+      "severity": "P1",
+      "expected": 200,
+      "actual": 404,
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "",
+      "artifact_refs": [
+        "d1869296-fe2d-40d8-b1aa-2c6d83b6c6c9",
+        "538f77e1-9e80-46a8-bf0a-fc4e7cb23c39"
+      ]
+    },
+    {
+      "node_key": "http_json_mismatch",
+      "node_status": "FAILED",
+      "attempt_no": 1,
+      "attempt_status": "FAILED",
+      "assertion_key": "http_json_mismatch",
+      "type": "jsonpath",
+      "status": "FAIL",
+      "oracle_layer": "STD",
+      "oracle_ref": "M4-FAULT-JSON",
+      "severity": "P1",
+      "expected": "M4_NOT_EXIST",
+      "actual": "ok",
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "",
+      "artifact_refs": [
+        "c1afba45-f735-400d-8463-474c15e75e68",
+        "9deeb7a9-1ef2-419f-9bdc-bba8a1cda31d"
+      ]
+    },
+    {
+      "node_key": "http_refused",
+      "node_status": "FAILED",
+      "attempt_no": 1,
+      "attempt_status": "FAILED",
+      "assertion_key": "http_refused_status",
+      "type": "http_status",
+      "status": "NOT_EVALUATED",
+      "oracle_layer": "STD",
+      "oracle_ref": "M4-FAULT-REFUSED",
+      "severity": "P1",
+      "expected": 200,
+      "actual": null,
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "无 HTTP status",
+      "artifact_refs": [
+        "26e1c1ed-1db9-4123-89ff-b3980c8a3cd1"
+      ]
+    },
+    {
+      "node_key": "http_timeout",
+      "node_status": "FAILED",
+      "attempt_no": 1,
+      "attempt_status": "FAILED",
+      "assertion_key": "http_timeout_status",
+      "type": "http_status",
+      "status": "NOT_EVALUATED",
+      "oracle_layer": "STD",
+      "oracle_ref": "M4-FAULT-TIMEOUT",
+      "severity": "P1",
+      "expected": 200,
+      "actual": null,
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "无 HTTP status",
+      "artifact_refs": [
+        "408e3a91-4db0-459c-9763-b1dc94b8aa13"
+      ]
+    },
+    {
+      "node_key": "ui_locator_missing",
+      "node_status": "FAILED",
+      "attempt_no": 1,
+      "attempt_status": "FAILED",
+      "assertion_key": "ui_locator_missing",
+      "type": "locator_visible",
+      "status": "NOT_EVALUATED",
+      "oracle_layer": "STD",
+      "oracle_ref": "M4-FAULT-LOCATOR",
+      "severity": "P1",
+      "expected": true,
+      "actual": null,
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "无 locator 实际值",
+      "artifact_refs": []
+    },
+    {
+      "node_key": "ui_text_mismatch",
+      "node_status": "FAILED",
+      "attempt_no": 1,
+      "attempt_status": "FAILED",
+      "assertion_key": "ui_text_mismatch",
+      "type": "text_contains",
+      "status": "FAIL",
+      "oracle_layer": "STD",
+      "oracle_ref": "M4-FAULT-TEXT",
+      "severity": "P1",
+      "expected": "M4_NOT_EXIST",
+      "actual": "CamelTv 测试平台\n前后端分离 · 多项目测试管理\n用户名\n密码\n登录\n忘记密码？\n\n还没有账号？免费注册\n\n先浏览平台模块",
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "",
+      "artifact_refs": []
+    }
+  ]
+}
