@@ -89,7 +89,7 @@ def post_evaluate(
     candidate_id: str,
     body: EvaluateIn,
     _console: CurrentUser = Depends(_console_access),
-    _current: CurrentUser = Depends(require_permission("defect:update")),
+    current: CurrentUser = Depends(require_permission("defect:update")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -100,9 +100,11 @@ def post_evaluate(
                 "false_positive_rate": body.false_positive_rate,
                 "sample_size": body.sample_size,
             },
+            project_id=current.project_id or 0,
         )
     except LearningError as exc:
-        raise APIException(code=400, msg=str(exc), http_status=400) from None
+        status = 404 if "不存在" in str(exc) else 400
+        raise APIException(code=status, msg=str(exc), http_status=status) from None
     return R.ok(_candidate_out(row))
 
 
@@ -114,13 +116,16 @@ def post_evaluate(
 def post_approve(
     candidate_id: str,
     _console: CurrentUser = Depends(_console_access),
-    _current: CurrentUser = Depends(require_permission("aiqe:learning:approve")),
+    current: CurrentUser = Depends(require_permission("aiqe:learning:approve")),
     db: Session = Depends(get_db),
 ):
     try:
-        row = approve_candidate(db, candidate_id)
+        row = approve_candidate(
+            db, candidate_id, project_id=current.project_id or 0
+        )
     except LearningError as exc:
-        raise APIException(code=400, msg=str(exc), http_status=400) from None
+        status = 404 if "不存在" in str(exc) else 400
+        raise APIException(code=status, msg=str(exc), http_status=status) from None
     return R.ok(_candidate_out(row))
 
 
@@ -128,14 +133,17 @@ def post_approve(
 def post_activate(
     candidate_id: str,
     _console: CurrentUser = Depends(_console_access),
-    _current: CurrentUser = Depends(require_permission("aiqe:learning:approve")),
+    current: CurrentUser = Depends(require_permission("aiqe:learning:approve")),
     db: Session = Depends(get_db),
 ):
     try:
-        row = get_candidate(db, candidate_id)
-        pattern = activate_candidate(db, candidate_id)
+        row = get_candidate(db, candidate_id, project_id=current.project_id or 0)
+        pattern = activate_candidate(
+            db, candidate_id, project_id=current.project_id or 0
+        )
     except LearningError as exc:
-        raise APIException(code=400, msg=str(exc), http_status=400) from None
+        status = 404 if "不存在" in str(exc) else 400
+        raise APIException(code=status, msg=str(exc), http_status=status) from None
     return R.ok(
         {
             "candidate": _candidate_out(row),

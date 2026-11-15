@@ -78,6 +78,7 @@ def put_artifact(
     node_run_id: str | None = None,
     step_attempt_id: str | None = None,
     metadata: dict[str, Any] | None = None,
+    redaction_status: str = "pending",
     linked_evidence_type: str | None = None,
     linked_evidence_id: str | None = None,
     storage: ArtifactStorageBackend | None = None,
@@ -85,6 +86,8 @@ def put_artifact(
     _run_or_deny(db, run_id, project_id)
     if artifact_type not in ARTIFACT_TYPES:
         raise InvalidArtifact(f"未知 artifact_type: {artifact_type!r}")
+    if redaction_status not in {"pending", "sanitized", "rejected"}:
+        raise InvalidArtifact(f"非法 redaction_status: {redaction_status!r}")
     if (linked_evidence_type is None) != (linked_evidence_id is None):
         raise InvalidArtifact("linked_evidence_type/id 必须成对出现")
     if linked_evidence_type is not None and linked_evidence_type not in LINKED_EVIDENCE_TYPES:
@@ -104,6 +107,7 @@ def put_artifact(
         sha256=digest,
         size_bytes=len(content),
         mime_type=mime_type,
+        redaction_status=redaction_status,
         metadata_json=metadata or {},
         linked_evidence_type=linked_evidence_type,
         linked_evidence_id=linked_evidence_id,

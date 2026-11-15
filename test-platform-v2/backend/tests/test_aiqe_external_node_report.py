@@ -62,7 +62,7 @@ def test_external_report_completes_node_success(db_session):
         db_session,
         job_id=job.id,
         status="success",
-        result={"status": "PASSED", "source_len": 100},
+        result={"status": "PASSED", "source_len": 100, "data": {"body_text": "X"}},
     )
     node = db_session.scalar(select(NodeRun).where(NodeRun.run_id == run.id))
     db_session.expire_all()

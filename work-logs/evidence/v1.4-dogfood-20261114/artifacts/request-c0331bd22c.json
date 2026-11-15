@@ -1,0 +1,1 @@
+{"method": "POST", "url": "http://127.0.0.1:63162/orders", "headers": {"Authorization": "***", "X-AIQE-Correlation-ID": "ffc71e16-ebe9-49c7-92eb-1870615abc87"}, "timeout_ms": 15000, "correlation_id": "ffc71e16-ebe9-49c7-92eb-1870615abc87", "retry_allowed": false}

@@ -1,0 +1,1 @@
+[{"kind": "request", "method": "GET", "url": "http://127.0.0.1:63162/ui?order=order-2ee6d894", "resource_type": "document"}, {"kind": "response", "status": 200, "url": "http://127.0.0.1:63162/ui?order=order-2ee6d894"}]

@@ -27,7 +27,7 @@ def upgrade() -> None:
         if bind.dialect.name == "postgresql":
             op.execute('DROP TABLE IF EXISTS "run_artifacts" CASCADE')
         else:
-            op.drop_table("run_artifacts")
+            op.execute('DROP TABLE IF EXISTS "run_artifacts"')
 
     op.create_table(
         "run_artifacts",

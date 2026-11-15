@@ -29,7 +29,13 @@ from app.aiqe.services.profile_service import (
     list_profiles,
     update_config,
 )
-from app.aiqe.services.quality_gate import evaluate_stats
+from app.aiqe.services.quality_gate_service import (
+    GateError,
+    GateNotFound,
+    evaluate_from_facts,
+    latest_snapshot,
+    snapshot_dict,
+)
 from app.core.deps import CurrentUser, get_db, require_permission
 from app.core.exceptions import APIException
 from app.schemas.common import R
@@ -41,11 +47,12 @@ _console_access = require_permission("menu:aiqe_runs")
 
 
 class QualityGateIn(BaseModel):
-    p0_total: int = 0
-    p0_passed: int = 0
-    p0_failed: int = 0
-    p0_unknown: int = 0
-    p0_not_run: int = 0
+    """v1.4：只接受事实定位参数，不接受前端 p0_total/p0_passed。"""
+
+    version_task_id: int | None = None
+    run_ids: list[str] = []
+    build_ref: str = ""
+    environment_ref: str = ""
 
 
 class NoiseRuleIn(BaseModel):
@@ -96,13 +103,44 @@ def _profile_out(row) -> dict:
     }
 
 
-@router.post("/quality-gate", response_model=R[dict], summary="质量门禁判定")
+@router.post("/quality-gate", response_model=R[dict], summary="质量门禁判定（服务端事实计算）")
 def quality_gate(
     body: QualityGateIn,
     _console: CurrentUser = Depends(_console_access),
-    _current: CurrentUser = Depends(require_permission("defect:list")),
+    current: CurrentUser = Depends(require_permission("defect:list")),
+    db: Session = Depends(get_db),
 ):
-    return R.ok(evaluate_stats(body.model_dump()))
+    try:
+        snapshot = evaluate_from_facts(
+            db,
+            project_id=current.project_id or 0,
+            run_ids=list(body.run_ids),
+            version_task_id=body.version_task_id,
+            build_ref=body.build_ref,
+            environment_ref=body.environment_ref,
+            computed_by=current.user.id,
+        )
+        db.commit()
+    except GateNotFound as exc:
+        db.rollback()
+        raise APIException(code=404, msg=str(exc), http_status=404) from None
+    except GateError as exc:
+        db.rollback()
+        raise APIException(code=400, msg=str(exc), http_status=400) from None
+    return R.ok(snapshot_dict(snapshot))
+
+
+@router.get("/quality-gate/latest", response_model=R[dict], summary="最近一次门禁快照")
+def quality_gate_latest(
+    version_task_id: int | None = Query(default=None),
+    _console: CurrentUser = Depends(_console_access),
+    current: CurrentUser = Depends(require_permission("defect:list")),
+    db: Session = Depends(get_db),
+):
+    row = latest_snapshot(
+        db, project_id=current.project_id or 0, version_task_id=version_task_id
+    )
+    return R.ok(snapshot_dict(row) if row else None)
 
 
 @router.get("/noise-rules", response_model=R[list], summary="噪音规则列表")
@@ -142,7 +180,8 @@ def post_noise_rule(
 def patch_noise_rule(
     rule_id: int,
     body: NoiseRulePatchIn,
-    _current: CurrentUser = Depends(require_permission("defect:update")),
+    _console: CurrentUser = Depends(_console_access),
+    current: CurrentUser = Depends(require_permission("defect:update")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -152,6 +191,7 @@ def patch_noise_rule(
             pattern=body.pattern,
             action=body.action,
             expires_at=body.expires_at,
+            project_id=current.project_id or 0,
         )
     except NoiseRuleError as exc:
         message = str(exc)
@@ -164,11 +204,11 @@ def patch_noise_rule(
 def post_renew_rule(
     rule_id: int,
     _console: CurrentUser = Depends(_console_access),
-    _current: CurrentUser = Depends(require_permission("defect:update")),
+    current: CurrentUser = Depends(require_permission("defect:update")),
     db: Session = Depends(get_db),
 ):
     try:
-        row = renew_rule(db, rule_id)
+        row = renew_rule(db, rule_id, project_id=current.project_id or 0)
     except NoiseRuleError as exc:
         raise APIException(code=404, msg=str(exc), http_status=404) from None
     return R.ok(_noise_rule_out(row))
@@ -178,11 +218,11 @@ def post_renew_rule(
 def remove_noise_rule(
     rule_id: int,
     _console: CurrentUser = Depends(_console_access),
-    _current: CurrentUser = Depends(require_permission("defect:update")),
+    current: CurrentUser = Depends(require_permission("defect:update")),
     db: Session = Depends(get_db),
 ):
     try:
-        delete_rule(db, rule_id)
+        delete_rule(db, rule_id, project_id=current.project_id or 0)
     except NoiseRuleError as exc:
         raise APIException(code=404, msg=str(exc), http_status=404) from None
     return R.ok({"id": rule_id, "deleted": True})

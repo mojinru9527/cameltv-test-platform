@@ -73,13 +73,16 @@ export async function approveWorkflow(workflowId: string): Promise<WorkflowSumma
 // ── batch-338：QualityGate / NoiseRules ──
 
 export interface QualityGateResult {
+  id: string
   gate_status: 'PASS' | 'FAIL' | 'BLOCKED'
   p0_total: number
   p0_passed: number
   p0_failed: number
-  p0_unknown: number
-  p0_not_run: number
+  p0_blocked: number
+  source_ids: string[]
+  rule_version: string
   reasons: string[]
+  immutable: boolean
 }
 
 export interface NoiseRule {
@@ -93,11 +96,10 @@ export interface NoiseRule {
 }
 
 export async function evaluateQualityGate(body: {
-  p0_total: number
-  p0_passed: number
-  p0_failed: number
-  p0_unknown: number
-  p0_not_run: number
+  run_ids?: string[]
+  version_task_id?: number
+  build_ref?: string
+  environment_ref?: string
 }): Promise<QualityGateResult> {
   return (await client.post('/aiqe/admin/quality-gate', body)) as unknown as QualityGateResult
 }

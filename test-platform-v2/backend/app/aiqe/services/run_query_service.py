@@ -4,7 +4,7 @@ from __future__ import annotations
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.aiqe.models.run import NodeRun, StepAttempt, TestRun
+from app.aiqe.models.run import NodeRun, RunAssertionResult, StepAttempt, TestRun
 from app.aiqe.services.artifact_service import list_artifacts
 from app.aiqe.services.event_service import list_events
 
@@ -81,3 +81,69 @@ def get_run_attempts(
     for attempt in attempts:
         by_node.setdefault(attempt.node_run_id, []).append(attempt)
     return run, [(node, by_node.get(node.id, [])) for node in nodes]
+
+
+def get_run_nodes(
+    db: Session, run_id: str, project_id: int
+) -> tuple[TestRun, list[dict]]:
+    """Run Console 的节点/attempt/断言/产物聚合（FIX-009 数据源）。"""
+    run, node_attempts = get_run_attempts(db, run_id, project_id)
+    attempt_ids = [
+        attempt.id for _node, attempts in node_attempts for attempt in attempts
+    ]
+    assertions = []
+    if attempt_ids:
+        assertions = list(
+            db.scalars(
+                select(RunAssertionResult)
+                .where(RunAssertionResult.step_attempt_id.in_(attempt_ids))
+                .order_by(RunAssertionResult.assertion_key)
+            )
+        )
+    artifacts = list_artifacts(db, run_id, project_id)
+    by_attempt: dict[str, list[RunAssertionResult]] = {}
+    for row in assertions:
+        by_attempt.setdefault(row.step_attempt_id, []).append(row)
+    by_node_artifacts: dict[str, list] = {}
+    for artifact in artifacts:
+        if artifact.node_run_id:
+            by_node_artifacts.setdefault(artifact.node_run_id, []).append(artifact)
+    items = []
+    for node, attempts in node_attempts:
+        items.append(
+            {
+                "node": node,
+                "attempts": [
+                    {
+                        "attempt": attempt,
+                        "assertions": by_attempt.get(attempt.id, []),
+                    }
+                    for attempt in attempts
+                ],
+                "artifacts": by_node_artifacts.get(node.id, []),
+            }
+        )
+    return run, items
+
+
+def get_run_assertions(
+    db: Session, run_id: str, project_id: int
+) -> tuple[TestRun, list[dict]]:
+    """扁平断言列表（前端 Step Detail / 证据复盘用）。"""
+    run, items = get_run_nodes(db, run_id, project_id)
+    rows: list[dict] = []
+    for item in items:
+        node = item["node"]
+        for attempt_item in item["attempts"]:
+            attempt = attempt_item["attempt"]
+            for assertion in attempt_item["assertions"]:
+                rows.append(
+                    {
+                        "node_key": node.node_key,
+                        "node_status": node.status,
+                        "attempt_no": attempt.attempt_no,
+                        "attempt_status": attempt.status,
+                        "assertion": assertion,
+                    }
+                )
+    return run, rows

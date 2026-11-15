@@ -26,6 +26,18 @@ class Settings(BaseSettings):
     # M10-347：AIQE NodeRun 进程内执行器（仅 http driver；默认关闭，Test/CI 显式开启）
     aiqe_inprocess_executor_enabled: bool = False
     aiqe_inprocess_poll_seconds: float = 2.0
+    # v1.4 FIX-003/006/012/015：AIQE 执行边界与安全开关。
+    # 生产 Run 创建默认关闭（只有受控运维 smoke）；Test 环境可显式打开。
+    aiqe_prod_run_create_enabled: bool = False
+    aiqe_http_enforce_ssrf: bool = True
+    aiqe_http_allow_private: bool = False
+    aiqe_http_allowed_hosts: str = ""
+    aiqe_evidence_max_body_bytes: int = 256 * 1024
+    aiqe_artifact_dir: str = "storage/aiqe-artifacts"
+    aiqe_db_readonly_url: str = ""
+    aiqe_db_query_registry_json: str = ""
+    aiqe_run_stale_seconds: int = 900
+    aiqe_retention_days: int = 30
     runner_http_url: str = ""
     # Security boundary for user-influenced Playwright/Node execution. This is
     # defense in depth, not a substitute for a dedicated sandbox container.
