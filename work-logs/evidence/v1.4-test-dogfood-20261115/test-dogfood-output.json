@@ -1,0 +1,497 @@
+{
+  "run": {
+    "id": "1dd2184e-c505-4464-808f-98df7c1193e4",
+    "run_key": "RUN-71ee124e",
+    "source_type": "manual",
+    "status": "COMPLETED",
+    "outcome": "PASS",
+    "workflow_definition_id": "a35f0100-05e9-4630-b953-0b674ea1fbb0",
+    "workflow_checksum": "5070043f187e0e89e6546cfab76e626e610f2a1f9ce7b17d0754edbdf1e9e5cc",
+    "build_ref": "test-v14-dogfood",
+    "commit_sha": "dbf16d1d8",
+    "created_at": "2026-11-15T05:58:05.524502Z",
+    "started_at": "2026-11-15T05:58:05.536843Z",
+    "finished_at": "2026-11-15T05:58:21.892738Z",
+    "duration_ms": null
+  },
+  "assertions": [
+    {
+      "node_key": "db_projects",
+      "node_status": "PASSED",
+      "attempt_no": 1,
+      "attempt_status": "PASSED",
+      "assertion_key": "projects_exist",
+      "type": "db_row_count",
+      "status": "PASS",
+      "oracle_layer": "REQ",
+      "oracle_ref": "TC-AIQE-TEST-3",
+      "severity": "P0",
+      "expected": 1,
+      "actual": 1,
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "",
+      "artifact_refs": [
+        "3db73186-5b73-462b-9c26-de44a619faa6"
+      ]
+    },
+    {
+      "node_key": "health",
+      "node_status": "PASSED",
+      "attempt_no": 1,
+      "attempt_status": "PASSED",
+      "assertion_key": "health_ok",
+      "type": "jsonpath",
+      "status": "PASS",
+      "oracle_layer": "REQ",
+      "oracle_ref": "TC-AIQE-TEST-1",
+      "severity": "P0",
+      "expected": "ok",
+      "actual": "ok",
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "",
+      "artifact_refs": [
+        "d5830c80-1597-4d15-aa56-1785c6cba977",
+        "99197154-a465-4434-aff8-d214106987a4"
+      ]
+    },
+    {
+      "node_key": "health",
+      "node_status": "PASSED",
+      "attempt_no": 1,
+      "attempt_status": "PASSED",
+      "assertion_key": "health_status",
+      "type": "http_status",
+      "status": "PASS",
+      "oracle_layer": "REQ",
+      "oracle_ref": "TC-AIQE-TEST-1",
+      "severity": "P0",
+      "expected": 200,
+      "actual": 200,
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "",
+      "artifact_refs": [
+        "d5830c80-1597-4d15-aa56-1785c6cba977",
+        "99197154-a465-4434-aff8-d214106987a4"
+      ]
+    },
+    {
+      "node_key": "ui_forgot",
+      "node_status": "PASSED",
+      "attempt_no": 1,
+      "attempt_status": "PASSED",
+      "assertion_key": "forgot_page",
+      "type": "text_contains",
+      "status": "PASS",
+      "oracle_layer": "REQ",
+      "oracle_ref": "TC-AIQE-TEST-2",
+      "severity": "P0",
+      "expected": "找回密码",
+      "actual": "找回密码\n输入用户名。若账号存在且绑定了邮箱，系统会发送 30 分钟内有效的一次性重置链接。\n\n当前部署未配置完整邮件发送链路，请联系管理员重置密码或配置 SMTP 与前端访问地址。\n\n用户名\n发送重置链接\n返回登录",
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "",
+      "artifact_refs": []
+    },
+    {
+      "node_key": "verify_health",
+      "node_status": "PASSED",
+      "attempt_no": 1,
+      "attempt_status": "PASSED",
+      "assertion_key": "verify_ok",
+      "type": "jsonpath",
+      "status": "PASS",
+      "oracle_layer": "REQ",
+      "oracle_ref": "TC-AIQE-TEST-4",
+      "severity": "P0",
+      "expected": "ok",
+      "actual": "ok",
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "",
+      "artifact_refs": [
+        "6be81db7-62b0-48db-9e60-0d6a4d1893cf",
+        "57cabd0d-cf6d-4e4c-9441-7c60addb7b03"
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "node": {
+        "id": "48e64701-3f44-47b6-a62c-c550ad935c79",
+        "node_key": "db_projects",
+        "driver_key": "db",
+        "status": "PASSED",
+        "error_class": "",
+        "attempt_count": 1,
+        "inputs": {
+          "query_registry": {
+            "project_count": {
+              "sql": "SELECT count(*) AS n FROM sys_project",
+              "allowed_tables": [
+                "sys_project"
+              ]
+            }
+          },
+          "allowed_tables": [
+            "sys_project"
+          ],
+          "query_key": "project_count"
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T13:58:19.7973+08:00",
+        "finished_at": "2026-11-15T13:58:19.835356+08:00"
+      },
+      "attempts": [
+        {
+          "id": "4581d886-f346-4f52-8486-de35ef1302e9",
+          "attempt_no": 1,
+          "status": "PASSED",
+          "started_at": "2026-11-15T13:58:19.7973+08:00",
+          "finished_at": "2026-11-15T13:58:19.835951+08:00",
+          "error": null,
+          "output": {},
+          "assertions": [
+            {
+              "id": "d2b3dd28-26e9-4596-8794-5f9611d55062",
+              "assertion_key": "projects_exist",
+              "type": "db_row_count",
+              "status": "PASS",
+              "schema_version": "1.0",
+              "oracle_layer": "REQ",
+              "oracle_ref": "TC-AIQE-TEST-3",
+              "severity": "P0",
+              "expected": 1,
+              "actual": 1,
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "",
+              "artifact_refs": [
+                "3db73186-5b73-462b-9c26-de44a619faa6"
+              ]
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": "3db73186-5b73-462b-9c26-de44a619faa6",
+          "artifact_type": "db_snapshot",
+          "sha256": "ba706af2404fd5ca2febe605cbfa95fa6af0591aee0e08dc4a2cc3950f9d210a",
+          "size_bytes": 126,
+          "mime_type": "application/json",
+          "redaction_status": "sanitized",
+          "metadata": {
+            "redacted": true,
+            "source": "execution_service"
+          },
+          "created_at": "2026-11-15T13:58:19.830714+08:00"
+        }
+      ]
+    },
+    {
+      "node": {
+        "id": "7e302fb4-4539-453b-a78d-c2e54db0f171",
+        "node_key": "health",
+        "driver_key": "http",
+        "status": "PASSED",
+        "error_class": "",
+        "attempt_count": 1,
+        "inputs": {
+          "timeout_ms": 15000,
+          "url": "http://aiqe-test-nginx:80/api/v1/open/health",
+          "method": "GET"
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T13:58:05.715207+08:00",
+        "finished_at": "2026-11-15T13:58:05.751898+08:00"
+      },
+      "attempts": [
+        {
+          "id": "e96db4c3-d031-4feb-abde-953af5d5205b",
+          "attempt_no": 1,
+          "status": "PASSED",
+          "started_at": "2026-11-15T13:58:05.715207+08:00",
+          "finished_at": "2026-11-15T13:58:05.752545+08:00",
+          "error": null,
+          "output": {},
+          "assertions": [
+            {
+              "id": "75a25b3e-6563-4560-8210-4dbd41727e9d",
+              "assertion_key": "health_ok",
+              "type": "jsonpath",
+              "status": "PASS",
+              "schema_version": "1.0",
+              "oracle_layer": "REQ",
+              "oracle_ref": "TC-AIQE-TEST-1",
+              "severity": "P0",
+              "expected": "ok",
+              "actual": "ok",
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "",
+              "artifact_refs": [
+                "d5830c80-1597-4d15-aa56-1785c6cba977",
+                "99197154-a465-4434-aff8-d214106987a4"
+              ]
+            },
+            {
+              "id": "e61d7dc8-b61f-47b3-a78c-537d6d077229",
+              "assertion_key": "health_status",
+              "type": "http_status",
+              "status": "PASS",
+              "schema_version": "1.0",
+              "oracle_layer": "REQ",
+              "oracle_ref": "TC-AIQE-TEST-1",
+              "severity": "P0",
+              "expected": 200,
+              "actual": 200,
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "",
+              "artifact_refs": [
+                "d5830c80-1597-4d15-aa56-1785c6cba977",
+                "99197154-a465-4434-aff8-d214106987a4"
+              ]
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": "99197154-a465-4434-aff8-d214106987a4",
+          "artifact_type": "response",
+          "sha256": "3681f6f222123235cf00c286113f77c90e910612cd20cc5a9195b8df8eb00eb4",
+          "size_bytes": 767,
+          "mime_type": "application/json",
+          "redaction_status": "sanitized",
+          "metadata": {
+            "redacted": true,
+            "source": "execution_service"
+          },
+          "created_at": "2026-11-15T13:58:05.74609+08:00"
+        },
+        {
+          "id": "d5830c80-1597-4d15-aa56-1785c6cba977",
+          "artifact_type": "request",
+          "sha256": "5b6e96d862a422d9141864bc0e7caae160e81cdc1c0149eb35a45af244c974e6",
+          "size_bytes": 252,
+          "mime_type": "application/json",
+          "redaction_status": "sanitized",
+          "metadata": {
+            "redacted": true,
+            "source": "execution_service"
+          },
+          "created_at": "2026-11-15T13:58:05.744462+08:00"
+        }
+      ]
+    },
+    {
+      "node": {
+        "id": "ab619e9a-f99b-40dd-aaa2-d75c4a46606f",
+        "node_key": "ui_forgot",
+        "driver_key": "playwright",
+        "status": "PASSED",
+        "error_class": "",
+        "attempt_count": 1,
+        "inputs": {
+          "actions": [
+            {
+              "type": "wait_visible",
+              "timeout_ms": 45000,
+              "selector": "a[href=\"/forgot-password\"]"
+            },
+            {
+              "selector": "a[href=\"/forgot-password\"]",
+              "type": "click"
+            },
+            {
+              "type": "assert_url",
+              "url": "/forgot-password"
+            },
+            {
+              "type": "assert_text",
+              "expected": "找回密码",
+              "selector": "body"
+            }
+          ],
+          "timeout_ms": 45000,
+          "url": "http://127.0.0.1:28080/login"
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T13:58:19.226176+08:00",
+        "finished_at": "2026-11-15T13:58:19.234594+08:00"
+      },
+      "attempts": [
+        {
+          "id": "ad036a35-ebdc-47a6-a4f4-af324397ef0b",
+          "attempt_no": 1,
+          "status": "PASSED",
+          "started_at": "2026-11-15T13:58:19.226176+08:00",
+          "finished_at": "2026-11-15T13:58:19.235177+08:00",
+          "error": null,
+          "output": {},
+          "assertions": [
+            {
+              "id": "f6541270-73dc-4468-8e5a-cc8592f97f98",
+              "assertion_key": "forgot_page",
+              "type": "text_contains",
+              "status": "PASS",
+              "schema_version": "1.0",
+              "oracle_layer": "REQ",
+              "oracle_ref": "TC-AIQE-TEST-2",
+              "severity": "P0",
+              "expected": "找回密码",
+              "actual": "找回密码\n输入用户名。若账号存在且绑定了邮箱，系统会发送 30 分钟内有效的一次性重置链接。\n\n当前部署未配置完整邮件发送链路，请联系管理员重置密码或配置 SMTP 与前端访问地址。\n\n用户名\n发送重置链接\n返回登录",
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "",
+              "artifact_refs": []
+            }
+          ]
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "node": {
+        "id": "91110272-d729-4920-9590-95ea9c73140a",
+        "node_key": "verify_health",
+        "driver_key": "http",
+        "status": "PASSED",
+        "error_class": "",
+        "attempt_count": 1,
+        "inputs": {
+          "timeout_ms": 15000,
+          "url": "http://aiqe-test-nginx:80/api/v1/open/health",
+          "method": "GET"
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T13:58:21.86462+08:00",
+        "finished_at": "2026-11-15T13:58:21.89005+08:00"
+      },
+      "attempts": [
+        {
+          "id": "1a9192f8-d4f5-440d-b73b-71556810f47a",
+          "attempt_no": 1,
+          "status": "PASSED",
+          "started_at": "2026-11-15T13:58:21.86462+08:00",
+          "finished_at": "2026-11-15T13:58:21.890678+08:00",
+          "error": null,
+          "output": {},
+          "assertions": [
+            {
+              "id": "c025784a-4ac9-4c10-80ac-48777701f83a",
+              "assertion_key": "verify_ok",
+              "type": "jsonpath",
+              "status": "PASS",
+              "schema_version": "1.0",
+              "oracle_layer": "REQ",
+              "oracle_ref": "TC-AIQE-TEST-4",
+              "severity": "P0",
+              "expected": "ok",
+              "actual": "ok",
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "",
+              "artifact_refs": [
+                "6be81db7-62b0-48db-9e60-0d6a4d1893cf",
+                "57cabd0d-cf6d-4e4c-9441-7c60addb7b03"
+              ]
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": "57cabd0d-cf6d-4e4c-9441-7c60addb7b03",
+          "artifact_type": "response",
+          "sha256": "25e7853b39a0d18d09654e4561e8cfd486addf857f35d5a40b4fc0e37167485e",
+          "size_bytes": 766,
+          "mime_type": "application/json",
+          "redaction_status": "sanitized",
+          "metadata": {
+            "redacted": true,
+            "source": "execution_service"
+          },
+          "created_at": "2026-11-15T13:58:21.88539+08:00"
+        },
+        {
+          "id": "6be81db7-62b0-48db-9e60-0d6a4d1893cf",
+          "artifact_type": "request",
+          "sha256": "755a7a38205eb03f30470ad4a50f1705501c16d50ac140cc03369651ff59b8e5",
+          "size_bytes": 252,
+          "mime_type": "application/json",
+          "redaction_status": "sanitized",
+          "metadata": {
+            "redacted": true,
+            "source": "execution_service"
+          },
+          "created_at": "2026-11-15T13:58:21.883018+08:00"
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "57cabd0d-cf6d-4e4c-9441-7c60addb7b03",
+      "artifact_type": "response",
+      "sha256": "25e7853b39a0d18d09654e4561e8cfd486addf857f35d5a40b4fc0e37167485e",
+      "size_bytes": 766,
+      "mime_type": "application/json",
+      "redaction_status": "sanitized",
+      "created_at": "2026-11-15T05:58:21.88539Z"
+    },
+    {
+      "id": "6be81db7-62b0-48db-9e60-0d6a4d1893cf",
+      "artifact_type": "request",
+      "sha256": "755a7a38205eb03f30470ad4a50f1705501c16d50ac140cc03369651ff59b8e5",
+      "size_bytes": 252,
+      "mime_type": "application/json",
+      "redaction_status": "sanitized",
+      "created_at": "2026-11-15T05:58:21.883018Z"
+    },
+    {
+      "id": "3db73186-5b73-462b-9c26-de44a619faa6",
+      "artifact_type": "db_snapshot",
+      "sha256": "ba706af2404fd5ca2febe605cbfa95fa6af0591aee0e08dc4a2cc3950f9d210a",
+      "size_bytes": 126,
+      "mime_type": "application/json",
+      "redaction_status": "sanitized",
+      "created_at": "2026-11-15T05:58:19.830714Z"
+    },
+    {
+      "id": "99197154-a465-4434-aff8-d214106987a4",
+      "artifact_type": "response",
+      "sha256": "3681f6f222123235cf00c286113f77c90e910612cd20cc5a9195b8df8eb00eb4",
+      "size_bytes": 767,
+      "mime_type": "application/json",
+      "redaction_status": "sanitized",
+      "created_at": "2026-11-15T05:58:05.74609Z"
+    },
+    {
+      "id": "d5830c80-1597-4d15-aa56-1785c6cba977",
+      "artifact_type": "request",
+      "sha256": "5b6e96d862a422d9141864bc0e7caae160e81cdc1c0149eb35a45af244c974e6",
+      "size_bytes": 252,
+      "mime_type": "application/json",
+      "redaction_status": "sanitized",
+      "created_at": "2026-11-15T05:58:05.744462Z"
+    }
+  ]
+}

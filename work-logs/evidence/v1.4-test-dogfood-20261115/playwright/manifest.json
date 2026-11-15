@@ -1,0 +1,42 @@
+{
+  "job_id": 22,
+  "attempt": 1,
+  "bundles": [
+    {
+      "job_id": 22,
+      "attempt": 1,
+      "created_at": "2026-11-15T13:58:19.170181+08:00",
+      "file_count": 5,
+      "total_bytes": 291508,
+      "files": [
+        {
+          "name": "console.json",
+          "size": 35,
+          "sha256": "47cde14e65e0a25b58b9f28f2ad76b3e129be94e39222df6c8442a36772bacb3"
+        },
+        {
+          "name": "dom.html",
+          "size": 21267,
+          "sha256": "7171a61dcb480a5712001696eda55fc4607d4fc2d4d087130fd081ce7287ba43"
+        },
+        {
+          "name": "network.json",
+          "size": 2653,
+          "sha256": "dce378cf8f5ff8868b69dc3bf1d00e8dc8eabecdfb981c051bc4884c11c2b3d8"
+        },
+        {
+          "name": "screenshot.png",
+          "size": 36052,
+          "sha256": "a81aa37dbf30df06711f0b251ad302d9de2a2fc5ec9530f86b640ce08a523738"
+        },
+        {
+          "name": "trace.zip",
+          "size": 231501,
+          "sha256": "1e5cba1bdf28e19697562a6caa6c080d1107713d5fbf7a4a826784bc28c56793"
+        }
+      ],
+      "schema_version": 1,
+      "completeness": "minimal"
+    }
+  ]
+}
