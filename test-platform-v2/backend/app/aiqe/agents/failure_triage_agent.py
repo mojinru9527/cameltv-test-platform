@@ -74,6 +74,8 @@ class FailureTriageAgent(BaseAgent):
         '"summary":str,"supporting_evidence":[str],"contradicting_evidence":[str],'
         '"missing_evidence":[str]}],"human_review_required":true,"auto_close_defect":false}。'
         "confidence 必须为 null；证据不足输出 UNKNOWN；不得自动关闭缺陷。"
+        "一致性硬约束：若 attribution_status=UNKNOWN，hypotheses 必须至少包含一条 "
+        "classification=UNKNOWN；若没有 UNKNOWN 假设，attribution_status 必须为 NEEDS_EXPERIMENT。"
     )
 
     def triage(self, failure_context: dict) -> dict:
