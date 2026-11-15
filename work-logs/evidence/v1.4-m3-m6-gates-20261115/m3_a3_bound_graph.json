@@ -1,0 +1,155 @@
+{
+  "graph": {
+    "schema_version": "1.0",
+    "scenario_key": "test-health-forgot-db",
+    "nodes": [
+      {
+        "key": "health_check",
+        "driver": "http",
+        "depends_on": [],
+        "input": {
+          "url": "http://aiqe-test-nginx:80/api/v1/open/health",
+          "method": "GET",
+          "timeout_ms": 10000
+        },
+        "assertions": [
+          {
+            "assertion_key": "health_http_status_200",
+            "type": "http_status",
+            "oracle_layer": "REQ",
+            "oracle_ref": "AC-1",
+            "expected": 200
+          },
+          {
+            "assertion_key": "health_data_status_ok",
+            "type": "jsonpath",
+            "oracle_layer": "REQ",
+            "oracle_ref": "AC-1",
+            "path": "$.data.status",
+            "expected": "ok"
+          }
+        ]
+      },
+      {
+        "key": "forgot_entry",
+        "driver": "playwright",
+        "depends_on": [],
+        "input": {
+          "url": "http://127.0.0.1:28080/login",
+          "actions": [
+            {
+              "type": "wait_visible",
+              "selector": "a[href=\"/forgot-password\"]",
+              "expected": {
+                "visible": true
+              },
+              "timeout_ms": 45000
+            }
+          ],
+          "timeout_ms": 45000
+        },
+        "assertions": [
+          {
+            "assertion_key": "login_forgot_password_entry_visible",
+            "type": "locator_visible",
+            "oracle_layer": "REQ",
+            "oracle_ref": "AC-2",
+            "selector": "a[href=\"/forgot-password\"]",
+            "expected": true
+          }
+        ]
+      },
+      {
+        "key": "forgot_password_redirect",
+        "driver": "playwright",
+        "depends_on": [
+          "forgot_entry"
+        ],
+        "input": {
+          "url": "http://127.0.0.1:28080/login",
+          "actions": [
+            {
+              "type": "wait_visible",
+              "selector": "a[href=\"/forgot-password\"]",
+              "timeout_ms": 45000
+            },
+            {
+              "type": "click",
+              "selector": "a[href=\"/forgot-password\"]",
+              "expected": {
+                "url_contains": "/forgot-password"
+              },
+              "timeout_ms": 45000
+            },
+            {
+              "type": "wait_visible",
+              "selector": "text=找回密码",
+              "expected": {
+                "visible": true
+              },
+              "timeout_ms": 45000
+            }
+          ],
+          "timeout_ms": 45000
+        },
+        "assertions": [
+          {
+            "assertion_key": "forgot_password_url_contains",
+            "type": "url_contains",
+            "oracle_layer": "REQ",
+            "oracle_ref": "AC-2",
+            "expected": "/forgot-password"
+          },
+          {
+            "assertion_key": "forgot_password_page_text_visible",
+            "type": "locator_visible",
+            "oracle_layer": "REQ",
+            "oracle_ref": "AC-2",
+            "selector": "text=找回密码",
+            "expected": true
+          }
+        ]
+      },
+      {
+        "key": "sys_project_exists",
+        "driver": "db",
+        "depends_on": [],
+        "input": {
+          "query_key": "sys_project_exists",
+          "allowed_tables": [
+            "sys_project"
+          ],
+          "query_registry": {
+            "sys_project_exists": {
+              "sql": "SELECT 1 FROM sys_project LIMIT 1",
+              "allowed_tables": [
+                "sys_project"
+              ]
+            }
+          }
+        },
+        "assertions": [
+          {
+            "assertion_key": "sys_project_at_least_one",
+            "type": "db_row_exists",
+            "oracle_layer": "REQ",
+            "oracle_ref": "AC-3",
+            "expected": true
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "from": "forgot_entry",
+        "to": "forgot_password_redirect"
+      }
+    ],
+    "run_policy": {
+      "max_parallel_nodes": 3,
+      "fail_fast": false,
+      "mode": "parallel"
+    }
+  },
+  "source": "A3 real provider + environment binding"
+}

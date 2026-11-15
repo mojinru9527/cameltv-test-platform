@@ -1,0 +1,148 @@
+{
+  "plan": {
+    "workflow": {
+      "schema_version": "1.0",
+      "scenario_key": "test-health-forgot-db",
+      "nodes": [
+        {
+          "key": "health_check",
+          "driver": "http",
+          "depends_on": [],
+          "input": {
+            "url": "/api/v1/open/health",
+            "method": "GET",
+            "timeout_ms": 10000
+          },
+          "assertions": [
+            {
+              "assertion_key": "health_http_status_200",
+              "type": "http_status",
+              "oracle_layer": "REQ",
+              "oracle_ref": "AC-1",
+              "expected": 200
+            },
+            {
+              "assertion_key": "health_data_status_ok",
+              "type": "jsonpath",
+              "oracle_layer": "REQ",
+              "oracle_ref": "AC-1",
+              "path": "$.data.status",
+              "expected": "ok"
+            }
+          ]
+        },
+        {
+          "key": "forgot_entry",
+          "driver": "playwright",
+          "depends_on": [],
+          "input": {
+            "url": "/login",
+            "actions": [
+              {
+                "type": "wait_for",
+                "selector": "text=忘记密码",
+                "expected": {
+                  "visible": true
+                }
+              }
+            ]
+          },
+          "assertions": [
+            {
+              "assertion_key": "login_forgot_password_entry_visible",
+              "type": "locator_visible",
+              "oracle_layer": "REQ",
+              "oracle_ref": "AC-2",
+              "selector": "text=忘记密码",
+              "expected": true
+            }
+          ]
+        },
+        {
+          "key": "forgot_password_redirect",
+          "driver": "playwright",
+          "depends_on": [
+            "forgot_entry"
+          ],
+          "input": {
+            "url": "/login",
+            "actions": [
+              {
+                "type": "click",
+                "selector": "text=忘记密码",
+                "expected": {
+                  "url_contains": "/forgot-password"
+                }
+              },
+              {
+                "type": "wait_for",
+                "selector": "text=找回密码",
+                "expected": {
+                  "visible": true
+                }
+              }
+            ]
+          },
+          "assertions": [
+            {
+              "assertion_key": "forgot_password_url_contains",
+              "type": "url_contains",
+              "oracle_layer": "REQ",
+              "oracle_ref": "AC-2",
+              "expected": "/forgot-password"
+            },
+            {
+              "assertion_key": "forgot_password_page_text_visible",
+              "type": "locator_visible",
+              "oracle_layer": "REQ",
+              "oracle_ref": "AC-2",
+              "selector": "text=找回密码",
+              "expected": true
+            }
+          ]
+        },
+        {
+          "key": "sys_project_exists",
+          "driver": "db",
+          "depends_on": [],
+          "input": {
+            "query_key": "sys_project_exists",
+            "allowed_tables": [
+              "sys_project"
+            ],
+            "query_registry": {
+              "sys_project_exists": {
+                "sql": "SELECT 1 FROM sys_project LIMIT 1",
+                "allowed_tables": [
+                  "sys_project"
+                ]
+              }
+            }
+          },
+          "assertions": [
+            {
+              "assertion_key": "sys_project_at_least_one",
+              "type": "db_row_exists",
+              "oracle_layer": "REQ",
+              "oracle_ref": "AC-3",
+              "expected": true
+            }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": "forgot_entry",
+          "to": "forgot_password_redirect"
+        }
+      ],
+      "run_policy": {
+        "max_parallel": 3,
+        "fail_fast": false
+      }
+    },
+    "rationale": "按三条验收标准拆分可执行节点：health_check 直接校验 HTTP 200 与 JSONPath $.data.status=ok；forgot_entry 校验登录页存在“忘记密码”入口，forgot_password_redirect 依赖前序节点执行点击并断言跳转 URL 与“找回密码”文案；sys_project_exists 使用受限查询 SELECT 1 FROM sys_project LIMIT 1 并通过 db_row_exists 断言至少存在 1 条项目记录。所有 URL 使用 Test 环境运行时基址解析，节点依赖无环，未使用非祖先变量。",
+    "approval_required": true,
+    "approval_status": "pending"
+  }
+}
