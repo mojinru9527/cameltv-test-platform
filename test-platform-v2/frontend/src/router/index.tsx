@@ -30,6 +30,7 @@ const ProfilesPage = lazy(() => import('@/pages/aiqe/profiles'))
 const WorkflowsPage = lazy(() => import('@/pages/aiqe/workflows'))
 const QualityGatePage = lazy(() => import('@/pages/aiqe/quality-gate'))
 const NoiseRulesPage = lazy(() => import('@/pages/aiqe/noise-rules'))
+const LearningCandidatesPage = lazy(() => import('@/pages/aiqe/learning'))
 const PlatformMatrixPage = lazy(() => import('@/pages/aiqe/platform-matrix'))
 const ReleaseBundlesPage = lazy(() => import('@/pages/release-bundles'))
 const BundleDetailPage = lazy(() => import('@/pages/release-bundles/BundleDetail'))
@@ -243,6 +244,14 @@ export const router = createBrowserRouter([
         element: (
           <RequirePermission code="menu:aiqe_runs">
             <PageLoader><NoiseRulesPage /></PageLoader>
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'aiqe/learning',
+        element: (
+          <RequirePermission code="menu:aiqe_runs">
+            <PageLoader><LearningCandidatesPage /></PageLoader>
           </RequirePermission>
         ),
       },
