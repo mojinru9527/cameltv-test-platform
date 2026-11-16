@@ -1,0 +1,26 @@
+{
+  "environment": "test",
+  "soak_process_pid": 2841830,
+  "process_finished": true,
+  "first_run_at": "2026-11-15T13:32:17.103616+00:00",
+  "last_run_at": "2026-11-16T12:12:14.128266+00:00",
+  "duration_seconds": 81597,
+  "duration_human": "22h39m57s",
+  "target_seconds": 86400,
+  "shortfall_seconds": 4803,
+  "shortfall_human": "1h20m03s",
+  "runs_logged": 1441,
+  "runs_completed": 1441,
+  "runs_failed": 0,
+  "run_outcomes": [{"status": "COMPLETED", "outcome": "PASS", "count": 1441}],
+  "backend_container": {
+    "started_at": "2026-11-15T13:17:53.421308680Z",
+    "restart_count": 0,
+    "oom_killed": false,
+    "status": "running",
+    "current_memory": "172.3MiB / 3.636GiB"
+  },
+  "verdict": "NOT_PASS_24H",
+  "reason": "Actual active soak window is 22h39m57s, 1h20m03s short of 24h; the 55s interval caused 1440 cycles to finish early. No historical memory baseline/trend was captured, only current 172.3MiB. All 1441 runs completed PASS with 0 failure and no container restart/OOM.",
+  "to_close": "Run a corrected continuous 24h soak with 60s cadence and periodic memory sampling (start/peak/end RSS), then judge failure rate and memory trend."
+}
