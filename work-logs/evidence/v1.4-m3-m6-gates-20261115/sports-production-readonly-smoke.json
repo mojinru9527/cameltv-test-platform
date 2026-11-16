@@ -1,0 +1,13 @@
+{
+  "environment": "production",
+  "authorized": "user-authorized read-only smoke",
+  "executed_at": "2026-11-16T18:00:00+08:00",
+  "targets": [
+    {"url": "https://www.camel1.tv/", "http_status": 403, "bytes": 170, "result": "BLOCKED_BY_EDGE_WAF", "note": "same 403 from production server and local executor"},
+    {"url": "https://api.cameltv.live/", "http_status": 200, "app_code": 404, "body": "{\"msg\":\"NOT FOUND\",\"code\":404}", "result": "NO_PUBLIC_ROUTE"},
+    {"url": "https://api.cameltv.live/health", "http_status": 200, "app_code": 404, "result": "NO_PUBLIC_ROUTE"},
+    {"url": "https://api.cameltv.live/api/v1/open/health", "http_status": 200, "app_code": 404, "result": "NO_PUBLIC_ROUTE"}
+  ],
+  "writes": false,
+  "conclusion": "Sports production read-only smoke executed; web is WAF-blocked and no usable public read-only API route/token is available. Needs WAF allowlist or a known read-only endpoint/token."
+}
