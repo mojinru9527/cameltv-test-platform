@@ -1,0 +1,15 @@
+{
+  "candidate_id": "63bb1797-cc2f-4e52-adbd-0bab71324e16",
+  "pattern": "human-review-1794753824",
+  "status": "approved",
+  "benchmark": {"false_positive_rate": 0.1, "sample_size": 50},
+  "candidate_updated_at": "2026-11-16T01:39:46.642645+00:00",
+  "reviewer": {"id": 4, "username": "reviewer", "last_login_at": "2026-11-16T01:28:26.823306+00:00"},
+  "observed_at": "2026-11-16T18:05:00+08:00",
+  "method": "human UI click on /aiqe/learning via SSH local port 18000; not an Agent/service-layer call",
+  "screenshots": [
+    "work-logs/evidence/v1.4-m3-m6-gates-20261115/learning-review-page.png",
+    "work-logs/evidence/v1.4-m3-m6-gates-20261115/learning-review-approved.png"
+  ],
+  "note": "Candidate was created and benchmarked by the M5 gate runner, then approved by the reviewer account through the Test UI. No AIQE service call approved this candidate after creation."
+}
