@@ -1,0 +1,25 @@
+{
+  "host": "i802e383.ala.asia-southeast1.emqxsl.com",
+  "port": 8883,
+  "tls": true,
+  "username": "aiqe-publisher",
+  "topic": "camel/aiqe/m6/telemetry",
+  "connected": true,
+  "connect_reason": "Success",
+  "subscribed": true,
+  "subscribe_reason": "[ReasonCode(Suback, 'Granted QoS 1')]",
+  "published": {
+    "topic": "camel/aiqe/m6/telemetry",
+    "payload": "{\"op\":\"telemetry\",\"value\":42,\"unit\":\"rpm\",\"source\":\"aiqe-m6\"}",
+    "qos": 1
+  },
+  "messages_received": 1,
+  "messages": [
+    {
+      "topic": "camel/aiqe/m6/telemetry",
+      "payload": "{\"op\":\"telemetry\",\"value\":42,\"unit\":\"rpm\",\"source\":\"aiqe-m6\"}",
+      "qos": 1
+    }
+  ],
+  "mode": "publish+subscribe"
+}
