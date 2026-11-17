@@ -1,0 +1,14 @@
+{
+  "host": "i802e383.ala.asia-southeast1.emqxsl.com",
+  "port": 8883,
+  "tls": true,
+  "username": "aiqe-tester",
+  "topic": "camel/aiqe/m6/telemetry",
+  "connected": true,
+  "connect_reason": "Success",
+  "subscribed": true,
+  "subscribe_reason": "[ReasonCode(Suback, 'Granted QoS 1')]",
+  "messages_received": 0,
+  "messages": [],
+  "mode": "read-only (no publish)"
+}
