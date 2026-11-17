@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "host": "broker.emqx.io",
+  "port": 1883,
+  "topic": "camel/aiqe/m6/4cee5fe569",
+  "subscribed": true,
+  "published": {
+    "op": "telemetry",
+    "value": 42,
+    "unit": "rpm"
+  },
+  "received": [
+    {
+      "topic": "camel/aiqe/m6/4cee5fe569",
+      "payload": "{\"op\": \"telemetry\", \"value\": 42, \"unit\": \"rpm\"}",
+      "qos": 1
+    }
+  ],
+  "elapsed_s": 1.25,
+  "note": "public EMQX broker, not private cloud account"
+}
