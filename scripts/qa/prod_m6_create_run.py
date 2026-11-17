@@ -48,31 +48,34 @@ graph = {
         },
         {
             "key": "sports_ui",
-            "driver": "playwright",
+            "driver": "external_e2e",
             "depends_on": [],
             "input": {
-                "url": "https://www.camel1.tv/",
-                "timeout_ms": 45000,
-                "actions": [
-                    {
-                        "type": "click",
-                        "selector": "text=International Friendly",
-                        "timeout_ms": 45000,
-                    },
-                    {
-                        "type": "wait_visible",
-                        "selector": "text=International Friendly 2026",
-                        "timeout_ms": 45000,
-                    },
+                "command": [
+                    "python",
+                    "scripts/qa/sports_real_mouse_smoke.py",
+                    "--url",
+                    "https://www.camel1.tv/",
+                    "--x",
+                    "230",
+                    "--y",
+                    "340",
+                    "--out",
+                    OUT + r"\sports-ui",
                 ],
+                "version": "prod-m6-ui-v1",
+                "cwd": ROOT,
+                "timeout_s": 180,
+                "artifacts_dir": OUT + r"\sports-ui",
             },
             "assertions": [
                 {
-                    "assertion_key": "sports_ui_match_page",
-                    "type": "text_contains",
+                    "assertion_key": "sports_ui_result",
+                    "type": "jsonpath",
                     "oracle_layer": "STD",
                     "oracle_ref": "M6-SPORTS-UI",
-                    "expected": "International Friendly 2026",
+                    "path": "$.result",
+                    "expected": "PASS",
                 }
             ],
         },

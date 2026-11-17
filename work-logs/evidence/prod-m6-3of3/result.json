@@ -1,0 +1,19 @@
+{
+  "result": "PASS",
+  "navigated": true,
+  "before": {
+    "status": 200,
+    "url": "https://www.camel1.tv/",
+    "title": "Watch Free Football Live Streaming, Score & Fixtures - Camel Live"
+  },
+  "after": {
+    "url": "https://www.camel1.tv/",
+    "title": "CAF Africa Cup of Nations Live Stream, Scores, Stats & News - Camel Live",
+    "body": "Matches Team Competitions News\n1\nREGISTER\nCamel Live\nCAF Africa Cup of Nations 2027 - Live Streaming, Standings, Score, Schedule, Fixtures & Results Today\n2027\n\nCAF Africa Cup of Nations\n\n2026/03/25\n2028/01/18\nRounds 4/6\nStandings\nQualifier Groups\nA Group\nPlayed\nW/D/L\nGoals\nPoints\nQualified\n1\nMorocco\n3\n3/0/0\n9/1\n9\n2\nGabon\n4\n2/0/2\n5/4\n6\n3\nLesotho\n4\n1/0/3\n3/7\n3\n4\nNiger\n3\n1/0/2\n3/8\n3\nB Group\nPlayed\nW/D/L\nGoals\nPoints\nQualified\n1\nAngola\n4\n3/1/0\n6/1\n10\n2\nEgypt\n4\n2/2/0\n10/0\n8\n3\nMalawi\n4\n1/1/2\n3/9\n4\n4\nSouth Sudan\n4\n0/0/4\n1/10\n0\nC Group\nPlayed\nW/D/L\nGoals\nPoints\nQualified\n1\nCote d'Ivoire\n3\n3/0/0\n6/1\n9\n2\nGambia\n3\n2/0/1\n7/5\n6\n3\nGhana\n4\n2/0/2\n5/6\n6\n4\nSomalia\n4\n0/0/4\n1/7\n0\nD Group\nPlayed\nW/D/L\nGoals\nPoints\nQualified\n1\nGuinea\n4\n3/0/1\n7/4\n9\n2\nSouth Africa\n3\n2/1/0\n9/3\n7\n3\nKenya\n3\n0/2/1\n3/4\n2\n4\nEritrea\n4\n0/1/3\n3/11\n1\nE Group\nPlayed\nW/D/L\nGoals\nPoints\nQualified\n1\nDemocratic Republic of the Congo\n3\n3/0/0\n7/2\n9\n2\nZimbabwe\n4\n2/1/1\n7/4\n7\n3\nEquatorial Guinea\n4\n1/1/2\n1/5\n4\n4\nSierra Leone\n3\n0/0/3\n3/7\n0\nF Grou"
+  },
+  "mouse": {
+    "x": 230,
+    "y": 340
+  },
+  "expected_title": "Camel Live"
+}

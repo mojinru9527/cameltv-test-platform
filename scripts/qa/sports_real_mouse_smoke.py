@@ -19,7 +19,7 @@ def main() -> int:
     parser.add_argument("--x", type=int, required=True)
     parser.add_argument("--y", type=int, required=True)
     parser.add_argument("--out", required=True)
-    parser.add_argument("--expected-title", default="International Friendly")
+    parser.add_argument("--expected-title", default="Camel Live")
     args = parser.parse_args()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -40,9 +40,11 @@ def main() -> int:
             "body": page.locator("body").inner_text()[:1000],
         }
         page.screenshot(path=str(out / "after.png"))
-        ok = args.expected_title.lower() in after["title"].lower()
+        navigated = after["title"] != before["title"]
+        ok = args.expected_title.lower() in after["title"].lower() and navigated
         result = {
             "result": "PASS" if ok else "FAIL",
+            "navigated": navigated,
             "before": before,
             "after": after,
             "mouse": {"x": args.x, "y": args.y},

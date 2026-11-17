@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "host": "i802e383.ala.asia-southeast1.emqxsl.com",
+  "port": 8883,
+  "topic": "camel/aiqe/m6/telemetry",
+  "published": "{\"op\": \"telemetry\", \"value\": 42, \"unit\": \"rpm\", \"source\": \"aiqe-android-e2e\"}",
+  "messages_received": 1,
+  "messages": [
+    {
+      "topic": "camel/aiqe/m6/telemetry",
+      "payload": "{\"op\": \"telemetry\", \"value\": 42, \"unit\": \"rpm\", \"source\": \"aiqe-android-e2e\"}",
+      "qos": 1
+    }
+  ]
+}
