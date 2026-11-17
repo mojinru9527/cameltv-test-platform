@@ -46,6 +46,8 @@ def execute_node(
         return _execute_db(spec_input, db_engine=db_engine)
     if driver in {"appium", "android", "mobile"}:
         return _execute_appium(spec_input)
+    if driver in {"external_e2e", "e2e"}:
+        return _execute_external_e2e(spec_input)
     return NodeExecution(
         status="BLOCKED",
         error_class="UNSUPPORTED_DRIVER",
@@ -358,3 +360,90 @@ def _execute_appium(spec_input: dict[str, Any]) -> NodeExecution:
             detail={**detail, "reason": f"{type(exc).__name__}: {exc}"},
             data={"error": f"{type(exc).__name__}: {exc}"},
         )
+
+def _execute_external_e2e(spec_input: dict[str, Any]) -> NodeExecution:
+    """Run a pinned external E2E command (TesterArmy contract).
+
+    Used for cross-tool chains such as Android Appium + MQTT that need a
+    workstation/device runner rather than the API process.
+    """
+    from pathlib import Path
+
+    from app.aiqe.drivers.external_e2e_driver import TesterArmyAdapter
+
+    command = spec_input.get("command")
+    version = str(spec_input.get("version") or "").strip()
+    if not isinstance(command, list) or not command or not version:
+        return NodeExecution(
+            status="FAILED",
+            error_class="INPUT_INVALID",
+            detail={"reason": "external_e2e 需要非空 command 数组和固定 version"},
+            data={"result": "FAIL"},
+        )
+    artifacts_dir = spec_input.get("artifacts_dir")
+    adapter = TesterArmyAdapter(
+        [str(part) for part in command],
+        version=version,
+        cwd=spec_input.get("cwd"),
+        env={
+            str(key): str(value)
+            for key, value in (spec_input.get("env") or {}).items()
+        },
+        timeout_s=float(spec_input.get("timeout_s") or 300),
+        artifacts_dir=artifacts_dir,
+    )
+    try:
+        result = adapter.run(replay=bool(spec_input.get("replay", False)))
+    except Exception as exc:  # noqa: BLE001 - adapter errors are evidence
+        return NodeExecution(
+            status="ERROR",
+            error_class="EXTERNAL_E2E_ERROR",
+            detail={"reason": f"{type(exc).__name__}: {exc}"},
+            data={"result": "FAIL"},
+        )
+    evidence: list[EvidenceFile] = []
+    artifact_rows: list[dict[str, Any]] = []
+    for artifact in result.artifacts:
+        try:
+            content = Path(artifact.path).read_bytes()
+        except OSError:
+            content = b""
+        evidence.append(
+            EvidenceFile(
+                name=artifact.name,
+                artifact_type=artifact.artifact_type,
+                content=content,
+                sha256=artifact.sha256,
+                metadata={"source": "external_e2e"},
+            )
+        )
+        artifact_rows.append(
+            {
+                "name": artifact.name,
+                "artifact_type": artifact.artifact_type,
+                "sha256": artifact.sha256,
+                "size_bytes": artifact.size_bytes,
+            }
+        )
+    status = "PASSED" if result.exit_code == 0 else "FAILED"
+    return NodeExecution(
+        status=status,
+        error_class="" if status == "PASSED" else "EXTERNAL_E2E_FAILED",
+        detail={
+            "exit_code": result.exit_code,
+            "duration_ms": result.duration_ms,
+            "replay_exit_code": result.replay_exit_code,
+        },
+        data={
+            "result": "PASS" if status == "PASSED" else "FAIL",
+            "json": {
+                "result": "PASS" if status == "PASSED" else "FAIL",
+                "exit_code": result.exit_code,
+            },
+            "exit_code": result.exit_code,
+            "stdout": result.stdout[-4000:],
+            "stderr": result.stderr[-4000:],
+            "artifacts": artifact_rows,
+        },
+        evidence=evidence,
+    )

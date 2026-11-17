@@ -1,0 +1,8 @@
+{
+  "backend_image": "sha256:2cd901f492816553e042fb54b5d5614220553321997434d0f519cca8fe5cdf7f",
+  "frontend_image": "sha256:0206543c497a77755c4009ceca195376cf103901f487bce3dcbd39e54d9d2e2f",
+  "aiqe_prod_run_create_enabled": true,
+  "ui_status": 200,
+  "health_status": 200,
+  "note": "Latest frontend deployed; production run creation explicitly enabled for the authorized Sports/Android/MQTT integrated run."
+}
