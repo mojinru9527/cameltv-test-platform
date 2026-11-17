@@ -394,7 +394,7 @@ def _execute_external_e2e(spec_input: dict[str, Any]) -> NodeExecution:
     )
     try:
         result = adapter.run(replay=bool(spec_input.get("replay", False)))
-    except Exception as exc:  # noqa: BLE001 - adapter errors are evidence
+    except Exception as exc:
         return NodeExecution(
             status="ERROR",
             error_class="EXTERNAL_E2E_ERROR",
