@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-17T18:12:55.780Z",
+  "generated_at": "2026-11-17T18:17:00.000Z",
   "policy": "full npm audit ratchet; production audit must still be zero",
   "counts": {
     "info": 0,
     "low": 2,
     "moderate": 14,
-    "high": 30,
+    "high": 31,
     "critical": 0,
-    "total": 46
+    "total": 47
   },
   "advisories": [
     "@eslint/config-array|via:minimatch",
@@ -66,6 +66,7 @@
     "qs|1243687",
     "readdirp|via:picomatch",
     "sucrase|via:tinyglobby",
+    "tailwindcss-animate|via:tailwindcss",
     "tailwindcss|via:chokidar",
     "tailwindcss|via:fast-glob",
     "tailwindcss|via:micromatch",
