@@ -19,6 +19,7 @@ def main() -> int:
     parser.add_argument("--x", type=int, required=True)
     parser.add_argument("--y", type=int, required=True)
     parser.add_argument("--out", required=True)
+    parser.add_argument("--expected-title", default="International Friendly")
     args = parser.parse_args()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -39,17 +40,21 @@ def main() -> int:
             "body": page.locator("body").inner_text()[:1000],
         }
         page.screenshot(path=str(out / "after.png"))
+        ok = args.expected_title.lower() in after["title"].lower()
+        result = {
+            "result": "PASS" if ok else "FAIL",
+            "before": before,
+            "after": after,
+            "mouse": {"x": args.x, "y": args.y},
+            "expected_title": args.expected_title,
+        }
         (out / "result.json").write_text(
-            json.dumps(
-                {"before": before, "after": after, "mouse": {"x": args.x, "y": args.y}},
-                ensure_ascii=False,
-                indent=2,
-            ),
+            json.dumps(result, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-        print(json.dumps({"ok": True, "before": before, "after_title": after["title"]}, ensure_ascii=False))
+        print(json.dumps({"result": result["result"], "before": before, "after_title": after["title"]}, ensure_ascii=False))
         browser.close()
-    return 0
+    return 0 if result["result"] == "PASS" else 1
 
 
 if __name__ == "__main__":

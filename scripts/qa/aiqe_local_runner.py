@@ -27,7 +27,7 @@ REPO_BACKEND = Path(__file__).resolve().parents[2] / "test-platform-v2" / "backe
 if str(REPO_BACKEND) not in sys.path:
     sys.path.insert(0, str(REPO_BACKEND))
 
-CAPABILITIES = ["api", "aiqe:http", "aiqe:playwright", "aiqe:appium"]
+CAPABILITIES = ["api", "aiqe:http", "aiqe:playwright", "aiqe:appium", "aiqe:external_e2e"]
 VAR_RE = re.compile(r"\$\{([^{}]+)\}")
 
 
