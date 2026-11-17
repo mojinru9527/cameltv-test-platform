@@ -1,0 +1,32 @@
+{
+  "device": {
+    "udid": "9f0564ba",
+    "model": "ONEPLUS A6010",
+    "android": "11",
+    "package": "com.camelrn",
+    "version": "3.8.0.30",
+    "activity": "com.camelrn/.MainActivity"
+  },
+  "appium": {
+    "server": "2.11.3",
+    "driver": "uiautomator2 4.2.0",
+    "session": "ecd98a0e-4e50-4b36-9766-8847c108849d",
+    "current_activity": "io.dcloud.PandoraEntryActivity"
+  },
+  "interaction": {
+    "type": "real Appium W3C touch pointer",
+    "tap": {
+      "x": 541,
+      "y": 1615
+    },
+    "result": "PASS",
+    "after_screen": "创建我的娃娃 modal"
+  },
+  "evidence": [
+    "android-before.png",
+    "android-after-tap.png",
+    "android-page.xml",
+    "android-after-tap.xml"
+  ],
+  "note": "Connected device app package com.camelrn (UI brand Future Wayu/未来娃屿), not the CamelTv Sports business app. Infrastructure PASS; business-target identity needs confirmation."
+}
