@@ -28,5 +28,5 @@
     "android-page.xml",
     "android-after-tap.xml"
   ],
-  "note": "Connected device app package com.camelrn (UI brand Future Wayu/未来娃屿), not the CamelTv Sports business app. Infrastructure PASS; business-target identity needs confirmation."
+  "note": "User confirmed com.camelrn is the CamelTv Sports business App. The captured screen shows a Future Wayu module inside the app; package/device identity is accepted. Previous note claiming it was not CamelTv was wrong and is corrected here."
 }
