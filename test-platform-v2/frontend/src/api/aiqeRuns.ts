@@ -1,5 +1,11 @@
 import client from './client'
-import type { AiqeRun, AiqeRunArtifact, AiqeRunEvent, AiqeRunPage } from '@/types/aiqe'
+import type {
+  AiqeRun,
+  AiqeRunArtifact,
+  AiqeRunAssertion,
+  AiqeRunEvent,
+  AiqeRunPage,
+} from '@/types/aiqe'
 
 interface RunDetail {
   run: AiqeRun
@@ -32,6 +38,14 @@ export async function listRunEvents(
 export async function listRunArtifacts(runId: string): Promise<AiqeRunArtifact[]> {
   const data = (await client.get(`/aiqe/runs/${runId}/artifacts`)) as unknown as {
     items: AiqeRunArtifact[]
+  }
+  return data.items
+}
+
+export async function listRunAssertions(runId: string): Promise<AiqeRunAssertion[]> {
+  const data = (await client.get(`/aiqe/runs/${runId}/assertions`)) as unknown as {
+    items: AiqeRunAssertion[]
+    total: number
   }
   return data.items
 }

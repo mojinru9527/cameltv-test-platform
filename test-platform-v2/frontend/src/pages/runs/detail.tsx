@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
-import { getAiqeRun } from '@/api/aiqeRuns'
+import { getAiqeRun, listRunAssertions } from '@/api/aiqeRuns'
 import { Badge } from '@/ui'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import type { AiqeRun, AiqeRunArtifact } from '@/types/aiqe'
+import type { AiqeRun, AiqeRunArtifact, AiqeRunAssertion } from '@/types/aiqe'
 import ConsoleTabs from '@/pages/aiqe/ConsoleTabs'
+import EvidencePanel from './EvidencePanel'
 import { useRunEvents } from './useRunEvents'
 
 export default function RunDetailPage() {
@@ -13,6 +14,7 @@ export default function RunDetailPage() {
 
   const [run, setRun] = useState<AiqeRun | null>(null)
   const [artifacts, setArtifacts] = useState<AiqeRunArtifact[]>([])
+  const [assertions, setAssertions] = useState<AiqeRunAssertion[]>([])
   const [error, setError] = useState('')
   const { events, connection } = useRunEvents(runId)
 
@@ -24,6 +26,13 @@ export default function RunDetailPage() {
         if (!alive) return
         setRun(data.run)
         setArtifacts(data.artifacts)
+        listRunAssertions(runId)
+          .then((rows) => {
+            if (alive) setAssertions(rows)
+          })
+          .catch(() => {
+            if (alive) setAssertions([])
+          })
       })
       .catch((err: unknown) => {
         if (alive) setError(err instanceof Error ? err.message : '加载失败')
@@ -97,31 +106,43 @@ export default function RunDetailPage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-lg font-semibold">Artifacts（{artifacts.length}）</h2>
+        <h2 className="text-lg font-semibold">断言结果（{assertions.length}）</h2>
         <div className="overflow-hidden rounded-lg border">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-left">
               <tr>
-                <th className="px-3 py-2">类型</th>
-                <th className="px-3 py-2">大小</th>
-                <th className="px-3 py-2">脱敏</th>
-                <th className="px-3 py-2">sha256</th>
+                <th className="px-3 py-2">节点</th>
+                <th className="px-3 py-2">断言</th>
+                <th className="px-3 py-2">必需</th>
+                <th className="px-3 py-2">状态</th>
+                <th className="px-3 py-2">期望 → 实际</th>
               </tr>
             </thead>
             <tbody>
-              {artifacts.length === 0 ? (
+              {assertions.length === 0 ? (
                 <tr>
-                  <td className="px-3 py-6 text-center text-muted-foreground" colSpan={4}>
-                    暂无 Artifact
+                  <td className="px-3 py-6 text-center text-muted-foreground" colSpan={5}>
+                    暂无断言结果
                   </td>
                 </tr>
               ) : (
-                artifacts.map((artifact) => (
-                  <tr key={artifact.id} className="border-t">
-                    <td className="px-3 py-2">{artifact.artifact_type}</td>
-                    <td className="px-3 py-2">{artifact.size_bytes} B</td>
-                    <td className="px-3 py-2">{artifact.redaction_status}</td>
-                    <td className="px-3 py-2 font-mono text-xs">{artifact.sha256.slice(0, 16)}…</td>
+                assertions.map((assertion) => (
+                  <tr key={assertion.id} className="border-t">
+                    <td className="px-3 py-2 font-mono text-xs">{assertion.node_key}</td>
+                    <td className="px-3 py-2">{assertion.assertion_key}</td>
+                    <td className="px-3 py-2">{assertion.required ? '是' : '否'}</td>
+                    <td className="px-3 py-2">
+                      {assertion.status === 'PASS' ? (
+                        <Badge tone="success">PASS</Badge>
+                      ) : assertion.status === 'FAIL' ? (
+                        <Badge tone="danger">FAIL</Badge>
+                      ) : (
+                        <Badge tone="warning">{assertion.status}</Badge>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 font-mono text-xs">
+                      {JSON.stringify(assertion.expected)} → {JSON.stringify(assertion.actual)}
+                    </td>
                   </tr>
                 ))
               )}
@@ -129,6 +150,8 @@ export default function RunDetailPage() {
           </table>
         </div>
       </section>
+
+      <EvidencePanel runId={runId ?? ''} artifacts={artifacts} />
     </div>
   )
 }
