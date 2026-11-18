@@ -33,6 +33,8 @@ const NoiseRulesPage = lazy(() => import('@/pages/aiqe/noise-rules'))
 const LearningCandidatesPage = lazy(() => import('@/pages/aiqe/learning'))
 const PlatformMatrixPage = lazy(() => import('@/pages/aiqe/platform-matrix'))
 const ContractsPage = lazy(() => import('@/pages/aiqe/contracts'))
+const ImpactPage = lazy(() => import('@/pages/aiqe/impact'))
+const BenchmarksPage = lazy(() => import('@/pages/aiqe/benchmarks'))
 const ReleaseBundlesPage = lazy(() => import('@/pages/release-bundles'))
 const BundleDetailPage = lazy(() => import('@/pages/release-bundles/BundleDetail'))
 const VersionPanoramaPage = lazy(() => import('@/pages/release-bundles/VersionPanorama'))
@@ -254,6 +256,30 @@ export const router = createBrowserRouter([
         element: (
           <RequirePermission code="menu:aiqe_runs">
             <PageLoader><ContractsPage /></PageLoader>
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'aiqe/impact',
+        element: (
+          <RequirePermission code="menu:aiqe_runs">
+            <PageLoader><ImpactPage /></PageLoader>
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'aiqe/benchmarks',
+        element: (
+          <RequirePermission code="menu:aiqe_runs">
+            <PageLoader><BenchmarksPage /></PageLoader>
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'aiqe/learning',
+        element: (
+          <RequirePermission code="menu:aiqe_runs">
+            <PageLoader><LearningCandidatesPage /></PageLoader>
           </RequirePermission>
         ),
       },
