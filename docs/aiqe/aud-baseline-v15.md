@@ -10,9 +10,9 @@
 | 批次 | AUD | 现状 | 本轮是否已整改 |
 |---|---|---|---|
 | 第一批 | AUD-001 SSRF/Redirect/DNS | 缺失（HTTP Driver 自动跟随跳转、无目标策略） | ✅ 已交付 |
-| 第一批 | AUD-002 DB Query Registry | 部分（只读 SQL 校验存在，无登记/项目注入/超时） | ⬜ |
-| 第一批 | AUD-003 Secret 全链路 | 部分（headers 脱敏，输出/持久化无分类器） | ⬜ |
-| 第一批 | AUD-004 实验→真 Run | **违规**（`uuid4()` 伪造 verification_run_id + 直接 completed） | ⬜ |
+| 第一批 | AUD-002 DB Query Registry | 部分（只读 SQL 校验存在，无登记/项目注入/超时） | ✅ 已交付 |
+| 第一批 | AUD-003 Secret 全链路 | 部分（headers 脱敏，输出/持久化无分类器） | ✅ 已交付 |
+| 第一批 | AUD-004 实验→真 Run | **违规**（`uuid4()` 伪造 verification_run_id + 直接 completed） | ✅ 已交付 |
 | 第一批 | AUD-005 Capability/Preflight | 部分（boolean available，无 VERIFIED 状态、无 Preflight） | ⬜ |
 | 第一批 | AUD-006 状态一致性/恢复 | 部分（lease/fencing 无、事件无生产者、Reconciler 无） | ⬜ |
 | 第二批 | AUD-007 Assertion Engine | **缺失**（断言写死在 node_executor，`run_assertion_results` 零写入） | ⬜ |
@@ -74,32 +74,68 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 
 **未覆盖（后续）**：Runner 侧 egress 防火墙与容器网络 deny-by-default 属于 DevOps 交付；`proxy_profile_id` 字段尚未接入（当前策略强制直连）。
 
+## 2.1 AUD-002（已交付）
+
+**问题**：`DbReadonlyDriver` 只有应用层 SQL 关键字过滤；Workflow 可传任意 SQL、任意连接、任意表；无 `project_id` 注入、无行/时间限额、无结果脱敏。
+
+**交付**：
+
+| 文件 | 作用 |
+|---|---|
+| `app/aiqe/models/query_registry.py` + 迁移 `20261124_aud002_query_registry` | `aiqe_registered_queries`（project + query_key + version 唯一、statement/params/limits/schema/审批字段） |
+| `app/aiqe/services/query_registry.py` | `register_query`（只允许单条 SELECT/WITH；拒绝 DDL/DML/多语句/FOR UPDATE/INTO/系统目录/文件函数；必须含 `:project_id`；参数集合精确匹配）、`resolve_query`（按项目+key+version）、`DbReadonlyExecutor`（服务端注入 `project_id`、参数化绑定、`max_rows`、`max_execution_ms`、生产环境默认拒绝、连接只从 `AIQE_DB_READONLY_URLS` 解析）、结果摘要（query_hash / rows_digest / 脱敏参数）与敏感列脱敏 |
+| `app/aiqe/services/node_executor.py` | `db` driver 只接受 `query_key + params`；`sql/connection_url/allowed_tables/...` → `BLOCKED WORKFLOW_DB_OVERRIDE` |
+| `app/aiqe/drivers/db_readonly_driver.py` | PostgreSQL `SET LOCAL statement_timeout` |
+| `app/core/config.py` | `aiqe_db_readonly_urls` 服务端连接引用表 |
+
+**测试**：`tests/test_aiqe_aud002_query_registry.py`（28 条：登记负向 8 类语句、参数匹配、版本解析、跨项目拒绝、服务端注入、字符串注入不改结构、行数上限、生产环境拒绝、连接未配置、节点级覆盖拒绝）。
+
+## 2.2 AUD-003（已交付）
+
+**问题**：`job_consumer` 把 `result.detail`（含完整请求头/响应体）写入 `node_runs.output_ref` 与 `step_attempts.output_summary_json` → 登录节点的 `access_token` 明文落库；无共享分类器；无 Secret Handle。
+
+**交付**：
+
+| 文件 | 作用 |
+|---|---|
+| `app/aiqe/redaction.py` | 唯一 `SensitiveDataClassifier` / `Redactor`：字段名规则 + JWT/Bearer/PEM/AKIA/sk-/canary 值模式、JSON 感知文本脱敏、`assert_no_secret` fail closed |
+| `app/aiqe/services/dag_scheduler.py` | `complete_node` 写入前脱敏（含 `_finalize_attempt`） |
+| `app/aiqe/services/job_consumer.py` | `job.result_json` 脱敏 |
+| `app/aiqe/services/event_service.py` | `append_event` 载荷脱敏 |
+| `app/aiqe/models/secret_handle.py` + 迁移 `20261124_aud003_secret_handles` | `aiqe_secret_handles`（只存 `vault://` 引用 + scope + TTL + 撤销） |
+| `app/aiqe/services/secret_vault.py` | 进程内 Vault；`create/resolve/revoke` 强制 project+run+consumer 白名单+TTL+撤销 |
+| `app/aiqe/services/run_context.py` | `set_output_secure`（敏感输出→Handle 引用）、`resolve_inputs`（`${nodes.x.outputs.y}` / `${secret_handles.id}` 按 consumer scope 解析） |
+
+**测试**：`tests/test_aiqe_aud003_secret_protection.py`（44 条：字段名/值模式、递归脱敏、**端到端 canary**——真实本地 HTTP 服务返回 `CANARY_SECRET_*`，扫描 node_runs/step_attempts/execution_jobs/run_events 明文命中 0，且 `match_id/status` 仍可追溯；Handle 合法/跨 Run/跨 Project/非白名单/过期/撤销全路径）。
+
+## 2.3 AUD-004（已交付）
+
+**问题**：`triage_service.run_experiment` 用 `uuid4()` 伪造 `verification_run_id` 并直接 `status="completed"`；E1–E6 语义与 v1.5 §04 表格不符。
+
+**交付**：
+
+| 文件 | 作用 |
+|---|---|
+| `app/aiqe/services/triage_service.py` | `ExperimentSpec` 矩阵（E1 run_attempt / E2 fixture_namespace / E3 upstream_mode / E4 feature_flag / E5 worker_instance / E6 network_profile）、`validate_change` 绑定唯一变量、`create_experiment`（必须真实 baseline Run，停在 VALIDATED）、`launch_experiment`（统一路径创建真实 `TestRun` + 复制节点骨架 + 单变量快照 diff；多变量 → BLOCKED）、`sync_experiment_result`（仅 Run 终态后 COMPLETED；Run 丢失 → UNKNOWN）、`record_experiment_result`（仅 COMPLETED 可记 SUPPORTED/REFUTED/INCONCLUSIVE） |
+| `app/aiqe/models/triage.py` + 迁移 `20261124_aud004_experiment_run_binding` | 新增 project_id / baseline_run_id / changed_dimension / snapshot hash / diff / result / error_code / started_at / completed_at |
+
+**测试**：`tests/test_aiqe_triage_experiments.py`（20 条，**已重写**：删除断言"随机 UUID 即验证 Run"的旧用例，新增真实 Run 绑定、幂等、多变量 BLOCKED、终态收敛、Run 丢失 UNKNOWN）。
+
 ## 3. 第一批剩余缺口（按代码事实）
-
-### AUD-002 DB Read-only / Query Registry
-
-- 现状：`app/aiqe/drivers/db_readonly_driver.py` 只有 `assert_readonly`（单条 SELECT/WITH/EXPLAIN、禁写关键字）+ SQLite `PRAGMA query_only` / PG `SET TRANSACTION READ ONLY`。
-- 缺口：无 Query Registry（`query_key + version + statement + allowed_params + max_rows + max_execution_ms + result_schema`）；无 `project_id` 服务端注入；无 `statement_timeout`/`lock_timeout`；无 `query_hash`；无行/列脱敏；`node_executor` 未接入 db driver（`driver="db"` → `UNSUPPORTED_DRIVER`）。
-
-### AUD-003 Secret 全链路
-
-- 现状：`httpx_driver.redact_headers` / `safe_http.redact_headers` 只脱敏请求/响应头；`run_context.set_output` 拒绝写入 `${secrets.*}` 字面量。
-- 缺口：无 `SensitiveDataClassifier` / `EvidenceRedactor`；`job_consumer` 把 `result.detail`（含完整请求头与响应体）写入 `node_runs.output_ref` 与 `step_attempts.output_summary_json` —— 登录节点的 `access_token` 会明文落库；无 Secret Handle 表/服务；无 canary 扫描测试。
-
-### AUD-004 反事实实验
-
-- 现状：`app/aiqe/services/triage_service.py:73` `verification_run_id=verification_run_id or str(uuid.uuid4())`，`:75` `status="completed"`；无 `TestRun`/`NodeRun`/Assertion/Artifact 绑定。
-- 缺口：E1–E6 语义与 v1.5 §04 表格不一致（E2/E4 互换、E3 改 Profile、E4 重置数据）；`validate_change` 不校验变量名；无 `baseline_run_id`/snapshot/diff/verdict；无 Reconciler 收敛。
 
 ### AUD-005 Capability / Preflight
 
-- 现状：`NodeCapabilityManifest.available: bool`；`select_nodes` 无生产调用点。
-- 缺口：无 6 态 `capability_status`；无 Preflight（Run 创建/派发前不检查能力）；无签名 Manifest；无 VERIFIED 证据链。
+- 现状：`NodeCapabilityManifest.available: bool`；`select_nodes` 无生产调用点；无 Preflight。
+- 缺口：无 6 态 `capability_status`（REGISTERED/AVAILABLE/VERIFIED/DEGRADED/UNAVAILABLE/REVOKED）；无签名 Manifest；无"软件更新后 VERIFIED 降级"；无 Preflight（Run 创建/派发前检查在线、能力、版本、环境、凭据、资源锁）；缺能力时不是 Launch 前 BLOCKED，而是执行期才 `UNSUPPORTED_DRIVER`。
 
 ### AUD-006 状态一致性与恢复
 
-- 现状：`job_consumer` 原子认领（pending→running + lease_expires_at）；`dag_scheduler` 聚合节点→Run 状态。
-- 缺口：无 fencing token（旧 Worker 迟到结果不被拒）；`append_event` 无生产调用（Run 无事件时间线）；无 Reconciler；无"节点终态但 Run 未收口"扫描；无 100 并发/Worker kill 测试。
+- 现状：`job_consumer` 原子认领（pending→running + `lease_expires_at`）；`dag_scheduler` 聚合节点→Run 状态；`run_state.apply_transition` 单一状态机。
+- 缺口：无 fencing token（旧 Worker 迟到结果不被拒绝）；`append_event` 仍无生产调用（Run 无事件时间线，`GET /runs/{id}/events` 恒为空）；无 Reconciler（过期 Job / 无 heartbeat NodeRun / 节点终态但 Run 未收口）；无 100 并发 / Worker kill / 重复消息测试。
+
+### AUD-002 / AUD-003 / AUD-004
+
+见 2.1–2.3（已交付）。
 
 ## 4. 第二批缺口要点
 
