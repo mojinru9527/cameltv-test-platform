@@ -19,6 +19,7 @@ from typing import Any
 from sqlalchemy import (
     JSON,
     BigInteger,
+    Boolean,
     DateTime,
     ForeignKey,
     Index,
@@ -170,6 +171,18 @@ class RunAssertionResult(Base):
     diff_json: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     evidence_refs_json: Mapped[list[str]] = mapped_column(JSON, default=list)
     evaluated_by: Mapped[str] = mapped_column(String(20), nullable=False, default="deterministic")
+    # ── AUD-007：Oracle / evaluator / 来源 / 时延（v1.5 §06 2.3）──
+    oracle_type: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    oracle_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    oracle_revision: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    evaluator_key: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    evaluator_version: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    source_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    required: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    evaluated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     step_attempt: Mapped[StepAttempt] = relationship(back_populates="assertion_results")
 

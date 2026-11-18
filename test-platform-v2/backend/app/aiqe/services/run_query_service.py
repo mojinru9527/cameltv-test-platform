@@ -4,7 +4,7 @@ from __future__ import annotations
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.aiqe.models.run import NodeRun, StepAttempt, TestRun
+from app.aiqe.models.run import NodeRun, RunAssertionResult, StepAttempt, TestRun
 from app.aiqe.services.artifact_service import list_artifacts
 from app.aiqe.services.event_service import list_events
 
@@ -58,6 +58,20 @@ def get_artifacts(db: Session, run_id: str, project_id: int):
     get_run(db, run_id, project_id)
     return list_artifacts(db, run_id, project_id)
 
+
+def get_run_assertions(
+    db: Session, run_id: str, project_id: int
+) -> list[tuple[RunAssertionResult, StepAttempt, NodeRun]]:
+    """AUD-007：Run 的断言结果（只读，供 Run Console / 质量门禁）。"""
+    get_run(db, run_id, project_id)
+    rows = db.execute(
+        select(RunAssertionResult, StepAttempt, NodeRun)
+        .join(StepAttempt, StepAttempt.id == RunAssertionResult.step_attempt_id)
+        .join(NodeRun, NodeRun.id == StepAttempt.node_run_id)
+        .where(NodeRun.run_id == run_id)
+        .order_by(NodeRun.node_key, StepAttempt.attempt_no, RunAssertionResult.assertion_key)
+    ).all()
+    return [(row[0], row[1], row[2]) for row in rows]
 def get_run_attempts(
     db: Session, run_id: str, project_id: int
 ) -> tuple[TestRun, list[tuple[NodeRun, list[StepAttempt]]]]:

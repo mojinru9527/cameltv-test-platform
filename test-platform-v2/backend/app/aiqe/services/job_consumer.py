@@ -10,10 +10,12 @@ import json
 import logging
 import threading
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from app.aiqe.assertions.engine import aggregate as aggregate_assertions
 from app.aiqe.models.run import NodeRun, TestRun
 from app.aiqe.redaction import redact_mapping
 from app.aiqe.services import dag_scheduler, node_executor
@@ -170,30 +172,57 @@ def run_job(db: Session, job_id: int) -> dict:
         dag_scheduler.mark_running(db, run_id, node.node_key)
 
     result = node_executor.execute_node(node, db=db)
+    # AUD-007：Driver 成功 ≠ Case PASS；有断言时以断言聚合结果为准。
+    node_status = result.status
+    error_class = result.error_class or None
+    assertion_outcomes: list[Any] = []
+    observation_payload = result.observation
+    if observation_payload is not None:
+        from app.aiqe.assertions.observation import Observation
+        from app.aiqe.services import result_writer
+
+        observation = Observation.from_http(
+            status_code=observation_payload.get("status_code"),
+            headers=observation_payload.get("headers") or {},
+            text=str(observation_payload.get("text") or ""),
+            body=observation_payload.get("body"),
+            duration_ms=observation_payload.get("duration_ms"),
+            error=observation_payload.get("error"),
+        )
+        mapped_status, mapped_error, assertion_outcomes = result_writer.evaluate_node_assertions(
+            db, run_id=run_id, node=node, observation=observation
+        )
+        if mapped_status is not None:
+            node_status = mapped_status
+            error_class = mapped_error or None
     # AUD-003：执行明细可能含 token/cookie，落库前统一脱敏（节点输出同一份）。
     safe_detail = redact_mapping(result.detail)
     dag_scheduler.complete_node(
         db,
         run_id,
         node.node_key,
-        result.status,
+        node_status,
         graph,
-        error_class=result.error_class or None,
+        error_class=error_class,
         outputs={"execution": safe_detail},
         fencing_token=lease_token,
     )
-    job.status = "success" if result.status == "PASSED" else "failed"
+    job.status = "success" if node_status == "PASSED" else "failed"
     job.result_json = json.dumps(safe_detail, ensure_ascii=False, default=str)[:20000]
-    job.summary = f"{node.node_key}:{result.status}"
-    job.error_message = result.error_class
+    job.summary = f"{node.node_key}:{node_status}"
+    job.error_message = error_class or ""
     job.finished_at = _now()
     db.commit()
     return {
         "job_id": job_id,
         "node": node.node_key,
-        "node_status": result.status,
+        "node_status": node_status,
         "job_status": job.status,
-        "error_class": result.error_class,
+        "error_class": error_class or "",
+        "assertions": len(assertion_outcomes),
+        "assertion_aggregate": (
+            aggregate_assertions(assertion_outcomes) if assertion_outcomes else ""
+        ),
     }
 
 

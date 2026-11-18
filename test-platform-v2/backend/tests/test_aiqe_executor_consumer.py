@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from sqlalchemy import select
 
-from app.aiqe.models.run import NodeRun, StepAttempt, TestRun
+from app.aiqe.models.run import NodeRun, RunAssertionResult, StepAttempt, TestRun
 from app.aiqe.security import SafeHttpResult, upsert_target_policy
 from app.aiqe.services import dag_scheduler, job_consumer
 from app.aiqe.services.execution_dispatcher import enqueue_node_run
@@ -100,9 +100,20 @@ def test_consumer_failure_marks_node_and_job(db_session, monkeypatch):
     db_session.expire_all()
     node = db_session.scalar(select(NodeRun).where(NodeRun.run_id == run.id))
     assert node.status == "FAILED"
-    assert node.error_class == "STATUS_MISMATCH"
+    # AUD-007：`expected_status` 会被转成 http.status 断言并由断言引擎判定，因此
+    # error_class 是 ASSERTION_FAILED（引擎结论）而不是 Driver 的 STATUS_MISMATCH。
+    assert node.error_class in {"STATUS_MISMATCH", "ASSERTION_FAILED"}
     assert db_session.get(TestRun, run.id).outcome == "FAIL"
     assert db_session.get(ExecutionJob, job.id).status == "failed"
+    assertion_rows = list(
+        db_session.scalars(
+            select(RunAssertionResult)
+            .join(StepAttempt, StepAttempt.id == RunAssertionResult.step_attempt_id)
+            .where(StepAttempt.node_run_id == node.id)
+        )
+    )
+    assert [row.assertion_key for row in assertion_rows] == ["http.status"]
+    assert assertion_rows[0].status == "FAIL"
 
 
 def test_claim_is_idempotent(db_session):

@@ -1,0 +1,58 @@
+"""AUD-007：AIQE 断言引擎包（Observation / Registry / Engine）。"""
+from app.aiqe.assertions.engine import (
+    BLOCKED,
+    ERROR,
+    EVALUATOR_KEY,
+    EVALUATOR_VERSION,
+    FAIL,
+    NOT_EVALUATED,
+    PASS,
+    UNKNOWN,
+    AssertionOutcome,
+    OracleRegistry,
+    aggregate,
+    evaluate_all,
+    evaluate_assertion,
+    node_status_from_aggregate,
+    poll_until,
+)
+from app.aiqe.assertions.observation import (
+    InvalidJsonPath,
+    Observation,
+    maybe_json,
+    resolve_json_path,
+)
+from app.aiqe.assertions.registry import (
+    OPERATOR_VERSION,
+    REGISTRY,
+    OperatorError,
+    known_operators,
+    resolve_operator,
+)
+
+__all__ = [
+    "BLOCKED",
+    "ERROR",
+    "EVALUATOR_KEY",
+    "EVALUATOR_VERSION",
+    "FAIL",
+    "NOT_EVALUATED",
+    "OPERATOR_VERSION",
+    "PASS",
+    "REGISTRY",
+    "UNKNOWN",
+    "AssertionOutcome",
+    "InvalidJsonPath",
+    "Observation",
+    "OperatorError",
+    "OracleRegistry",
+    "aggregate",
+    "evaluate_all",
+    "evaluate_assertion",
+    "known_operators",
+    "maybe_json",
+    "node_status_from_aggregate",
+    "poll_until",
+    "resolve_json_path",
+    "resolve_operator",
+]

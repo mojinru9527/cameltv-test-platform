@@ -67,6 +67,8 @@ class NodeExecution:
     status: str
     error_class: str = ""
     detail: dict[str, Any] = field(default_factory=dict)
+    #: AUD-007：结构化 Observation（断言引擎的唯一输入，不参与 Driver 判定）。
+    observation: dict[str, Any] | None = None
 
 
 def _driver_key(node: NodeRun) -> str:
@@ -243,14 +245,32 @@ def _execute_http(
     else:
         ok = bool(result.ok)
 
+    from app.aiqe.assertions.observation import maybe_json
+
+    body_text = str((result.response or {}).get("body") or "")
+    observation = {
+        "status_code": result.status_code,
+        "headers": (result.response or {}).get("headers") or {},
+        "text": body_text,
+        "body": maybe_json(body_text),
+        "duration_ms": result.duration_ms,
+        "error": (
+            result.error_code
+            if result.error_code in {"TIMEOUT", "DRIVER_ERROR", "CLIENT_INIT_FAILED"}
+            else None
+        ),
+    }
+    detail["observation"] = observation
     if ok:
-        return NodeExecution(status="PASSED", detail=detail)
+        return NodeExecution(status="PASSED", detail=detail, observation=observation)
     error_class = "STATUS_MISMATCH" if expected is not None else "HTTP_FAILED"
     if result.error_code == "TIMEOUT":
         error_class = "TIMEOUT"
     elif result.error_code == "CLIENT_INIT_FAILED":
         error_class = "DRIVER_ERROR"
-    return NodeExecution(status="FAILED", error_class=error_class, detail=detail)
+    return NodeExecution(
+        status="FAILED", error_class=error_class, detail=detail, observation=observation
+    )
 
 
 def _execute_db(

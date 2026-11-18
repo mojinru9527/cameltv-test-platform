@@ -21,6 +21,7 @@ from app.aiqe.services.run_query_service import (
     get_artifacts,
     get_events,
     get_run,
+    get_run_assertions,
     get_run_attempts,
     get_run_detail,
     list_runs,
@@ -115,6 +116,49 @@ def get_artifacts_api(
         raise _not_found(run_id) from None
     return R.ok(
         {"items": [RunArtifactOut.model_validate(a).model_dump(mode="json") for a in rows]}
+    )
+
+
+@router.get("/{run_id}/assertions", response_model=R[dict], summary="断言结果列表")
+def get_assertions_api(
+    run_id: str,
+    current: CurrentUser = Depends(require_permission("menu:aiqe_runs")),
+    db: Session = Depends(get_db),
+):
+    """AUD-007：只读断言结果（含 Oracle / evaluator 版本 / actual 脱敏摘要）。"""
+    try:
+        rows = get_run_assertions(db, run_id, current.project_id or 0)
+    except RunNotFoundError:
+        raise _not_found(run_id) from None
+    return R.ok(
+        {
+            "items": [
+                {
+                    "id": assertion.id,
+                    "node_key": node.node_key,
+                    "attempt_no": attempt.attempt_no,
+                    "assertion_key": assertion.assertion_key,
+                    "assertion_type": assertion.assertion_type,
+                    "status": assertion.status,
+                    "required": bool(assertion.required),
+                    "expected": assertion.expected_json,
+                    "actual": assertion.actual_json,
+                    "oracle_type": assertion.oracle_type,
+                    "oracle_id": assertion.oracle_id,
+                    "oracle_revision": assertion.oracle_revision,
+                    "evaluator_key": assertion.evaluator_key,
+                    "evaluator_version": assertion.evaluator_version,
+                    "source_ref": assertion.source_ref,
+                    "duration_ms": assertion.duration_ms,
+                    "evaluated_at": assertion.evaluated_at.isoformat()
+                    if assertion.evaluated_at
+                    else None,
+                    "detail": assertion.diff_json,
+                }
+                for assertion, attempt, node in rows
+            ],
+            "total": len(rows),
+        }
     )
 
 
