@@ -25,10 +25,10 @@
 | 第三批 | AUD-014 Requirement Contract | **缺失**（无 Contract 表/状态机/source ref 解析） | ✅ 已交付 |
 | 第三批 | AUD-015 结构化 Case | **缺失**（无 automation_grade/covers_ac_ids/oracle_ref） | ✅ 已交付 |
 | 第三批 | AUD-016 A4 Evidence-grounded | 部分（schema 校验有，evidence 不做服务端解析） | ✅ 已交付 |
-| 第三批 | AUD-017 A5 影响图 | 部分（文件名子串规则，无 git diff/symbol/trace path） | ⬜ |
+| 第三批 | AUD-017 A5 影响图 | 部分（文件名子串规则，无 git diff/symbol/trace path） | ✅ 已交付 |
 | 第三批 | AUD-018 A6 Benchmark | **违规**（接受前端自报 false_positive_rate） | ✅ 已交付 |
 | 第三批 | AUD-019 Noise Intelligence | 部分（10 个资源 Detector ≠ 12 类目；无 Observation 表） | ✅ 已交付 |
-| 第三批 | AUD-020 多端真实 Driver | 部分（boolean available；iOS 硬关闭；无 PlatformBinding） | ⬜ |
+| 第三批 | AUD-020 多端真实 Driver | 部分（boolean available；iOS 硬关闭；无 PlatformBinding） | ✅ 已交付（代码侧） |
 
 ## 1. 基线事实
 
@@ -193,10 +193,10 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 - AUD-015：✅ 已交付 —— `aiqe_test_cases`（结构化 steps/covers_ac_ids/platform_targets/oracle_ref/automation_grade A–D）；P0/P1 缺断言/Oracle/平台绑定 → D，P2/P3 → C；缺 fixture/cleanup/precondition → B；否则 A；P0/P1 必须绑定 APPROVED/FROZEN Contract revision；未知 AC 覆盖被拒绝；语义 dedupe_key 防冗余；审核门禁禁止 D 级自动执行；`coverage_report` 逐 AC 输出 UNCOVERED/PARTIAL/COVERED 并断言 P0 覆盖率。测试 `tests/test_aiqe_aud014_015_contract_testcase.py`（15 条）。
 - AUD-014/015 ⇒ 已解锁 AUD-017 的强制回归集合（失败 Case + P0 Case + 合约变更覆盖 Case）。
 - AUD-016：✅ 已交付 —— `evidence_service.resolve_evidence_refs` 服务端解析（存在性 + 同 Project + 同 Run，`signal:` 仅格式），任何非法引用使整个结果失败（`EVIDENCE_REF_INVALID`）；已接入缺陷草稿与 ReproductionBundle。剩余：把该解析器注入 `FailureTriageAgent.validate`（AI 归因输出校验）与 A4 调用链，属 AUD-013 任务链的一部分。
-- AUD-017：`change_impact_agent` 仅按文件名子串映射 area → suite 名，无 git diff/symbol/trace path。
+- AUD-017：✅ 已交付 —— `services/impact_service.py`：真实 `git diff`（name-status + numstat，固定 base/head SHA）、Python AST symbol、TS 导出、FastAPI route、migration 检测、确定性 component 映射；影响计划给出候选 Case 的 score/reason/**trace path**（component → AC → case）；**强制集合**由后端计算（直接失败 Case + 变更合约的 P0 Case + AC 覆盖 Case），`merge_ai_plan` 拒绝显式排除强制 Case 或不存在的 Case ID，并始终把强制集合并入最终计划；边写入既有 `ImpactEdge`（changed/covers/depends，按 version 幂等）。测试 `tests/test_aiqe_aud017_impact_graph.py`（8 条，含临时真实 git 仓库）。
 - AUD-018：✅ 已交付 —— `aiqe_benchmark_datasets/samples/runs`；冻结数据集（`content_hash` + `sample_count` + `gate_eligible`，<30 只作参考）；`run_benchmark` 真实调用 Agent predictor；**后端确定性计算** micro TP/FP/FN、Precision/Recall/F1、Unknown rate（UNKNOWN 视为弃权，不计误报）、阈值状态 `PASS_GATE/BELOW_THRESHOLD/REFERENCE_ONLY`、与 baseline 对比；`learning_service.evaluate_candidate` 改为只接受 `benchmark_run_id` 并从 BenchmarkRun 派生误报率/精确率，API `EvaluateIn` 仅接受 `benchmark_run_id`（自报 payload → 422）。测试 `tests/test_aiqe_aud018_benchmark.py`（12 条）+ 重写 learning curator/API 测试。
 - AUD-019：✅ 已交付 —— `aiqe_interference_observations`（detector_key/version、12 类 category、severity、±15s/10s 窗口、signal、evidence refs、建议实验；Detector 不改 Run Outcome）；`aiqe_triage_cases`（固定生命周期，禁止跳级）；`services/noise_intelligence.py`（10 个资源信号映射到 12 类 + 新增 UI_OVERLAY/CROSS_FEATURE/AUTOMATION/FLAKY/REQUIREMENT_GAP/TEST_DATA/TIME 检测器 + UNKNOWN 兜底 + 每类 E1–E6 建议 + P0 抑制守卫）；`NoiseRule` 治理（suppress 必须 reason、审批后才 active、项目作用域、续期新建版本并 supersede 旧版本、matched/false_suppress 计数）；`/admin/noise-rules/{id}/approve`。测试 `tests/test_aiqe_aud019_noise_intelligence.py`（22 条）。
-- AUD-020：`available: bool` + `IOS_ENABLED=False` + `node_executor` 硬编码 Android；无 PlatformBinding/Preflight/按平台聚合。
+- AUD-020：✅ 已交付（代码侧）—— `aiqe_platform_bindings`（AC/CASE × 9 平台 × OS/浏览器或 App 版本/设备型号/Driver 版本/节点/Profile）；`platform_binding_service` 服务端从 Capability Registry 计算 6 态（调用方不能自报 VERIFIED）、`platform_matrix` 不隐藏任何未验证平台、`preflight_platform` 对缺节点与未 VERIFIED 的真机/官方工具平台给 BLOCKED。测试 `tests/test_aiqe_aud020_platform_bindings.py`（9 条）。**遗留（环境侧）**：真实 iOS/Android/小程序设备与官方工具验收记录，需要设备实验室与真实节点，代码无法替代。
 
 ## 6. 实施顺序（本轮起的计划）
 
@@ -217,7 +217,12 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 13. ✅ AUD-014/015：Requirement Contract + 结构化 TestCase（第 5 轮）
 14. ✅ AUD-019：Noise 12 类目 + Observation + Triage 生命周期 + 规则治理（第 6 轮）
 15. ✅ AUD-018：Benchmark dataset/run + 后端计算指标（第 7 轮）
-16. AUD-017：A5 影响图（git diff → symbol/route/schema → AC/Case/Workflow + 强制集合不可删）——**下一轮**
-17. AUD-020：PlatformBinding + 按平台 6 态 + 多端 Preflight 矩阵——**下一轮**
+16. ✅ AUD-017：A5 影响图 + 强制集合不可删（第 8 轮）
+17. ✅ AUD-020：PlatformBinding + 按平台 6 态 + 多端 Preflight（第 8 轮，代码侧）
+
+> **代码侧 20/20 AUD 已全部交付。** 仍未满足的是 v1.5 §00-8 的**环境证据**类完成定义：
+> 真实 Test 环境下 20 次连续 Dogfood Run ID、真实 iOS/Android/小程序设备验收、Runner 出口
+> 防火墙部署、24h soak 与 100 并发、以及 QA/Backend/Security/Product 四方联合签字。
+> 这些需要可用的真实环境与设备，不能由代码仓库单侧完成。
 
 > 每项完成条件遵循 v1.5 §00-8：代码 + 单测/集成测试 + 正负向/安全/权限/并发路径 + 真实 Run 证据 + OpenAPI/迁移/前端同步 + 无 secret 日志 + PR 描述含代码路径/测试命令/CI/回滚。
