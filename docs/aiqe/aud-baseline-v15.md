@@ -22,8 +22,8 @@
 | 第二批 | AUD-011 Mixed Workflow Dogfood | **缺失**（占位 E2E 只断言 body.count()==1） | ✅ 已交付 |
 | 第二批 | AUD-012 Defect Draft 可复现 | 部分（草稿服务存在，evidence 仅前缀字符串校验） | ✅ 已交付 |
 | 第三批 | AUD-013 A0–A6 Registry/Orchestrator | **缺失**（无 AgentProtocol/AgentResult/Registry/DAG） | ✅ 已交付 |
-| 第三批 | AUD-014 Requirement Contract | **缺失**（无 Contract 表/状态机/source ref 解析） | ⬜ |
-| 第三批 | AUD-015 结构化 Case | **缺失**（无 automation_grade/covers_ac_ids/oracle_ref） | ⬜ |
+| 第三批 | AUD-014 Requirement Contract | **缺失**（无 Contract 表/状态机/source ref 解析） | ✅ 已交付 |
+| 第三批 | AUD-015 结构化 Case | **缺失**（无 automation_grade/covers_ac_ids/oracle_ref） | ✅ 已交付 |
 | 第三批 | AUD-016 A4 Evidence-grounded | 部分（schema 校验有，evidence 不做服务端解析） | ✅ 已交付 |
 | 第三批 | AUD-017 A5 影响图 | 部分（文件名子串规则，无 git diff/symbol/trace path） | ⬜ |
 | 第三批 | AUD-018 A6 Benchmark | **违规**（接受前端自报 false_positive_rate） | ⬜ |
@@ -189,7 +189,9 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 ## 5. 第三批缺口要点
 
 - AUD-013：✅ 已交付（见第 5 节），A1/A6 已就位，A0 计划 DAG 与人工暂停可执行。剩余：把 `run_plan` 暴露为 REST/MCP 工具（`/aiqe/agent-tasks` + `aiqe.requirement.analyze` 等，见 AUD-013「追加」章节）。
-- AUD-014/015：无 Contract / 结构化 Case 持久化（`automation_grade`/`covers_ac_ids`/`oracle_ref` 全仓 0 命中）——**下一轮**。
+- AUD-014：✅ 已交付 —— `aiqe_requirement_contracts` + `aiqe_acceptance_criteria`；按 requirement 递增 revision + `revision_checksum`；source refs（prd/figma/openapi/meeting_decision/bug/business_rule）结构化解析 + 服务端校验（`bug:` 必须存在且同项目、`ac:` 必须存在）→ `INVALID_SOURCE_REF`；状态机 DRAFT→REVIEW_REQUIRED→APPROVED→FROZEN→SUPERSEDED；P0/P1 无 Oracle 禁止批准/冻结；APPROVED/FROZEN 不可原地更新（新建 revision）；模糊词扫描（立即/实时/尽快/正常/稳定）要求指标或 SLA。
+- AUD-015：✅ 已交付 —— `aiqe_test_cases`（结构化 steps/covers_ac_ids/platform_targets/oracle_ref/automation_grade A–D）；P0/P1 缺断言/Oracle/平台绑定 → D，P2/P3 → C；缺 fixture/cleanup/precondition → B；否则 A；P0/P1 必须绑定 APPROVED/FROZEN Contract revision；未知 AC 覆盖被拒绝；语义 dedupe_key 防冗余；审核门禁禁止 D 级自动执行；`coverage_report` 逐 AC 输出 UNCOVERED/PARTIAL/COVERED 并断言 P0 覆盖率。测试 `tests/test_aiqe_aud014_015_contract_testcase.py`（15 条）。
+- AUD-014/015 ⇒ 已解锁 AUD-017 的强制回归集合（失败 Case + P0 Case + 合约变更覆盖 Case）。
 - AUD-016：✅ 已交付 —— `evidence_service.resolve_evidence_refs` 服务端解析（存在性 + 同 Project + 同 Run，`signal:` 仅格式），任何非法引用使整个结果失败（`EVIDENCE_REF_INVALID`）；已接入缺陷草稿与 ReproductionBundle。剩余：把该解析器注入 `FailureTriageAgent.validate`（AI 归因输出校验）与 A4 调用链，属 AUD-013 任务链的一部分。
 - AUD-017：`change_impact_agent` 仅按文件名子串映射 area → suite 名，无 git diff/symbol/trace path。
 - AUD-018：`learning_service.evaluate_candidate(false_positive_rate, sample_size)` 直接采用调用方自报数值（v1.5 明令禁止）。
@@ -212,7 +214,7 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 10. ✅ AUD-012/016：evidence ref 服务端解析 + 可复现缺陷草稿/复现包/人工确认（第 3 轮）
 11. ✅ AUD-011：混合 Workflow Dogfood harness（真实 Driver；第 4 轮）
 12. ✅ AUD-013：Agent Protocol/Registry/DAG + A0/A6 + A4 证据等级（第 4 轮）
-13. AUD-014/015：Requirement Contract（来源/版本/冻结/审批）+ 结构化 TestCase（grade/AC 覆盖/Oracle）
-14. AUD-017…020：A5 影响图、A6 Benchmark（后端计算指标）、Noise 12 类目、Platform Binding/Preflight 多端
+13. ✅ AUD-014/015：Requirement Contract（来源/版本/冻结/审批）+ 结构化 TestCase（grade/AC 覆盖/Oracle）（第 5 轮）
+14. AUD-017…020：A5 影响图（含强制集）、A6 Benchmark（后端计算指标）、Noise 12 类目、Platform Binding/多端 Preflight
 
 > 每项完成条件遵循 v1.5 §00-8：代码 + 单测/集成测试 + 正负向/安全/权限/并发路径 + 真实 Run 证据 + OpenAPI/迁移/前端同步 + 无 secret 日志 + PR 描述含代码路径/测试命令/CI/回滚。
