@@ -222,6 +222,7 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 18. ✅ §06 REST 契约 + AUD-013 追加 MCP 工具名（第 9 轮）
 19. ✅ 前端：Run 详情断言 + 证据 Viewer（第 10 轮）
 20. ✅ MCP HTTP adapter 对齐规范工具名 + 真实 REST（第 11 轮）
+21. ✅ 前端：Contract/Case 控制台（第 12 轮）
 
 > **§06 REST 契约与 MCP 工具名（第 9 轮补充）：** 新增 `/api/v1/aiqe` 能力路由
 > （contracts / cases / experiments / observations / triage / benchmarks / impact / platforms /
@@ -239,6 +240,12 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 > （scope READ/WRITE_DRAFT/EXECUTE_TEST/APPROVE、审批 token 透传、X-Project-Id /
 > X-Correlation-Id / X-Client、envelope 拆包、参数 hash 审计）；无 REST 入口的工具显式报错；
 > 配置 `AIQE_API_BASE_URL` 后 stdio server 使用真实 adapter，不再回显占位。
+>
+> **Contract/Case 控制台（第 12 轮）：** 新增 `GET /aiqe/contracts`、`GET /aiqe/cases`
+> 列表端点；前端 `/aiqe/contracts` 页支持创建 Draft（Requirement/来源/AC given-when-then/
+> 优先级/Oracle）、状态操作（提交评审/批准/冻结/作废）、AC Oracle 与覆盖（COVERED/PARTIAL/
+> UNCOVERED）、用例审核（通过/驳回）。验证：`tsc -b`、ESLint 干净，contracts 5 条 + AIQE UI
+> 15 条 + Run/AIQE 21 条通过，后端 AIQE 753 条通过。
 >
 > **代码侧 20/20 AUD 已全部交付。** 仍未满足的是 v1.5 §00-8 的**环境证据**类完成定义：
 > 真实 Test 环境下 20 次连续 Dogfood Run ID、真实 iOS/Android/小程序设备验收、Runner 出口
