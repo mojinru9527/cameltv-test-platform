@@ -1,5 +1,5 @@
 {
-  "count": 355,
+  "count": 393,
   "routes": [
     {
       "path": "/api/v1/ai-config/providers",
@@ -38,8 +38,232 @@
       "method": "POST"
     },
     {
+      "path": "/api/v1/aiqe/admin/artifacts/gc",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/noise-rules",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/noise-rules",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/noise-rules/{rule_id}",
+      "method": "DELETE"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/noise-rules/{rule_id}",
+      "method": "PATCH"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/noise-rules/{rule_id}/approve",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/noise-rules/{rule_id}/renew",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/profiles",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/profiles",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/profiles/{profile_id}",
+      "method": "PATCH"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/profiles/{profile_id}/approve",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/quality-gate",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/quality-gate/latest",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/agent-tasks",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/artifacts",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/artifacts/{artifact_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/artifacts/{artifact_id}/content",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/artifacts/{artifact_id}/content",
+      "method": "PUT"
+    },
+    {
+      "path": "/api/v1/aiqe/benchmarks/datasets",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/benchmarks/datasets/{dataset_id}/freeze",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/benchmarks/datasets/{dataset_id}/samples",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/benchmarks/runs/{run_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/cases",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/cases",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/cases/{case_id}/review",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/contracts",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/contracts",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/contracts/{contract_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/contracts/{contract_id}/approve-ac",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/contracts/{contract_id}/coverage",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/contracts/{contract_id}/transition",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/defects/drafts",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/defects/{defect_id}/confirm",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/defects/{defect_id}/regressions",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/defects/{defect_id}/reproduction-bundle",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/defects/{defect_id}/reproduction-bundle/download",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/experiments/{experiment_id}/launch",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/experiments/{experiment_id}/sync",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/impact/plan",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/learning/bug-patterns",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/learning/candidates",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/learning/candidates",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/learning/candidates/{candidate_id}/activate",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/learning/candidates/{candidate_id}/approve",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/learning/candidates/{candidate_id}/evaluate",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/platform-matrix",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/platforms/bindings",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/platforms/matrix",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/platforms/preflight",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/regressions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/regressions",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/regressions/{regression_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/regressions/{regression_id}/cancel",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/regressions/{regression_id}/comparison",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/regressions/{regression_id}/sync",
+      "method": "POST"
+    },
+    {
       "path": "/api/v1/aiqe/runs",
       "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/runs",
+      "method": "POST"
     },
     {
       "path": "/api/v1/aiqe/runs/{run_id}",
@@ -50,12 +274,68 @@
       "method": "GET"
     },
     {
+      "path": "/api/v1/aiqe/runs/{run_id}/assertions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/runs/{run_id}/attempts",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/runs/{run_id}/cancel",
+      "method": "POST"
+    },
+    {
       "path": "/api/v1/aiqe/runs/{run_id}/events",
       "method": "GET"
     },
     {
       "path": "/api/v1/aiqe/runs/{run_id}/events/stream",
       "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/runs/{run_id}/experiments",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/runs/{run_id}/nodes",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/runs/{run_id}/observations",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/runs/{run_id}/observations",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/runs/{run_id}/triage",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/triage/{triage_id}/transition",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/workflows",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/workflows",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/workflows/{workflow_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/workflows/{workflow_id}",
+      "method": "PATCH"
+    },
+    {
+      "path": "/api/v1/aiqe/workflows/{workflow_id}/approve",
+      "method": "POST"
     },
     {
       "path": "/api/v1/apitest/api-execute",
@@ -263,6 +543,10 @@
     },
     {
       "path": "/api/v1/defects/{defect_id}/comments",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/defects/{defect_id}/regressions",
       "method": "POST"
     },
     {
@@ -1287,138 +1571,6 @@
     },
     {
       "path": "/health",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/defects/{defect_id}/regressions",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/aiqe/admin/quality-gate",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/aiqe/admin/noise-rules",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/aiqe/admin/noise-rules",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/aiqe/admin/noise-rules/{rule_id}/renew",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/aiqe/admin/noise-rules/{rule_id}",
-      "method": "DELETE"
-    },
-    {
-      "path": "/api/v1/aiqe/admin/artifacts/gc",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/aiqe/admin/profiles",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/aiqe/admin/profiles",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/aiqe/admin/profiles/{profile_id}",
-      "method": "PATCH"
-    },
-    {
-      "path": "/api/v1/aiqe/admin/profiles/{profile_id}/approve",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/aiqe/workflows",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/aiqe/workflows/{workflow_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/aiqe/workflows/{workflow_id}/approve",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/aiqe/admin/noise-rules/{rule_id}",
-      "method": "PATCH"
-    },
-    {
-      "path": "/api/v1/aiqe/platform-matrix",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/aiqe/runs/{run_id}/attempts",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/aiqe/regressions",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/aiqe/regressions",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/aiqe/regressions/{regression_id}",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/aiqe/workflows",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/aiqe/workflows/{workflow_id}",
-      "method": "PATCH"
-    },
-    {
-      "path": "/api/v1/aiqe/learning/bug-patterns",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/aiqe/learning/candidates",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/aiqe/learning/candidates",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/aiqe/learning/candidates/{candidate_id}/activate",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/aiqe/learning/candidates/{candidate_id}/approve",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/aiqe/learning/candidates/{candidate_id}/evaluate",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/aiqe/runs",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/aiqe/runs/{run_id}/cancel",
-      "method": "POST"
-    },
-    {
-      "path": "/api/v1/aiqe/runs/{run_id}/nodes",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/aiqe/runs/{run_id}/assertions",
-      "method": "GET"
-    },
-    {
-      "path": "/api/v1/aiqe/admin/quality-gate/latest",
       "method": "GET"
     }
   ]
