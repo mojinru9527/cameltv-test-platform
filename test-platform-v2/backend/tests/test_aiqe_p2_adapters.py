@@ -118,7 +118,7 @@ def test_adapter_unsupported_tools_fail_explicitly():
     module = load_adapter()
     client = FakeClient()
     adapter = module.HttpMcpAdapter("http://x", client=client)
-    for tool in ("aiqe.run.launch", "aiqe.benchmark.run"):
+    for tool in ("aiqe.benchmark.run",):
         with pytest.raises(module.HttpMcpAdapterError):
             adapter.writer(tool, {}, "approve-1")
     assert client.calls == []  # 没有伪造请求
@@ -138,3 +138,18 @@ def test_adapter_missing_path_param_fails():
     adapter = module.HttpMcpAdapter("http://x", client=FakeClient())
     with pytest.raises(module.HttpMcpAdapterError):
         adapter.reader("aiqe.run.get", {})
+
+
+def test_run_launch_maps_to_run_create_endpoint():
+    module = load_adapter()
+    client = FakeClient(FakeResponse(200, {"code": 0, "data": {"id": "run-9"}}))
+    adapter = module.HttpMcpAdapter("http://x", token="t", client=client)
+    result = adapter.writer(
+        "aiqe.run.launch",
+        {"workflow_definition_id": "wf-1", "launch_key": "lk-1"},
+        "approve-1",
+    )
+    assert result["id"] == "run-9"
+    assert client.calls[0][0] == "POST"
+    assert client.calls[0][1] == "http://x/api/v1/aiqe/runs"
+    assert client.calls[0][3]["X-Approval-Token"] == "approve-1"

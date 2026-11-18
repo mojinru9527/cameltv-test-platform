@@ -40,6 +40,7 @@ TOOL_ROUTES: dict[str, Route] = {
         "POST", "/api/v1/aiqe/cases/{case_id}/review", "APPROVE"
     ),
     "aiqe.workflow.plan": Route("POST", "/api/v1/aiqe/agent-tasks", "WRITE_DRAFT"),
+    "aiqe.run.launch": Route("POST", "/api/v1/aiqe/runs", "EXECUTE_TEST"),
     "aiqe.run.get": Route("GET", "/api/v1/aiqe/runs/{run_id}", "READ"),
     "aiqe.run.events": Route("GET", "/api/v1/aiqe/runs/{run_id}/events", "READ"),
     "aiqe.triage.analyze": Route(
@@ -69,7 +70,7 @@ PATH_PARAMS: dict[str, str] = {
 }
 READ_SCOPES = frozenset({"READ", "PROD_READONLY"})
 #: 尚无 REST 入口的规范工具：显式报错而不是静默映射到不存在的接口。
-UNSUPPORTED_TOOLS: frozenset[str] = frozenset({"aiqe.run.launch", "aiqe.benchmark.run"})
+UNSUPPORTED_TOOLS: frozenset[str] = frozenset({"aiqe.benchmark.run"})
 
 
 def _args_hash(arguments: dict[str, Any]) -> str:
