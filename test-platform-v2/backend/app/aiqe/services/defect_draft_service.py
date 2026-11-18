@@ -358,3 +358,13 @@ __all__ = [
     "failing_assertion_refs",
     "promote_draft",
 ]
+
+
+def get_defect(db: Session, *, defect_id: int, project_id: int):
+    """项目作用域的缺陷读取（路由层不直连 ORM）。"""
+    from app.models.defect import Defect
+
+    row = db.get(Defect, int(defect_id))
+    if row is None or int(row.project_id or 0) != int(project_id):
+        return None
+    return row

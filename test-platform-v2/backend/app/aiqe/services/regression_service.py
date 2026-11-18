@@ -26,7 +26,12 @@ from app.aiqe.models.deployment import DeploymentAttestation
 from app.aiqe.models.profile import ExecutionProfile
 from app.aiqe.models.run import NodeRun, RunAssertionResult, StepAttempt, TestRun
 from app.aiqe.models.workflow import WorkflowDefinition
+from typing import TYPE_CHECKING
+
 from app.models.defect import Defect, DefectRegression
+
+if TYPE_CHECKING:
+    from app.models.defect import RunComparisonSnapshot
 
 FULL_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -467,3 +472,24 @@ def create_regression(
         raise RegressionError(f"回归被阻断: {row.blockers_json}")
     del environment_snapshot
     return row, run
+
+
+def load_comparison(
+    db: Session, *, regression_id: int, project_id: int
+) -> tuple[DefectRegression, RunComparisonSnapshot | None]:
+    """返回 (regression, comparison_snapshot)；必要时先幂等收敛一次终端状态。"""
+    from app.models.defect import RunComparisonSnapshot
+
+    row = get_regression(db, regression_id, project_id)
+    snapshot = None
+    if row.comparison_snapshot_id:
+        snapshot = db.get(RunComparisonSnapshot, row.comparison_snapshot_id)
+    if snapshot is None and row.verification_run_id:
+        from app.aiqe.services.regression_terminal import handle_run_terminal
+
+        handle_run_terminal(db, run_id=row.verification_run_id)
+        db.commit()
+        db.refresh(row)
+        if row.comparison_snapshot_id:
+            snapshot = db.get(RunComparisonSnapshot, row.comparison_snapshot_id)
+    return row, snapshot

@@ -185,6 +185,32 @@ def create_case_draft(
     return row, True
 
 
+def list_cases(
+    db: Session,
+    *,
+    project_id: int,
+    contract_id: str | None = None,
+    review_status: str | None = None,
+    priority: str | None = None,
+    limit: int = 100,
+) -> list[AiqeTestCase]:
+    """项目作用域的 Case 列表（路由层不直连 ORM）。"""
+    stmt = select(AiqeTestCase).where(AiqeTestCase.project_id == int(project_id))
+    if contract_id:
+        stmt = stmt.where(AiqeTestCase.contract_id == contract_id)
+    if review_status:
+        stmt = stmt.where(AiqeTestCase.review_status == review_status.upper())
+    if priority:
+        stmt = stmt.where(AiqeTestCase.priority == priority.upper())
+    return list(
+        db.scalars(
+            stmt.order_by(AiqeTestCase.created_at.desc()).limit(
+                min(max(int(limit), 1), 200)
+            )
+        )
+    )
+
+
 def review_case(
     db: Session, *, project_id: int, case_id: str, decision: str, reviewer_id: int
 ) -> AiqeTestCase:

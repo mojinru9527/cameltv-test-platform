@@ -10,12 +10,12 @@ from app.aiqe.services.defect_draft_service import (
     DefectDraftError,
     build_bundle,
     build_defect_draft,
+    get_defect,
     promote_draft,
 )
 from app.aiqe.services.evidence_service import EvidenceRefError
 from app.core.deps import CurrentUser, get_db, require_permission
 from app.core.exceptions import APIException
-from app.models.defect import Defect
 from app.schemas.common import R
 
 router = APIRouter(prefix="/aiqe/defects", tags=["AIQE Defect Draft"])
@@ -38,7 +38,7 @@ def _not_found(defect_id: int) -> APIException:
     return APIException(code=404, msg=f"缺陷不存在: {defect_id}", http_status=404)
 
 
-def _draft_out(defect: Defect) -> dict:
+def _draft_out(defect) -> dict:
     return {
         "id": defect.id,
         "project_id": defect.project_id,
@@ -57,9 +57,9 @@ def _draft_out(defect: Defect) -> dict:
     }
 
 
-def _load_defect(db: Session, defect_id: int, project_id: int) -> Defect:
-    defect = db.get(Defect, defect_id)
-    if defect is None or int(defect.project_id or 0) != int(project_id):
+def _load_defect(db: Session, defect_id: int, project_id: int):
+    defect = get_defect(db, defect_id=defect_id, project_id=project_id)
+    if defect is None:
         raise _not_found(defect_id)
     return defect
 

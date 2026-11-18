@@ -170,6 +170,31 @@ def list_acs(db: Session, contract_id: str) -> list[AcceptanceCriterion]:
     )
 
 
+def list_contracts(
+    db: Session,
+    *,
+    project_id: int,
+    requirement_id: str | None = None,
+    status: str | None = None,
+    limit: int = 50,
+) -> list[RequirementContract]:
+    """项目作用域的 Contract 列表（路由层不直连 ORM）。"""
+    stmt = select(RequirementContract).where(
+        RequirementContract.project_id == int(project_id)
+    )
+    if requirement_id:
+        stmt = stmt.where(RequirementContract.requirement_id == requirement_id)
+    if status:
+        stmt = stmt.where(RequirementContract.status == status.upper())
+    return list(
+        db.scalars(
+            stmt.order_by(RequirementContract.created_at.desc()).limit(
+                min(max(int(limit), 1), 200)
+            )
+        )
+    )
+
+
 def create_contract_draft(
     db: Session,
     *,

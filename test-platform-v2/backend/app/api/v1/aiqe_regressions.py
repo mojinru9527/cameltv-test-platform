@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Header, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.aiqe.services.regression_service import (
@@ -20,10 +19,10 @@ from app.aiqe.services.regression_service import (
     create_regression_request,
     get_regression,
     get_verification_run,
+    load_comparison,
     list_regressions,
 )
 from app.aiqe.services.regression_terminal import (
-    handle_run_terminal,
     regression_owner_project,
 )
 from app.core.deps import CurrentUser, get_db, require_permission
@@ -193,37 +192,14 @@ def get_regression_comparison(
     current: CurrentUser = Depends(require_permission("defect:list")),
     db: Session = Depends(get_db),
 ):
-    from app.models.defect import RunComparisonSnapshot
-
     try:
-        row = get_regression(db, regression_id, current.project_id or 0)
+        row, snapshot = load_comparison(
+            db, regression_id=regression_id, project_id=current.project_id or 0
+        )
     except RegressionNotFound:
         raise APIException(
             code=404, msg=f"回归请求不存在: {regression_id}", http_status=404
         ) from None
-    snapshot = (
-        db.scalar(
-            select(RunComparisonSnapshot).where(
-                RunComparisonSnapshot.id == row.comparison_snapshot_id
-            )
-        )
-        if row.comparison_snapshot_id
-        else None
-    )
-    if snapshot is None and row.verification_run_id:
-        # 允许在事件消费前主动收敛一次（幂等）。
-        handle_run_terminal(db, run_id=row.verification_run_id)
-        db.commit()
-        db.refresh(row)
-        snapshot = (
-            db.scalar(
-                select(RunComparisonSnapshot).where(
-                    RunComparisonSnapshot.id == row.comparison_snapshot_id
-                )
-            )
-            if row.comparison_snapshot_id
-            else None
-        )
     if snapshot is None:
         return R.ok(
             {

@@ -25,12 +25,15 @@ from app.api.v1 import (
 from app.api.v1 import (
     aiqe_admin,
     aiqe_artifacts,
-    aiqe_capabilities,
+    aiqe_automation,
+    aiqe_contracts,
     aiqe_defects,
+    aiqe_insights,
     aiqe_learning,
     aiqe_platform,
     aiqe_regressions,
     aiqe_runs,
+    aiqe_triage,
     aiqe_workflows,
 )
 from app.api.v1 import ai_config
@@ -99,7 +102,10 @@ api_router.include_router(campaign_execution_router.router)
 api_router.include_router(aiqe_runs.router)
 api_router.include_router(aiqe_artifacts.router)
 api_router.include_router(aiqe_defects.router)
-api_router.include_router(aiqe_capabilities.router)
+api_router.include_router(aiqe_contracts.router)
+api_router.include_router(aiqe_triage.router)
+api_router.include_router(aiqe_insights.router)
+api_router.include_router(aiqe_automation.router)
 api_router.include_router(aiqe_admin.router)
 api_router.include_router(aiqe_workflows.router)
 api_router.include_router(aiqe_platform.router)
