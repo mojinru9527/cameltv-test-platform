@@ -220,6 +220,7 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 16. ✅ AUD-017：A5 影响图 + 强制集合不可删（第 8 轮）
 17. ✅ AUD-020：PlatformBinding + 按平台 6 态 + 多端 Preflight（第 8 轮，代码侧）
 18. ✅ §06 REST 契约 + AUD-013 追加 MCP 工具名（第 9 轮）
+19. ✅ 前端：Run 详情断言 + 证据 Viewer（第 10 轮）
 
 > **§06 REST 契约与 MCP 工具名（第 9 轮补充）：** 新增 `/api/v1/aiqe` 能力路由
 > （contracts / cases / experiments / observations / triage / benchmarks / impact / platforms /
@@ -227,6 +228,11 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 > "不得自报事实"；MCP Gateway 改用规范 `aiqe.*` 工具名并标注
 > READ/WRITE_DRAFT/EXECUTE_TEST/APPROVE 作用域，`close_defect` 等受保护动作永不暴露。
 > 测试：`tests/test_aiqe_capabilities_api.py`（12 条）+ MCP 规范名/别名/禁列测试。
+>
+> **前端同步（第 10 轮）：** Run 详情新增断言结果表 + `EvidencePanel`
+> （截图/视频的 blob 查看、Trace 下载、HAR 请求表、DOM/a11y/DB JSON、Console/Runner 日志；
+> 上传状态徽标；按需加载，卸载时撤销 object URL），JSON 下载仍经后端重新鉴权。
+> 验证：`tsc -b` 干净、变更文件 ESLint 干净、`evidencePanel` 6 条 + Run/AIQE 页面 16 条通过。
 >
 > **代码侧 20/20 AUD 已全部交付。** 仍未满足的是 v1.5 §00-8 的**环境证据**类完成定义：
 > 真实 Test 环境下 20 次连续 Dogfood Run ID、真实 iOS/Android/小程序设备验收、Runner 出口
