@@ -6,6 +6,11 @@ from app.aiqe.models.event import EventOutbox, RunEvent
 from app.aiqe.models.hardening import MutationLedger
 from app.aiqe.models.learning import BugPattern, LearningCandidate
 from app.aiqe.models.noise_rule import NoiseRule
+from app.aiqe.models.contract import (
+    AcceptanceCriterion,
+    AiqeTestCase,
+    RequirementContract,
+)
 from app.aiqe.models.deployment import DeploymentAttestation
 from app.aiqe.models.profile import ExecutionProfile
 from app.aiqe.models.query_registry import RegisteredQuery
@@ -16,7 +21,9 @@ from app.aiqe.models.security import TargetPolicyRecord
 from app.aiqe.models.workflow import ResourceLock, WorkflowDefinition
 
 __all__ = [
+    "AcceptanceCriterion",
     "AgentExecution",
+    "AiqeTestCase",
     "BugPattern",
     "DeploymentAttestation",
     "EventOutbox",
@@ -27,6 +34,7 @@ __all__ = [
     "NodeRun",
     "NoiseRule",
     "RegisteredQuery",
+    "RequirementContract",
     "ResourceLock",
     "RunArtifact",
     "RunAssertionResult",

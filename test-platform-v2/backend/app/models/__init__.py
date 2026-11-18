@@ -26,6 +26,8 @@ from app.aiqe.models import secret_handle as aiqe_secret_handle_models  # noqa: 
 from app.aiqe.models import query_registry as aiqe_query_registry_models  # noqa: F401
 # AUD-009：可信部署证明
 from app.aiqe.models import deployment as aiqe_deployment_models  # noqa: F401
+# AUD-014/015：Requirement Contract + 结构化 TestCase
+from app.aiqe.models import contract as aiqe_contract_models  # noqa: F401
 from app.models.ai_task import AiTask
 from app.models.execution_node import ExecutionNode
 from app.models.ai_agent_token import AiAgentToken
