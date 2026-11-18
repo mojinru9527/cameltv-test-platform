@@ -82,6 +82,49 @@ def create_contract_api(
     return R.ok(_contract_out(db, contract))
 
 
+@router.get("/contracts", response_model=R[dict], summary="Contract 列表（项目作用域）")
+def list_contracts_api(
+    requirement_id: str | None = None,
+    status: str | None = None,
+    limit: int = 50,
+    current: CurrentUser = Depends(_console),
+    db: Session = Depends(get_db),
+):
+    from sqlalchemy import select
+
+    from app.aiqe.models.contract import RequirementContract
+
+    stmt = select(RequirementContract).where(
+        RequirementContract.project_id == int(current.project_id or 0)
+    )
+    if requirement_id:
+        stmt = stmt.where(RequirementContract.requirement_id == requirement_id)
+    if status:
+        stmt = stmt.where(RequirementContract.status == status.upper())
+    rows = list(
+        db.scalars(
+            stmt.order_by(RequirementContract.created_at.desc()).limit(min(max(limit, 1), 200))
+        )
+    )
+    return R.ok(
+        {
+            "items": [
+                {
+                    "id": row.id,
+                    "requirement_id": row.requirement_id,
+                    "revision": row.revision,
+                    "title": row.title,
+                    "status": row.status,
+                    "revision_checksum": row.revision_checksum,
+                    "created_at": row.created_at,
+                }
+                for row in rows
+            ],
+            "total": len(rows),
+        }
+    )
+
+
 @router.get("/contracts/{contract_id}", response_model=R[dict], summary="Contract 详情")
 def get_contract_api(
     contract_id: str,
@@ -239,6 +282,34 @@ def create_case_api(
         raise _bad(str(exc)) from None
     db.commit()
     return R.ok({**_case_out(row), "created": created})
+
+
+@router.get("/cases", response_model=R[dict], summary="结构化 Case 列表")
+def list_cases_api(
+    contract_id: str | None = None,
+    review_status: str | None = None,
+    priority: str | None = None,
+    limit: int = 100,
+    current: CurrentUser = Depends(_console),
+    db: Session = Depends(get_db),
+):
+    from sqlalchemy import select
+
+    from app.aiqe.models.contract import AiqeTestCase
+
+    stmt = select(AiqeTestCase).where(
+        AiqeTestCase.project_id == int(current.project_id or 0)
+    )
+    if contract_id:
+        stmt = stmt.where(AiqeTestCase.contract_id == contract_id)
+    if review_status:
+        stmt = stmt.where(AiqeTestCase.review_status == review_status.upper())
+    if priority:
+        stmt = stmt.where(AiqeTestCase.priority == priority.upper())
+    rows = list(
+        db.scalars(stmt.order_by(AiqeTestCase.created_at.desc()).limit(min(max(limit, 1), 200)))
+    )
+    return R.ok({"items": [_case_out(row) for row in rows], "total": len(rows)})
 
 
 @router.post("/cases/{case_id}/review", response_model=R[dict], summary="测试设计审核")

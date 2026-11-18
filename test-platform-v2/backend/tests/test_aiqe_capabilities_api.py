@@ -344,3 +344,35 @@ def test_agent_task_plan(api: TestClient):
     keys = [task["agent_key"] for task in data["tasks"]]
     assert keys.index("A1") < keys.index("A2") < keys.index("A3")
     assert data["a0_output"]["note"].startswith("A0 完成只代表")
+
+
+def test_contract_and_case_list_endpoints(api: TestClient):
+    contract = _approved_contract(api)
+    listed = api.get(f"{BASE}/contracts")
+    assert listed.status_code == 200, listed.text
+    data = listed.json()["data"]
+    assert data["total"] >= 1
+    assert any(item["id"] == contract["id"] for item in data["items"])
+
+    filtered = api.get(f"{BASE}/contracts", params={"status": "FROZEN"})
+    assert all(item["status"] == "FROZEN" for item in filtered.json()["data"]["items"])
+
+    case = api.post(
+        f"{BASE}/cases",
+        json={
+            "title": "列表页 Case",
+            "priority": "P2",
+            "contract_id": contract["id"],
+            "contract_revision": contract["revision"],
+            "covers_ac_ids": ["AC-001"],
+            "steps": [],
+            "oracle_type": "requirement_ac",
+            "oracle_ref": "AC-001",
+        },
+    )
+    assert case.status_code == 200, case.text
+    cases = api.get(f"{BASE}/cases", params={"contract_id": contract["id"]})
+    assert cases.status_code == 200
+    assert [item["case_id"] for item in cases.json()["data"]["items"]] == [
+        case.json()["data"]["case_id"]
+    ]
