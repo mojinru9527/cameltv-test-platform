@@ -6,6 +6,7 @@ from app.aiqe.models.event import EventOutbox, RunEvent
 from app.aiqe.models.hardening import MutationLedger
 from app.aiqe.models.learning import BugPattern, LearningCandidate
 from app.aiqe.models.noise_rule import NoiseRule
+from app.aiqe.models.benchmark import BenchmarkDataset, BenchmarkRun, BenchmarkSample
 from app.aiqe.models.interference import InterferenceObservation, TriageCase
 from app.aiqe.models.contract import (
     AcceptanceCriterion,
@@ -25,6 +26,9 @@ __all__ = [
     "AcceptanceCriterion",
     "AgentExecution",
     "AiqeTestCase",
+    "BenchmarkDataset",
+    "BenchmarkRun",
+    "BenchmarkSample",
     "BugPattern",
     "DeploymentAttestation",
     "EventOutbox",

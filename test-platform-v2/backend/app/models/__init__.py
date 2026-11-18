@@ -30,6 +30,8 @@ from app.aiqe.models import deployment as aiqe_deployment_models  # noqa: F401
 from app.aiqe.models import contract as aiqe_contract_models  # noqa: F401
 # AUD-019：干扰观测 + TriageCase
 from app.aiqe.models import interference as aiqe_interference_models  # noqa: F401
+# AUD-018：Agent Benchmark
+from app.aiqe.models import benchmark as aiqe_benchmark_models  # noqa: F401
 from app.models.ai_task import AiTask
 from app.models.execution_node import ExecutionNode
 from app.models.ai_agent_token import AiAgentToken
