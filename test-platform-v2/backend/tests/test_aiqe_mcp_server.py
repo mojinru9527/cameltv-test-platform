@@ -48,8 +48,8 @@ def test_tools_list(server_module):
         {"jsonrpc": "2.0", "id": 2, "method": "tools/list"}, gateway(server_module)
     )
     tools = {tool["name"]: tool for tool in response["result"]["tools"]}
-    assert tools["get_run"]["_meta"]["mode"] == "read"
-    assert tools["create_run"]["_meta"]["requires_approval"] is True
+    assert tools["aiqe.run.get"]["_meta"]["mode"] == "read"
+    assert tools["aiqe.run.launch"]["_meta"]["requires_approval"] is True
 
 
 def test_tools_call_read(server_module):

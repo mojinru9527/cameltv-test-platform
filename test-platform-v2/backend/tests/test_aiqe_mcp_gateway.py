@@ -33,16 +33,16 @@ def test_read_tool_delegates(gateway_module):
         return {"run_id": "run-1", "status": "PASS"}
 
     gateway = gateway_module.AiqeMcpGateway(reader=reader)
-    result = gateway.call("get_run", {"run_id": "run-1"})
+    result = gateway.call("aiqe.run.get", {"run_id": "run-1"})
     assert result["status"] == "PASS"
-    assert calls == [("get_run", {"run_id": "run-1"})]
+    assert calls == [("aiqe.run.get", {"run_id": "run-1"})]
 
 
 def test_write_requires_approval(gateway_module):
     written = []
     gateway = gateway_module.AiqeMcpGateway(writer=lambda *args: written.append(args))
     with pytest.raises(gateway_module.ApprovalRequired):
-        gateway.call("create_run", {"scenario": "x"})
+        gateway.call("aiqe.run.launch", {"scenario": "x"})
     assert written == []
 
 
@@ -52,7 +52,7 @@ def test_write_invalid_token_rejected(gateway_module):
         approval_verifier=lambda token, tool, args: False,
     )
     with pytest.raises(gateway_module.ApprovalRequired):
-        gateway.call("create_run", {}, approval_token="bad")
+        gateway.call("aiqe.run.launch", {}, approval_token="bad")
 
 
 def test_write_with_valid_token(gateway_module):
@@ -66,9 +66,9 @@ def test_write_with_valid_token(gateway_module):
         writer=writer,
         approval_verifier=lambda token, tool, args: token == "approved-1",
     )
-    result = gateway.call("retry_run", {"run_id": "run-1"}, approval_token="approved-1")
+    result = gateway.call("aiqe.run.launch", {"run_id": "run-1"}, approval_token="approved-1")
     assert result == {"ok": True}
-    assert captured == [("retry_run", {"run_id": "run-1"}, "approved-1")]
+    assert captured == [("aiqe.run.launch", {"run_id": "run-1"}, "approved-1")]
 
 
 def test_unknown_tool(gateway_module):
@@ -78,11 +78,55 @@ def test_unknown_tool(gateway_module):
 
 def test_tool_metadata_and_agents(gateway_module):
     tools = {tool["name"]: tool for tool in gateway_module.AiqeMcpGateway.list_tools()}
-    assert tools["get_run"]["mode"] == "read"
-    assert tools["create_run"]["requires_approval"] is True
+    assert tools["aiqe.run.get"]["mode"] == "read"
+    assert tools["aiqe.run.launch"]["requires_approval"] is True
     assert gateway_module.AiqeMcpGateway.supported_agents() == ("claude-code", "codex", "cursor")
 
 
 def test_missing_reader_adapter(gateway_module):
     with pytest.raises(gateway_module.McpError):
         gateway_module.AiqeMcpGateway().call("list_runs", {})
+
+
+def test_spec_tool_names_and_scopes(gateway_module):
+    tools = {tool["name"]: tool for tool in gateway_module.AiqeMcpGateway.list_tools()}
+    for name in (
+        "aiqe.project.get_context",
+        "aiqe.requirement.analyze",
+        "aiqe.requirement.get",
+        "aiqe.testcase.generate",
+        "aiqe.testcase.review",
+        "aiqe.workflow.plan",
+        "aiqe.workflow.validate",
+        "aiqe.run.launch",
+        "aiqe.run.get",
+        "aiqe.run.events",
+        "aiqe.triage.analyze",
+        "aiqe.regression.plan",
+        "aiqe.regression.launch",
+        "aiqe.benchmark.run",
+        "aiqe.learning.review",
+        "aiqe.learning.activate",
+    ):
+        assert name in tools, name
+    assert tools["aiqe.run.get"]["scope"] == "READ"
+    assert tools["aiqe.run.events"]["mode"] == "read"
+    assert tools["aiqe.run.launch"]["scope"] == "EXECUTE_TEST"
+    assert tools["aiqe.learning.review"]["scope"] == "APPROVE"
+    assert tools["aiqe.testcase.generate"]["requires_approval"] is True
+
+
+def test_forbidden_tools_are_never_exposed(gateway_module):
+    names = {tool["name"] for tool in gateway_module.AiqeMcpGateway.list_tools()}
+    assert "close_defect" not in names
+    gateway = gateway_module.AiqeMcpGateway(reader=lambda tool, args: 1)
+    with pytest.raises(gateway_module.UnknownTool):
+        gateway.call("close_defect", {})
+
+
+def test_legacy_alias_maps_to_canonical_handler(gateway_module):
+    calls: list[str] = []
+    gateway = gateway_module.AiqeMcpGateway(reader=lambda tool, args: calls.append(tool))
+    gateway.call("get_run", {"run_id": "r-1"})
+    gateway.call("list_runs", {})
+    assert calls == ["aiqe.run.get", "aiqe.project.get_context"]
