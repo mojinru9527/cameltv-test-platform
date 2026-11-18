@@ -15,6 +15,7 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.aiqe.models.run import NodeRun, TestRun
+from app.aiqe.redaction import redact_mapping
 from app.aiqe.services import dag_scheduler, node_executor
 from app.core.config import settings
 from app.core.db import SessionLocal
@@ -103,6 +104,8 @@ def run_job(db: Session, job_id: int) -> dict:
         dag_scheduler.mark_running(db, run_id, node.node_key)
 
     result = node_executor.execute_node(node, db=db)
+    # AUD-003：执行明细可能含 token/cookie，落库前统一脱敏（节点输出同一份）。
+    safe_detail = redact_mapping(result.detail)
     dag_scheduler.complete_node(
         db,
         run_id,
@@ -110,10 +113,10 @@ def run_job(db: Session, job_id: int) -> dict:
         result.status,
         graph,
         error_class=result.error_class or None,
-        outputs={"execution": result.detail},
+        outputs={"execution": safe_detail},
     )
     job.status = "success" if result.status == "PASSED" else "failed"
-    job.result_json = json.dumps(result.detail, ensure_ascii=False, default=str)[:20000]
+    job.result_json = json.dumps(safe_detail, ensure_ascii=False, default=str)[:20000]
     job.summary = f"{node.node_key}:{result.status}"
     job.error_message = result.error_class
     job.finished_at = _now()

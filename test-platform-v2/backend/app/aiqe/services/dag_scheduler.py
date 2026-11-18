@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.aiqe.models.run import NodeRun, StepAttempt, TestRun
 from app.aiqe.models.workflow import ResourceLock
+from app.aiqe.redaction import redact_mapping
 from app.aiqe.services import resource_lock
 from app.aiqe.services.run_state import apply_transition
 
@@ -293,6 +294,8 @@ def complete_node(
 ) -> TestRun:
     if status not in NODE_TERMINAL:
         raise ValueError(f"非法节点终态: {status}")
+    # AUD-003：节点输出是普通 JSON，持久化前必须脱敏（secret 只允许以 Handle 引用出现）。
+    safe_outputs = redact_mapping(dict(outputs)) if outputs else None
     rows = list(db.scalars(select(NodeRun).where(NodeRun.run_id == run_id)))
     by_key = {row.node_key: row for row in rows}
     row = by_key.get(node_key)
@@ -302,10 +305,10 @@ def complete_node(
     row.finished_at = datetime.now(UTC)
     if error_class:
         row.error_class = error_class
-    if outputs:
-        row.output_ref = {**(row.output_ref or {}), **dict(outputs)}
+    if safe_outputs:
+        row.output_ref = {**(row.output_ref or {}), **safe_outputs}
     # batch-340：attempt 终态先落库（失败 attempt 永久保留，重试追加新 attempt）。
-    _finalize_attempt(db, row, status, error_class, outputs)
+    _finalize_attempt(db, row, status, error_class, safe_outputs)
 
     for resource in row.resource_keys_json or []:
         try:

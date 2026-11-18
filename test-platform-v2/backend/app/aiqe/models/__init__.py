@@ -9,6 +9,7 @@ from app.aiqe.models.noise_rule import NoiseRule
 from app.aiqe.models.profile import ExecutionProfile
 from app.aiqe.models.triage import TriageExperiment
 from app.aiqe.models.run import NodeRun, RunAssertionResult, StepAttempt, TestRun
+from app.aiqe.models.secret_handle import SecretHandle
 from app.aiqe.models.security import TargetPolicyRecord
 from app.aiqe.models.workflow import ResourceLock, WorkflowDefinition
 
@@ -26,6 +27,7 @@ __all__ = [
     "RunArtifact",
     "RunAssertionResult",
     "RunEvent",
+    "SecretHandle",
     "StepAttempt",
     "TargetPolicyRecord",
     "TestRun",

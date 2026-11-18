@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.aiqe.models.event import EventOutbox, RunEvent
 from app.aiqe.models.run import TestRun
+from app.aiqe.redaction import redact_mapping
 
 PRODUCERS: frozenset[str] = frozenset(
     {"api_runner", "playwright", "keploy", "agent", "system", "node"}
@@ -63,6 +64,8 @@ def append_event(
     if producer not in PRODUCERS:
         raise InvalidEventPayload(f"未知 producer: {producer!r}")
     _validate_payload(payload)
+    # AUD-003：事件载荷可被前端/LLM 读取，入库前统一脱敏。
+    payload = redact_mapping(payload)
 
     # 行锁串行化同一 Run 的 seq 分配（SQLite 忽略 FOR UPDATE，单写者天然串行）
     run = db.scalar(select(TestRun).where(TestRun.id == run_id).with_for_update())
