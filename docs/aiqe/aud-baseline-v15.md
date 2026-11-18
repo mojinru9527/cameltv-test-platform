@@ -13,9 +13,9 @@
 | 第一批 | AUD-002 DB Query Registry | 部分（只读 SQL 校验存在，无登记/项目注入/超时） | ✅ 已交付 |
 | 第一批 | AUD-003 Secret 全链路 | 部分（headers 脱敏，输出/持久化无分类器） | ✅ 已交付 |
 | 第一批 | AUD-004 实验→真 Run | **违规**（`uuid4()` 伪造 verification_run_id + 直接 completed） | ✅ 已交付 |
-| 第一批 | AUD-005 Capability/Preflight | 部分（boolean available，无 VERIFIED 状态、无 Preflight） | ⬜ |
-| 第一批 | AUD-006 状态一致性/恢复 | 部分（lease/fencing 无、事件无生产者、Reconciler 无） | ⬜ |
-| 第二批 | AUD-007 Assertion Engine | **缺失**（断言写死在 node_executor，`run_assertion_results` 零写入） | ⬜ |
+| 第一批 | AUD-005 Capability/Preflight | 部分（boolean available，无 VERIFIED 状态、无 Preflight） | ✅ 已交付 |
+| 第一批 | AUD-006 状态一致性/恢复 | 部分（lease/fencing 无、事件无生产者、Reconciler 无） | ✅ 已交付 |
+| 第二批 | AUD-007 Assertion Engine | **缺失**（断言写死在 node_executor，`run_assertion_results` 零写入） | ✅ 已交付 |
 | 第二批 | AUD-008 Artifact 生命周期 | 部分（模型+存储+GC 有，无 Upload/Download API、无 Viewer、GC 硬删） | ⬜ |
 | 第二批 | AUD-009 Regression 幂等/SHA | **缺失**（`min_length=7`、无 fingerprint、无 deployed SHA） | ⬜ |
 | 第二批 | AUD-010 Regression 终态/对比 | **缺失** | ⬜ |
@@ -123,27 +123,66 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 
 ## 3. 第一批剩余缺口（按代码事实）
 
-### AUD-005 Capability / Preflight
+> AUD-001…AUD-006 均已交付（见 2.1–2.3、3.1–3.3）。第一批无剩余 P0 缺口。
+> 仍属 DevOps 交付、不在代码范围：Runner 出口防火墙 / 容器网络 deny-by-default、真实浏览器/设备节点注册。
 
-- 现状：`NodeCapabilityManifest.available: bool`；`select_nodes` 无生产调用点；无 Preflight。
-- 缺口：无 6 态 `capability_status`（REGISTERED/AVAILABLE/VERIFIED/DEGRADED/UNAVAILABLE/REVOKED）；无签名 Manifest；无"软件更新后 VERIFIED 降级"；无 Preflight（Run 创建/派发前检查在线、能力、版本、环境、凭据、资源锁）；缺能力时不是 Launch 前 BLOCKED，而是执行期才 `UNSUPPORTED_DRIVER`。
+### 3.1 AUD-005（已交付）
 
-### AUD-006 状态一致性与恢复
+**问题**：`NodeCapabilityManifest.available: bool` 无法区分 REGISTERED / AVAILABLE / VERIFIED；无 Preflight，缺少能力时执行期才 `UNSUPPORTED_DRIVER`。
 
-- 现状：`job_consumer` 原子认领（pending→running + `lease_expires_at`）；`dag_scheduler` 聚合节点→Run 状态；`run_state.apply_transition` 单一状态机。
-- 缺口：无 fencing token（旧 Worker 迟到结果不被拒绝）；`append_event` 仍无生产调用（Run 无事件时间线，`GET /runs/{id}/events` 恒为空）；无 Reconciler（过期 Job / 无 heartbeat NodeRun / 节点终态但 Run 未收口）；无 100 并发 / Worker kill / 重复消息测试。
+**交付**：
 
-### AUD-002 / AUD-003 / AUD-004
+| 文件 | 作用 |
+|---|---|
+| `app/aiqe/models/capability.py` + 迁移 `20261124_aud005_capability_status` | 6 态 `capability_status`、`verified_platforms_json`、`verified_at`、`runner_version`/`manifest_version`/`manifest_signature`、`status_reason`；`available` 保留为派生投影 |
+| `app/aiqe/services/capability_registry.py` | `compute_effective_status`（心跳新鲜度）、`mark_verified`（必须真实平台+证据）、`invalidate_verification`（软件更新降级）、`mark_degraded`/`revoke`/`restore`、`select_nodes` 仅可调度状态、`platform_matrix` |
+| `app/aiqe/services/preflight.py` | driver→能力映射、生产环境守卫、单节点/整图 preflight、`schedule_guard`；进程内 http/db 不要求外部节点 |
+| `app/aiqe/services/dag_scheduler.py` | `schedule(preflight=...)`：不可执行节点直接 BLOCKED 且**不创建 ExecutionJob** |
+| `app/aiqe/services/job_consumer.py` | 执行前预检，`PREFLIGHT_BLOCKED` 落节点 blocker |
 
-见 2.1–2.3（已交付）。
+**测试**：`tests/test_aiqe_aud005_capability_preflight.py`（21 条：6 态、软件更新降级、心跳过期、DEGRADED/REVOKED、平台不匹配、生产守卫、整图 blocker、缺能力不建 Job）。
+
+### 3.2 AUD-006（已交付）
+
+**问题**：无 fencing token（旧 Worker 迟到结果可覆盖新结果）；`append_event` 无生产调用（Run 时间线恒空）；无 Reconciler（Worker kill 后 Run 可能永久 RUNNING）。
+
+**交付**：
+
+| 文件 | 作用 |
+|---|---|
+| `app/aiqe/models/run.py` + 迁移 `20261124_aud006_fencing_token` | `node_runs.fencing_token` / `step_attempts.fencing_token` |
+| `app/aiqe/services/lease.py` | `LeaseContext`、`assert_current`（token + 租约有效期）、`bump_fencing_token`、`StaleLeaseError`/`LeaseExpired` |
+| `app/aiqe/services/job_consumer.py` | 认领时以"下一次 attempt"为唯一 token 来源并提升节点 token；`run_job`/`complete_from_report` 写前校验 token，迟到上报返回 `STALE_LEASE` |
+| `app/aiqe/services/dag_scheduler.py` | `complete_node(fencing_token=...)` 拒绝旧 token；生产 `node.ready/node.started/node.completed|failed|blocked/node.retry_scheduled/node.lease_expired/run.completed` 事件（幂等 producer_event_id）；`finalize_run()` |
+| `app/aiqe/services/reconciler.py` | 过期租约 Job → 节点 requeue（上限后 BLOCKED）、token 提升、Run 收口、实验同步；`AIQE_RECONCILER_ENABLED` 后台线程 |
+
+**测试**：`tests/test_aiqe_aud006_state_recovery.py`（15 条：token 提升/拒绝、租约过期、Worker kill→requeue→新 Job、超限 BLOCKED→Run INCOMPLETE、迟到结果拒绝、事件生命周期、重复投递幂等）。
+
+### 3.3 AUD-007（已交付）
+
+**问题**：断言逻辑内联在 Driver（`expected_status`/`expect_text`）；`run_assertion_results` 零写入；Driver 成功即 Run PASS。
+
+**交付**：
+
+| 文件 | 作用 |
+|---|---|
+| `app/aiqe/assertions/observation.py` | 结构化 `Observation` + JSONPath 子集（拒绝通配/递归） |
+| `app/aiqe/assertions/registry.py` | 有版本 `OperatorSpec`：equals/not_equals/contains/exists/regex/in/gte/lte/json_schema（按 JSON Pointer 报错） |
+| `app/aiqe/assertions/engine.py` | P0/P1 无 Oracle → BLOCKED；缺失值 → FAIL/UNKNOWN 不 PASS；evaluator 异常 → ERROR；Driver 失败 → NOT_EVALUATED；required-only 聚合；`poll_until`（有 timeout 与采样） |
+| `app/aiqe/models/run.py` + 迁移 `20261124_aud007_assertion_fields` | `run_assertion_results` 增加 oracle_*/evaluator_*/source_ref/required/duration_ms/evaluated_at |
+| `app/aiqe/services/result_writer.py` | 唯一断言写入口（attempt+key 幂等）、聚合→节点终态、`assertion.evaluated` 事件 |
+| `app/aiqe/services/job_consumer.py` | 有断言时以断言结论覆盖 Driver 结论（HTTP 200 + 业务错误 → FAIL） |
+| `app/api/v1/aiqe_runs.py` | `GET /api/v1/aiqe/runs/{run_id}/assertions`（含 Oracle/evaluator/expected/actual） |
+
+**测试**：`tests/test_aiqe_aud007_assertion_engine.py`（26 条：算子矩阵、Schema JSON Pointer、缺失值语义、P0 Oracle 门禁、evaluator 异常、聚合优先级、轮询、真实服务 200+业务错误端到端落库、接口 RBAC/项目隔离）。
 
 ## 4. 第二批缺口要点
 
-- AUD-007：断言逻辑内联在 `node_executor`（`expected_status`/`expect_text`），无 Observation/Registry/Engine；`run_assertion_results` 零写入；`GET /runs/{id}/assertions` 不存在；`dag_scheduler._finalize` 用节点状态直接推 Run PASS（与 v1.5 §06-7 冲突）。
+- AUD-007：✅ 已交付（见 3.3）。`dag_scheduler._finalize` 仍以节点状态聚合 Run；质量门禁读取断言需在 AUD-011 Dogfood 工作流显式声明 required 断言。
 - AUD-008：`put_artifact` 仅测试调用；无 Upload/Download API；无 `project_id/upload_status/retention_until`；GC `db.delete` 硬删无墓碑；无 Viewer。
 - AUD-009：`regression_service` `fixed_sha` 只要求 ≥7 位；无 fingerprint/唯一约束；无 deployed SHA 校验；创建的 Run 无 NodeRun（永远 QUEUED）。
-- AUD-010：无 `RunTerminalEventHandler`、无 `RunComparisonSnapshot`、无 `/comparison` `/cancel` 路由。
-- AUD-011：`tests/e2e/aiqe/test_tc_aiqe_001_010.py` 仅断言页面 `body.count()==1`；`RunContext` 无生产调用；无跨系统混合 Workflow 种子。
+- AUD-010：无 `RunTerminalEventHandler`、无 `RunComparisonSnapshot`、无 `/comparison` `/cancel` 路由（AUD-006 已提供 `run.completed` 事件作为前置）。
+- AUD-011：`tests/e2e/aiqe/test_tc_aiqe_001_010.py` 仅断言页面 `body.count()==1`；`RunContext` 已有生产可用的解析能力（AUD-003/007 起），但缺跨系统混合 Workflow 种子与 Dogfood harness。
 - AUD-012：`defect_service.validate_reproduction` 仅校验 `artifact:/event:/run:/node:/signal:` 前缀；无存在性/项目/run scope 校验；无 ReproductionBundle。
 
 ## 5. 第三批缺口要点
@@ -160,15 +199,17 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 
 按"风险消除 / 代码量"排序，每项独立可验证：
 
-1. ✅ AUD-001（本轮）
-2. AUD-004：删除伪造 verification_run_id，E1–E6 语义与单变量校验对齐 v1.5 §04，实验必须绑定真实 `TestRun`（`status=QUEUED`，Reconciler 收敛）。
-3. AUD-003：`SensitiveDataClassifier` + 输出脱敏 + Secret Handle 表；`job_consumer` 停止明文落库；canary 测试。
-4. AUD-006+007：`result_writer` 统一写 `run_events` + `run_assertion_results`，`_finalize` 改为按 required assertion 聚合。
-5. AUD-002：Query Registry + 项目注入 + 超时；`node_executor` 接入 db driver。
-6. AUD-005：capability 6 态 + Preflight（Run 创建前 BLOCKED）。
-7. AUD-008/009/010：Artifact 生命周期、Regression fingerprint/40 位 SHA/deployed SHA、终态同步 + 对比快照。
-8. AUD-012/016：evidence ref 服务端解析（存在性 + 项目/run scope）。
-9. AUD-011：混合 Workflow Dogfood harness（真实 Driver）。
-10. AUD-013…020：Agent Protocol/Registry/DAG、Contract/Case 模型、A5 影响图、A6 Benchmark、Noise 12 类目、Platform Binding。
+1. ✅ AUD-001（第 1 轮）
+2. ✅ AUD-004：删除伪造 verification_run_id，E1–E6 语义与单变量校验对齐 v1.5 §04（第 1 轮）
+3. ✅ AUD-003：`SensitiveDataClassifier` + 输出脱敏 + Secret Handle + canary 测试（第 1 轮）
+4. ✅ AUD-002：Query Registry + 项目注入 + 超时；`node_executor` 接入 db driver（第 1 轮）
+5. ✅ AUD-005：capability 6 态 + Preflight（Launch 前 BLOCKED、不建空跑 Job）（第 2 轮）
+6. ✅ AUD-006：fencing token + 生产事件时间线 + Reconciler（第 2 轮）
+7. ✅ AUD-007：Assertion Engine + `run_assertion_results` 写入 + 断言接口（第 2 轮）
+8. AUD-008：Artifact 生命周期（Upload/Download/RBAC/保留墓碑/Viewer）——**下一轮**
+9. AUD-009/010：Regression fingerprint/40 位 SHA/deployed SHA、终态同步 + 对比快照
+10. AUD-012/016：evidence ref 服务端解析（存在性 + 项目/run scope）+ ReproductionBundle
+11. AUD-011：混合 Workflow Dogfood harness（真实 Driver；复用 AUD-002/005/007 能力）
+12. AUD-013…020：Agent Protocol/Registry/DAG、Contract/Case 模型、A5 影响图、A6 Benchmark、Noise 12 类目、Platform Binding
 
 > 每项完成条件遵循 v1.5 §00-8：代码 + 单测/集成测试 + 正负向/安全/权限/并发路径 + 真实 Run 证据 + OpenAPI/迁移/前端同步 + 无 secret 日志 + PR 描述含代码路径/测试命令/CI/回滚。
