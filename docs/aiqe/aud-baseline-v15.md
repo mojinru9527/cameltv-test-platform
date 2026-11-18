@@ -221,6 +221,7 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 17. ✅ AUD-020：PlatformBinding + 按平台 6 态 + 多端 Preflight（第 8 轮，代码侧）
 18. ✅ §06 REST 契约 + AUD-013 追加 MCP 工具名（第 9 轮）
 19. ✅ 前端：Run 详情断言 + 证据 Viewer（第 10 轮）
+20. ✅ MCP HTTP adapter 对齐规范工具名 + 真实 REST（第 11 轮）
 
 > **§06 REST 契约与 MCP 工具名（第 9 轮补充）：** 新增 `/api/v1/aiqe` 能力路由
 > （contracts / cases / experiments / observations / triage / benchmarks / impact / platforms /
@@ -233,6 +234,11 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 > （截图/视频的 blob 查看、Trace 下载、HAR 请求表、DOM/a11y/DB JSON、Console/Runner 日志；
 > 上传状态徽标；按需加载，卸载时撤销 object URL），JSON 下载仍经后端重新鉴权。
 > 验证：`tsc -b` 干净、变更文件 ESLint 干净、`evidencePanel` 6 条 + Run/AIQE 页面 16 条通过。
+>
+> **MCP 传输层（第 11 轮）：** `http_adapter` 按规范工具名映射到真实 REST
+> （scope READ/WRITE_DRAFT/EXECUTE_TEST/APPROVE、审批 token 透传、X-Project-Id /
+> X-Correlation-Id / X-Client、envelope 拆包、参数 hash 审计）；无 REST 入口的工具显式报错；
+> 配置 `AIQE_API_BASE_URL` 后 stdio server 使用真实 adapter，不再回显占位。
 >
 > **代码侧 20/20 AUD 已全部交付。** 仍未满足的是 v1.5 §00-8 的**环境证据**类完成定义：
 > 真实 Test 环境下 20 次连续 Dogfood Run ID、真实 iOS/Android/小程序设备验收、Runner 出口
