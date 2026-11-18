@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timezone
-from typing import Optional
 
 from sqlalchemy import JSON, Boolean, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -22,22 +21,31 @@ class Defect(Base):
     status: Mapped[str] = mapped_column(String(20), default="open")
     # Statuses: open → confirmed → fixing → pending_review → closed / rejected
     #   rejected / closed → open (reopen)
-    case_id: Mapped[Optional[int]] = mapped_column(default=None, index=True)
-    execution_id: Mapped[Optional[int]] = mapped_column(default=None)
+    case_id: Mapped[int | None] = mapped_column(default=None, index=True)
+    execution_id: Mapped[int | None] = mapped_column(default=None)
     aiqe_run_id: Mapped[str | None] = mapped_column(String(36), default=None, index=True)
     aiqe_node_run_id: Mapped[str | None] = mapped_column(String(36), default=None)
     reproduction_steps_json: Mapped[list | None] = mapped_column(JSON, default=None)
     evidence_refs_json: Mapped[list | None] = mapped_column(JSON, default=None)
     ac_refs_json: Mapped[list | None] = mapped_column(JSON, default=None)
     is_draft: Mapped[bool] = mapped_column(Boolean, default=False)
-    aitde_run_id: Mapped[Optional[int]] = mapped_column(
+    # ── AUD-012：可复现缺陷草稿 ──
+    reproduction_status: Mapped[str] = mapped_column(String(32), default="COMPLETE")
+    failing_assertion_refs_json: Mapped[list | None] = mapped_column(JSON, default=None)
+    no_assertion_reason: Mapped[str] = mapped_column(Text, default="")
+    correlation_id: Mapped[str] = mapped_column(String(128), default="")
+    fixture_namespace: Mapped[str] = mapped_column(String(128), default="")
+    draft_id: Mapped[str | None] = mapped_column(String(36), default=None)
+    approved_by: Mapped[int | None] = mapped_column(default=None)
+    approved_at: Mapped[datetime | None] = mapped_column(default=None)
+    aitde_run_id: Mapped[int | None] = mapped_column(
         ForeignKey("execution_runs.id", ondelete="SET NULL"), default=None, index=True
     )
     assignee_id: Mapped[int] = mapped_column(default=0, index=True)
     external_id: Mapped[str] = mapped_column(String(100), default="")     # 禅道/Jira ID
     external_url: Mapped[str] = mapped_column(String(500), default="")    # 外部链接
     creator_id: Mapped[int] = mapped_column(default=0)
-    resolved_at: Mapped[Optional[datetime]] = mapped_column(default=None)
+    resolved_at: Mapped[datetime | None] = mapped_column(default=None)
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(
         default=lambda: datetime.now(timezone.utc),
