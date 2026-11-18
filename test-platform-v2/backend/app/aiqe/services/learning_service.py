@@ -57,14 +57,20 @@ def get_candidate(
 
 
 def evaluate_candidate(
-    db: Session, candidate_id: str, *, benchmark_run_id: str
+    db: Session,
+    candidate_id: str,
+    benchmark: dict[str, Any] | None = None,
+    *,
+    benchmark_run_id: str | None = None,
+    project_id: int | None = None,
 ) -> LearningCandidate:
     """AUD-018：指标只能来自后端计算的 BenchmarkRun，不接受调用方自报数值。"""
     from app.aiqe.services import benchmark_service
 
-    row = get_candidate(db, candidate_id)
-    run = benchmark_service.get_run(db, benchmark_run_id)
-    metrics = benchmark_service.metrics_of(db, benchmark_run_id)
+    row = get_candidate(db, candidate_id, project_id=project_id)
+    run_id_value = str(benchmark_run_id)
+    run = benchmark_service.get_run(db, run_id_value)
+    metrics = benchmark_service.metrics_of(db, run_id_value)
     if int(metrics.get("samples") or 0) <= 0:
         raise LearningError("BenchmarkRun 没有有效样本，不能作为评估依据")
     true_positives = int(metrics.get("true_positives") or 0)

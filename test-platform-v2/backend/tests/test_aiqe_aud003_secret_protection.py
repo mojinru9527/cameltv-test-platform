@@ -202,7 +202,10 @@ def _scan_tables_for(db, needle: str) -> list[str]:
     return hits
 
 
-def test_canary_token_never_persisted(db_session, login_server):
+def test_canary_token_never_persisted(db_session, login_server, monkeypatch):
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "aiqe_http_allow_private", True)
     port = login_server
     upsert_target_policy(
         db_session,
@@ -226,6 +229,11 @@ def test_canary_token_never_persisted(db_session, login_server):
                     "method": "POST",
                     "json": {"username": "qa", "password": "SuperSecret123"},
                     "expected_status": 200,
+                },
+                # v1.4 起输出必须显式声明（Assertion Runtime / capture_node_outputs）。
+                "outputs": {
+                    "match_id": "$.json.match_id",
+                    "status": "$.json.status",
                 },
             }
         ],

@@ -198,7 +198,6 @@ class RunAssertionResult(Base):
     actual_source: Mapped[str] = mapped_column(String(64), nullable=False, default="")
     severity: Mapped[str] = mapped_column(String(8), nullable=False, default="P1")
     timeout_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    duration_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     error_message: Mapped[str] = mapped_column(String(500), nullable=False, default="")
     evidence_refs_json: Mapped[list[str]] = mapped_column(JSON, default=list)
     artifact_refs_json: Mapped[list[str]] = mapped_column(JSON, default=list)

@@ -569,6 +569,19 @@ def _advance_run(db: Session, run: TestRun, graph: Mapping[str, Any]) -> None:
         raise
 
 
+def _has_target_policy(db: Session, run: TestRun) -> bool:
+    try:
+        from app.aiqe.security import TargetPolicyResolver
+
+        policy = TargetPolicyResolver(db).resolve(
+            project_id=int(run.project_id),
+            environment_id=getattr(run, "environment_id", None),
+        )
+        return str(getattr(policy, "source", "")) != "deny_all"
+    except Exception:
+        return False
+
+
 def execute_inprocess_job(db: Session, job_id: int) -> dict[str, Any]:
     """进程内执行一个 AIQE ExecutionJob（HTTP 节点）。"""
     from app.models.execution_job import ExecutionJob
@@ -586,6 +599,43 @@ def execute_inprocess_job(db: Session, job_id: int) -> dict[str, Any]:
         db.commit()
         return {"job_id": job_id, "status": "failed", "reason": "missing run/node"}
     graph = dict(payload.get("graph") or {"nodes": [{"key": node.node_key}], "edges": []})
+    from app.aiqe.services.job_consumer import INPROCESS_DRIVERS
+
+    if str(node.driver_key or "").lower() not in INPROCESS_DRIVERS:
+        # AUD-005：进程内消费者不得假装执行浏览器/真机节点。
+        node.status = "BLOCKED"
+        node.error_class = "PREFLIGHT_BLOCKED"
+        node.output_ref = {
+            **(node.output_ref or {}),
+            "preflight": {
+                "code": "PREFLIGHT_BLOCKED",
+                "blockers": [
+                    {
+                        "code": "NO_CAPABLE_RUNNER",
+                        "driver": node.driver_key,
+                    }
+                ],
+            },
+        }
+        job.status = "failed"
+        job.error_message = "PREFLIGHT_BLOCKED: NO_CAPABLE_RUNNER"
+        job.finished_at = _now()
+        _event(
+            db,
+            run.id,
+            "node.blocked",
+            {"code": "PREFLIGHT_BLOCKED", "driver": node.driver_key},
+            node=node,
+            producer_event_id=f"node-preflight-blocked:{node.id}",
+        )
+        db.commit()
+        return {
+            "job_id": job_id,
+            "run_id": run.id,
+            "node": node.node_key,
+            "node_status": "BLOCKED",
+            "error_class": "PREFLIGHT_BLOCKED",
+        }
     if node.status == "READY":
         dag_scheduler.mark_running(db, run.id, node.node_key)
     attempt = _latest_attempt(db, node)
@@ -627,11 +677,23 @@ def execute_inprocess_job(db: Session, job_id: int) -> dict[str, Any]:
         db.commit()
         return {"job_id": job_id, "run_id": run.id, "node": node.node_key, "status": "BLOCKED", "error_class": exc.code}
 
-    execution = execute_node(
-        node,
-        input_override=dict(resolved.values),
-        db_engine=readonly_db_engine(),
-    )
+    policy_ctx = db if _has_target_policy(db, run) else None
+    try:
+        execution = execute_node(
+            node,
+            input_override=dict(resolved.values),
+            db_engine=readonly_db_engine(),
+            db=policy_ctx,
+        )
+    except TypeError as exc:
+        # 兼容测试/第三方注入的旧签名 executor（不接受 db= 上下文）。
+        if "unexpected keyword argument 'db'" not in str(exc):
+            raise
+        execution = execute_node(
+            node,
+            input_override=dict(resolved.values),
+            db_engine=readonly_db_engine(),
+        )
     known_secrets = list(ctx.last_secret_values)
     artifact_ids = persist_execution_evidence(
         db,

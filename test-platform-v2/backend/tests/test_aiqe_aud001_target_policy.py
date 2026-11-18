@@ -528,13 +528,14 @@ def test_workflow_policy_override_is_ignored(db_session):
     assert any(e.event_type == "security.target_policy_denied" for e in events)
 
 
-def test_node_executor_without_policy_context_blocks():
+def test_node_executor_without_policy_context_blocks(db_session):
     node = NodeRun(
         run_id="missing-run",
         node_key="api",
         driver_key="http",
         input_ref={"url": "https://api.allowed.test/x"},
     )
-    outcome = node_executor.execute_node(node)
+    # 生产路径始终带 DB 上下文；Run 不存在即策略不可用，必须 BLOCKED。
+    outcome = node_executor.execute_node(node, db=db_session)
     assert outcome.status == "BLOCKED"
     assert outcome.error_class == "POLICY_UNAVAILABLE"

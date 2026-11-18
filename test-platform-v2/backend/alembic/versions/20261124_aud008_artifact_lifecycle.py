@@ -61,6 +61,9 @@ def downgrade() -> None:
     for index in ("ix_run_artifacts_upload_status", "ix_run_artifacts_project_id"):
         if index in indexes:
             op.drop_index(index, table_name="run_artifacts")
+    if bind.dialect.name == "sqlite":
+        # SQLite 不支持 DROP COLUMN 于被 FK 引用的列；降级保留这些向后兼容的追加列。
+        return
     existing = {column["name"] for column in inspector.get_columns("run_artifacts")}
     for name, _type in reversed(_COLUMNS):
         if name in existing:

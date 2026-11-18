@@ -4,6 +4,7 @@ import type {
   AiqeRunArtifact,
   AiqeRunAssertion,
   AiqeRunEvent,
+  AiqeRunNodes,
   AiqeRunPage,
 } from '@/types/aiqe'
 
@@ -40,6 +41,10 @@ export async function listRunArtifacts(runId: string): Promise<AiqeRunArtifact[]
     items: AiqeRunArtifact[]
   }
   return data.items
+}
+
+export async function listRunNodes(runId: string): Promise<AiqeRunNodes> {
+  return (await client.get(`/aiqe/runs/${runId}/nodes`)) as unknown as AiqeRunNodes
 }
 
 export async function listRunAssertions(runId: string): Promise<AiqeRunAssertion[]> {

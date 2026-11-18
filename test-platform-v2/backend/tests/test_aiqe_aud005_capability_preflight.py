@@ -17,7 +17,7 @@ from app.aiqe.models.run import NodeRun, TestRun
 from app.aiqe.services import capability_registry as registry
 from app.aiqe.services import dag_scheduler, job_consumer
 from app.aiqe.services.execution_dispatcher import enqueue_node_run
-from app.aiqe.services.preflight import (
+from app.aiqe.services.capability_preflight import (
     DRIVER_REQUIRED_CAPABILITIES,
     INPROCESS_DRIVERS,
     preflight_graph,
@@ -282,7 +282,7 @@ def test_schedule_with_preflight_blocks_and_creates_no_job(db_session):
     db_session.add(run)
     db_session.flush()
 
-    from app.aiqe.services.preflight import schedule_guard
+    from app.aiqe.services.capability_preflight import schedule_guard
 
     guard = schedule_guard(db_session, run=run, graph=graph)
     dag_scheduler.schedule(

@@ -12,17 +12,11 @@ import json
 import logging
 import threading
 from datetime import UTC, datetime, timedelta
-from typing import Any
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from app.aiqe.assertions.engine import aggregate as aggregate_assertions
-from app.aiqe.models.run import NodeRun, TestRun
-from app.aiqe.redaction import redact_mapping
-from app.aiqe.services import dag_scheduler, node_executor
-from app.aiqe.services import lease as lease
-from app.aiqe.services import preflight as preflight_service
+from app.aiqe.services import execution_service
 from app.core.config import settings
 from app.core.db import SessionLocal
 from app.models.execution_job import ExecutionJob
@@ -67,8 +61,6 @@ def claim_aiqe_jobs(db: Session, *, limit: int = 5) -> list[int]:
             driver = ""
         if driver not in INPROCESS_DRIVERS:
             continue
-        # 先在内存里算出本次认领的 attempt，作为 fencing token 的唯一来源
-        # （UPDATE 会让 ORM 对象同步为新值，不能再用 job.attempt+1 计算）。
         next_attempt = int(job.attempt or 0) + 1
         result = db.execute(
             update(ExecutionJob)
@@ -93,6 +85,8 @@ def claim_aiqe_jobs(db: Session, *, limit: int = 5) -> list[int]:
             node_run_id = str(payload.get("node_run_id") or "")
             if node_run_id:
                 try:
+                    from app.aiqe.services import lease
+
                     lease.bump_fencing_token(db, node_run_id, token=next_attempt)
                 except LookupError:
                     logger.warning("claimed job %s references missing node %s", job.id, node_run_id)
@@ -101,125 +95,7 @@ def claim_aiqe_jobs(db: Session, *, limit: int = 5) -> list[int]:
 
 
 def run_job(db: Session, job_id: int) -> dict:
-    job = db.get(ExecutionJob, job_id)
-    if job is None or job.status != "running":
-        return {"job_id": job_id, "skipped": True}
-    payload = json.loads(job.payload_json or "{}")
-    run_id = str(payload.get("run_id") or "")
-    node_run_id = str(payload.get("node_run_id") or "")
-    node = db.get(NodeRun, node_run_id) if node_run_id else None
-    run = db.get(TestRun, run_id) if run_id else None
-    if node is None or run is None:
-        job.status = "failed"
-        job.error_message = "node_run/run not found"
-        job.finished_at = _now()
-        db.commit()
-        return {"job_id": job_id, "status": "failed", "reason": "missing node/run"}
-
-    graph = payload.get("graph") or _synthesize_graph(db, run_id)
-    # AUD-006：持有过期/被顶替的租约时不得写入任何节点结果。
-    lease_token = int(job.attempt or 0)
-    try:
-        lease.assert_current(
-            db,
-            node_run_id=node.id,
-            fencing_token=lease_token,
-            job_expires_at=job.lease_expires_at,
-            job_id=job.id,
-        )
-    except (lease.StaleLeaseError, lease.LeaseExpired) as exc:
-        job.status = "expired" if isinstance(exc, lease.LeaseExpired) else "failed"
-        job.error_message = str(exc)[:500]
-        job.finished_at = _now()
-        db.commit()
-        return {
-            "job_id": job_id,
-            "node": node.node_key,
-            "skipped": True,
-            "reason": type(exc).__name__,
-        }
-    # AUD-005：执行前预检；缺能力/Runner 直接 BLOCKED，不进入 Driver（避免假装执行）。
-    preflight_result = preflight_service.preflight_node_run(db, node, run=run, graph=graph)
-    if not preflight_result.allowed:
-        detail = {"preflight": preflight_result.payload()}
-        dag_scheduler.complete_node(
-            db,
-            run_id,
-            node.node_key,
-            "BLOCKED",
-            graph,
-            error_class="PREFLIGHT_BLOCKED",
-            outputs=detail,
-            fencing_token=lease_token,
-        )
-        job.status = "failed"
-        job.result_json = json.dumps(detail, ensure_ascii=False, default=str)[:20000]
-        job.summary = f"{node.node_key}:BLOCKED"
-        job.error_message = "PREFLIGHT_BLOCKED"
-        job.finished_at = _now()
-        db.commit()
-        return {
-            "job_id": job_id,
-            "node": node.node_key,
-            "node_status": "BLOCKED",
-            "job_status": job.status,
-            "error_class": "PREFLIGHT_BLOCKED",
-            "preflight": preflight_result.payload(),
-        }
-
-    if node.status == "READY":
-        dag_scheduler.mark_running(db, run_id, node.node_key)
-
-    result = node_executor.execute_node(node, db=db)
-    # AUD-007：Driver 成功 ≠ Case PASS；有断言时以断言聚合结果为准。
-    node_status = result.status
-    error_class = result.error_class or None
-    assertion_outcomes: list[Any] = []
-    observation_payload = result.observation
-    if observation_payload is not None:
-        from app.aiqe.services import result_writer
-
-        observation = result_writer.observation_from_payload(observation_payload)
-        mapped_status, mapped_error, assertion_outcomes = result_writer.evaluate_node_assertions(
-            db,
-            run_id=run_id,
-            node=node,
-            observation=observation,
-            driver_status=result.status,
-            driver_error=result.error_class or None,
-        )
-        if mapped_status is not None:
-            node_status = mapped_status
-            error_class = mapped_error or None
-    # AUD-003：执行明细可能含 token/cookie，落库前统一脱敏（节点输出同一份）。
-    safe_detail = redact_mapping(result.detail)
-    dag_scheduler.complete_node(
-        db,
-        run_id,
-        node.node_key,
-        node_status,
-        graph,
-        error_class=error_class,
-        outputs={"execution": safe_detail},
-        fencing_token=lease_token,
-    )
-    job.status = "success" if node_status == "PASSED" else "failed"
-    job.result_json = json.dumps(safe_detail, ensure_ascii=False, default=str)[:20000]
-    job.summary = f"{node.node_key}:{node_status}"
-    job.error_message = error_class or ""
-    job.finished_at = _now()
-    db.commit()
-    return {
-        "job_id": job_id,
-        "node": node.node_key,
-        "node_status": node_status,
-        "job_status": job.status,
-        "error_class": error_class or "",
-        "assertions": len(assertion_outcomes),
-        "assertion_aggregate": (
-            aggregate_assertions(assertion_outcomes) if assertion_outcomes else ""
-        ),
-    }
+    return execution_service.execute_inprocess_job(db, job_id)
 
 
 def complete_from_report(
@@ -233,53 +109,36 @@ def complete_from_report(
 ) -> dict:
     """外部 runner（浏览器/设备）上报后，把 AIQE 节点状态回写到 DAG。
 
-    进程内消费者直接执行并回写；外部节点执行 UI/设备节点时必须走本函数，
-    否则 ExecutionJob 成功但 NodeRun 永远 RUNNING。
-
-    AUD-006：``fencing_token`` 必须等于节点当前租约 token，否则视为旧 Worker 迟到上报拒绝。
+    保留旧返回字段 `node_status`，内部走统一断言/证据/状态收口。
     """
-    job = db.get(ExecutionJob, job_id)
-    if job is None:
-        return {"skipped": True, "reason": "job missing"}
-    payload = json.loads(job.payload_json or "{}")
-    run_id = str(payload.get("run_id") or "")
-    node_run_id = str(payload.get("node_run_id") or "")
-    node = db.get(NodeRun, node_run_id) if node_run_id else None
-    run = db.get(TestRun, run_id) if run_id else None
-    if node is None or run is None:
-        return {"skipped": True, "reason": "node/run missing"}
+    if fencing_token is not None:
+        from app.aiqe.services import lease
 
-    token = fencing_token if fencing_token is not None else int(job.attempt or 0)
-    try:
-        lease.assert_writable(db, node_run_id=node.id, fencing_token=token)
-    except lease.StaleLeaseError as exc:
-        return {
-            "skipped": True,
-            "reason": "STALE_LEASE",
-            "detail": str(exc),
-            "job_id": job_id,
-        }
+        job = db.get(ExecutionJob, job_id)
+        node_run_id = ""
+        if job is not None:
+            try:
+                node_run_id = str(json.loads(job.payload_json or "{}").get("node_run_id") or "")
+            except (TypeError, ValueError):
+                node_run_id = ""
+        if node_run_id:
+            from app.aiqe.services.lease import StaleLeaseError
 
-    graph = payload.get("graph") or _synthesize_graph(db, run_id)
-    if node.status == "READY":
-        dag_scheduler.mark_running(db, run_id, node.node_key)
-
-    passed = str(status).lower() in {"completed", "success", "passed", "pass", "ok"}
-    node_status = "PASSED" if passed else "FAILED"
-    payload_result = redact_mapping(result or {})
-    error_class = str(payload_result.get("error_class") or "").strip()
-    if not passed and not error_class:
-        error_class = (error_message or "")[:80] or "EXTERNAL_RUNNER_FAILED"
-
-    dag_scheduler.complete_node(
+            try:
+                lease.assert_writable(db, node_run_id=node_run_id, fencing_token=fencing_token)
+            except StaleLeaseError:
+                return {
+                    "job_id": job_id,
+                    "skipped": True,
+                    "reason": "STALE_LEASE",
+                    "node_status": "RUNNING",
+                }
+    summary = execution_service.complete_from_external_report(
         db,
-        run_id,
-        node.node_key,
-        node_status,
-        graph,
-        error_class=error_class or None,
-        outputs={"execution": payload_result},
-        fencing_token=token,
+        job_id=job_id,
+        status=status,
+        result=result,
+        error_message=error_message,
     )
     if summary.get("skipped"):
         return summary

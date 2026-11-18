@@ -53,6 +53,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    if op.get_bind().dialect.name == "sqlite":
+        # SQLite 不支持 DROP COLUMN 于 FK 引用列；降级保留向后兼容的追加列。
+        return
     bind = op.get_bind()
     inspector = sa.inspect(bind)
     if "node_capability_manifests" not in inspector.get_table_names():

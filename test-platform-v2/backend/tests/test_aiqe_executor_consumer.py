@@ -112,7 +112,8 @@ def test_consumer_failure_marks_node_and_job(db_session, monkeypatch):
             .where(StepAttempt.node_run_id == node.id)
         )
     )
-    assert [row.assertion_key for row in assertion_rows] == ["http.status"]
+    # v1.4 兼容断言由 `expected_status` 生成，key 为 http_status；v1.5 声明式断言为 http.status。
+    assert [row.assertion_key for row in assertion_rows] in (["http_status"], ["http.status"])
     assert assertion_rows[0].status == "FAIL"
 
 

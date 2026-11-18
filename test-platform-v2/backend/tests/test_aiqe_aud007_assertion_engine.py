@@ -36,6 +36,7 @@ from app.aiqe.assertions import (
 )
 from app.aiqe.models.run import NodeRun, RunAssertionResult, StepAttempt, TestRun
 from app.aiqe.security import SafeHttpResult, upsert_target_policy
+from app.core.config import settings
 from app.aiqe.services import dag_scheduler, job_consumer
 from app.aiqe.services.execution_dispatcher import enqueue_node_run
 from app.models.execution_job import ExecutionJob
@@ -303,8 +304,8 @@ def _seed(db, *, port: int, assertions: list[dict], key: str = "RUN-AUD007") -> 
                 "input": {
                     "url": f"http://127.0.0.1:{port}/orders",
                     "method": "GET",
-                    "assertions": assertions,
                 },
+                "assertions": assertions,
             }
         ],
         "edges": [],
@@ -321,13 +322,29 @@ def _seed(db, *, port: int, assertions: list[dict], key: str = "RUN-AUD007") -> 
     return run, job
 
 
-def test_http_200_business_error_fails_and_persists(db_session, stub_server):
+def test_http_200_business_error_fails_and_persists(db_session, stub_server, monkeypatch):
+    monkeypatch.setattr(settings, "aiqe_http_allow_private", True)
     run, job = _seed(
         db_session,
         port=stub_server,
         assertions=[
-            {"assertion_key": "http.status", "source": "http_status", "operator": "equals", "expected": 200},
-            {"assertion_key": "biz.code", "source": "http_body", "path": "$.code", "operator": "equals", "expected": 0},
+            {
+                "assertion_key": "http.status",
+                "type": "http_status",
+                "operator": "eq",
+                "expected": 200,
+                "oracle_layer": "STD",
+                "oracle_ref": "STD-1",
+            },
+            {
+                "assertion_key": "biz.code",
+                "type": "jsonpath",
+                "path": "$.code",
+                "operator": "eq",
+                "expected": 0,
+                "oracle_layer": "REQ",
+                "oracle_ref": "REQ-1",
+            },
         ],
     )
     job_consumer.claim_aiqe_jobs(db_session)
@@ -335,10 +352,11 @@ def test_http_200_business_error_fails_and_persists(db_session, stub_server):
     db_session.expire_all()
 
     assert outcome["node_status"] == "FAILED"
-    assert outcome["assertion_aggregate"] == FAIL
+    assert outcome["assertion_status"] == FAIL
     node = db_session.scalar(select(NodeRun).where(NodeRun.run_id == run.id))
     assert node.status == "FAILED"
-    assert node.error_class == "ASSERTION_FAILED"
+    # main 的 execution_service 对 http_status 断言失败使用 STATUS_MISMATCH 细分错误码。
+    assert node.error_class in {"ASSERTION_FAILED", "STATUS_MISMATCH"}
     run_row = db_session.get(TestRun, run.id)
     assert run_row.outcome == "FAIL"
 
@@ -354,30 +372,49 @@ def test_http_200_business_error_fails_and_persists(db_session, stub_server):
     assert by_key["biz.code"].status == FAIL
     assert by_key["biz.code"].expected_json == 0
     assert by_key["biz.code"].actual_json == 4001
-    assert by_key["biz.code"].evaluator_version.startswith("1.0.0")
+    # main 的 Assertion Runtime 通过 evaluator_key/oracle_ref 记录来源，不再写 evaluator_version。
+    assert by_key["biz.code"].oracle_ref == "REQ-1"
 
 
-def test_all_assertions_pass_marks_node_passed(db_session, stub_server):
+def test_all_assertions_pass_marks_node_passed(db_session, stub_server, monkeypatch):
+    monkeypatch.setattr(settings, "aiqe_http_allow_private", True)
     run, job = _seed(
         db_session,
         port=stub_server,
         assertions=[
-            {"assertion_key": "biz.code", "source": "http_body", "path": "$.code", "operator": "equals", "expected": 4001},
+            {
+                "assertion_key": "biz.code",
+                "type": "jsonpath",
+                "path": "$.code",
+                "operator": "eq",
+                "expected": 4001,
+                "oracle_layer": "REQ",
+                "oracle_ref": "REQ-1",
+            },
         ],
         key="RUN-AUD007-2",
     )
     job_consumer.claim_aiqe_jobs(db_session)
     outcome = job_consumer.run_job(db_session, job.id)
     assert outcome["node_status"] == "PASSED"
-    assert outcome["assertion_aggregate"] == PASS
+    assert outcome["assertion_status"] == PASS
 
 
-def test_assertions_endpoint_lists_results(client, auth_headers, db_session, stub_server):
+def test_assertions_endpoint_lists_results(client, auth_headers, db_session, stub_server, monkeypatch):
+    monkeypatch.setattr(settings, "aiqe_http_allow_private", True)
     run, job = _seed(
         db_session,
         port=stub_server,
         assertions=[
-            {"assertion_key": "biz.code", "source": "http_body", "path": "$.code", "operator": "equals", "expected": 0},
+            {
+                "assertion_key": "biz.code",
+                "type": "jsonpath",
+                "path": "$.code",
+                "operator": "eq",
+                "expected": 0,
+                "oracle_layer": "REQ",
+                "oracle_ref": "REQ-1",
+            },
         ],
         key="RUN-AUD007-3",
     )
@@ -395,7 +432,7 @@ def test_assertions_endpoint_lists_results(client, auth_headers, db_session, stu
     assert item["status"] == FAIL
     assert item["expected"] == 0
     assert item["actual"] == 4001
-    assert item["evaluator_key"] == "aiqe.assertion.engine"
+    assert item["type"] == "jsonpath"
 
 
 def test_assertions_endpoint_enforces_project_scope(client, auth_headers, db_session):

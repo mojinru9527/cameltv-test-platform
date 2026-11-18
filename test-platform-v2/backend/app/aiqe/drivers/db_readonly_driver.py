@@ -265,24 +265,60 @@ class DbReadonlyDriver:
         params: Mapping[str, Any] | None = None,
         *,
         max_rows: int | None = None,
+        query_key: str = "",
+        timeout_ms: int | None = None,
         statement_timeout_ms: int | None = None,
     ) -> QueryResult:
-        statement = assert_readonly(sql)
-        limit = max(1, int(max_rows or self.max_rows))
-        with self.engine.connect() as connection:
-            dialect = connection.dialect.name
-            if dialect == "sqlite":
-                connection.exec_driver_sql("PRAGMA query_only=ON")
-            elif dialect == "postgresql":
-                connection.exec_driver_sql("SET TRANSACTION READ ONLY")
-                if statement_timeout_ms:
-                    # int() 强转，避免把任意文本拼进 SET 语句。
-                    connection.exec_driver_sql(
-                        f"SET LOCAL statement_timeout = {int(statement_timeout_ms)}"
-                    )
-            result = connection.execute(text(statement), params or {})
-            columns = list(result.keys())
-            rows = [dict(row) for row in result.mappings().fetchmany(limit + 1)]
+        template: QueryTemplate | None = None
+        if query_key:
+            try:
+                template = self.registry.get(query_key)
+            except QueryNotRegistered as exc:
+                self._audit("query", query_key, False, str(exc), sql or "")
+                raise
+            statement = template.sql
+            limit = max(1, int(max_rows or template.max_rows or self.max_rows))
+            max_field_chars = int(template.max_field_chars or self.max_field_chars)
+            allowed_tables = template.allowed_tables or self.allowed_tables
+        else:
+            if not sql:
+                self._audit("query", "", False, "缺少 sql/query_key")
+                raise UnsafeSqlError("未登记查询必须显式提供 SQL（仅测试/迁移允许）")
+            statement = sql
+            limit = max(1, int(max_rows or self.max_rows))
+            max_field_chars = self.max_field_chars
+            allowed_tables = self.allowed_tables
+
+        statement = assert_readonly(statement)
+        self._check_tables(statement, allowed_tables, query_key)
+        timeout = max(
+            1, int(timeout_ms or statement_timeout_ms or self.statement_timeout_ms)
+        )
+        started = time.monotonic()
+        try:
+            with self.engine.connect() as connection:
+                dialect = connection.dialect.name
+                if dialect == "postgresql":
+                    # 显式只读事务：statement_timeout 必须在该事务内 SET LOCAL。
+                    with connection.begin():
+                        connection.exec_driver_sql("SET TRANSACTION READ ONLY")
+                        connection.exec_driver_sql(f"SET LOCAL statement_timeout = {timeout}")
+                        result = connection.execute(text(statement), dict(params or {}))
+                        columns = list(result.keys())
+                        rows, truncated = _rows_from_result(
+                            result, limit, max_field_chars
+                        )
+                else:
+                    if dialect == "sqlite":
+                        connection.exec_driver_sql("PRAGMA query_only=ON")
+                    result = connection.execute(text(statement), dict(params or {}))
+                    columns = list(result.keys())
+                    rows, truncated = _rows_from_result(result, limit, max_field_chars)
+        except UnsafeSqlError:
+            raise
+        except Exception as exc:
+            self._audit("query", query_key, False, f"{type(exc).__name__}: {exc}", statement)
+            raise
         if len(rows) > limit:
             self._audit("query", query_key, False, f"超过行数上限 {limit}", statement)
             raise RowLimitExceeded(f"查询结果超过 {limit} 行（未截断）")

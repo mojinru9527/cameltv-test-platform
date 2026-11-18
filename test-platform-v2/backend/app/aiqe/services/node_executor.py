@@ -1,37 +1,97 @@
 """AIQE 节点 Driver 调度（M10-347 / v1.4 FIX-003/004/007）。
 
-- http：API 级节点（batch-347 已交付）；**AUD-001 起统一走
-  ``app.aiqe.security.SafeHttpExecutor``**，目标由服务端 Target Policy 决定，
-  节点输入里的 allow_private/allowed_hosts 等覆盖项被忽略并记录；
-- playwright：UI 节点（batch-347b），支持点击可用性探测与浮层注入（TC-004）；
-- appium：Android 设备节点（batch-347b），通过 Appium REST 会话读取 UI 层级；
-- 由 `job_consumer` 在 `AIQE_INPROCESS_EXECUTOR_ENABLED=true` 时调用；
-- 结果通过 `dag_scheduler.complete_node` 回写（attempt 时间线由 batch-340 持久化）。
+Runner 只负责“执行动作并采集事实”，不决定业务 PASS：
+- http：httpx 执行，返回 status/headers/body/json；
+- playwright：真实动作 + probe 分离 + 截图/Trace/DOM/A11y/console/network；
+- db：只读查询（engine 注入；无 engine 时 BLOCKED，绝不伪造结果）；
+- appium：Android 真机动作。
+业务断言由后端 Assertion Runtime 统一执行（FIX-002）。
 """
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field
 from typing import Any
 
+from app.aiqe.drivers.httpx_driver import HttpDriver, HttpRequestSpec
 from app.aiqe.models.run import NodeRun
-from app.aiqe.security import (
-    POLICY_OVERRIDE_KEYS,
-    SafeHttpExecutor,
-    SafeRequest,
-    SafeTargetValidator,
-    TargetDenied,
-    TargetPolicy,
-    TargetPolicyResolver,
-)
+from app.aiqe.schemas.contracts import EvidenceFile
 from app.aiqe.services.query_registry import (
     DbReadonlyExecutor,
     QueryDenied,
     QueryNotRegistered,
     default_connection_resolver,
 )
+from app.aiqe.security import (
+    POLICY_OVERRIDE_KEYS,
+    SafeHttpExecutor,
+    SafeRequest,
+    TargetPolicy,
+    TargetPolicyResolver,
+)
 
-logger = logging.getLogger(__name__)
+
+@dataclass
+class NodeExecution:
+    status: str
+    error_class: str = ""
+    detail: dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
+    evidence: list[EvidenceFile] = field(default_factory=list)
+    #: AUD-007：结构化 Observation（断言引擎的输入，不参与 Driver 判定）。
+    observation: dict[str, Any] | None = None
+
+
+def _driver_key(node: NodeRun) -> str:
+    return str(node.driver_key or "http").strip().lower()
+
+
+def _resolve_policy(
+    node: NodeRun, db: Any, policy: TargetPolicy | None
+) -> TargetPolicy | None:
+    """AUD-001：目标策略只能来自服务端 Target Policy（节点输入不可覆盖）。"""
+    if policy is not None:
+        return policy
+    if db is None:
+        return None
+    try:
+        run = getattr(node, "run", None)
+    except Exception:
+        run = None
+    if run is None:
+        try:
+            from app.aiqe.models.run import TestRun
+
+            run = db.get(TestRun, node.run_id) if node.run_id else None
+        except Exception:
+            return None
+    if run is None:
+        return None
+    try:
+        return TargetPolicyResolver(db).resolve(
+            project_id=int(run.project_id),
+            environment_id=getattr(run, "environment_id", None),
+        )
+    except Exception:
+        return None
+
+
+def _emit_security_event(db: Any, node: NodeRun, event_type: str, payload: dict[str, Any]) -> None:
+    if db is None:
+        return
+    try:
+        from app.aiqe.services import dag_scheduler
+
+        dag_scheduler.emit_event(
+            db,
+            run_id=node.run_id,
+            event_type=event_type,
+            payload=payload,
+            node_run_id=node.id,
+            producer="system",
+        )
+    except Exception:
+        pass
+
 
 #: AUD-002：Workflow 不得通过节点输入决定 SQL / 连接 / 表范围。
 DB_OVERRIDE_KEYS = frozenset(
@@ -47,255 +107,12 @@ DB_OVERRIDE_KEYS = frozenset(
     }
 )
 
-OVERLAY_JS = """
-(() => {
-  const el = document.createElement('div');
-  el.id = 'aiqe-injected-overlay';
-  el.style.position = 'fixed';
-  el.style.inset = '0';
-  el.style.zIndex = '2147483647';
-  el.style.background = 'rgba(0,0,0,0.01)';
-  el.setAttribute('data-aiqe-fixture', 'overlay');
-  document.body.appendChild(el);
-  return el.id;
-})()
-"""
 
-
-@dataclass
-class NodeExecution:
-    status: str
-    error_class: str = ""
-    detail: dict[str, Any] = field(default_factory=dict)
-    #: AUD-007：结构化 Observation（断言引擎的唯一输入，不参与 Driver 判定）。
-    observation: dict[str, Any] | None = None
-
-
-def _driver_key(node: NodeRun) -> str:
-    return str(node.driver_key or "http").strip().lower()
-
-
-def _resolve_policy(node: NodeRun | Any, db: Any) -> TargetPolicy | None:
-    """从 Run 的 project/environment 解析服务端策略；不接受节点输入覆盖。"""
-    if db is None or node is None:
-        return None
-    try:
-        run = getattr(node, "run", None)
-    except Exception:  # detached instance / 关系未加载
-        return None
-    if run is None:
-        return None
-    try:
-        return TargetPolicyResolver(db).resolve(
-            project_id=int(run.project_id),
-            environment_id=getattr(run, "environment_id", None),
-        )
-    except Exception:
-        logger.exception("target policy resolve failed")
-        return None
-
-
-def execute_node(
-    node: NodeRun,
-    *,
-    db: Any = None,
-    policy: TargetPolicy | None = None,
-) -> NodeExecution:
-    driver = _driver_key(node)
-    spec_input = dict(input_override if input_override is not None else (node.input_ref or {}))
-    if driver in {"http", "httpx", "api"}:
-        return _execute_http(spec_input, node=node, db=db, policy=policy)
-    if driver in {"playwright", "web", "ui"}:
-        if db is None and policy is None:
-            # 兼容单测：无 DB 上下文时按旧签名调用（生产路径始终带 db）。
-            return _execute_playwright(spec_input)
-        return _execute_playwright(spec_input, node=node, db=db, policy=policy)
-    if driver in {"appium", "android", "mobile"}:
-        return _execute_appium(spec_input)
-    if driver in {"db", "db_readonly", "database"}:
-        return _execute_db(spec_input, node=node, db=db)
-    return NodeExecution(
-        status="BLOCKED",
-        error_class="UNSUPPORTED_DRIVER",
-        detail={"driver": driver, "reason": "执行器不支持该 driver"},
-        data={"unsupported_driver": driver},
-    )
-
-
-def _emit_security_event(
-    db: Any,
-    node: NodeRun | Any,
-    *,
-    event_type: str,
-    payload: dict[str, Any],
-) -> None:
-    """安全事件必须可追踪（Run/Node/Actor/policy_version），但绝不能因写事件改变执行结果。"""
-    if db is None or node is None:
-        return
-    try:
-        from app.aiqe.services.event_service import append_event
-
-        run = getattr(node, "run", None)
-        run_id = getattr(run, "id", None)
-        if not run_id:
-            return
-        body = {"schema_version": "1.0", **payload}
-        append_event(
-            db,
-            run_id=str(run_id),
-            event_type=event_type,
-            payload=body,
-            producer="system",
-            node_run_id=getattr(node, "id", None),
-        )
-    except Exception:  # 审计失败不回滚执行事实
-        logger.exception("append security event failed")
-
-
-def _execute_http(
-    spec_input: dict[str, Any],
-    *,
-    node: NodeRun | Any = None,
-    db: Any = None,
-    policy: TargetPolicy | None = None,
-) -> NodeExecution:
-    url = str(spec_input.get("url") or "").strip()
-    if not url:
-        return NodeExecution(
-            status="FAILED",
-            error_class="INPUT_INVALID",
-            detail={"reason": "缺少 url"},
-            data={"error": "missing url"},
-        )
-    method = str(spec_input.get("method") or "GET").upper()
-    headers = {str(k): str(v) for k, v in (spec_input.get("headers") or {}).items()}
-    timeout_ms = int(spec_input.get("timeout_ms") or 15000)
-    # AUD-001：Workflow 不能通过节点输入扩大访问范围（忽略并留痕）。
-    overrides = {
-        key: spec_input.pop(key) for key in list(spec_input) if key in POLICY_OVERRIDE_KEYS
-    }
-
-    effective_policy = policy if policy is not None else _resolve_policy(node, db)
-    if effective_policy is None:
-        return NodeExecution(
-            status="BLOCKED",
-            error_class="POLICY_UNAVAILABLE",
-            detail={
-                "reason": "缺少服务端 Target Policy，默认拒绝出网",
-                "url": url,
-                "ignored_overrides": overrides,
-            },
-        )
-
-    request = SafeRequest(
-        method=method,
-        url=url,
-        headers={str(k): str(v) for k, v in (spec_input.get("headers") or {}).items()},
-        params=spec_input.get("params"),
-        json_body=spec_input.get("json"),
-        content=content,
-        timeout_ms=max(1, int(spec_input.get("timeout_ms") or 15000)),
-        correlation_id=str(spec_input.get("correlation_id") or ""),
-        idempotency_key=str(spec_input.get("idempotency_key") or ""),
-        allowed_hosts=allowed_hosts,
-        allow_private=(
-            bool(spec_input.get("allow_private"))
-            if "allow_private" in spec_input
-            else None
-        ),
-    )
-    result = SafeHttpExecutor().request(request, effective_policy)
-
-    detail = {
-        "status_code": result.status_code,
-        "duration_ms": result.duration_ms,
-        "request": result.request,
-        "response": result.response,
-        "policy_version": result.policy_version,
-        "resolution": result.resolution,
-        "redirect_chain": list(result.redirect_chain),
-        "ignored_overrides": overrides,
-    }
-
-    if overrides:
-        _emit_security_event(
-            db,
-            node,
-            event_type="security.policy_override_ignored",
-            payload={"node_key": getattr(node, "node_key", ""), "ignored": sorted(overrides)},
-        )
-
-    if result.blocked:
-        detail["denial"] = {
-            "code": result.error_code,
-            "message": result.error,
-        }
-        _emit_security_event(
-            db,
-            node,
-            event_type="security.target_policy_denied",
-            payload={
-                "node_key": getattr(node, "node_key", ""),
-                "url": url,
-                "code": result.error_code,
-                "message": result.error,
-                "policy_version": result.policy_version,
-                "resolution": result.resolution,
-            },
-        )
-        return NodeExecution(
-            status="BLOCKED",
-            error_class=result.error_code or "POLICY_DENIED",
-            detail=detail,
-        )
-
-    expected = spec_input.get("expected_status")
-    if expected is not None:
-        try:
-            ok = result.status_code == int(expected)
-        except (TypeError, ValueError):
-            ok = False
-    else:
-        ok = bool(result.ok)
-
-    from app.aiqe.assertions.observation import maybe_json
-
-    body_text = str((result.response or {}).get("body") or "")
-    observation = {
-        "status_code": result.status_code,
-        "headers": (result.response or {}).get("headers") or {},
-        "text": body_text,
-        "body": maybe_json(body_text),
-        "duration_ms": result.duration_ms,
-        "error": (
-            result.error_code
-            if result.error_code in {"TIMEOUT", "DRIVER_ERROR", "CLIENT_INIT_FAILED"}
-            else None
-        ),
-    }
-    detail["observation"] = observation
-    if ok:
-        return NodeExecution(status="PASSED", detail=detail, observation=observation)
-    error_class = "STATUS_MISMATCH" if expected is not None else "HTTP_FAILED"
-    if result.error_code == "TIMEOUT":
-        error_class = "TIMEOUT"
-    elif result.error_code == "CLIENT_INIT_FAILED":
-        error_class = "DRIVER_ERROR"
-    return NodeExecution(
-        status="FAILED", error_class=error_class, detail=detail, observation=observation
-    )
-
-
-def _execute_db(
-    spec_input: dict[str, Any],
-    *,
-    node: NodeRun | Any = None,
-    db: Any = None,
+def _execute_db_secure(
+    spec_input: dict[str, Any], *, node: NodeRun, db: Any
 ) -> NodeExecution:
     """AUD-002：只允许 ``query_key + typed_params``，SQL/连接由服务端登记。"""
-    raw_overrides = {
-        key: spec_input[key] for key in list(spec_input) if key in DB_OVERRIDE_KEYS
-    }
+    raw_overrides = {key: spec_input[key] for key in spec_input if key in DB_OVERRIDE_KEYS}
     query_key = str(spec_input.get("query_key") or "").strip()
     if not query_key:
         return NodeExecution(
@@ -307,8 +124,6 @@ def _execute_db(
             },
         )
     if raw_overrides:
-        # v1.5 §01 AUD-002：「Workflow 提交空值、通配符、任意表名和自定义 connection URL：
-        # schema 拒绝」→ 这里显式 BLOCKED 而不是静默忽略，便于发现越权尝试。
         return NodeExecution(
             status="BLOCKED",
             error_class="WORKFLOW_DB_OVERRIDE",
@@ -318,15 +133,9 @@ def _execute_db(
                 "query_key": query_key,
             },
         )
-    if db is None or node is None:
-        return NodeExecution(
-            status="BLOCKED",
-            error_class="POLICY_UNAVAILABLE",
-            detail={"reason": "缺少 DB 会话，无法解析登记查询", "query_key": query_key},
-        )
     try:
         run = getattr(node, "run", None)
-    except Exception:  # detached instance
+    except Exception:
         run = None
     if run is None:
         return NodeExecution(
@@ -334,7 +143,6 @@ def _execute_db(
             error_class="POLICY_UNAVAILABLE",
             detail={"reason": "节点未关联 Run", "query_key": query_key},
         )
-
     params = spec_input.get("params") or {}
     if not isinstance(params, dict):
         return NodeExecution(
@@ -344,7 +152,9 @@ def _execute_db(
         )
     version = spec_input.get("query_version")
     try:
-        result = DbReadonlyExecutor(connection_resolver=default_connection_resolver).execute(
+        result = DbReadonlyExecutor(
+            connection_resolver=default_connection_resolver
+        ).execute(
             db,
             project_id=int(run.project_id),
             query_key=query_key,
@@ -364,13 +174,12 @@ def _execute_db(
             error_class=exc.code,
             detail={"query_key": query_key, "reason": exc.message},
         )
-    except Exception as exc:  # 执行异常必须回写为失败，不得悬挂节点
+    except Exception as exc:
         return NodeExecution(
             status="FAILED",
             error_class="DRIVER_ERROR",
             detail={"query_key": query_key, "reason": f"{type(exc).__name__}: {exc}"},
         )
-
     return NodeExecution(
         status="PASSED",
         detail={
@@ -387,88 +196,220 @@ def _execute_db(
     )
 
 
-def _mouse_click(page, target, detail: dict[str, Any]) -> bool:
-    """真实鼠标点击（move→down→up），并记录点击落点是否被浮层拦截。"""
-    box = target.bounding_box()
-    if not box:
-        detail["click_error"] = "目标无可见位置"
-        return False
-    cx = box["x"] + box["width"] / 2
-    cy = box["y"] + box["height"] / 2
-    detail["click_point"] = [round(cx, 1), round(cy, 1)]
-    detail["top_at_point"] = page.evaluate(
-        "({x, y}) => { const el = document.elementFromPoint(x, y);"
-        " return el ? {tag: el.tagName, id: el.id || '', cls: String(el.className || '').slice(0, 80)} : null; }",
-        {"x": cx, "y": cy},
-    )
-    url_before = page.url
-    page.evaluate(
-        "() => { window.__aiqeClicks = [];"
-        " document.addEventListener('click', (e) => {"
-        " const t = e.target;"
-        " window.__aiqeClicks.push({tag: t.tagName, id: t.id || '',"
-        " overlay: t.id === 'aiqe-injected-overlay'}); }, true); }"
-    )
-    page.mouse.move(cx, cy, steps=12)
-    page.mouse.down()
-    page.mouse.up()
-    page.wait_for_timeout(400)
-    try:
-        clicks = page.evaluate("() => window.__aiqeClicks || []")
-    except Exception:  # 点击触发导航时上下文销毁，按成功处理
-        return True
-    detail["clicks"] = clicks[-3:]
-    if clicks:
-        if clicks[-1].get("overlay"):
-            detail["click_error"] = "浮层拦截了点击"
-            return False
-        return True
-    if page.url != url_before:
-        return True
-    detail["click_error"] = "未捕获到点击事件"
-    return False
-
-
-def _execute_playwright(
+def _execute_http_secure(
     spec_input: dict[str, Any],
     *,
-    node: NodeRun | Any = None,
-    db: Any = None,
-    policy: TargetPolicy | None = None,
+    node: NodeRun,
+    db: Any,
+    policy: TargetPolicy | None,
 ) -> NodeExecution:
+    resolved = _resolve_policy(node, db, policy)
+    if resolved is None:
+        return NodeExecution(
+            status="BLOCKED",
+            error_class="POLICY_UNAVAILABLE",
+            detail={"reason": "缺少服务端 Target Policy"},
+            data={"blocked": True},
+        )
+    ignored = sorted(set(spec_input) & POLICY_OVERRIDE_KEYS)
+    if ignored:
+        _emit_security_event(
+            db,
+            node,
+            "security.policy_override_ignored",
+            {"keys": ignored, "node_key": node.node_key},
+        )
     url = str(spec_input.get("url") or "").strip()
     if not url:
         return NodeExecution(
-            status="FAILED", error_class="INPUT_INVALID", detail={"reason": "缺少 url"}
+            status="FAILED",
+            error_class="INPUT_INVALID",
+            detail={"reason": "缺少 url"},
+            data={"error": "missing url"},
         )
-    effective_policy = policy if policy is not None else _resolve_policy(node, db)
-    if effective_policy is not None:
+    raw_content = spec_input.get("content")
+    content = raw_content.encode("utf-8") if isinstance(raw_content, str) else raw_content
+    request = SafeRequest(
+        method=str(spec_input.get("method") or "GET").upper(),
+        url=url,
+        headers={str(k): str(v) for k, v in (spec_input.get("headers") or {}).items()},
+        params=spec_input.get("params"),
+        json_body=spec_input.get("json"),
+        content=content,
+        timeout_ms=max(1, int(spec_input.get("timeout_ms") or 15000)),
+    )
+    result = SafeHttpExecutor().request(request, resolved)
+    if result.policy_denied:
+        code = result.error_code or "TARGET_DENIED"
+        _emit_security_event(
+            db,
+            node,
+            "security.target_policy_denied",
+            {
+                "code": code,
+                "node_key": node.node_key,
+                "policy_version": resolved.version,
+                "url": url,
+            },
+        )
+        return NodeExecution(
+            status="BLOCKED",
+            error_class=code,
+            detail={
+                "denial": {"code": code, "message": result.error or ""},
+                "ignored_overrides": ignored,
+            },
+            data={"blocked": True, "status_code": result.status_code},
+        )
+    response = result.response or {}
+    body_text = response.get("body") or ""
+    parsed: Any = None
+    if body_text:
         try:
-            SafeTargetValidator().validate(url, effective_policy)
-        except TargetDenied as exc:
-            _emit_security_event(
-                db,
-                node,
-                event_type="security.target_policy_denied",
-                payload={
-                    "node_key": getattr(node, "node_key", ""),
-                    "url": url,
-                    "code": exc.code,
-                    "message": exc.message,
-                    "policy_version": effective_policy.version,
-                    "driver": "playwright",
-                },
-            )
-            return NodeExecution(
-                status="BLOCKED",
-                error_class=exc.code,
-                detail={"url": url, "denial": exc.payload(), "policy_version": effective_policy.version},
-            )
-    click_text = str(spec_input.get("click_text") or "").strip()
-    click_selector = str(spec_input.get("click_selector") or "").strip()
-    expect_text = str(spec_input.get("expect_text") or "").strip()
-    inject_overlay = bool(spec_input.get("inject_overlay"))
-    timeout_ms = int(spec_input.get("timeout_ms") or 30000)
+            import json
+
+            parsed = json.loads(body_text)
+        except (TypeError, ValueError):
+            parsed = None
+    data = {
+        "status_code": result.status_code,
+        "headers": response.get("headers") or {},
+        "json": parsed,
+        "body_json": parsed,
+        "body_text": body_text,
+    }
+    observation = {
+        "source": "http_response",
+        "status_code": result.status_code,
+        "headers": data["headers"],
+        "text": body_text,
+        "body": parsed if parsed is not None else body_text,
+        "duration_ms": result.duration_ms,
+        "error": result.error,
+    }
+    detail = {
+        "status_code": result.status_code,
+        "duration_ms": result.duration_ms,
+        "request": result.request,
+        "response": result.response,
+        "error": result.error,
+        "ignored_overrides": ignored,
+        "observation": observation,
+    }
+    if result.ok:
+        error_class = ""
+    elif spec_input.get("expected_status") is not None:
+        error_class = "STATUS_MISMATCH"
+    else:
+        error_class = result.error_code or "HTTP_FAILED"
+    return NodeExecution(
+        status="PASSED" if result.ok else "FAILED",
+        error_class=error_class,
+        detail=detail,
+        data=data,
+        observation=observation,
+    )
+
+
+def execute_node(
+    node: NodeRun,
+    *,
+    db_engine: Any = None,
+    input_override: dict[str, Any] | None = None,
+    db: Any = None,
+    policy: TargetPolicy | None = None,
+) -> NodeExecution:
+    driver = _driver_key(node)
+    spec_input = dict(input_override if input_override is not None else (node.input_ref or {}))
+    if driver in {"http", "httpx", "api"}:
+        if policy is not None or db is not None:
+            return _execute_http_secure(spec_input, node=node, db=db, policy=policy)
+        return _execute_http(spec_input)
+    if driver in {"playwright", "web", "ui"}:
+        return _execute_playwright(spec_input)
+    if driver in {"db", "db_readonly", "database"}:
+        if db is not None:
+            return _execute_db_secure(spec_input, node=node, db=db)
+        return _execute_db(spec_input, db_engine=db_engine)
+    if driver in {"appium", "android", "mobile"}:
+        return _execute_appium(spec_input)
+    if driver in {"external_e2e", "e2e"}:
+        return _execute_external_e2e(spec_input)
+    return NodeExecution(
+        status="BLOCKED",
+        error_class="UNSUPPORTED_DRIVER",
+        detail={"driver": driver, "reason": "执行器不支持该 driver"},
+        data={"unsupported_driver": driver},
+    )
+
+
+def _execute_http(spec_input: dict[str, Any]) -> NodeExecution:
+    url = str(spec_input.get("url") or "").strip()
+    if not url:
+        return NodeExecution(
+            status="FAILED",
+            error_class="INPUT_INVALID",
+            detail={"reason": "缺少 url"},
+            data={"error": "missing url"},
+        )
+    allowed = spec_input.get("allowed_hosts")
+    allowed_hosts = (
+        [str(item) for item in allowed]
+        if isinstance(allowed, list)
+        else None
+    )
+    raw_content = spec_input.get("content")
+    content = raw_content.encode("utf-8") if isinstance(raw_content, str) else raw_content
+    spec = HttpRequestSpec(
+        method=str(spec_input.get("method") or "GET").upper(),
+        url=url,
+        headers={str(k): str(v) for k, v in (spec_input.get("headers") or {}).items()},
+        params=spec_input.get("params"),
+        json_body=spec_input.get("json"),
+        content=content,
+        timeout_ms=max(1, int(spec_input.get("timeout_ms") or 15000)),
+        correlation_id=str(spec_input.get("correlation_id") or ""),
+        idempotency_key=str(spec_input.get("idempotency_key") or ""),
+        allowed_hosts=allowed_hosts,
+        allow_private=(
+            bool(spec_input.get("allow_private"))
+            if "allow_private" in spec_input
+            else None
+        ),
+    )
+    try:
+        result = HttpDriver(allowed_hosts=allowed_hosts).execute(spec)
+    except Exception as exc:
+        return NodeExecution(
+            status="FAILED",
+            error_class="DRIVER_ERROR",
+            detail={"reason": f"{type(exc).__name__}: {exc}"},
+            data={"error": f"{type(exc).__name__}: {exc}"},
+        )
+
+    detail = {
+        "status_code": result.status_code,
+        "duration_ms": result.duration_ms,
+        "request": result.request,
+        "response": result.response,
+        "error": result.error,
+    }
+    data = dict(getattr(result, "data", None) or {})
+    data.setdefault("status_code", result.status_code)
+    data.setdefault("headers", (result.response or {}).get("headers") or {})
+    if result.status_code is None:
+        return NodeExecution(
+            status="FAILED" if result.error else "ERROR",
+            error_class=result.error_class or ("NETWORK_ERROR" if result.error else "EMPTY_RESPONSE"),
+            detail=detail,
+            data=data,
+        )
+    # 请求本身完成即成功；业务 PASS 由 Assertion Runtime 判定（HTTP 500 也可能是预期）。
+    return NodeExecution(status="PASSED", detail=detail, data=data)
+
+
+def _execute_playwright(spec_input: dict[str, Any]) -> NodeExecution:
+    from app.aiqe.drivers.playwright_driver import PlaywrightDriver
 
     has_actions = isinstance(spec_input.get("actions"), list) and bool(spec_input.get("actions"))
     has_legacy = bool(spec_input.get("click_text") or spec_input.get("click_selector"))

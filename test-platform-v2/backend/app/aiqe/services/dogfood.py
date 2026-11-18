@@ -452,7 +452,7 @@ def _run_once(
 
             # AUD-005/020：外部 Driver（playwright/appium 等）必须先有可用/已验证节点，
             # 否则 Launch 前 BLOCKED —— 绝不因为本机恰好能启动浏览器就宣称平台通过。
-            from app.aiqe.services import preflight as preflight_service
+            from app.aiqe.services import capability_preflight as preflight_service
 
             preflight_result = preflight_service.preflight_node_run(
                 db, node, run=run, graph=graph

@@ -1,17 +1,21 @@
-"""M2 / TA-011 + AUD-003：RunContext / Variable Store（13 号 §4.8 / §19 TA-011）。
+"""RunContext v1.4（FIX-001 / TA-011）。
 
-- 变量语法：`${nodes.<node_key>.outputs.<name>}`、`${secrets.<NAME>}`、
-  `${secret_handles.<handle_id>}`（AUD-003）；
-- 引用只能解析**同一 Run** 内已执行节点的 output_ref（Run scope 隔离）；
-- secret 只在执行期从注入的 mapping / Vault 解析，`snapshot()` 一律脱敏，禁止落库/日志；
-- `set_output_secure()` 把敏感输出写成 Secret Handle 引用（普通 JSON 只留 handle 元信息）。
+- 一个 Context 只属于一个 `run_id`；跨 Run 完全隔离；
+- 支持 `${nodes.<key>.outputs.<name>}`、`${FIXTURE:<key>}`、`${SECRET:<key>}`、
+  `${ENV:<key>}`，并兼容旧语法 `${secrets.<NAME>}`；
+- 引用的节点必须是当前节点的祖先，且输出必须由该节点声明；
+- 解析结果产出版本化 `ResolvedInput`，带 source_refs；secret 只保留 key，
+  持久化前把值替换为 `***`，真实值只在执行器内存中；
+- 节点完成时按声明的 outputs 从 DriverResult.data 做 JSONPath 提取，写入
+  `outputs_json`（同时镜像到 `output_ref` 兼容旧 UI）；
+- 缺少变量 / secret / fixture / 类型不匹配时抛带错误码的异常，由调度器置 BLOCKED。
 """
 from __future__ import annotations
 
 import os
 import re
 from collections.abc import Callable, Mapping
-from typing import Any
+from typing import Any, Protocol
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -23,11 +27,11 @@ from app.aiqe.services.secret_vault import (
     create_secret_handle,
     redacted_reference,
 )
+from app.aiqe.schemas.contracts import ResolvedInput, SourceRef
+from app.aiqe.services import jsonpath_subset
 
 VAR_RE = re.compile(r"\$\{([^{}]+)\}")
 SECRET_PREFIX = "secrets."
-HANDLE_PREFIX = "secret_handles."
-HANDLE_ID_KEY = "secret_handle_id"
 
 VARIABLE_NOT_FOUND = "VARIABLE_NOT_FOUND"
 VARIABLE_NOT_ANCESTOR = "VARIABLE_NOT_ANCESTOR"
@@ -97,12 +101,28 @@ class RunContext:
         db: Session,
         run_id: str,
         *,
+        graph: Mapping[str, Any] | None = None,
+        secrets: Mapping[str, str] | SecretProvider | None = None,
+        fixtures: Mapping[str, Any] | None = None,
+        environ: Mapping[str, str] | None = None,
         handle_resolver: Callable[[str, str], str] | None = None,
     ) -> None:
         self.db = db
         self.run_id = run_id
         self._handle_resolver = handle_resolver
-        self._consumer_node_key: str = ""
+        self._consumer_node_key = ""
+        self.graph = dict(graph or {})
+        if isinstance(secrets, Mapping):
+            self.secret_provider: SecretProvider = MappingSecretProvider(secrets)
+        elif secrets is not None:
+            self.secret_provider = secrets
+        else:
+            self.secret_provider = EnvSecretProvider(environ)
+        self.fixtures = dict(fixtures or {})
+        self.environ = dict(environ or os.environ)
+        self.last_source_refs: list[SourceRef] = []
+        self.last_secret_values: list[str] = []
+        self._current_node_key: str | None = None
 
     # ── node access ────────────────────────────────────────────────────
     def _node(self, node_key: str) -> NodeRun:
@@ -165,9 +185,10 @@ class RunContext:
                 stored[key] = redacted_reference(handle)
                 continue
             stored[key] = redact_mapping(value)
-        merged = dict(row.output_ref or {})
+        merged = dict(row.outputs_json or row.output_ref or {})
         merged.update(stored)
-        row.output_ref = merged
+        row.outputs_json = dict(merged)
+        row.output_ref = dict(merged)
         self.db.flush()
         return stored
 
@@ -179,8 +200,9 @@ class RunContext:
         secrets: Mapping[str, str] | None = None,
         handle_resolver: Callable[[str, str], str] | None = None,
     ) -> Any:
-        """解析节点输入；`${secret_handles.x}` 与敏感节点输出按 consumer scope 取值。"""
+        """解析节点输入；`${secret_handles.x}` 与敏感输出按 consumer scope 取值。"""
         self._consumer_node_key = str(node_key)
+        self._current_node_key = str(node_key)
         resolver = handle_resolver or self._handle_resolver
         previous = self._handle_resolver
         self._handle_resolver = resolver
@@ -194,7 +216,34 @@ class RunContext:
             raise VariableResolutionError("未注入 Secret Handle resolver")
         return self._handle_resolver(handle_id, self._consumer_node_key)
 
-    def _resolve_ref(self, ref: str, secrets: Mapping[str, str] | None) -> Any:
+    # ── resolution ─────────────────────────────────────────────────────
+    def _ancestors(self, node_key: str) -> set[str]:
+        if not self.graph:
+            return set()
+        deps = {
+            str(node.get("key")): [str(dep) for dep in (node.get("depends_on") or [])]
+            for node in self.graph.get("nodes", [])
+        }
+        seen: set[str] = set()
+        stack = list(deps.get(node_key, []))
+        while stack:
+            current = stack.pop()
+            if current in seen:
+                continue
+            seen.add(current)
+            stack.extend(deps.get(current, []))
+        return seen
+
+    def _secret(self, key: str) -> str:
+        value = self.secret_provider.get(key)
+        if value is None:
+            raise VariableResolutionError(
+                f"secret 未注入或已过期: {key}", code=SECRET_UNAVAILABLE
+            )
+        self.last_secret_values.append(value)
+        return value
+
+    def _resolve_ref(self, ref: str) -> Any:
         if ref.startswith("nodes."):
             parts = ref.split(".")
             if len(parts) < 4 or parts[2] != "outputs" or not parts[1] or not parts[3]:
@@ -212,20 +261,58 @@ class RunContext:
                     f"节点 {node_key} 未声明/未产出输出: {output_name}",
                     code=VARIABLE_NOT_FOUND,
                 )
-            value = outputs[parts[3]]
-            if isinstance(value, Mapping) and value.get(HANDLE_ID_KEY):
-                return self._resolve_handle(str(value[HANDLE_ID_KEY]))
+            value: Any = outputs[output_name]
+            if isinstance(value, Mapping) and value.get("secret_handle_id"):
+                return self._resolve_handle(str(value["secret_handle_id"]))
+            # 支持 `${nodes.A.outputs.data.id}` 的深层取值（只读，不改变声明校验）。
+            if len(parts) > 4:
+                sub_path = "$." + ".".join(parts[4:])
+                found, value = jsonpath_subset.first(value, sub_path)
+                if not found:
+                    raise VariableResolutionError(
+                        f"输出 {node_key}.{output_name} 中不存在路径 {sub_path}",
+                        code=VARIABLE_NOT_FOUND,
+                    )
+            self.last_source_refs.append(
+                SourceRef(
+                    kind="node_output",
+                    ref=ref,
+                    node_key=node_key,
+                    output=output_name,
+                )
+            )
             return value
-        if ref.startswith(HANDLE_PREFIX):
-            handle_id = ref[len(HANDLE_PREFIX) :].strip()
+        if ref.startswith("secret_handles."):
+            handle_id = ref[len("secret_handles.") :].strip()
             if not handle_id:
                 raise VariableResolutionError("secret handle id 不能为空")
             return self._resolve_handle(handle_id)
-        if ref.startswith(SECRET_PREFIX):
-            name = ref[len(SECRET_PREFIX) :]
-            if not name or secrets is None or name not in secrets:
-                raise VariableResolutionError(f"secret 未注入: {name or ref}")
-            return secrets[name]
+        if ref.startswith(SECRET_PREFIX) or ref.upper().startswith("SECRET:"):
+            key = ref[len(SECRET_PREFIX) :] if ref.startswith(SECRET_PREFIX) else ref.split(":", 1)[1]
+            key = key.strip()
+            if not key:
+                raise VariableResolutionError(f"非法 secret 引用: {ref}", code=SECRET_UNAVAILABLE)
+            value = self._secret(key)
+            self.last_source_refs.append(SourceRef(kind="secret", ref=f"SECRET:{key}"))
+            return value
+        if ref.upper().startswith("FIXTURE:"):
+            key = ref.split(":", 1)[1].strip()
+            if key not in self.fixtures:
+                raise VariableResolutionError(
+                    f"fixture 不存在: {key}", code=FIXTURE_NOT_FOUND
+                )
+            value = self.fixtures[key]
+            self.last_source_refs.append(SourceRef(kind="fixture", ref=f"FIXTURE:{key}"))
+            return value
+        if ref.upper().startswith("ENV:"):
+            key = ref.split(":", 1)[1].strip()
+            if key not in self.environ:
+                raise VariableResolutionError(
+                    f"环境变量不存在: {key}", code=VARIABLE_NOT_FOUND
+                )
+            value = self.environ[key]
+            self.last_source_refs.append(SourceRef(kind="env", ref=f"ENV:{key}"))
+            return value
         raise VariableResolutionError(f"未知变量命名空间: {ref}")
 
     def resolve(self, value: Any, *, secrets: Mapping[str, str] | None = None) -> Any:

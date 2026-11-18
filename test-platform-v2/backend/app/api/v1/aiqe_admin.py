@@ -219,7 +219,7 @@ def patch_noise_rule(
     db: Session = Depends(get_db),
 ):
     try:
-        row = get_rule(db, rule_id, project_id=_current.project_id or 0)
+        row = get_rule(db, rule_id, project_id=current.project_id or 0)
         row = update_rule(
             db,
             rule_id,
@@ -263,7 +263,7 @@ def post_renew_rule(
     db: Session = Depends(get_db),
 ):
     try:
-        row = renew_rule(db, rule_id, project_id=_current.project_id or 0)
+        row = renew_rule(db, rule_id, project_id=current.project_id or 0)
     except NoiseRuleError as exc:
         raise APIException(code=404, msg=str(exc), http_status=404) from None
     return R.ok(_noise_rule_out(row))
@@ -277,7 +277,7 @@ def remove_noise_rule(
     db: Session = Depends(get_db),
 ):
     try:
-        delete_rule(db, rule_id, project_id=_current.project_id or 0)
+        delete_rule(db, rule_id, project_id=current.project_id or 0)
     except NoiseRuleError as exc:
         raise APIException(code=404, msg=str(exc), http_status=404) from None
     return R.ok({"id": rule_id, "deleted": True})

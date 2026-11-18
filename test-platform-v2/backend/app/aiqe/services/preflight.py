@@ -1,322 +1,268 @@
-"""AUD-005：Run / Node Preflight（Launch 前判定能力，缺能力直接 BLOCKED）。
+"""FIX-005 / TA-015：Driver Capability Preflight。
 
-v1.5 §01 AUD-005 第 5–6 条：
+Run 启动前必须回答：每个节点的 driver/capability/platform/node slot 是否真实可用；
+缺失时 Run 直接 BLOCKED，并给出 node_key + required capability + available nodes，
+不允许先 QUEUED、执行时才暴露 `UNSUPPORTED_DRIVER`。
 
-- ``PreflightService`` 按 Workflow 节点约束选择 Runner；检查在线、能力、版本、环境、
-  凭据、网络和资源锁；
-- 无匹配能力时 **Run 状态 BLOCKED，生成节点级 blocker，不创建空跑 Job**。
-
-本模块只做确定性判断（不启动任何进程）。``INPROCESS_DRIVERS`` 是平台自身进程内可执行的
-driver（http / db），仍受 AUD-001/002 的目标策略与查询登记约束；其余 driver 必须有
-``VERIFIED``/``AVAILABLE`` 的外部节点。
+能力状态：
+- REGISTERED：有 manifest（DB 行存在）；
+- AVAILABLE：heartbeat 有效 + evidence_ref 非空 + available=True；
+- VERIFIED：manifest.last_evidence_ref 指向已保存的能力自检证据。
 """
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
+import re
+from collections.abc import Iterable, Mapping
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.aiqe.models.capability import NodeCapabilityManifest
-from app.aiqe.models.run import NodeRun, TestRun
-from app.aiqe.services import capability_registry
+from app.aiqe.models.profile import ExecutionProfile
+from app.aiqe.schemas.contracts import PreflightIssue, PreflightReport
+from app.aiqe.services.run_context import EnvSecretProvider
+from app.core.config import settings
+from app.models.environment import Environment
 
-#: driver → 必需的节点能力（v1.5 §03 AUD-020 平台覆盖）。
-DRIVER_REQUIRED_CAPABILITIES: dict[str, tuple[str, ...]] = {
-    "": ("api.http",),
-    "http": ("api.http",),
-    "httpx": ("api.http",),
-    "api": ("api.http",),
-    "playwright": ("browser.chromium",),
-    "web": ("browser.chromium",),
-    "ui": ("browser.chromium",),
-    "browser": ("browser.chromium",),
-    "appium": ("device.android",),
-    "android": ("device.android",),
-    "ios": ("device.ios",),
-    "mobile": ("mobile.app",),
-    "db": ("db.readonly",),
-    "db_readonly": ("db.readonly",),
-    "database": ("db.readonly",),
-    "miniapp": ("miniapp.wechat",),
-    "desktop": ("desktop.app",),
-    "iot": ("hardware.iot",),
-    "device": ("device.android",),
-    "external_e2e": ("external.e2e",),
+HEARTBEAT_TTL_SECONDS = 30
+VAR_RE = re.compile(r"\$\{([^{}]+)\}")
+DRIVER_CAPABILITIES: dict[str, tuple[str, ...]] = {
+    "http": ("aiqe:http", "api.http"),
+    "httpx": ("aiqe:http", "api.http"),
+    "api": ("aiqe:http", "api.http"),
+    "playwright": ("aiqe:playwright", "browser.chromium"),
+    "web": ("aiqe:playwright", "browser.chromium"),
+    "ui": ("aiqe:playwright", "browser.chromium"),
+    "db": ("aiqe:db", "db.readonly"),
+    "db_readonly": ("aiqe:db", "db.readonly"),
+    "appium": ("aiqe:appium", "device.android"),
+    "android": ("aiqe:appium", "device.android"),
+    "mobile": ("aiqe:appium", "device.android"),
+    "external_e2e": ("aiqe:external_e2e", "api.http"),
+    "keploy": ("aiqe:keploy", "api.http"),
 }
-#: 平台自身进程内即可执行，无需外部节点（仍受安全策略/查询登记约束）。
-INPROCESS_DRIVERS: frozenset[str] = frozenset(
-    {"", "http", "httpx", "api", "db", "db_readonly", "database"}
-)
+INPROCESS_CAPABILITIES: dict[str, tuple[str, ...]] = {
+    "http": ("aiqe:http", "api.http"),
+    "httpx": ("aiqe:http", "api.http"),
+    "api": ("aiqe:http", "api.http"),
+}
 
 
-@dataclass(frozen=True)
-class PreflightBlocker:
-    code: str
-    message: str
-    node_key: str = ""
-    driver: str = ""
-    details: dict[str, Any] = field(default_factory=dict)
-
-    def payload(self) -> dict[str, Any]:
-        return {
-            "code": self.code,
-            "message": self.message,
-            "node_key": self.node_key,
-            "driver": self.driver,
-            "details": self.details,
-        }
-
-
-@dataclass(frozen=True)
-class PreflightResult:
-    allowed: bool
-    status: str
-    blockers: tuple[PreflightBlocker, ...] = ()
-    checked_at: datetime | None = None
-    required_capabilities: tuple[str, ...] = ()
-
-    def payload(self) -> dict[str, Any]:
-        return {
-            "allowed": self.allowed,
-            "status": self.status,
-            "checked_at": (self.checked_at or datetime.now(UTC)).isoformat(),
-            "required_capabilities": list(self.required_capabilities),
-            "blockers": [blocker.payload() for blocker in self.blockers],
-        }
-
-
-def required_capabilities_for(node_def: Mapping[str, Any]) -> tuple[str, ...]:
-    driver = str(node_def.get("driver") or "").strip().lower()
-    declared: list[str] = []
-    single = str(node_def.get("capability") or "").strip()
-    if single:
-        declared.append(single)
-    many = node_def.get("capabilities")
-    if isinstance(many, (list, tuple)):
-        declared.extend(str(item).strip() for item in many if str(item).strip())
-    base = DRIVER_REQUIRED_CAPABILITIES.get(driver)
-    if base is None:
-        return tuple(sorted(set(declared)))
-    return tuple(sorted({*base, *declared}))
-
-
-def _check_production(db: Session, environment_id: int | None, allow_production: bool) -> PreflightBlocker | None:
-    if environment_id is None or allow_production:
-        return None
-    from app.models.environment import Environment
-
-    env = db.get(Environment, int(environment_id))
-    if env is None:
-        return PreflightBlocker("ENVIRONMENT_NOT_FOUND", f"环境不存在: {environment_id}")
-    if bool(getattr(env, "is_production", False)):
-        return PreflightBlocker(
-            "PRODUCTION_EXECUTION_FORBIDDEN",
-            "生产环境默认禁止 AIQE 自动执行业务 Workflow（只允许受控只读探测）",
-            details={"environment_id": environment_id},
-        )
-    return None
-
-
-def preflight_node(
-    db: Session,
-    *,
-    node_def: Mapping[str, Any],
-    environment_id: int | None = None,
-    allow_production: bool = False,
-    require_external_node: bool | None = None,
-    now: datetime | None = None,
-) -> PreflightResult:
-    """单节点预检；``allowed=False`` 时调用方不得创建 Job。"""
-    node_key = str(node_def.get("key") or "")
-    driver = str(node_def.get("driver") or "").strip().lower()
-    if driver not in DRIVER_REQUIRED_CAPABILITIES:
-        return PreflightResult(
-            allowed=False,
-            status="BLOCKED",
-            blockers=(
-                PreflightBlocker(
-                    "UNSUPPORTED_DRIVER",
-                    f"未知 driver: {driver!r}",
-                    node_key=node_key,
-                    driver=driver,
-                ),
-            ),
-            checked_at=now or datetime.now(UTC),
-        )
-
-    production_blocker = _check_production(db, environment_id, allow_production)
-    if production_blocker is not None:
-        return PreflightResult(
-            allowed=False,
-            status="BLOCKED",
-            blockers=(production_blocker,),
-            checked_at=now or datetime.now(UTC),
-        )
-
-    required = required_capabilities_for(node_def)
-    capability_required = (
-        bool(require_external_node) if require_external_node is not None else driver not in INPROCESS_DRIVERS
-    )
-    if not capability_required:
-        return PreflightResult(
-            allowed=True,
-            status="READY",
-            checked_at=now or datetime.now(UTC),
-            required_capabilities=required,
-        )
-
-    candidates = capability_registry.select_nodes(db, required, now=now)
-    platform = str(node_def.get("platform") or "").strip()
-    if platform:
-        candidates = [node_id for node_id in candidates if _node_has_platform(db, node_id, platform)]
-    if not candidates:
-        return PreflightResult(
-            allowed=False,
-            status="BLOCKED",
-            blockers=(
-                PreflightBlocker(
-                    "NO_CAPABLE_RUNNER",
-                    f"没有可用的 {driver} 执行节点（需要能力 {list(required)}"
-                    + (f"、平台 {platform}" if platform else "")
-                    + "）",
-                    node_key=node_key,
-                    driver=driver,
-                    details={"required_capabilities": list(required), "platform": platform},
-                ),
-            ),
-            checked_at=now or datetime.now(UTC),
-            required_capabilities=required,
-        )
-    return PreflightResult(
-        allowed=True,
-        status="READY",
-        checked_at=now or datetime.now(UTC),
-        required_capabilities=required,
-    )
-
-
-def _node_has_platform(db: Session, node_id: str, platform: str) -> bool:
-    row = db.scalar(
-        select(NodeCapabilityManifest).where(NodeCapabilityManifest.node_id == node_id)
-    )
-    if row is None:
+def _heartbeat_fresh(row: NodeCapabilityManifest, *, now: datetime | None = None) -> bool:
+    if row.last_heartbeat_at is None:
         return False
-    platforms = {str(item).lower() for item in (row.platforms_json or [])}
-    verified = {str(item).lower() for item in (row.verified_platforms_json or [])}
-    return platform.lower() in platforms or platform.lower() in verified
+    heartbeat = row.last_heartbeat_at
+    if heartbeat.tzinfo is None:
+        heartbeat = heartbeat.replace(tzinfo=UTC)
+    return (now or datetime.now(UTC)) - heartbeat <= timedelta(seconds=HEARTBEAT_TTL_SECONDS)
+
+
+def available_manifests(db: Session) -> list[NodeCapabilityManifest]:
+    rows = list(db.scalars(select(NodeCapabilityManifest)))
+    now = datetime.now(UTC)
+    return [row for row in rows if row.available and _heartbeat_fresh(row, now=now)]
+
+
+def snapshot_manifests(db: Session) -> dict:
+    rows = list(db.scalars(select(NodeCapabilityManifest)))
+    now = datetime.now(UTC)
+    return {
+        row.node_id: {
+            "driver_key": row.driver_key,
+            "driver_version": row.driver_version,
+            "capabilities": list(row.capabilities_json or []),
+            "platforms": list(row.platforms_json or []),
+            "max_parallel_sessions": row.max_parallel_sessions,
+            "artifact_types": list(row.artifact_types_json or []),
+            "available": bool(row.available),
+            "heartbeat_fresh": _heartbeat_fresh(row, now=now),
+            "evidence_ref": row.last_evidence_ref,
+            "last_heartbeat_at": (
+                row.last_heartbeat_at.isoformat() if row.last_heartbeat_at else ""
+            ),
+        }
+        for row in rows
+    }
+
+
+def _required_capabilities(node: dict) -> tuple[str, ...]:
+    explicit = str(node.get("capability") or "").strip()
+    if explicit:
+        return (explicit,)
+    driver = str(node.get("driver") or "").strip().lower()
+    return DRIVER_CAPABILITIES.get(driver, ())
+
+
+def _node_matches(
+    row: NodeCapabilityManifest,
+    required: tuple[str, ...],
+    *,
+    platform: str = "",
+) -> bool:
+    caps = {str(item) for item in (row.capabilities_json or [])}
+    if required and not any(cap in caps for cap in required):
+        return False
+    platforms = {str(item).strip().lower() for item in (row.platforms_json or [])}
+    if platform and platforms and platform.lower() not in platforms:
+        return False
+    return True
 
 
 def preflight_graph(
     db: Session,
+    graph: dict,
     *,
-    graph: Mapping[str, Any],
+    project_id: int | None = None,
     environment_id: int | None = None,
-    now: datetime | None = None,
-) -> PreflightResult:
-    """整图预检：任一节点不可执行即 BLOCKED，并返回全部 blocker。"""
-    policy = graph.get("run_policy") or {}
-    allow_production = bool(policy.get("allow_production", False))
-    blockers: list[PreflightBlocker] = []
-    required: set[str] = set()
-    nodes = list(graph.get("nodes") or [])
-    if not nodes:
-        return PreflightResult(
-            allowed=False,
-            status="BLOCKED",
-            blockers=(PreflightBlocker("EMPTY_WORKFLOW", "Workflow 没有任何节点"),),
-            checked_at=now or datetime.now(UTC),
-        )
-    for node_def in nodes:
-        if not isinstance(node_def, Mapping):
-            blockers.append(PreflightBlocker("INVALID_NODE", "节点定义必须是对象"))
+    profile_id: str | None = None,
+    inprocess_enabled: bool | None = None,
+    secret_provider: Any = None,
+    fixtures: Mapping[str, Any] | None = None,
+) -> PreflightReport:
+    report = PreflightReport()
+    rows = available_manifests(db)
+    all_nodes = sorted(row.node_id for row in rows)
+    enabled = (
+        settings.aiqe_inprocess_executor_enabled
+        if inprocess_enabled is None
+        else inprocess_enabled
+    )
+    if environment_id is not None:
+        environment = db.get(Environment, environment_id)
+        if environment is None or (
+            project_id is not None
+            and int(environment.project_id or 0) != int(project_id)
+        ):
+            report.add(
+                PreflightIssue(
+                    node_key="__environment__",
+                    code="ENVIRONMENT_MISSING",
+                    message=f"环境不存在或不属于项目: {environment_id}",
+                )
+            )
+    if profile_id:
+        profile = db.get(ExecutionProfile, profile_id)
+        if profile is None or (
+            project_id is not None and int(profile.project_id or 0) != int(project_id)
+        ):
+            report.add(
+                PreflightIssue(
+                    node_key="__profile__",
+                    code="PROFILE_MISSING",
+                    message=f"Execution Profile 不存在或不属于项目: {profile_id}",
+                )
+            )
+        elif profile.approval_status != "approved":
+            report.add(
+                PreflightIssue(
+                    node_key="__profile__",
+                    code="PROFILE_MISSING",
+                    message=f"Execution Profile 未审批: {profile_id}",
+                )
+            )
+    provider = secret_provider or EnvSecretProvider()
+    fixture_values = dict(fixtures or {})
+    for index, node in enumerate(graph.get("nodes") or []):
+        if not isinstance(node, dict):
+            report.add(
+                PreflightIssue(
+                    node_key=f"#{index}",
+                    code="UNSUPPORTED_DRIVER",
+                    message="节点不是对象",
+                )
+            )
             continue
-        result = preflight_node(
-            db,
-            node_def=node_def,
-            environment_id=environment_id,
-            allow_production=allow_production,
-            now=now,
-        )
-        required.update(result.required_capabilities)
-        blockers.extend(result.blockers)
-    return PreflightResult(
-        allowed=not blockers,
-        status="READY" if not blockers else "BLOCKED",
-        blockers=tuple(blockers),
-        checked_at=now or datetime.now(UTC),
-        required_capabilities=tuple(sorted(required)),
-    )
-
-
-def preflight_node_run(
-    db: Session,
-    node: NodeRun,
-    *,
-    run: TestRun | None = None,
-    graph: Mapping[str, Any] | None = None,
-    now: datetime | None = None,
-) -> PreflightResult:
-    """执行前对 NodeRun 做同样预检（外部 runner 节点缺失时立刻 BLOCKED）。"""
-    node_def: dict[str, Any] = {
-        "key": node.node_key,
-        "driver": node.driver_key,
-        "input": dict(node.input_ref or {}),
-    }
-    policy = (graph or {}).get("run_policy") or {}
-    return preflight_node(
-        db,
-        node_def=node_def,
-        environment_id=getattr(run, "environment_id", None) if run is not None else None,
-        allow_production=bool(policy.get("allow_production", False)),
-        now=now,
-    )
-
-
-def requirement_reporter(
-    db: Session, drivers: Iterable[str], *, now: datetime | None = None
-) -> dict[str, list[str]]:
-    """运维视图：某组 driver 分别缺哪些能力/节点。"""
-    report: dict[str, list[str]] = {}
-    for driver in drivers:
-        key = str(driver or "").strip().lower()
-        required = DRIVER_REQUIRED_CAPABILITIES.get(key, ())
-        report[key] = capability_registry.select_nodes(db, required, now=now)
+        node_key = str(node.get("key") or f"#{index}")
+        driver = str(node.get("driver") or "").strip().lower()
+        required = _required_capabilities(node)
+        if not required:
+            report.add(
+                PreflightIssue(
+                    node_key=node_key,
+                    code="UNSUPPORTED_DRIVER",
+                    message=f"driver 不在能力注册表: {driver or '(空)'}",
+                )
+            )
+            continue
+        platform = str(node.get("platform") or "").strip()
+        candidates = [
+            row
+            for row in rows
+            if _node_matches(row, required, platform=platform)
+        ]
+        if not candidates:
+            # 进程内 HTTP 执行器是受控特例：只有显式开启且是 http driver 才可用。
+            if not (enabled and driver in INPROCESS_CAPABILITIES):
+                report.add(
+                    PreflightIssue(
+                        node_key=node_key,
+                        code="CAPABILITY_UNAVAILABLE",
+                        message=(
+                            f"没有可用节点覆盖 driver={driver} capability="
+                            f"{'/'.join(required)}"
+                        ),
+                        required_capability="/".join(required),
+                        available_nodes=all_nodes,
+                    )
+                )
+                continue
+        elif any(int(row.max_parallel_sessions or 0) <= 0 for row in candidates):
+            report.add(
+                PreflightIssue(
+                    node_key=node_key,
+                    code="NO_SLOT",
+                    message="候选节点 max_parallel_sessions <= 0",
+                    required_capability="/".join(required),
+                    available_nodes=[row.node_id for row in candidates],
+                )
+            )
+        # Secret / fixture 引用必须在启动前可解析，不能等执行时才失败。
+        for text in _iter_strings(node.get("input")):
+            match = VAR_RE.fullmatch(text)
+            if not match:
+                continue
+            ref = match.group(1)
+            if ref.startswith("secrets."):
+                key = ref.split(".", 1)[1]
+                if provider.get(key) is None:
+                    report.add(
+                        PreflightIssue(
+                            node_key=node_key,
+                            code="SECRET_MISSING",
+                            message=f"secret 未注入: {key}",
+                        )
+                    )
+            elif ref.upper().startswith("SECRET:"):
+                key = ref.split(":", 1)[1]
+                if provider.get(key) is None:
+                    report.add(
+                        PreflightIssue(
+                            node_key=node_key,
+                            code="SECRET_MISSING",
+                            message=f"secret 未注入: {key}",
+                        )
+                    )
+            elif ref.upper().startswith("FIXTURE:"):
+                key = ref.split(":", 1)[1]
+                if key not in fixture_values:
+                    report.add(
+                        PreflightIssue(
+                            node_key=node_key,
+                            code="FIXTURE_MISSING",
+                            message=f"fixture 不存在: {key}",
+                        )
+                    )
     return report
 
 
-def schedule_guard(
-    db: Session,
-    *,
-    run: TestRun,
-    graph: Mapping[str, Any],
-    on_blocked: Callable[[NodeRun, PreflightResult], None] | None = None,
-) -> Callable[[NodeRun], bool]:
-    """构造 ``dag_scheduler.schedule(preflight=...)`` 使用的守卫。"""
-
-    def _guard(node: NodeRun) -> bool:
-        result = preflight_node_run(db, node, run=run, graph=graph)
-        if result.allowed:
-            return True
-        if on_blocked is not None:
-            on_blocked(node, result)
-        return False
-
-    return _guard
-
-
-__all__ = [
-    "DRIVER_REQUIRED_CAPABILITIES",
-    "INPROCESS_DRIVERS",
-    "PreflightBlocker",
-    "PreflightResult",
-    "preflight_graph",
-    "preflight_node",
-    "preflight_node_run",
-    "required_capabilities_for",
-    "requirement_reporter",
-    "schedule_guard",
-]
+def _iter_strings(value: Any) -> Iterable[str]:
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, Mapping):
+        for item in value.values():
+            yield from _iter_strings(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from _iter_strings(item)
