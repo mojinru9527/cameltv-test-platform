@@ -19,7 +19,7 @@ class RequirementAssessment(BaseModel):
 
 
 class RequirementAgent(BaseAgent):
-    key = "A0"
+    key = "A1"
     model = "deepseek-chat"
     system_prompt = (
         "你是需求评估 Agent。输出严格 JSON："

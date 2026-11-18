@@ -20,6 +20,11 @@ def payload(classification="PRODUCT_DEFECT", *, status="NEEDS_EXPERIMENT", evide
                 "supporting_evidence": evidence
                 if evidence is not None
                 else (["artifact:trace"] if classification != "UNKNOWN" else []),
+                # AUD-016：非 UNKNOWN 归因必须给出缺失证据与 E1–E6 实验建议
+                "missing_evidence": []
+                if classification == "UNKNOWN"
+                else ["hit-test snapshot"],
+                "recommended_experiment": None if classification == "UNKNOWN" else "E1",
                 "confidence": None,
                 "status": "PROPOSED",
             }
