@@ -190,7 +190,14 @@ def schedule(
     *,
     dispatch: Dispatch | None = None,
     ttl_seconds: int = 60,
+    preflight: Callable[[NodeRun], bool] | None = None,
+    blocked_detail: Callable[[NodeRun, dict[str, Any]], None] | None = None,
 ) -> list[NodeRun]:
+    """派发可执行节点。
+
+    ``preflight``（AUD-005）：返回 False 的节点**不创建 Job**，直接 BLOCKED 并记录
+    节点级 blocker——缺能力/Runner 时不允许出现空跑任务。
+    """
     run = db.scalar(select(TestRun).where(TestRun.id == run_id).with_for_update())
     if run is None:
         raise LookupError(run_id)
@@ -218,6 +225,20 @@ def schedule(
             if row.status != "PENDING":
                 continue
             if not _satisfied(key, defs, deps, statuses, cleanup, conditions):
+                continue
+            if preflight is not None and not preflight(row):
+                # AUD-005：能力/Runner 不满足时，Launch 前直接 BLOCKED，不创建空跑 Job。
+                row.status = "BLOCKED"
+                row.error_class = "PREFLIGHT_BLOCKED"
+                row.finished_at = datetime.now(UTC)
+                if blocked_detail is not None:
+                    blocked_detail(row, {"code": "PREFLIGHT_BLOCKED", "node_key": key})
+                else:
+                    row.output_ref = {
+                        **(row.output_ref or {}),
+                        "preflight": {"code": "PREFLIGHT_BLOCKED"},
+                    }
+                statuses[key] = "BLOCKED"
                 continue
             acquired: list[tuple[str, int]] = []
             try:

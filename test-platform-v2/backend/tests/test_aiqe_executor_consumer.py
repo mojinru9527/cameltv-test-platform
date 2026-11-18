@@ -133,4 +133,8 @@ def test_blocked_driver_marks_node_blocked(db_session, monkeypatch):
     db_session.expire_all()
     node = db_session.scalar(select(NodeRun).where(NodeRun.run_id == run.id))
     assert node.status == "BLOCKED"
-    assert out["error_class"] == "UNSUPPORTED_DRIVER"
+    # AUD-005：iot 是已声明但无可用节点的 driver，Preflight 在进入 Driver 前即 BLOCKED；
+    # 若未来有节点注册而执行器仍不支持，则回落到 UNSUPPORTED_DRIVER —— 两者都必须是 BLOCKED。
+    assert out["error_class"] in {"PREFLIGHT_BLOCKED", "UNSUPPORTED_DRIVER"}
+    if out["error_class"] == "PREFLIGHT_BLOCKED":
+        assert node.output_ref["preflight"]["blockers"][0]["code"] == "NO_CAPABLE_RUNNER"

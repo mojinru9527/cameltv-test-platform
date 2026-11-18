@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from app.aiqe.models.run import NodeRun, TestRun
 from app.aiqe.redaction import redact_mapping
 from app.aiqe.services import dag_scheduler, node_executor
+from app.aiqe.services import preflight as preflight_service
 from app.core.config import settings
 from app.core.db import SessionLocal
 from app.models.execution_job import ExecutionJob
@@ -100,6 +101,34 @@ def run_job(db: Session, job_id: int) -> dict:
         return {"job_id": job_id, "status": "failed", "reason": "missing node/run"}
 
     graph = payload.get("graph") or _synthesize_graph(db, run_id)
+    # AUD-005：执行前预检；缺能力/Runner 直接 BLOCKED，不进入 Driver（避免假装执行）。
+    preflight_result = preflight_service.preflight_node_run(db, node, run=run, graph=graph)
+    if not preflight_result.allowed:
+        detail = {"preflight": preflight_result.payload()}
+        dag_scheduler.complete_node(
+            db,
+            run_id,
+            node.node_key,
+            "BLOCKED",
+            graph,
+            error_class="PREFLIGHT_BLOCKED",
+            outputs=detail,
+        )
+        job.status = "failed"
+        job.result_json = json.dumps(detail, ensure_ascii=False, default=str)[:20000]
+        job.summary = f"{node.node_key}:BLOCKED"
+        job.error_message = "PREFLIGHT_BLOCKED"
+        job.finished_at = _now()
+        db.commit()
+        return {
+            "job_id": job_id,
+            "node": node.node_key,
+            "node_status": "BLOCKED",
+            "job_status": job.status,
+            "error_class": "PREFLIGHT_BLOCKED",
+            "preflight": preflight_result.payload(),
+        }
+
     if node.status == "READY":
         dag_scheduler.mark_running(db, run_id, node.node_key)
 
