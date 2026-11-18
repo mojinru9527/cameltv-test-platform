@@ -1,6 +1,8 @@
 """M10-347：AIQE NodeRun 进程内执行器（http / playwright / appium）。
 
-- http：API 级节点（batch-347 已交付）；
+- http：API 级节点（batch-347 已交付）；**AUD-001 起统一走
+  ``app.aiqe.security.SafeHttpExecutor``**，目标由服务端 Target Policy 决定，
+  节点输入里的 allow_private/allowed_hosts 等覆盖项被忽略并记录；
 - playwright：UI 节点（batch-347b），支持点击可用性探测与浮层注入（TC-004）；
 - appium：Android 设备节点（batch-347b），通过 Appium REST 会话读取 UI 层级；
 - 由 `job_consumer` 在 `AIQE_INPROCESS_EXECUTOR_ENABLED=true` 时调用；
@@ -8,11 +10,22 @@
 """
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from typing import Any
 
-from app.aiqe.drivers.httpx_driver import HttpDriver, HttpRequestSpec
 from app.aiqe.models.run import NodeRun
+from app.aiqe.security import (
+    POLICY_OVERRIDE_KEYS,
+    SafeHttpExecutor,
+    SafeRequest,
+    SafeTargetValidator,
+    TargetDenied,
+    TargetPolicy,
+    TargetPolicyResolver,
+)
+
+logger = logging.getLogger(__name__)
 
 OVERLAY_JS = """
 (() => {
@@ -40,13 +53,41 @@ def _driver_key(node: NodeRun) -> str:
     return str(node.driver_key or "http").strip().lower()
 
 
-def execute_node(node: NodeRun) -> NodeExecution:
+def _resolve_policy(node: NodeRun | Any, db: Any) -> TargetPolicy | None:
+    """从 Run 的 project/environment 解析服务端策略；不接受节点输入覆盖。"""
+    if db is None or node is None:
+        return None
+    try:
+        run = getattr(node, "run", None)
+    except Exception:  # detached instance / 关系未加载
+        return None
+    if run is None:
+        return None
+    try:
+        return TargetPolicyResolver(db).resolve(
+            project_id=int(run.project_id),
+            environment_id=getattr(run, "environment_id", None),
+        )
+    except Exception:
+        logger.exception("target policy resolve failed")
+        return None
+
+
+def execute_node(
+    node: NodeRun,
+    *,
+    db: Any = None,
+    policy: TargetPolicy | None = None,
+) -> NodeExecution:
     driver = _driver_key(node)
     spec_input = dict(node.input_ref or {})
     if driver in {"http", "httpx", "api"}:
-        return _execute_http(spec_input)
+        return _execute_http(spec_input, node=node, db=db, policy=policy)
     if driver in {"playwright", "web", "ui"}:
-        return _execute_playwright(spec_input)
+        if db is None and policy is None:
+            # 兼容单测：无 DB 上下文时按旧签名调用（生产路径始终带 db）。
+            return _execute_playwright(spec_input)
+        return _execute_playwright(spec_input, node=node, db=db, policy=policy)
     if driver in {"appium", "android", "mobile"}:
         return _execute_appium(spec_input)
     return NodeExecution(
@@ -56,7 +97,43 @@ def execute_node(node: NodeRun) -> NodeExecution:
     )
 
 
-def _execute_http(spec_input: dict[str, Any]) -> NodeExecution:
+def _emit_security_event(
+    db: Any,
+    node: NodeRun | Any,
+    *,
+    event_type: str,
+    payload: dict[str, Any],
+) -> None:
+    """安全事件必须可追踪（Run/Node/Actor/policy_version），但绝不能因写事件改变执行结果。"""
+    if db is None or node is None:
+        return
+    try:
+        from app.aiqe.services.event_service import append_event
+
+        run = getattr(node, "run", None)
+        run_id = getattr(run, "id", None)
+        if not run_id:
+            return
+        body = {"schema_version": "1.0", **payload}
+        append_event(
+            db,
+            run_id=str(run_id),
+            event_type=event_type,
+            payload=body,
+            producer="system",
+            node_run_id=getattr(node, "id", None),
+        )
+    except Exception:  # 审计失败不回滚执行事实
+        logger.exception("append security event failed")
+
+
+def _execute_http(
+    spec_input: dict[str, Any],
+    *,
+    node: NodeRun | Any = None,
+    db: Any = None,
+    policy: TargetPolicy | None = None,
+) -> NodeExecution:
     url = str(spec_input.get("url") or "").strip()
     if not url:
         return NodeExecution(
@@ -65,7 +142,24 @@ def _execute_http(spec_input: dict[str, Any]) -> NodeExecution:
     method = str(spec_input.get("method") or "GET").upper()
     headers = {str(k): str(v) for k, v in (spec_input.get("headers") or {}).items()}
     timeout_ms = int(spec_input.get("timeout_ms") or 15000)
-    spec = HttpRequestSpec(
+    # AUD-001：Workflow 不能通过节点输入扩大访问范围（忽略并留痕）。
+    overrides = {
+        key: spec_input.pop(key) for key in list(spec_input) if key in POLICY_OVERRIDE_KEYS
+    }
+
+    effective_policy = policy if policy is not None else _resolve_policy(node, db)
+    if effective_policy is None:
+        return NodeExecution(
+            status="BLOCKED",
+            error_class="POLICY_UNAVAILABLE",
+            detail={
+                "reason": "缺少服务端 Target Policy，默认拒绝出网",
+                "url": url,
+                "ignored_overrides": overrides,
+            },
+        )
+
+    request = SafeRequest(
         method=method,
         url=url,
         headers=headers,
@@ -73,13 +167,49 @@ def _execute_http(spec_input: dict[str, Any]) -> NodeExecution:
         json_body=spec_input.get("json"),
         timeout_ms=max(1, timeout_ms),
     )
-    try:
-        result = HttpDriver().execute(spec)
-    except Exception as exc:  # 执行异常必须回写为失败，不得悬挂节点
+    result = SafeHttpExecutor().request(request, effective_policy)
+
+    detail = {
+        "status_code": result.status_code,
+        "duration_ms": result.duration_ms,
+        "request": result.request,
+        "response": result.response,
+        "policy_version": result.policy_version,
+        "resolution": result.resolution,
+        "redirect_chain": list(result.redirect_chain),
+        "ignored_overrides": overrides,
+    }
+
+    if overrides:
+        _emit_security_event(
+            db,
+            node,
+            event_type="security.policy_override_ignored",
+            payload={"node_key": getattr(node, "node_key", ""), "ignored": sorted(overrides)},
+        )
+
+    if result.blocked:
+        detail["denial"] = {
+            "code": result.error_code,
+            "message": result.error,
+        }
+        _emit_security_event(
+            db,
+            node,
+            event_type="security.target_policy_denied",
+            payload={
+                "node_key": getattr(node, "node_key", ""),
+                "url": url,
+                "code": result.error_code,
+                "message": result.error,
+                "policy_version": result.policy_version,
+                "resolution": result.resolution,
+            },
+        )
         return NodeExecution(
-            status="FAILED",
-            error_class="DRIVER_ERROR",
-            detail={"reason": f"{type(exc).__name__}: {exc}"},
+            status="BLOCKED",
+            error_class=result.error_code or "POLICY_DENIED",
+            detail=detail,
         )
 
     expected = spec_input.get("expected_status")
@@ -91,15 +221,13 @@ def _execute_http(spec_input: dict[str, Any]) -> NodeExecution:
     else:
         ok = bool(result.ok)
 
-    detail = {
-        "status_code": result.status_code,
-        "duration_ms": result.duration_ms,
-        "request": result.request,
-        "response": result.response,
-    }
     if ok:
         return NodeExecution(status="PASSED", detail=detail)
     error_class = "STATUS_MISMATCH" if expected is not None else "HTTP_FAILED"
+    if result.error_code == "TIMEOUT":
+        error_class = "TIMEOUT"
+    elif result.error_code == "CLIENT_INIT_FAILED":
+        error_class = "DRIVER_ERROR"
     return NodeExecution(status="FAILED", error_class=error_class, detail=detail)
 
 
@@ -145,12 +273,41 @@ def _mouse_click(page, target, detail: dict[str, Any]) -> bool:
     return False
 
 
-def _execute_playwright(spec_input: dict[str, Any]) -> NodeExecution:
+def _execute_playwright(
+    spec_input: dict[str, Any],
+    *,
+    node: NodeRun | Any = None,
+    db: Any = None,
+    policy: TargetPolicy | None = None,
+) -> NodeExecution:
     url = str(spec_input.get("url") or "").strip()
     if not url:
         return NodeExecution(
             status="FAILED", error_class="INPUT_INVALID", detail={"reason": "缺少 url"}
         )
+    effective_policy = policy if policy is not None else _resolve_policy(node, db)
+    if effective_policy is not None:
+        try:
+            SafeTargetValidator().validate(url, effective_policy)
+        except TargetDenied as exc:
+            _emit_security_event(
+                db,
+                node,
+                event_type="security.target_policy_denied",
+                payload={
+                    "node_key": getattr(node, "node_key", ""),
+                    "url": url,
+                    "code": exc.code,
+                    "message": exc.message,
+                    "policy_version": effective_policy.version,
+                    "driver": "playwright",
+                },
+            )
+            return NodeExecution(
+                status="BLOCKED",
+                error_class=exc.code,
+                detail={"url": url, "denial": exc.payload(), "policy_version": effective_policy.version},
+            )
     click_text = str(spec_input.get("click_text") or "").strip()
     click_selector = str(spec_input.get("click_selector") or "").strip()
     expect_text = str(spec_input.get("expect_text") or "").strip()

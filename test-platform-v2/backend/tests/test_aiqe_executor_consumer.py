@@ -1,11 +1,14 @@
-"""M10-347：AIQE 进程内执行器 + ExecutionJob 消费者测试。"""
-from __future__ import annotations
+"""M10-347：AIQE 进程内执行器 + ExecutionJob 消费者测试。
 
-from dataclasses import dataclass
+AUD-001 起 http 节点统一经 ``SafeHttpExecutor``（服务端 Target Policy），
+因此这里先落一条允许 ``stub.local`` 的项目级策略，再替换执行器结果。
+"""
+from __future__ import annotations
 
 from sqlalchemy import select
 
 from app.aiqe.models.run import NodeRun, StepAttempt, TestRun
+from app.aiqe.security import SafeHttpResult, upsert_target_policy
 from app.aiqe.services import dag_scheduler, job_consumer
 from app.aiqe.services.execution_dispatcher import enqueue_node_run
 from app.models.execution_job import ExecutionJob
@@ -23,21 +26,22 @@ GRAPH = {
 }
 
 
-@dataclass
-class FakeResult:
-    ok: bool
-    status_code: int | None
-    error: str | None = None
-    duration_ms: int = 5
-    request: dict = None
-    response: dict = None
-
-    def __post_init__(self):
-        self.request = self.request or {"method": "GET", "url": "http://stub.local/health"}
-        self.response = self.response or {"status_code": self.status_code}
+def _seed_policy(db) -> None:
+    upsert_target_policy(
+        db,
+        project_id=1,
+        environment_id=None,
+        policy={
+            "allowed_hosts": ["stub.local"],
+            "allowed_ports": [80],
+            "allowed_methods": ["GET"],
+            "max_redirects": 0,
+        },
+    )
 
 
 def _seed_run(db, graph=GRAPH, key="RUN-EXEC-0001") -> tuple[TestRun, ExecutionJob]:
+    _seed_policy(db)
     run = TestRun(project_id=1, run_key=key, source_type="manual", status="QUEUED")
     db.add(run)
     db.flush()
@@ -51,9 +55,18 @@ def _seed_run(db, graph=GRAPH, key="RUN-EXEC-0001") -> tuple[TestRun, ExecutionJ
 
 
 def _patch_http(monkeypatch, ok: bool, status_code: int = 200):
+    def _fake(self, request, policy):
+        return SafeHttpResult(
+            ok=ok,
+            status_code=status_code,
+            duration_ms=5,
+            request={"method": request.method, "url": request.url},
+            response={"status_code": status_code},
+            policy_version=policy.version,
+        )
+
     monkeypatch.setattr(
-        "app.aiqe.services.node_executor.HttpDriver.execute",
-        lambda self, spec: FakeResult(ok=ok, status_code=status_code),
+        "app.aiqe.services.node_executor.SafeHttpExecutor.request", _fake
     )
 
 

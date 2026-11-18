@@ -102,7 +102,7 @@ def run_job(db: Session, job_id: int) -> dict:
     if node.status == "READY":
         dag_scheduler.mark_running(db, run_id, node.node_key)
 
-    result = node_executor.execute_node(node)
+    result = node_executor.execute_node(node, db=db)
     dag_scheduler.complete_node(
         db,
         run_id,
