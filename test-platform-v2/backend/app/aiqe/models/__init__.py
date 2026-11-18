@@ -7,6 +7,7 @@ from app.aiqe.models.hardening import MutationLedger
 from app.aiqe.models.learning import BugPattern, LearningCandidate
 from app.aiqe.models.noise_rule import NoiseRule
 from app.aiqe.models.benchmark import BenchmarkDataset, BenchmarkRun, BenchmarkSample
+from app.aiqe.models.platform_binding import PlatformBinding
 from app.aiqe.models.interference import InterferenceObservation, TriageCase
 from app.aiqe.models.contract import (
     AcceptanceCriterion,
@@ -39,6 +40,7 @@ __all__ = [
     "NodeCapabilityManifest",
     "NodeRun",
     "NoiseRule",
+    "PlatformBinding",
     "RegisteredQuery",
     "RequirementContract",
     "ResourceLock",

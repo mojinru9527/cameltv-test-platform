@@ -32,6 +32,8 @@ from app.aiqe.models import contract as aiqe_contract_models  # noqa: F401
 from app.aiqe.models import interference as aiqe_interference_models  # noqa: F401
 # AUD-018：Agent Benchmark
 from app.aiqe.models import benchmark as aiqe_benchmark_models  # noqa: F401
+# AUD-020：多端平台绑定
+from app.aiqe.models import platform_binding as aiqe_platform_binding_models  # noqa: F401
 from app.models.ai_task import AiTask
 from app.models.execution_node import ExecutionNode
 from app.models.ai_agent_token import AiAgentToken
