@@ -219,7 +219,15 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 15. ✅ AUD-018：Benchmark dataset/run + 后端计算指标（第 7 轮）
 16. ✅ AUD-017：A5 影响图 + 强制集合不可删（第 8 轮）
 17. ✅ AUD-020：PlatformBinding + 按平台 6 态 + 多端 Preflight（第 8 轮，代码侧）
+18. ✅ §06 REST 契约 + AUD-013 追加 MCP 工具名（第 9 轮）
 
+> **§06 REST 契约与 MCP 工具名（第 9 轮补充）：** 新增 `/api/v1/aiqe` 能力路由
+> （contracts / cases / experiments / observations / triage / benchmarks / impact / platforms /
+> agent-tasks / regression sync），全部复用已交付 service 并保持 project scope + RBAC +
+> "不得自报事实"；MCP Gateway 改用规范 `aiqe.*` 工具名并标注
+> READ/WRITE_DRAFT/EXECUTE_TEST/APPROVE 作用域，`close_defect` 等受保护动作永不暴露。
+> 测试：`tests/test_aiqe_capabilities_api.py`（12 条）+ MCP 规范名/别名/禁列测试。
+>
 > **代码侧 20/20 AUD 已全部交付。** 仍未满足的是 v1.5 §00-8 的**环境证据**类完成定义：
 > 真实 Test 环境下 20 次连续 Dogfood Run ID、真实 iOS/Android/小程序设备验收、Runner 出口
 > 防火墙部署、24h soak 与 100 并发、以及 QA/Backend/Security/Product 四方联合签字。
