@@ -16,15 +16,15 @@
 | 第一批 | AUD-005 Capability/Preflight | 部分（boolean available，无 VERIFIED 状态、无 Preflight） | ✅ 已交付 |
 | 第一批 | AUD-006 状态一致性/恢复 | 部分（lease/fencing 无、事件无生产者、Reconciler 无） | ✅ 已交付 |
 | 第二批 | AUD-007 Assertion Engine | **缺失**（断言写死在 node_executor，`run_assertion_results` 零写入） | ✅ 已交付 |
-| 第二批 | AUD-008 Artifact 生命周期 | 部分（模型+存储+GC 有，无 Upload/Download API、无 Viewer、GC 硬删） | ⬜ |
-| 第二批 | AUD-009 Regression 幂等/SHA | **缺失**（`min_length=7`、无 fingerprint、无 deployed SHA） | ⬜ |
-| 第二批 | AUD-010 Regression 终态/对比 | **缺失** | ⬜ |
+| 第二批 | AUD-008 Artifact 生命周期 | 部分（模型+存储+GC 有，无 Upload/Download API、无 Viewer、GC 硬删） | ✅ 已交付 |
+| 第二批 | AUD-009 Regression 幂等/SHA | **缺失**（`min_length=7`、无 fingerprint、无 deployed SHA） | ✅ 已交付 |
+| 第二批 | AUD-010 Regression 终态/对比 | **缺失** | ✅ 已交付 |
 | 第二批 | AUD-011 Mixed Workflow Dogfood | **缺失**（占位 E2E 只断言 body.count()==1） | ⬜ |
-| 第二批 | AUD-012 Defect Draft 可复现 | 部分（草稿服务存在，evidence 仅前缀字符串校验） | ⬜ |
+| 第二批 | AUD-012 Defect Draft 可复现 | 部分（草稿服务存在，evidence 仅前缀字符串校验） | ✅ 已交付 |
 | 第三批 | AUD-013 A0–A6 Registry/Orchestrator | **缺失**（无 AgentProtocol/AgentResult/Registry/DAG） | ⬜ |
 | 第三批 | AUD-014 Requirement Contract | **缺失**（无 Contract 表/状态机/source ref 解析） | ⬜ |
 | 第三批 | AUD-015 结构化 Case | **缺失**（无 automation_grade/covers_ac_ids/oracle_ref） | ⬜ |
-| 第三批 | AUD-016 A4 Evidence-grounded | 部分（schema 校验有，evidence 不做服务端解析） | ⬜ |
+| 第三批 | AUD-016 A4 Evidence-grounded | 部分（schema 校验有，evidence 不做服务端解析） | ✅ 已交付 |
 | 第三批 | AUD-017 A5 影响图 | 部分（文件名子串规则，无 git diff/symbol/trace path） | ⬜ |
 | 第三批 | AUD-018 A6 Benchmark | **违规**（接受前端自报 false_positive_rate） | ⬜ |
 | 第三批 | AUD-019 Noise Intelligence | 部分（10 个资源 Detector ≠ 12 类目；无 Observation 表） | ⬜ |
@@ -178,18 +178,18 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 
 ## 4. 第二批缺口要点
 
-- AUD-007：✅ 已交付（见 3.3）。`dag_scheduler._finalize` 仍以节点状态聚合 Run；质量门禁读取断言需在 AUD-011 Dogfood 工作流显式声明 required 断言。
-- AUD-008：`put_artifact` 仅测试调用；无 Upload/Download API；无 `project_id/upload_status/retention_until`；GC `db.delete` 硬删无墓碑；无 Viewer。
-- AUD-009：`regression_service` `fixed_sha` 只要求 ≥7 位；无 fingerprint/唯一约束；无 deployed SHA 校验；创建的 Run 无 NodeRun（永远 QUEUED）。
-- AUD-010：无 `RunTerminalEventHandler`、无 `RunComparisonSnapshot`、无 `/comparison` `/cancel` 路由（AUD-006 已提供 `run.completed` 事件作为前置）。
-- AUD-011：`tests/e2e/aiqe/test_tc_aiqe_001_010.py` 仅断言页面 `body.count()==1`；`RunContext` 已有生产可用的解析能力（AUD-003/007 起），但缺跨系统混合 Workflow 种子与 Dogfood harness。
-- AUD-012：`defect_service.validate_reproduction` 仅校验 `artifact:/event:/run:/node:/signal:` 前缀；无存在性/项目/run scope 校验；无 ReproductionBundle。
+- AUD-007：✅ 已交付（见 3.3）。
+- AUD-008：✅ 已交付 —— `run_artifacts` 增加 project_id/规范 ArtifactType/上传状态/保留期/墓碑；两阶段上传（`create_pending_artifact` → `complete_upload`，服务端重算 sha256，不匹配 CORRUPTED 且不落存储）；`open_download` 重新鉴权并拒绝未完成/损坏/已清理；GC 改为墓碑（`PURGED` + `deleted_at` + metadata，行保留）；`_finalize` 在有 PENDING/CORRUPTED 证据时 Run 只能 INCOMPLETE；新增 `/api/v1/aiqe/artifacts` 路由（会话/上传/元信息/下载 + RBAC + `Cache-Control: private`）。测试 `tests/test_aiqe_aud008_artifact_lifecycle.py`（16 条）。
+- AUD-009：✅ 已交付 —— `aiqe_deployment_attestations` 可信部署记录；`fixed_sha` 必须 40 位；部署缺失/不匹配 → BLOCKED（不启动 Run）；服务端 fingerprint 唯一约束实现幂等；范围冻结（直接失败节点/断言 + P0 选择，排除项有 reason）；验证 Run 复制 source 节点骨架；新入口 `POST /api/v1/aiqe/defects/{defect_id}/regressions`。
+- AUD-010：✅ 已交付 —— `run_comparison_snapshots`（只追加）；`regression_terminal.handle_run_terminal` 幂等收敛（断言聚合、建议 `READY_FOR_HUMAN_CLOSE`/`NEEDS_MORE_FIX`/`INCONCLUSIVE`，**不自动关闭缺陷**）；`consume_terminal_events` 消费 outbox `run.completed`；`GET /regressions/{id}/comparison` 懒收敛；`POST /regressions/{id}/cancel`。测试 `tests/test_aiqe_regression_api.py`（14 条，已重写为强化契约）。
+- AUD-011：⬜ 未完成 —— 需要真实跨系统混合 Workflow（API + Admin UI + DB + Public API + Web）与真实 Test 环境；下一轮实现可执行 harness（种子 Workflow + 20 次连续运行脚本 + 证据校验），无可用环境时明确跳过而非伪造 PASS。
+- AUD-012：✅ 已交付 —— 服务端 evidence 解析 + 失败断言强制 + 脱敏 ReproductionBundle（JSON/Markdown/ZIP）+ 人工确认保留 `draft_id/approved_by` 审计；`/api/v1/aiqe/defects` 路由。测试 `tests/test_aiqe_aud012_evidence_and_draft.py`（13 条，与 AUD-016 共用）。
 
 ## 5. 第三批缺口要点
 
 - AUD-013：`BaseAgent.run(input_text)`；无 `AgentProtocol`/`AgentResult`/Registry/DAG/工具白名单；`RequirementAgent.key="A0"` 与 A0=Orchestrator 冲突。
 - AUD-014/015：无 Contract / 结构化 Case 持久化（`automation_grade`/`covers_ac_ids`/`oracle_ref` 全仓 0 命中）。
-- AUD-016：`FailureTriageAgent` schema 严格（confidence 必须为 null、禁止自动关缺陷），但 evidence ref 不做服务端解析。
+- AUD-016：✅ 已交付 —— `evidence_service.resolve_evidence_refs` 服务端解析（存在性 + 同 Project + 同 Run，`signal:` 仅格式），任何非法引用使整个结果失败（`EVIDENCE_REF_INVALID`）；已接入缺陷草稿与 ReproductionBundle。剩余：把该解析器注入 `FailureTriageAgent.validate`（AI 归因输出校验）与 A4 调用链，属 AUD-013 任务链的一部分。
 - AUD-017：`change_impact_agent` 仅按文件名子串映射 area → suite 名，无 git diff/symbol/trace path。
 - AUD-018：`learning_service.evaluate_candidate(false_positive_rate, sample_size)` 直接采用调用方自报数值（v1.5 明令禁止）。
 - AUD-019：`interference_service.KINDS` 10 个资源信号，缺 `UI_OVERLAY/CROSS_FEATURE/AUTOMATION/FLAKY/REQUIREMENT_GAP/TEST_DATA/TIME` 类别；无 `InterferenceObservation` 表；`NoiseRule` 缺 11 个治理字段且创建即 active。
@@ -206,10 +206,10 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 5. ✅ AUD-005：capability 6 态 + Preflight（Launch 前 BLOCKED、不建空跑 Job）（第 2 轮）
 6. ✅ AUD-006：fencing token + 生产事件时间线 + Reconciler（第 2 轮）
 7. ✅ AUD-007：Assertion Engine + `run_assertion_results` 写入 + 断言接口（第 2 轮）
-8. AUD-008：Artifact 生命周期（Upload/Download/RBAC/保留墓碑/Viewer）——**下一轮**
-9. AUD-009/010：Regression fingerprint/40 位 SHA/deployed SHA、终态同步 + 对比快照
-10. AUD-012/016：evidence ref 服务端解析（存在性 + 项目/run scope）+ ReproductionBundle
-11. AUD-011：混合 Workflow Dogfood harness（真实 Driver；复用 AUD-002/005/007 能力）
-12. AUD-013…020：Agent Protocol/Registry/DAG、Contract/Case 模型、A5 影响图、A6 Benchmark、Noise 12 类目、Platform Binding
+8. ✅ AUD-008：Artifact 两阶段上传/下载/RBAC/墓碑保留 + Run 证据完整性（第 3 轮）
+9. ✅ AUD-009/010：部署证明 + 40 位 SHA + fingerprint 幂等 + 范围冻结；Run 终态同步 + 对比快照 + 取消（第 3 轮）
+10. ✅ AUD-012/016：evidence ref 服务端解析 + 可复现缺陷草稿/复现包/人工确认（第 3 轮）
+11. AUD-011：混合 Workflow Dogfood harness（真实 Driver；复用 AUD-002/005/007/008 能力）——**下一轮**
+12. AUD-013…015、017…020：Agent Protocol/Registry/DAG + A4 证据注入、Contract/Case 模型、A5 影响图、A6 Benchmark、Noise 12 类目、Platform Binding
 
 > 每项完成条件遵循 v1.5 §00-8：代码 + 单测/集成测试 + 正负向/安全/权限/并发路径 + 真实 Run 证据 + OpenAPI/迁移/前端同步 + 无 secret 日志 + PR 描述含代码路径/测试命令/CI/回滚。
