@@ -92,6 +92,7 @@ class DbReadonlyDriver:
         params: dict[str, Any] | None = None,
         *,
         max_rows: int | None = None,
+        statement_timeout_ms: int | None = None,
     ) -> QueryResult:
         statement = assert_readonly(sql)
         limit = max(1, int(max_rows or self.max_rows))
@@ -101,6 +102,11 @@ class DbReadonlyDriver:
                 connection.exec_driver_sql("PRAGMA query_only=ON")
             elif dialect == "postgresql":
                 connection.exec_driver_sql("SET TRANSACTION READ ONLY")
+                if statement_timeout_ms:
+                    # int() 强转，避免把任意文本拼进 SET 语句。
+                    connection.exec_driver_sql(
+                        f"SET LOCAL statement_timeout = {int(statement_timeout_ms)}"
+                    )
             result = connection.execute(text(statement), params or {})
             columns = list(result.keys())
             rows = [dict(row) for row in result.mappings().fetchmany(limit + 1)]

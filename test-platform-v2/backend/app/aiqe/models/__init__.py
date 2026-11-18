@@ -7,6 +7,7 @@ from app.aiqe.models.hardening import MutationLedger
 from app.aiqe.models.learning import BugPattern, LearningCandidate
 from app.aiqe.models.noise_rule import NoiseRule
 from app.aiqe.models.profile import ExecutionProfile
+from app.aiqe.models.query_registry import RegisteredQuery
 from app.aiqe.models.triage import TriageExperiment
 from app.aiqe.models.run import NodeRun, RunAssertionResult, StepAttempt, TestRun
 from app.aiqe.models.secret_handle import SecretHandle
@@ -23,6 +24,7 @@ __all__ = [
     "NodeCapabilityManifest",
     "NodeRun",
     "NoiseRule",
+    "RegisteredQuery",
     "ResourceLock",
     "RunArtifact",
     "RunAssertionResult",

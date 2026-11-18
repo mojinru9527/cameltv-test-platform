@@ -24,8 +24,28 @@ from app.aiqe.security import (
     TargetPolicy,
     TargetPolicyResolver,
 )
+from app.aiqe.services.query_registry import (
+    DbReadonlyExecutor,
+    QueryDenied,
+    QueryNotRegistered,
+    default_connection_resolver,
+)
 
 logger = logging.getLogger(__name__)
+
+#: AUD-002：Workflow 不得通过节点输入决定 SQL / 连接 / 表范围。
+DB_OVERRIDE_KEYS = frozenset(
+    {
+        "sql",
+        "statement",
+        "query",
+        "connection_url",
+        "connection_ref",
+        "database_url",
+        "allowed_tables",
+        "schema",
+    }
+)
 
 OVERLAY_JS = """
 (() => {
@@ -90,6 +110,8 @@ def execute_node(
         return _execute_playwright(spec_input, node=node, db=db, policy=policy)
     if driver in {"appium", "android", "mobile"}:
         return _execute_appium(spec_input)
+    if driver in {"db", "db_readonly", "database"}:
+        return _execute_db(spec_input, node=node, db=db)
     return NodeExecution(
         status="BLOCKED",
         error_class="UNSUPPORTED_DRIVER",
@@ -229,6 +251,102 @@ def _execute_http(
     elif result.error_code == "CLIENT_INIT_FAILED":
         error_class = "DRIVER_ERROR"
     return NodeExecution(status="FAILED", error_class=error_class, detail=detail)
+
+
+def _execute_db(
+    spec_input: dict[str, Any],
+    *,
+    node: NodeRun | Any = None,
+    db: Any = None,
+) -> NodeExecution:
+    """AUD-002：只允许 ``query_key + typed_params``，SQL/连接由服务端登记。"""
+    raw_overrides = {
+        key: spec_input[key] for key in list(spec_input) if key in DB_OVERRIDE_KEYS
+    }
+    query_key = str(spec_input.get("query_key") or "").strip()
+    if not query_key:
+        return NodeExecution(
+            status="BLOCKED",
+            error_class="INPUT_INVALID",
+            detail={
+                "reason": "db 节点必须提供 query_key（禁止内联 SQL）",
+                "rejected_overrides": raw_overrides,
+            },
+        )
+    if raw_overrides:
+        # v1.5 §01 AUD-002：「Workflow 提交空值、通配符、任意表名和自定义 connection URL：
+        # schema 拒绝」→ 这里显式 BLOCKED 而不是静默忽略，便于发现越权尝试。
+        return NodeExecution(
+            status="BLOCKED",
+            error_class="WORKFLOW_DB_OVERRIDE",
+            detail={
+                "reason": "Workflow 不能决定 SQL/连接/表范围",
+                "rejected_overrides": sorted(raw_overrides),
+                "query_key": query_key,
+            },
+        )
+    if db is None or node is None:
+        return NodeExecution(
+            status="BLOCKED",
+            error_class="POLICY_UNAVAILABLE",
+            detail={"reason": "缺少 DB 会话，无法解析登记查询", "query_key": query_key},
+        )
+    try:
+        run = getattr(node, "run", None)
+    except Exception:  # detached instance
+        run = None
+    if run is None:
+        return NodeExecution(
+            status="BLOCKED",
+            error_class="POLICY_UNAVAILABLE",
+            detail={"reason": "节点未关联 Run", "query_key": query_key},
+        )
+
+    params = spec_input.get("params") or {}
+    if not isinstance(params, dict):
+        return NodeExecution(
+            status="BLOCKED",
+            error_class="INPUT_INVALID",
+            detail={"reason": "params 必须是对象", "query_key": query_key},
+        )
+    version = spec_input.get("query_version")
+    try:
+        result = DbReadonlyExecutor(connection_resolver=default_connection_resolver).execute(
+            db,
+            project_id=int(run.project_id),
+            query_key=query_key,
+            params=params,
+            version=int(version) if version is not None else None,
+            environment_id=getattr(run, "environment_id", None),
+        )
+    except QueryNotRegistered:
+        return NodeExecution(
+            status="BLOCKED",
+            error_class="QUERY_NOT_REGISTERED",
+            detail={"query_key": query_key},
+        )
+    except QueryDenied as exc:
+        return NodeExecution(
+            status="BLOCKED",
+            error_class=exc.code,
+            detail={"query_key": query_key, "reason": exc.message},
+        )
+    except Exception as exc:  # 执行异常必须回写为失败，不得悬挂节点
+        return NodeExecution(
+            status="FAILED",
+            error_class="DRIVER_ERROR",
+            detail={"query_key": query_key, "reason": f"{type(exc).__name__}: {exc}"},
+        )
+
+    return NodeExecution(
+        status="PASSED",
+        detail={
+            "query_key": result.query_key,
+            "summary": result.summary(),
+            "columns": result.columns,
+            "rows": result.rows,
+        },
+    )
 
 
 def _mouse_click(page, target, detail: dict[str, Any]) -> bool:

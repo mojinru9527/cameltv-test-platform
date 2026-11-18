@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     # M10-347：AIQE NodeRun 进程内执行器（仅 http driver；默认关闭，Test/CI 显式开启）
     aiqe_inprocess_executor_enabled: bool = False
     aiqe_inprocess_poll_seconds: float = 2.0
+    # AUD-002：AIQE 只读 DB 连接引用表（JSON: {"aiqe_test_readonly": "postgresql://..."}）。
+    # Workflow 只能引用 connection_ref，URL 与账号由服务端配置，禁止客户端传入。
+    aiqe_db_readonly_urls: str = ""
     runner_http_url: str = ""
     # Security boundary for user-influenced Playwright/Node execution. This is
     # defense in depth, not a substitute for a dedicated sandbox container.
