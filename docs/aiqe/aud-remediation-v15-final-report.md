@@ -16,7 +16,8 @@
 
 | 项 | 值 |
 |---|---|
-| base | `origin/main` @ `b0f6cdd4c`（2026-11-14） |
+| base | `origin/main` @ `d0eba1f45`（2026-11-18，已合并 main 的 PR #595 执行正确性链路） |
+| 首次分支点 | `origin/main` @ `b0f6cdd4c`（2026-11-14） |
 | 工作树 | `F:\CamelTv-worktrees\DeepSeek_Harness-aiqe-v15-aud-remediation` |
 | 分支 | `feature/aiqe-v15-aud-remediation` |
 | 基线文档 | `docs/aiqe/aud-baseline-v15.md`（逐 AUD 的“整改前事实 → 交付内容”） |
@@ -50,16 +51,34 @@
 - `test_aiqe_mcp_gateway.py`（10）、`test_aiqe_mcp_server.py`（5）、`test_aiqe_p2_adapters.py`（9）：规范工具名、scope、审批、真实 REST adapter、审计。
 - 前端：`src/pages/runs/__tests__/evidencePanel.test.tsx`（6）、`src/pages/aiqe/__tests__/contracts.test.tsx`（5）。
 
+## 3.5 与 main（PR #595 / v1.4 FIX）的合并说明
+
+main 在本任务期间前进了 19 个提交，包含一套并行的 v1.4 执行正确性实现
+（`node_executor` 驱动化、`run_context` v2、`execution_service`、Assertion Runtime、
+Reconciler、FIX-005 preflight、PR #595 迁移）。合并策略：
+
+- **采用 main 的执行链**作为唯一运行路径；本分支的 capability preflight 保留为
+  `services/capability_preflight.py`（AUD-005 专用，不再与 FIX-005 抢 `preflight.py` 名称）；
+- 重挂本分支 main 缺失的 v1.5 能力：Target Policy（AUD-001）、DB Query Registry（AUD-002）、
+  Secret Handle / secure outputs（AUD-003）、fencing token/lease/生命周期事件（AUD-006）、
+  evidence-gap 收口（AUD-008）、能力消费守卫（AUD-005）、断言状态映射（AUD-007）、
+  dogfood observation 载荷；
+- A6 学习候选评估仍只接受 `benchmark_run_id`（AUD-018），服务层保留旧 benchmark dict 以兼容
+  main 的 tenant-scope 测试；
+- 迁移：新增 merge migration `20261125_merge_aud_v15_pr595` 收敛两个 head；
+  SQLite 下 downgrade 保留 FK 引用的追加列（`DROP COLUMN` 限制），PG 下仍完整回滚。
+
 ## 4. 验证证据（最终轮）
 
 | 命令 | 结果 |
 |---|---|
-| `cd test-platform-v2/backend && python -m pytest tests/ -q -k "aiqe" --ignore=tests/e2e` | **753 passed** |
+| `cd test-platform-v2/backend && python -m pytest tests/ -q -k "aiqe" --ignore=tests/e2e` | **837 passed**（含 main 的 v1.4 tests） |
 | `python scripts/ci/quality_ratchet.py` | **PASS**（ruff 396 ≤ 768、mypy 89 ≤ 193，均无新增） |
-| `python -m alembic heads` | 单头 `20261124_aud020_platform_binding` |
+| `python -m alembic heads` | 单头 `20261125_merge_aud_v15_pr595` |
+| `alembic upgrade head → downgrade 20261123_ta033_mutation_ledger → upgrade head`（临时 SQLite） | 通过 |
 | `cd test-platform-v2/frontend && npx tsc -b` | 通过（无输出） |
 | `npx eslint <changed files> --max-warnings=0` | 通过 |
-| `npx vitest run src/pages/runs src/pages/aiqe` | **21 passed** |
+| `npx vitest run src/pages/runs src/pages/aiqe` | **24 passed** |
 
 ## 5. 平台面收口
 
