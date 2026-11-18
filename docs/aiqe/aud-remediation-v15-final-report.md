@@ -72,13 +72,25 @@ Reconciler、FIX-005 preflight、PR #595 迁移）。合并策略：
 
 | 命令 | 结果 |
 |---|---|
-| `cd test-platform-v2/backend && python -m pytest tests/ -q -k "aiqe" --ignore=tests/e2e` | **837 passed**（含 main 的 v1.4 tests） |
+| `cd test-platform-v2/backend && python -m pytest tests/ -q -k "aiqe" --ignore=tests/e2e` | **838 passed**（含 main 的 v1.4 tests） |
+| `cd test-platform-v2/backend && python -m pytest tests/ -q --ignore=tests/e2e` | **2177 passed, 43 skipped** |
 | `python scripts/ci/quality_ratchet.py` | **PASS**（ruff 396 ≤ 768、mypy 89 ≤ 193，均无新增） |
 | `python -m alembic heads` | 单头 `20261125_merge_aud_v15_pr595` |
 | `alembic upgrade head → downgrade 20261123_ta033_mutation_ledger → upgrade head`（临时 SQLite） | 通过 |
 | `cd test-platform-v2/frontend && npx tsc -b` | 通过（无输出） |
 | `npx eslint <changed files> --max-warnings=0` | 通过 |
-| `npx vitest run src/pages/runs src/pages/aiqe` | **24 passed** |
+| `npx vitest run src/pages/runs src/pages/aiqe` | **27 passed** |
+
+## 4.5 合并后的结构收敛
+
+- `/api/v1/aiqe` 能力路由拆分为 `aiqe_contracts` / `aiqe_triage` / `aiqe_insights` /
+  `aiqe_automation`（均 <20KB），列表查询下沉到 `contract_service.list_contracts`、
+  `testcase_service.list_cases`、`defect_draft_service.get_defect`、
+  `regression_service.load_comparison`，满足 `test_route_layer_orm_ban`；
+- 路由基线 `tests/fixtures/route_inventory.json` 刷新为 393 条（AIQE 新增 63 个 path）；
+- AUD-013 迁移改用 PostgreSQL 兼容的 `FALSE` 字面量（CI 在全新 PG 上执行迁移）；
+- 新增前端 `/aiqe/impact` 与 `/aiqe/benchmarks` 页面，并导出
+  `docs/aiqe/openapi-aiqe-v15.json`（63 个 AIQE path）。
 
 ## 5. 平台面收口
 
