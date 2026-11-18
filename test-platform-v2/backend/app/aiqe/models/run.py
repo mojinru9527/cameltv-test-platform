@@ -110,6 +110,8 @@ class NodeRun(Base):
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     attempt_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    #: AUD-006：租约 fencing token，每次重新认领递增；旧 Worker 的迟到结果因 token 过旧被拒绝。
+    fencing_token: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     run: Mapped[TestRun] = relationship(back_populates="node_runs")
     step_attempts: Mapped[list[StepAttempt]] = relationship(
@@ -135,6 +137,8 @@ class StepAttempt(Base):
     output_summary_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     error_json: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     external_execution_ref: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    #: AUD-006：该 attempt 归属的租约 token（0 表示旧数据/无租约）。
+    fencing_token: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     node_run: Mapped[NodeRun] = relationship(back_populates="step_attempts")
     assertion_results: Mapped[list[RunAssertionResult]] = relationship(

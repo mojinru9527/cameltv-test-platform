@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     # AUD-002：AIQE 只读 DB 连接引用表（JSON: {"aiqe_test_readonly": "postgresql://..."}）。
     # Workflow 只能引用 connection_ref，URL 与账号由服务端配置，禁止客户端传入。
     aiqe_db_readonly_urls: str = ""
+    # AUD-006：Reconciler（过期租约回收 / Run 收口 / 实验同步）；默认关闭，按环境显式开启。
+    aiqe_reconciler_enabled: bool = False
+    aiqe_reconciler_poll_seconds: float = 30.0
     runner_http_url: str = ""
     # Security boundary for user-influenced Playwright/Node execution. This is
     # defense in depth, not a substitute for a dedicated sandbox container.

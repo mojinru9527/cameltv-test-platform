@@ -178,6 +178,12 @@ async def lifespan(application: FastAPI):
 
             start_aiqe_consumer()
             runtime.callback(stop_aiqe_consumer)
+        if settings.aiqe_reconciler_enabled:
+            # AUD-006：过期租约回收 / Run 收口 / 实验同步，默认关闭
+            from app.aiqe.services.reconciler import start_reconciler, stop_reconciler
+
+            start_reconciler()
+            runtime.callback(stop_reconciler)
         yield
 
 

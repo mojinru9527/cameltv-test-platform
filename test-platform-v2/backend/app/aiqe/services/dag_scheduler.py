@@ -7,6 +7,7 @@
 """
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from typing import Any
@@ -19,6 +20,43 @@ from app.aiqe.models.workflow import ResourceLock
 from app.aiqe.redaction import redact_mapping
 from app.aiqe.services import resource_lock
 from app.aiqe.services.run_state import apply_transition
+
+logger = logging.getLogger(__name__)
+
+NODE_TERMINAL_EVENTS: dict[str, str] = {
+    "PASSED": "node.completed",
+    "FAILED": "node.failed",
+    "BLOCKED": "node.blocked",
+    "SKIPPED": "node.skipped",
+    "CANCELED": "node.canceled",
+    "ERROR": "node.failed",
+}
+
+
+def emit_event(
+    db: Session,
+    *,
+    run_id: str,
+    event_type: str,
+    payload: dict[str, Any],
+    producer_event_id: str,
+    node_run_id: str | None = None,
+) -> None:
+    """AUD-006：节点/运行生命周期事件写入 Outbox（幂等、不影响执行结论）。"""
+    try:
+        from app.aiqe.services.event_service import append_event
+
+        append_event(
+            db,
+            run_id=run_id,
+            event_type=event_type,
+            payload={"schema_version": "1.0", **payload},
+            producer="system",
+            producer_event_id=producer_event_id,
+            node_run_id=node_run_id,
+        )
+    except Exception:  # 事件失败不能回滚执行事实
+        logger.exception("append %s event failed for run %s", event_type, run_id)
 
 NODE_TERMINAL = frozenset({"PASSED", "FAILED", "BLOCKED", "SKIPPED", "CANCELED", "ERROR"})
 NODE_FAILED = frozenset({"FAILED", "ERROR", "TIMED_OUT"})
@@ -181,6 +219,28 @@ def _finalize(db: Session, run: TestRun, rows: list[NodeRun], graph: dict[str, A
     else:
         apply_transition(run, "COMPLETED", outcome="PASS")
     run.finished_at = datetime.now(UTC)
+    emit_event(
+        db,
+        run_id=run.id,
+        event_type="run.blocked" if run.status == "BLOCKED" else "run.completed",
+        payload={
+            "status": run.status,
+            "outcome": run.outcome,
+            "node_statuses": statuses,
+        },
+        producer_event_id=f"{run.id}:terminal:{run.status}:{run.outcome}",
+    )
+
+
+def finalize_run(db: Session, run_id: str, graph: dict[str, Any] | None = None) -> TestRun:
+    """Public 收口入口（Reconciler 使用）：节点都已终态但 Run 仍 RUNNING 时收敛。"""
+    run = db.scalar(select(TestRun).where(TestRun.id == run_id).with_for_update())
+    if run is None:
+        raise LookupError(run_id)
+    rows = list(db.scalars(select(NodeRun).where(NodeRun.run_id == run_id)))
+    _finalize(db, run, rows, graph or {"nodes": [], "edges": []})
+    db.flush()
+    return run
 
 
 def schedule(
@@ -263,6 +323,14 @@ def schedule(
             statuses[key] = "READY"
             active += 1
             progressed = True
+            emit_event(
+                db,
+                run_id=run_id,
+                event_type="node.ready",
+                payload={"node_key": key, "attempt": int(row.attempt_count or 0)},
+                producer_event_id=f"{row.id}:{int(row.attempt_count or 0)}:node.ready",
+                node_run_id=row.id,
+            )
             if dispatch is not None:
                 dispatch(row)
 
@@ -297,9 +365,22 @@ def mark_running(db: Session, run_id: str, node_key: str) -> NodeRun:
                     status="RUNNING",
                     started_at=row.started_at,
                     external_execution_ref=str(row.execution_job_id or ""),
+                    fencing_token=int(row.fencing_token or 0),
                 )
             )
         db.flush()
+        emit_event(
+            db,
+            run_id=row.run_id,
+            event_type="node.started",
+            payload={
+                "node_key": row.node_key,
+                "attempt": attempt_no,
+                "fencing_token": int(row.fencing_token or 0),
+            },
+            producer_event_id=f"{row.id}:{attempt_no}:node.started",
+            node_run_id=row.id,
+        )
     return row
 
 
@@ -312,6 +393,7 @@ def complete_node(
     *,
     error_class: str | None = None,
     outputs: Mapping[str, Any] | None = None,
+    fencing_token: int | None = None,
 ) -> TestRun:
     if status not in NODE_TERMINAL:
         raise ValueError(f"非法节点终态: {status}")
@@ -322,6 +404,11 @@ def complete_node(
     row = by_key.get(node_key)
     if row is None:
         raise LookupError(node_key)
+    if fencing_token is not None:
+        # AUD-006：旧 Worker 的迟到结果必须被拒绝（fencing token 过旧）。
+        from app.aiqe.services.lease import assert_writable
+
+        assert_writable(db, node_run_id=row.id, fencing_token=fencing_token)
     row.status = status
     row.finished_at = datetime.now(UTC)
     if error_class:
@@ -330,6 +417,21 @@ def complete_node(
         row.output_ref = {**(row.output_ref or {}), **safe_outputs}
     # batch-340：attempt 终态先落库（失败 attempt 永久保留，重试追加新 attempt）。
     _finalize_attempt(db, row, status, error_class, safe_outputs)
+    node_event = NODE_TERMINAL_EVENTS.get(status)
+    if node_event:
+        emit_event(
+            db,
+            run_id=run_id,
+            event_type=node_event,
+            payload={
+                "node_key": node_key,
+                "status": status,
+                "error_class": error_class or "",
+                "attempt": int(row.attempt_count or 0),
+            },
+            producer_event_id=f"{row.id}:{int(row.attempt_count or 0)}:{node_event}",
+            node_run_id=row.id,
+        )
 
     for resource in row.resource_keys_json or []:
         try:
@@ -359,6 +461,18 @@ def complete_node(
         row.finished_at = None
         row.error_class = ""
         db.flush()
+        emit_event(
+            db,
+            run_id=run_id,
+            event_type="node.retry_scheduled",
+            payload={
+                "node_key": node_key,
+                "attempt": int(row.attempt_count or 0),
+                "reason": error_class or "",
+            },
+            producer_event_id=f"{row.id}:{int(row.attempt_count or 0)}:node.retry_scheduled",
+            node_run_id=row.id,
+        )
         return run
 
     if status in NODE_FAILED and fail_fast:
