@@ -27,7 +27,7 @@
 | 第三批 | AUD-016 A4 Evidence-grounded | 部分（schema 校验有，evidence 不做服务端解析） | ✅ 已交付 |
 | 第三批 | AUD-017 A5 影响图 | 部分（文件名子串规则，无 git diff/symbol/trace path） | ⬜ |
 | 第三批 | AUD-018 A6 Benchmark | **违规**（接受前端自报 false_positive_rate） | ⬜ |
-| 第三批 | AUD-019 Noise Intelligence | 部分（10 个资源 Detector ≠ 12 类目；无 Observation 表） | ⬜ |
+| 第三批 | AUD-019 Noise Intelligence | 部分（10 个资源 Detector ≠ 12 类目；无 Observation 表） | ✅ 已交付 |
 | 第三批 | AUD-020 多端真实 Driver | 部分（boolean available；iOS 硬关闭；无 PlatformBinding） | ⬜ |
 
 ## 1. 基线事实
@@ -195,7 +195,7 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 - AUD-016：✅ 已交付 —— `evidence_service.resolve_evidence_refs` 服务端解析（存在性 + 同 Project + 同 Run，`signal:` 仅格式），任何非法引用使整个结果失败（`EVIDENCE_REF_INVALID`）；已接入缺陷草稿与 ReproductionBundle。剩余：把该解析器注入 `FailureTriageAgent.validate`（AI 归因输出校验）与 A4 调用链，属 AUD-013 任务链的一部分。
 - AUD-017：`change_impact_agent` 仅按文件名子串映射 area → suite 名，无 git diff/symbol/trace path。
 - AUD-018：`learning_service.evaluate_candidate(false_positive_rate, sample_size)` 直接采用调用方自报数值（v1.5 明令禁止）。
-- AUD-019：`interference_service.KINDS` 10 个资源信号，缺 `UI_OVERLAY/CROSS_FEATURE/AUTOMATION/FLAKY/REQUIREMENT_GAP/TEST_DATA/TIME` 类别；无 `InterferenceObservation` 表；`NoiseRule` 缺 11 个治理字段且创建即 active。
+- AUD-019：✅ 已交付 —— `aiqe_interference_observations`（detector_key/version、12 类 category、severity、±15s/10s 窗口、signal、evidence refs、建议实验；Detector 不改 Run Outcome）；`aiqe_triage_cases`（固定生命周期，禁止跳级）；`services/noise_intelligence.py`（10 个资源信号映射到 12 类 + 新增 UI_OVERLAY/CROSS_FEATURE/AUTOMATION/FLAKY/REQUIREMENT_GAP/TEST_DATA/TIME 检测器 + UNKNOWN 兜底 + 每类 E1–E6 建议 + P0 抑制守卫）；`NoiseRule` 治理（suppress 必须 reason、审批后才 active、项目作用域、续期新建版本并 supersede 旧版本、matched/false_suppress 计数）；`/admin/noise-rules/{id}/approve`。测试 `tests/test_aiqe_aud019_noise_intelligence.py`（22 条）。
 - AUD-020：`available: bool` + `IOS_ENABLED=False` + `node_executor` 硬编码 Android；无 PlatformBinding/Preflight/按平台聚合。
 
 ## 6. 实施顺序（本轮起的计划）
@@ -214,7 +214,10 @@ rg "verification_run_id=.*uuid" app/aiqe                  # triage_service.py:73
 10. ✅ AUD-012/016：evidence ref 服务端解析 + 可复现缺陷草稿/复现包/人工确认（第 3 轮）
 11. ✅ AUD-011：混合 Workflow Dogfood harness（真实 Driver；第 4 轮）
 12. ✅ AUD-013：Agent Protocol/Registry/DAG + A0/A6 + A4 证据等级（第 4 轮）
-13. ✅ AUD-014/015：Requirement Contract（来源/版本/冻结/审批）+ 结构化 TestCase（grade/AC 覆盖/Oracle）（第 5 轮）
-14. AUD-017…020：A5 影响图（含强制集）、A6 Benchmark（后端计算指标）、Noise 12 类目、Platform Binding/多端 Preflight
+13. ✅ AUD-014/015：Requirement Contract + 结构化 TestCase（第 5 轮）
+14. ✅ AUD-019：Noise 12 类目 + Observation + Triage 生命周期 + 规则治理（第 6 轮）
+15. AUD-018：Benchmark dataset/run + 后端计算指标（取消前端自报）
+16. AUD-017：A5 影响图（git diff → symbol/route/schema → AC/Case/Workflow + 强制集合不可删）
+17. AUD-020：PlatformBinding + 按平台 6 态 + 多端 Preflight 矩阵
 
 > 每项完成条件遵循 v1.5 §00-8：代码 + 单测/集成测试 + 正负向/安全/权限/并发路径 + 真实 Run 证据 + OpenAPI/迁移/前端同步 + 无 secret 日志 + PR 描述含代码路径/测试命令/CI/回滚。
