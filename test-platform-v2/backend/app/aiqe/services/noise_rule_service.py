@@ -48,11 +48,22 @@ def create_rule(
     scope: str = "run",
     expires_at: datetime | None = None,
     created_by: int = 0,
+    environment_id: int | None = None,
+    profile_id: str | None = None,
+    detector_key: str | None = None,
+    error_class: str | None = None,
+    selector: dict | None = None,
+    app_version: str | None = None,
+    evidence_refs: list | None = None,
+    reason: str = "",
+    require_approval: bool = True,
 ) -> NoiseRule:
     if not str(pattern or "").strip():
         raise NoiseRuleError("规则 pattern 不能为空")
     if action not in ACTIONS:
         raise NoiseRuleError(f"未知 action: {action!r}")
+    if action == "suppress" and not str(reason or "").strip():
+        raise NoiseRuleError("suppress 规则必须填写 reason（治理要求）")
     now = _utcnow()
     expiry = _resolve_expiry(expires_at, action=action, base=now, now=now)
     row = NoiseRule(
@@ -60,8 +71,20 @@ def create_rule(
         pattern=str(pattern).strip(),
         action=action,
         scope=scope,
+        environment_id=environment_id,
+        profile_id=profile_id,
+        detector_key=detector_key,
+        error_class=error_class,
+        selector_json=selector,
+        app_version=app_version,
+        evidence_refs_json=list(evidence_refs or []),
+        reason=str(reason or ""),
+        version=1,
+        valid_from=now,
         expires_at=expiry,
-        status="active",
+        status="pending_approval" if require_approval else "active",
+        approved_by=None if require_approval else created_by,
+        approved_at=None if require_approval else now,
         created_by=created_by,
         created_at=now,
         updated_at=now,
@@ -71,11 +94,34 @@ def create_rule(
     return row
 
 
-def get_rule(db: Session, rule_id: int) -> NoiseRule:
+def get_rule(db: Session, rule_id: int, *, project_id: int | None = None) -> NoiseRule:
     row = db.get(NoiseRule, rule_id)
-    if row is None:
+    if row is None or (
+        project_id is not None and int(row.project_id or 0) != int(project_id)
+    ):
         raise NoiseRuleError(f"规则不存在: {rule_id}")
     return row
+
+
+def approve_rule(
+    db: Session, rule_id: int, *, project_id: int, approved_by: int
+) -> NoiseRule:
+    """AUD-019：规则必须经人工批准才能生效（禁止创建即 active）。"""
+    row = get_rule(db, rule_id, project_id=project_id)
+    if row.status == "active":
+        return row
+    row.status = "active"
+    row.approved_by = int(approved_by)
+    row.approved_at = _utcnow()
+    row.updated_at = _utcnow()
+    db.flush()
+    return row
+
+
+def assert_not_p0(rule: NoiseRule, *, priority: str | None) -> None:
+    """P0 原始 FAIL 永远不能通过 suppress/quarantine 转成 PASS。"""
+    if str(priority or "").upper() == "P0" and rule.action in {"suppress", "quarantine"}:
+        raise NoiseRuleError("P0 结果不允许被 Noise Rule 抑制/隔离")
 
 
 def update_rule(
@@ -107,12 +153,44 @@ def update_rule(
     return row
 
 
-def renew_rule(db: Session, rule_id: int) -> NoiseRule:
-    row = get_rule(db, rule_id)
+def renew_rule(
+    db: Session,
+    rule_id: int,
+    *,
+    project_id: int | None = None,
+    approved_by: int | None = None,
+    require_approval: bool = True,
+) -> NoiseRule:
+    """AUD-019：续期**新建版本**（旧行保留只读），并强制重新审批。"""
+    previous = get_rule(db, rule_id, project_id=project_id)
     now = _utcnow()
-    row.expires_at = now + timedelta(days=MAX_DAYS)
-    row.status = "active"
-    row.updated_at = now
+    row = NoiseRule(
+        project_id=int(previous.project_id),
+        pattern=previous.pattern,
+        action=previous.action,
+        scope=previous.scope,
+        environment_id=previous.environment_id,
+        profile_id=previous.profile_id,
+        detector_key=previous.detector_key,
+        error_class=previous.error_class,
+        selector_json=previous.selector_json,
+        app_version=previous.app_version,
+        evidence_refs_json=previous.evidence_refs_json,
+        reason=previous.reason,
+        version=int(previous.version or 1) + 1,
+        valid_from=now,
+        expires_at=_resolve_expiry(None, action=previous.action, base=now, now=now),
+        supersedes_id=int(previous.id),
+        status="active" if not require_approval else "pending_approval",
+        approved_by=approved_by if not require_approval else None,
+        approved_at=now if not require_approval else None,
+        created_by=int(previous.created_by or 0),
+        created_at=now,
+        updated_at=now,
+    )
+    previous.status = "superseded"
+    previous.updated_at = now
+    db.add(row)
     db.flush()
     return row
 
@@ -135,7 +213,20 @@ def list_rules(db: Session, project_id: int, *, include_expired: bool = True) ->
     return [row for row in rows if is_effective(row)]
 
 
-def delete_rule(db: Session, rule_id: int) -> None:
-    row = get_rule(db, rule_id)
+def delete_rule(db: Session, rule_id: int, *, project_id: int | None = None) -> None:
+    row = get_rule(db, rule_id, project_id=project_id)
     db.delete(row)
     db.flush()
+
+
+def record_match(
+    db: Session, rule_id: int, *, suppressed: bool = True, false_suppress: bool = False
+) -> NoiseRule:
+    row = get_rule(db, rule_id)
+    if suppressed:
+        row.matched_count = int(row.matched_count or 0) + 1
+    if false_suppress:
+        row.false_suppress_count = int(row.false_suppress_count or 0) + 1
+    row.updated_at = _utcnow()
+    db.flush()
+    return row
