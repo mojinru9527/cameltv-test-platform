@@ -82,7 +82,27 @@ def handle_message(message: dict[str, Any], gateway: AiqeMcpGateway) -> dict[str
 
 
 def main() -> None:
-    gateway = AiqeMcpGateway(reader=lambda tool, args: {"tool": tool, "arguments": args})
+    import os
+
+    base_url = os.environ.get("AIQE_API_BASE_URL", "").strip()
+    if base_url:
+        # AUD-013：配置了 API 地址时使用真实 HTTP adapter（同一套 FastAPI service）。
+        from http_adapter import HttpMcpAdapter
+
+        adapter = HttpMcpAdapter(
+            base_url,
+            token=os.environ.get("AIQE_API_TOKEN", ""),
+            project_id=int(os.environ.get("AIQE_PROJECT_ID", "0") or 0) or None,
+            correlation_id=os.environ.get("AIQE_CORRELATION_ID", ""),
+            actor=os.environ.get("AIQE_MCP_ACTOR", "mcp-client"),
+        )
+        gateway = AiqeMcpGateway(
+            reader=adapter.reader,
+            writer=adapter.writer,
+            approval_verifier=lambda token, tool, args: bool(token),
+        )
+    else:
+        gateway = AiqeMcpGateway(reader=lambda tool, args: {"tool": tool, "arguments": args})
     for line in sys.stdin:
         line = line.strip()
         if not line:
