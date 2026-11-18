@@ -92,6 +92,17 @@ Reconciler、FIX-005 preflight、PR #595 迁移）。合并策略：
 - 新增前端 `/aiqe/impact` 与 `/aiqe/benchmarks` 页面，并导出
   `docs/aiqe/openapi-aiqe-v15.json`（63 个 AIQE path）。
 
+## 4.8 Benchmark 执行入口（LLM）
+
+- `POST /api/v1/aiqe/benchmarks/datasets/{dataset_id}/runs`：对 FROZEN 数据集逐样本调用项目
+  `ai_provider`（OpenAI-compatible，`.env` 的 AI_API_KEY 仅用于配置 Provider），解析 `labels`，
+  由后端计算 TP/FP/FN、Precision/Recall/F1、Unknown rate，并记录逐样本输出与 token 用量；
+- **fail-closed**：项目未配置 AI Provider 时返回 400 `AI_PROVIDER_UNCONFIGURED`，不会降级为
+  假数据或调用方自报指标；
+- MCP `aiqe.benchmark.run` 已映射到该入口（EXECUTE_TEST scope + 审批 token）；
+- 前端 `/aiqe/benchmarks` 增加“运行 LLM Benchmark”，结果展示 `REFERENCE_ONLY / PASS_GATE /
+  BELOW_THRESHOLD` 与指标。
+
 ## 5. 平台面收口
 
 - **REST**：`/api/v1/aiqe` 新增 capabilities 路由（contracts/cases/experiments/observations/triage/benchmarks/impact/platforms/agent-tasks/regressions sync），统一 project scope + RBAC + 禁止自报事实。
@@ -107,7 +118,7 @@ Reconciler、FIX-005 preflight、PR #595 迁移）。合并策略：
 | Runner 出口防火墙/egress allowlist 实测 | 需要网络与安全组配置权限 |
 | 24h soak / 100 并发 | 需要压测环境与时间窗口 |
 | QA/Backend/Security/Product 四方签字 | 需要人工评审流程 |
-| 前端 Benchmark/Impact 结果页 | 可选增强；API 已就绪，核心证据链已在 Run 详情页闭环 |
+
 
 ## 7. 迁移与回滚
 

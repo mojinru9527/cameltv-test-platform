@@ -9,6 +9,7 @@ const api = vi.hoisted(() => ({
   addBenchmarkSample: vi.fn(),
   freezeBenchmarkDataset: vi.fn(),
   getBenchmarkRun: vi.fn(),
+  runLlmBenchmark: vi.fn(),
 }))
 
 vi.mock('@/api/aiqeInsights', () => api)
@@ -91,6 +92,37 @@ describe('BenchmarksPage', () => {
     await waitFor(() => expect(api.freezeBenchmarkDataset).toHaveBeenCalledWith('ds-1'))
     expect(await screen.findByText('可用于门禁')).toBeTruthy()
     expect(screen.getByText('样本数：31')).toBeTruthy()
+  })
+
+  it('runs an LLM benchmark from the frozen dataset', async () => {
+    api.createBenchmarkDataset.mockResolvedValue({ id: 'ds-1', dataset_key: 'learning', revision: 1 })
+    api.freezeBenchmarkDataset.mockResolvedValue({
+      id: 'ds-1',
+      status: 'FROZEN',
+      sample_count: 4,
+      content_hash: 'c'.repeat(64),
+      gate_eligible: false,
+    })
+    api.runLlmBenchmark.mockResolvedValue({
+      id: 'bench-1',
+      dataset_id: 'ds-1',
+      agent_key: 'A6',
+      status: 'COMPLETED',
+      result_status: 'REFERENCE_ONLY',
+      metrics: { samples: 4, precision: 1, recall: 1, f1: 1 },
+      per_sample: [],
+    })
+    renderPage(<BenchmarksPage />)
+    fireEvent.change(screen.getByPlaceholderText('dataset_key（如 learning-ds）'), {
+      target: { value: 'learning' },
+    })
+    fireEvent.click(screen.getByText('创建数据集'))
+    await waitFor(() => expect(api.createBenchmarkDataset).toHaveBeenCalled())
+    fireEvent.click(screen.getByText('冻结数据集'))
+    await waitFor(() => expect(api.freezeBenchmarkDataset).toHaveBeenCalled())
+    fireEvent.click(screen.getByText('运行 LLM Benchmark'))
+    await waitFor(() => expect(api.runLlmBenchmark).toHaveBeenCalledWith('ds-1'))
+    expect(await screen.findByText('REFERENCE_ONLY')).toBeTruthy()
   })
 
   it('shows benchmark run metrics', async () => {

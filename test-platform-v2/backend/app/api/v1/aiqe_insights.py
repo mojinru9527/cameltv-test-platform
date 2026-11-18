@@ -36,6 +36,11 @@ class DatasetIn(BaseModel):
     task_type: str = Field(default="learning", max_length=40)
 
 
+class BenchmarkRunIn(BaseModel):
+    agent_key: str = Field(default="A6", max_length=16)
+    agent_version: str = Field(default="", max_length=40)
+
+
 class SampleIn(BaseModel):
     sample_id: str = Field(min_length=1, max_length=120)
     golden_labels: list[str] = Field(min_length=1)
@@ -116,6 +121,43 @@ def freeze_dataset_api(
             "sample_count": row.sample_count,
             "content_hash": row.content_hash,
             "gate_eligible": row.gate_eligible,
+        }
+    )
+
+
+@router.post(
+    "/benchmarks/datasets/{dataset_id}/runs",
+    response_model=R[dict],
+    summary="运行 LLM Benchmark（服务端计算指标）",
+)
+def run_benchmark_api(
+    dataset_id: str,
+    body: BenchmarkRunIn,
+    current: CurrentUser = Depends(_edit),
+    db: Session = Depends(get_db),
+):
+    try:
+        run = benchmark_service.run_llm_benchmark(
+            db,
+            dataset_id=dataset_id,
+            project_id=current.project_id or 0,
+            agent_key=body.agent_key,
+            agent_version=body.agent_version,
+        )
+    except benchmark_service.BenchmarkError as exc:
+        db.rollback()
+        raise _bad(str(exc)) from None
+    db.commit()
+    return R.ok(
+        {
+            "id": run.id,
+            "dataset_id": run.dataset_id,
+            "agent_key": run.agent_key,
+            "status": run.status,
+            "result_status": run.result_status,
+            "metrics": run.metrics_json,
+            "per_sample": run.per_sample_json,
+            "token_usage": run.token_usage_json,
         }
     )
 

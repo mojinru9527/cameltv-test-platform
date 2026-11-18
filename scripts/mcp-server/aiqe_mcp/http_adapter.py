@@ -47,6 +47,9 @@ TOOL_ROUTES: dict[str, Route] = {
         "POST", "/api/v1/aiqe/runs/{run_id}/observations", "WRITE_DRAFT"
     ),
     "aiqe.regression.plan": Route("POST", "/api/v1/aiqe/impact/plan", "WRITE_DRAFT"),
+    "aiqe.benchmark.run": Route(
+        "POST", "/api/v1/aiqe/benchmarks/datasets/{dataset_id}/runs", "EXECUTE_TEST"
+    ),
     "aiqe.regression.launch": Route(
         "POST", "/api/v1/aiqe/defects/{defect_id}/regressions", "EXECUTE_TEST"
     ),
@@ -65,12 +68,13 @@ PATH_PARAMS: dict[str, str] = {
     "aiqe.run.events": "run_id",
     "aiqe.triage.analyze": "run_id",
     "aiqe.regression.launch": "defect_id",
+    "aiqe.benchmark.run": "dataset_id",
     "aiqe.learning.review": "candidate_id",
     "aiqe.learning.activate": "candidate_id",
 }
 READ_SCOPES = frozenset({"READ", "PROD_READONLY"})
 #: 尚无 REST 入口的规范工具：显式报错而不是静默映射到不存在的接口。
-UNSUPPORTED_TOOLS: frozenset[str] = frozenset({"aiqe.benchmark.run"})
+UNSUPPORTED_TOOLS: frozenset[str] = frozenset()
 
 
 def _args_hash(arguments: dict[str, Any]) -> str:

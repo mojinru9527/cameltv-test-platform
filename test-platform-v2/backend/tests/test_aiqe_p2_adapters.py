@@ -114,14 +114,16 @@ def test_adapter_write_scope_requires_approval_token():
         adapter.writer("aiqe.learning.review", {"candidate_id": "c-1"}, "")
 
 
-def test_adapter_unsupported_tools_fail_explicitly():
+def test_benchmark_run_maps_to_dataset_run_endpoint():
     module = load_adapter()
-    client = FakeClient()
-    adapter = module.HttpMcpAdapter("http://x", client=client)
-    for tool in ("aiqe.benchmark.run",):
-        with pytest.raises(module.HttpMcpAdapterError):
-            adapter.writer(tool, {}, "approve-1")
-    assert client.calls == []  # 没有伪造请求
+    client = FakeClient(FakeResponse(200, {"code": 0, "data": {"id": "bench-1"}}))
+    adapter = module.HttpMcpAdapter("http://x", token="t", client=client)
+    result = adapter.writer(
+        "aiqe.benchmark.run", {"dataset_id": "ds-1", "agent_key": "A6"}, "approve-1"
+    )
+    assert result["id"] == "bench-1"
+    assert client.calls[0][0] == "POST"
+    assert client.calls[0][1] == "http://x/api/v1/aiqe/benchmarks/datasets/ds-1/runs"
 
 
 def test_adapter_reader_writer_scope_guards():
