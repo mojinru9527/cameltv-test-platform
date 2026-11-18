@@ -178,19 +178,16 @@ def run_job(db: Session, job_id: int) -> dict:
     assertion_outcomes: list[Any] = []
     observation_payload = result.observation
     if observation_payload is not None:
-        from app.aiqe.assertions.observation import Observation
         from app.aiqe.services import result_writer
 
-        observation = Observation.from_http(
-            status_code=observation_payload.get("status_code"),
-            headers=observation_payload.get("headers") or {},
-            text=str(observation_payload.get("text") or ""),
-            body=observation_payload.get("body"),
-            duration_ms=observation_payload.get("duration_ms"),
-            error=observation_payload.get("error"),
-        )
+        observation = result_writer.observation_from_payload(observation_payload)
         mapped_status, mapped_error, assertion_outcomes = result_writer.evaluate_node_assertions(
-            db, run_id=run_id, node=node, observation=observation
+            db,
+            run_id=run_id,
+            node=node,
+            observation=observation,
+            driver_status=result.status,
+            driver_error=result.error_class or None,
         )
         if mapped_status is not None:
             node_status = mapped_status

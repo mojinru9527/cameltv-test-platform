@@ -123,6 +123,20 @@ def _assertion_digest(spec: Mapping[str, Any]) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
+def _maybe_redact_actual(spec: Mapping[str, Any], value: Any) -> Any:
+    """断言 actual 若来自敏感字段（如 access_token），持久化前必须打码。"""
+    from app.aiqe.redaction import CLASSIFIER, REDACTED
+
+    path = str(spec.get("path") or "")
+    source = str(spec.get("source") or "")
+    leaf = path.rsplit(".", 1)[-1].split("[", 1)[0] if path else ""
+    if CLASSIFIER.is_sensitive_key(leaf) or (
+        source in {"http_header", "db_query", "db"} and CLASSIFIER.is_sensitive_key(leaf)
+    ):
+        return REDACTED
+    return value
+
+
 def evaluate_assertion(
     spec: Mapping[str, Any],
     observation: Observation,
@@ -149,7 +163,7 @@ def evaluate_assertion(
             source=source,
             source_ref=source_ref,
             expected=expected,
-            actual_redacted=actual,
+            actual_redacted=_maybe_redact_actual(spec, actual),
             required=required,
             severity=severity,
             oracle_type=oracle_type,

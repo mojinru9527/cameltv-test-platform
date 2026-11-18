@@ -91,10 +91,17 @@ def specs_for_node(node: NodeRun) -> list[dict[str, Any]]:
     return []
 
 
-def observation_from_detail(detail: dict[str, Any] | None) -> Observation | None:
-    payload = (detail or {}).get("observation")
+def observation_from_payload(payload: dict[str, Any] | None) -> Observation | None:
+    """把 Driver 的 observation 载荷转成 Observation（支持 http / db 两类来源）。"""
     if not isinstance(payload, dict):
         return None
+    source = str(payload.get("source") or "http_response")
+    if source in {"db_query", "db"}:
+        return Observation(
+            source="db_query",
+            db_rows=tuple(payload.get("db_rows") or ()),
+            error=payload.get("error"),
+        )
     return Observation.from_http(
         status_code=payload.get("status_code"),
         headers=payload.get("headers") or {},
@@ -106,16 +113,25 @@ def observation_from_detail(detail: dict[str, Any] | None) -> Observation | None
     )
 
 
+def observation_from_detail(detail: dict[str, Any] | None) -> Observation | None:
+    payload = (detail or {}).get("observation")
+    return observation_from_payload(payload if isinstance(payload, dict) else None)
+
+
 def evaluate_node_assertions(
     db: Session,
     *,
     run_id: str,
     node: NodeRun,
     observation: Observation | None,
+    driver_status: str | None = None,
+    driver_error: str | None = None,
 ) -> tuple[str | None, str | None, list[AssertionOutcome]]:
     """评估并持久化；返回 ``(node_status, error_class, outcomes)``。
 
     无断言时返回 ``(None, None, [])``，由调用方沿用 Driver 结论（兼容旧 Workflow）。
+    安全策略拒绝（Driver BLOCKED）时断言只能是 NOT_EVALUATED，**节点仍为 BLOCKED**，
+    不能被误升级为 ERROR（AUD-001 §9）。
     """
     specs = specs_for_node(node)
     if not specs:
@@ -133,6 +149,8 @@ def evaluate_node_assertions(
             aggregate_status=aggregate(outcomes),
         )
     aggregate_status = aggregate(outcomes)
+    if driver_status == "BLOCKED":
+        return "BLOCKED", driver_error, outcomes
     mapped_status, mapped_error = node_status_from_aggregate(aggregate_status)
     return mapped_status, mapped_error, outcomes
 

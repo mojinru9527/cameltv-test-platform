@@ -223,23 +223,31 @@ class QueryRegistryResolver:
         )
 
 
+_ENGINE_CACHE: dict[str, Engine] = {}
+
+
 def default_connection_resolver(connection_ref: str) -> Engine:
     """按服务端配置解析只读连接；未配置即拒绝（fail closed）。"""
     from app.core.config import settings
 
+    ref = str(connection_ref or "")
+    if ref in _ENGINE_CACHE:
+        return _ENGINE_CACHE[ref]
     raw = getattr(settings, "aiqe_db_readonly_urls", "") or ""
     try:
         mapping = json.loads(raw) if raw.strip() else {}
     except ValueError as exc:
         raise QueryDenied("CONNECTION_CONFIG_INVALID", "AIQE_DB_READONLY_URLS 不是合法 JSON") from exc
-    url = (mapping or {}).get(str(connection_ref or ""))
+    url = (mapping or {}).get(ref)
     if not url:
         raise QueryDenied(
             "CONNECTION_NOT_CONFIGURED", f"连接引用未配置: {connection_ref!r}"
         )
     from sqlalchemy import create_engine
 
-    return create_engine(url, pool_pre_ping=True)
+    engine = create_engine(url, pool_pre_ping=True)
+    _ENGINE_CACHE[ref] = engine
+    return engine
 
 
 class DbReadonlyExecutor:
@@ -278,18 +286,12 @@ class DbReadonlyExecutor:
         import time
 
         started = time.monotonic()
-        try:
-            result: QueryResult = driver.query(
-                registered.statement,
-                bound,
-                max_rows=int(registered.max_rows),
-                statement_timeout_ms=int(registered.max_execution_ms),
-            )
-        finally:
-            try:
-                engine.dispose()
-            except Exception:  # pragma: no cover - 连接释放失败不影响结论
-                pass
+        result: QueryResult = driver.query(
+            registered.statement,
+            bound,
+            max_rows=int(registered.max_rows),
+            statement_timeout_ms=int(registered.max_execution_ms),
+        )
         duration_ms = int((time.monotonic() - started) * 1000)
         if duration_ms > int(registered.max_execution_ms):
             raise QueryDenied(

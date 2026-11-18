@@ -366,6 +366,11 @@ def _execute_db(
             "columns": result.columns,
             "rows": result.rows,
         },
+        observation={
+            "source": "db_query",
+            "db_rows": list(result.rows),
+            "error": None,
+        },
     )
 
 
