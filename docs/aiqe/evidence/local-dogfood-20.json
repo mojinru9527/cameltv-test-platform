@@ -1,0 +1,289 @@
+{
+  "generated_at": "2026-11-18T17:09:00.601303+00:00",
+  "base_url": "http://127.0.0.1:7778",
+  "runs": [
+    {
+      "index": 1,
+      "run_id": "28487c2c-9c9f-4993-969f-6ef9e519fb95",
+      "run_key": "EVID-LOCAL-20261118T170842Z-01",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 2,
+      "run_id": "9f34c3a1-098a-416d-a656-7cf23b494bfe",
+      "run_key": "EVID-LOCAL-20261118T170842Z-02",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 3,
+      "run_id": "cf2ff1cb-d52b-4258-83b7-87d39283d8c8",
+      "run_key": "EVID-LOCAL-20261118T170842Z-03",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 4,
+      "run_id": "c99db08a-2dd0-4d6e-9ed5-57b3074d61a9",
+      "run_key": "EVID-LOCAL-20261118T170842Z-04",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 5,
+      "run_id": "4aa846cc-7ede-496d-9c43-48ea315636ff",
+      "run_key": "EVID-LOCAL-20261118T170842Z-05",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 6,
+      "run_id": "63c8005d-9560-41ea-9af9-52e183014803",
+      "run_key": "EVID-LOCAL-20261118T170842Z-06",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 7,
+      "run_id": "247a9da4-bb04-4d19-b357-f25d26e5633a",
+      "run_key": "EVID-LOCAL-20261118T170842Z-07",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 8,
+      "run_id": "e3c1aa73-6d94-42b0-80a5-b45c52ac2602",
+      "run_key": "EVID-LOCAL-20261118T170842Z-08",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 9,
+      "run_id": "dd8a8d59-6e58-4b3b-86a8-89ac0f9d5bf7",
+      "run_key": "EVID-LOCAL-20261118T170842Z-09",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 10,
+      "run_id": "62b24795-eeb7-4368-8211-d2424a6b3d33",
+      "run_key": "EVID-LOCAL-20261118T170842Z-10",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 11,
+      "run_id": "7406e0b6-bf56-443e-8f10-04e2fb82ff69",
+      "run_key": "EVID-LOCAL-20261118T170842Z-11",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 12,
+      "run_id": "2f6f53e8-689f-42d9-a632-a0d5fdb6aa3b",
+      "run_key": "EVID-LOCAL-20261118T170842Z-12",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 13,
+      "run_id": "38b043b3-e43b-4fc6-96a0-e8ca58f28546",
+      "run_key": "EVID-LOCAL-20261118T170842Z-13",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 14,
+      "run_id": "596afcca-0b6f-4981-a107-a12cd5f0b0ce",
+      "run_key": "EVID-LOCAL-20261118T170842Z-14",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 15,
+      "run_id": "b620cb53-89f9-43b8-802f-793966158577",
+      "run_key": "EVID-LOCAL-20261118T170842Z-15",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 16,
+      "run_id": "46c2db17-cc5b-4b41-9350-d6c991666cc9",
+      "run_key": "EVID-LOCAL-20261118T170842Z-16",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 17,
+      "run_id": "5faae541-9a3a-4854-8442-661ed2ab64ca",
+      "run_key": "EVID-LOCAL-20261118T170842Z-17",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 18,
+      "run_id": "bf59a97f-338a-4340-acca-4efa8821ab8c",
+      "run_key": "EVID-LOCAL-20261118T170842Z-18",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 19,
+      "run_id": "847e7069-c55b-495d-828b-6683e6ad6ce9",
+      "run_key": "EVID-LOCAL-20261118T170842Z-19",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    },
+    {
+      "index": 20,
+      "run_id": "555ccc67-7521-4f90-a604-d2a1f1ced335",
+      "run_key": "EVID-LOCAL-20261118T170842Z-20",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "health": "PASSED",
+        "login": "PASSED",
+        "verify_db_readonly": "PASSED"
+      },
+      "assertions": 5,
+      "assertion_failures": []
+    }
+  ],
+  "passed": 20,
+  "failed": 0,
+  "digest": "f2423a5e193f1cecc9515f0332976c6a103e2fec28553be7556d42ac05589017"
+}

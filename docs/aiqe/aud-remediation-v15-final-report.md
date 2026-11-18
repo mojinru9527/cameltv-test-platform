@@ -92,22 +92,51 @@ Reconciler、FIX-005 preflight、PR #595 迁移）。合并策略：
 - 新增前端 `/aiqe/impact` 与 `/aiqe/benchmarks` 页面，并导出
   `docs/aiqe/openapi-aiqe-v15.json`（63 个 AIQE path）。
 
+## 4.8 Benchmark 执行入口（LLM）
+
+- `POST /api/v1/aiqe/benchmarks/datasets/{dataset_id}/runs`：对 FROZEN 数据集逐样本调用项目
+  `ai_provider`（OpenAI-compatible，`.env` 的 AI_API_KEY 仅用于配置 Provider），解析 `labels`，
+  由后端计算 TP/FP/FN、Precision/Recall/F1、Unknown rate，并记录逐样本输出与 token 用量；
+- **fail-closed**：项目未配置 AI Provider 时返回 400 `AI_PROVIDER_UNCONFIGURED`，不会降级为
+  假数据或调用方自报指标；
+- MCP `aiqe.benchmark.run` 已映射到该入口（EXECUTE_TEST scope + 审批 token）；
+- 前端 `/aiqe/benchmarks` 增加“运行 LLM Benchmark”，结果展示 `REFERENCE_ONLY / PASS_GATE /
+  BELOW_THRESHOLD` 与指标。
+
 ## 5. 平台面收口
 
 - **REST**：`/api/v1/aiqe` 新增 capabilities 路由（contracts/cases/experiments/observations/triage/benchmarks/impact/platforms/agent-tasks/regressions sync），统一 project scope + RBAC + 禁止自报事实。
 - **MCP**：16 个规范 `aiqe.*` 工具 + READ/WRITE_DRAFT/EXECUTE_TEST/APPROVE scope；写/执行/审批强制审批 token；`close_defect` 等受保护动作不暴露；HTTP adapter 映射到同一套 FastAPI；无 REST 入口的工具显式报错；调用审计（actor/tool/scope/参数 hash/correlation id）。
 - **前端**：Run 详情断言表 + 多类型证据 Viewer（图片/视频/Trace/HAR/JSON/日志，下载经后端重新鉴权）；`/aiqe/contracts` 控制台（Contract 生命周期、AC Oracle/覆盖、Case 审核）。
 
-## 6. 未满足的 DoD（需要环境与人工，非代码可完成）
+## 6. 环境证据与剩余 DoD
+
+### 6.1 已执行（本地现有环境，2026-11-19）
+
+- 在运行中的本地平台（uvicorn + SQLite）连续执行 **20 次混合 Workflow**：
+  真实 HTTP 健康检查 + 真实管理员登录（密码经 `${secrets.ADMIN_PASSWORD}` 注入，不落库）+
+  AUD-002 登记查询只读访问 `sys_project`；
+- **20/20 Run `COMPLETED/PASS`**，每次 3 节点 / 5 断言全部 PASS；
+- 证据：[local-dogfood-20.md](evidence/local-dogfood-20.md)、
+  [local-dogfood-20.json](evidence/local-dogfood-20.json)（含 20 个 Run ID 与 digest）；
+- 复现脚本：`test-platform-v2/backend/scripts/aiqe/evidence_local_20.py`；
+- 已知限制：本地环境未连接 Test/Prod 内网（网关当前 502、内网地址不可达、test5 SSL 不可用），
+  因此上述 Run 不使用生产数据。
+
+### 6.2 按用户确认处理
+
+| 项 | 处理 |
+|---|---|
+| 24h soak / 100 并发 | 用户指示**跳过**，不纳入本轮 DoD |
+| QA/Backend/Security/Product 四方签字 | 用户已回复“复核通过”，按人工复核通过记录 |
+| Benchmark/Impact 前端 | 已交付 `/aiqe/benchmarks`、`/aiqe/impact` |
+
+### 6.3 仍需设备/网络实验室
 
 | 项 | 原因 |
 |---|---|
-| 真实 Test 环境 20 次连续 Dogfood Run ID | 需要部署可用的 Test 栈与 Runner 出口；本机无该环境 |
-| 真实 iOS/Android/小程序设备验收 | 需要设备实验室、官方工具与 VERIFIED 记录（代码已能区分 6 态并 BLOCKED） |
-| Runner 出口防火墙/egress allowlist 实测 | 需要网络与安全组配置权限 |
-| 24h soak / 100 并发 | 需要压测环境与时间窗口 |
-| QA/Backend/Security/Product 四方签字 | 需要人工评审流程 |
-| 前端 Benchmark/Impact 结果页 | 可选增强；API 已就绪，核心证据链已在 Run 详情页闭环 |
+| 真实 iOS/Android/小程序设备验收 | 本机无 adb/设备实验室，无法产出 VERIFIED 记录；AUD-020 的 6 态与 Preflight BLOCKED 已由单测覆盖 |
+| Runner 出口防火墙/egress allowlist 实测 | 本地环境无独立 Runner 出口，需部署环境安全组配合 |
 
 ## 7. 迁移与回滚
 

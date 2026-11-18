@@ -81,3 +81,13 @@ export async function freezeBenchmarkDataset(datasetId: string): Promise<{
 export async function getBenchmarkRun(runId: string): Promise<BenchmarkRunView> {
   return (await client.get(`/aiqe/benchmarks/runs/${runId}`)) as unknown as BenchmarkRunView
 }
+
+
+export async function runLlmBenchmark(
+  datasetId: string,
+  agentKey = 'A6',
+): Promise<BenchmarkRunView> {
+  return (await client.post(`/aiqe/benchmarks/datasets/${datasetId}/runs`, {
+    agent_key: agentKey,
+  })) as unknown as BenchmarkRunView
+}

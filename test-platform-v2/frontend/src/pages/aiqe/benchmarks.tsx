@@ -6,6 +6,7 @@ import {
   createBenchmarkDataset,
   freezeBenchmarkDataset,
   getBenchmarkRun,
+  runLlmBenchmark,
   type BenchmarkRunView,
 } from '@/api/aiqeInsights'
 import ConsoleTabs from './ConsoleTabs'
@@ -23,6 +24,7 @@ export default function BenchmarksPage() {
   } | null>(null)
   const [runId, setRunId] = useState('')
   const [run, setRun] = useState<BenchmarkRunView | null>(null)
+  const [running, setRunning] = useState(false)
   const [error, setError] = useState('')
 
   const createDataset = useCallback(async () => {
@@ -59,6 +61,19 @@ export default function BenchmarksPage() {
       setFrozen(await freezeBenchmarkDataset(datasetId))
     } catch (err) {
       setError(err instanceof Error ? err.message : '冻结失败')
+    }
+  }, [datasetId])
+
+  const execute = useCallback(async () => {
+    if (!datasetId) return
+    setError('')
+    setRunning(true)
+    try {
+      setRun(await runLlmBenchmark(datasetId))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '运行 Benchmark 失败')
+    } finally {
+      setRunning(false)
     }
   }, [datasetId])
 
@@ -143,6 +158,14 @@ export default function BenchmarksPage() {
               disabled={!datasetId}
             >
               冻结数据集
+            </button>
+            <button
+              type="button"
+              className="rounded bg-primary px-3 py-1 text-primary-foreground"
+              onClick={() => void execute()}
+              disabled={!datasetId || running}
+            >
+              {running ? '运行中…' : '运行 LLM Benchmark'}
             </button>
           </div>
           {frozen ? (

@@ -21,6 +21,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.aiqe.models.benchmark import BenchmarkDataset, BenchmarkRun, BenchmarkSample
+from app.services import ai_client
 
 GATING_MIN_SAMPLES = 30
 DEFAULT_THRESHOLDS: dict[str, float] = {
@@ -386,3 +387,84 @@ __all__ = [
     "metrics_of",
     "run_benchmark",
 ]
+
+
+BENCHMARK_SYSTEM_PROMPT = (
+    "You are the AIQE benchmark agent. Given exactly one frozen sample, predict the "
+    'classification labels. Return strict JSON: {"labels": ["..."], "rationale": "..."}. '
+    "labels must be chosen from the sample's expected label space; never invent metrics, "
+    "confidence numbers, or evidence. If the sample is insufficient, return labels [\"UNKNOWN\"]."
+)
+
+
+def build_llm_predictor(db: Session, *, project_id: int) -> Callable[[BenchmarkSample], Any]:
+    """构造真实 LLM predictor：每个样本单独调用一次项目配置的 Provider。"""
+
+    def predictor(sample: BenchmarkSample) -> dict[str, Any]:
+        payload = {
+            "sample_id": sample.sample_id,
+            "task_type": sample.task_type,
+            "inputs": sample.input_refs_json or [],
+            "context": sample.frozen_context_json or {},
+            "expected_schema": sample.expected_schema_json or {},
+        }
+        summary = ai_client.chat_completions_full(
+            db,
+            project_id,
+            system_prompt=BENCHMARK_SYSTEM_PROMPT,
+            user_message=json.dumps(payload, ensure_ascii=False, default=str),
+            max_tokens=512,
+            temperature=0,
+            json_mode=True,
+            cache_namespace=f"aiqe-benchmark:{sample.dataset_id}",
+        )
+        parsed = ai_client.parse_json_object(str(summary.get("content") or ""))
+        labels = parsed.get("labels") or parsed.get("predicted_labels") or []
+        usage = summary.get("usage") or {}
+        return {
+            "labels": labels,
+            "rationale": str(parsed.get("rationale") or "")[:500],
+            "output_hash": hashlib.sha256(
+                str(summary.get("content") or "").encode()
+            ).hexdigest()[:16],
+            "token_usage": {
+                "input": int(usage.get("input_tokens") or 0),
+                "output": int(usage.get("output_tokens") or 0),
+            },
+        }
+
+    return predictor
+
+
+def run_llm_benchmark(
+    db: Session,
+    *,
+    dataset_id: str,
+    project_id: int,
+    agent_key: str = "A6",
+    agent_version: str = "",
+    thresholds: Mapping[str, float] | None = None,
+) -> BenchmarkRun:
+    """使用项目已配置的 LLM Provider 执行冻结数据集；未配置 Provider 时 fail-closed。"""
+    dataset = get_dataset(db, dataset_id)
+    if dataset.project_id is not None and int(dataset.project_id) != int(project_id):
+        raise BenchmarkError("数据集不属于当前项目")
+    if not ai_client.is_configured(db, project_id):
+        raise BenchmarkError(
+            "AI_PROVIDER_UNCONFIGURED: 请先在项目中配置 AI Provider 后再运行 Benchmark"
+        )
+    cfg = ai_client.resolve_config(db, project_id)
+    prompt_hash = "sha256:" + hashlib.sha256(
+        BENCHMARK_SYSTEM_PROMPT.encode()
+    ).hexdigest()[:16]
+    return run_benchmark(
+        db,
+        dataset_id=dataset.id,
+        agent_key=agent_key,
+        agent_version=agent_version or "llm",
+        prompt_hash=prompt_hash,
+        model_provider=str(getattr(cfg, "provider_type", "")),
+        model_name=str(getattr(cfg, "model", "")),
+        predictor=build_llm_predictor(db, project_id=project_id),
+        thresholds=thresholds,
+    )
