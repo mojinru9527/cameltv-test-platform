@@ -41,20 +41,21 @@ def _seed(db, *, job_status="running", lease_delta=-3600, node_status="RUNNING")
     return run, node, job, attempt
 
 
-def test_expired_lease_closes_node_and_run(db_session):
+def test_expired_lease_requeues_node_and_expires_job(db_session):
+    # AUD-006：租约过期先重排（未超过 requeue_limit），不是直接 ERROR。
     run, node, job, attempt = _seed(db_session)
     stats = reconcile(db_session, stale_seconds=60)
     db_session.commit()
     db_session.expire_all()
     assert stats["nodes_closed"] == 1
+    assert job.id in stats["expired_jobs"]
     node = db_session.get(NodeRun, node.id)
-    assert node.status == "ERROR"
-    assert node.error_class == "LEASE_EXPIRED"
+    assert node.status == "PENDING"
+    assert node.error_class == ""
     run = db_session.get(TestRun, run.id)
-    assert run.status == "COMPLETED"
-    assert run.outcome == "FAIL"
+    assert run.status == "RUNNING"
     job = db_session.get(ExecutionJob, job.id)
-    assert job.status == "failed"
+    assert job.status == "expired"
     assert job.error_message == "LEASE_EXPIRED"
 
 

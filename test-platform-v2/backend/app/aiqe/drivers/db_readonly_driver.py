@@ -267,6 +267,7 @@ class DbReadonlyDriver:
         max_rows: int | None = None,
         query_key: str = "",
         timeout_ms: int | None = None,
+        statement_timeout_ms: int | None = None,
     ) -> QueryResult:
         template: QueryTemplate | None = None
         if query_key:
@@ -290,7 +291,9 @@ class DbReadonlyDriver:
 
         statement = assert_readonly(statement)
         self._check_tables(statement, allowed_tables, query_key)
-        timeout = max(1, int(timeout_ms or self.statement_timeout_ms))
+        timeout = max(
+            1, int(timeout_ms or statement_timeout_ms or self.statement_timeout_ms)
+        )
         started = time.monotonic()
         try:
             with self.engine.connect() as connection:

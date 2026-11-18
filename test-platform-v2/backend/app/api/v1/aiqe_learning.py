@@ -36,8 +36,8 @@ class CandidateIn(BaseModel):
 
 
 class EvaluateIn(BaseModel):
-    false_positive_rate: float = Field(ge=0, le=1)
-    sample_size: int = Field(gt=0)
+    # AUD-018：只接受后端计算的 BenchmarkRun 引用，禁止调用方自报指标
+    benchmark_run_id: str = Field(min_length=1, max_length=36)
 
 
 def _candidate_out(row) -> dict:
@@ -94,13 +94,7 @@ def post_evaluate(
 ):
     try:
         row = evaluate_candidate(
-            db,
-            candidate_id,
-            {
-                "false_positive_rate": body.false_positive_rate,
-                "sample_size": body.sample_size,
-            },
-            project_id=current.project_id or 0,
+            db, candidate_id, benchmark_run_id=body.benchmark_run_id
         )
     except LearningError as exc:
         status = 404 if "不存在" in str(exc) else 400

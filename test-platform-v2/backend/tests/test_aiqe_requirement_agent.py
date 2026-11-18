@@ -1,4 +1,4 @@
-"""M3 / TA-019：A0 Requirement Agent + 编排执行记录单测。"""
+"""M3 / TA-019：A1 Requirement Agent + 编排执行记录单测。"""
 from __future__ import annotations
 
 import json
@@ -35,7 +35,7 @@ def test_run_agent_success_records_execution(db_session):
     assert all(item["source_ref"] for item in output["acceptance_criteria"])
     row = db_session.query(AgentExecution).one()
     assert row.status == "succeeded"
-    assert row.agent_key == "A0"
+    assert row.agent_key == "A1"
     assert row.output_json["acceptance_criteria"][0]["id"] == "AC1"
 
 

@@ -18,7 +18,22 @@ from app.aiqe.models import triage as aiqe_triage_models  # noqa: F401
 from app.aiqe.models import noise_rule as aiqe_noise_rule_models  # noqa: F401
 from app.aiqe.models import learning as aiqe_learning_models  # noqa: F401
 from app.aiqe.models import hardening as aiqe_hardening_models  # noqa: F401
-from app.aiqe.models import gate as aiqe_gate_models  # noqa: F401
+# AUD-001：服务端目标访问策略（Target Policy）
+from app.aiqe.models import security as aiqe_security_models  # noqa: F401
+# AUD-003：Secret Handle 元信息
+from app.aiqe.models import secret_handle as aiqe_secret_handle_models  # noqa: F401
+# AUD-002：DB 登记式只读查询
+from app.aiqe.models import query_registry as aiqe_query_registry_models  # noqa: F401
+# AUD-009：可信部署证明
+from app.aiqe.models import deployment as aiqe_deployment_models  # noqa: F401
+# AUD-014/015：Requirement Contract + 结构化 TestCase
+from app.aiqe.models import contract as aiqe_contract_models  # noqa: F401
+# AUD-019：干扰观测 + TriageCase
+from app.aiqe.models import interference as aiqe_interference_models  # noqa: F401
+# AUD-018：Agent Benchmark
+from app.aiqe.models import benchmark as aiqe_benchmark_models  # noqa: F401
+# AUD-020：多端平台绑定
+from app.aiqe.models import platform_binding as aiqe_platform_binding_models  # noqa: F401
 from app.models.ai_task import AiTask
 from app.models.execution_node import ExecutionNode
 from app.models.ai_agent_token import AiAgentToken

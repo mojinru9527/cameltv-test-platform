@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timezone
-from typing import Optional
 
 from sqlalchemy import JSON, Boolean, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -22,22 +21,31 @@ class Defect(Base):
     status: Mapped[str] = mapped_column(String(20), default="open")
     # Statuses: open → confirmed → fixing → pending_review → closed / rejected
     #   rejected / closed → open (reopen)
-    case_id: Mapped[Optional[int]] = mapped_column(default=None, index=True)
-    execution_id: Mapped[Optional[int]] = mapped_column(default=None)
+    case_id: Mapped[int | None] = mapped_column(default=None, index=True)
+    execution_id: Mapped[int | None] = mapped_column(default=None)
     aiqe_run_id: Mapped[str | None] = mapped_column(String(36), default=None, index=True)
     aiqe_node_run_id: Mapped[str | None] = mapped_column(String(36), default=None)
     reproduction_steps_json: Mapped[list | None] = mapped_column(JSON, default=None)
     evidence_refs_json: Mapped[list | None] = mapped_column(JSON, default=None)
     ac_refs_json: Mapped[list | None] = mapped_column(JSON, default=None)
     is_draft: Mapped[bool] = mapped_column(Boolean, default=False)
-    aitde_run_id: Mapped[Optional[int]] = mapped_column(
+    # ── AUD-012：可复现缺陷草稿 ──
+    reproduction_status: Mapped[str] = mapped_column(String(32), default="COMPLETE")
+    failing_assertion_refs_json: Mapped[list | None] = mapped_column(JSON, default=None)
+    no_assertion_reason: Mapped[str] = mapped_column(Text, default="")
+    correlation_id: Mapped[str] = mapped_column(String(128), default="")
+    fixture_namespace: Mapped[str] = mapped_column(String(128), default="")
+    draft_id: Mapped[str | None] = mapped_column(String(36), default=None)
+    approved_by: Mapped[int | None] = mapped_column(default=None)
+    approved_at: Mapped[datetime | None] = mapped_column(default=None)
+    aitde_run_id: Mapped[int | None] = mapped_column(
         ForeignKey("execution_runs.id", ondelete="SET NULL"), default=None, index=True
     )
     assignee_id: Mapped[int] = mapped_column(default=0, index=True)
     external_id: Mapped[str] = mapped_column(String(100), default="")     # 禅道/Jira ID
     external_url: Mapped[str] = mapped_column(String(500), default="")    # 外部链接
     creator_id: Mapped[int] = mapped_column(default=0)
-    resolved_at: Mapped[Optional[datetime]] = mapped_column(default=None)
+    resolved_at: Mapped[datetime | None] = mapped_column(default=None)
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(
         default=lambda: datetime.now(timezone.utc),
@@ -95,7 +103,13 @@ class DefectAttachment(Base):
 
 
 class DefectRegression(Base):
-    """缺陷一键回归记录（TA-027）。"""
+    """缺陷一键回归记录（TA-027 + AUD-009/010）。
+
+    - ``idempotency_fingerprint`` 唯一：同一项目/缺陷/SHA/环境/范围只允许一个回归；
+    - ``deployed_sha`` 来自 ``aiqe_deployment_attestations``（不接受客户端自报）；
+    - ``scope``/``mandatory_case_ids_json``/``excluded_json`` 冻结执行范围；
+    - ``terminal_summary_json``/``comparison_snapshot_id`` 由 Run 终态处理器写入。
+    """
     __tablename__ = "defect_regressions"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -107,3 +121,54 @@ class DefectRegression(Base):
     verification_run_id: Mapped[str | None] = mapped_column(String(36), default=None, index=True)
     status: Mapped[str] = mapped_column(String(20), default="pending")
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    # ── AUD-009 ──
+    idempotency_fingerprint: Mapped[str | None] = mapped_column(
+        String(64), default=None, unique=True, index=True
+    )
+    deployed_sha: Mapped[str | None] = mapped_column(String(64), default=None)
+    target_environment_id: Mapped[int | None] = mapped_column(default=None)
+    source_run_id: Mapped[str | None] = mapped_column(String(36), default=None, index=True)
+    workflow_definition_id: Mapped[str | None] = mapped_column(String(36), default=None)
+    workflow_checksum: Mapped[str | None] = mapped_column(String(128), default=None)
+    profile_checksum: Mapped[str | None] = mapped_column(String(128), default=None)
+    scope: Mapped[str] = mapped_column(String(40), default="DIRECT_FAILURES_PLUS_P0_PLUS_IMPACT")
+    scope_hash: Mapped[str | None] = mapped_column(String(64), default=None)
+    mandatory_case_ids_json: Mapped[list | None] = mapped_column(JSON, default=None)
+    selected_case_ids_json: Mapped[list | None] = mapped_column(JSON, default=None)
+    excluded_json: Mapped[list | None] = mapped_column(JSON, default=None)
+    reason: Mapped[str] = mapped_column(Text, default="")
+    request_idempotency_key: Mapped[str | None] = mapped_column(String(128), default=None)
+    blockers_json: Mapped[list | None] = mapped_column(JSON, default=None)
+    # ── AUD-010 ──
+    completed_at: Mapped[datetime | None] = mapped_column(default=None)
+    terminal_summary_json: Mapped[dict | None] = mapped_column(JSON, default=None)
+    failing_case_ids_json: Mapped[list | None] = mapped_column(JSON, default=None)
+    assertion_refs_json: Mapped[list | None] = mapped_column(JSON, default=None)
+    evidence_refs_json: Mapped[list | None] = mapped_column(JSON, default=None)
+    comparison_snapshot_id: Mapped[str | None] = mapped_column(String(36), default=None)
+    suggestion: Mapped[str | None] = mapped_column(String(32), default=None)
+    cancelled_at: Mapped[datetime | None] = mapped_column(default=None)
+
+
+class RunComparisonSnapshot(Base):
+    """AUD-010：不可变 Before/After 对比快照（只追加，不更新）。"""
+
+    __tablename__ = "run_comparison_snapshots"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    project_id: Mapped[int] = mapped_column(index=True)
+    regression_id: Mapped[int | None] = mapped_column(index=True, default=None)
+    defect_id: Mapped[int | None] = mapped_column(index=True, default=None)
+    source_run_id: Mapped[str | None] = mapped_column(String(36), default=None)
+    regression_run_id: Mapped[str | None] = mapped_column(String(36), default=None)
+    fixed_sha: Mapped[str] = mapped_column(String(64), default="")
+    deployed_sha: Mapped[str] = mapped_column(String(64), default="")
+    workflow_checksum: Mapped[str | None] = mapped_column(String(128), default=None)
+    outcome: Mapped[str] = mapped_column(String(24), default="")
+    assertion_diff_json: Mapped[dict | None] = mapped_column(JSON, default=None)
+    node_attempt_diff_json: Mapped[dict | None] = mapped_column(JSON, default=None)
+    evidence_refs_json: Mapped[list | None] = mapped_column(JSON, default=None)
+    new_failures_json: Mapped[list | None] = mapped_column(JSON, default=None)
+    fixed_failures_json: Mapped[list | None] = mapped_column(JSON, default=None)
+    blocked_json: Mapped[list | None] = mapped_column(JSON, default=None)
+    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(UTC))

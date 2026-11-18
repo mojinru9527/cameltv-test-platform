@@ -19,6 +19,7 @@ from typing import Any
 from sqlalchemy import (
     JSON,
     BigInteger,
+    Boolean,
     DateTime,
     ForeignKey,
     Index,
@@ -128,6 +129,8 @@ class NodeRun(Base):
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     attempt_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    #: AUD-006：租约 fencing token，每次重新认领递增；旧 Worker 的迟到结果因 token 过旧被拒绝。
+    fencing_token: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     run: Mapped[TestRun] = relationship(back_populates="node_runs")
     step_attempts: Mapped[list[StepAttempt]] = relationship(
@@ -157,6 +160,8 @@ class StepAttempt(Base):
     output_summary_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     error_json: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     external_execution_ref: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    #: AUD-006：该 attempt 归属的租约 token（0 表示旧数据/无租约）。
+    fencing_token: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     node_run: Mapped[NodeRun] = relationship(back_populates="step_attempts")
     assertion_results: Mapped[list[RunAssertionResult]] = relationship(
@@ -193,11 +198,22 @@ class RunAssertionResult(Base):
     actual_source: Mapped[str] = mapped_column(String(64), nullable=False, default="")
     severity: Mapped[str] = mapped_column(String(8), nullable=False, default="P1")
     timeout_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    duration_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     error_message: Mapped[str] = mapped_column(String(500), nullable=False, default="")
     evidence_refs_json: Mapped[list[str]] = mapped_column(JSON, default=list)
     artifact_refs_json: Mapped[list[str]] = mapped_column(JSON, default=list)
     evaluated_by: Mapped[str] = mapped_column(String(20), nullable=False, default="deterministic")
+    # ── AUD-007：Oracle / evaluator / 来源 / 时延（v1.5 §06 2.3）──
+    oracle_type: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    oracle_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    oracle_revision: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    evaluator_key: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    evaluator_version: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    source_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    required: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    evaluated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     step_attempt: Mapped[StepAttempt] = relationship(back_populates="assertion_results")
 

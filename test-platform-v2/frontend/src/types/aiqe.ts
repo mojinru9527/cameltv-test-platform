@@ -89,10 +89,29 @@ export interface AiqeRunArtifact {
   size_bytes: number
   mime_type: string
   redaction_status: string
+  upload_status?: 'PENDING_UPLOAD' | 'AVAILABLE' | 'CORRUPTED' | 'FAILED' | 'PURGED'
+  retention_until?: string | null
   created_at: string
 }
 
 export interface AiqeRunPage {
   items: AiqeRun[]
   total: number
+}
+
+export interface AiqeRunAssertion {
+  id: string
+  node_key: string
+  attempt_no: number
+  assertion_key: string
+  type: string
+  status: string
+  required: boolean
+  expected: unknown
+  actual: unknown
+  oracle_layer?: string | null
+  oracle_ref?: string | null
+  source_ref?: string | null
+  duration_ms: number | null
+  evaluated_at: string | null
 }

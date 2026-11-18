@@ -14,12 +14,21 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.aiqe.redaction import redact_mapping
 from app.aiqe.models.run import NodeRun, StepAttempt, TestRun
 from app.aiqe.models.workflow import ResourceLock
 from app.aiqe.services import resource_lock
 from app.aiqe.services.run_state import apply_transition
 
 NODE_TERMINAL = frozenset({"PASSED", "FAILED", "BLOCKED", "SKIPPED", "CANCELED", "ERROR"})
+NODE_TERMINAL_EVENTS: dict[str, str] = {
+    "PASSED": "node.completed",
+    "FAILED": "node.failed",
+    "BLOCKED": "node.blocked",
+    "SKIPPED": "node.skipped",
+    "CANCELED": "node.canceled",
+    "ERROR": "node.failed",
+}
 NODE_FAILED = frozenset({"FAILED", "ERROR", "TIMED_OUT"})
 ACTIVE_NODE = frozenset({"READY", "RUNNING"})
 
@@ -180,6 +189,10 @@ def _block_downstream(
                 _block_downstream(other, deps, rows, skip, defs, cleanup)
 
 
+def _finalize_graph_default() -> dict[str, Any]:
+    return {"nodes": [], "edges": []}
+
+
 def _finalize(db: Session, run: TestRun, rows: list[NodeRun], graph: dict[str, Any]) -> None:
     if run.status in {"COMPLETED", "BLOCKED", "CANCELED", "ERROR"}:
         return
@@ -188,13 +201,44 @@ def _finalize(db: Session, run: TestRun, rows: list[NodeRun], graph: dict[str, A
     if run.status != "RUNNING":
         return
     statuses = {row.node_key: row.status for row in rows}
-    if any(status in NODE_FAILED for status in statuses.values()):
-        apply_transition(run, "COMPLETED", outcome="FAIL")
-    elif any(status == "BLOCKED" for status in statuses.values()):
-        apply_transition(run, "COMPLETED", outcome="INCOMPLETE")
-    else:
-        apply_transition(run, "COMPLETED", outcome="PASS")
+    inferred = "FAIL" if any(status in NODE_FAILED for status in statuses.values()) else (
+        "INCOMPLETE" if any(status == "BLOCKED" for status in statuses.values()) else "PASS"
+    )
+    evidence_gaps: list[str] = []
+    if inferred == "PASS":
+        # AUD-008：证据未完成（PENDING_UPLOAD/CORRUPTED）时不能汇总为可发布 PASS。
+        from app.aiqe.services.artifact_service import incompleteness_reasons
+
+        evidence_gaps = incompleteness_reasons(db, run.id)
+        if evidence_gaps:
+            inferred = "INCOMPLETE"
+    apply_transition(run, "COMPLETED", outcome=inferred)
     run.finished_at = datetime.now(UTC)
+    emit_event(
+        db,
+        run_id=run.id,
+        event_type="run.completed",
+        payload={
+            "status": run.status,
+            "outcome": run.outcome,
+            "node_count": len(rows),
+            "evidence_gaps": evidence_gaps,
+        },
+        producer_event_id=f"run-completed:{run.id}",
+    )
+
+
+def finalize_run(
+    db: Session, run_id: str, graph: dict[str, Any] | None = None
+) -> TestRun:
+    """Public 收口入口（Reconciler / Dogfood 使用）：节点都已终态时收敛 Run。"""
+    run = db.scalar(select(TestRun).where(TestRun.id == run_id).with_for_update())
+    if run is None:
+        raise LookupError(run_id)
+    rows = list(db.scalars(select(NodeRun).where(NodeRun.run_id == run_id)))
+    _finalize(db, run, rows, graph or _finalize_graph_default())
+    db.flush()
+    return run
 
 
 def schedule(
@@ -204,6 +248,8 @@ def schedule(
     *,
     dispatch: Dispatch | None = None,
     prepare: Prepare | None = None,
+    preflight: Callable[[NodeRun], bool] | None = None,
+    blocked_detail: Callable[[NodeRun, dict[str, Any]], None] | None = None,
     ttl_seconds: int = 60,
 ) -> list[NodeRun]:
     run = db.scalar(select(TestRun).where(TestRun.id == run_id).with_for_update())
@@ -233,6 +279,20 @@ def schedule(
             if row.status != "PENDING":
                 continue
             if not _satisfied(key, defs, deps, statuses, cleanup, conditions):
+                continue
+            if preflight is not None and not preflight(row):
+                # AUD-005：能力/Runner 不满足时，Launch 前直接 BLOCKED，不创建空跑 Job。
+                row.status = "BLOCKED"
+                row.error_class = "PREFLIGHT_BLOCKED"
+                row.finished_at = datetime.now(UTC)
+                if blocked_detail is not None:
+                    blocked_detail(row, {"code": "PREFLIGHT_BLOCKED", "node_key": key})
+                else:
+                    row.output_ref = {
+                        **(row.output_ref or {}),
+                        "preflight": {"code": "PREFLIGHT_BLOCKED"},
+                    }
+                statuses[key] = "BLOCKED"
                 continue
             if prepare is not None:
                 error_code = prepare(row)
@@ -269,6 +329,14 @@ def schedule(
             statuses[key] = "READY"
             active += 1
             progressed = True
+            emit_event(
+                db,
+                run_id=run_id,
+                event_type="node.ready",
+                payload={"node_key": key, "attempt": int(row.attempt_count or 0)},
+                producer_event_id=f"{row.id}:{int(row.attempt_count or 0)}:node.ready",
+                node_run_id=row.id,
+            )
             if dispatch is not None:
                 dispatch(row)
 
@@ -318,22 +386,44 @@ def complete_node(
     *,
     error_class: str | None = None,
     outputs: Mapping[str, Any] | None = None,
+    fencing_token: int | None = None,
 ) -> TestRun:
     if status not in NODE_TERMINAL:
         raise ValueError(f"非法节点终态: {status}")
+    safe_outputs = redact_mapping(dict(outputs)) if outputs else None
     rows = list(db.scalars(select(NodeRun).where(NodeRun.run_id == run_id)))
     by_key = {row.node_key: row for row in rows}
     row = by_key.get(node_key)
     if row is None:
         raise LookupError(node_key)
+    if fencing_token is not None:
+        # AUD-006：旧 Worker 的迟到结果必须被拒绝（fencing token 过旧）。
+        from app.aiqe.services.lease import assert_writable
+
+        assert_writable(db, node_run_id=row.id, fencing_token=fencing_token)
     row.status = status
     row.finished_at = datetime.now(UTC)
     if error_class:
         row.error_class = error_class
-    if outputs:
-        row.output_ref = {**(row.output_ref or {}), **dict(outputs)}
+    if safe_outputs:
+        row.output_ref = {**(row.output_ref or {}), **safe_outputs}
     # batch-340：attempt 终态先落库（失败 attempt 永久保留，重试追加新 attempt）。
-    _finalize_attempt(db, row, status, error_class, outputs)
+    _finalize_attempt(db, row, status, error_class, safe_outputs)
+    node_event = NODE_TERMINAL_EVENTS.get(status)
+    if node_event:
+        emit_event(
+            db,
+            run_id=run_id,
+            event_type=node_event,
+            payload={
+                "node_key": node_key,
+                "status": status,
+                "error_class": error_class or "",
+                "attempt": int(row.attempt_count or 0),
+            },
+            producer_event_id=f"{row.id}:{int(row.attempt_count or 0)}:{node_event}",
+            node_run_id=row.id,
+        )
 
     for resource in row.resource_keys_json or []:
         try:
@@ -412,3 +502,32 @@ def recover(
             row.status = "PENDING"
     db.flush()
     return schedule(db, run_id, graph, dispatch=dispatch)
+
+def emit_event(
+    db,
+    *,
+    run_id: str,
+    event_type: str,
+    payload: dict,
+    node_run_id: str | None = None,
+    producer: str = "system",
+    producer_event_id: str | None = None,
+    step_attempt_id: str | None = None,
+    correlation_id: str | None = None,
+):
+    """AUD-006 兼容事件入口：委托给 event_service.append_event（幂等由调用方负责）。"""
+    from app.aiqe.services.event_service import append_event
+
+    body = dict(payload or {})
+    body.setdefault("schema_version", "1.0")
+    return append_event(
+        db,
+        run_id=run_id,
+        event_type=event_type,
+        payload=body,
+        producer=producer,
+        producer_event_id=producer_event_id,
+        node_run_id=node_run_id,
+        step_attempt_id=step_attempt_id,
+        correlation_id=correlation_id,
+    )

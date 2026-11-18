@@ -59,18 +59,38 @@ def get_candidate(
 def evaluate_candidate(
     db: Session,
     candidate_id: str,
-    benchmark: dict[str, Any],
+    benchmark: dict[str, Any] | None = None,
     *,
+    benchmark_run_id: str | None = None,
     project_id: int | None = None,
 ) -> LearningCandidate:
+    """AUD-018：指标只能来自后端计算的 BenchmarkRun，不接受调用方自报数值。"""
+    from app.aiqe.services import benchmark_service
+
     row = get_candidate(db, candidate_id, project_id=project_id)
-    rate = benchmark.get("false_positive_rate")
-    samples = benchmark.get("sample_size")
-    if not isinstance(rate, (int, float)) or not 0 <= float(rate) <= 1:
-        raise LearningError("benchmark 必须包含 0..1 的 false_positive_rate")
-    if not isinstance(samples, int) or samples <= 0:
-        raise LearningError("benchmark 必须包含正向 sample_size")
-    row.benchmark_json = dict(benchmark)
+    run_id_value = str(benchmark_run_id)
+    run = benchmark_service.get_run(db, run_id_value)
+    metrics = benchmark_service.metrics_of(db, run_id_value)
+    if int(metrics.get("samples") or 0) <= 0:
+        raise LearningError("BenchmarkRun 没有有效样本，不能作为评估依据")
+    true_positives = int(metrics.get("true_positives") or 0)
+    false_positives = int(metrics.get("false_positives") or 0)
+    denominator = true_positives + false_positives
+    false_positive_rate = (false_positives / denominator) if denominator else 0.0
+    row.benchmark_json = {
+        "benchmark_run_id": run.id,
+        "dataset_id": run.dataset_id,
+        "dataset_revision": run.dataset_id,
+        "sample_size": int(metrics.get("samples") or 0),
+        "metrics": metrics,
+        "false_positive_rate": false_positive_rate,
+        "precision": metrics.get("precision"),
+        "recall": metrics.get("recall"),
+        "f1": metrics.get("f1"),
+        "gate_eligible": metrics.get("gate_eligible"),
+        "meets_thresholds": metrics.get("meets_thresholds"),
+        "result_status": run.result_status,
+    }
     row.status = "benchmarked"
     row.updated_at = datetime.now(UTC)
     db.flush()

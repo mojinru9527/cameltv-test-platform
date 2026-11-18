@@ -14,6 +14,8 @@ from sqlalchemy.orm import Session
 
 from app.aiqe.services.artifact_gc import purge_expired_artifacts
 from app.aiqe.services.noise_rule_service import (
+    approve_rule,
+    get_rule,
     NoiseRuleError,
     create_rule,
     delete_rule,
@@ -60,6 +62,16 @@ class NoiseRuleIn(BaseModel):
     action: str = "suppress"
     scope: str = "run"
     expires_at: datetime | None = None
+    # AUD-019 治理字段
+    reason: str = ""
+    environment_id: int | None = None
+    profile_id: str | None = None
+    detector_key: str | None = None
+    error_class: str | None = None
+    selector: dict | None = None
+    app_version: str | None = None
+    evidence_refs: list[str] | None = None
+    require_approval: bool = True
 
 
 class NoiseRulePatchIn(BaseModel):
@@ -77,6 +89,19 @@ def _noise_rule_out(row) -> dict:
         "expires_at": row.expires_at,
         "status": row.status,
         "effective": is_effective(row),
+        "detector_key": row.detector_key,
+        "error_class": row.error_class,
+        "environment_id": row.environment_id,
+        "profile_id": row.profile_id,
+        "selector": row.selector_json,
+        "app_version": row.app_version,
+        "evidence_refs": row.evidence_refs_json or [],
+        "reason": row.reason,
+        "version": row.version,
+        "approved_by": row.approved_by,
+        "valid_from": row.valid_from,
+        "matched_count": row.matched_count,
+        "false_suppress_count": row.false_suppress_count,
     }
 
 
@@ -170,6 +195,15 @@ def post_noise_rule(
             scope=body.scope,
             expires_at=body.expires_at,
             created_by=current.user.id,
+            environment_id=body.environment_id,
+            profile_id=body.profile_id,
+            detector_key=body.detector_key,
+            error_class=body.error_class,
+            selector=body.selector,
+            app_version=body.app_version,
+            evidence_refs=body.evidence_refs,
+            reason=body.reason,
+            require_approval=body.require_approval,
         )
     except NoiseRuleError as exc:
         raise APIException(code=400, msg=str(exc), http_status=400) from None
@@ -185,6 +219,7 @@ def patch_noise_rule(
     db: Session = Depends(get_db),
 ):
     try:
+        row = get_rule(db, rule_id, project_id=current.project_id or 0)
         row = update_rule(
             db,
             rule_id,
@@ -192,6 +227,26 @@ def patch_noise_rule(
             action=body.action,
             expires_at=body.expires_at,
             project_id=current.project_id or 0,
+        )
+    except NoiseRuleError as exc:
+        message = str(exc)
+        status = 404 if "不存在" in message else 400
+        raise APIException(code=status, msg=message, http_status=status) from None
+    return R.ok(_noise_rule_out(row))
+
+
+@router.post(
+    "/noise-rules/{rule_id}/approve", response_model=R[dict], summary="人工批准噪音规则（AUD-019）"
+)
+def post_approve_rule(
+    rule_id: int,
+    _console: CurrentUser = Depends(_console_access),
+    current: CurrentUser = Depends(require_permission("defect:update")),
+    db: Session = Depends(get_db),
+):
+    try:
+        row = approve_rule(
+            db, rule_id, project_id=current.project_id or 0, approved_by=current.user.id
         )
     except NoiseRuleError as exc:
         message = str(exc)

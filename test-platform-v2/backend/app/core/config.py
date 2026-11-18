@@ -26,8 +26,13 @@ class Settings(BaseSettings):
     # M10-347：AIQE NodeRun 进程内执行器（仅 http driver；默认关闭，Test/CI 显式开启）
     aiqe_inprocess_executor_enabled: bool = False
     aiqe_inprocess_poll_seconds: float = 2.0
+    # AUD-002：AIQE 只读 DB 连接引用表（JSON: {"aiqe_test_readonly": "postgresql://..."}）。
+    # Workflow 只能引用 connection_ref，URL 与账号由服务端配置，禁止客户端传入。
+    aiqe_db_readonly_urls: str = ""
+    # AUD-006：Reconciler（过期租约回收 / Run 收口 / 实验同步）；默认关闭，按环境显式开启。
+    aiqe_reconciler_enabled: bool = False
+    aiqe_reconciler_poll_seconds: float = 30.0
     # v1.4 FIX-003/006/012/015：AIQE 执行边界与安全开关。
-    # 生产 Run 创建默认关闭（只有受控运维 smoke）；Test 环境可显式打开。
     aiqe_prod_run_create_enabled: bool = False
     aiqe_http_enforce_ssrf: bool = True
     aiqe_http_allow_private: bool = False

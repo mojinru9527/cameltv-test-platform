@@ -58,6 +58,7 @@ def get_artifacts(db: Session, run_id: str, project_id: int):
     get_run(db, run_id, project_id)
     return list_artifacts(db, run_id, project_id)
 
+
 def get_run_attempts(
     db: Session, run_id: str, project_id: int
 ) -> tuple[TestRun, list[tuple[NodeRun, list[StepAttempt]]]]:

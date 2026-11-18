@@ -50,7 +50,9 @@ class Hypothesis(BaseModel):
     supporting_evidence: list[str] = Field(default_factory=list)
     contradicting_evidence: list[str] = Field(default_factory=list)
     missing_evidence: list[str] = Field(default_factory=list)
+    recommended_experiment: Literal["E1", "E2", "E3", "E4", "E5", "E6"] | None = None
     confidence: None = None
+    confidence_band: Literal["HIGH", "MEDIUM", "LOW", "UNKNOWN"] | None = None
     status: Literal["PROPOSED"] = "PROPOSED"
 
 
@@ -60,6 +62,32 @@ class TriageResult(BaseModel):
     hypotheses: list[Hypothesis] = Field(default_factory=list)
     human_review_required: bool = True
     auto_close_defect: bool = False
+
+
+def compute_confidence_band(
+    *,
+    supporting: list[str],
+    contradicting: list[str],
+    reproducible: bool = False,
+) -> str:
+    """确定性证据等级（v1.5 §04-5.2），**不接受模型自填置信度**。
+
+    - HIGH：至少 1 条直接观测 + 1 条独立来源佐证 + 可重复；
+    - MEDIUM：有直接信号但缺乏独立重复；
+    - LOW：只有单一弱关联；
+    - UNKNOWN：无足够数据。
+    """
+    unique_supporting = {str(item) for item in supporting if str(item).strip()}
+    unique_contradicting = {str(item) for item in contradicting if str(item).strip()}
+    if not unique_supporting:
+        return "UNKNOWN"
+    if len(unique_supporting) >= 1 and reproducible and unique_contradicting:
+        return "HIGH"
+    if len(unique_supporting) >= 2 and reproducible:
+        return "HIGH"
+    if len(unique_supporting) >= 1:
+        return "MEDIUM"
+    return "LOW"
 
 
 class FailureTriageAgent(BaseAgent):
@@ -81,7 +109,7 @@ class FailureTriageAgent(BaseAgent):
     def triage(self, failure_context: dict) -> dict:
         return self.run(str(failure_context))
 
-    def validate(self, data: dict) -> dict:
+    def validate(self, data: dict, *, evidence_resolver=None) -> dict:
         try:
             result = TriageResult.model_validate(data)
         except ValidationError as exc:
@@ -100,12 +128,33 @@ class FailureTriageAgent(BaseAgent):
         if result.attribution_status == "UNKNOWN" and not unknown:
             raise AgentSchemaError("attribution_status=UNKNOWN 时必须包含 UNKNOWN 假设")
 
-        for hypothesis in result.hypotheses:
-            if hypothesis.confidence is not None:
+        payload = result.model_dump()
+        for index, hypothesis in enumerate(payload["hypotheses"]):
+            if hypothesis["confidence"] is not None:
                 raise AgentSchemaError("confidence 必须为 null（不让模型自填置信度）")
-            if hypothesis.classification == "CROSS_FEATURE_DEFECT" and not (
-                hypothesis.supporting_evidence
+            if hypothesis["classification"] == "CROSS_FEATURE_DEFECT" and not (
+                hypothesis["supporting_evidence"]
             ):
                 raise AgentSchemaError("CROSS_FEATURE_DEFECT 必须有用户路径失败证据")
+            if result.attribution_status != "UNKNOWN" and not hypothesis["missing_evidence"]:
+                raise AgentSchemaError("证据不足时必须显式列出 missing_evidence")
+            if (
+                result.attribution_status != "UNKNOWN"
+                and hypothesis["recommended_experiment"] is None
+            ):
+                raise AgentSchemaError("非 UNKNOWN 归因必须给出 E1–E6 实验建议")
 
-        return result.model_dump()
+            refs = list(hypothesis["supporting_evidence"]) + list(
+                hypothesis["contradicting_evidence"]
+            )
+            if evidence_resolver is not None:
+                # AUD-016：所有 evidence refs 必须由服务端解析（存在 + 同项目 + 同 Run）。
+                evidence_resolver(refs)
+            hypothesis["confidence_band"] = compute_confidence_band(
+                supporting=list(hypothesis["supporting_evidence"]),
+                contradicting=list(hypothesis["contradicting_evidence"]),
+                reproducible=hypothesis["recommended_experiment"] == "E1",
+            )
+            payload["hypotheses"][index] = hypothesis
+
+        return payload

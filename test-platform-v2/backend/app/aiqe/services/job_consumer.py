@@ -61,6 +61,7 @@ def claim_aiqe_jobs(db: Session, *, limit: int = 5) -> list[int]:
             driver = ""
         if driver not in INPROCESS_DRIVERS:
             continue
+        next_attempt = int(job.attempt or 0) + 1
         result = db.execute(
             update(ExecutionJob)
             .where(ExecutionJob.id == job.id, ExecutionJob.status == "pending")
@@ -76,6 +77,19 @@ def claim_aiqe_jobs(db: Session, *, limit: int = 5) -> list[int]:
         )
         if int(getattr(result, "rowcount", 0) or 0):
             claimed.append(int(job.id))
+            # AUD-006：认领即提升节点 fencing token，旧 Worker 的迟到结果会被拒绝。
+            try:
+                payload = json.loads(job.payload_json or "{}")
+            except (TypeError, ValueError):
+                payload = {}
+            node_run_id = str(payload.get("node_run_id") or "")
+            if node_run_id:
+                try:
+                    from app.aiqe.services import lease
+
+                    lease.bump_fencing_token(db, node_run_id, token=next_attempt)
+                except LookupError:
+                    logger.warning("claimed job %s references missing node %s", job.id, node_run_id)
     db.commit()
     return claimed
 
@@ -91,11 +105,34 @@ def complete_from_report(
     status: str,
     result: dict | None = None,
     error_message: str = "",
+    fencing_token: int | None = None,
 ) -> dict:
     """外部 runner（浏览器/设备）上报后，把 AIQE 节点状态回写到 DAG。
 
     保留旧返回字段 `node_status`，内部走统一断言/证据/状态收口。
     """
+    if fencing_token is not None:
+        from app.aiqe.services import lease
+
+        job = db.get(ExecutionJob, job_id)
+        node_run_id = ""
+        if job is not None:
+            try:
+                node_run_id = str(json.loads(job.payload_json or "{}").get("node_run_id") or "")
+            except (TypeError, ValueError):
+                node_run_id = ""
+        if node_run_id:
+            from app.aiqe.services.lease import StaleLeaseError
+
+            try:
+                lease.assert_writable(db, node_run_id=node_run_id, fencing_token=fencing_token)
+            except StaleLeaseError:
+                return {
+                    "job_id": job_id,
+                    "skipped": True,
+                    "reason": "STALE_LEASE",
+                    "node_status": "RUNNING",
+                }
     summary = execution_service.complete_from_external_report(
         db,
         job_id=job_id,

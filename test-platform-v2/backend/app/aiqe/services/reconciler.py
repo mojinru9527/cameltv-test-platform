@@ -9,6 +9,8 @@
 """
 from __future__ import annotations
 
+import threading
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -96,13 +98,53 @@ def _finalize_run(db: Session, run: TestRun, nodes: list[NodeRun]) -> None:
     db.flush()
 
 
+@dataclass
+class ReconcileReport:
+    """AUD-006 对账报告；同时保留 v1.4 统计键的 dict 访问。"""
+
+    scanned_jobs: int = 0
+    expired_jobs: list[int] = field(default_factory=list)
+    requeued_nodes: list[str] = field(default_factory=list)
+    blocked_nodes: list[str] = field(default_factory=list)
+    finalized_runs: list[dict] = field(default_factory=list)
+    experiments_synced: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    runs_scanned: int = 0
+    nodes_closed: int = 0
+    jobs_failed: int = 0
+    runs_completed: int = 0
+
+    def payload(self) -> dict[str, Any]:
+        return {
+            "scanned_jobs": self.scanned_jobs,
+            "expired_jobs": list(self.expired_jobs),
+            "requeued_nodes": list(self.requeued_nodes),
+            "blocked_nodes": list(self.blocked_nodes),
+            "finalized_runs": list(self.finalized_runs),
+            "experiments_synced": list(self.experiments_synced),
+            "errors": list(self.errors),
+            "runs_scanned": self.runs_scanned,
+            "nodes_closed": self.nodes_closed,
+            "jobs_failed": self.jobs_failed,
+            "runs_completed": self.runs_completed,
+        }
+
+    def __getitem__(self, key: str) -> Any:
+        return self.payload()[key]
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return self.payload().get(key, default)
+
+
 def reconcile(
     db: Session,
     *,
     stale_seconds: int | None = None,
     limit: int = 200,
-) -> dict[str, Any]:
-    """对账一批 RUNNING Run；返回统计。调用方负责 commit。"""
+    requeue_limit: int = 3,
+    sync_experiments: bool = True,
+) -> ReconcileReport:
+    """对账 RUNNING Run / 过期租约；返回 ReconcileReport（兼容 dict 访问）。"""
     stale = max(30, int(stale_seconds or 900))
     cutoff = _now() - timedelta(seconds=stale)
     runs = list(
@@ -113,12 +155,7 @@ def reconcile(
             .limit(max(1, int(limit)))
         )
     )
-    stats = {
-        "runs_scanned": len(runs),
-        "nodes_closed": 0,
-        "jobs_failed": 0,
-        "runs_completed": 0,
-    }
+    stats = ReconcileReport(runs_scanned=len(runs))
     for run in runs:
         nodes = list(db.scalars(select(NodeRun).where(NodeRun.run_id == run.id)))
         if not nodes:
@@ -131,7 +168,7 @@ def reconcile(
             )
             apply_transition(run, "ERROR")
             run.finished_at = _now()
-            stats["runs_completed"] += 1
+            stats.runs_completed += 1
             continue
         for node in nodes:
             if node.status in NODE_TERMINAL:
@@ -150,7 +187,7 @@ def reconcile(
                     {"node_key": node.node_key, "status": "ERROR", "reason": "JOB_MISSING"},
                     key=f"node-reconciled:{node.id}:JOB_MISSING",
                 )
-                stats["nodes_closed"] += 1
+                stats.nodes_closed += 1
                 continue
             heartbeat = _aware(job.heartbeat_at) or _aware(job.claimed_at)
             lease = _aware(job.lease_expires_at)
@@ -178,27 +215,50 @@ def reconcile(
                     },
                     key=f"node-reconciled:{node.id}:{job.id}:{job.status}",
                 )
-                stats["nodes_closed"] += 1
+                stats.nodes_closed += 1
                 continue
             if job.status == "running" and expired:
-                job.status = "failed"
+                # AUD-006：租约过期 → 提升 fencing token；未超过上限则重排，否则 BLOCKED。
+                job.status = "expired"
                 job.error_message = "LEASE_EXPIRED"
                 job.finished_at = _now()
-                _close_node(db, node, "ERROR", "LEASE_EXPIRED", "Runner 租约过期")
-                _event(
-                    db,
-                    run.id,
-                    "node.reconciled",
-                    {
-                        "node_key": node.node_key,
-                        "status": "ERROR",
-                        "job_id": job.id,
-                        "reason": "LEASE_EXPIRED",
-                    },
-                    key=f"node-reconciled:{node.id}:{job.id}:LEASE_EXPIRED",
-                )
-                stats["nodes_closed"] += 1
-                stats["jobs_failed"] += 1
+                stats.scanned_jobs += 1
+                stats.expired_jobs.append(int(job.id))
+                try:
+                    from app.aiqe.services import lease as lease_service
+
+                    lease_service.bump_fencing_token(
+                        db, node.id, token=int(job.attempt or 0) + 1
+                    )
+                except (LookupError, Exception):
+                    pass
+                attempts = int(node.attempt_count or 0)
+                if attempts < int(requeue_limit) and run.status == "RUNNING":
+                    node.status = "PENDING"
+                    node.started_at = None
+                    node.finished_at = None
+                    node.error_class = ""
+                    node.execution_job_id = None
+                    stats.requeued_nodes.append(node.node_key)
+                    _event(
+                        db,
+                        run.id,
+                        "node.lease_expired",
+                        {"node_key": node.node_key, "attempt": attempts, "action": "requeued"},
+                        key=f"node-lease-expired:{node.id}:{attempts}",
+                    )
+                else:
+                    _close_node(db, node, "BLOCKED", "LEASE_EXPIRED", "Runner 租约过期")
+                    stats.blocked_nodes.append(node.node_key)
+                    _event(
+                        db,
+                        run.id,
+                        "node.lease_expired",
+                        {"node_key": node.node_key, "attempt": attempts, "action": "blocked"},
+                        key=f"node-lease-expired:{node.id}:{attempts}",
+                    )
+                stats.nodes_closed += 1
+                stats.jobs_failed += 1
                 continue
             if job.status == "pending":
                 created = _aware(job.created_at)
@@ -217,11 +277,14 @@ def reconcile(
                         },
                         key=f"node-reconciled:{node.id}:{job.id}:NODE_UNAVAILABLE",
                     )
-                    stats["nodes_closed"] += 1
+                    stats.nodes_closed += 1
         before = run.status
         _finalize_run(db, run, nodes)
         if before == "RUNNING" and run.status == "COMPLETED":
-            stats["runs_completed"] += 1
+            stats.runs_completed += 1
+            stats.finalized_runs.append(
+                {"run_id": run.id, "status": run.status, "outcome": run.outcome}
+            )
 
     # COMPLETED 无 outcome 是非法状态，必须收敛为 ERROR（不能继续被当作 PASS）。
     invalid = list(
@@ -240,6 +303,61 @@ def reconcile(
             {"reason": "COMPLETED_WITHOUT_OUTCOME"},
             key=f"run-invalid-outcome:{run.id}",
         )
-        stats["runs_completed"] += 1
+        stats.runs_completed += 1
+    if sync_experiments:
+        try:
+            from app.aiqe.services import triage_service
+
+            from app.aiqe.models.triage import TriageExperiment
+
+            for run_id in [item["run_id"] for item in stats.finalized_runs]:
+                experiments = list(
+                    db.scalars(
+                        select(TriageExperiment).where(
+                            TriageExperiment.verification_run_id == run_id
+                        )
+                    )
+                )
+                for experiment in experiments:
+                    triage_service.sync_experiment_result(db, experiment.id)
+                    stats.experiments_synced.append(experiment.id)
+        except Exception as exc:  # 实验同步失败不得影响对账主流程
+            stats.errors.append(f"{type(exc).__name__}: {exc}")
     db.flush()
     return stats
+
+_thread: threading.Thread | None = None
+_stop = threading.Event()
+
+
+def start_reconciler(poll_seconds: float | None = None) -> None:
+    """AUD-006：后台对账线程（默认关闭，由 AIQE_RECONCILER_ENABLED 控制）。"""
+    global _thread
+    if _thread is not None and _thread.is_alive():
+        return
+    interval = float(poll_seconds or 30.0)
+    _stop.clear()
+
+    def loop() -> None:
+        from app.core.db import SessionLocal
+
+        while not _stop.wait(interval):
+            db = SessionLocal()
+            try:
+                reconcile(db)
+                db.commit()
+            except Exception:  # 单次对账失败不得终止线程
+                db.rollback()
+            finally:
+                db.close()
+
+    _thread = threading.Thread(target=loop, name="aiqe-reconciler", daemon=True)
+    _thread.start()
+
+
+def stop_reconciler() -> None:
+    global _thread
+    _stop.set()
+    if _thread is not None:
+        _thread.join(timeout=5)
+        _thread = None

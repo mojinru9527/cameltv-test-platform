@@ -10,6 +10,9 @@ const TABS = [
   { to: '/aiqe/noise-rules', label: '噪音规则' },
   { to: '/aiqe/learning', label: '学习候选' },
   { to: '/aiqe/platform-matrix', label: '平台矩阵' },
+  { to: '/aiqe/contracts', label: '需求合约' },
+  { to: '/aiqe/impact', label: '变更影响' },
+  { to: '/aiqe/benchmarks', label: 'Benchmark' },
 ] as const
 
 export default function ConsoleTabs() {

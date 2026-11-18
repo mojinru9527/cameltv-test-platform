@@ -14,13 +14,19 @@ from __future__ import annotations
 
 import os
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any, Protocol
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.aiqe.models.run import NodeRun
+from app.aiqe.redaction import CLASSIFIER, redact_mapping
+from app.aiqe.services.secret_vault import (
+    SecretVault,
+    create_secret_handle,
+    redacted_reference,
+)
 from app.aiqe.schemas.contracts import ResolvedInput, SourceRef
 from app.aiqe.services import jsonpath_subset
 
@@ -99,9 +105,12 @@ class RunContext:
         secrets: Mapping[str, str] | SecretProvider | None = None,
         fixtures: Mapping[str, Any] | None = None,
         environ: Mapping[str, str] | None = None,
+        handle_resolver: Callable[[str, str], str] | None = None,
     ) -> None:
         self.db = db
         self.run_id = run_id
+        self._handle_resolver = handle_resolver
+        self._consumer_node_key = ""
         self.graph = dict(graph or {})
         if isinstance(secrets, Mapping):
             self.secret_provider: SecretProvider = MappingSecretProvider(secrets)
@@ -141,6 +150,71 @@ class RunContext:
         row.outputs_json = merged
         row.output_ref = dict(merged)
         self.db.flush()
+
+    def set_output_secure(
+        self,
+        node_key: str,
+        values: Mapping[str, Any],
+        *,
+        project_id: int,
+        allowed_consumer_nodes: tuple[str, ...] | list[str] = (),
+        schema: Mapping[str, Any] | None = None,
+        ttl_seconds: int = 900,
+        vault: SecretVault | None = None,
+    ) -> dict[str, Any]:
+        """敏感输出写 Secret Handle，普通输出脱敏后落库（AUD-003 §3-4）。"""
+        row = self._node(node_key)
+        stored: dict[str, Any] = {}
+        for key, value in values.items():
+            marked = False
+            if isinstance(schema, Mapping):
+                spec = schema.get(key)
+                marked = bool(isinstance(spec, Mapping) and spec.get("sensitive"))
+            if (marked or CLASSIFIER.is_sensitive_key(key)) and isinstance(value, str) and value:
+                handle = create_secret_handle(
+                    self.db,
+                    project_id=int(project_id),
+                    run_id=self.run_id,
+                    producer_node_run_id=row.id,
+                    key_name=str(key),
+                    value=value,
+                    allowed_consumer_nodes=list(allowed_consumer_nodes),
+                    ttl_seconds=ttl_seconds,
+                    vault=vault,
+                )
+                stored[key] = redacted_reference(handle)
+                continue
+            stored[key] = redact_mapping(value)
+        merged = dict(row.outputs_json or row.output_ref or {})
+        merged.update(stored)
+        row.outputs_json = dict(merged)
+        row.output_ref = dict(merged)
+        self.db.flush()
+        return stored
+
+    def resolve_inputs(
+        self,
+        node_key: str,
+        spec: Any,
+        *,
+        secrets: Mapping[str, str] | None = None,
+        handle_resolver: Callable[[str, str], str] | None = None,
+    ) -> Any:
+        """解析节点输入；`${secret_handles.x}` 与敏感输出按 consumer scope 取值。"""
+        self._consumer_node_key = str(node_key)
+        self._current_node_key = str(node_key)
+        resolver = handle_resolver or self._handle_resolver
+        previous = self._handle_resolver
+        self._handle_resolver = resolver
+        try:
+            return self.resolve(spec, secrets=secrets)
+        finally:
+            self._handle_resolver = previous
+
+    def _resolve_handle(self, handle_id: str) -> str:
+        if self._handle_resolver is None:
+            raise VariableResolutionError("未注入 Secret Handle resolver")
+        return self._handle_resolver(handle_id, self._consumer_node_key)
 
     # ── resolution ─────────────────────────────────────────────────────
     def _ancestors(self, node_key: str) -> set[str]:
@@ -188,6 +262,8 @@ class RunContext:
                     code=VARIABLE_NOT_FOUND,
                 )
             value: Any = outputs[output_name]
+            if isinstance(value, Mapping) and value.get("secret_handle_id"):
+                return self._resolve_handle(str(value["secret_handle_id"]))
             # 支持 `${nodes.A.outputs.data.id}` 的深层取值（只读，不改变声明校验）。
             if len(parts) > 4:
                 sub_path = "$." + ".".join(parts[4:])
@@ -206,6 +282,11 @@ class RunContext:
                 )
             )
             return value
+        if ref.startswith("secret_handles."):
+            handle_id = ref[len("secret_handles.") :].strip()
+            if not handle_id:
+                raise VariableResolutionError("secret handle id 不能为空")
+            return self._resolve_handle(handle_id)
         if ref.startswith(SECRET_PREFIX) or ref.upper().startswith("SECRET:"):
             key = ref[len(SECRET_PREFIX) :] if ref.startswith(SECRET_PREFIX) else ref.split(":", 1)[1]
             key = key.strip()

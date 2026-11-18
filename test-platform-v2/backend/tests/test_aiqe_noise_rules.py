@@ -18,7 +18,14 @@ from app.aiqe.services.noise_rule_service import (
 
 
 def rule(db_session, **kwargs):
-    payload = {"project_id": 1, "pattern": "广告抖动", "action": "suppress"}
+    # AUD-019：suppress 规则必须说明 reason，且默认需要人工批准后生效。
+    payload = {
+        "project_id": 1,
+        "pattern": "广告抖动",
+        "action": "suppress",
+        "reason": "已知广告抖动非产品缺陷",
+        "require_approval": False,
+    }
     payload.update(kwargs)
     return create_rule(db_session, **payload)
 
@@ -50,10 +57,14 @@ def test_expired_rule_not_effective(db_session):
 def test_renew_extends_90_days(db_session):
     row = rule(db_session)
     old = row.expires_at
-    renewed = renew_rule(db_session, row.id)
+    renewed = renew_rule(db_session, row.id, require_approval=False)
     assert renewed.expires_at > old
     assert renewed.status == "active"
     assert is_effective(renewed) is True
+    # AUD-019：续期新建版本，旧版本标记 superseded
+    assert renewed.version == 2
+    assert renewed.supersedes_id == row.id
+    assert row.status == "superseded"
 
 
 def test_update_pattern_and_action(db_session):

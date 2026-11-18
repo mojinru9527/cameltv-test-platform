@@ -2,6 +2,7 @@ import client from './client'
 import type {
   AiqeRun,
   AiqeRunArtifact,
+  AiqeRunAssertion,
   AiqeRunEvent,
   AiqeRunNodes,
   AiqeRunPage,
@@ -44,4 +45,12 @@ export async function listRunArtifacts(runId: string): Promise<AiqeRunArtifact[]
 
 export async function listRunNodes(runId: string): Promise<AiqeRunNodes> {
   return (await client.get(`/aiqe/runs/${runId}/nodes`)) as unknown as AiqeRunNodes
+}
+
+export async function listRunAssertions(runId: string): Promise<AiqeRunAssertion[]> {
+  const data = (await client.get(`/aiqe/runs/${runId}/assertions`)) as unknown as {
+    items: AiqeRunAssertion[]
+    total: number
+  }
+  return data.items
 }

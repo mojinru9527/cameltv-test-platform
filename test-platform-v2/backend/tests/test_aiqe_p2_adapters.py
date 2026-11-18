@@ -46,12 +46,18 @@ class FakeClient:
         self.calls.append(("POST", url, json, headers))
         return self.response
 
+    def request(self, method, url, params=None, json=None, headers=None):
+        self.calls.append((method, url, params, headers))
+        return self.response
+
 
 def test_reader_get_run():
     module = load_adapter()
     client = FakeClient(FakeResponse(200, {"id": "run-1"}))
     adapter = module.HttpMcpAdapter("http://x", token="t", client=client)
-    assert adapter.reader("get_run", {"run_id": "run-1"})["id"] == "run-1"
+    assert adapter.reader("aiqe.run.get", {"run_id": "run-1"})["id"] == "run-1"
+    assert client.calls[0][0] == "GET"
+    assert client.calls[0][1] == "http://x/api/v1/aiqe/runs/run-1"
     assert client.calls[0][3]["Authorization"] == "Bearer t"
 
 
@@ -59,8 +65,11 @@ def test_writer_passes_approval_header():
     module = load_adapter()
     client = FakeClient(FakeResponse(200, {"ok": True}))
     adapter = module.HttpMcpAdapter("http://x", client=client)
-    adapter.writer("create_run", {"scenario": "s"}, "approve-1")
+    adapter.writer("aiqe.regression.launch", {"defect_id": 7, "fixed_sha": "a" * 40}, "approve-1")
+    assert client.calls[0][0] == "POST"
+    assert client.calls[0][1] == "http://x/api/v1/aiqe/defects/7/regressions"
     assert client.calls[0][3]["X-Approval-Token"] == "approve-1"
+    assert client.calls[0][3]["X-Client"] == "mcp-client"
 
 
 def test_http_error_raises():
@@ -68,7 +77,7 @@ def test_http_error_raises():
     client = FakeClient(FakeResponse(500, {"error": "boom"}))
     adapter = module.HttpMcpAdapter("http://x", client=client)
     with pytest.raises(module.HttpMcpAdapterError):
-        adapter.reader("list_runs", {})
+        adapter.reader("aiqe.project.get_context", {})
 
 
 def test_probes(monkeypatch):
@@ -84,3 +93,63 @@ def test_probes(monkeypatch):
     assert result["minium_cli"] is True
     assert result["paho_mqtt"] is True
     assert result["appium_reachable"] is False
+
+
+def test_adapter_canonical_route_and_envelope_unwrap():
+    module = load_adapter()
+    client = FakeClient(FakeResponse(200, {"code": 0, "data": {"items": []}}))
+    adapter = module.HttpMcpAdapter(
+        "http://x", token="t", client=client, project_id=3, correlation_id="corr-1"
+    )
+    assert adapter.reader("aiqe.project.get_context", {"limit": 5}) == {"items": []}
+    assert client.calls[0][1] == "http://x/api/v1/aiqe/runs"
+    assert client.calls[0][3]["X-Project-Id"] == "3"
+    assert client.calls[0][3]["X-Correlation-Id"] == "corr-1"
+
+
+def test_adapter_write_scope_requires_approval_token():
+    module = load_adapter()
+    adapter = module.HttpMcpAdapter("http://x", client=FakeClient())
+    with pytest.raises(module.HttpMcpAdapterError):
+        adapter.writer("aiqe.learning.review", {"candidate_id": "c-1"}, "")
+
+
+def test_adapter_unsupported_tools_fail_explicitly():
+    module = load_adapter()
+    client = FakeClient()
+    adapter = module.HttpMcpAdapter("http://x", client=client)
+    for tool in ("aiqe.benchmark.run",):
+        with pytest.raises(module.HttpMcpAdapterError):
+            adapter.writer(tool, {}, "approve-1")
+    assert client.calls == []  # 没有伪造请求
+
+
+def test_adapter_reader_writer_scope_guards():
+    module = load_adapter()
+    adapter = module.HttpMcpAdapter("http://x", client=FakeClient())
+    with pytest.raises(module.HttpMcpAdapterError):
+        adapter.reader("aiqe.testcase.review", {"case_id": "TC-1"})
+    with pytest.raises(module.HttpMcpAdapterError):
+        adapter.writer("aiqe.run.get", {"run_id": "r"}, "approve-1")
+
+
+def test_adapter_missing_path_param_fails():
+    module = load_adapter()
+    adapter = module.HttpMcpAdapter("http://x", client=FakeClient())
+    with pytest.raises(module.HttpMcpAdapterError):
+        adapter.reader("aiqe.run.get", {})
+
+
+def test_run_launch_maps_to_run_create_endpoint():
+    module = load_adapter()
+    client = FakeClient(FakeResponse(200, {"code": 0, "data": {"id": "run-9"}}))
+    adapter = module.HttpMcpAdapter("http://x", token="t", client=client)
+    result = adapter.writer(
+        "aiqe.run.launch",
+        {"workflow_definition_id": "wf-1", "launch_key": "lk-1"},
+        "approve-1",
+    )
+    assert result["id"] == "run-9"
+    assert client.calls[0][0] == "POST"
+    assert client.calls[0][1] == "http://x/api/v1/aiqe/runs"
+    assert client.calls[0][3]["X-Approval-Token"] == "approve-1"

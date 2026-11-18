@@ -1,21 +1,27 @@
-"""batch-341（M9-2）：缺陷修复回归 API 测试（创建 + verification Run + 项目隔离）。"""
+"""AUD-009/010：缺陷修复回归（40 位 SHA / 部署证明 / fingerprint 幂等 / 范围冻结 / 终端同步）。
+
+替换原先接受 7 位短 SHA、且不校验部署证明的旧用例（v1.5 §02 AUD-009/010）。
+"""
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import UTC, datetime
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.aiqe.models.run import NodeRun, TestRun
-from app.aiqe.services.capability_registry import register_manifest
-from app.aiqe.services.workflow_service import approve_workflow, create_workflow
-from app.models.defect import Defect, DefectRegression
-from app.models.execution_job import ExecutionJob
+from app.aiqe.models.run import NodeRun, RunAssertionResult, StepAttempt, TestRun
+from app.aiqe.services.regression_service import record_deployment_attestation
+from app.aiqe.services.regression_terminal import handle_run_terminal
+from app.models.defect import Defect, DefectRegression, RunComparisonSnapshot
 from app.models.project import Project, ProjectMember
 from app.models.rbac import Role
 from app.models.user import User
+
+SHA = "a" * 40
+OTHER_SHA = "b" * 40
 
 
 def _seed(db: Session) -> None:
@@ -69,140 +75,285 @@ def _defect(db: Session, *, project_id: int = 1, title: str = "直播入口无�
     return row
 
 
-def _old_run(
-    db: Session,
-    *,
-    project_id: int = 1,
-    graph: dict | None = None,
-    checksum: str = "",
-    workflow_id: str | None = None,
-) -> TestRun:
+def _source_run_with_failure(db: Session, *, project_id: int = 1) -> TestRun:
+    """source Run：一个 FAILED 节点 + 一条 required FAIL 断言。"""
     run = TestRun(
         project_id=project_id,
         run_key="RUN-OLD-0001",
         source_type="manual",
         status="COMPLETED",
         outcome="FAIL",
-        workflow_snapshot_json=graph or {},
-        workflow_checksum=checksum,
-        workflow_definition_id=workflow_id,
+        build_ref="build-1",
     )
     db.add(run)
+    db.flush()
+    node = NodeRun(run_id=run.id, node_key="ui", driver_key="playwright", status="FAILED")
+    db.add(node)
+    db.flush()
+    attempt = StepAttempt(node_run_id=node.id, step_key="ui", attempt_no=1, status="FAILED")
+    db.add(attempt)
+    db.flush()
+    db.add(
+        RunAssertionResult(
+            step_attempt_id=attempt.id,
+            assertion_key="live.entry",
+            assertion_type="exists",
+            status="FAIL",
+            required=True,
+        )
+    )
     db.commit()
     return run
 
 
-def _approved_workflow(db: Session) -> tuple[str, dict, str]:
-    graph = {
-        "schema_version": "1.0",
-        "nodes": [
-            {
-                "key": "health",
-                "driver": "http",
-                "depends_on": [],
-                "input": {"url": "https://api.test/health", "expected_status": 200},
-            }
-        ],
-        "edges": [],
-    }
-    row = create_workflow(db, project_id=1, graph=graph)
-    approve_workflow(db, row.id, approved_by=1)
-    register_manifest(
+def _attest(db: Session, *, sha: str = SHA, environment_id: int | None = None) -> None:
+    record_deployment_attestation(
         db,
-        node_id="node-http",
-        driver_key="http",
-        capabilities=["aiqe:http"],
-        platforms=["linux"],
-        evidence_ref="evidence://node-http",
+        project_id=1,
+        environment_id=environment_id,
+        commit_sha=sha,
+        image_digest="sha256:image",
+        source="ci",
+        evidence_ref="ci-run-1",
     )
     db.commit()
-    return row.id, dict(row.graph_json), row.checksum
 
 
+# ── 1. SHA 与部署证明 ─────────────────────────────────────
+def test_short_sha_rejected(api: TestClient, db_session: Session) -> None:
+    defect = _defect(db_session)
+    resp = api.post(
+        f"/api/v1/aiqe/defects/{defect.id}/regressions", json={"fixed_sha": "abc1234"}
+    )
+    assert resp.status_code == 400
+    assert "40 位" in resp.text
+
+
+def test_missing_attestation_blocks(api: TestClient, db_session: Session) -> None:
+    defect = _defect(db_session)
+    resp = api.post(
+        f"/api/v1/aiqe/defects/{defect.id}/regressions", json={"fixed_sha": SHA}
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()["data"]
+    assert data["status"] == "BLOCKED"
+    assert data["run"] is None
+    assert data["blockers"][0]["code"] == "DEPLOYMENT_ATTESTATION_MISSING"
+
+
+def test_deployed_sha_mismatch_blocks(api: TestClient, db_session: Session) -> None:
+    defect = _defect(db_session)
+    _attest(db_session, sha=OTHER_SHA)
+    resp = api.post(
+        f"/api/v1/aiqe/defects/{defect.id}/regressions", json={"fixed_sha": SHA}
+    )
+    data = resp.json()["data"]
+    assert data["status"] == "BLOCKED"
+    assert data["blockers"][0]["code"] == "DEPLOYED_SHA_MISMATCH"
+
+
+# ── 2. 创建 verification Run / 冻结范围 ───────────────────
 def test_create_regression_creates_verification_run(api: TestClient, db_session: Session) -> None:
     defect = _defect(db_session)
-    old = _old_run(db_session)
+    source = _source_run_with_failure(db_session)
+    _attest(db_session)
 
     resp = api.post(
-        "/api/v1/aiqe/regressions",
+        f"/api/v1/aiqe/defects/{defect.id}/regressions",
         json={
-            "defect_id": defect.id,
-            "fixed_sha": "abc1234def",
-            "previous_run_id": old.id,
-            "environment_snapshot": {"env": "test"},
+            "fixed_sha": SHA,
+            "source_run_id": source.id,
+            "scope": "DIRECT_FAILURES_PLUS_P0_PLUS_IMPACT",
+            "selected_case_ids": ["P0-login", "P2-search"],
+            "reason": "fix verified",
         },
     )
     assert resp.status_code == 200, resp.text
     data = resp.json()["data"]
-    assert data["fixed_sha"] == "abc1234def"
-    assert data["previous_run_id"] == old.id
-    assert data["status"] == "blocked"
-    assert data["run"]["status"] == "BLOCKED"
-    assert data["run"]["commit_sha"] == "abc1234def"
-    assert data["run"]["retest_of"] == old.id
+    assert data["status"] == "QUEUED"
+    assert data["deployed_sha"] == SHA
+    assert data["run"]["status"] == "QUEUED"
+    assert data["run"]["commit_sha"] == SHA
+    assert data["run"]["retest_of"] == source.id
+    # 强制集合含直接失败节点/断言 + P0；P2 被排除且有 reason
+    assert "node:ui" in data["mandatory_case_ids"]
+    assert "assertion:live.entry" in data["mandatory_case_ids"]
+    assert "P0-login" in data["mandatory_case_ids"]
+    assert {"case_id": "P2-search", "reason": "NON_P0_NOT_IN_MANDATORY_SCOPE"} in data["excluded"]
 
     db_session.expire_all()
-    regression = db_session.get(DefectRegression, data["id"])
     run = db_session.get(TestRun, data["verification_run_id"])
-    assert regression is not None and regression.verification_run_id == run.id
     assert run.source_type == "regression"
-    assert run.environment_snapshot_json["defect_id"] == defect.id
-    assert run.environment_snapshot_json["reason"] == "REGRESSION_WORKFLOW_MISSING"
+    assert run.environment_snapshot_json["scope_hash"] == data["scope_hash"]
+    nodes = list(db_session.scalars(select(NodeRun).where(NodeRun.run_id == run.id)))
+    assert [node.node_key for node in nodes] == ["ui"]
     # 旧 Run 不被修改
-    assert db_session.get(TestRun, old.id).status == "COMPLETED"
+    assert db_session.get(TestRun, source.id).status == "COMPLETED"
 
 
-def test_regression_detail_and_list(api: TestClient, db_session: Session) -> None:
+def test_fingerprint_idempotent(api: TestClient, db_session: Session) -> None:
     defect = _defect(db_session)
-    created = api.post(
-        "/api/v1/aiqe/regressions",
-        json={"defect_id": defect.id, "fixed_sha": "abc1234"},
+    _attest(db_session)
+    payload = {"fixed_sha": SHA, "scope": "DIRECT_FAILURES", "selected_case_ids": []}
+    first = api.post(f"/api/v1/aiqe/defects/{defect.id}/regressions", json=payload)
+    second = api.post(f"/api/v1/aiqe/defects/{defect.id}/regressions", json=payload)
+    assert first.json()["data"]["id"] == second.json()["data"]["id"]
+    assert second.json()["data"]["created"] is False
+    rows = list(db_session.scalars(select(DefectRegression)))
+    assert len(rows) == 1
+    runs = list(db_session.scalars(select(TestRun).where(TestRun.source_type == "regression")))
+    assert len(runs) == 1
+
+
+def test_different_scope_creates_new_regression(api: TestClient, db_session: Session) -> None:
+    defect = _defect(db_session)
+    _attest(db_session)
+    a = api.post(
+        f"/api/v1/aiqe/defects/{defect.id}/regressions",
+        json={"fixed_sha": SHA, "scope": "DIRECT_FAILURES"},
     ).json()["data"]
+    b = api.post(
+        f"/api/v1/aiqe/defects/{defect.id}/regressions",
+        json={"fixed_sha": SHA, "scope": "DIRECT_FAILURES_PLUS_P0", "selected_case_ids": ["P0-x"]},
+    ).json()["data"]
+    assert a["id"] != b["id"]
 
-    detail = api.get(f"/api/v1/aiqe/regressions/{created['id']}")
-    assert detail.status_code == 200
-    assert detail.json()["data"]["defect_id"] == defect.id
 
-    listing = api.get("/api/v1/aiqe/regressions", params={"defect_id": defect.id})
-    assert listing.status_code == 200
-    assert [row["id"] for row in listing.json()["data"]] == [created["id"]]
+# ── 3. 终端同步 + 对比快照 ────────────────────────────────
+def _complete_run(db: Session, run: TestRun, *, assertion_status: str = "PASS") -> None:
+    node = db.scalar(select(NodeRun).where(NodeRun.run_id == run.id))
+    node.status = "PASSED" if assertion_status == "PASS" else "FAILED"
+    attempt = db.scalar(select(StepAttempt).where(StepAttempt.node_run_id == node.id))
+    if attempt is None:
+        attempt = StepAttempt(
+            node_run_id=node.id, step_key=node.node_key, attempt_no=1, status=node.status
+        )
+        db.add(attempt)
+        db.flush()
+    attempt.status = node.status
+    row = db.scalar(
+        select(RunAssertionResult).where(RunAssertionResult.step_attempt_id == attempt.id)
+    )
+    if row is None:
+        row = RunAssertionResult(
+            step_attempt_id=attempt.id,
+            assertion_key="live.entry",
+            assertion_type="exists",
+            required=True,
+        )
+        db.add(row)
+    row.status = assertion_status
+    run.status = "COMPLETED"
+    run.outcome = "PASS" if assertion_status == "PASS" else "FAIL"
+    run.finished_at = datetime.now(UTC)
+    db.commit()
 
-    other = api.get("/api/v1/aiqe/regressions", params={"defect_id": 999})
-    assert other.json()["data"] == []
+
+def test_terminal_sync_pass_and_comparison(api: TestClient, db_session: Session) -> None:
+    defect = _defect(db_session)
+    source = _source_run_with_failure(db_session)
+    _attest(db_session)
+    created = api.post(
+        f"/api/v1/aiqe/defects/{defect.id}/regressions",
+        json={"fixed_sha": SHA, "source_run_id": source.id},
+    ).json()["data"]
+    run = db_session.get(TestRun, created["verification_run_id"])
+    _complete_run(db_session, run, assertion_status="PASS")
+
+    result = handle_run_terminal(db_session, run_id=run.id)
+    db_session.commit()
+    assert result.status == "PASS"
+    assert result.suggestion == "READY_FOR_HUMAN_CLOSE"
+
+    again = handle_run_terminal(db_session, run_id=run.id)
+    assert again.skipped is True and again.reason == "ALREADY_HANDLED"
+
+    db_session.expire_all()
+    regression = db_session.get(DefectRegression, created["id"])
+    assert regression.status == "PASS"
+    assert regression.completed_at is not None
+    assert regression.comparison_snapshot_id
+    snapshot = db_session.get(RunComparisonSnapshot, regression.comparison_snapshot_id)
+    assert snapshot.outcome == "PASS"
+    assert "ui:live.entry" in snapshot.assertion_diff_json["fixed_failures"]
+    # 绝不自动关闭缺陷
+    assert db_session.get(Defect, defect.id).status == "open"
+
+    resp = api.get(f"/api/v1/aiqe/regressions/{created['id']}/comparison")
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert data["available"] is True
+    assert data["snapshot"]["outcome"] == "PASS"
+    assert data["suggestion"] == "READY_FOR_HUMAN_CLOSE"
+
+
+def test_terminal_sync_fail_needs_more_fix(api: TestClient, db_session: Session) -> None:
+    defect = _defect(db_session)
+    source = _source_run_with_failure(db_session)
+    _attest(db_session)
+    created = api.post(
+        f"/api/v1/aiqe/defects/{defect.id}/regressions",
+        json={"fixed_sha": SHA, "source_run_id": source.id},
+    ).json()["data"]
+    run = db_session.get(TestRun, created["verification_run_id"])
+    _complete_run(db_session, run, assertion_status="FAIL")
+
+    result = handle_run_terminal(db_session, run_id=run.id)
+    db_session.commit()
+    assert result.status == "FAIL"
+    assert result.suggestion == "NEEDS_MORE_FIX"
+
+
+def test_terminal_sync_without_assertions_is_unknown(api: TestClient, db_session: Session) -> None:
+    defect = _defect(db_session)
+    _attest(db_session)
+    created = api.post(
+        f"/api/v1/aiqe/defects/{defect.id}/regressions",
+        json={"fixed_sha": SHA, "scope": "DIRECT_FAILURES"},
+    ).json()["data"]
+    run = db_session.get(TestRun, created["verification_run_id"])
+    run.status = "COMPLETED"
+    run.outcome = "PASS"
+    db_session.commit()
+
+    result = handle_run_terminal(db_session, run_id=run.id)
+    assert result.status == "UNKNOWN"
+
+
+# ── 4. 取消 / 权限 / 404 / 项目隔离 ───────────────────────
+def test_cancel_regression(api: TestClient, db_session: Session) -> None:
+    defect = _defect(db_session)
+    _attest(db_session)
+    created = api.post(
+        f"/api/v1/aiqe/defects/{defect.id}/regressions", json={"fixed_sha": SHA}
+    ).json()["data"]
+    resp = api.post(f"/api/v1/aiqe/regressions/{created['id']}/cancel")
+    assert resp.status_code == 200
+    assert resp.json()["data"]["status"] == "CANCELLED"
+    assert api.post(f"/api/v1/aiqe/regressions/{created['id']}/cancel").status_code == 400
 
 
 def test_invalid_defect_rejected(api: TestClient) -> None:
-    resp = api.post(
-        "/api/v1/aiqe/regressions", json={"defect_id": 999, "fixed_sha": "abc1234"}
-    )
-    assert resp.status_code == 400, resp.text
+    resp = api.post("/api/v1/aiqe/defects/999/regressions", json={"fixed_sha": SHA})
+    assert resp.status_code == 400
 
 
-def test_short_sha_rejected(api: TestClient, db_session: Session) -> None:
+def test_cross_project_source_run_rejected(api: TestClient, db_session: Session) -> None:
     defect = _defect(db_session)
+    foreign = _source_run_with_failure(db_session, project_id=2)
     resp = api.post(
-        "/api/v1/aiqe/regressions", json={"defect_id": defect.id, "fixed_sha": "abc"}
+        f"/api/v1/aiqe/defects/{defect.id}/regressions",
+        json={"fixed_sha": SHA, "source_run_id": foreign.id},
     )
-    assert resp.status_code == 422 or resp.status_code == 400
-
-
-def test_cross_project_previous_run_rejected(api: TestClient, db_session: Session) -> None:
-    defect = _defect(db_session)
-    foreign = _old_run(db_session, project_id=2)
-    resp = api.post(
-        "/api/v1/aiqe/regressions",
-        json={"defect_id": defect.id, "fixed_sha": "abc1234", "previous_run_id": foreign.id},
-    )
-    assert resp.status_code == 400, resp.text
+    assert resp.status_code == 400
 
 
 def test_regression_requires_console_permission(db_session: Session) -> None:
     _seed(db_session)
     client = _make_client(db_session, ["defect:list", "defect:update"])
     try:
-        assert client.post(
-            "/api/v1/aiqe/regressions", json={"defect_id": 1, "fixed_sha": "abc1234"}
-        ).status_code == 403
+        resp = client.post("/api/v1/aiqe/defects/1/regressions", json={"fixed_sha": SHA})
+        assert resp.status_code == 403
     finally:
         from app.main import app
 
@@ -211,66 +362,4 @@ def test_regression_requires_console_permission(db_session: Session) -> None:
 
 def test_unknown_regression_404(api: TestClient) -> None:
     assert api.get("/api/v1/aiqe/regressions/424242").status_code == 404
-
-
-def test_regression_dispatches_frozen_workflow_as_new_run(
-    api: TestClient, db_session: Session
-) -> None:
-    defect = _defect(db_session)
-    workflow_id, graph, checksum = _approved_workflow(db_session)
-    old = _old_run(
-        db_session, graph=graph, checksum=checksum, workflow_id=workflow_id
-    )
-    fixed = "abc1234def"
-
-    resp = api.post(
-        "/api/v1/aiqe/regressions",
-        json={
-            "defect_id": defect.id,
-            "fixed_sha": fixed,
-            "previous_run_id": old.id,
-            "deployed_sha": fixed,
-            "environment_snapshot": {"environment": "test"},
-        },
-    )
-    assert resp.status_code == 200, resp.text
-    data = resp.json()["data"]
-    assert data["status"] == "pending"
-    run = db_session.get(TestRun, data["verification_run_id"])
-    db_session.expire_all()
-    run = db_session.get(TestRun, run.id)
-    assert run.status == "RUNNING"
-    assert run.retest_of == old.id
-    assert run.workflow_checksum == checksum
-    assert run.workflow_snapshot_json["nodes"][0]["key"] == "health"
-    node = db_session.scalar(select(NodeRun).where(NodeRun.run_id == run.id))
-    assert node is not None and node.execution_job_id is not None
-    assert db_session.get(ExecutionJob, node.execution_job_id) is not None
-    # 旧 Run 事实不变
-    old_after = db_session.get(TestRun, old.id)
-    assert old_after.status == "COMPLETED" and old_after.outcome == "FAIL"
-
-
-def test_regression_blocks_on_deployed_sha_mismatch(
-    api: TestClient, db_session: Session
-) -> None:
-    defect = _defect(db_session)
-    workflow_id, graph, checksum = _approved_workflow(db_session)
-    old = _old_run(
-        db_session, graph=graph, checksum=checksum, workflow_id=workflow_id
-    )
-    resp = api.post(
-        "/api/v1/aiqe/regressions",
-        json={
-            "defect_id": defect.id,
-            "fixed_sha": "abc1234def",
-            "previous_run_id": old.id,
-            "deployed_sha": "fffffff999",
-        },
-    )
-    assert resp.status_code == 200, resp.text
-    data = resp.json()["data"]
-    assert data["status"] == "blocked"
-    run = db_session.get(TestRun, data["verification_run_id"])
-    assert run.status == "BLOCKED"
-    assert run.environment_snapshot_json["reason"] == "FIXED_SHA_MISMATCH"
+    assert api.get("/api/v1/aiqe/regressions/424242/comparison").status_code == 404

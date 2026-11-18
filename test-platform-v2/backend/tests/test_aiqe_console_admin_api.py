@@ -147,13 +147,24 @@ def _seed_p0_run(
 def test_noise_rule_crud(api: TestClient) -> None:
     created = api.post(
         f"{BASE}/noise-rules",
-        json={"pattern": "广告弹窗", "action": "suppress", "scope": "run"},
+        json={
+            "pattern": "广告弹窗",
+            "action": "suppress",
+            "scope": "run",
+            "reason": "已知广告弹窗非产品缺陷",
+        },
     )
     assert created.status_code == 200, created.text
     rule = created.json()["data"]
     assert rule["id"] > 0
-    assert rule["effective"] is True
-    assert rule["status"] == "active"
+    # AUD-019：新规则必须人工批准后才生效
+    assert rule["status"] == "pending_approval"
+    assert rule["effective"] is False
+
+    approved = api.post(f"{BASE}/noise-rules/{rule['id']}/approve")
+    assert approved.status_code == 200, approved.text
+    assert approved.json()["data"]["status"] == "active"
+    assert approved.json()["data"]["effective"] is True
 
     listing = api.get(f"{BASE}/noise-rules").json()["data"]
     assert any(item["id"] == rule["id"] for item in listing)
@@ -161,13 +172,17 @@ def test_noise_rule_crud(api: TestClient) -> None:
     renewed = api.post(f"{BASE}/noise-rules/{rule['id']}/renew")
     assert renewed.status_code == 200
     assert renewed.json()["data"]["expires_at"] is not None
+    # 续期生成新版本，旧规则 superseded
+    assert renewed.json()["data"]["version"] == 2
+    renewed_id = renewed.json()["data"]["id"]
 
-    patched = api.patch(f"{BASE}/noise-rules/{rule['id']}", json={"action": "hint"})
+    patched = api.patch(f"{BASE}/noise-rules/{renewed_id}", json={"action": "hint"})
     assert patched.status_code == 200, patched.text
     assert patched.json()["data"]["action"] == "hint"
 
     deleted = api.delete(f"{BASE}/noise-rules/{rule['id']}")
     assert deleted.status_code == 200
+    assert api.delete(f"{BASE}/noise-rules/{renewed_id}").status_code == 200
     assert api.get(f"{BASE}/noise-rules").json()["data"] == []
 
 
