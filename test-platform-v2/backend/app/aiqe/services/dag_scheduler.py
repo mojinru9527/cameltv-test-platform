@@ -212,12 +212,18 @@ def _finalize(db: Session, run: TestRun, rows: list[NodeRun], graph: dict[str, A
     if run.status != "RUNNING":
         return
     statuses = {row.node_key: row.status for row in rows}
-    if any(status in NODE_FAILED for status in statuses.values()):
-        apply_transition(run, "COMPLETED", outcome="FAIL")
-    elif any(status == "BLOCKED" for status in statuses.values()):
-        apply_transition(run, "COMPLETED", outcome="INCOMPLETE")
-    else:
-        apply_transition(run, "COMPLETED", outcome="PASS")
+    inferred_outcome = "FAIL" if any(
+        status in NODE_FAILED for status in statuses.values()
+    ) else ("INCOMPLETE" if any(status == "BLOCKED" for status in statuses.values()) else "PASS")
+    evidence_gaps: list[str] = []
+    if inferred_outcome == "PASS":
+        # AUD-008：证据未完成（PENDING_UPLOAD/CORRUPTED）时，P0 Run 不能汇总为可发布 PASS。
+        from app.aiqe.services.artifact_service import incompleteness_reasons
+
+        evidence_gaps = incompleteness_reasons(db, run.id)
+        if evidence_gaps:
+            inferred_outcome = "INCOMPLETE"
+    apply_transition(run, "COMPLETED", outcome=inferred_outcome)
     run.finished_at = datetime.now(UTC)
     emit_event(
         db,
@@ -227,6 +233,7 @@ def _finalize(db: Session, run: TestRun, rows: list[NodeRun], graph: dict[str, A
             "status": run.status,
             "outcome": run.outcome,
             "node_statuses": statuses,
+            "evidence_gaps": evidence_gaps,
         },
         producer_event_id=f"{run.id}:terminal:{run.status}:{run.outcome}",
     )

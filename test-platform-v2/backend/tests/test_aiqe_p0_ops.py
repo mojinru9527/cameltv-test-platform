@@ -41,7 +41,7 @@ def test_dispatch_is_idempotent(db_session):
     assert db_session.query(ExecutionJob).count() == 1
 
 
-def test_gc_removes_expired_artifact(db_session, tmp_path):
+def test_gc_purges_expired_artifact_with_tombstone(db_session, tmp_path):
     run, _node = make_run_node(db_session)
     storage = LocalArtifactStorage(tmp_path)
     uri = storage.put(b"old", "a" * 64)
@@ -58,8 +58,14 @@ def test_gc_removes_expired_artifact(db_session, tmp_path):
 
     result = purge_expired_artifacts(db_session, retention_days=30, storage=storage)
     assert result["deleted"] == 1
+    assert result["purged"] == 1
     assert result["failed"] == 0
-    assert db_session.get(RunArtifact, row.id) is None
+    # AUD-008：元数据保留审计墓碑（不再硬删行）
+    tombstone = db_session.get(RunArtifact, row.id)
+    assert tombstone is not None
+    assert tombstone.upload_status == "PURGED"
+    assert tombstone.storage_uri == ""
+    assert tombstone.deleted_at is not None
     assert not storage._path_for("a" * 64).exists()
 
 
