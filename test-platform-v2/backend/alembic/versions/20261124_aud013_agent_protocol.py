@@ -44,7 +44,7 @@ def upgrade() -> None:
     op.execute(
         "UPDATE agent_executions SET agent_version = '1.0.0' WHERE agent_version IS NULL"
     )
-    op.execute("UPDATE agent_executions SET needs_human = 0 WHERE needs_human IS NULL")
+    op.execute("UPDATE agent_executions SET needs_human = FALSE WHERE needs_human IS NULL")
     indexes = {index["name"] for index in inspector.get_indexes("agent_executions")}
     for index, columns in (
         ("ix_agent_executions_task_id", ["task_id"]),
