@@ -1,8 +1,10 @@
-"""M10-347：AIQE ExecutionJob 进程内消费者（解决 M9-R4）。
+"""M10-347 + v1.4：AIQE ExecutionJob 进程内消费者。
 
 - 仅认领 payload 含 `node_run_id` 的 ExecutionJob（AIQE DAG 节点）；
-- 原子认领（status pending → running + 租约），执行 `node_executor`，回写 `complete_node`；
-- 默认关闭（`AIQE_INPROCESS_EXECUTOR_ENABLED=true` 时由 lifespan 启动线程），避免控制面意外执行。
+- 原子认领（status pending → running + 租约）；
+- http / db 节点可在进程内执行；playwright/appium 只由具备浏览器/设备的 Runner 执行；
+- 执行收口统一走 `execution_service`（断言、outputs、证据、事件）；
+- 默认关闭（`AIQE_INPROCESS_EXECUTOR_ENABLED=true` 时由 lifespan 启动线程）。
 """
 from __future__ import annotations
 
@@ -30,8 +32,10 @@ logger = logging.getLogger(__name__)
 NODE_ID = "aiqe-inprocess"
 LEASE_SECONDS = 300
 MARKER = '"node_run_id"'
-# 进程内消费者只处理 http 节点；playwright/appium 留给具备浏览器/设备的 runner 节点。
-HTTP_DRIVERS = frozenset({"http", "httpx", "api", ""})
+# 进程内消费者可执行的 driver；浏览器/设备节点仍必须由外部 Runner 执行。
+INPROCESS_DRIVERS = frozenset(
+    {"http", "httpx", "api", "", "db", "db_readonly", "database"}
+)
 
 _stop = threading.Event()
 _thread: threading.Thread | None = None
@@ -39,11 +43,6 @@ _thread: threading.Thread | None = None
 
 def _now() -> datetime:
     return datetime.now(UTC)
-
-
-def _synthesize_graph(db: Session, run_id: str) -> dict:
-    rows = list(db.scalars(select(NodeRun).where(NodeRun.run_id == run_id)))
-    return {"nodes": [{"key": row.node_key} for row in rows], "edges": []}
 
 
 def claim_aiqe_jobs(db: Session, *, limit: int = 5) -> list[int]:
@@ -66,7 +65,7 @@ def claim_aiqe_jobs(db: Session, *, limit: int = 5) -> list[int]:
             driver = str(json.loads(job.payload_json or "{}").get("driver") or "").lower()
         except (TypeError, ValueError):
             driver = ""
-        if driver not in HTTP_DRIVERS:
+        if driver not in INPROCESS_DRIVERS:
             continue
         # 先在内存里算出本次认领的 attempt，作为 fencing token 的唯一来源
         # （UPDATE 会让 ORM 对象同步为新值，不能再用 job.attempt+1 计算）。
@@ -282,14 +281,13 @@ def complete_from_report(
         outputs={"execution": payload_result},
         fencing_token=token,
     )
-    db.commit()
-    return {
-        "job_id": job_id,
-        "run_id": run_id,
-        "node": node.node_key,
-        "node_status": node_status,
-        "error_class": error_class,
-    }
+    if summary.get("skipped"):
+        return summary
+    node_status = summary.get("status")
+    summary.setdefault("node_status", node_status)
+    summary.setdefault("node", summary.get("node_key"))
+    summary.setdefault("error_class", "")
+    return summary
 
 
 def consume_once(*, limit: int = 5) -> int:

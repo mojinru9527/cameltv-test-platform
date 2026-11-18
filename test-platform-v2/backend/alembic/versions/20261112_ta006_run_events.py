@@ -34,7 +34,7 @@ def upgrade() -> None:
                 if bind.dialect.name == "postgresql":
                     op.execute(f'DROP TABLE IF EXISTS "{legacy}" CASCADE')
                 else:
-                    op.drop_table(legacy)
+                    op.execute(f'DROP TABLE IF EXISTS "{legacy}"')
 
     op.create_table(
         "run_events",

@@ -63,6 +63,7 @@ NODE_FAILED = frozenset({"FAILED", "ERROR", "TIMED_OUT"})
 ACTIVE_NODE = frozenset({"READY", "RUNNING"})
 
 Dispatch = Callable[[NodeRun], None]
+Prepare = Callable[[NodeRun], str | None]
 
 
 def _node_defs(graph: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -151,6 +152,10 @@ def create_node_runs(db: Session, run_id: str, graph: dict[str, Any]) -> list[No
             driver_key=str(node.get("driver") or ""),
             status="PENDING",
             input_ref=node.get("input") or {},
+            assertions_json=list(node.get("assertions") or []),
+            outputs_spec_json=dict(node.get("outputs") or {}),
+            output_schema_json=node.get("output_schema"),
+            capability=str(node.get("capability") or ""),
             resource_keys_json=node.get("resource_keys") or [],
         )
         db.add(row)
@@ -193,15 +198,25 @@ def _satisfied(
 
 
 def _block_downstream(
-    key: str, deps: dict[str, list[str]], rows: dict[str, NodeRun], skip: set[str]
+    key: str,
+    deps: dict[str, list[str]],
+    rows: dict[str, NodeRun],
+    skip: set[str],
+    defs: dict[str, dict[str, Any]] | None = None,
+    cleanup: str | None = None,
 ) -> None:
     for other, other_deps in deps.items():
         if key in other_deps and other not in skip:
+            if cleanup and (
+                other == cleanup or (defs or {}).get(other, {}).get("type") == "cleanup"
+            ):
+                # cleanup 节点必须在其它节点终态后仍可执行，不被失败传播吞掉。
+                continue
             row = rows.get(other)
             if row is not None and row.status not in NODE_TERMINAL:
                 row.status = "BLOCKED"
                 skip.add(other)
-                _block_downstream(other, deps, rows, skip)
+                _block_downstream(other, deps, rows, skip, defs, cleanup)
 
 
 def _finalize(db: Session, run: TestRun, rows: list[NodeRun], graph: dict[str, Any]) -> None:
@@ -256,6 +271,7 @@ def schedule(
     graph: dict[str, Any],
     *,
     dispatch: Dispatch | None = None,
+    prepare: Prepare | None = None,
     ttl_seconds: int = 60,
     preflight: Callable[[NodeRun], bool] | None = None,
     blocked_detail: Callable[[NodeRun, dict[str, Any]], None] | None = None,
@@ -492,7 +508,7 @@ def complete_node(
         db.flush()
         return run
 
-    if status in NODE_FAILED:
+    if status in NODE_FAILED or status in {"BLOCKED", "CANCELED"}:
         _block_downstream(node_key, deps, by_key, {node_key})
 
     _finalize(db, run, rows, graph)

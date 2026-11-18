@@ -849,3 +849,33 @@ D+16+    └─ W3 起真正开发 M1，20 周后 M6 对外可用
 > 本排期是 proposal，进 Agent Team 门禁评审后以 Leader verdict 为准。
 > 核心承诺：**20 周 V1 对外可用，每 M Dogfood 全绿留档，防 AITDE 失败模式复发**。
 
+---
+
+## v1.4 执行校准（2026-11-14）
+
+PR #595 后执行包 v1.4 落地为一条独立分支的“执行正确性 + 门禁修复”批次，不新增里程碑：
+
+| 批次 | 内容 | 状态 |
+|---|---|---|
+| PR-0 | 刷新 `docs/aiqe/baseline.md` 到 `b0f6cdd4c`；核对表/路由/迁移数量 | ✅ |
+| PR-1/2 | RunContext Resolver + Assertion Runtime + 结果落库 | ✅ |
+| PR-3/4 | HTTP 业务化 + Playwright 真实动作/Trace/证据 | ✅ |
+| PR-5/6 | Capability Preflight + Run Launch / Outbox / Reconciler | ✅ |
+| PR-7 | Evidence Redactor + Artifact 授权/脱敏 | ✅ |
+| PR-8 | Run Console 步骤/Attempt/断言/证据 | ✅ |
+| PR-9/10 | Defect Draft 既有 + Regression 真实派发（fixed SHA 校验） | ✅ |
+| PR-11/12 | Quality Gate facts-only + Tenant Scope / 生产 Run 默认关闭 | ✅ |
+| PR-13–16 | A0–A6 / MCP / 跨端 / Sports pilot 既有能力 | 保持既有批次状态，不因 v1.4 重新宣告生产可用 |
+
+验证命令：
+
+```powershell
+cd test-platform-v2/backend
+python -m pytest tests -k aiqe -q
+python -m pytest -q                       # 全量回归
+python -m alembic heads                   # 单 head = 20261124_aiqe_pr595_execution
+python scripts/ci/quality_ratchet.py
+```
+
+**排期影响**：v1.4 是 M2 执行正确性的收口，不压缩 M2 Gate；M3–M6 的真实 Dogfood 仍按本文件原计划执行。生产 Run 创建保持关闭，PR #595 的 HTTP health smoke 不升级为生产验收。
+

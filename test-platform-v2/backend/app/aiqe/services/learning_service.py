@@ -45,9 +45,13 @@ def create_candidate(
     return row
 
 
-def get_candidate(db: Session, candidate_id: str) -> LearningCandidate:
+def get_candidate(
+    db: Session, candidate_id: str, *, project_id: int | None = None
+) -> LearningCandidate:
     row = db.get(LearningCandidate, candidate_id)
-    if row is None:
+    if row is None or (
+        project_id is not None and int(row.project_id or 0) != int(project_id)
+    ):
         raise LearningError(f"候选不存在: {candidate_id}")
     return row
 
@@ -88,9 +92,13 @@ def evaluate_candidate(
 
 
 def approve_candidate(
-    db: Session, candidate_id: str, *, acknowledge_duplicate: bool = False
+    db: Session,
+    candidate_id: str,
+    *,
+    acknowledge_duplicate: bool = False,
+    project_id: int | None = None,
 ) -> LearningCandidate:
-    row = get_candidate(db, candidate_id)
+    row = get_candidate(db, candidate_id, project_id=project_id)
     if row.status not in ("benchmarked",):
         raise LearningError("必须先完成 benchmark 才能批准")
     rate = float((row.benchmark_json or {}).get("false_positive_rate", 1))
@@ -105,8 +113,10 @@ def approve_candidate(
     return row
 
 
-def activate_candidate(db: Session, candidate_id: str) -> BugPattern | None:
-    row = get_candidate(db, candidate_id)
+def activate_candidate(
+    db: Session, candidate_id: str, *, project_id: int | None = None
+) -> BugPattern | None:
+    row = get_candidate(db, candidate_id, project_id=project_id)
     if row.status != "approved":
         raise LearningError("只有 approved 候选才能 ACTIVE")
     if row.duplicate_of:

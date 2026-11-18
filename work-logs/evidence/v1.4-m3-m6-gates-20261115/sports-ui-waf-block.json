@@ -1,0 +1,9 @@
+{
+  "url": "https://www.camel1.tv/",
+  "runner": "real Chrome (system channel), headless",
+  "http_status": 403,
+  "title": "403 Forbidden",
+  "attempts": ["23:00 local", "23:07 local"],
+  "other_mirrors": {"camel1.to": 567, "camelscore.live": 403, "goals365.live": 403, "camellofutbol.com": 403, "camel2.live": 403},
+  "conclusion": "WAF blocks the runner egress IP; real mouse cannot proceed until allowlist/proxy/cookie is provided."
+}

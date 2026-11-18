@@ -1,0 +1,8 @@
+{"event": "start", "ts": 1794925088.5693913, "topic": "camel/aiqe/m6/telemetry"}
+{"event": "connect", "rc": "Success", "ts": 1794925089.6516387}
+{"event": "suback", "rc": "[ReasonCode(Suback, 'Granted QoS 1')]", "ts": 1794925089.7517161}
+{"event": "start2", "ts": 1794925256.760713, "topic": "camel/aiqe/m6/telemetry"}
+{"event": "connect2", "rc": "Success", "ts": 1794925257.6016335}
+{"event": "suback2", "rc": "[ReasonCode(Suback, 'Granted QoS 1')]", "ts": 1794925257.7073095}
+{"event": "message", "topic": "camel/aiqe/m6/telemetry", "payload": "{\"op\":\"telemetry\",\"value\":42,\"unit\":\"rpm\",\"source\":\"aiqe-m6\"}", "qos": 1, "ts": 1794925671.33491}
+{"event": "message2", "topic": "camel/aiqe/m6/telemetry", "payload": "{\"op\":\"telemetry\",\"value\":42,\"unit\":\"rpm\",\"source\":\"aiqe-m6\"}", "qos": 1, "ts": 1794925671.6895463}

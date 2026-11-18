@@ -1,0 +1,79 @@
+[
+  {
+    "type": "request",
+    "sha256": "21dd0399e3ed059eb6a0a9741ee01d02572ed9913ac22d05a8b15323e93a7a5a",
+    "size_bytes": 238,
+    "redaction_status": "sanitized",
+    "file": "request-21dd0399e3.json"
+  },
+  {
+    "type": "response",
+    "sha256": "492554bcf476f3c68257396f861d2050eec6d3c0ed811423397851f36da21eb0",
+    "size_bytes": 390,
+    "redaction_status": "sanitized",
+    "file": "response-492554bcf4.json"
+  },
+  {
+    "type": "request",
+    "sha256": "c0331bd22c0d06d778d4ef0e8a8b37481338c92656b7f3f2a1b92bdabc01c60d",
+    "size_bytes": 263,
+    "redaction_status": "sanitized",
+    "file": "request-c0331bd22c.json"
+  },
+  {
+    "type": "response",
+    "sha256": "650df4197d5bdc79e3d8a2b135dd643cc48bbd818b802405b66b44de2f665023",
+    "size_bytes": 415,
+    "redaction_status": "sanitized",
+    "file": "response-650df4197d.json"
+  },
+  {
+    "type": "db_snapshot",
+    "sha256": "820c69355c779d26779bb5827378bd7c08f39cda1b104b874bedbb9c54cfd4d0",
+    "size_bytes": 139,
+    "redaction_status": "sanitized",
+    "file": "db_snapshot-820c69355c.json"
+  },
+  {
+    "type": "dom",
+    "sha256": "ab1952d6270f8ee8e7f91bddaa633d80292110dca32b2bd4e6135068abcae566",
+    "size_bytes": 257,
+    "redaction_status": "sanitized",
+    "file": "dom-ab1952d627.html"
+  },
+  {
+    "type": "log",
+    "sha256": "47cde14e65e0a25b58b9f28f2ad76b3e129be94e39222df6c8442a36772bacb3",
+    "size_bytes": 35,
+    "redaction_status": "sanitized",
+    "file": "log-47cde14e65.json"
+  },
+  {
+    "type": "log",
+    "sha256": "bc0c5311a07d7356dfbaa0cf9785dd85a1a3a43d93e428ff0a6512dc9c0eb40f",
+    "size_bytes": 218,
+    "redaction_status": "sanitized",
+    "file": "log-bc0c5311a0.json"
+  },
+  {
+    "type": "screenshot",
+    "sha256": "c96a8461302b0067d8e6c7c17b703f32504a9433929f17fc5cf71855aedfcbcc",
+    "size_bytes": 10656,
+    "redaction_status": "sanitized",
+    "file": "screenshot-c96a846130.png"
+  },
+  {
+    "type": "request",
+    "sha256": "e3216c09a49a59ccc31c38da5c8fcf2a02ff46f9c435dd2dd1bffaa8bdb1da71",
+    "size_bytes": 252,
+    "redaction_status": "sanitized",
+    "file": "request-e3216c09a4.json"
+  },
+  {
+    "type": "response",
+    "sha256": "f8c54212a583192f47d0d5db1a8462acd57f8abe30c4d06c66a80bcf9bcf1481",
+    "size_bytes": 435,
+    "redaction_status": "sanitized",
+    "file": "response-f8c54212a5.json"
+  }
+]

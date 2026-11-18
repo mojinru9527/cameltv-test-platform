@@ -1,4 +1,4 @@
-"""M10-347：AIQE NodeRun 进程内执行器（http / playwright / appium）。
+"""AIQE 节点 Driver 调度（M10-347 / v1.4 FIX-003/004/007）。
 
 - http：API 级节点（batch-347 已交付）；**AUD-001 起统一走
   ``app.aiqe.security.SafeHttpExecutor``**，目标由服务端 Target Policy 决定，
@@ -102,7 +102,7 @@ def execute_node(
     policy: TargetPolicy | None = None,
 ) -> NodeExecution:
     driver = _driver_key(node)
-    spec_input = dict(node.input_ref or {})
+    spec_input = dict(input_override if input_override is not None else (node.input_ref or {}))
     if driver in {"http", "httpx", "api"}:
         return _execute_http(spec_input, node=node, db=db, policy=policy)
     if driver in {"playwright", "web", "ui"}:
@@ -118,6 +118,7 @@ def execute_node(
         status="BLOCKED",
         error_class="UNSUPPORTED_DRIVER",
         detail={"driver": driver, "reason": "执行器不支持该 driver"},
+        data={"unsupported_driver": driver},
     )
 
 
@@ -161,7 +162,10 @@ def _execute_http(
     url = str(spec_input.get("url") or "").strip()
     if not url:
         return NodeExecution(
-            status="FAILED", error_class="INPUT_INVALID", detail={"reason": "缺少 url"}
+            status="FAILED",
+            error_class="INPUT_INVALID",
+            detail={"reason": "缺少 url"},
+            data={"error": "missing url"},
         )
     method = str(spec_input.get("method") or "GET").upper()
     headers = {str(k): str(v) for k, v in (spec_input.get("headers") or {}).items()}
@@ -186,10 +190,19 @@ def _execute_http(
     request = SafeRequest(
         method=method,
         url=url,
-        headers=headers,
+        headers={str(k): str(v) for k, v in (spec_input.get("headers") or {}).items()},
         params=spec_input.get("params"),
         json_body=spec_input.get("json"),
-        timeout_ms=max(1, timeout_ms),
+        content=content,
+        timeout_ms=max(1, int(spec_input.get("timeout_ms") or 15000)),
+        correlation_id=str(spec_input.get("correlation_id") or ""),
+        idempotency_key=str(spec_input.get("idempotency_key") or ""),
+        allowed_hosts=allowed_hosts,
+        allow_private=(
+            bool(spec_input.get("allow_private"))
+            if "allow_private" in spec_input
+            else None
+        ),
     )
     result = SafeHttpExecutor().request(request, effective_policy)
 
@@ -457,80 +470,122 @@ def _execute_playwright(
     inject_overlay = bool(spec_input.get("inject_overlay"))
     timeout_ms = int(spec_input.get("timeout_ms") or 30000)
 
-    try:
-        from playwright.sync_api import sync_playwright
-    except Exception as exc:
-        return NodeExecution(
-            status="BLOCKED",
-            error_class="BROWSER_UNAVAILABLE",
-            detail={"reason": f"playwright 不可用: {type(exc).__name__}: {exc}"},
-        )
-
-    detail: dict[str, Any] = {"url": url, "inject_overlay": inject_overlay}
-    try:
-        with sync_playwright() as pw:
-            try:
-                browser = pw.chromium.launch(headless=True)
-            except Exception as exc:
-                return NodeExecution(
-                    status="BLOCKED",
-                    error_class="BROWSER_UNAVAILABLE",
-                    detail={"reason": f"Chromium 启动失败: {type(exc).__name__}: {exc}"},
-                )
-            try:
-                page = browser.new_page()
-                response = page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
-                detail["status_code"] = response.status if response is not None else None
-                detail["title"] = page.title()
-                if inject_overlay:
-                    detail["overlay_id"] = page.evaluate(OVERLAY_JS)
-
-                click_mode = str(spec_input.get("click_mode") or "trial").lower()
-                detail["click_mode"] = click_mode
-                clickable: bool | None = None
-                if click_text or click_selector:
-                    target = (
-                        page.get_by_text(click_text, exact=False).first
-                        if click_text
-                        else page.locator(click_selector).first
-                    )
-                    if click_mode == "mouse":
-                        clickable = _mouse_click(page, target, detail)
-                    else:
-                        try:
-                            target.click(trial=True, timeout=4000)
-                            clickable = True
-                        except Exception as exc:
-                            clickable = False
-                            detail["click_error"] = str(exc).splitlines()[0][:300]
-                detail["clickable"] = clickable
-
-                body_text = page.locator("body").inner_text()[:4000]
-                detail["text_len"] = len(body_text)
-                if expect_text:
-                    detail["expect_text_found"] = expect_text in body_text
-
-                if clickable is False:
-                    return NodeExecution(
-                        status="FAILED",
-                        error_class=(
-                            "OVERLAY_INTERCEPTED" if inject_overlay else "CLICK_FAILED"
-                        ),
-                        detail=detail,
-                    )
-                if expect_text and not detail.get("expect_text_found"):
-                    return NodeExecution(
-                        status="FAILED", error_class="TEXT_MISMATCH", detail=detail
-                    )
-                return NodeExecution(status="PASSED", detail=detail)
-            finally:
-                browser.close()
-    except Exception as exc:
+    has_actions = isinstance(spec_input.get("actions"), list) and bool(spec_input.get("actions"))
+    has_legacy = bool(spec_input.get("click_text") or spec_input.get("click_selector"))
+    if not str(spec_input.get("url") or "").strip() and not has_actions and not has_legacy:
         return NodeExecution(
             status="FAILED",
-            error_class="DRIVER_ERROR",
-            detail={"reason": f"{type(exc).__name__}: {exc}"},
+            error_class="INPUT_INVALID",
+            detail={"reason": "缺少 url/actions"},
+            data={"error": "missing url/actions"},
         )
+    driver = PlaywrightDriver(
+        headless=bool(spec_input.get("headless", True)),
+        timeout_ms=max(1, int(spec_input.get("timeout_ms") or 30000)),
+        allowed_hosts=list(spec_input.get("allowed_hosts") or []),
+    )
+    try:
+        result = driver.execute(spec_input)
+    finally:
+        driver.close()
+    detail = result.data
+    if result.status == "BLOCKED":
+        return NodeExecution(
+            status="BLOCKED",
+            error_class=result.error_class or "BROWSER_UNAVAILABLE",
+            detail=detail,
+            data=detail,
+            evidence=result.evidence,
+        )
+    if result.status == "ERROR":
+        return NodeExecution(
+            status="ERROR",
+            error_class=result.error_class or "AUTOMATION_ERROR",
+            detail=detail,
+            data=detail,
+            evidence=result.evidence,
+        )
+    if result.status == "FAILED":
+        return NodeExecution(
+            status="FAILED",
+            error_class=result.error_class or "PLAYWRIGHT_FAILED",
+            detail=detail,
+            data=detail,
+            evidence=result.evidence,
+        )
+    return NodeExecution(status="PASSED", detail=detail, data=detail, evidence=result.evidence)
+
+
+def _execute_db(spec_input: dict[str, Any], *, db_engine: Any = None) -> NodeExecution:
+    if db_engine is None:
+        return NodeExecution(
+            status="BLOCKED",
+            error_class="DB_UNAVAILABLE",
+            detail={"reason": "未配置只读数据库连接（AIQE_DB_READONLY_URL）"},
+            data={"error": "db engine unavailable"},
+        )
+    from app.aiqe.drivers.db_readonly_driver import (
+        DbReadonlyDriver,
+        QueryRegistry,
+        RowLimitExceeded,
+        UnsafeSqlError,
+    )
+
+    registry_raw = spec_input.get("query_registry")
+    registry = (
+        QueryRegistry(registry_raw)
+        if isinstance(registry_raw, dict)
+        else QueryRegistry()
+    )
+    driver = DbReadonlyDriver(
+        db_engine,
+        max_rows=int(spec_input.get("max_rows") or 1000),
+        max_field_chars=int(spec_input.get("max_field_chars") or 2000),
+        allowed_tables=spec_input.get("allowed_tables") or [],
+        registry=registry,
+        statement_timeout_ms=int(spec_input.get("timeout_ms") or 5000),
+    )
+    try:
+        result = driver.query(
+            sql=None if spec_input.get("query_key") else str(spec_input.get("sql") or ""),
+            params=spec_input.get("params") or {},
+            query_key=str(spec_input.get("query_key") or ""),
+            max_rows=spec_input.get("max_rows"),
+        )
+    except UnsafeSqlError as exc:
+        return NodeExecution(
+            status="BLOCKED",
+            error_class="UNSAFE_SQL",
+            detail={"reason": str(exc), "audit": [event.__dict__ for event in driver.last_audit]},
+            data={"error": str(exc)},
+        )
+    except RowLimitExceeded as exc:
+        return NodeExecution(
+            status="FAILED",
+            error_class="ROW_LIMIT_EXCEEDED",
+            detail={"reason": str(exc)},
+            data={"error": str(exc)},
+        )
+    except Exception as exc:
+        return NodeExecution(
+            status="ERROR",
+            error_class="DB_ERROR",
+            detail={"reason": f"{type(exc).__name__}: {exc}"},
+            data={"error": f"{type(exc).__name__}: {exc}"},
+        )
+    db_data = {
+        "columns": result.columns,
+        "rows": result.rows,
+        "row_count": result.row_count,
+        "query_key": result.query_key,
+        "elapsed_ms": result.elapsed_ms,
+        "truncated_fields": result.truncated_fields,
+    }
+    return NodeExecution(
+        status="PASSED",
+        detail={"db": db_data, "audit": [event.__dict__ for event in driver.last_audit]},
+        data={"db": db_data},
+    )
 
 
 def _appium_post(client, path: str, body: dict[str, Any]) -> dict[str, Any]:
@@ -559,7 +614,7 @@ def _execute_appium(spec_input: dict[str, Any]) -> NodeExecution:
 
     detail: dict[str, Any] = {"appium_url": appium_url, "caps": caps}
     try:
-        with httpx.Client(base_url=appium_url, timeout=60) as client:
+        with httpx.Client(base_url=appium_url, timeout=60, trust_env=False) as client:
             try:
                 created = _appium_post(
                     client, "/session", {"capabilities": {"alwaysMatch": caps}}
@@ -569,6 +624,7 @@ def _execute_appium(spec_input: dict[str, Any]) -> NodeExecution:
                     status="BLOCKED",
                     error_class="APPIUM_UNAVAILABLE",
                     detail={**detail, "reason": f"{type(exc).__name__}: {exc}"},
+                    data={"error": f"{type(exc).__name__}: {exc}"},
                 )
             session_id = (created.get("value") or {}).get("sessionId") or created.get(
                 "sessionId"
@@ -579,6 +635,7 @@ def _execute_appium(spec_input: dict[str, Any]) -> NodeExecution:
                     status="FAILED",
                     error_class="APPIUM_SESSION_FAILED",
                     detail=detail,
+                    data={"error": "no session"},
                 )
             try:
                 source = client.get(f"/session/{session_id}/source")
@@ -598,7 +655,9 @@ def _execute_appium(spec_input: dict[str, Any]) -> NodeExecution:
                         )
                         element_id = (
                             (found.get("value") or {}).get("ELEMENT")
-                            or (found.get("value") or {}).get("element-6066-11e4-a52e-4f735466cecf")
+                            or (found.get("value") or {}).get(
+                                "element-6066-11e4-a52e-4f735466cecf"
+                            )
                         )
                         if element_id:
                             client.post(
@@ -610,15 +669,31 @@ def _execute_appium(spec_input: dict[str, Any]) -> NodeExecution:
                 detail["clicked"] = clicked
                 if expect_text:
                     detail["expect_text_found"] = expect_text in xml
+                data = {
+                    "source_len": len(xml),
+                    "clicked": clicked,
+                    "expect_text_found": bool(expect_text and expect_text in xml),
+                    "locators": (
+                        {"text": {"visible": True, "count": 1, "text": xml[:4000]}}
+                        if expect_text and expect_text in xml
+                        else {}
+                    ),
+                }
                 if click_text and not clicked:
                     return NodeExecution(
-                        status="FAILED", error_class="DEVICE_CLICK_FAILED", detail=detail
+                        status="FAILED",
+                        error_class="DEVICE_CLICK_FAILED",
+                        detail=detail,
+                        data=data,
                     )
                 if expect_text and not detail.get("expect_text_found"):
                     return NodeExecution(
-                        status="FAILED", error_class="TEXT_MISMATCH", detail=detail
+                        status="FAILED",
+                        error_class="TEXT_MISMATCH",
+                        detail=detail,
+                        data=data,
                     )
-                return NodeExecution(status="PASSED", detail=detail)
+                return NodeExecution(status="PASSED", detail=detail, data=data)
             finally:
                 try:
                     client.delete(f"/session/{session_id}")
@@ -629,4 +704,92 @@ def _execute_appium(spec_input: dict[str, Any]) -> NodeExecution:
             status="FAILED",
             error_class="DRIVER_ERROR",
             detail={**detail, "reason": f"{type(exc).__name__}: {exc}"},
+            data={"error": f"{type(exc).__name__}: {exc}"},
         )
+
+def _execute_external_e2e(spec_input: dict[str, Any]) -> NodeExecution:
+    """Run a pinned external E2E command (TesterArmy contract).
+
+    Used for cross-tool chains such as Android Appium + MQTT that need a
+    workstation/device runner rather than the API process.
+    """
+    from pathlib import Path
+
+    from app.aiqe.drivers.external_e2e_driver import TesterArmyAdapter
+
+    command = spec_input.get("command")
+    version = str(spec_input.get("version") or "").strip()
+    if not isinstance(command, list) or not command or not version:
+        return NodeExecution(
+            status="FAILED",
+            error_class="INPUT_INVALID",
+            detail={"reason": "external_e2e 需要非空 command 数组和固定 version"},
+            data={"result": "FAIL"},
+        )
+    artifacts_dir = spec_input.get("artifacts_dir")
+    adapter = TesterArmyAdapter(
+        [str(part) for part in command],
+        version=version,
+        cwd=spec_input.get("cwd"),
+        env={
+            str(key): str(value)
+            for key, value in (spec_input.get("env") or {}).items()
+        },
+        timeout_s=float(spec_input.get("timeout_s") or 300),
+        artifacts_dir=artifacts_dir,
+    )
+    try:
+        result = adapter.run(replay=bool(spec_input.get("replay", False)))
+    except Exception as exc:
+        return NodeExecution(
+            status="ERROR",
+            error_class="EXTERNAL_E2E_ERROR",
+            detail={"reason": f"{type(exc).__name__}: {exc}"},
+            data={"result": "FAIL"},
+        )
+    evidence: list[EvidenceFile] = []
+    artifact_rows: list[dict[str, Any]] = []
+    for artifact in result.artifacts:
+        try:
+            content = Path(artifact.path).read_bytes()
+        except OSError:
+            content = b""
+        evidence.append(
+            EvidenceFile(
+                name=artifact.name,
+                artifact_type=artifact.artifact_type,
+                content=content,
+                sha256=artifact.sha256,
+                metadata={"source": "external_e2e"},
+            )
+        )
+        artifact_rows.append(
+            {
+                "name": artifact.name,
+                "artifact_type": artifact.artifact_type,
+                "sha256": artifact.sha256,
+                "size_bytes": artifact.size_bytes,
+            }
+        )
+    status = "PASSED" if result.exit_code == 0 else "FAILED"
+    return NodeExecution(
+        status=status,
+        error_class="" if status == "PASSED" else "EXTERNAL_E2E_FAILED",
+        detail={
+            "exit_code": result.exit_code,
+            "duration_ms": result.duration_ms,
+            "replay_exit_code": result.replay_exit_code,
+        },
+        data={
+            "result": "PASS" if status == "PASSED" else "FAIL",
+            "json": {
+                "result": "PASS" if status == "PASSED" else "FAIL",
+                "exit_code": result.exit_code,
+            },
+            "exit_code": result.exit_code,
+            "stdout": result.stdout[-4000:],
+            "stderr": result.stderr[-4000:],
+            "artifacts": artifact_rows,
+        },
+        evidence=evidence,
+    )

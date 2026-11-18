@@ -8,6 +8,7 @@ const TABS = [
   { to: '/aiqe/workflows', label: 'Workflow 审批' },
   { to: '/aiqe/quality-gate', label: '质量门禁' },
   { to: '/aiqe/noise-rules', label: '噪音规则' },
+  { to: '/aiqe/learning', label: '学习候选' },
   { to: '/aiqe/platform-matrix', label: '平台矩阵' },
   { to: '/aiqe/contracts', label: '需求合约' },
 ] as const

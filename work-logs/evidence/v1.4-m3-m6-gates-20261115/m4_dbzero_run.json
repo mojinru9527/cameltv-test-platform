@@ -1,0 +1,119 @@
+{
+  "run": {
+    "id": "6c2f873a-6396-4c5c-9b1f-32eb081e536c",
+    "run_key": "RUN-1dab809c",
+    "source_type": "manual",
+    "status": "COMPLETED",
+    "outcome": "FAIL",
+    "workflow_definition_id": "e1922778-7f84-4df0-9029-1ffcf8d03df7",
+    "workflow_checksum": "6532161dca997279cc831e2db1c6cc681ebce9a34c895c0c90d68dc08f50427b",
+    "build_ref": "test-v14-m4-dbzero",
+    "commit_sha": "e4408546d",
+    "created_at": "2026-11-15T13:08:32.273253Z",
+    "started_at": "2026-11-15T13:08:32.284366Z",
+    "finished_at": "2026-11-15T13:08:34.193167Z",
+    "duration_ms": null
+  },
+  "nodes": [
+    {
+      "node": {
+        "id": "5270aa95-99d4-43eb-8f15-871dfa5b1143",
+        "node_key": "db_zero_rows",
+        "driver_key": "db",
+        "status": "FAILED",
+        "error_class": "ASSERTION_FAILED",
+        "attempt_count": 1,
+        "inputs": {
+          "query_key": "zero_rows",
+          "allowed_tables": [
+            "sys_project"
+          ],
+          "query_registry": {
+            "zero_rows": {
+              "sql": "SELECT id FROM sys_project WHERE 1=0",
+              "allowed_tables": [
+                "sys_project"
+              ]
+            }
+          }
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T13:08:34.176939+00:00",
+        "finished_at": "2026-11-15T13:08:34.190144+00:00"
+      },
+      "attempts": [
+        {
+          "id": "5c90d9e5-f2ea-4276-af61-1b40941684a6",
+          "attempt_no": 1,
+          "status": "FAILED",
+          "started_at": "2026-11-15T13:08:34.176939+00:00",
+          "finished_at": "2026-11-15T13:08:34.190792+00:00",
+          "error": {
+            "class": "ASSERTION_FAILED"
+          },
+          "output": {},
+          "assertions": [
+            {
+              "id": "e18270ab-ffe2-4801-b12a-6dcbf39bbc0c",
+              "assertion_key": "db_zero_rows",
+              "type": "db_row_count",
+              "status": "FAIL",
+              "schema_version": "1.0",
+              "oracle_layer": "STD",
+              "oracle_ref": "M4-FAULT-DB-ZERO",
+              "severity": "P1",
+              "expected": 1,
+              "actual": 0,
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "",
+              "artifact_refs": [
+                "519847ce-1249-42f6-a15c-30fadb48de39"
+              ]
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": "519847ce-1249-42f6-a15c-30fadb48de39",
+          "artifact_type": "db_snapshot",
+          "sha256": "4dddce5207d8ef74966060836a4c26df8ebbd3232c9367e8f9124d89719c0005",
+          "size_bytes": 114,
+          "mime_type": "application/json",
+          "redaction_status": "sanitized",
+          "metadata": {
+            "redacted": true,
+            "source": "execution_service"
+          },
+          "created_at": "2026-11-15T13:08:34.185459+00:00"
+        }
+      ]
+    }
+  ],
+  "assertions": [
+    {
+      "node_key": "db_zero_rows",
+      "node_status": "FAILED",
+      "attempt_no": 1,
+      "attempt_status": "FAILED",
+      "assertion_key": "db_zero_rows",
+      "type": "db_row_count",
+      "status": "FAIL",
+      "oracle_layer": "STD",
+      "oracle_ref": "M4-FAULT-DB-ZERO",
+      "severity": "P1",
+      "expected": 1,
+      "actual": 0,
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "",
+      "artifact_refs": [
+        "519847ce-1249-42f6-a15c-30fadb48de39"
+      ]
+    }
+  ]
+}

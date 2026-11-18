@@ -1,0 +1,464 @@
+{
+  "run": {
+    "id": "c23b1fa6-557b-43a2-96cd-28afeab611b7",
+    "run_key": "RUN-5183a374",
+    "source_type": "manual",
+    "status": "COMPLETED",
+    "outcome": "PASS",
+    "workflow_definition_id": "5c4ec220-b37b-4ed7-9548-b8865f5c7359",
+    "workflow_checksum": "b7a6177e8bd3477a4ac800e4bd880c521714bdd952a98779e144ba602dd366b0",
+    "build_ref": "test-v14-m3-a3",
+    "commit_sha": "507d06f34",
+    "created_at": "2026-11-15T12:51:18.338748Z",
+    "started_at": "2026-11-15T12:51:18.348746Z",
+    "finished_at": "2026-11-15T12:51:41.424753Z",
+    "duration_ms": null
+  },
+  "nodes": [
+    {
+      "node": {
+        "id": "ebcf3d61-3d6f-4af8-b10c-99dce1d3144c",
+        "node_key": "forgot_entry",
+        "driver_key": "playwright",
+        "status": "PASSED",
+        "error_class": "",
+        "attempt_count": 1,
+        "inputs": {
+          "url": "http://127.0.0.1:28080/login",
+          "actions": [
+            {
+              "type": "wait_visible",
+              "selector": "a[href=\"/forgot-password\"]",
+              "expected": {
+                "visible": true
+              },
+              "timeout_ms": 45000
+            }
+          ],
+          "timeout_ms": 45000
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T12:51:29.845917+00:00",
+        "finished_at": "2026-11-15T12:51:29.851401+00:00"
+      },
+      "attempts": [
+        {
+          "id": "4916ad60-67ec-4c83-8967-2d2ee5aff45f",
+          "attempt_no": 1,
+          "status": "PASSED",
+          "started_at": "2026-11-15T12:51:29.845917+00:00",
+          "finished_at": "2026-11-15T12:51:29.852076+00:00",
+          "error": null,
+          "output": {},
+          "assertions": [
+            {
+              "id": "8a961800-deaa-4089-9082-6755818479fb",
+              "assertion_key": "login_forgot_password_entry_visible",
+              "type": "locator_visible",
+              "status": "PASS",
+              "schema_version": "1.0",
+              "oracle_layer": "REQ",
+              "oracle_ref": "AC-2",
+              "severity": "P1",
+              "expected": true,
+              "actual": true,
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "",
+              "artifact_refs": []
+            }
+          ]
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "node": {
+        "id": "4fbdc3ae-f33f-4e48-9541-8dbd2549d6a9",
+        "node_key": "forgot_password_redirect",
+        "driver_key": "playwright",
+        "status": "PASSED",
+        "error_class": "",
+        "attempt_count": 1,
+        "inputs": {
+          "url": "http://127.0.0.1:28080/login",
+          "actions": [
+            {
+              "type": "wait_visible",
+              "selector": "a[href=\"/forgot-password\"]",
+              "timeout_ms": 45000
+            },
+            {
+              "type": "click",
+              "selector": "a[href=\"/forgot-password\"]",
+              "expected": {
+                "url_contains": "/forgot-password"
+              },
+              "timeout_ms": 45000
+            },
+            {
+              "type": "wait_visible",
+              "selector": "text=找回密码",
+              "expected": {
+                "visible": true
+              },
+              "timeout_ms": 45000
+            }
+          ],
+          "timeout_ms": 45000
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T12:51:41.416191+00:00",
+        "finished_at": "2026-11-15T12:51:41.422195+00:00"
+      },
+      "attempts": [
+        {
+          "id": "cac3d65c-15e8-4cdd-a272-832d33a54f3b",
+          "attempt_no": 1,
+          "status": "PASSED",
+          "started_at": "2026-11-15T12:51:41.416191+00:00",
+          "finished_at": "2026-11-15T12:51:41.422777+00:00",
+          "error": null,
+          "output": {},
+          "assertions": [
+            {
+              "id": "3545f546-9aa3-44a8-ba04-7029b3606c33",
+              "assertion_key": "forgot_password_page_text_visible",
+              "type": "locator_visible",
+              "status": "PASS",
+              "schema_version": "1.0",
+              "oracle_layer": "REQ",
+              "oracle_ref": "AC-2",
+              "severity": "P1",
+              "expected": true,
+              "actual": true,
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "",
+              "artifact_refs": []
+            },
+            {
+              "id": "315e6810-a5f8-40fa-8fdc-2a04d06ca39a",
+              "assertion_key": "forgot_password_url_contains",
+              "type": "url_contains",
+              "status": "PASS",
+              "schema_version": "1.0",
+              "oracle_layer": "REQ",
+              "oracle_ref": "AC-2",
+              "severity": "P1",
+              "expected": "/forgot-password",
+              "actual": "http://127.0.0.1:28080/forgot-password",
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "",
+              "artifact_refs": []
+            }
+          ]
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "node": {
+        "id": "8bb51c36-e462-4140-94f3-563ae47a92e3",
+        "node_key": "health_check",
+        "driver_key": "http",
+        "status": "PASSED",
+        "error_class": "",
+        "attempt_count": 1,
+        "inputs": {
+          "url": "http://aiqe-test-nginx:80/api/v1/open/health",
+          "method": "GET",
+          "timeout_ms": 10000
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T12:51:18.922165+00:00",
+        "finished_at": "2026-11-15T12:51:18.947998+00:00"
+      },
+      "attempts": [
+        {
+          "id": "2fd1cd5d-711a-44af-b324-66ce5b78fd6d",
+          "attempt_no": 1,
+          "status": "PASSED",
+          "started_at": "2026-11-15T12:51:18.922165+00:00",
+          "finished_at": "2026-11-15T12:51:18.948611+00:00",
+          "error": null,
+          "output": {},
+          "assertions": [
+            {
+              "id": "94e12304-10ef-4e88-9bbc-bdb007ef7356",
+              "assertion_key": "health_data_status_ok",
+              "type": "jsonpath",
+              "status": "PASS",
+              "schema_version": "1.0",
+              "oracle_layer": "REQ",
+              "oracle_ref": "AC-1",
+              "severity": "P1",
+              "expected": "ok",
+              "actual": "ok",
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "",
+              "artifact_refs": [
+                "62aa5df9-8a34-4e06-b160-b7eff08665e8",
+                "e638d97d-39a3-4346-ad34-905533d7d029"
+              ]
+            },
+            {
+              "id": "00acccf6-9aea-4ec0-88f3-5aa67c2ad50f",
+              "assertion_key": "health_http_status_200",
+              "type": "http_status",
+              "status": "PASS",
+              "schema_version": "1.0",
+              "oracle_layer": "REQ",
+              "oracle_ref": "AC-1",
+              "severity": "P1",
+              "expected": 200,
+              "actual": 200,
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "",
+              "artifact_refs": [
+                "62aa5df9-8a34-4e06-b160-b7eff08665e8",
+                "e638d97d-39a3-4346-ad34-905533d7d029"
+              ]
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": "e638d97d-39a3-4346-ad34-905533d7d029",
+          "artifact_type": "response",
+          "sha256": "d778916557b1c306acce7de46a2fecf0a2991ea133815830eda908ceb1a84526",
+          "size_bytes": 766,
+          "mime_type": "application/json",
+          "redaction_status": "sanitized",
+          "metadata": {
+            "redacted": true,
+            "source": "execution_service"
+          },
+          "created_at": "2026-11-15T12:51:18.942411+00:00"
+        },
+        {
+          "id": "62aa5df9-8a34-4e06-b160-b7eff08665e8",
+          "artifact_type": "request",
+          "sha256": "b77711fc1348402c78c18a74cec28a99aa886f9e7d8c6204213801fa78475b16",
+          "size_bytes": 252,
+          "mime_type": "application/json",
+          "redaction_status": "sanitized",
+          "metadata": {
+            "redacted": true,
+            "source": "execution_service"
+          },
+          "created_at": "2026-11-15T12:51:18.940285+00:00"
+        }
+      ]
+    },
+    {
+      "node": {
+        "id": "fb3147be-fc25-4243-a4d8-416e19dbd782",
+        "node_key": "sys_project_exists",
+        "driver_key": "db",
+        "status": "PASSED",
+        "error_class": "",
+        "attempt_count": 1,
+        "inputs": {
+          "query_key": "sys_project_exists",
+          "allowed_tables": [
+            "sys_project"
+          ],
+          "query_registry": {
+            "sys_project_exists": {
+              "sql": "SELECT 1 FROM sys_project LIMIT 1",
+              "allowed_tables": [
+                "sys_project"
+              ]
+            }
+          }
+        },
+        "outputs": {},
+        "secret_keys": [],
+        "source_refs": [],
+        "started_at": "2026-11-15T12:51:18.962517+00:00",
+        "finished_at": "2026-11-15T12:51:18.973694+00:00"
+      },
+      "attempts": [
+        {
+          "id": "091fb8c8-2d3f-41bd-b1e4-f038586238bf",
+          "attempt_no": 1,
+          "status": "PASSED",
+          "started_at": "2026-11-15T12:51:18.962517+00:00",
+          "finished_at": "2026-11-15T12:51:18.974291+00:00",
+          "error": null,
+          "output": {},
+          "assertions": [
+            {
+              "id": "9bb6c1b2-814a-456c-bf47-133faafa00a2",
+              "assertion_key": "sys_project_at_least_one",
+              "type": "db_row_exists",
+              "status": "PASS",
+              "schema_version": "1.0",
+              "oracle_layer": "REQ",
+              "oracle_ref": "AC-3",
+              "severity": "P1",
+              "expected": true,
+              "actual": 1,
+              "actual_source": "",
+              "duration_ms": 0,
+              "timeout_ms": 0,
+              "error": "",
+              "artifact_refs": [
+                "48eafa1a-78ff-4f1f-9abe-4fc5b1138929"
+              ]
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": "48eafa1a-78ff-4f1f-9abe-4fc5b1138929",
+          "artifact_type": "db_snapshot",
+          "sha256": "b98970969f9783ab5a24db735160c51ca7c936293e83c1fa7b39410b990406bc",
+          "size_bytes": 144,
+          "mime_type": "application/json",
+          "redaction_status": "sanitized",
+          "metadata": {
+            "redacted": true,
+            "source": "execution_service"
+          },
+          "created_at": "2026-11-15T12:51:18.969669+00:00"
+        }
+      ]
+    }
+  ],
+  "assertions": [
+    {
+      "node_key": "forgot_entry",
+      "node_status": "PASSED",
+      "attempt_no": 1,
+      "attempt_status": "PASSED",
+      "assertion_key": "login_forgot_password_entry_visible",
+      "type": "locator_visible",
+      "status": "PASS",
+      "oracle_layer": "REQ",
+      "oracle_ref": "AC-2",
+      "severity": "P1",
+      "expected": true,
+      "actual": true,
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "",
+      "artifact_refs": []
+    },
+    {
+      "node_key": "forgot_password_redirect",
+      "node_status": "PASSED",
+      "attempt_no": 1,
+      "attempt_status": "PASSED",
+      "assertion_key": "forgot_password_page_text_visible",
+      "type": "locator_visible",
+      "status": "PASS",
+      "oracle_layer": "REQ",
+      "oracle_ref": "AC-2",
+      "severity": "P1",
+      "expected": true,
+      "actual": true,
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "",
+      "artifact_refs": []
+    },
+    {
+      "node_key": "forgot_password_redirect",
+      "node_status": "PASSED",
+      "attempt_no": 1,
+      "attempt_status": "PASSED",
+      "assertion_key": "forgot_password_url_contains",
+      "type": "url_contains",
+      "status": "PASS",
+      "oracle_layer": "REQ",
+      "oracle_ref": "AC-2",
+      "severity": "P1",
+      "expected": "/forgot-password",
+      "actual": "http://127.0.0.1:28080/forgot-password",
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "",
+      "artifact_refs": []
+    },
+    {
+      "node_key": "health_check",
+      "node_status": "PASSED",
+      "attempt_no": 1,
+      "attempt_status": "PASSED",
+      "assertion_key": "health_data_status_ok",
+      "type": "jsonpath",
+      "status": "PASS",
+      "oracle_layer": "REQ",
+      "oracle_ref": "AC-1",
+      "severity": "P1",
+      "expected": "ok",
+      "actual": "ok",
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "",
+      "artifact_refs": [
+        "62aa5df9-8a34-4e06-b160-b7eff08665e8",
+        "e638d97d-39a3-4346-ad34-905533d7d029"
+      ]
+    },
+    {
+      "node_key": "health_check",
+      "node_status": "PASSED",
+      "attempt_no": 1,
+      "attempt_status": "PASSED",
+      "assertion_key": "health_http_status_200",
+      "type": "http_status",
+      "status": "PASS",
+      "oracle_layer": "REQ",
+      "oracle_ref": "AC-1",
+      "severity": "P1",
+      "expected": 200,
+      "actual": 200,
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "",
+      "artifact_refs": [
+        "62aa5df9-8a34-4e06-b160-b7eff08665e8",
+        "e638d97d-39a3-4346-ad34-905533d7d029"
+      ]
+    },
+    {
+      "node_key": "sys_project_exists",
+      "node_status": "PASSED",
+      "attempt_no": 1,
+      "attempt_status": "PASSED",
+      "assertion_key": "sys_project_at_least_one",
+      "type": "db_row_exists",
+      "status": "PASS",
+      "oracle_layer": "REQ",
+      "oracle_ref": "AC-3",
+      "severity": "P1",
+      "expected": true,
+      "actual": 1,
+      "actual_source": "",
+      "duration_ms": 0,
+      "error": "",
+      "artifact_refs": [
+        "48eafa1a-78ff-4f1f-9abe-4fc5b1138929"
+      ]
+    }
+  ]
+}

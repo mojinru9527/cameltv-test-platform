@@ -1,0 +1,16 @@
+{
+  "broker": "i802e383.ala.asia-southeast1.emqxsl.com",
+  "port": 8883,
+  "tls": true,
+  "publisher": "aiqe-publisher",
+  "listener": "aiqe-tester (read-only)",
+  "topic": "camel/aiqe/m6/telemetry",
+  "qos": 1,
+  "payload": {"op":"telemetry","value":42,"unit":"rpm","source":"aiqe-m6"},
+  "published": true,
+  "publisher_received": 1,
+  "readonly_listener_received": 2,
+  "result": "PASS",
+  "evidence": ["mqtt-cloud-publish-smoke.log","mqtt-cloud-live.jsonl"],
+  "note": "Real EMQX Cloud end-to-end. Passwords are not stored in this file."
+}

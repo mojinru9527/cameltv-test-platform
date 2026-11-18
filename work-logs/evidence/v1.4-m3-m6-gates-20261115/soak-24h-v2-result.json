@@ -1,0 +1,17 @@
+{
+  "environment": "test",
+  "started_at": "2026-11-17T00:57:17+08:00",
+  "ended_at": "2026-11-18T00:57:27+08:00",
+  "duration_seconds": 86410,
+  "duration_human": "24h00m10s",
+  "first_run_at": "2026-11-16T16:57:17.005525+00:00",
+  "last_run_at": "2026-11-17T16:56:26.860173+00:00",
+  "runs_logged": 1376,
+  "runs_completed": 1376,
+  "runs_failed": 0,
+  "run_outcomes": [{"status": "COMPLETED", "outcome": "PASS", "count": 1376}],
+  "memory": {"samples": 1376, "first": "172.4MiB", "last": "186.7MiB", "min": "172.4MiB", "max": "186.7MiB", "avg": "179.1MiB"},
+  "container": {"restart_count": 0, "oom_killed": false},
+  "verdict": "PASS",
+  "note": "Continuous 24h soak; 1376/1376 COMPLETED PASS, 0 failure, no restart/OOM. Memory stayed bounded 172.4-186.7 MiB (small 14.3 MiB rise); no unbounded growth evidence."
+}

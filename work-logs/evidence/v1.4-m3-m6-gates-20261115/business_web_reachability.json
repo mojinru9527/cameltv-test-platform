@@ -1,0 +1,12 @@
+{
+  "host": "camelive-g3-test5.elelive.cn",
+  "port": 443,
+  "resolved": [
+    "192.168.50.170"
+  ],
+  "private_ips": [
+    "192.168.50.170"
+  ],
+  "status": "BLOCKED",
+  "reason": "TCP ����ʧ�ܣ�DNS ָ��������ַ 192.168.50.170����ǰִ�л������ڸ����磩: timed out"
+}

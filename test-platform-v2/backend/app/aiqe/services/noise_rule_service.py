@@ -131,8 +131,9 @@ def update_rule(
     pattern: str | None = None,
     action: str | None = None,
     expires_at: datetime | None = None,
+    project_id: int | None = None,
 ) -> NoiseRule:
-    row = get_rule(db, rule_id)
+    row = get_rule(db, rule_id, project_id=project_id)
     now = _utcnow()
     next_action = action or row.action
     if next_action not in ACTIONS:

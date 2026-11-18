@@ -1,0 +1,14 @@
+{
+  "environment": "production",
+  "public_url": "https://swiftbugs.cn",
+  "run_id": "e8e47679-2def-4bf8-9c0d-5f4dbceaeca3",
+  "workflow_id": "bdeff72d-9cfd-4b3a-87f4-fcca18f4b2f7",
+  "result": "COMPLETED / PASS",
+  "nodes": [
+    {"key": "sports_api", "driver": "http", "status": "PASSED", "assertions": ["sports_api_status=200", "sports_api_region=CN"]},
+    {"key": "android_mqtt", "driver": "external_e2e", "status": "PASSED", "assertions": ["android_mqtt_result=PASS"], "combined": "Android Appium real touch + EMQX Cloud MQTT publish/receive"}
+  ],
+  "missing_third_flow": "sports_ui real browser returned WAF 403 when executed by the runner; separate manual real-mouse evidence exists but is not part of this production Run",
+  "production_config": {"aiqe_prod_run_create_enabled": true, "frontend": "latest dist deployed"},
+  "evidence": ["prod_m6_pass.json", "android-mqtt-e2e-final/result.json"]
+}

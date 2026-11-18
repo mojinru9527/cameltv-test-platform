@@ -1,0 +1,2 @@
+appium=NOT_INSTALLED
+adb=NOT_INSTALLED

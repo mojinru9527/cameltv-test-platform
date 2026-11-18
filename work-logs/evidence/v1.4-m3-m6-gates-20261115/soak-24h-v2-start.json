@@ -1,0 +1,17 @@
+{
+  "environment": "test",
+  "host": "111.230.155.116",
+  "started_at": "2026-11-17T00:57:00+08:00",
+  "expected_end_at": "2026-11-18T00:57:00+08:00",
+  "pid": 3789696,
+  "cadence_seconds": 60,
+  "first_run_id": "30f4f13a-2da2-4182-aa5a-74e744ff3bc1",
+  "memory_baseline": "172.4MiB / 3.636GiB",
+  "logs": [
+    "/root/v14/soak-24h-v2.jsonl",
+    "/root/v14/soak-24h-v2-memory.log",
+    "/root/v14/soak-24h-v2.log"
+  ],
+  "status": "RUNNING",
+  "note": "Corrected continuous 24h soak after the first attempt finished at 22h39m57s. This run samples memory every cycle; do not judge PASS until expected_end_at + log review."
+}

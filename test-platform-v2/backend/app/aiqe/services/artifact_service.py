@@ -290,6 +290,7 @@ def put_artifact(
     node_run_id: str | None = None,
     step_attempt_id: str | None = None,
     metadata: dict[str, Any] | None = None,
+    redaction_status: str = "pending",
     linked_evidence_type: str | None = None,
     linked_evidence_id: str | None = None,
     storage: ArtifactStorageBackend | None = None,

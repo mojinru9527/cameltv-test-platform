@@ -1,0 +1,62 @@
+{
+  "run": {
+    "id": "e8e47679-2def-4bf8-9c0d-5f4dbceaeca3",
+    "status": "COMPLETED",
+    "outcome": "PASS",
+    "workflow_id": "bdeff72d-9cfd-4b3a-87f4-fcca18f4b2f7",
+    "build_ref": "prod-m6-no-ui",
+    "commit": "3582a0696"
+  },
+  "nodes": [
+    {
+      "key": "sports_api",
+      "driver": "http",
+      "status": "PASSED",
+      "error": "",
+      "attempts": [
+        {
+          "status": "PASSED",
+          "assertions": [
+            {
+              "key": "sports_api_status",
+              "type": "http_status",
+              "status": "PASS",
+              "expected": 200,
+              "actual": 200,
+              "error": ""
+            },
+            {
+              "key": "sports_api_region",
+              "type": "jsonpath",
+              "status": "PASS",
+              "expected": "CN",
+              "actual": "CN",
+              "error": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "android_mqtt",
+      "driver": "external_e2e",
+      "status": "PASSED",
+      "error": "",
+      "attempts": [
+        {
+          "status": "PASSED",
+          "assertions": [
+            {
+              "key": "android_mqtt_result",
+              "type": "jsonpath",
+              "status": "PASS",
+              "expected": "PASS",
+              "actual": "PASS",
+              "error": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

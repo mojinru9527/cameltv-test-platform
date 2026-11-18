@@ -70,16 +70,61 @@ export async function approveWorkflow(workflowId: string): Promise<WorkflowSumma
   )) as unknown as WorkflowSummary
 }
 
+export interface LearningCandidate {
+  id: string
+  rule: { pattern?: string; description?: string; [key: string]: unknown }
+  source: string
+  status: 'draft' | 'benchmarked' | 'approved' | 'active' | string
+  benchmark: { false_positive_rate?: number; sample_size?: number } | null
+  duplicate_of: string | null
+  acknowledged: boolean
+  created_at: string
+  updated_at: string
+}
+
+export async function listLearningCandidates(): Promise<LearningCandidate[]> {
+  return (await client.get('/aiqe/learning/candidates')) as unknown as LearningCandidate[]
+}
+
+export async function evaluateLearningCandidate(
+  candidateId: string,
+  body: { false_positive_rate: number; sample_size: number },
+): Promise<LearningCandidate> {
+  return (await client.post(
+    `/aiqe/learning/candidates/${candidateId}/evaluate`,
+    body,
+  )) as unknown as LearningCandidate
+}
+
+export async function approveLearningCandidate(
+  candidateId: string,
+): Promise<LearningCandidate> {
+  return (await client.post(
+    `/aiqe/learning/candidates/${candidateId}/approve`,
+  )) as unknown as LearningCandidate
+}
+
+export async function activateLearningCandidate(
+  candidateId: string,
+): Promise<{ candidate: LearningCandidate; pattern: unknown }> {
+  return (await client.post(
+    `/aiqe/learning/candidates/${candidateId}/activate`,
+  )) as unknown as { candidate: LearningCandidate; pattern: unknown }
+}
+
 // ── batch-338：QualityGate / NoiseRules ──
 
 export interface QualityGateResult {
+  id: string
   gate_status: 'PASS' | 'FAIL' | 'BLOCKED'
   p0_total: number
   p0_passed: number
   p0_failed: number
-  p0_unknown: number
-  p0_not_run: number
+  p0_blocked: number
+  source_ids: string[]
+  rule_version: string
   reasons: string[]
+  immutable: boolean
 }
 
 export interface NoiseRule {
@@ -93,11 +138,10 @@ export interface NoiseRule {
 }
 
 export async function evaluateQualityGate(body: {
-  p0_total: number
-  p0_passed: number
-  p0_failed: number
-  p0_unknown: number
-  p0_not_run: number
+  run_ids?: string[]
+  version_task_id?: number
+  build_ref?: string
+  environment_ref?: string
 }): Promise<QualityGateResult> {
   return (await client.post('/aiqe/admin/quality-gate', body)) as unknown as QualityGateResult
 }
