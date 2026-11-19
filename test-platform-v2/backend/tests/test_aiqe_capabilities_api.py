@@ -379,13 +379,30 @@ def test_platform_binding_with_existing_ac(api: TestClient):
 
 # ── 7. Agent task plan ─────────────────────────────────
 def test_agent_task_plan(api: TestClient):
+    # V16-013：创建 Draft 不得执行 Agent；只返回 plan/hash 与审批要求。
     resp = api.post(f"{BASE}/agent-tasks", json={"goal": "分析体育赛事需求并准备测试"})
     assert resp.status_code == 200, resp.text
     data = resp.json()["data"]
-    assert data["a0_status"] == "COMPLETED"
+    assert data["status"] == "DRAFT"
+    assert data["approval_required"] is True
+    assert data["plan_hash"].startswith("sha256:")
     keys = [task["agent_key"] for task in data["tasks"]]
     assert keys.index("A1") < keys.index("A2") < keys.index("A3")
-    assert data["a0_output"]["note"].startswith("A0 完成只代表")
+
+    # 未审批执行 → 409
+    blocked = api.post(f"{BASE}/agent-tasks/{data['task_id']}/run")
+    assert blocked.status_code == 409
+
+    # 审批后可入队（返回 job_id，不在请求线程执行 Agent）
+    approved = api.post(
+        f"{BASE}/agent-tasks/{data['task_id']}/approve",
+        json={"reason": "approved for test"},
+    )
+    assert approved.status_code == 200, approved.text
+    assert approved.json()["data"]["status"] == "APPROVED"
+    queued = api.post(f"{BASE}/agent-tasks/{data['task_id']}/run")
+    assert queued.status_code == 202, queued.text
+    assert queued.json()["data"]["job_id"]
 
 
 def test_contract_and_case_list_endpoints(api: TestClient):

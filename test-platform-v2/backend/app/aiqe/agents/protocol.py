@@ -28,10 +28,11 @@ AGENT_STATUSES: tuple[str, ...] = (
     "PARTIAL",
     "COMPLETED",
     "FAILED",
+    "BLOCKED",
     "CANCELLED",
 )
 TERMINAL_STATUSES: frozenset[str] = frozenset(
-    {"COMPLETED", "FAILED", "CANCELLED", "WAITING_HUMAN", "PARTIAL"}
+    {"COMPLETED", "FAILED", "BLOCKED", "CANCELLED", "WAITING_HUMAN", "PARTIAL"}
 )
 
 
@@ -115,7 +116,7 @@ class AgentResult:
             raise AgentContractError("agent_version 不能为空")
         if self.status == "COMPLETED" and not self.output:
             raise AgentContractError("COMPLETED 必须有非空 output（空输出不能当成功）")
-        if self.needs_human and self.status not in {"WAITING_HUMAN", "PARTIAL"}:
+        if self.needs_human and self.status not in {"WAITING_HUMAN", "PARTIAL", "BLOCKED"}:
             raise AgentContractError("needs_human=true 时状态必须是 WAITING_HUMAN/PARTIAL")
         if self.status == "WAITING_HUMAN" and not self.needs_human:
             raise AgentContractError("WAITING_HUMAN 必须 needs_human=true")

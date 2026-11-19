@@ -1,17 +1,17 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "1497b27478e1a64bd3c9857dffbc67774faa6993",
+  "commit_sha": "2a64da0cfb9a3d2699632505c99045880f17a36e",
   "ci_run": "",
   "environment": "local",
   "baseline": {
     "main_sha": "86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f",
     "audit_snapshot_sha": "86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f",
-    "migration_head": "20261119_v16_010_learning_gate"
+    "migration_head": "20261119_v16_013_agent_task"
   },
   "summary": {
-    "requirements": 57,
-    "verified": 31,
+    "requirements": 59,
+    "verified": 34,
     "blocked": 2,
     "not_started": 10
   },
@@ -1137,28 +1137,97 @@
       "id": "V16-013-R1",
       "issue": "V16-013",
       "priority": "P1",
-      "status": "PARTIAL",
-      "owner": "ai-agent",
+      "status": "VERIFIED",
+      "owner": "ai-quality",
       "reviewer": "pending",
       "production_entry": [
-        "POST /aiqe/automation/agent-tasks"
+        "POST /api/v1/aiqe/agent-tasks",
+        "POST /api/v1/aiqe/agent-tasks/{id}/approve"
       ],
       "tests": {
-        "success": [],
-        "negative": [],
+        "success": [
+          "tests/test_aiqe_v16_013_agent_task.py::test_approval_records_identity_and_rejects_plan_change"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_013_agent_task.py::test_draft_does_not_execute_agent",
+          "tests/test_aiqe_v16_013_agent_task.py::test_cross_project_task_hidden",
+          "tests/test_aiqe_v16_013_agent_task.py::test_cancel_and_terminal_rules"
+        ],
         "boundary": [],
         "concurrency": []
       },
       "layers": [
-        "L1"
+        "L1",
+        "L2",
+        "L3"
       ],
       "evidence": [
-        "ci:baseline-audit-G6"
+        "pytest:tests/test_aiqe_v16_013_agent_task.py (9 passed)"
       ],
-      "gaps": [
-        "无 AgentTask 持久化/审批/approve/run 路由；run_plan 零生产调用。",
-        "工具表默认空；无取消/审批撤销/真实重试。"
-      ]
+      "gaps": []
+    },
+    {
+      "id": "V16-013-R2",
+      "issue": "V16-013",
+      "priority": "P1",
+      "status": "VERIFIED",
+      "owner": "ai-quality",
+      "reviewer": "pending",
+      "production_entry": [
+        "orchestrator.run_plan"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_013_agent_task.py::test_approved_run_executes_every_plan_node"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_013_agent_task.py::test_agent_failure_does_not_mark_task_completed",
+          "tests/test_aiqe_v16_013_agent_task.py::test_a4_without_resolver_blocks_agent_task"
+        ],
+        "boundary": [],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_013_agent_task.py (9 passed)"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "V16-013-R3",
+      "issue": "V16-013",
+      "priority": "P1",
+      "status": "VERIFIED",
+      "owner": "ai-quality",
+      "reviewer": "pending",
+      "production_entry": [
+        "POST /api/v1/aiqe/agent-tasks/{id}/run"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_013_agent_task.py::test_enqueue_and_execute_job"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_013_agent_task.py::test_cancel_and_terminal_rules"
+        ],
+        "boundary": [
+          "tests/test_aiqe_capabilities_api.py::test_agent_task_plan"
+        ],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_013_agent_task.py (9 passed)",
+        "pytest:tests/test_aiqe_capabilities_api.py::test_agent_task_plan"
+      ],
+      "gaps": []
     },
     {
       "id": "V16-014-R1",

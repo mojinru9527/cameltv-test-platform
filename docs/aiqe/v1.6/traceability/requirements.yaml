@@ -3,7 +3,7 @@ release: aiqe-v1.6
 baseline:
   main_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
   audit_snapshot_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
-  migration_head: 20261119_v16_010_learning_gate
+  migration_head: 20261119_v16_013_agent_task
   branch: release/aiqe-v1-6
   audit_reports:
     - docs/aiqe/v1.6/_audit/baseline-audit-G1-G3.txt
@@ -1173,36 +1173,106 @@ requirements:
     reviewer: pending
     gaps: []
 
-  # ── V16-013 A0 Draft→Approval→run_plan（P1，基线 PARTIAL）───
+  # ── V16-013 A0 Draft→Approval→run_plan（P1）────────────────
   - id: V16-013-R1
     issue: V16-013
     priority: P1
-    title: "A0 AgentTask 持久化 + 审批 + run_plan 真实执行"
-    requirement: "AgentTask/Execution/StepExecution 持久化；Draft 不执行；未审批 run 返回 403/409；审批后经统一 Job/Outbox 执行 run_plan 并记录每个 Agent 证据。"
-    invariant: "未审批不得执行；失败 Agent 不得标 COMPLETED；工具调用/审批/取消全程可追溯。"
-    status: PARTIAL
+    title: "持久化 AgentTask 与审批状态机"
+    requirement: "POST /agent-tasks 持久化 plan/plan_hash/input refs 并返回 DRAFT；未审批 run 返回 409；approve 校验 plan hash 未变、证据可解析并记录 approved_by/approved_at；取消/终态/跨项目规则明确。"
+    invariant: "Draft 不执行 Agent；审批后计划不可静默变化。"
+    status: VERIFIED
     code:
-      - path: test-platform-v2/backend/app/api/v1/aiqe_automation.py
-        symbol: "agent task endpoints"
-        change: unchanged
-      - path: test-platform-v2/backend/app/aiqe/agents/orchestrator.py
-        symbol: "run_plan / _persist_execution"
-        change: unchanged
       - path: test-platform-v2/backend/app/aiqe/models/agent.py
-        symbol: "AgentExecution"
-        change: unchanged
+        symbol: "AgentTask"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/services/agent_task_service.py
+        symbol: "create/submit/approve/cancel"
+        change: added
+      - path: test-platform-v2/backend/app/api/v1/aiqe_automation.py
+        symbol: "agent-tasks 创建/审批/取消"
+        change: modified
+      - path: test-platform-v2/backend/alembic/versions/20261119_v16_013_agent_task.py
+        symbol: "upgrade/downgrade"
+        change: added
     production_entry:
-      - "POST /aiqe/automation/agent-tasks"
-    tests: {}
-    mock_boundary: ""
-    layers: [L1]
+      - "POST /api/v1/aiqe/agent-tasks"
+      - "POST /api/v1/aiqe/agent-tasks/{id}/approve"
+    tests:
+      success:
+        - tests/test_aiqe_v16_013_agent_task.py::test_approval_records_identity_and_rejects_plan_change
+      negative:
+        - tests/test_aiqe_v16_013_agent_task.py::test_draft_does_not_execute_agent
+        - tests/test_aiqe_v16_013_agent_task.py::test_cross_project_task_hidden
+        - tests/test_aiqe_v16_013_agent_task.py::test_cancel_and_terminal_rules
+    mock_boundary: "真实 DB/状态机；无 Mock。"
+    layers: [L1, L2, L3]
     evidence:
-      - "ci:baseline-audit-G6"
-    owner: ai-agent
+      - "pytest:tests/test_aiqe_v16_013_agent_task.py (9 passed)"
+    owner: ai-quality
     reviewer: pending
-    gaps:
-      - "无 AgentTask 持久化/审批/approve/run 路由；run_plan 零生产调用。"
-      - "工具表默认空；无取消/审批撤销/真实重试。"
+    gaps: []
+
+  - id: V16-013-R2
+    issue: V16-013
+    priority: P1
+    title: "审批后真实执行 run_plan 与失败语义"
+    requirement: "run_task 通过 orchestrator.run_plan 执行，每个 Plan 节点写 AgentExecution（版本/prompt/model/tool/token/证据）；任一必需 Agent 失败 → Task 不得 COMPLETED，下游 CANCELLED；A4 无 resolver → BLOCKED。"
+    invariant: "Task COMPLETED 必须所有 Plan 节点 COMPLETED。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/agent_task_service.py
+        symbol: "run_task / _result_payload"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/agents/protocol.py
+        symbol: "AGENT_STATUSES + BLOCKED"
+        change: modified
+    production_entry:
+      - "orchestrator.run_plan"
+    tests:
+      success:
+        - tests/test_aiqe_v16_013_agent_task.py::test_approved_run_executes_every_plan_node
+      negative:
+        - tests/test_aiqe_v16_013_agent_task.py::test_agent_failure_does_not_mark_task_completed
+        - tests/test_aiqe_v16_013_agent_task.py::test_a4_without_resolver_blocks_agent_task
+    mock_boundary: "真实 run_plan/AgentExecution 持久化；执行器为测试注入（不伪造 PASS）。"
+    layers: [L1, L2, L3]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_013_agent_task.py (9 passed)"
+    owner: ai-quality
+    reviewer: pending
+    gaps: []
+
+  - id: V16-013-R3
+    issue: V16-013
+    priority: P1
+    title: "Outbox + ExecutionJob 异步执行入口"
+    requirement: "审批后 run 不在 HTTP 线程同步执行：写 ExecutionJob + Outbox 事件并返回 202 job_id；Worker 入口 execute_task_job 幂等执行并回写 Job 终态。"
+    invariant: "长任务不得阻塞请求线程；Job 与 Task 状态一致。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/agent_task_service.py
+        symbol: "enqueue_task_job / execute_task_job"
+        change: added
+      - path: test-platform-v2/backend/app/api/v1/aiqe_automation.py
+        symbol: "POST /agent-tasks/{id}/run 202"
+        change: modified
+    production_entry:
+      - "POST /api/v1/aiqe/agent-tasks/{id}/run"
+    tests:
+      success:
+        - tests/test_aiqe_v16_013_agent_task.py::test_enqueue_and_execute_job
+      negative:
+        - tests/test_aiqe_v16_013_agent_task.py::test_cancel_and_terminal_rules
+      boundary:
+        - tests/test_aiqe_capabilities_api.py::test_agent_task_plan
+    mock_boundary: "真实 DB + Outbox + ExecutionJob；执行器测试注入。"
+    layers: [L1, L2]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_013_agent_task.py (9 passed)"
+      - "pytest:tests/test_aiqe_capabilities_api.py::test_agent_task_plan"
+    owner: ai-quality
+    reviewer: pending
+    gaps: []
 
   # ── V16-014 A5 Change Impact（P1，基线 PARTIAL）─────────────
   - id: V16-014-R1
