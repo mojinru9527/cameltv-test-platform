@@ -14,7 +14,12 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
-from app.aiqe.agents.base import AgentSchemaError, AgentUnavailable, BaseAgent
+from app.aiqe.agents.base import (
+    AgentEvidenceError,
+    AgentSchemaError,
+    AgentUnavailable,
+    BaseAgent,
+)
 
 AGENT_STATUSES: tuple[str, ...] = (
     "QUEUED",
@@ -177,7 +182,21 @@ class BaseAgentAdapter:
     def execute(self, context: AgentContext, request: str) -> AgentResult:
         input_hash = stable_hash(request)
         try:
-            output = self._agent.run(request)
+            output = self._agent.run(request, context=context)
+        except AgentEvidenceError as exc:
+            # V16-012：证据不可采信 → BLOCKED，不得降级为 COMPLETED。
+            return AgentResult(
+                agent_key=self.key,
+                agent_version=self.version,
+                status="BLOCKED",
+                model_provider=self.provider,
+                model_name=self.model,
+                prompt_version=stable_hash(self._agent.system_prompt),
+                input_hash=input_hash,
+                error_code="INVALID_EVIDENCE",
+                warnings=[str(exc)],
+                needs_human=True,
+            )
         except AgentUnavailable as exc:
             return AgentResult(
                 agent_key=self.key,

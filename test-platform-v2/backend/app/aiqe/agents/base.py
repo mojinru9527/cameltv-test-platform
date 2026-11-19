@@ -1,8 +1,10 @@
 """M3 / TA-019：Agent 基类（schema 严格校验 + Key 缺失 fail-closed）。"""
 from __future__ import annotations
 
+import inspect
 import json
 from collections.abc import Callable
+from typing import Any
 
 
 class AgentUnavailable(RuntimeError):
@@ -11,6 +13,18 @@ class AgentUnavailable(RuntimeError):
 
 class AgentSchemaError(ValueError):
     """模型输出不符合约定 schema。"""
+
+    code = "SCHEMA_INVALID"
+
+
+class AgentEvidenceError(AgentSchemaError):
+    """V16-012：证据 resolver 缺失/无效/跨项目 → 输出不可采信。"""
+
+    code = "INVALID_EVIDENCE"
+
+    def __init__(self, message: str, *, reason: str = "INVALID_EVIDENCE") -> None:
+        super().__init__(message)
+        self.reason = reason
 
 
 class BaseAgent:
@@ -53,5 +67,23 @@ class BaseAgent:
     def validate(self, data: dict) -> dict:
         raise NotImplementedError
 
-    def run(self, input_text: str) -> dict:
-        return self.validate(self.parse_json(self._call(input_text)))
+    def run(self, input_text: str, *, context: Any = None) -> dict:
+        """V16-012：把 AgentContext.evidence_resolver 透传给需要的 Agent。
+
+        仅当 validate 显式声明 ``evidence_resolver`` 参数时才传递，避免破坏
+        其他 Agent 的既有签名；resolver 缺失由 A4 自己 fail-closed。
+        """
+        data = self.parse_json(self._call(input_text))
+        resolver = getattr(context, "evidence_resolver", None) if context is not None else None
+        params = inspect.signature(self.validate).parameters
+        if "evidence_resolver" in params:
+            return self.validate(data, evidence_resolver=resolver)  # type: ignore[call-arg]
+        return self.validate(data)
+
+
+__all__ = [
+    "AgentEvidenceError",
+    "AgentSchemaError",
+    "AgentUnavailable",
+    "BaseAgent",
+]
