@@ -118,6 +118,28 @@ def _register_node(client: httpx.Client, token: str, project_id: int, node_id: s
     return resp.json()["data"]["token"]
 
 
+def _capability_heartbeat(
+    client: httpx.Client, headers: dict[str, str], node_id: str
+) -> dict:
+    """刷新节点能力心跳；manifest 缺失/令牌失效时只记录，不退出 Runner。"""
+    try:
+        resp = client.post(f"/api/v1/aiqe/nodes/{node_id}/heartbeat", headers=headers)
+    except Exception as exc:  # noqa: BLE001 - 平台故障按可恢复处理
+        return {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
+    if resp.status_code == 404:
+        return {
+            "status": "manifest_missing",
+            "hint": "运维需先执行 capability_registry.register_manifest + mark_verified",
+        }
+    if resp.status_code == 401:
+        return {"status": "unauthorized", "hint": "节点令牌无效或已撤销"}
+    if resp.status_code == 409:
+        return {"status": "conflict", "detail": resp.text[:300]}
+    if resp.status_code >= 400:
+        return {"status": "http_error", "code": resp.status_code, "detail": resp.text[:300]}
+    return dict(resp.json().get("data") or {})
+
+
 def _claim(client: httpx.Client, headers: dict[str, str], node_id: str) -> dict | None:
     resp = client.post(
         "/api/v1/execution-jobs/claim", headers=headers, json={"node_id": node_id}
@@ -270,6 +292,12 @@ def main() -> int:
     parser.add_argument("--interval", type=float, default=3.0)
     parser.add_argument("--max-iterations", type=int, default=0)
     parser.add_argument("--no-evidence", action="store_true")
+    parser.add_argument(
+        "--capability-heartbeat-interval",
+        type=float,
+        default=15.0,
+        help="节点能力心跳间隔（秒，应小于平台 30s TTL）",
+    )
     args = parser.parse_args()
 
     with httpx.Client(base_url=args.base_url.rstrip("/"), timeout=120, trust_env=False) as client:
@@ -290,8 +318,15 @@ def main() -> int:
             "X-Project-Id": str(args.project_id),
         }
         print(json.dumps({"node_id": args.node_id, "base_url": args.base_url}), flush=True)
+        heartbeat_interval = max(1.0, float(args.capability_heartbeat_interval))
+        last_heartbeat = 0.0
         iterations = 0
         while True:
+            now = time.monotonic()
+            if now - last_heartbeat >= heartbeat_interval:
+                heartbeat = _capability_heartbeat(client, headers, args.node_id)
+                print(json.dumps({"capability_heartbeat": heartbeat}, ensure_ascii=False), flush=True)
+                last_heartbeat = now
             try:
                 report = run_once(
                     client, headers, args.node_id, upload_evidence=not args.no_evidence
