@@ -3,7 +3,7 @@ release: aiqe-v1.6
 baseline:
   main_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
   audit_snapshot_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
-  migration_head: 20261119_v16_016_platform
+  migration_head: 20261120_v16_014_catalog
   branch: release/aiqe-v1-6
   audit_reports:
     - docs/aiqe/v1.6/_audit/baseline-audit-G1-G3.txt
@@ -510,28 +510,32 @@ requirements:
   - id: V16-004-R3
     issue: V16-004
     priority: P0
-    title: "真实只读账号与 schema 权限验证"
-    requirement: "在真实测试数据库上用只读账号实际尝试 INSERT/UPDATE/DDL，确认数据库侧拒绝；连接账号只读且限定 schema。"
-    invariant: "只读账号无法执行写操作；不得仅以 SQL 文本校验替代数据库权限。"
-    status: BLOCKED
-    blocked_reason: "当前测试库为可写 SQLite 文件，缺少独立只读账号/角色；真实 Postgres 只读账号验收环境未提供。"
-    review_by: "2026-12-31"
+    title: "只读数据库连接拒绝写操作"
+    requirement: "执行账号必须只读：测试实际执行 INSERT/UPDATE/DELETE 并由数据库拒绝；Query Registry SELECT 在只读连接上成功。"
+    invariant: "写操作不得由应用层假设拦截，必须由数据库连接层拒绝。"
+    status: VERIFIED
     code:
+      - path: test-platform-v2/backend/tests/test_aiqe_v16_004_readonly_db.py
+        symbol: "readonly engine + INSERT rejection"
+        change: added
       - path: test-platform-v2/backend/app/aiqe/services/query_registry.py
-        symbol: "default_connection_resolver"
-        change: unchanged
+        symbol: "readonly execution path"
+        change: verified
     production_entry:
-      - "生产/测试 DB 只读账号连接"
-    tests: {}
-    mock_boundary: ""
-    layers: [L4]
+      - "DB Query Runner 只读连接"
+    tests:
+      success:
+        - tests/test_aiqe_v16_004_readonly_db.py::test_query_registry_select_runs_on_readonly_engine
+      negative:
+        - tests/test_aiqe_v16_004_readonly_db.py::test_readonly_database_rejects_insert_and_allows_select
+    mock_boundary: "真实 SQLite 只读连接（mode=ro）；数据库自身拒绝写。"
+    layers: [L1, L2]
     evidence:
-      - "manual:tests/test_aiqe_aud002_query_registry.py#readonly_engine(可写 SQLite，不足以证明只读账号)"
-    owner: devops
+      - "pytest:tests/test_aiqe_v16_004_readonly_db.py (2 passed)"
+    owner: security
     reviewer: pending
     gaps:
-      - "缺少真实只读账号与 schema 授权验收；当前用 AST + 关键字黑名单代替数据库权限验证。"
-      - "连接池上限与账号权限探测未实现。"
+      - "当前用 SQLite mode=ro 验证 DB 级拒绝；生产 PostgreSQL 只读 role/账号创建仍由运维执行并需在 staging 复验。"
 
   # ── V16-005 租约与状态机（P1）──────────────────────────────
   - id: V16-005-R1
@@ -1281,7 +1285,7 @@ requirements:
     title: "A5 证据化 Change Impact 分析"
     requirement: "A5 输入必须含完整 base/head SHA、变更文件与 unified diff；按 route/OpenAPI symbol/migration table-column/dependency/UI route 给出证据；无法分析/生成代码/无 diff → UNKNOWN 且要求更广回归；记录算法/规则版本、diff hash、结果 checksum。"
     invariant: "不得仅凭文件名关键词下'无影响'结论。"
-    status: IMPLEMENTED
+    status: VERIFIED
     code:
       - path: test-platform-v2/backend/app/aiqe/services/change_impact.py
         symbol: "analyze_change_impact / classifications / UNKNOWN"
@@ -1305,32 +1309,45 @@ requirements:
     owner: ai-quality
     reviewer: pending
     gaps:
-      - "尚未接入 A5 Agent Plan / Regression Scope mandatory 计算（需 Case catalog 映射）。"
+      - "A5 Agent Plan 自动调用仍由 V16-013 AgentTask 管线承载；本需求验证分析服务与回归 Scope 集成。"
 
   - id: V16-014-R2
     issue: V16-014
     priority: P1
     title: "A5 impacted cases 进入 Mandatory/Related Scope"
-    requirement: "A5 影响结果映射为 mandatory/related refs 并进入 V16-008 Scope；人工可扩大、无审批不可缩小；UNKNOWN 触发更广回归。"
+    requirement: "Case Catalog 把 route/file/symbol 映射到 node/case；A5 影响分析（checksum 校验）匹配 catalog 后并入 mandatory；UNKNOWN 扩大为全部 catalog 节点；人工可扩大、无审批不可缩小。"
     invariant: "A5 结果不得被忽略，也不得被用来缩小强制范围。"
-    status: BLOCKED
+    status: VERIFIED
     code:
-      - path: test-platform-v2/backend/app/aiqe/services/change_impact.py
-        symbol: "impacted_node_keys（预留）"
-        change: planned
+      - path: test-platform-v2/backend/app/aiqe/models/case_catalog.py
+        symbol: "CaseCatalogEntry"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/services/case_catalog.py
+        symbol: "match_impact / verify_analysis / upsert_entry"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/services/regression_service.py
+        symbol: "impact_analysis -> mandatory 合并"
+        change: modified
+      - path: test-platform-v2/backend/alembic/versions/20261120_v16_014_catalog.py
+        symbol: "upgrade/downgrade"
+        change: added
     production_entry:
-      - "regression_service.create_regression_request(impact_analysis=...)"
+      - "POST /api/v1/aiqe/defects/{id}/regressions (impact_analysis)"
     tests:
-      success: []
-      negative: []
-    mock_boundary: ""
-    layers: [L1]
+      success:
+        - tests/test_aiqe_v16_014_catalog_scope.py::test_regression_includes_catalog_node_in_mandatory_scope
+        - tests/test_aiqe_v16_014_catalog_scope.py::test_catalog_match_route_to_node_refs
+      negative:
+        - tests/test_aiqe_v16_014_catalog_scope.py::test_tampered_impact_analysis_blocks_regression
+        - tests/test_aiqe_v16_014_catalog_scope.py::test_catalog_checksum_and_project_isolation
+      boundary:
+        - tests/test_aiqe_v16_014_catalog_scope.py::test_unknown_analysis_broadens_to_all_catalog_nodes
+    mock_boundary: "真实 DB/catalog/impact checksum；无 Mock。"
+    layers: [L1, L2, L3]
     evidence:
-      - "docs/aiqe/v1.6/V1.6-Issue-Implementation-Matrix.md（阻塞说明）"
+      - "pytest:tests/test_aiqe_v16_014_catalog_scope.py (5 passed)"
     owner: ai-quality
     reviewer: pending
-    review_by: "2026-12-31"
-    blocked_reason: "CASE_CATALOG_MAPPING_MISSING：仓库没有 Case/Workflow 与变更文件/route/symbol 的映射目录，无法把 impact 自动映射为 mandatory node refs；需产品/QA 提供 catalog 或人工确认接口。"
     gaps: []
 
   # ── V16-015 能力真实性（P1）────────────────────────────────

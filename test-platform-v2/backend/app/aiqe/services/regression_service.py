@@ -16,6 +16,7 @@ import hashlib
 import json
 import re
 from datetime import UTC, datetime
+from collections.abc import Mapping
 from typing import Any
 
 from sqlalchemy import select
@@ -268,6 +269,7 @@ def create_regression_request(
     reason: str = "",
     idempotency_key: str | None = None,
     actor_id: int | None = None,
+    impact_analysis: Mapping[str, Any] | None = None,
 ) -> tuple[DefectRegression, TestRun | None, bool]:
     """返回 ``(regression, verification_run, created)``；BLOCKED 时 run 为 None。"""
     sha = normalize_sha(fixed_sha)
@@ -298,6 +300,38 @@ def create_regression_request(
     )
     scope_plan: dict[str, Any] | None = None
     blockers_scope_error: dict[str, str] | None = None
+    impact_meta: dict[str, Any] | None = None
+    impact_error: dict[str, str] | None = None
+    if impact_analysis is not None:
+        from app.aiqe.services.case_catalog import (
+            CaseCatalogError,
+            match_impact,
+            verify_analysis,
+        )
+
+        try:
+            verify_analysis(impact_analysis)
+            graph_keys = {
+                str(node.get("key"))
+                for node in (frozen.canonical_json if frozen is not None else {}).get("nodes") or []
+            }
+            matched = match_impact(
+                db,
+                project_id=int(project_id),
+                impact_analysis=impact_analysis,
+                allowed_node_keys=graph_keys,
+            )
+            mandatory = sorted(set(mandatory) | set(matched["node_refs"]))
+            impact_meta = {
+                "status": matched["status"],
+                "checksum": impact_analysis.get("checksum"),
+                "matched_case_ids": matched["matched_case_ids"],
+                "node_refs": matched["node_refs"],
+                "catalog_size": matched["catalog_size"],
+                "unknown_broadened": matched["unknown_broadened"],
+            }
+        except CaseCatalogError as exc:
+            impact_error = {"code": "IMPACT_ANALYSIS_INVALID", "message": str(exc)}
     scope_hash = _scope_hash(scope, mandatory, list(selected_case_ids or []))
     if frozen is not None:
         try:
@@ -325,6 +359,8 @@ def create_regression_request(
         blockers_scope_error = None
 
     blockers: list[dict[str, Any]] = []
+    if impact_error is not None:
+        blockers.append(impact_error)
     if blockers_scope_error is not None:
         blockers.append(blockers_scope_error)
     deployed_sha = resolve_deployed_sha(
@@ -450,6 +486,7 @@ def create_regression_request(
             "scope_hash": scope_hash,
             "mandatory_case_ids": mandatory,
             "regression_id": row.id,
+            "impact_analysis": impact_meta,
         },
     )
     run = db.get(TestRun, launch_result.run_id)
