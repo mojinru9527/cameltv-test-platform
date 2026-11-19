@@ -74,7 +74,7 @@ function Build-Images {
 
 function Upload-Artifacts {
     param([string]$Tag)
-    Invoke-Step "上传镜像 tar 到 $UserName@$HostName:$ReleaseDir"
+    Invoke-Step "上传镜像 tar 到 $UserName@${HostName}:$ReleaseDir"
     $ssh = @{
         KeyPath = $KeyPath
         HostName = $HostName
