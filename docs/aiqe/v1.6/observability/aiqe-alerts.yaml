@@ -1,0 +1,156 @@
+groups:
+  - name: aiqe-security
+    rules:
+      - alert: AIQESecretCanaryDetected
+        expr: increase(aiqe_secret_canary_detected_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: P0
+          page: security
+        annotations:
+          summary: "Secret Canary 明文命中（必须为 0）"
+          action: "停止相关 Worker，隔离数据并启动密钥轮换"
+      - alert: AIQETargetPolicyDeniedSurge
+        expr: sum(rate(aiqe_target_policy_denied_total[5m])) > 5
+        for: 10m
+        labels:
+          severity: P1
+        annotations:
+          summary: "TargetPolicy 拒绝率异常上升"
+      - alert: AIQETargetPolicyUnavailable
+        expr: sum(rate(aiqe_target_policy_unavailable_total[5m])) > 0
+        for: 5m
+        labels:
+          severity: P0
+        annotations:
+          summary: "TargetPolicy 不可用；必须阻断新执行，不得降级旧路径"
+      - alert: AIQESSRFBlocked
+        expr: increase(aiqe_ssrf_blocked_total[10m]) > 0
+        for: 0m
+        labels:
+          severity: P1
+        annotations:
+          summary: "SSRF 拦截发生，检查目标策略与 runner egress"
+      - alert: AIQESecretHandleResolveDenied
+        expr: increase(aiqe_secret_handle_resolve_denied_total[10m]) > 0
+        for: 0m
+        labels:
+          severity: P1
+        annotations:
+          summary: "Secret Handle 越权/过期解析被拒绝"
+      - alert: AIQECrossProjectAccessDenied
+        expr: increase(aiqe_cross_project_access_denied_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: P0
+        annotations:
+          summary: "出现跨项目访问尝试；成功事件视为 P0 安全事件"
+      - alert: AIQEDbQueryPolicyDenied
+        expr: increase(aiqe_db_query_policy_denied_total[10m]) > 0
+        for: 0m
+        labels:
+          severity: P1
+        annotations:
+          summary: "DB Query Policy 拒绝；检查 Query Registry/租户谓词"
+  - name: aiqe-execution
+    rules:
+      - alert: AIQERunQueuedTooLong
+        expr: max(aiqe_run_queued_age_seconds) > 300
+        for: 5m
+        labels:
+          severity: P1
+        annotations:
+          summary: "Run 在 QUEUED 超过 5 分钟"
+      - alert: AIQEJobPendingTooLong
+        expr: max(aiqe_job_pending_age_seconds) > 300
+        for: 5m
+        labels:
+          severity: P1
+        annotations:
+          summary: "Job pending 超过 5 分钟，检查 Worker/队列"
+      - alert: AIQEJobLeaseExpired
+        expr: increase(aiqe_job_lease_expired_total[10m]) > 0
+        for: 0m
+        labels:
+          severity: P1
+        annotations:
+          summary: "Worker lease 过期；暂停自动回归/Noise 实验并检查 Worker"
+      - alert: AIQEJobFencingRejected
+        expr: increase(aiqe_job_fencing_rejected_total[10m]) > 0
+        for: 0m
+        labels:
+          severity: P1
+        annotations:
+          summary: "迟到结果被 fencing 拒绝；确认无状态回退"
+      - alert: AIQERunWithoutJob
+        expr: increase(aiqe_run_without_job_total[10m]) > 0
+        for: 0m
+        labels:
+          severity: P1
+        annotations:
+          summary: "QUEUED Run 没有 Job；Reconciler 必须收敛"
+      - alert: AIQERunTerminalLatency
+        expr: histogram_quantile(0.95, sum(rate(aiqe_run_terminal_latency_seconds_bucket[15m])) by (le)) > 1800
+        for: 15m
+        labels:
+          severity: P2
+        annotations:
+          summary: "Run 终态延迟 p95 超过 30 分钟"
+      - alert: AIQENodeWithoutAssertion
+        expr: increase(aiqe_node_without_assertion_total[30m]) > 0
+        for: 0m
+        labels:
+          severity: P1
+        annotations:
+          summary: "Run PASS 但存在无 required assertion 的节点"
+      - alert: AIQEReconcilerRepairSurge
+        expr: increase(aiqe_reconciler_repair_total[15m]) > 10
+        for: 5m
+        labels:
+          severity: P2
+        annotations:
+          summary: "Reconciler 修复次数异常，检查悬挂状态"
+  - name: aiqe-agent-learning
+    rules:
+      - alert: AIQEAgentTaskFailure
+        expr: increase(aiqe_agent_task_failure_total[15m]) > 3
+        for: 5m
+        labels:
+          severity: P1
+        annotations:
+          summary: "AgentTask 失败率异常"
+      - alert: AIQEAgentToolUnavailable
+        expr: increase(aiqe_agent_tool_unavailable_total[30m]) > 0
+        for: 0m
+        labels:
+          severity: P2
+        annotations:
+          summary: "Agent Plan 尝试使用 UNAVAILABLE 工具"
+      - alert: AIQEAgentInvalidEvidence
+        expr: increase(aiqe_agent_invalid_evidence_total[15m]) > 0
+        for: 0m
+        labels:
+          severity: P1
+        annotations:
+          summary: "A4 证据校验失败；结论不可采信"
+      - alert: AIQEBenchmarkGateRejected
+        expr: increase(aiqe_benchmark_gate_rejected_total[1h]) > 0
+        for: 0m
+        labels:
+          severity: P2
+        annotations:
+          summary: "Benchmark gate 拒绝候选（正常但需观察）"
+      - alert: AIQELearningPublishedWithoutGate
+        expr: increase(aiqe_learning_publish_total[10m]) > 0 unless on() (increase(aiqe_benchmark_gate_rejected_total[10m]) >= 0)
+        for: 0m
+        labels:
+          severity: P1
+        annotations:
+          summary: "Learning 发布事件；核对 gate 记录"
+      - alert: AIQELearningRollback
+        expr: increase(aiqe_learning_rollback_total[10m]) > 0
+        for: 0m
+        labels:
+          severity: P1
+        annotations:
+          summary: "Learning 回滚发生，立即核对已发布规则"

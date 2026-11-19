@@ -197,6 +197,15 @@ class BoundToolRegistry(ToolRegistry):
             raise ToolNotAllowed(str(agent_key), tool_name)
         spec = self.spec(tool_name)
         if not spec.available:
+            try:
+                from app.aiqe.observability.metrics import metrics
+
+                metrics.inc(
+                    "aiqe_agent_tool_unavailable_total",
+                    {"project_id": self._project_id, "tool": tool_name},
+                )
+            except Exception:
+                pass
             raise ToolUnavailable(f"工具无真实实现: {tool_name}")
         return self._wrap(str(agent_key), spec)
 

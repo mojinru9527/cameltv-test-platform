@@ -31,6 +31,7 @@ from app.api.v1 import (
     aiqe_insights,
     aiqe_nodes,
     aiqe_learning,
+    aiqe_metrics,
     aiqe_platform,
     aiqe_regressions,
     aiqe_runs,
@@ -109,6 +110,7 @@ api_router.include_router(aiqe_insights.router)
 api_router.include_router(aiqe_automation.router)
 api_router.include_router(aiqe_nodes.router)
 api_router.include_router(aiqe_admin.router)
+api_router.include_router(aiqe_metrics.router)
 api_router.include_router(aiqe_workflows.router)
 api_router.include_router(aiqe_platform.router)
 api_router.include_router(aiqe_regressions.router)

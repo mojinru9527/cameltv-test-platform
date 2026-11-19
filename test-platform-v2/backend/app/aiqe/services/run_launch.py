@@ -252,6 +252,13 @@ def launch_run(
             "SCOPE_SNAPSHOT_REQUIRED", "Defect Regression 必须携带服务端 Scope Snapshot"
         )
 
+    try:
+        from app.aiqe.observability.rate_limits import RateLimited, enforce
+
+        enforce("launch", project_id=project_id)
+    except RateLimited as exc:
+        raise LaunchError("RATE_LIMITED", str(exc)) from exc
+
     if launch_key:
         existing = db.scalar(
             select(TestRun).where(

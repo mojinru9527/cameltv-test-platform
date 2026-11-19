@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "b397242051c207eeae72117d4fc227a6a97c9966",
+  "commit_sha": "f0d8ff586f291b922c198b2def48787f43093c61",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -10,9 +10,9 @@
     "migration_head": "20261119_v16_016_platform"
   },
   "summary": {
-    "requirements": 67,
-    "verified": 49,
-    "blocked": 3,
+    "requirements": 69,
+    "verified": 51,
+    "blocked": 4,
     "not_started": 10
   },
   "requirements": [
@@ -1793,11 +1793,75 @@
       "id": "V16-024-R1",
       "issue": "V16-024",
       "priority": "P0",
-      "status": "PARTIAL",
+      "status": "VERIFIED",
       "owner": "devops",
       "reviewer": "pending",
       "production_entry": [
-        "生产部署与监控平台"
+        "GET /api/v1/aiqe/metrics"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_024_production.py::test_metrics_registry_low_cardinality_and_render",
+          "tests/test_aiqe_v16_024_production.py::test_alert_rules_cover_required_metrics"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_024_production.py::test_metrics_endpoint_token_and_production_fail_closed",
+          "tests/test_aiqe_v16_024_production.py::test_alert_validator_rejects_missing_metric_or_bad_severity"
+        ],
+        "boundary": [],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_024_production.py (8 passed)",
+        "scripts/aiqe/check_alerts.py: alerts=21 metrics=21"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "V16-024-R2",
+      "issue": "V16-024",
+      "priority": "P0",
+      "status": "VERIFIED",
+      "owner": "devops",
+      "reviewer": "pending",
+      "production_entry": [
+        "run_launch.launch_run -> enforce('launch')",
+        "Prometheus scrape"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_024_production.py::test_container_egress_policy_deny_by_default",
+          "tests/test_aiqe_v16_024_production.py::test_rate_limit_enforced_only_in_production"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_024_production.py::test_alert_validator_rejects_missing_metric_or_bad_severity"
+        ],
+        "boundary": [],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_024_production.py (8 passed)",
+        "scripts/aiqe/check_container_egress.py: policies=2 configmaps=1"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "V16-024-R3",
+      "issue": "V16-024",
+      "priority": "P0",
+      "status": "BLOCKED",
+      "owner": "devops",
+      "reviewer": "pending",
+      "production_entry": [
+        "发布火车 + 运维演练"
       ],
       "tests": {
         "success": [],
@@ -1806,15 +1870,12 @@
         "concurrency": []
       },
       "layers": [
-        "L4"
+        "L1"
       ],
       "evidence": [
-        "ci:baseline-audit-G7"
+        "docs/aiqe/v1.6/Production-Readiness.md（NOT_RUN 清单）"
       ],
-      "gaps": [
-        "无任何 aiqe_* 指标实现、告警规则、限流与 AIQE 灰度阶段。",
-        "容器 egress 策略尚未落地到部署定义。"
-      ]
+      "gaps": []
     },
     {
       "id": "V16-025-R1",

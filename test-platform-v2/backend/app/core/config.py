@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     app_name: str = "CamelTv Test Platform API"
     app_version: str = "2.1.0"
     environment: str = "development"          # "development" | "production"
+    #: V16-024：Prometheus 抓取 token（生产必须配置；空值仅限非生产）。
+    aiqe_metrics_token: str = ""
+    #: V16-024：是否强制 AIQE 限流（生产自动启用）。
+    aiqe_rate_limit_enforce: bool = False
 
     # Same-host admission; enable only with a shared local volume across runners.
     heavy_task_budget_enabled: bool = False

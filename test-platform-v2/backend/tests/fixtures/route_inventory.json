@@ -1,5 +1,5 @@
 {
-  "count": 406,
+  "count": 407,
   "routes": [
     {
       "path": "/api/v1/ai-config/providers",
@@ -264,6 +264,10 @@
     {
       "path": "/api/v1/aiqe/learning/candidates/{candidate_id}/revoke",
       "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/metrics",
+      "method": "GET"
     },
     {
       "path": "/api/v1/aiqe/nodes/{node_id}/heartbeat",

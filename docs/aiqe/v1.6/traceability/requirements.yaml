@@ -1835,36 +1835,108 @@ requirements:
     reviewer: pending
     gaps: []
 
-  # ── V16-024 生产化（P0 release gate，基线 PARTIAL）─────────
+  # ── V16-024 生产化（P0 release gate）───────────────────────
   - id: V16-024-R1
     issue: V16-024
     priority: P0
-    title: "监控、告警、限流、灰度与回滚"
-    requirement: "实现 §8.2 全部 aiqe_* 指标与 §8.3 告警规则；Runner 网络/资源隔离；灰度 Stage 0-5 与回滚演练记录。"
-    invariant: "Secret Canary 命中、SSRF 漏拦、跨租户成功、假 PASS 必须触发停止扩大与回滚。"
-    status: PARTIAL
+    title: "指标与告警（21 项 / P0 Canary）"
+    requirement: "Prometheus 指标端点 token 鉴权（生产 fail-closed）；21 项 aiqe_ 指标低基数/敏感 label 过滤；告警规则覆盖全部指标且 Canary 为 P0，由脚本校验。"
+    invariant: "Secret Canary 非零必须 P0 告警；指标 label 不得含 URL/Token/SQL。"
+    status: VERIFIED
     code:
-      - path: test-platform-v2/deploy/docker-compose.yml
-        symbol: "部署定义"
-        change: unchanged
-      - path: docs/aiqe/rollback.md
-        symbol: "回滚文档"
-        change: unchanged
-      - path: docs/aiqe/runner-deployment.md
-        symbol: "Runner 部署"
-        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/observability/metrics.py
+        symbol: "MetricsRegistry / REQUIRED_METRICS"
+        change: added
+      - path: test-platform-v2/backend/app/api/v1/aiqe_metrics.py
+        symbol: "GET /aiqe/metrics"
+        change: added
+      - path: docs/aiqe/v1.6/observability/aiqe-alerts.yaml
+        symbol: "21 alerts / 21 metrics"
+        change: added
+      - path: scripts/aiqe/check_alerts.py
+        symbol: "validate"
+        change: added
     production_entry:
-      - "生产部署与监控平台"
-    tests: {}
-    mock_boundary: ""
-    layers: [L4]
+      - "GET /api/v1/aiqe/metrics"
+    tests:
+      success:
+        - tests/test_aiqe_v16_024_production.py::test_metrics_registry_low_cardinality_and_render
+        - tests/test_aiqe_v16_024_production.py::test_alert_rules_cover_required_metrics
+      negative:
+        - tests/test_aiqe_v16_024_production.py::test_metrics_endpoint_token_and_production_fail_closed
+        - tests/test_aiqe_v16_024_production.py::test_alert_validator_rejects_missing_metric_or_bad_severity
+    mock_boundary: "真实 registry/endpoint/YAML；无 Mock。"
+    layers: [L1, L2]
     evidence:
-      - "ci:baseline-audit-G7"
+      - "pytest:tests/test_aiqe_v16_024_production.py (8 passed)"
+      - "scripts/aiqe/check_alerts.py: alerts=21 metrics=21"
     owner: devops
     reviewer: pending
-    gaps:
-      - "无任何 aiqe_* 指标实现、告警规则、限流与 AIQE 灰度阶段。"
-      - "容器 egress 策略尚未落地到部署定义。"
+    gaps: []
+
+  - id: V16-024-R2
+    issue: V16-024
+    priority: P0
+    title: "容器 egress / 限流 / Canary 计数器"
+    requirement: "Runner egress deny-by-default 且仅经 proxy，元数据/私网 denylist；launch/agent/report 限流（生产启用）；Canary 检测计数并接入 P0 告警。"
+    invariant: "容器默认不可直连公网/元数据；超限不得静默放行。"
+    status: VERIFIED
+    code:
+      - path: deploy/aiqe/egress-networkpolicy.yaml
+        symbol: "default-deny + proxy-only + denylist"
+        change: added
+      - path: scripts/aiqe/check_container_egress.py
+        symbol: "validate"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/observability/rate_limits.py
+        symbol: "enforce"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/security/output_sanitizer.py
+        symbol: "note_canary"
+        change: added
+    production_entry:
+      - "run_launch.launch_run -> enforce('launch')"
+      - "Prometheus scrape"
+    tests:
+      success:
+        - tests/test_aiqe_v16_024_production.py::test_container_egress_policy_deny_by_default
+        - tests/test_aiqe_v16_024_production.py::test_rate_limit_enforced_only_in_production
+      negative:
+        - tests/test_aiqe_v16_024_production.py::test_alert_validator_rejects_missing_metric_or_bad_severity
+    mock_boundary: "YAML/内存限流器；真实策略未在集群实测（见 R3）。"
+    layers: [L1, L2]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_024_production.py (8 passed)"
+      - "scripts/aiqe/check_container_egress.py: policies=2 configmaps=1"
+    owner: devops
+    reviewer: pending
+    gaps: []
+
+  - id: V16-024-R3
+    issue: V16-024
+    priority: P0
+    title: "灰度 / 备份恢复 / 监控联调演练"
+    requirement: "Shadow→Dogfood→小流量→扩大→GA 各阶段执行并记录停止条件；DB 备份恢复、容器 egress 实测、监控告警联调、KMS 接入完成。"
+    invariant: "未演练不得宣称生产就绪/PRODUCTION_OBSERVED。"
+    status: BLOCKED
+    code:
+      - path: docs/aiqe/v1.6/Production-Readiness.md
+        symbol: "阶段/停止条件/备份回滚"
+        change: added
+    production_entry:
+      - "发布火车 + 运维演练"
+    tests:
+      success: []
+      negative: []
+    mock_boundary: ""
+    layers: [L1]
+    evidence:
+      - "docs/aiqe/v1.6/Production-Readiness.md（NOT_RUN 清单）"
+    owner: devops
+    reviewer: pending
+    review_by: "2027-01-15"
+    blocked_reason: "STAGING_DRILL_INFRA_MISSING：当前环境无 staging/生产同构集群、Prometheus/告警通道、KMS 与只读 DB 账号，无法执行 Shadow/狗粮/小流量、备份恢复和 egress 实测。"
+    gaps: []
 
   # ── V16-025 工程治理（P0 release gate，基线 PARTIAL）──────
   - id: V16-025-R1

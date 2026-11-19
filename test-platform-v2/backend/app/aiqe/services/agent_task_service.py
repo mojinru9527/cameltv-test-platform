@@ -309,6 +309,15 @@ def run_task(
     if any(status == "FAILED" for status in statuses.values()):
         row.status = "FAILED"
         row.error_code = "AGENT_FAILED"
+        try:
+            from app.aiqe.observability.metrics import metrics
+
+            metrics.inc(
+                "aiqe_agent_task_failure_total",
+                {"project_id": row.project_id, "reason": "AGENT_FAILED"},
+            )
+        except Exception:
+            pass
     elif statuses and all(status == "COMPLETED" for status in statuses.values()):
         row.status = "COMPLETED"
     elif any(status == "WAITING_HUMAN" for status in statuses.values()):

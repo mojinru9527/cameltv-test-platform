@@ -427,6 +427,13 @@ def _emit_security_denials(
         producer_event_id=f"ssrf-blocked:{node.id}:{attempt.id if attempt else 'no-attempt'}",
     )
 
+    try:
+        from app.aiqe.observability.metrics import metrics
+
+        metrics.inc("aiqe_ssrf_blocked_total", {"project_id": run.project_id, "driver": node.driver_key})
+    except Exception:
+        pass
+
 
 def finalize_node(
     db: Session,
@@ -725,6 +732,17 @@ def _block_node_for_policy(
         PolicyDecision.UNAVAILABLE: "security.target_policy_unavailable",
         PolicyDecision.MISSING_BINDING: "security.target_policy_missing_binding",
     }.get(policy.decision, "security.target_policy_denied")
+    try:
+        from app.aiqe.observability.metrics import metrics
+
+        if policy.decision is PolicyDecision.DENY:
+            metrics.inc("aiqe_target_policy_denied_total", {"project_id": run.project_id})
+        elif policy.decision is PolicyDecision.UNAVAILABLE:
+            metrics.inc(
+                "aiqe_target_policy_unavailable_total", {"project_id": run.project_id}
+            )
+    except Exception:
+        pass
     snapshot = policy.snapshot()
     node.output_ref = {**(node.output_ref or {}), "policy": snapshot}
     if attempt is not None:
@@ -1113,6 +1131,12 @@ def complete_from_external_report(
             "node_status": node.status,
         }
     except lease.StaleLeaseError as exc:
+        try:
+            from app.aiqe.observability.metrics import metrics
+
+            metrics.inc("aiqe_job_fencing_rejected_total", {"project_id": run.project_id})
+        except Exception:
+            pass
         _event(
             db,
             run.id,
@@ -1136,6 +1160,12 @@ def complete_from_external_report(
             "node_status": node.status,
         }
     except lease.LeaseExpired as exc:
+        try:
+            from app.aiqe.observability.metrics import metrics
+
+            metrics.inc("aiqe_job_lease_expired_total", {"project_id": run.project_id})
+        except Exception:
+            pass
         _event(
             db,
             run.id,

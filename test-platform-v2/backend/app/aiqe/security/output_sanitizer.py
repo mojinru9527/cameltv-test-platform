@@ -108,6 +108,18 @@ def classify_value(
     return SecretClassification.PUBLIC, []
 
 
+def note_canary(value: str) -> None:
+    """V16-024：Canary 明文检测计数（必须保持 0）。"""
+    if not str(value).startswith("CANARY-"):
+        return
+    try:
+        from app.aiqe.observability.metrics import metrics
+
+        metrics.inc("aiqe_secret_canary_detected_total")
+    except Exception:
+        return
+
+
 class OutputSanitizer:
     """节点输出 → 持久化结构的唯一转换器。"""
 
@@ -221,7 +233,11 @@ class OutputSanitizer:
             if not ok:
                 continue
             _classification, plaintexts = classify_value(name, value, schema=output_schema)
-            found.extend(item for item in plaintexts if item)
+            for item in plaintexts:
+                if not item:
+                    continue
+                found.append(item)
+                note_canary(item)
         return sorted(set(found))
 
     def persist(self, node: Any, captured: CaptureResult) -> dict[str, Any]:

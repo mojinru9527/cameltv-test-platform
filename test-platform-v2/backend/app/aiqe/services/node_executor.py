@@ -320,6 +320,15 @@ def _execute_db_secure(
             detail={"query_key": query_key, "reason": exc.message},
         )
     except Exception as exc:
+        try:
+            from app.aiqe.observability.metrics import metrics
+
+            metrics.inc(
+                "aiqe_db_query_policy_denied_total",
+                {"project_id": getattr(node, "project_id", None) or 0},
+            )
+        except Exception:
+            pass
         return NodeExecution(
             status="FAILED",
             error_class="DRIVER_ERROR",

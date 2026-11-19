@@ -251,6 +251,16 @@ def evaluate_candidate(
     }
     # V16-010：不无条件标记 benchmarked —— gate 拒绝时进入 rejected。
     row.status = "benchmarked" if decision == "PASS" else "rejected"
+    if decision != "PASS":
+        try:
+            from app.aiqe.observability.metrics import metrics as metrics_registry
+
+            metrics_registry.inc(
+                "aiqe_benchmark_gate_rejected_total",
+                {"project_id": row.project_id, "reason": str(reasons[0] if reasons else "REJECT")[:40]},
+            )
+        except Exception:
+            pass
     row.updated_at = datetime.now(UTC)
     db.flush()
     return row
@@ -341,6 +351,12 @@ def publish_candidate(
     pattern = _activate_pattern(db, row)
     row.published_at = datetime.now(UTC)
     row.updated_at = datetime.now(UTC)
+    try:
+        from app.aiqe.observability.metrics import metrics as metrics_registry
+
+        metrics_registry.inc("aiqe_learning_publish_total", {"project_id": row.project_id})
+    except Exception:
+        pass
     db.flush()
     return pattern
 
@@ -353,6 +369,12 @@ def revoke_candidate(
         raise LearningError("只有已批准/已发布候选才能撤销")
     row.status = "revoked"
     row.revoked_at = datetime.now(UTC)
+    try:
+        from app.aiqe.observability.metrics import metrics as metrics_registry
+
+        metrics_registry.inc("aiqe_learning_rollback_total", {"project_id": row.project_id})
+    except Exception:
+        pass
     row.approval_reason = str(reason or row.approval_reason or "")[:500]
     pattern = db.scalar(
         select(BugPattern).where(BugPattern.source_candidate_id == row.id)
