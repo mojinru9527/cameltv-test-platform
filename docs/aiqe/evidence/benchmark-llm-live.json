@@ -1,0 +1,326 @@
+{
+  "id": "08eed69e-6944-47c4-a491-e44d193c441f",
+  "dataset_id": "ad66041d-3a3b-4eef-b2fe-d75e64cfa0b2",
+  "agent_key": "A6",
+  "status": "COMPLETED",
+  "result_status": "PASS_GATE",
+  "metrics": {
+    "samples": 30,
+    "true_positives": 30,
+    "false_positives": 0,
+    "false_negatives": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "unknown_rate": 0.0,
+    "gate_eligible": true,
+    "meets_thresholds": true,
+    "thresholds": {
+      "precision": 0.8,
+      "recall": 0.8,
+      "f1": 0.75
+    }
+  },
+  "per_sample": [
+    {
+      "sample_id": "s-00",
+      "predicted": [
+        "UI_OVERLAY"
+      ],
+      "golden": [
+        "UI_OVERLAY"
+      ],
+      "output_hash": "9fdef7d6b84b8dd2"
+    },
+    {
+      "sample_id": "s-01",
+      "predicted": [
+        "NETWORK"
+      ],
+      "golden": [
+        "NETWORK"
+      ],
+      "output_hash": "63ee60ad75ffd200"
+    },
+    {
+      "sample_id": "s-02",
+      "predicted": [
+        "UI_OVERLAY"
+      ],
+      "golden": [
+        "UI_OVERLAY"
+      ],
+      "output_hash": "09f359b40483fb7e"
+    },
+    {
+      "sample_id": "s-03",
+      "predicted": [
+        "NETWORK"
+      ],
+      "golden": [
+        "NETWORK"
+      ],
+      "output_hash": "53d478a5f868c01e"
+    },
+    {
+      "sample_id": "s-04",
+      "predicted": [
+        "UI_OVERLAY"
+      ],
+      "golden": [
+        "UI_OVERLAY"
+      ],
+      "output_hash": "ef0955ceb8a66db5"
+    },
+    {
+      "sample_id": "s-05",
+      "predicted": [
+        "NETWORK"
+      ],
+      "golden": [
+        "NETWORK"
+      ],
+      "output_hash": "61272b8ca61e0085"
+    },
+    {
+      "sample_id": "s-06",
+      "predicted": [
+        "UI_OVERLAY"
+      ],
+      "golden": [
+        "UI_OVERLAY"
+      ],
+      "output_hash": "b6ba29a90ce085f8"
+    },
+    {
+      "sample_id": "s-07",
+      "predicted": [
+        "NETWORK"
+      ],
+      "golden": [
+        "NETWORK"
+      ],
+      "output_hash": "f6a425327cf554a6"
+    },
+    {
+      "sample_id": "s-08",
+      "predicted": [
+        "UI_OVERLAY"
+      ],
+      "golden": [
+        "UI_OVERLAY"
+      ],
+      "output_hash": "ec3a6a7fe2895142"
+    },
+    {
+      "sample_id": "s-09",
+      "predicted": [
+        "NETWORK"
+      ],
+      "golden": [
+        "NETWORK"
+      ],
+      "output_hash": "eb1a5ccaab380c9a"
+    },
+    {
+      "sample_id": "s-10",
+      "predicted": [
+        "UI_OVERLAY"
+      ],
+      "golden": [
+        "UI_OVERLAY"
+      ],
+      "output_hash": "dcd871dc1e16ccde"
+    },
+    {
+      "sample_id": "s-11",
+      "predicted": [
+        "NETWORK"
+      ],
+      "golden": [
+        "NETWORK"
+      ],
+      "output_hash": "230c23d0d1e9e339"
+    },
+    {
+      "sample_id": "s-12",
+      "predicted": [
+        "UI_OVERLAY"
+      ],
+      "golden": [
+        "UI_OVERLAY"
+      ],
+      "output_hash": "f7c9fe6dcf2ee067"
+    },
+    {
+      "sample_id": "s-13",
+      "predicted": [
+        "NETWORK"
+      ],
+      "golden": [
+        "NETWORK"
+      ],
+      "output_hash": "41d50f9c4d77e1cc"
+    },
+    {
+      "sample_id": "s-14",
+      "predicted": [
+        "UI_OVERLAY"
+      ],
+      "golden": [
+        "UI_OVERLAY"
+      ],
+      "output_hash": "b40a26b79406bd8e"
+    },
+    {
+      "sample_id": "s-15",
+      "predicted": [
+        "NETWORK"
+      ],
+      "golden": [
+        "NETWORK"
+      ],
+      "output_hash": "ab36cb399c494322"
+    },
+    {
+      "sample_id": "s-16",
+      "predicted": [
+        "UI_OVERLAY"
+      ],
+      "golden": [
+        "UI_OVERLAY"
+      ],
+      "output_hash": "dbcf3b6b337c9f73"
+    },
+    {
+      "sample_id": "s-17",
+      "predicted": [
+        "NETWORK"
+      ],
+      "golden": [
+        "NETWORK"
+      ],
+      "output_hash": "b963f8a3cdf8741c"
+    },
+    {
+      "sample_id": "s-18",
+      "predicted": [
+        "UI_OVERLAY"
+      ],
+      "golden": [
+        "UI_OVERLAY"
+      ],
+      "output_hash": "20fcfb622626c3d4"
+    },
+    {
+      "sample_id": "s-19",
+      "predicted": [
+        "NETWORK"
+      ],
+      "golden": [
+        "NETWORK"
+      ],
+      "output_hash": "eafefbf68cc0f06d"
+    },
+    {
+      "sample_id": "s-20",
+      "predicted": [
+        "UI_OVERLAY"
+      ],
+      "golden": [
+        "UI_OVERLAY"
+      ],
+      "output_hash": "b1b3dde1f111f4da"
+    },
+    {
+      "sample_id": "s-21",
+      "predicted": [
+        "NETWORK"
+      ],
+      "golden": [
+        "NETWORK"
+      ],
+      "output_hash": "40704cccf1017e55"
+    },
+    {
+      "sample_id": "s-22",
+      "predicted": [
+        "UI_OVERLAY"
+      ],
+      "golden": [
+        "UI_OVERLAY"
+      ],
+      "output_hash": "e3b72899f2d2e0eb"
+    },
+    {
+      "sample_id": "s-23",
+      "predicted": [
+        "NETWORK"
+      ],
+      "golden": [
+        "NETWORK"
+      ],
+      "output_hash": "336ffc5f521b89c3"
+    },
+    {
+      "sample_id": "s-24",
+      "predicted": [
+        "UI_OVERLAY"
+      ],
+      "golden": [
+        "UI_OVERLAY"
+      ],
+      "output_hash": "fa1cfe3e24e79f07"
+    },
+    {
+      "sample_id": "s-25",
+      "predicted": [
+        "NETWORK"
+      ],
+      "golden": [
+        "NETWORK"
+      ],
+      "output_hash": "cb61d8bad4bc8c4a"
+    },
+    {
+      "sample_id": "s-26",
+      "predicted": [
+        "UI_OVERLAY"
+      ],
+      "golden": [
+        "UI_OVERLAY"
+      ],
+      "output_hash": "f654a4ce9c807203"
+    },
+    {
+      "sample_id": "s-27",
+      "predicted": [
+        "NETWORK"
+      ],
+      "golden": [
+        "NETWORK"
+      ],
+      "output_hash": "38c23d07e3fada80"
+    },
+    {
+      "sample_id": "s-28",
+      "predicted": [
+        "UI_OVERLAY"
+      ],
+      "golden": [
+        "UI_OVERLAY"
+      ],
+      "output_hash": "5b451be6d3ba1320"
+    },
+    {
+      "sample_id": "s-29",
+      "predicted": [
+        "NETWORK"
+      ],
+      "golden": [
+        "NETWORK"
+      ],
+      "output_hash": "60de650e0cb90386"
+    }
+  ]
+}
