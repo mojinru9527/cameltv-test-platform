@@ -42,6 +42,8 @@ jobs:
         run: git diff --name-only "$BASE_SHA" "$HEAD_SHA" > changed-files.txt
       - name: Traceability matrix validation
         run: python scripts/aiqe/check_traceability.py
+      - name: Release audit (secrets/fake E2E/traceability/docs)
+        run: python scripts/aiqe/check_release_audit.py
       - name: PR traceability fields
         if: ${{ github.event_name == 'pull_request' }}
         run: |

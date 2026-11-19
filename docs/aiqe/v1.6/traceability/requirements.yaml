@@ -1544,9 +1544,9 @@ requirements:
     invariant: "BLOCKED 不计入通过率；不得以 body 存在/SKIP 冒充 PASS。"
     status: BLOCKED
     code:
-      - path: test-platform-v2/backend/tests/e2e/aiqe/test_tc_aiqe_001_010.py
-        symbol: "旧 body 断言入口（不得作为证据）"
-        change: pending-replacement
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
+        symbol: "产品级 TC 未实现（旧 body 断言文件已删除）"
+        change: blocked
     production_entry:
       - "隔离 Test 环境 API/UI"
     tests:
@@ -1829,6 +1829,8 @@ requirements:
       success:
         - tests/test_aiqe_v16_022_reproducible.py::test_lockfile_pins_runtime_and_test_dependencies
         - tests/test_aiqe_v16_022_reproducible.py::test_reproducibility_doc_exists
+      negative:
+        - tests/test_aiqe_v16_022_reproducible.py::test_unknown_layer_and_empty_layer_fail
     mock_boundary: "静态锁文件/文档校验；无 Mock。"
     layers: [L1, L2]
     evidence:
@@ -2024,6 +2026,9 @@ requirements:
       - path: docs/aiqe/v1.6/traceability/requirements.yaml
         symbol: "追踪矩阵"
         change: added
+      - path: scripts/aiqe/check_release_audit.py
+        symbol: "run_audit（secrets/fake E2E/migration/traceability/docs）"
+        change: added
     production_entry:
       - "python scripts/aiqe/check_traceability.py --issue ... --pr-body ... --changed-files ..."
       - ".github/workflows/aiqe-v16-gates.yml"
@@ -2033,6 +2038,10 @@ requirements:
       negative:
         - tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_missing_negative_test_for_p0
         - tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_self_accepted_requirement
+        - tests/test_aiqe_release_audit.py::test_secrets_and_e2e_scans
+        - tests/test_aiqe_release_audit.py::test_requirements_status_rules
+      boundary:
+        - tests/test_aiqe_release_audit.py::test_repo_release_audit_is_clean
     mock_boundary: "真实 YAML 矩阵文件 + 真实 CLI；无 Mock。"
     layers: [L1, L2]
     evidence:
@@ -2051,9 +2060,9 @@ requirements:
     invariant: "BLOCKED 不计入通过率。"
     status: BLOCKED
     code:
-      - path: test-platform-v2/backend/tests/e2e/aiqe/test_tc_aiqe_001_010.py
-        symbol: "旧 body 断言入口（不得作为证据）"
-        change: pending-replacement
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
+        symbol: "产品级 TC 未实现（旧 body 断言文件已删除）"
+        change: blocked
     production_entry:
       - "隔离 Test 环境"
     tests:
@@ -2104,9 +2113,9 @@ requirements:
     invariant: "BLOCKED 不计入通过率。"
     status: BLOCKED
     code:
-      - path: test-platform-v2/backend/tests/e2e/aiqe/test_tc_aiqe_001_010.py
-        symbol: "旧 body 断言入口（不得作为证据）"
-        change: pending-replacement
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
+        symbol: "产品级 TC 未实现（旧 body 断言文件已删除）"
+        change: blocked
     production_entry:
       - "隔离 Test 环境"
     tests:

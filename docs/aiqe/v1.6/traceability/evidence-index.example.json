@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "525ae8c1976afb63362de009ea2503c5e75d4531",
+  "commit_sha": "42fa0adce3d459be2fe4ccbc0d75fbc47fb59ac4",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -1770,7 +1770,9 @@
           "tests/test_aiqe_v16_022_reproducible.py::test_lockfile_pins_runtime_and_test_dependencies",
           "tests/test_aiqe_v16_022_reproducible.py::test_reproducibility_doc_exists"
         ],
-        "negative": [],
+        "negative": [
+          "tests/test_aiqe_v16_022_reproducible.py::test_unknown_layer_and_empty_layer_fail"
+        ],
         "boundary": [],
         "concurrency": []
       },
@@ -1962,9 +1964,13 @@
         ],
         "negative": [
           "tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_missing_negative_test_for_p0",
-          "tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_self_accepted_requirement"
+          "tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_self_accepted_requirement",
+          "tests/test_aiqe_release_audit.py::test_secrets_and_e2e_scans",
+          "tests/test_aiqe_release_audit.py::test_requirements_status_rules"
         ],
-        "boundary": [],
+        "boundary": [
+          "tests/test_aiqe_release_audit.py::test_repo_release_audit_is_clean"
+        ],
         "concurrency": []
       },
       "layers": [
