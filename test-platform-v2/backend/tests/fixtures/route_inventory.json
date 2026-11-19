@@ -1,5 +1,5 @@
 {
-  "count": 401,
+  "count": 406,
   "routes": [
     {
       "path": "/api/v1/ai-config/providers",
@@ -111,6 +111,26 @@
     },
     {
       "path": "/api/v1/aiqe/agent-tasks",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/agent-tasks/{task_id}",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/agent-tasks/{task_id}/approve",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/agent-tasks/{task_id}/cancel",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/agent-tasks/{task_id}/run",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/agent-tasks/{task_id}/submit",
       "method": "POST"
     },
     {
