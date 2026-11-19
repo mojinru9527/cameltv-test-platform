@@ -1,0 +1,39 @@
+{
+  "environment": "Camel Test5",
+  "admin_base": "https://camel-admintest5.elelive.cn",
+  "user_base": "https://camel-test5.elelive.cn",
+  "steps": [
+    {
+      "step": "user_login",
+      "endpoint": "POST /account-service/ee/client/demo/login",
+      "result": "status=200, userId=11025728"
+    },
+    {
+      "step": "admin_login",
+      "endpoint": "POST /captcha/check + POST /login",
+      "result": "success=true (admin account masked)"
+    },
+    {
+      "step": "create",
+      "endpoint": "POST /ee/sports_live/NewsKind/upsert",
+      "result": "status=200, created id=19",
+      "entity": "AIQE_DOGFOOD_20261119_164512"
+    },
+    {
+      "step": "verify",
+      "endpoint": "GET /ee/sports_live/NewsKind/detail?id=19",
+      "result": "status=200, fields match"
+    },
+    {
+      "step": "cleanup",
+      "endpoint": "POST /ee/sports_live/NewsKind/del id=19",
+      "result": "status=200"
+    },
+    {
+      "step": "post_check",
+      "endpoint": "POST /ee/sports_live/NewsKind/query",
+      "result": "matched=[] (no residue)"
+    }
+  ],
+  "conclusion": "PASS: 登录 → 创建 → 校验 → 清理 全链路通过，无残留"
+}
