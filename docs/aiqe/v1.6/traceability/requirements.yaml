@@ -3,7 +3,7 @@ release: aiqe-v1.6
 baseline:
   main_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
   audit_snapshot_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
-  migration_head: 20261119_v16_019_tool_audit
+  migration_head: 20261119_v16_016_platform
   branch: release/aiqe-v1-6
   audit_reports:
     - docs/aiqe/v1.6/_audit/baseline-audit-G1-G3.txt
@@ -1333,70 +1333,141 @@ requirements:
     blocked_reason: "CASE_CATALOG_MAPPING_MISSING：仓库没有 Case/Workflow 与变更文件/route/symbol 的映射目录，无法把 impact 自动映射为 mandatory node refs；需产品/QA 提供 catalog 或人工确认接口。"
     gaps: []
 
-  # ── V16-015 能力真实性（P1，基线 PARTIAL）──────────────────
+  # ── V16-015 能力真实性（P1）────────────────────────────────
   - id: V16-015-R1
     issue: V16-015
     priority: P1
-    title: "Capability VERIFIED 只由真实运行证据产生"
-    requirement: "REGISTERED/AVAILABLE/VERIFIED/DEGRADED/BLOCKED 分级；VERIFIED 只能由成功的 Capability Verification Run 写入；API 不得直接把状态改为 VERIFIED。"
-    invariant: "Preflight 只接受 VERIFIED（或经批准的 AVAILABLE 策略）；设备/版本/健康变化自动降级。"
-    status: PARTIAL
+    title: "VERIFIED 只来自真实验收 Run + Artifact"
+    requirement: "verify_from_run 要求 Run COMPLETED/PASS、同项目、Artifact AVAILABLE 且 checksum 有效、平台非空；记录 verification_run_id/artifact refs/runner image digest/os/browser/device/supported actions/limitations；API 不能直接改 VERIFIED。"
+    invariant: "Manifest 声明不等于 VERIFIED；缺验收证据不得 VERIFIED。"
+    status: VERIFIED
     code:
       - path: test-platform-v2/backend/app/aiqe/services/capability_registry.py
-        symbol: "mark_verified / compute_effective_status"
-        change: unchanged
+        symbol: "verify_from_run"
+        change: added
       - path: test-platform-v2/backend/app/aiqe/models/capability.py
-        symbol: "NodeCapabilityManifest"
-        change: unchanged
-      - path: test-platform-v2/backend/app/aiqe/services/capability_preflight.py
-        symbol: "preflight"
-        change: unchanged
+        symbol: "verification_run_id / artifact refs / 平台版本字段"
+        change: modified
+      - path: test-platform-v2/backend/alembic/versions/20261119_v16_015_capability.py
+        symbol: "upgrade/downgrade"
+        change: added
     production_entry:
-      - "Preflight -> capability_registry.select_nodes"
-    tests: {}
-    mock_boundary: ""
+      - "capability verification workflow -> verify_from_run"
+    tests:
+      success:
+        - tests/test_aiqe_v16_015_capability_verification.py::test_verify_from_run_writes_evidence_and_verified
+      negative:
+        - tests/test_aiqe_v16_015_capability_verification.py::test_verify_requires_completed_pass_run
+        - tests/test_aiqe_v16_015_capability_verification.py::test_verify_requires_same_run_available_artifacts
+        - tests/test_aiqe_v16_015_capability_verification.py::test_verify_rejects_cross_project_run
+        - tests/test_aiqe_v16_015_capability_verification.py::test_manifest_cannot_self_declare_verified
+    mock_boundary: "真实 DB/Artifact；无 Mock。"
     layers: [L1, L2]
     evidence:
-      - "ci:baseline-audit-G7"
-    owner: driver-device
+      - "pytest:tests/test_aiqe_v16_015_capability_verification.py (8 passed)"
+    owner: driver-platform
+    reviewer: pending
+    gaps: []
+
+  - id: V16-015-R2
+    issue: V16-015
+    priority: P1
+    title: "Preflight 只接受 VERIFIED 与软件变更自动降级"
+    requirement: "生产环境 Preflight 拒绝 AVAILABLE（需显式批准策略）；runner image/driver version 变化使 VERIFIED 自动降级为 AVAILABLE 并要求重验。"
+    invariant: "生产 Run 不得基于未验收能力启动。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/preflight.py
+        symbol: "allow_available_capability / CAPABILITY_NOT_VERIFIED"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/services/capability_registry.py
+        symbol: "runner image digest invalidation"
+        change: modified
+    production_entry:
+      - "run_launch -> preflight_graph"
+    tests:
+      success:
+        - tests/test_aiqe_v16_015_capability_verification.py::test_verified_capability_passes_production_preflight
+      negative:
+        - tests/test_aiqe_v16_015_capability_verification.py::test_production_preflight_rejects_available_capability
+        - tests/test_aiqe_v16_015_capability_verification.py::test_runner_image_digest_change_invalidates_verification
+    mock_boundary: "真实 DB/Preflight；无 Mock。"
+    layers: [L1, L2]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_015_capability_verification.py (8 passed)"
+    owner: driver-platform
     reviewer: pending
     gaps:
-      - "VERIFIED 无生产写入者；验机脚本伪造 COMPLETED/PASS Run 后直接 mark_verified。"
-      - "模型缺 verification_run_id/artifact refs/OS/镜像/设备字段。"
+      - "非生产环境默认允许 AVAILABLE（显式测试策略）；生产默认拒绝。"
 
-  # ── V16-016 多端边界（P1，基线 PARTIAL）────────────────────
+  # ── V16-016 多端边界（P1）──────────────────────────────────
   - id: V16-016-R1
     issue: V16-016
     priority: P1
-    title: "多端适配器能力边界与 GA 支持矩阵"
-    requirement: "所有 Driver 通过统一 DriverProtocol/NodeExecutor 注册；DeviceBroker 统一设备租约/清理/健康检查；未实现平台标 BLOCKED 并列入 GA 不支持清单。"
-    invariant: "未接入执行链的 Adapter 不得对外宣称 VERIFIED。"
-    status: PARTIAL
+    title: "GA 平台声明与动作粒度 Preflight"
+    requirement: "各平台声明支持的动作为唯一事实源；未支持动作在 Preflight 返回 PLATFORM_ACTION_UNSUPPORTED；iOS/小程序/Desktop/IoT 只能是 BLOCKED，不得宣称 VERIFIED；GA 仅 Web。"
+    invariant: "声明 ≠ VERIFIED；未验证平台不得进入 GA 支持列表。"
+    status: VERIFIED
     code:
-      - path: test-platform-v2/backend/app/aiqe/adapters/miniapp.py
-        symbol: "miniapp adapter"
-        change: unchanged
-      - path: test-platform-v2/backend/app/aiqe/adapters/desktop_driver.py
-        symbol: "desktop driver"
-        change: unchanged
-      - path: test-platform-v2/backend/app/aiqe/adapters/iot_driver.py
-        symbol: "iot driver"
-        change: unchanged
-      - path: test-platform-v2/backend/app/aiqe/services/device_broker.py
-        symbol: "DeviceBroker"
-        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/platform_support.py
+        symbol: "PLATFORM_ACTIONS / PLATFORM_CLAIM / ga_matrix"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/services/preflight.py
+        symbol: "PLATFORM_ACTION_UNSUPPORTED"
+        change: modified
+      - path: docs/aiqe/v1.6/Platform-Support-Matrix.md
+        symbol: "GA 矩阵 / 不支持清单"
+        change: added
     production_entry:
-      - "node_executor.execute_node -> platform adapters"
-    tests: {}
-    mock_boundary: ""
-    layers: [L1]
+      - "run_launch -> preflight_graph"
+    tests:
+      success:
+        - tests/test_aiqe_v16_016_platform_boundaries.py::test_ga_matrix_only_web_is_verified_and_ga
+        - tests/test_aiqe_v16_016_platform_boundaries.py::test_platform_actions_supported_and_unsupported
+      negative:
+        - tests/test_aiqe_v16_016_platform_boundaries.py::test_preflight_blocks_unsupported_platform_actions
+    mock_boundary: "真实 Preflight；无 Mock。"
+    layers: [L1, L2]
     evidence:
-      - "ci:baseline-audit-G7"
-    owner: driver-device
+      - "pytest:tests/test_aiqe_v16_016_platform_boundaries.py (6 passed)"
+    owner: driver-platform
     reviewer: pending
     gaps:
-      - "Miniapp/Desktop/IoT Adapter 仅被测试导入，未接标准执行链。"
-      - "DeviceBroker 为内存对象且无生产引用；PlatformBinding 缺 Environment/DevicePool/Runner。"
+      - "Android 仅 AVAILABLE（无真机设备池验收）；iOS/小程序/Desktop/IoT BLOCKED 已列入 GA 不支持清单。"
+
+  - id: V16-016-R2
+    issue: V16-016
+    priority: P1
+    title: "设备租约回收与 PlatformBinding 绑定"
+    requirement: "DeviceBroker 单设备单租约、lease 到期回收、断连 offline/恢复；iOS 注册/分配拒绝；PlatformBinding 记录 Project/Environment/DevicePool/Runner/Capability version。"
+    invariant: "Worker 崩溃不得造成设备永久 busy；跨项目/未绑定环境不得冒用。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/device_broker.py
+        symbol: "allocate lease / reap_expired / mark_offline / recover"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/models/platform_binding.py
+        symbol: "environment_id / device_pool / runner_version"
+        change: modified
+      - path: test-platform-v2/backend/alembic/versions/20261119_v16_016_platform.py
+        symbol: "upgrade/downgrade"
+        change: added
+    production_entry:
+      - "DeviceBroker 巡检 -> reap_expired"
+      - "platform_binding_service.create_binding"
+    tests:
+      success:
+        - tests/test_aiqe_v16_016_platform_boundaries.py::test_device_broker_lease_expiry_reaps_and_recovers
+        - tests/test_aiqe_v16_016_platform_boundaries.py::test_platform_binding_records_environment_pool_runner
+      negative:
+        - tests/test_aiqe_v16_016_platform_boundaries.py::test_device_broker_ios_disabled_and_release_rules
+    mock_boundary: "真实内存设备池/DB；无 Mock。"
+    layers: [L1, L2]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_016_platform_boundaries.py (6 passed)"
+    owner: driver-platform
+    reviewer: pending
+    gaps: []
 
   # ── V16-017 十个真实 E2E（P1，基线 MISSING）─────────────────
   - id: V16-017-R1

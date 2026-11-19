@@ -142,6 +142,7 @@ def register_manifest(
     evidence_ref: str = "",
     heartbeat_at: datetime | None = None,
     runner_version: str = "",
+    runner_image_digest: str = "",
     manifest_version: str = "",
     signature: str = "",
     now: datetime | None = None,
@@ -171,13 +172,20 @@ def register_manifest(
     row.max_parallel_sessions = int(max_parallel_sessions)
     row.artifact_types_json = _normalize(artifact_types)
     row.last_evidence_ref = evidence_ref
+    previous_image_digest = str(row.runner_image_digest or "")
+    if runner_image_digest:
+        row.runner_image_digest = str(runner_image_digest)[:128]
     row.last_heartbeat_at = heartbeat_at or moment
-
     invalidated = bool(
         row.verified_at is not None
         and (
             (driver_version and driver_version != previous_driver_version)
             or (runner_version and runner_version != previous_runner_version)
+            or (
+                runner_image_digest
+                and previous_image_digest
+                and runner_image_digest != previous_image_digest
+            )
         )
     )
     if invalidated:
@@ -273,6 +281,83 @@ def mark_verified(
     row.last_evidence_ref = str(evidence_ref)
     row.verified_at = moment
     row.last_heartbeat_at = row.last_heartbeat_at or moment
+    _apply_status(row, CapabilityStatus.VERIFIED, now=moment)
+    db.flush()
+    return row
+
+
+
+def verify_from_run(
+    db: Session,
+    node_id: str,
+    *,
+    project_id: int,
+    verification_run_id: str,
+    artifact_ids: Iterable[str],
+    platforms: Iterable[str],
+    runner_image_digest: str = "",
+    os_version: str = "",
+    browser_version: str = "",
+    device_id: str = "",
+    device_model: str = "",
+    device_os: str = "",
+    supported_actions: Iterable[str] = (),
+    limitations: Iterable[str] = (),
+    now: datetime | None = None,
+) -> NodeCapabilityManifest:
+    """V16-015：VERIFIED 只能由成功的 Capability Verification Run + Artifact 证据写入。"""
+    from app.aiqe.models.artifact import ArtifactUploadStatus, RunArtifact
+    from app.aiqe.models.run import TestRun
+
+    verified_platforms = _normalize(platforms)
+    if not verified_platforms:
+        raise CapabilityError("VERIFIED 必须记录实际验收平台")
+    row = get_manifest(db, node_id)
+    if row is None:
+        raise CapabilityError(f"节点不存在: {node_id}")
+    if row.capability_status == CapabilityStatus.REVOKED.value:
+        raise CapabilityError("已 REVOKED 的节点不能直接 VERIFIED，需先恢复")
+    run = db.get(TestRun, str(verification_run_id))
+    if run is None or int(run.project_id or 0) != int(project_id):
+        raise CapabilityError("验证 Run 不存在或不属于当前项目")
+    if str(run.status) != "COMPLETED" or str(run.outcome) != "PASS":
+        raise CapabilityError("验证 Run 必须是 COMPLETED/PASS 才可 VERIFIED")
+    refs: list[str] = []
+    for artifact_id in artifact_ids:
+        artifact = db.get(RunArtifact, str(artifact_id))
+        if artifact is None:
+            raise CapabilityError(f"验证 Artifact 不存在: {artifact_id}")
+        if str(artifact.run_id) != str(run.id):
+            raise CapabilityError(f"验证 Artifact 不属于该 Run: {artifact_id}")
+        if artifact.project_id is not None and int(artifact.project_id) != int(project_id):
+            raise CapabilityError(f"验证 Artifact 跨项目: {artifact_id}")
+        if artifact.upload_status != ArtifactUploadStatus.AVAILABLE.value or not artifact.sha256:
+            raise CapabilityError(f"验证 Artifact 不可用/缺 checksum: {artifact_id}")
+        refs.append(f"artifact:{artifact.id}@sha256:{artifact.sha256}")
+    if not refs:
+        raise CapabilityError("VERIFIED 必须提供至少一条真实 Artifact 证据")
+    moment = now or datetime.now(UTC)
+    row.verified_platforms_json = verified_platforms
+    row.last_evidence_ref = refs[0][:255]
+    row.verified_at = moment
+    row.verification_run_id = run.id
+    row.verification_artifact_refs_json = refs
+    if runner_image_digest:
+        row.runner_image_digest = str(runner_image_digest)[:128]
+    if os_version:
+        row.os_version = str(os_version)[:80]
+    if browser_version:
+        row.browser_version = str(browser_version)[:80]
+    if device_id:
+        row.device_id = str(device_id)[:120]
+    if device_model:
+        row.device_model = str(device_model)[:120]
+    if device_os:
+        row.device_os = str(device_os)[:80]
+    if supported_actions:
+        row.supported_actions_json = _normalize(supported_actions)
+    if limitations:
+        row.limitations_json = [str(item)[:200] for item in limitations]
     _apply_status(row, CapabilityStatus.VERIFIED, now=moment)
     db.flush()
     return row
@@ -426,4 +511,5 @@ __all__ = [
     "revoke",
     "select_nodes",
     "supports",
+    "verify_from_run",
 ]

@@ -172,6 +172,9 @@ def create_binding(
     driver_name: str = "",
     driver_version: str = "",
     node_id: str = "",
+    environment_id: int | None = None,
+    device_pool: str = "",
+    runner_version: str = "",
     test_profile: str = "",
     evidence_refs: list[str] | None = None,
     now=None,
@@ -199,6 +202,9 @@ def create_binding(
     row.driver_name = str(driver_name or "")
     row.driver_version = str(driver_version or "")
     row.node_id = str(node_id or (status.node_ids[0] if status.node_ids else ""))
+    row.environment_id = int(environment_id) if environment_id is not None else None
+    row.device_pool = str(device_pool or "")[:120]
+    row.runner_version = str(runner_version or "")[:80]
     row.test_profile = str(test_profile or "")
     row.evidence_refs_json = list(evidence_refs or [])
     # 客户端不能自报 VERIFIED：状态永远以服务端计算为准。

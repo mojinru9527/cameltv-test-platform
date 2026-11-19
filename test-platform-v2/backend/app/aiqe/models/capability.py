@@ -43,6 +43,17 @@ class NodeCapabilityManifest(Base):
     )
     status_reason: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # ── V16-015：VERIFIED 必须来自真实验收 Run + Artifact 证据 ──
+    verification_run_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    verification_artifact_refs_json: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    runner_image_digest: Mapped[str] = mapped_column(String(128), nullable=False, default="")
+    os_version: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    browser_version: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    device_id: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    device_model: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    device_os: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    supported_actions_json: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    limitations_json: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     available: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)

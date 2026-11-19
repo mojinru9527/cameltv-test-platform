@@ -120,6 +120,7 @@ def preflight_graph(
     inprocess_enabled: bool | None = None,
     secret_provider: Any = None,
     fixtures: Mapping[str, Any] | None = None,
+    allow_available_capability: bool | None = None,
 ) -> PreflightReport:
     report = PreflightReport()
     rows = available_manifests(db)
@@ -187,11 +188,50 @@ def preflight_graph(
             )
             continue
         platform = str(node.get("platform") or "").strip()
+        actions = node.get("actions") or []
+        if platform and actions:
+            from app.aiqe.services.platform_support import (
+                PlatformSupportError,
+                assert_actions_supported,
+            )
+
+            try:
+                assert_actions_supported(platform, actions)
+            except PlatformSupportError as exc:
+                report.add(
+                    PreflightIssue(
+                        node_key=node_key,
+                        code="PLATFORM_ACTION_UNSUPPORTED",
+                        message=str(exc),
+                    )
+                )
+                continue
         candidates = [
             row
             for row in rows
             if _node_matches(row, required, platform=platform)
         ]
+        allow_available = (
+            str(getattr(settings, "environment", "development")) != "production"
+            if allow_available_capability is None
+            else bool(allow_available_capability)
+        )
+        verified_candidates = [
+            row
+            for row in candidates
+            if str(getattr(row, "capability_status", "")) == "VERIFIED"
+        ]
+        if candidates and not verified_candidates and not allow_available:
+            report.add(
+                PreflightIssue(
+                    node_key=node_key,
+                    code="CAPABILITY_NOT_VERIFIED",
+                    message="生产环境只接受 VERIFIED 能力；AVAILABLE 需显式批准的测试策略",
+                    required_capability="/".join(required),
+                    available_nodes=[row.node_id for row in candidates],
+                )
+            )
+            continue
         if not candidates:
             # 进程内 HTTP 执行器是受控特例：只有显式开启且是 http driver 才可用。
             if not (enabled and driver in INPROCESS_CAPABILITIES):
