@@ -19,6 +19,7 @@ from sqlalchemy import select
 
 from app.aiqe.models.agent import AgentExecution
 from app.aiqe.models.run import NodeRun, TestRun
+from app.aiqe.models.triage import TriageExperiment
 from app.aiqe.models.tool import ToolExecutionAudit
 from app.aiqe.security import upsert_target_policy
 from app.aiqe.services import job_consumer
@@ -35,6 +36,7 @@ from app.aiqe.services.regression_service import (
 )
 from app.aiqe.services.regression_terminal import handle_run_terminal
 from app.aiqe.services.run_launch import launch_run
+from app.aiqe.services.triage_service import create_experiment, launch_experiment
 from app.aiqe.services.workflow_service import approve_workflow, create_workflow
 from app.models.environment import Environment
 from app.models.execution_job import ExecutionJob
@@ -600,3 +602,45 @@ def test_tc_006_secret_chain_no_plaintext(db_session, sut):
     for payload in payloads:
         assert token_value not in payload
         assert "e2e-refresh" not in payload
+
+
+# ── TC-009：Noise E1–E6 单变量实验（真实 Run/Worker）────────
+def test_tc_009_noise_experiments_e1_to_e6(db_session, sut):
+    port = sut
+    baseline = _launch(
+        db_session,
+        port,
+        _http_graph(port, "/health", expected=True, key="biz"),
+    )
+    assert baseline.outcome == "PASS"
+    specs = [
+        ("E1", "run_attempt", 2),
+        ("E2", "fixture_namespace", "e2e-ns-2"),
+        ("E3", "upstream_mode", "recorded"),
+        ("E4", "feature_flag", "overlay=on"),
+        ("E5", "worker_instance", "e2e-worker-2"),
+        ("E6", "network_profile", "3g-lossy"),
+    ]
+    launched_runs: list[str] = []
+    for key, variable, value in specs:
+        exp = create_experiment(
+            db_session,
+            experiment_key=key,
+            idempotency_key=f"e2e-{key}-{uuid.uuid4().hex[:6]}",
+            baseline_run_id=baseline.id,
+            change={variable: value},
+        )
+        db_session.commit()
+        launched = launch_experiment(db_session, exp.id)
+        db_session.commit()
+        _drain(db_session)
+        db_session.expire_all()
+        exp = db_session.get(TriageExperiment, exp.id)
+        run = db_session.get(TestRun, launched.verification_run_id)
+        assert run is not None and run.retest_of == baseline.id
+        assert run.source_type == "experiment"
+        assert run.status in {"COMPLETED", "BLOCKED", "FAILED"}, (key, run.status)
+        assert exp.snapshot_diff_json["single_variable"] is True, key
+        assert exp.snapshot_diff_json["expected_dimension"] == variable, key
+        launched_runs.append(run.id)
+    assert len(set(launched_runs)) == 6

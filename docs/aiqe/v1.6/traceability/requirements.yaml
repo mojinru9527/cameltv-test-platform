@@ -1501,8 +1501,8 @@ requirements:
   - id: V16-017-R1
     issue: V16-017
     priority: P1
-    title: "平台链路真实 E2E（7/10）"
-    requirement: "TC-002/004/005/006/007/008/010 通过正式 Launch/AgentTask→Worker/Outbox→Driver/Tool→Assertion/Evidence 链路独立执行。"
+    title: "平台链路真实 E2E（8/10）"
+    requirement: "TC-002/004/005/006/007/008/009/010 通过正式 Launch/AgentTask/Experiment→Worker/Outbox→Driver/Tool→Assertion/Evidence 链路独立执行。"
     invariant: "每个 TC 独立数据隔离、业务断言、清理与证据；禁止只断言页面 body。"
     status: PARTIAL
     code:
@@ -1525,15 +1525,16 @@ requirements:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_008_defect_regression_end_to_end
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6
     mock_boundary: "本地确定性 SUT（真实 HTTP/SQLite/Worker），非产品租户。"
     layers: [L2, L3]
     evidence:
-      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (7 passed)"
+      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (8 passed)"
       - "docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md"
     owner: qa-automation
     reviewer: pending
     gaps:
-      - "7/10 平台链路通过；TC-001/003/009 需隔离 Test 产品环境。"
+      - "8/10 平台链路通过；TC-001/003 需隔离 Test 产品环境。"
 
   - id: V16-017-R2
     issue: V16-017
@@ -2191,12 +2192,14 @@ requirements:
     tests:
       success:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6
       negative:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6
     mock_boundary: "本地确定性 SUT（真实 HTTP/SQLite/Worker），非产品租户。"
     layers: [L2, L3]
     evidence:
-      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (7 passed)"
+      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (8 passed)"
     owner: qa-automation
     reviewer: pending
     gaps:
@@ -2250,7 +2253,7 @@ requirements:
     mock_boundary: "本地确定性 SUT（真实 HTTP/SQLite/Worker），非产品租户。"
     layers: [L2, L3]
     evidence:
-      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (7 passed)"
+      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (8 passed)"
     owner: qa-automation
     reviewer: pending
     gaps:
@@ -2259,28 +2262,29 @@ requirements:
   - id: TC-AIQE-009
     issue: TC-AIQE-009
     priority: P1
-    title: "产品级 E2E（隔离 Test 环境）"
-    requirement: "在隔离 Test 环境通过真实 API/Worker/Driver/UI 执行并产出证据。"
-    invariant: "BLOCKED 不计入通过率。"
-    status: BLOCKED
+    title: "Noise E1–E6 单变量实验"
+    requirement: "平台链路 E2E（真实 baseline + 6 个 verification Run/Worker）；真实故障注入需隔离 Test 环境。"
+    invariant: "每个实验只允许一个变量，baseline 不可变，verification 必须是真实 Run。"
+    status: PARTIAL
     code:
-      - path: test-platform-v2/backend/tests/e2e/aiqe/test_tc_aiqe_001_010.py
-        symbol: "旧 body 断言入口（不得作为证据）"
-        change: pending-replacement
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
+        symbol: "test_tc_009_noise_experiments_e1_to_e6"
+        change: added
     production_entry:
-      - "隔离 Test 环境"
+      - "pytest tests/e2e/aiqe/test_v16_017_platform_chain.py"
     tests:
-      success: []
-      negative: []
-    mock_boundary: ""
-    layers: [L3, L4]
+      success:
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6
+      negative:
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6
+    mock_boundary: "本地确定性 SUT（真实 HTTP/SQLite/Worker）；未做真实网络/第三方故障注入。"
+    layers: [L2, L3]
     evidence:
-      - "docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md"
+      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (8 passed)"
     owner: qa-automation
     reviewer: pending
-    review_by: "2027-01-15"
-    blocked_reason: "E2E_TEST_ENV_MISSING：Noise E1–E6 需真实故障注入与生产同构环境。"
-    gaps: []
+    gaps:
+      - "真实故障注入（网络/CPU/第三方）仍需隔离 Test 环境。"
 
   - id: TC-AIQE-010
     issue: TC-AIQE-010
@@ -2299,13 +2303,15 @@ requirements:
       success:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6
       negative:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6
     mock_boundary: "本地确定性 SUT（真实 HTTP/SQLite/Worker），非产品租户。"
     layers: [L2, L3]
     evidence:
-      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (7 passed)"
+      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (8 passed)"
     owner: qa-automation
     reviewer: pending
     gaps:

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "3dcefd99293f4034a761a58cc5ebdcf7e14d1269",
+  "commit_sha": "525ae8c1976afb63362de009ea2503c5e75d4531",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -12,7 +12,7 @@
   "summary": {
     "requirements": 70,
     "verified": 54,
-    "blocked": 4,
+    "blocked": 3,
     "not_started": 0
   },
   "requirements": [
@@ -1460,7 +1460,8 @@
         "boundary": [
           "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_008_defect_regression_end_to_end",
           "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain",
-          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext"
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext",
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6"
         ],
         "concurrency": []
       },
@@ -1469,11 +1470,11 @@
         "L3"
       ],
       "evidence": [
-        "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (7 passed)",
+        "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (8 passed)",
         "docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md"
       ],
       "gaps": [
-        "7/10 平台链路通过；TC-001/003/009 需隔离 Test 产品环境。"
+        "8/10 平台链路通过；TC-001/003 需隔离 Test 产品环境。"
       ]
     },
     {
@@ -2132,10 +2133,12 @@
       ],
       "tests": {
         "success": [
-          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext"
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext",
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6"
         ],
         "negative": [
-          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext"
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext",
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6"
         ],
         "boundary": [],
         "concurrency": []
@@ -2145,7 +2148,7 @@
         "L3"
       ],
       "evidence": [
-        "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (7 passed)"
+        "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (8 passed)"
       ],
       "gaps": [
         "产品登录 JWT/真实租户仍需隔离 Test 环境。"
@@ -2207,7 +2210,7 @@
         "L3"
       ],
       "evidence": [
-        "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (7 passed)"
+        "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (8 passed)"
       ],
       "gaps": [
         "产品级 E2E 仍 BLOCKED（见 V16-017-R2 / E2E-Coverage-and-Blockers.md）。"
@@ -2217,26 +2220,32 @@
       "id": "TC-AIQE-009",
       "issue": "TC-AIQE-009",
       "priority": "P1",
-      "status": "BLOCKED",
+      "status": "PARTIAL",
       "owner": "qa-automation",
       "reviewer": "pending",
       "production_entry": [
-        "隔离 Test 环境"
+        "pytest tests/e2e/aiqe/test_v16_017_platform_chain.py"
       ],
       "tests": {
-        "success": [],
-        "negative": [],
+        "success": [
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6"
+        ],
+        "negative": [
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6"
+        ],
         "boundary": [],
         "concurrency": []
       },
       "layers": [
-        "L3",
-        "L4"
+        "L2",
+        "L3"
       ],
       "evidence": [
-        "docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md"
+        "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (8 passed)"
       ],
-      "gaps": []
+      "gaps": [
+        "真实故障注入（网络/CPU/第三方）仍需隔离 Test 环境。"
+      ]
     },
     {
       "id": "TC-AIQE-010",
@@ -2251,11 +2260,13 @@
       "tests": {
         "success": [
           "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain",
-          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext"
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext",
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6"
         ],
         "negative": [
           "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain",
-          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext"
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext",
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6"
         ],
         "boundary": [],
         "concurrency": []
@@ -2265,7 +2276,7 @@
         "L3"
       ],
       "evidence": [
-        "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (7 passed)"
+        "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (8 passed)"
       ],
       "gaps": [
         "产品级 E2E 仍 BLOCKED（见 V16-017-R2 / E2E-Coverage-and-Blockers.md）。"
