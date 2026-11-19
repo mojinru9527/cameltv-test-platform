@@ -79,6 +79,12 @@ class Settings(BaseSettings):
     db_encryption_enabled: bool = False
     object_storage_encryption_enabled: bool = False
     use_external_secret_store: bool = False
+    #: V16-003-R4：外部 Secret Store（file=加密文件，aws=Secrets Manager）
+    aiqe_secret_store_provider: str = "file"
+    aiqe_secret_store_path: str = "storage/secrets/aiqe-secrets.json"
+    aiqe_secret_store_key: str = ""
+    aiqe_secret_store_region: str = ""
+    aiqe_secret_store_prefix: str = "aiqe/secrets"
     https_only: bool = False
     db_connection_tls: bool = False
     # V40-009 SSO scaffolding (real IdP handshake is external; values are config

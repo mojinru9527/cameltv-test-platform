@@ -101,26 +101,51 @@ class SecretVault:
     （``settings.use_external_secret_store`` 为 True 时本实现拒绝启动）。
     """
 
-    def __init__(self, *, backend: str = "memory") -> None:
+    def __init__(self, *, backend: str = "memory", store: Any = None) -> None:
         self.backend = backend
         self._entries: dict[str, _Entry] = {}
+        self._store = store
         self._lock = threading.RLock()
 
     def put(self, *, handle_id: str, value: str, expires_at: datetime, run_id: str, project_id: int) -> None:
+        if self._store is not None:
+            self._store.put(
+                handle_id=handle_id,
+                value=value,
+                expires_at=expires_at,
+                run_id=run_id,
+                project_id=project_id,
+            )
+            return
         with self._lock:
             self._entries[handle_id] = _Entry(
                 value=value, expires_at=expires_at, run_id=run_id, project_id=project_id
             )
 
     def get(self, handle_id: str) -> _Entry | None:
+        if self._store is not None:
+            stored = self._store.get(handle_id)
+            if stored is None:
+                return None
+            return _Entry(
+                value=stored.value,
+                expires_at=stored.expires_at,
+                run_id=stored.run_id,
+                project_id=stored.project_id,
+            )
         with self._lock:
             return self._entries.get(handle_id)
 
     def drop(self, handle_id: str) -> None:
+        if self._store is not None:
+            self._store.drop(handle_id)
+            return
         with self._lock:
             self._entries.pop(handle_id, None)
 
     def purge_expired(self, *, now: datetime | None = None) -> int:
+        if self._store is not None:
+            return int(self._store.purge_expired(now=now))
         moment = now or datetime.now(UTC)
         with self._lock:
             expired = [key for key, entry in self._entries.items() if entry.expires_at <= moment]
@@ -129,21 +154,43 @@ class SecretVault:
         return len(expired)
 
     def clear(self) -> None:
+        if self._store is not None:
+            self._store.clear()
+            return
         with self._lock:
             self._entries.clear()
 
 
 VAULT = SecretVault()
+_EXTERNAL_VAULT: SecretVault | None = None
+
+
+def clear_secret_vault_cache() -> None:
+    global _EXTERNAL_VAULT
+    _EXTERNAL_VAULT = None
 
 
 def get_secret_vault() -> SecretVault:
-    """Vault 提供者：外部 Secret Store 未实现时必须 fail closed。"""
+    """Vault 提供者：外部 Secret Store 缺失/配置非法时必须 fail closed。"""
+    global _EXTERNAL_VAULT
     from app.core.config import settings
 
     if bool(getattr(settings, "use_external_secret_store", False)):
-        raise SecretVaultUnavailable(
-            "AIQE 外部 Secret Store 尚未实现：禁止在未配置 KMS/Secret Manager 时执行敏感节点"
-        )
+        if _EXTERNAL_VAULT is None:
+            from app.aiqe.security.external_secret_store import (
+                ExternalStoreUnavailable,
+                build_external_store,
+            )
+
+            try:
+                store = build_external_store()
+            except ExternalStoreUnavailable as exc:
+                raise SecretVaultUnavailable(str(exc)) from exc
+            _EXTERNAL_VAULT = SecretVault(
+                backend=str(getattr(settings, "aiqe_secret_store_provider", "file")),
+                store=store,
+            )
+        return _EXTERNAL_VAULT
     return VAULT
 
 
@@ -408,6 +455,7 @@ __all__ = [
     "SecretVault",
     "SecretVaultBackend",
     "SecretVaultUnavailable",
+    "clear_secret_vault_cache",
     "create_secret_handle",
     "get_secret_vault",
     "purge_expired_handles",
