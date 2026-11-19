@@ -252,6 +252,11 @@ def test_launch_with_cloned_snapshot_uses_clone_graph(db_session):
         user_id=1,
         workflow_snapshot_id=child.id,
         execution_kind="DEFECT_REGRESSION",
+        # V16-008：回归必须携带服务端 Scope Snapshot（mandatory 必须在 DAG 内）。
+        scope_snapshot={
+            "mandatory_node_keys": ["login"],
+            "checksum_sha256": "e" * 64,
+        },
         launch_key="v16-007-4",
     )
     db_session.commit()

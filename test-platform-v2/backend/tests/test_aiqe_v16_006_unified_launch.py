@@ -14,7 +14,7 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import select
 
 from app.aiqe.models.outbox import FAILED, PENDING, PUBLISHED, AIQEOutbox
-from app.aiqe.models.run import TestRun
+from app.aiqe.models.run import NodeRun, TestRun
 from app.aiqe.services import outbox_service
 from app.aiqe.services.capability_registry import register_manifest
 from app.aiqe.services.regression_service import (
@@ -232,6 +232,11 @@ def test_regression_launch_creates_real_jobs_and_preserves_dag(db_session):
         db_session, project_id=1, user_id=1, workflow_definition_id=workflow.id,
         launch_key="v16-006-src",
     )
+    # 回归来源必须有失败证据，否则 Mandatory Scope 为空（V16-008 拒绝空范围）。
+    source_node = db_session.scalar(select(NodeRun).where(NodeRun.run_id == source.run_id))
+    source_node.status = "FAILED"
+    source_node.error_class = "ASSERTION_FAILED"
+    db_session.commit()
     defect = Defect(project_id=1, defect_id="BUG-1", title="order broken", severity="P1", status="open")
     db_session.add(defect)
     db_session.flush()

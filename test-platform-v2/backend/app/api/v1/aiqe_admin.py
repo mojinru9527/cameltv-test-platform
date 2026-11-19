@@ -8,15 +8,24 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.aiqe.models.query_registry import RegisteredQuery
-from app.aiqe.models.security import TargetPolicyRecord
-from app.aiqe.security.target_policy import TargetPolicyConfigError, upsert_target_policy
+from app.aiqe.security.target_policy import (
+    TargetPolicyConfigError,
+    list_target_policies,
+    upsert_target_policy,
+)
 from app.aiqe.services.artifact_gc import purge_expired_artifacts
-from app.aiqe.services.query_registry import RegisteredQueryError, register_query
+from app.aiqe.services.query_registry import (
+    RegisteredQueryError,
+    approve_registered_query,
+    list_registered_queries,
+    register_query,
+)
 from app.aiqe.services.noise_rule_service import (
     approve_rule,
     get_rule,
@@ -382,7 +391,7 @@ class TargetPolicyIn(BaseModel):
     base_version: int | None = None
 
 
-def _query_out(row: RegisteredQuery) -> dict:
+def _query_out(row: Any) -> dict:
     return {
         "id": row.id,
         "project_id": row.project_id,
@@ -403,7 +412,7 @@ def _query_out(row: RegisteredQuery) -> dict:
     }
 
 
-def _policy_out(row: TargetPolicyRecord) -> dict:
+def _policy_out(row: Any) -> dict:
     return {
         "id": row.id,
         "project_id": row.project_id,
@@ -422,15 +431,7 @@ def list_query_registry(
     current: CurrentUser = Depends(require_permission("defect:list")),
     db: Session = Depends(get_db),
 ):
-    from sqlalchemy import select
-
-    rows = list(
-        db.scalars(
-            select(RegisteredQuery)
-            .where(RegisteredQuery.project_id == int(current.project_id or 0))
-            .order_by(RegisteredQuery.query_key, RegisteredQuery.version.desc())
-        )
-    )
+    rows = list_registered_queries(db, project_id=int(current.project_id or 0))
     return R.ok([_query_out(row) for row in rows])
 
 
@@ -442,12 +443,6 @@ def create_query_registry(
     db: Session = Depends(get_db),
 ):
     project_id = int(current.project_id or 0)
-    if body.environment_id is not None:
-        from app.models.environment import Environment
-
-        env = db.get(Environment, int(body.environment_id))
-        if env is None or int(env.project_id or 0) != project_id:
-            raise APIException(code=404, msg="环境不存在或不属于当前项目", http_status=404)
     try:
         row = register_query(
             db,
@@ -482,37 +477,25 @@ def approve_query_registry(
     current: CurrentUser = Depends(require_permission("defect:update")),
     db: Session = Depends(get_db),
 ):
-    from sqlalchemy import select
-
-    row = db.scalar(
-        select(RegisteredQuery).where(
-            RegisteredQuery.id == str(query_id),
-            RegisteredQuery.project_id == int(current.project_id or 0),
-        )
+    row = approve_registered_query(
+        db,
+        project_id=int(current.project_id or 0),
+        query_id=str(query_id),
+        approved_by=getattr(current, "id", None),
     )
     if row is None:
         raise APIException(code=404, msg="登记查询不存在", http_status=404)
-    row.approval_status = "approved"
-    row.approved_by = getattr(current, "id", None)
     db.commit()
     return R.ok(_query_out(row))
 
 
 @router.get("/target-policies", response_model=R[list], summary="目标策略列表（含历史版本）")
-def list_target_policies(
+def list_target_policies_route(
     _console: CurrentUser = Depends(_console_access),
     current: CurrentUser = Depends(require_permission("defect:list")),
     db: Session = Depends(get_db),
 ):
-    from sqlalchemy import select
-
-    rows = list(
-        db.scalars(
-            select(TargetPolicyRecord)
-            .where(TargetPolicyRecord.project_id == int(current.project_id or 0))
-            .order_by(TargetPolicyRecord.version.desc())
-        )
-    )
+    rows = list_target_policies(db, project_id=int(current.project_id or 0))
     return R.ok([_policy_out(row) for row in rows])
 
 
@@ -524,12 +507,6 @@ def create_target_policy(
     db: Session = Depends(get_db),
 ):
     project_id = int(current.project_id or 0)
-    if body.environment_id is not None:
-        from app.models.environment import Environment
-
-        env = db.get(Environment, int(body.environment_id))
-        if env is None or int(env.project_id or 0) != project_id:
-            raise APIException(code=404, msg="环境不存在或不属于当前项目", http_status=404)
     try:
         row = upsert_target_policy(
             db,

@@ -1,5 +1,5 @@
 {
-  "count": 395,
+  "count": 400,
   "routes": [
     {
       "path": "/api/v1/ai-config/providers",
@@ -88,6 +88,26 @@
     {
       "path": "/api/v1/aiqe/admin/quality-gate/latest",
       "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/query-registry",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/query-registry",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/query-registry/{query_id}/approve",
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/target-policies",
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/aiqe/admin/target-policies",
+      "method": "POST"
     },
     {
       "path": "/api/v1/aiqe/agent-tasks",

@@ -25,6 +25,11 @@ from app.aiqe.models.deployment import DeploymentAttestation
 from app.aiqe.models.profile import ExecutionProfile
 from app.aiqe.models.run import NodeRun, RunAssertionResult, StepAttempt, TestRun
 from app.aiqe.models.workflow import WorkflowDefinition
+from app.aiqe.services.regression_scope import (
+    ScopeError,
+    build_scope_plan,
+    ensure_scope_snapshot,
+)
 from app.aiqe.services.run_launch import launch
 from app.aiqe.services.snapshot_service import (
     SnapshotError,
@@ -286,9 +291,42 @@ def create_regression_request(
     mandatory, excluded = build_mandatory_scope(
         db, source_run=source_run, scope=scope, selected_case_ids=selected_case_ids
     )
+    snapshot = _source_snapshot(db, source_run)
+    frozen = _regression_snapshot(db, source_run, snapshot)
+    workflow_checksum = (
+        frozen.checksum_sha256 if frozen is not None else snapshot.get("workflow_checksum")
+    )
+    scope_plan: dict[str, Any] | None = None
+    blockers_scope_error: dict[str, str] | None = None
     scope_hash = _scope_hash(scope, mandatory, list(selected_case_ids or []))
+    if frozen is not None:
+        try:
+            scope_plan = build_scope_plan(
+                scope=scope,
+                graph=frozen.canonical_json or {},
+                mandatory_refs=list(mandatory),
+                excluded=list(excluded),
+                inputs={
+                    "source_run_id": source_run.id if source_run is not None else None,
+                    "workflow_snapshot_id": frozen.id,
+                    "snapshot_hash": frozen.checksum_sha256,
+                    "fixed_sha": sha,
+                    "environment_id": environment_id,
+                    "selected_case_ids": list(selected_case_ids or []),
+                },
+            )
+            scope_hash = str(scope_plan["checksum_sha256"])
+        except ScopeError as exc:
+            scope_plan = None
+            blockers_scope_error = {"code": exc.code, "message": str(exc)}
+        else:
+            blockers_scope_error = None
+    else:
+        blockers_scope_error = None
 
     blockers: list[dict[str, Any]] = []
+    if blockers_scope_error is not None:
+        blockers.append(blockers_scope_error)
     deployed_sha = resolve_deployed_sha(
         db, project_id=int(project_id), environment_id=environment_id
     )
@@ -310,9 +348,6 @@ def create_regression_request(
             }
         )
 
-    snapshot = _source_snapshot(db, source_run)
-    workflow_checksum = snapshot.get("workflow_checksum")
-    frozen = _regression_snapshot(db, source_run, snapshot)
     if frozen is None:
         blockers.append(
             {
@@ -369,6 +404,17 @@ def create_regression_request(
     )
     db.add(row)
     db.flush()
+    if scope_plan is not None and not blockers:
+        scope_row = ensure_scope_snapshot(
+            db,
+            project_id=int(project_id),
+            defect_id=int(defect_id),
+            plan=scope_plan,
+            approved_by=actor_id,
+        )
+        row.scope_snapshot_id = scope_row.id
+        row.scope_hash = scope_row.checksum_sha256
+        scope_plan["scope_id"] = scope_row.id
 
     if blockers:
         return row, None, True
@@ -382,6 +428,7 @@ def create_regression_request(
         user_id=actor_id,
         workflow_snapshot_id=child.id,
         execution_kind="DEFECT_REGRESSION",
+        scope_snapshot=scope_plan,
         launch_key=f"regression:{row.id}",
         source_type="regression",
         source_id=str(defect_id),

@@ -606,6 +606,19 @@ def upsert_target_policy(
     return record
 
 
+def list_target_policies(db, *, project_id: int):
+    """V16-001：目标策略历史版本列表（路由层不得直接 ORM）。"""
+    from app.aiqe.models.security import TargetPolicyRecord
+
+    return list(
+        db.scalars(
+            select(TargetPolicyRecord)
+            .where(TargetPolicyRecord.project_id == int(project_id))
+            .order_by(TargetPolicyRecord.version.desc())
+        )
+    )
+
+
 __all__ = [
     "DEFAULT_BLOCKED_CIDRS",
     "DEFAULT_METHODS",
@@ -618,6 +631,7 @@ __all__ = [
     "TargetPolicy",
     "TargetPolicyConfigError",
     "TargetPolicyResolver",
+    "list_target_policies",
     "resolve_execution_policy",
     "upsert_target_policy",
 ]

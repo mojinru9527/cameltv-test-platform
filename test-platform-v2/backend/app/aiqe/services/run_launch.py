@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
@@ -111,6 +112,7 @@ def launch_run(
     environment_snapshot: dict[str, Any] | None = None,
     workflow_snapshot_id: str | None = None,
     execution_kind: str = "NORMAL",
+    scope_snapshot: Mapping[str, Any] | None = None,
 ) -> TestRun:
     freeze = None
     if workflow_snapshot_id:
@@ -229,6 +231,25 @@ def launch_run(
                 "version": profile.version,
                 "checksum": profile.checksum,
             },
+        )
+
+    # V16-008：回归必须携带服务端 Scope Snapshot；mandatory 节点不得被排除。
+    if scope_snapshot is not None:
+        scope_payload = dict(scope_snapshot)
+        graph_keys = {str(node.get("key")) for node in graph.get("nodes") or []}
+        mandatory_keys = [str(key) for key in scope_payload.get("mandatory_node_keys") or []]
+        missing = [key for key in mandatory_keys if key not in graph_keys]
+        if missing:
+            raise LaunchError(
+                "MANDATORY_SCOPE_VIOLATION",
+                f"mandatory 节点不在执行 DAG 中: {sorted(missing)}",
+            )
+        snapshot["scope_snapshot"] = scope_payload
+        if scope_payload.get("scope_id"):
+            snapshot["scope_snapshot_id"] = str(scope_payload["scope_id"])
+    elif str(execution_kind) == "DEFECT_REGRESSION":
+        raise LaunchError(
+            "SCOPE_SNAPSHOT_REQUIRED", "Defect Regression 必须携带服务端 Scope Snapshot"
         )
 
     if launch_key:

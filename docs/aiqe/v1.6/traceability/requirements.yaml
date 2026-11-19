@@ -3,7 +3,7 @@ release: aiqe-v1.6
 baseline:
   main_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
   audit_snapshot_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
-  migration_head: 20261119_v16_006_outbox
+  migration_head: 20261119_v16_008_scope
   branch: release/aiqe-v1-6
   audit_reports:
     - docs/aiqe/v1.6/_audit/baseline-audit-G1-G3.txt
@@ -786,33 +786,131 @@ requirements:
     gaps:
       - "旧 Run（无 snapshot）走 LEGACY_RECONSTRUCTED 迁移路径，仅从既有 NodeRun 重建一次快照；新 Run 一律冻结。"
 
-  # ── V16-008 Mandatory Scope（P1，基线 PARTIAL）──────────────
+  # ── V16-008 Mandatory Scope（P1）────────────────────────────
   - id: V16-008-R1
     issue: V16-008
     priority: P1
-    title: "Defect Regression Mandatory Scope 强制执行"
-    requirement: "Mandatory scope 由服务端计算并冻结；SnapshotCloner 不得排除 mandatory 节点；必测节点不可执行时 Run BLOCKED。"
-    invariant: "Mandatory 全部完成且断言通过才可判定质量门禁通过；不得缩小范围后 PASS。"
-    status: PARTIAL
+    title: "服务端 Scope Snapshot 与三类集合"
+    requirement: "Scope 由服务端计算并冻结：scope_id、规则版本、输入证据 refs、mandatory/related/smoke 集合、原因、审批人、checksum；相同输入复用同一快照。"
+    invariant: "Mandatory 集合不可由调用方/AI 缩小；必测引用必须能映射到冻结 DAG。"
+    status: VERIFIED
     code:
+      - path: test-platform-v2/backend/app/aiqe/models/regression_scope.py
+        symbol: "RegressionScopeSnapshot / scope_checksum"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/services/regression_scope.py
+        symbol: "build_scope_plan / ensure_scope_snapshot / verify_scope_snapshot"
+        change: added
       - path: test-platform-v2/backend/app/aiqe/services/regression_service.py
-        symbol: "build_mandatory_scope"
-        change: unchanged
-      - path: test-platform-v2/backend/app/api/v1/aiqe_regressions.py
-        symbol: "regression API"
-        change: unchanged
+        symbol: "create_regression_request scope 冻结"
+        change: modified
+      - path: test-platform-v2/backend/alembic/versions/20261119_v16_008_scope.py
+        symbol: "upgrade/downgrade"
+        change: added
     production_entry:
-      - "POST /aiqe/regressions"
-    tests: {}
-    mock_boundary: ""
+      - "regression_service.create_regression_request"
+      - "aiqe_regression_scopes"
+    tests:
+      success:
+        - tests/test_aiqe_v16_008_mandatory_scope.py::test_scope_plan_builds_mandatory_related_smoke_and_checksum
+        - tests/test_aiqe_v16_008_mandatory_scope.py::test_regression_freezes_scope_snapshot_and_binds_run
+      negative:
+        - tests/test_aiqe_v16_008_mandatory_scope.py::test_scope_plan_rejects_missing_mandatory_and_empty_scope
+        - tests/test_aiqe_v16_008_mandatory_scope.py::test_scope_snapshot_is_immutable_and_tamper_evident
+    mock_boundary: "真实 DB + 真实冻结 DAG + 真实 checksum；无 Mock。"
+    layers: [L1, L2, L3]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_008_mandatory_scope.py (11 passed)"
+    owner: quality-platform
+    reviewer: pending
+    gaps: []
+
+  - id: V16-008-R2
+    issue: V16-008
+    priority: P1
+    title: "Launch 强制 Scope 且禁止排除 Mandatory"
+    requirement: "DEFECT_REGRESSION Launch 必须携带服务端 Scope Snapshot；mandatory 节点必须存在于执行 DAG，缺失/被排除即拒绝；无失败证据导致空 mandatory 时 BLOCKED。"
+    invariant: "不得缩小范围后 PASS；Mandatory 不可删除/skip。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/run_launch.py
+        symbol: "scope_snapshot 校验与绑定"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/services/regression_service.py
+        symbol: "launch(scope_snapshot=...)"
+        change: modified
+    production_entry:
+      - "launch_run(execution_kind='DEFECT_REGRESSION', scope_snapshot=...)"
+    tests:
+      success:
+        - tests/test_aiqe_v16_008_mandatory_scope.py::test_regression_freezes_scope_snapshot_and_binds_run
+      negative:
+        - tests/test_aiqe_v16_008_mandatory_scope.py::test_launch_requires_scope_snapshot_for_regression
+        - tests/test_aiqe_v16_008_mandatory_scope.py::test_launch_rejects_scope_with_missing_mandatory
+        - tests/test_aiqe_v16_008_mandatory_scope.py::test_regression_without_failure_evidence_is_blocked
+    mock_boundary: "真实 Launch/DB；无 Mock。"
+    layers: [L1, L2, L3]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_008_mandatory_scope.py (11 passed)"
+    owner: quality-platform
+    reviewer: pending
+    gaps: []
+
+  - id: V16-008-R3
+    issue: V16-008
+    priority: P1
+    title: "Run PASS 门禁：Mandatory 全部 PASSED"
+    requirement: "Run PASSED 要求所有 mandatory 节点执行且 PASSED；mandatory FAILED → Run FAIL；BLOCKED/缺失 → INCOMPLETE，不得 PASS。"
+    invariant: "Quality Gate 与 Run Outcome 使用同一 mandatory 集合。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/dag_scheduler.py
+        symbol: "mandatory_node_keys gate"
+        change: modified
+    production_entry:
+      - "dag_scheduler._finalize"
+    tests:
+      success:
+        - tests/test_aiqe_v16_008_mandatory_scope.py::test_mandatory_failed_never_passes
+      negative:
+        - tests/test_aiqe_v16_008_mandatory_scope.py::test_mandatory_blocked_is_incomplete
+        - tests/test_aiqe_v16_008_mandatory_scope.py::test_mandatory_missing_from_execution_is_incomplete
+    mock_boundary: "真实状态机与 DB；无 Mock。"
     layers: [L1, L2]
     evidence:
-      - "ci:baseline-audit-G5"
-    owner: execution-platform
+      - "pytest:tests/test_aiqe_v16_008_mandatory_scope.py (11 passed)"
+    owner: quality-platform
     reviewer: pending
-    gaps:
-      - "Mandatory 集合只落库不参与终态/门禁；客户端可用 scope=SELECTED 清空强制集合。"
-      - "回归 Run 不派发 Job、不复制断言、永不到终态。"
+    gaps: []
+
+  - id: V16-008-R4
+    issue: V16-008
+    priority: P1
+    title: "回归幂等键确定性（SHA/Snapshot/Scope/Env）"
+    requirement: "同一 project+defect+full SHA+snapshot hash+scope checksum+environment+policy 只创建一个回归；不同 commit 或环境创建不同回归。"
+    invariant: "禁止随机 UUID 作为幂等键；重复请求返回既有回归与 Run。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/regression_service.py
+        symbol: "_fingerprint（含 snapshot/scope checksum）"
+        change: modified
+    production_entry:
+      - "regression_service.create_regression_request"
+    tests:
+      success:
+        - tests/test_aiqe_v16_008_mandatory_scope.py::test_different_sha_or_environment_creates_new_regression
+      negative:
+        - tests/test_aiqe_v16_008_mandatory_scope.py::test_launch_rejects_scope_with_missing_mandatory
+      boundary:
+        - tests/test_aiqe_regression_api.py::test_fingerprint_idempotent
+    mock_boundary: "真实 DB 唯一 fingerprint；无 Mock。"
+    layers: [L1, L2]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_008_mandatory_scope.py (11 passed)"
+      - "pytest:tests/test_aiqe_regression_api.py (passed)"
+    owner: quality-platform
+    reviewer: pending
+    gaps: []
 
   # ── V16-009 Assertion/PASS 语义（P1）───────────────────────
   - id: V16-009-R1

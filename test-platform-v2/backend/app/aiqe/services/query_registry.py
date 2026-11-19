@@ -148,6 +148,12 @@ def register_query(
     key = str(query_key or "").strip()
     if not key or len(key) > 80:
         raise RegisteredQueryError("query_key 不能为空且不超过 80 字符")
+    if environment_id is not None:
+        from app.models.environment import Environment
+
+        env = db.get(Environment, int(environment_id))
+        if env is None or int(env.project_id or 0) != int(project_id):
+            raise RegisteredQueryError("环境不存在或不属于当前项目")
     if project_scope != "current_project":
         raise RegisteredQueryError("project_scope 目前只支持 current_project")
     params = [str(name).strip() for name in allowed_params]
@@ -492,6 +498,40 @@ class DbReadonlyExecutor:
         return bound
 
 
+def list_registered_queries(db: Session, *, project_id: int) -> list[RegisteredQuery]:
+    """路由层使用的只读列表（项目隔离）。"""
+    return list(
+        db.scalars(
+            select(RegisteredQuery)
+            .where(RegisteredQuery.project_id == int(project_id))
+            .order_by(RegisteredQuery.query_key, RegisteredQuery.version.desc())
+        )
+    )
+
+
+def get_registered_query(
+    db: Session, *, project_id: int, query_id: str
+) -> RegisteredQuery | None:
+    return db.scalar(
+        select(RegisteredQuery).where(
+            RegisteredQuery.id == str(query_id),
+            RegisteredQuery.project_id == int(project_id),
+        )
+    )
+
+
+def approve_registered_query(
+    db: Session, *, project_id: int, query_id: str, approved_by: int | None
+) -> RegisteredQuery | None:
+    row = get_registered_query(db, project_id=project_id, query_id=query_id)
+    if row is None:
+        return None
+    row.approval_status = "approved"
+    row.approved_by = approved_by
+    db.flush()
+    return row
+
+
 __all__ = [
     "DbReadonlyExecutor",
     "QueryDenied",
@@ -499,7 +539,10 @@ __all__ = [
     "QueryNotRegistered",
     "QueryRegistryResolver",
     "RegisteredQueryError",
+    "approve_registered_query",
     "default_connection_resolver",
+    "get_registered_query",
+    "list_registered_queries",
     "register_query",
     "resolve_query",
     "statement_hash",

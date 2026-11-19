@@ -212,7 +212,7 @@ def test_create_regression_creates_verification_run(api: TestClient, db_session:
     )
     assert resp.status_code == 200, resp.text
     data = resp.json()["data"]
-    assert data["status"] in {"QUEUED", "RUNNING"}
+    assert data["status"] in {"QUEUED", "RUNNING"}, data.get("blockers")
     assert data["deployed_sha"] == SHA
     assert data["run"]["status"] in {"QUEUED", "RUNNING"}
     assert data["run"]["commit_sha"] == SHA

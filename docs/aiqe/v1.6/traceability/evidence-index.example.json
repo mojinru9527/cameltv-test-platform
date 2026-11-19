@@ -1,17 +1,17 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "9ab169f597feced2e5d9b1e9e4f43bee92e6998a",
+  "commit_sha": "0ff7612c477c0ad174ae2641634d0c11194bc009",
   "ci_run": "",
   "environment": "local",
   "baseline": {
     "main_sha": "86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f",
     "audit_snapshot_sha": "86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f",
-    "migration_head": "20261119_v16_006_outbox"
+    "migration_head": "20261119_v16_008_scope"
   },
   "summary": {
-    "requirements": 51,
-    "verified": 21,
+    "requirements": 54,
+    "verified": 25,
     "blocked": 2,
     "not_started": 10
   },
@@ -745,15 +745,85 @@
       "id": "V16-008-R1",
       "issue": "V16-008",
       "priority": "P1",
-      "status": "PARTIAL",
-      "owner": "execution-platform",
+      "status": "VERIFIED",
+      "owner": "quality-platform",
       "reviewer": "pending",
       "production_entry": [
-        "POST /aiqe/regressions"
+        "regression_service.create_regression_request",
+        "aiqe_regression_scopes"
       ],
       "tests": {
-        "success": [],
-        "negative": [],
+        "success": [
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_scope_plan_builds_mandatory_related_smoke_and_checksum",
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_regression_freezes_scope_snapshot_and_binds_run"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_scope_plan_rejects_missing_mandatory_and_empty_scope",
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_scope_snapshot_is_immutable_and_tamper_evident"
+        ],
+        "boundary": [],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_008_mandatory_scope.py (11 passed)"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "V16-008-R2",
+      "issue": "V16-008",
+      "priority": "P1",
+      "status": "VERIFIED",
+      "owner": "quality-platform",
+      "reviewer": "pending",
+      "production_entry": [
+        "launch_run(execution_kind='DEFECT_REGRESSION', scope_snapshot=...)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_regression_freezes_scope_snapshot_and_binds_run"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_launch_requires_scope_snapshot_for_regression",
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_launch_rejects_scope_with_missing_mandatory",
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_regression_without_failure_evidence_is_blocked"
+        ],
+        "boundary": [],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_008_mandatory_scope.py (11 passed)"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "V16-008-R3",
+      "issue": "V16-008",
+      "priority": "P1",
+      "status": "VERIFIED",
+      "owner": "quality-platform",
+      "reviewer": "pending",
+      "production_entry": [
+        "dag_scheduler._finalize"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_mandatory_failed_never_passes"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_mandatory_blocked_is_incomplete",
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_mandatory_missing_from_execution_is_incomplete"
+        ],
         "boundary": [],
         "concurrency": []
       },
@@ -762,12 +832,41 @@
         "L2"
       ],
       "evidence": [
-        "ci:baseline-audit-G5"
+        "pytest:tests/test_aiqe_v16_008_mandatory_scope.py (11 passed)"
       ],
-      "gaps": [
-        "Mandatory 集合只落库不参与终态/门禁；客户端可用 scope=SELECTED 清空强制集合。",
-        "回归 Run 不派发 Job、不复制断言、永不到终态。"
-      ]
+      "gaps": []
+    },
+    {
+      "id": "V16-008-R4",
+      "issue": "V16-008",
+      "priority": "P1",
+      "status": "VERIFIED",
+      "owner": "quality-platform",
+      "reviewer": "pending",
+      "production_entry": [
+        "regression_service.create_regression_request"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_different_sha_or_environment_creates_new_regression"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_launch_rejects_scope_with_missing_mandatory"
+        ],
+        "boundary": [
+          "tests/test_aiqe_regression_api.py::test_fingerprint_idempotent"
+        ],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_008_mandatory_scope.py (11 passed)",
+        "pytest:tests/test_aiqe_regression_api.py (passed)"
+      ],
+      "gaps": []
     },
     {
       "id": "V16-009-R1",

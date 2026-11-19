@@ -242,6 +242,19 @@ def _finalize(db: Session, run: TestRun, rows: list[NodeRun], graph: dict[str, A
             if not int(passed_assertions or 0):
                 inferred = "INCOMPLETE"
                 business_gate = "NO_REQUIRED_ASSERTION_PASS"
+    # V16-008：Regression Scope 的 mandatory 节点必须全部执行且 PASSED；
+    # 缺失（被排除/未创建）或未通过一律不得把 Run 汇总为 PASS。
+    scope_snapshot = (run.environment_snapshot_json or {}).get("scope_snapshot") or {}
+    mandatory_keys = [str(key) for key in (scope_snapshot.get("mandatory_node_keys") or [])]
+    if mandatory_keys:
+        absent = [key for key in mandatory_keys if key not in statuses]
+        if absent:
+            if inferred == "PASS":
+                inferred = "INCOMPLETE"
+            business_gate = business_gate or "MANDATORY_NODE_MISSING"
+        elif inferred == "PASS" and any(statuses[key] != "PASSED" for key in mandatory_keys):
+            inferred = "INCOMPLETE"
+            business_gate = business_gate or "MANDATORY_NOT_PASSED"
     if inferred == "PASS":
         # AUD-008：证据未完成（PENDING_UPLOAD/CORRUPTED）时不能汇总为可发布 PASS。
         from app.aiqe.services.artifact_service import incompleteness_reasons
