@@ -26,8 +26,9 @@ from app.aiqe.drivers.db_readonly_driver import (
     UnsafeSqlError,
     assert_readonly,
 )
-from app.aiqe.models.query_registry import RegisteredQuery
+from app.aiqe.models.query_registry import QueryExecutionAudit, RegisteredQuery
 from app.aiqe.redaction import redact_mapping
+from app.aiqe.security.sql_policy import SqlPolicyError, validate_select
 
 _PARAM_RE = re.compile(r":([A-Za-z_][A-Za-z0-9_]*)")
 _FORBIDDEN_FRAGMENTS = (
@@ -139,6 +140,10 @@ def register_query(
     project_scope: str = "current_project",
     created_by: int | None = None,
     approved_by: int | None = None,
+    environment_id: int | None = None,
+    allowed_tables: list[str] | tuple[str, ...] | None = None,
+    allowed_columns: list[str] | tuple[str, ...] | None = None,
+    approval_status: str = "approved",
 ) -> RegisteredQuery:
     key = str(query_key or "").strip()
     if not key or len(key) > 80:
@@ -158,6 +163,23 @@ def register_query(
         raise RegisteredQueryError(f"max_execution_ms 必须在 100..{MAX_EXECUTION_MS_LIMIT}")
     _validate_statement(str(statement or ""), params)
 
+    # V16-004：AST allowlist（纵深防御）。未显式提供表白名单时由 AST 推导，
+    # 保证登记记录始终带有可执行的白名单，而不是“空清单 = 全部允许”。
+    explicit_tables = [str(name).strip() for name in (allowed_tables or ()) if str(name).strip()]
+    try:
+        policy = validate_select(
+            str(statement or ""),
+            allowed_tables=explicit_tables,
+            require_project_predicate=True,
+        )
+    except SqlPolicyError as exc:
+        raise RegisteredQueryError(f"{exc.code}: {exc.message}") from exc
+    effective_tables = sorted({item.lower() for item in explicit_tables} or set(policy.tables))
+    if not effective_tables:
+        raise RegisteredQueryError("登记查询必须至少有 1 个允许表")
+    if approval_status not in {"pending", "approved", "disabled"}:
+        raise RegisteredQueryError("approval_status 必须是 pending/approved/disabled")
+
     existing = list(
         db.scalars(
             select(RegisteredQuery).where(
@@ -169,12 +191,17 @@ def register_query(
     version = max((int(row.version or 0) for row in existing), default=0) + 1
     row = RegisteredQuery(
         project_id=int(project_id),
+        environment_id=environment_id,
         query_key=key,
         version=version,
         project_scope=project_scope,
         connection_ref=str(connection_ref or ""),
         statement=str(statement).strip(),
+        statement_hash=policy.statement_hash,
         allowed_params=params,
+        allowed_tables=effective_tables,
+        allowed_columns=[str(name).strip() for name in (allowed_columns or ()) if str(name).strip()],
+        approval_status=approval_status,
         max_rows=rows,
         max_execution_ms=timeout,
         result_schema=dict(result_schema) if result_schema else None,
@@ -271,40 +298,122 @@ class DbReadonlyExecutor:
         params: Mapping[str, Any] | None = None,
         version: int | None = None,
         environment_id: int | None = None,
+        requested_max_rows: int | None = None,
+        requested_timeout_ms: int | None = None,
+        executor_identity: str = "worker",
     ) -> QueryExecutionResult:
         session = db or self._db
         if session is None:
             raise QueryDenied("SESSION_REQUIRED", "缺少 DB 会话，无法解析登记查询")
-        self._assert_environment_allowed(session, environment_id)
         registered = resolve_query(
             session, project_id=int(project_id), query_key=query_key, version=version
         )
+        effective_env = environment_id if environment_id is not None else registered.environment_id
+        self._assert_environment_allowed(session, effective_env)
+        if str(registered.approval_status or "") != "approved":
+            self._audit(
+                session,
+                registered,
+                project_id=int(project_id),
+                environment_id=effective_env,
+                decision="DENY",
+                reason_code="QUERY_NOT_APPROVED",
+                executor_identity=executor_identity,
+            )
+            raise QueryDenied("QUERY_NOT_APPROVED", "登记查询未审批/已停用")
+
+        # V16-004：执行时再次做 AST allowlist（防止登记后语句被篡改或历史数据无白名单）。
+        allow_tables = [str(name) for name in (registered.allowed_tables or []) if str(name).strip()]
+        try:
+            validate_select(
+                registered.statement,
+                allowed_tables=allow_tables,
+                require_project_predicate=True,
+            )
+        except SqlPolicyError as exc:
+            self._audit(
+                session,
+                registered,
+                project_id=int(project_id),
+                environment_id=effective_env,
+                decision="DENY",
+                reason_code=exc.code,
+                executor_identity=executor_identity,
+            )
+            raise QueryDenied(exc.code, exc.message) from exc
+
         bound = self._bind_params(registered, params or {}, project_id=int(project_id))
 
+        # Workflow 请求值只能更严格，不能放大服务端上限。
+        row_limit = int(registered.max_rows)
+        if requested_max_rows is not None:
+            row_limit = min(row_limit, max(1, int(requested_max_rows)))
+        timeout_limit = int(registered.max_execution_ms)
+        if requested_timeout_ms is not None:
+            timeout_limit = min(timeout_limit, max(100, int(requested_timeout_ms)))
+
         engine = self._connection_resolver(str(registered.connection_ref or ""))
-        driver = DbReadonlyDriver(engine, max_rows=int(registered.max_rows))
         import time
 
         started = time.monotonic()
-        result: QueryResult = driver.query(
-            registered.statement,
-            bound,
-            max_rows=int(registered.max_rows),
-            statement_timeout_ms=int(registered.max_execution_ms),
-        )
+        try:
+            driver = DbReadonlyDriver(
+                engine,
+                max_rows=row_limit,
+                allowed_tables=allow_tables,
+                require_allowlist=True,
+            )
+            result: QueryResult = driver.query(
+                registered.statement,
+                bound,
+                max_rows=row_limit,
+                statement_timeout_ms=timeout_limit,
+            )
+        except Exception as exc:
+            self._audit(
+                session,
+                registered,
+                project_id=int(project_id),
+                environment_id=effective_env,
+                decision="DENY",
+                reason_code=str(getattr(exc, "code", "") or type(exc).__name__),
+                executor_identity=executor_identity,
+            )
+            raise
         duration_ms = int((time.monotonic() - started) * 1000)
-        if duration_ms > int(registered.max_execution_ms):
+        if duration_ms > timeout_limit:
+            self._audit(
+                session,
+                registered,
+                project_id=int(project_id),
+                environment_id=effective_env,
+                decision="DENY",
+                reason_code="QUERY_TIMEOUT",
+                executor_identity=executor_identity,
+            )
             raise QueryDenied(
                 "QUERY_TIMEOUT",
-                f"查询耗时 {duration_ms}ms 超过上限 {registered.max_execution_ms}ms",
+                f"查询耗时 {duration_ms}ms 超过上限 {timeout_limit}ms",
             )
 
         redacted_rows = [redact_mapping(row) for row in result.rows]
         digest_payload = json.dumps(redacted_rows, sort_keys=True, ensure_ascii=False, default=str)
+        self._audit(
+            session,
+            registered,
+            project_id=int(project_id),
+            environment_id=effective_env,
+            decision="ALLOW",
+            reason_code="OK",
+            executor_identity=executor_identity,
+            params_redacted=redact_mapping(dict(params or {})),
+            row_count=result.row_count,
+            duration_ms=duration_ms,
+        )
         return QueryExecutionResult(
             query_key=registered.query_key,
             query_version=int(registered.version),
-            query_hash=statement_hash(registered.statement, int(registered.version)),
+            query_hash=str(registered.statement_hash or statement_hash(registered.statement, int(registered.version))),
             row_count=result.row_count,
             columns=list(result.columns),
             rows=redacted_rows,
@@ -312,12 +421,52 @@ class DbReadonlyExecutor:
             params_redacted=redact_mapping(dict(params or {})),
             rows_digest="sha256:" + hashlib.sha256(digest_payload.encode("utf-8")).hexdigest(),
             connection_ref=str(registered.connection_ref or ""),
-            max_rows=int(registered.max_rows),
+            max_rows=row_limit,
         )
+
+    @staticmethod
+    def _audit(
+        session: Session,
+        registered: RegisteredQuery,
+        *,
+        project_id: int,
+        environment_id: int | None,
+        decision: str,
+        reason_code: str,
+        executor_identity: str,
+        params_redacted: Mapping[str, Any] | None = None,
+        row_count: int = 0,
+        duration_ms: int = 0,
+    ) -> None:
+        """V16-004 §8：每次执行写审计（成功/拒绝都写，幂等无副作用）。"""
+        session.add(
+            QueryExecutionAudit(
+                project_id=int(project_id),
+                environment_id=environment_id,
+                query_id=str(registered.id),
+                query_key=str(registered.query_key),
+                query_version=int(registered.version or 0),
+                query_hash=str(registered.statement_hash or ""),
+                params_redacted_json=dict(params_redacted or {}),
+                row_count=int(row_count),
+                duration_ms=int(duration_ms),
+                executor_identity=str(executor_identity)[:120],
+                policy_decision=decision,
+                reason_code=str(reason_code)[:64],
+            )
+        )
+        session.flush()
 
     @staticmethod
     def _assert_environment_allowed(session: Session, environment_id: int | None) -> None:
         if environment_id is None:
+            # V16-004：生产环境禁止“未绑定环境”的 DB 读取（避免绕过 production guard）。
+            from app.core.config import settings as app_settings
+
+            if str(getattr(app_settings, "environment", "")).lower() == "production":
+                raise QueryDenied(
+                    "ENVIRONMENT_REQUIRED", "生产环境 DB 查询必须绑定 Environment"
+                )
             return
         from app.models.environment import Environment
 

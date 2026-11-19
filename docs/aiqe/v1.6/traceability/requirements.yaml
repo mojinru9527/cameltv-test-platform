@@ -3,7 +3,7 @@ release: aiqe-v1.6
 baseline:
   main_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
   audit_snapshot_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
-  migration_head: 20261119_v16_003_secret_audit
+  migration_head: 20261119_v16_004_query_registry
   branch: release/aiqe-v1-6
   audit_reports:
     - docs/aiqe/v1.6/_audit/baseline-audit-G1-G3.txt
@@ -417,41 +417,121 @@ requirements:
       - "外部 Secret Store 未实现（use_external_secret_store=True 时 fail closed）。"
       - "跨进程解析/密钥轮换/访问审计未在真实 KMS 环境验证。"
 
-  # ── V16-004 Query Registry（P0，基线 PARTIAL）───────────────
+  # ── V16-004 Query Registry（P0）────────────────────────────
   - id: V16-004-R1
     issue: V16-004
     priority: P0
-    title: "DB Query Registry 服务端化与租户/表白名单"
-    requirement: "DB 节点只接受 {query_key, version, params}；SQL/表范围/连接/租户谓词由服务端 Registry 决定；只读账号与 AST allowlist 纵深防御。"
-    invariant: "inline SQL/Workflow 白名单一律 BLOCKED；跨项目查询、系统表、跨 schema、超限均拒绝。"
-    status: PARTIAL
+    title: "Query Registry 服务端化 + AST allowlist"
+    requirement: "Workflow 只允许 {query_key, query_version, params}；SQL/连接/表白名单由服务端登记；登记与执行两个时点都经 sqlglot AST 校验（单条 SELECT、禁 DML/DDL/系统表/危险函数/跨 schema）。"
+    invariant: "inline SQL、Workflow 自带 allowed_tables/query_registry/connection_* 一律 BLOCKED 且 0 连接。"
+    status: VERIFIED
     code:
+      - path: test-platform-v2/backend/app/aiqe/security/sql_policy.py
+        symbol: "validate_select"
+        change: added
       - path: test-platform-v2/backend/app/aiqe/services/query_registry.py
-        symbol: "register_query / DbReadonlyExecutor"
-        change: unchanged
-      - path: test-platform-v2/backend/app/aiqe/drivers/db_readonly_driver.py
-        symbol: "DbReadonlyDriver.query / _check_tables"
-        change: unchanged
-      - path: test-platform-v2/backend/app/aiqe/models/query_registry.py
-        symbol: "RegisteredQuery"
-        change: unchanged
+        symbol: "register_query / DbReadonlyExecutor.execute"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/services/workflow_validator.py
+        symbol: "db_workflow_override / db_query_key_missing"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/services/node_executor.py
+        symbol: "_execute_db_secure / DB_OVERRIDE_KEYS"
+        change: modified
+      - path: test-platform-v2/backend/requirements.txt
+        symbol: "sqlglot==30.33.0"
+        change: modified
+      - path: test-platform-v2/backend/requirements.lock
+        symbol: "sqlglot pinned + hashes"
+        change: modified
     production_entry:
-      - "job_consumer.run_job -> node_executor._execute_db_secure -> DbReadonlyExecutor"
+      - "job_consumer.run_job -> node_executor._execute_db_secure -> DbReadonlyExecutor.execute"
+      - "run_launch -> validate_workflow"
     tests:
       success:
-        - tests/test_aiqe_aud002_query_registry.py::test_node_executor_runs_registered_query
+        - tests/test_aiqe_v16_004_query_registry_boundary.py::test_worker_runs_registered_query_and_writes_audit
+        - tests/test_aiqe_v16_004_query_registry_boundary.py::test_register_derives_allowed_tables_and_hash
       negative:
-        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_db_node_rejects_workflow_sql_and_never_connects
-    mock_boundary: ""
-    layers: [L1, L2]
+        - tests/test_aiqe_v16_004_query_registry_boundary.py::test_worker_rejects_workflow_overrides_without_connecting
+        - tests/test_aiqe_v16_004_query_registry_boundary.py::test_sql_policy_ast_matrix
+        - tests/test_aiqe_v16_004_query_registry_boundary.py::test_register_rejects_unsafe_sql
+        - tests/test_aiqe_v16_004_query_registry_boundary.py::test_execution_revalidates_disallowed_table
+        - tests/test_aiqe_v16_004_query_registry_boundary.py::test_execution_rejects_system_table
+        - tests/test_aiqe_v16_004_query_registry_boundary.py::test_execution_rejects_unapproved_query
+      boundary:
+        - tests/test_aiqe_v16_004_query_registry_boundary.py::test_workflow_validator_rejects_db_override
+        - tests/test_aiqe_v16_004_query_registry_boundary.py::test_workflow_validator_requires_query_key
+      concurrency: []
+    mock_boundary: "真实 SQLite 目标库 + 真实 Worker 入口；连接解析器计数用于证明拒绝时 0 连接；AST 为真实 sqlglot 解析。"
+    layers: [L1, L2, L3]
     evidence:
-      - "ci:baseline-audit-G1-G3"
+      - "pytest:tests/test_aiqe_v16_004_query_registry_boundary.py (25 passed)"
     owner: backend-security
     reviewer: pending
+    gaps: []
+
+  - id: V16-004-R2
+    issue: V16-004
+    priority: P0
+    title: "租户谓词、限额、审批与执行审计"
+    requirement: "语句必须含 project_id = :project_id 真实谓词；max_rows/timeout 只能更严格；未审批查询不可执行；每次执行写 QueryExecutionAudit（成功/拒绝）。"
+    invariant: "伪租户谓词（IS NOT NULL）与未审批/越权表查询必须拒绝并留痕。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/query_registry.py
+        symbol: "_bind_params / _audit / _assert_environment_allowed"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/models/query_registry.py
+        symbol: "QueryExecutionAudit"
+        change: added
+      - path: test-platform-v2/backend/alembic/versions/20261119_v16_004_query_registry.py
+        symbol: "upgrade/downgrade"
+        change: added
+    production_entry:
+      - "DbReadonlyExecutor.execute"
+      - "POST /api/v1/aiqe/admin/query-registry"
+      - "POST /api/v1/aiqe/admin/query-registry/{id}/approve"
+    tests:
+      success:
+        - tests/test_aiqe_v16_004_query_registry_boundary.py::test_worker_runs_registered_query_and_writes_audit
+        - tests/test_aiqe_v16_004_query_registry_boundary.py::test_admin_query_registry_register_and_approve
+        - tests/test_aiqe_v16_004_query_registry_boundary.py::test_request_limits_can_only_tighten
+      negative:
+        - tests/test_aiqe_v16_004_query_registry_boundary.py::test_execution_rejects_fake_tenant_predicate
+        - tests/test_aiqe_v16_004_query_registry_boundary.py::test_execution_rejects_cross_project_and_production_env
+    mock_boundary: "真实 SQLite + 真实 FastAPI TestClient（管理员鉴权）；未 Mock 审计写入。"
+    layers: [L1, L2, L3]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_004_query_registry_boundary.py (25 passed)"
+    owner: backend-security
+    reviewer: pending
+    gaps: []
+
+  - id: V16-004-R3
+    issue: V16-004
+    priority: P0
+    title: "真实只读账号与 schema 权限验证"
+    requirement: "在真实测试数据库上用只读账号实际尝试 INSERT/UPDATE/DDL，确认数据库侧拒绝；连接账号只读且限定 schema。"
+    invariant: "只读账号无法执行写操作；不得仅以 SQL 文本校验替代数据库权限。"
+    status: BLOCKED
+    blocked_reason: "当前测试库为可写 SQLite 文件，缺少独立只读账号/角色；真实 Postgres 只读账号验收环境未提供。"
+    review_by: "2026-12-31"
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/query_registry.py
+        symbol: "default_connection_resolver"
+        change: unchanged
+    production_entry:
+      - "生产/测试 DB 只读账号连接"
+    tests: {}
+    mock_boundary: ""
+    layers: [L4]
+    evidence:
+      - "manual:tests/test_aiqe_aud002_query_registry.py#readonly_engine(可写 SQLite，不足以证明只读账号)"
+    owner: devops
+    reviewer: pending
     gaps:
-      - "登记查询路径未传 allowed_tables → 表白名单在真实执行中失效。"
-      - "缺 QueryDefinition/QueryVersion/QueryExecutionAudit 与管理员 API；无 environment_id 与租户谓词强制。"
-      - "系统表/跨 schema 拦截不完整；SQL parser/AST allowlist 未实现；生产连接账号只读未校验。"
+      - "缺少真实只读账号与 schema 授权验收；当前用 AST + 关键字黑名单代替数据库权限验证。"
+      - "连接池上限与账号权限探测未实现。"
 
   # ── V16-005 租约与状态机（P1，基线 PARTIAL）─────────────────
   - id: V16-005-R1

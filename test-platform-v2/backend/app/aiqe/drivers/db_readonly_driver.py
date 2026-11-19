@@ -225,6 +225,7 @@ class DbReadonlyDriver:
         registry: QueryRegistry | None = None,
         statement_timeout_ms: int = 5000,
         audit_hook: Callable[[AuditEvent], None] | None = None,
+        require_allowlist: bool = False,
     ) -> None:
         self.engine = engine
         self.max_rows = max(1, int(max_rows))
@@ -233,6 +234,7 @@ class DbReadonlyDriver:
         self.registry = registry or QueryRegistry()
         self.statement_timeout_ms = max(1, int(statement_timeout_ms))
         self.audit_hook = audit_hook
+        self.require_allowlist = bool(require_allowlist)
         self.last_audit: list[AuditEvent] = []
 
     def _audit(
@@ -252,6 +254,10 @@ class DbReadonlyDriver:
     def _check_tables(self, sql: str, allowed_tables: Iterable[str] | None, query_key: str) -> None:
         allow = {str(item).lower() for item in (allowed_tables or self.allowed_tables)}
         if not allow:
+            if self.require_allowlist:
+                # V16-004：登记查询必须带表白名单；空清单不得等于“全部允许”。
+                self._audit("query", query_key, False, "缺少表白名单", sql)
+                raise UnsafeSqlError("登记查询缺少 allowed_tables 白名单")
             return
         referenced = _referenced_tables(sql)
         blocked = sorted(referenced - allow)

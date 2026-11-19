@@ -286,6 +286,9 @@ def _execute_db_secure(
             detail={"reason": "params 必须是对象", "query_key": query_key},
         )
     version = spec_input.get("query_version")
+    # Workflow 请求的限额只能更严格（由 Query Registry 执行层 clamp）。
+    requested_max_rows = spec_input.get("max_rows")
+    requested_timeout_ms = spec_input.get("timeout_ms")
     try:
         result = DbReadonlyExecutor(
             connection_resolver=default_connection_resolver
@@ -296,6 +299,13 @@ def _execute_db_secure(
             params=params,
             version=int(version) if version is not None else None,
             environment_id=getattr(run, "environment_id", None),
+            requested_max_rows=(
+                int(requested_max_rows) if requested_max_rows is not None else None
+            ),
+            requested_timeout_ms=(
+                int(requested_timeout_ms) if requested_timeout_ms is not None else None
+            ),
+            executor_identity="aiqe-worker",
         )
     except QueryNotRegistered:
         return NodeExecution(

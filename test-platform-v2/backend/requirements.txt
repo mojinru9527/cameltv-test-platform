@@ -41,3 +41,6 @@ rapidocr_onnxruntime>=1.4.4
 cryptography>=42.0
 # Shared same-host task admission; already pinned in requirements.lock.
 filelock>=3.32
+
+# V16-004：SQL parser/AST allowlist（纵深防御，只读账号仍是主控制）
+sqlglot==30.33.0
