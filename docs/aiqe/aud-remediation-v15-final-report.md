@@ -154,12 +154,14 @@ Reconciler、FIX-005 preflight、PR #595 迁移）。合并策略：
 | QA/Backend/Security/Product 四方签字 | 用户已回复“复核通过”，按人工复核通过记录 |
 | Benchmark/Impact 前端 | 已交付 `/aiqe/benchmarks`、`/aiqe/impact` |
 
-### 6.3 仍需设备/网络实验室
+### 6.3 设备与网络证据
 
-| 项 | 原因 |
+| 项 | 状态 |
 |---|---|
-| 真实 iOS/Android/小程序设备验收 | 本机无 adb/设备实验室，无法产出 VERIFIED 记录；AUD-020 的 6 态与 Preflight BLOCKED 已由单测覆盖 |
-| Runner 出口防火墙/egress allowlist 实测 | 本地环境无独立 Runner 出口，需部署环境安全组配合 |
+| Android 真机 | ✅ 已验收：OnePlus 6T / Android 11 / `com.camelrn`，adb 启动 + UIAutomator + 截图；能力 `VERIFIED`，`native_android` Preflight `READY`；证据 [android-node/README.md](evidence/android-node/README.md)，Run `0a631a4d-efc6-443b-bc70-4dd197c101a5` |
+| 微信小程序 | ⏳ 待你提供项目路径 + AppID（本机已装微信开发者工具，需启用自动化端口并安装 minium） |
+| Runner 出口防火墙 | ⏳ 需先定义 allowlist；当前主机 Private 防火墙开启但出站默认放行、无 allowlist，提供方式见 [runner-egress.md](evidence/runner-egress.md) |
+| iOS 真机 | ⏳ 本机无 iOS 设备/官方工具链 |
 
 ## 7. 迁移与回滚
 

@@ -1,0 +1,44 @@
+{
+  "run_id": "0a631a4d-efc6-443b-bc70-4dd197c101a5",
+  "run_key": "ANDROID-VERIFY-20261119T033706Z",
+  "device": {
+    "serial": "9f0564ba",
+    "manufacturer": "OnePlus",
+    "model": "ONEPLUS A6010",
+    "android": "11",
+    "resolution": "1080x2340",
+    "package": "com.camelrn",
+    "activity": "com.camelrn/.MainActivity",
+    "tool": "adb (platform-tools)"
+  },
+  "artifacts": {
+    "screenshot": "b2b7e37b-0c54-4a02-aed4-2dd0a8daac57",
+    "ui_xml": "9716a0ed-d565-4af1-b4f7-eea1951a5f7e",
+    "device_log": "d8f31b10-3756-44b9-8660-fae7e8a72c75"
+  },
+  "capability": {
+    "node_id": "android-oneplus6t-9f0564ba",
+    "status": "VERIFIED",
+    "platforms": [
+      "android"
+    ],
+    "evidence_ref": "b2b7e37b-0c54-4a02-aed4-2dd0a8daac57"
+  },
+  "preflight_native_android": {
+    "allowed": true,
+    "status": "READY",
+    "platforms": [
+      {
+        "platform_id": "native_android",
+        "capability_status": "VERIFIED",
+        "required_capability": "device.android",
+        "node_ids": [
+          "android-oneplus6t-9f0564ba"
+        ],
+        "real_device": true,
+        "verified": true
+      }
+    ],
+    "blockers": []
+  }
+}
