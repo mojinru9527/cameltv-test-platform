@@ -22,6 +22,7 @@ import pytest
 from app.aiqe.models.run import NodeRun, TestRun
 from app.aiqe.security import (
     SafeHttpExecutor,
+    TargetPolicyResolver,
     SafeRequest,
     SafeTargetValidator,
     TargetDenied,
@@ -539,3 +540,42 @@ def test_node_executor_without_policy_context_blocks(db_session):
     outcome = node_executor.execute_node(node, db=db_session)
     assert outcome.status == "BLOCKED"
     assert outcome.error_class == "POLICY_UNAVAILABLE"
+
+
+def test_new_policy_supersedes_previous_active(db_session):
+    """同一 project/environment 只能有一条 active 策略，避免按 version 误选旧策略。"""
+    from sqlalchemy import select
+
+    from app.aiqe.models.security import TargetPolicyRecord
+
+    upsert_target_policy(
+        db_session,
+        project_id=1,
+        environment_id=None,
+        policy={"allowed_hosts": ["api.allowed.test"], "allowed_ports": [443]},
+        name="policy-a",
+    )
+    upsert_target_policy(
+        db_session,
+        project_id=1,
+        environment_id=None,
+        policy={"allowed_hosts": ["other.allowed.test"], "allowed_ports": [443]},
+        name="policy-b",
+    )
+    db_session.commit()
+
+    resolved = TargetPolicyResolver(db_session).resolve(project_id=1)
+    assert resolved.allowed_hosts == ("other.allowed.test",)
+    assert resolved.version == 2
+
+    active = list(
+        db_session.scalars(
+            select(TargetPolicyRecord).where(
+                TargetPolicyRecord.project_id == 1,
+                TargetPolicyRecord.environment_id.is_(None),
+                TargetPolicyRecord.active.is_(True),
+            )
+        )
+    )
+    assert len(active) == 1
+    assert active[0].name == "policy-b"

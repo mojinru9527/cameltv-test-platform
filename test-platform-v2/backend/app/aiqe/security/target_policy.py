@@ -372,11 +372,11 @@ def upsert_target_policy(
     # 构造一次以校验合法性（非法 CIDR / 端口在这里就 fail closed）
     TargetPolicy.from_mapping(policy, project_id=project_id, environment_id=environment_id)
 
+    # 同一 project/environment 只允许一条 active 策略；旧行保留（active=False）用于审计。
     existing = list(
         db.scalars(
             select(TargetPolicyRecord).where(
                 TargetPolicyRecord.project_id == int(project_id),
-                TargetPolicyRecord.name == name,
                 TargetPolicyRecord.environment_id == environment_id,
             )
         )
@@ -386,6 +386,9 @@ def upsert_target_policy(
         raise TargetPolicyConfigError(
             f"策略版本冲突：期望 {base_version}，当前 {current_version}"
         )
+    for row in existing:
+        if row.active:
+            row.active = False
     record = TargetPolicyRecord(
         project_id=int(project_id),
         environment_id=environment_id,
