@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "scope": "AIQE Runner egress (Camel Test5)",
+  "default_action": "deny",
+  "allow": [
+    {
+      "target": "192.168.50.170",
+      "port": 443,
+      "protocol": "tcp",
+      "purpose": "Camel Test5 API/UI"
+    },
+    {
+      "target": "10.255.255.254",
+      "port": 53,
+      "protocol": "udp,tcp",
+      "purpose": "DNS"
+    },
+    {
+      "target": "127.0.0.0/8",
+      "port": "*",
+      "protocol": "any",
+      "purpose": "loopback"
+    }
+  ],
+  "denied_examples": [
+    "example.com:443",
+    "1.1.1.1:80"
+  ],
+  "evidence_run": "55fd90cd-beb5-43f7-bf6e-d4b8cc5a17e3",
+  "evidence_lab": "WSL2 Ubuntu iptables, 2026-11-19",
+  "approved_by": null,
+  "notes": "approved_by 需安全/网络负责人签字后填入；生产需在云安全组/NACL 落地同一 allowlist。"
+}
