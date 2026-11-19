@@ -404,6 +404,109 @@ def _emit_evidence_index(
     target.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def _emit_markdown(
+    matrix: dict[str, Any], entries: list[dict[str, Any]], target: Path
+) -> None:
+    """从 YAML 生成人类可读矩阵；Markdown 不允许手工编辑（避免与 YAML 漂移）。"""
+    baseline = matrix.get("baseline") or {}
+    order = {issue: index for index, issue in enumerate(REQUIRED_ISSUES)}
+    ordered = sorted(entries, key=lambda item: (order.get(str(item.get("issue")), 999), str(item.get("id"))))
+    status_counts: dict[str, int] = {}
+    for item in ordered:
+        status = str(item.get("_status"))
+        status_counts[status] = status_counts.get(status, 0) + 1
+    lines: list[str] = []
+    lines.append("# CamelTv AIQE V1.6 需求—代码—正式入口—测试—证据矩阵")
+    lines.append("")
+    lines.append("> 本文件由 `python scripts/aiqe/check_traceability.py --emit-markdown` 从")
+    lines.append("> `docs/aiqe/v1.6/traceability/requirements.yaml` 生成，**禁止手工编辑**。")
+    lines.append("> 状态语义：`NOT_STARTED` / `PARTIAL` / `IMPLEMENTED` 不计入通过率；")
+    lines.append("> 只有 `VERIFIED`（正式入口 L2/L3 测试通过）与 `ACCEPTED`（非原作者复核）计入。")
+    lines.append("")
+    lines.append("## 基线")
+    lines.append("")
+    lines.append(f"- release: `{matrix.get('release', 'aiqe-v1.6')}`")
+    lines.append(f"- main SHA: `{baseline.get('main_sha', '')}`")
+    lines.append(f"- V1.5 审计快照: `{baseline.get('audit_snapshot_sha', '')}`")
+    lines.append(f"- 迁移 head: `{baseline.get('migration_head', '')}`")
+    lines.append("")
+    lines.append("## 状态汇总")
+    lines.append("")
+    lines.append("| 状态 | 数量 |")
+    lines.append("|---|---:|")
+    for status in ("VERIFIED", "ACCEPTED", "IMPLEMENTED", "PARTIAL", "NOT_STARTED", "BLOCKED"):
+        lines.append(f"| {status} | {status_counts.get(status, 0)} |")
+    lines.append(f"| **合计** | **{len(ordered)}** |")
+    lines.append("")
+    lines.append("## 需求追踪")
+    lines.append("")
+    lines.append("| Requirement | Issue | 优先级 | 状态 | Owner | Reviewer | 正式入口 | 成功/拒绝测试 | 层级 | 证据 | 未决风险 |")
+    lines.append("|---|---|---|---|---|---|---|---|---|---|---|")
+    for item in ordered:
+        tests = item.get("_parsed_tests") or {}
+        success = tests.get("success") or []
+        negative = tests.get("negative") or []
+        test_cell = []
+        if success:
+            test_cell.append(f"✅ {len(success)}")
+        if negative:
+            test_cell.append(f"⛔ {len(negative)}")
+        gaps = item.get("gaps") or []
+        gap_text = "<br>".join(str(gap).replace("|", "/") for gap in gaps) if gaps else "—"
+        lines.append(
+            "| {id} | {issue} | {priority} | {status} | {owner} | {reviewer} | {entry} | {tests} | {layers} | {evidence} | {gaps} |".format(
+                id=item.get("id"),
+                issue=item.get("issue"),
+                priority=item.get("_priority"),
+                status=item.get("_status"),
+                owner=item.get("owner"),
+                reviewer=item.get("reviewer") or "pending",
+                entry="<br>".join(str(x) for x in (item.get("production_entry") or [])),
+                tests=" / ".join(test_cell) or "—",
+                layers=", ".join(str(x) for x in (item.get("layers") or [])) or "—",
+                evidence="<br>".join(str(x) for x in (item.get("evidence") or [])) or "—",
+                gaps=gap_text,
+            )
+        )
+    lines.append("")
+    lines.append("## 需求正文与不变量")
+    lines.append("")
+    for item in ordered:
+        lines.append(f"### {item.get('id')} — {item.get('title')}")
+        lines.append("")
+        lines.append(f"- Issue: `{item.get('issue')}` / 优先级 `{item.get('_priority')}` / 状态 `{item.get('_status')}`")
+        lines.append(f"- 需求：{item.get('requirement')}")
+        lines.append(f"- 不变量：{item.get('invariant')}")
+        code = item.get("code") or []
+        if code:
+            rendered = []
+            for entry in code:
+                if isinstance(entry, dict):
+                    symbol = f" `{entry.get('symbol')}`" if entry.get("symbol") else ""
+                    change = f"（{entry.get('change')}）" if entry.get("change") else ""
+                    rendered.append(f"`{entry.get('path')}`{symbol}{change}")
+                else:
+                    rendered.append(f"`{entry}`")
+            lines.append(f"- 代码映射：{'；'.join(rendered)}")
+        tests = item.get("_parsed_tests") or {}
+        for kind, label in (
+            ("success", "成功路径"),
+            ("negative", "拒绝/失败路径"),
+            ("boundary", "边界"),
+            ("concurrency", "并发/重试"),
+        ):
+            refs = tests.get(kind) or []
+            if refs:
+                lines.append(f"- {label}：{'；'.join(f'`{ref.label}`' for ref in refs)}")
+        if item.get("mock_boundary"):
+            lines.append(f"- Mock 边界：{item.get('mock_boundary')}")
+        if item.get("evidence"):
+            lines.append(f"- 证据：{'；'.join(str(x) for x in item.get('evidence'))}")
+        lines.append("")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="AIQE V1.6 追踪矩阵门禁")
     parser.add_argument("--matrix", default=str(MATRIX_PATH))
@@ -411,6 +514,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--pr-body", default="")
     parser.add_argument("--changed-files", default="")
     parser.add_argument("--emit-evidence-index", default="")
+    parser.add_argument("--emit-markdown", default="")
     parser.add_argument("--commit-sha", default="")
     parser.add_argument("--ci-run", default="")
     parser.add_argument("--environment", default="")
@@ -442,6 +546,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.emit_evidence_index:
         _emit_evidence_index(matrix, entries, Path(args.emit_evidence_index), args)
+    if args.emit_markdown:
+        _emit_markdown(matrix, entries, Path(args.emit_markdown))
 
     summary = {
         "requirements": len(entries),

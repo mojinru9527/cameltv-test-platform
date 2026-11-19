@@ -1,0 +1,1222 @@
+schema_version: "1.0"
+release: aiqe-v1.6
+baseline:
+  main_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
+  audit_snapshot_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
+  migration_head: 20261119_v16_001_policy_status
+  branch: release/aiqe-v1-6
+  audit_reports:
+    - docs/aiqe/v1.6/_audit/baseline-audit-G1-G3.txt
+    - docs/aiqe/v1.6/_audit/G2-playwright.md
+    - docs/aiqe/v1.6/_audit/G4-exec-state.md
+    - docs/aiqe/v1.6/_audit/G5-scope-assert.md
+    - docs/aiqe/v1.6/_audit/G6-agent-learning.md
+    - docs/aiqe/v1.6/_audit/G7-driver-artifact-ops.md
+    - docs/aiqe/v1.6/_audit/G8-e2e-governance.md
+
+requirements:
+  # ── V16-001 安全边界（P0）──────────────────────────────────
+  - id: V16-001-R1
+    issue: V16-001
+    priority: P0
+    title: "策略四态决策与不可变授权快照"
+    requirement: "TargetPolicyResolver 必须返回显式 PolicyDecision(ALLOW/DENY/UNAVAILABLE/MISSING_BINDING) 与不可变 ResolvedExecutionPolicy，禁止用 bool 表达策略存在性。"
+    invariant: "只有 decision=ALLOW 才允许创建 Driver 或发起网络/数据库动作；其余决策一律 BLOCKED。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/security/target_policy.py
+        symbol: "PolicyDecision / ResolvedExecutionPolicy / resolve_execution_policy"
+        change: modified
+    production_entry:
+      - "job_consumer.run_job -> execution_service.execute_inprocess_job -> resolve_execution_policy"
+      - "GET /api/v1/execution-jobs/{job_id}/payload -> policy_gate_for_external_runner"
+    tests:
+      success:
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_policy_decision_four_states
+      negative:
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_run_without_environment_and_never_reaches_target
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_when_policy_resolver_raises
+      boundary:
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_expired_policy_blocks_node_execution
+    mock_boundary: "真实 SQLite 会话 + 真实本地 ThreadingHTTPServer 目标；策略解析/Job/Worker 链路未 Mock。"
+    layers: [L1, L2, L3]
+    evidence:
+      - "commit:09140401f"
+      - "pytest:tests/test_aiqe_v16_001_policy_fail_closed.py (25 passed)"
+    owner: backend-security
+    reviewer: pending
+    gaps: []
+
+  - id: V16-001-R2
+    issue: V16-001
+    priority: P0
+    title: "Worker 入口在创建 Driver 前 fail-closed"
+    requirement: "execute_inprocess_job 必须在创建任何 Driver 前解析策略；无 Environment/无 Policy/Resolver 异常/策略删除/策略过期时节点 BLOCKED，且目标服务器 0 请求、数据库 0 连接。"
+    invariant: "不得出现 policy_context 缺失时调用 _execute_http/_execute_db 的路径；网络/DB 副作用计数必须为 0。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/execution_service.py
+        symbol: "_block_node_for_policy / execute_inprocess_job"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/services/node_executor.py
+        symbol: "execute_node(policy_context=...) / _policy_denial"
+        change: modified
+    production_entry:
+      - "job_consumer.claim_aiqe_jobs -> execution_service.execute_inprocess_job"
+    tests:
+      success:
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_allows_authorized_target_and_persists_policy_evidence
+      negative:
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_run_without_policy_record
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_when_policy_record_removed_before_claim
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_private_and_metadata_targets
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_db_node_rejects_workflow_sql_and_never_connects
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_network_node_with_none_capabilities_blocks
+      boundary:
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_expired_policy_blocks_node_execution
+    mock_boundary: "真实目标服务器请求计数（ThreadingHTTPServer）与真实 DB 连接解析器计数；未 Mock 策略解析。"
+    layers: [L2, L3]
+    evidence:
+      - "commit:09140401f"
+      - "pytest:tests/test_aiqe_v16_001_policy_fail_closed.py (25 passed)"
+    owner: backend-security
+    reviewer: pending
+    gaps: []
+
+  - id: V16-001-R3
+    issue: V16-001
+    priority: P0
+    title: "删除 legacy fail-open 执行器与静态门禁"
+    requirement: "删除 _has_target_policy、db=None 兼容开关、except TypeError 重调；删除 _execute_http/_execute_db；execute_node 的 policy_context 为必填关键字参数。"
+    invariant: "Worker 进程内不存在任何绕过策略的 HTTP/DB 执行分支；静态扫描可复现。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/node_executor.py
+        symbol: "NETWORK_DRIVERS / _execute_http_secure / _execute_db_secure"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/services/execution_service.py
+        symbol: "execute_inprocess_job"
+        change: modified
+    production_entry:
+      - "job_consumer.run_job -> execution_service.execute_inprocess_job -> node_executor.execute_node"
+    tests:
+      success:
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_allows_authorized_target_and_persists_policy_evidence
+      negative:
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_no_legacy_executors_and_policy_context_is_required
+    mock_boundary: "静态源码扫描 + 真实 Worker 入口；无 Mock。"
+    layers: [L1, L2, L3]
+    evidence:
+      - "commit:09140401f"
+      - "pytest:tests/test_aiqe_v16_001_policy_fail_closed.py (25 passed)"
+    owner: backend-security
+    reviewer: pending
+    gaps: []
+
+  - id: V16-001-R4
+    issue: V16-001
+    priority: P0
+    title: "外部 Runner 载荷与上报同样受策略约束"
+    requirement: "外部 Runner 每次拉取 /payload 时服务端重新解析策略；非 ALLOW 返回 409 且不下发可执行载荷；伪造的 PASSED 上报必须收口为 BLOCKED。"
+    invariant: "策略是服务端不变量，Runner 无法通过上报或跳过 payload 获得 PASS。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/api/v1/execution_jobs.py
+        symbol: "get_payload"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/services/execution_service.py
+        symbol: "policy_gate_for_external_runner / complete_from_external_report"
+        change: modified
+      - path: scripts/qa/aiqe_local_runner.py
+        symbol: "_policy_from_payload / run_once"
+        change: modified
+    production_entry:
+      - "GET /api/v1/execution-jobs/{job_id}/payload"
+      - "POST /api/v1/execution-jobs/{job_id}/report"
+    tests:
+      success:
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_payload_endpoint_returns_policy_snapshot_when_authorized
+      negative:
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_payload_endpoint_blocks_without_policy_and_never_handed_payload
+        - tests/test_aiqe_external_node_report.py::test_external_report_without_policy_blocks_even_if_runner_claims_success
+    mock_boundary: "真实 FastAPI TestClient + 节点令牌；未 Mock 策略/Job 链路。"
+    layers: [L2, L3]
+    evidence:
+      - "commit:09140401f"
+      - "pytest:tests/test_aiqe_v16_001_policy_fail_closed.py (25 passed)"
+    owner: execution-platform
+    reviewer: pending
+    gaps: []
+
+  - id: V16-001-R5
+    issue: V16-001
+    priority: P0
+    title: "旧 Workflow 策略迁移与 NEEDS_POLICY_REVIEW 禁止启动"
+    requirement: "提供显式迁移命令把可接受的旧字段迁入服务端策略；无法映射的 Workflow 标记 NEEDS_POLICY_REVIEW 并禁止启动。"
+    invariant: "旧 allowed_hosts/allow_private/allowed_tables/query_registry 不参与权限决策；未复核的 Workflow 不得调度。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/scripts/aiqe/migrate_workflow_target_policy.py
+        symbol: "analyze_workflow / main"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/models/workflow.py
+        symbol: "policy_status"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/services/run_launch.py
+        symbol: "launch_run"
+        change: modified
+      - path: test-platform-v2/backend/alembic/versions/20261119_v16_001_policy_status.py
+        symbol: "upgrade/downgrade"
+        change: added
+    production_entry:
+      - "python scripts/aiqe/migrate_workflow_target_policy.py --database-url ... --apply"
+      - "run_launch.launch_run"
+    tests:
+      success:
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_legacy_workflow_migration_tool_classifies_workflows
+      negative:
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_workflow_needs_policy_review_cannot_launch
+    mock_boundary: "真实 WorkflowDefinition ORM 对象 + 迁移脚本模块；无 Mock。"
+    layers: [L1, L2]
+    evidence:
+      - "commit:09140401f"
+      - "pytest:tests/test_aiqe_v16_001_policy_fail_closed.py (25 passed)"
+    owner: backend-security
+    reviewer: pending
+    gaps: []
+
+  # ── V16-002 浏览器全请求链（P0）────────────────────────────
+  - id: V16-002-R1
+    issue: V16-002
+    priority: P0
+    title: "应用层导航预校验 + 浏览器层 route 全请求拦截"
+    requirement: "PlaywrightDriver 必须接收服务端 ResolvedExecutionPolicy；主页面/导航 URL 在任何浏览器动作前校验；context.route 必须在任何 Page 创建前安装，覆盖 iframe/XHR/fetch/图片/脚本。"
+    invariant: "缺失 ALLOW 策略不得启动浏览器；未授权子资源请求不得抵达目标服务器。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/drivers/playwright_driver.py
+        symbol: "_prevalidate_targets / _install_request_guards / _on_route"
+        change: modified
+    production_entry:
+      - "node_executor.execute_node -> _execute_playwright -> PlaywrightDriver.execute"
+      - "scripts/qa/aiqe_local_runner.py -> node_executor.execute_node"
+    tests:
+      success:
+        - tests/test_aiqe_v16_002_playwright_interception.py::test_allowed_navigation_loads_page_and_subresources
+      negative:
+        - tests/test_aiqe_v16_002_playwright_interception.py::test_main_navigation_outside_policy_blocked_before_browser_starts
+        - tests/test_aiqe_v16_002_playwright_interception.py::test_subresource_requests_to_denied_target_blocked
+      boundary:
+        - tests/test_aiqe_v16_002_playwright_interception.py::test_dns_mixed_public_and_private_rejected
+        - tests/test_aiqe_v16_002_playwright_interception.py::test_route_installed_before_page_and_service_workers_blocked
+    mock_boundary: "真实 Chromium 149 + 本地受控 HTTP/WS 目标服务器；route/驱动链路未 Mock。"
+    layers: [L2, L3]
+    evidence:
+      - "commit:6eeb7b316"
+      - "pytest:tests/test_aiqe_v16_002_playwright_interception.py (10 passed)"
+    owner: driver-device
+    reviewer: pending
+    gaps: []
+
+  - id: V16-002-R2
+    issue: V16-002
+    priority: P0
+    title: "出口代理覆盖 redirect / WebSocket / 弹窗与 DNS pinning"
+    requirement: "浏览器所有出口流量必须经过策略代理；重定向目标在出口层重新校验；CONNECT/绝对 URI/WebSocket 均按策略校验并连接到已校验 IP；Service Worker 禁用。"
+    invariant: "redirect 到私网/云元数据/未授权端口的目标服务器请求计数为 0；未授权 WebSocket 握手数为 0。"
+    status: IMPLEMENTED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/drivers/browser_egress_proxy.py
+        symbol: "BrowserEgressProxy / _Handler.do_CONNECT / _handle_absolute"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/drivers/playwright_driver.py
+        symbol: "start() / _on_egress_denial"
+        change: modified
+    production_entry:
+      - "PlaywrightDriver.start -> Chromium --proxy-server -> BrowserEgressProxy"
+    tests:
+      success:
+        - tests/test_aiqe_v16_002_playwright_interception.py::test_allowed_navigation_loads_page_and_subresources
+      negative:
+        - tests/test_aiqe_v16_002_playwright_interception.py::test_redirect_to_denied_target_blocked_and_never_reached
+        - tests/test_aiqe_v16_002_playwright_interception.py::test_redirect_to_cloud_metadata_blocked
+        - tests/test_aiqe_v16_002_playwright_interception.py::test_websocket_to_denied_target_never_handshakes
+        - tests/test_aiqe_v16_002_playwright_interception.py::test_popup_navigation_to_denied_target_blocked
+    mock_boundary: "真实 Chromium + 受控目标/WebSocket 服务器；代理为进程内真实实现（非 Mock）。"
+    layers: [L2, L3]
+    evidence:
+      - "commit:6eeb7b316"
+      - "pytest:tests/test_aiqe_v16_002_playwright_interception.py (10 passed)"
+    owner: driver-device
+    reviewer: pending
+    gaps:
+      - "生产容器级 egress deny-by-default 仍待 V16-024 落地（进程内代理为第三层防护，容器网络策略为第四层）。"
+
+  - id: V16-002-R3
+    issue: V16-002
+    priority: P0
+    title: "拦截证据与安全事件（不含敏感值）"
+    requirement: "每次拦截记录 Run/Node/Request 维度证据、规范化目标、策略 hash、拒绝原因；不得记录 Authorization/Cookie/敏感 query；写入 Artifact 与 RunEvent。"
+    invariant: "安全事件与 Artifact 中 secret canary 命中数为 0。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/drivers/browser_egress_proxy.py
+        symbol: "deny()"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/services/execution_service.py
+        symbol: "_emit_security_denials"
+        change: modified
+    production_entry:
+      - "execution_service.finalize_node -> security.ssrf_blocked RunEvent"
+    tests:
+      success:
+        - tests/test_aiqe_v16_002_playwright_interception.py::test_subresource_requests_to_denied_target_blocked
+      negative:
+        - tests/test_aiqe_v16_002_playwright_interception.py::test_main_navigation_outside_policy_blocked_before_browser_starts
+        - tests/test_aiqe_v16_002_playwright_interception.py::test_security_denials_exclude_sensitive_headers_and_query
+    mock_boundary: "真实 Chromium 事件与真实 RunEvent 落库；无 Mock。"
+    layers: [L2, L3]
+    evidence:
+      - "commit:6eeb7b316"
+      - "pytest:tests/test_aiqe_v16_002_playwright_interception.py (10 passed)"
+    owner: backend-security
+    reviewer: pending
+    gaps: []
+
+  # ── V16-003 Secret Handle（P0，基线 PARTIAL）────────────────
+  - id: V16-003-R1
+    issue: V16-003
+    priority: P0
+    title: "Secret Handle 全链路（输出分类/Vault/解析/遮蔽）"
+    requirement: "Driver 输出的 SECRET 必须经分类器写入 Vault 并以 Handle 替换；正式 Worker 下游可在授权 scope 内解析；DB/AR/API/Event/Artifact/日志 0 明文。"
+    invariant: "任何持久化列与 API 响应不得出现原始 secret；Vault 不可用时 fail closed。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/run_context.py
+        symbol: "capture_node_outputs / set_output_secure"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/secret_vault.py
+        symbol: "SecretVault / resolve_secret_handle"
+        change: unchanged
+      - path: test-platform-v2/backend/app/api/v1/aiqe_runs.py
+        symbol: "run detail / nodes / attempts"
+        change: unchanged
+    production_entry:
+      - "job_consumer.run_job -> execution_service.execute_inprocess_job -> RunContext.capture_node_outputs"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1, L2]
+    evidence:
+      - "ci:baseline-audit-G1-G3"
+    owner: backend-security
+    reviewer: pending
+    gaps:
+      - "正式 Worker 的 capture_node_outputs 直接写 outputs_json 明文；无分类器/Vault/assert_no_secret。"
+      - "finalize_node 重建无 resolver 的 RunContext；下游 Handle 引用在 Worker 内必 BLOCKED。"
+      - "Run Detail API 原样返回 outputs_json/output_summary_json；无 KMS/外部 Secret Manager 实现。"
+
+  # ── V16-004 Query Registry（P0，基线 PARTIAL）───────────────
+  - id: V16-004-R1
+    issue: V16-004
+    priority: P0
+    title: "DB Query Registry 服务端化与租户/表白名单"
+    requirement: "DB 节点只接受 {query_key, version, params}；SQL/表范围/连接/租户谓词由服务端 Registry 决定；只读账号与 AST allowlist 纵深防御。"
+    invariant: "inline SQL/Workflow 白名单一律 BLOCKED；跨项目查询、系统表、跨 schema、超限均拒绝。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/query_registry.py
+        symbol: "register_query / DbReadonlyExecutor"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/drivers/db_readonly_driver.py
+        symbol: "DbReadonlyDriver.query / _check_tables"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/models/query_registry.py
+        symbol: "RegisteredQuery"
+        change: unchanged
+    production_entry:
+      - "job_consumer.run_job -> node_executor._execute_db_secure -> DbReadonlyExecutor"
+    tests:
+      success:
+        - tests/test_aiqe_aud002_query_registry.py::test_node_executor_runs_registered_query
+      negative:
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_db_node_rejects_workflow_sql_and_never_connects
+    mock_boundary: ""
+    layers: [L1, L2]
+    evidence:
+      - "ci:baseline-audit-G1-G3"
+    owner: backend-security
+    reviewer: pending
+    gaps:
+      - "登记查询路径未传 allowed_tables → 表白名单在真实执行中失效。"
+      - "缺 QueryDefinition/QueryVersion/QueryExecutionAudit 与管理员 API；无 environment_id 与租户谓词强制。"
+      - "系统表/跨 schema 拦截不完整；SQL parser/AST allowlist 未实现；生产连接账号只读未校验。"
+
+  # ── V16-005 租约与状态机（P1，基线 PARTIAL）─────────────────
+  - id: V16-005-R1
+    issue: V16-005
+    priority: P1
+    title: "Worker 租约/fencing/幂等与 Reconciler 状态机"
+    requirement: "每次 claim 产生单调 fencing token；写结果必须条件更新并携带 token；重复投递幂等；Reconciler 修复过期租约/无 Job 的 QUEUED/悬挂证据。"
+    invariant: "迟到结果不得覆盖新结果；终态不可回退；QUEUED 必须有 Job 或 QueueTicket。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/job_consumer.py
+        symbol: "claim_aiqe_jobs / complete_from_report"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/lease.py
+        symbol: "bump_fencing_token / assert_writable"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/reconciler.py
+        symbol: "reconcile"
+        change: unchanged
+    production_entry:
+      - "job_consumer.run_job / POST /execution-jobs/{id}/report"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1, L2]
+    evidence:
+      - "ci:baseline-audit-G4"
+    owner: execution-platform
+    reviewer: pending
+    gaps:
+      - "正式写结果路径（complete_node/进程内执行链）不传 fencing token；外部上报 API 也不校验 token。"
+      - "Job 幂等唯一键与条件更新 rowcount 语义缺失。"
+      - "Run/Node/Job 状态词表三套并存，与规格状态机不一致。"
+
+  # ── V16-006 统一 Launch（P1，基线 MISSING）──────────────────
+  - id: V16-006-R1
+    issue: V16-006
+    priority: P1
+    title: "唯一 Run Launch 服务与 Outbox 派发"
+    requirement: "所有 Run 类型（NORMAL/NOISE_EXPERIMENT/DEFECT_REGRESSION）必须经 launch_run 创建；返回 LaunchResult 含 job_ids；Outbox 同事务发布。"
+    invariant: "任何 Run 处于 QUEUED 时必须存在可查 Job；Noise/Regression 不得自行创建 QUEUED Run。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/run_launch.py
+        symbol: "launch_run"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/triage_service.py
+        symbol: "experiment launch"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/regression_service.py
+        symbol: "regression launch"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/execution_dispatcher.py
+        symbol: "enqueue_node_run"
+        change: unchanged
+    production_entry:
+      - "POST /aiqe/runs / regression API / experiment API"
+    tests: {}
+    mock_boundary: ""
+    layers: [L2]
+    evidence:
+      - "ci:baseline-audit-G4"
+    owner: execution-platform
+    reviewer: pending
+    gaps:
+      - "规格 launch_run 契约字段（workflow_snapshot_id/execution_kind/LaunchResult）全仓缺失。"
+      - "triage/regression 仍自行创建 QUEUED Run 且不产生 ExecutionJob。"
+      - "Outbox relay 与 QUEUED→RUNNING 时点未实现。"
+
+  # ── V16-007 冻结 DAG 快照（P1，基线 MISSING）────────────────
+  - id: V16-007-R1
+    issue: V16-007
+    priority: P1
+    title: "不可变 WorkflowSnapshot 与完整 DAG 复制"
+    requirement: "执行 Run 只能绑定带 checksum 的不可变 Snapshot；Regression/Noise 通过 SnapshotCloner 复制并保留 depends_on/edges/条件/断言/输出映射。"
+    invariant: "克隆图与原图拓扑一致；缺父节点/环路/未知引用必须拒绝。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/workflow_service.py
+        symbol: "create_workflow / approve_workflow"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/regression_service.py
+        symbol: "_replicate_nodes"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/triage_service.py
+        symbol: "experiment replication"
+        change: unchanged
+    production_entry:
+      - "regression API / triage experiment API"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1, L2]
+    evidence:
+      - "ci:baseline-audit-G4"
+    owner: execution-platform
+    reviewer: pending
+    gaps:
+      - "无 WorkflowSnapshot 模型/表/迁移与 SnapshotCloner。"
+      - "两处克隆手写 graph 且硬编码 depends_on=[] / edges=[]，丢弃 assertions/outputs。"
+      - "克隆 Run 的 workflow_checksum 为空。"
+
+  # ── V16-008 Mandatory Scope（P1，基线 PARTIAL）──────────────
+  - id: V16-008-R1
+    issue: V16-008
+    priority: P1
+    title: "Defect Regression Mandatory Scope 强制执行"
+    requirement: "Mandatory scope 由服务端计算并冻结；SnapshotCloner 不得排除 mandatory 节点；必测节点不可执行时 Run BLOCKED。"
+    invariant: "Mandatory 全部完成且断言通过才可判定质量门禁通过；不得缩小范围后 PASS。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/regression_service.py
+        symbol: "build_mandatory_scope"
+        change: unchanged
+      - path: test-platform-v2/backend/app/api/v1/aiqe_regressions.py
+        symbol: "regression API"
+        change: unchanged
+    production_entry:
+      - "POST /aiqe/regressions"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1, L2]
+    evidence:
+      - "ci:baseline-audit-G5"
+    owner: execution-platform
+    reviewer: pending
+    gaps:
+      - "Mandatory 集合只落库不参与终态/门禁；客户端可用 scope=SELECTED 清空强制集合。"
+      - "回归 Run 不派发 Job、不复制断言、永不到终态。"
+
+  # ── V16-009 Assertion/PASS 语义（P1，基线 PARTIAL）──────────
+  - id: V16-009-R1
+    issue: V16-009
+    priority: P1
+    title: "业务断言与 Run PASS 语义"
+    requirement: "BUSINESS 节点必须有有效 Oracle；PASS 必须实际执行 required business assertions 并具备可验证证据；无断言节点不得贡献 PASS。"
+    invariant: "Run PASSED 需要至少一个有效业务 Oracle 且无 FAIL/BLOCKED/ERROR/UNKNOWN。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/workflow_validator.py
+        symbol: "validate_workflow"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/assertion_service.py
+        symbol: "evaluate_and_persist"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/execution_service.py
+        symbol: "finalize_node"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/services/quality_gate_service.py
+        symbol: "quality gate"
+        change: unchanged
+    production_entry:
+      - "job_consumer.run_job -> execution_service.finalize_node"
+    tests:
+      success:
+        - tests/test_aiqe_execution_pipeline.py::test_pipeline_variable_assertion_outputs_and_evidence
+      negative:
+        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_run_without_policy_record
+    mock_boundary: ""
+    layers: [L1, L2]
+    evidence:
+      - "ci:baseline-audit-G5"
+    owner: execution-platform
+    reviewer: pending
+    gaps:
+      - "无断言节点直接 PASSED；Run 可零业务 Oracle 判 PASS。"
+      - "缺节点类别/required/evidence_required 校验；Quality Gate 与 Run Outcome 语义不一致。"
+
+  # ── V16-010 Benchmark Gate（P1，基线 PARTIAL）───────────────
+  - id: V16-010-R1
+    issue: V16-010
+    priority: P1
+    title: "A6 Benchmark PASS_GATE 强制审批"
+    requirement: "候选批准必须同时满足 PASS_GATE、gate_eligible、样本数、全部阈值、baseline 无退化、dataset checksum 匹配与审批人权限。"
+    invariant: "非 PASS_GATE 或证据不足的候选不可批准/发布；不得无条件标记 benchmarked。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/learning_service.py
+        symbol: "evaluate_candidate / approve_candidate"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/benchmark_service.py
+        symbol: "evaluate / metrics"
+        change: unchanged
+    production_entry:
+      - "POST /aiqe/learning/candidates/{id}/evaluate|approve"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1, L2]
+    evidence:
+      - "ci:baseline-audit-G6"
+    owner: ai-agent
+    reviewer: pending
+    gaps:
+      - "approve 仅判 FPR≤0.2；全 UNKNOWN 候选 FPR=0 可批准。"
+      - "evaluate 无条件 status=benchmarked，无 gate decision/immutable snapshot。"
+      - "approved_by/benchmark_run_id/dataset_checksum/baseline_version 等字段全缺。"
+
+  # ── V16-011 Project Scope（P1，基线 PARTIAL）────────────────
+  - id: V16-011-R1
+    issue: V16-011
+    priority: P1
+    title: "Benchmark/Learning/Insights 全资源 Project Scope"
+    requirement: "所有 service 方法以 project_id 为必填；查询必须同时包含 resource_id 与 project_id；跨项目读写全部拒绝。"
+    invariant: "A/B 两项目任意资源 GET/POST/PATCH/DELETE/Freeze/Evaluate/Approve/Publish 均不可跨项目成功。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/benchmark_service.py
+        symbol: "dataset/run 操作"
+        change: unchanged
+      - path: test-platform-v2/backend/app/api/v1/aiqe_insights.py
+        symbol: "benchmark endpoints"
+        change: unchanged
+      - path: test-platform-v2/backend/app/api/v1/aiqe_learning.py
+        symbol: "evaluate / bug-patterns"
+        change: unchanged
+    production_entry:
+      - "POST /aiqe/benchmarks/* /aiqe/learning/*"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1, L2]
+    evidence:
+      - "ci:baseline-audit-G6"
+    owner: ai-agent
+    reviewer: pending
+    gaps:
+      - "benchmark_service 6 个公开函数无 project 参数；API 不传 project。"
+      - "BugPattern 无 project_id 且 pattern_key 全局唯一。"
+
+  # ── V16-012 A4 Evidence Resolver（P1，基线 PARTIAL）─────────
+  - id: V16-012-R1
+    issue: V16-012
+    priority: P1
+    title: "A4 证据 Resolver 强制接入与拒绝语义"
+    requirement: "A4 每条 evidence ref 必须经服务端 resolver 校验存在性/项目/Run/类型/权限/checksum；resolver 缺失或异常不得降级通过。"
+    invariant: "无效/跨项目/跨 Run/已删除/checksum 错误证据 → INVALID_EVIDENCE/BLOCKED，不得成为可采信结论。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/aiqe/agents/failure_triage_agent.py
+        symbol: "validate / evidence_resolver"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/agents/protocol.py
+        symbol: "BaseAgentAdapter.execute"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/evidence_service.py
+        symbol: "resolve_evidence_refs"
+        change: unchanged
+    production_entry:
+      - "Agent Adapter -> A4 validate"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1]
+    evidence:
+      - "ci:baseline-audit-G6"
+    owner: ai-agent
+    reviewer: pending
+    gaps:
+      - "resolver 默认 None 且缺失即跳过校验；Adapter 丢弃 AgentContext.evidence_resolver。"
+      - "resolver 返回值未被消费；无 INVALID_EVIDENCE/BLOCKED 语义；A4 无生产入口。"
+
+  # ── V16-013 A0 Draft→Approval→run_plan（P1，基线 PARTIAL）───
+  - id: V16-013-R1
+    issue: V16-013
+    priority: P1
+    title: "A0 AgentTask 持久化 + 审批 + run_plan 真实执行"
+    requirement: "AgentTask/Execution/StepExecution 持久化；Draft 不执行；未审批 run 返回 403/409；审批后经统一 Job/Outbox 执行 run_plan 并记录每个 Agent 证据。"
+    invariant: "未审批不得执行；失败 Agent 不得标 COMPLETED；工具调用/审批/取消全程可追溯。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/api/v1/aiqe_automation.py
+        symbol: "agent task endpoints"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/agents/orchestrator.py
+        symbol: "run_plan / _persist_execution"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/models/agent.py
+        symbol: "AgentExecution"
+        change: unchanged
+    production_entry:
+      - "POST /aiqe/automation/agent-tasks"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1]
+    evidence:
+      - "ci:baseline-audit-G6"
+    owner: ai-agent
+    reviewer: pending
+    gaps:
+      - "无 AgentTask 持久化/审批/approve/run 路由；run_plan 零生产调用。"
+      - "工具表默认空；无取消/审批撤销/真实重试。"
+
+  # ── V16-014 A5 Change Impact（P1，基线 PARTIAL）─────────────
+  - id: V16-014-R1
+    issue: V16-014
+    priority: P1
+    title: "A5 变更影响证据化并进入 Mandatory Scope"
+    requirement: "A5 输入包含 base/head 完整 SHA、diff hash、文件列表与 API/DB/UI 影响证据；结果按 6 类分类并进入回归 Scope；无 baseline 标 UNKNOWN 并扩大回归。"
+    invariant: "不得仅凭文件名关键词给结论；无 baseline 不得声称无影响。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/aiqe/agents/change_impact_agent.py
+        symbol: "A5 规则"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/impact_service.py
+        symbol: "diff/AST/route/migration 解析"
+        change: unchanged
+    production_entry:
+      - "POST /aiqe/insights/impact/plan"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1, L2]
+    evidence:
+      - "ci:baseline-audit-G6"
+    owner: ai-agent
+    reviewer: pending
+    gaps:
+      - "A5 结论由路径子串匹配产生；经 Adapter 时强制集合守卫失效。"
+      - "A5 不进 AgentPlan/回归 Scope；无算法/规则版本与 diff hash 落库。"
+
+  # ── V16-015 能力真实性（P1，基线 PARTIAL）──────────────────
+  - id: V16-015-R1
+    issue: V16-015
+    priority: P1
+    title: "Capability VERIFIED 只由真实运行证据产生"
+    requirement: "REGISTERED/AVAILABLE/VERIFIED/DEGRADED/BLOCKED 分级；VERIFIED 只能由成功的 Capability Verification Run 写入；API 不得直接把状态改为 VERIFIED。"
+    invariant: "Preflight 只接受 VERIFIED（或经批准的 AVAILABLE 策略）；设备/版本/健康变化自动降级。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/capability_registry.py
+        symbol: "mark_verified / compute_effective_status"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/models/capability.py
+        symbol: "NodeCapabilityManifest"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/capability_preflight.py
+        symbol: "preflight"
+        change: unchanged
+    production_entry:
+      - "Preflight -> capability_registry.select_nodes"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1, L2]
+    evidence:
+      - "ci:baseline-audit-G7"
+    owner: driver-device
+    reviewer: pending
+    gaps:
+      - "VERIFIED 无生产写入者；验机脚本伪造 COMPLETED/PASS Run 后直接 mark_verified。"
+      - "模型缺 verification_run_id/artifact refs/OS/镜像/设备字段。"
+
+  # ── V16-016 多端边界（P1，基线 PARTIAL）────────────────────
+  - id: V16-016-R1
+    issue: V16-016
+    priority: P1
+    title: "多端适配器能力边界与 GA 支持矩阵"
+    requirement: "所有 Driver 通过统一 DriverProtocol/NodeExecutor 注册；DeviceBroker 统一设备租约/清理/健康检查；未实现平台标 BLOCKED 并列入 GA 不支持清单。"
+    invariant: "未接入执行链的 Adapter 不得对外宣称 VERIFIED。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/aiqe/adapters/miniapp.py
+        symbol: "miniapp adapter"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/adapters/desktop_driver.py
+        symbol: "desktop driver"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/adapters/iot_driver.py
+        symbol: "iot driver"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/device_broker.py
+        symbol: "DeviceBroker"
+        change: unchanged
+    production_entry:
+      - "node_executor.execute_node -> platform adapters"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1]
+    evidence:
+      - "ci:baseline-audit-G7"
+    owner: driver-device
+    reviewer: pending
+    gaps:
+      - "Miniapp/Desktop/IoT Adapter 仅被测试导入，未接标准执行链。"
+      - "DeviceBroker 为内存对象且无生产引用；PlatformBinding 缺 Environment/DevicePool/Runner。"
+
+  # ── V16-017 十个真实 E2E（P1，基线 MISSING）─────────────────
+  - id: V16-017-R1
+    issue: V16-017
+    priority: P1
+    title: "TC-AIQE-001～010 独立真实 E2E"
+    requirement: "每个 TC 独立 fixture、业务断言、负向断言与证据清单；从正式 Launch/API/Worker 入口执行；输出 Run/Job/Assertion/Artifact ID。"
+    invariant: "不得用同一页面 body 断言冒充多个场景；BLOCKED/SKIP 不计入通过率。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_tc_aiqe_001_010.py
+        symbol: "TC 页面断言"
+        change: unchanged
+      - path: test-platform-v2/backend/tests/e2e/aiqe/tc_aiqe_service_acceptance.py
+        symbol: "服务验收脚本"
+        change: unchanged
+    production_entry:
+      - "pytest tests/e2e/aiqe"
+    tests: {}
+    mock_boundary: ""
+    layers: [L3]
+    evidence:
+      - "ci:baseline-audit-G8"
+    owner: qa-automation
+    reviewer: pending
+    gaps:
+      - "十个用例仍是同一 /runs 页面 body 断言；服务脚本存在 NotImplementedError 与直调 helper。"
+      - "缺 project_id/job_ids/assertion_ids/artifact_refs/workflow_snapshot_hash 输出。"
+
+  # ── V16-018 Artifact（P1，基线 PARTIAL）─────────────────────
+  - id: V16-018-R1
+    issue: V16-018
+    priority: P1
+    title: "Artifact 权限、完整性与 Evidence Lifecycle"
+    requirement: "initiate→signed upload→finalize；finalize 校验对象存在/大小/hash/类型/归属；下载短时授权；元数据无 Secret；tombstone 后引用不可用。"
+    invariant: "跨项目/伪造 key/篡改 hash/过期 URL/未 finalize 下载均拒绝；required evidence 缺失不得 PASS。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/artifact_service.py
+        symbol: "initiate/finalize/download"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/models/artifact.py
+        symbol: "Artifact"
+        change: unchanged
+      - path: test-platform-v2/backend/app/api/v1/aiqe_artifacts.py
+        symbol: "artifact endpoints"
+        change: unchanged
+    production_entry:
+      - "POST /aiqe/artifacts/initiate|finalize / GET download"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1, L2]
+    evidence:
+      - "ci:baseline-audit-G7"
+    owner: backend-security
+    reviewer: pending
+    gaps:
+      - "上传会话 expires_at 不校验；无 Content-Type/期望大小校验；API 上传不脱敏。"
+      - "无访问审计与 reconciliation；墓碑/CORRUPTED artifact 仍可被 Evidence 引用。"
+
+  # ── V16-019 Tool Registry（P1，基线 MISSING）───────────────
+  - id: V16-019-R1
+    issue: V16-019
+    priority: P1
+    title: "Tool Registry 真实绑定、权限与 ToolExecution 审计"
+    requirement: "注册项包含 version/implementation/schema/permission/project scope/side effect/idempotent/timeout/approval；启动校验实现存在；调用前授权、调用后写 ToolExecution 事件与 Artifact。"
+    invariant: "未注册/越权/参数越权/超时/审批缺失一律拒绝；只读默认，写操作需审批。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/aiqe/agents/protocol.py
+        symbol: "ToolRegistry"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/agents/registry.py
+        symbol: "build_tool_registry"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/agents/orchestrator.py
+        symbol: "run_plan tool calls"
+        change: unchanged
+    production_entry:
+      - "Agent run_plan -> ToolRegistry.resolve"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1]
+    evidence:
+      - "ci:baseline-audit-G6"
+    owner: ai-agent
+    reviewer: pending
+    gaps:
+      - "默认实现表为空；无 12 项注册元数据、无 UNAVAILABLE、无参数 schema 校验。"
+      - "无 ToolExecution 模型/事件/审计；tool_calls 恒空且可伪造。"
+
+  # ── V16-020 终态与对比（P1，基线 PARTIAL）──────────────────
+  - id: V16-020-R1
+    issue: V16-020
+    priority: P1
+    title: "统一终态与 Comparison Snapshot"
+    requirement: "仅真实终态 Run 可生成对比结论；终态计算唯一；Comparison Snapshot 引用真实 Assertion/Artifact。"
+    invariant: "非终态 Run 不得被固化对比结论；Run Outcome/Quality Gate/Regression Outcome 语义一致。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/regression_terminal.py
+        symbol: "handle_run_terminal"
+        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/reconciler.py
+        symbol: "terminal reconciliation"
+        change: unchanged
+    production_entry:
+      - "GET /aiqe/runs/{id}/comparison"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1, L2]
+    evidence:
+      - "ci:baseline-audit-G5"
+    owner: execution-platform
+    reviewer: pending
+    gaps:
+      - "handle_run_terminal 不校验终态；读路径写库把非终态 Run 固化为 UNKNOWN 结论。"
+      - "存在多套终态计算；outbox 消费者零生产调用点。"
+
+  # ── V16-021 Dogfood 弱口令（P2，基线 MISSING）──────────────
+  - id: V16-021-R1
+    issue: V16-021
+    priority: P2
+    title: "删除 Dogfood 默认弱口令"
+    requirement: "移除硬编码 admin123 与命令行密码参数；必须显式提供 Secret Provider/短期凭据；无凭据非 0 退出且日志不打印密码。"
+    invariant: "仓库不存在任何默认管理员密码；历史凭据已轮换记录。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/scripts/aiqe/evidence_local_20.py
+        symbol: "password default"
+        change: unchanged
+      - path: test-platform-v2/backend/scripts/aiqe/evidence_camel_test5.py
+        symbol: "credential handling"
+        change: unchanged
+    production_entry:
+      - "python scripts/aiqe/evidence_local_20.py"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1]
+    evidence:
+      - "ci:baseline-audit-G7"
+    owner: qa-automation
+    reviewer: pending
+    gaps:
+      - "仍存在 os.environ.get('AIQE_EVIDENCE_PASSWORD', 'admin123') 与 --password 参数。"
+      - "无「无凭据退出非 0」测试与历史凭据扫描/轮换记录。"
+
+  # ── V16-022 依赖与环境可复现（P2，基线 PARTIAL）────────────
+  - id: V16-022-R1
+    issue: V16-022
+    priority: P2
+    title: "依赖锁定与测试环境可复现"
+    requirement: "锁定 Python/Node/浏览器版本与依赖 hash；CI 用 lockfile 安装；分层标记单元/集成/Worker/Browser E2E；输出 JUnit/coverage/trace。"
+    invariant: "干净容器按文档一次安装即可运行规定 AIQE 测试集；安装失败不得计为通过。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/backend/requirements.txt
+        symbol: "依赖声明"
+        change: unchanged
+      - path: test-platform-v2/backend/requirements.lock
+        symbol: "hash lock"
+        change: unchanged
+      - path: test-platform-v2/backend/Dockerfile
+        symbol: "构建镜像"
+        change: unchanged
+    production_entry:
+      - "pip install -r requirements.txt + 测试命令"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1]
+    evidence:
+      - "ci:baseline-audit-G7"
+    owner: devops
+    reviewer: pending
+    gaps:
+      - "required CI 使用浮动 pytest，lock 仅 dry-run；无 dependency groups。"
+      - "pytest 仅 slow/integration 两个 marker；无 AIQE 分层测试报告。"
+
+  # ── V16-023 证据与版本追溯（P2，基线 MISSING）──────────────
+  - id: V16-023-R1
+    issue: V16-023
+    priority: P2
+    title: "证据与版本可追溯"
+    requirement: "每个验收证据关联 commit SHA/PR/CI run/环境/Run ID/Snapshot hash/Driver 镜像 digest；报告由 CI artifact 自动生成；区分实现/单测/集成/E2E/生产观察。"
+    invariant: "不允许手工填写测试数量；未运行测试标 NOT_RUN。"
+    status: PARTIAL
+    code:
+      - path: docs/aiqe/aud-remediation-v15-final-report.md
+        symbol: "v1.5 报告"
+        change: unchanged
+      - path: config/aiqe-version.lock
+        symbol: "版本锁"
+        change: unchanged
+    production_entry:
+      - "CI evidence job"
+    tests: {}
+    mock_boundary: ""
+    layers: [L1]
+    evidence:
+      - "ci:baseline-audit-G7"
+    owner: devops
+    reviewer: pending
+    gaps:
+      - "既有验收证据无 commit/CI/PR/镜像标识；版本锁停留在旧 SHA。"
+      - "无 evidence-index 生成器与 v1.6 交付文档。"
+
+  # ── V16-024 生产化（P0 release gate，基线 PARTIAL）─────────
+  - id: V16-024-R1
+    issue: V16-024
+    priority: P0
+    title: "监控、告警、限流、灰度与回滚"
+    requirement: "实现 §8.2 全部 aiqe_* 指标与 §8.3 告警规则；Runner 网络/资源隔离；灰度 Stage 0-5 与回滚演练记录。"
+    invariant: "Secret Canary 命中、SSRF 漏拦、跨租户成功、假 PASS 必须触发停止扩大与回滚。"
+    status: PARTIAL
+    code:
+      - path: test-platform-v2/deploy/docker-compose.yml
+        symbol: "部署定义"
+        change: unchanged
+      - path: docs/aiqe/rollback.md
+        symbol: "回滚文档"
+        change: unchanged
+      - path: docs/aiqe/runner-deployment.md
+        symbol: "Runner 部署"
+        change: unchanged
+    production_entry:
+      - "生产部署与监控平台"
+    tests: {}
+    mock_boundary: ""
+    layers: [L4]
+    evidence:
+      - "ci:baseline-audit-G7"
+    owner: devops
+    reviewer: pending
+    gaps:
+      - "无任何 aiqe_* 指标实现、告警规则、限流与 AIQE 灰度阶段。"
+      - "容器 egress 策略尚未落地到部署定义。"
+
+  # ── V16-025 工程治理（P0 release gate，基线 PARTIAL）──────
+  - id: V16-025-R1
+    issue: V16-025
+    priority: P0
+    title: "需求—代码—正式入口—测试—证据追踪与 CI 门禁"
+    requirement: "建立 requirements.yaml + Markdown 矩阵 + check_traceability.py + aiqe-v16-gates.yml + CODEOWNERS + PR 模板强制字段 + evidence-index 生成器；阶段差距报告。"
+    invariant: "P0/P1 追踪覆盖率 100%；缺失 Requirement ID/测试/证据/Reviewer 的 PR 必须失败。"
+    status: PARTIAL
+    code:
+      - path: scripts/aiqe/check_traceability.py
+        symbol: "main / 校验规则"
+        change: added
+      - path: docs/aiqe/v1.6/traceability/requirements.yaml
+        symbol: "追踪矩阵"
+        change: added
+    production_entry:
+      - "python scripts/aiqe/check_traceability.py --issue ... --pr-body ... --changed-files ..."
+      - ".github/workflows/aiqe-v16-gates.yml"
+    tests:
+      success:
+        - tests/test_aiqe_v16_025_traceability_gate.py::test_valid_matrix_passes
+      negative:
+        - tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_missing_negative_test_for_p0
+        - tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_self_accepted_requirement
+    mock_boundary: "真实 YAML 矩阵文件 + 真实 CLI；无 Mock。"
+    layers: [L1, L2]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_025_traceability_gate.py"
+    owner: tech-lead
+    reviewer: pending
+    gaps:
+      - "CI workflow / CODEOWNERS / PR 模板字段 / evidence-index 生成器尚在本次补齐。"
+
+  # ── TC-AIQE-001～010（基线 NOT_STARTED）────────────────────
+  - id: TC-AIQE-001
+    issue: TC-AIQE-001
+    priority: P1
+    title: "跨系统混合 Workflow（API→后台 UI→DB→前台 UI）"
+    requirement: "真实 API/DB/UI 串联，动态业务 ID 传递，每步有断言与 Artifact。"
+    invariant: "API/DB/UI 数据一致；DAG 顺序正确；无硬编码 ID。"
+    status: NOT_STARTED
+    code:
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_tc_aiqe_001_010.py
+        symbol: "tc001"
+        change: unchanged
+    production_entry:
+      - "pytest tests/e2e/aiqe"
+    tests: {}
+    mock_boundary: ""
+    layers: [L3]
+    evidence: []
+    owner: qa-automation
+    reviewer: pending
+    gaps:
+      - "当前为页面 body 断言，未从正式 Launch/Worker 入口执行。"
+
+  - id: TC-AIQE-002
+    issue: TC-AIQE-002
+    priority: P1
+    title: "HTTP 200 但业务断言失败"
+    requirement: "transport 成功但业务 JSON 不满足断言时 Run 不得 PASS。"
+    invariant: "业务断言失败必须产生 FAIL 证据。"
+    status: NOT_STARTED
+    code:
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_tc_aiqe_001_010.py
+        symbol: "tc002"
+        change: unchanged
+    production_entry:
+      - "pytest tests/e2e/aiqe"
+    tests: {}
+    mock_boundary: ""
+    layers: [L3]
+    evidence: []
+    owner: qa-automation
+    reviewer: pending
+    gaps:
+      - "未独立实现。"
+
+  - id: TC-AIQE-003
+    issue: TC-AIQE-003
+    priority: P1
+    title: "Playwright 真实交互与安全拦截"
+    requirement: "真实点击/输入成功；非法 iframe/fetch/redirect 被 route 与 egress 阻断；HAR/Trace 无 Secret。"
+    invariant: "非法目标服务器收到 0 请求。"
+    status: NOT_STARTED
+    code:
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_tc_aiqe_001_010.py
+        symbol: "tc003"
+        change: unchanged
+    production_entry:
+      - "pytest tests/e2e/aiqe"
+    tests: {}
+    mock_boundary: ""
+    layers: [L3]
+    evidence: []
+    owner: qa-automation
+    reviewer: pending
+    gaps:
+      - "V16-002 已提供 Driver 级拦截证据，TC 级尚未从 Launch 入口重建。"
+
+  - id: TC-AIQE-004
+    issue: TC-AIQE-004
+    priority: P1
+    title: "DB 只读、Query Registry 与租户隔离"
+    requirement: "合法 SELECT 成功；inline SQL/写 SQL/跨租户/跨项目 Query ID 全部拒绝。"
+    invariant: "数据库无写入、无越权读取。"
+    status: NOT_STARTED
+    code:
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_tc_aiqe_001_010.py
+        symbol: "tc004"
+        change: unchanged
+    production_entry:
+      - "pytest tests/e2e/aiqe"
+    tests: {}
+    mock_boundary: ""
+    layers: [L3]
+    evidence: []
+    owner: qa-automation
+    reviewer: pending
+    gaps:
+      - "未独立实现。"
+
+  - id: TC-AIQE-005
+    issue: TC-AIQE-005
+    priority: P1
+    title: "SSRF / Redirect / DNS Rebinding"
+    requirement: "受控 DNS/HTTP fixture 模拟公网/私网/混合解析/302/DNS 变化/IPv4-mapped；危险目标 0 请求。"
+    invariant: "允许目标可达；危险目标未抵达；事件含拒绝原因。"
+    status: NOT_STARTED
+    code:
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_tc_aiqe_001_010.py
+        symbol: "tc005"
+        change: unchanged
+    production_entry:
+      - "pytest tests/e2e/aiqe"
+    tests: {}
+    mock_boundary: ""
+    layers: [L3]
+    evidence: []
+    owner: qa-automation
+    reviewer: pending
+    gaps:
+      - "V16-002 已有 Driver 级负向证据，TC 级尚未从 Launch 入口重建。"
+
+  - id: TC-AIQE-006
+    issue: TC-AIQE-006
+    priority: P1
+    title: "Secret 全链路保护"
+    requirement: "登录响应产生 JWT/access/refresh token；下游经 Handle 使用；DB/API/Event/Artifact/日志 0 明文。"
+    invariant: "3 类 canary 明文命中数为 0；越权解析失败。"
+    status: NOT_STARTED
+    code:
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_tc_aiqe_001_010.py
+        symbol: "tc006"
+        change: unchanged
+    production_entry:
+      - "pytest tests/e2e/aiqe"
+    tests: {}
+    mock_boundary: ""
+    layers: [L3]
+    evidence: []
+    owner: qa-automation
+    reviewer: pending
+    gaps:
+      - "依赖 V16-003 正式 Worker 的 Secret Handle 链路。"
+
+  - id: TC-AIQE-007
+    issue: TC-AIQE-007
+    priority: P1
+    title: "Worker 崩溃、重复消息、Lease/Fencing"
+    requirement: "claim/执行/写结果/ack 各阶段崩溃、重复投递、迟到结果；最多一个有效 Attempt 终态。"
+    invariant: "旧 fencing token 结果被拒绝；Reconciler 可恢复；无状态回退。"
+    status: NOT_STARTED
+    code:
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_tc_aiqe_001_010.py
+        symbol: "tc007"
+        change: unchanged
+    production_entry:
+      - "pytest tests/e2e/aiqe"
+    tests: {}
+    mock_boundary: ""
+    layers: [L3]
+    evidence: []
+    owner: qa-automation
+    reviewer: pending
+    gaps:
+      - "依赖 V16-005 租约/fencing 整改。"
+
+  - id: TC-AIQE-008
+    issue: TC-AIQE-008
+    priority: P1
+    title: "缺陷一键回归"
+    requirement: "创建 Defect、绑定完整 SHA/部署证明、计算 mandatory scope、Launch 回归、真实执行必测 Case、生成对比。"
+    invariant: "Job 已派发；DAG 依赖保留；Mandatory 全覆盖；幂等请求不重复执行。"
+    status: NOT_STARTED
+    code:
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_tc_aiqe_001_010.py
+        symbol: "tc008"
+        change: unchanged
+    production_entry:
+      - "pytest tests/e2e/aiqe"
+    tests: {}
+    mock_boundary: ""
+    layers: [L3]
+    evidence: []
+    owner: qa-automation
+    reviewer: pending
+    gaps:
+      - "依赖 V16-006/007/008 整改。"
+
+  - id: TC-AIQE-009
+    issue: TC-AIQE-009
+    priority: P1
+    title: "Noise 因果分析与 E1–E6 实验"
+    requirement: "分别注入 6 类故障，baseline/control/experiment 各自有真实 Job 与 terminal Run。"
+    invariant: "实验组/对照组变量差异可追溯；无证据结论为 UNKNOWN。"
+    status: NOT_STARTED
+    code:
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_tc_aiqe_001_010.py
+        symbol: "tc009"
+        change: unchanged
+    production_entry:
+      - "pytest tests/e2e/aiqe"
+    tests: {}
+    mock_boundary: ""
+    layers: [L3]
+    evidence: []
+    owner: qa-automation
+    reviewer: pending
+    gaps:
+      - "依赖 V16-006 统一 Launch。"
+
+  - id: TC-AIQE-010
+    issue: TC-AIQE-010
+    priority: P1
+    title: "A0–A6 需求、用例、Workflow、归因、Benchmark、学习发布"
+    requirement: "Draft→人工审批→执行 A1–A6；提交 Benchmark；未达标拒绝、达标双人审批发布。"
+    invariant: "每个 Agent 有 Execution/ToolExecution/evidence refs；A6 非 PASS_GATE 不可批准。"
+    status: NOT_STARTED
+    code:
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_tc_aiqe_001_010.py
+        symbol: "tc010"
+        change: unchanged
+    production_entry:
+      - "pytest tests/e2e/aiqe"
+    tests: {}
+    mock_boundary: ""
+    layers: [L3]
+    evidence: []
+    owner: qa-automation
+    reviewer: pending
+    gaps:
+      - "依赖 V16-010～014/019 整改。"

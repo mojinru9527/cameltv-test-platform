@@ -1,0 +1,46 @@
+# AIQE V1.6 CODEOWNERS
+#
+# 说明（V16-025 §6）：
+# - 单人仓库阶段，责任域以注释形式标注；实际 owner 统一为仓库维护者。
+# - 多人协作时，把对应域替换为团队 handle（例如 @cameltv/aiqe-security），
+#   并保持域边界不变。
+# - CODEOWNERS 不能替代独立 QA 验收（V16-025 §0.2.7）。
+
+# ── 安全边界：TargetPolicy / SafeTarget / SSRF / Secret / Query Registry ──
+/test-platform-v2/backend/app/aiqe/security/                 @mojinru9527
+/test-platform-v2/backend/app/aiqe/drivers/browser_egress_proxy.py @mojinru9527
+/test-platform-v2/backend/app/aiqe/services/secret_vault.py   @mojinru9527
+/test-platform-v2/backend/app/aiqe/services/query_registry.py @mojinru9527
+/test-platform-v2/backend/app/aiqe/services/run_context.py    @mojinru9527
+
+# ── 执行运行时：Launch / Job / Lease / DAG / Reconciler / 终态 ──
+/test-platform-v2/backend/app/aiqe/services/run_launch.py      @mojinru9527
+/test-platform-v2/backend/app/aiqe/services/job_consumer.py    @mojinru9527
+/test-platform-v2/backend/app/aiqe/services/execution_service.py @mojinru9527
+/test-platform-v2/backend/app/aiqe/services/dag_scheduler.py   @mojinru9527
+/test-platform-v2/backend/app/aiqe/services/lease.py           @mojinru9527
+/test-platform-v2/backend/app/aiqe/services/reconciler.py      @mojinru9527
+/test-platform-v2/backend/app/aiqe/services/assertion_service.py @mojinru9527
+
+# ── Agent / Learning ──
+/test-platform-v2/backend/app/aiqe/agents/                     @mojinru9527
+/test-platform-v2/backend/app/aiqe/services/benchmark_service.py @mojinru9527
+/test-platform-v2/backend/app/aiqe/services/learning_service.py  @mojinru9527
+
+# ── Driver / Device ──
+/test-platform-v2/backend/app/aiqe/drivers/                    @mojinru9527
+/test-platform-v2/backend/app/aiqe/adapters/                   @mojinru9527
+/test-platform-v2/backend/app/aiqe/services/capability_registry.py @mojinru9527
+/test-platform-v2/backend/app/aiqe/services/device_broker.py   @mojinru9527
+/scripts/qa/aiqe_local_runner.py                               @mojinru9527
+
+# ── 迁移 / CI / 治理 ──
+/test-platform-v2/backend/alembic/versions/                    @mojinru9527
+/.github/workflows/aiqe-v16-gates.yml                          @mojinru9527
+/scripts/aiqe/                                                 @mojinru9527
+/test-platform-v2/backend/scripts/ci/check_aiqe_v16_*.py       @mojinru9527
+/docs/aiqe/v1.6/                                               @mojinru9527
+
+# ── 验收测试 ──
+/test-platform-v2/backend/tests/test_aiqe_v16_*.py             @mojinru9527
+/test-platform-v2/backend/tests/e2e/aiqe/                      @mojinru9527

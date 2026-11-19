@@ -114,17 +114,18 @@ class _TargetHandler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
     def do_GET(self):  # noqa: N802
-        self._hit(self.path)
-        if self.path == "/ok":
+        path = self.path.split("?", 1)[0]
+        self._hit(path)
+        if path == "/ok":
             self._html(PAGE_HTML)
-        elif self.path == "/ok.js":
+        elif path == "/ok.js":
             payload = b"window.__ok = true;"
             self.send_response(200)
             self.send_header("content-type", "application/javascript")
             self.send_header("content-length", str(len(payload)))
             self.end_headers()
             self.wfile.write(payload)
-        elif self.path == "/ok.png":
+        elif path == "/ok.png":
             payload = base64.b64decode(
                 "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
             )
@@ -133,29 +134,29 @@ class _TargetHandler(BaseHTTPRequestHandler):
             self.send_header("content-length", str(len(payload)))
             self.end_headers()
             self.wfile.write(payload)
-        elif self.path == "/ok-frame":
+        elif path == "/ok-frame":
             self._html("<html><body>frame-ok</body></html>")
-        elif self.path == "/private-fetch":
+        elif path == "/private-fetch":
             self._html(PRIVATE_FETCH_HTML.format(blocked=_TargetState.blocked_port))
-        elif self.path == "/popup":
+        elif path == "/popup":
             self._html(POPUP_HTML.format(blocked=_TargetState.blocked_port))
-        elif self.path == "/ws":
+        elif path == "/ws":
             self._html(WS_HTML.format(ws_port=_TargetState.ws_port))
-        elif self.path == "/sw":
+        elif path == "/sw":
             self._html(SW_HTML)
-        elif self.path == "/sw.js":
+        elif path == "/sw.js":
             payload = b"self.addEventListener('fetch', function(e) {});"
             self.send_response(200)
             self.send_header("content-type", "application/javascript")
             self.send_header("content-length", str(len(payload)))
             self.end_headers()
             self.wfile.write(payload)
-        elif self.path == "/redirect-blocked":
+        elif path == "/redirect-blocked":
             self.send_response(302)
             self.send_header("location", f"http://127.0.0.1:{_TargetState.blocked_port}/leak-redirect")
             self.send_header("content-length", "0")
             self.end_headers()
-        elif self.path == "/redirect-metadata":
+        elif path == "/redirect-metadata":
             self.send_response(302)
             self.send_header("location", "http://169.254.169.254/latest/meta-data/")
             self.send_header("content-length", "0")
@@ -447,6 +448,27 @@ def test_route_installed_before_page_and_service_workers_blocked():
 
 
 # ── 10. 静态门禁：Driver 不再接受 Workflow 白名单 ────────────
+def test_security_denials_exclude_sensitive_headers_and_query(servers):
+    """拦截证据不得包含 query 值 / Authorization / Cookie（Secret 泄漏面）。"""
+    import json
+
+    canary = "CANARY_SECRET_v16_002_9f1c"
+    policy = _policy(port=servers["target_port"])
+    driver = PlaywrightDriver(policy=policy, timeout_ms=5000)
+    result = _run(
+        driver,
+        {
+            "url": f"http://127.0.0.1:{servers['target_port']}/redirect-blocked?token={canary}",
+            "headers": {"Authorization": f"Bearer {canary}", "Cookie": f"sid={canary}"},
+        },
+    )
+    payload = json.dumps(result.data["security_denials"], ensure_ascii=False)
+    assert result.data["security_denials"], "本用例需要至少一条拒绝证据"
+    assert canary not in payload
+    assert "Authorization" not in payload
+    assert "Cookie" not in payload
+
+
 def test_playwright_driver_has_no_workflow_allowlist_parameter():
     import inspect
 

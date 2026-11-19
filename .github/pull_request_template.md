@@ -49,6 +49,27 @@ tags: ["template", "pull-request", "code-review"]
 
 ---
 
+## AIQE V1.6 需求追踪（V16-025 强制，AIQE 相关 PR 必须完整填写）
+
+> 由 `.github/workflows/aiqe-v16-gates.yml` 的 Traceability Gate 校验；空字段直接拒绝。
+> 追踪矩阵：`docs/aiqe/v1.6/traceability/requirements.yaml`（随 PR 增量更新，禁止版本末尾补写）。
+
+- Issue / Requirement ID：<!-- 例如 V16-001 / V16-001-R1；多个用逗号分隔 -->
+- 业务结果（用户可观察）：<!-- 不是“改了哪些文件” -->
+- 正式入口（API / Worker / Job / CLI）：<!-- 例如 job_consumer.run_job -> execution_service.execute_inprocess_job -->
+- 调用链（入口到 Driver/Assertion/Finalize）：<!-- 逐跳写明 -->
+- 真实组件与 Mock 边界：<!-- 说明哪些是真实的、哪些被 Mock，以及 Mock 为什么不影响本 Issue 结论 -->
+- 成功路径测试：<!-- path::test_name -->
+- 拒绝/失败路径测试：<!-- path::test_name -->
+- 异常/依赖缺失测试：<!-- path::test_name -->
+- 并发/重试/竞态测试（如适用）：<!-- path::test_name -->
+- 安全影响（权限/Secret/网络/租户/外部副作用）：
+- 迁移影响（迁移文件、回滚/前滚方案）：
+- 证据（commit SHA / CI Run / 测试报告 / Run ID / Job ID / Artifact ID）：
+- Reviewer（非原实现者）：<!-- 自测不能替代独立验收 -->
+
+---
+
 ## 自检清单
 
 ### 代码质量
