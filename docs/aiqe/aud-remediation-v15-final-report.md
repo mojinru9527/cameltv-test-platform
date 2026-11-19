@@ -160,7 +160,7 @@ Reconciler、FIX-005 preflight、PR #595 迁移）。合并策略：
 |---|---|
 | Android 真机 | ✅ 已验收：OnePlus 6T / Android 11 / `com.camelrn`，adb 启动 + UIAutomator + 截图；能力 `VERIFIED`，`native_android` Preflight `READY`；证据 [android-node/README.md](evidence/android-node/README.md)，Run `0a631a4d-efc6-443b-bc70-4dd197c101a5` |
 | 微信小程序 | ⏳ 待你提供项目路径 + AppID（本机已装微信开发者工具，需启用自动化端口并安装 minium） |
-| Runner 出口防火墙 | ✅ WSL2 网络实验室实测 default-DROP + allowlist：Camel Test5 200 / example.com 与 1.1.1.1 超时；证据 Run `55fd90cd-beb5-43f7-bf6e-d4b8cc5a17e3`，详见 [runner-egress.md](evidence/runner-egress.md) |
+| Runner 出口防火墙 | ✅ 方式 2（网络实验室）：WSL2 default-DROP + allowlist，Camel Test5 200 / example.com 与 1.1.1.1 超时；策略 [policy.json](evidence/runner-egress/policy.json)、映射 [cloud-sg-mapping.md](evidence/runner-egress/cloud-sg-mapping.md)、Run `55fd90cd-beb5-43f7-bf6e-d4b8cc5a17e3` |
 | iOS 真机 | ⏳ 本机无 iOS 设备/官方工具链 |
 
 ## 7. 迁移与回滚
