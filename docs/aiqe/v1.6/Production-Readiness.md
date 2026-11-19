@@ -58,7 +58,8 @@ P0：Secret Canary、TargetPolicy 不可用、跨项目访问成功/尝试；P1�
 | 项 | 状态 | 证据 |
 |---|---|---|
 | staging 灰度（Shadow→Dogfood→小流量） | NOT_RUN | 需真实基础设施与业务只读副本 |
-| DB 备份恢复演练 | NOT_RUN | 需生产同构数据库 |
+| DB 备份恢复演练（本地 SQLite） | **PASS（脚本+测试）** | `scripts/ops/aiqe_backup_restore_drill.py` + `test_aiqe_v16_024_backup_drill.py`（integrity/revision/SHA256） |
+| DB 备份恢复演练（staging PostgreSQL） | NOT_RUN | 需生产同构数据库 |
 | 容器 egress 策略实测（云元数据拒绝） | NOT_RUN（策略文件已校验） | 需 Runner 集群 |
 | KMS/外部 Secret Manager | BLOCKED | 依赖组织密钥服务 |
 | 监控告警联调（Prometheus→告警通道） | NOT_RUN | 需监控栈 |

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "6a13e4aa8f14d5316156ebd20ac1ac808f01b3b5",
+  "commit_sha": "a5b22e0226a258b227db4da3a91f855ba727ffbb",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -12,7 +12,7 @@
   "summary": {
     "requirements": 70,
     "verified": 54,
-    "blocked": 6,
+    "blocked": 5,
     "not_started": 0
   },
   "requirements": [
@@ -1914,25 +1914,34 @@
       "id": "V16-024-R3",
       "issue": "V16-024",
       "priority": "P0",
-      "status": "BLOCKED",
+      "status": "PARTIAL",
       "owner": "devops",
       "reviewer": "pending",
       "production_entry": [
-        "发布火车 + 运维演练"
+        "python scripts/ops/aiqe_backup_restore_drill.py --database-url ..."
       ],
       "tests": {
-        "success": [],
-        "negative": [],
+        "success": [
+          "tests/test_aiqe_v16_024_backup_drill.py::test_backup_restore_drill_passes_and_is_verifiable"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_024_backup_drill.py::test_drill_rejects_non_sqlite_or_memory_or_missing",
+          "tests/test_aiqe_v16_024_backup_drill.py::test_cli_exit_codes"
+        ],
         "boundary": [],
         "concurrency": []
       },
       "layers": [
-        "L1"
+        "L1",
+        "L2"
       ],
       "evidence": [
-        "docs/aiqe/v1.6/Production-Readiness.md（NOT_RUN 清单）"
+        "pytest:tests/test_aiqe_v16_024_backup_drill.py (3 passed)",
+        "work-logs/evidence/aiqe-v16/backup-drill/report.json（本地执行产物）"
       ],
-      "gaps": []
+      "gaps": [
+        "仅本地 SQLite 演练通过；staging/生产同构 PostgreSQL 备份恢复、Shadow/狗粮/小流量、Prometheus 告警联调、云 KMS 演练仍 NOT_RUN，不能宣称生产就绪。"
+      ]
     },
     {
       "id": "V16-025-R1",

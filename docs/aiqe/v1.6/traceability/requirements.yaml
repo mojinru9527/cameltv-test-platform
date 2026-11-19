@@ -1981,25 +1981,31 @@ requirements:
     title: "灰度 / 备份恢复 / 监控联调演练"
     requirement: "Shadow→Dogfood→小流量→扩大→GA 各阶段执行并记录停止条件；DB 备份恢复、容器 egress 实测、监控告警联调、KMS 接入完成。"
     invariant: "未演练不得宣称生产就绪/PRODUCTION_OBSERVED。"
-    status: BLOCKED
+    status: PARTIAL
     code:
-      - path: docs/aiqe/v1.6/Production-Readiness.md
-        symbol: "阶段/停止条件/备份回滚"
+      - path: scripts/ops/aiqe_backup_restore_drill.py
+        symbol: "run_drill（SQLite backup/restore/integrity/revision）"
         change: added
+      - path: docs/aiqe/v1.6/Production-Readiness.md
+        symbol: "阶段/停止条件/备份回滚/NOT_RUN 清单"
+        change: modified
     production_entry:
-      - "发布火车 + 运维演练"
+      - "python scripts/ops/aiqe_backup_restore_drill.py --database-url ..."
     tests:
-      success: []
-      negative: []
-    mock_boundary: ""
-    layers: [L1]
+      success:
+        - tests/test_aiqe_v16_024_backup_drill.py::test_backup_restore_drill_passes_and_is_verifiable
+      negative:
+        - tests/test_aiqe_v16_024_backup_drill.py::test_drill_rejects_non_sqlite_or_memory_or_missing
+        - tests/test_aiqe_v16_024_backup_drill.py::test_cli_exit_codes
+    mock_boundary: "本地真实 SQLite 备份/恢复；staging PostgreSQL/监控栈/KMS 未演练。"
+    layers: [L1, L2]
     evidence:
-      - "docs/aiqe/v1.6/Production-Readiness.md（NOT_RUN 清单）"
+      - "pytest:tests/test_aiqe_v16_024_backup_drill.py (3 passed)"
+      - "work-logs/evidence/aiqe-v16/backup-drill/report.json（本地执行产物）"
     owner: devops
     reviewer: pending
-    review_by: "2027-01-15"
-    blocked_reason: "STAGING_DRILL_INFRA_MISSING：当前环境无 staging/生产同构集群、Prometheus/告警通道、KMS 与只读 DB 账号，无法执行 Shadow/狗粮/小流量、备份恢复和 egress 实测。"
-    gaps: []
+    gaps:
+      - "仅本地 SQLite 演练通过；staging/生产同构 PostgreSQL 备份恢复、Shadow/狗粮/小流量、Prometheus 告警联调、云 KMS 演练仍 NOT_RUN，不能宣称生产就绪。"
 
   # ── V16-025 工程治理（P0 release gate，基线 PARTIAL）──────
   - id: V16-025-R1
