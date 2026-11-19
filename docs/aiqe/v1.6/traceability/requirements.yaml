@@ -1501,8 +1501,8 @@ requirements:
   - id: V16-017-R1
     issue: V16-017
     priority: P1
-    title: "平台链路真实 E2E（6/10）"
-    requirement: "TC-002/004/005/007/008/010 通过正式 Launch/AgentTask→Worker/Outbox→Driver/Tool→Assertion/Evidence 链路独立执行。"
+    title: "平台链路真实 E2E（7/10）"
+    requirement: "TC-002/004/005/006/007/008/010 通过正式 Launch/AgentTask→Worker/Outbox→Driver/Tool→Assertion/Evidence 链路独立执行。"
     invariant: "每个 TC 独立数据隔离、业务断言、清理与证据；禁止只断言页面 body。"
     status: PARTIAL
     code:
@@ -1524,15 +1524,16 @@ requirements:
       boundary:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_008_defect_regression_end_to_end
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext
     mock_boundary: "本地确定性 SUT（真实 HTTP/SQLite/Worker），非产品租户。"
     layers: [L2, L3]
     evidence:
-      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (6 passed)"
+      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (7 passed)"
       - "docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md"
     owner: qa-automation
     reviewer: pending
     gaps:
-      - "6/10 平台链路通过；TC-001/003/006/009 需隔离 Test 产品环境。"
+      - "7/10 平台链路通过；TC-001/003/009 需隔离 Test 产品环境。"
 
   - id: V16-017-R2
     issue: V16-017
@@ -2177,28 +2178,29 @@ requirements:
   - id: TC-AIQE-006
     issue: TC-AIQE-006
     priority: P1
-    title: "产品级 E2E（隔离 Test 环境）"
-    requirement: "在隔离 Test 环境通过真实 API/Worker/Driver/UI 执行并产出证据。"
-    invariant: "BLOCKED 不计入通过率。"
-    status: BLOCKED
+    title: "Secret 全链路"
+    requirement: "平台链路 E2E（本地确定性 SUT）；产品登录 JWT 需隔离 Test 环境。"
+    invariant: "Secret 明文不得落库/日志/事件/Artifact；越权解析必须拒绝。"
+    status: PARTIAL
     code:
-      - path: test-platform-v2/backend/tests/e2e/aiqe/test_tc_aiqe_001_010.py
-        symbol: "旧 body 断言入口（不得作为证据）"
-        change: pending-replacement
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
+        symbol: "test_tc_006_secret_chain_no_plaintext"
+        change: added
     production_entry:
-      - "隔离 Test 环境"
+      - "pytest tests/e2e/aiqe/test_v16_017_platform_chain.py"
     tests:
-      success: []
-      negative: []
-    mock_boundary: ""
-    layers: [L3, L4]
+      success:
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext
+      negative:
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext
+    mock_boundary: "本地确定性 SUT（真实 HTTP/SQLite/Worker），非产品租户。"
+    layers: [L2, L3]
     evidence:
-      - "docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md"
+      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (7 passed)"
     owner: qa-automation
     reviewer: pending
-    review_by: "2027-01-15"
-    blocked_reason: "E2E_TEST_ENV_MISSING：产品登录 JWT 链路需真实租户；Secret 链路已由 V16-003 覆盖。"
-    gaps: []
+    gaps:
+      - "产品登录 JWT/真实租户仍需隔离 Test 环境。"
 
   - id: TC-AIQE-007
     issue: TC-AIQE-007
@@ -2248,7 +2250,7 @@ requirements:
     mock_boundary: "本地确定性 SUT（真实 HTTP/SQLite/Worker），非产品租户。"
     layers: [L2, L3]
     evidence:
-      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (6 passed)"
+      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (7 passed)"
     owner: qa-automation
     reviewer: pending
     gaps:
@@ -2296,12 +2298,14 @@ requirements:
     tests:
       success:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext
       negative:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext
     mock_boundary: "本地确定性 SUT（真实 HTTP/SQLite/Worker），非产品租户。"
     layers: [L2, L3]
     evidence:
-      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (6 passed)"
+      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (7 passed)"
     owner: qa-automation
     reviewer: pending
     gaps:

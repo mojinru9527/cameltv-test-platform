@@ -45,6 +45,10 @@ pytestmark = pytest.mark.integration
 
 class _Handler(BaseHTTPRequestHandler):
     orders: ClassVar[dict[str, Any]] = {}
+    last_auth: ClassVar[str] = ""
+    canary_token: ClassVar[str] = (
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMmUifQ.e2e-signature"
+    )
 
     def log_message(self, *_args):
         return
@@ -58,7 +62,10 @@ class _Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
-        if self.path == "/health":
+        if self.path == "/echo":
+            _Handler.last_auth = str(self.headers.get("authorization") or "")
+            self._json({"received": True, "success": True})
+        elif self.path == "/health":
             self._json({"ok": True, "success": True})
         elif self.path.startswith("/orders/"):
             order = self.orders.get(self.path.rsplit("/", 1)[-1])
@@ -67,6 +74,15 @@ class _Handler(BaseHTTPRequestHandler):
             self._json({"success": False}, 200)
 
     def do_POST(self):
+        if self.path == "/login":
+            self._json(
+                {
+                    "access_token": self.canary_token,
+                    "refresh_token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyZWZyZXNoIn0.e2e-refresh",
+                    "success": True,
+                }
+            )
+            return
         length = int(self.headers.get("content-length") or 0)
         payload = json.loads(self.rfile.read(length) or b"{}")
         order = {"id": f"ORD-{len(self.orders) + 1}", **payload}
@@ -465,3 +481,122 @@ def test_tc_010_agent_task_platform_chain(db_session):
     assert audits and audits[0].tool_name == "read_project_context"
     job_row = db_session.get(ExecutionJob, job.id)
     assert job_row.status == "success"
+
+
+# ── TC-006：Secret 全链路（输出 Handle/下游授权/明文零落库）────
+def test_tc_006_secret_chain_no_plaintext(db_session, sut):
+    import json as _json
+
+    from sqlalchemy import select
+
+    from app.aiqe.models.event import RunEvent
+    from app.aiqe.models.run import StepAttempt
+    from app.aiqe.models.secret_handle import SecretHandle
+    from app.aiqe.services.secret_vault import SecretAccessDenied, resolve_secret_handle
+
+    port = sut
+    _Handler.last_auth = ""
+    token_value = _Handler.canary_token
+    graph = {
+        "schema_version": "1.0",
+        "nodes": [
+            {
+                "key": "login",
+                "driver": "http",
+                "depends_on": [],
+                "input": {
+                    "url": f"http://127.0.0.1:{port}/login",
+                    "method": "POST",
+                    "json": {"username": "qa", "password": "not-a-secret"},
+                    "expected_status": 200,
+                },
+                "outputs": {"token": "$.json.access_token"},
+                "output_schema": {
+                    "type": "object",
+                    "properties": {"token": {"type": "string", "sensitive": True}},
+                },
+                "assertions": [
+                    {
+                        "assertion_key": "login_http",
+                        "oracle_layer": "REQ",
+                        "oracle_ref": "AC-LOGIN-200",
+                        "type": "http_status",
+                        "expected": 200,
+                        "severity": "P0",
+                    }
+                ],
+            },
+            {
+                "key": "use",
+                "driver": "http",
+                "depends_on": ["login"],
+                "input": {
+                    "url": f"http://127.0.0.1:{port}/echo",
+                    "headers": {"Authorization": "Bearer ${nodes.login.outputs.token}"},
+                    "expected_status": 200,
+                },
+                "assertions": [
+                    {
+                        "assertion_key": "echo_received",
+                        "oracle_layer": "REQ",
+                        "oracle_ref": "AC-ECHO",
+                        "type": "jsonpath",
+                        "path": "$.received",
+                        "expected": True,
+                        "severity": "P0",
+                    }
+                ],
+            },
+        ],
+        "edges": [{"from": "login", "to": "use"}],
+    }
+    run = _launch(db_session, port, graph)
+    nodes_debug = [
+        (n.node_key, n.status, n.error_class, n.output_ref, n.outputs_json)
+        for n in db_session.scalars(select(NodeRun).where(NodeRun.run_id == run.id))
+    ]
+    assert run.outcome == "PASS", (run.outcome, run.status, nodes_debug, run.preflight_json)
+    # 下游真实收到 Canary 明文（证明 Handle 被授权解析）
+    assert _Handler.last_auth == f"Bearer {token_value}"
+
+    handles = list(db_session.scalars(select(SecretHandle)))
+    assert handles, "登录输出必须生成 SecretHandle"
+    handle = handles[0]
+    scope = handle.consumer_scope_json or {}
+    assert "use" in list(scope.get("allowed_nodes") or []), scope
+    # 越权解析必须拒绝
+    with pytest.raises(SecretAccessDenied):
+        resolve_secret_handle(
+            db_session,
+            handle_id=handle.id,
+            run_id=run.id,
+            consumer_node_key="other-node",
+            project_id=int(run.project_id),
+        )
+
+    # 明文零落库：输出/Job/事件/Handle 序列化均不得出现 Canary
+    node = db_session.scalar(select(NodeRun).where(NodeRun.run_id == run.id))
+    login_node = db_session.scalar(
+        select(NodeRun).where(NodeRun.run_id == run.id, NodeRun.node_key == "login")
+    )
+    payloads = [
+        _json.dumps(login_node.outputs_json, ensure_ascii=False),
+        _json.dumps(login_node.output_ref, ensure_ascii=False),
+        _json.dumps(handle.__dict__, default=str),
+        _json.dumps(run.environment_snapshot_json, ensure_ascii=False, default=str),
+    ]
+    for job in db_session.scalars(select(ExecutionJob).where(ExecutionJob.run_id == run.id)):
+        payloads.append(job.payload_json or "")
+        payloads.append(job.result_json or "")
+    for event in db_session.scalars(select(RunEvent).where(RunEvent.run_id == run.id)):
+        payloads.append(_json.dumps(event.payload_json, ensure_ascii=False))
+    for attempt in db_session.scalars(
+        select(StepAttempt).join(NodeRun, NodeRun.id == StepAttempt.node_run_id).where(
+            NodeRun.run_id == run.id
+        )
+    ):
+        payloads.append(_json.dumps(attempt.output_summary_json, ensure_ascii=False, default=str))
+    assert node is not None
+    for payload in payloads:
+        assert token_value not in payload
+        assert "e2e-refresh" not in payload
