@@ -24,8 +24,8 @@ __all__ = [
     "FIXTURE_NOT_FOUND",
     "OUTPUT_SCHEMA_MISMATCH",
     "SECRET_UNAVAILABLE",
-    "SecretLeakError",
     "VARIABLE_NOT_ANCESTOR",
     "VARIABLE_NOT_FOUND",
+    "SecretLeakError",
     "VariableResolutionError",
 ]

@@ -114,11 +114,12 @@ def enqueue_node_run(
     except IntegrityError:
         # 并发重复 dispatch：唯一索引兜底，返回既有 Job。
         db.rollback()
-        job = db.scalar(
+        existing_job = db.scalar(
             select(ExecutionJob).where(ExecutionJob.idempotency_key == idempotency_key)
         )
-        if job is None:
+        if existing_job is None:
             raise
+        job = existing_job
     node_run.execution_job_id = job.id
     db.flush()
     return job

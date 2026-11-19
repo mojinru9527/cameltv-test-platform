@@ -96,7 +96,6 @@ class BrowserEgressProxy:
         if self._server is not None:
             return self.proxy_url
         handler = _make_handler(self)
-        handler.daemon_threads = True
         server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
         server.daemon_threads = True
         thread = threading.Thread(
@@ -124,7 +123,7 @@ class BrowserEgressProxy:
         if self._server is None:
             return ""
         host, port = self._server.server_address[:2]
-        return f"http://{host}:{port}"
+        return f"http://{host!s}:{int(port)}"
 
     @property
     def denials(self) -> list[dict[str, Any]]:
@@ -221,11 +220,11 @@ def _make_handler(proxy: BrowserEgressProxy) -> type:
         server_version = "AIQEEgressProxy/1.0"
 
         # ── 入口 ─────────────────────────────────────────
-        def do_CONNECT(self):  # noqa: N802
+        def do_CONNECT(self):
             authority = self.path
             method = "CONNECT"
             try:
-                host, port, ip = proxy.validate_target(
+                _host, port, ip = proxy.validate_target(
                     authority=authority, default_port=443, method=method, kind="https"
                 )
             except TargetDenied as exc:
@@ -413,25 +412,25 @@ def _make_handler(proxy: BrowserEgressProxy) -> type:
                     pass
             self.close_connection = True
 
-        def do_GET(self):  # noqa: N802
+        def do_GET(self):
             self._handle_absolute()
 
-        def do_HEAD(self):  # noqa: N802
+        def do_HEAD(self):
             self._handle_absolute()
 
-        def do_POST(self):  # noqa: N802
+        def do_POST(self):
             self._handle_absolute()
 
-        def do_PUT(self):  # noqa: N802
+        def do_PUT(self):
             self._handle_absolute()
 
-        def do_PATCH(self):  # noqa: N802
+        def do_PATCH(self):
             self._handle_absolute()
 
-        def do_DELETE(self):  # noqa: N802
+        def do_DELETE(self):
             self._handle_absolute()
 
-        def do_OPTIONS(self):  # noqa: N802
+        def do_OPTIONS(self):
             self._handle_absolute()
 
         def log_message(self, fmt: str, *args: Any) -> None:
@@ -441,9 +440,9 @@ def _make_handler(proxy: BrowserEgressProxy) -> type:
 
 
 __all__ = [
-    "BrowserEgressProxy",
     "CONNECT_TIMEOUT_SECONDS",
     "MAX_RESPONSE_BYTES",
     "NEVER_TUNNEL_PORTS",
+    "BrowserEgressProxy",
     "ProxyDenial",
 ]

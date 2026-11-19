@@ -174,7 +174,10 @@ def validate_workflow(
 
         # V16-004：DB 节点只能引用服务端 Query Registry，Workflow 不得携带 SQL/白名单/连接。
         if driver in {"db", "db_readonly", "database"}:
-            spec_input = node.get("input") if isinstance(node.get("input"), dict) else {}
+            raw_input = node.get("input")
+            spec_input: dict[str, Any] = (
+                dict(raw_input) if isinstance(raw_input, dict) else {}
+            )
             forbidden = sorted(
                 str(item)
                 for item in spec_input
@@ -201,7 +204,7 @@ def validate_workflow(
                     f"db 节点不得携带 SQL/表白名单/连接字段: {forbidden}",
                     key,
                 )
-            if not str((node.get("input") or {}).get("query_key") or "").strip():
+            if not str(spec_input.get("query_key") or "").strip():
                 add(
                     "db_query_key_missing",
                     "db 节点必须提供 query_key（服务端登记查询）",

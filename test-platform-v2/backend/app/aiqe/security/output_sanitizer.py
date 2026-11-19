@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -35,7 +35,7 @@ from app.aiqe.services.secret_vault import (
 )
 
 
-class SecretClassification(str, Enum):
+class SecretClassification(StrEnum):
     PUBLIC = "PUBLIC"
     SENSITIVE = "SENSITIVE"
     SECRET = "SECRET"
@@ -157,7 +157,7 @@ class OutputSanitizer:
                     f"节点 {node.node_key} 的 output {name} 在 DriverResult 中不存在: {path}",
                     code=OUTPUT_SCHEMA_MISMATCH,
                 )
-            classification, plaintexts = classify_value(name, value, schema=output_schema)
+            classification, _plaintexts = classify_value(name, value, schema=output_schema)
             captured.raw[str(name)] = value
             captured.classifications[str(name)] = classification.value
             if classification is SecretClassification.SECRET:

@@ -121,7 +121,7 @@ def _normalize_table(name: str) -> str:
     return str(name or "").strip().strip('"').strip("`").lower()
 
 
-def _is_select_root(node: exp.Expression) -> bool:
+def _is_select_root(node: exp.Expr) -> bool:
     if isinstance(node, exp.Select):
         return True
     if isinstance(node, exp.Union):
@@ -143,7 +143,7 @@ def _all_union_selects(node: exp.Union) -> bool:
     return True
 
 
-def _check_dangerous_functions(tree: exp.Expression) -> None:
+def _check_dangerous_functions(tree: exp.Expr) -> None:
     for func in tree.find_all(exp.Func):
         name = ""
         if isinstance(func, exp.Anonymous):
@@ -154,7 +154,7 @@ def _check_dangerous_functions(tree: exp.Expression) -> None:
             raise SqlPolicyError("QUERY_FUNCTION_DENIED", f"禁止的 SQL 函数: {name}")
 
 
-def _check_project_predicate(tree: exp.Expression) -> bool:
+def _check_project_predicate(tree: exp.Expr) -> bool:
     found = False
     for node in tree.find_all(exp.EQ):
         left, right = node.this, node.expression
@@ -167,8 +167,8 @@ def _check_project_predicate(tree: exp.Expression) -> bool:
             if isinstance(column, exp.Column) and str(column.name or "").lower() == "project_id":
                 found = True
     # 显式阻断 ``:project_id IS NOT NULL`` 之类的伪谓词。
-    for node in tree.find_all(exp.Is):
-        target = node.this
+    for is_node in tree.find_all(exp.Is):
+        target = is_node.this
         if isinstance(target, exp.Placeholder) and str(target.name or "").lower() == "project_id":
             raise SqlPolicyError(
                 "QUERY_TENANT_PREDICATE_INVALID",

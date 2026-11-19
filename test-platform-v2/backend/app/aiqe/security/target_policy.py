@@ -20,7 +20,7 @@ import json
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from sqlalchemy import select
@@ -63,7 +63,7 @@ DEFAULT_POLICY_TTL_SECONDS = 300
 POLICY_HASH_SCHEMA = "aiqe.target-policy.v1"
 
 
-class PolicyDecision(str, Enum):
+class PolicyDecision(StrEnum):
     """V16-001：显式的四态策略决策，禁止用 bool 表达“是否有策略”。"""
 
     ALLOW = "ALLOW"
@@ -611,8 +611,8 @@ __all__ = [
     "DEFAULT_METHODS",
     "DEFAULT_POLICY_TTL_SECONDS",
     "DEFAULT_SCHEMES",
-    "ExecutionCapabilities",
     "POLICY_HASH_SCHEMA",
+    "ExecutionCapabilities",
     "PolicyDecision",
     "ResolvedExecutionPolicy",
     "TargetPolicy",

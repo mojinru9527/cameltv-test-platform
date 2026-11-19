@@ -44,7 +44,7 @@ def _scrub_known(text: str) -> str:
 
 
 class SecretRedactingFilter(logging.Filter):
-    def filter(self, record: logging.LogRecord) -> bool:  # noqa: A003 - logging API
+    def filter(self, record: logging.LogRecord) -> bool:
         try:
             message = record.getMessage()
             record.msg = _scrub_known(message)
