@@ -437,6 +437,7 @@ def finalize_node(
     execution: NodeExecution,
     attempt: StepAttempt | None,
     ctx: RunContext,
+    fencing_token: int | None = None,
     known_secrets: Iterable[str] = (),
     artifact_ids: list[str] | None = None,
 ) -> dict[str, Any]:
@@ -613,6 +614,7 @@ def finalize_node(
         dict(graph),
         error_class=(node.error_class or execution.error_class or None),
         outputs=outputs,
+        fencing_token=fencing_token,
     )
     _emit_security_denials(
         db, run=run, node=node, attempt=attempt, execution=execution
@@ -705,6 +707,7 @@ def _block_node_for_policy(
     graph: Mapping[str, Any],
     attempt: StepAttempt | None,
     policy: TargetPolicy,
+    fencing_token: int | None = None,
 ) -> dict[str, Any]:
     """V16-001：策略非 ALLOW 时收口为 BLOCKED，且不创建任何 Driver。
 
@@ -763,6 +766,7 @@ def _block_node_for_policy(
         dict(graph),
         error_class=code,
         outputs={"policy": snapshot},
+        fencing_token=fencing_token,
     )
     job.status = "failed"
     job.error_message = f"{code}: {policy.reason_code or policy.deny_reason}".strip()[:500]
@@ -917,6 +921,8 @@ def execute_inprocess_job(db: Session, job_id: int) -> dict[str, Any]:
     # 不存在“没有策略就走 legacy executor”的降级分支。
     policy_context = resolve_execution_policy(db, run, node)
     node.output_ref = {**(node.output_ref or {}), "policy": policy_context.snapshot()}
+    # V16-005：fencing token 来自本次 claim（job.attempt 单调递增）。
+    fencing_token = int(node.fencing_token or job.attempt or 0) or None
     if policy_context.decision is not PolicyDecision.ALLOW:
         return _block_node_for_policy(
             db,
@@ -926,6 +932,7 @@ def execute_inprocess_job(db: Session, job_id: int) -> dict[str, Any]:
             graph=graph,
             attempt=attempt,
             policy=policy_context,
+            fencing_token=fencing_token,
         )
     execution = execute_node(
         node,
@@ -1037,6 +1044,7 @@ def policy_gate_for_external_runner(db: Session, job_id: int) -> dict[str, Any]:
             graph=graph,
             attempt=attempt,
             policy=policy,
+            fencing_token=int(job.attempt or 0) or None,
         )
         return {
             "allowed": False,
@@ -1055,8 +1063,15 @@ def complete_from_external_report(
     status: str,
     result: Mapping[str, Any] | None = None,
     error_message: str = "",
+    fencing_token: int | None = None,
+    node_id: str | None = None,
 ) -> dict[str, Any]:
-    """外部 Runner 上报后走同一断言/证据/状态收口。"""
+    """外部 Runner 上报后走同一断言/证据/状态收口。
+
+    V16-005：上报必须携带 fencing token；条件更新 rowcount=0 或 token 落后时
+    拒绝迟到结果（旧 Worker 不能覆盖新结果）。
+    """
+    from app.aiqe.services import lease
     from app.models.execution_job import ExecutionJob
 
     job = db.get(ExecutionJob, job_id)
@@ -1067,6 +1082,77 @@ def complete_from_external_report(
     node = db.get(NodeRun, str(payload.get("node_run_id") or ""))
     if run is None or node is None:
         return {"skipped": True, "reason": "node/run missing"}
+    if fencing_token is None:
+        return {
+            "skipped": True,
+            "reason": "FENCING_TOKEN_REQUIRED",
+            "node_status": node.status,
+        }
+    try:
+        lease.fenced_job_write(
+            db,
+            job_id=job.id,
+            node_id=str(node_id or job.node_id or ""),
+            attempt=int(fencing_token),
+            now=_now(),
+        )
+        lease.assert_current(
+            db,
+            node_run_id=node.id,
+            fencing_token=int(fencing_token),
+            job_expires_at=job.lease_expires_at,
+            job_id=job.id,
+            now=_now(),
+        )
+    except lease.JobAlreadyTerminal as exc:
+        return {
+            "job_id": job.id,
+            "skipped": True,
+            "reason": "JOB_ALREADY_TERMINAL",
+            "job_status": exc.status,
+            "node_status": node.status,
+        }
+    except lease.StaleLeaseError as exc:
+        _event(
+            db,
+            run.id,
+            "security.fencing_rejected",
+            {
+                "code": exc.code,
+                "job_id": job.id,
+                "fencing_token": int(fencing_token),
+                "current_token": exc.current_token,
+            },
+            node=node,
+            attempt=_latest_attempt(db, node),
+            producer="system",
+            producer_event_id=f"fencing-rejected:{job.id}:{fencing_token}",
+        )
+        db.commit()
+        return {
+            "job_id": job.id,
+            "skipped": True,
+            "reason": "STALE_LEASE",
+            "node_status": node.status,
+        }
+    except lease.LeaseExpired as exc:
+        _event(
+            db,
+            run.id,
+            "security.lease_expired",
+            {"code": exc.code, "job_id": job.id, "expires_at": str(exc.expires_at)},
+            node=node,
+            attempt=_latest_attempt(db, node),
+            producer="system",
+            producer_event_id=f"lease-expired:{job.id}",
+        )
+        db.commit()
+        return {
+            "job_id": job.id,
+            "skipped": True,
+            "reason": "LEASE_EXPIRED",
+            "node_status": node.status,
+        }
     graph = dict(payload.get("graph") or {"nodes": [{"key": node.node_key}], "edges": []})
     if node.status == "READY":
         dag_scheduler.mark_running(db, run.id, node.node_key)
@@ -1084,6 +1170,7 @@ def complete_from_external_report(
             graph=graph,
             attempt=attempt,
             policy=policy_context,
+            fencing_token=int(fencing_token),
         )
     reported = dict(result or {})
     passed = str(reported.get("status") or status).lower() in {
@@ -1177,6 +1264,7 @@ def complete_from_external_report(
         execution=execution,
         attempt=attempt,
         ctx=ctx,
+        fencing_token=fencing_token,
         known_secrets=known_secrets,
         artifact_ids=artifact_ids,
     )
@@ -1194,6 +1282,18 @@ def complete_from_external_report(
         attempt=attempt,
         producer_event_id=f"node-reported:{job_id}:{status}",
     )
+    job.status = "success" if summary["status"] == "PASSED" else "failed"
+    job.summary = f"{node.node_key}:{summary['status']}"
+    job.error_message = (node.error_class or execution.error_class or "")[:500]
+    job.result_json = json.dumps(
+        evidence_redactor.redact(
+            {"detail": execution.detail, "data": execution.data, "summary": summary},
+            known_secrets=list(known_secrets),
+        ),
+        ensure_ascii=False,
+        default=str,
+    )[:20000]
+    job.finished_at = _now()
     _advance_run(db, run, graph)
     _cleanup_terminal_run_secrets(db, run, vault=vault)
     db.commit()

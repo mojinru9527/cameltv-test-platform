@@ -76,14 +76,28 @@ def _close_node(
 
 
 def _finalize_run(db: Session, run: TestRun, nodes: list[NodeRun]) -> None:
-    if run.status != "RUNNING" or not nodes:
+    # V16-005：QUEUED 悬挂 Run 与 RUNNING Run 一样需要收敛。
+    if run.status not in {"RUNNING", "QUEUED"} or not nodes:
         return
     if any(node.status not in NODE_TERMINAL for node in nodes):
+        return
+    if run.status == "QUEUED":
+        # 从未真正执行的 Run 没有 outcome 语义，按 ERROR 收敛（可告警、可重跑）。
+        apply_transition(run, "ERROR")
+        run.finished_at = _now()
+        _event(
+            db,
+            run.id,
+            "run.reconciled",
+            {"status": run.status, "reason": "QUEUED_WITHOUT_JOB"},
+            key=f"run-reconciled:{run.id}:QUEUED:ERROR",
+        )
+        db.flush()
         return
     statuses = {node.node_key: node.status for node in nodes}
     if any(status in NODE_FAILED for status in statuses.values()):
         apply_transition(run, "COMPLETED", outcome="FAIL")
-    elif any(status == "BLOCKED" for status in statuses.values()):
+    elif any(status in {"BLOCKED", "ERROR"} for status in statuses.values()):
         apply_transition(run, "COMPLETED", outcome="INCOMPLETE")
     else:
         apply_transition(run, "COMPLETED", outcome="PASS")
@@ -151,7 +165,8 @@ def reconcile(
     runs = list(
         db.scalars(
             select(TestRun)
-            .where(TestRun.status == "RUNNING")
+            # V16-005：QUEUED 长时间没有 Job 也属于悬挂状态，必须收敛并告警。
+            .where(TestRun.status.in_(("RUNNING", "QUEUED")))
             .order_by(TestRun.created_at)
             .limit(max(1, int(limit)))
         )

@@ -46,20 +46,24 @@ def _seed(db, driver: str, key: str, *, with_policy: bool = True):
     )
     db.commit()
     job = db.scalar(select(ExecutionJob).where(ExecutionJob.status == "pending"))
+    # V16-005：模拟外部节点认领（node_id/attempt/fencing token 必须与上报一致）。
+    job.status = "running"
+    job.node_id = "node-ext"
+    job.attempt = 1
+    db.commit()
     return run, job
 
 
 def test_external_report_without_policy_blocks_even_if_runner_claims_success(db_session):
     """V16-001：策略是服务端不变量，外部 Runner 伪造 PASSED 也必须收口为 BLOCKED。"""
     run, job = _seed(db_session, "appium", "RUN-EXT-NOPOLICY", with_policy=False)
-    job.status = "running"
-    db_session.commit()
-
     out = job_consumer.complete_from_report(
         db_session,
         job_id=job.id,
         status="success",
         result={"status": "PASSED", "source_len": 100},
+        fencing_token=1,
+        node_id="node-ext",
     )
     node = db_session.scalar(select(NodeRun).where(NodeRun.run_id == run.id))
     db_session.expire_all()
@@ -85,15 +89,13 @@ def test_inprocess_consumer_skips_non_http(db_session):
 
 def test_external_report_completes_node_success(db_session):
     run, job = _seed(db_session, "appium", "RUN-EXT-0003")
-    # 模拟外部节点认领
-    job.status = "running"
-    db_session.commit()
-
     out = job_consumer.complete_from_report(
         db_session,
         job_id=job.id,
         status="success",
         result={"status": "PASSED", "source_len": 100, "data": {"body_text": "X"}},
+        fencing_token=1,
+        node_id="node-ext",
     )
     node = db_session.scalar(select(NodeRun).where(NodeRun.run_id == run.id))
     db_session.expire_all()
@@ -109,15 +111,14 @@ def test_external_report_completes_node_success(db_session):
 
 def test_external_report_failure_marks_node(db_session):
     run, job = _seed(db_session, "playwright", "RUN-EXT-0004")
-    job.status = "running"
-    db_session.commit()
-
     out = job_consumer.complete_from_report(
         db_session,
         job_id=job.id,
         status="failed",
         result={"status": "FAILED", "error_class": "OVERLAY_INTERCEPTED"},
         error_message="overlay",
+        fencing_token=1,
+        node_id="node-ext",
     )
     node = db_session.scalar(select(NodeRun).where(NodeRun.run_id == run.id))
     db_session.expire_all()

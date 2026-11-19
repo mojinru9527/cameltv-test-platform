@@ -11,10 +11,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.aiqe.models.run import NodeRun
+from app.models.execution_job import ExecutionJob
 
 
 class StaleLeaseError(PermissionError):
@@ -38,6 +39,22 @@ class LeaseExpired(PermissionError):
         super().__init__(f"LEASE_EXPIRED: job {job_id} expires_at={expires_at}")
         self.job_id = job_id
         self.expires_at = expires_at
+
+
+class FencingTokenRequired(PermissionError):
+    code = "FENCING_TOKEN_REQUIRED"
+
+    def __init__(self) -> None:
+        super().__init__("FENCING_TOKEN_REQUIRED: 写结果必须携带 fencing token")
+
+
+class JobAlreadyTerminal(PermissionError):
+    code = "JOB_ALREADY_TERMINAL"
+
+    def __init__(self, *, job_id: int, status: str) -> None:
+        super().__init__(f"JOB_ALREADY_TERMINAL: job {job_id} status={status}")
+        self.job_id = job_id
+        self.status = status
 
 
 @dataclass(frozen=True)
@@ -105,12 +122,56 @@ def assert_writable(
     return assert_current(db, node_run_id=node_run_id, fencing_token=fencing_token)
 
 
+def fenced_job_write(
+    db: Session,
+    *,
+    job_id: int,
+    node_id: str,
+    attempt: int,
+    now: datetime | None = None,
+) -> ExecutionJob:
+    """V16-005：条件更新抢占写权限（rowcount=0 表示已失去所有权）。
+
+    ``UPDATE execution_jobs SET heartbeat_at=? WHERE id=? AND node_id=?
+      AND attempt=? AND status='running'``
+    """
+    moment = now or datetime.now(UTC)
+    job = db.get(ExecutionJob, int(job_id))
+    if job is None:
+        raise LookupError(job_id)
+    if str(job.status or "") not in {"pending", "running"}:
+        # 重复投递/重复上报：Job 已终态，必须返回幂等跳过而不是再写一次。
+        raise JobAlreadyTerminal(job_id=int(job_id), status=str(job.status))
+    result = db.execute(
+        update(ExecutionJob)
+        .where(
+            ExecutionJob.id == int(job_id),
+            ExecutionJob.node_id == str(node_id),
+            ExecutionJob.attempt == int(attempt),
+            ExecutionJob.status == "running",
+        )
+        .values(heartbeat_at=moment)
+    )
+    if int(getattr(result, "rowcount", 0) or 0) != 1:
+        raise StaleLeaseError(
+            node_run_id=str(job_id),
+            fencing_token=int(attempt),
+            current_token=int(job.attempt or 0),
+        )
+    db.flush()
+    db.refresh(job)
+    return job
+
+
 __all__ = [
+    "FencingTokenRequired",
+    "JobAlreadyTerminal",
     "LeaseContext",
     "LeaseExpired",
     "StaleLeaseError",
     "assert_current",
     "assert_writable",
     "bump_fencing_token",
+    "fenced_job_write",
     "get_node",
 ]

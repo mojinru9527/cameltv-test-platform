@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Integer, String, Text
+from sqlalchemy import Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -31,6 +31,11 @@ class ExecutionJob(Base, TimestampMixin):
     env_ref: Mapped[str] = mapped_column(String(255), default="")
     attempt: Mapped[int] = mapped_column(Integer, default=0)
     timeout_seconds: Mapped[int] = mapped_column(Integer, default=1800)
+    # ── V16-005：Job 幂等键（AIQE 节点任务专用；旧任务保持 NULL）──
+    run_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    node_run_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    execution_kind: Mapped[str] = mapped_column(String(32), default="NORMAL")
+    idempotency_key: Mapped[str | None] = mapped_column(String(160), nullable=True)
     # ── 租约（claim / heartbeat / stale 回收）──
     node_id: Mapped[str] = mapped_column(String(64), default="", index=True)
     claimed_at: Mapped[datetime | None] = mapped_column(default=None)
@@ -43,3 +48,18 @@ class ExecutionJob(Base, TimestampMixin):
     result_json: Mapped[str] = mapped_column(Text, default="{}")
     summary: Mapped[str] = mapped_column(Text, default="")
     error_message: Mapped[str] = mapped_column(Text, default="")
+
+    __table_args__ = (
+        # 幂等键唯一：重复 dispatch/重复投递不得产生第二个副作用 Job。
+        # attempt 在 claim 时会被 +1，不能作为唯一键的一部分（会与重试冲突）。
+        Index("uq_execution_jobs_idempotency_key", "idempotency_key", unique=True),
+        Index("ix_execution_jobs_run_node", "run_id", "node_run_id"),
+        Index(
+            "ix_execution_jobs_attempt_kind",
+            "run_id",
+            "node_run_id",
+            "attempt",
+            "execution_kind",
+        ),
+        Index("ix_execution_jobs_idempotency", "project_id", "idempotency_key"),
+    )

@@ -44,6 +44,8 @@ class ReportRequest(NodeRequest):
     result: dict = Field(default_factory=dict)
     evidence_bundle_id: int | None = None
     error_message: str = ""
+    #: V16-005：写结果必须携带 fencing token（= 认领时的 attempt），迟到结果会被拒绝。
+    fencing_token: int | None = Field(default=None, ge=1)
 
 
 def _project_id(current: CurrentUser) -> int:
@@ -202,13 +204,31 @@ def report(
     if _is_aiqe_job(job):
         from app.aiqe.services.job_consumer import complete_from_report
 
-        complete_from_report(
+        if body.fencing_token is None:
+            raise HTTPException(
+                409,
+                detail={
+                    "code": "FENCING_TOKEN_REQUIRED",
+                    "message": "AIQE 节点上报必须携带 fencing_token（认领时的 attempt）",
+                },
+            )
+        summary = complete_from_report(
             db,
             job_id=job.id,
             status=body.status,
             result=body.result,
             error_message=body.error_message,
+            fencing_token=body.fencing_token,
+            node_id=body.node_id,
         )
+        if summary.get("skipped"):
+            raise HTTPException(
+                409,
+                detail={
+                    "code": summary.get("reason") or "STALE_LEASE",
+                    "message": "结果被拒绝：租约/所有权已失效",
+                },
+            )
     return R.ok(execution_job_service.job_dict(job))
 
 

@@ -77,6 +77,26 @@ def claim_aiqe_jobs(db: Session, *, limit: int = 5) -> list[int]:
         )
         if int(getattr(result, "rowcount", 0) or 0):
             claimed.append(int(job.id))
+            # V16-005：每次 claim 提升 fencing token 并写审计事件（旧 Worker 结果被拒绝）。
+            try:
+                from app.aiqe.services import event_service
+
+                event_service.append_event(
+                    db,
+                    run_id=str(getattr(job, "run_id", "") or ""),
+                    event_type="job.claimed",
+                    payload={
+                        "schema_version": "1.0",
+                        "job_id": int(job.id),
+                        "node_id": NODE_ID,
+                        "attempt": next_attempt,
+                        "lease_seconds": LEASE_SECONDS,
+                    },
+                    producer="system",
+                    producer_event_id=f"job-claimed:{job.id}:{next_attempt}",
+                )
+            except Exception:
+                pass
             # AUD-006：认领即提升节点 fencing token，旧 Worker 的迟到结果会被拒绝。
             try:
                 payload = json.loads(job.payload_json or "{}")
@@ -106,39 +126,21 @@ def complete_from_report(
     result: dict | None = None,
     error_message: str = "",
     fencing_token: int | None = None,
+    node_id: str | None = None,
 ) -> dict:
     """外部 runner（浏览器/设备）上报后，把 AIQE 节点状态回写到 DAG。
 
-    保留旧返回字段 `node_status`，内部走统一断言/证据/状态收口。
+    V16-005：fencing token 与 job 归属校验在 `complete_from_external_report` 内
+    通过条件更新（rowcount）完成，迟到/越权结果返回 ``skipped``。
     """
-    if fencing_token is not None:
-        from app.aiqe.services import lease
-
-        job = db.get(ExecutionJob, job_id)
-        node_run_id = ""
-        if job is not None:
-            try:
-                node_run_id = str(json.loads(job.payload_json or "{}").get("node_run_id") or "")
-            except (TypeError, ValueError):
-                node_run_id = ""
-        if node_run_id:
-            from app.aiqe.services.lease import StaleLeaseError
-
-            try:
-                lease.assert_writable(db, node_run_id=node_run_id, fencing_token=fencing_token)
-            except StaleLeaseError:
-                return {
-                    "job_id": job_id,
-                    "skipped": True,
-                    "reason": "STALE_LEASE",
-                    "node_status": "RUNNING",
-                }
     summary = execution_service.complete_from_external_report(
         db,
         job_id=job_id,
         status=status,
         result=result,
         error_message=error_message,
+        fencing_token=fencing_token,
+        node_id=node_id,
     )
     if summary.get("skipped"):
         return summary

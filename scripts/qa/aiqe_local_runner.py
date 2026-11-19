@@ -188,6 +188,7 @@ def _report(
     ok: bool,
     result: dict,
     error: str,
+    fencing_token: int | None = None,
 ) -> None:
     resp = client.post(
         f"/api/v1/execution-jobs/{job_id}/report",
@@ -198,6 +199,8 @@ def _report(
             "summary": "aiqe local runner",
             "result": result,
             "error_message": error,
+            # V16-005：写结果必须携带 claim 时的 attempt 作为 fencing token。
+            "fencing_token": fencing_token,
         },
     )
     resp.raise_for_status()
@@ -237,6 +240,7 @@ def run_once(
     if not job:
         return {"claimed": False}
     job_id = int(job["id"])
+    fencing_token = int(job.get("attempt") or 0) or None
     payload = _payload(client, headers, node_id, job_id)
     policy = _policy_from_payload(payload)
     try:
@@ -307,6 +311,7 @@ def run_once(
         ok=ok,
         result=result,
         error=execution.error_class,
+        fencing_token=fencing_token,
     )
     return {
         "claimed": True,

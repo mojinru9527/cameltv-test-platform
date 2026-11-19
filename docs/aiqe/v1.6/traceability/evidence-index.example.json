@@ -1,17 +1,17 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "67ec4f83eb75f0904c8c65b949fffd2c2624da50",
+  "commit_sha": "9bc403a294a7394b26c0562f68f182beaf64412a",
   "ci_run": "",
   "environment": "local",
   "baseline": {
     "main_sha": "86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f",
     "audit_snapshot_sha": "86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f",
-    "migration_head": "20261119_v16_004_query_registry"
+    "migration_head": "20261119_v16_005_job_idempotency"
   },
   "summary": {
-    "requirements": 47,
-    "verified": 14,
+    "requirements": 49,
+    "verified": 17,
     "blocked": 2,
     "not_started": 10
   },
@@ -511,15 +511,54 @@
       "id": "V16-005-R1",
       "issue": "V16-005",
       "priority": "P1",
-      "status": "PARTIAL",
+      "status": "VERIFIED",
       "owner": "execution-platform",
       "reviewer": "pending",
       "production_entry": [
-        "job_consumer.run_job / POST /execution-jobs/{id}/report"
+        "job_consumer.claim_aiqe_jobs -> execute_inprocess_job -> finalize_node",
+        "POST /api/v1/execution-jobs/{job_id}/report",
+        "dag_scheduler.complete_node(fencing_token=...)"
       ],
       "tests": {
-        "success": [],
-        "negative": [],
+        "success": [
+          "tests/test_aiqe_v16_005_lease_fencing.py::test_duplicate_delivery_is_idempotent"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_005_lease_fencing.py::test_stale_worker_result_rejected",
+          "tests/test_aiqe_v16_005_lease_fencing.py::test_expired_lease_report_rejected",
+          "tests/test_aiqe_v16_005_lease_fencing.py::test_complete_node_rejects_stale_token"
+        ],
+        "boundary": [],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_005_lease_fencing.py (6 passed)"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "V16-005-R2",
+      "issue": "V16-005",
+      "priority": "P1",
+      "status": "VERIFIED",
+      "owner": "execution-platform",
+      "reviewer": "pending",
+      "production_entry": [
+        "dag_scheduler.schedule -> execution_dispatcher.enqueue_node_run",
+        "POST /api/v1/execution-jobs/{job_id}/report（重复投递）"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_005_lease_fencing.py::test_dispatch_is_idempotent_and_unique_index_enforced"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_005_lease_fencing.py::test_duplicate_delivery_is_idempotent"
+        ],
         "boundary": [],
         "concurrency": []
       },
@@ -528,13 +567,40 @@
         "L2"
       ],
       "evidence": [
-        "ci:baseline-audit-G4"
+        "pytest:tests/test_aiqe_v16_005_lease_fencing.py (6 passed)"
       ],
-      "gaps": [
-        "正式写结果路径（complete_node/进程内执行链）不传 fencing token；外部上报 API 也不校验 token。",
-        "Job 幂等唯一键与条件更新 rowcount 语义缺失。",
-        "Run/Node/Job 状态词表三套并存，与规格状态机不一致。"
-      ]
+      "gaps": []
+    },
+    {
+      "id": "V16-005-R3",
+      "issue": "V16-005",
+      "priority": "P1",
+      "status": "VERIFIED",
+      "owner": "execution-platform",
+      "reviewer": "pending",
+      "production_entry": [
+        "reconciler.reconcile / start_reconciler"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_005_lease_fencing.py::test_reconciler_converges_queued_run_without_job"
+        ],
+        "negative": [
+          "tests/test_aiqe_aud006_state_recovery.py::test_reconciler_blocks_after_requeue_limit",
+          "tests/test_aiqe_aud006_state_recovery.py::test_old_worker_cannot_overwrite_after_reconcile"
+        ],
+        "boundary": [],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_005_lease_fencing.py (6 passed)",
+        "pytest:tests/test_aiqe_aud006_state_recovery.py (15 passed)"
+      ],
+      "gaps": []
     },
     {
       "id": "V16-006-R1",

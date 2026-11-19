@@ -295,6 +295,8 @@ def _run_playwright_job(db, run: TestRun, node: NodeRun, job: ExecutionJob, grap
         status="completed" if execution.status == "PASSED" else "failed",
         result=result,
         error_message=execution.error_class,
+        fencing_token=int(job.attempt or 0) or None,
+        node_id=job.node_id or "local-dogfood",
     )
     # 外部 Runner 证据单独落库（截图/Trace/DOM/A11y/console/network）。
     attempt = db.scalar(

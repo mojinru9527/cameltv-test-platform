@@ -3,7 +3,7 @@ release: aiqe-v1.6
 baseline:
   main_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
   audit_snapshot_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
-  migration_head: 20261119_v16_004_query_registry
+  migration_head: 20261119_v16_005_job_idempotency
   branch: release/aiqe-v1-6
   audit_reports:
     - docs/aiqe/v1.6/_audit/baseline-audit-G1-G3.txt
@@ -533,37 +533,109 @@ requirements:
       - "缺少真实只读账号与 schema 授权验收；当前用 AST + 关键字黑名单代替数据库权限验证。"
       - "连接池上限与账号权限探测未实现。"
 
-  # ── V16-005 租约与状态机（P1，基线 PARTIAL）─────────────────
+  # ── V16-005 租约与状态机（P1）──────────────────────────────
   - id: V16-005-R1
     issue: V16-005
     priority: P1
-    title: "Worker 租约/fencing/幂等与 Reconciler 状态机"
-    requirement: "每次 claim 产生单调 fencing token；写结果必须条件更新并携带 token；重复投递幂等；Reconciler 修复过期租约/无 Job 的 QUEUED/悬挂证据。"
-    invariant: "迟到结果不得覆盖新结果；终态不可回退；QUEUED 必须有 Job 或 QueueTicket。"
-    status: PARTIAL
+    title: "fencing token 强制覆盖全部写结果路径"
+    requirement: "claim 产生单调 fencing token；进程内执行、外部 Runner 上报、complete_node 直接写结果都必须携带并校验 token；迟到/过期结果返回 skipped 并写安全事件。"
+    invariant: "旧 Worker 不能覆盖新结果；租约过期上报被拒绝；拒绝不改变节点终态。"
+    status: VERIFIED
     code:
-      - path: test-platform-v2/backend/app/aiqe/services/job_consumer.py
-        symbol: "claim_aiqe_jobs / complete_from_report"
-        change: unchanged
       - path: test-platform-v2/backend/app/aiqe/services/lease.py
-        symbol: "bump_fencing_token / assert_writable"
-        change: unchanged
-      - path: test-platform-v2/backend/app/aiqe/services/reconciler.py
-        symbol: "reconcile"
-        change: unchanged
+        symbol: "fenced_job_write / assert_current / JobAlreadyTerminal"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/services/execution_service.py
+        symbol: "complete_from_external_report / finalize_node fencing_token"
+        change: modified
+      - path: test-platform-v2/backend/app/api/v1/execution_jobs.py
+        symbol: "ReportRequest.fencing_token"
+        change: modified
+      - path: scripts/qa/aiqe_local_runner.py
+        symbol: "_report(fencing_token=...)"
+        change: modified
     production_entry:
-      - "job_consumer.run_job / POST /execution-jobs/{id}/report"
-    tests: {}
-    mock_boundary: ""
-    layers: [L1, L2]
+      - "job_consumer.claim_aiqe_jobs -> execute_inprocess_job -> finalize_node"
+      - "POST /api/v1/execution-jobs/{job_id}/report"
+      - "dag_scheduler.complete_node(fencing_token=...)"
+    tests:
+      success:
+        - tests/test_aiqe_v16_005_lease_fencing.py::test_duplicate_delivery_is_idempotent
+      negative:
+        - tests/test_aiqe_v16_005_lease_fencing.py::test_stale_worker_result_rejected
+        - tests/test_aiqe_v16_005_lease_fencing.py::test_expired_lease_report_rejected
+        - tests/test_aiqe_v16_005_lease_fencing.py::test_complete_node_rejects_stale_token
+    mock_boundary: "真实 SQLite + 真实 Worker/API 服务层；外部上报通过 job_consumer 正式路径。"
+    layers: [L1, L2, L3]
     evidence:
-      - "ci:baseline-audit-G4"
+      - "pytest:tests/test_aiqe_v16_005_lease_fencing.py (6 passed)"
     owner: execution-platform
     reviewer: pending
-    gaps:
-      - "正式写结果路径（complete_node/进程内执行链）不传 fencing token；外部上报 API 也不校验 token。"
-      - "Job 幂等唯一键与条件更新 rowcount 语义缺失。"
-      - "Run/Node/Job 状态词表三套并存，与规格状态机不一致。"
+    gaps: []
+
+  - id: V16-005-R2
+    issue: V16-005
+    priority: P1
+    title: "Job 幂等键与重复投递不产生第二副作用"
+    requirement: "重复 dispatch 同一节点/attempt 返回同一 Job；ExecutionJob 幂等键唯一；重复上报返回 JOB_ALREADY_TERMINAL；终态 Attempt 只保留一条。"
+    invariant: "同一节点同一 attempt 只有一个 Job 与一个终态 Attempt；重复消息无副作用。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/models/execution_job.py
+        symbol: "idempotency_key + uq_execution_jobs_idempotency_key"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/services/execution_dispatcher.py
+        symbol: "enqueue_node_run idempotency"
+        change: modified
+      - path: test-platform-v2/backend/alembic/versions/20261119_v16_005_job_idempotency.py
+        symbol: "upgrade/downgrade"
+        change: added
+    production_entry:
+      - "dag_scheduler.schedule -> execution_dispatcher.enqueue_node_run"
+      - "POST /api/v1/execution-jobs/{job_id}/report（重复投递）"
+    tests:
+      success:
+        - tests/test_aiqe_v16_005_lease_fencing.py::test_dispatch_is_idempotent_and_unique_index_enforced
+      negative:
+        - tests/test_aiqe_v16_005_lease_fencing.py::test_duplicate_delivery_is_idempotent
+    mock_boundary: "真实 DB 唯一索引 + 真实 claim/report 路径。"
+    layers: [L1, L2]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_005_lease_fencing.py (6 passed)"
+    owner: execution-platform
+    reviewer: pending
+    gaps: []
+
+  - id: V16-005-R3
+    issue: V16-005
+    priority: P1
+    title: "Reconciler 收敛 QUEUED 悬挂与幂等对账"
+    requirement: "Reconciler 扫描 RUNNING 与 QUEUED：无 Job 超时收敛为 ERROR/BLOCKED 并写事件；重复对账幂等（不产生重复事件/状态回退）。"
+    invariant: "Run/Node 不得永久悬挂；对账重复执行无副作用。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/reconciler.py
+        symbol: "reconcile RUNNING/QUEUED 扫描 / _finalize_run"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/services/job_consumer.py
+        symbol: "job.claimed 事件"
+        change: modified
+    production_entry:
+      - "reconciler.reconcile / start_reconciler"
+    tests:
+      success:
+        - tests/test_aiqe_v16_005_lease_fencing.py::test_reconciler_converges_queued_run_without_job
+      negative:
+        - tests/test_aiqe_aud006_state_recovery.py::test_reconciler_blocks_after_requeue_limit
+        - tests/test_aiqe_aud006_state_recovery.py::test_old_worker_cannot_overwrite_after_reconcile
+    mock_boundary: "真实 DB 状态机；无 Mock。"
+    layers: [L1, L2]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_005_lease_fencing.py (6 passed)"
+      - "pytest:tests/test_aiqe_aud006_state_recovery.py (15 passed)"
+    owner: execution-platform
+    reviewer: pending
+    gaps: []
 
   # ── V16-006 统一 Launch（P1，基线 MISSING）──────────────────
   - id: V16-006-R1
