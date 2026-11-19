@@ -1501,8 +1501,8 @@ requirements:
   - id: V16-017-R1
     issue: V16-017
     priority: P1
-    title: "平台链路真实 E2E（8/10）"
-    requirement: "TC-002/004/005/006/007/008/009/010 通过正式 Launch/AgentTask/Experiment→Worker/Outbox→Driver/Tool→Assertion/Evidence 链路独立执行。"
+    title: "平台链路真实 E2E（9/10）"
+    requirement: "TC-002/003/004/005/006/007/008/009/010 通过正式 Launch/AgentTask/Experiment/Driver→Worker/Outbox/Chromium→Assertion/Evidence 链路独立执行。"
     invariant: "每个 TC 独立数据隔离、业务断言、清理与证据；禁止只断言页面 body。"
     status: PARTIAL
     code:
@@ -1526,15 +1526,16 @@ requirements:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_003_browser_interaction_and_interception
     mock_boundary: "本地确定性 SUT（真实 HTTP/SQLite/Worker），非产品租户。"
     layers: [L2, L3]
     evidence:
-      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (8 passed)"
+      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (9 passed)"
       - "docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md"
     owner: qa-automation
     reviewer: pending
     gaps:
-      - "8/10 平台链路通过；TC-001/003 需隔离 Test 产品环境。"
+      - "9/10 平台链路通过；TC-001 需隔离 Test 产品环境。"
 
   - id: V16-017-R2
     issue: V16-017
@@ -2108,28 +2109,29 @@ requirements:
   - id: TC-AIQE-003
     issue: TC-AIQE-003
     priority: P1
-    title: "产品级 E2E（隔离 Test 环境）"
-    requirement: "在隔离 Test 环境通过真实 API/Worker/Driver/UI 执行并产出证据。"
-    invariant: "BLOCKED 不计入通过率。"
-    status: BLOCKED
+    title: "Playwright 真实交互与安全拦截"
+    requirement: "平台链路 E2E：真实 Chromium fill/click/assert_text + 子资源拦截；产品 UI 场景需隔离 Test 环境。"
+    invariant: "真实浏览器动作与拦截必须被执行，禁止只断言页面 body。"
+    status: PARTIAL
     code:
       - path: test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
-        symbol: "产品级 TC 未实现（旧 body 断言文件已删除）"
-        change: blocked
+        symbol: "test_tc_003_browser_interaction_and_interception"
+        change: added
     production_entry:
-      - "隔离 Test 环境"
+      - "pytest tests/e2e/aiqe/test_v16_017_platform_chain.py"
     tests:
-      success: []
-      negative: []
-    mock_boundary: ""
-    layers: [L3, L4]
+      success:
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_003_browser_interaction_and_interception
+      negative:
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_003_browser_interaction_and_interception
+    mock_boundary: "真实 Chromium + 本地确定性页面；非产品 UI。"
+    layers: [L2, L3]
     evidence:
-      - "docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md"
+      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (9 passed)"
     owner: qa-automation
     reviewer: pending
-    review_by: "2027-01-15"
-    blocked_reason: "E2E_TEST_ENV_MISSING：产品 UI 真实交互需隔离 Test 登录/页面；安全拦截已由 V16-002 覆盖。"
-    gaps: []
+    gaps:
+      - "产品 UI 登录/业务页面仍需隔离 Test 环境。"
 
   - id: TC-AIQE-004
     issue: TC-AIQE-004
@@ -2202,13 +2204,15 @@ requirements:
       success:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_003_browser_interaction_and_interception
       negative:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_003_browser_interaction_and_interception
     mock_boundary: "本地确定性 SUT（真实 HTTP/SQLite/Worker），非产品租户。"
     layers: [L2, L3]
     evidence:
-      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (8 passed)"
+      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (9 passed)"
     owner: qa-automation
     reviewer: pending
     gaps:
@@ -2262,7 +2266,7 @@ requirements:
     mock_boundary: "本地确定性 SUT（真实 HTTP/SQLite/Worker），非产品租户。"
     layers: [L2, L3]
     evidence:
-      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (8 passed)"
+      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (9 passed)"
     owner: qa-automation
     reviewer: pending
     gaps:
@@ -2284,12 +2288,14 @@ requirements:
     tests:
       success:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_003_browser_interaction_and_interception
       negative:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_003_browser_interaction_and_interception
     mock_boundary: "本地确定性 SUT（真实 HTTP/SQLite/Worker）；未做真实网络/第三方故障注入。"
     layers: [L2, L3]
     evidence:
-      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (8 passed)"
+      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (9 passed)"
     owner: qa-automation
     reviewer: pending
     gaps:
@@ -2313,14 +2319,16 @@ requirements:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_003_browser_interaction_and_interception
       negative:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_003_browser_interaction_and_interception
     mock_boundary: "本地确定性 SUT（真实 HTTP/SQLite/Worker），非产品租户。"
     layers: [L2, L3]
     evidence:
-      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (8 passed)"
+      - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (9 passed)"
     owner: qa-automation
     reviewer: pending
     gaps:

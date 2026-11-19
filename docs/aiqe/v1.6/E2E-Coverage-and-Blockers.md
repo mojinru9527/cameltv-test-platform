@@ -15,13 +15,13 @@
 | TC-AIQE-010 | AgentTask 全链路 | **PASS（平台链路）** | Draft→审批→Outbox/Job→ToolRegistry→AgentExecution→审计 |
 | TC-AIQE-006 | Secret 全链路 | **PASS（平台链路）** | 登录 JWT → SecretHandle → 下游授权解析 → 全库/Job/Event 零明文；越权解析拒绝 |
 | TC-AIQE-009 | Noise E1–E6 | **PASS（平台链路）** | 6 个单变量实验均绑定真实 baseline/verification Run 并由 Worker 执行 |
+| TC-AIQE-003 | 真实 Chromium 交互 + 拦截 | **PASS（平台链路）** | 本地页面 fill/click/assert_text；元数据子资源被 PORT/HOST 策略拦截；允许子资源真实请求 |
 
 ## BLOCKED（产品级，缺隔离 Test 环境）
 
 | TC | 场景 | 阻塞原因 |
 |---|---|---|
 | TC-AIQE-001 | 跨系统 API→后台 UI→DB→前台 UI | 无真实业务租户/用户/后台与前台 UI；本地 fixture 不等同产品 |
-| TC-AIQE-003 | Playwright 真实交互 + 安全拦截（产品 UI） | 无测试环境登录凭据/业务页面；安全拦截已由 V16-002 真实 Chromium 测试覆盖 |
 
 ## 缺失环境清单（解除阻塞所需）
 
@@ -34,6 +34,6 @@
 
 ## 诚实结论
 
-- 平台链路 E2E：**8/10 独立执行通过**（TC-002/004/005/006/007/008/009/010）。
-- 产品级 E2E：**0/2 执行**（TC-001/003 BLOCKED），不得计入通过率，不得宣称 10/10。
-- `V16-017` 状态：**PARTIAL**（R1 8/10）+ **BLOCKED**（R2 产品级）。
+- 平台链路 E2E：**9/10 独立执行通过**（TC-002/003/004/005/006/007/008/009/010）。
+- 产品级 E2E：**0/1 执行**（TC-001 BLOCKED），不得计入通过率，不得宣称 10/10。
+- `V16-017` 状态：**PARTIAL**（R1 9/10）+ **BLOCKED**（R2 产品级）。

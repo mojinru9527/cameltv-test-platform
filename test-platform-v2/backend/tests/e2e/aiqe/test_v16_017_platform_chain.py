@@ -22,6 +22,7 @@ from app.aiqe.models.run import NodeRun, TestRun
 from app.aiqe.models.triage import TriageExperiment
 from app.aiqe.models.tool import ToolExecutionAudit
 from app.aiqe.security import upsert_target_policy
+from app.aiqe.security.target_policy import PolicyDecision, TargetPolicy
 from app.aiqe.services import job_consumer
 from app.aiqe.services.capability_registry import register_manifest
 from app.aiqe.services.agent_task_service import (
@@ -48,6 +49,11 @@ pytestmark = pytest.mark.integration
 class _Handler(BaseHTTPRequestHandler):
     orders: ClassVar[dict[str, Any]] = {}
     last_auth: ClassVar[str] = ""
+    asset_hits: ClassVar[int] = 0
+    PAGE_HTML = """<!doctype html><html><head><title>AIQE-E2E</title></head><body>
+<input id="name"/><button id="go" onclick="document.getElementById('out').textContent='hello '+document.getElementById('name').value">GO</button>
+<div id="out">idle</div><img src="/pixel"/><img src="http://169.254.169.254/secret"/>
+</body></html>"""
     canary_token: ClassVar[str] = (
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMmUifQ.e2e-signature"
     )
@@ -64,7 +70,20 @@ class _Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
-        if self.path == "/echo":
+        if self.path == "/page":
+            body = self.PAGE_HTML.encode()
+            self.send_response(200)
+            self.send_header("content-type", "text/html; charset=utf-8")
+            self.send_header("content-length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        elif self.path == "/pixel":
+            _Handler.asset_hits += 1
+            self.send_response(200)
+            self.send_header("content-type", "image/gif")
+            self.send_header("content-length", "0")
+            self.end_headers()
+        elif self.path == "/echo":
             _Handler.last_auth = str(self.headers.get("authorization") or "")
             self._json({"received": True, "success": True})
         elif self.path == "/health":
@@ -644,3 +663,53 @@ def test_tc_009_noise_experiments_e1_to_e6(db_session, sut):
         assert exp.snapshot_diff_json["expected_dimension"] == variable, key
         launched_runs.append(run.id)
     assert len(set(launched_runs)) == 6
+
+
+# ── TC-003：真实 Chromium 交互 + 子资源安全拦截 ─────────────
+@pytest.mark.browser
+def test_tc_003_browser_interaction_and_interception(db_session, sut):
+    from app.aiqe.drivers.playwright_driver import PlaywrightDriver
+
+    port = sut
+    _Handler.asset_hits = 0
+    policy = TargetPolicy(
+        project_id=1,
+        version=1,
+        source="policy_record:e2e",
+        allowed_hosts=("127.0.0.1",),
+        allowed_ports=(port,),
+        allow_private_cidrs=("127.0.0.0/8",),
+        max_redirects=0,
+        decision=PolicyDecision.ALLOW,
+    )
+    driver = PlaywrightDriver(policy=policy, timeout_ms=15000)
+    try:
+        result = driver.execute(
+            {
+                "url": f"http://127.0.0.1:{port}/page",
+                "actions": [
+                    {"type": "fill", "selector": "#name", "value": "Camel"},
+                    {"type": "click", "selector": "#go"},
+                    {"type": "assert_text", "selector": "#out", "expected": "hello Camel"},
+                ],
+            }
+        )
+    finally:
+        driver.close()
+    assert result.status == "SUCCEEDED", (result.error_class, result.error_message)
+    assert result.data["title"] == "AIQE-E2E"
+    records = result.data["actions"]
+    assert len(records) >= 3 and all(not item.get("error") for item in records), records
+    assert records[-1]["action"] == "assert_text"
+    assert records[-1]["text"].strip() == "hello Camel"
+    assert _Handler.asset_hits >= 1, "允许的子资源必须真实请求"
+    codes = {item["code"] for item in result.data["security_denials"]}
+    assert codes & {
+        "ADDRESS_BLOCKED",
+        "PRIVATE_ADDRESS_DENIED",
+        "HOST_NOT_ALLOWED",
+        "PORT_NOT_ALLOWED",
+    }, codes
+    assert any(
+        item.get("host") == "169.254.169.254" for item in result.data["security_denials"]
+    ), result.data["security_denials"]
