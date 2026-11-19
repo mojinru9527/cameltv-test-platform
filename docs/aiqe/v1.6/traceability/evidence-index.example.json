@@ -1,17 +1,17 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "2a64da0cfb9a3d2699632505c99045880f17a36e",
+  "commit_sha": "14973984a6657aab1382ae6e1992db65b0a73c87",
   "ci_run": "",
   "environment": "local",
   "baseline": {
     "main_sha": "86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f",
     "audit_snapshot_sha": "86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f",
-    "migration_head": "20261119_v16_013_agent_task"
+    "migration_head": "20261119_v16_019_tool_audit"
   },
   "summary": {
-    "requirements": 59,
-    "verified": 34,
+    "requirements": 61,
+    "verified": 37,
     "blocked": 2,
     "not_started": 10
   },
@@ -1371,28 +1371,99 @@
       "id": "V16-019-R1",
       "issue": "V16-019",
       "priority": "P1",
-      "status": "PARTIAL",
-      "owner": "ai-agent",
+      "status": "VERIFIED",
+      "owner": "ai-quality",
       "reviewer": "pending",
       "production_entry": [
-        "Agent run_plan -> ToolRegistry.resolve"
+        "lifespan -> validate_implementations",
+        "agent_task_service.run_task -> build_bound_registry"
       ],
       "tests": {
-        "success": [],
-        "negative": [],
+        "success": [
+          "tests/test_aiqe_v16_019_tool_registry.py::test_all_allowlist_tools_classified",
+          "tests/test_aiqe_v16_019_tool_registry.py::test_read_tool_returns_real_project_and_writes_audit"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_019_tool_registry.py::test_unregistered_and_unavailable_rejected",
+          "tests/test_aiqe_v16_019_tool_registry.py::test_agent_without_permission_rejected"
+        ],
         "boundary": [],
         "concurrency": []
       },
       "layers": [
-        "L1"
+        "L1",
+        "L2",
+        "L3"
       ],
       "evidence": [
-        "ci:baseline-audit-G6"
+        "pytest:tests/test_aiqe_v16_019_tool_registry.py (13 passed)"
       ],
       "gaps": [
-        "默认实现表为空；无 12 项注册元数据、无 UNAVAILABLE、无参数 schema 校验。",
-        "无 ToolExecution 模型/事件/审计；tool_calls 恒空且可伪造。"
+        "read_requirements/read_git_diff/create_* 无真实实现，标 UNAVAILABLE；生产默认只读。"
       ]
+    },
+    {
+      "id": "V16-019-R2",
+      "issue": "V16-019",
+      "priority": "P1",
+      "status": "VERIFIED",
+      "owner": "ai-quality",
+      "reviewer": "pending",
+      "production_entry": [
+        "BoundToolRegistry.resolve/invoke"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_019_tool_registry.py::test_project_override_rejected"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_019_tool_registry.py::test_schema_extra_field_rejected_and_audited",
+          "tests/test_aiqe_v16_019_tool_registry.py::test_secret_argument_rejected",
+          "tests/test_aiqe_v16_019_tool_registry.py::test_rate_limit_enforced",
+          "tests/test_aiqe_v16_019_tool_registry.py::test_timeout_enforced"
+        ],
+        "boundary": [],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_019_tool_registry.py (13 passed)"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "V16-019-R3",
+      "issue": "V16-019",
+      "priority": "P1",
+      "status": "VERIFIED",
+      "owner": "ai-quality",
+      "reviewer": "pending",
+      "production_entry": [
+        "BoundToolRegistry._audit"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_019_tool_registry.py::test_deny_and_allow_audits_recorded",
+          "tests/test_aiqe_v16_019_tool_registry.py::test_agent_task_uses_bound_registry"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_019_tool_registry.py::test_write_tool_requires_approval_token",
+          "tests/test_aiqe_v16_019_tool_registry.py::test_production_rejects_write_even_with_token"
+        ],
+        "boundary": [],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_019_tool_registry.py (13 passed)"
+      ],
+      "gaps": []
     },
     {
       "id": "V16-020-R1",

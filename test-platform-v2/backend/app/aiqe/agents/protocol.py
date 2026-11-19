@@ -67,7 +67,17 @@ class ToolRegistry:
         self._tools = dict(tools or {})
 
     def allowed(self, agent_key: str) -> tuple[str, ...]:
-        return self._allowlist.get(str(agent_key), ())
+        key = str(agent_key)
+        # 支持两种 allowlist 形状：
+        # 1) {agent_key: (tool_name...)}（build_tool_registry 默认）
+        # 2) {tool_name: (agent_key...)}（DEFAULT_TOOL_ALLOWLIST）
+        if key in self._allowlist:
+            return tuple(self._allowlist[key])
+        return tuple(
+            tool
+            for tool, agents in self._allowlist.items()
+            if key in {str(item) for item in agents}
+        )
 
     def resolve(self, agent_key: str, tool_name: str) -> Callable[..., Any]:
         if tool_name not in self.allowed(agent_key):

@@ -254,6 +254,17 @@ def run_task(
             )
         except EvidenceResolverError:
             resolver = None
+    if tools is None:
+        # V16-019：绑定真实实现的 ToolRegistry（生产默认只读，写工具需审批）。
+        from app.aiqe.services.tool_registry import build_bound_registry
+
+        tools = build_bound_registry(
+            db,
+            project_id=int(project_id),
+            actor_id=actor_id,
+            task_id=row.id,
+            approval_token=row.id,
+        )
     if row.status == "WAITING_HUMAN":
         _transition(row, "RUNNING")
     elif row.status == "QUEUED":

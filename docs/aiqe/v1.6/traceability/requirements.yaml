@@ -3,7 +3,7 @@ release: aiqe-v1.6
 baseline:
   main_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
   audit_snapshot_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
-  migration_head: 20261119_v16_013_agent_task
+  migration_head: 20261119_v16_019_tool_audit
   branch: release/aiqe-v1-6
   audit_reports:
     - docs/aiqe/v1.6/_audit/baseline-audit-G1-G3.txt
@@ -1426,36 +1426,105 @@ requirements:
       - "上传会话 expires_at 不校验；无 Content-Type/期望大小校验；API 上传不脱敏。"
       - "无访问审计与 reconciliation；墓碑/CORRUPTED artifact 仍可被 Evidence 引用。"
 
-  # ── V16-019 Tool Registry（P1，基线 MISSING）───────────────
+  # ── V16-019 Tool Registry（P1）─────────────────────────────
   - id: V16-019-R1
     issue: V16-019
     priority: P1
-    title: "Tool Registry 真实绑定、权限与 ToolExecution 审计"
-    requirement: "注册项包含 version/implementation/schema/permission/project scope/side effect/idempotent/timeout/approval；启动校验实现存在；调用前授权、调用后写 ToolExecution 事件与 Artifact。"
-    invariant: "未注册/越权/参数越权/超时/审批缺失一律拒绝；只读默认，写操作需审批。"
-    status: PARTIAL
+    title: "工具真实绑定与启动可用性校验"
+    requirement: "每个 allowlist 工具登记实现引用/版本/schema/权限/Project scope/副作用等级/超时/限流/审批/Secret 策略；启动校验缺失实现标 UNAVAILABLE，Plan 不得当可用。"
+    invariant: "allowlist 名称不等于可用；无实现工具必须 fail-closed。"
+    status: VERIFIED
     code:
-      - path: test-platform-v2/backend/app/aiqe/agents/protocol.py
-        symbol: "ToolRegistry"
-        change: unchanged
-      - path: test-platform-v2/backend/app/aiqe/agents/registry.py
-        symbol: "build_tool_registry"
-        change: unchanged
-      - path: test-platform-v2/backend/app/aiqe/agents/orchestrator.py
-        symbol: "run_plan tool calls"
-        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/tool_registry.py
+        symbol: "ToolSpec / BoundToolRegistry / validate_implementations"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/services/tool_impls.py
+        symbol: "只读工具真实实现 / UNAVAILABLE 集合"
+        change: added
+      - path: test-platform-v2/backend/app/main.py
+        symbol: "启动校验"
+        change: modified
     production_entry:
-      - "Agent run_plan -> ToolRegistry.resolve"
-    tests: {}
-    mock_boundary: ""
-    layers: [L1]
+      - "lifespan -> validate_implementations"
+      - "agent_task_service.run_task -> build_bound_registry"
+    tests:
+      success:
+        - tests/test_aiqe_v16_019_tool_registry.py::test_all_allowlist_tools_classified
+        - tests/test_aiqe_v16_019_tool_registry.py::test_read_tool_returns_real_project_and_writes_audit
+      negative:
+        - tests/test_aiqe_v16_019_tool_registry.py::test_unregistered_and_unavailable_rejected
+        - tests/test_aiqe_v16_019_tool_registry.py::test_agent_without_permission_rejected
+    mock_boundary: "真实 DB；写工具真实实现未落地，显式 UNAVAILABLE。"
+    layers: [L1, L2, L3]
     evidence:
-      - "ci:baseline-audit-G6"
-    owner: ai-agent
+      - "pytest:tests/test_aiqe_v16_019_tool_registry.py (13 passed)"
+    owner: ai-quality
     reviewer: pending
     gaps:
-      - "默认实现表为空；无 12 项注册元数据、无 UNAVAILABLE、无参数 schema 校验。"
-      - "无 ToolExecution 模型/事件/审计；tool_calls 恒空且可伪造。"
+      - "read_requirements/read_git_diff/create_* 无真实实现，标 UNAVAILABLE；生产默认只读。"
+
+  - id: V16-019-R2
+    issue: V16-019
+    priority: P1
+    title: "参数 schema / Project 越权 / 限流 / 超时拒绝"
+    requirement: "工具参数 JSON-Schema 校验（拒绝额外字段与敏感字段）；禁止跨 Project 覆盖；限流与超时拒绝；未授权 Agent 不能调用。"
+    invariant: "参数/权限/资源任何一项不满足都不得执行工具。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/tool_registry.py
+        symbol: "_precheck / _call_with_timeout"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/agents/protocol.py
+        symbol: "ToolRegistry.allowed 修正（tool→agents 反向）"
+        change: modified
+    production_entry:
+      - "BoundToolRegistry.resolve/invoke"
+    tests:
+      success:
+        - tests/test_aiqe_v16_019_tool_registry.py::test_project_override_rejected
+      negative:
+        - tests/test_aiqe_v16_019_tool_registry.py::test_schema_extra_field_rejected_and_audited
+        - tests/test_aiqe_v16_019_tool_registry.py::test_secret_argument_rejected
+        - tests/test_aiqe_v16_019_tool_registry.py::test_rate_limit_enforced
+        - tests/test_aiqe_v16_019_tool_registry.py::test_timeout_enforced
+    mock_boundary: "真实 schema/线程超时/限流；无 Mock 授权。"
+    layers: [L1, L2]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_019_tool_registry.py (13 passed)"
+    owner: ai-quality
+    reviewer: pending
+    gaps: []
+
+  - id: V16-019-R3
+    issue: V16-019
+    priority: P1
+    title: "工具调用审计与审批/生产只读"
+    requirement: "每次工具调用写 ToolExecutionAudit（人/Agent/task/tool version/参数摘要/decision/结果摘要/耗时/证据 refs）；WRITE/EXTERNAL 需审批 token，生产环境默认只读。"
+    invariant: "成功和拒绝都有审计；审批缺失不得执行写操作。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/models/tool.py
+        symbol: "ToolExecutionAudit"
+        change: added
+      - path: test-platform-v2/backend/alembic/versions/20261119_v16_019_tool_audit.py
+        symbol: "upgrade/downgrade"
+        change: added
+    production_entry:
+      - "BoundToolRegistry._audit"
+    tests:
+      success:
+        - tests/test_aiqe_v16_019_tool_registry.py::test_deny_and_allow_audits_recorded
+        - tests/test_aiqe_v16_019_tool_registry.py::test_agent_task_uses_bound_registry
+      negative:
+        - tests/test_aiqe_v16_019_tool_registry.py::test_write_tool_requires_approval_token
+        - tests/test_aiqe_v16_019_tool_registry.py::test_production_rejects_write_even_with_token
+    mock_boundary: "真实 DB 审计；审批 token 为测试注入。"
+    layers: [L1, L2]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_019_tool_registry.py (13 passed)"
+    owner: ai-quality
+    reviewer: pending
+    gaps: []
 
   # ── V16-020 终态与对比（P1，基线 PARTIAL）──────────────────
   - id: V16-020-R1
