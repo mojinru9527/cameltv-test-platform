@@ -1274,33 +1274,64 @@ requirements:
     reviewer: pending
     gaps: []
 
-  # ── V16-014 A5 Change Impact（P1，基线 PARTIAL）─────────────
+  # ── V16-014 A5 Change Impact（P1）──────────────────────────
   - id: V16-014-R1
     issue: V16-014
     priority: P1
-    title: "A5 变更影响证据化并进入 Mandatory Scope"
-    requirement: "A5 输入包含 base/head 完整 SHA、diff hash、文件列表与 API/DB/UI 影响证据；结果按 6 类分类并进入回归 Scope；无 baseline 标 UNKNOWN 并扩大回归。"
-    invariant: "不得仅凭文件名关键词给结论；无 baseline 不得声称无影响。"
-    status: PARTIAL
+    title: "A5 证据化 Change Impact 分析"
+    requirement: "A5 输入必须含完整 base/head SHA、变更文件与 unified diff；按 route/OpenAPI symbol/migration table-column/dependency/UI route 给出证据；无法分析/生成代码/无 diff → UNKNOWN 且要求更广回归；记录算法/规则版本、diff hash、结果 checksum。"
+    invariant: "不得仅凭文件名关键词下'无影响'结论。"
+    status: IMPLEMENTED
     code:
-      - path: test-platform-v2/backend/app/aiqe/agents/change_impact_agent.py
-        symbol: "A5 规则"
-        change: unchanged
-      - path: test-platform-v2/backend/app/aiqe/services/impact_service.py
-        symbol: "diff/AST/route/migration 解析"
-        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/change_impact.py
+        symbol: "analyze_change_impact / classifications / UNKNOWN"
+        change: added
     production_entry:
-      - "POST /aiqe/insights/impact/plan"
-    tests: {}
-    mock_boundary: ""
+      - "A5 ChangeImpactAgent（计划接线待 V16-014-R2）"
+    tests:
+      success:
+        - tests/test_aiqe_v16_014_change_impact.py::test_route_and_permission_change_has_structural_evidence
+        - tests/test_aiqe_v16_014_change_impact.py::test_migration_change_is_data_evidence
+        - tests/test_aiqe_v16_014_change_impact.py::test_ui_route_change_classified
+        - tests/test_aiqe_v16_014_change_impact.py::test_transitive_dependency_evidence
+      negative:
+        - tests/test_aiqe_v16_014_change_impact.py::test_unsupported_file_forces_unknown_and_broad_regression
+        - tests/test_aiqe_v16_014_change_impact.py::test_missing_diff_is_unknown_not_no_impact
+        - tests/test_aiqe_v16_014_change_impact.py::test_invalid_shas_and_empty_files_rejected
+    mock_boundary: "真实 diff/AST/repo 扫描；无 Mock。"
     layers: [L1, L2]
     evidence:
-      - "ci:baseline-audit-G6"
-    owner: ai-agent
+      - "pytest:tests/test_aiqe_v16_014_change_impact.py (8 passed)"
+    owner: ai-quality
     reviewer: pending
     gaps:
-      - "A5 结论由路径子串匹配产生；经 Adapter 时强制集合守卫失效。"
-      - "A5 不进 AgentPlan/回归 Scope；无算法/规则版本与 diff hash 落库。"
+      - "尚未接入 A5 Agent Plan / Regression Scope mandatory 计算（需 Case catalog 映射）。"
+
+  - id: V16-014-R2
+    issue: V16-014
+    priority: P1
+    title: "A5 impacted cases 进入 Mandatory/Related Scope"
+    requirement: "A5 影响结果映射为 mandatory/related refs 并进入 V16-008 Scope；人工可扩大、无审批不可缩小；UNKNOWN 触发更广回归。"
+    invariant: "A5 结果不得被忽略，也不得被用来缩小强制范围。"
+    status: BLOCKED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/change_impact.py
+        symbol: "impacted_node_keys（预留）"
+        change: planned
+    production_entry:
+      - "regression_service.create_regression_request(impact_analysis=...)"
+    tests:
+      success: []
+      negative: []
+    mock_boundary: ""
+    layers: [L1]
+    evidence:
+      - "docs/aiqe/v1.6/V1.6-Issue-Implementation-Matrix.md（阻塞说明）"
+    owner: ai-quality
+    reviewer: pending
+    review_by: "2026-12-31"
+    blocked_reason: "CASE_CATALOG_MAPPING_MISSING：仓库没有 Case/Workflow 与变更文件/route/symbol 的映射目录，无法把 impact 自动映射为 mandatory node refs；需产品/QA 提供 catalog 或人工确认接口。"
+    gaps: []
 
   # ── V16-015 能力真实性（P1，基线 PARTIAL）──────────────────
   - id: V16-015-R1
@@ -1395,36 +1426,67 @@ requirements:
       - "十个用例仍是同一 /runs 页面 body 断言；服务脚本存在 NotImplementedError 与直调 helper。"
       - "缺 project_id/job_ids/assertion_ids/artifact_refs/workflow_snapshot_hash 输出。"
 
-  # ── V16-018 Artifact（P1，基线 PARTIAL）─────────────────────
+  # ── V16-018 Artifact（P1）──────────────────────────────────
   - id: V16-018-R1
     issue: V16-018
     priority: P1
-    title: "Artifact 权限、完整性与 Evidence Lifecycle"
-    requirement: "initiate→signed upload→finalize；finalize 校验对象存在/大小/hash/类型/归属；下载短时授权；元数据无 Secret；tombstone 后引用不可用。"
-    invariant: "跨项目/伪造 key/篡改 hash/过期 URL/未 finalize 下载均拒绝；required evidence 缺失不得 PASS。"
-    status: PARTIAL
+    title: "Artifact finalize 完整性与归属校验"
+    requirement: "initiate→upload→finalize：校验上传会话有效期、声明 Content-Type 与 artifact 类型匹配、声明大小、node/step_attempt 归属 Run；失败置 FAILED/CORRUPTED，不产生可用半成品。"
+    invariant: "未 finalize/过期/类型不符/跨 Run 附件不得成为证据。"
+    status: VERIFIED
     code:
       - path: test-platform-v2/backend/app/aiqe/services/artifact_service.py
-        symbol: "initiate/finalize/download"
-        change: unchanged
-      - path: test-platform-v2/backend/app/aiqe/models/artifact.py
-        symbol: "Artifact"
-        change: unchanged
-      - path: test-platform-v2/backend/app/api/v1/aiqe_artifacts.py
-        symbol: "artifact endpoints"
-        change: unchanged
+        symbol: "complete_upload / _validate_declared_content_type / create_pending_artifact"
+        change: modified
     production_entry:
-      - "POST /aiqe/artifacts/initiate|finalize / GET download"
-    tests: {}
-    mock_boundary: ""
+      - "PUT /api/v1/aiqe/artifacts/{id}/content"
+    tests:
+      success:
+        - tests/test_aiqe_v16_018_artifact_security.py::test_content_type_mismatch_rejected
+      negative:
+        - tests/test_aiqe_v16_018_artifact_security.py::test_upload_session_expiry_rejects_finalize
+        - tests/test_aiqe_v16_018_artifact_security.py::test_expected_size_mismatch_rejected
+        - tests/test_aiqe_v16_018_artifact_security.py::test_step_attempt_from_other_run_rejected
+    mock_boundary: "真实存储后端/DB；无 Mock。"
     layers: [L1, L2]
     evidence:
-      - "ci:baseline-audit-G7"
-    owner: backend-security
+      - "pytest:tests/test_aiqe_v16_018_artifact_security.py (9 passed)"
+    owner: security
     reviewer: pending
-    gaps:
-      - "上传会话 expires_at 不校验；无 Content-Type/期望大小校验；API 上传不脱敏。"
-      - "无访问审计与 reconciliation；墓碑/CORRUPTED artifact 仍可被 Evidence 引用。"
+    gaps: []
+
+  - id: V16-018-R2
+    issue: V16-018
+    priority: P1
+    title: "Evidence Lifecycle 与访问审计"
+    requirement: "下载重新鉴权并记录 artifact.accessed 审计；墓碑 ref 返回 unavailable；悬挂 PENDING_UPLOAD 超时 FAILED 且阻断证据完整；伪造 storage URI/跨项目拒绝。"
+    invariant: "Artifact 缺失/中断/篡改不得让 Run PASS。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/artifact_service.py
+        symbol: "evidence_ref_metadata / fail_stale_pending_uploads / _audit_artifact_access"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/services/reconciler.py
+        symbol: "reconcile stale uploads"
+        change: modified
+    production_entry:
+      - "GET /api/v1/aiqe/artifacts/{id}/content"
+      - "reconciler.reconcile"
+    tests:
+      success:
+        - tests/test_aiqe_v16_018_artifact_security.py::test_download_records_access_event
+        - tests/test_aiqe_v16_018_artifact_security.py::test_stale_pending_upload_marked_failed_and_blocks_evidence
+      negative:
+        - tests/test_aiqe_v16_018_artifact_security.py::test_cross_project_download_denied
+        - tests/test_aiqe_v16_018_artifact_security.py::test_tombstoned_evidence_ref_is_explicitly_unavailable
+        - tests/test_aiqe_v16_018_artifact_security.py::test_forged_storage_uri_rejected
+    mock_boundary: "真实存储/DB/事件；无 Mock。"
+    layers: [L1, L2]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_018_artifact_security.py (9 passed)"
+    owner: security
+    reviewer: pending
+    gaps: []
 
   # ── V16-019 Tool Registry（P1）─────────────────────────────
   - id: V16-019-R1

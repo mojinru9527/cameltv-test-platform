@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "441d2625eb15666e8f089131bcde849192fde955",
+  "commit_sha": "1481bd297bbae87559fa83307797dcaac3b66473",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -10,9 +10,9 @@
     "migration_head": "20261119_v16_019_tool_audit"
   },
   "summary": {
-    "requirements": 63,
-    "verified": 43,
-    "blocked": 2,
+    "requirements": 65,
+    "verified": 45,
+    "blocked": 3,
     "not_started": 10
   },
   "requirements": [
@@ -1233,15 +1233,24 @@
       "id": "V16-014-R1",
       "issue": "V16-014",
       "priority": "P1",
-      "status": "PARTIAL",
-      "owner": "ai-agent",
+      "status": "IMPLEMENTED",
+      "owner": "ai-quality",
       "reviewer": "pending",
       "production_entry": [
-        "POST /aiqe/insights/impact/plan"
+        "A5 ChangeImpactAgent（计划接线待 V16-014-R2）"
       ],
       "tests": {
-        "success": [],
-        "negative": [],
+        "success": [
+          "tests/test_aiqe_v16_014_change_impact.py::test_route_and_permission_change_has_structural_evidence",
+          "tests/test_aiqe_v16_014_change_impact.py::test_migration_change_is_data_evidence",
+          "tests/test_aiqe_v16_014_change_impact.py::test_ui_route_change_classified",
+          "tests/test_aiqe_v16_014_change_impact.py::test_transitive_dependency_evidence"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_014_change_impact.py::test_unsupported_file_forces_unknown_and_broad_regression",
+          "tests/test_aiqe_v16_014_change_impact.py::test_missing_diff_is_unknown_not_no_impact",
+          "tests/test_aiqe_v16_014_change_impact.py::test_invalid_shas_and_empty_files_rejected"
+        ],
         "boundary": [],
         "concurrency": []
       },
@@ -1250,12 +1259,35 @@
         "L2"
       ],
       "evidence": [
-        "ci:baseline-audit-G6"
+        "pytest:tests/test_aiqe_v16_014_change_impact.py (8 passed)"
       ],
       "gaps": [
-        "A5 结论由路径子串匹配产生；经 Adapter 时强制集合守卫失效。",
-        "A5 不进 AgentPlan/回归 Scope；无算法/规则版本与 diff hash 落库。"
+        "尚未接入 A5 Agent Plan / Regression Scope mandatory 计算（需 Case catalog 映射）。"
       ]
+    },
+    {
+      "id": "V16-014-R2",
+      "issue": "V16-014",
+      "priority": "P1",
+      "status": "BLOCKED",
+      "owner": "ai-quality",
+      "reviewer": "pending",
+      "production_entry": [
+        "regression_service.create_regression_request(impact_analysis=...)"
+      ],
+      "tests": {
+        "success": [],
+        "negative": [],
+        "boundary": [],
+        "concurrency": []
+      },
+      "layers": [
+        "L1"
+      ],
+      "evidence": [
+        "docs/aiqe/v1.6/V1.6-Issue-Implementation-Matrix.md（阻塞说明）"
+      ],
+      "gaps": []
     },
     {
       "id": "V16-015-R1",
@@ -1343,15 +1375,21 @@
       "id": "V16-018-R1",
       "issue": "V16-018",
       "priority": "P1",
-      "status": "PARTIAL",
-      "owner": "backend-security",
+      "status": "VERIFIED",
+      "owner": "security",
       "reviewer": "pending",
       "production_entry": [
-        "POST /aiqe/artifacts/initiate|finalize / GET download"
+        "PUT /api/v1/aiqe/artifacts/{id}/content"
       ],
       "tests": {
-        "success": [],
-        "negative": [],
+        "success": [
+          "tests/test_aiqe_v16_018_artifact_security.py::test_content_type_mismatch_rejected"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_018_artifact_security.py::test_upload_session_expiry_rejects_finalize",
+          "tests/test_aiqe_v16_018_artifact_security.py::test_expected_size_mismatch_rejected",
+          "tests/test_aiqe_v16_018_artifact_security.py::test_step_attempt_from_other_run_rejected"
+        ],
         "boundary": [],
         "concurrency": []
       },
@@ -1360,12 +1398,42 @@
         "L2"
       ],
       "evidence": [
-        "ci:baseline-audit-G7"
+        "pytest:tests/test_aiqe_v16_018_artifact_security.py (9 passed)"
       ],
-      "gaps": [
-        "上传会话 expires_at 不校验；无 Content-Type/期望大小校验；API 上传不脱敏。",
-        "无访问审计与 reconciliation；墓碑/CORRUPTED artifact 仍可被 Evidence 引用。"
-      ]
+      "gaps": []
+    },
+    {
+      "id": "V16-018-R2",
+      "issue": "V16-018",
+      "priority": "P1",
+      "status": "VERIFIED",
+      "owner": "security",
+      "reviewer": "pending",
+      "production_entry": [
+        "GET /api/v1/aiqe/artifacts/{id}/content",
+        "reconciler.reconcile"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_018_artifact_security.py::test_download_records_access_event",
+          "tests/test_aiqe_v16_018_artifact_security.py::test_stale_pending_upload_marked_failed_and_blocks_evidence"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_018_artifact_security.py::test_cross_project_download_denied",
+          "tests/test_aiqe_v16_018_artifact_security.py::test_tombstoned_evidence_ref_is_explicitly_unavailable",
+          "tests/test_aiqe_v16_018_artifact_security.py::test_forged_storage_uri_rejected"
+        ],
+        "boundary": [],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_018_artifact_security.py (9 passed)"
+      ],
+      "gaps": []
     },
     {
       "id": "V16-019-R1",

@@ -130,6 +130,7 @@ class ReconcileReport:
     secrets_purged: int = 0
     outbox_published: int = 0
     outbox_failed: int = 0
+    stale_uploads_failed: int = 0
 
     def payload(self) -> dict[str, Any]:
         return {
@@ -349,6 +350,13 @@ def reconcile(
         stats.secrets_purged = purge_expired_handles(db)
     except Exception:
         stats.secrets_purged = 0
+    # V16-018：悬挂 PENDING_UPLOAD 超时标记 FAILED（不产生可用半成品）。
+    try:
+        from app.aiqe.services.artifact_service import fail_stale_pending_uploads
+
+        stats.stale_uploads_failed = fail_stale_pending_uploads(db)
+    except Exception:
+        stats.stale_uploads_failed = 0
     # V16-006：Outbox relay（幂等发布；失败保留 pending 等下一轮）。
     try:
         from app.aiqe.services import outbox_service
