@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "8e3190667ea9f44d7ea4bba8a1d594cb1317671f",
+  "commit_sha": "90be244f8dfe801dbda019a9b3b9fad24bc06e27",
   "ci_run": "",
   "environment": "local",
   "baseline": {
