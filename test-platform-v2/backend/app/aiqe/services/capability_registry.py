@@ -197,6 +197,36 @@ def register_manifest(
     return row
 
 
+def heartbeat(
+    db: Session, node_id: str, *, now: datetime | None = None
+) -> NodeCapabilityManifest:
+    """节点存活心跳：刷新 last_heartbeat_at，并恢复因心跳过期而降级的状态。
+
+    - REVOKED 节点拒绝心跳（不得借心跳复活）；
+    - DEGRADED 保持降级（依赖异常需重新验收/恢复后才可调度）；
+    - VERIFIED 保持 VERIFIED，其余有 evidence 的恢复 AVAILABLE。
+    """
+    row = get_manifest(db, node_id)
+    if row is None:
+        raise LookupError(node_id)
+    current = str(row.capability_status or CapabilityStatus.REGISTERED.value)
+    if current == CapabilityStatus.REVOKED.value:
+        raise CapabilityError("节点已 REVOKED，禁止心跳")
+    moment = now or datetime.now(UTC)
+    row.last_heartbeat_at = moment
+    if current == CapabilityStatus.DEGRADED.value:
+        status = CapabilityStatus.DEGRADED
+    elif row.verified_at is not None and row.verified_platforms_json:
+        status = CapabilityStatus.VERIFIED
+    elif row.last_evidence_ref and row.capabilities_json:
+        status = CapabilityStatus.AVAILABLE
+    else:
+        status = CapabilityStatus.REGISTERED
+    _apply_status(row, status, reason="HEARTBEAT", now=moment)
+    db.flush()
+    return row
+
+
 def record_evidence(db: Session, node_id: str, evidence_ref: str) -> NodeCapabilityManifest:
     """实测 evidence 回填；只有拿到 evidence 才允许 AVAILABLE。"""
     if not evidence_ref:
