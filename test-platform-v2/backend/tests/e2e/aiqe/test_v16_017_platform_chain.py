@@ -12,16 +12,28 @@ import json
 import threading
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any
+from typing import Any, ClassVar
 
 import pytest
 from sqlalchemy import select
 
+from app.aiqe.models.agent import AgentExecution
 from app.aiqe.models.run import NodeRun, TestRun
+from app.aiqe.models.tool import ToolExecutionAudit
 from app.aiqe.security import upsert_target_policy
 from app.aiqe.services import job_consumer
 from app.aiqe.services.capability_registry import register_manifest
-from app.aiqe.services.execution_dispatcher import enqueue_node_run
+from app.aiqe.services.agent_task_service import (
+    approve_task,
+    create_task,
+    enqueue_task_job,
+    execute_task_job,
+)
+from app.aiqe.services.regression_service import (
+    create_regression_request,
+    record_deployment_attestation,
+)
+from app.aiqe.services.regression_terminal import handle_run_terminal
 from app.aiqe.services.run_launch import launch_run
 from app.aiqe.services.workflow_service import approve_workflow, create_workflow
 from app.models.environment import Environment
@@ -32,9 +44,9 @@ pytestmark = pytest.mark.integration
 
 
 class _Handler(BaseHTTPRequestHandler):
-    orders: dict[str, Any] = {}
+    orders: ClassVar[dict[str, Any]] = {}
 
-    def log_message(self, *_args):  # noqa: A003 - BaseHTTPRequestHandler API
+    def log_message(self, *_args):
         return
 
     def _json(self, payload: dict, status: int = 200) -> None:
@@ -45,7 +57,7 @@ class _Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def do_GET(self):  # noqa: N802
+    def do_GET(self):
         if self.path == "/health":
             self._json({"ok": True, "success": True})
         elif self.path.startswith("/orders/"):
@@ -54,7 +66,7 @@ class _Handler(BaseHTTPRequestHandler):
         else:
             self._json({"success": False}, 200)
 
-    def do_POST(self):  # noqa: N802
+    def do_POST(self):
         length = int(self.headers.get("content-length") or 0)
         payload = json.loads(self.rfile.read(length) or b"{}")
         order = {"id": f"ORD-{len(self.orders) + 1}", **payload}
@@ -309,7 +321,7 @@ def test_tc_007_stale_worker_result_rejected(db_session, sut):
     graph = _http_graph(port, "/health", expected=True)
     workflow = create_workflow(db_session, project_id=1, graph=graph)
     approve_workflow(db_session, workflow.id, approved_by=1)
-    run = launch_run(
+    _run = launch_run(
         db_session,
         project_id=1,
         user_id=1,
@@ -336,3 +348,120 @@ def test_tc_007_stale_worker_result_rejected(db_session, sut):
     assert result.get("reason") in {"STALE_LEASE", "JOB_ALREADY_TERMINAL"}
     db_session.expire_all()
     assert db_session.get(NodeRun, node.id).status != "PASSED"
+
+
+# ── TC-008：缺陷一键回归（真实 Launch/Worker/Scope/Comparison）────
+def test_tc_008_defect_regression_end_to_end(db_session, sut):
+    port = sut
+    env = _project_env(db_session, port)
+    graph = _http_graph(port, "/fail", expected=True, key="biz")
+    workflow = create_workflow(db_session, project_id=1, graph=graph)
+    approve_workflow(db_session, workflow.id, approved_by=1)
+    source = launch_run(
+        db_session,
+        project_id=1,
+        user_id=1,
+        workflow_definition_id=workflow.id,
+        environment_id=env.id,
+        launch_key=f"e2e-reg-src-{uuid.uuid4().hex}",
+    )
+    db_session.commit()
+    _drain(db_session)
+    db_session.expire_all()
+    source = db_session.get(TestRun, source.id)
+    assert source.outcome == "FAIL", source.outcome
+
+    from app.models.defect import Defect, RunComparisonSnapshot
+
+    defect = Defect(
+        project_id=1, defect_id=f"BUG-E2E-{uuid.uuid4().hex[:6]}", title="x", severity="P1", status="open"
+    )
+    db_session.add(defect)
+    db_session.flush()
+    sha = "d" * 40
+    record_deployment_attestation(
+        db_session, project_id=1, environment_id=env.id, commit_sha=sha, source="ci"
+    )
+    db_session.commit()
+    row, run, created = create_regression_request(
+        db_session,
+        project_id=1,
+        defect_id=defect.id,
+        fixed_sha=sha,
+        target_environment_id=env.id,
+        source_run_id=source.id,
+        idempotency_key="e2e-reg-1",
+    )
+    db_session.commit()
+    assert created is True and run is not None
+    assert row.scope_snapshot_id
+    from app.aiqe.models.regression_scope import RegressionScopeSnapshot
+
+    scope = db_session.get(RegressionScopeSnapshot, row.scope_snapshot_id)
+    assert "biz" in set(scope.mandatory_node_keys_json or [])
+    _drain(db_session)
+    db_session.expire_all()
+    run = db_session.get(TestRun, run.id)
+    assert run.status in {"COMPLETED", "BLOCKED", "FAILED"}
+    result = handle_run_terminal(db_session, run_id=run.id)
+    db_session.commit()
+    assert result.status in {"FAIL", "BLOCKED", "UNKNOWN", "PASS"}
+    assert result.comparison_id
+    snapshot = db_session.get(RunComparisonSnapshot, result.comparison_id)
+    assert snapshot is not None and snapshot.regression_run_id == run.id
+
+    again, again_run, created_again = create_regression_request(
+        db_session,
+        project_id=1,
+        defect_id=defect.id,
+        fixed_sha=sha,
+        target_environment_id=env.id,
+        source_run_id=source.id,
+        idempotency_key="e2e-reg-1",
+    )
+    db_session.commit()
+    assert created_again is False and again.id == row.id
+    assert again_run is not None and again_run.id == run.id
+
+
+# ── TC-010：AgentTask → Outbox → Job → ToolRegistry → AgentExecution ─
+def test_tc_010_agent_task_platform_chain(db_session):
+    from app.aiqe.agents.protocol import AgentResult
+
+    _project_env(db_session, 80)
+    db_session.commit()
+    task = create_task(
+        db_session,
+        project_id=1,
+        goal="分析业务并准备测试",
+        include=("a1_requirement",),
+        requested_by=10,
+        idempotency_key="e2e-agent-1",
+    )
+    approve_task(db_session, task.id, project_id=1, approved_by=2)
+    job = enqueue_task_job(db_session, task)
+    db_session.commit()
+
+    def executor(plan_task, context, request):
+        tool = context.tools.resolve("A1", "read_project_context")
+        data = tool()
+        return AgentResult(
+            agent_key="A1",
+            agent_version="1.0.0",
+            status="COMPLETED",
+            output={"project": data["project_id"]},
+        )
+
+    result = execute_task_job(db_session, job.id, executor=executor)
+    db_session.commit()
+    assert result["task"]["status"] == "COMPLETED"
+    executions = list(
+        db_session.scalars(
+            select(AgentExecution).where(AgentExecution.parent_task_id == task.id)
+        )
+    )
+    assert len(executions) == 1 and executions[0].agent_key == "A1"
+    audits = list(db_session.scalars(select(ToolExecutionAudit)))
+    assert audits and audits[0].tool_name == "read_project_context"
+    job_row = db_session.get(ExecutionJob, job.id)
+    assert job_row.status == "success"
