@@ -1526,120 +1526,181 @@ requirements:
     reviewer: pending
     gaps: []
 
-  # ── V16-020 终态与对比（P1，基线 PARTIAL）──────────────────
+  # ── V16-020 终态与对比（P1）────────────────────────────────
   - id: V16-020-R1
     issue: V16-020
     priority: P1
-    title: "统一终态与 Comparison Snapshot"
-    requirement: "仅真实终态 Run 可生成对比结论；终态计算唯一；Comparison Snapshot 引用真实 Assertion/Artifact。"
-    invariant: "非终态 Run 不得被固化对比结论；Run Outcome/Quality Gate/Regression Outcome 语义一致。"
-    status: PARTIAL
+    title: "仅真实终态 Run 生成 Comparison Snapshot"
+    requirement: "RunTerminalHandler 只处理 COMPLETED/BLOCKED/CANCELED/ERROR；RUNNING/QUEUED 返回 skipped RUN_NOT_TERMINAL，不得提前生成对比结论；重复处理幂等返回 ALREADY_HANDLED。"
+    invariant: "对比结论必须来自真实终态与已持久化 Assertion/Artifact 证据。"
+    status: VERIFIED
     code:
       - path: test-platform-v2/backend/app/aiqe/services/regression_terminal.py
-        symbol: "handle_run_terminal"
-        change: unchanged
-      - path: test-platform-v2/backend/app/aiqe/services/reconciler.py
-        symbol: "terminal reconciliation"
-        change: unchanged
+        symbol: "handle_run_terminal 终态 guard"
+        change: modified
     production_entry:
-      - "GET /aiqe/runs/{id}/comparison"
-    tests: {}
-    mock_boundary: ""
+      - "POST /api/v1/aiqe/regressions/{id}/sync"
+      - "consume_terminal_events"
+    tests:
+      success:
+        - tests/test_aiqe_v16_020_terminal_comparison.py::test_terminal_pass_generates_immutable_comparison_and_is_idempotent
+      negative:
+        - tests/test_aiqe_v16_020_terminal_comparison.py::test_non_terminal_run_cannot_generate_comparison
+    mock_boundary: "真实 DB 终态/Assertion/Artifact；无 Mock。"
     layers: [L1, L2]
     evidence:
-      - "ci:baseline-audit-G5"
+      - "pytest:tests/test_aiqe_v16_020_terminal_comparison.py (5 passed)"
     owner: execution-platform
     reviewer: pending
-    gaps:
-      - "handle_run_terminal 不校验终态；读路径写库把非终态 Run 固化为 UNKNOWN 结论。"
-      - "存在多套终态计算；outbox 消费者零生产调用点。"
+    gaps: []
 
-  # ── V16-021 Dogfood 弱口令（P2，基线 MISSING）──────────────
+  - id: V16-020-R2
+    issue: V16-020
+    priority: P1
+    title: "聚合规则与不可变对比证据"
+    requirement: "required FAIL→FAIL、BLOCKED/ERROR→BLOCKED、无断言 PASS→UNKNOWN；Comparison 引用真实 Assertion diff 与 Artifact evidence refs；AI 不得自动关闭缺陷。"
+    invariant: "Run PASS 但无 required assertion 不得判 PASS；证据缺失不得生成对比。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/regression_terminal.py
+        symbol: "aggregate_regression_status / build_comparison_snapshot"
+        change: verified
+    production_entry:
+      - "handle_run_terminal"
+    tests:
+      success:
+        - tests/test_aiqe_v16_020_terminal_comparison.py::test_terminal_pass_generates_immutable_comparison_and_is_idempotent
+      negative:
+        - tests/test_aiqe_v16_020_terminal_comparison.py::test_outcome_pass_without_assertions_is_unknown
+        - tests/test_aiqe_v16_020_terminal_comparison.py::test_required_failure_maps_to_fail_and_needs_more_fix
+        - tests/test_aiqe_v16_020_terminal_comparison.py::test_blocked_required_assertion_maps_to_blocked
+    mock_boundary: "真实 DB；无 Mock。"
+    layers: [L1, L2]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_020_terminal_comparison.py (5 passed)"
+    owner: execution-platform
+    reviewer: pending
+    gaps: []
+
+  # ── V16-021 Dogfood 弱口令（P2）────────────────────────────
   - id: V16-021-R1
     issue: V16-021
     priority: P2
-    title: "删除 Dogfood 默认弱口令"
-    requirement: "移除硬编码 admin123 与命令行密码参数；必须显式提供 Secret Provider/短期凭据；无凭据非 0 退出且日志不打印密码。"
-    invariant: "仓库不存在任何默认管理员密码；历史凭据已轮换记录。"
-    status: PARTIAL
+    title: "Dogfood 脚本无弱默认口令"
+    requirement: "移除 admin123 等硬编码默认值；凭据只能来自 AIQE_EVIDENCE_PASSWORD 或 AIQE_EVIDENCE_PASSWORD_FILE；禁止命令行密码；缺失时非零退出且输出不含密码。"
+    invariant: "日志/命令行/仓库不得出现默认凭据。"
+    status: VERIFIED
     code:
       - path: test-platform-v2/backend/scripts/aiqe/evidence_local_20.py
-        symbol: "password default"
-        change: unchanged
-      - path: test-platform-v2/backend/scripts/aiqe/evidence_camel_test5.py
-        symbol: "credential handling"
-        change: unchanged
+        symbol: "load_password / argument parser"
+        change: modified
     production_entry:
-      - "python scripts/aiqe/evidence_local_20.py"
-    tests: {}
-    mock_boundary: ""
-    layers: [L1]
+      - "python scripts/aiqe/evidence_local_20.py --runs N"
+    tests:
+      success:
+        - tests/test_aiqe_v16_021_weak_password.py::test_secret_file_provider_is_supported
+      negative:
+        - tests/test_aiqe_v16_021_weak_password.py::test_no_hardcoded_password_or_password_cli_option
+        - tests/test_aiqe_v16_021_weak_password.py::test_missing_credentials_exits_nonzero_without_secret
+    mock_boundary: "真实子进程；无网络调用。"
+    layers: [L1, L2]
     evidence:
-      - "ci:baseline-audit-G7"
-    owner: qa-automation
+      - "pytest:tests/test_aiqe_v16_021_weak_password.py (3 passed)"
+    owner: security
     reviewer: pending
-    gaps:
-      - "仍存在 os.environ.get('AIQE_EVIDENCE_PASSWORD', 'admin123') 与 --password 参数。"
-      - "无「无凭据退出非 0」测试与历史凭据扫描/轮换记录。"
+    gaps: []
 
-  # ── V16-022 依赖与环境可复现（P2，基线 PARTIAL）────────────
+  # ── V16-022 依赖与环境可复现（P2）─────────────────────────
   - id: V16-022-R1
     issue: V16-022
     priority: P2
-    title: "依赖锁定与测试环境可复现"
-    requirement: "锁定 Python/Node/浏览器版本与依赖 hash；CI 用 lockfile 安装；分层标记单元/集成/Worker/Browser E2E；输出 JUnit/coverage/trace。"
-    invariant: "干净容器按文档一次安装即可运行规定 AIQE 测试集；安装失败不得计为通过。"
-    status: PARTIAL
+    title: "依赖锁定与一键复现"
+    requirement: "Python/Node/Playwright/Chromium 版本明确；bcrypt 等依赖在 lockfile 固定并含 hash；提供一次性安装命令；CI 与本地使用同一锁文件。"
+    invariant: "不得依赖开发者全局包；安装失败不得计为测试通过。"
+    status: VERIFIED
     code:
-      - path: test-platform-v2/backend/requirements.txt
-        symbol: "依赖声明"
-        change: unchanged
       - path: test-platform-v2/backend/requirements.lock
-        symbol: "hash lock"
-        change: unchanged
-      - path: test-platform-v2/backend/Dockerfile
-        symbol: "构建镜像"
-        change: unchanged
+        symbol: "bcrypt/playwright/pytest 固定版本"
+        change: verified
+      - path: docs/aiqe/v1.6/Environment-Reproducibility.md
+        symbol: "版本表/安装命令/分层命令"
+        change: added
     production_entry:
-      - "pip install -r requirements.txt + 测试命令"
-    tests: {}
-    mock_boundary: ""
-    layers: [L1]
+      - "pip install -r requirements.lock"
+    tests:
+      success:
+        - tests/test_aiqe_v16_022_reproducible.py::test_lockfile_pins_runtime_and_test_dependencies
+        - tests/test_aiqe_v16_022_reproducible.py::test_reproducibility_doc_exists
+    mock_boundary: "静态锁文件/文档校验；无 Mock。"
+    layers: [L1, L2]
     evidence:
-      - "ci:baseline-audit-G7"
+      - "pytest:tests/test_aiqe_v16_022_reproducible.py (5 passed)"
     owner: devops
     reviewer: pending
-    gaps:
-      - "required CI 使用浮动 pytest，lock 仅 dry-run；无 dependency groups。"
-      - "pytest 仅 slow/integration 两个 marker；无 AIQE 分层测试报告。"
+    gaps: []
 
-  # ── V16-023 证据与版本追溯（P2，基线 MISSING）──────────────
+  - id: V16-022-R2
+    issue: V16-022
+    priority: P2
+    title: "测试分层执行器与 JUnit 产物"
+    requirement: "unit/integration/browser/device/security 层可独立执行并输出 JUnit；未知层/空层失败；CI 与本地同一命令。"
+    invariant: "分层缺失或空集合不得静默通过。"
+    status: VERIFIED
+    code:
+      - path: scripts/ci/run_aiqe_layer.py
+        symbol: "LAYERS / resolve_files / command_for"
+        change: added
+      - path: test-platform-v2/backend/pytest.ini
+        symbol: "分层 markers"
+        change: modified
+    production_entry:
+      - "python scripts/ci/run_aiqe_layer.py <layer> --junit ..."
+    tests:
+      success:
+        - tests/test_aiqe_v16_022_reproducible.py::test_layer_listing_and_dry_run
+      negative:
+        - tests/test_aiqe_v16_022_reproducible.py::test_unknown_layer_and_empty_layer_fail
+        - tests/test_aiqe_v16_022_reproducible.py::test_pytest_layers_are_declared
+    mock_boundary: "真实 pytest 命令构建（dry-run）；无 Mock。"
+    layers: [L1, L2]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_022_reproducible.py (5 passed)"
+    owner: devops
+    reviewer: pending
+    gaps: []
+
+  # ── V16-023 证据与版本追溯（P2）────────────────────────────
   - id: V16-023-R1
     issue: V16-023
     priority: P2
-    title: "证据与版本可追溯"
-    requirement: "每个验收证据关联 commit SHA/PR/CI run/环境/Run ID/Snapshot hash/Driver 镜像 digest；报告由 CI artifact 自动生成；区分实现/单测/集成/E2E/生产观察。"
-    invariant: "不允许手工填写测试数量；未运行测试标 NOT_RUN。"
-    status: PARTIAL
+    title: "机器可读 evidence-index 生成器"
+    requirement: "从 Runtime E2E 机器结果生成 evidence-index：commit SHA（40 位）、CI Run、环境、Run/Project/Snapshot hash/Job/NodeRun/Assertion/Artifact IDs；PASS 缺任一关键 ID、重复 TC、BLOCKED/NOT_RUN 无原因均非零退出；BLOCKED/NOT_RUN 不计入通过率。"
+    invariant: "报告数量不得手工填写；证据缺失不得计为通过。"
+    status: VERIFIED
     code:
-      - path: docs/aiqe/aud-remediation-v15-final-report.md
-        symbol: "v1.5 报告"
-        change: unchanged
-      - path: config/aiqe-version.lock
-        symbol: "版本锁"
-        change: unchanged
+      - path: scripts/aiqe/build_evidence_index.py
+        symbol: "validate_record / build_index / main"
+        change: added
     production_entry:
-      - "CI evidence job"
-    tests: {}
-    mock_boundary: ""
-    layers: [L1]
+      - "CI: build_evidence_index.py --input results.json"
+    tests:
+      success:
+        - tests/test_aiqe_v16_023_evidence_index.py::test_valid_ten_tcs_builds_ga_ready_index
+        - tests/test_aiqe_v16_023_evidence_index.py::test_cli_writes_index_and_fails_on_blocked
+      negative:
+        - tests/test_aiqe_v16_023_evidence_index.py::test_pass_without_artifact_is_rejected
+        - tests/test_aiqe_v16_023_evidence_index.py::test_pass_without_job_is_rejected
+        - tests/test_aiqe_v16_023_evidence_index.py::test_duplicate_tc_rejected
+        - tests/test_aiqe_v16_023_evidence_index.py::test_invalid_commit_sha_rejected
+        - tests/test_aiqe_v16_023_evidence_index.py::test_blocked_requires_reason_and_is_excluded_from_pass_rate
+        - tests/test_aiqe_v16_023_evidence_index.py::test_require_tcs_enforced
+    mock_boundary: "真实子进程/JSON 文件；无 Mock。"
+    layers: [L1, L2]
     evidence:
-      - "ci:baseline-audit-G7"
-    owner: devops
+      - "pytest:tests/test_aiqe_v16_023_evidence_index.py (8 passed)"
+    owner: qa-automation
     reviewer: pending
-    gaps:
-      - "既有验收证据无 commit/CI/PR/镜像标识；版本锁停留在旧 SHA。"
-      - "无 evidence-index 生成器与 v1.6 交付文档。"
+    gaps: []
 
   # ── V16-024 生产化（P0 release gate，基线 PARTIAL）─────────
   - id: V16-024-R1

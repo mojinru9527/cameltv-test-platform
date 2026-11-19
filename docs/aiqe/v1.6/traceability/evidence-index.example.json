@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "14973984a6657aab1382ae6e1992db65b0a73c87",
+  "commit_sha": "441d2625eb15666e8f089131bcde849192fde955",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -10,8 +10,8 @@
     "migration_head": "20261119_v16_019_tool_audit"
   },
   "summary": {
-    "requirements": 61,
-    "verified": 37,
+    "requirements": 63,
+    "verified": 43,
     "blocked": 2,
     "not_started": 10
   },
@@ -1469,14 +1469,108 @@
       "id": "V16-020-R1",
       "issue": "V16-020",
       "priority": "P1",
-      "status": "PARTIAL",
+      "status": "VERIFIED",
       "owner": "execution-platform",
       "reviewer": "pending",
       "production_entry": [
-        "GET /aiqe/runs/{id}/comparison"
+        "POST /api/v1/aiqe/regressions/{id}/sync",
+        "consume_terminal_events"
       ],
       "tests": {
-        "success": [],
+        "success": [
+          "tests/test_aiqe_v16_020_terminal_comparison.py::test_terminal_pass_generates_immutable_comparison_and_is_idempotent"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_020_terminal_comparison.py::test_non_terminal_run_cannot_generate_comparison"
+        ],
+        "boundary": [],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_020_terminal_comparison.py (5 passed)"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "V16-020-R2",
+      "issue": "V16-020",
+      "priority": "P1",
+      "status": "VERIFIED",
+      "owner": "execution-platform",
+      "reviewer": "pending",
+      "production_entry": [
+        "handle_run_terminal"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_020_terminal_comparison.py::test_terminal_pass_generates_immutable_comparison_and_is_idempotent"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_020_terminal_comparison.py::test_outcome_pass_without_assertions_is_unknown",
+          "tests/test_aiqe_v16_020_terminal_comparison.py::test_required_failure_maps_to_fail_and_needs_more_fix",
+          "tests/test_aiqe_v16_020_terminal_comparison.py::test_blocked_required_assertion_maps_to_blocked"
+        ],
+        "boundary": [],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_020_terminal_comparison.py (5 passed)"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "V16-021-R1",
+      "issue": "V16-021",
+      "priority": "P2",
+      "status": "VERIFIED",
+      "owner": "security",
+      "reviewer": "pending",
+      "production_entry": [
+        "python scripts/aiqe/evidence_local_20.py --runs N"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_021_weak_password.py::test_secret_file_provider_is_supported"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_021_weak_password.py::test_no_hardcoded_password_or_password_cli_option",
+          "tests/test_aiqe_v16_021_weak_password.py::test_missing_credentials_exits_nonzero_without_secret"
+        ],
+        "boundary": [],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_021_weak_password.py (3 passed)"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "V16-022-R1",
+      "issue": "V16-022",
+      "priority": "P2",
+      "status": "VERIFIED",
+      "owner": "devops",
+      "reviewer": "pending",
+      "production_entry": [
+        "pip install -r requirements.lock"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_022_reproducible.py::test_lockfile_pins_runtime_and_test_dependencies",
+          "tests/test_aiqe_v16_022_reproducible.py::test_reproducibility_doc_exists"
+        ],
         "negative": [],
         "boundary": [],
         "concurrency": []
@@ -1486,93 +1580,74 @@
         "L2"
       ],
       "evidence": [
-        "ci:baseline-audit-G5"
+        "pytest:tests/test_aiqe_v16_022_reproducible.py (5 passed)"
       ],
-      "gaps": [
-        "handle_run_terminal 不校验终态；读路径写库把非终态 Run 固化为 UNKNOWN 结论。",
-        "存在多套终态计算；outbox 消费者零生产调用点。"
-      ]
+      "gaps": []
     },
     {
-      "id": "V16-021-R1",
-      "issue": "V16-021",
-      "priority": "P2",
-      "status": "PARTIAL",
-      "owner": "qa-automation",
-      "reviewer": "pending",
-      "production_entry": [
-        "python scripts/aiqe/evidence_local_20.py"
-      ],
-      "tests": {
-        "success": [],
-        "negative": [],
-        "boundary": [],
-        "concurrency": []
-      },
-      "layers": [
-        "L1"
-      ],
-      "evidence": [
-        "ci:baseline-audit-G7"
-      ],
-      "gaps": [
-        "仍存在 os.environ.get('AIQE_EVIDENCE_PASSWORD', 'admin123') 与 --password 参数。",
-        "无「无凭据退出非 0」测试与历史凭据扫描/轮换记录。"
-      ]
-    },
-    {
-      "id": "V16-022-R1",
+      "id": "V16-022-R2",
       "issue": "V16-022",
       "priority": "P2",
-      "status": "PARTIAL",
+      "status": "VERIFIED",
       "owner": "devops",
       "reviewer": "pending",
       "production_entry": [
-        "pip install -r requirements.txt + 测试命令"
+        "python scripts/ci/run_aiqe_layer.py <layer> --junit ..."
       ],
       "tests": {
-        "success": [],
-        "negative": [],
+        "success": [
+          "tests/test_aiqe_v16_022_reproducible.py::test_layer_listing_and_dry_run"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_022_reproducible.py::test_unknown_layer_and_empty_layer_fail",
+          "tests/test_aiqe_v16_022_reproducible.py::test_pytest_layers_are_declared"
+        ],
         "boundary": [],
         "concurrency": []
       },
       "layers": [
-        "L1"
+        "L1",
+        "L2"
       ],
       "evidence": [
-        "ci:baseline-audit-G7"
+        "pytest:tests/test_aiqe_v16_022_reproducible.py (5 passed)"
       ],
-      "gaps": [
-        "required CI 使用浮动 pytest，lock 仅 dry-run；无 dependency groups。",
-        "pytest 仅 slow/integration 两个 marker；无 AIQE 分层测试报告。"
-      ]
+      "gaps": []
     },
     {
       "id": "V16-023-R1",
       "issue": "V16-023",
       "priority": "P2",
-      "status": "PARTIAL",
-      "owner": "devops",
+      "status": "VERIFIED",
+      "owner": "qa-automation",
       "reviewer": "pending",
       "production_entry": [
-        "CI evidence job"
+        "CI: build_evidence_index.py --input results.json"
       ],
       "tests": {
-        "success": [],
-        "negative": [],
+        "success": [
+          "tests/test_aiqe_v16_023_evidence_index.py::test_valid_ten_tcs_builds_ga_ready_index",
+          "tests/test_aiqe_v16_023_evidence_index.py::test_cli_writes_index_and_fails_on_blocked"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_023_evidence_index.py::test_pass_without_artifact_is_rejected",
+          "tests/test_aiqe_v16_023_evidence_index.py::test_pass_without_job_is_rejected",
+          "tests/test_aiqe_v16_023_evidence_index.py::test_duplicate_tc_rejected",
+          "tests/test_aiqe_v16_023_evidence_index.py::test_invalid_commit_sha_rejected",
+          "tests/test_aiqe_v16_023_evidence_index.py::test_blocked_requires_reason_and_is_excluded_from_pass_rate",
+          "tests/test_aiqe_v16_023_evidence_index.py::test_require_tcs_enforced"
+        ],
         "boundary": [],
         "concurrency": []
       },
       "layers": [
-        "L1"
+        "L1",
+        "L2"
       ],
       "evidence": [
-        "ci:baseline-audit-G7"
+        "pytest:tests/test_aiqe_v16_023_evidence_index.py (8 passed)"
       ],
-      "gaps": [
-        "既有验收证据无 commit/CI/PR/镜像标识；版本锁停留在旧 SHA。",
-        "无 evidence-index 生成器与 v1.6 交付文档。"
-      ]
+      "gaps": []
     },
     {
       "id": "V16-024-R1",

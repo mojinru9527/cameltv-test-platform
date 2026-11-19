@@ -7,7 +7,7 @@
 
 用法（后端需已启动，且管理员密码可用）：
     python scripts/aiqe/evidence_local_20.py --base-url http://127.0.0.1:7778 \
-        --runs 20 --password admin123
+        --runs 20   # 凭据只从 AIQE_EVIDENCE_PASSWORD / AIQE_EVIDENCE_PASSWORD_FILE 读取
 """
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ import argparse
 import hashlib
 import json
 import os
+import pathlib
 import shutil
 import sys
 from datetime import UTC, datetime
@@ -196,16 +197,35 @@ def execute_run(db, *, graph: dict, run: TestRun, password: str) -> None:
     db.commit()
 
 
+def load_password() -> str:
+    """V16-021：禁止弱默认/命令行密码；仅 Env 或 Secret 文件。"""
+    env_value = (os.environ.get("AIQE_EVIDENCE_PASSWORD") or "").strip()
+    if env_value:
+        return env_value
+    secret_file = (os.environ.get("AIQE_EVIDENCE_PASSWORD_FILE") or "").strip()
+    if secret_file:
+        try:
+            value = pathlib.Path(secret_file).read_text(encoding="utf-8").strip()
+        except OSError:
+            value = ""
+        if value:
+            return value
+    raise SystemExit(
+        "缺少 dogfood 凭据：请设置 AIQE_EVIDENCE_PASSWORD 或 "
+        "AIQE_EVIDENCE_PASSWORD_FILE（不接受命令行密码/默认弱口令）"
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", default="http://127.0.0.1:7778")
     parser.add_argument("--runs", type=int, default=20)
-    parser.add_argument("--password", default=os.environ.get("AIQE_EVIDENCE_PASSWORD", "admin123"))
     parser.add_argument(
         "--output",
         default=str(BACKEND.parent.parent / "docs/aiqe/evidence/local-dogfood-20.json"),
     )
     args = parser.parse_args()
+    password = load_password()
 
     db = SessionLocal()
     records: list[dict] = []
@@ -224,7 +244,7 @@ def main() -> int:
             db.add(run)
             db.flush()
             dag_scheduler.create_node_runs(db, run.id, graph)
-            execute_run(db, graph=graph, run=run, password=args.password)
+            execute_run(db, graph=graph, run=run, password=password)
             db.refresh(run)
             node_statuses = {
                 node.node_key: node.status
@@ -263,7 +283,7 @@ def main() -> int:
         payload_text = json.dumps(
             [run.environment_snapshot_json for run in plaintext], ensure_ascii=False
         )
-        assert args.password not in payload_text, "secret leaked into run snapshot"
+        assert password not in payload_text, "secret leaked into run snapshot"
     finally:
         db.close()
 
