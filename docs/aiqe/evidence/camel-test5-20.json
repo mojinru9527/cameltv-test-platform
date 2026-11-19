@@ -1,0 +1,269 @@
+{
+  "generated_at": "2026-11-19T02:58:30.167926+00:00",
+  "target": "https://camel-test5.elelive.cn",
+  "runs": [
+    {
+      "index": 1,
+      "run_id": "b7fda8a4-cdd2-4664-90a8-09090adfd8b7",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-01",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 2,
+      "run_id": "2747735a-89fb-4dd3-bb17-7468d372166d",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-02",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 3,
+      "run_id": "0bc3a600-e93e-4a96-b128-44e70c089314",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-03",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 4,
+      "run_id": "39c0f0b1-13ed-47fd-929d-0f00837ced80",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-04",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 5,
+      "run_id": "ae7bc778-0f24-4d39-8c99-16916c358671",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-05",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 6,
+      "run_id": "fc7f305c-5092-416f-8591-1e45a7ef34c1",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-06",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 7,
+      "run_id": "4efe79ba-b94f-4757-bca0-037c792fc0fa",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-07",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 8,
+      "run_id": "5abb53cc-3792-4d87-8412-d48cb23cdf09",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-08",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 9,
+      "run_id": "94130e9f-361d-43ca-94e7-d3de886e082f",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-09",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 10,
+      "run_id": "af14befb-be35-460f-850e-91fa1249e028",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-10",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 11,
+      "run_id": "719fc897-ca18-4f40-9246-b8ab50820549",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-11",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 12,
+      "run_id": "bf47cf4f-8fb6-4a17-9986-5a753ab956ce",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-12",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 13,
+      "run_id": "1b39b895-333a-434d-97c0-ba1897842980",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-13",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 14,
+      "run_id": "d03396f8-41ae-457c-8b75-c2ee6be7c6ae",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-14",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 15,
+      "run_id": "8daa944b-7f16-40cb-adf7-bc9b0df38c29",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-15",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 16,
+      "run_id": "0efc67ee-6387-4e2f-bce1-b8a97bd42c59",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-16",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 17,
+      "run_id": "7267a1e6-3d50-4b38-9c5c-21af36f52993",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-17",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 18,
+      "run_id": "cf6380c5-b6ab-4b69-9736-dbf204fe5638",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-18",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 19,
+      "run_id": "144f299d-d808-4faf-bb18-324d70c63268",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-19",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    },
+    {
+      "index": 20,
+      "run_id": "4d183881-f092-4807-8e0a-be66d1fc218c",
+      "run_key": "CAMEL-TEST5-20261119T025810Z-20",
+      "status": "COMPLETED",
+      "outcome": "PASS",
+      "node_statuses": {
+        "home_match": "PASSED",
+        "client_general": "PASSED"
+      },
+      "assertions": 7,
+      "assertion_failures": []
+    }
+  ],
+  "passed": 20,
+  "failed": 0,
+  "digest": "9ae8d77cca6305d5d50e0231ed0649f0c988d28d4a50223fa6ddf18eb1884ceb"
+}

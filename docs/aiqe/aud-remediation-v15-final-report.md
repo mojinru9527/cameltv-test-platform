@@ -122,6 +122,18 @@ Reconciler、FIX-005 preflight、PR #595 迁移）。合并策略：
 
 ## 6. 环境证据与剩余 DoD
 
+### 6.0 Camel Test5 真实环境（2026-11-19）
+
+- 浏览器与命令行均确认 `https://camelive-g3-test5.elelive.cn` 可访问；真实 API 网关为
+  `https://camel-test5.elelive.cn`；
+- 连续执行 **20 次只读混合 Workflow**（真实 HTTP GET，不写测试数据）：
+  `home_match` + `client_general`，每次 7 断言；
+- **20/20 Run `COMPLETED/PASS`**；证据：
+  [camel-test5-20.md](evidence/camel-test5-20.md)、[camel-test5-20.json](evidence/camel-test5-20.json)；
+- 复现脚本：`test-platform-v2/backend/scripts/aiqe/evidence_camel_test5.py`；
+- 同时修复 Target Policy 选择缺陷：同一 project/environment 现只保留一条 active 策略，
+  新策略写入会自动停用旧策略，避免按 version 误选到旧策略（含回归测试）。
+
 ### 6.1 已执行（本地现有环境，2026-11-19）
 
 - 在运行中的本地平台（uvicorn + SQLite）连续执行 **20 次混合 Workflow**：
