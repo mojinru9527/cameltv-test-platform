@@ -223,6 +223,29 @@ def get_payload(
     job = execution_job_service.get_job(db, project_id=scope, job_id=job_id)
     if job is None:
         raise HTTPException(404, "执行任务不存在")
+    payload = execution_job_service.job_payload(job)
+    if _is_aiqe_job(job):
+        # V16-001：外部 Runner 每次拉取载荷都由服务端重新解析策略；
+        # 非 ALLOW 时立即收口 BLOCKED，绝不下发可执行载荷。
+        from app.aiqe.services import execution_service
+
+        gate = execution_service.policy_gate_for_external_runner(db, job.id)
+        if gate.get("policy") is not None:
+            payload = {
+                **payload,
+                "target_policy": gate["policy"],
+                "target_policy_hash": gate["policy"].get("policy_hash"),
+            }
+        if not gate.get("allowed"):
+            raise HTTPException(
+                409,
+                detail={
+                    "code": gate.get("code") or "TARGET_POLICY_DENIED",
+                    "decision": (gate.get("policy") or {}).get("decision"),
+                    "policy_hash": (gate.get("policy") or {}).get("policy_hash"),
+                    "policy": gate.get("policy"),
+                },
+            )
     return R.ok(
         {
             "job_id": job.id,
@@ -230,7 +253,7 @@ def get_payload(
             "attempt": job.attempt,
             "env_ref": job.env_ref,
             "timeout_seconds": job.timeout_seconds,
-            "payload": execution_job_service.job_payload(job),
+            "payload": payload,
         }
     )
 

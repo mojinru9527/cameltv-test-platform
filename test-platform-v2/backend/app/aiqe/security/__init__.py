@@ -17,15 +17,22 @@ from app.aiqe.security.safe_target import (
     TargetDenied,
 )
 from app.aiqe.security.target_policy import (
+    ExecutionCapabilities,
+    PolicyDecision,
+    ResolvedExecutionPolicy,
     TargetPolicy,
     TargetPolicyConfigError,
     TargetPolicyResolver,
+    resolve_execution_policy,
     upsert_target_policy,
 )
 
 __all__ = [
     "POLICY_OVERRIDE_KEYS",
     "REDIRECT_STATUSES",
+    "ExecutionCapabilities",
+    "PolicyDecision",
+    "ResolvedExecutionPolicy",
     "ResolvedTarget",
     "SafeHttpExecutor",
     "SafeHttpResult",
@@ -37,5 +44,6 @@ __all__ = [
     "TargetPolicyResolver",
     "pinned_dns",
     "redact_headers",
+    "resolve_execution_policy",
     "upsert_target_policy",
 ]

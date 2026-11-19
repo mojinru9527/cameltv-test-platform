@@ -39,6 +39,11 @@ class WorkflowDefinition(Base):
     checksum: Mapped[str] = mapped_column(String(128), nullable=False, default="")
     validation_status: Mapped[str] = mapped_column(String(16), nullable=False, default="draft")
     approval_status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending")
+    #: V16-001 §5：旧 Workflow 的策略迁移状态。
+    #: UNREVIEWED（未核对）/ MIGRATED（旧字段已迁入服务端策略）/ NEEDS_POLICY_REVIEW（无法自动映射，禁止调度）。
+    policy_status: Mapped[str] = mapped_column(
+        String(24), nullable=False, default="UNREVIEWED"
+    )
     approved_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("sys_user.id", ondelete="SET NULL"), nullable=True
     )

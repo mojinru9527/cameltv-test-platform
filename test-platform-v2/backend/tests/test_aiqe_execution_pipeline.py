@@ -55,6 +55,15 @@ def _setup(db):
     if db.get(Project, 1) is None:
         db.add(Project(id=1, code="TEST", name="Test", owner_id=1, status=1))
         db.flush()
+    # V16-001：正式执行链要求服务端 TargetPolicy；测试用受控白名单。
+    from app.aiqe.security import upsert_target_policy
+
+    upsert_target_policy(
+        db,
+        project_id=1,
+        environment_id=None,
+        policy={"allowed_hosts": ["api.test"], "allowed_ports": [443]},
+    )
     register_manifest(
         db,
         node_id="node-http",
@@ -73,7 +82,7 @@ def test_pipeline_variable_assertion_outputs_and_evidence(db_session, monkeypatc
     monkeypatch.setenv("AIQE_SECRET_API_KEY", "s3cr3t")
     calls: list[dict] = []
 
-    def fake_execute(node, *, input_override=None, db_engine=None):
+    def fake_execute(node, *, input_override=None, db_engine=None, **kwargs):
         calls.append({"node": node.node_key, "input": dict(input_override or {})})
         if node.node_key == "login":
             return node_executor.NodeExecution(
@@ -186,7 +195,7 @@ def test_blocked_node_blocks_downstream_and_closes_run(db_session, monkeypatch):
     )
     db_session.commit()
 
-    def fake_blocked(node, *, input_override=None, db_engine=None):
+    def fake_blocked(node, *, input_override=None, db_engine=None, **kwargs):
         return node_executor.NodeExecution(
             status="BLOCKED",
             error_class="BROWSER_UNAVAILABLE",
@@ -223,7 +232,7 @@ def test_probe_only_execution_never_passes(db_session, monkeypatch):
     )
     db_session.commit()
 
-    def fake_probe(node, *, input_override=None, db_engine=None):
+    def fake_probe(node, *, input_override=None, db_engine=None, **kwargs):
         return node_executor.NodeExecution(
             status="PASSED",
             detail={},

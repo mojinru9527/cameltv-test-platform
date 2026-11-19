@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 from app.aiqe.schemas.contracts import DriverResult, EvidenceFile
+from app.aiqe.security.target_policy import PolicyDecision, TargetPolicy
 from app.aiqe.services.evidence_redactor import redact, redact_json_text
 
 SUPPORTED_ACTIONS: frozenset[str] = frozenset(
@@ -118,17 +119,19 @@ class PlaywrightDriver:
     def __init__(
         self,
         *,
+        policy: TargetPolicy,
         headless: bool = True,
         evidence_dir: str | Path | None = None,
         timeout_ms: int = 30000,
         playwright_factory: Callable[[], Any] | None = None,
-        allowed_hosts: list[str] | None = None,
     ) -> None:
+        # V16-001/002：浏览器授权只能来自服务端解析的 TargetPolicy，
+        # 禁止 Workflow 自带 allowed_hosts / allow_private 作为授权依据。
+        self.policy = policy
         self.headless = headless
         self.evidence_dir = Path(evidence_dir) if evidence_dir else None
         self.timeout_ms = max(1, int(timeout_ms))
         self._factory = playwright_factory
-        self.allowed_hosts = list(allowed_hosts or [])
         self._cm: Any = None
         self._playwright: Any = None
         self._browser: Any = None
@@ -525,6 +528,18 @@ class PlaywrightDriver:
 
     def execute(self, spec_input: dict[str, Any]) -> DriverResult:
         """执行一个节点的动作列表，返回标准化 DriverResult（含证据）。"""
+        # V16-001：非 ALLOW 策略不得启动浏览器（也就不会有任何请求）。
+        if not isinstance(self.policy, TargetPolicy) or self.policy.decision is not PolicyDecision.ALLOW:
+            decision = getattr(getattr(self.policy, "decision", None), "value", "UNKNOWN")
+            return DriverResult(
+                driver_key="playwright",
+                status="BLOCKED",
+                error_class=str(
+                    getattr(self.policy, "reason_code", "") or "TARGET_POLICY_MISSING_BINDING"
+                ),
+                error_message=f"浏览器执行未获授权（decision={decision}）",
+                data={"blocked": True, "policy_decision": decision},
+            )
         try:
             self.start()
         except PlaywrightUnavailable as exc:

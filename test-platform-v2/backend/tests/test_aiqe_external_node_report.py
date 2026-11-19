@@ -25,7 +25,17 @@ def _graph(driver: str) -> dict:
     }
 
 
-def _seed(db, driver: str, key: str):
+def _seed(db, driver: str, key: str, *, with_policy: bool = True):
+    if with_policy:
+        # V16-001：外部 runner 上报同样受服务端策略约束。
+        from app.aiqe.security import upsert_target_policy
+
+        upsert_target_policy(
+            db,
+            project_id=1,
+            environment_id=None,
+            policy={"allowed_hosts": ["stub.local"], "allowed_ports": [80, 443]},
+        )
     graph = _graph(driver)
     run = TestRun(project_id=1, run_key=key, source_type="manual", status="QUEUED")
     db.add(run)
@@ -37,6 +47,27 @@ def _seed(db, driver: str, key: str):
     db.commit()
     job = db.scalar(select(ExecutionJob).where(ExecutionJob.status == "pending"))
     return run, job
+
+
+def test_external_report_without_policy_blocks_even_if_runner_claims_success(db_session):
+    """V16-001：策略是服务端不变量，外部 Runner 伪造 PASSED 也必须收口为 BLOCKED。"""
+    run, job = _seed(db_session, "appium", "RUN-EXT-NOPOLICY", with_policy=False)
+    job.status = "running"
+    db_session.commit()
+
+    out = job_consumer.complete_from_report(
+        db_session,
+        job_id=job.id,
+        status="success",
+        result={"status": "PASSED", "source_len": 100},
+    )
+    node = db_session.scalar(select(NodeRun).where(NodeRun.run_id == run.id))
+    db_session.expire_all()
+    run = db_session.get(TestRun, run.id)
+    assert out["node_status"] == "BLOCKED"
+    assert node.status == "BLOCKED"
+    assert node.error_class == "TARGET_POLICY_MISSING_BINDING"
+    assert run.outcome != "PASS"
 
 
 def test_payload_contains_driver_and_input(db_session):

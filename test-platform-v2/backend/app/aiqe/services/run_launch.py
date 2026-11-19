@@ -120,6 +120,12 @@ def launch_run(
         workflow = _load_workflow(db, workflow_definition_id, project_id)
         if workflow.approval_status != "approved":
             raise LaunchError("WORKFLOW_NOT_APPROVED", "Workflow 未审批，不能启动")
+        # V16-001 §5：旧字段无法迁移为服务端策略的 Workflow 暂停执行，必须人工复核。
+        if str(getattr(workflow, "policy_status", "") or "").upper() == "NEEDS_POLICY_REVIEW":
+            raise LaunchError(
+                "WORKFLOW_NEEDS_POLICY_REVIEW",
+                "Workflow 的旧目标字段无法自动迁移为服务端策略，需管理员配置 TargetPolicy 后重新审批",
+            )
         graph = dict(workflow.graph_json or {})
         checksum = workflow_checksum(graph)
         if checksum != workflow.checksum:

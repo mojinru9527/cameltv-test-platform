@@ -166,7 +166,12 @@ def execute_run(db, *, graph: dict, run: TestRun, password: str) -> None:
             dag_scheduler.mark_running(db, run.id, node.node_key)
             db.commit()
             resolved = ctx.resolve_inputs(node.node_key, node.input_ref or {}, secrets=secrets)
-            result = node_executor.execute_node(node, db=db, input_override=dict(resolved))
+            result = node_executor.execute_node(
+                node,
+                policy_context=node_executor.policy_context_for(db, node),
+                db=db,
+                input_override=dict(resolved),
+            )
             observation = result_writer.observation_from_payload(result.observation)
             status, error_class, outcomes = result_writer.evaluate_node_assertions(
                 db,

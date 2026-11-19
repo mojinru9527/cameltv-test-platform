@@ -23,6 +23,7 @@ from sqlalchemy.orm import Session
 
 from app.aiqe.models.run import NodeRun, StepAttempt, TestRun
 from app.aiqe.schemas.contracts import DriverResult, EvidenceFile
+from app.aiqe.security import PolicyDecision, TargetPolicy, resolve_execution_policy
 from app.aiqe.services import assertion_service, dag_scheduler, evidence_redactor
 from app.aiqe.services.artifact_service import put_artifact
 from app.aiqe.services.event_service import append_event
@@ -569,17 +570,98 @@ def _advance_run(db: Session, run: TestRun, graph: Mapping[str, Any]) -> None:
         raise
 
 
-def _has_target_policy(db: Session, run: TestRun) -> bool:
-    try:
-        from app.aiqe.security import TargetPolicyResolver
+def _block_node_for_policy(
+    db: Session,
+    *,
+    job: Any,
+    run: TestRun,
+    node: NodeRun,
+    graph: Mapping[str, Any],
+    attempt: StepAttempt | None,
+    policy: TargetPolicy,
+) -> dict[str, Any]:
+    """V16-001：策略非 ALLOW 时收口为 BLOCKED，且不创建任何 Driver。
 
-        policy = TargetPolicyResolver(db).resolve(
-            project_id=int(run.project_id),
-            environment_id=getattr(run, "environment_id", None),
-        )
-        return str(getattr(policy, "source", "")) != "deny_all"
-    except Exception:
-        return False
+    - 记录决策、策略版本、hash、拒绝原因（不含客户端原始配置）；
+    - 安全事件按决策分类；
+    - 走统一 DAG 收口，阻断下游并计算 Run 终态。
+    """
+    code = {
+        PolicyDecision.DENY: "TARGET_POLICY_DENIED",
+        PolicyDecision.UNAVAILABLE: "TARGET_POLICY_UNAVAILABLE",
+        PolicyDecision.MISSING_BINDING: "TARGET_POLICY_MISSING_BINDING",
+    }.get(policy.decision, "TARGET_POLICY_DENIED")
+    event_type = {
+        PolicyDecision.DENY: "security.target_policy_denied",
+        PolicyDecision.UNAVAILABLE: "security.target_policy_unavailable",
+        PolicyDecision.MISSING_BINDING: "security.target_policy_missing_binding",
+    }.get(policy.decision, "security.target_policy_denied")
+    snapshot = policy.snapshot()
+    node.output_ref = {**(node.output_ref or {}), "policy": snapshot}
+    if attempt is not None:
+        attempt.error_json = {
+            "code": code,
+            "decision": policy.decision.value,
+            "reason_code": policy.reason_code,
+            "policy_hash": policy.policy_hash,
+            "policy_version": policy.version,
+        }
+        attempt.finished_at = _now()
+        attempt.status = "BLOCKED"
+    _event(
+        db,
+        run.id,
+        event_type,
+        {
+            "code": code,
+            "decision": policy.decision.value,
+            "reason_code": policy.reason_code,
+            "policy_id": policy.policy_id,
+            "policy_version": policy.version,
+            "policy_hash": policy.policy_hash,
+            "project_id": policy.project_id,
+            "environment_id": policy.environment_id,
+            "node_key": node.node_key,
+            "driver": node.driver_key,
+        },
+        node=node,
+        attempt=attempt,
+        producer="system",
+        producer_event_id=f"policy-blocked:{node.id}:{code}",
+    )
+    dag_scheduler.complete_node(
+        db,
+        run.id,
+        node.node_key,
+        "BLOCKED",
+        dict(graph),
+        error_class=code,
+        outputs={"policy": snapshot},
+    )
+    job.status = "failed"
+    job.error_message = f"{code}: {policy.reason_code or policy.deny_reason}".strip()[:500]
+    job.result_json = json.dumps(
+        {
+            "node_key": node.node_key,
+            "status": "BLOCKED",
+            "error_class": code,
+            "policy": snapshot,
+        },
+        ensure_ascii=False,
+        default=str,
+    )[:20000]
+    job.summary = f"{node.node_key}:BLOCKED:{code}"
+    job.finished_at = _now()
+    db.commit()
+    return {
+        "job_id": job.id,
+        "run_id": run.id,
+        "node": node.node_key,
+        "node_status": "BLOCKED",
+        "status": "BLOCKED",
+        "error_class": code,
+        "policy_decision": policy.decision.value,
+    }
 
 
 def execute_inprocess_job(db: Session, job_id: int) -> dict[str, Any]:
@@ -677,23 +759,27 @@ def execute_inprocess_job(db: Session, job_id: int) -> dict[str, Any]:
         db.commit()
         return {"job_id": job_id, "run_id": run.id, "node": node.node_key, "status": "BLOCKED", "error_class": exc.code}
 
-    policy_ctx = db if _has_target_policy(db, run) else None
-    try:
-        execution = execute_node(
-            node,
-            input_override=dict(resolved.values),
-            db_engine=readonly_db_engine(),
-            db=policy_ctx,
+    # V16-001：策略必须在创建任何 Driver 之前解析；非 ALLOW 一律 BLOCKED，
+    # 不存在“没有策略就走 legacy executor”的降级分支。
+    policy_context = resolve_execution_policy(db, run, node)
+    node.output_ref = {**(node.output_ref or {}), "policy": policy_context.snapshot()}
+    if policy_context.decision is not PolicyDecision.ALLOW:
+        return _block_node_for_policy(
+            db,
+            job=job,
+            run=run,
+            node=node,
+            graph=graph,
+            attempt=attempt,
+            policy=policy_context,
         )
-    except TypeError as exc:
-        # 兼容测试/第三方注入的旧签名 executor（不接受 db= 上下文）。
-        if "unexpected keyword argument 'db'" not in str(exc):
-            raise
-        execution = execute_node(
-            node,
-            input_override=dict(resolved.values),
-            db_engine=readonly_db_engine(),
-        )
+    execution = execute_node(
+        node,
+        policy_context=policy_context,
+        input_override=dict(resolved.values),
+        db_engine=readonly_db_engine(),
+        db=db,
+    )
     known_secrets = list(ctx.last_secret_values)
     artifact_ids = persist_execution_evidence(
         db,
@@ -735,6 +821,49 @@ def execute_inprocess_job(db: Session, job_id: int) -> dict[str, Any]:
     return {"job_id": job_id, "run_id": run.id, **summary}
 
 
+def policy_gate_for_external_runner(db: Session, job_id: int) -> dict[str, Any]:
+    """V16-001：外部 Runner 拉取载荷前必须由服务端重新解析策略。
+
+    - 非 ALLOW：立即把节点/Job 收口为 BLOCKED 并返回不可执行原因；
+    - ALLOW：返回策略快照（Runner 侧仍按该快照做目标校验，服务端在 report 时再校验一次）。
+    """
+    from app.models.execution_job import ExecutionJob
+
+    job = db.get(ExecutionJob, job_id)
+    if job is None:
+        return {"allowed": False, "code": "JOB_NOT_FOUND", "policy": None}
+    try:
+        payload = json.loads(job.payload_json or "{}")
+    except (TypeError, ValueError):
+        payload = {}
+    run = db.get(TestRun, str(payload.get("run_id") or ""))
+    node = db.get(NodeRun, str(payload.get("node_run_id") or ""))
+    if run is None or node is None:
+        return {"allowed": False, "code": "RUN_OR_NODE_MISSING", "policy": None}
+    graph = dict(payload.get("graph") or {"nodes": [{"key": node.node_key}], "edges": []})
+    attempt = _latest_attempt(db, node)
+    policy = resolve_execution_policy(db, run, node)
+    node.output_ref = {**(node.output_ref or {}), "policy": policy.snapshot()}
+    if policy.decision is not PolicyDecision.ALLOW:
+        result = _block_node_for_policy(
+            db,
+            job=job,
+            run=run,
+            node=node,
+            graph=graph,
+            attempt=attempt,
+            policy=policy,
+        )
+        return {
+            "allowed": False,
+            "code": result["error_class"],
+            "policy": policy.snapshot(),
+            "status": "BLOCKED",
+        }
+    db.commit()
+    return {"allowed": True, "code": None, "policy": policy.snapshot(), "status": "RUNNING"}
+
+
 def complete_from_external_report(
     db: Session,
     *,
@@ -758,6 +887,20 @@ def complete_from_external_report(
     if node.status == "READY":
         dag_scheduler.mark_running(db, run.id, node.node_key)
     attempt = _latest_attempt(db, node)
+    # V16-001：外部 Runner 的上报同样受服务端策略约束；非 ALLOW 时伪造的
+    # PASSED 上报也必须收口为 BLOCKED（策略是服务端不变量，不是 Runner 的自觉）。
+    policy_context = resolve_execution_policy(db, run, node)
+    node.output_ref = {**(node.output_ref or {}), "policy": policy_context.snapshot()}
+    if policy_context.decision is not PolicyDecision.ALLOW:
+        return _block_node_for_policy(
+            db,
+            job=job,
+            run=run,
+            node=node,
+            graph=graph,
+            attempt=attempt,
+            policy=policy_context,
+        )
     reported = dict(result or {})
     passed = str(reported.get("status") or status).lower() in {
         "completed",
