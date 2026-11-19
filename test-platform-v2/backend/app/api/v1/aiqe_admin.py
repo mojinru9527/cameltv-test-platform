@@ -458,7 +458,7 @@ def create_query_registry(
             max_execution_ms=body.max_execution_ms,
             result_schema=body.result_schema,
             approval_status=body.approval_status,
-            created_by=getattr(current, "id", None),
+            created_by=current.user.id,
         )
     except RegisteredQueryError as exc:
         raise APIException(code=400, msg=str(exc), http_status=400) from None
@@ -481,7 +481,7 @@ def approve_query_registry(
         db,
         project_id=int(current.project_id or 0),
         query_id=str(query_id),
-        approved_by=getattr(current, "id", None),
+        approved_by=current.user.id,
     )
     if row is None:
         raise APIException(code=404, msg="登记查询不存在", http_status=404)
@@ -514,7 +514,7 @@ def create_target_policy(
             environment_id=body.environment_id,
             policy=body.policy,
             name=body.name,
-            created_by=getattr(current, "id", None),
+            created_by=current.user.id,
             base_version=body.base_version,
         )
     except TargetPolicyConfigError as exc:

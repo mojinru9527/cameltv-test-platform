@@ -28,10 +28,11 @@ def test_learning_candidate_cross_project_blocked(db_session):
     with pytest.raises(learning_service.LearningError):
         learning_service.get_candidate(db_session, row.id, project_id=2)
     with pytest.raises(learning_service.LearningError):
+        # V16-010：只接受 benchmark_run_id（不接受调用方自报指标）；跨项目先被拒绝。
         learning_service.evaluate_candidate(
             db_session,
             row.id,
-            {"false_positive_rate": 0.1, "sample_size": 10},
+            benchmark_run_id="missing-run",
             project_id=2,
         )
     with pytest.raises(learning_service.LearningError):

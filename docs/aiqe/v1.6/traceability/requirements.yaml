@@ -3,7 +3,7 @@ release: aiqe-v1.6
 baseline:
   main_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
   audit_snapshot_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
-  migration_head: 20261119_v16_008_scope
+  migration_head: 20261119_v16_010_learning_gate
   branch: release/aiqe-v1-6
   audit_reports:
     - docs/aiqe/v1.6/_audit/baseline-audit-G1-G3.txt
@@ -978,65 +978,108 @@ requirements:
     reviewer: pending
     gaps: []
 
-  # ── V16-010 Benchmark Gate（P1，基线 PARTIAL）───────────────
+  # ── V16-010 Benchmark Gate（P1）────────────────────────────
   - id: V16-010-R1
     issue: V16-010
     priority: P1
-    title: "A6 Benchmark PASS_GATE 强制审批"
-    requirement: "候选批准必须同时满足 PASS_GATE、gate_eligible、样本数、全部阈值、baseline 无退化、dataset checksum 匹配与审批人权限。"
-    invariant: "非 PASS_GATE 或证据不足的候选不可批准/发布；不得无条件标记 benchmarked。"
-    status: PARTIAL
+    title: "Benchmark Gate 唯一批准条件"
+    requirement: "evaluate_candidate 只接受 benchmark_run_id，服务端读取 Run/Dataset 计算 gate：PASS_GATE、gate_eligible、样本≥30、Precision/Recall/F1/FPR/Unknown 阈值、数据集冻结且 checksum 匹配、候选版本匹配；不无条件标记 benchmarked。"
+    invariant: "未通过 gate 的候选不能进入 approved；指标不得由调用方自报。"
+    status: VERIFIED
     code:
       - path: test-platform-v2/backend/app/aiqe/services/learning_service.py
-        symbol: "evaluate_candidate / approve_candidate"
-        change: unchanged
-      - path: test-platform-v2/backend/app/aiqe/services/benchmark_service.py
-        symbol: "evaluate / metrics"
-        change: unchanged
+        symbol: "evaluate_candidate / _evaluate_gate"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/models/learning.py
+        symbol: "gate/approval/publish 字段"
+        change: modified
+      - path: test-platform-v2/backend/alembic/versions/20261119_v16_010_learning_gate.py
+        symbol: "upgrade/downgrade"
+        change: added
     production_entry:
-      - "POST /aiqe/learning/candidates/{id}/evaluate|approve"
-    tests: {}
-    mock_boundary: ""
+      - "POST /api/v1/aiqe/learning/candidates/{id}/evaluate"
+    tests:
+      success:
+        - tests/test_aiqe_v16_010_benchmark_gate.py::test_passing_candidate_approved_and_published
+      negative:
+        - tests/test_aiqe_v16_010_benchmark_gate.py::test_reference_only_small_sample_rejected
+        - tests/test_aiqe_v16_010_benchmark_gate.py::test_low_recall_rejected
+        - tests/test_aiqe_v16_010_benchmark_gate.py::test_high_fpr_or_unknown_rejected
+        - tests/test_aiqe_v16_010_benchmark_gate.py::test_cross_project_benchmark_rejected
+    mock_boundary: "真实 BenchmarkRun/指标计算；未 Mock 指标。"
+    layers: [L1, L2, L3]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_010_benchmark_gate.py (11 passed)"
+    owner: ai-quality
+    reviewer: pending
+    gaps: []
+
+  - id: V16-010-R2
+    issue: V16-010
+    priority: P1
+    title: "审批/发布事务内重校验与撤销"
+    requirement: "approve/publish 重新读取 Run/Dataset/Candidate 并重算 eligibility；数据集或候选在评估后变更、Run 非 PASS_GATE、审批身份缺失/自动化自审均拒绝；发布后可撤销并回退上一稳定版本。"
+    invariant: "评估后的任何篡改都不能被批准或发布。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/learning_service.py
+        symbol: "_revalidate / approve_candidate / publish_candidate / revoke_candidate"
+        change: added
+    production_entry:
+      - "POST /api/v1/aiqe/learning/candidates/{id}/approve"
+      - "POST /api/v1/aiqe/learning/candidates/{id}/revoke"
+    tests:
+      success:
+        - tests/test_aiqe_v16_010_benchmark_gate.py::test_passing_candidate_approved_and_published
+      negative:
+        - tests/test_aiqe_v16_010_benchmark_gate.py::test_dataset_change_after_evaluation_blocks_approval
+        - tests/test_aiqe_v16_010_benchmark_gate.py::test_publish_rejects_rule_change_after_approval
+        - tests/test_aiqe_v16_010_benchmark_gate.py::test_automation_service_cannot_self_approve
+        - tests/test_aiqe_v16_010_benchmark_gate.py::test_regression_against_published_baseline_rejected
+    mock_boundary: "真实 DB 事务；无 Mock。"
     layers: [L1, L2]
     evidence:
-      - "ci:baseline-audit-G6"
-    owner: ai-agent
+      - "pytest:tests/test_aiqe_v16_010_benchmark_gate.py (11 passed)"
+    owner: ai-quality
     reviewer: pending
-    gaps:
-      - "approve 仅判 FPR≤0.2；全 UNKNOWN 候选 FPR=0 可批准。"
-      - "evaluate 无条件 status=benchmarked，无 gate decision/immutable snapshot。"
-      - "approved_by/benchmark_run_id/dataset_checksum/baseline_version 等字段全缺。"
+    gaps: []
 
-  # ── V16-011 Project Scope（P1，基线 PARTIAL）────────────────
+  # ── V16-011 Project Scope（P1）──────────────────────────────
   - id: V16-011-R1
     issue: V16-011
     priority: P1
-    title: "Benchmark/Learning/Insights 全资源 Project Scope"
-    requirement: "所有 service 方法以 project_id 为必填；查询必须同时包含 resource_id 与 project_id；跨项目读写全部拒绝。"
-    invariant: "A/B 两项目任意资源 GET/POST/PATCH/DELETE/Freeze/Evaluate/Approve/Publish 均不可跨项目成功。"
-    status: PARTIAL
+    title: "Benchmark/Learning Service 跨项目隔离"
+    requirement: "Dataset/Sample/Run/Candidate 的 get/add_sample/freeze/run/metrics/evaluate/approve/publish 同时校验 resource_id 与 project_id；关联资源必须同项目；跨项目按 404 语义拒绝。"
+    invariant: "直接调用 Service 层也不能跨项目读写，不能只依赖 API 过滤。"
+    status: VERIFIED
     code:
       - path: test-platform-v2/backend/app/aiqe/services/benchmark_service.py
-        symbol: "dataset/run 操作"
-        change: unchanged
-      - path: test-platform-v2/backend/app/api/v1/aiqe_insights.py
-        symbol: "benchmark endpoints"
-        change: unchanged
-      - path: test-platform-v2/backend/app/api/v1/aiqe_learning.py
-        symbol: "evaluate / bug-patterns"
-        change: unchanged
+        symbol: "project_id 校验（dataset/run/metrics）"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/services/learning_service.py
+        symbol: "evaluate/approve/publish project 校验"
+        change: modified
     production_entry:
-      - "POST /aiqe/benchmarks/* /aiqe/learning/*"
-    tests: {}
-    mock_boundary: ""
-    layers: [L1, L2]
+      - "所有 Benchmark/Learning Service 方法与 API"
+    tests:
+      success:
+        - tests/test_aiqe_v16_011_project_scope.py::test_dataset_cross_project_read_rejected
+      negative:
+        - tests/test_aiqe_v16_011_project_scope.py::test_add_sample_cross_project_rejected
+        - tests/test_aiqe_v16_011_project_scope.py::test_freeze_cross_project_rejected
+        - tests/test_aiqe_v16_011_project_scope.py::test_run_benchmark_cross_project_rejected
+        - tests/test_aiqe_v16_011_project_scope.py::test_metrics_and_run_cross_project_rejected
+        - tests/test_aiqe_v16_011_project_scope.py::test_candidate_cross_project_rejected
+        - tests/test_aiqe_v16_011_project_scope.py::test_evaluate_cross_project_benchmark_rejected
+        - tests/test_aiqe_v16_011_project_scope.py::test_related_resources_must_share_project
+    mock_boundary: "真实 DB + 两个 Project；无 Mock。"
+    layers: [L1, L2, L3]
     evidence:
-      - "ci:baseline-audit-G6"
-    owner: ai-agent
+      - "pytest:tests/test_aiqe_v16_011_project_scope.py (8 passed)"
+    owner: ai-quality
     reviewer: pending
     gaps:
-      - "benchmark_service 6 个公开函数无 project 参数；API 不传 project。"
-      - "BugPattern 无 project_id 且 pattern_key 全局唯一。"
+      - "project_id 仍为可选参数：内部迁移/旧测试未传时按资源自身 project 回退；API 全部传认证上下文 project。"
 
   # ── V16-012 A4 Evidence Resolver（P1，基线 PARTIAL）─────────
   - id: V16-012-R1
