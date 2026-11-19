@@ -1,0 +1,31 @@
+{
+  "run_id": "55fd90cd-beb5-43f7-bf6e-d4b8cc5a17e3",
+  "run_key": "RUNNER-EGRESS-20261119T041143Z",
+  "artifacts": {
+    "identity": "de2ba834-0893-4c4c-a0da-d837bdf377ae",
+    "rules_before": "66d39a3e-96cf-4ffd-b5d0-474f7b5f0bcb",
+    "rules_allowlist": "1fb0713c-b1c0-4aaa-a380-1b55d928c848",
+    "rules_restored": "ab76df70-2e8f-46f6-a84e-6344fa4b39bc",
+    "probes": "d9f82fa4-b839-447e-b43f-87135af4a4bc",
+    "python_probes": "69d456b2-77b1-4924-b3a3-5596d564eba2"
+  },
+  "sha256": {
+    "identity": "b3ec1b07ccd60cca1bd1b61ea77258cde7bfd20630d732cd35e3e5fc83c236a1",
+    "rules_before": "069a22b9c97de8ef182ad368777a6833807f372e6b83150a7b54063d8787e76d",
+    "rules_allowlist": "cbc8b97a4d72aa980dd7669540bc740d216f7ecba93fa9d2e5ddd6f03e98401d",
+    "rules_restored": "60c0935e9191ab72fdc1d9f31e9cb7bda5a2d711eea80cbc003a97f1b21e5410",
+    "probes": "173dc80f5d989cebde544b2f89a684d8332a13da6d3a446701ddeb09142846c0",
+    "python_probes": "08224db8a21ac658d079381e702bc663c0fa25034574bab62fa5a0aeb3e4380e"
+  },
+  "allowlist": [
+    "192.168.50.170:443/tcp",
+    "dns:53/udp,tcp",
+    "loopback"
+  ],
+  "default_policy": "DROP",
+  "results": {
+    "allowed_camel_test5": "HTTP 200 (0.35s)",
+    "denied_example_com": "timeout 8s (exit 28)",
+    "denied_1_1_1_1": "timeout 8s (exit 28)"
+  }
+}
