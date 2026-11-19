@@ -11,13 +11,19 @@ from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.aiqe.redaction import redact_mapping
-from app.aiqe.models.run import NodeRun, StepAttempt, TestRun
+from app.aiqe.models.run import NodeRun, RunAssertionResult, StepAttempt, TestRun
 from app.aiqe.models.workflow import ResourceLock
 from app.aiqe.services import resource_lock
+from app.aiqe.services.node_category import (
+    CATEGORY_BUSINESS,
+    ORACLE_LAYERS,
+    graph_node_by_key,
+    node_category,
+)
 from app.aiqe.services.run_state import apply_transition
 
 NODE_TERMINAL = frozenset({"PASSED", "FAILED", "BLOCKED", "SKIPPED", "CANCELED", "ERROR"})
@@ -201,10 +207,41 @@ def _finalize(db: Session, run: TestRun, rows: list[NodeRun], graph: dict[str, A
     if run.status != "RUNNING":
         return
     statuses = {row.node_key: row.status for row in rows}
+    business_rows = [
+        row
+        for row in rows
+        if node_category(graph_node_by_key(graph, row.node_key), driver=row.driver_key)
+        == CATEGORY_BUSINESS
+    ]
     inferred = "FAIL" if any(status in NODE_FAILED for status in statuses.values()) else (
         "INCOMPLETE" if any(status == "BLOCKED" for status in statuses.values()) else "PASS"
     )
     evidence_gaps: list[str] = []
+    business_gate: str = ""
+    if inferred == "PASS":
+        # V16-009：Run PASS 必须有业务 Oracle 且业务节点全部 PASSED。
+        if not business_rows:
+            inferred = "INCOMPLETE"
+            business_gate = "NO_BUSINESS_ORACLE"
+        elif any(row.status != "PASSED" for row in business_rows):
+            inferred = "INCOMPLETE"
+            business_gate = "BUSINESS_NODE_NOT_PASSED"
+        else:
+            passed_assertions = db.scalar(
+                select(func.count())
+                .select_from(RunAssertionResult)
+                .join(StepAttempt, StepAttempt.id == RunAssertionResult.step_attempt_id)
+                .join(NodeRun, NodeRun.id == StepAttempt.node_run_id)
+                .where(
+                    NodeRun.run_id == run.id,
+                    RunAssertionResult.status == "PASS",
+                    RunAssertionResult.oracle_layer.in_(tuple(ORACLE_LAYERS)),
+                    RunAssertionResult.severity.in_(("P0", "P1")),
+                )
+            )
+            if not int(passed_assertions or 0):
+                inferred = "INCOMPLETE"
+                business_gate = "NO_REQUIRED_ASSERTION_PASS"
     if inferred == "PASS":
         # AUD-008：证据未完成（PENDING_UPLOAD/CORRUPTED）时不能汇总为可发布 PASS。
         from app.aiqe.services.artifact_service import incompleteness_reasons
@@ -222,6 +259,8 @@ def _finalize(db: Session, run: TestRun, rows: list[NodeRun], graph: dict[str, A
             "status": run.status,
             "outcome": run.outcome,
             "node_count": len(rows),
+            "business_nodes": len(business_rows),
+            "business_gate": business_gate,
             "evidence_gaps": evidence_gaps,
         },
         producer_event_id=f"run-completed:{run.id}",

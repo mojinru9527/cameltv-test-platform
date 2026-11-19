@@ -660,43 +660,71 @@ requirements:
       - "Mandatory 集合只落库不参与终态/门禁；客户端可用 scope=SELECTED 清空强制集合。"
       - "回归 Run 不派发 Job、不复制断言、永不到终态。"
 
-  # ── V16-009 Assertion/PASS 语义（P1，基线 PARTIAL）──────────
+  # ── V16-009 Assertion/PASS 语义（P1）───────────────────────
   - id: V16-009-R1
     issue: V16-009
     priority: P1
-    title: "业务断言与 Run PASS 语义"
-    requirement: "BUSINESS 节点必须有有效 Oracle；PASS 必须实际执行 required business assertions 并具备可验证证据；无断言节点不得贡献 PASS。"
-    invariant: "Run PASSED 需要至少一个有效业务 Oracle 且无 FAIL/BLOCKED/ERROR/UNKNOWN。"
-    status: PARTIAL
+    title: "节点类别与业务 Oracle 强制"
+    requirement: "BUSINESS 节点必须有有效业务 Oracle（断言或历史 expected_status/expect_text），Validate 阶段拒绝空断言；SETUP/CLEANUP/OBSERVE 可无断言但不得贡献业务 PASS。"
+    invariant: "Driver 成功但无业务 Oracle 的节点必须 BLOCKED（NO_BUSINESS_ORACLE），不得 PASSED。"
+    status: VERIFIED
     code:
+      - path: test-platform-v2/backend/app/aiqe/services/node_category.py
+        symbol: "node_category / has_business_oracle"
+        change: added
       - path: test-platform-v2/backend/app/aiqe/services/workflow_validator.py
-        symbol: "validate_workflow"
-        change: unchanged
-      - path: test-platform-v2/backend/app/aiqe/services/assertion_service.py
-        symbol: "evaluate_and_persist"
-        change: unchanged
-      - path: test-platform-v2/backend/app/aiqe/services/execution_service.py
-        symbol: "finalize_node"
+        symbol: "business_assertion_missing"
         change: modified
-      - path: test-platform-v2/backend/app/aiqe/services/quality_gate_service.py
-        symbol: "quality gate"
-        change: unchanged
+      - path: test-platform-v2/backend/app/aiqe/services/execution_service.py
+        symbol: "finalize_node 类别分支"
+        change: modified
     production_entry:
+      - "run_launch -> validate_workflow"
       - "job_consumer.run_job -> execution_service.finalize_node"
     tests:
       success:
-        - tests/test_aiqe_execution_pipeline.py::test_pipeline_variable_assertion_outputs_and_evidence
+        - tests/test_aiqe_v16_009_pass_semantics.py::test_worker_business_assertion_pass_yields_run_pass
       negative:
-        - tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_run_without_policy_record
-    mock_boundary: ""
-    layers: [L1, L2]
+        - tests/test_aiqe_v16_009_pass_semantics.py::test_validator_rejects_business_node_without_oracle
+        - tests/test_aiqe_v16_009_pass_semantics.py::test_worker_business_assertion_failure_is_not_pass
+        - tests/test_aiqe_v16_009_pass_semantics.py::test_worker_business_without_oracle_blocks
+      boundary:
+        - tests/test_aiqe_v16_009_pass_semantics.py::test_validator_allows_setup_cleanup_observe_without_oracle
+        - tests/test_aiqe_v16_009_pass_semantics.py::test_business_oracle_detection
+    mock_boundary: "真实本地 HTTP 目标 + 真实 Worker；Assertion Runtime 真实执行；未 Mock 业务断言。"
+    layers: [L1, L2, L3]
     evidence:
-      - "ci:baseline-audit-G5"
+      - "pytest:tests/test_aiqe_v16_009_pass_semantics.py (9 passed)"
     owner: execution-platform
     reviewer: pending
-    gaps:
-      - "无断言节点直接 PASSED；Run 可零业务 Oracle 判 PASS。"
-      - "缺节点类别/required/evidence_required 校验；Quality Gate 与 Run Outcome 语义不一致。"
+    gaps: []
+
+  - id: V16-009-R2
+    issue: V16-009
+    priority: P1
+    title: "Run PASS 语义与业务证据"
+    requirement: "Run PASSED 要求所有 BUSINESS 节点 PASSED 且至少一条 required（P0/P1、REQ/STD/PATTERN）断言 PASS；Setup-only 或伪造节点 PASS 不得让 Run PASS。"
+    invariant: "Run Outcome、DAG finalize 与业务断言集合使用同一事实源；无证据不得 PASS。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/dag_scheduler.py
+        symbol: "_finalize business_gate"
+        change: modified
+    production_entry:
+      - "dag_scheduler.complete_node -> _finalize -> run.completed"
+    tests:
+      success:
+        - tests/test_aiqe_v16_009_pass_semantics.py::test_worker_business_assertion_pass_yields_run_pass
+      negative:
+        - tests/test_aiqe_v16_009_pass_semantics.py::test_setup_only_graph_cannot_pass
+        - tests/test_aiqe_v16_009_pass_semantics.py::test_business_node_without_assertion_rows_never_passes
+    mock_boundary: "真实 Run/Node/Assertion DB 行；未 Mock finalize。"
+    layers: [L2, L3]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_009_pass_semantics.py (9 passed)"
+    owner: execution-platform
+    reviewer: pending
+    gaps: []
 
   # ── V16-010 Benchmark Gate（P1，基线 PARTIAL）───────────────
   - id: V16-010-R1

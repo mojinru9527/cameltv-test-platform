@@ -89,6 +89,7 @@ def test_known_capabilities_drive_validator():
                 "key": "ui",
                 "driver": "playwright",
                 "capability": "browser.chromium",
+                "category": "setup",
                 "depends_on": [],
             }
         ],

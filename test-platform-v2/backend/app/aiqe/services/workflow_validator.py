@@ -17,6 +17,12 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from app.aiqe.services.node_category import (
+    CATEGORY_BUSINESS,
+    has_business_oracle,
+    node_category,
+)
+
 VAR_RE = re.compile(r"\$\{nodes\.([A-Za-z0-9_-]+)\.outputs\.([A-Za-z0-9_-]+)\}")
 WRITE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
@@ -218,6 +224,19 @@ def validate_workflow(
                         f"assertion {assertion.get('key', '?')} 缺少 expected/expected_ref",
                         key,
                     )
+
+        # V16-009：BUSINESS 节点必须有有效业务 Oracle；SETUP/CLEANUP/OBSERVE 才能无断言。
+        category = node_category(
+            node, driver=driver if isinstance(driver, str) else ""
+        )
+        if category == CATEGORY_BUSINESS and not has_business_oracle(
+            assertions, node.get("input") if isinstance(node.get("input"), dict) else {}
+        ):
+            add(
+                "business_assertion_missing",
+                "BUSINESS 节点必须至少有一个有效业务 Oracle（assertions 或历史 expected_status/expect_text）",
+                key,
+            )
 
     cycle = _detect_cycle(deps)
     if cycle:

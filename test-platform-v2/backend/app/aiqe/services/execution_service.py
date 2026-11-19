@@ -28,6 +28,11 @@ from app.aiqe.security import PolicyDecision, TargetPolicy, resolve_execution_po
 from app.aiqe.services import assertion_service, dag_scheduler, evidence_redactor
 from app.aiqe.services.artifact_service import put_artifact
 from app.aiqe.services.event_service import append_event
+from app.aiqe.services.node_category import (
+    CATEGORY_BUSINESS,
+    graph_node_by_key,
+    node_category,
+)
 from app.aiqe.services.node_executor import NodeExecution, execute_node
 from app.aiqe.services.run_context import (
     EnvSecretProvider,
@@ -563,8 +568,26 @@ def finalize_node(
     elif assertion_status == assertion_service.ERROR:
         node_status = "ERROR"
     elif not declarations:
-        # 非业务节点（setup/cleanup）允许在 driver 成功后通过；事件会标明没有断言。
-        node_status = "PASSED"
+        # V16-009：只有 SETUP/CLEANUP/OBSERVE 允许无断言通过；
+        # BUSINESS 节点没有业务 Oracle 时不得 PASS（也不得用 Driver 成功冒充业务成功）。
+        category = node_category(
+            graph_node_by_key(graph, node.node_key), driver=node.driver_key
+        )
+        if category == CATEGORY_BUSINESS:
+            node_status = "BLOCKED"
+            node.error_class = "NO_BUSINESS_ORACLE"
+            _event(
+                db,
+                run.id,
+                "node.business_oracle_missing",
+                {"code": "NO_BUSINESS_ORACLE", "category": category},
+                node=node,
+                attempt=attempt,
+                producer="system",
+                producer_event_id=f"business-oracle-missing:{attempt.id}",
+            )
+        else:
+            node_status = "PASSED"
     else:
         node_status = "BLOCKED"
 

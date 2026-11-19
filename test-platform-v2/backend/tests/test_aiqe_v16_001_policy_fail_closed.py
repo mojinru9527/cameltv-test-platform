@@ -300,6 +300,8 @@ def test_worker_allows_authorized_target_and_persists_policy_evidence(db_session
         },
     )
     run, node, job = _seed_job(db_session, url=f"http://127.0.0.1:{port}/data")
+    node.input_ref = {**node.input_ref, "expected_status": 200}
+    db_session.commit()
     result = job_consumer.run_job(db_session, job.id)
     db_session.expire_all()
     node = db_session.get(NodeRun, node.id)

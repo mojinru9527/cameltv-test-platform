@@ -325,6 +325,15 @@ def _execute_db_secure(
             error_class="DRIVER_ERROR",
             detail={"query_key": query_key, "reason": f"{type(exc).__name__}: {exc}"},
         )
+    db_data = {
+        "query_key": result.query_key,
+        "query_version": result.query_version,
+        "query_hash": result.query_hash,
+        "columns": result.columns,
+        "rows": result.rows,
+        "row_count": result.row_count,
+        "elapsed_ms": result.duration_ms,
+    }
     return NodeExecution(
         status="PASSED",
         detail={
@@ -332,10 +341,14 @@ def _execute_db_secure(
             "summary": result.summary(),
             "columns": result.columns,
             "rows": result.rows,
+            "db": db_data,
         },
+        # V16-009：DB 断言需要实际值（row_count/rows），必须同时进入 data 供 Assertion Runtime 使用。
+        data={"db": db_data},
         observation={
             "source": "db_query",
             "db_rows": list(result.rows),
+            "row_count": result.row_count,
             "error": None,
         },
     )

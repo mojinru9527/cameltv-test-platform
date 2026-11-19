@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.aiqe.models.run import NodeRun, TestRun
+from app.aiqe.models.run import NodeRun, StepAttempt, TestRun
 from app.aiqe.services import dag_scheduler
 
 
@@ -33,6 +33,44 @@ def diamond(max_parallel: int = 2, fail_fast: bool = False) -> dict:
     }
 
 
+def record_business_oracle(db, run_id, node_key):
+    """V16-009：为业务节点落一条 PASS 业务断言（模拟 Assertion Runtime 的结果）。"""
+    from app.aiqe.schemas.contracts import AssertionOutcome
+    from app.aiqe.services import assertion_service
+
+    node = db.query(NodeRun).filter_by(run_id=run_id, node_key=node_key).first()
+    # complete_node 已创建 attempt；复用最新 attempt，避免 (node,step,attempt_no) 唯一约束冲突。
+    attempt = (
+        db.query(StepAttempt)
+        .filter_by(node_run_id=node.id)
+        .order_by(StepAttempt.attempt_no.desc())
+        .first()
+    )
+    if attempt is None:
+        attempt = StepAttempt(
+            node_run_id=node.id, step_key=node_key, attempt_no=1, status="PASSED"
+        )
+        db.add(attempt)
+        db.flush()
+    assertion_service.persist_outcomes(
+        db,
+        attempt,
+        [
+            AssertionOutcome(
+                assertion_key="oracle",
+                type="http_status",
+                oracle_layer="REQ",
+                oracle_ref="AC-1",
+                status="PASS",
+                expected=200,
+                actual=200,
+                severity="P0",
+            )
+        ],
+    )
+    db.flush()
+
+
 def statuses(db, run_id):
     rows = db.query(NodeRun).filter_by(run_id=run_id).all()
     return {row.node_key: row.status for row in rows}
@@ -46,6 +84,7 @@ def test_serial_parallel_join_and_complete(db_session):
     assert dispatched == ["A"]
 
     dag_scheduler.complete_node(db_session, run.id, "A", "PASSED", graph)
+    record_business_oracle(db_session, run.id, "A")
     dispatched.clear()
     dag_scheduler.schedule(db_session, run.id, graph, dispatch=lambda n: dispatched.append(n.node_key))
     assert sorted(dispatched) == ["B", "C"]
@@ -134,6 +173,7 @@ def test_cleanup_node_runs_after_terminal(db_session):
     run = make_run(db_session)
     dag_scheduler.schedule(db_session, run.id, graph)
     dag_scheduler.complete_node(db_session, run.id, "A", "PASSED", graph)
+    record_business_oracle(db_session, run.id, "A")
 
     dispatched: list[str] = []
     dag_scheduler.schedule(db_session, run.id, graph, dispatch=lambda n: dispatched.append(n.node_key))

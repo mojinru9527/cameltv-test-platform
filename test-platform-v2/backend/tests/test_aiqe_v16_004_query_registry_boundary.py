@@ -197,10 +197,21 @@ def test_worker_runs_registered_query_and_writes_audit(db_session, target_db, mo
     _, node, job = _seed_db_job(
         db_session, input_ref={"query_key": "order_status", "params": {"order_id": 1}}
     )
+    node.assertions_json = [
+        {
+            "assertion_key": "row_count",
+            "oracle_layer": "REQ",
+            "oracle_ref": "AC-DB-1",
+            "type": "db_row_count",
+            "expected": 1,
+            "severity": "P0",
+        }
+    ]
+    db_session.commit()
     result = job_consumer.run_job(db_session, job.id)
     db_session.expire_all()
     node = db_session.get(NodeRun, node.id)
-    assert result["status"] == "PASSED", result
+    assert result["status"] == "PASSED", (result.get("error_class"), node.error_class, node.output_ref.get("preflight"))
     assert node.status == "PASSED"
     job_row = db_session.get(ExecutionJob, job.id)
     assert '"row_count": 1' in (job_row.result_json or "")
