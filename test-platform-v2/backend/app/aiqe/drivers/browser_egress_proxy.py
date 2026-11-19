@@ -27,7 +27,6 @@ Playwright 的 `context.route` 只覆盖浏览器发起的初始请求；**HTTP 
 """
 from __future__ import annotations
 
-import json
 import select
 import socket
 import threading

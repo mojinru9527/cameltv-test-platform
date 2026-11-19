@@ -1,6 +1,8 @@
 """v1.4 执行链 E2E（单元级）：变量传递 → 断言 → outputs → 证据 → DAG 推进。"""
 from __future__ import annotations
 
+import json
+
 from sqlalchemy import select
 
 from app.aiqe.models.run import NodeRun, RunAssertionResult, TestRun
@@ -134,11 +136,16 @@ def test_pipeline_variable_assertion_outputs_and_evidence(db_session, monkeypatc
     first_job = db_session.get(ExecutionJob, claimed[0])
     assert "tok-1" not in (first_job.result_json or "")
     assert login.status == "PASSED"
-    assert login.outputs_json["token"] == "tok-1"
+    # V16-003：敏感输出必须落为 Secret Handle，不得明文写 outputs_json。
+    token_ref = login.outputs_json["token"]
+    assert isinstance(token_ref, dict) and token_ref.get("secret_handle_id")
+    assert token_ref["secret_ref"].startswith("vault://")
+    assert token_ref["secret_type"] in {"token", "access_token", "jwt"}
+    assert "tok-1" not in json.dumps(login.outputs_json, ensure_ascii=False)
     assert query.status == "READY"
     assert query.execution_job_id is not None
-    # 解析输入已持久化，但 secret 明文不落库
-    assert query.resolved_input_json["headers"]["Authorization"] == "Bearer tok-1"
+    # 解析输入已持久化，但 Authorization/secret 明文不落库
+    assert query.resolved_input_json["headers"]["Authorization"] == "***"
     assert query.resolved_input_json["headers"]["X-Secret"] == "***"
     assert query.secret_keys_json == ["API_KEY"]
 

@@ -113,6 +113,7 @@ class ReconcileReport:
     nodes_closed: int = 0
     jobs_failed: int = 0
     runs_completed: int = 0
+    secrets_purged: int = 0
 
     def payload(self) -> dict[str, Any]:
         return {
@@ -324,6 +325,13 @@ def reconcile(
         except Exception as exc:  # 实验同步失败不得影响对账主流程
             stats.errors.append(f"{type(exc).__name__}: {exc}")
     db.flush()
+    # V16-003 §11：过期 Secret Handle 清理（幂等；失败不影响对账结论）。
+    try:
+        from app.aiqe.services.secret_vault import purge_expired_handles
+
+        stats.secrets_purged = purge_expired_handles(db)
+    except Exception:
+        stats.secrets_purged = 0
     return stats
 
 _thread: threading.Thread | None = None

@@ -68,13 +68,27 @@ class SecretLeakError(ValueError):
     """检测到疑似 secret 明文，调用方必须阻断持久化/外发。"""
 
 
+#: V16-003：合法的 Secret Handle 引用结构（不含明文），脱敏与断言必须放行。
+HANDLE_ID_KEY = "secret_handle_id"
+HANDLE_REF_KEY = "secret_ref"
+
+
+def is_secret_handle_reference(value: Any) -> bool:
+    if not isinstance(value, Mapping):
+        return False
+    handle_id = value.get(HANDLE_ID_KEY)
+    if not isinstance(handle_id, str) or not handle_id:
+        return False
+    ref = str(value.get(HANDLE_REF_KEY) or "")
+    return ref.startswith("vault://") or ref.startswith("secret://")
+
+
 def normalize_key(key: Any) -> str:
     return str(key if key is not None else "").strip()
 
 
 class SensitiveDataClassifier:
     """字段名 + 值模式双重判定；不依赖外部配置。"""
-
     def is_sensitive_key(self, key: Any) -> bool:
         text = normalize_key(key)
         if not text:
@@ -111,6 +125,9 @@ class Redactor:
     def redact(self, value: Any, *, key: Any = None, depth: int = 0) -> Any:
         if depth > MAX_DEPTH:
             return REDACTED
+        if is_secret_handle_reference(value):
+            # Handle 引用是脱敏后的安全表示，绝不能把 id/ref 替换成 ***（否则下游无法解析）。
+            return dict(value)
         if key is not None and self.classifier.is_sensitive_key(key):
             # 字段名命中即整值替换（含嵌套对象），空值保持空值便于断言「存在性」。
             return REDACTED if value not in (None, "") else value
@@ -169,6 +186,8 @@ class Redactor:
         if depth > MAX_DEPTH:
             return []
         if isinstance(value, Mapping):
+            if is_secret_handle_reference(value):
+                return []
             leaks: list[str] = []
             for item_key, item_value in _safe_items(value):
                 if self.classifier.is_sensitive_key(item_key) and item_value not in (

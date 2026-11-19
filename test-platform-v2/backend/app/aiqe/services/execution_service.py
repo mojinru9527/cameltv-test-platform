@@ -22,6 +22,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
 from app.aiqe.models.run import NodeRun, StepAttempt, TestRun
+from app.aiqe.redaction import SecretLeakError
 from app.aiqe.schemas.contracts import DriverResult, EvidenceFile
 from app.aiqe.security import PolicyDecision, TargetPolicy, resolve_execution_policy
 from app.aiqe.services import assertion_service, dag_scheduler, evidence_redactor
@@ -32,6 +33,13 @@ from app.aiqe.services.run_context import (
     EnvSecretProvider,
     RunContext,
     VariableResolutionError,
+)
+from app.aiqe.services.secret_vault import (
+    SecretHandleError,
+    SecretVault,
+    SecretVaultUnavailable,
+    get_secret_vault,
+    revoke_run_handles,
 )
 from app.core.config import settings
 
@@ -103,13 +111,33 @@ def prepare_node(
     *,
     secret_provider: Any = None,
 ) -> str | None:
-    """解析节点输入并持久化脱敏快照；返回错误码（None 表示成功）。"""
+    """解析节点输入并持久化脱敏快照；返回错误码（None 表示成功）。
+
+    V16-003：必须使用带 SecretVault 的 RunContext，否则下游 Handle 引用无法解析。
+    """
+    try:
+        vault = get_secret_vault()
+    except SecretVaultUnavailable:
+        node.status = "BLOCKED"
+        node.error_class = "SECRET_VAULT_UNAVAILABLE"
+        _event(
+            db,
+            run.id,
+            "security.secret_vault_unavailable",
+            {"code": "SECRET_VAULT_UNAVAILABLE"},
+            node=node,
+            producer="system",
+            producer_event_id=f"secret-vault-unavailable:{node.id}",
+        )
+        return "SECRET_VAULT_UNAVAILABLE"
     ctx = RunContext(
         db,
         run.id,
         graph=graph,
         secrets=_secret_provider(run, secret_provider),
         fixtures=(run.environment_snapshot_json or {}).get("fixtures") or {},
+        vault=vault,
+        project_id=run.project_id,
     )
     try:
         resolved = ctx.resolve_node_input(node.node_key, node.input_ref or {})
@@ -286,7 +314,16 @@ def _upload_binary_artifact(
         mime_type=file.mime_type,
         node_run_id=node.id,
         step_attempt_id=attempt.id,
-        metadata={"redacted": True, "source": "driver", "name": file.name, **(file.metadata or {})},
+        metadata={
+            "redacted": True,
+            "source": "driver",
+            "name": file.name,
+            **(
+                evidence_redactor.redact(dict(file.metadata or {}), known_secrets=known_secrets)
+                if isinstance(file.metadata, Mapping)
+                else {}
+            ),
+        },
         redaction_status="sanitized",
     )
     return row.id
@@ -394,10 +431,15 @@ def finalize_node(
     graph: Mapping[str, Any],
     execution: NodeExecution,
     attempt: StepAttempt | None,
+    ctx: RunContext,
     known_secrets: Iterable[str] = (),
     artifact_ids: list[str] | None = None,
 ) -> dict[str, Any]:
-    """断言 → outputs → evidence → 状态收口（in-process / external 共用）。"""
+    """断言 → outputs → evidence → 状态收口（in-process / external 共用）。
+
+    V16-003：``ctx`` 必须是由 ExecutionContext 注入的统一 RunContext
+    （携带 SecretVault + Handle resolver），禁止在此重建普通 RunContext。
+    """
     if attempt is None:
         attempt = _latest_attempt(db, node)
     if attempt is None:
@@ -456,10 +498,23 @@ def finalize_node(
     output_error = ""
     outputs_spec = dict(node.outputs_spec_json or {})
     if outputs_spec:
-        ctx = RunContext(db, run.id, graph=graph)
         try:
             outputs = ctx.capture_node_outputs(
                 node, result, outputs_spec, node.output_schema_json
+            )
+        except (SecretLeakError, SecretHandleError, SecretVaultUnavailable) as exc:
+            # V16-003：Vault/分类失败必须 fail closed，不允许退回明文落库。
+            output_error = "SECRET_PERSISTENCE_BLOCKED"
+            node.error_class = output_error
+            _event(
+                db,
+                run.id,
+                "security.secret_persistence_blocked",
+                {"code": output_error, "error_type": type(exc).__name__},
+                node=node,
+                attempt=attempt,
+                producer="system",
+                producer_event_id=f"secret-persistence-blocked:{attempt.id}",
             )
         except VariableResolutionError as exc:
             output_error = exc.code
@@ -475,12 +530,23 @@ def finalize_node(
             )
     elif node.output_schema_json:
         # 没有 outputs 映射但声明了 schema 时，以 data 作为输出整体校验。
-        ctx = RunContext(db, run.id, graph=graph)
         try:
-            ctx.capture_node_outputs(
+            outputs = ctx.capture_node_outputs(
                 node, result, {"data": "$.data"}, node.output_schema_json
             )
-            outputs = {"data": result.data.get("data")}
+        except (SecretLeakError, SecretHandleError, SecretVaultUnavailable) as exc:
+            output_error = "SECRET_PERSISTENCE_BLOCKED"
+            node.error_class = output_error
+            _event(
+                db,
+                run.id,
+                "security.secret_persistence_blocked",
+                {"code": output_error, "error_type": type(exc).__name__},
+                node=node,
+                attempt=attempt,
+                producer="system",
+                producer_event_id=f"secret-persistence-blocked:{attempt.id}",
+            )
         except VariableResolutionError as exc:
             output_error = exc.code
             node.error_class = exc.code
@@ -547,7 +613,8 @@ def finalize_node(
     )
     attempt.status = node_status
     attempt.finished_at = attempt.finished_at or _now()
-    attempt.output_summary_json = dict(outputs or {})
+    # V16-003：attempt 摘要同样只写脱敏值（Handle 引用原样保留，明文一律 ***）。
+    attempt.output_summary_json = dict(evidence_redactor.redact(dict(outputs or {})))
     db.flush()
     return {
         "node_key": node.node_key,
@@ -768,12 +835,40 @@ def execute_inprocess_job(db: Session, job_id: int) -> dict[str, Any]:
     )
 
     # 解析输入（含 secret；secret 只在内存中）。
+    try:
+        vault = get_secret_vault()
+    except SecretVaultUnavailable as exc:
+        node.status = "BLOCKED"
+        node.error_class = "SECRET_VAULT_UNAVAILABLE"
+        _event(
+            db,
+            run.id,
+            "security.secret_vault_unavailable",
+            {"code": "SECRET_VAULT_UNAVAILABLE", "error_type": type(exc).__name__},
+            node=node,
+            attempt=attempt,
+            producer="system",
+            producer_event_id=f"secret-vault-unavailable:{node.id}",
+        )
+        job.status = "failed"
+        job.error_message = "SECRET_VAULT_UNAVAILABLE"
+        job.finished_at = _now()
+        db.commit()
+        return {
+            "job_id": job_id,
+            "run_id": run.id,
+            "node": node.node_key,
+            "status": "BLOCKED",
+            "error_class": "SECRET_VAULT_UNAVAILABLE",
+        }
     ctx = RunContext(
         db,
         run.id,
         graph=graph,
         secrets=_secret_provider(run),
         fixtures=(run.environment_snapshot_json or {}).get("fixtures") or {},
+        vault=vault,
+        project_id=run.project_id,
     )
     try:
         resolved = ctx.resolve_node_input(node.node_key, node.input_ref or {})
@@ -817,44 +912,74 @@ def execute_inprocess_job(db: Session, job_id: int) -> dict[str, Any]:
         db=db,
     )
     known_secrets = list(ctx.last_secret_values)
-    artifact_ids = persist_execution_evidence(
-        db,
-        run=run,
-        node=node,
-        attempt=attempt,  # type: ignore[arg-type]
-        execution=execution,
-        known_secrets=known_secrets,
-    ) if attempt is not None else []
-    summary = finalize_node(
-        db,
-        run=run,
-        node=node,
-        graph=graph,
-        execution=execution,
-        attempt=attempt,
-        known_secrets=known_secrets,
-        artifact_ids=artifact_ids,
-    )
-    job.status = "success" if summary["status"] == "PASSED" else "failed"
-    safe_result = evidence_redactor.redact(
-        {
-            "detail": execution.detail,
-            "data": execution.data,
-            "summary": summary,
-        },
-        known_secrets=list(known_secrets),
-    )
-    job.result_json = json.dumps(
-        safe_result,
-        ensure_ascii=False,
-        default=str,
-    )[:20000]
-    job.summary = f"{node.node_key}:{summary['status']}"
-    job.error_message = node.error_class or execution.error_class
-    job.finished_at = _now()
-    _advance_run(db, run, graph)
-    db.commit()
-    return {"job_id": job_id, "run_id": run.id, **summary}
+    outputs_spec_for_secrets = dict(node.outputs_spec_json or {})
+    if outputs_spec_for_secrets:
+        # V16-003：Driver 动态返回的 token/cookie 也必须在证据落库前纳入脱敏集合。
+        known_secrets.extend(
+            ctx.preview_secret_values(
+                execution, outputs_spec_for_secrets, node.output_schema_json
+            )
+        )
+        known_secrets = sorted({value for value in known_secrets if value})
+    from app.aiqe.security.log_redaction import register_known_secrets, reset_known_secrets
+
+    log_token = register_known_secrets(known_secrets)
+    try:
+        artifact_ids = persist_execution_evidence(
+            db,
+            run=run,
+            node=node,
+            attempt=attempt,  # type: ignore[arg-type]
+            execution=execution,
+            known_secrets=known_secrets,
+        ) if attempt is not None else []
+        summary = finalize_node(
+            db,
+            run=run,
+            node=node,
+            graph=graph,
+            execution=execution,
+            attempt=attempt,
+            ctx=ctx,
+            known_secrets=known_secrets,
+            artifact_ids=artifact_ids,
+        )
+        job.status = "success" if summary["status"] == "PASSED" else "failed"
+        safe_result = evidence_redactor.redact(
+            {
+                "detail": execution.detail,
+                "data": execution.data,
+                "summary": summary,
+            },
+            known_secrets=list(known_secrets),
+        )
+        job.result_json = json.dumps(
+            safe_result,
+            ensure_ascii=False,
+            default=str,
+        )[:20000]
+        job.summary = f"{node.node_key}:{summary['status']}"
+        job.error_message = node.error_class or execution.error_class
+        job.finished_at = _now()
+        _advance_run(db, run, graph)
+        _cleanup_terminal_run_secrets(db, run, vault=vault)
+        db.commit()
+        return {"job_id": job_id, "run_id": run.id, **summary}
+    finally:
+        reset_known_secrets(log_token)
+
+
+def _cleanup_terminal_run_secrets(
+    db: Session, run: TestRun, *, vault: SecretVault | None = None
+) -> int:
+    """V16-003 §11：Run 终态后撤销临时 Secret Handle 并逐出 Vault 明文。"""
+    if str(run.status or "") not in {"COMPLETED", "BLOCKED", "CANCELED", "ERROR"}:
+        return 0
+    try:
+        return revoke_run_handles(db, run.id, vault=vault)
+    except Exception:  # 清理失败不得吞掉执行结论，但必须留痕
+        logger.exception("revoke run secrets failed: %s", run.id)
+        return 0
 
 
 def policy_gate_for_external_runner(db: Session, job_id: int) -> dict[str, Any]:
@@ -977,6 +1102,42 @@ def complete_from_external_report(
         evidence=[],
     )
     known_secrets: list[str] = []
+    try:
+        vault = get_secret_vault()
+    except SecretVaultUnavailable:
+        node.status = "BLOCKED"
+        node.error_class = "SECRET_VAULT_UNAVAILABLE"
+        _event(
+            db,
+            run.id,
+            "security.secret_vault_unavailable",
+            {"code": "SECRET_VAULT_UNAVAILABLE"},
+            node=node,
+            attempt=attempt,
+            producer="system",
+            producer_event_id=f"secret-vault-unavailable:{node.id}",
+        )
+        job.status = "failed"
+        job.error_message = "SECRET_VAULT_UNAVAILABLE"
+        job.finished_at = _now()
+        db.commit()
+        return {
+            "job_id": job_id,
+            "run_id": run.id,
+            "node": node.node_key,
+            "node_status": "BLOCKED",
+            "status": "BLOCKED",
+            "error_class": "SECRET_VAULT_UNAVAILABLE",
+        }
+    ctx = RunContext(
+        db,
+        run.id,
+        graph=graph,
+        secrets=_secret_provider(run),
+        fixtures=(run.environment_snapshot_json or {}).get("fixtures") or {},
+        vault=vault,
+        project_id=run.project_id,
+    )
     artifact_ids = persist_execution_evidence(
         db,
         run=run,
@@ -992,6 +1153,7 @@ def complete_from_external_report(
         graph=graph,
         execution=execution,
         attempt=attempt,
+        ctx=ctx,
         known_secrets=known_secrets,
         artifact_ids=artifact_ids,
     )
@@ -1010,6 +1172,7 @@ def complete_from_external_report(
         producer_event_id=f"node-reported:{job_id}:{status}",
     )
     _advance_run(db, run, graph)
+    _cleanup_terminal_run_secrets(db, run, vault=vault)
     db.commit()
     return {"job_id": job_id, "run_id": run.id, **summary}
 

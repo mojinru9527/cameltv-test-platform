@@ -3,7 +3,7 @@ release: aiqe-v1.6
 baseline:
   main_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
   audit_snapshot_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
-  migration_head: 20261119_v16_001_policy_status
+  migration_head: 20261119_v16_003_secret_audit
   branch: release/aiqe-v1-6
   audit_reports:
     - docs/aiqe/v1.6/_audit/baseline-audit-G1-G3.txt
@@ -283,37 +283,139 @@ requirements:
     reviewer: pending
     gaps: []
 
-  # ── V16-003 Secret Handle（P0，基线 PARTIAL）────────────────
+  # ── V16-003 Secret Handle（P0）──────────────────────────────
   - id: V16-003-R1
     issue: V16-003
     priority: P0
-    title: "Secret Handle 全链路（输出分类/Vault/解析/遮蔽）"
-    requirement: "Driver 输出的 SECRET 必须经分类器写入 Vault 并以 Handle 替换；正式 Worker 下游可在授权 scope 内解析；DB/AR/API/Event/Artifact/日志 0 明文。"
-    invariant: "任何持久化列与 API 响应不得出现原始 secret；Vault 不可用时 fail closed。"
-    status: PARTIAL
+    title: "输出分类与 Secret Handle 化（唯一安全写入入口）"
+    requirement: "RunContext.capture_node_outputs 必须依据 schema 标记/字段名/值模式把 SECRET 输出写入 Vault 并以 opaque Handle 替换；下游节点只能在 consumer scope 内经 resolver 解析。"
+    invariant: "敏感输出不得以明文出现在 outputs_json/output_ref；未授权 consumer/跨 Run/跨 Project 解析一律拒绝。"
+    status: VERIFIED
     code:
+      - path: test-platform-v2/backend/app/aiqe/security/output_sanitizer.py
+        symbol: "OutputSanitizer.capture / classify_value"
+        change: added
       - path: test-platform-v2/backend/app/aiqe/services/run_context.py
-        symbol: "capture_node_outputs / set_output_secure"
-        change: unchanged
+        symbol: "capture_node_outputs / _default_handle_resolver"
+        change: modified
       - path: test-platform-v2/backend/app/aiqe/services/secret_vault.py
-        symbol: "SecretVault / resolve_secret_handle"
-        change: unchanged
-      - path: test-platform-v2/backend/app/api/v1/aiqe_runs.py
-        symbol: "run detail / nodes / attempts"
-        change: unchanged
+        symbol: "create_secret_handle / resolve_secret_handle"
+        change: modified
     production_entry:
-      - "job_consumer.run_job -> execution_service.execute_inprocess_job -> RunContext.capture_node_outputs"
-    tests: {}
-    mock_boundary: ""
-    layers: [L1, L2]
+      - "job_consumer.run_job -> execution_service.execute_inprocess_job -> finalize_node -> RunContext.capture_node_outputs"
+      - "POST /api/v1/execution-jobs/{id}/report -> complete_from_external_report -> finalize_node"
+    tests:
+      success:
+        - tests/test_aiqe_v16_003_secret_handle_chain.py::test_worker_secret_chain_persists_handles_and_zero_plaintext
+      negative:
+        - tests/test_aiqe_v16_003_secret_handle_chain.py::test_handle_resolution_scope_denials
+        - tests/test_aiqe_v16_003_secret_handle_chain.py::test_sensitive_non_string_value_is_redacted_not_handled
+      boundary:
+        - tests/test_aiqe_v16_003_secret_handle_chain.py::test_run_detail_api_masks_secret_handles
+    mock_boundary: "真实 HTTP 目标服务器（记录真实收到的 Authorization/API token/Cookie）；真实 SQLite + 真实 Worker 入口；未 Mock 策略/Secret 链路。"
+    layers: [L1, L2, L3]
     evidence:
-      - "ci:baseline-audit-G1-G3"
+      - "pytest:tests/test_aiqe_v16_003_secret_handle_chain.py (6 passed)"
     owner: backend-security
     reviewer: pending
+    gaps: []
+
+  - id: V16-003-R2
+    issue: V16-003
+    priority: P0
+    title: "持久化/API/日志/Artifact 零明文（Canary 扫描）"
+    requirement: "数据库所有 JSON/TEXT 列、Run Detail API、RunEvent、StepAttempt、Artifact 与日志中，JWT/随机 API token/Cookie 三类 Canary 明文命中数必须为 0。"
+    invariant: "任何持久化边界都先经过 unified sanitizer；命中疑似 secret 时中止写入并产生不含内容的安全事件。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/execution_service.py
+        symbol: "persist_execution_evidence / finalize_node / known_secrets"
+        change: modified
+      - path: test-platform-v2/backend/app/api/v1/aiqe_runs.py
+        symbol: "mask_for_api"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/services/secret_masking.py
+        symbol: "mask_for_api"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/security/log_redaction.py
+        symbol: "install_log_redaction / register_known_secrets"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/redaction.py
+        symbol: "is_secret_handle_reference"
+        change: modified
+    production_entry:
+      - "job_consumer.run_job -> execution_service.execute_inprocess_job"
+      - "GET /api/v1/aiqe/runs/{run_id}/nodes|attempts|events|assertions"
+    tests:
+      success:
+        - tests/test_aiqe_v16_003_secret_handle_chain.py::test_worker_secret_chain_persists_handles_and_zero_plaintext
+      negative:
+        - tests/test_aiqe_v16_003_secret_handle_chain.py::test_run_detail_api_masks_secret_handles
+        - tests/test_aiqe_v16_003_secret_handle_chain.py::test_log_redaction_filter_scrubs_canaries
+    mock_boundary: "真实 HTTP + 真实 DB 全列扫描 + 真实 API 响应 + 真实 Artifact 目录扫描；日志使用真实 logging 管道。"
+    layers: [L2, L3]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_003_secret_handle_chain.py (6 passed)"
+    owner: backend-security
+    reviewer: pending
+    gaps: []
+
+  - id: V16-003-R3
+    issue: V16-003
+    priority: P0
+    title: "Vault 不可用 fail-closed 与生命周期（过期/撤销/轮换）"
+    requirement: "外部 Secret Store 未配置时禁止执行敏感节点；Handle 过期/撤销/轮换可审计；Run 终态清理临时 secret。"
+    invariant: "Vault 不可用时节点 BLOCKED，不得回退明文；撤销后的 Handle 不可解析。"
+    status: VERIFIED
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/secret_vault.py
+        symbol: "get_secret_vault / rotate_secret_handle / revoke_run_handles / purge_expired_handles"
+        change: modified
+      - path: test-platform-v2/backend/app/aiqe/services/reconciler.py
+        symbol: "reconcile -> purge_expired_handles"
+        change: modified
+    production_entry:
+      - "job_consumer.run_job -> get_secret_vault"
+      - "reconciler.reconcile"
+    tests:
+      success:
+        - tests/test_aiqe_v16_003_secret_handle_chain.py::test_worker_secret_chain_persists_handles_and_zero_plaintext
+      negative:
+        - tests/test_aiqe_v16_003_secret_handle_chain.py::test_vault_unavailable_blocks_execution_without_plaintext
+        - tests/test_aiqe_v16_003_secret_handle_chain.py::test_handle_resolution_scope_denials
+    mock_boundary: "真实 settings 切换 + 真实 Worker；Vault 为进程内真实实现（生产 KMS 见 R4）。"
+    layers: [L2, L3]
+    evidence:
+      - "pytest:tests/test_aiqe_v16_003_secret_handle_chain.py (6 passed)"
+    owner: backend-security
+    reviewer: pending
+    gaps: []
+
+  - id: V16-003-R4
+    issue: V16-003
+    priority: P0
+    title: "生产 KMS/外部 Secret Manager 与跨进程解析"
+    requirement: "生产 Vault 必须支持 KMS/envelope encryption 或云 Secret Manager，支持跨进程解析与密钥轮换审计。"
+    invariant: "不得以进程内 dict 作为生产凭据存储；不允许在没有 KMS 时宣称生产就绪。"
+    status: BLOCKED
+    blocked_reason: "未接入云 KMS/Secret Manager；当前仅进程内 Vault（测试/开发），跨进程解析与密钥轮换无法验证。"
+    review_by: "2026-12-31"
+    code:
+      - path: test-platform-v2/backend/app/aiqe/services/secret_vault.py
+        symbol: "SecretVaultBackend / get_secret_vault"
+        change: modified
+    production_entry:
+      - "生产 Runner/Worker 启动时注入 KMS 后端"
+    tests: {}
+    mock_boundary: ""
+    layers: [L4]
+    evidence:
+      - "manual:V1.6-Rollback-and-Recovery.md#3"
+    owner: devops
+    reviewer: pending
     gaps:
-      - "正式 Worker 的 capture_node_outputs 直接写 outputs_json 明文；无分类器/Vault/assert_no_secret。"
-      - "finalize_node 重建无 resolver 的 RunContext；下游 Handle 引用在 Worker 内必 BLOCKED。"
-      - "Run Detail API 原样返回 outputs_json/output_summary_json；无 KMS/外部 Secret Manager 实现。"
+      - "外部 Secret Store 未实现（use_external_secret_store=True 时 fail closed）。"
+      - "跨进程解析/密钥轮换/访问审计未在真实 KMS 环境验证。"
 
   # ── V16-004 Query Registry（P0，基线 PARTIAL）───────────────
   - id: V16-004-R1

@@ -96,6 +96,11 @@ class RequestSizeLimitMiddleware:
 async def lifespan(application: FastAPI):
     import app.models  # noqa: F401
 
+    # V16-003 §10：所有日志（含异常堆栈）在格式化前统一脱敏。
+    from app.aiqe.security.log_redaction import install_log_redaction
+
+    install_log_redaction()
+
     # ── security validation (fail early in production) ──
     security_issues = settings.validate_security()
     if security_issues:
