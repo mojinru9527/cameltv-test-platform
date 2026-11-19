@@ -103,6 +103,17 @@ Reconciler、FIX-005 preflight、PR #595 迁移）。合并策略：
 - 前端 `/aiqe/benchmarks` 增加“运行 LLM Benchmark”，结果展示 `REFERENCE_ONLY / PASS_GATE /
   BELOW_THRESHOLD` 与指标。
 
+### 4.8.1 真实 LLM 执行（2026-11-19）
+
+- 在本地现有环境 project 1 配置 DeepSeek OpenAI-compatible Provider
+  （`https://api.deepseek.com/v1`，模型 `deepseek-flash`，key 加密入库、不落日志）；
+- 构造 30 样本数据集（`UI_OVERLAY|NETWORK` label space），冻结后 gate_eligible=true；
+- `POST /benchmarks/datasets/{id}/runs` 真实逐样本调用 LLM：BenchmarkRun `08eed69e-6944-47c4-a491-e44d193c441f`，
+  `COMPLETED / PASS_GATE`，Precision=Recall=F1=**1.0**，Unknown rate 0，token 5475/3036；
+- 证据：[benchmark-llm-live.md](evidence/benchmark-llm-live.md)、
+  [benchmark-llm-live.json](evidence/benchmark-llm-live.json)；
+- 注：API 实际模型 id 为 `deepseek-flash` / `deepseek-v4-pro`（同一 Provider 均可用，默认 flash）。
+
 ## 5. 平台面收口
 
 - **REST**：`/api/v1/aiqe` 新增 capabilities 路由（contracts/cases/experiments/observations/triage/benchmarks/impact/platforms/agent-tasks/regressions sync），统一 project scope + RBAC + 禁止自报事实。
