@@ -353,6 +353,39 @@ def persist_execution_evidence(
     return artifact_ids
 
 
+def _emit_security_denials(
+    db: Session,
+    *,
+    run: TestRun,
+    node: NodeRun,
+    attempt: StepAttempt | None,
+    execution: NodeExecution,
+) -> None:
+    """V16-002：把浏览器请求链拦截写入 RunEvent（不含敏感 header/query）。"""
+    raw = (execution.detail or {}).get("security_denials") or (
+        execution.data or {}
+    ).get("security_denials")
+    if not isinstance(raw, list) or not raw:
+        return
+    safe = evidence_redactor.redact(list(raw)[:20], known_secrets=[])
+    _event(
+        db,
+        run.id,
+        "security.ssrf_blocked",
+        {
+            "count": len(raw),
+            "truncated": len(raw) > 20,
+            "denials": safe,
+            "node_key": node.node_key,
+            "driver": node.driver_key,
+        },
+        node=node,
+        attempt=attempt,
+        producer="system",
+        producer_event_id=f"ssrf-blocked:{node.id}:{attempt.id if attempt else 'no-attempt'}",
+    )
+
+
 def finalize_node(
     db: Session,
     *,
@@ -491,6 +524,9 @@ def finalize_node(
         dict(graph),
         error_class=(node.error_class or execution.error_class or None),
         outputs=outputs,
+    )
+    _emit_security_denials(
+        db, run=run, node=node, attempt=attempt, execution=execution
     )
     _event(
         db,

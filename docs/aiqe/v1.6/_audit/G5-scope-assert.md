@@ -36,14 +36,15 @@
 
 ## 0.2 基线与工作树漂移（复核前提）
 
-1. `git -C <worktree> rev-parse HEAD` = `86a44b2cb…`（= `origin/main`）。
+1. 审计起点 `git -C <worktree> rev-parse HEAD` = `86a44b2cb…`（= `origin/main`）；审计期间并发提交 `09140401f`（仅 V16-001 相关 + 各审计报告文件），见第 2 条。
 2. 审计开始时工作树有 17 个 `M` 文件（V16-001 在途改动）；审计期间又新增：
    - `test-platform-v2/backend/app/aiqe/services/run_launch.py` 被并发修改（新增 `WORKFLOW_NEEDS_POLICY_REVIEW` 抛错，+6 行，位于原 L122 之后）；
    - 新增未跟踪文件 `alembic/versions/20261119_v16_001_policy_status.py`、`scripts/aiqe/migrate_workflow_target_policy.py`、`tests/test_aiqe_v16_001_policy_fail_closed.py`。
+   - 19:12 左右这批在途改动被并发提交为 **`09140401f`（feat(aiqe-v16): V16-001 删除 HTTP/DB fail-open…）**；`git diff --name-only 86a44b2cb 09140401f` 显示，本报告引用的核心文件中**只有 `run_launch.py` 变化**，其余行号在 `86a44b2cb` 与 `09140401f` 之间完全一致。
 3. **本报告引用的核心文件均未被在途改动触及**（`git status --porcelain -- <files>` 为空，唯一例外 `run_launch.py`）：
    `regression_service.py`、`regression_terminal.py`、`workflow_validator.py`、`result_writer.py`、`dag_scheduler.py`、`quality_gate.py`、`quality_gate_service.py`、`assertion_service.py`、`assertions/engine.py`、`reconciler.py`、`api/v1/aiqe_regressions.py`、`api/v1/aiqe_automation.py`、`api/v1/defect.py`、`models/defect.py`、`models/deployment.py`。
 4. `run_launch.py` 行号以 **19:2x 当前工作树**为准（`validate_workflow` L138、`preflight_graph` L204、`TestRun(...)` L212、`apply_transition(QUEUED)` L258、`enqueue_node_run` L266、`dag_scheduler.schedule` L284、`apply_transition(RUNNING)` L292）；其余文件行号与 HEAD 一致。
-5. alembic 当前为**单头**：`20261119_v16_001_policy_status`（在途文件）；`defect_regressions` / `aiqe_deployment_attestations` / `run_comparison_snapshots` 由 `alembic/versions/20261124_aud009_regression_hardening.py` 建立，迁移本身可重复执行（`upgrade()` 先 inspect 再 add/drop，L43–L123），SQLite 下 downgrade 为空操作（L127–L129）。
+5. 按 `alembic/versions/*.py` 的 `revision/down_revision` 解析，当前为**单头** `20261119_v16_001_policy_status`（该文件已随 `09140401f` 提交；未执行 `alembic heads` 实测）；`defect_regressions` / `aiqe_deployment_attestations` / `run_comparison_snapshots` 由 `alembic/versions/20261124_aud009_regression_hardening.py` 建立，迁移本身可重复执行（`upgrade()` 先 inspect 再 add/drop，L43–L123），SQLite 下 downgrade 为空操作（L127–L129）。
 
 ---
 
@@ -55,7 +56,7 @@
 |---|---|---|---|
 | 1 | Mandatory Scope 由服务端根据 Defect、修复 commit、Impact Analysis、历史缺陷映射、风险策略计算 | **PARTIAL** | `build_mandatory_scope()` 存在并被调用（`regression_service.py:157-179`、`:263-266`），但输入只有 **source Run 的失败节点/断言** + `selected_case_ids` 中 `P0` 前缀；不读 Defect 严重度、不读 A5 `impact_service`、无历史缺陷映射、无风险策略 |
 | 2 | Scope 记录 `scope_id`、规则版本、输入证据 refs、必测 Case/Node、原因、审批人、checksum | **PARTIAL** | 有 `scope`/`scope_hash`/`mandatory_case_ids_json`/`selected_case_ids_json`/`excluded_json`（含 reason）/`reason`（`models/defect.py:134-139`，迁移 `20261124_aud009_regression_hardening.py:24-29`）；**无 `scope_id`、无规则版本、无输入证据 refs、无审批人**（全仓 `scope_id` 0 命中） |
-| 3 | Regression Launch 必须接收 scope snapshot；Cloner 只允许排除非 mandatory 节点 | **MISSING** | 不存在统一 Launch（回归直接 `TestRun(status="QUEUED")`，`regression_service.py:344-376`）；不存在 `SnapshotCloner`（全仓 0 命中）；克隆由 `_replicate_nodes()` 临时实现（`:204-227`），既不接收 mandatory/excluded，也不存在“排除”逻辑 |
+| 3 | Regression Launch 必须接收 scope snapshot；Cloner 只允许排除非 mandatory 节点 | **MISSING** | 回归链路**未接入**唯一 Launch 服务 `run_launch.launch_run()`，而是直接 `TestRun(status="QUEUED")`（`regression_service.py:344-376`）；不存在 `SnapshotCloner`（全仓 0 命中）；克隆由 `_replicate_nodes()` 临时实现（`:204-227`），既不接收 mandatory/excluded 参数，也不存在“排除”逻辑 |
 | 4 | 必测节点无法执行时必须 BLOCKED，不能缩小范围后 PASS | **MISSING** | 终态聚合与门禁都不读 `mandatory_*`；无 `MANDATORY_*` 错误码（全仓 0 命中）；`aggregate_regression_status()`（`regression_terminal.py:74-118`）只看 assertion 状态与 `run.outcome` |
 | 5 | 支持 `MANDATORY + RELATED + SMOKE` 三类集合，分别报告；门禁要求 Mandatory 全部完成且断言通过 | **MISSING** | `SCOPES` 只有 `DIRECT_FAILURES / DIRECT_FAILURES_PLUS_P0 / DIRECT_FAILURES_PLUS_P0_PLUS_IMPACT / SELECTED`（`regression_service.py:38-45`）；无三集合模型、无分类上报；Quality Gate 完全不读 mandatory（`quality_gate_service.py` 全文） |
 | 6 | 修复版本绑定 40 位 SHA、构建产物 digest、部署环境 ID、部署证明、workflow snapshot hash；禁止 SHA 前缀 | **PARTIAL** | 40 位 SHA 强校验 IMPLEMENTED（`regression_service.py:36,58-62`）；部署证明来自 `aiqe_deployment_attestations` 且只读（`:97-108`、`:269-288`）；**digest / evidence_ref 未绑定到回归记录**（`DefectRegression` 无 image_digest/attestation_id 列）；`workflow_checksum` 只存 WorkflowDefinition checksum（`:182-201`），未绑定任何 snapshot hash；**旧 API 仍接受 7 位 SHA**（见 G8-8） |
@@ -173,14 +174,14 @@ rg -n "build_mandatory_scope" "$B\tests"
 | 规格项（L519–L547） | 状态 | 关键证据 |
 |---|---|---|
 | **节点类别** BUSINESS / SETUP / CLEANUP / OBSERVE；BUSINESS 缺断言在 Validate/Preflight 拒绝 | **MISSING** | 不存在节点类别模型；只有 `node.get("type") == "cleanup"` 特例（`workflow_validator.py:66-68`、`dag_scheduler.py:156`）；`validate_workflow()` 不断言“业务节点至少一条断言”（`:169-184` 只查 `expected` 是否存在）；`preflight.py` 只查 driver/capability/secret/env，不查断言 |
-| **断言结构**（assertion_id/kind/subject/operator/expected/actual_source/severity/required/timeout_ms/evidence_required/version） | **PARTIAL** | `AssertionSpec`（`schemas/contracts.py:67-100`）有 `assertion_key/oracle_layer/oracle_ref/type/operator/expected/expected_ref/actual_source/path/selector/schema/timeout_ms/severity/message`；**无 `assertion_id` / `kind` / `subject` / `required` / `evidence_required`**（`required` 只能落 `model_extra` 且无人读取）；validator 不校验 type/operator/actual_source/timeout；`expected: null` 可通过 validate（只判键存在，`workflow_validator.py:179`） |
+| **断言结构**（assertion_id/kind/subject/operator/expected/actual_source/severity/required/timeout_ms/evidence_required/version） | **PARTIAL** | `AssertionSpec`（`schemas/contracts.py:67-100`）有 `assertion_key/oracle_layer/oracle_ref/type/operator/expected/expected_ref/actual_source/path/selector/schema/timeout_ms/severity/message`；**无 `assertion_id` / `kind` / `subject` / `required` / `evidence_required`**（在 `AssertionSpec` / Worker 链路中 `required` 只能落 `model_extra` 且无人读取；只有 `assertions/engine.py` 直接读原始 dict 的 `required`）；validator 不校验 type/operator/actual_source/timeout；`expected: null` 可通过 validate（只判键存在，`workflow_validator.py:179`） |
 | 不允许空表达式/未知变量/无类型比较/空 expected/静默忽略 evaluator error | **PARTIAL** | 未知变量/悬空引用 IMPLEMENTED（`workflow_validator.py:209-244`）；evaluator 异常 → ERROR IMPLEMENTED（`assertion_service.py:388-391`）；但未知 `operator`/未知 `type` 要到运行期才 ERROR（`assertion_service.py:202,387`）、空 `expected` 不拒绝、`exploratory` 断言在 validate 被放行（`workflow_validator.py:177-178`）并在 Runtime 被**静默丢弃**（`assertion_service.py:127-128`） |
 | **结果规则** PASS/FAIL/BLOCKED/ERROR/UNKNOWN/NOT_EVALUATED 语义 | **PARTIAL** | `assertion_service` 有 PASS/FAIL/ERROR/NOT_EVALUATED/BLOCKED（`:47-53`）；**UNKNOWN 在 Worker 链路永不产生**（仅在 `assertions/engine.py:215` 的非 required 分支）；Run 级 outcome 只有 PASS/FAIL/INCOMPLETE/UNKNOWN（`run_state.py:34`），`dag_scheduler`/`reconciler` 均不产生 `UNKNOWN` |
 | **Run PASSED 条件**：所有 mandatory business 节点 terminal、所有 required assertion PASS、至少一个有效业务 Oracle、无 FAIL/BLOCKED/ERROR/UNKNOWN、required evidence 存在；Setup/Cleanup/Observe 不得使 Run PASS | **MISSING** | `dag_scheduler._finalize()`（`:196-228`）：FAIL 有 → FAIL；BLOCKED 有 → INCOMPLETE；否则 **PASS**；证据只查“已存在但上传未完成”的 Artifact（`:207-214` → `artifact_service.incompleteness_reasons()` `:261-279`）。**无“至少一个业务 Oracle”、无 required 集合、无 mandatory 节点、无 setup/cleanup 排除** |
 | 验收①：空 assertions 的 BUSINESS node 在 Validate 阶段拒绝 | **MISSING** | 同上；`test_aiqe_execution_pipeline.py:249` 甚至把“login 无业务断言允许 PASS”写成契约 |
 | 验收②：Driver 200 但业务 JSON 状态错误 → Assertion FAIL | **IMPLEMENTED** | `assertion_service.py:293-305`（jsonpath → FAIL）；**真实 Worker 入口测试** `test_aiqe_aud007_assertion_engine.py:325-377`（`job_consumer.claim_aiqe_jobs` + `run_job`，真实本地 HTTP stub） |
 | 验收③：Driver 成功但无 Oracle，Run 必须 BLOCKED/ERROR，不得 PASS | **MISSING（fail-open）** | `execution_service.py:466-468`：`elif not declarations: node_status = "PASSED"`；`result_writer.py:136-138`：无断言返回 `(None,None,[])` 让调用方沿用 Driver 结论；`dogfood.py:493` 同样 `mapped_status or result.status` |
-| 验收④：required assertion 未执行 / evidence 缺失 / actual source 不存在 → 不得 PASS | **PARTIAL** | `NOT_EVALUATED` → 节点 ERROR（`assertion_service.py:509`、`assertions/engine.py:270`）✓；但 `required` 语义在真实链路丢失（G9-5）、`evidence_required` 不存在（G9-8）、`actual_source` 只落库不校验（`assertion_service.py:457`） |
+| 验收④：required assertion 未执行 / evidence 缺失 / actual source 不存在 → 不得 PASS | **PARTIAL** | Driver 失败时节点仍 ERROR（`execution_service.py:458-459`），断言记 `NOT_EVALUATED`（`assertion_service.py:502-516`）；`summarize()` 把 `NOT_EVALUATED` 归为 `BLOCKED`（`assertion_service.py:406-418`）；另一引擎把 `NOT_EVALUATED` 映射 `ERROR`（`assertions/engine.py:270`，仅 dogfood 路径）。但 `required` 语义在真实链路丢失（G9-5）、`evidence_required` 不存在（G9-8）、`actual_source` 只落库不校验（`assertion_service.py:457`） |
 | 验收⑤：Quality Gate 与 Run Outcome 使用同一 required assertion 集合与证据规则 | **MISSING** | Gate 只统计 `severity == "P0"`（`quality_gate_service.py:136-147`），不读 `required`、不校验证据、不校验 Run 终态（`_runs_for_scope` `:57-80`）；与 Run Outcome 的聚合口径不同（G9-7） |
 
 ## 2.2 代码证据（可复核）
@@ -392,7 +393,7 @@ rg -n "handle_run_terminal|consume_terminal_events|build_comparison_snapshot" "$
 2. **对比结论可先于执行产生**：回归 Run 无 Job（V16-008 G8-4）→ 永远 QUEUED → `GET /comparison` 立刻写 `UNKNOWN` 并 `completed_at`（V16-020 G20-1）→ 后续任何真实执行结果都无法写回。因此 “Regression Outcome” 在真实部署下**不可信**。
 3. **Quality Gate 不能被用于反向兜底**：Gate 只统计 `severity=P0` 且不校验 `required`/证据/Run 终态（quality_gate_service.py:57-80,132-175），因此无法发现“Run PASS 但无 Oracle”的假 PASS；这与 Gate C L1153–L1155 直接冲突。
 4. **证据形态被旧/伪 E2E 固化**：`tc_aiqe_unblocked_verify.py:146-147` 与 `test_aiqe_defect_regression.py:17-29` 把“7 位 SHA / QUEUED 即成功 / 立即 passed”写成期望；`test_aiqe_execution_pipeline.py:249` 把“无断言 PASS”写成注释。整改这些 Issue 必然触发上述测试变红，属于**必须同步修改的契约**，不能作为“回归失败”处理。
-5. **文档/追踪缺口**：规格无 V16-020 章节；仓库内 `docs/aiqe/v1.6/` 只有一份 `_audit/baseline-audit-G1-G3.txt`，不存在 `V1.6-Requirement-Code-Test-Evidence-Matrix.md` / `traceability/requirements.yaml` / `aiqe-v16-gates.yml`（V16-025 交付物），因此本报告提到的三条 Issue 目前**没有追踪矩阵映射**，按 V16-025 口径无法进入 `VERIFIED/ACCEPTED`。
+5. **文档/追踪缺口**：规格无 V16-020 章节；审计时 `docs/aiqe/v1.6/` 下只有 `_audit/` 审计输出（`baseline-audit-G1-G3.txt` 及并行的 G2/G5/G8 报告），**不存在** `V1.6-Requirement-Code-Test-Evidence-Matrix.md` / `traceability/requirements.yaml` / `.github/workflows/aiqe-v16-gates.yml`（V16-025 交付物），因此本报告三条 Issue 目前**没有追踪矩阵映射**，按 V16-025 口径无法进入 `VERIFIED/ACCEPTED`。
 
 ---
 
@@ -400,7 +401,7 @@ rg -n "handle_run_terminal|consume_terminal_events|build_comparison_snapshot" "$
 
 1. **未执行测试**：本次为只读审计，未运行 pytest/alembic（避免在工作树写 DB/缓存）。所有“测试是否会红/是否会绿”的判断均基于代码阅读，并在 §1.5/§2.5/§3.5 给出可执行命令。
 2. **E2E 未运行**：`tests/e2e/aiqe/*` 需要隔离 Test 环境（`AIQE_E2E_BASE_URL`），本次未触发；本报告只评估其入口与断言质量。
-3. **工作树仍在漂移**：审计期间 `run_launch.py` 与新增迁移被并发写入（§0.2）；若 V16-001 补丁继续扩展 `execution_service.execute_inprocess_job()`，需重新核对本报告 L1 段落（G9-1 位于 `<L573`，当前不受影响）。
+3. **工作树仍在漂移**：审计期间 `run_launch.py` 与新增迁移被并发写入（§0.2）；若 V16-001 补丁继续扩展到 `execution_service.py` 的 `finalize_node()` 区域，需重新核对本报告行号（G9-1 位于当前 L466-468，位于 V16-001 已改区 `L573+` 之前，本次审计时未受影响）。
 4. **前端未审**：本次范围不含前端；对照 API 回显字段（`aiqe_regressions.py:70-91`）未发现前端可绕过服务端强制集合的入口，但“前端是否把 `scope/selected_case_ids` 当作用户可随意收缩的控件”未验证。
 5. **Runner 侧**：外部 Runner 上报路径（`execution_service.complete_from_external_report`）未在本报告展开（属 V16-001/002 范围），但它同样不会让回归 Run 产生 Job，故不影响 G8-4 结论。
 

@@ -171,6 +171,11 @@ class FakeContext:
     def __init__(self, page):
         self.page = page
         self.tracing = FakeTracing()
+        self.route_patterns: list[str] = []
+
+    def route(self, pattern, handler):
+        # V16-002：真实浏览器会安装全请求链拦截；fake 只记录注册顺序。
+        self.route_patterns.append(pattern)
 
     def new_page(self):
         return self.page
