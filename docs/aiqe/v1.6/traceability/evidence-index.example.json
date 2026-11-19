@@ -1,17 +1,17 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "9bc403a294a7394b26c0562f68f182beaf64412a",
+  "commit_sha": "9ab169f597feced2e5d9b1e9e4f43bee92e6998a",
   "ci_run": "",
   "environment": "local",
   "baseline": {
     "main_sha": "86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f",
     "audit_snapshot_sha": "86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f",
-    "migration_head": "20261119_v16_005_job_idempotency"
+    "migration_head": "20261119_v16_006_outbox"
   },
   "summary": {
-    "requirements": 49,
-    "verified": 17,
+    "requirements": 51,
+    "verified": 21,
     "blocked": 2,
     "not_started": 10
   },
@@ -606,43 +606,57 @@
       "id": "V16-006-R1",
       "issue": "V16-006",
       "priority": "P1",
-      "status": "PARTIAL",
+      "status": "VERIFIED",
       "owner": "execution-platform",
       "reviewer": "pending",
       "production_entry": [
-        "POST /aiqe/runs / regression API / experiment API"
+        "launch_run / launch",
+        "triage_service.launch_experiment",
+        "regression_service.create_regression_request"
       ],
       "tests": {
-        "success": [],
-        "negative": [],
-        "boundary": [],
+        "success": [
+          "tests/test_aiqe_v16_006_unified_launch.py::test_launch_result_contains_jobs_nodes_and_snapshot",
+          "tests/test_aiqe_v16_006_unified_launch.py::test_noise_experiment_launch_creates_real_jobs"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_006_unified_launch.py::test_regression_without_source_snapshot_is_blocked"
+        ],
+        "boundary": [
+          "tests/test_aiqe_v16_006_unified_launch.py::test_launch_idempotency_key_returns_same_run_and_no_second_job"
+        ],
         "concurrency": []
       },
       "layers": [
-        "L2"
+        "L1",
+        "L2",
+        "L3"
       ],
       "evidence": [
-        "ci:baseline-audit-G4"
+        "pytest:tests/test_aiqe_v16_006_unified_launch.py (7 passed)"
       ],
       "gaps": [
-        "规格 launch_run 契约字段（workflow_snapshot_id/execution_kind/LaunchResult）全仓缺失。",
-        "triage/regression 仍自行创建 QUEUED Run 且不产生 ExecutionJob。",
-        "Outbox relay 与 QUEUED→RUNNING 时点未实现。"
+        "既有状态机在 schedule 派发时把 Run QUEUED→RUNNING；LaunchResult 返回真实状态（RUNNING），Worker claim 仍幂等，不提前写 PASS/FAIL。"
       ]
     },
     {
-      "id": "V16-007-R1",
-      "issue": "V16-007",
+      "id": "V16-006-R2",
+      "issue": "V16-006",
       "priority": "P1",
-      "status": "PARTIAL",
+      "status": "VERIFIED",
       "owner": "execution-platform",
       "reviewer": "pending",
       "production_entry": [
-        "regression API / triage experiment API"
+        "run_launch.launch -> outbox enqueue",
+        "reconciler.reconcile -> outbox relay"
       ],
       "tests": {
-        "success": [],
-        "negative": [],
+        "success": [
+          "tests/test_aiqe_v16_006_unified_launch.py::test_outbox_written_same_transaction_and_relay_idempotent"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_006_unified_launch.py::test_outbox_relay_failure_retries_then_fails"
+        ],
         "boundary": [],
         "concurrency": []
       },
@@ -651,12 +665,80 @@
         "L2"
       ],
       "evidence": [
-        "ci:baseline-audit-G4"
+        "pytest:tests/test_aiqe_v16_006_unified_launch.py (7 passed)"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "V16-007-R1",
+      "issue": "V16-007",
+      "priority": "P1",
+      "status": "VERIFIED",
+      "owner": "execution-platform",
+      "reviewer": "pending",
+      "production_entry": [
+        "launch_run(workflow_snapshot_id=...)",
+        "ensure_snapshot -> aiqe_workflow_snapshots"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_snapshot_is_content_addressed_and_immutable",
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_launch_binds_immutable_snapshot"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_snapshot_is_project_scoped",
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_launch_with_snapshot_rejects_checksum_mismatch"
+        ],
+        "boundary": [
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_snapshot_hash_detects_tampering",
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_graph_override_is_frozen_into_snapshot"
+        ],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_007_workflow_snapshot.py (10 passed)"
+      ],
+      "gaps": []
+    },
+    {
+      "id": "V16-007-R2",
+      "issue": "V16-007",
+      "priority": "P1",
+      "status": "VERIFIED",
+      "owner": "execution-platform",
+      "reviewer": "pending",
+      "production_entry": [
+        "triage_service.default_run_launcher -> clone_snapshot",
+        "regression_service.create_regression_request -> clone_snapshot"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_clone_graph_preserves_dependencies_edges_assertions_outputs",
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_clone_removing_dependency_rewrites_edges"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_clone_snapshot_creates_child_and_validates"
+        ],
+        "boundary": [
+          "tests/test_aiqe_v16_006_unified_launch.py::test_regression_launch_creates_real_jobs_and_preserves_dag"
+        ],
+        "concurrency": []
+      },
+      "layers": [
+        "L1",
+        "L2"
+      ],
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_007_workflow_snapshot.py (10 passed)",
+        "pytest:tests/test_aiqe_v16_006_unified_launch.py (7 passed)"
       ],
       "gaps": [
-        "无 WorkflowSnapshot 模型/表/迁移与 SnapshotCloner。",
-        "两处克隆手写 graph 且硬编码 depends_on=[] / edges=[]，丢弃 assertions/outputs。",
-        "克隆 Run 的 workflow_checksum 为空。"
+        "旧 Run（无 snapshot）走 LEGACY_RECONSTRUCTED 迁移路径，仅从既有 NodeRun 重建一次快照；新 Run 一律冻结。"
       ]
     },
     {

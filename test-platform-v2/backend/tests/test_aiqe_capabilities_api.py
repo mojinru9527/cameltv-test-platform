@@ -9,6 +9,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.aiqe.models.run import TestRun
+from app.aiqe.services.capability_registry import register_manifest
+from app.aiqe.services.snapshot_service import ensure_snapshot
+from app.aiqe.services.workflow_service import approve_workflow, create_workflow
 from app.models.project import Project, ProjectMember
 from app.models.rbac import Role
 from app.models.user import User
@@ -171,12 +174,51 @@ def test_case_create_review_and_coverage(api: TestClient):
 
 # ── 2. Experiments ─────────────────────────────────────
 def test_experiment_create_launch_sync(api: TestClient, db_session: Session):
+    register_manifest(
+        db_session,
+        node_id="node-http",
+        driver_key="http",
+        capabilities=["aiqe:http"],
+        platforms=["linux"],
+        evidence_ref="evidence://node-http",
+    )
+    workflow = create_workflow(
+        db_session,
+        project_id=1,
+        graph={
+            "schema_version": "1.0",
+            "nodes": [
+                {
+                    "key": "health",
+                    "driver": "http",
+                    "depends_on": [],
+                    "input": {"url": "https://api.test/health", "expected_status": 200},
+                    "assertions": [
+                        {
+                            "assertion_key": "ok",
+                            "oracle_layer": "REQ",
+                            "oracle_ref": "AC-H",
+                            "type": "http_status",
+                            "expected": 200,
+                            "severity": "P0",
+                        }
+                    ],
+                }
+            ],
+            "edges": [],
+        },
+    )
+    approve_workflow(db_session, workflow.id, approved_by=1)
+    db_session.flush()
+    snapshot = ensure_snapshot(db_session, workflow)
     baseline = TestRun(
         project_id=1,
         run_key="RUN-API-EXP",
         status="COMPLETED",
         outcome="FAIL",
         commit_sha="a" * 40,
+        workflow_definition_id=workflow.id,
+        workflow_snapshot_id=snapshot.id,
         environment_snapshot_json={"contract_checksum": "c1"},
     )
     db_session.add(baseline)
@@ -200,11 +242,11 @@ def test_experiment_create_launch_sync(api: TestClient, db_session: Session):
     assert launched.status_code == 200, launched.text
     data = launched.json()["data"]
     assert data["verification_run_id"]
-    assert data["status"] == "QUEUED"
+    assert data["status"] in {"QUEUED", "RUNNING"}
 
     synced = api.post(f"{BASE}/experiments/{experiment['id']}/sync")
     assert synced.status_code == 200
-    assert synced.json()["data"]["status"] in {"QUEUED", "UNKNOWN", "COMPLETED"}
+    assert synced.json()["data"]["status"] in {"QUEUED", "RUNNING", "UNKNOWN", "COMPLETED"}
 
 
 def test_experiment_rejects_wrong_variable(api: TestClient, db_session: Session):

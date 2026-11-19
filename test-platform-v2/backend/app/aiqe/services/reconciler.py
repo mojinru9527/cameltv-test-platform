@@ -128,6 +128,8 @@ class ReconcileReport:
     jobs_failed: int = 0
     runs_completed: int = 0
     secrets_purged: int = 0
+    outbox_published: int = 0
+    outbox_failed: int = 0
 
     def payload(self) -> dict[str, Any]:
         return {
@@ -347,6 +349,16 @@ def reconcile(
         stats.secrets_purged = purge_expired_handles(db)
     except Exception:
         stats.secrets_purged = 0
+    # V16-006：Outbox relay（幂等发布；失败保留 pending 等下一轮）。
+    try:
+        from app.aiqe.services import outbox_service
+
+        relayed = outbox_service.relay(db)
+        stats.outbox_published = int(relayed.get("published") or 0)
+        stats.outbox_failed = int(relayed.get("failed") or 0)
+    except Exception:
+        stats.outbox_published = 0
+        stats.outbox_failed = 0
     return stats
 
 _thread: threading.Thread | None = None
