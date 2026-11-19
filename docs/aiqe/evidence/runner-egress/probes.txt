@@ -1,0 +1,10 @@
+probe=allowed target=https://camel-test5.elelive.cn (192.168.50.170:443)
+http=200 ip=192.168.50.170 seconds=0.353416
+probe=denied target=https://example.com:443
+curl: (28) Connection timed out after 8002 milliseconds
+http=000 ip= seconds=8.002086
+curl_exit=28
+probe=denied target=http://1.1.1.1:80
+curl: (28) Connection timed out after 8002 milliseconds
+http=000 ip= seconds=8.002557
+curl_exit=28

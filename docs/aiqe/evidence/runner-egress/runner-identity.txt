@@ -1,0 +1,7 @@
+captured_at_utc=2026-11-19T04:10:55Z
+distro=Ubuntu(WSL2) host=MJR
+uid=0 user=root
+ipv4=172.17.59.69/20
+default via 172.17.48.1 dev eth0 proto kernel 
+172.17.48.0/20 dev eth0 proto kernel scope link src 172.17.59.69 
+nameserver 10.255.255.254
