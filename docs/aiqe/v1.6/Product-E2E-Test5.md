@@ -115,10 +115,10 @@ python scripts/qa/aiqe_test5_e2e.py --out work-logs/evidence/aiqe-v16/test5
 - **仍为 PARTIAL**：没有 API 创建 match_id、后台配置直播源/发布、Public API 状态查询、Cleanup；DB 是 fixture 而非 test5 DB-RO。
 
 
-## 11. TC-007 UI Runner 强杀（PARTIAL）
+## 11. TC-007 UI Runner 强杀（VERIFIED）
 
 - 本地 AIQE API + Playwright Runner 执行 test5 直播页；
 - 测试侧 kill `chrome-headless-shell` 主进程；
 - Runner 捕获 `TargetClosedError`，上报 `AUTOMATION/WORKER_FAILURE`；
 - Run `82036730`：outcome=FAIL，Node=ERROR/AUTOMATION/WORKER_FAILURE，attempts=1，**未无限 RUNNING**；
-- 仍为 PARTIAL：节点为 OBSERVE 且无业务断言，未单独记录 NOT_EVALUATED。
+- 断言 `page_has_camel` = **NOT_EVALUATED**（业务断言未执行）；结论：**TC-007 VERIFIED**。

@@ -2230,9 +2230,9 @@ requirements:
     issue: TC-AIQE-007
     priority: P1
     title: "UI Runner 自身故障"
-    requirement: "浏览器进程被强制 kill 时，Runner 必须上报 AUTOMATION/WORKER_FAILURE；Node 不得无限 RUNNING，Run 必须有可读错误。"
+    requirement: "浏览器进程被强制 kill 时，Runner 必须上报 AUTOMATION/WORKER_FAILURE；业务断言 NOT_EVALUATED；Node 不得无限 RUNNING，Run 必须有可读错误。"
     invariant: "不得把自动化故障伪造成产品失败或 PASS。"
-    status: PARTIAL
+    status: VERIFIED
     code:
       - path: scripts/qa/aiqe_local_runner.py
         symbol: "Runner 捕获浏览器/驱动异常并上报 AUTOMATION/WORKER_FAILURE"
@@ -2247,11 +2247,10 @@ requirements:
     mock_boundary: "真实 test5 页面 + 本地 Playwright Runner；测试侧强制 kill chrome-headless-shell。"
     layers: [L3, L4]
     evidence:
-      - "manual:browser kill Run 82036730 outcome=FAIL；Node=ERROR/AUTOMATION/WORKER_FAILURE；attempts=1；未无限 RUNNING"
+      - "manual:browser kill Run 1c5e7411 outcome=FAIL；Node=ERROR/AUTOMATION/WORKER_FAILURE；assertion=NOT_EVALUATED；attempts=1"
     owner: qa-automation
     reviewer: pending
-    gaps:
-      - "节点为 OBSERVE 且未配置业务断言，未单独记录 NOT_EVALUATED 断言结果。"
+    gaps: []
 
   - id: TC-AIQE-008
     issue: TC-AIQE-008

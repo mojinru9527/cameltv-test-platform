@@ -2,7 +2,7 @@
 
 > **重要纠正**：此前把 test5 登录/浏览/详情误标为 TC-001、把两节点 DAG 误标为 TC-003。
 > 按 merged spec 的真实 TC 定义，二者仅是 **TC-002 的支撑证据**，不能计为 TC-001/TC-003 PASS。
-> 当前 **3/10 TC 完全 VERIFIED（TC-003/TC-005/TC-006）**；TC-001/002/004/007 PARTIAL，其余 BLOCKED。
+> 当前 **4/10 TC 完全 VERIFIED（TC-003/TC-005/TC-006/TC-007）**；TC-001/002/004 PARTIAL，其余 BLOCKED。
 
 ## 真实 TC 状态（merged spec §TC-AIQE）
 
@@ -36,6 +36,6 @@
 
 ## 结论
 
-- 产品级 TC：**3/10 完全 VERIFIED（TC-003/TC-005/TC-006）**；TC-001/002/004/007 PARTIAL；其余 BLOCKED。
+- 产品级 TC：**4/10 完全 VERIFIED（TC-003/TC-005/TC-006/TC-007）**；TC-001/002/004 PARTIAL；其余 BLOCKED。
 - `V16-017-R2` 仍 BLOCKED；不得宣称 10/10 或 GA。
 - 旧 `test_tc_aiqe_001_010.py` 已删除，不再有 body 断言/整文件 skip 假入口。

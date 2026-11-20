@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "abec29f13d178067292f2fc921bcc80074b32b92",
+  "commit_sha": "b1606be865b2d1d37f537ffd773cd7cda148b7b6",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -11,7 +11,7 @@
   },
   "summary": {
     "requirements": 70,
-    "verified": 57,
+    "verified": 58,
     "blocked": 4,
     "not_started": 0
   },
@@ -2028,7 +2028,7 @@
       ],
       "tests": {
         "success": [
-          "tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready"
+          "tests/test_aiqe_external_node_report.py::test_external_report_completes_node_success"
         ],
         "negative": [
           "tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser"
@@ -2042,10 +2042,12 @@
         "L4"
       ],
       "evidence": [
+        "manual:统一 Run 19525865 outcome=PASS；api_general/browser_live/db_user 三节点均 PASSED；browser 标题已采集",
         "manual:test5 前端 4 步 + 后台 uu 登录/只读/退出 + MySQL 只读断言"
       ],
       "gaps": [
-        "尚未把 API/Playwright/DB 组成同一个 AIQE Run；当前为独立步骤脚本。"
+        "未执行 API 创建 match_id、后台配置直播源/发布、Public API 状态查询、Cleanup；Admin UI 未进入 Run。",
+        "DB 节点使用 SQLite fixture，不是 test5 DB-RO。"
       ]
     },
     {
@@ -2174,32 +2176,30 @@
       "id": "TC-AIQE-007",
       "issue": "TC-AIQE-007",
       "priority": "P1",
-      "status": "PARTIAL",
+      "status": "VERIFIED",
       "owner": "qa-automation",
       "reviewer": "pending",
       "production_entry": [
-        "python scripts/qa/aiqe_test5_e2e.py"
+        "python scripts/qa/aiqe_local_runner.py --once"
       ],
       "tests": {
         "success": [
-          "tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready"
+          "tests/test_aiqe_external_node_report.py::test_external_report_failure_marks_node"
         ],
         "negative": [
-          "tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser"
+          "tests/test_aiqe_external_node_report.py::test_external_report_without_policy_blocks_even_if_runner_claims_success"
         ],
         "boundary": [],
         "concurrency": []
       },
       "layers": [
-        "L2",
-        "L3"
+        "L3",
+        "L4"
       ],
       "evidence": [
-        "manual:test5 前端真实 Chromium 流程（未 kill 浏览器）"
+        "manual:browser kill Run 1c5e7411 outcome=FAIL；Node=ERROR/AUTOMATION/WORKER_FAILURE；assertion=NOT_EVALUATED；attempts=1"
       ],
-      "gaps": [
-        "未在 test5 产品流程强制 kill 浏览器并验证 Runner 故障；平台级有浏览器不可用测试。"
-      ]
+      "gaps": []
     },
     {
       "id": "TC-AIQE-008",
