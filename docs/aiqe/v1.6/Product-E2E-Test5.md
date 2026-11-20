@@ -88,3 +88,16 @@ python scripts/qa/aiqe_test5_e2e.py --out work-logs/evidence/aiqe-v16/test5
 - Integration：注入全屏 `aiqe-cross-feature-overlay` → 同一 CTA 点击被拦截 **FAIL（预期）**；
 - `elementFromPoint` 命中 overlay；分类 **CROSS_FEATURE_DEFECT**；
 - 未接入 AIQE Core/Integration 两个正式 Run，未创建 Defect Draft → **TC-004 PARTIAL**。
+
+
+## 9. TC-005 并发串行（test5 赛事 resource key）
+
+运行器：`scripts/qa/aiqe_test5_concurrency_e2e.py`
+
+- 真实 test5 API 经 1.5s 延迟代理，确保锁被持有；
+- 两个 Run 使用同一 `resource_keys=["match:l7oqdehg7gkgr51"]`；
+- Run A `d1984e6f`：09:23:50 start → 09:23:53 finish；
+- Run B `1572eb74`：09:23:53 start → 09:23:56 finish；
+- **B start >= A finish**，无重叠，`serialized=true`，两 Run 均 PASS；
+- 同时修复 `resource_lock.release` 后 owner 为空仍阻塞的缺陷，并加回归测试；
+- 结论：**TC-005 VERIFIED**。

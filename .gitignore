@@ -126,3 +126,6 @@ test-platform-v2/backend/work-logs/evidence/aiqe-v16/
 
 # TC-004 overlay evidence
 work-logs/evidence/aiqe-v16/test5-overlay/
+
+# TC-005 concurrency evidence
+work-logs/evidence/aiqe-v16/test5-concurrency/

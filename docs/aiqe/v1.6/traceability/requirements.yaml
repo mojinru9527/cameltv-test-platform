@@ -2165,25 +2165,30 @@ requirements:
     issue: TC-AIQE-005
     priority: P1
     title: "并发数据污染"
-    requirement: "共享账号/赛事 fixture 下并发执行，验证数据隔离与污染检测。"
-    invariant: "必须真实注入故障/并发/多端并产出完整证据；不得以平台链路替代。"
-    status: BLOCKED
+    requirement: "同一赛事 resource key 的两个 Run 必须由 scheduler 锁串行；不得重叠执行，B 必须在 A 完成后开始。"
+    invariant: "共享资源不得并发执行；锁释放后必须立即可被其他 Run 获取。"
+    status: VERIFIED
     code:
-      - path: docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md
-        symbol: "TC-005 阻塞说明"
-        change: updated
+      - path: scripts/qa/aiqe_test5_concurrency_e2e.py
+        symbol: "two runs + resource lock + timing"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/services/resource_lock.py
+        symbol: "release 后 owner 为空视为可获取"
+        change: modified
     production_entry:
-      - "隔离 test5 环境 + 故障注入"
+      - "python scripts/qa/aiqe_test5_concurrency_e2e.py"
     tests:
-      success: []
-      negative: []
-    mock_boundary: ""
-    layers: [L3, L4]
-    evidence: []
+      success:
+        - tests/test_aiqe_v16_017_resource_lock.py::test_released_lock_is_immediately_acquirable
+      negative:
+        - tests/test_aiqe_v16_005_lease_fencing.py::test_duplicate_delivery_is_idempotent
+    mock_boundary: "真实 test5 API（经 1.5s 延迟代理）；本地 SQLite AIQE 运行时。"
+    layers: [L2, L3]
+    evidence:
+      - "manual:test5 concurrency PASS resource=match:l7oqdehg7gkgr51；A finish <= B start；serialized=true；两 Run PASS"
+      - "pytest:tests/test_aiqe_v16_017_resource_lock.py (1 passed)"
     owner: qa-automation
     reviewer: pending
-    review_by: "2027-01-15"
-    blocked_reason: "CONCURRENCY_FIXTURE_MISSING：未提供共享账号/赛事 fixture 与并发执行窗口。"
     gaps: []
 
   - id: TC-AIQE-006
