@@ -122,6 +122,9 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install pytest -r requirements-quality.txt
+      - name: Install Chromium for Playwright browser tests
+        working-directory: test-platform-v2/backend
+        run: python -m playwright install --with-deps chromium
       - name: AIQE unit + integration tests
         working-directory: test-platform-v2/backend
         run: |
