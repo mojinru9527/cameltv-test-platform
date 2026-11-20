@@ -2091,21 +2091,26 @@ requirements:
       - path: scripts/qa/aiqe_test5_e2e.py
         symbol: "test5 product E2E"
         change: added
+      - path: test-platform-v2/backend/app/api/v1/execution_jobs.py
+        symbol: "AIQE 外部 Runner 上报先 fenced 收口再落 Job 终态"
+        change: modified
     production_entry:
       - "python scripts/qa/aiqe_test5_e2e.py"
     tests:
       success:
-        - tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready
+        - tests/test_aiqe_external_node_report.py::test_external_report_completes_node_success
       negative:
         - tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser
-    mock_boundary: "真实 test5 前端/后台/MySQL；尚未形成规格要求的单一统一 Run。"
+    mock_boundary: "真实 test5 API/公开页 + 本地 Playwright Runner + SQLite fixture DB；Admin UI 与写流程尚未进入同一 Run。"
     layers: [L2, L3, L4]
     evidence:
+      - "manual:统一 Run 19525865 outcome=PASS；api_general/browser_live/db_user 三节点均 PASSED；browser 标题已采集"
       - "manual:test5 前端 4 步 + 后台 uu 登录/只读/退出 + MySQL 只读断言"
     owner: qa-automation
     reviewer: pending
     gaps:
-      - "尚未把 API/Playwright/DB 组成同一个 AIQE Run；当前为独立步骤脚本。"
+      - "未执行 API 创建 match_id、后台配置直播源/发布、Public API 状态查询、Cleanup；Admin UI 未进入 Run。"
+      - "DB 节点使用 SQLite fixture，不是 test5 DB-RO。"
 
   - id: TC-AIQE-003
     issue: TC-AIQE-003

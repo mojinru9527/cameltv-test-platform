@@ -101,3 +101,15 @@ python scripts/qa/aiqe_test5_e2e.py --out work-logs/evidence/aiqe-v16/test5
 - **B start >= A finish**，无重叠，`serialized=true`，两 Run 均 PASS；
 - 同时修复 `resource_lock.release` 后 owner 为空仍阻塞的缺陷，并加回归测试；
 - 结论：**TC-005 VERIFIED**。
+
+
+## 10. TC-002 统一 Run（PARTIAL）
+
+本地 AIQE API + 本地 Playwright Runner + in-process HTTP/DB worker：
+
+- Run `19525865-fbc0-4710-a425-a9880a59c289`，outcome=PASS；
+- Node `api_general`（HTTP）PASSED；
+- Node `browser_live`（Playwright，test5 直播页）PASSED，标题已采集；
+- Node `db_user`（DB-RO，SQLite fixture）PASSED；
+- 同时修复外部 Runner 上报顺序缺陷：先 fenced 收口，再落 Job 终态；否则 Node 永久 READY；
+- **仍为 PARTIAL**：没有 API 创建 match_id、后台配置直播源/发布、Public API 状态查询、Cleanup；DB 是 fixture 而非 test5 DB-RO。

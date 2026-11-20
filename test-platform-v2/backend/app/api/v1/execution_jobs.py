@@ -8,6 +8,8 @@
 """
 from __future__ import annotations
 
+from typing import cast
+
 from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -15,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
+from app.models.execution_job import ExecutionJob
 from app.schemas.common import R
 from app.services import (
     ai_agent_service,
@@ -187,20 +190,13 @@ def report(
     x_ai_agent_token: str | None = Header(default=None),
     db: Session = Depends(get_db),
 ):
-    _node_scope(body.node_id, x_ai_agent_token, db)
-    job = execution_job_service.report(
-        db,
-        job_id=job_id,
-        node_id=body.node_id,
-        status=body.status,
-        summary=body.summary,
-        result=body.result,
-        evidence_bundle_id=body.evidence_bundle_id,
-        error_message=body.error_message,
-    )
+    scope = _node_scope(body.node_id, x_ai_agent_token, db)
+    job = execution_job_service.get_job(db, project_id=scope, job_id=job_id)
     if job is None:
         raise HTTPException(404, "任务不存在或不属于当前节点")
-    # batch-347c：AIQE 节点由外部 runner（浏览器/设备）执行时，回报后必须回写节点状态。
+    # batch-347c / V16-017：AIQE 外部 Runner 必须先走 fenced 收口，不能被
+    # execution_job_service.report 提前置为 completed，否则 complete_from_report
+    # 会看到终态 Job 并拒绝回写，Node 永久停在 READY。
     if _is_aiqe_job(job):
         from app.aiqe.services.job_consumer import complete_from_report
 
@@ -229,6 +225,24 @@ def report(
                     "message": "结果被拒绝：租约/所有权已失效",
                 },
             )
+        db.expire_all()
+        refreshed = execution_job_service.get_job(db, project_id=scope, job_id=job_id)
+        if refreshed is None:
+            refreshed = job
+        assert refreshed is not None
+        return R.ok(execution_job_service.job_dict(cast(ExecutionJob, refreshed)))
+    job = execution_job_service.report(
+        db,
+        job_id=job_id,
+        node_id=body.node_id,
+        status=body.status,
+        summary=body.summary,
+        result=body.result,
+        evidence_bundle_id=body.evidence_bundle_id,
+        error_message=body.error_message,
+    )
+    if job is None:
+        raise HTTPException(404, "任务不存在或不属于当前节点")
     return R.ok(execution_job_service.job_dict(job))
 
 

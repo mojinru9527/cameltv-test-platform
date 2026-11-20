@@ -129,3 +129,6 @@ work-logs/evidence/aiqe-v16/test5-overlay/
 
 # TC-005 concurrency evidence
 work-logs/evidence/aiqe-v16/test5-concurrency/
+
+# TC-002 unified run evidence
+work-logs/evidence/aiqe-v16/test5-unified/
