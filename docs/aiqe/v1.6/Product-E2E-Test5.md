@@ -11,10 +11,11 @@
 | 首页赛事浏览 | **PASS** | 444 个赛事节点；`front_browse.png` |
 | 搜索 “Arsenal” | **PASS** | 搜索结果页出现 Arsenal；报告 `front_search` |
 | 赛事详情页 | **PASS** | 真实导航到 `/football/match-east-bengal-fc-vs-sc-delhi/...`，标题/Kick Off/Prediction 正常；`front_match_detail.png` |
-| 管理后台登录（ll） | **BLOCKED** | `admin-service/login; 用户[ll]已经登录`；`admin_login_blocked.png` |
-| PostgreSQL DB 断言 | **BLOCKED** | `AIQE_TEST5_DB_DSN` 未配置 |
+| 搜索 “Arsenal”（最近一次） | **BLOCKED** | 搜索框不可见；早先运行曾 PASS |
+| 管理后台登录（pp） | **BLOCKED** | `admin-service/login; 用户[pp]已经登录`（单会话锁）；`admin_login_blocked.png` |
+| MySQL 只读 DB 断言 | **PASS** | `camel_account.user_info user_id=11025728 nickname=llll`；`camel_studio.sports_favorite` 15 条（READ ONLY 事务） |
 
-整体：**BLOCKED（exit 2）**，不是 PASS；管理员会话锁与 DB 只读连接解除后可重跑。
+整体：**BLOCKED（exit 2）**，不是 PASS；管理员会话锁解除后可重跑。
 
 ## 2. 使用方式
 
@@ -23,9 +24,13 @@ $env:AIQE_TEST5_FRONTEND_URL="https://camelive-g3-test5.elelive.cn/"
 $env:AIQE_TEST5_ADMIN_URL="https://camel-admintest5.elelive.cn"
 $env:AIQE_TEST5_PHONE="+8618476944071"
 $env:AIQE_TEST5_PASSWORD="<从密钥系统注入，不提交>"
-$env:AIQE_TEST5_ADMIN_USER="ll"
+$env:AIQE_TEST5_ADMIN_USER="pp"
 $env:AIQE_TEST5_ADMIN_SMS="1234"
-$env:AIQE_TEST5_DB_DSN="postgresql+psycopg2://<readonly>:...@host/db"
+$env:AIQE_TEST5_MYSQL_HOST="testdata5.elelive.cn"
+$env:AIQE_TEST5_MYSQL_PORT="13356"
+$env:AIQE_TEST5_MYSQL_USER="<readonly>"
+$env:AIQE_TEST5_MYSQL_PASSWORD="<从密钥系统注入>"
+$env:AIQE_TEST5_MYSQL_DATABASE="camel_account"
 python scripts/qa/aiqe_test5_e2e.py --out work-logs/evidence/aiqe-v16/test5
 ```
 
@@ -40,8 +45,9 @@ python scripts/qa/aiqe_test5_e2e.py --out work-logs/evidence/aiqe-v16/test5
 
 ## 4. 解除阻塞条件
 
-1. 让管理员 `ll` 退出后台（或提供第二个 admin 账号）；
-2. 提供 PostgreSQL 只读账号/DSN（仅 SELECT 权限）；
-3. 确认允许的测试写操作（收藏/取消收藏）及清理方式。
+1. 让管理员 `pp`（或 `ll`）退出后台单会话；
+2. 确认允许的测试写操作（收藏/取消收藏）及清理方式。
+
+MySQL 只读连接已验证；MongoDB 未用于本阶段断言。
 
 解除后运行器将补齐：管理后台只读页面、DB 状态断言、收藏/取消收藏业务闭环，并输出最终 PASS 报告。

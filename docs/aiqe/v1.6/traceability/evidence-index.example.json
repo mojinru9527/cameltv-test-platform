@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "224d556a82f760667ef4cee32d2448ef9c63da24",
+  "commit_sha": "2946efba898d2c1aa08af105810c31d4885d8754",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -2012,11 +2012,11 @@
         "L3"
       ],
       "evidence": [
-        "manual:test5 report BLOCKED（front_login/front_browse/front_search PASS；admin_login/db_assert BLOCKED）",
+        "manual:test5 report BLOCKED（front_login/front_browse/front_match_detail PASS；db_assert PASS（user_info+favorites=15）；search/admin BLOCKED）",
         "pytest:tests/test_aiqe_test5_e2e_runner.py (5 passed)"
       ],
       "gaps": [
-        "管理后台 ll 单会话锁未解除；PostgreSQL 只读 DSN 未提供，DB 断言与后台流程仍 BLOCKED。"
+        "管理后台 pp/ll 单会话锁未解除；后台流程仍 BLOCKED。"
       ]
     },
     {

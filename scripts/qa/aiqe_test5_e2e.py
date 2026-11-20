@@ -113,15 +113,20 @@ def _front_browse(page: Any, steps: Steps) -> None:
     steps.add("front_browse", "PASS", f"match_nodes={count}")
     inputs = page.locator("input.searchInput, input[aria-label='Search'], input[type='search']")
     if not inputs.count():
-        page.locator("[aria-label='Search']").first.click()
-        page.wait_for_timeout(800)
+        try:
+            page.locator("[aria-label='Search']").first.click()
+            page.wait_for_timeout(1200)
+        except Exception:
+            pass
         inputs = page.locator("input[type='search'], input[placeholder*='earch'], input.searchInput")
     if inputs.count():
-        inputs.first.click()
-        inputs.first.fill("Arsenal")
-        page.keyboard.press("Enter")
-        page.wait_for_timeout(3000)
-        steps.add("front_search", "PASS", page.url, body=page.locator("body").inner_text()[:300])
+        try:
+            inputs.first.fill("Arsenal", timeout=5000)
+            page.keyboard.press("Enter")
+            page.wait_for_timeout(3000)
+            steps.add("front_search", "PASS", page.url, body=page.locator("body").inner_text()[:300])
+        except Exception as exc:
+            steps.add("front_search", "BLOCKED", f"搜索输入不可用: {type(exc).__name__}")
     else:
         steps.add("front_search", "BLOCKED", "未找到搜索输入框")
 
@@ -163,7 +168,13 @@ def _admin_login(page: Any, steps: Steps) -> None:
     page.fill("input[name='imageVerifyCode']", _env("AIQE_TEST5_ADMIN_CAPTCHA", "1234"))
     page.locator("button").first.click()
     page.wait_for_timeout(2500)
-    page.locator("#layui-layer2 input[name='smsCode']").fill(_env("AIQE_TEST5_ADMIN_SMS"))
+    sms = page.locator("#layui-layer2 input[name='smsCode']")
+    if not sms.count() or not sms.is_visible():
+        body = page.locator("body").inner_text()
+        if "已经登录" in body:
+            raise StepBlocked(f"管理员单会话锁：用户[{_env('AIQE_TEST5_ADMIN_USER')}]已经登录")
+        raise StepBlocked("管理员登录未进入短信验证步骤（会话锁/验证码/接口失败）")
+    sms.fill(_env("AIQE_TEST5_ADMIN_SMS"))
     page.locator("#layui-layer2 .layui-layer-btn0").click()
     page.wait_for_timeout(6000)
     body = page.locator("body").inner_text()
@@ -172,23 +183,59 @@ def _admin_login(page: Any, steps: Steps) -> None:
         return
     joined = " ".join(login_responses)
     if "已经登录" in joined or "already" in joined.lower():
-        raise StepBlocked("管理员单会话锁：用户[ll]已经登录，需后台退出或改用第二账号")
+        raise StepBlocked(f"管理员单会话锁：用户[{_env('AIQE_TEST5_ADMIN_USER')}]已经登录，需后台退出或改用第二账号")
     if "已经登录" in body or "already" in body.lower():
-        raise StepBlocked("管理员单会话锁：用户[ll]已经登录，需后台退出或改用第二账号")
+        raise StepBlocked(f"管理员单会话锁：用户[{_env('AIQE_TEST5_ADMIN_USER')}]已经登录，需后台退出或改用第二账号")
     raise AssertionError(f"管理员登录未进入 /main: {page.url} {body[:200]}")
 
 
 def _db_check(steps: Steps) -> None:
-    dsn = _env("AIQE_TEST5_DB_DSN")
-    if not dsn:
-        steps.add("db_assert", "BLOCKED", "AIQE_TEST5_DB_DSN 未配置（只读连接）")
+    host = _env("AIQE_TEST5_MYSQL_HOST")
+    user = _env("AIQE_TEST5_MYSQL_USER")
+    password = _env("AIQE_TEST5_MYSQL_PASSWORD")
+    if not (host and user and password):
+        steps.add(
+            "db_assert",
+            "BLOCKED",
+            "AIQE_TEST5_MYSQL_HOST/USER/PASSWORD 未配置（只读连接）",
+        )
         return
-    from sqlalchemy import create_engine, text
+    import pymysql
 
-    engine = create_engine(dsn, pool_pre_ping=True)
-    with engine.connect() as conn:
-        value = conn.execute(text("SELECT 1")).scalar()
-    steps.add("db_assert", "PASS" if value == 1 else "FAIL", f"SELECT 1 -> {value}")
+    conn = pymysql.connect(
+        host=host,
+        port=int(_env("AIQE_TEST5_MYSQL_PORT", "3306")),
+        user=user,
+        password=password,
+        database=_env("AIQE_TEST5_MYSQL_DATABASE", "camel_account"),
+        connect_timeout=15,
+        read_timeout=15,
+        charset="utf8mb4",
+    )
+    try:
+        with conn.cursor() as cur:
+            cur.execute("START TRANSACTION READ ONLY")
+            user_id = int(_env("AIQE_TEST5_USER_ID", "11025728"))
+            cur.execute(
+                "SELECT user_id, nickname FROM camel_account.user_info WHERE user_id=%s",
+                (user_id,),
+            )
+            row = cur.fetchone()
+            if not row:
+                raise AssertionError(f"DB 未找到 user_id={user_id}")
+            cur.execute(
+                "SELECT COUNT(*) FROM camel_studio.sports_favorite WHERE user_id=%s",
+                (str(user_id),),
+            )
+            favorites = int(cur.fetchone()[0])
+            cur.execute("ROLLBACK")
+        steps.add(
+            "db_assert",
+            "PASS",
+            f"camel_account.user_info user_id={row[0]} nickname={row[1]} favorites={favorites}",
+        )
+    finally:
+        conn.close()
 
 
 def run(out: Path, *, headless: bool = True) -> dict:

@@ -1560,7 +1560,7 @@ requirements:
     owner: qa-automation
     reviewer: pending
     review_by: "2027-01-15"
-    blocked_reason: "PRODUCT_ADMIN_AND_DB_BLOCKED：test5 管理员 ll 单会话锁未解除、PostgreSQL 只读 DSN 未提供；TC-001 后端/DB 与 V16-017-R2 总验收无法完成。"
+    blocked_reason: "PRODUCT_ADMIN_BLOCKED：test5 管理员 pp/ll 单会话锁未解除；TC-001 后台流程与 V16-017-R2 总验收无法完成。"
     gaps: []
 
   # ── V16-018 Artifact（P1）──────────────────────────────────
@@ -2079,12 +2079,12 @@ requirements:
     mock_boundary: "真实 test5 前端/登录；后台/DB 未执行，报告为 BLOCKED。"
     layers: [L2, L3]
     evidence:
-      - "manual:test5 report BLOCKED（front_login/front_browse/front_search PASS；admin_login/db_assert BLOCKED）"
+      - "manual:test5 report BLOCKED（front_login/front_browse/front_match_detail PASS；db_assert PASS（user_info+favorites=15）；search/admin BLOCKED）"
       - "pytest:tests/test_aiqe_test5_e2e_runner.py (5 passed)"
     owner: qa-automation
     reviewer: pending
     gaps:
-      - "管理后台 ll 单会话锁未解除；PostgreSQL 只读 DSN 未提供，DB 断言与后台流程仍 BLOCKED。"
+      - "管理后台 pp/ll 单会话锁未解除；后台流程仍 BLOCKED。"
 
   - id: TC-AIQE-002
     issue: TC-AIQE-002

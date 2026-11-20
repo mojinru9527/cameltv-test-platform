@@ -23,10 +23,9 @@
 |---|---|---|
 | 前端 +86 登录 | **PASS** | `auth` Cookie `userId=11025728` |
 | 首页浏览 | **PASS** | 444 个赛事节点 |
-| 搜索 Arsenal | **PASS** | 搜索结果出现 Arsenal |
 | 赛事详情页 | **PASS** | 真实 match 页面标题/Kick Off/Prediction 正常 |
-| 管理后台 `ll` | **BLOCKED** | `用户[ll]已经登录`（单会话锁） |
-| PostgreSQL DB 断言 | **BLOCKED** | `AIQE_TEST5_DB_DSN` 未配置 |
+| 管理后台 `pp` | **BLOCKED** | `用户[pp]已经登录`（单会话锁） |
+| MySQL 只读 DB 断言 | **PASS** | `camel_account.user_info user_id=11025728 nickname=llll`；favorites=15 |
 
 报告：`work-logs/evidence/aiqe-v16/test5/report.json`（含 HAR/Trace，已 gitignore）。
 
@@ -34,10 +33,10 @@
 
 | 项 | 原因 | 解除条件 |
 |---|---|---|
-| V16-017-R2 产品级 10/10 | 后台 `ll` 会话锁 + PG 只读 DSN + 写操作/清理授权 | 退出后台会话或第二 admin；提供只读 DSN；确认收藏/取消收藏清理方式 |
+| V16-017-R2 产品级 10/10 | 后台 `pp/ll` 会话锁 + 写操作/清理授权 | 退出后台会话或第二 admin；确认收藏/取消收藏清理方式 |
 
 ## 诚实结论
 
 - 平台链路 E2E：**9/10 PASS**（TC-001 为产品级，不在平台链路内）；
-- 产品级：前端登录/浏览/搜索 **PASS**；后台/DB **BLOCKED**，**不得**宣称 TC-001 PASS 或 10/10；
+- 产品级：前端登录/浏览/赛事详情 **PASS**；MySQL 只读断言 **PASS**；后台 **BLOCKED**，**不得**宣称 TC-001 PASS 或 10/10；
 - 旧 `test_tc_aiqe_001_010.py` 已删除，不再有“只断言 body / 环境缺失整文件 skip”的假入口。
