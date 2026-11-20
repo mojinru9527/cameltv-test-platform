@@ -2111,25 +2111,26 @@ requirements:
     issue: TC-AIQE-003
     priority: P1
     title: "API 首次失败 + 重试成功 → 不得掩盖失败"
-    requirement: "注入一次 503，重试成功；Run 必须保留首次失败证据，不得直接 PASS。"
-    invariant: "必须真实注入故障/并发/多端并产出完整证据；不得以平台链路替代。"
-    status: BLOCKED
+    requirement: "注入一次 503，DAG retry.max_attempts=2；重试成功但首次 FAILED attempt/断言证据必须保留。"
+    invariant: "不得用最终 PASS 掩盖首次失败；两次 attempt 必须可查。"
+    status: VERIFIED
     code:
-      - path: docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md
-        symbol: "TC-003 阻塞说明"
-        change: updated
+      - path: scripts/qa/aiqe_test5_retry_e2e.py
+        symbol: "fault proxy + retry DAG + attempt evidence"
+        change: added
     production_entry:
-      - "隔离 test5 环境 + 故障注入"
+      - "python scripts/qa/aiqe_test5_retry_e2e.py"
     tests:
-      success: []
-      negative: []
-    mock_boundary: ""
-    layers: [L3, L4]
-    evidence: []
+      success:
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_007_stale_worker_result_rejected
+      negative:
+        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_002_http_200_business_assertion_fails
+    mock_boundary: "test-side fault proxy 注入一次 503，第二次转发真实 test5 API。"
+    layers: [L2, L3, L4]
+    evidence:
+      - "manual:test5 retry PASS run=ef8c0d14；proxy_hits=2；attempt1 FAILED(STATUS_MISMATCH)；attempt2 PASSED"
     owner: qa-automation
     reviewer: pending
-    review_by: "2027-01-15"
-    blocked_reason: "NETWORK_FAULT_INJECTION_NOT_READY：尚未对 test5 API 注入单次 503 并验证重试/失败证据。"
     gaps: []
 
   - id: TC-AIQE-004

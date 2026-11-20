@@ -54,3 +54,15 @@ python scripts/qa/aiqe_test5_e2e.py --out work-logs/evidence/aiqe-v16/test5
 ```
 
 退出码：`0=PASS`、`2=BLOCKED`、`1=FAIL`。HAR/Trace 已 gitignore。
+
+
+## 6. TC-003 产品级重试与失败证据
+
+运行器：`scripts/qa/aiqe_test5_retry_e2e.py`；报告：`test-platform-v2/backend/work-logs/evidence/aiqe-v16/test5-retry/report.json`
+
+- test-side fault proxy：第 1 次返回 503，第 2 次转发真实 test5 `general` API；
+- DAG `retry.max_attempts=2`；
+- Run `ef8c0d14`，outcome=PASS；
+- **attempt 1 = FAILED（STATUS_MISMATCH，503）**；**attempt 2 = PASSED（200）**；
+- `proxy_hits=2`，两条 attempt ID 均在证据中；
+- 结论：**TC-003 VERIFIED**，首次失败未被最终 PASS 掩盖。

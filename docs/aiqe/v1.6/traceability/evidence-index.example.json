@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "42aa51d958f5463f51b01251418470751ecb60ae",
+  "commit_sha": "f9a7804f202ed20ace17511967f874c2050b038c",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -11,8 +11,8 @@
   },
   "summary": {
     "requirements": 70,
-    "verified": 54,
-    "blocked": 8,
+    "verified": 55,
+    "blocked": 7,
     "not_started": 0
   },
   "requirements": [
@@ -2052,23 +2052,30 @@
       "id": "TC-AIQE-003",
       "issue": "TC-AIQE-003",
       "priority": "P1",
-      "status": "BLOCKED",
+      "status": "VERIFIED",
       "owner": "qa-automation",
       "reviewer": "pending",
       "production_entry": [
-        "隔离 test5 环境 + 故障注入"
+        "python scripts/qa/aiqe_test5_retry_e2e.py"
       ],
       "tests": {
-        "success": [],
-        "negative": [],
+        "success": [
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_007_stale_worker_result_rejected"
+        ],
+        "negative": [
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_002_http_200_business_assertion_fails"
+        ],
         "boundary": [],
         "concurrency": []
       },
       "layers": [
+        "L2",
         "L3",
         "L4"
       ],
-      "evidence": [],
+      "evidence": [
+        "manual:test5 retry PASS run=ef8c0d14；proxy_hits=2；attempt1 FAILED(STATUS_MISMATCH)；attempt2 PASSED"
+      ],
       "gaps": []
     },
     {
