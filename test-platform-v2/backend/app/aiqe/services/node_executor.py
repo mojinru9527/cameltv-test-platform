@@ -471,6 +471,23 @@ def _execute_http_secure(
         "ignored_overrides": ignored,
         "observation": observation,
     }
+    # TC-AIQE-006：显式标记的第三方上游依赖返回 5xx 时，属于依赖故障，不是产品断言失败；
+    # Node 必须 BLOCKED/UPSTREAM_5XX，业务 Assertion 不得被当成 FAIL 归因到产品。
+    if int(result.status_code or 0) >= 500 and bool(spec_input.get("upstream_dependency")):
+        return NodeExecution(
+            status="BLOCKED",
+            error_class="UPSTREAM_5XX",
+            detail={
+                "upstream_status": result.status_code,
+                "duration_ms": result.duration_ms,
+                "request": result.request,
+                "response": result.response,
+                "error": result.error,
+                "observation": observation,
+            },
+            data=data,
+            observation=observation,
+        )
     if result.ok:
         error_class = ""
     elif spec_input.get("expected_status") is not None:

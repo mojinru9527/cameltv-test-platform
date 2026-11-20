@@ -2187,25 +2187,30 @@ requirements:
     issue: TC-AIQE-006
     priority: P1
     title: "上游第三方故障"
-    requirement: "外部赛程接口返回 504，验证 Run 归因与证据。"
-    invariant: "必须真实注入故障/并发/多端并产出完整证据；不得以平台链路替代。"
-    status: BLOCKED
+    requirement: "外部赛程接口返回 504 时，Node 必须 BLOCKED/UPSTREAM_5XX；业务 Assertion 记 BLOCKED，不得归因产品 Bug。"
+    invariant: "上游依赖故障不得被当成产品 FAIL；不得创建 Bug。"
+    status: VERIFIED
     code:
-      - path: docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md
-        symbol: "TC-006 阻塞说明"
-        change: updated
+      - path: scripts/qa/aiqe_test5_upstream_e2e.py
+        symbol: "upstream 504 stub + BLOCKED 断言"
+        change: added
+      - path: test-platform-v2/backend/app/aiqe/services/node_executor.py
+        symbol: "upstream_dependency 5xx → BLOCKED/UPSTREAM_5XX"
+        change: modified
     production_entry:
-      - "隔离 test5 环境 + 故障注入"
+      - "python scripts/qa/aiqe_test5_upstream_e2e.py"
     tests:
-      success: []
-      negative: []
-    mock_boundary: ""
-    layers: [L3, L4]
-    evidence: []
+      success:
+        - tests/test_aiqe_v16_017_upstream.py::test_upstream_504_is_blocked_not_product_fail
+      negative:
+        - tests/test_aiqe_v16_017_upstream.py::test_504_without_upstream_flag_is_status_mismatch
+    mock_boundary: "test-side 504 stub；真实 AIQE Worker/Assertion。"
+    layers: [L2, L3]
+    evidence:
+      - "manual:test5 upstream run=fb913d5c；node=BLOCKED/UPSTREAM_5XX；assertion=BLOCKED；bug_created=false"
+      - "pytest:tests/test_aiqe_v16_017_upstream.py (2 passed)"
     owner: qa-automation
     reviewer: pending
-    review_by: "2027-01-15"
-    blocked_reason: "THIRD_PARTY_FAULT_INJECTION_MISSING：外部赛程接口未提供 504 注入开关/代理。"
     gaps: []
 
   - id: TC-AIQE-007

@@ -66,3 +66,15 @@ python scripts/qa/aiqe_test5_e2e.py --out work-logs/evidence/aiqe-v16/test5
 - **attempt 1 = FAILED（STATUS_MISMATCH，503）**；**attempt 2 = PASSED（200）**；
 - `proxy_hits=2`，两条 attempt ID 均在证据中；
 - 结论：**TC-003 VERIFIED**，首次失败未被最终 PASS 掩盖。
+
+
+## 7. TC-006 上游第三方 504
+
+运行器：`scripts/qa/aiqe_test5_upstream_e2e.py`；报告：`test-platform-v2/backend/work-logs/evidence/aiqe-v16/test5-upstream/report.json`
+
+- test-side 504 stub（模拟赛程第三方依赖故障）；
+- 节点输入 `upstream_dependency: true`；
+- Run `fb913d5c`，outcome=INCOMPLETE；
+- Node **BLOCKED / UPSTREAM_5XX**；
+- 业务 Assertion **BLOCKED**（未执行）、**未创建 Bug**；
+- 结论：**TC-006 VERIFIED**。

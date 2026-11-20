@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "f9a7804f202ed20ace17511967f874c2050b038c",
+  "commit_sha": "a94ecd8500418fb7b2d4960111e1865b58162277",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -11,8 +11,8 @@
   },
   "summary": {
     "requirements": 70,
-    "verified": 55,
-    "blocked": 7,
+    "verified": 56,
+    "blocked": 6,
     "not_started": 0
   },
   "requirements": [
@@ -2128,23 +2128,30 @@
       "id": "TC-AIQE-006",
       "issue": "TC-AIQE-006",
       "priority": "P1",
-      "status": "BLOCKED",
+      "status": "VERIFIED",
       "owner": "qa-automation",
       "reviewer": "pending",
       "production_entry": [
-        "隔离 test5 环境 + 故障注入"
+        "python scripts/qa/aiqe_test5_upstream_e2e.py"
       ],
       "tests": {
-        "success": [],
-        "negative": [],
+        "success": [
+          "tests/test_aiqe_v16_017_upstream.py::test_upstream_504_is_blocked_not_product_fail"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_017_upstream.py::test_504_without_upstream_flag_is_status_mismatch"
+        ],
         "boundary": [],
         "concurrency": []
       },
       "layers": [
-        "L3",
-        "L4"
+        "L2",
+        "L3"
       ],
-      "evidence": [],
+      "evidence": [
+        "manual:test5 upstream run=fb913d5c；node=BLOCKED/UPSTREAM_5XX；assertion=BLOCKED；bug_created=false",
+        "pytest:tests/test_aiqe_v16_017_upstream.py (2 passed)"
+      ],
       "gaps": []
     },
     {
