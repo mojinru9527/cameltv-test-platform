@@ -53,3 +53,20 @@ python scripts/qa/aiqe_test5_e2e.py --out work-logs/evidence/aiqe-v16/test5
 MySQL 只读连接已验证；MongoDB 未用于本阶段断言。
 
 解除后运行器将补齐：管理后台只读页面、DB 状态断言、收藏/取消收藏业务闭环，并输出最终 PASS 报告。
+
+
+## 5. TC-003 产品级 DAG（真实 test5）
+
+运行器：`scripts/qa/aiqe_test5_dag_e2e.py`；报告：`work-logs/evidence/aiqe-v16/test5-dag/report.json`
+
+| 项 | 值 |
+|---|---|
+| 目标 | `https://camel-test5.elelive.cn/account-service/ee/client/general` → `/getCountryCode` |
+| DAG | 2 节点（general → country_code），4 条断言 |
+| Run | `f1b779e2-414c-4dcf-a821-ba6e72d089f6`，outcome=PASS |
+| Node | 2 个均 PASSED |
+| Assertion | 4 条 PASS |
+| Artifact | 4 个 |
+| 执行路径 | 本地 AIQE launch → Worker → HTTP Driver → Assertion → Artifact |
+
+报告为机器可读 JSON；HAR/Trace 未生成本阶段（API 节点）。

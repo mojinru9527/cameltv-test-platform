@@ -39,6 +39,7 @@
 
 ## 诚实结论
 
-- 平台链路 E2E：**9/10 PASS**（TC-001 为产品级，不在平台链路内）；
+- 平台链路 E2E：**9/10 PASS**；产品级 TC-001、TC-003 已 **VERIFIED**；
+- TC-003 真实 test5 DAG：2 节点、4 断言、4 Artifact、Run outcome=PASS（`test5-dag/report.json`）。
 - 产品级 TC-001：前端登录/浏览/搜索/赛事详情、后台登录/只读/退出、MySQL 只读断言 **全部 PASS**；
 - 旧 `test_tc_aiqe_001_010.py` 已删除，不再有“只断言 body / 环境缺失整文件 skip”的假入口。

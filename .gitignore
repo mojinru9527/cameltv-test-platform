@@ -120,3 +120,6 @@ browser-screenshots/
 
 # V16-017 test5 product E2E evidence (contains HAR/trace tokens)
 work-logs/evidence/aiqe-v16/test5/
+
+# Generated E2E evidence (may contain request/response ids)
+test-platform-v2/backend/work-logs/evidence/aiqe-v16/

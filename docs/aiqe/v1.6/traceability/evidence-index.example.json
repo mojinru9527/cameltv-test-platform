@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "9b6797bb5d71baaaaf891942e22f93e8f7d808c4",
+  "commit_sha": "1186f2b1354fa8e9ba4868dc07091a2cc2d09d6c",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -11,7 +11,7 @@
   },
   "summary": {
     "requirements": 70,
-    "verified": 55,
+    "verified": 56,
     "blocked": 1,
     "not_started": 0
   },
@@ -2053,32 +2053,31 @@
       "id": "TC-AIQE-003",
       "issue": "TC-AIQE-003",
       "priority": "P1",
-      "status": "PARTIAL",
+      "status": "VERIFIED",
       "owner": "qa-automation",
       "reviewer": "pending",
       "production_entry": [
-        "pytest tests/e2e/aiqe/test_v16_017_platform_chain.py"
+        "python scripts/qa/aiqe_test5_dag_e2e.py"
       ],
       "tests": {
         "success": [
           "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_003_browser_interaction_and_interception"
         ],
         "negative": [
-          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_003_browser_interaction_and_interception"
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_run_without_environment_and_never_reaches_target"
         ],
         "boundary": [],
         "concurrency": []
       },
       "layers": [
         "L2",
-        "L3"
+        "L3",
+        "L4"
       ],
       "evidence": [
-        "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (9 passed)"
+        "manual:test5 DAG PASS run=f1b779e2-414c-4dcf-a821-ba6e72d089f6；nodes=2；assertions=4；artifacts=4"
       ],
-      "gaps": [
-        "产品 UI 登录/业务页面仍需隔离 Test 环境。"
-      ]
+      "gaps": []
     },
     {
       "id": "TC-AIQE-004",
