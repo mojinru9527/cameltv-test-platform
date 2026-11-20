@@ -1,45 +1,41 @@
 # V1.6 E2E 覆盖与阻塞清单（V16-017）
 
-> 平台链路：`tests/e2e/aiqe/test_v16_017_platform_chain.py`（9/10 PASS，本地确定性 SUT）
-> 产品级：`scripts/qa/aiqe_test5_e2e.py`（真实 CamelTv test5；当前整体 BLOCKED）
+> **重要纠正**：此前把 test5 登录/浏览/详情误标为 TC-001、把两节点 DAG 误标为 TC-003。
+> 按 merged spec 的真实 TC 定义，二者仅是 **TC-002 的支撑证据**，不能计为 TC-001/TC-003 PASS。
+> 当前 **0/10 TC 完全 VERIFIED**；TC-002/TC-007 PARTIAL，其余 BLOCKED。
 
-## 平台链路 E2E（9 passed）
+## 真实 TC 状态（merged spec §TC-AIQE）
 
-| TC | 场景 | 状态 | 证据 |
+| TC | 规格标题 | 当前状态 | 证据 / 缺口 |
 |---|---|---|---|
-| TC-AIQE-002 | HTTP 200 业务断言失败 | **PASS** | 节点 FAILED、断言 FAIL |
-| TC-AIQE-003 | 真实 Chromium 交互 + 拦截 | **PASS** | fill/click/assert_text + 元数据拦截 |
-| TC-AIQE-004 | DB 只读 + Query Registry | **PASS** | 真实 SQLite SELECT |
-| TC-AIQE-005 | SSRF / 云元数据 | **PASS** | 169.254.169.254 阻断、零外呼 |
-| TC-AIQE-006 | Secret 全链路 | **PASS** | Handle/下游授权/零明文 |
-| TC-AIQE-007 | 迟到 fencing | **PASS** | STALE_LEASE 拒绝 |
-| TC-AIQE-008 | 缺陷一键回归 | **PASS** | Mandatory/Comparison/幂等 |
-| TC-AIQE-009 | Noise E1–E6 | **PASS** | 6 个单变量实验真实 Run |
-| TC-AIQE-010 | AgentTask 全链路 | **PASS** | Draft→审批→Job→Tool→Audit |
+| TC-001 | 需求契约冻结 + 需求变更影响 | **PARTIAL** | 只有 test5 连通性；未导入收藏 PRD、未做契约冻结/变更影响 |
+| TC-002 | API → Admin UI → Public API → DB 的统一 Run | **PARTIAL** | test5 前端 4 步 + 后台 uu 登录/只读/退出 + MySQL 断言；另有 2 节点 API DAG；但**不是同一个 AIQE Run**，缺 Playwright/DB Driver 统一编排 |
+| TC-003 | API 首次失败 + 重试成功 → 不得掩盖失败 | **BLOCKED** | 未对 test5 API 注入单次 503；未验证重试后仍保留失败证据 |
+| TC-004 | 广告/其他功能浮层交叉干扰 | **BLOCKED** | 无 overlay feature flag / core_isolated vs integration profile |
+| TC-005 | 并发数据污染 | **BLOCKED** | 无共享账号/赛事 fixture 与并发执行窗口 |
+| TC-006 | 上游第三方故障 | **BLOCKED** | 外部赛程接口无 504 注入开关 |
+| TC-007 | UI Runner 自身故障 | **PARTIAL** | 有真实 Chromium 流程；未强制 kill 浏览器验证 Runner 故障归因 |
+| TC-008 | 开发修复后点击回归 | **BLOCKED** | 无 TC-004 缺陷草稿/人工确认/修复 commit SHA |
+| TC-009 | 多端 AC 对照 | **BLOCKED** | 无 Android Chrome 模拟器/真机 |
+| TC-010 | 学习候选发布 | **BLOCKED** | 缺陷/回归产品链路未完成，无法进入学习发布 |
 
-## 产品级 E2E（test5，TC-001 PASS）
+## 平台链路 E2E（本地确定性 SUT，9 passed）
 
-| 步骤 | 状态 | 证据 |
-|---|---|---|
-| 前端 +86 登录 | **PASS** | `auth` Cookie `userId=11025728` |
-| 首页浏览 | **PASS** | 444 个赛事节点 |
-| 赛事详情页 | **PASS** | 真实 match 页面标题/Kick Off/Prediction 正常 |
-| 管理后台 `uu` 登录 | **PASS** | `/main` |
-| 后台只读页面 | **PASS** | 直播管理 → LIVE房直播记录 |
-| 后台退出 | **PASS** | `/logout` → `/login`，会话已释放 |
-| MySQL 只读 DB 断言 | **PASS** | `camel_account.user_info user_id=11025728 nickname=llll`；favorites=15 |
+`tests/e2e/aiqe/test_v16_017_platform_chain.py` 覆盖 HTTP/DB/SSRF/fencing/回归/Secret/Noise/Agent 平台链路。
+它是**平台能力证据**，不等同任何真实产品 TC；不得用它把 TC-001~010 标成 VERIFIED。
 
-报告：`work-logs/evidence/aiqe-v16/test5/report.json`（含 HAR/Trace，已 gitignore）。
+## test5 产品证据（TC-002 支撑）
 
-## 仍未 BLOCKED 的项
+- 前端：+86 登录、首页浏览、搜索 Arsenal、赛事详情 **PASS**
+- 后台：`uu` 登录 → 直播管理/LIVE房直播记录只读 → `/logout` 退出 **PASS**
+- MySQL：只读事务查询 `camel_account.user_info` / `camel_studio.sports_favorite` **PASS**
+- DAG：`aiqe_test5_dag_e2e.py` 两节点（general → getCountryCode）、4 断言、4 Artifact、Run PASS
+- 报告：
+  - `work-logs/evidence/aiqe-v16/test5/report.json`
+  - `test-platform-v2/backend/work-logs/evidence/aiqe-v16/test5-dag/report.json`（gitignore）
 
-| 项 | 原因 | 解除条件 |
-|---|---|---|
-| V16-017-R2 产品级 10/10 | TC-002~010 尚未逐条在 test5 产品环境独立执行 | 按 TC 清单逐条执行并产出证据 |
+## 结论
 
-## 诚实结论
-
-- 平台链路 E2E：**9/10 PASS**；产品级 TC-001、TC-003 已 **VERIFIED**；
-- TC-003 真实 test5 DAG：2 节点、4 断言、4 Artifact、Run outcome=PASS（`test5-dag/report.json`）。
-- 产品级 TC-001：前端登录/浏览/搜索/赛事详情、后台登录/只读/退出、MySQL 只读断言 **全部 PASS**；
-- 旧 `test_tc_aiqe_001_010.py` 已删除，不再有“只断言 body / 环境缺失整文件 skip”的假入口。
+- 产品级 TC：**0/10 完全 VERIFIED**；TC-002/TC-007 PARTIAL；其余 BLOCKED。
+- `V16-017-R2` 仍 BLOCKED；不得宣称 10/10 或 GA。
+- 旧 `test_tc_aiqe_001_010.py` 已删除，不再有 body 断言/整文件 skip 假入口。
