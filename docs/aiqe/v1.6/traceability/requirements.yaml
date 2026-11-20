@@ -2230,28 +2230,28 @@ requirements:
     issue: TC-AIQE-007
     priority: P1
     title: "UI Runner 自身故障"
-    requirement: "强制 kill 浏览器进程，验证 UI Runner 故障归因/重试/证据。"
-    invariant: "真实产品/真实 Run；不得用 fixture 或 body 断言冒充。"
+    requirement: "浏览器进程被强制 kill 时，Runner 必须上报 AUTOMATION/WORKER_FAILURE；Node 不得无限 RUNNING，Run 必须有可读错误。"
+    invariant: "不得把自动化故障伪造成产品失败或 PASS。"
     status: PARTIAL
     code:
-      - path: scripts/qa/aiqe_test5_e2e.py
-        symbol: "test5 product E2E"
-        change: added
+      - path: scripts/qa/aiqe_local_runner.py
+        symbol: "Runner 捕获浏览器/驱动异常并上报 AUTOMATION/WORKER_FAILURE"
+        change: modified
     production_entry:
-      - "python scripts/qa/aiqe_test5_e2e.py"
+      - "python scripts/qa/aiqe_local_runner.py --once"
     tests:
       success:
-        - tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready
+        - tests/test_aiqe_external_node_report.py::test_external_report_failure_marks_node
       negative:
-        - tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser
-    mock_boundary: "真实 test5 前端/后台/MySQL；尚未形成规格要求的单一统一 Run。"
-    layers: [L2, L3]
+        - tests/test_aiqe_external_node_report.py::test_external_report_without_policy_blocks_even_if_runner_claims_success
+    mock_boundary: "真实 test5 页面 + 本地 Playwright Runner；测试侧强制 kill chrome-headless-shell。"
+    layers: [L3, L4]
     evidence:
-      - "manual:test5 前端真实 Chromium 流程（未 kill 浏览器）"
+      - "manual:browser kill Run 82036730 outcome=FAIL；Node=ERROR/AUTOMATION/WORKER_FAILURE；attempts=1；未无限 RUNNING"
     owner: qa-automation
     reviewer: pending
     gaps:
-      - "未在 test5 产品流程强制 kill 浏览器并验证 Runner 故障；平台级有浏览器不可用测试。"
+      - "节点为 OBSERVE 且未配置业务断言，未单独记录 NOT_EVALUATED 断言结果。"
 
   - id: TC-AIQE-008
     issue: TC-AIQE-008

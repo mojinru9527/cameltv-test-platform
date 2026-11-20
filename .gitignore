@@ -132,3 +132,6 @@ work-logs/evidence/aiqe-v16/test5-concurrency/
 
 # TC-002 unified run evidence
 work-logs/evidence/aiqe-v16/test5-unified/
+
+# TC-007 browser kill evidence
+work-logs/evidence/aiqe-v16/test5-browser-kill/

@@ -276,9 +276,17 @@ def run_once(
             data={"error": resolve_error},
         )
     else:
-        execution = node_executor.execute_node(
-            node, policy_context=policy, input_override=resolved_input
-        )
+        try:
+            execution = node_executor.execute_node(
+                node, policy_context=policy, input_override=resolved_input
+            )
+        except Exception as exc:  # Runner 自身/浏览器崩溃必须上报，不能悬挂
+            execution = node_executor.NodeExecution(
+                status="ERROR",
+                error_class="AUTOMATION/WORKER_FAILURE",
+                detail={"error": f"{type(exc).__name__}: {exc}"},
+                data={"worker_failure": True},
+            )
     ok = execution.status == "PASSED"
     result = {
         "status": execution.status,
