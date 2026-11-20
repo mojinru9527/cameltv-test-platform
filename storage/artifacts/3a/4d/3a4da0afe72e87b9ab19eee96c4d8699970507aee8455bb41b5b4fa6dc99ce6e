@@ -1,1 +1,0 @@
-{"status_code": 200, "headers": {"server": "BaseHTTP/0.6 Python/3.12.10", "date": "Thu, 19 Nov 2026 12:37:14 GMT", "content-type": "application/json", "content-length": "23"}, "body": "{\"ok\": true, \"user\": 7}", "body_truncated": false, "policy_version": 1}

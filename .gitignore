@@ -78,6 +78,8 @@ tests/automation/ui/captured/
 # Test Platform V2 runtime artifacts
 test-platform-v2/backend/storage/lanhu-evidence/
 test-platform-v2/backend/storage/ui-runs/
+storage/artifacts/
+test-platform-v2/backend/storage/artifacts/
 test-platform-v2/backend/storage/models/
 test-platform-v2/backend/storage/*.json
 test-platform-v2/backend/storage/TASK-REPORT-*.md

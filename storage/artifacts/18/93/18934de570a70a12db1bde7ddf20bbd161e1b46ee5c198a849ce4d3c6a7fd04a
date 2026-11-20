@@ -1,1 +1,0 @@
-{"status_code": 200, "headers": {"server": "BaseHTTP/0.6 Python/3.12.10", "date": "Thu, 19 Nov 2026 12:35:42 GMT", "content-type": "application/json", "content-length": "145"}, "body": "{\"access_token\": \"***\", \"refresh_token\": \"***\", \"match_id\": \"match-42\", \"status\": \"live\"}", "body_truncated": false, "policy_version": 1}
