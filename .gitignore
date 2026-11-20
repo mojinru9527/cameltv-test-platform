@@ -123,3 +123,6 @@ work-logs/evidence/aiqe-v16/test5/
 
 # Generated E2E evidence (may contain request/response ids)
 test-platform-v2/backend/work-logs/evidence/aiqe-v16/
+
+# TC-004 overlay evidence
+work-logs/evidence/aiqe-v16/test5-overlay/

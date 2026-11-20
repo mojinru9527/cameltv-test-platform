@@ -2137,26 +2137,29 @@ requirements:
     issue: TC-AIQE-004
     priority: P1
     title: "广告/其他功能浮层造成交叉干扰"
-    requirement: "integration profile 注入浮层，core_isolated 关闭该 fixture；验证 PASS/FAIL 归因。"
-    invariant: "必须真实注入故障/并发/多端并产出完整证据；不得以平台链路替代。"
-    status: BLOCKED
+    requirement: "Core profile 点击直播入口 Login CTA 打开登录弹层；Integration profile 注入浮层后同一操作被拦截，分类 CROSS_FEATURE_DEFECT。"
+    invariant: "Integration 不得记 PASS，也不得归因赛事服务代码错误。"
+    status: PARTIAL
     code:
-      - path: docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md
-        symbol: "TC-004 阻塞说明"
-        change: updated
+      - path: scripts/qa/aiqe_test5_overlay_e2e.py
+        symbol: "core/integration overlay profiles"
+        change: added
     production_entry:
-      - "隔离 test5 环境 + 故障注入"
+      - "python scripts/qa/aiqe_test5_overlay_e2e.py"
     tests:
-      success: []
-      negative: []
-    mock_boundary: ""
+      success:
+        - tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready
+      negative:
+        - tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser
+    mock_boundary: "真实 test5 直播页；浮层由 test fixture 注入，未接入 AIQE 两个正式 Run。"
     layers: [L3, L4]
-    evidence: []
+    evidence:
+      - "manual:test5 overlay PASS（core login modal input_count=2；integration blocked；hit_target=aiqe-cross-feature-overlay）"
+      - "gaps: 未接入 AIQE Core/Integration 正式 Run，未创建 Defect Draft"
     owner: qa-automation
     reviewer: pending
-    review_by: "2027-01-15"
-    blocked_reason: "OVERLAY_FEATURE_FLAG_MISSING：test5 未提供可控浮层 feature flag/profile 与独立 fixture 配置。"
-    gaps: []
+    gaps:
+      - "未用 AIQE Core/Integration 两个正式 Run 对照，未生成关联浮层的 Defect Draft。"
 
   - id: TC-AIQE-005
     issue: TC-AIQE-005

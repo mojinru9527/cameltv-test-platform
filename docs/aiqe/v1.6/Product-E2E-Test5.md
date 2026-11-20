@@ -78,3 +78,13 @@ python scripts/qa/aiqe_test5_e2e.py --out work-logs/evidence/aiqe-v16/test5
 - Node **BLOCKED / UPSTREAM_5XX**；
 - 业务 Assertion **BLOCKED**（未执行）、**未创建 Bug**；
 - 结论：**TC-006 VERIFIED**。
+
+
+## 8. TC-004 浮层交叉干扰（PARTIAL）
+
+运行器：`scripts/qa/aiqe_test5_overlay_e2e.py`
+
+- Core：关闭 test5 原有引导层 → 点击直播页 Login CTA → 登录弹层出现（2 个输入）**PASS**；
+- Integration：注入全屏 `aiqe-cross-feature-overlay` → 同一 CTA 点击被拦截 **FAIL（预期）**；
+- `elementFromPoint` 命中 overlay；分类 **CROSS_FEATURE_DEFECT**；
+- 未接入 AIQE Core/Integration 两个正式 Run，未创建 Defect Draft → **TC-004 PARTIAL**。

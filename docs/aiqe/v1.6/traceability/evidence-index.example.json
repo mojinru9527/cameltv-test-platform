@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "a94ecd8500418fb7b2d4960111e1865b58162277",
+  "commit_sha": "26cdfa8c518f09412d466fe2be4128acfd1a9cb7",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -12,7 +12,7 @@
   "summary": {
     "requirements": 70,
     "verified": 56,
-    "blocked": 6,
+    "blocked": 5,
     "not_started": 0
   },
   "requirements": [
@@ -2082,15 +2082,19 @@
       "id": "TC-AIQE-004",
       "issue": "TC-AIQE-004",
       "priority": "P1",
-      "status": "BLOCKED",
+      "status": "PARTIAL",
       "owner": "qa-automation",
       "reviewer": "pending",
       "production_entry": [
-        "隔离 test5 环境 + 故障注入"
+        "python scripts/qa/aiqe_test5_overlay_e2e.py"
       ],
       "tests": {
-        "success": [],
-        "negative": [],
+        "success": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready"
+        ],
+        "negative": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser"
+        ],
         "boundary": [],
         "concurrency": []
       },
@@ -2098,8 +2102,13 @@
         "L3",
         "L4"
       ],
-      "evidence": [],
-      "gaps": []
+      "evidence": [
+        "manual:test5 overlay PASS（core login modal input_count=2；integration blocked；hit_target=aiqe-cross-feature-overlay）",
+        "gaps: 未接入 AIQE Core/Integration 正式 Run，未创建 Defect Draft"
+      ],
+      "gaps": [
+        "未用 AIQE Core/Integration 两个正式 Run 对照，未生成关联浮层的 Defect Draft。"
+      ]
     },
     {
       "id": "TC-AIQE-005",
