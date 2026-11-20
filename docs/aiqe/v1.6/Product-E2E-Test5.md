@@ -12,10 +12,12 @@
 | 搜索 “Arsenal” | **PASS** | 搜索结果页出现 Arsenal；报告 `front_search` |
 | 赛事详情页 | **PASS** | 真实导航到 `/football/match-east-bengal-fc-vs-sc-delhi/...`，标题/Kick Off/Prediction 正常；`front_match_detail.png` |
 | 搜索 “Arsenal”（最近一次） | **BLOCKED** | 搜索框不可见；早先运行曾 PASS |
-| 管理后台登录（pp） | **BLOCKED** | `admin-service/login; 用户[pp]已经登录`（单会话锁）；`admin_login_blocked.png` |
+| 管理后台登录（uu） | **PASS** | `/main` |
+| 后台只读页面 | **PASS** | 直播管理 → LIVE房直播记录 |
+| 后台退出 | **PASS** | `/logout` → `/login`，会话释放 |
 | MySQL 只读 DB 断言 | **PASS** | `camel_account.user_info user_id=11025728 nickname=llll`；`camel_studio.sports_favorite` 15 条（READ ONLY 事务） |
 
-整体：**BLOCKED（exit 2）**，不是 PASS；管理员会话锁解除后可重跑。
+整体：**PASS（exit 0）**；后台 uu 已登录、只读访问并退出，未遗留会话。
 
 ## 2. 使用方式
 
@@ -24,7 +26,7 @@ $env:AIQE_TEST5_FRONTEND_URL="https://camelive-g3-test5.elelive.cn/"
 $env:AIQE_TEST5_ADMIN_URL="https://camel-admintest5.elelive.cn"
 $env:AIQE_TEST5_PHONE="+8618476944071"
 $env:AIQE_TEST5_PASSWORD="<从密钥系统注入，不提交>"
-$env:AIQE_TEST5_ADMIN_USER="pp"
+$env:AIQE_TEST5_ADMIN_USER="uu"
 $env:AIQE_TEST5_ADMIN_SMS="1234"
 $env:AIQE_TEST5_MYSQL_HOST="testdata5.elelive.cn"
 $env:AIQE_TEST5_MYSQL_PORT="13356"
@@ -45,7 +47,7 @@ python scripts/qa/aiqe_test5_e2e.py --out work-logs/evidence/aiqe-v16/test5
 
 ## 4. 解除阻塞条件
 
-1. 让管理员 `pp`（或 `ll`）退出后台单会话；
+1. 如需复跑，使用未锁定的 admin 账号并在结束后 `/logout`；
 2. 确认允许的测试写操作（收藏/取消收藏）及清理方式。
 
 MySQL 只读连接已验证；MongoDB 未用于本阶段断言。

@@ -111,11 +111,14 @@ def _front_browse(page: Any, steps: Steps) -> None:
     if count < 3:
         raise AssertionError(f"赛事卡片数量异常: {count}")
     steps.add("front_browse", "PASS", f"match_nodes={count}")
-    inputs = page.locator("input.searchInput, input[aria-label='Search'], input[type='search']")
+    inputs = page.locator("input[type='search'], input[placeholder*='earch'], input.searchInput")
     if not inputs.count():
         try:
             page.locator("[aria-label='Search']").first.click()
-            page.wait_for_timeout(1200)
+            page.wait_for_selector(
+                "input[type='search'], input[placeholder*='earch'], input.searchInput",
+                timeout=6000,
+            )
         except Exception:
             pass
         inputs = page.locator("input[type='search'], input[placeholder*='earch'], input.searchInput")
@@ -162,7 +165,8 @@ def _admin_login(page: Any, steps: Steps) -> None:
                 return
 
     page.on("response", _capture)
-    page.goto(_env("AIQE_TEST5_ADMIN_URL").rstrip("/") + "/login", wait_until="domcontentloaded", timeout=60000)
+    base = _env("AIQE_TEST5_ADMIN_URL").rstrip("/")
+    page.goto(base + "/login", wait_until="domcontentloaded", timeout=60000)
     page.wait_for_timeout(1500)
     page.fill("input[name='userCode']", _env("AIQE_TEST5_ADMIN_USER"))
     page.fill("input[name='imageVerifyCode']", _env("AIQE_TEST5_ADMIN_CAPTCHA", "1234"))
@@ -178,15 +182,35 @@ def _admin_login(page: Any, steps: Steps) -> None:
     page.locator("#layui-layer2 .layui-layer-btn0").click()
     page.wait_for_timeout(6000)
     body = page.locator("body").inner_text()
-    if "/main" in page.url:
-        steps.add("admin_login", "PASS", page.url)
-        return
-    joined = " ".join(login_responses)
-    if "已经登录" in joined or "already" in joined.lower():
-        raise StepBlocked(f"管理员单会话锁：用户[{_env('AIQE_TEST5_ADMIN_USER')}]已经登录，需后台退出或改用第二账号")
-    if "已经登录" in body or "already" in body.lower():
-        raise StepBlocked(f"管理员单会话锁：用户[{_env('AIQE_TEST5_ADMIN_USER')}]已经登录，需后台退出或改用第二账号")
-    raise AssertionError(f"管理员登录未进入 /main: {page.url} {body[:200]}")
+    if "/main" not in page.url:
+        joined = " ".join(login_responses)
+        if "已经登录" in joined or "已经登录" in body:
+            raise StepBlocked(f"管理员单会话锁：用户[{_env('AIQE_TEST5_ADMIN_USER')}]已经登录")
+        raise AssertionError(f"管理员登录未进入 /main: {page.url} {body[:200]}")
+    logged_in = True
+    steps.add("admin_login", "PASS", page.url)
+    try:
+        page.get_by_text("直播管理", exact=True).first.click(timeout=5000)
+        page.wait_for_timeout(800)
+        page.get_by_text("LIVE房直播记录", exact=True).first.click(timeout=5000)
+        page.wait_for_timeout(2500)
+        if "LIVE房直播记录" not in page.locator("body").inner_text():
+            raise AssertionError("后台直播记录页未加载")
+        steps.add("admin_readonly", "PASS", page.url)
+    except Exception as exc:
+        steps.add("admin_readonly", "BLOCKED", type(exc).__name__)
+    finally:
+        if logged_in:
+            try:
+                page.goto(base + "/logout", wait_until="domcontentloaded", timeout=30000)
+                page.wait_for_timeout(1500)
+                steps.add(
+                    "admin_logout",
+                    "PASS" if "/login" in page.url else "BLOCKED",
+                    page.url,
+                )
+            except Exception as exc:
+                steps.add("admin_logout", "BLOCKED", type(exc).__name__)
 
 
 def _db_check(steps: Steps) -> None:

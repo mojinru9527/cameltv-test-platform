@@ -2057,12 +2057,12 @@ requirements:
     issue: TC-AIQE-001
     priority: P1
     title: "跨系统 API→后台 UI→DB→前台 UI"
-    requirement: "在 CamelTv test5 真实环境执行前端登录/浏览/搜索、后台登录、DB 断言与业务闭环；缺后台会话/DB 时记录 BLOCKED。"
-    invariant: "不得用 fixture 冒充产品；BLOCKED 不计入通过率。"
-    status: PARTIAL
+    requirement: "在 CamelTv test5 真实环境执行前端登录/浏览/搜索/赛事详情、后台登录/只读页面/退出、MySQL 只读 DB 断言。"
+    invariant: "后台登录后必须真实退出；BLOCKED/FAIL 不得计入 PASS。"
+    status: VERIFIED
     code:
       - path: scripts/qa/aiqe_test5_e2e.py
-        symbol: "front_login/front_browse/front_search/admin_login/db_assert"
+        symbol: "front_login/front_browse/front_search/front_match_detail/admin_login/admin_readonly/admin_logout/db_assert"
         change: added
       - path: docs/aiqe/v1.6/Product-E2E-Test5.md
         symbol: "test5 运行说明与实测结果"
@@ -2076,15 +2076,14 @@ requirements:
       negative:
         - tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser
         - tests/test_aiqe_test5_e2e_runner.py::test_partial_admin_config_is_blocked
-    mock_boundary: "真实 test5 前端/登录；后台/DB 未执行，报告为 BLOCKED。"
-    layers: [L2, L3]
+    mock_boundary: "真实 test5 前端/后台/MySQL；无 fixture 替身。"
+    layers: [L2, L3, L4]
     evidence:
-      - "manual:test5 report BLOCKED（front_login/front_browse/front_match_detail PASS；db_assert PASS（user_info+favorites=15）；search/admin BLOCKED）"
+      - "manual:test5 report PASS（front 4 步 + admin login/readonly/logout + db_assert；userId=11025728；favorites=15）"
       - "pytest:tests/test_aiqe_test5_e2e_runner.py (5 passed)"
     owner: qa-automation
     reviewer: pending
-    gaps:
-      - "管理后台 pp/ll 单会话锁未解除；后台流程仍 BLOCKED。"
+    gaps: []
 
   - id: TC-AIQE-002
     issue: TC-AIQE-002

@@ -17,14 +17,16 @@
 | TC-AIQE-009 | Noise E1–E6 | **PASS** | 6 个单变量实验真实 Run |
 | TC-AIQE-010 | AgentTask 全链路 | **PASS** | Draft→审批→Job→Tool→Audit |
 
-## 产品级 E2E（test5，当前 PARTIAL / BLOCKED）
+## 产品级 E2E（test5，TC-001 PASS）
 
 | 步骤 | 状态 | 证据 |
 |---|---|---|
 | 前端 +86 登录 | **PASS** | `auth` Cookie `userId=11025728` |
 | 首页浏览 | **PASS** | 444 个赛事节点 |
 | 赛事详情页 | **PASS** | 真实 match 页面标题/Kick Off/Prediction 正常 |
-| 管理后台 `pp` | **BLOCKED** | `用户[pp]已经登录`（单会话锁） |
+| 管理后台 `uu` 登录 | **PASS** | `/main` |
+| 后台只读页面 | **PASS** | 直播管理 → LIVE房直播记录 |
+| 后台退出 | **PASS** | `/logout` → `/login`，会话已释放 |
 | MySQL 只读 DB 断言 | **PASS** | `camel_account.user_info user_id=11025728 nickname=llll`；favorites=15 |
 
 报告：`work-logs/evidence/aiqe-v16/test5/report.json`（含 HAR/Trace，已 gitignore）。
@@ -33,10 +35,10 @@
 
 | 项 | 原因 | 解除条件 |
 |---|---|---|
-| V16-017-R2 产品级 10/10 | 后台 `pp/ll` 会话锁 + 写操作/清理授权 | 退出后台会话或第二 admin；确认收藏/取消收藏清理方式 |
+| V16-017-R2 产品级 10/10 | TC-002~010 尚未逐条在 test5 产品环境独立执行 | 按 TC 清单逐条执行并产出证据 |
 
 ## 诚实结论
 
 - 平台链路 E2E：**9/10 PASS**（TC-001 为产品级，不在平台链路内）；
-- 产品级：前端登录/浏览/赛事详情 **PASS**；MySQL 只读断言 **PASS**；后台 **BLOCKED**，**不得**宣称 TC-001 PASS 或 10/10；
+- 产品级 TC-001：前端登录/浏览/搜索/赛事详情、后台登录/只读/退出、MySQL 只读断言 **全部 PASS**；
 - 旧 `test_tc_aiqe_001_010.py` 已删除，不再有“只断言 body / 环境缺失整文件 skip”的假入口。

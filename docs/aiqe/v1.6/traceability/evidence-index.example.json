@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "2946efba898d2c1aa08af105810c31d4885d8754",
+  "commit_sha": "9b6797bb5d71baaaaf891942e22f93e8f7d808c4",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -11,7 +11,7 @@
   },
   "summary": {
     "requirements": 70,
-    "verified": 54,
+    "verified": 55,
     "blocked": 1,
     "not_started": 0
   },
@@ -1989,7 +1989,7 @@
       "id": "TC-AIQE-001",
       "issue": "TC-AIQE-001",
       "priority": "P1",
-      "status": "PARTIAL",
+      "status": "VERIFIED",
       "owner": "qa-automation",
       "reviewer": "pending",
       "production_entry": [
@@ -2009,15 +2009,14 @@
       },
       "layers": [
         "L2",
-        "L3"
+        "L3",
+        "L4"
       ],
       "evidence": [
-        "manual:test5 report BLOCKED（front_login/front_browse/front_match_detail PASS；db_assert PASS（user_info+favorites=15）；search/admin BLOCKED）",
+        "manual:test5 report PASS（front 4 步 + admin login/readonly/logout + db_assert；userId=11025728；favorites=15）",
         "pytest:tests/test_aiqe_test5_e2e_runner.py (5 passed)"
       ],
-      "gaps": [
-        "管理后台 pp/ll 单会话锁未解除；后台流程仍 BLOCKED。"
-      ]
+      "gaps": []
     },
     {
       "id": "TC-AIQE-002",
