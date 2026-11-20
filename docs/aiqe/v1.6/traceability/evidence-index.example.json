@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "5fc0fb57c2d035f333b97205ec9b4cf2aff8209b",
+  "commit_sha": "224d556a82f760667ef4cee32d2448ef9c63da24",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -12,7 +12,7 @@
   "summary": {
     "requirements": 70,
     "verified": 54,
-    "blocked": 2,
+    "blocked": 1,
     "not_started": 0
   },
   "requirements": [
@@ -1989,26 +1989,35 @@
       "id": "TC-AIQE-001",
       "issue": "TC-AIQE-001",
       "priority": "P1",
-      "status": "BLOCKED",
+      "status": "PARTIAL",
       "owner": "qa-automation",
       "reviewer": "pending",
       "production_entry": [
-        "隔离 Test 环境"
+        "python scripts/qa/aiqe_test5_e2e.py --out work-logs/evidence/aiqe-v16/test5"
       ],
       "tests": {
-        "success": [],
-        "negative": [],
+        "success": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready",
+          "tests/test_aiqe_test5_e2e_runner.py::test_phone_masking_and_status_precedence"
+        ],
+        "negative": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser",
+          "tests/test_aiqe_test5_e2e_runner.py::test_partial_admin_config_is_blocked"
+        ],
         "boundary": [],
         "concurrency": []
       },
       "layers": [
-        "L3",
-        "L4"
+        "L2",
+        "L3"
       ],
       "evidence": [
-        "docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md"
+        "manual:test5 report BLOCKED（front_login/front_browse/front_search PASS；admin_login/db_assert BLOCKED）",
+        "pytest:tests/test_aiqe_test5_e2e_runner.py (5 passed)"
       ],
-      "gaps": []
+      "gaps": [
+        "管理后台 ll 单会话锁未解除；PostgreSQL 只读 DSN 未提供，DB 断言与后台流程仍 BLOCKED。"
+      ]
     },
     {
       "id": "TC-AIQE-002",

@@ -1,39 +1,43 @@
 # V1.6 E2E 覆盖与阻塞清单（V16-017）
 
-> 已交付：平台链路真实 E2E（Launch/AgentTask → Worker/Outbox → Driver/Tool → Assertion/Evidence），使用确定性本地 SUT（真实 HTTP 服务 + SQLite + 真实 Worker/Chromium 链路）。
-> 未交付：CamelTv 真实业务租户/前端/小程序/原生端的 4 条产品级 E2E；需隔离 Test 环境，见下表 BLOCKED。
+> 平台链路：`tests/e2e/aiqe/test_v16_017_platform_chain.py`（9/10 PASS，本地确定性 SUT）
+> 产品级：`scripts/qa/aiqe_test5_e2e.py`（真实 CamelTv test5；当前整体 BLOCKED）
 
-## 已执行（`pytest tests/e2e/aiqe/test_v16_017_platform_chain.py` → 6 passed）
+## 平台链路 E2E（9 passed）
 
 | TC | 场景 | 状态 | 证据 |
 |---|---|---|---|
-| TC-AIQE-002 | HTTP 200 但业务断言失败 | **PASS（平台链路）** | 节点 FAILED、断言 FAIL、Run 非 PASS |
-| TC-AIQE-004 | DB 只读 + Query Registry | **PASS（平台链路）** | 真实 SQLite SELECT、db_row_count PASS |
-| TC-AIQE-005 | SSRF / 云元数据 | **PASS（平台链路）** | 169.254.169.254 被 TargetPolicy 阻断、零外呼 |
-| TC-AIQE-007 | 迟到 fencing 结果 | **PASS（平台链路）** | STALE_LEASE skipped，节点未 PASS |
-| TC-AIQE-008 | 缺陷一键回归 | **PASS（平台链路）** | Mandatory 含失败节点、Job 执行、Comparison Snapshot、幂等 |
-| TC-AIQE-010 | AgentTask 全链路 | **PASS（平台链路）** | Draft→审批→Outbox/Job→ToolRegistry→AgentExecution→审计 |
-| TC-AIQE-006 | Secret 全链路 | **PASS（平台链路）** | 登录 JWT → SecretHandle → 下游授权解析 → 全库/Job/Event 零明文；越权解析拒绝 |
-| TC-AIQE-009 | Noise E1–E6 | **PASS（平台链路）** | 6 个单变量实验均绑定真实 baseline/verification Run 并由 Worker 执行 |
-| TC-AIQE-003 | 真实 Chromium 交互 + 拦截 | **PASS（平台链路）** | 本地页面 fill/click/assert_text；元数据子资源被 PORT/HOST 策略拦截；允许子资源真实请求 |
+| TC-AIQE-002 | HTTP 200 业务断言失败 | **PASS** | 节点 FAILED、断言 FAIL |
+| TC-AIQE-003 | 真实 Chromium 交互 + 拦截 | **PASS** | fill/click/assert_text + 元数据拦截 |
+| TC-AIQE-004 | DB 只读 + Query Registry | **PASS** | 真实 SQLite SELECT |
+| TC-AIQE-005 | SSRF / 云元数据 | **PASS** | 169.254.169.254 阻断、零外呼 |
+| TC-AIQE-006 | Secret 全链路 | **PASS** | Handle/下游授权/零明文 |
+| TC-AIQE-007 | 迟到 fencing | **PASS** | STALE_LEASE 拒绝 |
+| TC-AIQE-008 | 缺陷一键回归 | **PASS** | Mandatory/Comparison/幂等 |
+| TC-AIQE-009 | Noise E1–E6 | **PASS** | 6 个单变量实验真实 Run |
+| TC-AIQE-010 | AgentTask 全链路 | **PASS** | Draft→审批→Job→Tool→Audit |
 
-## BLOCKED（产品级，缺隔离 Test 环境）
+## 产品级 E2E（test5，当前 PARTIAL / BLOCKED）
 
-| TC | 场景 | 阻塞原因 |
+| 步骤 | 状态 | 证据 |
 |---|---|---|
-| TC-AIQE-001 | 跨系统 API→后台 UI→DB→前台 UI | 无真实业务租户/用户/后台与前台 UI；本地 fixture 不等同产品 |
+| 前端 +86 登录 | **PASS** | `auth` Cookie `userId=11025728` |
+| 首页浏览 | **PASS** | 444 个赛事节点 |
+| 搜索 Arsenal | **PASS** | 搜索结果出现 Arsenal |
+| 赛事详情页 | **PASS** | 真实 match 页面标题/Kick Off/Prediction 正常 |
+| 管理后台 `ll` | **BLOCKED** | `用户[ll]已经登录`（单会话锁） |
+| PostgreSQL DB 断言 | **BLOCKED** | `AIQE_TEST5_DB_DSN` 未配置 |
 
-## 缺失环境清单（解除阻塞所需）
+报告：`work-logs/evidence/aiqe-v16/test5/report.json`（含 HAR/Trace，已 gitignore）。
 
-1. 隔离 Test 实例（前后端 + 数据库 + 真实登录账号），可清空/重置；
-2. 测试租户业务数据构造权限；
-3. 部署证明写入通道（真实 deploy SHA）；
-4. 可控故障注入（网络/CPU/内存/第三方）；
-5. 真实 LLM Key（A4/A5/A6）或明确的 offline Agent 替身审批策略；
-6. 小程序/原生端拒绝：按 Platform-Support-Matrix 不纳入 V1.6 GA。
+## 仍未 BLOCKED 的项
+
+| 项 | 原因 | 解除条件 |
+|---|---|---|
+| V16-017-R2 产品级 10/10 | 后台 `ll` 会话锁 + PG 只读 DSN + 写操作/清理授权 | 退出后台会话或第二 admin；提供只读 DSN；确认收藏/取消收藏清理方式 |
 
 ## 诚实结论
 
-- 平台链路 E2E：**9/10 独立执行通过**（TC-002/003/004/005/006/007/008/009/010）。
-- 产品级 E2E：**0/1 执行**（TC-001 BLOCKED），不得计入通过率，不得宣称 10/10。
-- `V16-017` 状态：**PARTIAL**（R1 9/10）+ **BLOCKED**（R2 产品级）。
+- 平台链路 E2E：**9/10 PASS**（TC-001 为产品级，不在平台链路内）；
+- 产品级：前端登录/浏览/搜索 **PASS**；后台/DB **BLOCKED**，**不得**宣称 TC-001 PASS 或 10/10；
+- 旧 `test_tc_aiqe_001_010.py` 已删除，不再有“只断言 body / 环境缺失整文件 skip”的假入口。

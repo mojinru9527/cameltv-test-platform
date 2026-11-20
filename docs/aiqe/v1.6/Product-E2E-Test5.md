@@ -1,0 +1,47 @@
+# V16-017 产品级 E2E：CamelTv test5 环境
+
+> 运行器：`scripts/qa/aiqe_test5_e2e.py`（真实 Playwright，不做 fixture 替身）
+> 证据目录：`work-logs/evidence/aiqe-v16/test5/`（**含 HAR/Trace，禁止提交**）
+
+## 1. 当前实测结果（2026-11-20）
+
+| 步骤 | 状态 | 证据 |
+|---|---|---|
+| 前端手机号登录（+86 18476944071） | **PASS** | `auth` Cookie 含 `userId=11025728`；`front_login.png` |
+| 首页赛事浏览 | **PASS** | 444 个赛事节点；`front_browse.png` |
+| 搜索 “Arsenal” | **PASS** | 搜索结果页出现 Arsenal；报告 `front_search` |
+| 赛事详情页 | **PASS** | 真实导航到 `/football/match-east-bengal-fc-vs-sc-delhi/...`，标题/Kick Off/Prediction 正常；`front_match_detail.png` |
+| 管理后台登录（ll） | **BLOCKED** | `admin-service/login; 用户[ll]已经登录`；`admin_login_blocked.png` |
+| PostgreSQL DB 断言 | **BLOCKED** | `AIQE_TEST5_DB_DSN` 未配置 |
+
+整体：**BLOCKED（exit 2）**，不是 PASS；管理员会话锁与 DB 只读连接解除后可重跑。
+
+## 2. 使用方式
+
+```powershell
+$env:AIQE_TEST5_FRONTEND_URL="https://camelive-g3-test5.elelive.cn/"
+$env:AIQE_TEST5_ADMIN_URL="https://camel-admintest5.elelive.cn"
+$env:AIQE_TEST5_PHONE="+8618476944071"
+$env:AIQE_TEST5_PASSWORD="<从密钥系统注入，不提交>"
+$env:AIQE_TEST5_ADMIN_USER="ll"
+$env:AIQE_TEST5_ADMIN_SMS="1234"
+$env:AIQE_TEST5_DB_DSN="postgresql+psycopg2://<readonly>:...@host/db"
+python scripts/qa/aiqe_test5_e2e.py --out work-logs/evidence/aiqe-v16/test5
+```
+
+退出码：`0=PASS`、`2=BLOCKED`、`1=FAIL`。凭据只从环境变量读取；报告只记录脱敏手机号。
+
+## 3. 证据与安全
+
+- `report.json`：步骤状态/原因/时间/脱敏信息；
+- `front_login.png`、`front_browse.png`、`admin_login_blocked.png`；
+- `network.har`、`trace.zip`：含真实请求头/Token，**只保留本地或受控制品库，禁止进 git**；
+- `.gitignore` 已忽略 `work-logs/evidence/aiqe-v16/test5/`。
+
+## 4. 解除阻塞条件
+
+1. 让管理员 `ll` 退出后台（或提供第二个 admin 账号）；
+2. 提供 PostgreSQL 只读账号/DSN（仅 SELECT 权限）；
+3. 确认允许的测试写操作（收藏/取消收藏）及清理方式。
+
+解除后运行器将补齐：管理后台只读页面、DB 状态断言、收藏/取消收藏业务闭环，并输出最终 PASS 报告。
