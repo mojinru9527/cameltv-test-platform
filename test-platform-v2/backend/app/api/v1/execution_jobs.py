@@ -8,7 +8,7 @@
 """
 from __future__ import annotations
 
-from typing import cast
+from typing import Any, cast
 
 from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
@@ -17,7 +17,6 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
-from app.models.execution_job import ExecutionJob
 from app.schemas.common import R
 from app.services import (
     ai_agent_service,
@@ -230,7 +229,7 @@ def report(
         if refreshed is None:
             refreshed = job
         assert refreshed is not None
-        return R.ok(execution_job_service.job_dict(cast(ExecutionJob, refreshed)))
+        return R.ok(execution_job_service.job_dict(cast(Any, refreshed)))
     job = execution_job_service.report(
         db,
         job_id=job_id,
