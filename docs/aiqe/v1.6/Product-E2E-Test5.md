@@ -139,3 +139,16 @@ python scripts/qa/aiqe_test5_e2e.py --out work-logs/evidence/aiqe-v16/test5
 - Contract V1 冻结，checksum `sha256:...`；V2 创建后 V1 checksum **不变**，V2 checksum 不同；
 - 关联用例 `CASE-FAV-001` 置 `DRAFT`（需复审）；
 - 报告：`work-logs/evidence/aiqe-v16/test5-contract/report.json`。
+
+
+## 14. TC-004 补充：REGISTER/Login 登录方式区分（PARTIAL）
+
+运行器：`scripts/qa/aiqe_test5_register_login_e2e.py`
+
+- 点击 `REGISTER` 打开 Register 弹窗；
+- EMAIL 模式输入：`email / password / smsVerifyCode`；
+- PHONE NUMBER 模式输入：`mobile / password / smsVerifyCode`；
+- 点击 `Log in` 进入 Login 弹窗；
+- Login EMAIL：`email / password`；Login PHONE：`mobile / password`；
+- 8 项互斥检查全部 PASS；
+- **仍为 PARTIAL**：原始“广告/其他功能浮层交叉干扰 + Defect Draft”未执行，本次只验证登录方式区分。

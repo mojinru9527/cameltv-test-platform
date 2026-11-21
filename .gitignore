@@ -141,3 +141,6 @@ work-logs/evidence/aiqe-v16/test5-multidevice/
 
 # TC-001 contract evidence
 work-logs/evidence/aiqe-v16/test5-contract/
+
+# TC-004 login method evidence
+work-logs/evidence/aiqe-v16/test5-login-methods/

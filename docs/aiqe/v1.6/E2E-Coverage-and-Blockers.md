@@ -11,7 +11,7 @@
 | TC-001 | 需求契约冻结 + 需求变更影响 | **PARTIAL** | 只有 test5 连通性；未导入收藏 PRD、未做契约冻结/变更影响 |
 | TC-002 | API → Admin UI → Public API → DB 的统一 Run | **PARTIAL** | test5 前端 4 步 + 后台 uu 登录/只读/退出 + MySQL 断言；另有 2 节点 API DAG；但**不是同一个 AIQE Run**，缺 Playwright/DB Driver 统一编排 |
 | TC-003 | API 首次失败 + 重试成功 → 不得掩盖失败 | **VERIFIED** | fault proxy 注入一次 503；attempt1 FAILED/attempt2 PASSED 均保留；Run PASS（`test5-retry/report.json`） |
-| TC-004 | 广告/其他功能浮层交叉干扰 | **PARTIAL** | test5 Core 登录弹层 PASS；注入浮层后 Integration 被拦截并分类 CROSS_FEATURE_DEFECT；未接入 AIQE 两个正式 Run/Defect Draft |
+| TC-004 | 广告/其他功能浮层交叉干扰 | **PARTIAL** | REGISTER/Login 邮箱 vs 手机号登录方式区分 8 项 PASS；原始浮层 CrossFeature/Defect Draft 未执行 |
 | TC-005 | 并发数据污染 | **VERIFIED** | 同一赛事 resource key 的两个 Run 由 scheduler 锁串行；A finish <= B start，无重叠（`test5-concurrency/report.json`） |
 | TC-006 | 上游第三方故障 | **VERIFIED** | 504 stub → Node BLOCKED/UPSTREAM_5XX；Assertion BLOCKED；未创建 Bug（`test5-upstream/report.json`） |
 | TC-007 | UI Runner 自身故障 | **PARTIAL** | 有真实 Chromium 流程；未强制 kill 浏览器验证 Runner 故障归因 |

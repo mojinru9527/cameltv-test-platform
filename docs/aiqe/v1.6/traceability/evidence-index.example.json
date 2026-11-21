@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "f1edcfdccea1d0def0a0d70d0e3dc638c5460ea4",
+  "commit_sha": "5a5967898bbeb24df0e3861e9ae320f864ba879c",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -2095,10 +2095,12 @@
       ],
       "evidence": [
         "manual:test5 overlay PASS（core login modal input_count=2；integration blocked；hit_target=aiqe-cross-feature-overlay）",
-        "gaps: 未接入 AIQE Core/Integration 正式 Run，未创建 Defect Draft"
+        "manual:REGISTER/Login 邮箱与手机号两种登录方式区分 PASS（register/login 均 email vs mobile 输入互斥）",
+        "gaps: 原始浮层 CrossFeature/Defect Draft 仍未执行，TC 保持 PARTIAL"
       ],
       "gaps": [
-        "未用 AIQE Core/Integration 两个正式 Run 对照，未生成关联浮层的 Defect Draft。"
+        "未用 AIQE Core/Integration 两个正式 Run 对照，未生成关联浮层的 Defect Draft。",
+        "已补充 REGISTER/Login 邮箱与手机号登录方式区分证据；这不替代原始浮层交叉干扰验收。"
       ]
     },
     {

@@ -2153,11 +2153,13 @@ requirements:
     layers: [L3, L4]
     evidence:
       - "manual:test5 overlay PASS（core login modal input_count=2；integration blocked；hit_target=aiqe-cross-feature-overlay）"
-      - "gaps: 未接入 AIQE Core/Integration 正式 Run，未创建 Defect Draft"
+      - "manual:REGISTER/Login 邮箱与手机号两种登录方式区分 PASS（register/login 均 email vs mobile 输入互斥）"
+      - "gaps: 原始浮层 CrossFeature/Defect Draft 仍未执行，TC 保持 PARTIAL"
     owner: qa-automation
     reviewer: pending
     gaps:
       - "未用 AIQE Core/Integration 两个正式 Run 对照，未生成关联浮层的 Defect Draft。"
+      - "已补充 REGISTER/Login 邮箱与手机号登录方式区分证据；这不替代原始浮层交叉干扰验收。"
 
   - id: TC-AIQE-005
     issue: TC-AIQE-005
