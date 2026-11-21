@@ -85,6 +85,10 @@ class Settings(BaseSettings):
     aiqe_secret_store_key: str = ""
     aiqe_secret_store_region: str = ""
     aiqe_secret_store_prefix: str = "aiqe/secrets"
+    aiqe_vault_addr: str = ""
+    aiqe_vault_token: str = ""
+    aiqe_vault_transit_mount: str = "transit"
+    aiqe_vault_transit_key: str = "aiqe-secrets"
     https_only: bool = False
     db_connection_tls: bool = False
     # V40-009 SSO scaffolding (real IdP handshake is external; values are config

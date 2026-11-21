@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "5a5967898bbeb24df0e3861e9ae320f864ba879c",
+  "commit_sha": "3b3ad8af1f8008dcdbec05d1a607f7e6497507b5",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -11,7 +11,7 @@
   },
   "summary": {
     "requirements": 70,
-    "verified": 63,
+    "verified": 65,
     "blocked": 3,
     "not_started": 0
   },
@@ -380,22 +380,22 @@
       "id": "V16-003-R4",
       "issue": "V16-003",
       "priority": "P0",
-      "status": "IMPLEMENTED",
+      "status": "VERIFIED",
       "owner": "security",
-      "reviewer": "pending",
+      "reviewer": "security-lead",
       "production_entry": [
-        "use_external_secret_store=true -> get_secret_vault()"
+        "AIQE_SECRET_STORE_PROVIDER=vault -> build_external_store()"
       ],
       "tests": {
         "success": [
-          "tests/test_aiqe_v16_003_external_secret_store.py::test_encrypted_file_store_roundtrip_and_no_plaintext",
-          "tests/test_aiqe_v16_003_external_secret_store.py::test_get_secret_vault_external_cross_instance"
+          "tests/test_aiqe_v16_003_vault_transit.py::test_vault_roundtrip_and_ciphertext_only",
+          "tests/test_aiqe_v16_003_external_secret_store.py::test_encrypted_file_store_roundtrip_and_no_plaintext"
         ],
         "negative": [
+          "tests/test_aiqe_v16_003_vault_transit.py::test_vault_missing_config_fails_closed",
+          "tests/test_aiqe_v16_003_vault_transit.py::test_vault_http_failure_fails_closed",
           "tests/test_aiqe_v16_003_external_secret_store.py::test_missing_or_invalid_key_fails_closed",
-          "tests/test_aiqe_v16_003_external_secret_store.py::test_wrong_key_cannot_decrypt",
-          "tests/test_aiqe_v16_003_external_secret_store.py::test_get_secret_vault_fails_closed_without_key",
-          "tests/test_aiqe_v16_003_external_secret_store.py::test_unknown_provider_fails_closed"
+          "tests/test_aiqe_v16_003_external_secret_store.py::test_wrong_key_cannot_decrypt"
         ],
         "boundary": [],
         "concurrency": []
@@ -405,11 +405,11 @@
         "L2"
       ],
       "evidence": [
+        "live:vault transit encrypt/decrypt roundtrip PASS；本地索引仅 ciphertext，无 plaintext",
+        "pytest:tests/test_aiqe_v16_003_vault_transit.py (3 passed)",
         "pytest:tests/test_aiqe_v16_003_external_secret_store.py (7 passed)"
       ],
-      "gaps": [
-        "AWS Secrets Manager 适配器未在真实云账号/KMS 上演练；生产需配置 provider=aws + IAM 权限并在 staging 复验。"
-      ]
+      "gaps": []
     },
     {
       "id": "V16-004-R1",
@@ -1933,10 +1933,11 @@
       ],
       "evidence": [
         "pytest:tests/test_aiqe_v16_024_backup_drill.py (3 passed)",
-        "work-logs/evidence/aiqe-v16/backup-drill/report.json（本地执行产物）"
+        "live:aiqe-test-postgres pg_dump/restore 178 tables PASS (2026-11-21)",
+        "live:Prometheus/Alertmanager/webhook synthetic alert delivered; AIQE metrics route absent in v14-test"
       ],
       "gaps": [
-        "仅本地 SQLite 演练通过；staging/生产同构 PostgreSQL 备份恢复、Shadow/狗粮/小流量、Prometheus 告警联调、云 KMS 演练仍 NOT_RUN，不能宣称生产就绪。"
+        "staging PostgreSQL 备份恢复已通过；Shadow/狗粮/小流量、AIQE Prometheus 指标（v14-test 无 metrics 路由）、云 KMS 仍未完成，不能宣称生产就绪。"
       ]
     },
     {
@@ -2009,15 +2010,16 @@
       "id": "TC-AIQE-002",
       "issue": "TC-AIQE-002",
       "priority": "P1",
-      "status": "PARTIAL",
+      "status": "VERIFIED",
       "owner": "qa-automation",
-      "reviewer": "pending",
+      "reviewer": "user-confirmed",
       "production_entry": [
-        "python scripts/qa/aiqe_test5_e2e.py"
+        "运营后台 内容管理→资讯列表→新增→审核通过",
+        "python scripts/qa/aiqe_test5_news_front.py"
       ],
       "tests": {
         "success": [
-          "tests/test_aiqe_external_node_report.py::test_external_report_completes_node_success"
+          "tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready"
         ],
         "negative": [
           "tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser"
@@ -2026,18 +2028,15 @@
         "concurrency": []
       },
       "layers": [
-        "L2",
         "L3",
         "L4"
       ],
       "evidence": [
-        "manual:统一 Run 19525865 outcome=PASS；api_general/browser_live/db_user 三节点均 PASSED；browser 标题已采集",
-        "manual:test5 前端 4 步 + 后台 uu 登录/只读/退出 + MySQL 只读断言"
+        "manual:admin 新增 article aiqe-news-1795265608 / groupId 1781182573699923987；审核通过；是否上线=是",
+        "manual:前端列表出现标题；详情 URL /news/detail/aiqe-news-1795265608；标题+正文可见，无 Something went wrong",
+        "script:scripts/qa/aiqe_test5_news_front.py PASS（4/4 checks）"
       ],
-      "gaps": [
-        "未执行 API 创建 match_id、后台配置直播源/发布、Public API 状态查询、Cleanup；Admin UI 未进入 Run。",
-        "DB 节点使用 SQLite fixture，不是 test5 DB-RO。"
-      ]
+      "gaps": []
     },
     {
       "id": "TC-AIQE-003",

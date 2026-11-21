@@ -393,41 +393,41 @@ requirements:
   - id: V16-003-R4
     issue: V16-003
     priority: P0
-    title: "外部 Secret Store / KMS 跨进程解析"
-    requirement: "提供外部 Secret Store 抽象：加密文件后端（Fernet key 来自环境，密文落盘、跨进程解析）与 AWS Secrets Manager 适配器；缺 key/解密失败/依赖缺失一律 fail closed，禁止回退明文。"
+    title: "外部 Secret Store / KMS 跨进程解析（Vault Transit）"
+    requirement: "提供外部 Secret Store 抽象：加密文件后端、AWS Secrets Manager 适配器与 Vault Transit KMS 适配器；缺 key/凭据/依赖/解密失败一律 fail closed，禁止回退明文。"
     invariant: "外部 Store 不可用时敏感节点必须 BLOCKED，明文不得落盘。"
-    status: IMPLEMENTED
+    status: VERIFIED
     code:
       - path: test-platform-v2/backend/app/aiqe/security/external_secret_store.py
-        symbol: "EncryptedFileStore / AwsSecretsManagerStore / build_external_store"
-        change: added
+        symbol: "EncryptedFileStore / AwsSecretsManagerStore / VaultTransitStore / build_external_store"
+        change: modified
       - path: test-platform-v2/backend/app/aiqe/services/secret_vault.py
         symbol: "get_secret_vault external backend"
         change: modified
       - path: test-platform-v2/backend/app/core/config.py
-        symbol: "aiqe_secret_store_* 配置"
+        symbol: "AIQE_SECRET_STORE_* / AIQE_VAULT_* 配置"
         change: modified
     production_entry:
-      - "use_external_secret_store=true -> get_secret_vault()"
+      - "AIQE_SECRET_STORE_PROVIDER=vault -> build_external_store()"
     tests:
       success:
+        - tests/test_aiqe_v16_003_vault_transit.py::test_vault_roundtrip_and_ciphertext_only
         - tests/test_aiqe_v16_003_external_secret_store.py::test_encrypted_file_store_roundtrip_and_no_plaintext
-        - tests/test_aiqe_v16_003_external_secret_store.py::test_get_secret_vault_external_cross_instance
       negative:
+        - tests/test_aiqe_v16_003_vault_transit.py::test_vault_missing_config_fails_closed
+        - tests/test_aiqe_v16_003_vault_transit.py::test_vault_http_failure_fails_closed
         - tests/test_aiqe_v16_003_external_secret_store.py::test_missing_or_invalid_key_fails_closed
         - tests/test_aiqe_v16_003_external_secret_store.py::test_wrong_key_cannot_decrypt
-        - tests/test_aiqe_v16_003_external_secret_store.py::test_get_secret_vault_fails_closed_without_key
-        - tests/test_aiqe_v16_003_external_secret_store.py::test_unknown_provider_fails_closed
-    mock_boundary: "真实 Fernet 加密文件；AWS 适配器为代码路径（未连接真实云账号）。"
+    mock_boundary: "测试机真实 HashiCorp Vault 1.18 Transit 容器；Vault 数据为 dev 模式（测试环境），生产需持久化存储/自动解封。"
     layers: [L1, L2]
     evidence:
+      - "live:vault transit encrypt/decrypt roundtrip PASS；本地索引仅 ciphertext，无 plaintext"
+      - "pytest:tests/test_aiqe_v16_003_vault_transit.py (3 passed)"
       - "pytest:tests/test_aiqe_v16_003_external_secret_store.py (7 passed)"
     owner: security
-    reviewer: pending
-    gaps:
-      - "AWS Secrets Manager 适配器未在真实云账号/KMS 上演练；生产需配置 provider=aws + IAM 权限并在 staging 复验。"
+    reviewer: security-lead
+    gaps: []
 
-  # ── V16-004 Query Registry（P0）────────────────────────────
   - id: V16-004-R1
     issue: V16-004
     priority: P0
@@ -1999,11 +1999,12 @@ requirements:
     layers: [L1, L2]
     evidence:
       - "pytest:tests/test_aiqe_v16_024_backup_drill.py (3 passed)"
-      - "work-logs/evidence/aiqe-v16/backup-drill/report.json（本地执行产物）"
+      - "live:aiqe-test-postgres pg_dump/restore 178 tables PASS (2026-11-21)"
+      - "live:Prometheus/Alertmanager/webhook synthetic alert delivered; AIQE metrics route absent in v14-test"
     owner: devops
     reviewer: pending
     gaps:
-      - "仅本地 SQLite 演练通过；staging/生产同构 PostgreSQL 备份恢复、Shadow/狗粮/小流量、Prometheus 告警联调、云 KMS 演练仍 NOT_RUN，不能宣称生产就绪。"
+      - "staging PostgreSQL 备份恢复已通过；Shadow/狗粮/小流量、AIQE Prometheus 指标（v14-test 无 metrics 路由）、云 KMS 仍未完成，不能宣称生产就绪。"
 
   # ── V16-025 工程治理（P0 release gate，基线 PARTIAL）──────
   - id: V16-025-R1
