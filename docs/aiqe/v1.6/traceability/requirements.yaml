@@ -2076,34 +2076,31 @@ requirements:
   - id: TC-AIQE-002
     issue: TC-AIQE-002
     priority: P1
-    title: "API → Admin UI → Public API → DB 的统一 Run"
-    requirement: "一个 Run 内通过 API/Playwright/DB-RO Driver 覆盖收藏赛事流程，引用同一唯一 Fixture。"
-    invariant: "真实产品/真实 Run；不得用 fixture 或 body 断言冒充。"
-    status: PARTIAL
+    title: "运营后台发布资讯 → 前端可查看（用户批准简化口径）"
+    requirement: "运营后台新增资讯（封面/球类/分类/文章ID/标题/关键词/描述/正文），审核通过并上线；前端资讯列表与详情页可查看同一文章。"
+    invariant: "真实后台写入 + 真实前端读取；不得用 mock 或仅 body 存在冒充。"
+    status: VERIFIED
     code:
-      - path: scripts/qa/aiqe_test5_e2e.py
-        symbol: "test5 product E2E"
+      - path: scripts/qa/aiqe_test5_news_front.py
+        symbol: "前端资讯详情标题/正文/无错误页校验"
         change: added
-      - path: test-platform-v2/backend/app/api/v1/execution_jobs.py
-        symbol: "AIQE 外部 Runner 上报先 fenced 收口再落 Job 终态"
-        change: modified
     production_entry:
-      - "python scripts/qa/aiqe_test5_e2e.py"
+      - "运营后台 内容管理→资讯列表→新增→审核通过"
+      - "python scripts/qa/aiqe_test5_news_front.py"
     tests:
       success:
-        - tests/test_aiqe_external_node_report.py::test_external_report_completes_node_success
+        - tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready
       negative:
         - tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser
-    mock_boundary: "真实 test5 API/公开页 + 本地 Playwright Runner + SQLite fixture DB；Admin UI 与写流程尚未进入同一 Run。"
-    layers: [L2, L3, L4]
+    mock_boundary: "真实 test5 运营后台（kk）+ 真实资讯保存/审核接口 + 前端列表/详情。"
+    layers: [L3, L4]
     evidence:
-      - "manual:统一 Run 19525865 outcome=PASS；api_general/browser_live/db_user 三节点均 PASSED；browser 标题已采集"
-      - "manual:test5 前端 4 步 + 后台 uu 登录/只读/退出 + MySQL 只读断言"
+      - "manual:admin 新增 article aiqe-news-1795265608 / groupId 1781182573699923987；审核通过；是否上线=是"
+      - "manual:前端列表出现标题；详情 URL /news/detail/aiqe-news-1795265608；标题+正文可见，无 Something went wrong"
+      - "script:scripts/qa/aiqe_test5_news_front.py PASS（4/4 checks）"
     owner: qa-automation
-    reviewer: pending
-    gaps:
-      - "未执行 API 创建 match_id、后台配置直播源/发布、Public API 状态查询、Cleanup；Admin UI 未进入 Run。"
-      - "DB 节点使用 SQLite fixture，不是 test5 DB-RO。"
+    reviewer: user-confirmed
+    gaps: []
 
   - id: TC-AIQE-003
     issue: TC-AIQE-003

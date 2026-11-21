@@ -152,3 +152,16 @@ python scripts/qa/aiqe_test5_e2e.py --out work-logs/evidence/aiqe-v16/test5
 - Login EMAIL：`email / password`；Login PHONE：`mobile / password`；
 - 8 项互斥检查全部 PASS；
 - **仍为 PARTIAL**：原始“广告/其他功能浮层交叉干扰 + Defect Draft”未执行，本次只验证登录方式区分。
+
+
+## 15. TC-002 运营后台资讯发布 → 前端查看（VERIFIED，用户批准简化口径）
+
+- 运营后台 `内容管理 → 资讯列表 → 新增`；
+- 文章 ID：`aiqe-news-1795265608`；groupId：`1781182573699923987`；
+- 封面、球类、分类、标题、关键词、描述、正文均写入；
+- 审核通过，是否上线=是；
+- 前端列表出现标题；详情页：
+  `https://camelive-g3-test5.elelive.cn/news/detail/aiqe-news-1795265608?entry_way=news`
+- 详情页标题/正文可见，无 “Something went wrong”；
+- 运行器：`scripts/qa/aiqe_test5_news_front.py`，4/4 checks PASS；
+- 边界：这是用户批准的“资讯发布→前端查看”简化口径，不是原始 match_id/直播源/DB-RO 统一 Run。
