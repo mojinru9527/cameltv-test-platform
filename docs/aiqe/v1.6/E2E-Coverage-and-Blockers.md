@@ -39,3 +39,12 @@
 - 产品级 TC：**7/10 完全 VERIFIED（TC-001/TC-002/TC-003/TC-005/TC-006/TC-007/TC-009）**；TC-004 PARTIAL；TC-008/TC-010 BLOCKED。
 - `V16-017-R2` 仍 BLOCKED；不得宣称 10/10 或 GA。
 - 旧 `test_tc_aiqe_001_010.py` 已删除，不再有 body 断言/整文件 skip 假入口。
+
+
+## 用户暂缓项（2026-11-22）
+
+- TC-004：已有 REGISTER/Login 登录方式区分证据；原始浮层 CrossFeature/Defect Draft 暂缓。
+- TC-008：用户暂时跳过，后续再验证。
+- TC-010：用户暂时跳过，依赖 TC-008 恢复。
+
+以上不计入 VERIFIED，PR 不得宣称 10/10。

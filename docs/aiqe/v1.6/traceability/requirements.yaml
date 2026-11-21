@@ -1553,7 +1553,7 @@ requirements:
     owner: qa-automation
     reviewer: pending
     review_by: "2027-01-15"
-    blocked_reason: "PRODUCT_TC_PARTIAL：产品级 TC 6/10 完全 VERIFIED；TC-002/TC-004 PARTIAL，TC-008/TC-010 按用户意见跳过；不是管理员锁问题。"
+    blocked_reason: "PRODUCT_TC_DEFERRED：产品级 TC 7/10 完全 VERIFIED；TC-004 PARTIAL，TC-008/TC-010 用户决定暂时跳过，后续再验证。"
     gaps: []
 
   # ── V16-018 Artifact（P1）──────────────────────────────────
@@ -2158,6 +2158,7 @@ requirements:
     gaps:
       - "未用 AIQE Core/Integration 两个正式 Run 对照，未生成关联浮层的 Defect Draft。"
       - "已补充 REGISTER/Login 邮箱与手机号登录方式区分证据；这不替代原始浮层交叉干扰验收。"
+      - "用户决定暂时跳过 TC-004 的浮层 CrossFeature/Defect Draft 部分，后续再验证。"
 
   - id: TC-AIQE-005
     issue: TC-AIQE-005
@@ -2267,7 +2268,7 @@ requirements:
     owner: qa-automation
     reviewer: pending
     review_by: "2027-01-15"
-    blocked_reason: "DEFECT_AND_FIXED_SHA_MISSING：尚无 TC-004 缺陷草稿、人工确认与真实修复 commit SHA。"
+    blocked_reason: "USER_DEFERRED：用户决定暂时跳过 TC-008，后续再验证；恢复时仍需 TC-004 缺陷草稿、人工确认与真实修复 commit SHA。"
     gaps: []
 
   - id: TC-AIQE-009
@@ -2318,6 +2319,6 @@ requirements:
     owner: qa-automation
     reviewer: pending
     review_by: "2027-01-15"
-    blocked_reason: "LEARNING_PRODUCT_CHAIN_MISSING：缺陷/回归产品链路尚未完成，无法进入学习候选发布。"
+    blocked_reason: "USER_DEFERRED：用户决定暂时跳过 TC-010，后续再验证；恢复依赖 TC-008 缺陷/回归产品链路。"
     gaps: []
 
