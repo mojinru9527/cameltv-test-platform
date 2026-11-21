@@ -54,6 +54,10 @@ class TestRun(Base):
         Integer, ForeignKey("test_scenarios.id", ondelete="SET NULL"), nullable=True
     )
     workflow_definition_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    # V16-007：执行只能绑定不可变 WorkflowSnapshot（content-addressed）。
+    workflow_snapshot_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    # V16-006：NORMAL / NOISE_EXPERIMENT / DEFECT_REGRESSION（统一 Launch 入口）。
+    execution_kind: Mapped[str] = mapped_column(String(32), nullable=False, default="NORMAL")
     # v1.4 / PR-6：Run 把自己的执行合同冻结在本地，后续 Workflow 版本漂移不影响历史。
     workflow_checksum: Mapped[str] = mapped_column(String(64), nullable=False, default="")
     workflow_snapshot_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)

@@ -244,6 +244,32 @@ def test_run_pass_when_evidence_complete(db_session, storage):
     )
     complete_upload(db_session, artifact_id=row.id, project_id=1, content=b"png", storage=storage)
 
+    # V16-009：Run PASS 需要业务 Oracle；为该节点预置一条 PASS 业务断言。
+    from app.aiqe.models.run import StepAttempt
+    from app.aiqe.schemas.contracts import AssertionOutcome
+    from app.aiqe.services import assertion_service
+
+    attempt = StepAttempt(
+        node_run_id=node.id, step_key=node.node_key, attempt_no=1, status="PASSED"
+    )
+    db_session.add(attempt)
+    db_session.flush()
+    assertion_service.persist_outcomes(
+        db_session,
+        attempt,
+        [
+            AssertionOutcome(
+                assertion_key="evidence_oracle",
+                type="http_status",
+                oracle_layer="REQ",
+                oracle_ref="AC-EVIDENCE-1",
+                status="PASS",
+                expected=200,
+                actual=200,
+                severity="P0",
+            )
+        ],
+    )
     dag_scheduler.complete_node(db_session, run.id, node.node_key, "PASSED", GRAPH)
     db_session.commit()
     run_row = db_session.get(TestRun, run.id)

@@ -154,8 +154,29 @@ def _payload(client: httpx.Client, headers: dict[str, str], node_id: str, job_id
         headers=headers,
         params={"node_id": node_id},
     )
+    if resp.status_code == 409:
+        # V16-001：服务端策略未授权时不会下发可执行载荷；Runner 只能上报 BLOCKED。
+        detail = (resp.json() or {}).get("detail") or {}
+        return {
+            "_blocked": True,
+            "code": str(detail.get("code") or "TARGET_POLICY_DENIED"),
+            "target_policy": detail.get("policy"),
+        }
     resp.raise_for_status()
     return resp.json()["data"]["payload"]
+
+
+def _policy_from_payload(payload: dict):
+    """Runner 侧策略强制：没有服务端策略或非 ALLOW 时禁止执行任何节点。"""
+    from app.aiqe.security.target_policy import PolicyDecision, TargetPolicy
+
+    raw = payload.get("target_policy")
+    if not isinstance(raw, dict):
+        return None
+    policy = TargetPolicy.from_snapshot(raw)
+    if policy.decision is not PolicyDecision.ALLOW:
+        return policy
+    return policy
 
 
 def _report(
@@ -167,6 +188,7 @@ def _report(
     ok: bool,
     result: dict,
     error: str,
+    fencing_token: int | None = None,
 ) -> None:
     resp = client.post(
         f"/api/v1/execution-jobs/{job_id}/report",
@@ -177,6 +199,8 @@ def _report(
             "summary": "aiqe local runner",
             "result": result,
             "error_message": error,
+            # V16-005：写结果必须携带 claim 时的 attempt 作为 fencing token。
+            "fencing_token": fencing_token,
         },
     )
     resp.raise_for_status()
@@ -216,9 +240,11 @@ def run_once(
     if not job:
         return {"claimed": False}
     job_id = int(job["id"])
+    fencing_token = int(job.get("attempt") or 0) or None
     payload = _payload(client, headers, node_id, job_id)
+    policy = _policy_from_payload(payload)
     try:
-        resolved_input = resolve_input(payload)
+        resolved_input = {} if payload.get("_blocked") else resolve_input(payload)
         resolve_error = ""
     except Exception as exc:  # noqa: BLE001
         resolved_input = {}
@@ -228,7 +254,21 @@ def run_once(
         input_ref=dict(payload.get("input") or {}),
         node_key=payload.get("node_key"),
     )
-    if resolve_error:
+    if payload.get("_blocked"):
+        execution = node_executor.NodeExecution(
+            status="BLOCKED",
+            error_class=str(payload.get("code") or "TARGET_POLICY_DENIED"),
+            detail={"reason": "服务端 TargetPolicy 未授权，Runner 拒绝执行"},
+            data={"blocked": True},
+        )
+    elif policy is None:
+        execution = node_executor.NodeExecution(
+            status="BLOCKED",
+            error_class="TARGET_POLICY_MISSING_BINDING",
+            detail={"reason": "服务端未下发 TargetPolicy 快照"},
+            data={"blocked": True},
+        )
+    elif resolve_error:
         execution = node_executor.NodeExecution(
             status="BLOCKED",
             error_class="VARIABLE_NOT_FOUND",
@@ -236,7 +276,17 @@ def run_once(
             data={"error": resolve_error},
         )
     else:
-        execution = node_executor.execute_node(node, input_override=resolved_input)
+        try:
+            execution = node_executor.execute_node(
+                node, policy_context=policy, input_override=resolved_input
+            )
+        except Exception as exc:  # Runner 自身/浏览器崩溃必须上报，不能悬挂
+            execution = node_executor.NodeExecution(
+                status="ERROR",
+                error_class="AUTOMATION/WORKER_FAILURE",
+                detail={"error": f"{type(exc).__name__}: {exc}"},
+                data={"worker_failure": True},
+            )
     ok = execution.status == "PASSED"
     result = {
         "status": execution.status,
@@ -269,6 +319,7 @@ def run_once(
         ok=ok,
         result=result,
         error=execution.error_class,
+        fencing_token=fencing_token,
     )
     return {
         "claimed": True,

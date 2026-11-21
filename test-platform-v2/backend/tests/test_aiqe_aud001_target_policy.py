@@ -21,6 +21,7 @@ import pytest
 
 from app.aiqe.models.run import NodeRun, TestRun
 from app.aiqe.security import (
+    PolicyDecision,
     SafeHttpExecutor,
     TargetPolicyResolver,
     SafeRequest,
@@ -53,6 +54,8 @@ def open_policy(**overrides) -> TargetPolicy:
         "allowed_ports": (80, 443),
         "allowed_methods": ("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"),
         "max_redirects": 0,
+        # V16-001：显式 ALLOW 决策是唯一授权入口（hosts 不再隐式等于授权）。
+        "decision": PolicyDecision.ALLOW,
     }
     base.update(overrides)
     return TargetPolicy(**base)
@@ -479,7 +482,11 @@ def test_node_executor_denies_unlisted_host_and_records_event(db_session):
     )
     node = _seed_run_with_node(db_session, url="http://127.0.0.1/admin")
 
-    outcome = node_executor.execute_node(node, db=db_session)
+    outcome = node_executor.execute_node(
+        node,
+        policy_context=node_executor.policy_context_for(db_session, node),
+        db=db_session,
+    )
     assert outcome.status == "BLOCKED"
     assert outcome.error_class == "HOST_NOT_ALLOWED"
     assert outcome.detail["denial"]["code"] == outcome.error_class
@@ -502,7 +509,11 @@ def test_node_executor_denies_private_address_even_when_host_allowed(db_session)
         policy={"allowed_hosts": ["127.0.0.1"], "allowed_ports": [8080]},
     )
     node = _seed_run_with_node(db_session, url="http://127.0.0.1:8080/admin")
-    outcome = node_executor.execute_node(node, db=db_session)
+    outcome = node_executor.execute_node(
+        node,
+        policy_context=node_executor.policy_context_for(db_session, node),
+        db=db_session,
+    )
     assert outcome.status == "BLOCKED"
     assert outcome.error_class in {"PRIVATE_ADDRESS_DENIED", "ADDRESS_BLOCKED"}
 
@@ -519,7 +530,11 @@ def test_workflow_policy_override_is_ignored(db_session):
         url="http://127.0.0.1:8080/admin",
         input_extra={"allow_private": True, "allowed_hosts": ["*"], "verify_tls": False},
     )
-    outcome = node_executor.execute_node(node, db=db_session)
+    outcome = node_executor.execute_node(
+        node,
+        policy_context=node_executor.policy_context_for(db_session, node),
+        db=db_session,
+    )
     db_session.commit()
 
     assert outcome.status == "BLOCKED"
@@ -536,10 +551,15 @@ def test_node_executor_without_policy_context_blocks(db_session):
         driver_key="http",
         input_ref={"url": "https://api.allowed.test/x"},
     )
-    # 生产路径始终带 DB 上下文；Run 不存在即策略不可用，必须 BLOCKED。
-    outcome = node_executor.execute_node(node, db=db_session)
+    # 生产路径始终带 DB 上下文；Run 不存在即未绑定 Project/Environment/Policy，必须 BLOCKED。
+    outcome = node_executor.execute_node(
+        node,
+        policy_context=node_executor.policy_context_for(db_session, node),
+        db=db_session,
+    )
     assert outcome.status == "BLOCKED"
-    assert outcome.error_class == "POLICY_UNAVAILABLE"
+    # V16-001：四态决策下这是 MISSING_BINDING，而不是笼统的“策略不可用”。
+    assert outcome.error_class == "TARGET_POLICY_MISSING_BINDING"
 
 
 def test_new_policy_supersedes_previous_active(db_session):

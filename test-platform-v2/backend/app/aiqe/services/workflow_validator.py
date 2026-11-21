@@ -17,6 +17,12 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from app.aiqe.services.node_category import (
+    CATEGORY_BUSINESS,
+    has_business_oracle,
+    node_category,
+)
+
 VAR_RE = re.compile(r"\$\{nodes\.([A-Za-z0-9_-]+)\.outputs\.([A-Za-z0-9_-]+)\}")
 WRITE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
@@ -166,6 +172,45 @@ def validate_workflow(
                     key,
                 )
 
+        # V16-004：DB 节点只能引用服务端 Query Registry，Workflow 不得携带 SQL/白名单/连接。
+        if driver in {"db", "db_readonly", "database"}:
+            raw_input = node.get("input")
+            spec_input: dict[str, Any] = (
+                dict(raw_input) if isinstance(raw_input, dict) else {}
+            )
+            forbidden = sorted(
+                str(item)
+                for item in spec_input
+                if str(item)
+                in {
+                    "sql",
+                    "statement",
+                    "query",
+                    "query_registry",
+                    "registry",
+                    "allowed_tables",
+                    "allowed_columns",
+                    "connection_url",
+                    "connection_ref",
+                    "database_url",
+                    "schema",
+                    "tables",
+                    "table",
+                }
+            )
+            if forbidden:
+                add(
+                    "db_workflow_override",
+                    f"db 节点不得携带 SQL/表白名单/连接字段: {forbidden}",
+                    key,
+                )
+            if not str(spec_input.get("query_key") or "").strip():
+                add(
+                    "db_query_key_missing",
+                    "db 节点必须提供 query_key（服务端登记查询）",
+                    key,
+                )
+
         assertions = node.get("assertions") or []
         if not isinstance(assertions, list):
             add("assertions_invalid", "assertions 必须是数组", key)
@@ -182,6 +227,19 @@ def validate_workflow(
                         f"assertion {assertion.get('key', '?')} 缺少 expected/expected_ref",
                         key,
                     )
+
+        # V16-009：BUSINESS 节点必须有有效业务 Oracle；SETUP/CLEANUP/OBSERVE 才能无断言。
+        category = node_category(
+            node, driver=driver if isinstance(driver, str) else ""
+        )
+        if category == CATEGORY_BUSINESS and not has_business_oracle(
+            assertions, node.get("input") if isinstance(node.get("input"), dict) else {}
+        ):
+            add(
+                "business_assertion_missing",
+                "BUSINESS 节点必须至少有一个有效业务 Oracle（assertions 或历史 expected_status/expect_text）",
+                key,
+            )
 
     cycle = _detect_cycle(deps)
     if cycle:

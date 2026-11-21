@@ -13,14 +13,14 @@ from app.models.user import User
 
 GRAPH = {
     "schema_version": "1.0",
-    "nodes": [{"key": "n1", "driver": "http"}],
+    "nodes": [{"key": "n1", "driver": "http", "category": "setup"}],
     "edges": [],
 }
 GRAPH_V2 = {
     "schema_version": "1.0",
     "nodes": [
-        {"key": "n1", "driver": "http"},
-        {"key": "n2", "driver": "playwright", "depends_on": ["n1"]},
+        {"key": "n1", "driver": "http", "category": "setup"},
+        {"key": "n2", "driver": "playwright", "category": "setup", "depends_on": ["n1"]},
     ],
     "edges": [{"from": "n1", "to": "n2"}],
 }

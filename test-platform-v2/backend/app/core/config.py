@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     app_name: str = "CamelTv Test Platform API"
     app_version: str = "2.1.0"
     environment: str = "development"          # "development" | "production"
+    #: V16-024：Prometheus 抓取 token（生产必须配置；空值仅限非生产）。
+    aiqe_metrics_token: str = ""
+    #: V16-024：是否强制 AIQE 限流（生产自动启用）。
+    aiqe_rate_limit_enforce: bool = False
 
     # Same-host admission; enable only with a shared local volume across runners.
     heavy_task_budget_enabled: bool = False
@@ -75,6 +79,12 @@ class Settings(BaseSettings):
     db_encryption_enabled: bool = False
     object_storage_encryption_enabled: bool = False
     use_external_secret_store: bool = False
+    #: V16-003-R4：外部 Secret Store（file=加密文件，aws=Secrets Manager）
+    aiqe_secret_store_provider: str = "file"
+    aiqe_secret_store_path: str = "storage/secrets/aiqe-secrets.json"
+    aiqe_secret_store_key: str = ""
+    aiqe_secret_store_region: str = ""
+    aiqe_secret_store_prefix: str = "aiqe/secrets"
     https_only: bool = False
     db_connection_tls: bool = False
     # V40-009 SSO scaffolding (real IdP handshake is external; values are config

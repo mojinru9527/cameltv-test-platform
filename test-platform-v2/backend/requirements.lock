@@ -2103,6 +2103,10 @@ soupsieve==2.9.1 \
     --hash=sha256:4f4477399246b7a0c720a88ca2454b11cd6bb9ae4c9d170140786e916776c14c \
     --hash=sha256:c33e6605bbc71dd628b00c632d58ae607c22bade247e52553928f83bbb75b4ba
     # via beautifulsoup4
+sqlglot==30.33.0 \
+    --hash=sha256:a5b279fe7397a9fb6cdd0274a13a5fcee0fa83ac6ff617083f1f2832031e90bc \
+    --hash=sha256:9c007e0471c93e778d8613f25853543b959a3f793d9dadf1341b3d6bd53246a8
+    # via -r requirements.txt
 sqlalchemy==2.0.51 \
     --hash=sha256:0378d055e9e8cd6ce4d8dff683bdd3d7d413533c4ee51d67a2b1e0f9eacc0f23 \
     --hash=sha256:0592bdadf86ddcabfd72d9ab66ea8a5d8d2cc6be1cc51fa7e66c03868ac5eac1 \

@@ -8,11 +8,24 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.aiqe.security.target_policy import (
+    TargetPolicyConfigError,
+    list_target_policies,
+    upsert_target_policy,
+)
 from app.aiqe.services.artifact_gc import purge_expired_artifacts
+from app.aiqe.services.query_registry import (
+    RegisteredQueryError,
+    approve_registered_query,
+    list_registered_queries,
+    register_query,
+)
 from app.aiqe.services.noise_rule_service import (
     approve_rule,
     get_rule,
@@ -353,3 +366,158 @@ def patch_profile(
         status = 409 if "approved" in message else 404
         raise APIException(code=status, msg=message, http_status=status) from None
     return R.ok(_profile_out(row))
+
+# ── V16-004 / V16-001：Query Registry 与 Target Policy 管理 API ──────────
+
+
+class QueryRegisterIn(BaseModel):
+    query_key: str
+    statement: str
+    allowed_params: list[str]
+    connection_ref: str = ""
+    environment_id: int | None = None
+    allowed_tables: list[str] = []
+    allowed_columns: list[str] = []
+    max_rows: int = 100
+    max_execution_ms: int = 2000
+    result_schema: dict | None = None
+    approval_status: str = "pending"
+
+
+class TargetPolicyIn(BaseModel):
+    policy: dict
+    environment_id: int | None = None
+    name: str = "default"
+    base_version: int | None = None
+
+
+def _query_out(row: Any) -> dict:
+    return {
+        "id": row.id,
+        "project_id": row.project_id,
+        "environment_id": row.environment_id,
+        "query_key": row.query_key,
+        "version": row.version,
+        "statement_hash": row.statement_hash,
+        "allowed_params": list(row.allowed_params or []),
+        "allowed_tables": list(row.allowed_tables or []),
+        "allowed_columns": list(row.allowed_columns or []),
+        "max_rows": row.max_rows,
+        "max_execution_ms": row.max_execution_ms,
+        "connection_ref": row.connection_ref,
+        "approval_status": row.approval_status,
+        "active": bool(row.active),
+        "approved_by": row.approved_by,
+        "created_at": row.created_at.isoformat() if row.created_at else None,
+    }
+
+
+def _policy_out(row: Any) -> dict:
+    return {
+        "id": row.id,
+        "project_id": row.project_id,
+        "environment_id": row.environment_id,
+        "name": row.name,
+        "version": row.version,
+        "active": bool(row.active),
+        "policy": dict(row.policy_json or {}),
+        "created_at": row.created_at.isoformat() if row.created_at else None,
+    }
+
+
+@router.get("/query-registry", response_model=R[list], summary="登记查询列表（项目隔离）")
+def list_query_registry(
+    _console: CurrentUser = Depends(_console_access),
+    current: CurrentUser = Depends(require_permission("defect:list")),
+    db: Session = Depends(get_db),
+):
+    rows = list_registered_queries(db, project_id=int(current.project_id or 0))
+    return R.ok([_query_out(row) for row in rows])
+
+
+@router.post("/query-registry", response_model=R[dict], summary="登记只读查询（需审批后执行）")
+def create_query_registry(
+    body: QueryRegisterIn,
+    _console: CurrentUser = Depends(_console_access),
+    current: CurrentUser = Depends(require_permission("defect:update")),
+    db: Session = Depends(get_db),
+):
+    project_id = int(current.project_id or 0)
+    try:
+        row = register_query(
+            db,
+            project_id=project_id,
+            query_key=body.query_key,
+            statement=body.statement,
+            allowed_params=body.allowed_params,
+            connection_ref=body.connection_ref,
+            environment_id=body.environment_id,
+            allowed_tables=body.allowed_tables,
+            allowed_columns=body.allowed_columns,
+            max_rows=body.max_rows,
+            max_execution_ms=body.max_execution_ms,
+            result_schema=body.result_schema,
+            approval_status=body.approval_status,
+            created_by=current.user.id,
+        )
+    except RegisteredQueryError as exc:
+        raise APIException(code=400, msg=str(exc), http_status=400) from None
+    db.commit()
+    return R.ok(_query_out(row))
+
+
+@router.post(
+    "/query-registry/{query_id}/approve",
+    response_model=R[dict],
+    summary="审批登记查询（approved 才可执行）",
+)
+def approve_query_registry(
+    query_id: str,
+    _console: CurrentUser = Depends(_console_access),
+    current: CurrentUser = Depends(require_permission("defect:update")),
+    db: Session = Depends(get_db),
+):
+    row = approve_registered_query(
+        db,
+        project_id=int(current.project_id or 0),
+        query_id=str(query_id),
+        approved_by=current.user.id,
+    )
+    if row is None:
+        raise APIException(code=404, msg="登记查询不存在", http_status=404)
+    db.commit()
+    return R.ok(_query_out(row))
+
+
+@router.get("/target-policies", response_model=R[list], summary="目标策略列表（含历史版本）")
+def list_target_policies_route(
+    _console: CurrentUser = Depends(_console_access),
+    current: CurrentUser = Depends(require_permission("defect:list")),
+    db: Session = Depends(get_db),
+):
+    rows = list_target_policies(db, project_id=int(current.project_id or 0))
+    return R.ok([_policy_out(row) for row in rows])
+
+
+@router.post("/target-policies", response_model=R[dict], summary="写入新版本目标策略（管理员）")
+def create_target_policy(
+    body: TargetPolicyIn,
+    _console: CurrentUser = Depends(_console_access),
+    current: CurrentUser = Depends(require_permission("defect:update")),
+    db: Session = Depends(get_db),
+):
+    project_id = int(current.project_id or 0)
+    try:
+        row = upsert_target_policy(
+            db,
+            project_id=project_id,
+            environment_id=body.environment_id,
+            policy=body.policy,
+            name=body.name,
+            created_by=current.user.id,
+            base_version=body.base_version,
+        )
+    except TargetPolicyConfigError as exc:
+        raise APIException(code=400, msg=str(exc), http_status=400) from None
+    db.commit()
+    return R.ok(_policy_out(row))

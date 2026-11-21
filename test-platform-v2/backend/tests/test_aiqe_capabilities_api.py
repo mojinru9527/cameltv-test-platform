@@ -9,6 +9,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.aiqe.models.run import TestRun
+from app.aiqe.services.capability_registry import register_manifest
+from app.aiqe.services.snapshot_service import ensure_snapshot
+from app.aiqe.services.workflow_service import approve_workflow, create_workflow
 from app.models.project import Project, ProjectMember
 from app.models.rbac import Role
 from app.models.user import User
@@ -171,12 +174,51 @@ def test_case_create_review_and_coverage(api: TestClient):
 
 # ── 2. Experiments ─────────────────────────────────────
 def test_experiment_create_launch_sync(api: TestClient, db_session: Session):
+    register_manifest(
+        db_session,
+        node_id="node-http",
+        driver_key="http",
+        capabilities=["aiqe:http"],
+        platforms=["linux"],
+        evidence_ref="evidence://node-http",
+    )
+    workflow = create_workflow(
+        db_session,
+        project_id=1,
+        graph={
+            "schema_version": "1.0",
+            "nodes": [
+                {
+                    "key": "health",
+                    "driver": "http",
+                    "depends_on": [],
+                    "input": {"url": "https://api.test/health", "expected_status": 200},
+                    "assertions": [
+                        {
+                            "assertion_key": "ok",
+                            "oracle_layer": "REQ",
+                            "oracle_ref": "AC-H",
+                            "type": "http_status",
+                            "expected": 200,
+                            "severity": "P0",
+                        }
+                    ],
+                }
+            ],
+            "edges": [],
+        },
+    )
+    approve_workflow(db_session, workflow.id, approved_by=1)
+    db_session.flush()
+    snapshot = ensure_snapshot(db_session, workflow)
     baseline = TestRun(
         project_id=1,
         run_key="RUN-API-EXP",
         status="COMPLETED",
         outcome="FAIL",
         commit_sha="a" * 40,
+        workflow_definition_id=workflow.id,
+        workflow_snapshot_id=snapshot.id,
         environment_snapshot_json={"contract_checksum": "c1"},
     )
     db_session.add(baseline)
@@ -200,11 +242,11 @@ def test_experiment_create_launch_sync(api: TestClient, db_session: Session):
     assert launched.status_code == 200, launched.text
     data = launched.json()["data"]
     assert data["verification_run_id"]
-    assert data["status"] == "QUEUED"
+    assert data["status"] in {"QUEUED", "RUNNING"}
 
     synced = api.post(f"{BASE}/experiments/{experiment['id']}/sync")
     assert synced.status_code == 200
-    assert synced.json()["data"]["status"] in {"QUEUED", "UNKNOWN", "COMPLETED"}
+    assert synced.json()["data"]["status"] in {"QUEUED", "RUNNING", "UNKNOWN", "COMPLETED"}
 
 
 def test_experiment_rejects_wrong_variable(api: TestClient, db_session: Session):
@@ -337,13 +379,30 @@ def test_platform_binding_with_existing_ac(api: TestClient):
 
 # ── 7. Agent task plan ─────────────────────────────────
 def test_agent_task_plan(api: TestClient):
+    # V16-013：创建 Draft 不得执行 Agent；只返回 plan/hash 与审批要求。
     resp = api.post(f"{BASE}/agent-tasks", json={"goal": "分析体育赛事需求并准备测试"})
     assert resp.status_code == 200, resp.text
     data = resp.json()["data"]
-    assert data["a0_status"] == "COMPLETED"
+    assert data["status"] == "DRAFT"
+    assert data["approval_required"] is True
+    assert data["plan_hash"].startswith("sha256:")
     keys = [task["agent_key"] for task in data["tasks"]]
     assert keys.index("A1") < keys.index("A2") < keys.index("A3")
-    assert data["a0_output"]["note"].startswith("A0 完成只代表")
+
+    # 未审批执行 → 409
+    blocked = api.post(f"{BASE}/agent-tasks/{data['task_id']}/run")
+    assert blocked.status_code == 409
+
+    # 审批后可入队（返回 job_id，不在请求线程执行 Agent）
+    approved = api.post(
+        f"{BASE}/agent-tasks/{data['task_id']}/approve",
+        json={"reason": "approved for test"},
+    )
+    assert approved.status_code == 200, approved.text
+    assert approved.json()["data"]["status"] == "APPROVED"
+    queued = api.post(f"{BASE}/agent-tasks/{data['task_id']}/run")
+    assert queued.status_code == 202, queued.text
+    assert queued.json()["data"]["job_id"]
 
 
 def test_contract_and_case_list_endpoints(api: TestClient):

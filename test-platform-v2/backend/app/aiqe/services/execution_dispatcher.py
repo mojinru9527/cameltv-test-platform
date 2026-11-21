@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.aiqe.models.run import NodeRun, TestRun
@@ -55,6 +56,7 @@ def enqueue_node_run(
     kind: str = "api",
     timeout_seconds: int = 1800,
     graph: dict | None = None,
+    execution_kind: str = "NORMAL",
 ) -> ExecutionJob:
     if node_run.execution_job_id:
         existing = db.get(ExecutionJob, node_run.execution_job_id)
@@ -65,6 +67,19 @@ def enqueue_node_run(
     run = db.get(TestRun, node_run.run_id)
     if run is None:
         raise DispatchError(f"Run 不存在: {node_run.run_id}")
+    # V16-005：schedule 已把 attempt_count 置为“本次执行序号”（从 1 开始），
+    # Job 记录的 attempt 是 claim 前序号，claim 时 +1 作为 fencing token。
+    attempt_seed = max(0, int(node_run.attempt_count or 0) - 1)
+    idempotency_key = (
+        f"aiqe:{run.id}:{node_run.id}:{int(node_run.attempt_count or 0)}:{execution_kind}"
+    )
+    existing_by_key = db.scalar(
+        select(ExecutionJob).where(ExecutionJob.idempotency_key == idempotency_key)
+    )
+    if existing_by_key is not None:
+        node_run.execution_job_id = existing_by_key.id
+        db.flush()
+        return existing_by_key
     payload = {
         "run_id": node_run.run_id,
         "node_run_id": node_run.id,
@@ -87,9 +102,24 @@ def enqueue_node_run(
         payload_json=json.dumps(payload, ensure_ascii=False),
         env_ref=str(run.environment_id or ""),
         timeout_seconds=timeout_seconds,
+        run_id=run.id,
+        node_run_id=node_run.id,
+        execution_kind=str(execution_kind),
+        idempotency_key=idempotency_key,
+        attempt=attempt_seed,
     )
     db.add(job)
-    db.flush()
+    try:
+        db.flush()
+    except IntegrityError:
+        # 并发重复 dispatch：唯一索引兜底，返回既有 Job。
+        db.rollback()
+        existing_job = db.scalar(
+            select(ExecutionJob).where(ExecutionJob.idempotency_key == idempotency_key)
+        )
+        if existing_job is None:
+            raise
+        job = existing_job
     node_run.execution_job_id = job.id
     db.flush()
     return job

@@ -51,6 +51,8 @@ class RegressionRequestIn(BaseModel):
     selected_case_ids: list[str] = Field(default_factory=list)
     reason: str = Field(default="", max_length=2000)
     idempotency_key: str | None = Field(default=None, max_length=128)
+    #: V16-014-R2：A5 证据化影响分析（checksum 必须匹配），用于扩大 mandatory scope。
+    impact_analysis: dict | None = None
 
 
 def _run_out(run) -> dict | None:
@@ -117,6 +119,7 @@ def post_defect_regression(
             reason=body.reason,
             idempotency_key=idempotency_header or body.idempotency_key,
             actor_id=getattr(current.user, "id", None),
+            impact_analysis=body.impact_analysis,
         )
     except RegressionError as exc:
         raise APIException(code=400, msg=str(exc), http_status=400) from None

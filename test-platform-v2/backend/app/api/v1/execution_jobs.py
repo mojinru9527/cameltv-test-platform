@@ -8,6 +8,8 @@
 """
 from __future__ import annotations
 
+from typing import Any, cast
+
 from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -44,6 +46,8 @@ class ReportRequest(NodeRequest):
     result: dict = Field(default_factory=dict)
     evidence_bundle_id: int | None = None
     error_message: str = ""
+    #: V16-005：写结果必须携带 fencing token（= 认领时的 attempt），迟到结果会被拒绝。
+    fencing_token: int | None = Field(default=None, ge=1)
 
 
 def _project_id(current: CurrentUser) -> int:
@@ -185,7 +189,47 @@ def report(
     x_ai_agent_token: str | None = Header(default=None),
     db: Session = Depends(get_db),
 ):
-    _node_scope(body.node_id, x_ai_agent_token, db)
+    scope = _node_scope(body.node_id, x_ai_agent_token, db)
+    job = execution_job_service.get_job(db, project_id=scope, job_id=job_id)
+    if job is None:
+        raise HTTPException(404, "任务不存在或不属于当前节点")
+    # batch-347c / V16-017：AIQE 外部 Runner 必须先走 fenced 收口，不能被
+    # execution_job_service.report 提前置为 completed，否则 complete_from_report
+    # 会看到终态 Job 并拒绝回写，Node 永久停在 READY。
+    if _is_aiqe_job(job):
+        from app.aiqe.services.job_consumer import complete_from_report
+
+        if body.fencing_token is None:
+            raise HTTPException(
+                409,
+                detail={
+                    "code": "FENCING_TOKEN_REQUIRED",
+                    "message": "AIQE 节点上报必须携带 fencing_token（认领时的 attempt）",
+                },
+            )
+        summary = complete_from_report(
+            db,
+            job_id=job.id,
+            status=body.status,
+            result=body.result,
+            error_message=body.error_message,
+            fencing_token=body.fencing_token,
+            node_id=body.node_id,
+        )
+        if summary.get("skipped"):
+            raise HTTPException(
+                409,
+                detail={
+                    "code": summary.get("reason") or "STALE_LEASE",
+                    "message": "结果被拒绝：租约/所有权已失效",
+                },
+            )
+        db.expire_all()
+        refreshed = execution_job_service.get_job(db, project_id=scope, job_id=job_id)
+        if refreshed is None:
+            refreshed = job
+        assert refreshed is not None
+        return R.ok(execution_job_service.job_dict(cast(Any, refreshed)))
     job = execution_job_service.report(
         db,
         job_id=job_id,
@@ -198,17 +242,6 @@ def report(
     )
     if job is None:
         raise HTTPException(404, "任务不存在或不属于当前节点")
-    # batch-347c：AIQE 节点由外部 runner（浏览器/设备）执行时，回报后必须回写节点状态。
-    if _is_aiqe_job(job):
-        from app.aiqe.services.job_consumer import complete_from_report
-
-        complete_from_report(
-            db,
-            job_id=job.id,
-            status=body.status,
-            result=body.result,
-            error_message=body.error_message,
-        )
     return R.ok(execution_job_service.job_dict(job))
 
 
@@ -223,6 +256,29 @@ def get_payload(
     job = execution_job_service.get_job(db, project_id=scope, job_id=job_id)
     if job is None:
         raise HTTPException(404, "执行任务不存在")
+    payload = execution_job_service.job_payload(job)
+    if _is_aiqe_job(job):
+        # V16-001：外部 Runner 每次拉取载荷都由服务端重新解析策略；
+        # 非 ALLOW 时立即收口 BLOCKED，绝不下发可执行载荷。
+        from app.aiqe.services import execution_service
+
+        gate = execution_service.policy_gate_for_external_runner(db, job.id)
+        if gate.get("policy") is not None:
+            payload = {
+                **payload,
+                "target_policy": gate["policy"],
+                "target_policy_hash": gate["policy"].get("policy_hash"),
+            }
+        if not gate.get("allowed"):
+            raise HTTPException(
+                409,
+                detail={
+                    "code": gate.get("code") or "TARGET_POLICY_DENIED",
+                    "decision": (gate.get("policy") or {}).get("decision"),
+                    "policy_hash": (gate.get("policy") or {}).get("policy_hash"),
+                    "policy": gate.get("policy"),
+                },
+            )
     return R.ok(
         {
             "job_id": job.id,
@@ -230,7 +286,7 @@ def get_payload(
             "attempt": job.attempt,
             "env_ref": job.env_ref,
             "timeout_seconds": job.timeout_seconds,
-            "payload": execution_job_service.job_payload(job),
+            "payload": payload,
         }
     )
 

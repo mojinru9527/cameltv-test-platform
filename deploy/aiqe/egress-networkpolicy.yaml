@@ -1,0 +1,61 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: aiqe-runner-default-deny-egress
+  namespace: aiqe-runners
+spec:
+  podSelector: {}
+  policyTypes: ["Egress"]
+  egress: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: aiqe-runner-egress-via-proxy-only
+  namespace: aiqe-runners
+spec:
+  podSelector:
+    matchLabels:
+      app: aiqe-runner
+  policyTypes: ["Egress"]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: aiqe-egress
+          podSelector:
+            matchLabels:
+              app: aiqe-egress-proxy
+      ports:
+        - protocol: TCP
+          port: 3128
+    - to:
+        - ipBlock:
+            cidr: 10.96.0.0/12
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+# 说明（供 check_container_egress.py 校验）：
+# - 默认 deny egress；仅允许经 aiqe-egress-proxy 出网。
+# - 云元数据地址 169.254.169.254/32 必须在代理侧与 CNI ipBlock except 中阻断；
+#   禁止任何 allow-all 0.0.0.0/0 规则。
+# - 代理侧 deny 列表必须包含：169.254.169.254/32, 100.100.100.200/32,
+#   fd00:ec2::254/128, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8。
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aiqe-egress-proxy-denylist
+  namespace: aiqe-egress
+data:
+  denylist.conf: |
+    169.254.169.254/32
+    100.100.100.200/32
+    fd00:ec2::254/128
+    10.0.0.0/8
+    172.16.0.0/12
+    192.168.0.0/16
+    127.0.0.0/8

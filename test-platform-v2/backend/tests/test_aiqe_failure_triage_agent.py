@@ -34,8 +34,27 @@ def payload(classification="PRODUCT_DEFECT", *, status="NEEDS_EXPERIMENT", evide
     }
 
 
+def _fake_resolver(refs):
+    return [
+        {
+            "ref": ref,
+            "valid": True,
+            "kind": str(ref).split(":")[0],
+            "checksum": "sha256:test",
+            "run_id": "run-test",
+            "tombstoned": False,
+        }
+        for ref in refs
+    ]
+
+
 def agent_returning(payload_dict: dict) -> FailureTriageAgent:
-    return FailureTriageAgent(lambda system, user: json.dumps(payload_dict, ensure_ascii=False))
+    agent = FailureTriageAgent(
+        lambda system, user: json.dumps(payload_dict, ensure_ascii=False)
+    )
+    # V16-012：A4 必须注入服务端 Evidence Resolver；单测使用聚合 fake。
+    agent.evidence_resolver = _fake_resolver
+    return agent
 
 
 def test_valid_attribution():

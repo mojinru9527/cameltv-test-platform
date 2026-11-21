@@ -9,13 +9,13 @@ from app.aiqe.services import dag_scheduler
 GRAPH = {
     "schema_version": "1.0",
     "retry": {"max_attempts": 2},
-    "nodes": [{"key": "api", "driver": "http"}],
+    "nodes": [{"key": "api", "driver": "http", "category": "setup"}],
     "edges": [],
 }
 
 GRAPH_NO_RETRY = {
     "schema_version": "1.0",
-    "nodes": [{"key": "api", "driver": "http"}],
+    "nodes": [{"key": "api", "driver": "http", "category": "setup"}],
     "edges": [],
 }
 
@@ -68,7 +68,8 @@ def test_failed_attempt_kept_and_retry_runs(db_session):
     db_session.commit()
     db_session.refresh(run)
 
-    assert run.status == "COMPLETED" and run.outcome == "PASS"
+    # V16-009：该图只有 setup 节点（无业务 Oracle），Run 不能 PASS。
+    assert run.status == "COMPLETED" and run.outcome == "INCOMPLETE"
     attempts = _attempts(db_session, run.id)
     assert [a.status for a in attempts] == ["FAILED", "PASSED"]
     assert [a.attempt_no for a in attempts] == [1, 2]

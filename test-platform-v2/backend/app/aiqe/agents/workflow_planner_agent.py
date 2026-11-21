@@ -52,7 +52,8 @@ class WorkflowPlannerAgent(BaseAgent):
         '{"key":str,"driver":"http|playwright|db|event|mobile|miniapp|device|external_e2e",'
         '"depends_on":[str],"input":{...},"assertions":[{...}]}。'
         "input 示例：http={url,method,timeout_ms}；playwright={url,actions:[{type,selector/text,expected}]}；"
-        "db={query_key,allowed_tables,query_registry:{query_key:{sql,allowed_tables}}}。"
+        "db={query_key,query_version?,params}（V16-004：只允许引用服务端 Query Registry 的 query_key，"
+        "禁止输出 sql/allowed_tables/query_registry/connection_* 等扩权字段）。"
         "assertions 必须是 Runtime 支持类型："
         f"{sorted(ASSERTION_TYPES)}；每条断言必须含 assertion_key、type、oracle_layer(REQ|STD|PATTERN)、"
         "oracle_ref、expected/expected_ref。禁止只输出 steps/query/自定义断言。"

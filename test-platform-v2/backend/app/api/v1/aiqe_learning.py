@@ -18,6 +18,7 @@ from app.aiqe.services.learning_service import (
     get_candidate,
     list_bug_patterns,
     list_candidates,
+    revoke_candidate,
 )
 from app.core.deps import CurrentUser, get_db, require_permission
 from app.core.exceptions import APIException
@@ -78,6 +79,7 @@ def post_candidate(
             rule={"pattern": body.pattern, "description": body.description},
             source=body.source,
             duplicate_of=body.duplicate_of,
+            created_by=current.user.id,
         )
     except LearningError as exc:
         raise APIException(code=400, msg=str(exc), http_status=400) from None
@@ -94,7 +96,10 @@ def post_evaluate(
 ):
     try:
         row = evaluate_candidate(
-            db, candidate_id, benchmark_run_id=body.benchmark_run_id
+            db,
+            candidate_id,
+            benchmark_run_id=body.benchmark_run_id,
+            project_id=current.project_id or 0,
         )
     except LearningError as exc:
         status = 404 if "不存在" in str(exc) else 400
@@ -109,13 +114,20 @@ def post_evaluate(
 )
 def post_approve(
     candidate_id: str,
+    acknowledge_duplicate: bool = Query(default=False),
+    reason: str = Query(default="", max_length=500),
     _console: CurrentUser = Depends(_console_access),
     current: CurrentUser = Depends(require_permission("aiqe:learning:approve")),
     db: Session = Depends(get_db),
 ):
     try:
         row = approve_candidate(
-            db, candidate_id, project_id=current.project_id or 0
+            db,
+            candidate_id,
+            project_id=current.project_id or 0,
+            approved_by=current.user.id,
+            acknowledge_duplicate=acknowledge_duplicate,
+            approval_reason=reason,
         )
     except LearningError as exc:
         status = 404 if "不存在" in str(exc) else 400
@@ -152,6 +164,31 @@ def post_activate(
             ),
         }
     )
+
+
+@router.post(
+    "/candidates/{candidate_id}/revoke",
+    response_model=R[dict],
+    summary="撤销已发布候选并回退上一稳定版本（需 aiqe:learning:approve）",
+)
+def post_revoke(
+    candidate_id: str,
+    reason: str = Query(default="", max_length=500),
+    _console: CurrentUser = Depends(_console_access),
+    current: CurrentUser = Depends(require_permission("aiqe:learning:approve")),
+    db: Session = Depends(get_db),
+):
+    try:
+        row = revoke_candidate(
+            db,
+            candidate_id,
+            project_id=current.project_id or 0,
+            reason=reason,
+        )
+    except LearningError as exc:
+        status = 404 if "不存在" in str(exc) else 400
+        raise APIException(code=status, msg=str(exc), http_status=status) from None
+    return R.ok(_candidate_out(row))
 
 
 @router.get("/bug-patterns", response_model=R[list], summary="已激活 BugPattern 列表")

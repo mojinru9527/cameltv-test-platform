@@ -136,7 +136,11 @@ def execute_run(db, *, graph: dict, run: TestRun) -> None:
         for node in ready:
             dag_scheduler.mark_running(db, run.id, node.node_key)
             db.commit()
-            result = node_executor.execute_node(node, db=db)
+            result = node_executor.execute_node(
+                node,
+                policy_context=node_executor.policy_context_for(db, node),
+                db=db,
+            )
             observation = result_writer.observation_from_payload(result.observation)
             status, error_class, outcomes = result_writer.evaluate_node_assertions(
                 db,

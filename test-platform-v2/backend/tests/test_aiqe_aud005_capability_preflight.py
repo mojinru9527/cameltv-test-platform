@@ -325,7 +325,7 @@ def test_job_consumer_blocks_when_capability_missing(db_session):
 def test_job_consumer_runs_http_node_after_preflight(db_session, monkeypatch):
     graph = {
         "schema_version": "1.0",
-        "nodes": [{"key": "api", "driver": "http", "input": {"url": "https://api.allowed.test/x"}}],
+        "nodes": [{"key": "api", "driver": "http", "input": {"url": "https://api.allowed.test/x", "expected_status": 200}}],
         "edges": [],
     }
     from app.aiqe.security import SafeHttpResult, upsert_target_policy

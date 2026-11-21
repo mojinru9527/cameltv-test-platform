@@ -1,6 +1,8 @@
 """v1.4 执行链 E2E（单元级）：变量传递 → 断言 → outputs → 证据 → DAG 推进。"""
 from __future__ import annotations
 
+import json
+
 from sqlalchemy import select
 
 from app.aiqe.models.run import NodeRun, RunAssertionResult, TestRun
@@ -55,6 +57,15 @@ def _setup(db):
     if db.get(Project, 1) is None:
         db.add(Project(id=1, code="TEST", name="Test", owner_id=1, status=1))
         db.flush()
+    # V16-001：正式执行链要求服务端 TargetPolicy；测试用受控白名单。
+    from app.aiqe.security import upsert_target_policy
+
+    upsert_target_policy(
+        db,
+        project_id=1,
+        environment_id=None,
+        policy={"allowed_hosts": ["api.test"], "allowed_ports": [443]},
+    )
     register_manifest(
         db,
         node_id="node-http",
@@ -73,7 +84,7 @@ def test_pipeline_variable_assertion_outputs_and_evidence(db_session, monkeypatc
     monkeypatch.setenv("AIQE_SECRET_API_KEY", "s3cr3t")
     calls: list[dict] = []
 
-    def fake_execute(node, *, input_override=None, db_engine=None):
+    def fake_execute(node, *, input_override=None, db_engine=None, **kwargs):
         calls.append({"node": node.node_key, "input": dict(input_override or {})})
         if node.node_key == "login":
             return node_executor.NodeExecution(
@@ -125,11 +136,16 @@ def test_pipeline_variable_assertion_outputs_and_evidence(db_session, monkeypatc
     first_job = db_session.get(ExecutionJob, claimed[0])
     assert "tok-1" not in (first_job.result_json or "")
     assert login.status == "PASSED"
-    assert login.outputs_json["token"] == "tok-1"
+    # V16-003：敏感输出必须落为 Secret Handle，不得明文写 outputs_json。
+    token_ref = login.outputs_json["token"]
+    assert isinstance(token_ref, dict) and token_ref.get("secret_handle_id")
+    assert token_ref["secret_ref"].startswith("vault://")
+    assert token_ref["secret_type"] in {"token", "access_token", "jwt"}
+    assert "tok-1" not in json.dumps(login.outputs_json, ensure_ascii=False)
     assert query.status == "READY"
     assert query.execution_job_id is not None
-    # 解析输入已持久化，但 secret 明文不落库
-    assert query.resolved_input_json["headers"]["Authorization"] == "Bearer tok-1"
+    # 解析输入已持久化，但 Authorization/secret 明文不落库
+    assert query.resolved_input_json["headers"]["Authorization"] == "***"
     assert query.resolved_input_json["headers"]["X-Secret"] == "***"
     assert query.secret_keys_json == ["API_KEY"]
 
@@ -186,7 +202,7 @@ def test_blocked_node_blocks_downstream_and_closes_run(db_session, monkeypatch):
     )
     db_session.commit()
 
-    def fake_blocked(node, *, input_override=None, db_engine=None):
+    def fake_blocked(node, *, input_override=None, db_engine=None, **kwargs):
         return node_executor.NodeExecution(
             status="BLOCKED",
             error_class="BROWSER_UNAVAILABLE",
@@ -223,7 +239,7 @@ def test_probe_only_execution_never_passes(db_session, monkeypatch):
     )
     db_session.commit()
 
-    def fake_probe(node, *, input_override=None, db_engine=None):
+    def fake_probe(node, *, input_override=None, db_engine=None, **kwargs):
         return node_executor.NodeExecution(
             status="PASSED",
             detail={},

@@ -20,8 +20,12 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
+from app.aiqe.drivers.browser_egress_proxy import BrowserEgressProxy
 from app.aiqe.schemas.contracts import DriverResult, EvidenceFile
+from app.aiqe.security.safe_target import SafeTargetValidator, TargetDenied
+from app.aiqe.security.target_policy import PolicyDecision, TargetPolicy
 from app.aiqe.services.evidence_redactor import redact, redact_json_text
 
 SUPPORTED_ACTIONS: frozenset[str] = frozenset(
@@ -48,6 +52,12 @@ SUPPORTED_ACTIONS: frozenset[str] = frozenset(
 OBSERVE_ONLY = frozenset(
     {"probe_actionability", "wait_visible", "wait_url", "assert_visible", "assert_text", "assert_url", "assert_count"}
 )
+
+
+#: 浏览器内部产生、不发起网络请求的本地 scheme（允许的 data/blob/about 子资源）。
+ALLOWED_LOCAL_SCHEMES: frozenset[str] = frozenset({"data", "blob", "about"})
+#: 这些资源类型的请求一旦被策略拒绝，说明页面试图访问未授权目标。
+NAVIGATION_RESOURCE_TYPES = frozenset({"document"})
 
 
 class PlaywrightUnavailable(RuntimeError):
@@ -118,17 +128,26 @@ class PlaywrightDriver:
     def __init__(
         self,
         *,
+        policy: TargetPolicy,
         headless: bool = True,
         evidence_dir: str | Path | None = None,
         timeout_ms: int = 30000,
         playwright_factory: Callable[[], Any] | None = None,
-        allowed_hosts: list[str] | None = None,
+        validator: SafeTargetValidator | None = None,
     ) -> None:
+        # V16-001/002：浏览器授权只能来自服务端解析的 TargetPolicy，
+        # 禁止 Workflow 自带 allowed_hosts / allow_private 作为授权依据。
+        self.policy = policy
         self.headless = headless
         self.evidence_dir = Path(evidence_dir) if evidence_dir else None
         self.timeout_ms = max(1, int(timeout_ms))
         self._factory = playwright_factory
-        self.allowed_hosts = list(allowed_hosts or [])
+        self._validator = validator or SafeTargetValidator()
+        #: V16-002：被拦截的请求（不含敏感 header/query 值），随证据落库为安全事件。
+        self._security_denials: list[dict[str, Any]] = []
+        self._denied_navigation = False
+        self._allowed_local_schemes = ALLOWED_LOCAL_SCHEMES
+        self._proxy: BrowserEgressProxy | None = None
         self._cm: Any = None
         self._playwright: Any = None
         self._browser: Any = None
@@ -154,11 +173,31 @@ class PlaywrightDriver:
                 factory = self._factory
             self._cm = factory()
             self._playwright = self._cm.__enter__()
-            self._browser = self._playwright.chromium.launch(headless=self.headless)
-            self._context = self._browser.new_context(
-                viewport={"width": 1440, "height": 900},
-                ignore_https_errors=False,
+            # V16-002 第三层：所有出口流量强制经由策略代理（覆盖 redirect/WS/弹窗）。
+            self._proxy = BrowserEgressProxy(
+                policy=self.policy,
+                validator=self._validator,
+                on_denial=self._on_egress_denial,
             )
+            proxy_url = self._proxy.start()
+            self._browser = self._playwright.chromium.launch(
+                headless=self.headless,
+                args=[
+                    f"--proxy-server={proxy_url}",
+                    # 让 loopback 也走代理（默认 Chromium 会绕过本机地址）。
+                    "--proxy-bypass-list=<-loopback>",
+                    # 禁止 HTTP/3 绕过代理层。
+                    "--disable-quic",
+                ],
+            )
+            kwargs = self._context_kwargs()
+            try:
+                self._context = self._browser.new_context(**kwargs)
+            except TypeError:  # pragma: no cover - 旧 Playwright 无 service_workers
+                kwargs.pop("service_workers", None)
+                self._context = self._browser.new_context(**kwargs)
+            # V16-002：在任何 Page 创建/导航前安装全请求链拦截。
+            self._install_request_guards()
             try:
                 self._context.tracing.start(screenshots=True, snapshots=True, sources=True)
                 self._trace_started = True
@@ -173,6 +212,144 @@ class PlaywrightDriver:
         except Exception as exc:
             self.close()
             raise PlaywrightUnavailable(f"{type(exc).__name__}: {exc}") from exc
+
+    # ── V16-002 请求链拦截 ─────────────────────────────────────────────
+    def _context_kwargs(self) -> dict[str, Any]:
+        """V16-002：Service Worker 可绕过 context.route，必须在上下文层禁用。"""
+        return {
+            "viewport": {"width": 1440, "height": 900},
+            "ignore_https_errors": False,
+            "service_workers": "block",
+        }
+
+    def _on_egress_denial(self, entry: dict[str, Any]) -> None:
+        """代理层拒绝（含 redirect / 隧道 / WebSocket）并入统一安全证据。"""
+        if len(self._security_denials) < 200:
+            self._security_denials.append(dict(entry))
+        if len(self._network) < 200:
+            self._network.append({"kind": "blocked", **entry})
+        if bool(entry.get("navigation")):
+            self._denied_navigation = True
+
+    def _install_request_guards(self) -> None:
+        context = self._context
+        if context is None:
+            return
+        try:
+            context.route("**/*", self._on_route)
+        except Exception as exc:  # pragma: no cover - 浏览器不可用
+            raise PlaywrightUnavailable(f"安装请求拦截失败: {exc}") from exc
+        # WebSocket 由出口代理层强制（CONNECT / Upgrade 隧道）：
+        # route_web_socket 在同步 API 下会与浏览器事件循环互相等待，故不启用。
+
+    def _is_navigation(self, request: Any) -> bool:
+        try:
+            checker = getattr(request, "is_navigation_request", None)
+            if callable(checker):
+                return bool(checker())
+        except Exception:
+            pass
+        return str(getattr(request, "resource_type", "") or "") in NAVIGATION_RESOURCE_TYPES
+
+    def _is_main_frame_navigation(self, request: Any) -> bool:
+        if not self._is_navigation(request):
+            return False
+        try:
+            frame = getattr(request, "frame", None)
+            page = self._page
+            if frame is None or page is None:
+                return True
+            return frame == page.main_frame
+        except Exception:
+            return True
+
+    def _record_denial(
+        self,
+        *,
+        url: str,
+        method: str,
+        resource_type: str,
+        code: str,
+        message: str,
+        navigation: bool,
+        kind: str = "http",
+    ) -> None:
+        # 只记录 host/path，不记录 query 值、Authorization、Cookie。
+        host = ""
+        path = ""
+        try:
+            parts = urlsplit(str(url or ""))
+            host = (parts.hostname or "").strip().lower()
+            path = parts.path or "/"
+        except ValueError:
+            path = ""
+        entry = {
+            "kind": kind,
+            "code": code,
+            "message": str(message)[:300],
+            "method": method,
+            "host": host,
+            "path": path,
+            "resource_type": resource_type,
+            "navigation": bool(navigation),
+            "policy_version": self.policy.version,
+            "policy_hash": self.policy.policy_hash,
+            "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }
+        if len(self._security_denials) < 200:
+            self._security_denials.append(entry)
+        if navigation:
+            self._denied_navigation = True
+        if len(self._network) < 200:
+            self._network.append({"kind": "blocked", **entry})
+
+    def _on_route(self, route: Any) -> None:
+        request = getattr(route, "request", None)
+        url = str(getattr(request, "url", "") or "")
+        scheme = ""
+        try:
+            scheme = urlsplit(url).scheme.lower()
+        except ValueError:
+            scheme = ""
+        if scheme in self._allowed_local_schemes:
+            route.continue_()
+            return
+        method = str(getattr(request, "method", "") or "GET").upper()
+        resource_type = str(getattr(request, "resource_type", "") or "")
+        navigation = self._is_main_frame_navigation(request)
+        try:
+            target = self._validator.validate(url, self.policy, method=method)
+        except TargetDenied as exc:
+            self._record_denial(
+                url=url,
+                method=method,
+                resource_type=resource_type,
+                code=exc.code,
+                message=exc.message,
+                navigation=navigation,
+            )
+            route.abort("blockedbyclient")
+            return
+        except Exception as exc:  # 校验器异常也必须 fail closed
+            self._record_denial(
+                url=url,
+                method=method,
+                resource_type=resource_type,
+                code="TARGET_VALIDATION_ERROR",
+                message=f"{type(exc).__name__}: {exc}",
+                navigation=navigation,
+            )
+            route.abort("blockedbyclient")
+            return
+        if navigation and not self._denied_navigation:
+            self._network.append(
+                {
+                    "kind": "navigation_allowed",
+                    "url": target.normalized_url,
+                    "host": target.hostname,
+                }
+            )
+        route.continue_()
 
     def close(self) -> None:
         try:
@@ -192,6 +369,12 @@ class PlaywrightDriver:
                 except Exception:
                     pass
         finally:
+            if self._proxy is not None:
+                try:
+                    self._proxy.stop()
+                except Exception:
+                    pass
+                self._proxy = None
             self._cm = self._playwright = self._browser = self._context = self._page = None
             self._started = False
 
@@ -508,6 +691,16 @@ class PlaywrightDriver:
             redact_json_text(json.dumps(self._network, ensure_ascii=False)).encode("utf-8"),
             "application/json",
         )
+        if self._security_denials:
+            # V16-002：拦截证据单独落 Artifact（不含 header/query 值）。
+            add(
+                "security-denials.json",
+                "log",
+                redact_json_text(
+                    json.dumps(self._security_denials, ensure_ascii=False)
+                ).encode("utf-8"),
+                "application/json",
+            )
         try:
             screenshot = directory / "screenshot.png"
             self._page.screenshot(path=str(screenshot), full_page=True)
@@ -523,8 +716,80 @@ class PlaywrightDriver:
                 pass
         return files
 
+    def _prevalidate_targets(self, spec_input: dict[str, Any]) -> DriverResult | None:
+        """V16-002 应用层：主页面/导航动作 URL 在任何浏览器动作前校验。"""
+        urls: list[tuple[str, str]] = []
+        top = str(spec_input.get("url") or "").strip()
+        if top:
+            urls.append((top, "GET"))
+        actions_raw = spec_input.get("actions")
+        if isinstance(actions_raw, list):
+            for item in actions_raw:
+                if not isinstance(item, dict):
+                    continue
+                if str(item.get("type") or "") not in {"navigate", "goto"}:
+                    continue
+                action_url = str(item.get("url") or "").strip()
+                if action_url:
+                    urls.append((action_url, "GET"))
+        for action_url, method in urls:
+            try:
+                self._validator.validate(action_url, self.policy, method=method)
+            except TargetDenied as exc:
+                self._record_denial(
+                    url=action_url,
+                    method=method,
+                    resource_type="document",
+                    code=exc.code,
+                    message=exc.message,
+                    navigation=True,
+                )
+                return DriverResult(
+                    driver_key="playwright",
+                    status="BLOCKED",
+                    error_class=str(exc.code),
+                    error_message=exc.message,
+                    data={
+                        "blocked": True,
+                        "security_denials": list(self._security_denials),
+                        "target_policy": self.policy.snapshot(),
+                    },
+                )
+            except Exception as exc:  # fail closed
+                self._record_denial(
+                    url=action_url,
+                    method=method,
+                    resource_type="document",
+                    code="TARGET_VALIDATION_ERROR",
+                    message=f"{type(exc).__name__}: {exc}",
+                    navigation=True,
+                )
+                return DriverResult(
+                    driver_key="playwright",
+                    status="BLOCKED",
+                    error_class="TARGET_VALIDATION_ERROR",
+                    error_message=f"{type(exc).__name__}: {exc}",
+                    data={"blocked": True, "security_denials": list(self._security_denials)},
+                )
+        return None
+
     def execute(self, spec_input: dict[str, Any]) -> DriverResult:
         """执行一个节点的动作列表，返回标准化 DriverResult（含证据）。"""
+        # V16-001：非 ALLOW 策略不得启动浏览器（也就不会有任何请求）。
+        if not isinstance(self.policy, TargetPolicy) or self.policy.decision is not PolicyDecision.ALLOW:
+            decision = getattr(getattr(self.policy, "decision", None), "value", "UNKNOWN")
+            return DriverResult(
+                driver_key="playwright",
+                status="BLOCKED",
+                error_class=str(
+                    getattr(self.policy, "reason_code", "") or "TARGET_POLICY_MISSING_BINDING"
+                ),
+                error_message=f"浏览器执行未获授权（decision={decision}）",
+                data={"blocked": True, "policy_decision": decision},
+            )
+        blocked = self._prevalidate_targets(spec_input)
+        if blocked is not None:
+            return blocked
         try:
             self.start()
         except PlaywrightUnavailable as exc:
@@ -602,6 +867,16 @@ class PlaywrightDriver:
             record for record in self._records if record.action == "probe_actionability"
         ]
         probe_only = bool(probe_actions) and not dispatched
+        if self._denied_navigation and not error_class:
+            # 主文档导航被策略拦截：业务动作不可能完成，不能以 PASSED 收口。
+            error_class = "SSRF_BLOCKED"
+            error_message = error_message or "主文档导航被目标策略拦截"
+        elif self._denied_navigation and error_class in {
+            "NAVIGATION_FAILED",
+            "AUTOMATION_ERROR",
+            "PLAYWRIGHT_FAILED",
+        }:
+            error_class = "SSRF_BLOCKED"
         data: dict[str, Any] = {
             "url": self._url(),
             "title": str(getattr(self._page, "title", lambda: "")()) if self._page else "",
@@ -612,6 +887,10 @@ class PlaywrightDriver:
             "console": self._console,
             "page_errors": self._page_errors,
             "network": self._network,
+            # V16-002：安全拦截证据 + 策略快照（供 RunEvent / 证据索引复算）。
+            "security_denials": list(self._security_denials),
+            "denied_navigation": self._denied_navigation,
+            "target_policy": self.policy.snapshot(),
         }
         locators: dict[str, dict[str, Any]] = {}
         for record in self._records:

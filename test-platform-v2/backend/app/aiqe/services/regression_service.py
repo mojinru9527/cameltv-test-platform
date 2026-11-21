@@ -15,8 +15,8 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-import uuid
 from datetime import UTC, datetime
+from collections.abc import Mapping
 from typing import Any
 
 from sqlalchemy import select
@@ -26,6 +26,18 @@ from app.aiqe.models.deployment import DeploymentAttestation
 from app.aiqe.models.profile import ExecutionProfile
 from app.aiqe.models.run import NodeRun, RunAssertionResult, StepAttempt, TestRun
 from app.aiqe.models.workflow import WorkflowDefinition
+from app.aiqe.services.regression_scope import (
+    ScopeError,
+    build_scope_plan,
+    ensure_scope_snapshot,
+)
+from app.aiqe.services.run_launch import launch
+from app.aiqe.services.snapshot_service import (
+    SnapshotError,
+    clone_snapshot,
+    ensure_snapshot,
+    get_snapshot,
+)
 from typing import TYPE_CHECKING
 
 from app.models.defect import Defect, DefectRegression
@@ -201,6 +213,23 @@ def _source_snapshot(db: Session, source_run: TestRun | None) -> dict[str, Any]:
     }
 
 
+def _regression_snapshot(db: Session, source_run: TestRun | None, snapshot: dict[str, Any]):
+    """解析 source Run 的不可变快照；缺失时返回 None（由调用方 BLOCKED）。"""
+    if source_run is not None and source_run.workflow_snapshot_id:
+        try:
+            return get_snapshot(
+                db, source_run.workflow_snapshot_id, project_id=int(source_run.project_id)
+            )
+        except SnapshotError:
+            return None
+    workflow_id = snapshot.get("workflow_definition_id")
+    if workflow_id:
+        definition = db.get(WorkflowDefinition, workflow_id)
+        if definition is not None:
+            return ensure_snapshot(db, definition)
+    return None
+
+
 def _replicate_nodes(db: Session, *, source_run: TestRun | None, target_run: TestRun) -> None:
     if source_run is None:
         return
@@ -240,6 +269,7 @@ def create_regression_request(
     reason: str = "",
     idempotency_key: str | None = None,
     actor_id: int | None = None,
+    impact_analysis: Mapping[str, Any] | None = None,
 ) -> tuple[DefectRegression, TestRun | None, bool]:
     """返回 ``(regression, verification_run, created)``；BLOCKED 时 run 为 None。"""
     sha = normalize_sha(fixed_sha)
@@ -263,9 +293,76 @@ def create_regression_request(
     mandatory, excluded = build_mandatory_scope(
         db, source_run=source_run, scope=scope, selected_case_ids=selected_case_ids
     )
+    snapshot = _source_snapshot(db, source_run)
+    frozen = _regression_snapshot(db, source_run, snapshot)
+    workflow_checksum = (
+        frozen.checksum_sha256 if frozen is not None else snapshot.get("workflow_checksum")
+    )
+    scope_plan: dict[str, Any] | None = None
+    blockers_scope_error: dict[str, str] | None = None
+    impact_meta: dict[str, Any] | None = None
+    impact_error: dict[str, str] | None = None
+    if impact_analysis is not None:
+        from app.aiqe.services.case_catalog import (
+            CaseCatalogError,
+            match_impact,
+            verify_analysis,
+        )
+
+        try:
+            verify_analysis(impact_analysis)
+            graph_keys = {
+                str(node.get("key"))
+                for node in (frozen.canonical_json if frozen is not None else {}).get("nodes") or []
+            }
+            matched = match_impact(
+                db,
+                project_id=int(project_id),
+                impact_analysis=impact_analysis,
+                allowed_node_keys=graph_keys,
+            )
+            mandatory = sorted(set(mandatory) | set(matched["node_refs"]))
+            impact_meta = {
+                "status": matched["status"],
+                "checksum": impact_analysis.get("checksum"),
+                "matched_case_ids": matched["matched_case_ids"],
+                "node_refs": matched["node_refs"],
+                "catalog_size": matched["catalog_size"],
+                "unknown_broadened": matched["unknown_broadened"],
+            }
+        except CaseCatalogError as exc:
+            impact_error = {"code": "IMPACT_ANALYSIS_INVALID", "message": str(exc)}
     scope_hash = _scope_hash(scope, mandatory, list(selected_case_ids or []))
+    if frozen is not None:
+        try:
+            scope_plan = build_scope_plan(
+                scope=scope,
+                graph=frozen.canonical_json or {},
+                mandatory_refs=list(mandatory),
+                excluded=list(excluded),
+                inputs={
+                    "source_run_id": source_run.id if source_run is not None else None,
+                    "workflow_snapshot_id": frozen.id,
+                    "snapshot_hash": frozen.checksum_sha256,
+                    "fixed_sha": sha,
+                    "environment_id": environment_id,
+                    "selected_case_ids": list(selected_case_ids or []),
+                },
+            )
+            scope_hash = str(scope_plan["checksum_sha256"])
+        except ScopeError as exc:
+            scope_plan = None
+            blockers_scope_error = {"code": exc.code, "message": str(exc)}
+        else:
+            blockers_scope_error = None
+    else:
+        blockers_scope_error = None
 
     blockers: list[dict[str, Any]] = []
+    if impact_error is not None:
+        blockers.append(impact_error)
+    if blockers_scope_error is not None:
+        blockers.append(blockers_scope_error)
     deployed_sha = resolve_deployed_sha(
         db, project_id=int(project_id), environment_id=environment_id
     )
@@ -287,8 +384,14 @@ def create_regression_request(
             }
         )
 
-    snapshot = _source_snapshot(db, source_run)
-    workflow_checksum = snapshot.get("workflow_checksum")
+    if frozen is None:
+        blockers.append(
+            {
+                "code": "SOURCE_SNAPSHOT_MISSING",
+                "message": "source Run 未绑定不可变 WorkflowSnapshot，无法重建回归 DAG",
+                "source_run_id": source_run.id if source_run is not None else None,
+            }
+        )
     fingerprint_seed = _fingerprint(
         project_id=int(project_id),
         defect_id=int(defect_id),
@@ -337,17 +440,34 @@ def create_regression_request(
     )
     db.add(row)
     db.flush()
+    if scope_plan is not None and not blockers:
+        scope_row = ensure_scope_snapshot(
+            db,
+            project_id=int(project_id),
+            defect_id=int(defect_id),
+            plan=scope_plan,
+            approved_by=actor_id,
+        )
+        row.scope_snapshot_id = scope_row.id
+        row.scope_hash = scope_row.checksum_sha256
+        scope_plan["scope_id"] = scope_row.id
 
     if blockers:
         return row, None, True
 
-    run = TestRun(
+    # V16-006/007：回归必须经统一 Launch + 冻结快照（禁止手写 NodeRun 复制）。
+    assert frozen is not None
+    child = clone_snapshot(db, frozen, execution_kind="DEFECT_REGRESSION")
+    launch_result = launch(
+        db,
         project_id=int(project_id),
-        run_key=f"REG-{sha[:7]}-{uuid.uuid4().hex[:8]}",
+        user_id=actor_id,
+        workflow_snapshot_id=child.id,
+        execution_kind="DEFECT_REGRESSION",
+        scope_snapshot=scope_plan,
+        launch_key=f"regression:{row.id}",
         source_type="regression",
         source_id=str(defect_id),
-        scenario_id=snapshot.get("scenario_id"),
-        workflow_definition_id=snapshot.get("workflow_definition_id"),
         retest_of=source_run.id if source_run is not None else None,
         commit_sha=sha,
         build_ref=snapshot.get("build_ref") or "",
@@ -355,8 +475,7 @@ def create_regression_request(
         execution_profile_id=(
             source_run.execution_profile_id if source_run is not None else None
         ),
-        status="QUEUED",
-        environment_snapshot_json={
+        environment_snapshot={
             "fixed_sha": sha,
             "deployed_sha": deployed_sha,
             "defect_id": defect_id,
@@ -367,13 +486,24 @@ def create_regression_request(
             "scope_hash": scope_hash,
             "mandatory_case_ids": mandatory,
             "regression_id": row.id,
+            "impact_analysis": impact_meta,
         },
-        created_at=now,
     )
-    db.add(run)
-    db.flush()
+    run = db.get(TestRun, launch_result.run_id)
+    if run is None:
+        raise RegressionError("回归 Run 创建失败")
     row.verification_run_id = run.id
-    _replicate_nodes(db, source_run=source_run, target_run=run)
+    row.workflow_checksum = run.workflow_checksum
+    if launch_result.dispatch_status == "BLOCKED":
+        row.status = BLOCKED_STATUS
+        row.blockers_json = [
+            {
+                "code": launch_result.blocked_reason or "PREFLIGHT_BLOCKED",
+                "message": "回归 Run 在 Preflight 阶段被阻断",
+            }
+        ]
+    else:
+        row.status = "QUEUED"
 
     from app.aiqe.services import dag_scheduler
 

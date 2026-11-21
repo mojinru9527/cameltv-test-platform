@@ -76,14 +76,28 @@ def _close_node(
 
 
 def _finalize_run(db: Session, run: TestRun, nodes: list[NodeRun]) -> None:
-    if run.status != "RUNNING" or not nodes:
+    # V16-005：QUEUED 悬挂 Run 与 RUNNING Run 一样需要收敛。
+    if run.status not in {"RUNNING", "QUEUED"} or not nodes:
         return
     if any(node.status not in NODE_TERMINAL for node in nodes):
+        return
+    if run.status == "QUEUED":
+        # 从未真正执行的 Run 没有 outcome 语义，按 ERROR 收敛（可告警、可重跑）。
+        apply_transition(run, "ERROR")
+        run.finished_at = _now()
+        _event(
+            db,
+            run.id,
+            "run.reconciled",
+            {"status": run.status, "reason": "QUEUED_WITHOUT_JOB"},
+            key=f"run-reconciled:{run.id}:QUEUED:ERROR",
+        )
+        db.flush()
         return
     statuses = {node.node_key: node.status for node in nodes}
     if any(status in NODE_FAILED for status in statuses.values()):
         apply_transition(run, "COMPLETED", outcome="FAIL")
-    elif any(status == "BLOCKED" for status in statuses.values()):
+    elif any(status in {"BLOCKED", "ERROR"} for status in statuses.values()):
         apply_transition(run, "COMPLETED", outcome="INCOMPLETE")
     else:
         apply_transition(run, "COMPLETED", outcome="PASS")
@@ -113,6 +127,10 @@ class ReconcileReport:
     nodes_closed: int = 0
     jobs_failed: int = 0
     runs_completed: int = 0
+    secrets_purged: int = 0
+    outbox_published: int = 0
+    outbox_failed: int = 0
+    stale_uploads_failed: int = 0
 
     def payload(self) -> dict[str, Any]:
         return {
@@ -150,7 +168,8 @@ def reconcile(
     runs = list(
         db.scalars(
             select(TestRun)
-            .where(TestRun.status == "RUNNING")
+            # V16-005：QUEUED 长时间没有 Job 也属于悬挂状态，必须收敛并告警。
+            .where(TestRun.status.in_(("RUNNING", "QUEUED")))
             .order_by(TestRun.created_at)
             .limit(max(1, int(limit)))
         )
@@ -324,6 +343,30 @@ def reconcile(
         except Exception as exc:  # 实验同步失败不得影响对账主流程
             stats.errors.append(f"{type(exc).__name__}: {exc}")
     db.flush()
+    # V16-003 §11：过期 Secret Handle 清理（幂等；失败不影响对账结论）。
+    try:
+        from app.aiqe.services.secret_vault import purge_expired_handles
+
+        stats.secrets_purged = purge_expired_handles(db)
+    except Exception:
+        stats.secrets_purged = 0
+    # V16-018：悬挂 PENDING_UPLOAD 超时标记 FAILED（不产生可用半成品）。
+    try:
+        from app.aiqe.services.artifact_service import fail_stale_pending_uploads
+
+        stats.stale_uploads_failed = fail_stale_pending_uploads(db)
+    except Exception:
+        stats.stale_uploads_failed = 0
+    # V16-006：Outbox relay（幂等发布；失败保留 pending 等下一轮）。
+    try:
+        from app.aiqe.services import outbox_service
+
+        relayed = outbox_service.relay(db)
+        stats.outbox_published = int(relayed.get("published") or 0)
+        stats.outbox_failed = int(relayed.get("failed") or 0)
+    except Exception:
+        stats.outbox_published = 0
+        stats.outbox_failed = 0
     return stats
 
 _thread: threading.Thread | None = None

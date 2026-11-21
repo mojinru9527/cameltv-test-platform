@@ -160,6 +160,8 @@ def test_assertion_expected_required():
 def test_exploratory_assertion_allowed_without_expected():
     graph = sample()
     graph["nodes"][1]["assertions"] = [{"key": "explore", "type": "exploratory"}]
+    # V16-009：exploratory 不是业务 Oracle，节点必须显式声明 observe。
+    graph["nodes"][1]["category"] = "observe"
     check(graph)
 
 
