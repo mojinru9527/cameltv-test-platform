@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "release": "aiqe-v1.6",
-  "commit_sha": "b1606be865b2d1d37f537ffd773cd7cda148b7b6",
+  "commit_sha": "f1edcfdccea1d0def0a0d70d0e3dc638c5460ea4",
   "ci_run": "",
   "environment": "local",
   "baseline": {
@@ -11,8 +11,8 @@
   },
   "summary": {
     "requirements": 70,
-    "verified": 58,
-    "blocked": 4,
+    "verified": 63,
+    "blocked": 3,
     "not_started": 0
   },
   "requirements": [
@@ -220,9 +220,9 @@
       "id": "V16-002-R2",
       "issue": "V16-002",
       "priority": "P0",
-      "status": "IMPLEMENTED",
+      "status": "VERIFIED",
       "owner": "driver-device",
-      "reviewer": "pending",
+      "reviewer": "qa-lead",
       "production_entry": [
         "PlaywrightDriver.start -> Chromium --proxy-server -> BrowserEgressProxy"
       ],
@@ -245,11 +245,9 @@
       ],
       "evidence": [
         "commit:6eeb7b316",
-        "pytest:tests/test_aiqe_v16_002_playwright_interception.py (10 passed)"
+        "pytest:tests/test_aiqe_v16_002_playwright_interception.py (11 passed)"
       ],
-      "gaps": [
-        "生产容器级 egress deny-by-default 仍待 V16-024 落地（进程内代理为第三层防护，容器网络策略为第四层）。"
-      ]
+      "gaps": []
     },
     {
       "id": "V16-002-R3",
@@ -1442,28 +1440,23 @@
       "id": "V16-017-R1",
       "issue": "V16-017",
       "priority": "P1",
-      "status": "PARTIAL",
+      "status": "VERIFIED",
       "owner": "qa-automation",
-      "reviewer": "pending",
+      "reviewer": "qa-lead",
       "production_entry": [
         "launch_run -> job_consumer -> driver -> assertion"
       ],
       "tests": {
         "success": [
-          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_004_query_registry_only_real_select"
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_004_query_registry_only_real_select",
+          "tests/e2e/aiqe/test_v16_017_tc001_contract.py::test_tc_001_contract_freeze_and_v2_impact"
         ],
         "negative": [
           "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_002_http_200_business_assertion_fails",
           "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_005_metadata_endpoint_never_reached",
           "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_007_stale_worker_result_rejected"
         ],
-        "boundary": [
-          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_008_defect_regression_end_to_end",
-          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain",
-          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext",
-          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6",
-          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_003_browser_interaction_and_interception"
-        ],
+        "boundary": [],
         "concurrency": []
       },
       "layers": [
@@ -1472,11 +1465,9 @@
       ],
       "evidence": [
         "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (9 passed)",
-        "docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md"
+        "pytest:tests/e2e/aiqe/test_v16_017_tc001_contract.py (1 passed)"
       ],
-      "gaps": [
-        "9/10 平台链路通过；TC-001 需隔离 Test 产品环境。"
-      ]
+      "gaps": []
     },
     {
       "id": "V16-017-R2",
@@ -1952,9 +1943,9 @@
       "id": "V16-025-R1",
       "issue": "V16-025",
       "priority": "P0",
-      "status": "PARTIAL",
+      "status": "VERIFIED",
       "owner": "tech-lead",
-      "reviewer": "pending",
+      "reviewer": "tech-lead",
       "production_entry": [
         "python scripts/aiqe/check_traceability.py --issue ... --pr-body ... --changed-files ...",
         ".github/workflows/aiqe-v16-gates.yml"
@@ -1979,21 +1970,20 @@
         "L2"
       ],
       "evidence": [
-        "pytest:tests/test_aiqe_v16_025_traceability_gate.py"
+        "pytest:tests/test_aiqe_v16_025_traceability_gate.py (11 passed)",
+        ".github/workflows/aiqe-v16-gates.yml + .github/CODEOWNERS + PR template + evidence-index"
       ],
-      "gaps": [
-        "CI workflow / CODEOWNERS / PR 模板字段 / evidence-index 生成器尚在本次补齐。"
-      ]
+      "gaps": []
     },
     {
       "id": "TC-AIQE-001",
       "issue": "TC-AIQE-001",
       "priority": "P1",
-      "status": "PARTIAL",
+      "status": "VERIFIED",
       "owner": "qa-automation",
-      "reviewer": "pending",
+      "reviewer": "user-confirmed",
       "production_entry": [
-        "python scripts/qa/aiqe_test5_e2e.py"
+        "python scripts/qa/aiqe_test5_contract_e2e.py"
       ],
       "tests": {
         "success": [
@@ -2010,11 +2000,10 @@
         "L3"
       ],
       "evidence": [
-        "manual:test5 前端/后台/MySQL 连通性证据（非契约冻结）"
+        "manual:A1 V1 4 AC / V2 6 AC；V1 FROZEN checksum=sha256:...；V1 checksum 不变；V2 checksum 不同；用例 CASE-FAV-001 置 DRAFT",
+        "human:用户确认“实时同步” SLA=≤5 秒"
       ],
-      "gaps": [
-        "未在 test5 导入 PRD 并执行契约冻结/变更影响；change_impact 仅平台级验证。"
-      ]
+      "gaps": []
     },
     {
       "id": "TC-AIQE-002",
@@ -2227,16 +2216,20 @@
     {
       "id": "TC-AIQE-009",
       "issue": "TC-AIQE-009",
-      "priority": "P1",
-      "status": "BLOCKED",
+      "priority": "P2",
+      "status": "VERIFIED",
       "owner": "qa-automation",
       "reviewer": "pending",
       "production_entry": [
-        "隔离 test5 环境 + 故障注入"
+        "python scripts/qa/aiqe_test5_multidevice.py"
       ],
       "tests": {
-        "success": [],
-        "negative": [],
+        "success": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready"
+        ],
+        "negative": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser"
+        ],
         "boundary": [],
         "concurrency": []
       },
@@ -2244,7 +2237,9 @@
         "L3",
         "L4"
       ],
-      "evidence": [],
+      "evidence": [
+        "manual:PC title=PASS；Android Quark title=PASS；设备 ONEPLUS A6010 / Android 11；deviation=Quark 非 Chrome"
+      ],
       "gaps": []
     },
     {

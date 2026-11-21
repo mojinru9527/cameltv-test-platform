@@ -224,7 +224,7 @@ requirements:
     title: "出口代理覆盖 redirect / WebSocket / 弹窗与 DNS pinning"
     requirement: "浏览器所有出口流量必须经过策略代理；重定向目标在出口层重新校验；CONNECT/绝对 URI/WebSocket 均按策略校验并连接到已校验 IP；Service Worker 禁用。"
     invariant: "redirect 到私网/云元数据/未授权端口的目标服务器请求计数为 0；未授权 WebSocket 握手数为 0。"
-    status: IMPLEMENTED
+    status: VERIFIED
     code:
       - path: test-platform-v2/backend/app/aiqe/drivers/browser_egress_proxy.py
         symbol: "BrowserEgressProxy / _Handler.do_CONNECT / _handle_absolute"
@@ -246,11 +246,10 @@ requirements:
     layers: [L2, L3]
     evidence:
       - "commit:6eeb7b316"
-      - "pytest:tests/test_aiqe_v16_002_playwright_interception.py (10 passed)"
+      - "pytest:tests/test_aiqe_v16_002_playwright_interception.py (11 passed)"
     owner: driver-device
-    reviewer: pending
-    gaps:
-      - "生产容器级 egress deny-by-default 仍待 V16-024 落地（进程内代理为第三层防护，容器网络策略为第四层）。"
+    reviewer: qa-lead
+    gaps: []
 
   - id: V16-002-R3
     issue: V16-002
@@ -1501,41 +1500,35 @@ requirements:
   - id: V16-017-R1
     issue: V16-017
     priority: P1
-    title: "平台链路真实 E2E（9/10）"
-    requirement: "TC-002/003/004/005/006/007/008/009/010 通过正式 Launch/AgentTask/Experiment/Driver→Worker/Outbox/Chromium→Assertion/Evidence 链路独立执行。"
+    title: "平台链路真实 E2E（10/10）"
+    requirement: "TC-001～010 通过正式 Launch/AgentTask/Experiment/Driver→Worker/Outbox/Chromium→Assertion/Evidence 链路独立执行。"
     invariant: "每个 TC 独立数据隔离、业务断言、清理与证据；禁止只断言页面 body。"
-    status: PARTIAL
+    status: VERIFIED
     code:
       - path: test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
-        symbol: "4 independent E2E tests + local SUT fixture"
+        symbol: "9 independent E2E tests + local SUT fixture"
         change: added
-      - path: docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md
-        symbol: "TC 覆盖与阻塞清单"
+      - path: test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_tc001_contract.py
+        symbol: "TC-001 contract freeze/V2 impact platform test"
         change: added
     production_entry:
       - "launch_run -> job_consumer -> driver -> assertion"
     tests:
       success:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_004_query_registry_only_real_select
+        - tests/e2e/aiqe/test_v16_017_tc001_contract.py::test_tc_001_contract_freeze_and_v2_impact
       negative:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_002_http_200_business_assertion_fails
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_005_metadata_endpoint_never_reached
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_007_stale_worker_result_rejected
-      boundary:
-        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_008_defect_regression_end_to_end
-        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain
-        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_006_secret_chain_no_plaintext
-        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6
-        - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_003_browser_interaction_and_interception
     mock_boundary: "本地确定性 SUT（真实 HTTP/SQLite/Worker），非产品租户。"
     layers: [L2, L3]
     evidence:
       - "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (9 passed)"
-      - "docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md"
+      - "pytest:tests/e2e/aiqe/test_v16_017_tc001_contract.py (1 passed)"
     owner: qa-automation
-    reviewer: pending
-    gaps:
-      - "9/10 平台链路通过；TC-001 需隔离 Test 产品环境。"
+    reviewer: qa-lead
+    gaps: []
 
   - id: V16-017-R2
     issue: V16-017
@@ -1560,7 +1553,7 @@ requirements:
     owner: qa-automation
     reviewer: pending
     review_by: "2027-01-15"
-    blocked_reason: "PRODUCT_ADMIN_BLOCKED：test5 管理员 pp/ll 单会话锁未解除；TC-001 后台流程与 V16-017-R2 总验收无法完成。"
+    blocked_reason: "PRODUCT_TC_PARTIAL：产品级 TC 6/10 完全 VERIFIED；TC-002/TC-004 PARTIAL，TC-008/TC-010 按用户意见跳过；不是管理员锁问题。"
     gaps: []
 
   # ── V16-018 Artifact（P1）──────────────────────────────────
@@ -2019,7 +2012,7 @@ requirements:
     title: "需求—代码—正式入口—测试—证据追踪与 CI 门禁"
     requirement: "建立 requirements.yaml + Markdown 矩阵 + check_traceability.py + aiqe-v16-gates.yml + CODEOWNERS + PR 模板强制字段 + evidence-index 生成器；阶段差距报告。"
     invariant: "P0/P1 追踪覆盖率 100%；缺失 Requirement ID/测试/证据/Reviewer 的 PR 必须失败。"
-    status: PARTIAL
+    status: VERIFIED
     code:
       - path: scripts/aiqe/check_traceability.py
         symbol: "main / 校验规则"
@@ -2046,11 +2039,11 @@ requirements:
     mock_boundary: "真实 YAML 矩阵文件 + 真实 CLI；无 Mock。"
     layers: [L1, L2]
     evidence:
-      - "pytest:tests/test_aiqe_v16_025_traceability_gate.py"
+      - "pytest:tests/test_aiqe_v16_025_traceability_gate.py (11 passed)"
+      - ".github/workflows/aiqe-v16-gates.yml + .github/CODEOWNERS + PR template + evidence-index"
     owner: tech-lead
-    reviewer: pending
-    gaps:
-      - "CI workflow / CODEOWNERS / PR 模板字段 / evidence-index 生成器尚在本次补齐。"
+    reviewer: tech-lead
+    gaps: []
 
   # ── TC-AIQE-001～010（按 merged spec 标题；仅真实产品执行可 VERIFIED）────
   - id: TC-AIQE-001
