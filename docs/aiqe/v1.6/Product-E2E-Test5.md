@@ -122,3 +122,11 @@ python scripts/qa/aiqe_test5_e2e.py --out work-logs/evidence/aiqe-v16/test5
 - Runner 捕获 `TargetClosedError`，上报 `AUTOMATION/WORKER_FAILURE`；
 - Run `82036730`：outcome=FAIL，Node=ERROR/AUTOMATION/WORKER_FAILURE，attempts=1，**未无限 RUNNING**；
 - 断言 `page_has_camel` = **NOT_EVALUATED**（业务断言未执行）；结论：**TC-007 VERIFIED**。
+
+
+## 12. TC-009 多端 AC 对照（VERIFIED，Quark 替代）
+
+- PC：Playwright Chromium 打开 test5 直播赛事页，标题 PASS；
+- Android：OnePlus6T / Android 11，OpenVPN 已连接，Quark 打开同一 URL，标题 PASS；
+- 报告：`work-logs/evidence/aiqe-v16/test5-multidevice/report.json`；
+- **deviation**：设备无 Android Chrome，经用户批准以 Quark 替代；不声称 Android Chrome 已验证。

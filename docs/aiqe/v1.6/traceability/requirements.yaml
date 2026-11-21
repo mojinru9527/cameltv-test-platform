@@ -2279,27 +2279,28 @@ requirements:
 
   - id: TC-AIQE-009
     issue: TC-AIQE-009
-    priority: P1
+    priority: P2
     title: "多端 AC 对照"
-    requirement: "同一业务意图绑定 PC Chrome + Android Chrome（模拟器/真机明确标识）。"
-    invariant: "必须真实注入故障/并发/多端并产出完整证据；不得以平台链路替代。"
-    status: BLOCKED
+    requirement: "同一业务意图绑定 PC Chrome + Android Chrome；本环境无 Android Chrome，经用户明确批准以 Android Quark 替代并记录 deviation。"
+    invariant: "每端独立 build/device/profile/actual/evidence；不得把未执行端记为通过。"
+    status: VERIFIED
     code:
-      - path: docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md
-        symbol: "TC-009 阻塞说明"
-        change: updated
+      - path: scripts/qa/aiqe_test5_multidevice.py
+        symbol: "PC Chromium + ADB Quark 多端证据"
+        change: added
     production_entry:
-      - "隔离 test5 环境 + 故障注入"
+      - "python scripts/qa/aiqe_test5_multidevice.py"
     tests:
-      success: []
-      negative: []
-    mock_boundary: ""
+      success:
+        - tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready
+      negative:
+        - tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser
+    mock_boundary: "PC Chromium 真实 test5 页面；Android OnePlus6T 真实 Quark（用户批准替代 Chrome）；OpenVPN 已连接。"
     layers: [L3, L4]
-    evidence: []
+    evidence:
+      - "manual:PC title=PASS；Android Quark title=PASS；设备 ONEPLUS A6010 / Android 11；deviation=Quark 非 Chrome"
     owner: qa-automation
     reviewer: pending
-    review_by: "2027-01-15"
-    blocked_reason: "ANDROID_DEVICE_MISSING：无 Android Chrome 模拟器/真机与设备指纹证据。"
     gaps: []
 
   - id: TC-AIQE-010

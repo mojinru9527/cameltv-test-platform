@@ -135,3 +135,6 @@ work-logs/evidence/aiqe-v16/test5-unified/
 
 # TC-007 browser kill evidence
 work-logs/evidence/aiqe-v16/test5-browser-kill/
+
+# TC-009 multi-device evidence
+work-logs/evidence/aiqe-v16/test5-multidevice/
