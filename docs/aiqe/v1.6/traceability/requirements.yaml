@@ -2057,28 +2057,28 @@ requirements:
     issue: TC-AIQE-001
     priority: P1
     title: "需求契约冻结 + 需求变更影响"
-    requirement: "导入收藏赛事 PRD（重复收藏/取消收藏/跨设备同步），冻结契约并做需求变更影响分析。"
-    invariant: "真实产品/真实 Run；不得用 fixture 或 body 断言冒充。"
-    status: PARTIAL
+    requirement: "导入收藏赛事 PRD（重复收藏/取消收藏/跨设备同步），A1 提取 AC，人工确认“实时同步=≤5 秒”，冻结 V1，再做 V2 变更影响。"
+    invariant: "V1 checksum 不变；V2 差异列出；关联用例标记需复审；AI 不直接修改 V1。"
+    status: VERIFIED
     code:
-      - path: scripts/qa/aiqe_test5_e2e.py
-        symbol: "test5 product E2E"
+      - path: scripts/qa/aiqe_test5_contract_e2e.py
+        symbol: "A1 + Contract V1 freeze + V2 impact + case re-review"
         change: added
     production_entry:
-      - "python scripts/qa/aiqe_test5_e2e.py"
+      - "python scripts/qa/aiqe_test5_contract_e2e.py"
     tests:
       success:
         - tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready
       negative:
         - tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser
-    mock_boundary: "真实 test5 前端/后台/MySQL；尚未形成规格要求的单一统一 Run。"
+    mock_boundary: "真实 A1 LLM 调用；本地 SQLite Contract 存储；PRD 为收藏赛事 V1/V2。"
     layers: [L2, L3]
     evidence:
-      - "manual:test5 前端/后台/MySQL 连通性证据（非契约冻结）"
+      - "manual:A1 V1 4 AC / V2 6 AC；V1 FROZEN checksum=sha256:...；V1 checksum 不变；V2 checksum 不同；用例 CASE-FAV-001 置 DRAFT"
+      - "human:用户确认“实时同步” SLA=≤5 秒"
     owner: qa-automation
-    reviewer: pending
-    gaps:
-      - "未在 test5 导入 PRD 并执行契约冻结/变更影响；change_impact 仅平台级验证。"
+    reviewer: user-confirmed
+    gaps: []
 
   - id: TC-AIQE-002
     issue: TC-AIQE-002

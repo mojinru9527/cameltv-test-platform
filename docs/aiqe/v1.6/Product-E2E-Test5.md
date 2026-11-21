@@ -130,3 +130,12 @@ python scripts/qa/aiqe_test5_e2e.py --out work-logs/evidence/aiqe-v16/test5
 - Android：OnePlus6T / Android 11，OpenVPN 已连接，Quark 打开同一 URL，标题 PASS；
 - 报告：`work-logs/evidence/aiqe-v16/test5-multidevice/report.json`；
 - **deviation**：设备无 Android Chrome，经用户批准以 Quark 替代；不声称 Android Chrome 已验证。
+
+
+## 13. TC-001 契约冻结与变更影响（VERIFIED）
+
+- A1 LLM 真实调用：V1 提取 4 条 AC，V2 提取 6 条 AC；
+- 用户人工确认“实时同步”SLA = **≤5 秒**；
+- Contract V1 冻结，checksum `sha256:...`；V2 创建后 V1 checksum **不变**，V2 checksum 不同；
+- 关联用例 `CASE-FAV-001` 置 `DRAFT`（需复审）；
+- 报告：`work-logs/evidence/aiqe-v16/test5-contract/report.json`。

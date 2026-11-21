@@ -138,3 +138,6 @@ work-logs/evidence/aiqe-v16/test5-browser-kill/
 
 # TC-009 multi-device evidence
 work-logs/evidence/aiqe-v16/test5-multidevice/
+
+# TC-001 contract evidence
+work-logs/evidence/aiqe-v16/test5-contract/
