@@ -422,6 +422,7 @@ requirements:
     layers: [L1, L2]
     evidence:
       - "live:vault transit encrypt/decrypt roundtrip PASS；本地索引仅 ciphertext，无 plaintext"
+      - "live:V1.6 API image build_external_store provider=vault -> VaultTransitStore put/get PASS"
       - "pytest:tests/test_aiqe_v16_003_vault_transit.py (3 passed)"
       - "pytest:tests/test_aiqe_v16_003_external_secret_store.py (7 passed)"
     owner: security
@@ -1995,16 +1996,19 @@ requirements:
       negative:
         - tests/test_aiqe_v16_024_backup_drill.py::test_drill_rejects_non_sqlite_or_memory_or_missing
         - tests/test_aiqe_v16_024_backup_drill.py::test_cli_exit_codes
-    mock_boundary: "本地真实 SQLite 备份/恢复；staging PostgreSQL/监控栈/KMS 未演练。"
+    mock_boundary: "真实 staging PostgreSQL、Prometheus/Alertmanager、V1.6 API 容器；Vault 为测试环境 dev 模式。"
     layers: [L1, L2]
     evidence:
       - "pytest:tests/test_aiqe_v16_024_backup_drill.py (3 passed)"
       - "live:aiqe-test-postgres pg_dump/restore 178 tables PASS (2026-11-21)"
-      - "live:Prometheus/Alertmanager/webhook synthetic alert delivered; AIQE metrics route absent in v14-test"
+      - "live:V1.6 API image cameltv-tp-backend:v16-api (711MB) + staging aiqe-v16-backend health/metrics 200"
+      - "live:Shadow run 9fb84240-8906-4a17-9338-b368718e38c4 PASS; Dogfood 9804b240-524c-44de-99b8-e8f8f6581853 PASS"
+      - "live:small_traffic be4e64cb-6f2a-40a7-bf65-e27fd3ab018f / e5ef2ebf-3579-43fa-b5f1-698c68b86f38 / 4bc9b025-b8e9-4e7f-a339-720ad8b42912 PASS"
+      - "live:Prometheus target aiqe-v16-backend up; AIQE rules 21 loaded; AIQE self-test alert delivered to webhook"
     owner: devops
     reviewer: pending
     gaps:
-      - "staging PostgreSQL 备份恢复已通过；Shadow/狗粮/小流量、AIQE Prometheus 指标（v14-test 无 metrics 路由）、云 KMS 仍未完成，不能宣称生产就绪。"
+      - "staging PostgreSQL、Shadow/Dogfood/小流量、V1.6 metrics、Prometheus/Alertmanager 已通过；Stage 4 扩大/Stage 5 GA 未执行，Vault 生产持久化未完成，不能宣称 GA。"
 
   # ── V16-025 工程治理（P0 release gate，基线 PARTIAL）──────
   - id: V16-025-R1

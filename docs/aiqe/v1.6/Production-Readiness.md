@@ -65,3 +65,9 @@ P0：Secret Canary、TargetPolicy 不可用、跨项目访问成功/尝试；P1�
 | 监控告警联调（Prometheus→告警通道） | **PASS（合成自检）** | Prometheus/Alertmanager/webhook 已部署并收到告警；AIQE metrics 路由仍缺 |
 
 以上 NOT_RUN/BLOCKED 不计入通过率，发布报告必须披露。
+
+## 6. 2026-11-22 staging 实测
+
+- Stage 1 Shadow / Stage 2 Dogfood / Stage 3 小流量共 5 个 Run 全部 PASS（详见 `Staging-V16-Run-Evidence.md`）。
+- Prometheus target `aiqe-v16-backend` up，21 条 AIQE 规则已加载，自检告警已送达 webhook。
+- Stage 4/Stage 5 仍未执行；Vault 仍为测试 dev 模式。

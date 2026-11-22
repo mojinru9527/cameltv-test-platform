@@ -30,30 +30,31 @@ def _columns(table: str) -> list[str]:
 
 
 def upgrade() -> None:
-    columns = _columns("aiqe_workflow_definitions")
-    if columns and "policy_status" not in columns:
-        op.add_column(
-            "aiqe_workflow_definitions",
-            sa.Column(
-                "policy_status",
-                sa.String(length=24),
-                nullable=False,
-                server_default="UNREVIEWED",
-            ),
-        )
-        op.create_index(
-            "ix_aiqe_workflow_definitions_policy_status",
-            "aiqe_workflow_definitions",
-            ["policy_status"],
-            unique=False,
-        )
+    # 兼容历史表名 aiqe_workflow_definitions 与当前 ORM 表 workflow_definitions。
+    for table, index_name in (
+        ("aiqe_workflow_definitions", "ix_aiqe_workflow_definitions_policy_status"),
+        ("workflow_definitions", "ix_workflow_definitions_policy_status"),
+    ):
+        columns = _columns(table)
+        if columns and "policy_status" not in columns:
+            op.add_column(
+                table,
+                sa.Column(
+                    "policy_status",
+                    sa.String(length=24),
+                    nullable=False,
+                    server_default="UNREVIEWED",
+                ),
+            )
+            op.create_index(index_name, table, ["policy_status"], unique=False)
 
 
 def downgrade() -> None:
-    columns = _columns("aiqe_workflow_definitions")
-    if "policy_status" in columns:
-        op.drop_index(
-            "ix_aiqe_workflow_definitions_policy_status",
-            table_name="aiqe_workflow_definitions",
-        )
-        op.drop_column("aiqe_workflow_definitions", "policy_status")
+    for table, index_name in (
+        ("aiqe_workflow_definitions", "ix_aiqe_workflow_definitions_policy_status"),
+        ("workflow_definitions", "ix_workflow_definitions_policy_status"),
+    ):
+        columns = _columns(table)
+        if "policy_status" in columns:
+            op.drop_index(index_name, table_name=table)
+            op.drop_column(table, "policy_status")

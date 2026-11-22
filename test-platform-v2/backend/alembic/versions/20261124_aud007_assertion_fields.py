@@ -36,10 +36,10 @@ def upgrade() -> None:
         if name in existing:
             continue
         op.add_column("run_assertion_results", sa.Column(name, type_, nullable=True))
-    if "required" not in existing:
-        op.execute(
-            "UPDATE run_assertion_results SET required = 1 WHERE required IS NULL"
-        )
+    # PostgreSQL 的 boolean 不接受整数 1；SQLite 接受 TRUE。
+    op.execute(
+        "UPDATE run_assertion_results SET required = TRUE WHERE required IS NULL"
+    )
 
 
 def downgrade() -> None:

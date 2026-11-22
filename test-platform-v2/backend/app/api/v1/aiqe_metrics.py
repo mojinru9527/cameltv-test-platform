@@ -6,11 +6,15 @@ import hmac
 from fastapi import APIRouter, Header
 from fastapi.responses import PlainTextResponse
 
-from app.aiqe.observability.metrics import metrics
+from app.aiqe.observability.metrics import REQUIRED_METRICS, metrics
 from app.core.config import settings
 from app.core.exceptions import APIException
 
 router = APIRouter(prefix="/aiqe", tags=["AIQE Observability"])
+
+# 首次请求前暴露所有必需指标，避免告警规则因“无 series”静默
+for _name in REQUIRED_METRICS:
+    metrics.set_gauge(_name, 0)
 
 
 @router.get("/metrics", summary="AIQE Prometheus 指标")
