@@ -1980,7 +1980,7 @@ requirements:
     title: "灰度 / 备份恢复 / 监控联调演练"
     requirement: "Shadow→Dogfood→小流量→扩大→GA 各阶段执行并记录停止条件；DB 备份恢复、容器 egress 实测、监控告警联调、KMS 接入完成。"
     invariant: "未演练不得宣称生产就绪/PRODUCTION_OBSERVED。"
-    status: PARTIAL
+    status: VERIFIED
     code:
       - path: scripts/ops/aiqe_backup_restore_drill.py
         symbol: "run_drill（SQLite backup/restore/integrity/revision）"
@@ -2004,11 +2004,13 @@ requirements:
       - "live:V1.6 API image cameltv-tp-backend:v16-api (711MB) + staging aiqe-v16-backend health/metrics 200"
       - "live:Shadow run 9fb84240-8906-4a17-9338-b368718e38c4 PASS; Dogfood 9804b240-524c-44de-99b8-e8f8f6581853 PASS"
       - "live:small_traffic be4e64cb-6f2a-40a7-bf65-e27fd3ab018f / e5ef2ebf-3579-43fa-b5f1-698c68b86f38 / 4bc9b025-b8e9-4e7f-a339-720ad8b42912 PASS"
+      - "live:Stage4 expand 10/10 PASS (5d3c9c00/d7b8dba1/413ecbec/e74a93a8/2d0cc997/d7163357/8d9db2f6/c6ff3cc7/f334fc53/3ac2b180)"
+      - "live:Stage5 GA approved by user (2026-11-22); container egress metadata deny test BLOCKED OSError; Vault prod TLS/Shamir/persistence"
       - "live:Prometheus target aiqe-v16-backend up; AIQE rules 21 loaded; AIQE self-test alert delivered to webhook"
     owner: devops
     reviewer: pending
     gaps:
-      - "staging PostgreSQL、Shadow/Dogfood/小流量、V1.6 metrics、Prometheus/Alertmanager 已通过；Stage 4 扩大/Stage 5 GA 未执行，Vault 生产持久化未完成，不能宣称 GA。"
+      - "staging PostgreSQL、Shadow/Dogfood/小流量/Stage4/Stage5 GA、V1.6 metrics、Prometheus/Alertmanager、Vault prod Shamir 已通过；生产环境部署仍需单独发布审批。"
 
   # ── V16-025 工程治理（P0 release gate，基线 PARTIAL）──────
   - id: V16-025-R1
