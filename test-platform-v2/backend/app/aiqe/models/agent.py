@@ -53,3 +53,37 @@ class AgentExecution(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
     )
+
+class AgentTask(Base):
+    """V16-013：A0 AgentTask 持久化（Draft → 审批 → 执行状态机）。"""
+
+    __tablename__ = "agent_tasks"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    project_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    task_type: Mapped[str] = mapped_column(String(40), nullable=False, default="A0_PLAN")
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="DRAFT", index=True)
+    goal: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    input_refs_json: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    plan_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    plan_hash: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    agent_registry_version: Mapped[str] = mapped_column(String(40), nullable=False, default="")
+    prompt_version: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    toolset_version: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    requested_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    approved_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    approval_reason: Mapped[str] = mapped_column(String(500), nullable=False, default="")
+    run_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    result_refs_json: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    error_code: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    error_text: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )

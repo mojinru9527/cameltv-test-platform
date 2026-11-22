@@ -133,6 +133,8 @@ class DefectRegression(Base):
     profile_checksum: Mapped[str | None] = mapped_column(String(128), default=None)
     scope: Mapped[str] = mapped_column(String(40), default="DIRECT_FAILURES_PLUS_P0_PLUS_IMPACT")
     scope_hash: Mapped[str | None] = mapped_column(String(64), default=None)
+    #: V16-008：服务端计算的 Scope Snapshot（mandatory/related/smoke + checksum）。
+    scope_snapshot_id: Mapped[str | None] = mapped_column(String(36), default=None, index=True)
     mandatory_case_ids_json: Mapped[list | None] = mapped_column(JSON, default=None)
     selected_case_ids_json: Mapped[list | None] = mapped_column(JSON, default=None)
     excluded_json: Mapped[list | None] = mapped_column(JSON, default=None)

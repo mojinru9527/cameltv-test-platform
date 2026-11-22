@@ -22,15 +22,29 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
 from app.aiqe.models.run import NodeRun, StepAttempt, TestRun
+from app.aiqe.redaction import SecretLeakError
 from app.aiqe.schemas.contracts import DriverResult, EvidenceFile
+from app.aiqe.security import PolicyDecision, TargetPolicy, resolve_execution_policy
 from app.aiqe.services import assertion_service, dag_scheduler, evidence_redactor
 from app.aiqe.services.artifact_service import put_artifact
 from app.aiqe.services.event_service import append_event
+from app.aiqe.services.node_category import (
+    CATEGORY_BUSINESS,
+    graph_node_by_key,
+    node_category,
+)
 from app.aiqe.services.node_executor import NodeExecution, execute_node
 from app.aiqe.services.run_context import (
     EnvSecretProvider,
     RunContext,
     VariableResolutionError,
+)
+from app.aiqe.services.secret_vault import (
+    SecretHandleError,
+    SecretVault,
+    SecretVaultUnavailable,
+    get_secret_vault,
+    revoke_run_handles,
 )
 from app.core.config import settings
 
@@ -102,13 +116,33 @@ def prepare_node(
     *,
     secret_provider: Any = None,
 ) -> str | None:
-    """解析节点输入并持久化脱敏快照；返回错误码（None 表示成功）。"""
+    """解析节点输入并持久化脱敏快照；返回错误码（None 表示成功）。
+
+    V16-003：必须使用带 SecretVault 的 RunContext，否则下游 Handle 引用无法解析。
+    """
+    try:
+        vault = get_secret_vault()
+    except SecretVaultUnavailable:
+        node.status = "BLOCKED"
+        node.error_class = "SECRET_VAULT_UNAVAILABLE"
+        _event(
+            db,
+            run.id,
+            "security.secret_vault_unavailable",
+            {"code": "SECRET_VAULT_UNAVAILABLE"},
+            node=node,
+            producer="system",
+            producer_event_id=f"secret-vault-unavailable:{node.id}",
+        )
+        return "SECRET_VAULT_UNAVAILABLE"
     ctx = RunContext(
         db,
         run.id,
         graph=graph,
         secrets=_secret_provider(run, secret_provider),
         fixtures=(run.environment_snapshot_json or {}).get("fixtures") or {},
+        vault=vault,
+        project_id=run.project_id,
     )
     try:
         resolved = ctx.resolve_node_input(node.node_key, node.input_ref or {})
@@ -285,7 +319,16 @@ def _upload_binary_artifact(
         mime_type=file.mime_type,
         node_run_id=node.id,
         step_attempt_id=attempt.id,
-        metadata={"redacted": True, "source": "driver", "name": file.name, **(file.metadata or {})},
+        metadata={
+            "redacted": True,
+            "source": "driver",
+            "name": file.name,
+            **(
+                evidence_redactor.redact(dict(file.metadata or {}), known_secrets=known_secrets)
+                if isinstance(file.metadata, Mapping)
+                else {}
+            ),
+        },
         redaction_status="sanitized",
     )
     return row.id
@@ -352,6 +395,46 @@ def persist_execution_evidence(
     return artifact_ids
 
 
+def _emit_security_denials(
+    db: Session,
+    *,
+    run: TestRun,
+    node: NodeRun,
+    attempt: StepAttempt | None,
+    execution: NodeExecution,
+) -> None:
+    """V16-002：把浏览器请求链拦截写入 RunEvent（不含敏感 header/query）。"""
+    raw = (execution.detail or {}).get("security_denials") or (
+        execution.data or {}
+    ).get("security_denials")
+    if not isinstance(raw, list) or not raw:
+        return
+    safe = evidence_redactor.redact(list(raw)[:20], known_secrets=[])
+    _event(
+        db,
+        run.id,
+        "security.ssrf_blocked",
+        {
+            "count": len(raw),
+            "truncated": len(raw) > 20,
+            "denials": safe,
+            "node_key": node.node_key,
+            "driver": node.driver_key,
+        },
+        node=node,
+        attempt=attempt,
+        producer="system",
+        producer_event_id=f"ssrf-blocked:{node.id}:{attempt.id if attempt else 'no-attempt'}",
+    )
+
+    try:
+        from app.aiqe.observability.metrics import metrics
+
+        metrics.inc("aiqe_ssrf_blocked_total", {"project_id": run.project_id, "driver": node.driver_key})
+    except Exception:
+        pass
+
+
 def finalize_node(
     db: Session,
     *,
@@ -360,10 +443,16 @@ def finalize_node(
     graph: Mapping[str, Any],
     execution: NodeExecution,
     attempt: StepAttempt | None,
+    ctx: RunContext,
+    fencing_token: int | None = None,
     known_secrets: Iterable[str] = (),
     artifact_ids: list[str] | None = None,
 ) -> dict[str, Any]:
-    """断言 → outputs → evidence → 状态收口（in-process / external 共用）。"""
+    """断言 → outputs → evidence → 状态收口（in-process / external 共用）。
+
+    V16-003：``ctx`` 必须是由 ExecutionContext 注入的统一 RunContext
+    （携带 SecretVault + Handle resolver），禁止在此重建普通 RunContext。
+    """
     if attempt is None:
         attempt = _latest_attempt(db, node)
     if attempt is None:
@@ -422,10 +511,23 @@ def finalize_node(
     output_error = ""
     outputs_spec = dict(node.outputs_spec_json or {})
     if outputs_spec:
-        ctx = RunContext(db, run.id, graph=graph)
         try:
             outputs = ctx.capture_node_outputs(
                 node, result, outputs_spec, node.output_schema_json
+            )
+        except (SecretLeakError, SecretHandleError, SecretVaultUnavailable) as exc:
+            # V16-003：Vault/分类失败必须 fail closed，不允许退回明文落库。
+            output_error = "SECRET_PERSISTENCE_BLOCKED"
+            node.error_class = output_error
+            _event(
+                db,
+                run.id,
+                "security.secret_persistence_blocked",
+                {"code": output_error, "error_type": type(exc).__name__},
+                node=node,
+                attempt=attempt,
+                producer="system",
+                producer_event_id=f"secret-persistence-blocked:{attempt.id}",
             )
         except VariableResolutionError as exc:
             output_error = exc.code
@@ -441,12 +543,23 @@ def finalize_node(
             )
     elif node.output_schema_json:
         # 没有 outputs 映射但声明了 schema 时，以 data 作为输出整体校验。
-        ctx = RunContext(db, run.id, graph=graph)
         try:
-            ctx.capture_node_outputs(
+            outputs = ctx.capture_node_outputs(
                 node, result, {"data": "$.data"}, node.output_schema_json
             )
-            outputs = {"data": result.data.get("data")}
+        except (SecretLeakError, SecretHandleError, SecretVaultUnavailable) as exc:
+            output_error = "SECRET_PERSISTENCE_BLOCKED"
+            node.error_class = output_error
+            _event(
+                db,
+                run.id,
+                "security.secret_persistence_blocked",
+                {"code": output_error, "error_type": type(exc).__name__},
+                node=node,
+                attempt=attempt,
+                producer="system",
+                producer_event_id=f"secret-persistence-blocked:{attempt.id}",
+            )
         except VariableResolutionError as exc:
             output_error = exc.code
             node.error_class = exc.code
@@ -463,8 +576,26 @@ def finalize_node(
     elif assertion_status == assertion_service.ERROR:
         node_status = "ERROR"
     elif not declarations:
-        # 非业务节点（setup/cleanup）允许在 driver 成功后通过；事件会标明没有断言。
-        node_status = "PASSED"
+        # V16-009：只有 SETUP/CLEANUP/OBSERVE 允许无断言通过；
+        # BUSINESS 节点没有业务 Oracle 时不得 PASS（也不得用 Driver 成功冒充业务成功）。
+        category = node_category(
+            graph_node_by_key(graph, node.node_key), driver=node.driver_key
+        )
+        if category == CATEGORY_BUSINESS:
+            node_status = "BLOCKED"
+            node.error_class = "NO_BUSINESS_ORACLE"
+            _event(
+                db,
+                run.id,
+                "node.business_oracle_missing",
+                {"code": "NO_BUSINESS_ORACLE", "category": category},
+                node=node,
+                attempt=attempt,
+                producer="system",
+                producer_event_id=f"business-oracle-missing:{attempt.id}",
+            )
+        else:
+            node_status = "PASSED"
     else:
         node_status = "BLOCKED"
 
@@ -490,6 +621,10 @@ def finalize_node(
         dict(graph),
         error_class=(node.error_class or execution.error_class or None),
         outputs=outputs,
+        fencing_token=fencing_token,
+    )
+    _emit_security_denials(
+        db, run=run, node=node, attempt=attempt, execution=execution
     )
     _event(
         db,
@@ -510,7 +645,8 @@ def finalize_node(
     )
     attempt.status = node_status
     attempt.finished_at = attempt.finished_at or _now()
-    attempt.output_summary_json = dict(outputs or {})
+    # V16-003：attempt 摘要同样只写脱敏值（Handle 引用原样保留，明文一律 ***）。
+    attempt.output_summary_json = dict(evidence_redactor.redact(dict(outputs or {})))
     db.flush()
     return {
         "node_key": node.node_key,
@@ -569,17 +705,111 @@ def _advance_run(db: Session, run: TestRun, graph: Mapping[str, Any]) -> None:
         raise
 
 
-def _has_target_policy(db: Session, run: TestRun) -> bool:
-    try:
-        from app.aiqe.security import TargetPolicyResolver
+def _block_node_for_policy(
+    db: Session,
+    *,
+    job: Any,
+    run: TestRun,
+    node: NodeRun,
+    graph: Mapping[str, Any],
+    attempt: StepAttempt | None,
+    policy: TargetPolicy,
+    fencing_token: int | None = None,
+) -> dict[str, Any]:
+    """V16-001：策略非 ALLOW 时收口为 BLOCKED，且不创建任何 Driver。
 
-        policy = TargetPolicyResolver(db).resolve(
-            project_id=int(run.project_id),
-            environment_id=getattr(run, "environment_id", None),
-        )
-        return str(getattr(policy, "source", "")) != "deny_all"
+    - 记录决策、策略版本、hash、拒绝原因（不含客户端原始配置）；
+    - 安全事件按决策分类；
+    - 走统一 DAG 收口，阻断下游并计算 Run 终态。
+    """
+    code = {
+        PolicyDecision.DENY: "TARGET_POLICY_DENIED",
+        PolicyDecision.UNAVAILABLE: "TARGET_POLICY_UNAVAILABLE",
+        PolicyDecision.MISSING_BINDING: "TARGET_POLICY_MISSING_BINDING",
+    }.get(policy.decision, "TARGET_POLICY_DENIED")
+    event_type = {
+        PolicyDecision.DENY: "security.target_policy_denied",
+        PolicyDecision.UNAVAILABLE: "security.target_policy_unavailable",
+        PolicyDecision.MISSING_BINDING: "security.target_policy_missing_binding",
+    }.get(policy.decision, "security.target_policy_denied")
+    try:
+        from app.aiqe.observability.metrics import metrics
+
+        if policy.decision is PolicyDecision.DENY:
+            metrics.inc("aiqe_target_policy_denied_total", {"project_id": run.project_id})
+        elif policy.decision is PolicyDecision.UNAVAILABLE:
+            metrics.inc(
+                "aiqe_target_policy_unavailable_total", {"project_id": run.project_id}
+            )
     except Exception:
-        return False
+        pass
+    snapshot = policy.snapshot()
+    node.output_ref = {**(node.output_ref or {}), "policy": snapshot}
+    if attempt is not None:
+        attempt.error_json = {
+            "code": code,
+            "decision": policy.decision.value,
+            "reason_code": policy.reason_code,
+            "policy_hash": policy.policy_hash,
+            "policy_version": policy.version,
+        }
+        attempt.finished_at = _now()
+        attempt.status = "BLOCKED"
+    _event(
+        db,
+        run.id,
+        event_type,
+        {
+            "code": code,
+            "decision": policy.decision.value,
+            "reason_code": policy.reason_code,
+            "policy_id": policy.policy_id,
+            "policy_version": policy.version,
+            "policy_hash": policy.policy_hash,
+            "project_id": policy.project_id,
+            "environment_id": policy.environment_id,
+            "node_key": node.node_key,
+            "driver": node.driver_key,
+        },
+        node=node,
+        attempt=attempt,
+        producer="system",
+        producer_event_id=f"policy-blocked:{node.id}:{code}",
+    )
+    dag_scheduler.complete_node(
+        db,
+        run.id,
+        node.node_key,
+        "BLOCKED",
+        dict(graph),
+        error_class=code,
+        outputs={"policy": snapshot},
+        fencing_token=fencing_token,
+    )
+    job.status = "failed"
+    job.error_message = f"{code}: {policy.reason_code or policy.deny_reason}".strip()[:500]
+    job.result_json = json.dumps(
+        {
+            "node_key": node.node_key,
+            "status": "BLOCKED",
+            "error_class": code,
+            "policy": snapshot,
+        },
+        ensure_ascii=False,
+        default=str,
+    )[:20000]
+    job.summary = f"{node.node_key}:BLOCKED:{code}"
+    job.finished_at = _now()
+    db.commit()
+    return {
+        "job_id": job.id,
+        "run_id": run.id,
+        "node": node.node_key,
+        "node_status": "BLOCKED",
+        "status": "BLOCKED",
+        "error_class": code,
+        "policy_decision": policy.decision.value,
+    }
 
 
 def execute_inprocess_job(db: Session, job_id: int) -> dict[str, Any]:
@@ -650,12 +880,40 @@ def execute_inprocess_job(db: Session, job_id: int) -> dict[str, Any]:
     )
 
     # 解析输入（含 secret；secret 只在内存中）。
+    try:
+        vault = get_secret_vault()
+    except SecretVaultUnavailable as exc:
+        node.status = "BLOCKED"
+        node.error_class = "SECRET_VAULT_UNAVAILABLE"
+        _event(
+            db,
+            run.id,
+            "security.secret_vault_unavailable",
+            {"code": "SECRET_VAULT_UNAVAILABLE", "error_type": type(exc).__name__},
+            node=node,
+            attempt=attempt,
+            producer="system",
+            producer_event_id=f"secret-vault-unavailable:{node.id}",
+        )
+        job.status = "failed"
+        job.error_message = "SECRET_VAULT_UNAVAILABLE"
+        job.finished_at = _now()
+        db.commit()
+        return {
+            "job_id": job_id,
+            "run_id": run.id,
+            "node": node.node_key,
+            "status": "BLOCKED",
+            "error_class": "SECRET_VAULT_UNAVAILABLE",
+        }
     ctx = RunContext(
         db,
         run.id,
         graph=graph,
         secrets=_secret_provider(run),
         fixtures=(run.environment_snapshot_json or {}).get("fixtures") or {},
+        vault=vault,
+        project_id=run.project_id,
     )
     try:
         resolved = ctx.resolve_node_input(node.node_key, node.input_ref or {})
@@ -677,62 +935,143 @@ def execute_inprocess_job(db: Session, job_id: int) -> dict[str, Any]:
         db.commit()
         return {"job_id": job_id, "run_id": run.id, "node": node.node_key, "status": "BLOCKED", "error_class": exc.code}
 
-    policy_ctx = db if _has_target_policy(db, run) else None
-    try:
-        execution = execute_node(
-            node,
-            input_override=dict(resolved.values),
-            db_engine=readonly_db_engine(),
-            db=policy_ctx,
+    # V16-001：策略必须在创建任何 Driver 之前解析；非 ALLOW 一律 BLOCKED，
+    # 不存在“没有策略就走 legacy executor”的降级分支。
+    policy_context = resolve_execution_policy(db, run, node)
+    node.output_ref = {**(node.output_ref or {}), "policy": policy_context.snapshot()}
+    # V16-005：fencing token 来自本次 claim（job.attempt 单调递增）。
+    fencing_token = int(node.fencing_token or job.attempt or 0) or None
+    if policy_context.decision is not PolicyDecision.ALLOW:
+        return _block_node_for_policy(
+            db,
+            job=job,
+            run=run,
+            node=node,
+            graph=graph,
+            attempt=attempt,
+            policy=policy_context,
+            fencing_token=fencing_token,
         )
-    except TypeError as exc:
-        # 兼容测试/第三方注入的旧签名 executor（不接受 db= 上下文）。
-        if "unexpected keyword argument 'db'" not in str(exc):
-            raise
-        execution = execute_node(
-            node,
-            input_override=dict(resolved.values),
-            db_engine=readonly_db_engine(),
-        )
+    execution = execute_node(
+        node,
+        policy_context=policy_context,
+        input_override=dict(resolved.values),
+        db_engine=readonly_db_engine(),
+        db=db,
+    )
     known_secrets = list(ctx.last_secret_values)
-    artifact_ids = persist_execution_evidence(
-        db,
-        run=run,
-        node=node,
-        attempt=attempt,  # type: ignore[arg-type]
-        execution=execution,
-        known_secrets=known_secrets,
-    ) if attempt is not None else []
-    summary = finalize_node(
-        db,
-        run=run,
-        node=node,
-        graph=graph,
-        execution=execution,
-        attempt=attempt,
-        known_secrets=known_secrets,
-        artifact_ids=artifact_ids,
-    )
-    job.status = "success" if summary["status"] == "PASSED" else "failed"
-    safe_result = evidence_redactor.redact(
-        {
-            "detail": execution.detail,
-            "data": execution.data,
-            "summary": summary,
-        },
-        known_secrets=list(known_secrets),
-    )
-    job.result_json = json.dumps(
-        safe_result,
-        ensure_ascii=False,
-        default=str,
-    )[:20000]
-    job.summary = f"{node.node_key}:{summary['status']}"
-    job.error_message = node.error_class or execution.error_class
-    job.finished_at = _now()
-    _advance_run(db, run, graph)
+    outputs_spec_for_secrets = dict(node.outputs_spec_json or {})
+    if outputs_spec_for_secrets:
+        # V16-003：Driver 动态返回的 token/cookie 也必须在证据落库前纳入脱敏集合。
+        known_secrets.extend(
+            ctx.preview_secret_values(
+                execution, outputs_spec_for_secrets, node.output_schema_json
+            )
+        )
+        known_secrets = sorted({value for value in known_secrets if value})
+    from app.aiqe.security.log_redaction import register_known_secrets, reset_known_secrets
+
+    log_token = register_known_secrets(known_secrets)
+    try:
+        artifact_ids = persist_execution_evidence(
+            db,
+            run=run,
+            node=node,
+            attempt=attempt,  # type: ignore[arg-type]
+            execution=execution,
+            known_secrets=known_secrets,
+        ) if attempt is not None else []
+        summary = finalize_node(
+            db,
+            run=run,
+            node=node,
+            graph=graph,
+            execution=execution,
+            attempt=attempt,
+            ctx=ctx,
+            known_secrets=known_secrets,
+            artifact_ids=artifact_ids,
+        )
+        job.status = "success" if summary["status"] == "PASSED" else "failed"
+        safe_result = evidence_redactor.redact(
+            {
+                "detail": execution.detail,
+                "data": execution.data,
+                "summary": summary,
+            },
+            known_secrets=list(known_secrets),
+        )
+        job.result_json = json.dumps(
+            safe_result,
+            ensure_ascii=False,
+            default=str,
+        )[:20000]
+        job.summary = f"{node.node_key}:{summary['status']}"
+        job.error_message = node.error_class or execution.error_class
+        job.finished_at = _now()
+        _advance_run(db, run, graph)
+        _cleanup_terminal_run_secrets(db, run, vault=vault)
+        db.commit()
+        return {"job_id": job_id, "run_id": run.id, **summary}
+    finally:
+        reset_known_secrets(log_token)
+
+
+def _cleanup_terminal_run_secrets(
+    db: Session, run: TestRun, *, vault: SecretVault | None = None
+) -> int:
+    """V16-003 §11：Run 终态后撤销临时 Secret Handle 并逐出 Vault 明文。"""
+    if str(run.status or "") not in {"COMPLETED", "BLOCKED", "CANCELED", "ERROR"}:
+        return 0
+    try:
+        return revoke_run_handles(db, run.id, vault=vault)
+    except Exception:  # 清理失败不得吞掉执行结论，但必须留痕
+        logger.exception("revoke run secrets failed: %s", run.id)
+        return 0
+
+
+def policy_gate_for_external_runner(db: Session, job_id: int) -> dict[str, Any]:
+    """V16-001：外部 Runner 拉取载荷前必须由服务端重新解析策略。
+
+    - 非 ALLOW：立即把节点/Job 收口为 BLOCKED 并返回不可执行原因；
+    - ALLOW：返回策略快照（Runner 侧仍按该快照做目标校验，服务端在 report 时再校验一次）。
+    """
+    from app.models.execution_job import ExecutionJob
+
+    job = db.get(ExecutionJob, job_id)
+    if job is None:
+        return {"allowed": False, "code": "JOB_NOT_FOUND", "policy": None}
+    try:
+        payload = json.loads(job.payload_json or "{}")
+    except (TypeError, ValueError):
+        payload = {}
+    run = db.get(TestRun, str(payload.get("run_id") or ""))
+    node = db.get(NodeRun, str(payload.get("node_run_id") or ""))
+    if run is None or node is None:
+        return {"allowed": False, "code": "RUN_OR_NODE_MISSING", "policy": None}
+    graph = dict(payload.get("graph") or {"nodes": [{"key": node.node_key}], "edges": []})
+    attempt = _latest_attempt(db, node)
+    policy = resolve_execution_policy(db, run, node)
+    node.output_ref = {**(node.output_ref or {}), "policy": policy.snapshot()}
+    if policy.decision is not PolicyDecision.ALLOW:
+        result = _block_node_for_policy(
+            db,
+            job=job,
+            run=run,
+            node=node,
+            graph=graph,
+            attempt=attempt,
+            policy=policy,
+            fencing_token=int(job.attempt or 0) or None,
+        )
+        return {
+            "allowed": False,
+            "code": result["error_class"],
+            "policy": policy.snapshot(),
+            "status": "BLOCKED",
+        }
     db.commit()
-    return {"job_id": job_id, "run_id": run.id, **summary}
+    return {"allowed": True, "code": None, "policy": policy.snapshot(), "status": "RUNNING"}
 
 
 def complete_from_external_report(
@@ -742,8 +1081,15 @@ def complete_from_external_report(
     status: str,
     result: Mapping[str, Any] | None = None,
     error_message: str = "",
+    fencing_token: int | None = None,
+    node_id: str | None = None,
 ) -> dict[str, Any]:
-    """外部 Runner 上报后走同一断言/证据/状态收口。"""
+    """外部 Runner 上报后走同一断言/证据/状态收口。
+
+    V16-005：上报必须携带 fencing token；条件更新 rowcount=0 或 token 落后时
+    拒绝迟到结果（旧 Worker 不能覆盖新结果）。
+    """
+    from app.aiqe.services import lease
     from app.models.execution_job import ExecutionJob
 
     job = db.get(ExecutionJob, job_id)
@@ -754,10 +1100,108 @@ def complete_from_external_report(
     node = db.get(NodeRun, str(payload.get("node_run_id") or ""))
     if run is None or node is None:
         return {"skipped": True, "reason": "node/run missing"}
+    if fencing_token is None:
+        return {
+            "skipped": True,
+            "reason": "FENCING_TOKEN_REQUIRED",
+            "node_status": node.status,
+        }
+    try:
+        lease.fenced_job_write(
+            db,
+            job_id=job.id,
+            node_id=str(node_id or job.node_id or ""),
+            attempt=int(fencing_token),
+            now=_now(),
+        )
+        lease.assert_current(
+            db,
+            node_run_id=node.id,
+            fencing_token=int(fencing_token),
+            job_expires_at=job.lease_expires_at,
+            job_id=job.id,
+            now=_now(),
+        )
+    except lease.JobAlreadyTerminal as exc:
+        return {
+            "job_id": job.id,
+            "skipped": True,
+            "reason": "JOB_ALREADY_TERMINAL",
+            "job_status": exc.status,
+            "node_status": node.status,
+        }
+    except lease.StaleLeaseError as exc:
+        try:
+            from app.aiqe.observability.metrics import metrics
+
+            metrics.inc("aiqe_job_fencing_rejected_total", {"project_id": run.project_id})
+        except Exception:
+            pass
+        _event(
+            db,
+            run.id,
+            "security.fencing_rejected",
+            {
+                "code": exc.code,
+                "job_id": job.id,
+                "fencing_token": int(fencing_token),
+                "current_token": exc.current_token,
+            },
+            node=node,
+            attempt=_latest_attempt(db, node),
+            producer="system",
+            producer_event_id=f"fencing-rejected:{job.id}:{fencing_token}",
+        )
+        db.commit()
+        return {
+            "job_id": job.id,
+            "skipped": True,
+            "reason": "STALE_LEASE",
+            "node_status": node.status,
+        }
+    except lease.LeaseExpired as exc:
+        try:
+            from app.aiqe.observability.metrics import metrics
+
+            metrics.inc("aiqe_job_lease_expired_total", {"project_id": run.project_id})
+        except Exception:
+            pass
+        _event(
+            db,
+            run.id,
+            "security.lease_expired",
+            {"code": exc.code, "job_id": job.id, "expires_at": str(exc.expires_at)},
+            node=node,
+            attempt=_latest_attempt(db, node),
+            producer="system",
+            producer_event_id=f"lease-expired:{job.id}",
+        )
+        db.commit()
+        return {
+            "job_id": job.id,
+            "skipped": True,
+            "reason": "LEASE_EXPIRED",
+            "node_status": node.status,
+        }
     graph = dict(payload.get("graph") or {"nodes": [{"key": node.node_key}], "edges": []})
     if node.status == "READY":
         dag_scheduler.mark_running(db, run.id, node.node_key)
     attempt = _latest_attempt(db, node)
+    # V16-001：外部 Runner 的上报同样受服务端策略约束；非 ALLOW 时伪造的
+    # PASSED 上报也必须收口为 BLOCKED（策略是服务端不变量，不是 Runner 的自觉）。
+    policy_context = resolve_execution_policy(db, run, node)
+    node.output_ref = {**(node.output_ref or {}), "policy": policy_context.snapshot()}
+    if policy_context.decision is not PolicyDecision.ALLOW:
+        return _block_node_for_policy(
+            db,
+            job=job,
+            run=run,
+            node=node,
+            graph=graph,
+            attempt=attempt,
+            policy=policy_context,
+            fencing_token=int(fencing_token),
+        )
     reported = dict(result or {})
     passed = str(reported.get("status") or status).lower() in {
         "completed",
@@ -798,6 +1242,42 @@ def complete_from_external_report(
         evidence=[],
     )
     known_secrets: list[str] = []
+    try:
+        vault = get_secret_vault()
+    except SecretVaultUnavailable:
+        node.status = "BLOCKED"
+        node.error_class = "SECRET_VAULT_UNAVAILABLE"
+        _event(
+            db,
+            run.id,
+            "security.secret_vault_unavailable",
+            {"code": "SECRET_VAULT_UNAVAILABLE"},
+            node=node,
+            attempt=attempt,
+            producer="system",
+            producer_event_id=f"secret-vault-unavailable:{node.id}",
+        )
+        job.status = "failed"
+        job.error_message = "SECRET_VAULT_UNAVAILABLE"
+        job.finished_at = _now()
+        db.commit()
+        return {
+            "job_id": job_id,
+            "run_id": run.id,
+            "node": node.node_key,
+            "node_status": "BLOCKED",
+            "status": "BLOCKED",
+            "error_class": "SECRET_VAULT_UNAVAILABLE",
+        }
+    ctx = RunContext(
+        db,
+        run.id,
+        graph=graph,
+        secrets=_secret_provider(run),
+        fixtures=(run.environment_snapshot_json or {}).get("fixtures") or {},
+        vault=vault,
+        project_id=run.project_id,
+    )
     artifact_ids = persist_execution_evidence(
         db,
         run=run,
@@ -813,6 +1293,8 @@ def complete_from_external_report(
         graph=graph,
         execution=execution,
         attempt=attempt,
+        ctx=ctx,
+        fencing_token=fencing_token,
         known_secrets=known_secrets,
         artifact_ids=artifact_ids,
     )
@@ -830,7 +1312,20 @@ def complete_from_external_report(
         attempt=attempt,
         producer_event_id=f"node-reported:{job_id}:{status}",
     )
+    job.status = "success" if summary["status"] == "PASSED" else "failed"
+    job.summary = f"{node.node_key}:{summary['status']}"
+    job.error_message = (node.error_class or execution.error_class or "")[:500]
+    job.result_json = json.dumps(
+        evidence_redactor.redact(
+            {"detail": execution.detail, "data": execution.data, "summary": summary},
+            known_secrets=list(known_secrets),
+        ),
+        ensure_ascii=False,
+        default=str,
+    )[:20000]
+    job.finished_at = _now()
     _advance_run(db, run, graph)
+    _cleanup_terminal_run_secrets(db, run, vault=vault)
     db.commit()
     return {"job_id": job_id, "run_id": run.id, **summary}
 

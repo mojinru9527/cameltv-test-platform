@@ -1,0 +1,200 @@
+name: AIQE V1.6 交付门禁
+
+on:
+  pull_request:
+    branches: [main, "release/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  traceability:
+    name: Traceability Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install gate dependency
+        run: pip install pyyaml
+      - name: Write PR body
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: python -c "import os; open('pr-body.md','w',encoding='utf-8').write(os.environ.get('PR_BODY') or '')"
+      - name: Collect changed files
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: git diff --name-only "$BASE_SHA" "$HEAD_SHA" > changed-files.txt
+      - name: Traceability matrix validation
+        run: python scripts/aiqe/check_traceability.py
+      - name: Release audit (secrets/fake E2E/traceability/docs)
+        run: python scripts/aiqe/check_release_audit.py
+      - name: PR traceability fields
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import re, subprocess, sys
+          body = open("pr-body.md", encoding="utf-8").read()
+          issues = sorted(set(re.findall(r"V16-0\d\d", body)))
+          if not issues:
+              print("::error::PR 描述必须声明至少一个 V16 Issue")
+              sys.exit(1)
+          args = ["python", "scripts/aiqe/check_traceability.py", "--pr-body", "pr-body.md", "--changed-files", "changed-files.txt"]
+          for issue in issues:
+              args += ["--issue", issue]
+          sys.exit(subprocess.call(args))
+          PY
+      - name: Emit evidence index
+        run: |
+          python scripts/aiqe/check_traceability.py \
+            --emit-evidence-index evidence-index.json \
+            --commit-sha "${{ github.event.pull_request.head.sha || github.sha }}" \
+            --ci-run "${{ github.run_id }}" \
+            --environment ci
+          python scripts/aiqe/check_traceability.py --emit-markdown traceability-matrix.md
+      - name: Upload evidence index
+        uses: actions/upload-artifact@v4
+        with:
+          name: aiqe-v16-evidence-index
+          path: |
+            evidence-index.json
+            traceability-matrix.md
+          retention-days: 90
+
+  lint-type:
+    name: Build & Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: test-platform-v2/backend/requirements.txt
+      - working-directory: test-platform-v2/backend
+        run: |
+          pip install -r requirements.txt
+          pip install pytest -r requirements-quality.txt
+      - name: Ruff F821
+        working-directory: test-platform-v2/backend
+        run: ruff check app/ --select F821 --output-format=github
+      - name: Quality ratchet (ruff/mypy)
+        run: python scripts/ci/quality_ratchet.py
+      - name: Migration single head + roundtrip
+        working-directory: test-platform-v2/backend
+        env:
+          DATABASE_URL: sqlite:///./data/v16_ci.db
+        run: python scripts/ci/check_aiqe_v16_migrations.py
+
+  unit-integration:
+    name: Unit / Integration Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: test-platform-v2/backend/requirements.txt
+      - working-directory: test-platform-v2/backend
+        run: |
+          pip install -r requirements.txt
+          pip install pytest -r requirements-quality.txt
+      - name: Install Chromium for Playwright browser tests
+        working-directory: test-platform-v2/backend
+        run: python -m playwright install --with-deps chromium
+      - name: AIQE unit + integration tests
+        working-directory: test-platform-v2/backend
+        run: |
+          python -m pytest tests -q -p no:cacheprovider -k "aiqe" \
+            --junitxml=../../work-logs/evidence/aiqe-v16/junit-unit.xml
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aiqe-v16-unit-junit
+          path: work-logs/evidence/aiqe-v16/junit-unit.xml
+          retention-days: 90
+
+  runtime-security:
+    name: Runtime / Negative Security Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: test-platform-v2/backend/requirements.txt
+      - working-directory: test-platform-v2/backend
+        run: |
+          pip install -r requirements.txt
+          pip install pytest -r requirements-quality.txt
+          python -m playwright install --with-deps chromium
+      - name: V16 P0 runtime/negative suites
+        working-directory: test-platform-v2/backend
+        run: |
+          python -m pytest -q -p no:cacheprovider \
+            tests/test_aiqe_v16_001_policy_fail_closed.py \
+            tests/test_aiqe_v16_002_playwright_interception.py \
+            tests/test_aiqe_v16_025_traceability_gate.py \
+            --junitxml=../../work-logs/evidence/aiqe-v16/junit-runtime.xml
+      - name: Static fail-open scan
+        working-directory: test-platform-v2/backend
+        run: python scripts/ci/check_aiqe_v16_static_gates.py
+      - name: Upload runtime report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aiqe-v16-runtime-junit
+          path: work-logs/evidence/aiqe-v16/junit-runtime.xml
+          retention-days: 90
+
+  migration:
+    name: Migration Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: test-platform-v2/backend/requirements.txt
+      - working-directory: test-platform-v2/backend
+        run: pip install -r requirements.txt
+      - name: Alembic upgrade / downgrade / upgrade
+        working-directory: test-platform-v2/backend
+        env:
+          DATABASE_URL: sqlite:///./data/v16_migration_ci.db
+        run: |
+          python -m alembic upgrade head
+          python -m alembic downgrade -1
+          python -m alembic upgrade head
+          python -m alembic heads | tee heads.txt
+          test "$(wc -l < heads.txt)" -eq 1

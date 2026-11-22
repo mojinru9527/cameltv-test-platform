@@ -10,9 +10,9 @@ Runner 只负责“执行动作并采集事实”，不决定业务 PASS：
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from typing import Any
 
-from app.aiqe.drivers.httpx_driver import HttpDriver, HttpRequestSpec
 from app.aiqe.models.run import NodeRun
 from app.aiqe.schemas.contracts import EvidenceFile
 from app.aiqe.services.query_registry import (
@@ -23,11 +23,26 @@ from app.aiqe.services.query_registry import (
 )
 from app.aiqe.security import (
     POLICY_OVERRIDE_KEYS,
+    ExecutionCapabilities,
+    PolicyDecision,
     SafeHttpExecutor,
     SafeRequest,
     TargetPolicy,
-    TargetPolicyResolver,
+    resolve_execution_policy,
 )
+
+#: Driver 能力分类：没有对应能力/策略授权时一律 BLOCKED，禁止降级到 legacy 执行器。
+NETWORK_DRIVERS = frozenset({"http", "httpx", "api"})
+BROWSER_DRIVERS = frozenset({"playwright", "web", "ui"})
+DB_DRIVERS = frozenset({"db", "db_readonly", "database"})
+DEVICE_DRIVERS = frozenset({"appium", "android", "mobile"})
+EXTERNAL_DRIVERS = frozenset({"external_e2e", "e2e"})
+
+_POLICY_ERROR_CODES: dict[PolicyDecision, str] = {
+    PolicyDecision.DENY: "TARGET_POLICY_DENIED",
+    PolicyDecision.UNAVAILABLE: "TARGET_POLICY_UNAVAILABLE",
+    PolicyDecision.MISSING_BINDING: "TARGET_POLICY_MISSING_BINDING",
+}
 
 
 @dataclass
@@ -45,34 +60,122 @@ def _driver_key(node: NodeRun) -> str:
     return str(node.driver_key or "http").strip().lower()
 
 
-def _resolve_policy(
-    node: NodeRun, db: Any, policy: TargetPolicy | None
-) -> TargetPolicy | None:
-    """AUD-001：目标策略只能来自服务端 Target Policy（节点输入不可覆盖）。"""
-    if policy is not None:
-        return policy
-    if db is None:
-        return None
+def _run_of(node: NodeRun, db: Any = None) -> Any:
     try:
         run = getattr(node, "run", None)
-    except Exception:
+    except Exception:  # pragma: no cover - 非 ORM 对象
         run = None
-    if run is None:
+    if run is not None:
+        return run
+    if db is not None:
         try:
             from app.aiqe.models.run import TestRun
 
-            run = db.get(TestRun, node.run_id) if node.run_id else None
-        except Exception:
+            run_id = getattr(node, "run_id", None)
+            return db.get(TestRun, run_id) if run_id else None
+        except Exception:  # pragma: no cover - DB 不可用时按未绑定处理
             return None
-    if run is None:
-        return None
-    try:
-        return TargetPolicyResolver(db).resolve(
-            project_id=int(run.project_id),
-            environment_id=getattr(run, "environment_id", None),
+    return None
+
+
+def _coerce_policy_context(
+    policy_context: Any,
+    *,
+    node: NodeRun,
+    db: Any = None,
+    policy: TargetPolicy | None = None,
+) -> TargetPolicy | ExecutionCapabilities:
+    """把显式 ``policy_context`` 规整为唯一授权对象；任何缺失都不构成放行。"""
+    if isinstance(policy_context, ExecutionCapabilities):
+        return policy_context
+    if isinstance(policy_context, TargetPolicy):
+        return policy_context
+    if isinstance(policy, TargetPolicy):
+        return policy
+    # 防御式兜底：调用方只给了 db 时按服务端策略重新解析，仍 fail closed。
+    return resolve_execution_policy(db, _run_of(node, db), node)
+
+
+def policy_context_for(db: Any, node: NodeRun, run: Any = None) -> TargetPolicy:
+    """服务端策略解析入口（Worker 预检/脚本/测试共用，禁止自行拼授权对象）。"""
+    return resolve_execution_policy(db, run if run is not None else _run_of(node, db), node)
+
+
+def _policy_denial(
+    context: TargetPolicy | ExecutionCapabilities,
+    *,
+    required: str,
+    extra: dict[str, Any] | None = None,
+) -> NodeExecution | None:
+    """返回 BLOCKED 结果或 ``None``（表示已授权）。"""
+    if isinstance(context, ExecutionCapabilities):
+        allowed = bool(
+            (required == "network" and context.network)
+            or (required == "db_read" and context.db_read)
+            or (required == "browser" and context.browser)
+            or (required == "device" and context.device)
         )
-    except Exception:
+        if allowed:
+            return None
+        return NodeExecution(
+            status="BLOCKED",
+            error_class="CAPABILITY_REQUIRED",
+            detail={
+                "reason": f"节点未声明 {required} 能力（禁止用 None 代表绕过）",
+                "required_capability": required,
+                "capabilities": {
+                    "network": context.network,
+                    "db_read": context.db_read,
+                    "browser": context.browser,
+                    "device": context.device,
+                },
+                **(extra or {}),
+            },
+            data={"blocked": True},
+        )
+    if context.decision is PolicyDecision.ALLOW:
+        expires_at = context.expires_at
+        if expires_at is not None and expires_at <= datetime.now(UTC):
+            # V16-001 §8：过期授权不得沿用（Worker 重试必须重新解析）。
+            return NodeExecution(
+                status="BLOCKED",
+                error_class="TARGET_POLICY_EXPIRED",
+                detail={
+                    "reason": "执行授权已过期，需要重新解析策略",
+                    "denial": {
+                        "code": "TARGET_POLICY_EXPIRED",
+                        "decision": context.decision.value,
+                        "policy_version": context.version,
+                        "policy_hash": context.policy_hash,
+                        "expires_at": expires_at.isoformat(),
+                    },
+                    "policy": context.snapshot(),
+                    "required_capability": required,
+                    **(extra or {}),
+                },
+                data={"blocked": True, "policy_decision": context.decision.value},
+            )
         return None
+    code = _POLICY_ERROR_CODES.get(context.decision, "TARGET_POLICY_DENIED")
+    return NodeExecution(
+        status="BLOCKED",
+        error_class=code,
+        detail={
+            "reason": context.deny_reason or context.reason_code or code,
+            "denial": {
+                "code": code,
+                "decision": context.decision.value,
+                "reason_code": context.reason_code,
+                "policy_id": context.policy_id,
+                "policy_version": context.version,
+                "policy_hash": context.policy_hash,
+            },
+            "policy": context.snapshot(),
+            "required_capability": required,
+            **(extra or {}),
+        },
+        data={"blocked": True, "policy_decision": context.decision.value},
+    )
 
 
 def _emit_security_event(db: Any, node: NodeRun, event_type: str, payload: dict[str, Any]) -> None:
@@ -93,7 +196,34 @@ def _emit_security_event(db: Any, node: NodeRun, event_type: str, payload: dict[
         pass
 
 
-#: AUD-002：Workflow 不得通过节点输入决定 SQL / 连接 / 表范围。
+def _safe_url_for_event(url: str) -> str:
+    """安全事件只记录规范化目标，不记录 userinfo / query 值（防 Secret 泄漏）。"""
+    try:
+        from urllib.parse import urlsplit, urlunsplit
+
+        parts = urlsplit(str(url or "").strip())
+    except ValueError:
+        return ""
+    if not parts.scheme or not parts.hostname:
+        return ""
+    try:
+        port = f":{parts.port}" if parts.port else ""
+    except ValueError:
+        port = ""
+    query_keys = ""
+    if parts.query:
+        keys = sorted(
+            {
+                item.split("=", 1)[0]
+                for item in parts.query.split("&")
+                if item.split("=", 1)[0]
+            }
+        )
+        query_keys = "?" + "&".join(f"{key}=***" for key in keys)
+    return urlunsplit((parts.scheme, f"{parts.hostname}{port}", parts.path or "/", query_keys, ""))
+
+
+#: AUD-002 / V16-004：Workflow 不得通过节点输入决定 SQL / 连接 / 表范围 / 查询注册表。
 DB_OVERRIDE_KEYS = frozenset(
     {
         "sql",
@@ -103,7 +233,12 @@ DB_OVERRIDE_KEYS = frozenset(
         "connection_ref",
         "database_url",
         "allowed_tables",
+        "allowed_columns",
         "schema",
+        "query_registry",
+        "registry",
+        "table",
+        "tables",
     }
 )
 
@@ -151,6 +286,9 @@ def _execute_db_secure(
             detail={"reason": "params 必须是对象", "query_key": query_key},
         )
     version = spec_input.get("query_version")
+    # Workflow 请求的限额只能更严格（由 Query Registry 执行层 clamp）。
+    requested_max_rows = spec_input.get("max_rows")
+    requested_timeout_ms = spec_input.get("timeout_ms")
     try:
         result = DbReadonlyExecutor(
             connection_resolver=default_connection_resolver
@@ -161,6 +299,13 @@ def _execute_db_secure(
             params=params,
             version=int(version) if version is not None else None,
             environment_id=getattr(run, "environment_id", None),
+            requested_max_rows=(
+                int(requested_max_rows) if requested_max_rows is not None else None
+            ),
+            requested_timeout_ms=(
+                int(requested_timeout_ms) if requested_timeout_ms is not None else None
+            ),
+            executor_identity="aiqe-worker",
         )
     except QueryNotRegistered:
         return NodeExecution(
@@ -175,11 +320,29 @@ def _execute_db_secure(
             detail={"query_key": query_key, "reason": exc.message},
         )
     except Exception as exc:
+        try:
+            from app.aiqe.observability.metrics import metrics
+
+            metrics.inc(
+                "aiqe_db_query_policy_denied_total",
+                {"project_id": getattr(node, "project_id", None) or 0},
+            )
+        except Exception:
+            pass
         return NodeExecution(
             status="FAILED",
             error_class="DRIVER_ERROR",
             detail={"query_key": query_key, "reason": f"{type(exc).__name__}: {exc}"},
         )
+    db_data = {
+        "query_key": result.query_key,
+        "query_version": result.query_version,
+        "query_hash": result.query_hash,
+        "columns": result.columns,
+        "rows": result.rows,
+        "row_count": result.row_count,
+        "elapsed_ms": result.duration_ms,
+    }
     return NodeExecution(
         status="PASSED",
         detail={
@@ -187,10 +350,14 @@ def _execute_db_secure(
             "summary": result.summary(),
             "columns": result.columns,
             "rows": result.rows,
+            "db": db_data,
         },
+        # V16-009：DB 断言需要实际值（row_count/rows），必须同时进入 data 供 Assertion Runtime 使用。
+        data={"db": db_data},
         observation={
             "source": "db_query",
             "db_rows": list(result.rows),
+            "row_count": result.row_count,
             "error": None,
         },
     )
@@ -201,16 +368,12 @@ def _execute_http_secure(
     *,
     node: NodeRun,
     db: Any,
-    policy: TargetPolicy | None,
+    policy: TargetPolicy,
 ) -> NodeExecution:
-    resolved = _resolve_policy(node, db, policy)
-    if resolved is None:
-        return NodeExecution(
-            status="BLOCKED",
-            error_class="POLICY_UNAVAILABLE",
-            detail={"reason": "缺少服务端 Target Policy"},
-            data={"blocked": True},
-        )
+    # 调用方（execute_node）已保证 decision == ALLOW；这里只做纵深防御断言。
+    if policy.decision is not PolicyDecision.ALLOW:
+        return _policy_denial(policy, required="network")  # type: ignore[return-value]
+    resolved = policy
     ignored = sorted(set(spec_input) & POLICY_OVERRIDE_KEYS)
     if ignored:
         _emit_security_event(
@@ -248,16 +411,28 @@ def _execute_http_secure(
             {
                 "code": code,
                 "node_key": node.node_key,
+                "decision": resolved.decision.value,
+                "policy_id": resolved.policy_id,
                 "policy_version": resolved.version,
-                "url": url,
+                "policy_hash": resolved.policy_hash,
+                "project_id": resolved.project_id,
+                "environment_id": resolved.environment_id,
+                "url": _safe_url_for_event(url),
             },
         )
         return NodeExecution(
             status="BLOCKED",
             error_class=code,
             detail={
-                "denial": {"code": code, "message": result.error or ""},
+                "denial": {
+                    "code": code,
+                    "message": result.error or "",
+                    "decision": resolved.decision.value,
+                    "policy_hash": resolved.policy_hash,
+                    "policy_version": resolved.version,
+                },
                 "ignored_overrides": ignored,
+                "policy": resolved.snapshot(),
             },
             data={"blocked": True, "status_code": result.status_code},
         )
@@ -296,6 +471,23 @@ def _execute_http_secure(
         "ignored_overrides": ignored,
         "observation": observation,
     }
+    # TC-AIQE-006：显式标记的第三方上游依赖返回 5xx 时，属于依赖故障，不是产品断言失败；
+    # Node 必须 BLOCKED/UPSTREAM_5XX，业务 Assertion 不得被当成 FAIL 归因到产品。
+    if int(result.status_code or 0) >= 500 and bool(spec_input.get("upstream_dependency")):
+        return NodeExecution(
+            status="BLOCKED",
+            error_class="UPSTREAM_5XX",
+            detail={
+                "upstream_status": result.status_code,
+                "duration_ms": result.duration_ms,
+                "request": result.request,
+                "response": result.response,
+                "error": result.error,
+                "observation": observation,
+            },
+            data=data,
+            observation=observation,
+        )
     if result.ok:
         error_class = ""
     elif spec_input.get("expected_status") is not None:
@@ -314,26 +506,55 @@ def _execute_http_secure(
 def execute_node(
     node: NodeRun,
     *,
+    policy_context: TargetPolicy | ExecutionCapabilities,
     db_engine: Any = None,
     input_override: dict[str, Any] | None = None,
     db: Any = None,
     policy: TargetPolicy | None = None,
 ) -> NodeExecution:
+    """执行单个节点。
+
+    V16-001：``policy_context`` 是**必填**授权对象，必须是
+    ``ResolvedExecutionPolicy``（只有 ``decision=ALLOW`` 才放行）或显式的
+    ``ExecutionCapabilities``（纯本地节点声明）。不存在“没策略就走 legacy”的分支，
+    HTTP/DB/Browser 在没有 ALLOW 策略时不会创建任何 Driver 或网络客户端。
+    """
     driver = _driver_key(node)
     spec_input = dict(input_override if input_override is not None else (node.input_ref or {}))
-    if driver in {"http", "httpx", "api"}:
-        if policy is not None or db is not None:
-            return _execute_http_secure(spec_input, node=node, db=db, policy=policy)
-        return _execute_http(spec_input)
-    if driver in {"playwright", "web", "ui"}:
-        return _execute_playwright(spec_input)
-    if driver in {"db", "db_readonly", "database"}:
-        if db is not None:
-            return _execute_db_secure(spec_input, node=node, db=db)
-        return _execute_db(spec_input, db_engine=db_engine)
-    if driver in {"appium", "android", "mobile"}:
-        return _execute_appium(spec_input)
-    if driver in {"external_e2e", "e2e"}:
+    context = _coerce_policy_context(
+        policy_context, node=node, db=db, policy=policy
+    )
+    if driver in NETWORK_DRIVERS:
+        denied = _policy_denial(context, required="network")
+        if denied is not None:
+            return denied
+        return _execute_http_secure(spec_input, node=node, db=db, policy=context)  # type: ignore[arg-type]
+    if driver in BROWSER_DRIVERS:
+        denied = _policy_denial(context, required="browser")
+        if denied is not None:
+            return denied
+        return _execute_playwright(spec_input, policy_context=context)  # type: ignore[arg-type]
+    if driver in DB_DRIVERS:
+        denied = _policy_denial(context, required="db_read")
+        if denied is not None:
+            return denied
+        if db is None:
+            return NodeExecution(
+                status="BLOCKED",
+                error_class="POLICY_UNAVAILABLE",
+                detail={"reason": "查询注册表需要服务端 DB 会话"},
+                data={"blocked": True},
+            )
+        return _execute_db_secure(spec_input, node=node, db=db)
+    if driver in DEVICE_DRIVERS:
+        denied = _policy_denial(context, required="device")
+        if denied is not None:
+            return denied
+        return _execute_appium(spec_input, policy_context=context)  # type: ignore[arg-type]
+    if driver in EXTERNAL_DRIVERS:
+        denied = _policy_denial(context, required="device")
+        if denied is not None:
+            return denied
         return _execute_external_e2e(spec_input)
     return NodeExecution(
         status="BLOCKED",
@@ -343,74 +564,21 @@ def execute_node(
     )
 
 
-def _execute_http(spec_input: dict[str, Any]) -> NodeExecution:
-    url = str(spec_input.get("url") or "").strip()
-    if not url:
-        return NodeExecution(
-            status="FAILED",
-            error_class="INPUT_INVALID",
-            detail={"reason": "缺少 url"},
-            data={"error": "missing url"},
-        )
-    allowed = spec_input.get("allowed_hosts")
-    allowed_hosts = (
-        [str(item) for item in allowed]
-        if isinstance(allowed, list)
-        else None
-    )
-    raw_content = spec_input.get("content")
-    content = raw_content.encode("utf-8") if isinstance(raw_content, str) else raw_content
-    spec = HttpRequestSpec(
-        method=str(spec_input.get("method") or "GET").upper(),
-        url=url,
-        headers={str(k): str(v) for k, v in (spec_input.get("headers") or {}).items()},
-        params=spec_input.get("params"),
-        json_body=spec_input.get("json"),
-        content=content,
-        timeout_ms=max(1, int(spec_input.get("timeout_ms") or 15000)),
-        correlation_id=str(spec_input.get("correlation_id") or ""),
-        idempotency_key=str(spec_input.get("idempotency_key") or ""),
-        allowed_hosts=allowed_hosts,
-        allow_private=(
-            bool(spec_input.get("allow_private"))
-            if "allow_private" in spec_input
-            else None
-        ),
-    )
-    try:
-        result = HttpDriver(allowed_hosts=allowed_hosts).execute(spec)
-    except Exception as exc:
-        return NodeExecution(
-            status="FAILED",
-            error_class="DRIVER_ERROR",
-            detail={"reason": f"{type(exc).__name__}: {exc}"},
-            data={"error": f"{type(exc).__name__}: {exc}"},
-        )
-
-    detail = {
-        "status_code": result.status_code,
-        "duration_ms": result.duration_ms,
-        "request": result.request,
-        "response": result.response,
-        "error": result.error,
-    }
-    data = dict(getattr(result, "data", None) or {})
-    data.setdefault("status_code", result.status_code)
-    data.setdefault("headers", (result.response or {}).get("headers") or {})
-    if result.status_code is None:
-        return NodeExecution(
-            status="FAILED" if result.error else "ERROR",
-            error_class=result.error_class or ("NETWORK_ERROR" if result.error else "EMPTY_RESPONSE"),
-            detail=detail,
-            data=data,
-        )
-    # 请求本身完成即成功；业务 PASS 由 Assertion Runtime 判定（HTTP 500 也可能是预期）。
-    return NodeExecution(status="PASSED", detail=detail, data=data)
-
-
-def _execute_playwright(spec_input: dict[str, Any]) -> NodeExecution:
+def _execute_playwright(
+    spec_input: dict[str, Any],
+    *,
+    policy_context: TargetPolicy | ExecutionCapabilities,
+) -> NodeExecution:
+    """浏览器节点：策略由服务端解析，Workflow 不能自带 allowed_hosts（V16-002）。"""
     from app.aiqe.drivers.playwright_driver import PlaywrightDriver
 
+    if not isinstance(policy_context, TargetPolicy):
+        return NodeExecution(
+            status="BLOCKED",
+            error_class="TARGET_POLICY_MISSING_BINDING",
+            detail={"reason": "浏览器节点必须绑定服务端 TargetPolicy"},
+            data={"blocked": True},
+        )
     has_actions = isinstance(spec_input.get("actions"), list) and bool(spec_input.get("actions"))
     has_legacy = bool(spec_input.get("click_text") or spec_input.get("click_selector"))
     if not str(spec_input.get("url") or "").strip() and not has_actions and not has_legacy:
@@ -423,7 +591,7 @@ def _execute_playwright(spec_input: dict[str, Any]) -> NodeExecution:
     driver = PlaywrightDriver(
         headless=bool(spec_input.get("headless", True)),
         timeout_ms=max(1, int(spec_input.get("timeout_ms") or 30000)),
-        allowed_hosts=list(spec_input.get("allowed_hosts") or []),
+        policy=policy_context,
     )
     try:
         result = driver.execute(spec_input)
@@ -457,88 +625,44 @@ def _execute_playwright(spec_input: dict[str, Any]) -> NodeExecution:
     return NodeExecution(status="PASSED", detail=detail, data=detail, evidence=result.evidence)
 
 
-def _execute_db(spec_input: dict[str, Any], *, db_engine: Any = None) -> NodeExecution:
-    if db_engine is None:
-        return NodeExecution(
-            status="BLOCKED",
-            error_class="DB_UNAVAILABLE",
-            detail={"reason": "未配置只读数据库连接（AIQE_DB_READONLY_URL）"},
-            data={"error": "db engine unavailable"},
-        )
-    from app.aiqe.drivers.db_readonly_driver import (
-        DbReadonlyDriver,
-        QueryRegistry,
-        RowLimitExceeded,
-        UnsafeSqlError,
-    )
-
-    registry_raw = spec_input.get("query_registry")
-    registry = (
-        QueryRegistry(registry_raw)
-        if isinstance(registry_raw, dict)
-        else QueryRegistry()
-    )
-    driver = DbReadonlyDriver(
-        db_engine,
-        max_rows=int(spec_input.get("max_rows") or 1000),
-        max_field_chars=int(spec_input.get("max_field_chars") or 2000),
-        allowed_tables=spec_input.get("allowed_tables") or [],
-        registry=registry,
-        statement_timeout_ms=int(spec_input.get("timeout_ms") or 5000),
-    )
-    try:
-        result = driver.query(
-            sql=None if spec_input.get("query_key") else str(spec_input.get("sql") or ""),
-            params=spec_input.get("params") or {},
-            query_key=str(spec_input.get("query_key") or ""),
-            max_rows=spec_input.get("max_rows"),
-        )
-    except UnsafeSqlError as exc:
-        return NodeExecution(
-            status="BLOCKED",
-            error_class="UNSAFE_SQL",
-            detail={"reason": str(exc), "audit": [event.__dict__ for event in driver.last_audit]},
-            data={"error": str(exc)},
-        )
-    except RowLimitExceeded as exc:
-        return NodeExecution(
-            status="FAILED",
-            error_class="ROW_LIMIT_EXCEEDED",
-            detail={"reason": str(exc)},
-            data={"error": str(exc)},
-        )
-    except Exception as exc:
-        return NodeExecution(
-            status="ERROR",
-            error_class="DB_ERROR",
-            detail={"reason": f"{type(exc).__name__}: {exc}"},
-            data={"error": f"{type(exc).__name__}: {exc}"},
-        )
-    db_data = {
-        "columns": result.columns,
-        "rows": result.rows,
-        "row_count": result.row_count,
-        "query_key": result.query_key,
-        "elapsed_ms": result.elapsed_ms,
-        "truncated_fields": result.truncated_fields,
-    }
-    return NodeExecution(
-        status="PASSED",
-        detail={"db": db_data, "audit": [event.__dict__ for event in driver.last_audit]},
-        data={"db": db_data},
-    )
-
-
 def _appium_post(client, path: str, body: dict[str, Any]) -> dict[str, Any]:
     response = client.post(path, json=body)
     response.raise_for_status()
     return response.json()
 
 
-def _execute_appium(spec_input: dict[str, Any]) -> NodeExecution:
+def _validate_device_service_url(url: str) -> str:
+    """设备服务（Appium）必须是本机回环地址；Workflow 不能把它指向内网/公网。"""
+    from urllib.parse import urlsplit
+
+    try:
+        parsed = urlsplit(str(url or "").strip())
+    except ValueError:
+        return "DEVICE_SERVICE_INVALID"
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        return "DEVICE_SERVICE_INVALID"
+    host = parsed.hostname.strip().lower().rstrip(".")
+    if host not in {"127.0.0.1", "localhost", "::1"}:
+        return "DEVICE_SERVICE_NOT_LOCAL"
+    return ""
+
+
+def _execute_appium(
+    spec_input: dict[str, Any],
+    *,
+    policy_context: TargetPolicy | ExecutionCapabilities,
+) -> NodeExecution:
     import httpx
 
     appium_url = str(spec_input.get("appium_url") or "http://127.0.0.1:4723").rstrip("/")
+    url_error = _validate_device_service_url(appium_url)
+    if url_error:
+        return NodeExecution(
+            status="BLOCKED",
+            error_class=url_error,
+            detail={"reason": "Appium 服务地址必须是本机回环地址", "appium_url": appium_url[:120]},
+            data={"blocked": True},
+        )
     expect_text = str(spec_input.get("expect_text") or "").strip()
     click_text = str(spec_input.get("click_text") or "").strip()
     caps: dict[str, Any] = {

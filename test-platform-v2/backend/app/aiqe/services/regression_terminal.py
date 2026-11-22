@@ -209,6 +209,13 @@ def handle_run_terminal(
     )
     if regression is None:
         return TerminalHandleResult(skipped=True, reason="NO_REGRESSION")
+    # V16-020：只有真实终态 Run 才能生成对比结论，RUNNING/QUEUED 不得提前对比。
+    if str(run.status) not in {"COMPLETED", "BLOCKED", "CANCELED", "ERROR"}:
+        return TerminalHandleResult(
+            regression_id=regression.id,
+            skipped=True,
+            reason="RUN_NOT_TERMINAL",
+        )
     if regression.completed_at is not None:
         return TerminalHandleResult(
             regression_id=regression.id,

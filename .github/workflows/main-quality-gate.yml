@@ -105,6 +105,11 @@ jobs:
           pip install -r requirements.txt
           pip install pytest -r requirements-quality.txt
 
+      - name: Install Chromium for Playwright tests
+        if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+        working-directory: test-platform-v2/backend
+        run: python -m playwright install --with-deps chromium
+
       - name: 未定义符号检查
         if: ${{ needs.detect_changes.outputs.backend == 'true' }}
         working-directory: test-platform-v2/backend

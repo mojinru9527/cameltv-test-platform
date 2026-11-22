@@ -78,6 +78,8 @@ tests/automation/ui/captured/
 # Test Platform V2 runtime artifacts
 test-platform-v2/backend/storage/lanhu-evidence/
 test-platform-v2/backend/storage/ui-runs/
+storage/artifacts/
+test-platform-v2/backend/storage/artifacts/
 test-platform-v2/backend/storage/models/
 test-platform-v2/backend/storage/*.json
 test-platform-v2/backend/storage/TASK-REPORT-*.md
@@ -115,3 +117,33 @@ browser-screenshots/
 .workbuddy/
 .claude/scheduled_tasks.lock
 
+
+# V16-017 test5 product E2E evidence (contains HAR/trace tokens)
+work-logs/evidence/aiqe-v16/test5/
+
+# Generated E2E evidence (may contain request/response ids)
+test-platform-v2/backend/work-logs/evidence/aiqe-v16/
+
+# TC-004 overlay evidence
+work-logs/evidence/aiqe-v16/test5-overlay/
+
+# TC-005 concurrency evidence
+work-logs/evidence/aiqe-v16/test5-concurrency/
+
+# TC-002 unified run evidence
+work-logs/evidence/aiqe-v16/test5-unified/
+
+# TC-007 browser kill evidence
+work-logs/evidence/aiqe-v16/test5-browser-kill/
+
+# TC-009 multi-device evidence
+work-logs/evidence/aiqe-v16/test5-multidevice/
+
+# TC-001 contract evidence
+work-logs/evidence/aiqe-v16/test5-contract/
+
+# TC-004 login method evidence
+work-logs/evidence/aiqe-v16/test5-login-methods/
+
+# TC-002 news evidence
+work-logs/evidence/aiqe-v16/test5-news/

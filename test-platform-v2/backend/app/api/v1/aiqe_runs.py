@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.aiqe.services.event_service import list_events
 from app.aiqe.services.run_launch import LaunchError, LaunchNotFound, cancel_run, launch_run
+from app.aiqe.services.secret_masking import mask_for_api
 from app.aiqe.services.run_state import TERMINAL_STATUSES
 from app.aiqe.services.run_query_service import (
     RunNotFoundError,
@@ -167,9 +168,14 @@ def get_events_api(
         )
     except RunNotFoundError:
         raise _not_found(run_id) from None
+    items: list[dict] = []
+    for event in rows:
+        dumped = RunEventOut.model_validate(event).model_dump(mode="json")
+        dumped["payload_json"] = mask_for_api(dumped.get("payload_json") or {})
+        items.append(dumped)
     return R.ok(
         {
-            "items": [RunEventOut.model_validate(e).model_dump(mode="json") for e in rows],
+            "items": items,
             "last_seq": rows[-1].seq if rows else after_seq,
         }
     )
@@ -220,7 +226,7 @@ def get_attempts_api(
                             "started_at": attempt.started_at,
                             "finished_at": attempt.finished_at,
                             "error": attempt.error_json,
-                            "output": attempt.output_summary_json,
+                            "output": mask_for_api(attempt.output_summary_json),
                         }
                         for attempt in attempts
                     ],
@@ -252,8 +258,8 @@ def get_run_nodes_api(
             "oracle_layer": row.oracle_layer,
             "oracle_ref": row.oracle_ref,
             "severity": row.severity,
-            "expected": row.expected_json,
-            "actual": row.actual_json,
+            "expected": mask_for_api(row.expected_json),
+            "actual": mask_for_api(row.actual_json),
             "actual_source": row.actual_source,
             "duration_ms": row.duration_ms,
             "timeout_ms": row.timeout_ms,
@@ -269,7 +275,7 @@ def get_run_nodes_api(
             "size_bytes": row.size_bytes,
             "mime_type": row.mime_type,
             "redaction_status": row.redaction_status,
-            "metadata": row.metadata_json or {},
+            "metadata": mask_for_api(row.metadata_json or {}),
             "created_at": row.created_at.isoformat() if row.created_at else None,
         }
 
@@ -285,8 +291,8 @@ def get_run_nodes_api(
                     "status": node.status,
                     "error_class": node.error_class,
                     "attempt_count": node.attempt_count,
-                    "inputs": node.resolved_input_json or node.input_ref or {},
-                    "outputs": node.outputs_json or node.output_ref or {},
+                    "inputs": mask_for_api(node.resolved_input_json or node.input_ref or {}),
+                    "outputs": mask_for_api(node.outputs_json or node.output_ref or {}),
                     "secret_keys": node.secret_keys_json or [],
                     "source_refs": node.source_refs_json or [],
                     "started_at": node.started_at.isoformat() if node.started_at else None,
@@ -308,7 +314,7 @@ def get_run_nodes_api(
                             else None
                         ),
                         "error": entry["attempt"].error_json,
-                        "output": entry["attempt"].output_summary_json,
+                        "output": mask_for_api(entry["attempt"].output_summary_json),
                         "assertions": [_assertion(row) for row in entry["assertions"]],
                     }
                     for entry in item["attempts"]
@@ -351,8 +357,8 @@ def get_run_assertions_api(
                 "oracle_layer": assertion.oracle_layer,
                 "oracle_ref": assertion.oracle_ref,
                 "severity": assertion.severity,
-                "expected": assertion.expected_json,
-                "actual": assertion.actual_json,
+                "expected": mask_for_api(assertion.expected_json),
+                "actual": mask_for_api(assertion.actual_json),
                 "actual_source": assertion.actual_source,
                 "duration_ms": assertion.duration_ms,
                 "error": assertion.error_message,
@@ -372,9 +378,9 @@ def get_run_assertions_api(
 
 def _sse_payload(event) -> str:
     """SSE 帧：带 `id`（断线重连 Last-Event-ID）与 `retry`（3s 重连）。"""
-    data = json.dumps(
-        RunEventOut.model_validate(event).model_dump(mode="json"), ensure_ascii=False
-    )
+    dumped = RunEventOut.model_validate(event).model_dump(mode="json")
+    dumped["payload_json"] = mask_for_api(dumped.get("payload_json") or {})
+    data = json.dumps(dumped, ensure_ascii=False)
     return f"id: {event.seq}\nretry: 3000\ndata: {data}\n\n"
 
 

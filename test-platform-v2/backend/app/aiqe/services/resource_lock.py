@@ -63,7 +63,7 @@ def acquire(
             return _take_over(db, row, owner_id, now, ttl)
         return row.fencing_token
 
-    if _as_utc(row.expires_at) <= now or row.owner_id == owner_id:
+    if not row.owner_id or _as_utc(row.expires_at) <= now or row.owner_id == owner_id:
         return _take_over(db, row, owner_id, now, ttl)
     raise LockUnavailable(f"lock {key!r} held by {row.owner_id!r}")
 

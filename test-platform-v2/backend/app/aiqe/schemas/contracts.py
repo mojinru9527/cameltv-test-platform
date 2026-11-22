@@ -158,9 +158,11 @@ class PreflightIssue(BaseModel):
     code: Literal[
         "UNSUPPORTED_DRIVER",
         "CAPABILITY_UNAVAILABLE",
+        "CAPABILITY_NOT_VERIFIED",
         "NODE_OFFLINE",
         "NO_SLOT",
         "PLATFORM_MISMATCH",
+        "PLATFORM_ACTION_UNSUPPORTED",
         "ENVIRONMENT_MISSING",
         "PROFILE_MISSING",
         "FIXTURE_MISSING",

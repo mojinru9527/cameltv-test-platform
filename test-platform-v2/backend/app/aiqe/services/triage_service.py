@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import uuid
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -25,7 +24,13 @@ from sqlalchemy.orm import Session
 
 from app.aiqe.models.run import NodeRun, TestRun
 from app.aiqe.models.triage import TriageExperiment
+from app.aiqe.services.run_launch import launch
 from app.aiqe.services.run_state import TERMINAL_STATUSES
+from app.aiqe.services.snapshot_service import (
+    clone_snapshot,
+    ensure_snapshot,
+    get_snapshot,
+)
 
 #: 实验状态机（v1.5 §01 AUD-004）。
 STATUSES: tuple[str, ...] = (
@@ -222,37 +227,68 @@ def create_experiment(
 def default_run_launcher(
     db: Session, experiment: TriageExperiment, baseline: TestRun
 ) -> str:
-    """统一 Run 创建路径：复制 baseline 不可变快照，仅写入声明的单变量。"""
+    """V16-006/007：统一 Launch + 不可变快照克隆（禁止手写 NodeRun 复制）。
+
+    实验只改变声明的单变量；DAG 依赖/边/断言/输出全部来自 baseline 的冻结快照。
+    """
     if experiment.changed_dimension and experiment.changed_dimension in IMMUTABLE_KEYS:
         raise ExperimentError(f"{experiment.changed_dimension} 属于不可变字段，不能作为实验变量")
+    snapshot = _baseline_snapshot(db, baseline)
+    child = clone_snapshot(
+        db,
+        snapshot,
+        execution_kind="NOISE_EXPERIMENT",
+        created_by=None,
+    )
     env_snapshot = dict(baseline.environment_snapshot_json or {})
     if experiment.changed_dimension:
         env_snapshot[experiment.changed_dimension] = experiment.changed_value
-    run = TestRun(
-        project_id=baseline.project_id,
-        run_key=f"EXP-{experiment.experiment_key}-{uuid.uuid4().hex[:12]}",
+    result = launch(
+        db,
+        project_id=int(baseline.project_id),
+        user_id=None,
+        workflow_snapshot_id=child.id,
+        execution_kind="NOISE_EXPERIMENT",
+        launch_key=f"experiment:{experiment.id}",
         source_type="experiment",
-        source_id=experiment.id,
-        scenario_id=baseline.scenario_id,
-        workflow_definition_id=baseline.workflow_definition_id,
+        source_id=str(experiment.id),
+        retest_of=baseline.id,
+        environment_id=baseline.environment_id,
+        environment_snapshot=env_snapshot,
         build_ref=baseline.build_ref,
         commit_sha=baseline.commit_sha,
-        environment_id=baseline.environment_id,
         execution_profile_id=experiment.profile_id or baseline.execution_profile_id,
-        environment_snapshot_json=env_snapshot,
-        retest_of=baseline.id,
-        status="QUEUED",
     )
-    db.add(run)
-    db.flush()
+    return result.run_id
 
-    baseline_nodes = list(
+
+def _baseline_snapshot(db: Session, baseline: TestRun):
+    """取 baseline 的不可变快照；老数据没有 snapshot 时从 Workflow 定义补建。"""
+    if baseline.workflow_snapshot_id:
+        return get_snapshot(
+            db, baseline.workflow_snapshot_id, project_id=int(baseline.project_id)
+        )
+    if baseline.workflow_definition_id:
+        from app.aiqe.models.workflow import WorkflowDefinition
+
+        definition = db.get(WorkflowDefinition, baseline.workflow_definition_id)
+        if definition is not None and int(definition.project_id or 0) == int(baseline.project_id):
+            return ensure_snapshot(db, definition, execution_kind="NOISE_EXPERIMENT")
+    # 旧数据迁移路径：历史 Run 只有 NodeRun，没有 snapshot。重建一次不可变快照并标记
+    # LEGACY_RECONSTRUCTED；新 Run 一律走 launch 冻结快照，不再走这里。
+    nodes = list(
         db.scalars(select(NodeRun).where(NodeRun.run_id == baseline.id).order_by(NodeRun.id))
     )
-    if baseline_nodes:
-        from app.aiqe.services import dag_scheduler
+    if not nodes:
+        raise ExperimentError(
+            "BASELINE_SNAPSHOT_MISSING: baseline Run 未绑定不可变 WorkflowSnapshot"
+        )
+    from app.aiqe.services.snapshot_service import snapshot_from_graph
 
-        graph = {
+    return snapshot_from_graph(
+        db,
+        project_id=int(baseline.project_id),
+        graph={
             "schema_version": "1.0",
             "nodes": [
                 {
@@ -261,12 +297,14 @@ def default_run_launcher(
                     "input": dict(node.input_ref or {}),
                     "depends_on": [],
                 }
-                for node in baseline_nodes
+                for node in nodes
             ],
             "edges": [],
-        }
-        dag_scheduler.create_node_runs(db, run.id, graph)
-    return run.id
+        },
+        workflow_id=None,
+        execution_kind="NOISE_EXPERIMENT",
+        parent_snapshot_id=None,
+    )
 
 
 def launch_experiment(

@@ -41,6 +41,10 @@ class PlatformBinding(Base):
     driver_name: Mapped[str] = mapped_column(String(80), nullable=False, default="")
     driver_version: Mapped[str] = mapped_column(String(40), nullable=False, default="")
     node_id: Mapped[str] = mapped_column(String(128), nullable=False, default="")
+    # V16-016：Project/Environment/DevicePool/Runner/Capability version 绑定。
+    environment_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    device_pool: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    runner_version: Mapped[str] = mapped_column(String(80), nullable=False, default="")
     #: 服务端根据 Capability Registry 计算的 6 态，客户端不得自报 VERIFIED。
     capability_status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="UNAVAILABLE", index=True

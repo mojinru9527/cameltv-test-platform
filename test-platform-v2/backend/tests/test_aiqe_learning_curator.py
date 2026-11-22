@@ -70,7 +70,8 @@ def test_evaluate_uses_backend_metrics_only(db_session):
 
 def test_evaluate_rejects_unknown_run(db_session):
     row = candidate(db_session)
-    with pytest.raises(BenchmarkError):
+    # V16-011：跨项目/不存在统一按 LearningError（404 语义）返回。
+    with pytest.raises(LearningError):
         evaluate_candidate(db_session, row.id, benchmark_run_id="missing-run")
 
 
@@ -79,13 +80,13 @@ def test_high_false_positive_rate_rejected(db_session):
     row = candidate(db_session)
     evaluate_candidate(db_session, row.id, benchmark_run_id=run.id)
     with pytest.raises(LearningError):
-        approve_candidate(db_session, row.id)
+        approve_candidate(db_session, row.id, approved_by=2)
 
 
 def test_approve_requires_benchmark(db_session):
     row = candidate(db_session)
     with pytest.raises(LearningError):
-        approve_candidate(db_session, row.id)
+        approve_candidate(db_session, row.id, approved_by=2)
 
 
 def test_duplicate_requires_acknowledgement(db_session):
@@ -93,8 +94,8 @@ def test_duplicate_requires_acknowledgement(db_session):
     row = candidate(db_session, duplicate_of="other-pattern")
     evaluate_candidate(db_session, row.id, benchmark_run_id=run.id)
     with pytest.raises(LearningError):
-        approve_candidate(db_session, row.id)
-    approved = approve_candidate(db_session, row.id, acknowledge_duplicate=True)
+        approve_candidate(db_session, row.id, approved_by=2)
+    approved = approve_candidate(db_session, row.id, approved_by=2, acknowledge_duplicate=True)
     assert approved.status == "approved"
     assert approved.acknowledged is True
 
@@ -103,7 +104,7 @@ def test_activate_creates_bug_pattern(db_session):
     run = make_benchmark_run(db_session)
     row = candidate(db_session, pattern="LIVE_ENTRY_OVERLAY_2")
     evaluate_candidate(db_session, row.id, benchmark_run_id=run.id)
-    approve_candidate(db_session, row.id)
+    approve_candidate(db_session, row.id, approved_by=2)
     pattern = activate_candidate(db_session, row.id)
     assert pattern is not None
     assert pattern.pattern_key == "LIVE_ENTRY_OVERLAY_2"
@@ -120,11 +121,11 @@ def test_duplicate_activation_merges(db_session):
     run = make_benchmark_run(db_session)
     first = candidate(db_session, pattern="DUP_PATTERN")
     evaluate_candidate(db_session, first.id, benchmark_run_id=run.id)
-    approve_candidate(db_session, first.id)
+    approve_candidate(db_session, first.id, approved_by=2)
     activate_candidate(db_session, first.id)
     second = candidate(db_session, pattern="DUP_PATTERN_OTHER", duplicate_of=first.id)
     evaluate_candidate(db_session, second.id, benchmark_run_id=run.id)
-    approve_candidate(db_session, second.id, acknowledge_duplicate=True)
+    approve_candidate(db_session, second.id, approved_by=2, acknowledge_duplicate=True)
     activate_candidate(db_session, second.id)
     assert get_candidate(db_session, second.id).status == "active"
 

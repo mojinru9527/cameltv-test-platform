@@ -14,7 +14,12 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
-from app.aiqe.agents.base import AgentSchemaError, AgentUnavailable, BaseAgent
+from app.aiqe.agents.base import (
+    AgentEvidenceError,
+    AgentSchemaError,
+    AgentUnavailable,
+    BaseAgent,
+)
 
 AGENT_STATUSES: tuple[str, ...] = (
     "QUEUED",
@@ -23,10 +28,11 @@ AGENT_STATUSES: tuple[str, ...] = (
     "PARTIAL",
     "COMPLETED",
     "FAILED",
+    "BLOCKED",
     "CANCELLED",
 )
 TERMINAL_STATUSES: frozenset[str] = frozenset(
-    {"COMPLETED", "FAILED", "CANCELLED", "WAITING_HUMAN", "PARTIAL"}
+    {"COMPLETED", "FAILED", "BLOCKED", "CANCELLED", "WAITING_HUMAN", "PARTIAL"}
 )
 
 
@@ -61,7 +67,17 @@ class ToolRegistry:
         self._tools = dict(tools or {})
 
     def allowed(self, agent_key: str) -> tuple[str, ...]:
-        return self._allowlist.get(str(agent_key), ())
+        key = str(agent_key)
+        # 支持两种 allowlist 形状：
+        # 1) {agent_key: (tool_name...)}（build_tool_registry 默认）
+        # 2) {tool_name: (agent_key...)}（DEFAULT_TOOL_ALLOWLIST）
+        if key in self._allowlist:
+            return tuple(self._allowlist[key])
+        return tuple(
+            tool
+            for tool, agents in self._allowlist.items()
+            if key in {str(item) for item in agents}
+        )
 
     def resolve(self, agent_key: str, tool_name: str) -> Callable[..., Any]:
         if tool_name not in self.allowed(agent_key):
@@ -110,7 +126,7 @@ class AgentResult:
             raise AgentContractError("agent_version 不能为空")
         if self.status == "COMPLETED" and not self.output:
             raise AgentContractError("COMPLETED 必须有非空 output（空输出不能当成功）")
-        if self.needs_human and self.status not in {"WAITING_HUMAN", "PARTIAL"}:
+        if self.needs_human and self.status not in {"WAITING_HUMAN", "PARTIAL", "BLOCKED"}:
             raise AgentContractError("needs_human=true 时状态必须是 WAITING_HUMAN/PARTIAL")
         if self.status == "WAITING_HUMAN" and not self.needs_human:
             raise AgentContractError("WAITING_HUMAN 必须 needs_human=true")
@@ -177,7 +193,21 @@ class BaseAgentAdapter:
     def execute(self, context: AgentContext, request: str) -> AgentResult:
         input_hash = stable_hash(request)
         try:
-            output = self._agent.run(request)
+            output = self._agent.run(request, context=context)
+        except AgentEvidenceError as exc:
+            # V16-012：证据不可采信 → BLOCKED，不得降级为 COMPLETED。
+            return AgentResult(
+                agent_key=self.key,
+                agent_version=self.version,
+                status="BLOCKED",
+                model_provider=self.provider,
+                model_name=self.model,
+                prompt_version=stable_hash(self._agent.system_prompt),
+                input_hash=input_hash,
+                error_code="INVALID_EVIDENCE",
+                warnings=[str(exc)],
+                needs_human=True,
+            )
         except AgentUnavailable as exc:
             return AgentResult(
                 agent_key=self.key,

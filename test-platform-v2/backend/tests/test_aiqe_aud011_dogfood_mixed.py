@@ -173,7 +173,29 @@ def test_missing_config_refuses_to_fake_pass():
         ).validate()
 
 
-def test_mixed_api_and_db_run_passes_with_real_drivers(db_session, sports_server, monkeypatch, tmp_path):
+@pytest.fixture()
+def admin_policy(db_session, sports_server):
+    """V16-001：策略由管理员预先配置，dogfood 不得自行授权私网。"""
+    from app.aiqe.security import upsert_target_policy
+
+    upsert_target_policy(
+        db_session,
+        project_id=1,
+        environment_id=None,
+        policy={
+            "allowed_hosts": ["127.0.0.1"],
+            "allowed_ports": [sports_server],
+            "allow_private_cidrs": ["127.0.0.0/8"],
+            "max_redirects": 0,
+        },
+    )
+    db_session.commit()
+    yield
+
+
+def test_mixed_api_and_db_run_passes_with_real_drivers(
+    db_session, sports_server, monkeypatch, tmp_path, admin_policy
+):
     engine = _readonly_engine(tmp_path)
     _SportsStub.db_engine = _write_engine(tmp_path)
     register_query(
@@ -229,7 +251,7 @@ def test_mixed_api_and_db_run_passes_with_real_drivers(db_session, sports_server
     assert len(assertion_rows) >= 6
 
 
-def test_ui_node_without_runner_blocks_instead_of_pass(db_session, sports_server):
+def test_ui_node_without_runner_blocks_instead_of_pass(db_session, sports_server, admin_policy):
     report = run_dogfood(
         db_session, _config(sports_server, include_public_ui=True)
     )[0]
@@ -239,7 +261,9 @@ def test_ui_node_without_runner_blocks_instead_of_pass(db_session, sports_server
     assert report.verified_platforms == []
 
 
-def test_repeated_runs_use_isolated_fixture_namespaces(db_session, sports_server, monkeypatch, tmp_path):
+def test_repeated_runs_use_isolated_fixture_namespaces(
+    db_session, sports_server, monkeypatch, tmp_path, admin_policy
+):
     engine = _readonly_engine(tmp_path)
     _SportsStub.db_engine = _write_engine(tmp_path)
     register_query(
@@ -264,7 +288,7 @@ def test_repeated_runs_use_isolated_fixture_namespaces(db_session, sports_server
     assert all(report.outcome == "PASS" for report in reports)
 
 
-def test_wrong_credentials_fail_run_not_pass(db_session, sports_server):
+def test_wrong_credentials_fail_run_not_pass(db_session, sports_server, admin_policy):
     config = DogfoodConfig(
         project_id=1,
         base_url=f"http://127.0.0.1:{sports_server}",
@@ -280,14 +304,49 @@ def test_wrong_credentials_fail_run_not_pass(db_session, sports_server):
     assert report.assertions_failed >= 1
 
 
-def test_policy_blocks_target_outside_allowlist(db_session):
+def test_missing_policy_blocks_dogfood_before_any_node(db_session):
+    """V16-001：无服务端 TargetPolicy 时 dogfood 不得自动授权并执行。"""
     config = DogfoodConfig(
         project_id=1,
         base_url="http://127.0.0.1:9",
         admin_username="qa_admin",
         admin_password=PASSWORD,
-        allow_private_targets=False,  # 未授权私网
+        allow_private_targets=True,  # 调用方开关不再能生成私网授权
         fixture_namespace="aiqe-dogfood-blocked",
+    )
+    report = run_dogfood(db_session, config)[0]
+    assert report.status == "BLOCKED"
+    assert report.outcome != "PASS"
+    assert report.node_statuses == {}
+    assert report.blocked_steps
+    assert report.blocked_steps[0]["error_class"] in {
+        "RUN_ENVIRONMENT_MISSING",
+        "NO_POLICY_CONFIGURED",
+    }
+
+
+def test_policy_without_target_port_blocks_node(db_session):
+    """策略存在但未授权目标端口：节点 BLOCKED，且不产生 PASS。"""
+    from app.aiqe.security import upsert_target_policy
+
+    upsert_target_policy(
+        db_session,
+        project_id=1,
+        environment_id=None,
+        policy={
+            "allowed_hosts": ["127.0.0.1"],
+            "allowed_ports": [1],
+            "allow_private_cidrs": ["127.0.0.0/8"],
+        },
+    )
+    db_session.commit()
+    config = DogfoodConfig(
+        project_id=1,
+        base_url="http://127.0.0.1:9",
+        admin_username="qa_admin",
+        admin_password=PASSWORD,
+        allow_private_targets=True,
+        fixture_namespace="aiqe-dogfood-port-denied",
     )
     report = run_dogfood(db_session, config)[0]
     assert report.node_statuses["login"] == "BLOCKED"

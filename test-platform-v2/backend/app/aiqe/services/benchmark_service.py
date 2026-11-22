@@ -188,9 +188,16 @@ def create_dataset(
     return row
 
 
-def get_dataset(db: Session, dataset_id: str) -> BenchmarkDataset:
+def get_dataset(
+    db: Session, dataset_id: str, *, project_id: int | None = None
+) -> BenchmarkDataset:
     row = db.get(BenchmarkDataset, dataset_id)
-    if row is None:
+    if row is None or (
+        project_id is not None
+        and row.project_id is not None
+        and int(row.project_id) != int(project_id)
+    ):
+        # V16-011：跨项目按 404 语义拒绝（不暴露资源存在性）。
         raise BenchmarkError(f"数据集不存在: {dataset_id}")
     return row
 
@@ -201,6 +208,7 @@ def add_sample(
     *,
     sample_id: str,
     golden_labels: Sequence[str],
+    project_id: int | None = None,
     task_type: str = "",
     input_refs: Sequence[str] | None = None,
     frozen_context: dict[str, Any] | None = None,
@@ -209,7 +217,7 @@ def add_sample(
     labeler: str = "",
     reviewer: str = "",
 ) -> BenchmarkSample:
-    dataset = get_dataset(db, dataset_id)
+    dataset = get_dataset(db, dataset_id, project_id=project_id)
     if dataset.status != "DRAFT":
         raise BenchmarkError("只有 DRAFT 数据集可以追加样本（冻结后不可改）")
     if not str(sample_id or "").strip():
@@ -235,7 +243,10 @@ def add_sample(
     return sample
 
 
-def list_samples(db: Session, dataset_id: str) -> list[BenchmarkSample]:
+def list_samples(
+    db: Session, dataset_id: str, *, project_id: int | None = None
+) -> list[BenchmarkSample]:
+    get_dataset(db, dataset_id, project_id=project_id)
     return list(
         db.scalars(
             select(BenchmarkSample)
@@ -246,9 +257,13 @@ def list_samples(db: Session, dataset_id: str) -> list[BenchmarkSample]:
 
 
 def freeze_dataset(
-    db: Session, dataset_id: str, *, approved_by: int | None = None
+    db: Session,
+    dataset_id: str,
+    *,
+    approved_by: int | None = None,
+    project_id: int | None = None,
 ) -> BenchmarkDataset:
-    dataset = get_dataset(db, dataset_id)
+    dataset = get_dataset(db, dataset_id, project_id=project_id)
     if dataset.status == "FROZEN":
         return dataset
     samples = list_samples(db, dataset.id)
@@ -269,6 +284,7 @@ def run_benchmark(
     *,
     dataset_id: str,
     agent_key: str,
+    project_id: int | None = None,
     agent_version: str = "",
     prompt_hash: str = "",
     model_provider: str = "",
@@ -277,7 +293,7 @@ def run_benchmark(
     thresholds: Mapping[str, float] | None = None,
 ) -> BenchmarkRun:
     """真实执行 Agent 并计算指标；预测结果由 ``predictor`` 调用 Agent 得到。"""
-    dataset = get_dataset(db, dataset_id)
+    dataset = get_dataset(db, dataset_id, project_id=project_id)
     if dataset.status != "FROZEN":
         raise BenchmarkError("Benchmark 必须使用 FROZEN 数据集")
     samples = list_samples(db, dataset.id)
@@ -342,15 +358,23 @@ def run_benchmark(
     return run
 
 
-def get_run(db: Session, run_id: str) -> BenchmarkRun:
+def get_run(
+    db: Session, run_id: str, *, project_id: int | None = None
+) -> BenchmarkRun:
     row = db.get(BenchmarkRun, run_id)
-    if row is None:
+    if row is None or (
+        project_id is not None
+        and row.project_id is not None
+        and int(row.project_id) != int(project_id)
+    ):
         raise BenchmarkError(f"BenchmarkRun 不存在: {run_id}")
     return row
 
 
-def metrics_of(db: Session, run_id: str) -> dict[str, Any]:
-    run = get_run(db, run_id)
+def metrics_of(
+    db: Session, run_id: str, *, project_id: int | None = None
+) -> dict[str, Any]:
+    run = get_run(db, run_id, project_id=project_id)
     if run.status != "COMPLETED" or not run.metrics_json:
         raise BenchmarkError("BenchmarkRun 尚未完成，没有可引用指标")
     return dict(run.metrics_json)

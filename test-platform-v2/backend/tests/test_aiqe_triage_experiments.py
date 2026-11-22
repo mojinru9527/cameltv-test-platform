@@ -27,8 +27,36 @@ from app.aiqe.services.triage_service import (
 GRAPH = {
     "schema_version": "1.0",
     "nodes": [
-        {"key": "login", "driver": "http", "input": {"url": "https://api.allowed.test/login"}},
-        {"key": "verify", "driver": "http", "input": {"url": "https://api.allowed.test/state"}},
+        {
+            "key": "login",
+            "driver": "http",
+            "input": {"url": "https://api.allowed.test/login", "expected_status": 200},
+            "assertions": [
+                {
+                    "assertion_key": "login_ok",
+                    "oracle_layer": "REQ",
+                    "oracle_ref": "AC-LOGIN",
+                    "type": "http_status",
+                    "expected": 200,
+                    "severity": "P0",
+                }
+            ],
+        },
+        {
+            "key": "verify",
+            "driver": "http",
+            "input": {"url": "https://api.allowed.test/state", "expected_status": 200},
+            "assertions": [
+                {
+                    "assertion_key": "state_ok",
+                    "oracle_layer": "REQ",
+                    "oracle_ref": "AC-STATE",
+                    "type": "http_status",
+                    "expected": 200,
+                    "severity": "P0",
+                }
+            ],
+        },
     ],
     "edges": [],
 }
@@ -36,7 +64,20 @@ GRAPH = {
 
 def _seed_baseline(db, *, key: str = "RUN-BASE-0001") -> TestRun:
     from app.aiqe.services import dag_scheduler
+    from app.aiqe.services.capability_registry import register_manifest
+    from app.models.project import Project
 
+    if db.get(Project, 1) is None:
+        db.add(Project(id=1, code="TEST", name="Test", owner_id=1, status=1))
+        db.flush()
+    register_manifest(
+        db,
+        node_id="node-http",
+        driver_key="http",
+        capabilities=["aiqe:http"],
+        platforms=["linux"],
+        evidence_ref="evidence://node-http",
+    )
     run = TestRun(
         project_id=1,
         run_key=key,
@@ -162,8 +203,9 @@ def test_launch_creates_real_run_bound_to_baseline(db_session):
     assert run.project_id == baseline.project_id
     assert run.retest_of == baseline.id
     assert run.source_type == "experiment"
-    assert run.status == "QUEUED"
-    assert launched.status == "QUEUED"
+    # 派发后 scheduler 迁移为 RUNNING；Worker 领取前不得出现 PASS/FAIL 结果。
+    assert run.status in {"QUEUED", "RUNNING"}
+    assert launched.status in {"QUEUED", "RUNNING"}
     assert launched.started_at is not None
 
     # 验证 Run 必须有可执行节点（否则无法真实执行）

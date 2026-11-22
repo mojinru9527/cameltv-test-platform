@@ -12,7 +12,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
-from app.aiqe.agents.base import AgentSchemaError, BaseAgent
+from app.aiqe.agents.base import AgentEvidenceError, AgentSchemaError, BaseAgent
 
 CLASSIFICATIONS = (
     "PRODUCT_DEFECT",
@@ -90,6 +90,11 @@ def compute_confidence_band(
     return "LOW"
 
 
+class _Ctx:
+    def __init__(self, resolver):
+        self.evidence_resolver = resolver
+
+
 class FailureTriageAgent(BaseAgent):
     key = "A4"
     model = "deepseek-chat"
@@ -106,8 +111,11 @@ class FailureTriageAgent(BaseAgent):
         "classification=UNKNOWN；若没有 UNKNOWN 假设，attribution_status 必须为 NEEDS_EXPERIMENT。"
     )
 
-    def triage(self, failure_context: dict) -> dict:
-        return self.run(str(failure_context))
+    def triage(self, failure_context: dict, *, evidence_resolver=None) -> dict:
+        resolver = evidence_resolver if evidence_resolver is not None else getattr(
+            self, "evidence_resolver", None
+        )
+        return self.run(str(failure_context), context=_Ctx(resolver))
 
     def validate(self, data: dict, *, evidence_resolver=None) -> dict:
         try:
@@ -147,9 +155,48 @@ class FailureTriageAgent(BaseAgent):
             refs = list(hypothesis["supporting_evidence"]) + list(
                 hypothesis["contradicting_evidence"]
             )
-            if evidence_resolver is not None:
-                # AUD-016：所有 evidence refs 必须由服务端解析（存在 + 同项目 + 同 Run）。
-                evidence_resolver(refs)
+            if evidence_resolver is None:
+                raise AgentEvidenceError(
+                    "A4 必须注入服务端 Evidence Resolver，禁止无证据校验通过",
+                    reason="EVIDENCE_RESOLVER_UNAVAILABLE",
+                )
+            if result.attribution_status != "UNKNOWN" and not hypothesis["supporting_evidence"]:
+                raise AgentEvidenceError(
+                    "非 UNKNOWN 归因必须至少引用一条支持证据",
+                    reason="SUPPORTING_EVIDENCE_REQUIRED",
+                )
+            try:
+                resolved = list(evidence_resolver(refs))
+            except Exception as exc:
+                raise AgentEvidenceError(
+                    f"Evidence Resolver 执行失败: {type(exc).__name__}: {exc}",
+                    reason="EVIDENCE_RESOLVER_FAILED",
+                ) from exc
+            by_ref = {str(item.get("ref")): dict(item) for item in resolved if isinstance(item, dict)}
+            for ref in refs:
+                meta = by_ref.get(str(ref))
+                if meta is None:
+                    raise AgentEvidenceError(
+                        f"证据未被 resolver 解析: {ref}", reason="EVIDENCE_UNRESOLVED"
+                    )
+                if not bool(meta.get("valid")):
+                    raise AgentEvidenceError(
+                        f"证据不可采信: {ref} ({meta.get('reason') or 'invalid'})",
+                        reason=str(meta.get("reason") or "INVALID_EVIDENCE"),
+                    )
+                if meta.get("tombstoned"):
+                    raise AgentEvidenceError(
+                        f"证据已删除/墓碑: {ref}", reason="EVIDENCE_TOMBSTONED"
+                    )
+            evidence_snapshot = {
+                str(ref): {
+                    "kind": str(by_ref[str(ref)].get("kind") or ""),
+                    "checksum": str(by_ref[str(ref)].get("checksum") or ""),
+                    "run_id": str(by_ref[str(ref)].get("run_id") or ""),
+                }
+                for ref in refs
+            }
+            payload.setdefault("evidence_snapshot", {})[hypothesis["summary"]] = evidence_snapshot
             hypothesis["confidence_band"] = compute_confidence_band(
                 supporting=list(hypothesis["supporting_evidence"]),
                 contradicting=list(hypothesis["contradicting_evidence"]),
@@ -157,4 +204,11 @@ class FailureTriageAgent(BaseAgent):
             )
             payload["hypotheses"][index] = hypothesis
 
+        import hashlib
+        import json as _json
+
+        snapshot = payload.get("evidence_snapshot") or {}
+        payload["evidence_hash"] = "sha256:" + hashlib.sha256(
+            _json.dumps(snapshot, sort_keys=True, ensure_ascii=False).encode()
+        ).hexdigest()
         return payload

@@ -20,36 +20,29 @@ from typing import Any, Protocol
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.aiqe.models.run import NodeRun
+from app.aiqe.models.run import NodeRun, TestRun
 from app.aiqe.redaction import CLASSIFIER, redact_mapping
+from app.aiqe.schemas.contracts import ResolvedInput, SourceRef
+from app.aiqe.security.output_sanitizer import OutputSanitizer, assert_persistable
+from app.aiqe.services import jsonpath_subset
+from app.aiqe.services.run_errors import (
+    FIXTURE_NOT_FOUND,
+    OUTPUT_SCHEMA_MISMATCH,
+    SECRET_UNAVAILABLE,
+    VARIABLE_NOT_ANCESTOR,
+    VARIABLE_NOT_FOUND,
+    SecretLeakError,
+    VariableResolutionError,
+)
 from app.aiqe.services.secret_vault import (
     SecretVault,
     create_secret_handle,
     redacted_reference,
+    resolve_secret_handle,
 )
-from app.aiqe.schemas.contracts import ResolvedInput, SourceRef
-from app.aiqe.services import jsonpath_subset
 
 VAR_RE = re.compile(r"\$\{([^{}]+)\}")
 SECRET_PREFIX = "secrets."
-
-VARIABLE_NOT_FOUND = "VARIABLE_NOT_FOUND"
-VARIABLE_NOT_ANCESTOR = "VARIABLE_NOT_ANCESTOR"
-SECRET_UNAVAILABLE = "SECRET_UNAVAILABLE"
-FIXTURE_NOT_FOUND = "FIXTURE_NOT_FOUND"
-OUTPUT_SCHEMA_MISMATCH = "OUTPUT_SCHEMA_MISMATCH"
-
-
-class VariableResolutionError(ValueError):
-    """变量引用无法解析；`code` 用于 Run/Node 错误分类。"""
-
-    def __init__(self, message: str, *, code: str = VARIABLE_NOT_FOUND) -> None:
-        self.code = code
-        super().__init__(message)
-
-
-class SecretLeakError(ValueError):
-    """试图把 secret 写入持久化数据。"""
 
 
 class SecretProvider(Protocol):
@@ -106,9 +99,17 @@ class RunContext:
         fixtures: Mapping[str, Any] | None = None,
         environ: Mapping[str, str] | None = None,
         handle_resolver: Callable[[str, str], str] | None = None,
+        vault: SecretVault | None = None,
+        project_id: int | None = None,
+        secret_ttl_seconds: int = 900,
     ) -> None:
         self.db = db
         self.run_id = run_id
+        self.vault = vault
+        self.project_id = int(project_id) if project_id is not None else None
+        self.secret_ttl_seconds = int(secret_ttl_seconds)
+        if handle_resolver is None and vault is not None:
+            handle_resolver = self._default_handle_resolver
         self._handle_resolver = handle_resolver
         self._consumer_node_key = ""
         self.graph = dict(graph or {})
@@ -123,6 +124,31 @@ class RunContext:
         self.last_source_refs: list[SourceRef] = []
         self.last_secret_values: list[str] = []
         self._current_node_key: str | None = None
+
+    # ── secret dependency wiring ──────────────────────────────────────
+    def _project_id(self) -> int:
+        if self.project_id is not None:
+            return self.project_id
+        run = self.db.get(TestRun, self.run_id)
+        if run is None:
+            raise VariableResolutionError(
+                "Run 不存在，无法解析 Secret Handle", code=SECRET_UNAVAILABLE
+            )
+        self.project_id = int(run.project_id)
+        return self.project_id
+
+    def _default_handle_resolver(self, handle_id: str, consumer_node_key: str) -> str:
+        value = resolve_secret_handle(
+            self.db,
+            handle_id,
+            project_id=self._project_id(),
+            run_id=self.run_id,
+            consumer_node_key=consumer_node_key,
+            vault=self.vault,
+        )
+        # 解析出的明文同样进入 known_secrets，供证据/日志脱敏。
+        self.last_secret_values.append(value)
+        return value
 
     # ── node access ────────────────────────────────────────────────────
     def _node(self, node_key: str) -> NodeRun:
@@ -144,9 +170,11 @@ class RunContext:
     def set_output(self, node_key: str, values: Mapping[str, Any]) -> None:
         if any(_looks_like_secret_ref(v) for v in values.values()):
             raise SecretLeakError("节点输出不能包含 ${SECRET:*} / ${secrets.*} 引用")
+        sanitized = redact_mapping(dict(values))
+        assert_persistable(sanitized, where=f"node:{node_key}:outputs")
         row = self._node(node_key)
         merged = dict(row.outputs_json or row.output_ref or {})
-        merged.update(dict(values))
+        merged.update(sanitized)
         row.outputs_json = merged
         row.output_ref = dict(merged)
         self.db.flush()
@@ -183,8 +211,10 @@ class RunContext:
                     vault=vault,
                 )
                 stored[key] = redacted_reference(handle)
+                self.last_secret_values.append(value)
                 continue
             stored[key] = redact_mapping(value)
+        assert_persistable(stored, where=f"node:{node_key}:outputs")
         merged = dict(row.outputs_json or row.output_ref or {})
         merged.update(stored)
         row.outputs_json = dict(merged)
@@ -364,6 +394,8 @@ class RunContext:
         self.last_source_refs = []
         self.last_secret_values = []
         self._current_node_key = node_key
+        # Handle 解析必须按“当前消费者节点”校验 scope（不能留空绕过白名单）。
+        self._consumer_node_key = node_key
         values = self.resolve(dict(raw_input or {}))
         secret_keys = sorted(
             {
@@ -381,7 +413,10 @@ class RunContext:
     def persist_resolved_input(self, node: NodeRun, resolved: ResolvedInput) -> None:
         """持久化脱敏后的解析输入；真实 secret 值不落盘。"""
         secret_values = sorted({value for value in self.last_secret_values if value})
-        sanitized = _scrub_values(resolved.values, secret_values)
+        # 先按字段名/值模式脱敏，再按已知 secret 值替换（字面量 password 也不能落库）。
+        sanitized = redact_mapping(dict(resolved.values or {}))
+        sanitized = _scrub_values(sanitized, secret_values)
+        assert_persistable(sanitized, where=f"node:{node.node_key}:resolved_input")
         node.resolved_input_json = dict(sanitized or {})
         node.secret_keys_json = list(resolved.secret_keys)
         node.source_refs_json = [
@@ -397,35 +432,51 @@ class RunContext:
         outputs_spec: Mapping[str, str] | None,
         output_schema: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """按节点声明的 outputs 从 DriverResult.data 提取结构化输出。"""
+        """按节点声明的 outputs 提取结构化输出并做统一分类/Handle 化。
+
+        V16-003：返回值是**已脱敏/Handle 化**的存储值（不是 Driver 原始值）。
+        """
+        if self.vault is None:
+            raise SecretLeakError(
+                "RunContext 未注入 SecretVault：禁止在无 Vault 时持久化节点输出"
+            )
+        sanitizer = OutputSanitizer(
+            self.db,
+            project_id=self._project_id(),
+            run_id=self.run_id,
+            vault=self.vault,
+            graph=self.graph,
+            ttl_seconds=self.secret_ttl_seconds,
+        )
         data = getattr(result, "data", None) or {}
-        outputs: dict[str, Any] = {}
-        for name, path in (outputs_spec or {}).items():
-            if not isinstance(path, str) or not path:
-                raise VariableResolutionError(
-                    f"节点 {node.node_key} 的 output {name} 缺少 JSONPath",
-                    code=OUTPUT_SCHEMA_MISMATCH,
-                )
-            if path.startswith("$"):
-                found, value = jsonpath_subset.first(data, path)
-            elif path in data:
-                found, value = True, data[path]
-            else:
-                found, value = jsonpath_subset.first(data, "$." + path)
-            if not found:
-                raise VariableResolutionError(
-                    f"节点 {node.node_key} 的 output {name} 在 DriverResult 中不存在: {path}",
-                    code=OUTPUT_SCHEMA_MISMATCH,
-                )
-            outputs[name] = value
+        captured = sanitizer.capture(node, data, outputs_spec, output_schema)
         if output_schema:
-            _validate_output_schema(outputs, output_schema)
-        merged = dict(node.outputs_json or {})
-        merged.update(outputs)
-        node.outputs_json = merged
-        node.output_ref = dict(merged)
-        self.db.flush()
-        return outputs
+            # schema 校验针对 Driver 返回的原始值（Handle 是存储表示，不是业务值）。
+            _validate_output_schema(dict(captured.raw), output_schema)
+        stored = sanitizer.persist(node, captured)
+        self.last_secret_values.extend(captured.secret_values)
+        return stored
+
+    def preview_secret_values(
+        self,
+        result: Any,
+        outputs_spec: Mapping[str, str] | None,
+        output_schema: Mapping[str, Any] | None = None,
+    ) -> list[str]:
+        """预扫描输出中的 secret 明文（证据落库前纳入 known_secrets）。"""
+        if self.vault is None:
+            return []
+        sanitizer = OutputSanitizer(
+            self.db,
+            project_id=self._project_id(),
+            run_id=self.run_id,
+            vault=self.vault,
+            graph=self.graph,
+            ttl_seconds=self.secret_ttl_seconds,
+        )
+        return sanitizer.detect_secret_values(
+            getattr(result, "data", None) or {}, outputs_spec, output_schema
+        )
 
     def snapshot(self, *, secrets: Mapping[str, str] | None = None) -> dict[str, dict[str, Any]]:
         """可持久化/展示的变量快照：secret 引用与已知 secret 值一律脱敏。"""

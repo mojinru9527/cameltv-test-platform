@@ -28,45 +28,189 @@ def _bad(message: str, status: int = 400) -> APIException:
     return APIException(code=status, msg=message, http_status=status)
 
 
-# ── Agent task plan (AUD-013) ───────────────────────────
+# ── Agent task plan (AUD-013 / V16-013) ─────────────────
 class AgentTaskIn(BaseModel):
     goal: str = Field(min_length=1, max_length=2000)
     include: list[str] | None = None
+    run_id: str | None = None
+    input_refs: list[str] | None = None
+    idempotency_key: str | None = Field(default=None, max_length=128)
+    submit: bool = False
 
 
-@router.post("/agent-tasks", response_model=R[dict], summary="A0 任务计划 Draft")
+class ApprovalIn(BaseModel):
+    reason: str = Field(default="", max_length=500)
+    expected_plan_hash: str | None = None
+
+
+def _agent_task_out(row) -> dict:
+    return {
+        "task_id": row.id,
+        "status": row.status,
+        "goal": row.goal,
+        "plan_id": (row.plan_json or {}).get("plan_id"),
+        "plan_hash": row.plan_hash,
+        "approval_required": row.status in {"DRAFT", "PENDING_APPROVAL"},
+        "approved_by": row.approved_by,
+        "approved_at": row.approved_at,
+        "error_code": row.error_code,
+        "result_refs": list(row.result_refs_json or []),
+        "tasks": [
+            {
+                "task_id": task.get("task_id"),
+                "agent_key": task.get("agent_key"),
+                "depends_on": task.get("depends_on") or [],
+            }
+            for task in (row.plan_json or {}).get("tasks") or []
+        ],
+    }
+
+
+@router.post("/agent-tasks", response_model=R[dict], summary="A0 任务计划 Draft（不执行 Agent）")
 def create_agent_task_api(
     body: AgentTaskIn,
     current: CurrentUser = Depends(_console),
     db: Session = Depends(get_db),
 ):
-    from app.aiqe.agents.orchestrator import build_plan
-    from app.aiqe.agents.protocol import AgentContext
-    from app.aiqe.agents.registry import get_agent
+    from app.aiqe.services.agent_task_service import (
+        AgentTaskError,
+        create_task,
+        submit_task,
+    )
 
     try:
-        plan = build_plan(body.goal, include=tuple(body.include) if body.include else None)
-    except Exception as exc:  # PlanError
-        raise _bad(str(exc)) from None
-    agent = get_agent("A0")
-    result = agent.execute(AgentContext(project_id=current.project_id or 0), body.goal)
-    return R.ok(
-        {
-            "plan_id": plan.plan_id,
-            "goal": plan.goal,
-            "tasks": [
-                {
-                    "task_id": task.task_id,
-                    "agent_key": task.agent_key,
-                    "depends_on": list(task.depends_on),
-                    "allowed_tools": list(task.allowed_tools),
-                }
-                for task in plan.order()
-            ],
-            "a0_status": result.status,
-            "a0_output": result.output,
-        }
+        row = create_task(
+            db,
+            project_id=int(current.project_id or 0),
+            goal=body.goal,
+            include=tuple(body.include) if body.include else None,
+            input_refs=list(body.input_refs or []),
+            requested_by=current.user.id,
+            idempotency_key=body.idempotency_key,
+            run_id=body.run_id,
+        )
+        if body.submit:
+            row = submit_task(db, row.id, project_id=int(current.project_id or 0))
+    except AgentTaskError as exc:
+        raise _bad(f"{exc.code}: {exc}", 400) from None
+    db.commit()
+    return R.ok(_agent_task_out(row))
+
+
+@router.get("/agent-tasks/{task_id}", response_model=R[dict], summary="AgentTask 详情")
+def get_agent_task_api(
+    task_id: str,
+    current: CurrentUser = Depends(_console),
+    db: Session = Depends(get_db),
+):
+    from app.aiqe.services.agent_task_service import AgentTaskError, get_task
+
+    try:
+        row = get_task(db, task_id, project_id=int(current.project_id or 0))
+    except AgentTaskError:
+        raise _bad("AgentTask 不存在", 404) from None
+    return R.ok(_agent_task_out(row))
+
+
+@router.post(
+    "/agent-tasks/{task_id}/submit", response_model=R[dict], summary="提交人工审批"
+)
+def submit_agent_task_api(
+    task_id: str,
+    current: CurrentUser = Depends(_edit),
+    db: Session = Depends(get_db),
+):
+    from app.aiqe.services.agent_task_service import (
+        AgentTaskError,
+        get_task,
+        submit_task,
     )
+
+    try:
+        get_task(db, task_id, project_id=int(current.project_id or 0))
+        row = submit_task(db, task_id, project_id=int(current.project_id or 0))
+    except AgentTaskError as exc:
+        raise _bad(str(exc), 404 if "不存在" in str(exc) else 400) from None
+    db.commit()
+    return R.ok(_agent_task_out(row))
+
+
+@router.post(
+    "/agent-tasks/{task_id}/approve", response_model=R[dict], summary="人工审批（记录审批人）"
+)
+def approve_agent_task_api(
+    task_id: str,
+    body: ApprovalIn | None = None,
+    current: CurrentUser = Depends(_edit),
+    db: Session = Depends(get_db),
+):
+    from app.aiqe.services.agent_task_service import AgentTaskError, approve_task
+
+    try:
+        row = approve_task(
+            db,
+            task_id,
+            project_id=int(current.project_id or 0),
+            approved_by=current.user.id,
+            reason=(body.reason if body else ""),
+            expected_plan_hash=(body.expected_plan_hash if body else None),
+        )
+    except AgentTaskError as exc:
+        status = 404 if exc.code == "TASK_NOT_FOUND" else 400
+        raise _bad(str(exc), status) from None
+    db.commit()
+    return R.ok(_agent_task_out(row))
+
+
+@router.post(
+    "/agent-tasks/{task_id}/run",
+    response_model=R[dict],
+    status_code=202,
+    summary="审批后入队执行（Outbox + ExecutionJob，不在请求线程执行）",
+)
+def run_agent_task_api(
+    task_id: str,
+    current: CurrentUser = Depends(_edit),
+    db: Session = Depends(get_db),
+):
+    from app.aiqe.services.agent_task_service import (
+        AgentTaskError,
+        enqueue_task_job,
+        get_task,
+    )
+
+    try:
+        row = get_task(db, task_id, project_id=int(current.project_id or 0))
+        if row.status != "APPROVED":
+            raise AgentTaskError(
+                "APPROVAL_REQUIRED", f"Task 未审批或已执行（当前 {row.status}）"
+            )
+        job = enqueue_task_job(db, row)
+    except AgentTaskError as exc:
+        raise _bad(str(exc), 409 if exc.code == "APPROVAL_REQUIRED" else 400) from None
+    db.commit()
+    return R.ok({"task_id": row.id, "job_id": job.id, "status": row.status})
+
+
+@router.post(
+    "/agent-tasks/{task_id}/cancel", response_model=R[dict], summary="取消 AgentTask"
+)
+def cancel_agent_task_api(
+    task_id: str,
+    reason: str = "",
+    current: CurrentUser = Depends(_edit),
+    db: Session = Depends(get_db),
+):
+    from app.aiqe.services.agent_task_service import AgentTaskError, cancel_task
+
+    try:
+        row = cancel_task(
+            db, task_id, project_id=int(current.project_id or 0), reason=reason
+        )
+    except AgentTaskError as exc:
+        raise _bad(str(exc), 404 if "不存在" in str(exc) else 400) from None
+    db.commit()
+    return R.ok(_agent_task_out(row))
 
 
 @router.post(

@@ -277,7 +277,7 @@ def tc010(db):
     learning_service.evaluate_candidate(
         db, cand.id, {"false_positive_rate": 0.05, "sample_size": 50}
     )
-    learning_service.approve_candidate(db, cand.id)
+    learning_service.approve_candidate(db, cand.id, approved_by=2)
     pattern_row = learning_service.activate_candidate(db, cand.id)
     db.commit()
     db.refresh(cand)

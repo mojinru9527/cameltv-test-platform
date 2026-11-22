@@ -122,6 +122,9 @@ def create_pending_artifact(
         attempt = db.get(StepAttempt, step_attempt_id)
         if attempt is None:
             raise InvalidArtifact("step_attempt 不存在")
+        attempt_node = db.get(NodeRun, attempt.node_run_id)
+        if attempt_node is None or attempt_node.run_id != run.id:
+            raise InvalidArtifact("step_attempt 不属于该 Run")
     if expected_size_bytes is not None and int(expected_size_bytes) > MAX_ARTIFACT_BYTES:
         raise InvalidArtifact(f"artifact 超过 {MAX_ARTIFACT_BYTES} bytes 限制")
     moment = now or datetime.now(UTC)
@@ -141,7 +144,13 @@ def create_pending_artifact(
         upload_status=ArtifactUploadStatus.PENDING_UPLOAD.value,
         retention_until=_retention_until(retention_days, moment),
         access_scope=str(access_scope or "project"),
-        metadata_json=dict(metadata or {}),
+        metadata_json={
+            **dict(metadata or {}),
+            # V16-018：上传会话有效期，finalize 必须校验，过期 URL 不得继续上传。
+            "upload_expires_at": (moment + timedelta(minutes=30)).isoformat(),
+            "upload_content_type": content_type or "application/octet-stream",
+            "expected_size_bytes": int(expected_size_bytes or 0),
+        },
     )
     db.add(row)
     db.flush()
@@ -154,6 +163,33 @@ def create_pending_artifact(
         "max_bytes": MAX_ARTIFACT_BYTES,
     }
     return row, target
+
+
+#: artifact_type → 声明 mime 的类别约束（application/octet-stream 视为未声明）。
+_MIME_CATEGORIES: dict[str, tuple[str, ...]] = {
+    "SCREENSHOT": ("image/",),
+    "VIDEO": ("video/",),
+    "HAR": ("application/json", "application/octet-stream"),
+    "DOM_SNAPSHOT": ("text/html", "application/xhtml", "text/plain"),
+    "ACCESSIBILITY_TREE": ("application/json", "text/plain"),
+    "CONSOLE_LOG": ("text/", "application/json"),
+    "RUNNER_LOG": ("text/", "application/json"),
+    "DEVICE_LOG": ("text/", "application/json"),
+    "NETWORK_PROFILE": ("application/json", "text/"),
+}
+
+
+def _validate_declared_content_type(row: RunArtifact) -> None:
+    declared = str((row.metadata_json or {}).get("upload_content_type") or row.mime_type or "")
+    if not declared or declared == "application/octet-stream":
+        return
+    allowed = _MIME_CATEGORIES.get(str(row.artifact_type))
+    if not allowed:
+        return
+    if not any(declared.startswith(prefix) for prefix in allowed):
+        raise InvalidArtifact(
+            f"Content-Type 与 artifact 类型不匹配: {row.artifact_type} <- {declared}"
+        )
 
 
 def complete_upload(
@@ -169,6 +205,25 @@ def complete_upload(
     row = get_artifact(db, artifact_id, project_id)
     if row.upload_status != ArtifactUploadStatus.PENDING_UPLOAD.value:
         raise InvalidArtifact(f"artifact 状态不是 PENDING_UPLOAD: {row.upload_status}")
+    moment = now or datetime.now(UTC)
+    expires_raw = str((row.metadata_json or {}).get("upload_expires_at") or "")
+    if expires_raw:
+        try:
+            expires_at = datetime.fromisoformat(expires_raw)
+        except ValueError:
+            expires_at = None
+        if expires_at is not None:
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=UTC)
+            if expires_at <= moment:
+                row.upload_status = ArtifactUploadStatus.FAILED.value
+                row.metadata_json = {
+                    **(row.metadata_json or {}),
+                    "upload_error": "UPLOAD_SESSION_EXPIRED",
+                }
+                db.flush()
+                raise InvalidArtifact("上传会话已过期，拒绝 finalize")
+    _validate_declared_content_type(row)
     if not content:
         row.upload_status = ArtifactUploadStatus.FAILED.value
         db.flush()
@@ -177,6 +232,13 @@ def complete_upload(
         row.upload_status = ArtifactUploadStatus.FAILED.value
         db.flush()
         raise InvalidArtifact(f"artifact 超过 {MAX_ARTIFACT_BYTES} bytes 限制")
+    expected_size = int((row.metadata_json or {}).get("expected_size_bytes") or 0)
+    if expected_size and len(content) != expected_size:
+        row.upload_status = ArtifactUploadStatus.FAILED.value
+        db.flush()
+        raise InvalidArtifact(
+            f"artifact 大小与声明不一致: expected={expected_size} actual={len(content)}"
+        )
 
     digest = hashlib.sha256(content).hexdigest()
     if row.expected_sha256 and row.expected_sha256 != digest:
@@ -228,6 +290,7 @@ def open_download(
             if row.storage_uri.startswith("file://")
             else get_storage_backend()
         )
+    _audit_artifact_access(db, row, action="download")
     return row, backend.read(row.storage_uri)
 
 
@@ -258,6 +321,77 @@ def verify_integrity(
     return row
 
 
+def _audit_artifact_access(db: Session, row: RunArtifact, *, action: str) -> None:
+    """V16-018：Artifact 访问审计（下载/读取），不改变业务状态。"""
+    try:
+        from app.aiqe.services import dag_scheduler
+
+        dag_scheduler.emit_event(
+            db,
+            run_id=str(row.run_id),
+            event_type="artifact.accessed",
+            payload={
+                "artifact_id": row.id,
+                "action": action,
+                "project_id": row.project_id,
+                "sha256": row.sha256,
+                "upload_status": row.upload_status,
+            },
+            producer_event_id=f"artifact-{action}:{row.id}:{uuid.uuid4().hex}",
+        )
+    except Exception:
+        return
+
+
+def evidence_ref_metadata(db: Session, artifact_id: str, project_id: int) -> dict[str, Any]:
+    """V16-018 §5：evidence ref 返回不可变 ID + checksum；墓碑必须显式 unavailable。"""
+    try:
+        row = get_artifact(db, artifact_id, project_id)
+    except (InvalidArtifact, ArtifactAccessDenied):
+        return {"ref": f"artifact:{artifact_id}", "available": False, "reason": "NOT_FOUND"}
+    available = row.upload_status == ArtifactUploadStatus.AVAILABLE.value
+    reason = ""
+    if row.upload_status == ArtifactUploadStatus.PURGED.value:
+        reason = "EVIDENCE_TOMBSTONED"
+    elif not available:
+        reason = f"UPLOAD_{row.upload_status}"
+    return {
+        "ref": f"artifact:{row.id}",
+        "available": available,
+        "reason": reason,
+        "sha256": row.sha256,
+        "size_bytes": row.size_bytes,
+        "artifact_type": row.artifact_type,
+        "upload_status": row.upload_status,
+    }
+
+
+def fail_stale_pending_uploads(
+    db: Session, *, stale_after_minutes: int = 60, now: datetime | None = None
+) -> int:
+    """V16-018 §6：上传中断/Worker 崩溃的悬挂 PENDING_UPLOAD → FAILED（不可当证据）。"""
+    moment = now or datetime.now(UTC)
+    cutoff = moment - timedelta(minutes=max(1, int(stale_after_minutes)))
+    rows = list(
+        db.scalars(
+            select(RunArtifact).where(
+                RunArtifact.upload_status == ArtifactUploadStatus.PENDING_UPLOAD.value,
+                RunArtifact.created_at < cutoff,
+            )
+        )
+    )
+    for row in rows:
+        row.upload_status = ArtifactUploadStatus.FAILED.value
+        row.metadata_json = {
+            **(row.metadata_json or {}),
+            "upload_error": "STALE_PENDING_UPLOAD",
+            "failed_at": moment.isoformat(),
+        }
+        _audit_artifact_access(db, row, action="stale_failed")
+    db.flush()
+    return len(rows)
+
+
 def incompleteness_reasons(db: Session, run_id: str) -> list[str]:
     """Run 证据是否完整（AUD-008 §10：PENDING_UPLOAD 时 P0 不得汇总为 PASS）。"""
     rows = list(
@@ -268,6 +402,7 @@ def incompleteness_reasons(db: Session, run_id: str) -> list[str]:
                     [
                         ArtifactUploadStatus.PENDING_UPLOAD.value,
                         ArtifactUploadStatus.CORRUPTED.value,
+                        ArtifactUploadStatus.FAILED.value,
                     ]
                 ),
             )

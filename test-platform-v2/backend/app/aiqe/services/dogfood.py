@@ -27,7 +27,6 @@ from sqlalchemy.orm import Session
 
 from app.aiqe.models.run import NodeRun, TestRun
 from app.aiqe.redaction import assert_no_secret, redact_mapping
-from app.aiqe.security import upsert_target_policy
 from app.aiqe.services import dag_scheduler, node_executor, result_writer
 from app.aiqe.services.run_context import RunContext
 from app.aiqe.services.secret_vault import SecretVault, resolve_secret_handle
@@ -327,38 +326,22 @@ def run_dogfood(
     return reports
 
 
-def _ensure_target_policy(db: Session, config: DogfoodConfig) -> None:
-    from urllib.parse import urlsplit
+def _require_target_policy(db: Session, config: DogfoodConfig) -> str | None:
+    """V16-001：策略只能由管理员预先配置。
 
-    hosts: list[str] = []
-    for url in (config.base_url, config.admin_url):
-        if not url:
-            continue
-        host = urlsplit(url).hostname
-        if host:
-            hosts.append(host)
-    policy: dict[str, Any] = {
-        "allowed_hosts": sorted(set(hosts)),
-        "allowed_methods": ["GET", "POST", "PUT", "PATCH", "DELETE"],
-        "max_redirects": 0,
-    }
-    if config.allow_private_targets:
-        policy["allow_private_cidrs"] = ["127.0.0.0/8", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "::1/128"]
-    if config.base_url.startswith("http://"):
-        policy["allowed_ports"] = [80]
-    else:
-        policy["allowed_ports"] = [443]
-    ports = set(policy["allowed_ports"])
-    for url in (config.base_url, config.admin_url):
-        if not url:
-            continue
-        parsed = urlsplit(url)
-        if parsed.port:
-            ports.add(parsed.port)
-    policy["allowed_ports"] = sorted(ports)
-    upsert_target_policy(
-        db, project_id=config.project_id, environment_id=None, policy=policy, name="dogfood"
+    dogfood 不得在执行路径内自动 `upsert_target_policy`，尤其不得依据调用方
+    `allow_private_targets` 生成私网授权；缺少策略时返回拒绝原因（Run 直接 BLOCKED）。
+    """
+    from app.aiqe.security import PolicyDecision, resolve_execution_policy
+
+    policy = resolve_execution_policy(
+        db,
+        project_id=config.project_id,
+        environment_id=getattr(config, "environment_id", None),
     )
+    if policy.decision is not PolicyDecision.ALLOW:
+        return policy.reason_code or policy.decision.value
+    return None
 
 
 def _run_once(
@@ -369,7 +352,20 @@ def _run_once(
     vault: SecretVault | None,
     now: datetime | None,
 ) -> DogfoodReport:
-    _ensure_target_policy(db, config)
+    blocked_reason = _require_target_policy(db, config)
+    if blocked_reason:
+        # V16-001：无服务端策略不得执行任何节点（不降级、不自动授权）。
+        return DogfoodReport(
+            status="BLOCKED",
+            blocked_steps=[
+                {
+                    "node_key": "__target_policy__",
+                    "status": "BLOCKED",
+                    "error_class": blocked_reason,
+                }
+            ],
+            fixture_namespace=fixture_namespace,
+        )
     graph = build_sports_mixed_graph(config)
     run = TestRun(
         project_id=config.project_id,
@@ -480,7 +476,11 @@ def _run_once(
                 break
 
             dag_scheduler.mark_running(db, run.id, node.node_key)
-            result = node_executor.execute_node(node, db=db)
+            result = node_executor.execute_node(
+                node,
+                policy_context=node_executor.policy_context_for(db, node),
+                db=db,
+            )
             observation = result_writer.observation_from_payload(result.observation)
             mapped_status, mapped_error, outcomes = result_writer.evaluate_node_assertions(
                 db,

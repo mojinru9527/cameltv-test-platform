@@ -5,6 +5,7 @@ import pytest
 
 from app.aiqe.models.run import NodeRun, TestRun
 from app.aiqe.schemas.contracts import DriverResult
+from app.aiqe.services.secret_vault import SecretVault
 from app.aiqe.services.run_context import (
     RunContext,
     VariableResolutionError,
@@ -108,7 +109,7 @@ def test_non_ancestor_reference_blocked(db_session):
 def test_capture_outputs_jsonpath_and_schema(db_session):
     run = _run(db_session, "RUN-CTX-V2-5")
     node = _node(db_session, run.id, "A")
-    ctx = RunContext(db_session, run.id)
+    ctx = RunContext(db_session, run.id, vault=SecretVault(), project_id=run.project_id)
     result = DriverResult(
         driver_key="http",
         status="SUCCEEDED",
@@ -132,7 +133,7 @@ def test_capture_outputs_jsonpath_and_schema(db_session):
 def test_capture_outputs_schema_mismatch_blocks(db_session):
     run = _run(db_session, "RUN-CTX-V2-6")
     node = _node(db_session, run.id, "A")
-    ctx = RunContext(db_session, run.id)
+    ctx = RunContext(db_session, run.id, vault=SecretVault(), project_id=run.project_id)
     result = DriverResult(
         driver_key="http", status="SUCCEEDED", data={"json": {"id": "x"}}
     )

@@ -96,6 +96,25 @@ class RequestSizeLimitMiddleware:
 async def lifespan(application: FastAPI):
     import app.models  # noqa: F401
 
+    # V16-003 §10：所有日志（含异常堆栈）在格式化前统一脱敏。
+    from app.aiqe.security.log_redaction import install_log_redaction
+
+    install_log_redaction()
+
+    # V16-019：启动校验工具 allowlist 的实现绑定；缺失实现必须显式 UNAVAILABLE。
+    try:
+        from app.aiqe.services.tool_registry import validate_implementations
+
+        tool_report = validate_implementations()
+        application.state.aiqe_tool_report = tool_report
+        if tool_report["unavailable"]:
+            logger.warning(
+                "[aiqe] tools UNAVAILABLE（Plan 不得当作可用）: %s",
+                tool_report["unavailable"],
+            )
+    except Exception as exc:
+        logger.warning("[aiqe] tool registry 校验失败: %s", exc)
+
     # ── security validation (fail early in production) ──
     security_issues = settings.validate_security()
     if security_issues:
@@ -153,7 +172,7 @@ async def lifespan(application: FastAPI):
             "RAILWAY_RUN_UID=0 并重新部署；或先以 root 执行 chown -R 10001:10001 /app/storage。",
             exc,
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning("[storage] Lanhu evidence storage init failed: %s", exc)
 
     if settings.auto_create_tables:

@@ -248,6 +248,10 @@ def test_production_flag_allows_explicit_enable(db_session, monkeypatch):
         platforms=["linux"],
         evidence_ref="evidence://node-http",
     )
+    # V16-015：生产环境只接受 VERIFIED 能力；测试显式标记真实验收。
+    from app.aiqe.services.capability_registry import mark_verified
+
+    mark_verified(db_session, "node-http", platforms=["linux"], evidence_ref="evidence://node-http")
     row = _workflow(db_session)
     run = launch_run(
         db_session,

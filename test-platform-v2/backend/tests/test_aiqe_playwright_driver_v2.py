@@ -11,7 +11,20 @@ from app.aiqe.drivers.playwright_driver import (
     PlaywrightDriver,
 )
 from app.aiqe.schemas.contracts import DriverResult
+from app.aiqe.security.target_policy import PolicyDecision, TargetPolicy
 from app.aiqe.services import assertion_service
+
+
+def _allow_policy() -> TargetPolicy:
+    """V16-001：浏览器 Driver 只能由 ALLOW 策略构造。"""
+    return TargetPolicy(
+        project_id=1,
+        version=1,
+        source="test",
+        allowed_hosts=("example.com",),
+        allowed_ports=(443,),
+        decision=PolicyDecision.ALLOW,
+    )
 
 
 class FakeLocator:
@@ -158,6 +171,11 @@ class FakeContext:
     def __init__(self, page):
         self.page = page
         self.tracing = FakeTracing()
+        self.route_patterns: list[str] = []
+
+    def route(self, pattern, handler):
+        # V16-002：真实浏览器会安装全请求链拦截；fake 只记录注册顺序。
+        self.route_patterns.append(pattern)
 
     def new_page(self):
         return self.page
@@ -207,6 +225,7 @@ def driver(tmp_path):
     context = FakeContext(page)
     browser = FakeBrowser(context)
     drv = PlaywrightDriver(
+        policy=_allow_policy(),
         evidence_dir=tmp_path,
         playwright_factory=lambda: FakeCM(FakePlaywright(browser)),
     )

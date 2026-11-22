@@ -366,6 +366,12 @@ def test_missing_connection_reference_denied(db_session, monkeypatch):
 
 # ── 4. 节点执行器：只接受 query_key ────────────────────────
 def _seed_run_with_node(db, *, input_ref: dict) -> NodeRun:
+    from app.aiqe.security import upsert_target_policy
+
+    # V16-001：DB 节点同样必须有服务端策略；空 allowed_hosts 只授权 Query Registry。
+    upsert_target_policy(
+        db, project_id=1, environment_id=None, policy={"allowed_hosts": []}
+    )
     run = TestRun(project_id=1, run_key="RUN-AUD002", status="RUNNING")
     db.add(run)
     db.flush()
@@ -388,7 +394,11 @@ def test_node_executor_runs_registered_query(db_session, readonly_engine, monkey
         db_session,
         input_ref={"query_key": "verify_match_status", "params": {"match_id": 1}},
     )
-    outcome = node_executor.execute_node(node, db=db_session)
+    outcome = node_executor.execute_node(
+        node,
+        policy_context=node_executor.policy_context_for(db_session, node),
+        db=db_session,
+    )
     assert outcome.status == "PASSED", outcome
     assert outcome.detail["query_key"] == "verify_match_status"
     assert outcome.detail["summary"]["row_count"] == 1
@@ -406,20 +416,32 @@ def test_node_executor_runs_registered_query(db_session, readonly_engine, monkey
 )
 def test_node_executor_rejects_workflow_db_overrides(db_session, input_ref):
     node = _seed_run_with_node(db_session, input_ref=input_ref)
-    outcome = node_executor.execute_node(node, db=db_session)
+    outcome = node_executor.execute_node(
+        node,
+        policy_context=node_executor.policy_context_for(db_session, node),
+        db=db_session,
+    )
     assert outcome.status == "BLOCKED"
     assert outcome.error_class == "WORKFLOW_DB_OVERRIDE"
 
 
 def test_node_executor_requires_query_key(db_session):
     node = _seed_run_with_node(db_session, input_ref={"sql": "SELECT 1"})
-    outcome = node_executor.execute_node(node, db=db_session)
+    outcome = node_executor.execute_node(
+        node,
+        policy_context=node_executor.policy_context_for(db_session, node),
+        db=db_session,
+    )
     assert outcome.status == "BLOCKED"
     assert outcome.error_class == "INPUT_INVALID"
 
 
 def test_node_executor_unregistered_query_blocked(db_session):
     node = _seed_run_with_node(db_session, input_ref={"query_key": "missing"})
-    outcome = node_executor.execute_node(node, db=db_session)
+    outcome = node_executor.execute_node(
+        node,
+        policy_context=node_executor.policy_context_for(db_session, node),
+        db=db_session,
+    )
     assert outcome.status == "BLOCKED"
     assert outcome.error_class == "QUERY_NOT_REGISTERED"

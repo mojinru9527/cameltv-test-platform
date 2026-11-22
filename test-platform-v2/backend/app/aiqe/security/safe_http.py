@@ -134,6 +134,21 @@ class SafeHttpExecutor:
     # ── 公共入口 ────────────────────────────────────────────
     def request(self, request: SafeRequest, policy: TargetPolicy) -> SafeHttpResult:
         started = time.monotonic()
+        # V16-001：只有显式 ALLOW 决策才允许任何网络动作；其余决策一律拒绝，
+        # 且必须在创建 httpx.Client 之前返回。
+        decision = getattr(policy, "decision", None)
+        decision_value = str(getattr(decision, "value", decision or ""))
+        if decision_value != "ALLOW":
+            code = str(
+                getattr(policy, "reason_code", "")
+                or f"TARGET_POLICY_{decision_value or 'UNAVAILABLE'}"
+            )
+            return self._denied(
+                request,
+                policy,
+                TargetDenied(code, f"目标策略未授权（decision={decision_value or 'UNKNOWN'}）"),
+                started,
+            )
         method = (request.method or "GET").strip().upper()
         try:
             target = self._validator.validate(request.url, policy, method=method)
