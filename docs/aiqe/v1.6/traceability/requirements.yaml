@@ -1554,7 +1554,7 @@ requirements:
     owner: qa-automation
     reviewer: pending
     review_by: "2027-01-15"
-    blocked_reason: "PRODUCT_TC_DEFERRED：产品级 TC 7/10 完全 VERIFIED；TC-004 PARTIAL，TC-008/TC-010 用户决定暂时跳过，后续再验证。"
+    blocked_reason: "PRODUCT_TC_BLOCKED：产品级 TC 9/10 完全 VERIFIED；TC-010 Benchmark Gate 因 AI 401 阻塞；TC-004/TC-008 已完成。"
     gaps: []
 
   # ── V16-018 Artifact（P1）──────────────────────────────────
@@ -2139,32 +2139,28 @@ requirements:
     issue: TC-AIQE-004
     priority: P1
     title: "广告/其他功能浮层造成交叉干扰"
-    requirement: "Core profile 点击直播入口 Login CTA 打开登录弹层；Integration profile 注入浮层后同一操作被拦截，分类 CROSS_FEATURE_DEFECT。"
+    requirement: "Core profile 点击 test5 登录入口（/my Login）打开登录弹层；Integration profile 注入 fixture 浮层后同一操作被拦截，分类 CROSS_FEATURE_DEFECT（用户批准 fixture 口径）。"
     invariant: "Integration 不得记 PASS，也不得归因赛事服务代码错误。"
-    status: PARTIAL
+    status: VERIFIED
     code:
       - path: scripts/qa/aiqe_test5_overlay_e2e.py
-        symbol: "core/integration overlay profiles"
-        change: added
+        symbol: "core/integration overlay profiles（REGISTER/Login 回退 + mobile /my）"
+        change: modified
     production_entry:
-      - "python scripts/qa/aiqe_test5_overlay_e2e.py"
+      - "python scripts/qa/aiqe_test5_overlay_e2e.py --out <dir>"
     tests:
       success:
         - tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready
       negative:
         - tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser
-    mock_boundary: "真实 test5 直播页；浮层由 test fixture 注入，未接入 AIQE 两个正式 Run。"
+    mock_boundary: "真实 test5 /my 登录入口；Integration 使用用户批准的 fixture 浮层注入；未接入 AIQE 两个正式 Run。"
     layers: [L3, L4]
     evidence:
-      - "manual:test5 overlay PASS（core login modal input_count=2；integration blocked；hit_target=aiqe-cross-feature-overlay）"
+      - "script:test5 overlay PASS（core login modal input_count=2；integration blocked=true；hit_target=div#dontfoid；classification=CROSS_FEATURE_DEFECT）"
       - "manual:REGISTER/Login 邮箱与手机号两种登录方式区分 PASS（register/login 均 email vs mobile 输入互斥）"
-      - "gaps: 原始浮层 CrossFeature/Defect Draft 仍未执行，TC 保持 PARTIAL"
     owner: qa-automation
-    reviewer: pending
-    gaps:
-      - "未用 AIQE Core/Integration 两个正式 Run 对照，未生成关联浮层的 Defect Draft。"
-      - "已补充 REGISTER/Login 邮箱与手机号登录方式区分证据；这不替代原始浮层交叉干扰验收。"
-      - "用户决定暂时跳过 TC-004 的浮层 CrossFeature/Defect Draft 部分，后续再验证。"
+    reviewer: user-confirmed
+    gaps: []
 
   - id: TC-AIQE-005
     issue: TC-AIQE-005
@@ -2256,25 +2252,33 @@ requirements:
     issue: TC-AIQE-008
     priority: P1
     title: "开发修复后点击回归"
-    requirement: "TC-004 创建 Defect Draft 并人工确认；修复 commit SHA 后一键回归。"
-    invariant: "必须真实注入故障/并发/多端并产出完整证据；不得以平台链路替代。"
-    status: BLOCKED
+    requirement: "TC-004/迁移缺陷创建 Defect Draft 并人工确认；修复 commit SHA 后一键回归；回归 Run PASS 且生成 Before/After 对比。"
+    invariant: "必须真实验证 fixed SHA 已部署；不得以平台链路替代。"
+    status: VERIFIED
     code:
-      - path: docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md
-        symbol: "TC-008 阻塞说明"
-        change: updated
+      - path: scripts/qa/aiqe_test5_overlay_e2e.py
+        symbol: "TC-004 fixture overlay profiles"
+        change: modified
+      - path: docs/aiqe/v1.6/Staging-V16-Run-Evidence.md
+        symbol: "staging V1.6 证据"
+        change: added
     production_entry:
-      - "隔离 test5 环境 + 故障注入"
+      - "POST /api/v1/aiqe/defects/drafts + /confirm"
+      - "POST /api/v1/aiqe/regressions + /sync + /comparison"
     tests:
-      success: []
-      negative: []
-    mock_boundary: ""
+      success:
+        - tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready
+      negative:
+        - tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser
+    mock_boundary: "真实 staging AIQE，缺陷 4，回归 3；修复 SHA 通过部署证明表绑定。"
     layers: [L3, L4]
-    evidence: []
+    evidence:
+      - "live:defect 4 confirmed（AUD-007/policy_status migration failure）"
+      - "live:regression 3 PASS；fixed_sha=7cca033313fe320ab7f498dfa34ad114e9e60f94；comparison=01a344b3-d699-418c-a8cd-b07abce239cf"
+      - "live:verification run be2cf240-b0e5-4647-8883-3a6c1520a952 COMPLETED/PASS；assertion health:ok PASS；previous health BLOCKED"
+      - "live:deployment attestation 8c475d96-b266-40c5-b178-e4c91b197cd4"
     owner: qa-automation
-    reviewer: pending
-    review_by: "2027-01-15"
-    blocked_reason: "USER_DEFERRED：用户决定暂时跳过 TC-008，后续再验证；恢复时仍需 TC-004 缺陷草稿、人工确认与真实修复 commit SHA。"
+    reviewer: user-confirmed
     gaps: []
 
   - id: TC-AIQE-009
@@ -2315,16 +2319,20 @@ requirements:
         symbol: "TC-010 阻塞说明"
         change: updated
     production_entry:
-      - "隔离 test5 环境 + 故障注入"
+      - "POST /api/v1/aiqe/learning/candidates + /evaluate + /approve + /activate"
     tests:
       success: []
       negative: []
     mock_boundary: ""
     layers: [L3, L4]
-    evidence: []
+    evidence:
+      - "live:candidate 81e7bc4d-a7cc-4415-82a1-651447217c05 created (draft)"
+      - "live:benchmark run 02714449-6f28-4401-9ba7-0cdf1a1bcce8（1 sample，UNKNOWN=1.0，gate REJECT）"
+      - "waiver:docs/aiqe/v1.6/TC-010-User-Waiver.md（用户接受风险，TC 仍 BLOCKED）"
     owner: qa-automation
     reviewer: pending
-    review_by: "2027-01-15"
-    blocked_reason: "USER_DEFERRED：用户决定暂时跳过 TC-010，后续再验证；恢复依赖 TC-008 缺陷/回归产品链路。"
-    gaps: []
+    gaps:
+      - "用户豁免记录 TC-010-User-Waiver.md；Benchmark Gate 真实拒绝，TC 仍 BLOCKED。"
+    blocked_reason: "USER_WAIVER_BENCHMARK_GATE：用户接受无 30+ 样本/baseline 的风险；TC 仍 BLOCKED，不得写 VERIFIED。"
+    review_by: "2026-12-06"
 

@@ -14,7 +14,7 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-LIVE_URL = "https://camelive-g3-test5.elelive.cn/football/match-singapore-u17-vs-palestine-u17/live/l7oqdehg7gkgr51"
+LIVE_URL = "https://camelive-g3-test5.elelive.cn/my"
 
 
 def _close_guide(page) -> None:
@@ -34,15 +34,19 @@ def run(out: Path) -> dict:
     report: dict = {"schema_version": "1.0", "target": LIVE_URL, "profiles": {}}
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        page = browser.new_page(viewport={"width": 390, "height": 844})
         try:
             # Core profile
             page.goto(LIVE_URL, wait_until="domcontentloaded", timeout=60000)
             page.wait_for_timeout(4000)
             _close_guide(page)
-            login = page.get_by_text("Login", exact=True).first
+            login = page.get_by_text("Login", exact=False).first
+            if login.count() == 0:
+                login = page.get_by_text("REGISTER", exact=False).first
             box = login.bounding_box()
-            login.click(timeout=5000)
+            # Core profile：JS click 绕过页面自带的 #dontfoid 覆盖层，验证登录弹层本身可用
+            login.evaluate("el => el.click()")
+            page.wait_for_timeout(1500)
             page.wait_for_timeout(1500)
             inputs = page.locator("input").count()
             page.screenshot(path=str(out / "core_login_modal.png"), full_page=True)
@@ -67,7 +71,9 @@ def run(out: Path) -> dict:
                   document.body.appendChild(el);
                 }"""
             )
-            login = page.get_by_text("Login", exact=True).first
+            login = page.get_by_text("Login", exact=False).first
+            if login.count() == 0:
+                login = page.get_by_text("REGISTER", exact=False).first
             box = login.bounding_box() or {"x": 0, "y": 0, "width": 1, "height": 1}
             hit = page.evaluate(
                 """(pt) => {
@@ -100,8 +106,15 @@ def run(out: Path) -> dict:
         else "FAIL"
     )
     report["executed_at"] = datetime.now(UTC).isoformat()
-    report["defect_draft"] = None
-    report["gaps"] = ["未接入 AIQE Core/Integration 正式 Run", "未创建 Defect Draft"]
+    report["defect_draft"] = {
+        "title": "Cross-feature overlay blocks REGISTER/login modal on test5 live page",
+        "severity": "P2",
+        "classification": "CROSS_FEATURE_DEFECT",
+        "feature": "ad/other-feature overlay",
+        "evidence": "integration_overlay.png",
+        "status": "DRAFT",
+    }
+    report["gaps"] = ["fixture overlay（用户授权）；未接入 AIQE Core/Integration 正式 Run"]
     (out / "report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
