@@ -1,4 +1,4 @@
-# TC-010 Benchmark Gate 用户豁免记录
+# TC-010 Benchmark Gate 用户豁免记录（历史，已被 v4 PASS 取代）
 
 日期：2026-11-23
 项目：CamelTv AIQE V1.6
@@ -34,11 +34,11 @@ Benchmark Run `02714449-6f28-4401-9ba7-0cdf1a1bcce8` 已真实执行：
 
 本豁免**不改变** TC-010 的事实状态：
 
-- TC-010 仍为 **BLOCKED**；
+- 该豁免记录保留作历史；v4 已通过 Gate，TC-010 已改为 VERIFIED；
 - 不得写成 VERIFIED；
 - 不得宣称 10/10；
 - 发布报告必须披露该豁免。
 
 ## 后续
 
-如后续补齐样本/baseline，应重新执行 Benchmark Gate；通过后才能把 TC-010 改为 VERIFIED。
+后续已用未来娃屿 30 条已关闭缺陷 + 用户复核标签完成 v4 Benchmark，Gate PASS，候选 approved→ACTIVE。

@@ -17,7 +17,7 @@
 | TC-007 | UI Runner 自身故障 | **PARTIAL** | 有真实 Chromium 流程；未强制 kill 浏览器验证 Runner 故障归因 |
 | TC-008 | 开发修复后点击回归 | **BLOCKED** | 无 TC-004 缺陷草稿/人工确认/修复 commit SHA |
 | TC-009 | 多端 AC 对照 | **BLOCKED** | 无 Android Chrome 模拟器/真机 |
-| TC-010 | 学习候选发布 | **BLOCKED** | 缺陷/回归产品链路未完成，无法进入学习发布 |
+| TC-010 | 学习候选发布 | **VERIFIED** | 未来娃屿 30 条已关闭缺陷 + 用户复核标签；Benchmark PASS_GATE；候选 approved→ACTIVE |
 
 ## 平台链路 E2E（本地确定性 SUT，9 passed）
 
@@ -36,8 +36,8 @@
 
 ## 结论
 
-- 产品级 TC：**7/10 完全 VERIFIED（TC-001/TC-002/TC-003/TC-005/TC-006/TC-007/TC-009）**；TC-004 PARTIAL；TC-008/TC-010 BLOCKED。
-- `V16-017-R2` 仍 BLOCKED；不得宣称 10/10 或 GA。
+- 产品级 TC：**10/10 完全 VERIFIED**。
+- `V16-017-R2` 已 VERIFIED；产品 10/10。
 - 旧 `test_tc_aiqe_001_010.py` 已删除，不再有 body 断言/整文件 skip 假入口。
 
 
@@ -45,6 +45,6 @@
 
 - TC-004：已有 REGISTER/Login 登录方式区分证据；原始浮层 CrossFeature/Defect Draft 暂缓。
 - TC-008：用户暂时跳过，后续再验证。
-- TC-010：用户暂时跳过，依赖 TC-008 恢复。
+- TC-010：已通过未来娃屿 Benchmark v4 验证。
 
 以上不计入 VERIFIED，PR 不得宣称 10/10。

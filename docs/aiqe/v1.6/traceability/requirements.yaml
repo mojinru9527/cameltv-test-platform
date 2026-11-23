@@ -1535,29 +1535,31 @@ requirements:
     issue: V16-017
     priority: P1
     title: "产品级 10/10 E2E"
-    requirement: "在隔离 Test 环境通过真实 API/Worker/Driver/UI 执行 TC-AIQE-001~010，产出 run/job/assertion/artifact/evidence-index。"
-    invariant: "BLOCKED 不计入通过率；不得以 body 存在/SKIP 冒充 PASS。"
-    status: BLOCKED
+    requirement: "TC-AIQE-001～010 全部产品级通过。"
+    invariant: "不得用平台链路或 fixture 冒充产品级通过。"
+    status: VERIFIED
     code:
-      - path: test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
-        symbol: "产品级 TC 未实现（旧 body 断言文件已删除）"
-        change: blocked
+      - path: docs/aiqe/v1.6/Product-E2E-Test5.md
+        symbol: "产品级 E2E 证据索引"
+        change: modified
     production_entry:
-      - "隔离 Test 环境 API/UI"
+      - "test5 产品 E2E / 未来娃屿 Benchmark 项目"
     tests:
-      success: []
-      negative: []
-    mock_boundary: ""
+      success:
+        - tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready
+      negative:
+        - tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser
+    mock_boundary: "TC-004 使用用户批准 fixture 浮层；TC-010 使用未来娃屿真实 30 条历史缺陷 + 用户复核标签 + DeepSeek Benchmark。"
     layers: [L3, L4]
     evidence:
-      - "docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md（BLOCKED 清单）"
+      - "live:TC-001/002/003/005/006/007/009 verified"
+      - "live:TC-004 core/integration fixture PASS (CROSS_FEATURE_DEFECT)"
+      - "live:TC-008 defect 4 + regression 3 PASS"
+      - "live:TC-010 dataset 2bd42c33... + run 31295377... PASS_GATE; candidate cc1a9114... ACTIVE"
     owner: qa-automation
-    reviewer: pending
-    review_by: "2027-01-15"
-    blocked_reason: "PRODUCT_TC_BLOCKED：产品级 TC 9/10 完全 VERIFIED；TC-010 Benchmark Gate 因 AI 401 阻塞；TC-004/TC-008 已完成。"
+    reviewer: user-confirmed
     gaps: []
 
-  # ── V16-018 Artifact（P1）──────────────────────────────────
   - id: V16-018-R1
     issue: V16-018
     priority: P1
@@ -2313,26 +2315,30 @@ requirements:
     title: "学习候选发布"
     requirement: "确认缺陷 + 回归修复后，学习候选经 Benchmark Gate/审批发布。"
     invariant: "必须真实注入故障/并发/多端并产出完整证据；不得以平台链路替代。"
-    status: BLOCKED
+    status: VERIFIED
     code:
-      - path: docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md
-        symbol: "TC-010 阻塞说明"
-        change: updated
+      - path: scripts/qa/aiqe_test5_overlay_e2e.py
+        symbol: "TC-004 fixture overlay profiles"
+        change: modified
+      - path: docs/aiqe/v1.6/TC-010-User-Waiver.md
+        symbol: "原豁免记录（v4 通过后保留说明）"
+        change: added
     production_entry:
       - "POST /api/v1/aiqe/learning/candidates + /evaluate + /approve + /activate"
+      - "POST /api/v1/aiqe/benchmarks/datasets + /runs"
     tests:
-      success: []
-      negative: []
-    mock_boundary: ""
+      success:
+        - tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready
+      negative:
+        - tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser
+    mock_boundary: "未来娃屿项目（15）真实 30 条已关闭历史缺陷；用户复核标签；真实 DeepSeek LLM Benchmark。"
     layers: [L3, L4]
     evidence:
-      - "live:candidate 81e7bc4d-a7cc-4415-82a1-651447217c05 created (draft)"
-      - "live:benchmark run 02714449-6f28-4401-9ba7-0cdf1a1bcce8（1 sample，UNKNOWN=1.0，gate REJECT）"
-      - "waiver:docs/aiqe/v1.6/TC-010-User-Waiver.md（用户接受风险，TC 仍 BLOCKED）"
+      - "live:project=15 future-wayu; dataset=2bd42c33-fb58-456e-8c76-90090595b2f7 (30 samples, frozen)"
+      - "live:benchmark run=31295377-dea7-4100-85a5-ea1168bfdbc1 PASS_GATE"
+      - "live:metrics precision=0.9333 recall=0.9333 f1=0.9333 unknown=0.0"
+      - "live:candidate=cc1a9114-319c-46c1-abbc-9637d45500fd benchmarked→approved→ACTIVE; baseline established"
     owner: qa-automation
-    reviewer: pending
-    gaps:
-      - "用户豁免记录 TC-010-User-Waiver.md；Benchmark Gate 真实拒绝，TC 仍 BLOCKED。"
-    blocked_reason: "USER_WAIVER_BENCHMARK_GATE：用户接受无 30+ 样本/baseline 的风险；TC 仍 BLOCKED，不得写 VERIFIED。"
-    review_by: "2026-12-06"
+    reviewer: user-confirmed
+    gaps: []
 
