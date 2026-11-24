@@ -45,14 +45,23 @@
 | 平台链路 E2E | `pytest tests/e2e/aiqe/test_v16_017_*.py` | 10 passed（结果已归档） |
 | Branch Protection | `check_branch_protection.py --check` | **预期失败**（需 GitHub 权限采集） |
 
-## 4. 未完成（后续批次）
+## 4. 第二轮补充（2026-11-24 晚）
 
-1. **A5 服务端重算**：Regression API 仍接受调用方 `impact_analysis`（仅 checksum/catalog 校验）；
-   A5 已能通过 ToolExecutor 读取真实 `read_git_diff`，但服务端重算 + 绑定仍待做。
-2. **产品级 TC-AIQE-001..010**：需隔离 Test 环境按 merged spec §20 重跑并归档产物。
-3. **独立验收**：70 条需求需要非原作者 Reviewer + `acceptance.artifact`。
-4. **Gate G**：需要 GitHub 仓库权限执行
+| 审计项 | 处理 | 验证 |
+|---|---|---|
+| 19/17：A5 必须服务端重算，不能只收调用方 impact_analysis | `create_regression_request(impact_base_sha=...)`：服务端 `compute_impact_analysis` 从真实 Git diff 重算；调用方 checksum 不一致 → `IMPACT_ANALYSIS_MISMATCH`；非法 base SHA → `IMPACT_ANALYSIS_UNCOMPUTABLE`；`environment_snapshot.impact_analysis.source` 记录 server/caller | `tests/test_aiqe_v16_014_catalog_scope.py` 9 passed（含 4 条新增） |
+| TC-005 危险请求必须证明“目标 0 请求” | 增加可到达但不在 allowlist 的受控目标（localhost），断言节点 BLOCKED 且目标计数器 0 | 平台 E2E 10 passed |
+| TC-009 E1–E6 故障归类可追溯 | 增加 `sync_experiment_result` 终态收敛、`changed_dimension` 对照、仅 COMPLETED 可记录 SUPPORTED/REFUTED；UNKNOWN 记录结论抛错 | 平台 E2E 10 passed |
+| TC-006 已知 flaky | 去掉对 `handles[0]` 插入顺序的依赖（按 created_at/id 排序 + scope 匹配）；`_launch` 改为 3 轮真实 claim 轮询（仍禁止人工 fallback） | 连续 3 次 10 passed |
+
+## 5. 未完成（后续批次）
+
+1. **产品级 TC-AIQE-001..010**：需隔离 Test 环境按 merged spec §20 重跑并归档产物。
+2. **独立验收**：70 条需求需要非原作者 Reviewer + `acceptance.artifact`。
+3. **Gate G**：需要 GitHub 仓库权限执行
    `check_branch_protection.py --capture`，再重算 verdict。
-5. **Gate F**：镜像重建 digest/SBOM、干净节点部署、PG 备份恢复/Vault 生产/告警原始日志。
-6. **已知 flaky**：`test_tc_006_secret_chain_no_plaintext` 在整套运行时曾出现 1 次失败
-   （单文件/重复运行均通过），与旧 GA 报告记录的 JWT 时序 flaky 同类，需按 P1 定位，不得重跑掩盖。
+4. **Gate F**：镜像重建 digest/SBOM、干净节点部署、PG/Vault/告警原始日志。
+5. **A5 剩余**：`create_regression_plan` 写工具仍 UNAVAILABLE（需审批与副作用门禁），
+   A5 自动生成回归计划并调用 Regression API 的端到端链路尚未打通。
+6. **TC-006 flaky 观察**：已消除已知顺序/时序假设，连续 3 次通过；若再次出现需抓取
+   失败时的 handle/scope/事件快照，不得以重跑掩盖。
