@@ -1,0 +1,202 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "platform-chain-e2e",
+  "generated_at": "2026-11-24T13:32:07.493945+00:00",
+  "commit_sha": "045b000265556b99bacb3b8a3957aeaaf83673b4",
+  "ci_run": "local",
+  "environment": "local-20261124",
+  "tests": [
+    {
+      "tc_id": "TC-PLATFORM-001",
+      "status": "PASS",
+      "blocked_reason": "",
+      "duration_ms": 0,
+      "driver_image_digest": "",
+      "run_id": "ff712e3d-7c84-4bee-9906-2663839be0f0",
+      "project_id": 1,
+      "workflow_snapshot_hash": "3ebd0e4727eb3ae00f40c95134479c262581c6da8e554069fd2d0a2fd6c56639",
+      "job_ids": [
+        "1"
+      ],
+      "node_run_ids": [
+        "cb0527f3-a150-454d-8206-e0e033f57098"
+      ],
+      "assertion_ids": [
+        "d3ace405-6481-4c0a-a367-6b2d522a3d57"
+      ],
+      "artifact_refs": [
+        "5a6921cb-3afd-4609-9c2e-07f623500af0",
+        "07ed10a0-f08e-4ed3-9ade-13077ee4ce26"
+      ],
+      "run_status": "COMPLETED",
+      "run_outcome": "FAIL"
+    },
+    {
+      "tc_id": "TC-PLATFORM-002",
+      "status": "PASS",
+      "blocked_reason": "",
+      "duration_ms": 0,
+      "driver_image_digest": "",
+      "run_id": "50a6915f-d766-4340-af23-fcbfe8aedea8",
+      "project_id": 1,
+      "workflow_snapshot_hash": "c2ef96251679f1dea047e6d7b986d08c7e1ffb863c786a38ba9ee013b6a1cc42",
+      "job_ids": [
+        "1"
+      ],
+      "node_run_ids": [
+        "b51a4e70-a7e6-4e0f-abdb-9a7f36644f5d"
+      ],
+      "assertion_ids": [
+        "aee507a9-67e8-4b6d-a3a4-d2c41cab70f8"
+      ],
+      "artifact_refs": [
+        "debe76ad-1402-4d40-9dec-f148a6b2b741"
+      ],
+      "run_status": "COMPLETED",
+      "run_outcome": "PASS"
+    },
+    {
+      "tc_id": "TC-PLATFORM-003",
+      "status": "BLOCKED",
+      "blocked_reason": "策略阻断发生在断言执行前，无 AssertionResult（负向场景按 BLOCKED 记录）",
+      "duration_ms": 0,
+      "driver_image_digest": "",
+      "run_id": "7c925e0a-10e8-451c-b075-707a9e843d98",
+      "project_id": 1,
+      "workflow_snapshot_hash": "55f6b93065860b7350ae979d90550bd389e913e3d1df41221a48554f246a7810",
+      "job_ids": [
+        "1"
+      ],
+      "node_run_ids": [
+        "be7fb5cf-9da7-4a74-a09a-3b3c6880f6b5"
+      ],
+      "assertion_ids": [
+        "656d3208-4ea6-4fe5-94df-0c0f41d3cb80"
+      ],
+      "artifact_refs": [],
+      "run_status": "COMPLETED",
+      "run_outcome": "INCOMPLETE"
+    },
+    {
+      "tc_id": "TC-PLATFORM-004",
+      "status": "NOT_RUN",
+      "blocked_reason": "fencing 负向场景：迟到结果被拒绝，无完整 Run/Assertion 链路结果可计 PASS",
+      "duration_ms": 0,
+      "driver_image_digest": "",
+      "run_id": "1a915e76-e016-41a2-b87e-8d262c54159c",
+      "project_id": 1,
+      "workflow_snapshot_hash": "82732378c3d07248f8d03ba8eb8129d4c599855470bad8ea4d86d383a4178f2c",
+      "job_ids": [
+        "1"
+      ],
+      "node_run_ids": [
+        "3af0604a-b729-4867-ab7f-17590b1d09d9"
+      ],
+      "assertion_ids": [],
+      "artifact_refs": [],
+      "run_status": "RUNNING",
+      "run_outcome": ""
+    },
+    {
+      "tc_id": "TC-PLATFORM-005",
+      "status": "PASS",
+      "blocked_reason": "",
+      "duration_ms": 0,
+      "driver_image_digest": "",
+      "run_id": "c9fe8696-e48c-463c-9ec6-b8042ac30335",
+      "project_id": 1,
+      "workflow_snapshot_hash": "c4b138a6a8d21edad74babcb6d3d6f94a6172eb573c936a9d6289009561e5dda",
+      "job_ids": [
+        "2"
+      ],
+      "node_run_ids": [
+        "88238adb-e255-49f0-a6e9-b6b6f1193e64"
+      ],
+      "assertion_ids": [
+        "c85ddcd1-1574-49d8-b990-61676c82e794"
+      ],
+      "artifact_refs": [
+        "a47bd5a5-46e8-43bf-b9ff-67d2ede27d10",
+        "e1b67871-ab4f-4291-8927-5fd6591e01b2"
+      ],
+      "run_status": "COMPLETED",
+      "run_outcome": "PASS"
+    },
+    {
+      "tc_id": "TC-PLATFORM-006",
+      "status": "PASS",
+      "blocked_reason": "",
+      "duration_ms": 0,
+      "driver_image_digest": "",
+      "run_id": "1689f45e-e329-4db5-a638-6c9b2b532b97",
+      "project_id": 1,
+      "workflow_snapshot_hash": "63b8dd09b94c86a73d47bcbd05675a7406be3e3bf1281ef6ee5a2f7c2e2068cc",
+      "job_ids": [
+        "1",
+        "2"
+      ],
+      "node_run_ids": [
+        "33893563-5382-42ca-8921-97a88a09fb07",
+        "64e04599-ecc4-4882-a1f8-368e55cb8b31"
+      ],
+      "assertion_ids": [
+        "0eac3a9c-9cab-4be3-be00-5ef172cac17b",
+        "60bffc1b-5839-4a80-a54a-4647a40194a0"
+      ],
+      "artifact_refs": [
+        "7bd365a7-5a58-441f-89b3-6d1d2e1eca91",
+        "38613806-b874-4975-b9ce-81df539944ac",
+        "af9c4354-94c7-49ed-8a27-faaae1c6acdd",
+        "d7370ceb-8882-450a-a55f-4128e9082692"
+      ],
+      "run_status": "COMPLETED",
+      "run_outcome": "PASS"
+    },
+    {
+      "tc_id": "TC-PLATFORM-007",
+      "status": "PASS",
+      "blocked_reason": "",
+      "duration_ms": 0,
+      "driver_image_digest": "",
+      "run_id": "edcbf00f-f479-4cd5-ab5c-5ec5a066ecd9",
+      "project_id": 1,
+      "workflow_snapshot_hash": "6709b540dde39464d1dd378c5f35dc29e3b42fbc1460336533aa178aca64a910",
+      "job_ids": [
+        "1"
+      ],
+      "node_run_ids": [
+        "3604d26f-0627-45d1-8782-a49bc556dab3"
+      ],
+      "assertion_ids": [
+        "80d83bba-16cc-4f96-a077-2ce373d457c9"
+      ],
+      "artifact_refs": [
+        "b9be5048-6491-417c-b7a0-a06d7e42121c",
+        "86261abb-10d1-4671-97e9-fc74e9661a7c"
+      ],
+      "run_status": "COMPLETED",
+      "run_outcome": "PASS"
+    },
+    {
+      "tc_id": "TC-PLATFORM-008",
+      "status": "BLOCKED",
+      "blocked_reason": "browser 节点由外部 Runner 执行；本用例覆盖 node_executor→PlaywrightDriver，未产生 TestRun，故不计入运行证据索引 PASS",
+      "duration_ms": 0,
+      "driver_image_digest": ""
+    },
+    {
+      "tc_id": "TC-PLATFORM-009",
+      "status": "NOT_RUN",
+      "blocked_reason": "AgentTask 链路不产生 TestRun，无法计入需要 Run/Job/Assertion ID 的运行证据索引",
+      "duration_ms": 0,
+      "driver_image_digest": ""
+    },
+    {
+      "tc_id": "TC-PLATFORM-010",
+      "status": "NOT_RUN",
+      "blocked_reason": "Contract Service 平台行为测试，无 TestRun/UI/DB 链路，不能计为产品 TC-001 运行证据",
+      "duration_ms": 0,
+      "driver_image_digest": ""
+    }
+  ]
+}
