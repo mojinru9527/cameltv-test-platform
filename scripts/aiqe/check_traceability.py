@@ -822,6 +822,7 @@ PR_REQUIRED_FIELDS = (
     "拒绝/失败路径测试",
     "证据",
     "Reviewer",
+    "Reviewer 角色域",
 )
 PR_PLACEHOLDER_TOKENS = ("例如", "<!--", "path::test_name", "请填写", "todo", "tbd")
 
@@ -861,7 +862,11 @@ def _validate_pr_fields(body: str, report: Report, *, pr_author: str) -> None:
         if any(token in value for token in PR_PLACEHOLDER_TOKENS) or lowered in {"...", "…", "-"}:
             report.error(f"PR 字段仍是占位符: {matched_key} = {value!r}")
             continue
-        if len(value) < 8 and required not in {"Reviewer"}:
+        if len(value) < 8 and required not in {
+            "Reviewer",
+            "Reviewer 角色域",
+            "Issue / Requirement ID",
+        }:
             report.error(f"PR 字段内容过短: {matched_key} = {value!r}")
     _, evidence_value_raw = _find_field(fields, "证据")
     evidence_value = evidence_value_raw.strip()
@@ -883,6 +888,15 @@ def _validate_pr_fields(body: str, report: Report, *, pr_author: str) -> None:
         for token in re.split(r"[,，;\s]+", value):
             if "::" in token:
                 _parse_test_ref(token, report, issue_id=f"PR:{key}")
+    _, role_raw = _find_field(fields, "Reviewer 角色域")
+    reviewer_role = role_raw.strip().lower()
+    if reviewer_role:
+        roles = load_role_matrix()
+        known_roles = set(roles["reviewers"].values()) | set(roles["owners"].values())
+        if reviewer_role not in known_roles:
+            report.error(
+                f"PR Reviewer 角色域非法: {reviewer_role!r}（允许 {sorted(known_roles)}）"
+            )
 
 
 def _pr_mode(
@@ -909,6 +923,22 @@ def _pr_mode(
                 if issue_id not in body:
                     report.error(f"PR 描述未声明要求追踪的 issue: {issue_id}")
             _validate_pr_fields(body, report, pr_author=str(args.pr_author or ""))
+            fields = _parse_pr_fields(body)
+            _, role_value = _find_field(fields, "Reviewer 角色域")
+            reviewer_role = role_value.strip().lower()
+            if reviewer_role:
+                roles = load_role_matrix()
+                owner_roles = {
+                    roles["owners"].get(str(entry.get("owner") or ""))
+                    for entry in entries
+                    if str(entry.get("issue")) in issue_ids
+                }
+                owner_roles.discard(None)
+                if owner_roles and owner_roles == {reviewer_role}:
+                    report.error(
+                        "PR Reviewer 角色域与受影响需求 owner 角色域相同，不构成独立验收 "
+                        f"(role={reviewer_role!r})"
+                    )
     if args.changed_files:
         changed_path = Path(args.changed_files)
         if not changed_path.exists():

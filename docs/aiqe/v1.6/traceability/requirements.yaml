@@ -630,14 +630,20 @@ requirements:
   - L2
   evidence:
   - pytest:tests/test_aiqe_v16_004_readonly_db.py (2 passed)
+  - script:scripts/aiqe/check_pg_readonly_role.py (no dsn -> NOT_PROVEN)
+  - artifact:docs/aiqe/v1.6/evidence/pg-readonly-role.json
   owner: security
   reviewer: pending
   gaps:
-  - 当前用 SQLite mode=ro 验证 DB 级拒绝；生产 PostgreSQL 只读 role/账号创建仍由运维执行并需在 staging 复验。
+  - SQLite mode=ro 只证明连接级拒绝；生产 PostgreSQL 只读 role/账号尚未验证（evidence/pg-readonly-role.json = NOT_PROVEN，Gate B 因此 evidence=NOT_PROVEN）。
   acceptance:
     status: NOT_REVIEWED
     reviewed_at: null
     artifact: null
+  runtime_evidence:
+    status: NOT_PROVEN
+    artifacts: []
+    note: SQLite mode=ro 已自动化；生产 PostgreSQL 只读 role 需运维创建后用 scripts/aiqe/check_pg_readonly_role.py 实测并写入 evidence/pg-readonly-role.json。
 - id: V16-005-R1
   issue: V16-005
   priority: P1

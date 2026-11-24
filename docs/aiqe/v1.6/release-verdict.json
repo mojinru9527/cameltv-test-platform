@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-24T13:55:01.210147+00:00",
+  "generated_at": "2026-11-24T13:58:35.523927+00:00",
   "release": "aiqe-v1.6",
-  "commit_sha": "dc87d57ed1109d1489c0e1f5f9bc89e580b600af",
+  "commit_sha": "4bf4b5b6a2e1d73045555ee53b4884fafd935fd9",
   "baseline_release_commit": "9bbbdbb2026bada5c016d663780e03d62fca940d",
   "migration_head": "20261122_v16_catalog_post_merge",
   "summary": {
@@ -12,7 +12,7 @@
     "partial": 12,
     "blocked": 0,
     "independent_reviews": 0,
-    "runtime_not_proven": 16,
+    "runtime_not_proven": 17,
     "product_tc_pass": 0,
     "product_tc_total": 10
   },
@@ -32,12 +32,15 @@
       "gate": "B",
       "title": "安全边界",
       "status": "NOT_PROVEN",
-      "evidence": "PASS",
+      "evidence": "NOT_PROVEN",
       "acceptance": "PENDING",
       "reasons": [
-        "独立验收未完成: V16-001-R1, V16-001-R2, V16-001-R3, V16-001-R4, V16-001-R5, V16-002-R1, V16-002-R2, V16-002-R3, V16-003-R1, V16-003-R2, V16-003-R3, V16-003-R4, V16-004-R1, V16-004-R2, V16-004-R3"
+        "独立验收未完成: V16-001-R1, V16-001-R2, V16-001-R3, V16-001-R4, V16-001-R5, V16-002-R1, V16-002-R2, V16-002-R3, V16-003-R1, V16-003-R2, V16-003-R3, V16-003-R4, V16-004-R1, V16-004-R2, V16-004-R3",
+        "PostgreSQL 只读角色未验证: 尚无真实 PostgreSQL 只读角色验证：SQLite mode=ro 不能替代生产 PG role。请运维创建只读账号后运行 python scripts/aiqe/check_pg_readonly_role.py --check --dsn <dsn> 覆盖本文件。"
       ],
-      "artifacts": []
+      "artifacts": [
+        "docs\\aiqe\\v1.6\\evidence\\pg-readonly-role.json"
+      ]
     },
     "C": {
       "gate": "C",
@@ -110,6 +113,7 @@
   "ga_status": "GA_NOT_READY",
   "blocking": [
     "Gate B: 独立验收未完成: V16-001-R1, V16-001-R2, V16-001-R3, V16-001-R4, V16-001-R5, V16-002-R1, V16-002-R2, V16-002-R3, V16-003-R1, V16-003-R2, V16-003-R3, V16-003-R4, V16-004-R1, V16-004-R2, V16-004-R3",
+    "Gate B: PostgreSQL 只读角色未验证: 尚无真实 PostgreSQL 只读角色验证：SQLite mode=ro 不能替代生产 PG role。请运维创建只读账号后运行 python scripts/aiqe/check_pg_readonly_role.py --check --dsn <dsn> 覆盖本文件。",
     "Gate C: 独立验收未完成: V16-005-R1, V16-005-R2, V16-005-R3, V16-006-R1, V16-006-R2, V16-007-R1, V16-007-R2, V16-008-R1, V16-008-R2, V16-008-R3, V16-008-R4, V16-009-R1, V16-009-R2",
     "Gate D: 独立验收未完成: V16-010-R1, V16-010-R2, V16-011-R1, V16-012-R1, V16-012-R2, V16-012-R3, V16-013-R1, V16-013-R2, V16-013-R3, V16-014-R1, V16-014-R2, V16-019-R1, V16-019-R2, V16-019-R3",
     "Gate E: 产品级 TC PASS 0/10；其余仅现场记录或未执行",
@@ -124,7 +128,8 @@
     "branch_protection": "docs\\aiqe\\v1.6\\governance\\branch-protection.json",
     "production_evidence": "docs\\aiqe\\v1.6\\governance\\production-evidence.json",
     "platform_results": "docs\\aiqe\\v1.6\\e2e\\platform-results.json",
-    "runtime_evidence_index": "docs\\aiqe\\v1.6\\evidence\\evidence-index.json"
+    "runtime_evidence_index": "docs\\aiqe\\v1.6\\evidence\\evidence-index.json",
+    "pg_readonly_role": "docs\\aiqe\\v1.6\\evidence\\pg-readonly-role.json"
   },
   "traceability": {
     "strict_validation": true,

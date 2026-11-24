@@ -41,6 +41,7 @@ VERDICT_JSON = DOCS / "release-verdict.json"
 TRACEABILITY_SNAPSHOT = DOCS / "traceability/matrix-snapshot.json"
 PLATFORM_RESULTS = DOCS / "e2e/platform-results.json"
 RUNTIME_EVIDENCE_INDEX = DOCS / "evidence/evidence-index.json"
+PG_READONLY_EVIDENCE = DOCS / "evidence/pg-readonly-role.json"
 BRANCH_PROTECTION = DOCS / "governance/branch-protection.json"
 PRODUCTION_EVIDENCE = DOCS / "governance/production-evidence.json"
 
@@ -253,6 +254,25 @@ def build_verdict() -> dict[str, Any]:
     for key in ("B", "C", "D"):
         gates[key] = requirement_gate(key)
 
+    # Gate B 补充：PostgreSQL 只读角色必须有真实 PG 证据（SQLite mode=ro 不算）。
+    pg_evidence = _load_json(PG_READONLY_EVIDENCE)
+    if pg_evidence is None:
+        gates["B"].reasons.append(
+            "缺少 docs/aiqe/v1.6/evidence/pg-readonly-role.json（真实 PG 只读角色未验证）"
+        )
+    else:
+        gates["B"].artifacts.append(str(PG_READONLY_EVIDENCE.relative_to(ROOT)))
+        pg_status = str(pg_evidence.get("status") or "").upper()
+        if pg_status == FAIL:
+            gates["B"].evidence = FAIL
+        elif pg_status != PASS:
+            gates["B"].evidence = NOT_PROVEN
+        if pg_status != PASS:
+            gates["B"].reasons.append(
+                "PostgreSQL 只读角色未验证: "
+                + str(pg_evidence.get("reason") or pg_evidence.get("error") or pg_status)
+            )
+
     # ---------------- Gate E：真实 E2E ----------------
     gate_e = Gate("E", GATE_TITLES["E"])
     product_tcs = [entry for entry in entries if str(entry.get("id", "")).startswith("TC-AIQE-")]
@@ -409,6 +429,9 @@ def build_verdict() -> dict[str, Any]:
             ),
             "runtime_evidence_index": (
                 str(RUNTIME_EVIDENCE_INDEX.relative_to(ROOT)) if runtime_index is not None else None
+            ),
+            "pg_readonly_role": (
+                str(PG_READONLY_EVIDENCE.relative_to(ROOT)) if pg_evidence is not None else None
             ),
         },
         "traceability": {

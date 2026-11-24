@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "pg-readonly-role-verification",
+  "generated_at": null,
+  "status": "NOT_PROVEN",
+  "reason": "尚无真实 PostgreSQL 只读角色验证：SQLite mode=ro 不能替代生产 PG role。请运维创建只读账号后运行 python scripts/aiqe/check_pg_readonly_role.py --check --dsn <dsn> 覆盖本文件。",
+  "dsn": "",
+  "checks": []
+}

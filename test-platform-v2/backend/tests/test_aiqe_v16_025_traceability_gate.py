@@ -489,7 +489,8 @@ def test_pr_mode_rejects_placeholder_fields(checker, tmp_path):
         "成功路径测试：tests/test_aiqe_v16_001_policy_fail_closed.py::test_policy_decision_four_states\n"
         "拒绝/失败路径测试：tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_run_without_policy_record\n"
         "证据（commit SHA / CI Run / 测试报告 / Run ID / Job ID / Artifact ID）：commit:09140401f\n"
-        "Reviewer（非原实现者）：qa-lead\n",
+        "Reviewer（非原实现者）：qa-lead\n"
+        "Reviewer 角色域（须与 owner 不同）：qa\n",
         encoding="utf-8",
     )
     assert checker.main(["--matrix", str(matrix), "--issue", "V16-001", "--pr-body", str(body)]) == 1
@@ -508,7 +509,8 @@ def test_pr_mode_accepts_complete_fields(checker, tmp_path):
         "成功路径测试：tests/test_aiqe_v16_001_policy_fail_closed.py::test_policy_decision_four_states\n"
         "拒绝/失败路径测试：tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_run_without_policy_record\n"
         "证据（commit SHA / CI Run / 测试报告 / Run ID / Job ID / Artifact ID）：commit:09140401f\n"
-        "Reviewer（非原实现者）：qa-lead\n",
+        "Reviewer（非原实现者）：qa-lead\n"
+        "Reviewer 角色域（须与 owner 不同）：qa\n",
         encoding="utf-8",
     )
     assert checker.main(["--matrix", str(matrix), "--issue", "V16-001", "--pr-body", str(body)]) == 0
@@ -527,7 +529,8 @@ def test_pr_mode_rejects_author_as_reviewer(checker, tmp_path):
         "成功路径测试：tests/test_aiqe_v16_001_policy_fail_closed.py::test_policy_decision_four_states\n"
         "拒绝/失败路径测试：tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_run_without_policy_record\n"
         "证据（commit SHA / CI Run / 测试报告 / Run ID / Job ID / Artifact ID）：commit:09140401f\n"
-        "Reviewer（非原实现者）：@mojinru9527\n",
+        "Reviewer（非原实现者）：@mojinru9527\n"
+        "Reviewer 角色域（须与 owner 不同）：qa\n",
         encoding="utf-8",
     )
     assert (
@@ -567,3 +570,41 @@ def test_emit_markdown(checker, tmp_path):
     assert "需求—代码—正式入口—测试—证据矩阵" in text
     assert "V16-001-R1" in text
     assert "acceptance" in text.lower() or "独立验收" in text
+
+
+def _pr_body(role: str) -> str:
+    return (
+        "# PR\n"
+        "Issue / Requirement ID：V16-001\n"
+        "业务结果（用户可观察）：策略缺失时节点阻塞\n"
+        "正式入口（API / Worker / Job / CLI）：job_consumer.run_job\n"
+        "调用链（入口到 Driver/Assertion/Finalize）：job -> policy\n"
+        "真实组件与 Mock 边界：真实 SQLite，无 Mock\n"
+        "成功路径测试：tests/test_aiqe_v16_001_policy_fail_closed.py::test_policy_decision_four_states\n"
+        "拒绝/失败路径测试：tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_run_without_policy_record\n"
+        "证据（commit SHA / CI Run / 测试报告 / Run ID / Job ID / Artifact ID）：commit:09140401f\n"
+        "Reviewer（非原实现者）：qa-lead\n"
+        f"Reviewer 角色域（须与 owner 不同）：{role}\n"
+    )
+
+
+def test_pr_mode_rejects_same_role_domain(checker, tmp_path):
+    # owner backend-security → engineering；reviewer 角色域同为 engineering 不独立
+    matrix = _write_matrix(tmp_path / "matrix.yaml", [_base_entry()])
+    body = tmp_path / "pr.md"
+    body.write_text(_pr_body("engineering"), encoding="utf-8")
+    assert checker.main(["--matrix", str(matrix), "--issue", "V16-001", "--pr-body", str(body)]) == 1
+
+
+def test_pr_mode_rejects_unknown_role_domain(checker, tmp_path):
+    matrix = _write_matrix(tmp_path / "matrix.yaml", [_base_entry()])
+    body = tmp_path / "pr.md"
+    body.write_text(_pr_body("wizard"), encoding="utf-8")
+    assert checker.main(["--matrix", str(matrix), "--issue", "V16-001", "--pr-body", str(body)]) == 1
+
+
+def test_pr_mode_accepts_independent_role_domain(checker, tmp_path):
+    matrix = _write_matrix(tmp_path / "matrix.yaml", [_base_entry()])
+    body = tmp_path / "pr.md"
+    body.write_text(_pr_body("qa"), encoding="utf-8")
+    assert checker.main(["--matrix", str(matrix), "--issue", "V16-001", "--pr-body", str(body)]) == 0

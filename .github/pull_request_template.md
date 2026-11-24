@@ -67,6 +67,8 @@ tags: ["template", "pull-request", "code-review"]
 - 迁移影响（迁移文件、回滚/前滚方案）：
 - 证据（commit SHA / CI Run / 测试报告 / Run ID / Job ID / Artifact ID）：
 - Reviewer（非原实现者）：<!-- 自测不能替代独立验收 -->
+- Reviewer 角色域（须与 owner 不同）：<!-- engineering / qa / security / platform / ops / ai / leadership / user；见 docs/aiqe/v1.6/governance/review-roles.yaml -->
+- 独立验收记录（如本 PR 触发 REVIEWED）：<!-- docs/aiqe/v1.6/acceptance/records/<REQ-ID>.json；由 record_acceptance.py 生成 -->
 
 ---
 

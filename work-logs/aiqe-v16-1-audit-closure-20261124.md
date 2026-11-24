@@ -54,14 +54,25 @@
 | TC-009 E1–E6 故障归类可追溯 | 增加 `sync_experiment_result` 终态收敛、`changed_dimension` 对照、仅 COMPLETED 可记录 SUPPORTED/REFUTED；UNKNOWN 记录结论抛错 | 平台 E2E 10 passed |
 | TC-006 已知 flaky | 去掉对 `handles[0]` 插入顺序的依赖（按 created_at/id 排序 + scope 匹配）；`_launch` 改为 3 轮真实 claim 轮询（仍禁止人工 fallback） | 连续 3 次 10 passed |
 
-## 5. 未完成（后续批次）
+## 5. 第三轮补充（2026-11-24 深夜）
+
+| 审计项 | 处理 | 验证 |
+|---|---|---|
+| P0-1 独立 Reviewer 无法证明 | 新增 `acceptance/records/*.json` 机制 + `governance/review-roles.yaml` 角色域矩阵 + `record_acceptance.py` CLI；矩阵不能自证 REVIEWED，同角色域/pending/缺 artifact 全部拒绝；PR 模板增加 `Reviewer 角色域` 字段并强制校验 | 10 条 acceptance 测试 + PR 模式 3 条新测试 |
+| TC-007 Worker crash（claim/execute/persist/ack） | 新增崩溃恢复 E2E：claim 后租约过期 → reconciler 重排 → 真实 dispatch/Worker 完成 → 迟到结果 fencing 拒绝 → 重复投递不新增 Assertion | 平台链路 6 PASS / 2 BLOCKED / 2 NOT_RUN |
+| V16-004 真实 PG 只读 role | 新增 `check_pg_readonly_role.py`（角色属性/写拒绝/read-only/timeout 检查，DSN 脱敏）+ `evidence/pg-readonly-role.json=NOT_PROVEN`；Gate B evidence 因此为 NOT_PROVEN | 5 条 PG 测试（含“仓库证据不得伪称 PASS”） |
+| TC-AIQE-007 平台映射 | 映射到 TC-PLATFORM-004（Worker 崩溃恢复） | 矩阵 strict 校验 0 error |
+
+## 6. 未完成（后续批次）
 
 1. **产品级 TC-AIQE-001..010**：需隔离 Test 环境按 merged spec §20 重跑并归档产物。
-2. **独立验收**：70 条需求需要非原作者 Reviewer + `acceptance.artifact`。
+2. **独立验收签署**：机制已就绪，70 条需求仍需真实 Reviewer 逐条生成
+   `acceptance/records/*.json`（当前 0 条）。
 3. **Gate G**：需要 GitHub 仓库权限执行
    `check_branch_protection.py --capture`，再重算 verdict。
-4. **Gate F**：镜像重建 digest/SBOM、干净节点部署、PG/Vault/告警原始日志。
+4. **Gate F**：镜像重建 digest/SBOM、干净节点部署、PG 备份恢复/PG 只读 role/
+   Vault 生产/告警原始日志。
 5. **A5 剩余**：`create_regression_plan` 写工具仍 UNAVAILABLE（需审批与副作用门禁），
    A5 自动生成回归计划并调用 Regression API 的端到端链路尚未打通。
-6. **TC-006 flaky 观察**：已消除已知顺序/时序假设，连续 3 次通过；若再次出现需抓取
+6. **TC-006 flaky 观察**：已消除已知顺序/时序假设，连续多次通过；若再次出现需抓取
    失败时的 handle/scope/事件快照，不得以重跑掩盖。
