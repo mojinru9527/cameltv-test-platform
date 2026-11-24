@@ -40,6 +40,7 @@ MATRIX = DOCS / "traceability/requirements.yaml"
 VERDICT_JSON = DOCS / "release-verdict.json"
 TRACEABILITY_SNAPSHOT = DOCS / "traceability/matrix-snapshot.json"
 PLATFORM_RESULTS = DOCS / "e2e/platform-results.json"
+PRODUCT_RESULTS = DOCS / "e2e/product-results.json"
 RUNTIME_EVIDENCE_INDEX = DOCS / "evidence/evidence-index.json"
 PG_READONLY_EVIDENCE = DOCS / "evidence/pg-readonly-role.json"
 BRANCH_PROTECTION = DOCS / "governance/branch-protection.json"
@@ -313,6 +314,30 @@ def build_verdict() -> dict[str, Any]:
     gate_e.acceptance = _acceptance_of(product_tcs)[0]
     if len(product_pass) == 10 and gate_e.acceptance != REVIEWED:
         gate_e.reasons.append("产品 TC 缺少非原作者独立验收")
+    # 产品级 TC 执行结果（scripts/aiqe/run_product_tc.py 产物）；无文件即未执行。
+    product_results = _load_json(PRODUCT_RESULTS)
+    if product_results is None:
+        gate_e.reasons.append(
+            "缺少 docs/aiqe/v1.6/e2e/product-results.json（产品级 TC 未在隔离 Test 环境执行）"
+        )
+    else:
+        gate_e.artifacts.append(str(PRODUCT_RESULTS.relative_to(ROOT)))
+        summary = product_results.get("summary") or {}
+        if str(product_results.get("status")).upper() == NOT_PROVEN or not summary:
+            gate_e.reasons.append(
+                "产品级 TC 执行结果 NOT_PROVEN: "
+                + str(product_results.get("reason") or "缺少可执行配置/环境")
+            )
+        else:
+            product_result_pass = int(summary.get("product_tc_pass") or 0)
+            gate_e.reasons.append(
+                f"产品级 TC 机器结果: {product_result_pass}/10 PASS"
+                f"（environment {product_results.get('environment')}）"
+            )
+            if product_result_pass != len(product_pass):
+                gate_e.reasons.append(
+                    "矩阵 e2e.product.status 与 product-results.json 不一致，需先更新矩阵"
+                )
     gates["E"] = gate_e
 
     # ---------------- Gate F：生产运行 ----------------
@@ -426,6 +451,9 @@ def build_verdict() -> dict[str, Any]:
             ),
             "platform_results": (
                 str(PLATFORM_RESULTS.relative_to(ROOT)) if platform is not None else None
+            ),
+            "product_results": (
+                str(PRODUCT_RESULTS.relative_to(ROOT)) if product_results is not None else None
             ),
             "runtime_evidence_index": (
                 str(RUNTIME_EVIDENCE_INDEX.relative_to(ROOT)) if runtime_index is not None else None

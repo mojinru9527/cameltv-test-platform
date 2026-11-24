@@ -88,9 +88,18 @@
 | 审计整改可审计性 | 新增 `governance/audit-closure.yaml`（19 项：P0-1..P2-4 + P3-1）与 `check_audit_closure.py`：CLOSED 必须有存在证据、EXTERNAL 必须写 blocked_by/owner/unblock_action；生成 `V1.6.1-Audit-Closure-Report.md` 并接入 CI traceability + release-gate | 6 条测试；closure check 0 error（12 CLOSED / 7 EXTERNAL） |
 | 全量回归 | 本机执行完整后端 `pytest tests`：**2553 passed / 43 skipped / 0 failed**（一次中间态失败为生成文档与并发重生成竞态，单独复跑 11 passed） | `python -m pytest tests -q -p no:cacheprovider` |
 
-## 9. 未完成（后续批次）
+## 9. 第七轮补充（2026-11-25）
 
-1. **产品级 TC-AIQE-001..010**：需隔离 Test 环境按 merged spec §20 重跑并归档产物。
+| 项 | 处理 | 验证 |
+|---|---|---|
+| P1-4 产品级 TC 无法执行 | 新增 `e2e/product-tc-config.yaml`（TC-001..010 执行计划，含 spec_ref/evidence_glob/blocked_by）与 `run_product_tc.py`：校验收 10 个 TC、runner 必须从正式入口执行且产出机器结果、缺 env → NOT_PROVEN 退出 2；产出 `product-results.json` 并按 `build_evidence_index` 校验 PASS 所需 ID | 5 条测试（含 fake runner 聚合、失败非零、缺 env NOT_PROVEN） |
+| Gate E 联动 | `release_verdict` 读取 `product-results.json`：缺失 → “产品级 TC 未执行”；有结果 → 显示 n/10 PASS 并与矩阵交叉校验 | verdict Gate E 新增原因，release audit 0 error |
+| 仓库级门禁 | 复跑 `check-oracle-layer -SelfTest`、`check-aiqe-skills`、CI 分类器测试 | 全部 PASS（23 passed + 39 subtests） |
+
+## 10. 未完成（后续批次）
+
+1. **产品级 TC-AIQE-001..010**：执行器与配置已就绪，需隔离 Test 环境 + per-TC runner
+   接入后运行 `python scripts/aiqe/run_product_tc.py --run`。
 2. **独立验收签署**：机制已就绪，70 条需求仍需真实 Reviewer 逐条生成
    `acceptance/records/*.json`（当前 0 条）。
 3. **Gate G**：需要 GitHub 仓库权限执行

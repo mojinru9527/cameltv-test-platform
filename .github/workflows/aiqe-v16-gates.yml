@@ -49,6 +49,8 @@ jobs:
         run: python scripts/aiqe/check_release_audit.py
       - name: Audit closure ledger
         run: python scripts/aiqe/check_audit_closure.py --check
+      - name: Product TC config validation
+        run: python scripts/aiqe/run_product_tc.py --check-config
       - name: PR traceability fields
         if: ${{ github.event_name == 'pull_request' }}
         env:

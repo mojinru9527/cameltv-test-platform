@@ -1,0 +1,80 @@
+# V16-017 产品级 TC 执行配置（隔离 Test 环境）
+#
+# 说明：本文件是产品级 TC-AIQE-001..010 的可执行计划。runner 为 null 表示尚未接入
+# 真实执行脚本；`python scripts/aiqe/run_product_tc.py --check-config` 只校验结构，
+# `--run` 在没有 runner/环境变量时输出 NOT_PROVEN 并退出 2，绝不伪造 PASS。
+#
+# 每个 runner 必须：
+#   1. 从正式入口（REST API / Worker / 外部 Runner）执行，不得 Service 直调；
+#   2. 把机器结果写入环境变量 AIQE_TC_RESULT_PATH 指向的 JSON：
+#      {tc_id, status: PASS|FAIL|BLOCKED|NOT_RUN, run_id, project_id,
+#       workflow_snapshot_hash, job_ids[], node_run_ids[], assertion_ids[],
+#       artifact_refs[], blocked_reason, duration_ms}
+#   3. 产物（截图/trace/report）落在 evidence_glob 命中的仓库路径下。
+schema_version: "1.0"
+environment: "isolated-test"
+required_env:
+  - AIQE_TEST_BASE_URL
+  - AIQE_TEST_ADMIN_URL
+  - AIQE_TEST_DB_READONLY_DSN
+test_cases:
+  - tc_id: TC-AIQE-001
+    title: "需求契约冻结 + 需求变更影响"
+    spec_ref: "merged-spec §20 TC-AIQE-001"
+    runner: null
+    evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-001/**"
+    blocked_by: "需要导入收藏赛事 PRD 的 Test 环境与人工确认环节"
+  - tc_id: TC-AIQE-002
+    title: "API → Admin UI → Public API → DB 的统一 Run"
+    spec_ref: "merged-spec §20 TC-AIQE-002"
+    runner: null
+    evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-002/**"
+    blocked_by: "需要业务 API/后台 UI/前台 UI/DB 账号与唯一 Fixture 模板"
+  - tc_id: TC-AIQE-003
+    title: "API 首次失败 + 重试成功（不得掩盖失败）"
+    spec_ref: "merged-spec §20 TC-AIQE-003"
+    runner: null
+    evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-003/**"
+    blocked_by: "需要可注入一次 503 的 Test API Stub"
+  - tc_id: TC-AIQE-004
+    title: "广告/其他功能浮层交叉干扰"
+    spec_ref: "merged-spec §20 TC-AIQE-004"
+    runner: null
+    evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-004/**"
+    blocked_by: "需要可注入浮层的 integration profile 与直播入口 fixture"
+  - tc_id: TC-AIQE-005
+    title: "并发数据污染"
+    spec_ref: "merged-spec §20 TC-AIQE-005"
+    runner: null
+    evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-005/**"
+    blocked_by: "需要共享账号/赛事 fixture 与并发调度环境"
+  - tc_id: TC-AIQE-006
+    title: "上游第三方故障"
+    spec_ref: "merged-spec §20 TC-AIQE-006"
+    runner: null
+    evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-006/**"
+    blocked_by: "需要可返回 504 的外部赛程接口 Stub"
+  - tc_id: TC-AIQE-007
+    title: "UI Runner 自身故障"
+    spec_ref: "merged-spec §20 TC-AIQE-007"
+    runner: null
+    evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-007/**"
+    blocked_by: "需要可强制 kill 浏览器的 Runner 环境"
+  - tc_id: TC-AIQE-008
+    title: "开发修复后点击回归"
+    spec_ref: "merged-spec §20 TC-AIQE-008"
+    runner: null
+    evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-008/**"
+    blocked_by: "依赖 TC-004 缺陷草稿 + 人工确认 + 修复 commit 部署到 Test"
+  - tc_id: TC-AIQE-009
+    title: "多端 AC 对照"
+    spec_ref: "merged-spec §20 TC-AIQE-009"
+    runner: null
+    evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-009/**"
+    blocked_by: "需要 Android Chrome 模拟器/真机并明确标识设备"
+  - tc_id: TC-AIQE-010
+    title: "学习候选发布"
+    spec_ref: "merged-spec §20 TC-AIQE-010"
+    runner: null
+    evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-010/**"
+    blocked_by: "需要已确认缺陷 + 已关闭缺陷标注集 + Benchmark Gate + 人工批准"
