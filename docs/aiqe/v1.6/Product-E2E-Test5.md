@@ -1,5 +1,8 @@
 # CamelTv test5 产品连通性证据（TC-002 支撑，不是 TC-001/003 PASS）
 
+> **STATUS: HISTORICAL** — 本文记录 2026-11-2x 当时的执行事实与结论；其中 PASS/VERIFIED 等表述不代表当前发布判定。当前状态以 `release-verdict.json`、`E2E-Coverage-and-Blockers.md` 与 `governance/production-evidence.json` 为准。
+
+
 > 本文件只证明 test5 环境与关键链路可达；它**不能**替代 merged spec 的 TC-001（契约冻结/变更影响）
 > 或 TC-003（503 首次失败+重试）。当前真实 TC 状态见 `E2E-Coverage-and-Blockers.md`。
 

@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "repository": "mojinru9527/cameltv-test-platform",
+  "branch": "main",
+  "verified": false,
+  "checked_at": null,
+  "source": "not-collected",
+  "reason": "仓库内没有 Branch Protection / Ruleset 的导出或 API 查询结果；2026-11-24 审计环境无法访问 GitHub（curl 28）且没有仓库权限。禁止在未取得该证据时宣称 Gate G 完成。",
+  "required_checks": [],
+  "require_pr_before_merge": null,
+  "require_non_author_review": null,
+  "allow_force_push": null,
+  "allow_deletions": null,
+  "ruleset_ids": [],
+  "capture_command": "python scripts/aiqe/check_branch_protection.py --capture --repo mojinru9527/cameltv-test-platform --branch main"
+}

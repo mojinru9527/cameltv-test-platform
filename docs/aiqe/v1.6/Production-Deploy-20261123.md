@@ -1,5 +1,8 @@
 # V1.6 生产部署记录（2026-11-23）
 
+> **STATUS: HISTORICAL** — 本文记录 2026-11-2x 当时的执行事实与结论；其中 PASS/VERIFIED 等表述不代表当前发布判定。当前状态以 `release-verdict.json`、`E2E-Coverage-and-Blockers.md` 与 `governance/production-evidence.json` 为准。
+
+
 ## 部署内容
 
 - 生产地址：`https://swiftbugs.cn`

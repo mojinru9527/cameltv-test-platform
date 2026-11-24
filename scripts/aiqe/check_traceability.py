@@ -11,7 +11,7 @@ v2.0 相对 v1.0 的变化
    ``runtime_evidence``；``PROVEN`` 需要仓库内 artifact 与机器 ID，否则
    ``NOT_PROVEN``，且不得把该条目计为运行验收。
 4. **TC 双命名空间**：``TC-AIQE-*`` 是产品级验收，必须声明 ``e2e.product`` 与
-   ``e2e.platform``；平台链路记录用 ``PLATFORM-TC-*``，不得冒充产品 TC。
+   ``e2e.platform``；平台链路记录用 ``TC-PLATFORM-*``，不得冒充产品 TC。
 5. **基线唯一**：``--check-baseline`` 校验 release commit 与 Alembic 单头，禁止
    追踪矩阵里出现过期 SHA / migration head。
 
@@ -64,7 +64,7 @@ ISSUES: tuple[str, ...] = tuple(f"V16-{index:03d}" for index in range(1, 26))
 TEST_CASES: tuple[str, ...] = tuple(f"TC-AIQE-{index:03d}" for index in range(1, 11))
 REQUIRED_ISSUES = ISSUES + TEST_CASES
 PRODUCT_TC_RE = re.compile(r"^TC-AIQE-\d{3}$")
-PLATFORM_TC_RE = re.compile(r"^PLATFORM-TC-\d{3}$")
+PLATFORM_TC_RE = re.compile(r"^TC-PLATFORM-\d{3}$")
 
 P0_P1 = {"P0", "P1"}
 STATUS_VALUES = {
@@ -513,7 +513,7 @@ def _validate_e2e_block(
         tc_ids = []
     for tc_id in tc_ids:
         if not PLATFORM_TC_RE.match(str(tc_id)):
-            report.error(f"{req_id}: 非法平台 TC ID {tc_id!r}（必须是 PLATFORM-TC-xxx）")
+            report.error(f"{req_id}: 非法平台 TC ID {tc_id!r}（必须是 TC-PLATFORM-xxx）")
     platform_tests = platform.get("tests") or []
     if not isinstance(platform_tests, list):
         report.error(f"{req_id}: e2e.platform.tests 必须是数组")

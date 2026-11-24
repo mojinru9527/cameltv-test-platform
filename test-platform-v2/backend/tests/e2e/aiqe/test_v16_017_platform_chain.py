@@ -42,6 +42,7 @@ from app.aiqe.services.workflow_service import approve_workflow, create_workflow
 from app.models.environment import Environment
 from app.models.execution_job import ExecutionJob
 from app.models.project import Project
+from platform_results import pending_jobs, record_tc
 
 pytestmark = pytest.mark.integration
 
@@ -50,6 +51,8 @@ class _Handler(BaseHTTPRequestHandler):
     orders: ClassVar[dict[str, Any]] = {}
     last_auth: ClassVar[str] = ""
     asset_hits: ClassVar[int] = 0
+    # TC-008：模拟“修复后部署”——修复前 /fail 返回 success=false，修复后返回 true。
+    fixed: ClassVar[bool] = False
     PAGE_HTML = """<!doctype html><html><head><title>AIQE-E2E</title></head><body>
 <input id="name"/><button id="go" onclick="document.getElementById('out').textContent='hello '+document.getElementById('name').value">GO</button>
 <div id="out">idle</div><img src="/pixel"/><img src="http://169.254.169.254/secret"/>
@@ -86,6 +89,8 @@ class _Handler(BaseHTTPRequestHandler):
         elif self.path == "/echo":
             _Handler.last_auth = str(self.headers.get("authorization") or "")
             self._json({"received": True, "success": True})
+        elif self.path == "/fail":
+            self._json({"success": bool(_Handler.fixed)})
         elif self.path == "/health":
             self._json({"ok": True, "success": True})
         elif self.path.startswith("/orders/"):
@@ -156,6 +161,7 @@ def _project_env(db, port: int) -> Environment:
 
 
 def _drain(db) -> None:
+    """只通过真实 Worker claim/lease 消费 Job；禁止把 pending Job 手工改成 running。"""
     for _ in range(50):
         claimed = job_consumer.claim_aiqe_jobs(db)
         if not claimed:
@@ -163,16 +169,6 @@ def _drain(db) -> None:
         for job_id in claimed:
             job_consumer.run_job(db, job_id)
         db.commit()
-    pending = list(
-        db.scalars(select(ExecutionJob).where(ExecutionJob.status == "pending"))
-    )
-    for job in pending:
-        job.status = "running"
-        job.node_id = "e2e-worker"
-        job.attempt = int(job.attempt or 0) + 1
-        db.commit()
-        job_consumer.run_job(db, job.id)
-    db.commit()
 
 
 def _launch(db, port: int, graph: dict) -> TestRun:
@@ -191,7 +187,13 @@ def _launch(db, port: int, graph: dict) -> TestRun:
     db.commit()
     _drain(db)
     db.expire_all()
-    return db.get(TestRun, run.id)
+    run = db.get(TestRun, run.id)
+    leftovers = pending_jobs(db, run)
+    assert not leftovers, (
+        "存在未被真实 Worker claim 的 pending Job（禁止人工 fallback 消费）: "
+        f"{leftovers}；run={run.id}"
+    )
+    return run
 
 
 def _http_graph(port: int, path: str, expected: Any, *, key: str = "biz") -> dict:
@@ -248,6 +250,7 @@ def test_tc_002_http_200_business_assertion_fails(db_session, sut):
     assert node.status == "FAILED", (node.status, node.error_class, [a.status for a in assertions])
     assert assertions and assertions[0].status == "FAIL", [a.status for a in assertions]
     assert run.outcome in {"FAIL", "INCOMPLETE"}, run.outcome
+    record_tc("TC-PLATFORM-001", db_session, run)
 
 
 # ── TC-004：DB 只读 + Query Registry ───────────────────────
@@ -330,6 +333,8 @@ def test_tc_004_query_registry_only_real_select(db_session, sut, tmp_path):
 
     rows = list(db_session.scalars(select(RunAssertionResult)))
     assert rows and rows[0].status == "PASS"
+    assert not pending_jobs(db_session, run), pending_jobs(db_session, run)
+    record_tc("TC-PLATFORM-002", db_session, run)
 
 
 # ── TC-005：SSRF/云元数据零请求 ────────────────────────────
@@ -349,6 +354,13 @@ def test_tc_005_metadata_endpoint_never_reached(db_session, sut):
     assert any(
         "target_policy" in item or "ssrf" in item or "policy" in item for item in events
     ), events
+    record_tc(
+        "TC-PLATFORM-003",
+        db_session,
+        run,
+        status="BLOCKED",
+        blocked_reason="策略阻断发生在断言执行前，无 AssertionResult（负向场景按 BLOCKED 记录）",
+    )
 
 
 # ── TC-007：迟到 fencing 结果拒绝 ─────────────────────────
@@ -385,11 +397,19 @@ def test_tc_007_stale_worker_result_rejected(db_session, sut):
     assert result.get("reason") in {"STALE_LEASE", "JOB_ALREADY_TERMINAL"}
     db_session.expire_all()
     assert db_session.get(NodeRun, node.id).status != "PASSED"
+    record_tc(
+        "TC-PLATFORM-004",
+        db_session,
+        db_session.get(TestRun, node.run_id),
+        status="NOT_RUN",
+        blocked_reason="fencing 负向场景：迟到结果被拒绝，无完整 Run/Assertion 链路结果可计 PASS",
+    )
 
 
 # ── TC-008：缺陷一键回归（真实 Launch/Worker/Scope/Comparison）────
 def test_tc_008_defect_regression_end_to_end(db_session, sut):
     port = sut
+    _Handler.fixed = False  # 修复前：/fail 返回 success=false
     env = _project_env(db_session, port)
     graph = _http_graph(port, "/fail", expected=True, key="biz")
     workflow = create_workflow(db_session, project_id=1, graph=graph)
@@ -416,6 +436,8 @@ def test_tc_008_defect_regression_end_to_end(db_session, sut):
     db_session.add(defect)
     db_session.flush()
     sha = "d" * 40
+    # 模拟“修复后部署”：同一 SUT 在修复 SHA 下返回 success=true。
+    _Handler.fixed = True
     record_deployment_attestation(
         db_session, project_id=1, environment_id=env.id, commit_sha=sha, source="ci"
     )
@@ -440,9 +462,11 @@ def test_tc_008_defect_regression_end_to_end(db_session, sut):
     db_session.expire_all()
     run = db_session.get(TestRun, run.id)
     assert run.status in {"COMPLETED", "BLOCKED", "FAILED"}
+    # 修复后回归必须真正 PASS；FAIL/BLOCKED/UNKNOWN 只能是测试失败，不可被接受为回归成功。
+    assert run.outcome == "PASS", (run.outcome, run.status, run.preflight_json)
     result = handle_run_terminal(db_session, run_id=run.id)
     db_session.commit()
-    assert result.status in {"FAIL", "BLOCKED", "UNKNOWN", "PASS"}
+    assert result.status == "PASS", result.status
     assert result.comparison_id
     snapshot = db_session.get(RunComparisonSnapshot, result.comparison_id)
     assert snapshot is not None and snapshot.regression_run_id == run.id
@@ -459,6 +483,8 @@ def test_tc_008_defect_regression_end_to_end(db_session, sut):
     db_session.commit()
     assert created_again is False and again.id == row.id
     assert again_run is not None and again_run.id == run.id
+    record_tc("TC-PLATFORM-005", db_session, run)
+    _Handler.fixed = False
 
 
 # ── TC-010：AgentTask → Outbox → Job → ToolRegistry → AgentExecution ─
@@ -502,6 +528,11 @@ def test_tc_010_agent_task_platform_chain(db_session):
     assert audits and audits[0].tool_name == "read_project_context"
     job_row = db_session.get(ExecutionJob, job.id)
     assert job_row.status == "success"
+    record_tc(
+        "TC-PLATFORM-009",
+        status="NOT_RUN",
+        blocked_reason="AgentTask 链路不产生 TestRun，无法计入需要 Run/Job/Assertion ID 的运行证据索引",
+    )
 
 
 # ── TC-006：Secret 全链路（输出 Handle/下游授权/明文零落库）────
@@ -621,6 +652,7 @@ def test_tc_006_secret_chain_no_plaintext(db_session, sut):
     for payload in payloads:
         assert token_value not in payload
         assert "e2e-refresh" not in payload
+    record_tc("TC-PLATFORM-006", db_session, run)
 
 
 # ── TC-009：Noise E1–E6 单变量实验（真实 Run/Worker）────────
@@ -663,12 +695,22 @@ def test_tc_009_noise_experiments_e1_to_e6(db_session, sut):
         assert exp.snapshot_diff_json["expected_dimension"] == variable, key
         launched_runs.append(run.id)
     assert len(set(launched_runs)) == 6
+    record_tc("TC-PLATFORM-007", db_session, baseline)
 
 
 # ── TC-003：真实 Chromium 交互 + 子资源安全拦截 ─────────────
 @pytest.mark.browser
 def test_tc_003_browser_interaction_and_interception(db_session, sut):
-    from app.aiqe.drivers.playwright_driver import PlaywrightDriver
+    """浏览器节点必须经 ``node_executor``（正式节点执行器）而不是直接构造 Driver。
+
+    平台约束：进程内 Worker 不消费 browser driver（``job_consumer.INPROCESS_DRIVERS``
+    只含 http/db），浏览器节点由外部 Runner 执行。本用例覆盖
+    ``node_executor.execute_node -> _execute_playwright -> PlaywrightDriver`` 的
+    策略注入与拦截链路；完整 Run→Job→外部 Worker 链路见 V16-017-R1 缺口记录。
+    """
+    from app.aiqe.models.run import NodeRun
+
+    from app.aiqe.services import node_executor
 
     port = sut
     _Handler.asset_hits = 0
@@ -682,28 +724,30 @@ def test_tc_003_browser_interaction_and_interception(db_session, sut):
         max_redirects=0,
         decision=PolicyDecision.ALLOW,
     )
-    driver = PlaywrightDriver(policy=policy, timeout_ms=15000)
-    try:
-        result = driver.execute(
-            {
-                "url": f"http://127.0.0.1:{port}/page",
-                "actions": [
-                    {"type": "fill", "selector": "#name", "value": "Camel"},
-                    {"type": "click", "selector": "#go"},
-                    {"type": "assert_text", "selector": "#out", "expected": "hello Camel"},
-                ],
-            }
-        )
-    finally:
-        driver.close()
-    assert result.status == "SUCCEEDED", (result.error_class, result.error_message)
-    assert result.data["title"] == "AIQE-E2E"
-    records = result.data["actions"]
+    node = NodeRun(
+        run_id="transient-e2e-browser",
+        node_key="browser",
+        driver_key="playwright",
+        status="running",
+        input_ref={
+            "url": f"http://127.0.0.1:{port}/page",
+            "actions": [
+                {"type": "fill", "selector": "#name", "value": "Camel"},
+                {"type": "click", "selector": "#go"},
+                {"type": "assert_text", "selector": "#out", "expected": "hello Camel"},
+            ],
+        },
+    )
+    result = node_executor.execute_node(node, policy_context=policy)
+    assert result.status == "PASSED", (result.error_class, result.detail)
+    data = result.data or {}
+    assert data.get("title") == "AIQE-E2E", data
+    records = data.get("actions") or []
     assert len(records) >= 3 and all(not item.get("error") for item in records), records
     assert records[-1]["action"] == "assert_text"
     assert records[-1]["text"].strip() == "hello Camel"
     assert _Handler.asset_hits >= 1, "允许的子资源必须真实请求"
-    codes = {item["code"] for item in result.data["security_denials"]}
+    codes = {item["code"] for item in data.get("security_denials") or []}
     assert codes & {
         "ADDRESS_BLOCKED",
         "PRIVATE_ADDRESS_DENIED",
@@ -711,5 +755,13 @@ def test_tc_003_browser_interaction_and_interception(db_session, sut):
         "PORT_NOT_ALLOWED",
     }, codes
     assert any(
-        item.get("host") == "169.254.169.254" for item in result.data["security_denials"]
-    ), result.data["security_denials"]
+        item.get("host") == "169.254.169.254" for item in data.get("security_denials") or []
+    ), data.get("security_denials")
+    record_tc(
+        "TC-PLATFORM-008",
+        status="BLOCKED",
+        blocked_reason=(
+            "browser 节点由外部 Runner 执行；本用例覆盖 node_executor→PlaywrightDriver，"
+            "未产生 TestRun，故不计入运行证据索引 PASS"
+        ),
+    )

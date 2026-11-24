@@ -1,5 +1,8 @@
 # AIQE V1.6 staging GA 决策记录（2026-11-22）
 
+> **STATUS: HISTORICAL** — 本文记录 2026-11-2x 当时的执行事实与结论；其中 PASS/VERIFIED 等表述不代表当前发布判定。当前状态以 `release-verdict.json`、`E2E-Coverage-and-Blockers.md` 与 `governance/production-evidence.json` 为准。
+
+
 ## 结论
 
 用户于 2026-11-22 明确授权：全部处理，并授权 Stage 5 GA + PR 合并。

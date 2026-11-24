@@ -3,6 +3,8 @@ name: AIQE V1.6 交付门禁
 on:
   pull_request:
     branches: [main, "release/**"]
+  push:
+    tags: ["aiqe-v*"]
   workflow_dispatch:
 
 concurrency:
@@ -28,7 +30,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - name: Install gate dependency
+      - name: Install gate dependencies
         run: pip install pyyaml
       - name: Write PR body
         env:
@@ -40,41 +42,58 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: git diff --name-only "$BASE_SHA" "$HEAD_SHA" > changed-files.txt
-      - name: Traceability matrix validation
-        run: python scripts/aiqe/check_traceability.py
-      - name: Release audit (secrets/fake E2E/traceability/docs)
+      # v2：strict warnings 进 CI；缺失/漂移的证据格式直接阻断，不再只打印 warning。
+      - name: Traceability matrix validation (strict + baseline)
+        run: python scripts/aiqe/check_traceability.py --strict-warnings --check-baseline
+      - name: Release audit (secrets / fake E2E / docs / verdict consistency)
         run: python scripts/aiqe/check_release_audit.py
       - name: PR traceability fields
         if: ${{ github.event_name == 'pull_request' }}
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         run: |
           set -euo pipefail
           python - <<'PY'
-          import re, subprocess, sys
+          import os, re, subprocess, sys
           body = open("pr-body.md", encoding="utf-8").read()
           issues = sorted(set(re.findall(r"V16-0\d\d", body)))
           if not issues:
               print("::error::PR 描述必须声明至少一个 V16 Issue")
               sys.exit(1)
-          args = ["python", "scripts/aiqe/check_traceability.py", "--pr-body", "pr-body.md", "--changed-files", "changed-files.txt"]
+          args = [
+              "python", "scripts/aiqe/check_traceability.py",
+              "--pr-body", "pr-body.md",
+              "--changed-files", "changed-files.txt",
+              "--pr-author", os.environ.get("PR_AUTHOR", ""),
+          ]
           for issue in issues:
               args += ["--issue", issue]
           sys.exit(subprocess.call(args))
           PY
-      - name: Emit evidence index
+      # 矩阵快照：只表示“矩阵声明了什么”，不是运行证据（artifact_kind 已显式标注）。
+      - name: Emit matrix snapshot
         run: |
           python scripts/aiqe/check_traceability.py \
-            --emit-evidence-index evidence-index.json \
+            --emit-evidence-index traceability-matrix-snapshot.json \
             --commit-sha "${{ github.event.pull_request.head.sha || github.sha }}" \
             --ci-run "${{ github.run_id }}" \
             --environment ci
           python scripts/aiqe/check_traceability.py --emit-markdown traceability-matrix.md
-      - name: Upload evidence index
+      - name: Emit release verdict
+        run: |
+          python scripts/aiqe/release_verdict.py --write \
+            --emit-markdown release-verdict.md \
+            --emit-e2e-doc e2e-coverage.md
+      - name: Upload governance artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: aiqe-v16-evidence-index
+          name: aiqe-v16-governance
           path: |
-            evidence-index.json
+            traceability-matrix-snapshot.json
             traceability-matrix.md
+            release-verdict.md
+            e2e-coverage.md
+            docs/aiqe/v1.6/release-verdict.json
           retention-days: 90
 
   lint-type:
@@ -130,12 +149,36 @@ jobs:
         run: |
           python -m pytest tests -q -p no:cacheprovider -k "aiqe" \
             --junitxml=../../work-logs/evidence/aiqe-v16/junit-unit.xml
-      - name: Upload test report
+      # V16-017：平台链路 E2E 产出机器结果（TC-PLATFORM-*），再由 builder 生成运行证据索引。
+      - name: Platform chain E2E with machine results
+        working-directory: test-platform-v2/backend
+        env:
+          AIQE_PLATFORM_RESULTS: ../../work-logs/evidence/aiqe-v16/platform-results.json
+          AIQE_ENVIRONMENT: ci
+        run: |
+          python -m pytest tests/e2e/aiqe/test_v16_017_platform_chain.py \
+            tests/e2e/aiqe/test_v16_017_tc001_contract.py \
+            -q -p no:cacheprovider \
+            --junitxml=../../work-logs/evidence/aiqe-v16/junit-platform.xml
+      - name: Build runtime evidence index
+        run: |
+          python scripts/aiqe/build_evidence_index.py \
+            --input work-logs/evidence/aiqe-v16/platform-results.json \
+            --commit-sha "${{ github.event.pull_request.head.sha || github.sha }}" \
+            --ci-run "${{ github.run_id }}" \
+            --environment ci \
+            --output work-logs/evidence/aiqe-v16/evidence-index.json \
+            --require-tcs 10
+      - name: Upload test report and runtime evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: aiqe-v16-unit-junit
-          path: work-logs/evidence/aiqe-v16/junit-unit.xml
+          name: aiqe-v16-unit-and-runtime
+          path: |
+            work-logs/evidence/aiqe-v16/junit-unit.xml
+            work-logs/evidence/aiqe-v16/junit-platform.xml
+            work-logs/evidence/aiqe-v16/platform-results.json
+            work-logs/evidence/aiqe-v16/evidence-index.json
           retention-days: 90
 
   runtime-security:
@@ -163,6 +206,8 @@ jobs:
             tests/test_aiqe_v16_001_policy_fail_closed.py \
             tests/test_aiqe_v16_002_playwright_interception.py \
             tests/test_aiqe_v16_025_traceability_gate.py \
+            tests/test_aiqe_release_audit.py \
+            tests/test_aiqe_v16_024_image_dependencies.py \
             --junitxml=../../work-logs/evidence/aiqe-v16/junit-runtime.xml
       - name: Static fail-open scan
         working-directory: test-platform-v2/backend
@@ -198,3 +243,32 @@ jobs:
           python -m alembic upgrade head
           python -m alembic heads | tee heads.txt
           test "$(wc -l < heads.txt)" -eq 1
+
+  # 发布门禁：只在 release 分支 / release tag 运行；GA 未签署时明确失败，禁止带病发布。
+  release-gate:
+    name: Release Gate (GA verdict)
+    if: ${{ startsWith(github.ref, 'refs/tags/aiqe-v') || startsWith(github.head_ref, 'release/') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install dependencies
+        run: pip install pyyaml
+      - name: Traceability release gate (independent acceptance required)
+        run: python scripts/aiqe/check_traceability.py --strict-warnings --check-baseline --release-gate
+      - name: Branch protection evidence
+        run: python scripts/aiqe/check_branch_protection.py --check
+      - name: GA verdict
+        run: python scripts/aiqe/release_verdict.py --require-ga
+      - name: Upload release gate report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aiqe-v16-release-gate
+          path: docs/aiqe/v1.6/release-verdict.json
+          retention-days: 90

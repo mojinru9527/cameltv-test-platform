@@ -1,5 +1,8 @@
 # G6 独立审计报告 — Benchmark Gate / Project Scope / A4 Evidence / A0 Plan / A5 Impact / Tool Registry
 
+> **STATUS: HISTORICAL** — 本文记录 2026-11-2x 当时的执行事实与结论；其中 PASS/VERIFIED 等表述不代表当前发布判定。当前状态以 `release-verdict.json`、`E2E-Coverage-and-Blockers.md` 与 `governance/production-evidence.json` 为准。
+
+
 | 项目 | 内容 |
 |---|---|
 | 审计 Issue | **V16-010**（Benchmark Gate 强制审批和发布）、**V16-011**（全资源 Project Scope）、**V16-012**（A4 Evidence Resolver 强制校验）、**V16-013**（A0 Draft→审批→run_plan 执行）、**V16-014**（A5 Change Impact 纳入 Plan/Scope）、**V16-019**（Tool Registry 真实绑定/权限/审计） |

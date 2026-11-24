@@ -1,5 +1,8 @@
 # G5 独立审计报告 — Mandatory Scope / Assertion Engine / Workflow Validator / Quality Gate / Terminal Handler / Comparison Snapshot
 
+> **STATUS: HISTORICAL** — 本文记录 2026-11-2x 当时的执行事实与结论；其中 PASS/VERIFIED 等表述不代表当前发布判定。当前状态以 `release-verdict.json`、`E2E-Coverage-and-Blockers.md` 与 `governance/production-evidence.json` 为准。
+
+
 | 项目 | 内容 |
 |---|---|
 | 审计 Issue | **V16-008**（Mandatory Scope 真正生效）、**V16-009**（Assertion 与 PASS 语义）、**V16-020**（统一终态与 Comparison Snapshot） |

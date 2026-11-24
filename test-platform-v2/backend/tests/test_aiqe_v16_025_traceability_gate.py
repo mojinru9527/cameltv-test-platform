@@ -345,7 +345,7 @@ def _product_tc_entry(**overrides) -> dict:
                 ],
             },
             "platform": {
-                "tc_ids": ["PLATFORM-TC-010"],
+                "tc_ids": ["TC-PLATFORM-010"],
                 "tests": [
                     "tests/e2e/aiqe/test_v16_017_tc001_contract.py::test_tc_001_contract_freeze_and_v2_impact"
                 ],

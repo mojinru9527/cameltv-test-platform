@@ -1,5 +1,8 @@
 # G4 独立审计报告 — V16-005 / V16-006 / V16-007（执行入口 · 租约状态机 · DAG 快照）
 
+> **STATUS: HISTORICAL** — 本文记录 2026-11-2x 当时的执行事实与结论；其中 PASS/VERIFIED 等表述不代表当前发布判定。当前状态以 `release-verdict.json`、`E2E-Coverage-and-Blockers.md` 与 `governance/production-evidence.json` 为准。
+
+
 - 审计 Issue：**V16-005（AUD-006 Worker 状态/租约/迟到结果，P1）**、**V16-006（AUD-004/009 唯一 Run Launch，P1）**、**V16-007（AUD-004/009 冻结并完整复制 DAG 快照，P1）**
 - 规格：`C:\Users\26029\Downloads\CamelTv_AIQE_V1.6_修复与生产化开发实施计划.md` 第 391–419 行（V16-005）、第 421–463 行（V16-006）、第 465–492 行（V16-007）；并参照 §0.1 完成定义、§0.2.3 测试分层、§0.2.4 状态定义、§0.2.6 正/负/异常路径、§0.2.8 禁止的“通过方式”、§1 依赖顺序（第 199 行）。
 - 仓库：`F:\CamelTv-worktrees\DeepSeek_Harness-aiqe-v1-6`

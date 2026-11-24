@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0",
+  "environment": "production",
+  "release": "aiqe-v1.6",
+  "checked_at": null,
+  "source": "repository-doc-review-20261124",
+  "note": "本文件是生产运行证据的唯一定性来源。任何阶段只有在该阶段给出仓库内可校验 artifact（日志/JSON/镜像 digest）后才能置 PASS；只有现场记录或相邻文档互相矛盾时一律 NOT_PROVEN。文档叙述不得覆盖本文件。",
+  "stages": {
+    "stage1_shadow": {
+      "status": "NOT_PROVEN",
+      "artifacts": [],
+      "doc_refs": [
+        "docs/aiqe/v1.6/Staging-V16-Run-Evidence.md",
+        "docs/aiqe/v1.6/Production-Readiness.md"
+      ],
+      "note": "文档记录 Shadow/ Dogfood / 小流量 Run PASS，但未提交 Run/Job/Assertion/Artifact 机器产物或 CI Run 链接。"
+    },
+    "stage2_dogfood": {
+      "status": "NOT_PROVEN",
+      "artifacts": [],
+      "doc_refs": ["docs/aiqe/v1.6/Staging-V16-Run-Evidence.md"],
+      "note": "同上：仅有 Run ID 文本记录，无归档产物。"
+    },
+    "stage3_small_traffic": {
+      "status": "NOT_PROVEN",
+      "artifacts": [],
+      "doc_refs": ["docs/aiqe/v1.6/Staging-V16-Run-Evidence.md"],
+      "note": "同上。"
+    },
+    "stage4_expand": {
+      "status": "NOT_PROVEN",
+      "artifacts": [],
+      "doc_refs": [
+        "docs/aiqe/v1.6/Staging-V16-Run-Evidence.md",
+        "docs/aiqe/v1.6/Production-Readiness.md",
+        "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
+      ],
+      "note": "Staging 证据与 Production-Readiness 记录 Stage 4/5 未执行，GA 报告却写已完成；无执行产物。"
+    },
+    "stage5_ga": {
+      "status": "NOT_PROVEN",
+      "artifacts": [],
+      "doc_refs": [
+        "docs/aiqe/v1.6/GA-Decision-20261122.md",
+        "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
+      ],
+      "note": "用户授权记录存在，但缺少独立验收签署与发布证据包。"
+    },
+    "postgres_backup_restore": {
+      "status": "NOT_PROVEN",
+      "artifacts": [],
+      "doc_refs": [
+        "docs/aiqe/v1.6/Production-Readiness.md",
+        "docs/aiqe/v1.6/Platform-Residual-Resolution.md"
+      ],
+      "note": "178 表一致仅有文本记录；Platform-Residual-Resolution 同时记录 staging PG 恢复 NOT_RUN。未提交 pg_dump/restore 原始日志或校验文件。"
+    },
+    "vault_production_mode": {
+      "status": "NOT_PROVEN",
+      "artifacts": [],
+      "doc_refs": [
+        "docs/aiqe/v1.6/Vault-Transit-Deployment.md",
+        "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
+      ],
+      "note": "Vault-Transit-Deployment.md 明确写的是开发/测试模式（vault server -dev，重启丢数据）；GA 报告宣称生产 TLS/Shamir/持久化已完成，二者矛盾且无配置脱敏记录。"
+    },
+    "monitoring_alerts": {
+      "status": "NOT_PROVEN",
+      "artifacts": [],
+      "doc_refs": [
+        "docs/aiqe/v1.6/observability/Monitoring-and-Alerts.md",
+        "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
+      ],
+      "note": "仅记录 21 条规则加载与自测告警投递，未归档 Prometheus/Alertmanager 触发截图或 API 响应。"
+    },
+    "container_egress": {
+      "status": "NOT_PROVEN",
+      "artifacts": [],
+      "doc_refs": ["docs/aiqe/v1.6/V1.6-GA-Release-Report.md"],
+      "note": "GA 报告第 49 行勾选项自身写着“集群实测 NOT_RUN”，不能计 PASS。"
+    },
+    "image_self_contained": {
+      "status": "NOT_PROVEN",
+      "artifacts": [],
+      "doc_refs": [
+        "docs/aiqe/v1.6/Production-Deploy-20261123.md",
+        "test-platform-v2/backend/Dockerfile"
+      ],
+      "note": "生产容器曾依赖 /opt/aiqe-v16-deps 挂载 sqlglot 与创建后复制迁移文件。本批次已把 sqlglot 固化进 requirements.api.txt / requirements.api.lock / requirements.runner.lock（含 hash）；尚未重建镜像并记录 digest，故仍为 NOT_PROVEN。"
+    },
+    "production_smoke": {
+      "status": "NOT_PROVEN",
+      "artifacts": [],
+      "doc_refs": ["docs/aiqe/v1.6/Production-Deploy-20261123.md"],
+      "note": "swiftbugs.cn health 200 仅为部署记录，缺少容器 digest、部署 commit 与源码 SHA 一致性校验。"
+    }
+  },
+  "independent_verification": {
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "artifact": null,
+    "note": "生产验收尚无独立签字记录。"
+  }
+}

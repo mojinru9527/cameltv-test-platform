@@ -1797,7 +1797,7 @@ requirements:
     owner: qa-automation
     reviewer: qa-lead
     gaps:
-    - 平台链路 E2E 计为 PLATFORM-TC-001..012，不等同任何产品 TC；产品级 TC-AIQE-001..010 当前为 PARTIAL。
+    - 平台链路 E2E 计为 TC-PLATFORM-001..012，不等同任何产品 TC；产品级 TC-AIQE-001..010 当前为 PARTIAL。
     acceptance:
       status: NOT_REVIEWED
       reviewed_at: null
@@ -2494,7 +2494,7 @@ requirements:
           note: 现场执行记录，未归档机器产物。
       platform:
         tc_ids:
-        - PLATFORM-TC-010
+        - TC-PLATFORM-010
         tests:
         - tests/e2e/aiqe/test_v16_017_tc001_contract.py::test_tc_001_contract_freeze_and_v2_impact
 
@@ -2654,7 +2654,7 @@ requirements:
           note: 现场执行记录，未归档机器产物。
       platform:
         tc_ids:
-        - PLATFORM-TC-008
+        - TC-PLATFORM-008
         tests:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_003_browser_interaction_and_interception
 
@@ -2711,7 +2711,7 @@ requirements:
           note: 现场执行记录，未归档机器产物。
       platform:
         tc_ids:
-        - PLATFORM-TC-011
+        - TC-PLATFORM-011
         tests:
         - tests/test_aiqe_v16_017_resource_lock.py::test_released_lock_is_immediately_acquirable
 
@@ -2768,7 +2768,7 @@ requirements:
           note: 现场执行记录，未归档机器产物。
       platform:
         tc_ids:
-        - PLATFORM-TC-012
+        - TC-PLATFORM-012
         tests:
         - tests/test_aiqe_v16_017_upstream.py::test_upstream_504_is_blocked_not_product_fail
 
@@ -2879,7 +2879,7 @@ requirements:
           note: 现场执行记录，未归档机器产物。
       platform:
         tc_ids:
-        - PLATFORM-TC-005
+        - TC-PLATFORM-005
         tests:
         - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_008_defect_regression_end_to_end
 

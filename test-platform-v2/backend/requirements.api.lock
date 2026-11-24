@@ -2187,6 +2187,12 @@ sqlalchemy==2.0.51 \
     #   -c requirements.lock
     #   -r requirements.api.txt
     #   alembic
+sqlglot==30.33.0 \
+    --hash=sha256:9c007e0471c93e778d8613f25853543b959a3f793d9dadf1341b3d6bd53246a8 \
+    --hash=sha256:a5b279fe7397a9fb6cdd0274a13a5fcee0fa83ac6ff617083f1f2832031e90bc
+    # via
+    #   -c requirements.lock
+    #   -r requirements.api.txt
 sse-starlette==3.4.6 \
     --hash=sha256:56217ab4c9a9f9c5db7b21e08732d3e7c2b807f45231ad23de0551a24c4a41f6 \
     --hash=sha256:725f8a1bd6d26ae1b2c9610c0ef5065dfdd496f3988d28adcf8c4b49dc25c627

@@ -1,5 +1,8 @@
 # TC-010 Benchmark Gate 用户豁免记录（历史，已被 v4 PASS 取代）
 
+> **STATUS: HISTORICAL** — 本文记录 2026-11-2x 当时的执行事实与结论；其中 PASS/VERIFIED 等表述不代表当前发布判定。当前状态以 `release-verdict.json`、`E2E-Coverage-and-Blockers.md` 与 `governance/production-evidence.json` 为准。
+
+
 日期：2026-11-23
 项目：CamelTv AIQE V1.6
 关联：TC-AIQE-010、候选 `81e7bc4d-a7cc-4415-82a1-651447217c05`

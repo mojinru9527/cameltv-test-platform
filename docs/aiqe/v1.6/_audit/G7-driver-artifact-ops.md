@@ -1,5 +1,8 @@
 # G7 独立审计报告 — Driver 能力真实性 / 多端边界 / Artifact 安全 / 脚本与生产化
 
+> **STATUS: HISTORICAL** — 本文记录 2026-11-2x 当时的执行事实与结论；其中 PASS/VERIFIED 等表述不代表当前发布判定。当前状态以 `release-verdict.json`、`E2E-Coverage-and-Blockers.md` 与 `governance/production-evidence.json` 为准。
+
+
 - 审计组：G7（capability registry / platform adapters / artifact service / scripts/aiqe / 依赖与 CI / 监控指标）
 - 负责 Issue：**V16-015、V16-016、V16-018、V16-021、V16-022、V16-023、V16-024**
 - 仓库工作树：`F:\CamelTv-worktrees\DeepSeek_Harness-aiqe-v1-6`
