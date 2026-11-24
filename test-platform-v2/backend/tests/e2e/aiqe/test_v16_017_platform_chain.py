@@ -37,7 +37,13 @@ from app.aiqe.services.regression_service import (
 )
 from app.aiqe.services.regression_terminal import handle_run_terminal
 from app.aiqe.services.run_launch import launch_run
-from app.aiqe.services.triage_service import create_experiment, launch_experiment
+from app.aiqe.services.triage_service import (
+    ExperimentError,
+    create_experiment,
+    launch_experiment,
+    record_experiment_result,
+    sync_experiment_result,
+)
 from app.aiqe.services.workflow_service import approve_workflow, create_workflow
 from app.models.environment import Environment
 from app.models.execution_job import ExecutionJob
@@ -51,6 +57,8 @@ class _Handler(BaseHTTPRequestHandler):
     orders: ClassVar[dict[str, Any]] = {}
     last_auth: ClassVar[str] = ""
     asset_hits: ClassVar[int] = 0
+    #: 受控目标计数器：策略阻断必须表现为“目标实际收到 0 次请求”。
+    health_hits: ClassVar[int] = 0
     # TC-008：模拟“修复后部署”——修复前 /fail 返回 success=false，修复后返回 true。
     fixed: ClassVar[bool] = False
     PAGE_HTML = """<!doctype html><html><head><title>AIQE-E2E</title></head><body>
@@ -92,6 +100,7 @@ class _Handler(BaseHTTPRequestHandler):
         elif self.path == "/fail":
             self._json({"success": bool(_Handler.fixed)})
         elif self.path == "/health":
+            _Handler.health_hits += 1
             self._json({"ok": True, "success": True})
         elif self.path.startswith("/orders/"):
             order = self.orders.get(self.path.rsplit("/", 1)[-1])
@@ -185,9 +194,13 @@ def _launch(db, port: int, graph: dict) -> TestRun:
         launch_key=f"e2e-{uuid.uuid4().hex}",
     )
     db.commit()
-    _drain(db)
-    db.expire_all()
-    run = db.get(TestRun, run.id)
+    # Worker 轮询是异步语义：允许有限轮真实 claim（禁止人工把 pending 改成 running）。
+    for _ in range(3):
+        _drain(db)
+        db.expire_all()
+        run = db.get(TestRun, run.id)
+        if not pending_jobs(db, run):
+            break
     leftovers = pending_jobs(db, run)
     assert not leftovers, (
         "存在未被真实 Worker claim 的 pending Job（禁止人工 fallback 消费）: "
@@ -354,6 +367,15 @@ def test_tc_005_metadata_endpoint_never_reached(db_session, sut):
     assert any(
         "target_policy" in item or "ssrf" in item or "policy" in item for item in events
     ), events
+    # 受控目标证明：把“可真实到达但不在 allowlist”的服务端目标作为危险目标，
+    # 策略必须阻断且目标计数器保持 0（而不是只断言节点状态）。
+    _Handler.health_hits = 0
+    denied_graph = _http_graph(port, "/health", expected=True)
+    denied_graph["nodes"][0]["input"]["url"] = f"http://localhost:{port}/health"
+    denied_run = _launch(db_session, port, denied_graph)
+    denied_node = db_session.scalar(select(NodeRun).where(NodeRun.run_id == denied_run.id))
+    assert denied_node.status == "BLOCKED", denied_node.status
+    assert _Handler.health_hits == 0, f"被阻断目标仍收到 {_Handler.health_hits} 次请求"
     record_tc(
         "TC-PLATFORM-003",
         db_session,
@@ -620,11 +642,24 @@ def test_tc_006_secret_chain_no_plaintext(db_session, sut):
     # 下游真实收到 Canary 明文（证明 Handle 被授权解析）
     assert _Handler.last_auth == f"Bearer {token_value}"
 
-    handles = list(db_session.scalars(select(SecretHandle)))
+    handles = list(
+        db_session.scalars(
+            select(SecretHandle).order_by(SecretHandle.created_at, SecretHandle.id)
+        )
+    )
     assert handles, "登录输出必须生成 SecretHandle"
-    handle = handles[0]
+    handle = next(
+        (
+            item
+            for item in handles
+            if "use" in list((item.consumer_scope_json or {}).get("allowed_nodes") or [])
+        ),
+        handles[0],
+    )
     scope = handle.consumer_scope_json or {}
-    assert "use" in list(scope.get("allowed_nodes") or []), scope
+    assert "use" in list(scope.get("allowed_nodes") or []), [
+        (item.id, item.consumer_scope_json) for item in handles
+    ]
     # 越权解析必须拒绝
     with pytest.raises(SecretAccessDenied):
         resolve_secret_handle(
@@ -696,10 +731,27 @@ def test_tc_009_noise_experiments_e1_to_e6(db_session, sut):
         _drain(db_session)
         db_session.expire_all()
         exp = db_session.get(TriageExperiment, exp.id)
+        exp = sync_experiment_result(db_session, exp.id)
+        db_session.commit()
         run = db_session.get(TestRun, launched.verification_run_id)
         assert run is not None and run.retest_of == baseline.id
         assert run.source_type == "experiment"
         assert run.status in {"COMPLETED", "BLOCKED", "FAILED"}, (key, run.status)
+        assert exp.changed_dimension == variable, (key, exp.changed_dimension)
+        assert exp.status in {"COMPLETED", "FAILED", "UNKNOWN", "BLOCKED"}, (
+            key,
+            exp.status,
+            exp.error_code,
+        )
+        # 故障归因：只有终态 Run 才能给出结论；UNKNOWN 不得被归类成已知根因。
+        if exp.status == "COMPLETED" and run.outcome:
+            conclusion = "REFUTED" if run.outcome == "PASS" else "SUPPORTED"
+            record_experiment_result(db_session, exp.id, result=conclusion)
+            db_session.commit()
+            assert db_session.get(TriageExperiment, exp.id).experiment_result == conclusion
+        else:
+            with pytest.raises(ExperimentError):
+                record_experiment_result(db_session, exp.id, result="SUPPORTED")
         assert exp.snapshot_diff_json["single_variable"] is True, key
         assert exp.snapshot_diff_json["expected_dimension"] == variable, key
         launched_runs.append(run.id)

@@ -52,7 +52,10 @@ class RegressionRequestIn(BaseModel):
     reason: str = Field(default="", max_length=2000)
     idempotency_key: str | None = Field(default=None, max_length=128)
     #: V16-014-R2：A5 证据化影响分析（checksum 必须匹配），用于扩大 mandatory scope。
+    #: 兼容旧调用方；新调用方应只传 impact_base_sha，由服务端重算。
     impact_analysis: dict | None = None
+    #: V16-014：服务端从 base_sha..fixed_sha 的真实 Git diff 重算影响分析。
+    impact_base_sha: str | None = Field(default=None, max_length=64)
 
 
 def _run_out(run) -> dict | None:
@@ -120,6 +123,7 @@ def post_defect_regression(
             idempotency_key=idempotency_header or body.idempotency_key,
             actor_id=getattr(current.user, "id", None),
             impact_analysis=body.impact_analysis,
+            impact_base_sha=body.impact_base_sha,
         )
     except RegressionError as exc:
         raise APIException(code=400, msg=str(exc), http_status=400) from None

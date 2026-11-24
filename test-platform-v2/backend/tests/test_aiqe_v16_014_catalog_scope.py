@@ -1,6 +1,9 @@
 """V16-014-R2 验收：Case Catalog 将 A5 影响映射进 Mandatory Scope。"""
 from __future__ import annotations
 
+import subprocess
+from pathlib import Path
+
 import pytest
 
 from app.aiqe.models.case_catalog import CaseCatalogEntry
@@ -260,3 +263,98 @@ def test_tampered_impact_analysis_blocks_regression(db_session):
     assert run is None
     assert row.status == "BLOCKED"
     assert any(item["code"] == "IMPACT_ANALYSIS_INVALID" for item in (row.blockers_json or []))
+
+
+# ── V16-014：服务端重算（不接受调用方算好的 impact_analysis）────────
+REPO_ROOT = Path(__file__).resolve().parents[3]
+
+
+def _real_diff():
+    def _sha(rev: str) -> str:
+        return subprocess.run(
+            ["git", "rev-parse", rev],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+
+    from app.aiqe.services.impact_service import load_git_diff
+
+    base, head = _sha("HEAD~1"), _sha("HEAD")
+    files = load_git_diff(str(REPO_ROOT), base, head)
+    assert files, "HEAD~1..HEAD 必须包含文件变更"
+    return base, head, files[0].path
+
+
+def _regression_with_impact(db_session, *, base_sha: str, head_sha: str, caller_analysis=None):
+    _catalog(db_session)
+    source = _source_run(db_session)
+    defect = Defect(project_id=1, defect_id="BUG-SRV", title="x", severity="P1", status="open")
+    db_session.add(defect)
+    db_session.flush()
+    record_deployment_attestation(
+        db_session, project_id=1, environment_id=None, commit_sha=head_sha, source="ci"
+    )
+    db_session.commit()
+    return create_regression_request(
+        db_session,
+        project_id=1,
+        defect_id=defect.id,
+        fixed_sha=head_sha,
+        source_run_id=source.id,
+        idempotency_key=f"srv-reg-{base_sha[:8]}",
+        impact_base_sha=base_sha,
+        impact_analysis=caller_analysis,
+    )
+
+
+def test_server_recomputes_impact_from_real_git(db_session):
+    base, head, _changed = _real_diff()
+    row, run, created = _regression_with_impact(db_session, base_sha=base, head_sha=head)
+    db_session.commit()
+    assert created is True and run is not None, row.blockers_json
+    meta = run.environment_snapshot_json["impact_analysis"]
+    assert meta["source"] == "server"
+    assert meta["base_sha"] == base and meta["head_sha"] == head
+    assert str(meta["checksum"]).startswith("sha256:")
+
+
+def test_server_recompute_matches_catalog_entry(db_session):
+    base, head, changed = _real_diff()
+    upsert_entry(
+        db_session,
+        project_id=1,
+        case_id="CASE-REAL-1",
+        node_key="order",
+        file_path=changed,
+    )
+    db_session.flush()
+    row, run, created = _regression_with_impact(db_session, base_sha=base, head_sha=head)
+    db_session.commit()
+    assert created is True and run is not None, row.blockers_json
+    meta = run.environment_snapshot_json["impact_analysis"]
+    assert "CASE-REAL-1" in meta["matched_case_ids"], meta
+
+
+def test_server_rejects_caller_analysis_mismatch(db_session):
+    base, head, _changed = _real_diff()
+    caller = _impact()  # 与真实 diff 无关的调用方分析
+    row, run, created = _regression_with_impact(
+        db_session, base_sha=base, head_sha=head, caller_analysis=caller
+    )
+    db_session.commit()
+    assert created is True
+    assert run is None and row.status == "BLOCKED"
+    codes = {item["code"] for item in (row.blockers_json or [])}
+    assert "IMPACT_ANALYSIS_MISMATCH" in codes, row.blockers_json
+
+
+def test_server_rejects_invalid_base_sha(db_session):
+    _base, head, _changed = _real_diff()
+    row, run, created = _regression_with_impact(db_session, base_sha="abc123", head_sha=head)
+    db_session.commit()
+    assert created is True
+    assert run is None and row.status == "BLOCKED"
+    codes = {item["code"] for item in (row.blockers_json or [])}
+    assert "IMPACT_ANALYSIS_UNCOMPUTABLE" in codes, row.blockers_json

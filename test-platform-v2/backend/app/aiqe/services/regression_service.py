@@ -17,12 +17,14 @@ import json
 import re
 from datetime import UTC, datetime
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.aiqe.models.deployment import DeploymentAttestation
+from app.aiqe.services.impact_service import ImpactError
 from app.aiqe.models.profile import ExecutionProfile
 from app.aiqe.models.run import NodeRun, RunAssertionResult, StepAttempt, TestRun
 from app.aiqe.models.workflow import WorkflowDefinition
@@ -256,6 +258,31 @@ def _replicate_nodes(db: Session, *, source_run: TestRun | None, target_run: Tes
     dag_scheduler.create_node_runs(db, target_run.id, graph)
 
 
+def compute_impact_analysis(base_sha: str, head_sha: str) -> dict[str, Any]:
+    """服务端重算影响分析（V16-014：禁止只信任调用方提交的 impact_analysis）。"""
+    from app.aiqe.services.change_impact import analyze_change_impact
+    from app.aiqe.services.impact_service import _run_git, collect_changes
+
+    base = normalize_sha(base_sha, field="base_sha")
+    head = normalize_sha(head_sha, field="fixed_sha")
+    if base == head:
+        raise RegressionError("base_sha 与 fixed_sha 不能相同")
+    repo_root = Path(__file__).resolve().parents[5]
+    files, _symbols, _routes, _migrations, _components = collect_changes(
+        str(repo_root), base, head
+    )
+    if not files:
+        raise RegressionError("服务端无法计算影响：diff 为空或 SHA 不在仓库历史中")
+    diff_text = _run_git(str(repo_root), ["diff", "--unified=0", f"{base}..{head}"])
+    return analyze_change_impact(
+        base_sha=base,
+        head_sha=head,
+        changed_files=[item.path for item in files],
+        diff_text=diff_text[:200_000],
+        repo_root=str(repo_root),
+    )
+
+
 def create_regression_request(
     db: Session,
     *,
@@ -270,6 +297,7 @@ def create_regression_request(
     idempotency_key: str | None = None,
     actor_id: int | None = None,
     impact_analysis: Mapping[str, Any] | None = None,
+    impact_base_sha: str | None = None,
 ) -> tuple[DefectRegression, TestRun | None, bool]:
     """返回 ``(regression, verification_run, created)``；BLOCKED 时 run 为 None。"""
     sha = normalize_sha(fixed_sha)
@@ -302,7 +330,30 @@ def create_regression_request(
     blockers_scope_error: dict[str, str] | None = None
     impact_meta: dict[str, Any] | None = None
     impact_error: dict[str, str] | None = None
-    if impact_analysis is not None:
+    analysis: Mapping[str, Any] | None = impact_analysis
+    server_analysis: dict[str, Any] | None = None
+    if impact_base_sha:
+        # 服务端重算：调用方只提供 base SHA，分析内容由服务器从真实 Git 历史推导。
+        try:
+            server_analysis = compute_impact_analysis(str(impact_base_sha), sha)
+        except (RegressionError, ValueError, ImpactError) as exc:
+            impact_error = {
+                "code": "IMPACT_ANALYSIS_UNCOMPUTABLE",
+                "message": str(exc)[:300],
+            }
+        else:
+            if (
+                impact_analysis is not None
+                and str(impact_analysis.get("checksum") or "")
+                != str(server_analysis.get("checksum") or "")
+            ):
+                impact_error = {
+                    "code": "IMPACT_ANALYSIS_MISMATCH",
+                    "message": "调用方 impact_analysis 与服务端重算的 checksum 不一致",
+                }
+            else:
+                analysis = server_analysis
+    if analysis is not None and impact_error is None:
         from app.aiqe.services.case_catalog import (
             CaseCatalogError,
             match_impact,
@@ -310,7 +361,7 @@ def create_regression_request(
         )
 
         try:
-            verify_analysis(impact_analysis)
+            verify_analysis(analysis)
             graph_keys = {
                 str(node.get("key"))
                 for node in (frozen.canonical_json if frozen is not None else {}).get("nodes") or []
@@ -318,17 +369,21 @@ def create_regression_request(
             matched = match_impact(
                 db,
                 project_id=int(project_id),
-                impact_analysis=impact_analysis,
+                impact_analysis=analysis,
                 allowed_node_keys=graph_keys,
             )
             mandatory = sorted(set(mandatory) | set(matched["node_refs"]))
             impact_meta = {
                 "status": matched["status"],
-                "checksum": impact_analysis.get("checksum"),
+                "checksum": analysis.get("checksum"),
                 "matched_case_ids": matched["matched_case_ids"],
                 "node_refs": matched["node_refs"],
                 "catalog_size": matched["catalog_size"],
                 "unknown_broadened": matched["unknown_broadened"],
+                # V16-014：区分服务端重算与调用方提交，禁止把调用方数据当 A5 结果。
+                "source": "server" if server_analysis is not None else "caller",
+                "base_sha": analysis.get("base_sha"),
+                "head_sha": analysis.get("head_sha"),
             }
         except CaseCatalogError as exc:
             impact_error = {"code": "IMPACT_ANALYSIS_INVALID", "message": str(exc)}

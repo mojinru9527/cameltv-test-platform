@@ -1528,7 +1528,7 @@ requirements:
   owner: ai-quality
   reviewer: pending
   gaps:
-  - A5 已通过 ToolExecutor 读取服务端 read_git_diff（真实 diff/AST/route/migration）；Regression API 仍接受调用方 impact_analysis 并只做 checksum/catalog 校验，服务端重算与 binding 待 V16-014-R2 后续批次。
+  - A5 通过 ToolExecutor 读取服务端 read_git_diff（真实 diff/AST/route/migration）；Regression API 新增 impact_base_sha，由服务端重算影响并校验调用方 checksum；create_regression_plan 写工具仍 UNAVAILABLE（需审批与副作用门禁）。
   acceptance:
     status: NOT_REVIEWED
     reviewed_at: null
@@ -1559,9 +1559,13 @@ requirements:
     success:
     - tests/test_aiqe_v16_014_catalog_scope.py::test_regression_includes_catalog_node_in_mandatory_scope
     - tests/test_aiqe_v16_014_catalog_scope.py::test_catalog_match_route_to_node_refs
+    - tests/test_aiqe_v16_014_catalog_scope.py::test_server_recomputes_impact_from_real_git
+    - tests/test_aiqe_v16_014_catalog_scope.py::test_server_recompute_matches_catalog_entry
     negative:
     - tests/test_aiqe_v16_014_catalog_scope.py::test_tampered_impact_analysis_blocks_regression
     - tests/test_aiqe_v16_014_catalog_scope.py::test_catalog_checksum_and_project_isolation
+    - tests/test_aiqe_v16_014_catalog_scope.py::test_server_rejects_caller_analysis_mismatch
+    - tests/test_aiqe_v16_014_catalog_scope.py::test_server_rejects_invalid_base_sha
     boundary:
     - tests/test_aiqe_v16_014_catalog_scope.py::test_unknown_analysis_broadens_to_all_catalog_nodes
   mock_boundary: 真实 DB/catalog/impact checksum；无 Mock。
@@ -1571,9 +1575,11 @@ requirements:
   - L3
   evidence:
   - pytest:tests/test_aiqe_v16_014_catalog_scope.py (5 passed)
+  - pytest:tests/test_aiqe_v16_014_catalog_scope.py (9 passed)
   owner: ai-quality
   reviewer: pending
-  gaps: []
+  gaps:
+  - 服务端重算已覆盖 checksum 不一致/非法 base SHA/真实 Git diff；调用方仍可只传 impact_analysis（兼容旧入口），此时 meta.source=caller 不计服务端证据。
   acceptance:
     status: NOT_REVIEWED
     reviewed_at: null
@@ -2654,6 +2660,7 @@ requirements:
   reviewer: pending
   gaps:
   - 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。
+  - 平台侧已加入受控目标零请求断言（localhost 可到达但不在 allowlist → BLOCKED 且计数器 0）。
   acceptance:
     status: NOT_REVIEWED
     reviewed_at: null
@@ -2867,6 +2874,7 @@ requirements:
   reviewer: pending
   gaps:
   - 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。
+  - 平台侧 E1–E6 实验已补终态收敛与结论记录断言（UNKNOWN 不得给已知根因结论）。
   acceptance:
     status: NOT_REVIEWED
     reviewed_at: null
