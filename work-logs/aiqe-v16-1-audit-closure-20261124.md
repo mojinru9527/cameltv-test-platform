@@ -71,7 +71,17 @@
 | 生产缺陷：A3 无法通过 AgentTask 运行 | `WorkflowPlannerAgent.__init__` 不接受 `model`，`get_agent` 传参即 TypeError。已修复并加回归测试覆盖 A0–A6 全部构造 | `test_get_agent_accepts_model_for_every_agent` |
 | §10.21 证据字段统一 Schema | 新增 `traceability/runtime-evidence.schema.json`（PROVEN 必须含 artifacts + run_id/run_ids；refs 键白名单），checker 接入 jsonschema，CI traceability job 安装 jsonschema | 新增 2 条 schema 测试 |
 
-## 7. 未完成（后续批次）
+## 7. 第五轮补充（2026-11-25）
+
+| 审计项 | 处理 | 验证 |
+|---|---|---|
+| §10.16/§10.17 `create_regression_plan` 未实现 | 实现为**只读提案工具**（`side_effects=NONE`）：服务端强制集合 + 影响面重算/Catalog 匹配 + `requires_human_approval=true` + 提交端点；A5 在 references 带 defect/base/head 时自动取证 | 3 条新测试（提案无副作用、跨项目拒绝、A5 取证）；工具循环测试 13 passed |
+| 写工具边界 | `create_draft` / `create_learning_candidate` 仍 UNAVAILABLE（业务写副作用，需审批），矩阵明确记录拆分 | `test_write_tools_remain_unavailable` |
+
+> 结论：A5 现已能“自动分析 + 生成回归计划提案”，但**创建 Regression/Run 仍必须人工审批后调用 API**，
+> 这是审计要求的副作用门禁，不是缺口。
+
+## 8. 未完成（后续批次）
 
 1. **产品级 TC-AIQE-001..010**：需隔离 Test 环境按 merged spec §20 重跑并归档产物。
 2. **独立验收签署**：机制已就绪，70 条需求仍需真实 Reviewer 逐条生成
@@ -80,7 +90,5 @@
    `check_branch_protection.py --capture`，再重算 verdict。
 4. **Gate F**：镜像重建 digest/SBOM、干净节点部署、PG 备份恢复/PG 只读 role/
    Vault 生产/告警原始日志。
-5. **A5 剩余**：`create_regression_plan` 写工具仍 UNAVAILABLE（需审批与副作用门禁），
-   A5 自动生成回归计划并调用 Regression API 的端到端链路尚未打通。
-6. **TC-006 flaky 观察**：已消除已知顺序/时序假设，连续多次通过；若再次出现需抓取
+5. **TC-006 flaky 观察**：已消除已知顺序/时序假设，连续多次通过；若再次出现需抓取
    失败时的 handle/scope/事件快照，不得以重跑掩盖。

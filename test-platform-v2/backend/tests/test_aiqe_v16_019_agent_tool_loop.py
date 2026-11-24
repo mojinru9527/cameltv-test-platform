@@ -18,6 +18,7 @@ from sqlalchemy import select
 from app.aiqe.agents.protocol import AgentContext
 from app.aiqe.agents.registry import get_agent
 from app.aiqe.agents.tool_executor import ToolExecutor
+from app.aiqe.models.case_catalog import CaseCatalogEntry  # noqa: F401 - 注册建表元数据
 from app.aiqe.models.tool import ToolExecutionAudit
 from app.aiqe.services import contract_service
 from app.aiqe.services.tool_impls import READ_TOOLS, UNAVAILABLE_TOOLS
@@ -113,10 +114,10 @@ def test_read_git_diff_returns_server_derived_evidence(db_session):
 
 
 def test_write_tools_remain_unavailable():
-    assert "create_regression_plan" in UNAVAILABLE_TOOLS
+    assert "create_learning_candidate" in UNAVAILABLE_TOOLS
     assert "create_draft" in UNAVAILABLE_TOOLS
     assert "read_requirements" in READ_TOOLS
-    assert "read_git_diff" in READ_TOOLS
+    assert "create_regression_plan" in READ_TOOLS
 
 
 # ── 2. ToolExecutor 授权 + 审计 + tool_calls ───────────────
@@ -215,3 +216,72 @@ def test_get_agent_accepts_model_for_every_agent(db_session):
     for key in ("A0", "A1", "A2", "A3", "A4", "A5", "A6"):
         agent = get_agent(key, stub, model="deepseek-chat")
         assert agent.key == key
+
+
+# ── 4. 回归计划工具（只读提案，不产生副作用）───────────────
+def test_create_regression_plan_is_proposal_only(db_session):
+    from app.models.defect import Defect
+
+    _project(db_session)
+    defect = Defect(
+        project_id=1, defect_id="BUG-PLAN", title="x", severity="P1", status="open"
+    )
+    db_session.add(defect)
+    db_session.commit()
+    from app.models.defect import DefectRegression
+
+    before = len(list(db_session.scalars(select(DefectRegression))))
+    registry = build_bound_registry(db_session, project_id=1, actor_id=1)
+    plan = registry.resolve("A5", "create_regression_plan")(
+        defect_id=defect.id, fixed_sha="d" * 40
+    )
+    after = len(list(db_session.scalars(select(DefectRegression))))
+    assert before == after == 0, "计划工具不得创建 Regression"
+    assert plan["side_effects"] == "NONE"
+    assert plan["requires_human_approval"] is True
+    assert plan["submission_endpoint"].endswith("/regressions")
+    assert plan["fixed_sha"] == "d" * 40
+
+
+def test_create_regression_plan_rejects_cross_project(db_session):
+    from app.models.defect import Defect
+
+    _project(db_session, 1)
+    _project(db_session, 2)
+    defect = Defect(
+        project_id=2, defect_id="BUG-OTHER", title="x", severity="P1", status="open"
+    )
+    db_session.add(defect)
+    db_session.commit()
+    registry = build_bound_registry(db_session, project_id=1, actor_id=1)
+    with pytest.raises(PermissionError):
+        registry.resolve("A5", "create_regression_plan")(
+            defect_id=defect.id, fixed_sha="d" * 40
+        )
+
+
+def test_a5_gathers_regression_plan_when_refs_present(db_session):
+    from app.models.defect import Defect
+
+    _project(db_session)
+    defect = Defect(
+        project_id=1, defect_id="BUG-GATHER", title="x", severity="P1", status="open"
+    )
+    db_session.add(defect)
+    db_session.commit()
+    head = _git("rev-parse", "HEAD")
+    base = _git("rev-parse", "HEAD~1")
+    registry = build_bound_registry(db_session, project_id=1, actor_id=1)
+    executor = ToolExecutor(
+        registry=registry,
+        agent_key="A5",
+        references={"base_sha": base, "head_sha": head, "defect_id": defect.id},
+    )
+    from app.aiqe.agents.change_impact_agent import ChangeImpactAgent
+
+    evidence = ChangeImpactAgent(lambda system, prompt: "{}").gather_tool_evidence(executor)
+    assert "regression_plan" in evidence
+    assert evidence["regression_plan"]["ok"] is True, evidence["regression_plan"]
+    assert evidence["regression_plan"]["data"]["side_effects"] == "NONE"
+    tools = {item["tool"] for item in executor.tool_calls()}
+    assert {"read_git_diff", "create_regression_plan"}.issubset(tools)

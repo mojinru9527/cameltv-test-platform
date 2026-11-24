@@ -67,7 +67,6 @@ def test_all_allowlist_tools_classified():
     assert report["unavailable"] == [
         "create_draft",
         "create_learning_candidate",
-        "create_regression_plan",
     ]
     # V16-019：只读工具必须真实可用（读需求/读 Git diff 已补齐）。
     assert "read_project_context" in report["available"]
@@ -79,9 +78,9 @@ def test_unregistered_and_unavailable_rejected(db_session):
     registry = _registry(db_session)
     with pytest.raises(ToolNotAllowed):
         registry.resolve("A1", "read_project_context_unknown")
-    # 写工具保持 UNAVAILABLE（需要审批与副作用门禁）。
+    # 有写副作用的工具保持 UNAVAILABLE（需要审批与副作用门禁）。
     with pytest.raises(ToolUnavailable):
-        registry.resolve("A5", "create_regression_plan")
+        registry.resolve("A6", "create_learning_candidate")
 
 
 def test_agent_without_permission_rejected(db_session):

@@ -248,6 +248,92 @@ def read_git_diff(
     }
 
 
+def create_regression_plan(
+    db: Session,
+    *,
+    project_id: int,
+    defect_id: int,
+    fixed_sha: str,
+    source_run_id: str = "",
+    base_sha: str = "",
+    scope: str = "DIRECT_FAILURES_PLUS_P0_PLUS_IMPACT",
+    **_: Any,
+) -> dict[str, Any]:
+    """生成回归计划草案（**无副作用**，不创建 Regression/Run）。
+
+    V16-014/V16-019：A5 需要能自动产出回归范围，但写操作必须由人工审批后经
+    ``POST /api/v1/aiqe/defects/{id}/regressions`` 提交。本工具只做只读计算：
+    - 校验 defect / source Run 的项目归属；
+    - 复用 ``build_mandatory_scope`` 计算强制集合（AI 不可删除）；
+    - 若提供 ``base_sha``，调用服务端 ``compute_impact_analysis`` 重算影响面并匹配 Catalog。
+    """
+    import re as _re
+
+    from app.aiqe.services import regression_service
+
+    sha_pattern = _re.compile(r"^[0-9a-f]{40}$")
+    fixed = str(fixed_sha or "").strip().lower()
+    if not sha_pattern.match(fixed):
+        raise ValueError("fixed_sha 必须是完整 40 位小写 SHA")
+    base = str(base_sha or "").strip().lower()
+    if base and not sha_pattern.match(base):
+        raise ValueError("base_sha 必须是完整 40 位小写 SHA")
+    defect = db.get(Defect, int(defect_id))
+    if defect is None or int(defect.project_id or 0) != int(project_id):
+        raise PermissionError("缺陷不存在或无权限")
+    source_run = None
+    if source_run_id:
+        from app.aiqe.models.run import TestRun
+
+        source_run = db.get(TestRun, str(source_run_id))
+        if source_run is None or int(source_run.project_id or 0) != int(project_id):
+            raise PermissionError("source Run 不存在或无权限")
+    if scope not in regression_service.SCOPES:
+        raise ValueError(f"未知 scope: {scope!r}")
+    mandatory, excluded = regression_service.build_mandatory_scope(
+        db, source_run=source_run, scope=scope, selected_case_ids=None
+    )
+    impact: dict[str, Any] | None = None
+    if base:
+        analysis = regression_service.compute_impact_analysis(base, fixed)
+        from app.aiqe.services.case_catalog import match_impact, verify_analysis
+
+        verify_analysis(analysis)
+        matched = match_impact(
+            db, project_id=int(project_id), impact_analysis=analysis, allowed_node_keys=None
+        )
+        mandatory = sorted(
+            set(mandatory)
+            | {ref.removeprefix("node:") for ref in matched["node_refs"]}
+        )
+        impact = {
+            "status": matched["status"],
+            "checksum": analysis.get("checksum"),
+            "changed_files": analysis.get("changed_files"),
+            "impacted_areas": analysis.get("impacted_areas"),
+            "matched_case_ids": matched["matched_case_ids"],
+            "node_refs": matched["node_refs"],
+            "unknown_broadened": matched["unknown_broadened"],
+            "base_sha": base,
+            "head_sha": fixed,
+        }
+    return {
+        "plan_kind": "DEFECT_REGRESSION_PLAN",
+        "project_id": int(project_id),
+        "defect_id": int(defect_id),
+        "fixed_sha": fixed,
+        "source_run_id": source_run.id if source_run is not None else None,
+        "scope": scope,
+        "mandatory_case_ids": sorted(set(mandatory)),
+        "excluded": excluded,
+        "impact": impact,
+        "requires_human_approval": True,
+        "side_effects": "NONE",
+        "submission_endpoint": f"POST /api/v1/aiqe/defects/{int(defect_id)}/regressions",
+        "note": "本工具只生成回归计划；创建 Regression/Run 必须人工审批后调用 API。",
+    }
+
+
 READ_TOOLS: dict[str, Any] = {
     "read_project_context": read_project_context,
     "read_openapi": read_openapi,
@@ -257,14 +343,16 @@ READ_TOOLS: dict[str, Any] = {
     "read_benchmark_dataset": read_benchmark_dataset,
     "read_requirements": read_requirements,
     "read_git_diff": read_git_diff,
+    # 名称以 create_ 开头但**无副作用**：只产出待审批的回归计划草案。
+    "create_regression_plan": create_regression_plan,
 }
 
 #: 未实现真实实现（或需要写副作用审批）的工具必须显式 UNAVAILABLE。
-#: 写工具（create_*）保持不可用：必须走审批与副作用门禁，不能为了“工具全绿”放开。
+#: create_draft / create_learning_candidate 会产生业务写副作用，保持不可用；
+#: create_regression_plan 已改为只读提案（副作用见 submission_endpoint）。
 UNAVAILABLE_TOOLS = frozenset(
     {
         "create_draft",
-        "create_regression_plan",
         "create_learning_candidate",
     }
 )

@@ -91,6 +91,21 @@ class ChangeImpactAgent(BaseAgent):
             evidence["git_diff"] = executor.safe_call(
                 "read_git_diff", base_sha=base_sha, head_sha=head_sha
             )
+        # V16-014：缺陷回归计划（只读提案；创建 Regression 仍需人工审批 + API）。
+        defect_id = references.get("defect_id")
+        if defect_id and head_sha:
+            plan_args: dict[str, Any] = {
+                "defect_id": int(defect_id),
+                "fixed_sha": head_sha,
+            }
+            source_run_id = str(references.get("source_run_id") or "").strip()
+            if source_run_id:
+                plan_args["source_run_id"] = source_run_id
+            if base_sha:
+                plan_args["base_sha"] = base_sha
+            evidence["regression_plan"] = executor.safe_call(
+                "create_regression_plan", **plan_args
+            )
         return evidence
 
     def validate(self, data: dict) -> dict:

@@ -135,6 +135,26 @@ TOOL_INPUT_SCHEMAS: dict[str, dict[str, Any]] = {
         "required": ["base_sha", "head_sha"],
         "additionalProperties": False,
     },
+    "create_regression_plan": {
+        "type": "object",
+        "properties": {
+            "defect_id": {"type": "integer", "minimum": 1},
+            "fixed_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+            "source_run_id": {"type": "string", "maxLength": 64},
+            "base_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+            "scope": {
+                "type": "string",
+                "enum": [
+                    "DIRECT_FAILURES",
+                    "DIRECT_FAILURES_PLUS_P0",
+                    "DIRECT_FAILURES_PLUS_P0_PLUS_IMPACT",
+                    "SELECTED",
+                ],
+            },
+        },
+        "required": ["defect_id", "fixed_sha"],
+        "additionalProperties": False,
+    },
 }
 
 

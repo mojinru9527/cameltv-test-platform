@@ -2,7 +2,7 @@
 #
 # 状态语义：NOT_STARTED < PARTIAL < IMPLEMENTED < VERIFIED（交付/自动证据）；
 # ACCEPTED 需非原作者独立 Reviewer 签署，且 acceptance.status=REVIEWED。
-# VERIFIED 不等于独立验收：acceptance.status 为 NOT_REVIEWED 时 Gate G 不得宣称完成。
+# VERIFIED 不等于独立验收：acceptance.status=NOT_REVIEWED 时 Gate G 不得宣称完成。
 # 运行时证据必须有可校验的机器产物；仅有现场记录时 runtime_evidence.status=NOT_PROVEN。
 # 本文件由人工维护，机器校验见 scripts/aiqe/check_traceability.py。
 
@@ -1524,6 +1524,7 @@ requirements:
     - tests/test_aiqe_v16_014_change_impact.py::test_migration_change_is_data_evidence
     - tests/test_aiqe_v16_014_change_impact.py::test_ui_route_change_classified
     - tests/test_aiqe_v16_014_change_impact.py::test_transitive_dependency_evidence
+    - tests/test_aiqe_v16_019_agent_tool_loop.py::test_a5_gathers_regression_plan_when_refs_present
     negative:
     - tests/test_aiqe_v16_014_change_impact.py::test_unsupported_file_forces_unknown_and_broad_regression
     - tests/test_aiqe_v16_014_change_impact.py::test_missing_diff_is_unknown_not_no_impact
@@ -1534,10 +1535,11 @@ requirements:
   - L2
   evidence:
   - pytest:tests/test_aiqe_v16_014_change_impact.py (8 passed)
+  - pytest:tests/test_aiqe_v16_019_agent_tool_loop.py (13 passed)
   owner: ai-quality
   reviewer: pending
   gaps:
-  - A5 通过 ToolExecutor 读取服务端 read_git_diff（真实 diff/AST/route/migration）；Regression API 新增 impact_base_sha，由服务端重算影响并校验调用方 checksum；create_regression_plan 写工具仍 UNAVAILABLE（需审批与副作用门禁）。
+  - A5 通过 ToolExecutor 读取服务端 read_git_diff 并生成 create_regression_plan 只读提案（含强制集合与影响面，无副作用）；创建 Regression/Run 仍需人工审批后调用 API。
   acceptance:
     status: NOT_REVIEWED
     reviewed_at: null
@@ -1932,11 +1934,13 @@ requirements:
     - tests/test_aiqe_v16_019_tool_registry.py::test_read_tool_returns_real_project_and_writes_audit
     - tests/test_aiqe_v16_019_agent_tool_loop.py::test_read_requirements_returns_real_contracts
     - tests/test_aiqe_v16_019_agent_tool_loop.py::test_read_git_diff_returns_server_derived_evidence
+    - tests/test_aiqe_v16_019_agent_tool_loop.py::test_create_regression_plan_is_proposal_only
     negative:
     - tests/test_aiqe_v16_019_tool_registry.py::test_unregistered_and_unavailable_rejected
     - tests/test_aiqe_v16_019_tool_registry.py::test_agent_without_permission_rejected
     - tests/test_aiqe_v16_019_agent_tool_loop.py::test_read_requirements_is_project_scoped
     - tests/test_aiqe_v16_019_agent_tool_loop.py::test_write_tools_remain_unavailable
+    - tests/test_aiqe_v16_019_agent_tool_loop.py::test_create_regression_plan_rejects_cross_project
   mock_boundary: 真实 DB；写工具真实实现未落地，显式 UNAVAILABLE。
   layers:
   - L1
@@ -1944,11 +1948,11 @@ requirements:
   - L3
   evidence:
   - pytest:tests/test_aiqe_v16_019_tool_registry.py (13 passed)
-  - pytest:tests/test_aiqe_v16_019_agent_tool_loop.py (9 passed)
+  - pytest:tests/test_aiqe_v16_019_agent_tool_loop.py (13 passed)
   owner: ai-quality
   reviewer: pending
   gaps:
-  - create_draft/create_regression_plan/create_learning_candidate 写工具保持 UNAVAILABLE（需要审批与副作用门禁）；read_requirements / read_git_diff 已实现真实只读实现。
+  - read_requirements / read_git_diff 已实现；create_regression_plan 改为**只读提案**（side_effects=NONE，创建仍走人工审批 API）；create_draft / create_learning_candidate 保留 UNAVAILABLE（业务写副作用）。
   acceptance:
     status: NOT_REVIEWED
     reviewed_at: null
@@ -2015,6 +2019,7 @@ requirements:
     - tests/test_aiqe_v16_019_agent_tool_loop.py::test_a1_agent_invokes_tools_through_executor
     - tests/test_aiqe_v16_019_agent_tool_loop.py::test_tool_executor_records_invocations_and_audits
     - tests/test_aiqe_v16_019_agent_tool_loop.py::test_a5_agent_reads_git_diff_when_shas_provided
+    - tests/test_aiqe_v16_019_agent_tool_loop.py::test_a5_gathers_regression_plan_when_refs_present
     negative:
     - tests/test_aiqe_v16_019_tool_registry.py::test_write_tool_requires_approval_token
     - tests/test_aiqe_v16_019_tool_registry.py::test_production_rejects_write_even_with_token
@@ -2024,7 +2029,7 @@ requirements:
   - L2
   evidence:
   - pytest:tests/test_aiqe_v16_019_tool_registry.py (13 passed)
-  - pytest:tests/test_aiqe_v16_019_agent_tool_loop.py (10 passed)
+  - pytest:tests/test_aiqe_v16_019_agent_tool_loop.py (13 passed)
   owner: ai-quality
   reviewer: pending
   gaps:

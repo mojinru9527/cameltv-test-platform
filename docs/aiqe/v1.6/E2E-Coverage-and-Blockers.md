@@ -25,15 +25,15 @@
 
 | TC | 状态 | Run ID | Job | NodeRun | Assertion | Artifact | 说明 |
 |---|---|---|---|---|---|---|---|
-| TC-PLATFORM-001 | **PASS** | aed4a2ba | 1 | d87206cd | 1392e56c | 9c297293,2b2cc983 |  |
-| TC-PLATFORM-002 | **PASS** | 25401e3b | 1 | 91b1bf64 | 7348214a | 143f38e7 |  |
-| TC-PLATFORM-003 | **BLOCKED** | bda9658d | 1 | 22ff5513 | a9d8ecef | — | 策略阻断发生在断言执行前，无 AssertionResult（负向场景按 BLOCKED 记录） |
-| TC-PLATFORM-004 | **PASS** | a0cad29d | 1,2 | 246870df | 5e33127d | 1c000b39,34418e6d |  |
-| TC-PLATFORM-005 | **PASS** | f83de402 | 2 | 884903c5 | cff0cda0 | 4e19f0ad,f32732b1 |  |
-| TC-PLATFORM-006 | **PASS** | d2fbb268 | 2,1 | c0a9f97c,95893669 | 775674b1,da464c87 | a41bfb63,c8974361,0cc9d453,a5a5ab72 |  |
-| TC-PLATFORM-007 | **PASS** | 846d1b01 | 1 | 652e038d | 2898e7d9 | b7fc5801,0d6665cc |  |
+| TC-PLATFORM-001 | **PASS** | b8f401b0 | 1 | 61024738 | 1dcb5ade | ef09600f,209258a9 |  |
+| TC-PLATFORM-002 | **PASS** | 4ea1bbe5 | 1 | 0940cf39 | b7a14f7e | 275033e7 |  |
+| TC-PLATFORM-003 | **BLOCKED** | 5e16f3e1 | 1 | 0095d069 | 9ab1709c | — | 策略阻断发生在断言执行前，无 AssertionResult（负向场景按 BLOCKED 记录） |
+| TC-PLATFORM-004 | **PASS** | ec687854 | 1,2 | 49675869 | 0ef23cf2 | a8ca96b1,8dec8587 |  |
+| TC-PLATFORM-005 | **PASS** | 7b822554 | 2 | bcbb783d | 4c62b2eb | be77fb63,8d815f58 |  |
+| TC-PLATFORM-006 | **PASS** | 6f70861f | 1,2 | 48c8de7b,336eb58c | 7023e89f,420d6cdc | 8e2b5c54,b795b382,e643b94e,7471e20a |  |
+| TC-PLATFORM-007 | **PASS** | 8b261cc9 | 1 | 1f086685 | ab110219 | f9dce99b,4fc2348d |  |
 | TC-PLATFORM-008 | **BLOCKED** | — | — | — | — | — | browser 节点由外部 Runner 执行；本用例覆盖 node_executor→PlaywrightDriver，未产生 TestRun，故不计入运行证据索引 PASS |
-| TC-PLATFORM-009 | **PASS** | 984e0753 | 1 | 7bad3b0b | c578c5cb | aa848a35,ee627b3c |  |
+| TC-PLATFORM-009 | **PASS** | 950264bc | 1 | 27e762e5 | 0694e4c8 | 5d293100,38929159 |  |
 | TC-PLATFORM-010 | **NOT_RUN** | — | — | — | — | — | Contract Service 平台行为测试，无 TestRun/UI/DB 链路，不能计为产品 TC-001 运行证据 |
 
 - 平台结果文件：`docs\aiqe\v1.6\e2e\platform-results.json`（环境 `local-20261124`，机器产物含 Run/Job/Assertion/Artifact ID）。
