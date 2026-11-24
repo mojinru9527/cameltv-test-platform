@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cameltv.local/aiqe/runtime-evidence.schema.json",
+  "title": "AIQE V1.6 runtime evidence block",
+  "description": "追踪矩阵 runtime_evidence 的统一 Schema（V16-025 审计整改项 21）：PROVEN 必须能反查 Run/Job/NodeRun/Assertion/Artifact。",
+  "type": "object",
+  "required": ["status"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["PROVEN", "NOT_PROVEN", "NOT_APPLICABLE"]
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "description": "仓库内可校验产物路径（相对仓库根）。"
+    },
+    "refs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {"type": "string", "minLength": 8},
+        "run_ids": {"type": "array", "items": {"type": "string", "minLength": 8}, "minItems": 1},
+        "job_ids": {"type": "array", "minItems": 1},
+        "node_run_ids": {"type": "array", "minItems": 1},
+        "assertion_ids": {"type": "array", "minItems": 1},
+        "artifact_refs": {"type": "array", "minItems": 1},
+        "project_id": {"type": "integer", "minimum": 1},
+        "workflow_snapshot_hash": {"type": "string", "pattern": "^(sha256:)?[0-9a-f]{64}$"},
+        "commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "ci_run_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "note": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "PROVEN"}}, "required": ["status"]},
+      "then": {
+        "required": ["artifacts", "refs"],
+        "properties": {
+          "artifacts": {"minItems": 1},
+          "refs": {
+            "anyOf": [{"required": ["run_id"]}, {"required": ["run_ids"]}]
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "NOT_PROVEN"}}, "required": ["status"]},
+      "then": {"required": ["note"]}
+    }
+  ]
+}

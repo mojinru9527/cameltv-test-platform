@@ -598,60 +598,165 @@ def test_tc_008_defect_regression_end_to_end(db_session, sut):
     _Handler.fixed = False
 
 
-# ── TC-010：AgentTask → Outbox → Job → 真实 Agent Adapter → ToolRegistry ─
-def test_tc_010_agent_task_platform_chain(db_session):
-    """真实 Agent Adapter 路径：不注入自定义 executor，A1 通过 ToolExecutor 取证。
+# ── TC-010：A0 编排 + A1–A6 真实 Agent Adapter（ToolRegistry + Evidence）──
+def test_tc_010_agent_task_platform_chain(db_session, sut):
+    """A0（run_plan 编排）→ A1..A6 全链路，不注入自定义 executor。
 
-    模型层用确定性 stub（LLM 是可替换边界），但 AgentTask 状态机、BoundToolRegistry
-    授权、ToolExecutionAudit、AgentExecution 与 AgentResult.tool_calls 都是真实实现。
+    真实：AgentTask 状态机、BoundToolRegistry 授权/审计、Evidence Resolver、
+    AgentExecution 持久化、AgentResult.tool_calls。
+    边界：LLM 为确定性 stub（模型层是可替换边界），A6 仍需人工批准激活。
     """
     import json as _json
 
-    _project_env(db_session, 80)
-    db_session.commit()
+    port = sut
+    run = _launch(db_session, port, _http_graph(port, "/health", expected=True))
+    assert run.outcome == "PASS"
+
     task = create_task(
         db_session,
         project_id=1,
-        goal="分析业务并准备测试",
-        include=("a1_requirement",),
+        goal="分析业务并准备测试、影响面与学习候选",
+        include=(
+            "a1_requirement",
+            "a2_test_design",
+            "a3_workflow",
+            "a4_triage",
+            "a5_impact",
+            "a6_learning",
+        ),
         requested_by=10,
-        idempotency_key="e2e-agent-1",
+        idempotency_key="e2e-agent-full",
+        run_id=run.id,
     )
     approve_task(db_session, task.id, project_id=1, approved_by=2)
     job = enqueue_task_job(db_session, task)
     db_session.commit()
 
-    def stub_llm(_system: str, _prompt: str) -> str:
-        return _json.dumps(
-            {
-                "summary": "收藏赛事需求可测",
-                "acceptance_criteria": [
-                    {"id": "AC-1", "text": "收藏成功", "source_ref": "PRD:favorites#收藏赛事"}
-                ],
-                "risks": [],
-            }
-        )
+    evidence_ref = f"run:{run.id}"
+    prompts: list[str] = []
+
+    def stub_llm(system: str, prompt: str) -> str:
+        prompts.append(prompt)
+        if "需求评估" in system:
+            return _json.dumps(
+                {
+                    "summary": "健康检查需求可测",
+                    "acceptance_criteria": [
+                        {"id": "AC-1", "text": "health 返回 200", "source_ref": "PRD:health#200"}
+                    ],
+                    "risks": [],
+                }
+            )
+        if "测试设计" in system:
+            return _json.dumps(
+                {
+                    "decision": "approve",
+                    "cases": [
+                        {
+                            "title": "health 200",
+                            "priority": "P1",
+                            "steps": ["GET /health"],
+                            "acceptance_refs": ["AC-1"],
+                        }
+                    ],
+                    "coverage_notes": "覆盖基本健康检查",
+                    "reject_reason": "",
+                    "duplicate_of": [],
+                }
+            )
+        if "工作流规划" in system:
+            workflow = _http_graph(port, "/health", expected=True)
+            workflow["scenario_key"] = "e2e-a3"
+            return _json.dumps(
+                {
+                    "workflow": workflow,
+                    "rationale": "最小可执行工作流",
+                    "approval_required": True,
+                    "approval_status": "pending",
+                }
+            )
+        if "变更影响" in system:
+            return _json.dumps(
+                {
+                    "impacted_areas": ["unknown"],
+                    "candidate_suites": ["smoke-suite"],
+                    "forced_suites": [],
+                    "rationale": "无结构性证据时扩大回归",
+                }
+            )
+        if "归因" in system:
+            return _json.dumps(
+                {
+                    "execution_outcome": "INCOMPLETE",
+                    "attribution_status": "NEEDS_EXPERIMENT",
+                    "hypotheses": [
+                        {
+                            "classification": "AUTOMATION",
+                            "summary": "Runner 环境导致节点未完成",
+                            "supporting_evidence": [evidence_ref],
+                            "contradicting_evidence": [],
+                            "missing_evidence": ["runner 日志"],
+                            "recommended_experiment": "E1",
+                            "confidence": None,
+                            "confidence_band": "LOW",
+                            "status": "PROPOSED",
+                        }
+                    ],
+                    "human_review_required": True,
+                    "auto_close_defect": False,
+                }
+            )
+        if "BugPattern" in system:
+            return _json.dumps(
+                {
+                    "pattern_key": "runner-environment-flake",
+                    "description": "Runner 环境不稳定导致节点未完成",
+                    "conditions": ["node INCOMPLETE"],
+                    "source_refs": [evidence_ref],
+                    "false_positive_risk": "LOW",
+                    "rationale": "来自真实 Run 失败证据",
+                }
+            )
+        raise AssertionError(f"未覆盖的 Agent system prompt: {system[:80]}")
 
     result = execute_task_job(db_session, job.id, llm=stub_llm)
     db_session.commit()
     assert result["task"]["status"] == "COMPLETED", result
     executions = list(
         db_session.scalars(
-            select(AgentExecution).where(AgentExecution.parent_task_id == task.id)
+            select(AgentExecution)
+            .where(AgentExecution.parent_task_id == task.id)
+            .order_by(AgentExecution.created_at)
         )
     )
-    assert len(executions) == 1 and executions[0].agent_key == "A1"
-    declared = {item.get("tool") for item in (executions[0].tool_calls_json or [])}
-    assert declared == {"read_project_context", "read_requirements"}, declared
+    keys = {item.agent_key for item in executions}
+    assert keys == {"A1", "A2", "A3", "A4", "A5", "A6"}, keys
+    # 每个 Agent 的真实工具调用必须与 ToolExecutionAudit 对账
+    declared = {
+        item.agent_key: {call.get("tool") for call in (item.tool_calls_json or [])}
+        for item in executions
+    }
+    assert "read_requirements" in declared["A1"]
+    assert "read_git_diff" not in declared["A5"]  # 未提供 base/head 时不伪造 diff 证据
+    assert "read_defects" in declared["A4"]
+    assert "read_defects" in declared["A6"]
     audits = list(db_session.scalars(select(ToolExecutionAudit)))
-    assert {row.tool_name for row in audits} == {"read_project_context", "read_requirements"}
-    assert all(row.task_id == task.id for row in audits)
+    assert audits and all(row.task_id == task.id for row in audits)
+    audit_tools = {row.tool_name for row in audits}
+    assert {"read_project_context", "read_requirements", "read_defects"}.issubset(audit_tools)
+    # A4/A6 的证据引用必须经服务端 Evidence Resolver（而非模型自述）
+    assert evidence_ref in _json.dumps([row.source_refs_json for row in executions])
+    available = {row.tool_name for row in audits}
+    benchmark_tools = {"read_benchmark_dataset"} & available
+    assert benchmark_tools == set()
     job_row = db_session.get(ExecutionJob, job.id)
     assert job_row.status == "success"
     record_tc(
         "TC-PLATFORM-009",
-        status="NOT_RUN",
-        blocked_reason="AgentTask 链路不产生 TestRun，无法计入需要 Run/Job/Assertion ID 的运行证据索引",
+        db_session,
+        run,
+        status="PASS",
+        blocked_reason="",
     )
 
 

@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "artifact_kind": "platform-chain-e2e",
-  "generated_at": "2026-11-24T13:54:42.023212+00:00",
-  "commit_sha": "dc87d57ed1109d1489c0e1f5f9bc89e580b600af",
+  "generated_at": "2026-11-24T14:03:37.503349+00:00",
+  "commit_sha": "7eecb73fc8356e25af1a296f326a104c5fb21a25",
   "ci_run": "local",
   "environment": "local-20261124",
   "tests": [
@@ -12,21 +12,21 @@
       "blocked_reason": "",
       "duration_ms": 0,
       "driver_image_digest": "",
-      "run_id": "3208dd1f-f1b6-4a31-8b0e-f9bb442412ec",
+      "run_id": "aed4a2ba-fccc-4320-98bf-3607a83c4ab0",
       "project_id": 1,
-      "workflow_snapshot_hash": "19e02c3d36940f15bd8779dc608ae09fd0630a3115db5b37dfbd6ccad23d091e",
+      "workflow_snapshot_hash": "38f71fadb6b1c0918425d31addc7b67fe041d2485f282cffb75bf067ef1e90aa",
       "job_ids": [
         "1"
       ],
       "node_run_ids": [
-        "cf32a48d-1286-44a8-9873-d1aa84fa0332"
+        "d87206cd-cc76-4905-978e-6ae2a7f6fced"
       ],
       "assertion_ids": [
-        "c051ae9c-ddd0-4bd7-a671-b4837b42aeb7"
+        "1392e56c-8f8a-4b42-adcc-4c3419656ecb"
       ],
       "artifact_refs": [
-        "64f22d24-b108-49c5-ae82-d8a232ef34dd",
-        "c7419f33-225a-49d1-b5eb-931a97031c37"
+        "9c297293-678f-4b94-acfc-7e2c1649c948",
+        "2b2cc983-6af6-464a-8f3e-197ed241e293"
       ],
       "run_status": "COMPLETED",
       "run_outcome": "FAIL"
@@ -37,20 +37,20 @@
       "blocked_reason": "",
       "duration_ms": 0,
       "driver_image_digest": "",
-      "run_id": "e77cb3fb-6d1a-4ecf-be2f-2b4dce3fd641",
+      "run_id": "25401e3b-8bea-44d1-bea7-119b6a5f5dd6",
       "project_id": 1,
       "workflow_snapshot_hash": "c2ef96251679f1dea047e6d7b986d08c7e1ffb863c786a38ba9ee013b6a1cc42",
       "job_ids": [
         "1"
       ],
       "node_run_ids": [
-        "b2383615-9241-41e4-ae8b-ce1267af4671"
+        "91b1bf64-545b-449a-92e7-c8abd073dfe4"
       ],
       "assertion_ids": [
-        "aec4585a-565e-48a3-af9c-314c9d149a49"
+        "7348214a-9b87-4ed0-97e3-c0d3d6889dc8"
       ],
       "artifact_refs": [
-        "35f02c2e-b386-45cc-a692-6567bef11229"
+        "143f38e7-8ed9-400c-8245-877c40530a78"
       ],
       "run_status": "COMPLETED",
       "run_outcome": "PASS"
@@ -61,17 +61,17 @@
       "blocked_reason": "策略阻断发生在断言执行前，无 AssertionResult（负向场景按 BLOCKED 记录）",
       "duration_ms": 0,
       "driver_image_digest": "",
-      "run_id": "da7a6f50-ea55-45d0-a472-460811642770",
+      "run_id": "bda9658d-5d20-47c8-bbe6-09ee5b4be3b4",
       "project_id": 1,
       "workflow_snapshot_hash": "55f6b93065860b7350ae979d90550bd389e913e3d1df41221a48554f246a7810",
       "job_ids": [
         "1"
       ],
       "node_run_ids": [
-        "c7a6a388-06ef-4fda-863a-cafae01eb956"
+        "22ff5513-ca6a-4215-a141-d6d9e1cbfdc1"
       ],
       "assertion_ids": [
-        "97d39757-7f6d-408b-93d5-cb0a1638ab83"
+        "a9d8ecef-db26-43c9-9b95-b081579987e9"
       ],
       "artifact_refs": [],
       "run_status": "COMPLETED",
@@ -83,22 +83,22 @@
       "blocked_reason": "",
       "duration_ms": 0,
       "driver_image_digest": "",
-      "run_id": "996ab69d-783a-40f1-82b3-4adcdad12d04",
+      "run_id": "a0cad29d-ccd1-437a-887d-4d0fa61d80f3",
       "project_id": 1,
-      "workflow_snapshot_hash": "9ec601dc1a4870b1516f1daa13d876f33c2ca3482ec73a9bd0456d7ad465863b",
+      "workflow_snapshot_hash": "3e5523f0a48fc09e05ab9df742824404f3a04bea085f7946755a4c19631a913d",
       "job_ids": [
         "1",
         "2"
       ],
       "node_run_ids": [
-        "3ba2216a-3b76-42df-816a-f6a61fb7f39e"
+        "246870df-f81f-445e-8b14-713b44f3dd6f"
       ],
       "assertion_ids": [
-        "5bbcd8b2-0911-4a95-be60-911382676581"
+        "5e33127d-770d-41dc-847a-1e4c8beffcd6"
       ],
       "artifact_refs": [
-        "023e5cbe-0ec9-4ec0-a7a5-20ad2290b326",
-        "b33c7bc1-69e1-4415-988f-6702731a57f4"
+        "1c000b39-e8b1-410c-bf45-869e00464498",
+        "34418e6d-8fa0-462d-ba09-4dd9b9d0f3e4"
       ],
       "run_status": "COMPLETED",
       "run_outcome": "PASS"
@@ -109,21 +109,21 @@
       "blocked_reason": "",
       "duration_ms": 0,
       "driver_image_digest": "",
-      "run_id": "aa0483d4-2eb4-4c6f-a17b-e9051612dfd3",
+      "run_id": "f83de402-7e12-4de1-bd3d-f22605f0624a",
       "project_id": 1,
-      "workflow_snapshot_hash": "f37e5282d5f2c5a4dc2b544462af559ea4a699d49fad9ef907b1b63e84932395",
+      "workflow_snapshot_hash": "ed77ef128cf2378f06bf673d4387f021af1bffa554a2be65b08022e2ad590f6b",
       "job_ids": [
         "2"
       ],
       "node_run_ids": [
-        "743b46e0-c094-411e-a3ee-f219b441f8d7"
+        "884903c5-89c1-441c-9563-a1964aa167db"
       ],
       "assertion_ids": [
-        "60d0e8b7-898b-48e0-8085-ae7f0b939dad"
+        "cff0cda0-748d-4175-93ad-0d70e54ac41d"
       ],
       "artifact_refs": [
-        "693c4293-e6a8-437f-a8ae-0b3ee959ed07",
-        "79f6adb5-7b7b-4cbf-a9c0-f88646a0d857"
+        "4e19f0ad-7edb-48ae-a516-db81e53126ad",
+        "f32732b1-713d-4c91-8e6f-fad5a6ff62e1"
       ],
       "run_status": "COMPLETED",
       "run_outcome": "PASS"
@@ -134,26 +134,26 @@
       "blocked_reason": "",
       "duration_ms": 0,
       "driver_image_digest": "",
-      "run_id": "9f83264a-ed9c-46b7-b64d-655438269327",
+      "run_id": "d2fbb268-1bc5-44cd-9742-1b7babc27b68",
       "project_id": 1,
-      "workflow_snapshot_hash": "addc97fe4cbc0b03b3e7e98ed050c7e25d1dd3e432a5cd42b531aeef9aa0bbb9",
+      "workflow_snapshot_hash": "6aeea2287fe3345077b398a43af4797c1f48745fcc349407af8fb8b8ef6158d4",
       "job_ids": [
         "2",
         "1"
       ],
       "node_run_ids": [
-        "64c1e584-3773-4e4a-a67b-110e2cffb2e9",
-        "5a90546a-15db-42e2-9fb9-350b65018e6c"
+        "c0a9f97c-94c3-4c1a-a265-173f8bf64aeb",
+        "95893669-52c1-4a3b-8d96-69e572ea1473"
       ],
       "assertion_ids": [
-        "28d4d5f0-ac9b-4c07-878d-6f43e0c4d043",
-        "9dadbb76-4fbd-48fd-9885-89a386527b42"
+        "775674b1-da7c-46f1-923b-e3ce3a65beab",
+        "da464c87-464c-4df8-a55f-5feb9884831b"
       ],
       "artifact_refs": [
-        "26a364d4-7b3b-45df-97b4-39d41ee7a063",
-        "ab754555-f2e3-4388-8ed8-638b22e72a13",
-        "de4e08bf-6a82-4504-8663-1156dba652b9",
-        "4e84de2a-fc4e-4cd5-90a1-55b1b5d0ed9e"
+        "a41bfb63-8185-4cc2-b08e-6435edb10e58",
+        "c8974361-1b84-4f9f-8873-135662b12baf",
+        "0cc9d453-69a5-4e74-95ff-bc5033903fa3",
+        "a5a5ab72-1e3c-49f3-999c-b7886e814918"
       ],
       "run_status": "COMPLETED",
       "run_outcome": "PASS"
@@ -164,21 +164,21 @@
       "blocked_reason": "",
       "duration_ms": 0,
       "driver_image_digest": "",
-      "run_id": "aadefa82-caac-421f-a71d-7812c104b4a8",
+      "run_id": "846d1b01-429d-4357-b6c3-1928b97a65da",
       "project_id": 1,
-      "workflow_snapshot_hash": "f357bc70f1cd1d7ea53842f4cbd40044a73fa56d3bdc7d1b388d69860224171d",
+      "workflow_snapshot_hash": "b80babdf50cf1691669000443c254283b223b28f3f5a8aa576ffb5debbd08ebf",
       "job_ids": [
         "1"
       ],
       "node_run_ids": [
-        "dc8ab5e0-5617-4d76-906e-623ecbe08a9d"
+        "652e038d-0fd9-4b92-9353-4133ddabb418"
       ],
       "assertion_ids": [
-        "ada514e4-5bc4-4654-a63f-98b6747ac125"
+        "2898e7d9-551a-4dde-a5a8-49adcd377b2d"
       ],
       "artifact_refs": [
-        "654811a5-881a-4693-b0cc-811bfc47fa7c",
-        "340c34fc-45d5-44c0-b7f0-b7a39b5e2aed"
+        "b7fc5801-2135-448d-9ef7-4cb27432e0d5",
+        "0d6665cc-79cb-462a-8730-538095ef765b"
       ],
       "run_status": "COMPLETED",
       "run_outcome": "PASS"
@@ -192,10 +192,28 @@
     },
     {
       "tc_id": "TC-PLATFORM-009",
-      "status": "NOT_RUN",
-      "blocked_reason": "AgentTask 链路不产生 TestRun，无法计入需要 Run/Job/Assertion ID 的运行证据索引",
+      "status": "PASS",
+      "blocked_reason": "",
       "duration_ms": 0,
-      "driver_image_digest": ""
+      "driver_image_digest": "",
+      "run_id": "984e0753-f1df-4512-9105-15c3b2e9635e",
+      "project_id": 1,
+      "workflow_snapshot_hash": "f864b54ec96ccf697ddcc3ed7bbc0bcd7b770756d35548831c3d1934d816577b",
+      "job_ids": [
+        "1"
+      ],
+      "node_run_ids": [
+        "7bad3b0b-bced-4471-b93e-73857954465e"
+      ],
+      "assertion_ids": [
+        "c578c5cb-5531-40e3-8f98-99f7a1484f2f"
+      ],
+      "artifact_refs": [
+        "aa848a35-ed31-4ba5-90c2-2b249c75c5bf",
+        "ee627b3c-fe7c-4ab0-8e55-74995985860e"
+      ],
+      "run_status": "COMPLETED",
+      "run_outcome": "PASS"
     },
     {
       "tc_id": "TC-PLATFORM-010",

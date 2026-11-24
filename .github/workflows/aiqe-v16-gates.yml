@@ -31,7 +31,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install gate dependencies
-        run: pip install pyyaml
+        run: pip install pyyaml jsonschema
       - name: Write PR body
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
@@ -258,7 +258,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install dependencies
-        run: pip install pyyaml
+        run: pip install pyyaml jsonschema
       - name: Traceability release gate (independent acceptance required)
         run: python scripts/aiqe/check_traceability.py --strict-warnings --check-baseline --release-gate
       - name: Branch protection evidence

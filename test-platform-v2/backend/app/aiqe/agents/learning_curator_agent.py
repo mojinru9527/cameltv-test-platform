@@ -71,7 +71,16 @@ class LearningCuratorAgent:
                 error_code="MODEL_UNAVAILABLE",
                 warnings=["LLM 客户端不可用（Key 缺失或未注入）"],
             )
-        raw = self._llm(self.system_prompt, request)
+        # V16-019：A6 也通过 ToolExecutor 取证（缺陷/数据集事实），与 A1–A5 一致。
+        prompt = request
+        executor = getattr(context, "tool_executor", None)
+        if executor is not None:
+            tool_evidence = {"defects": executor.safe_call("read_defects")}
+            prompt = (
+                f"{request}\n\n[TOOL_EVIDENCE]\n"
+                + json.dumps(tool_evidence, ensure_ascii=False, default=str)[:4000]
+            )
+        raw = self._llm(self.system_prompt, prompt)
         try:
             text = str(raw or "").strip()
             if text.startswith("```"):
@@ -110,6 +119,7 @@ class LearningCuratorAgent:
             status="COMPLETED" if refs else "PARTIAL",
             output=output,
             source_refs=[str(item) for item in output["candidate"]["source_refs"]],
+            tool_calls=list(executor.tool_calls()) if executor is not None else [],
             model_name=self.model,
             prompt_version=stable_hash(self.system_prompt),
             input_hash=input_hash,

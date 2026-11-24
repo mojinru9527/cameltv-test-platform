@@ -199,3 +199,19 @@ def test_a5_agent_reads_git_diff_when_shas_provided(db_session):
     agent.execute(context, "分析本次改动影响")
     called = {item["tool"] for item in executor.tool_calls()}
     assert "read_git_diff" in called, called
+
+
+def test_get_agent_accepts_model_for_every_agent(db_session):
+    """回归：get_agent(key, llm, model=...) 必须对 A0–A6 全部可用。
+
+    审计后回归点：WorkflowPlannerAgent 曾不接受 model 参数，导致 run_plan 执行 A3
+    直接 TypeError（生产 A3 永远无法通过 AgentTask 运行）。
+    """
+    from app.aiqe.agents.registry import get_agent
+
+    def stub(system, prompt):
+        return "{}"
+
+    for key in ("A0", "A1", "A2", "A3", "A4", "A5", "A6"):
+        agent = get_agent(key, stub, model="deepseek-chat")
+        assert agent.key == key

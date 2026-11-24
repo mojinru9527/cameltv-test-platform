@@ -1443,6 +1443,7 @@ requirements:
   tests:
     success:
     - tests/test_aiqe_v16_013_agent_task.py::test_approved_run_executes_every_plan_node
+    - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain
     negative:
     - tests/test_aiqe_v16_013_agent_task.py::test_agent_failure_does_not_mark_task_completed
     - tests/test_aiqe_v16_013_agent_task.py::test_a4_without_resolver_blocks_agent_task
@@ -1453,9 +1454,11 @@ requirements:
   - L3
   evidence:
   - pytest:tests/test_aiqe_v16_013_agent_task.py (9 passed)
+  - pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (10 passed)
   owner: ai-quality
   reviewer: pending
-  gaps: []
+  gaps:
+  - A1–A6 已通过真实 Adapter 全链路（LLM 为确定性 stub 边界）；A0 编排由 run_plan 承担，A6 学习候选仍需 benchmark + 人工批准才能激活。
   acceptance:
     status: NOT_REVIEWED
     reviewed_at: null
@@ -1784,7 +1787,7 @@ requirements:
   owner: qa-automation
   reviewer: qa-lead
   gaps:
-  - 平台链路 E2E 计为 TC-PLATFORM-001..010（6 PASS / 2 BLOCKED / 2 NOT_RUN），不等同任何产品 TC；产品级 TC-AIQE-001..010 当前为 PARTIAL。
+  - 平台链路 E2E 计为 TC-PLATFORM-001..010（7 PASS / 2 BLOCKED / 1 NOT_RUN），不等同任何产品 TC；产品级 TC-AIQE-001..010 当前为 PARTIAL。
   acceptance:
     status: NOT_REVIEWED
     reviewed_at: null
@@ -2021,11 +2024,11 @@ requirements:
   - L2
   evidence:
   - pytest:tests/test_aiqe_v16_019_tool_registry.py (13 passed)
-  - pytest:tests/test_aiqe_v16_019_agent_tool_loop.py (9 passed)
+  - pytest:tests/test_aiqe_v16_019_agent_tool_loop.py (10 passed)
   owner: ai-quality
   reviewer: pending
   gaps:
-  - Agent 已通过 ToolExecutor 调用 context.tool_executor 取证；A0/A6 仍按各自 execute 逻辑取证，未强绑 ToolExecutor。
+  - A1–A6 均通过 ToolExecutor 取证（A0 编排由 run_plan 承担）；写工具（create_*）仍 UNAVAILABLE，需审批与副作用门禁。
   acceptance:
     status: NOT_REVIEWED
     reviewed_at: null
@@ -2404,6 +2407,7 @@ requirements:
     - tests/test_aiqe_v16_025_traceability_gate.py::test_valid_matrix_passes
     - tests/test_aiqe_v16_025_acceptance_records.py::test_valid_record_passes
     - tests/test_aiqe_v16_025_acceptance_records.py::test_load_records_merges_valid_record
+    - tests/test_aiqe_v16_025_traceability_gate.py::test_accepts_runtime_evidence_full_ref_set
     negative:
     - tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_missing_negative_test_for_p0
     - tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_accepted_without_reviewed_acceptance
@@ -2414,6 +2418,7 @@ requirements:
     - tests/test_aiqe_v16_025_acceptance_records.py::test_same_role_domain_rejected
     - tests/test_aiqe_v16_025_acceptance_records.py::test_pending_reviewer_rejected
     - tests/test_aiqe_v16_025_acceptance_records.py::test_missing_artifact_rejected
+    - tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_runtime_evidence_unknown_ref_key
     boundary:
     - tests/test_aiqe_release_audit.py::test_repo_release_audit_is_clean
   mock_boundary: 真实 YAML 矩阵文件 + 真实 CLI；无 Mock。
@@ -2428,6 +2433,7 @@ requirements:
   - pytest:tests/test_aiqe_v16_025_acceptance_records.py (10 passed)
   - artifact:docs/aiqe/v1.6/governance/review-roles.yaml
   - artifact:docs/aiqe/v1.6/acceptance/README.md
+  - artifact:docs/aiqe/v1.6/traceability/runtime-evidence.schema.json (runtime_evidence Schema)
   owner: tech-lead
   reviewer: pending
   gaps:
@@ -2950,6 +2956,7 @@ requirements:
   reviewer: user-confirmed
   gaps:
   - 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。
+  - 平台侧 A1–A6 Agent 全链路已跑通；产品级 Benchmark/激活仍以 live 现场记录为准（未归档）。
   acceptance:
     status: NOT_REVIEWED
     reviewed_at: null
@@ -2967,5 +2974,7 @@ requirements:
         artifact: null
         note: 现场执行记录，未归档机器产物。
     platform:
-      tc_ids: []
-      tests: []
+      tc_ids:
+      - TC-PLATFORM-009
+      tests:
+      - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain

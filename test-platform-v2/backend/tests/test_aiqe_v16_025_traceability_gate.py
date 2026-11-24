@@ -608,3 +608,46 @@ def test_pr_mode_accepts_independent_role_domain(checker, tmp_path):
     body = tmp_path / "pr.md"
     body.write_text(_pr_body("qa"), encoding="utf-8")
     assert checker.main(["--matrix", str(matrix), "--issue", "V16-001", "--pr-body", str(body)]) == 0
+
+
+def test_rejects_runtime_evidence_unknown_ref_key(checker, tmp_path):
+    """V16-025 审计项 21：runtime_evidence.refs 只允许统一 Schema 中的键。"""
+    entry = _base_entry(
+        evidence=[
+            "pytest:tests/test_aiqe_v16_001_policy_fail_closed.py (25 passed)",
+            "live:shadow run PASS",
+        ],
+        runtime_evidence={
+            "status": "PROVEN",
+            "artifacts": [EXISTING_ARTIFACT],
+            "refs": {"run_id": "9fb84240-8906-4a17-9338-b368718e38c4", "fake_id": "x"},
+        },
+    )
+    matrix = _write_matrix(tmp_path / "matrix.yaml", [entry])
+    assert checker.main(["--matrix", str(matrix)]) == 1
+
+
+def test_accepts_runtime_evidence_full_ref_set(checker, tmp_path):
+    entry = _base_entry(
+        evidence=[
+            "pytest:tests/test_aiqe_v16_001_policy_fail_closed.py (25 passed)",
+            "live:shadow run PASS",
+        ],
+        runtime_evidence={
+            "status": "PROVEN",
+            "artifacts": [EXISTING_ARTIFACT],
+            "refs": {
+                "run_id": "9fb84240-8906-4a17-9338-b368718e38c4",
+                "project_id": 1,
+                "job_ids": [1],
+                "node_run_ids": ["n-1"],
+                "assertion_ids": ["a-1"],
+                "artifact_refs": ["art-1"],
+                "workflow_snapshot_hash": "a" * 64,
+                "commit_sha": "b" * 40,
+                "ci_run_id": "12345",
+            },
+        },
+    )
+    matrix = _write_matrix(tmp_path / "matrix.yaml", [entry])
+    assert checker.main(["--matrix", str(matrix)]) == 0

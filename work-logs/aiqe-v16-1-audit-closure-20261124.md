@@ -63,7 +63,15 @@
 | V16-004 真实 PG 只读 role | 新增 `check_pg_readonly_role.py`（角色属性/写拒绝/read-only/timeout 检查，DSN 脱敏）+ `evidence/pg-readonly-role.json=NOT_PROVEN`；Gate B evidence 因此为 NOT_PROVEN | 5 条 PG 测试（含“仓库证据不得伪称 PASS”） |
 | TC-AIQE-007 平台映射 | 映射到 TC-PLATFORM-004（Worker 崩溃恢复） | 矩阵 strict 校验 0 error |
 
-## 6. 未完成（后续批次）
+## 6. 第四轮补充（2026-11-24 夜）
+
+| 审计项 | 处理 | 验证 |
+|---|---|---|
+| §6.3/§10.13 A0–A6 未真正端到端 | TC-010 改为 **A1–A6 全链路真实 Adapter**（A0 编排由 run_plan 承担）：6 个 AgentExecution、每 Agent 真实工具调用与审计对账、A4/A6 证据经服务端 Resolver | 平台链路 7 PASS / 2 BLOCKED / 1 NOT_RUN |
+| 生产缺陷：A3 无法通过 AgentTask 运行 | `WorkflowPlannerAgent.__init__` 不接受 `model`，`get_agent` 传参即 TypeError。已修复并加回归测试覆盖 A0–A6 全部构造 | `test_get_agent_accepts_model_for_every_agent` |
+| §10.21 证据字段统一 Schema | 新增 `traceability/runtime-evidence.schema.json`（PROVEN 必须含 artifacts + run_id/run_ids；refs 键白名单），checker 接入 jsonschema，CI traceability job 安装 jsonschema | 新增 2 条 schema 测试 |
+
+## 7. 未完成（后续批次）
 
 1. **产品级 TC-AIQE-001..010**：需隔离 Test 环境按 merged spec §20 重跑并归档产物。
 2. **独立验收签署**：机制已就绪，70 条需求仍需真实 Reviewer 逐条生成

@@ -66,6 +66,23 @@ from acceptance_records import (  # noqa: E402
 )
 
 MATRIX_PATH = REPO_ROOT / "docs/aiqe/v1.6/traceability/requirements.yaml"
+EVIDENCE_SCHEMA_PATH = REPO_ROOT / "docs/aiqe/v1.6/traceability/runtime-evidence.schema.json"
+
+
+def _validate_against_schema(block: dict[str, Any]) -> list[str]:
+    """按统一 Schema 校验 runtime_evidence（jsonschema 缺失时退化为手工规则）。"""
+    try:
+        import jsonschema
+    except ModuleNotFoundError:  # pragma: no cover - CI traceability job 只装 pyyaml
+        return []
+    if not EVIDENCE_SCHEMA_PATH.exists():  # pragma: no cover - schema 缺失不阻断
+        return []
+    schema = json.loads(EVIDENCE_SCHEMA_PATH.read_text(encoding="utf-8"))
+    validator = jsonschema.Draft202012Validator(schema)
+    return [
+        f"{'.'.join(str(part) for part in error.absolute_path)}: {error.message}"
+        for error in sorted(validator.iter_errors(block), key=lambda item: list(item.absolute_path))
+    ]
 BACKEND_ROOT = REPO_ROOT / "test-platform-v2/backend"
 ALEMBIC_VERSIONS = BACKEND_ROOT / "alembic/versions"
 
@@ -456,6 +473,8 @@ def _validate_runtime_evidence_block(
     if not isinstance(block, dict):
         report.error(f"{req_id}: runtime_evidence 必须是对象")
         return
+    for schema_error in _validate_against_schema(block):
+        report.error(f"{req_id}: runtime_evidence 违反 Schema: {schema_error}")
     status = str(block.get("status") or "").strip().upper()
     if status not in RUNTIME_EVIDENCE_VALUES:
         report.error(f"{req_id}: 非法 runtime_evidence.status {status!r}")
