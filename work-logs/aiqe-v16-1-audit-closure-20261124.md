@@ -111,7 +111,21 @@
 | 审计 §3.4 “release tag 对应精确 commit 为唯一基线” | `check_traceability` 新增 `--expected-commit`：release-gate 在 tag 发布时把 `github.sha` 传入，矩阵 `release_commit` 必须完全相等，否则阻断 | 3 条测试（相等通过 / 不等失败 / 非法 SHA 失败） |
 | CI release-gate | 仅 `ref_type == 'tag'` 时传 `--expected-commit`；PR 场景保持祖先校验 | workflow YAML 校验通过 |
 
-## 12. 未完成（后续批次）
+## 12. 第十轮：交付包与最终核验
+
+| 项 | 处理 |
+|---|---|
+| PR 交付包 | 新增 `work-logs/pr-body-aiqe-v161-audit-closure.md`：按 PR 模板填好 AIQE 追踪字段、调用链、Mock 边界、测试/证据、风险；Reviewer 与角色域明确标注“待指定” |
+| 最终核验 | 全量后端回归 **2572 passed / 43 skipped / 0 failed**（6:00）；traceability strict 0 error、release audit 0 error、audit closure 0 error、quality ratchet PASS |
+
+> 交付状态：**本地整改与验证完成，等待外部输入**。
+> —— 推送/PR 需用户按 AGENTS.md §2.4 逐字确认；
+> —— 独立验收需 70 条非作者 Reviewer；
+> —— 产品级 TC 需隔离 Test 环境；
+> —— Gate G 需在 ruleset 启用非作者审批并邀请独立账号；
+> —— Gate F 需生产基础设施证据。
+
+## 13. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
 
 1. **产品级 TC-AIQE-001..010**：执行器与配置已就绪，需隔离 Test 环境 + per-TC runner
    接入后运行 `python scripts/aiqe/run_product_tc.py --run`。
@@ -121,5 +135,6 @@
    `required_approving_review_count>=1`，并邀请独立 reviewer 账号。
 4. **Gate F**：镜像重建 digest/SBOM、干净节点部署、PG 备份恢复/PG 只读 role/
    Vault 生产/告警原始日志。
-5. **TC-006 flaky 观察**：已消除已知顺序/时序假设，连续多次通过；若再次出现需抓取
+5. **推送/PR**：`fix/aiqe-v161-audit-closure` 17 个提交待用户授权推送。
+6. **TC-006 flaky 观察**：已消除已知顺序/时序假设，连续多次通过；若再次出现需抓取
    失败时的 handle/scope/事件快照，不得以重跑掩盖。
