@@ -2,7 +2,7 @@
 #
 # 状态语义：NOT_STARTED < PARTIAL < IMPLEMENTED < VERIFIED（交付/自动证据）；
 # ACCEPTED 需非原作者独立 Reviewer 签署，且 acceptance.status=REVIEWED。
-# VERIFIED 不等于独立验收：acceptance.status=NOT_REVIEWED 时 Gate G 不得宣称完成。
+# VERIFIED 不等于独立验收：acceptance.status 为 NOT_REVIEWED 时 Gate G 不得宣称完成。
 # 运行时证据必须有可校验的机器产物；仅有现场记录时 runtime_evidence.status=NOT_PROVEN。
 # 本文件由人工维护，机器校验见 scripts/aiqe/check_traceability.py。
 
@@ -2439,6 +2439,7 @@ requirements:
     - tests/test_aiqe_v16_025_audit_closure.py::test_external_item_requires_blocker_owner_action
     - tests/test_aiqe_v16_025_branch_protection.py::test_non_author_review_required
     - tests/test_aiqe_v16_025_branch_protection.py::test_force_push_and_deletion_must_be_disabled
+    - tests/test_aiqe_v16_025_traceability_gate.py::test_expected_commit_must_equal_baseline
     boundary:
     - tests/test_aiqe_release_audit.py::test_repo_release_audit_is_clean
   mock_boundary: 真实 YAML 矩阵文件 + 真实 CLI；无 Mock。

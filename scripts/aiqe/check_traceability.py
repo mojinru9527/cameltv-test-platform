@@ -564,7 +564,9 @@ def _validate_e2e_block(
             _parse_test_ref(str(test), report, issue_id=req_id)
 
 
-def _validate_baseline(matrix: dict[str, Any], report: Report, *, check_git: bool) -> None:
+def _validate_baseline(
+    matrix: dict[str, Any], report: Report, *, check_git: bool, expected_commit: str = ""
+) -> None:
     baseline = matrix.get("baseline")
     if not isinstance(baseline, dict):
         report.error("追踪矩阵缺少 baseline")
@@ -575,6 +577,15 @@ def _validate_baseline(matrix: dict[str, Any], report: Report, *, check_git: boo
     commit = str(baseline.get("release_commit") or "").strip().lower()
     if commit and not re.fullmatch(r"[0-9a-f]{40}", commit):
         report.error(f"baseline.release_commit 必须是完整 40 位 SHA: {commit!r}")
+    expected = str(expected_commit or "").strip().lower()
+    if expected:
+        if not re.fullmatch(r"[0-9a-f]{40}", expected):
+            report.error(f"--expected-commit 必须是完整 40 位 SHA: {expected!r}")
+        elif commit != expected:
+            report.error(
+                f"baseline.release_commit {commit[:12]} != release commit {expected[:12]}"
+                "（发布时矩阵基线必须等于被发布 commit）"
+            )
     if not check_git:
         return
     if commit:
@@ -1291,6 +1302,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--environment", default="")
     parser.add_argument("--strict-warnings", action="store_true")
     parser.add_argument("--check-baseline", action="store_true")
+    parser.add_argument("--expected-commit", default="")
     parser.add_argument("--release-gate", action="store_true")
     parser.add_argument("--summary", default="")
     args = parser.parse_args(argv)
@@ -1320,7 +1332,9 @@ def main(argv: list[str] | None = None) -> int:
             entries.append(validated)
 
     _coverage_checks(entries, report)
-    _validate_baseline(matrix, report, check_git=bool(args.check_baseline))
+    _validate_baseline(
+        matrix, report, check_git=bool(args.check_baseline), expected_commit=args.expected_commit
+    )
     if args.issue or args.pr_body:
         _pr_mode(entries, args, report)
     if args.release_gate:

@@ -264,7 +264,17 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml jsonschema
       - name: Traceability release gate (independent acceptance required)
-        run: python scripts/aiqe/check_traceability.py --strict-warnings --check-baseline --release-gate
+        env:
+          # 仅 tag 发布时强制“矩阵基线 == 被发布 commit”；PR 场景留空。
+          EXPECTED_COMMIT: ${{ github.ref_type == 'tag' && github.sha || '' }}
+        run: |
+          set -euo pipefail
+          if [ -n "${EXPECTED_COMMIT}" ]; then
+            python scripts/aiqe/check_traceability.py --strict-warnings --check-baseline \
+              --release-gate --expected-commit "${EXPECTED_COMMIT}"
+          else
+            python scripts/aiqe/check_traceability.py --strict-warnings --check-baseline --release-gate
+          fi
       - name: Branch protection evidence
         run: python scripts/aiqe/check_branch_protection.py --check
       - name: Audit closure ledger

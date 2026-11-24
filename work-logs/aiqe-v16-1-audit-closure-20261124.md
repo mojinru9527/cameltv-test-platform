@@ -104,7 +104,14 @@
 | Gate G Branch Protection（审计 P0-2） | 用已登录的 gh CLI 采集真实 Ruleset：`protect-main #18351498`，3 个 required checks（AI/Git 交付策略、前端/后端全新检出与全量回归）、禁强推、禁删除、必须 PR；**非作者审批未启用**（`require_code_owner_review=false`、`approving_count=0`） | `check_branch_protection --capture` 成功；6 条校验测试；Gate G 现在精确报告剩余缺口而非“未验证” |
 | 采集器增强 | `check_branch_protection.py` 读取 ruleset 明细（required_status_checks/pull_request/non_fast_forward/deletion），不再只看列表摘要 | release audit 0 error，traceability strict 0 error |
 
-## 11. 未完成（后续批次）
+## 11. 第九轮补充（release 基线锁定）
+
+| 项 | 处理 | 验证 |
+|---|---|---|
+| 审计 §3.4 “release tag 对应精确 commit 为唯一基线” | `check_traceability` 新增 `--expected-commit`：release-gate 在 tag 发布时把 `github.sha` 传入，矩阵 `release_commit` 必须完全相等，否则阻断 | 3 条测试（相等通过 / 不等失败 / 非法 SHA 失败） |
+| CI release-gate | 仅 `ref_type == 'tag'` 时传 `--expected-commit`；PR 场景保持祖先校验 | workflow YAML 校验通过 |
+
+## 12. 未完成（后续批次）
 
 1. **产品级 TC-AIQE-001..010**：执行器与配置已就绪，需隔离 Test 环境 + per-TC runner
    接入后运行 `python scripts/aiqe/run_product_tc.py --run`。

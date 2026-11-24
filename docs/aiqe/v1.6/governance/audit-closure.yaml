@@ -39,7 +39,7 @@ items:
   evidence:
   - docs/aiqe/v1.6/traceability/requirements.yaml
   - scripts/aiqe/check_traceability.py
-  note: release_commit + migration_head 单一基线；--check-baseline 校验 git 祖先与 Alembic 单头。
+  note: release_commit + migration_head 单一基线；--check-baseline 校验 git 祖先与 Alembic 单头；tag 发布时 release-gate 传 --expected-commit 强制矩阵基线 == 被发布 commit。
 - id: P1-1
   title: CI evidence-index 由 YAML 派生，不是运行证据
   status: CLOSED

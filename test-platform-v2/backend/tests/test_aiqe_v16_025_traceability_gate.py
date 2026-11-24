@@ -651,3 +651,43 @@ def test_accepts_runtime_evidence_full_ref_set(checker, tmp_path):
     )
     matrix = _write_matrix(tmp_path / "matrix.yaml", [entry])
     assert checker.main(["--matrix", str(matrix)]) == 0
+
+
+def test_expected_commit_must_equal_baseline(checker, tmp_path, monkeypatch):
+    """发布时矩阵基线必须等于被发布的 release commit（审计 P0-4）。"""
+    head = _head_sha()
+    matrix = _write_matrix(
+        tmp_path / "matrix.yaml",
+        [_base_entry()],
+        baseline={
+            "release_commit": head,
+            "migration_head": "20260202_current",
+            "branch": "main",
+        },
+    )
+    monkeypatch.setattr(checker, "_compute_alembic_head", lambda report: "20260202_current")
+    assert (
+        checker.main(
+            [
+                "--matrix",
+                str(matrix),
+                "--check-baseline",
+                "--expected-commit",
+                head,
+            ]
+        )
+        == 0
+    )
+    assert (
+        checker.main(
+            [
+                "--matrix",
+                str(matrix),
+                "--check-baseline",
+                "--expected-commit",
+                "0" * 40,
+            ]
+        )
+        == 1
+    )
+    assert checker.main(["--matrix", str(matrix), "--expected-commit", "not-a-sha"]) == 1
