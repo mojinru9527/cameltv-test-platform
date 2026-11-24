@@ -1,0 +1,175 @@
+# AIQE V1.6 外部审计整改台账（machine-checked）
+#
+# 来源：CamelTv_AIQE_V1.6_Main_9bbbdbb_Code_Audit.md（2026-11-24）
+# 规则：
+#   CLOSED   —— 机制/代码/测试已落地，evidence 必须是仓库内存在路径
+#   EXTERNAL —— 需要外部条件（真实 Test 环境 / 人工签署 / GitHub 权限 / 生产基础设施），
+#               必须写 blocked_by + owner + unblock_action
+# 禁止把未验证项标 CLOSED；改状态必须同时更新 evidence 与 work-log。
+schema_version: "1.0"
+audit: CamelTv_AIQE_V1.6_Main_9bbbdbb_Code_Audit.md
+audit_date: "2026-11-24"
+baseline_commit: 9bbbdbb2026bada5c016d663780e03d62fca940d
+items:
+  - id: P0-1
+    title: "追踪矩阵全量 VERIFIED / 60 条 reviewer pending / V16-025 自审"
+    status: CLOSED
+    evidence:
+      - docs/aiqe/v1.6/traceability/requirements.yaml
+      - docs/aiqe/v1.6/governance/review-roles.yaml
+      - docs/aiqe/v1.6/acceptance/README.md
+      - scripts/aiqe/acceptance_records.py
+      - scripts/aiqe/record_acceptance.py
+      - test-platform-v2/backend/tests/test_aiqe_v16_025_traceability_gate.py
+      - test-platform-v2/backend/tests/test_aiqe_v16_025_acceptance_records.py
+    note: "status 与 acceptance 分离；REVIEWED 只能来自人工 acceptance/records；同角色域/自审/pending 拒绝。"
+  - id: P0-2
+    title: "Branch Protection / Ruleset 无生效证据（Gate G）"
+    status: EXTERNAL
+    evidence:
+      - docs/aiqe/v1.6/governance/branch-protection.json
+      - scripts/aiqe/check_branch_protection.py
+    blocked_by: "GitHub 网络不可达且无仓库权限；仓库内无规则导出"
+    owner: "repo-admin"
+    unblock_action: "python scripts/aiqe/check_branch_protection.py --capture --repo mojinru9527/cameltv-test-platform --branch main"
+  - id: P0-3
+    title: "PR 字段校验只查关键词，不校验真实填写"
+    status: CLOSED
+    evidence:
+      - scripts/aiqe/check_traceability.py
+      - .github/pull_request_template.md
+      - test-platform-v2/backend/tests/test_aiqe_v16_025_traceability_gate.py
+    note: "字段级校验：占位符/过短/作者自审/角色域同域/证据类型全部拒绝。"
+  - id: P0-4
+    title: "基线 SHA 与 migration head 漂移（三套指纹）"
+    status: CLOSED
+    evidence:
+      - docs/aiqe/v1.6/traceability/requirements.yaml
+      - scripts/aiqe/check_traceability.py
+    note: "release_commit + migration_head 单一基线；--check-baseline 校验 git 祖先与 Alembic 单头。"
+  - id: P1-1
+    title: "CI evidence-index 由 YAML 派生，不是运行证据"
+    status: CLOSED
+    evidence:
+      - docs/aiqe/v1.6/e2e/platform-results.json
+      - docs/aiqe/v1.6/evidence/evidence-index.json
+      - scripts/aiqe/build_evidence_index.py
+      - .github/workflows/aiqe-v16-gates.yml
+    note: "平台 E2E 产物 → build_evidence_index.py → evidence-index.json；矩阵快照显式 not_runtime_evidence。"
+  - id: P1-2
+    title: "strict warnings 未进 CI（102 warnings 放行）"
+    status: CLOSED
+    evidence:
+      - scripts/aiqe/check_traceability.py
+      - .github/workflows/aiqe-v16-gates.yml
+    note: "证据类型化后 strict = 0 error / 0 warning，CI 使用 --strict-warnings --check-baseline。"
+  - id: P1-3
+    title: "check_release_audit 0 error 但文档语义矛盾"
+    status: CLOSED
+    evidence:
+      - scripts/aiqe/check_release_audit.py
+      - test-platform-v2/backend/tests/test_aiqe_release_audit.py
+    note: "跨文档断言校验（Gate 勾选/TC 状态/10-10/GA 状态/PRODUCTION_DEPLOYED）+ 生成文档新鲜度。"
+  - id: P1-4
+    title: "TC-AIQE-001..010 未按原计划独立真实 E2E（SUT/Service 直调/人工 fallback）"
+    status: EXTERNAL
+    evidence:
+      - docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md
+      - docs/aiqe/v1.6/e2e/platform-results.json
+    blocked_by: "产品级 TC 需要隔离 Test 环境（业务 API/后台 UI/前台 UI/DB 账号）"
+    owner: "qa-team"
+    unblock_action: "按 merged spec §20 在 Test 环境执行 TC-001..010，逐 TC 写入 e2e.product.status=PASS 与机器产物"
+    note: "平台链路已真实化（7 PASS/2 BLOCKED/1 NOT_RUN），但产品级 TC 仍为 PARTIAL。"
+  - id: P1-5
+    title: "TC-003/TC-005 未从正式链路起跑，危险目标无 0 请求证明"
+    status: CLOSED
+    evidence:
+      - test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
+      - docs/aiqe/v1.6/e2e/platform-results.json
+    note: "TC-003 走 node_executor；TC-005 增加可到达受控目标 + 计数器 0 断言。"
+  - id: P1-6
+    title: "TC-007 未证明 claim/execute/persist/ack 崩溃阶段"
+    status: CLOSED
+    evidence:
+      - test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
+      - docs/aiqe/v1.6/e2e/platform-results.json
+    note: "崩溃恢复 E2E：租约过期→reconciler 重排→真实 dispatch/Worker→迟到 fencing 拒绝→重复投递不新增 Assertion。"
+  - id: P1-7
+    title: "TC-008 终态断言过宽；TC-009 归因/对照不足"
+    status: CLOSED
+    evidence:
+      - test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
+      - docs/aiqe/v1.6/e2e/platform-results.json
+    note: "TC-008 必须 PASS；TC-009 补 sync_experiment_result/changed_dimension/UNKNOWN 不得记录已知根因。"
+  - id: P1-8
+    title: "Agent ToolRegistry 未真正消费；read_* 工具 UNAVAILABLE；A5 未自动接线"
+    status: CLOSED
+    evidence:
+      - test-platform-v2/backend/app/aiqe/agents/tool_executor.py
+      - test-platform-v2/backend/app/aiqe/services/tool_impls.py
+      - test-platform-v2/backend/tests/test_aiqe_v16_019_agent_tool_loop.py
+      - test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
+    note: "ToolExecutor + A1–A6 真实取证；read_requirements/read_git_diff 实现；create_regression_plan 只读提案。"
+  - id: P1-9
+    title: "生产镜像依赖运行时 sqlglot 挂载与创建后复制迁移"
+    status: EXTERNAL
+    evidence:
+      - test-platform-v2/backend/requirements.api.txt
+      - test-platform-v2/backend/requirements.api.lock
+      - test-platform-v2/backend/requirements.runner.lock
+      - test-platform-v2/backend/tests/test_aiqe_v16_024_image_dependencies.py
+    blocked_by: "需要从 release commit 干净重建镜像并记录 digest/SBOM（本机无 Docker 生产构建环境）"
+    owner: "devops"
+    unblock_action: "重建 api/runtime 镜像，记录 digest/SBOM，验证 sqlglot + alembic/versions 自包含"
+    note: "仓库侧已固化 sqlglot（含 hash）并加回归测试；镜像重建属外部动作。"
+  - id: P1-10
+    title: "生产/GA 文档互相矛盾，无单一时间线"
+    status: CLOSED
+    evidence:
+      - docs/aiqe/v1.6/governance/production-evidence.json
+      - docs/aiqe/v1.6/V1.6-GA-Release-Report.md
+      - docs/aiqe/v1.6/Production-Readiness.md
+      - scripts/aiqe/release_verdict.py
+    note: "production-evidence 为唯一定性来源；旧执行记录标 STATUS: HISTORICAL；Gate F 由机器判定。"
+  - id: P2-1
+    title: "PostgreSQL 只读 role 未在真实 PG 验证（SQLite mode=ro 不算）"
+    status: EXTERNAL
+    evidence:
+      - scripts/aiqe/check_pg_readonly_role.py
+      - docs/aiqe/v1.6/evidence/pg-readonly-role.json
+    blocked_by: "需要运维创建只读账号并提供 PG DSN"
+    owner: "ops"
+    unblock_action: "python scripts/aiqe/check_pg_readonly_role.py --check --dsn <readonly-dsn>"
+  - id: P2-2
+    title: "V16-024 生产证据（备份恢复/Vault/告警/灰度）未归档"
+    status: EXTERNAL
+    evidence:
+      - docs/aiqe/v1.6/governance/production-evidence.json
+    blocked_by: "需要生产/staging 基础设施访问与原始日志"
+    owner: "ops"
+    unblock_action: "归档 pg_dump/restore、Vault 脱敏配置、Alertmanager 触发、灰度 Run 证据并更新 production-evidence.json"
+  - id: P2-3
+    title: "V16-021 历史弱凭据需扫描/轮换"
+    status: EXTERNAL
+    evidence:
+      - test-platform-v2/backend/tests/test_aiqe_v16_021_weak_password.py
+      - scripts/aiqe/check_release_audit.py
+    blocked_by: "需要访问历史日志/工作目录与生产凭据系统做轮换确认"
+    owner: "security"
+    unblock_action: "扫描历史日志/工作目录，确认 admin123 等旧凭据已轮换并记录"
+  - id: P2-4
+    title: "CODEOWNERS 全指向同一账号，无独立责任域"
+    status: EXTERNAL
+    evidence:
+      - .github/CODEOWNERS
+      - docs/aiqe/v1.6/governance/review-roles.yaml
+    blocked_by: "仓库只有单一 GitHub 账号，无法建立真实独立 CODEOWNER"
+    owner: "repo-admin"
+    unblock_action: "邀请独立 QA/Security 账号并为其分配 CODEOWNERS 域"
+  - id: P3-1
+    title: "全量测试未在当前环境复现（审计缺 bcrypt）"
+    status: CLOSED
+    evidence:
+      - work-logs/aiqe-v16-1-audit-closure-20261124.md
+      - docs/aiqe/v1.6/V1.6-Release-Verdict.md
+    note: "本机已复跑 AIQE 全量子集（354 passed）与平台 E2E（11 passed）；全量后端结果见 work-log。"

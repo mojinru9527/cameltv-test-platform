@@ -2,7 +2,7 @@
 #
 # 状态语义：NOT_STARTED < PARTIAL < IMPLEMENTED < VERIFIED（交付/自动证据）；
 # ACCEPTED 需非原作者独立 Reviewer 签署，且 acceptance.status=REVIEWED。
-# VERIFIED 不等于独立验收：acceptance.status=NOT_REVIEWED 时 Gate G 不得宣称完成。
+# VERIFIED 不等于独立验收：acceptance.status 为 NOT_REVIEWED 时 Gate G 不得宣称完成。
 # 运行时证据必须有可校验的机器产物；仅有现场记录时 runtime_evidence.status=NOT_PROVEN。
 # 本文件由人工维护，机器校验见 scripts/aiqe/check_traceability.py。
 
@@ -2413,6 +2413,8 @@ requirements:
     - tests/test_aiqe_v16_025_acceptance_records.py::test_valid_record_passes
     - tests/test_aiqe_v16_025_acceptance_records.py::test_load_records_merges_valid_record
     - tests/test_aiqe_v16_025_traceability_gate.py::test_accepts_runtime_evidence_full_ref_set
+    - tests/test_aiqe_v16_025_audit_closure.py::test_ledger_covers_required_audit_items
+    - tests/test_aiqe_v16_025_audit_closure.py::test_report_is_fresh_and_check_passes
     negative:
     - tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_missing_negative_test_for_p0
     - tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_accepted_without_reviewed_acceptance
@@ -2424,6 +2426,8 @@ requirements:
     - tests/test_aiqe_v16_025_acceptance_records.py::test_pending_reviewer_rejected
     - tests/test_aiqe_v16_025_acceptance_records.py::test_missing_artifact_rejected
     - tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_runtime_evidence_unknown_ref_key
+    - tests/test_aiqe_v16_025_audit_closure.py::test_closed_item_requires_existing_evidence
+    - tests/test_aiqe_v16_025_audit_closure.py::test_external_item_requires_blocker_owner_action
     boundary:
     - tests/test_aiqe_release_audit.py::test_repo_release_audit_is_clean
   mock_boundary: 真实 YAML 矩阵文件 + 真实 CLI；无 Mock。
@@ -2439,6 +2443,9 @@ requirements:
   - artifact:docs/aiqe/v1.6/governance/review-roles.yaml
   - artifact:docs/aiqe/v1.6/acceptance/README.md
   - artifact:docs/aiqe/v1.6/traceability/runtime-evidence.schema.json (runtime_evidence Schema)
+  - artifact:docs/aiqe/v1.6/governance/audit-closure.yaml (19 项审计整改台账)
+  - artifact:docs/aiqe/v1.6/V1.6.1-Audit-Closure-Report.md (generated)
+  - script:scripts/aiqe/check_audit_closure.py (CI wired)
   owner: tech-lead
   reviewer: pending
   gaps:
@@ -2448,6 +2455,10 @@ requirements:
     status: NOT_REVIEWED
     reviewed_at: null
     artifact: null
+  runtime_evidence:
+    status: NOT_PROVEN
+    artifacts: []
+    note: 审计台账/报告为仓库内可校验产物；无运行时 Run 证据需求（治理文件）。
 - id: TC-AIQE-001
   issue: TC-AIQE-001
   priority: P1

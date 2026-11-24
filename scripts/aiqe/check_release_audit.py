@@ -65,6 +65,7 @@ GENERATED_DOCS = {
     "E2E-Coverage-and-Blockers.md": "e2e",
     "V1.6-Release-Verdict.md": "verdict",
     "V1.6-Requirement-Code-Test-Evidence-Matrix.md": "matrix",
+    "V1.6.1-Audit-Closure-Report.md": "audit-closure",
 }
 HISTORICAL_MARKERS = ("STATUS: HISTORICAL", "历史归档", "superseded", "已被取代")
 

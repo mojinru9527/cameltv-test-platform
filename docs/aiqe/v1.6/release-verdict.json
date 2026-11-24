@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-24T14:10:48.496607+00:00",
+  "generated_at": "2026-11-24T14:15:02.359660+00:00",
   "release": "aiqe-v1.6",
-  "commit_sha": "960da41784c0889d601fba8df53f2bfba09cd7a7",
+  "commit_sha": "b558b119ec48a843bc12e5b00d01e0602ef76f08",
   "baseline_release_commit": "9bbbdbb2026bada5c016d663780e03d62fca940d",
   "migration_head": "20261122_v16_catalog_post_merge",
   "summary": {
@@ -12,7 +12,7 @@
     "partial": 12,
     "blocked": 0,
     "independent_reviews": 0,
-    "runtime_not_proven": 17,
+    "runtime_not_proven": 18,
     "product_tc_pass": 0,
     "product_tc_total": 10
   },

@@ -81,7 +81,14 @@
 > 结论：A5 现已能“自动分析 + 生成回归计划提案”，但**创建 Regression/Run 仍必须人工审批后调用 API**，
 > 这是审计要求的副作用门禁，不是缺口。
 
-## 8. 未完成（后续批次）
+## 8. 第六轮补充（2026-11-25）
+
+| 项 | 处理 | 验证 |
+|---|---|---|
+| 审计整改可审计性 | 新增 `governance/audit-closure.yaml`（19 项：P0-1..P2-4 + P3-1）与 `check_audit_closure.py`：CLOSED 必须有存在证据、EXTERNAL 必须写 blocked_by/owner/unblock_action；生成 `V1.6.1-Audit-Closure-Report.md` 并接入 CI traceability + release-gate | 6 条测试；closure check 0 error（12 CLOSED / 7 EXTERNAL） |
+| 全量回归 | 本机执行完整后端 `pytest tests`：**2553 passed / 43 skipped / 0 failed**（一次中间态失败为生成文档与并发重生成竞态，单独复跑 11 passed） | `python -m pytest tests -q -p no:cacheprovider` |
+
+## 9. 未完成（后续批次）
 
 1. **产品级 TC-AIQE-001..010**：需隔离 Test 环境按 merged spec §20 重跑并归档产物。
 2. **独立验收签署**：机制已就绪，70 条需求仍需真实 Reviewer 逐条生成
