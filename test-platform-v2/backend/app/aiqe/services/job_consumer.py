@@ -143,7 +143,6 @@ def claim_agent_task_jobs(db: Session, *, limit: int = 5) -> list[int]:
     )
     claimed: list[int] = []
     for job in rows:
-        next_attempt = int(job.attempt or 0) + 1
         result = db.execute(
             update(ExecutionJob)
             .where(ExecutionJob.id == job.id, ExecutionJob.status == "pending")
