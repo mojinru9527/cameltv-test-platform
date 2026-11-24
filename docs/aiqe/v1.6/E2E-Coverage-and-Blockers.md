@@ -25,13 +25,13 @@
 
 | TC | 状态 | Run ID | Job | NodeRun | Assertion | Artifact | 说明 |
 |---|---|---|---|---|---|---|---|
-| TC-PLATFORM-001 | **PASS** | ff712e3d | 1 | cb0527f3 | d3ace405 | 5a6921cb,07ed10a0 |  |
-| TC-PLATFORM-002 | **PASS** | 50a6915f | 1 | b51a4e70 | aee507a9 | debe76ad |  |
-| TC-PLATFORM-003 | **BLOCKED** | 7c925e0a | 1 | be7fb5cf | 656d3208 | — | 策略阻断发生在断言执行前，无 AssertionResult（负向场景按 BLOCKED 记录） |
-| TC-PLATFORM-004 | **NOT_RUN** | 1a915e76 | 1 | 3af0604a | — | — | fencing 负向场景：迟到结果被拒绝，无完整 Run/Assertion 链路结果可计 PASS |
-| TC-PLATFORM-005 | **PASS** | c9fe8696 | 2 | 88238adb | c85ddcd1 | a47bd5a5,e1b67871 |  |
-| TC-PLATFORM-006 | **PASS** | 1689f45e | 1,2 | 33893563,64e04599 | 0eac3a9c,60bffc1b | 7bd365a7,38613806,af9c4354,d7370ceb |  |
-| TC-PLATFORM-007 | **PASS** | edcbf00f | 1 | 3604d26f | 80d83bba | b9be5048,86261abb |  |
+| TC-PLATFORM-001 | **PASS** | 85b06644 | 1 | f15dd626 | ae13d189 | 9fe6bd5d,9493c8ff |  |
+| TC-PLATFORM-002 | **PASS** | 905cdae4 | 1 | 3fcf0126 | 42980d36 | 728c45d6 |  |
+| TC-PLATFORM-003 | **BLOCKED** | 4e1ef203 | 1 | 99d8a329 | d9ce8d38 | — | 策略阻断发生在断言执行前，无 AssertionResult（负向场景按 BLOCKED 记录） |
+| TC-PLATFORM-004 | **NOT_RUN** | 2185d391 | 1 | 8f5f2faa | — | — | fencing 负向场景：迟到结果被拒绝，无完整 Run/Assertion 链路结果可计 PASS |
+| TC-PLATFORM-005 | **PASS** | d239f2df | 2 | 7977b416 | 0f016e06 | e826ecde,3b00afb5 |  |
+| TC-PLATFORM-006 | **PASS** | 9faa7812 | 1,2 | 34ef4cd4,639dc9d2 | ac462859,2fa06309 | 2f389112,6f9bfe36,e3dd7994,65a6f9be |  |
+| TC-PLATFORM-007 | **PASS** | ec04f232 | 1 | 4762f7ea | 5dcca2b1 | 64a51b85,430484d8 |  |
 | TC-PLATFORM-008 | **BLOCKED** | — | — | — | — | — | browser 节点由外部 Runner 执行；本用例覆盖 node_executor→PlaywrightDriver，未产生 TestRun，故不计入运行证据索引 PASS |
 | TC-PLATFORM-009 | **NOT_RUN** | — | — | — | — | — | AgentTask 链路不产生 TestRun，无法计入需要 Run/Job/Assertion ID 的运行证据索引 |
 | TC-PLATFORM-010 | **NOT_RUN** | — | — | — | — | — | Contract Service 平台行为测试，无 TestRun/UI/DB 链路，不能计为产品 TC-001 运行证据 |

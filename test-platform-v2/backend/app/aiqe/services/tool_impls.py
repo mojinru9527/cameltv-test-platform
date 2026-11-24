@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import func, select
@@ -140,6 +141,113 @@ def read_benchmark_dataset(
     }
 
 
+def read_requirements(
+    db: Session, *, project_id: int, requirement_id: str = "", limit: int = 20, **_: Any
+) -> dict[str, Any]:
+    """读取本项目的需求契约与验收标准（只读、项目隔离）。
+
+    V16-019 补齐：A1/A2/A5 需要真实需求事实，不能依赖调用方 Facts。
+    """
+    from app.aiqe.models.contract import AcceptanceCriterion, RequirementContract
+
+    query = select(RequirementContract).where(
+        RequirementContract.project_id == int(project_id)
+    )
+    if requirement_id:
+        query = query.where(RequirementContract.requirement_id == str(requirement_id))
+    contracts = list(
+        db.scalars(
+            query.order_by(RequirementContract.id.desc()).limit(max(1, min(int(limit), 100)))
+        )
+    )
+    items: list[dict[str, Any]] = []
+    for contract in contracts:
+        acs = list(
+            db.scalars(
+                select(AcceptanceCriterion).where(AcceptanceCriterion.contract_id == contract.id)
+            )
+        )
+        items.append(
+            {
+                "contract_id": contract.id,
+                "requirement_id": contract.requirement_id,
+                "status": contract.status,
+                "revision": contract.revision,
+                "revision_checksum": contract.revision_checksum,
+                "acceptance_criteria": [
+                    {
+                        "ac_id": ac.ac_id,
+                        "given": ac.given,
+                        "when": ac.when,
+                        "then": list(ac.then_json or []),
+                        "priority": ac.priority,
+                        "oracle_type": ac.oracle_type,
+                        "oracle_ref": ac.oracle_ref,
+                        "approval_status": ac.approval_status,
+                    }
+                    for ac in acs
+                ],
+            }
+        )
+    return {"project_id": int(project_id), "count": len(items), "items": items}
+
+
+def read_git_diff(
+    db: Session,
+    *,
+    project_id: int,
+    base_sha: str,
+    head_sha: str,
+    max_files: int = 200,
+    **_: Any,
+) -> dict[str, Any]:
+    """读取服务器侧 Git diff 并做影响面分析（SHAs 严格校验，仓库路径不可由调用方指定）。
+
+    V16-019/V16-014 补齐：A5 必须基于真实 diff/AST/route/migration 证据，
+    不能由调用方提交一份算好的 impact_analysis。
+    """
+    import re
+
+    from app.aiqe.services.change_impact import analyze_change_impact
+    from app.aiqe.services.impact_service import _run_git, collect_changes
+
+    sha_pattern = re.compile(r"^[0-9a-f]{40}$")
+    base = str(base_sha or "").strip().lower()
+    head = str(head_sha or "").strip().lower()
+    for name, value in (("base_sha", base), ("head_sha", head)):
+        if not sha_pattern.match(value):
+            raise ValueError(f"{name} 必须是完整 40 位小写 SHA")
+    repo_root = Path(__file__).resolve().parents[5]
+    files, symbols, routes, migrations, components = collect_changes(str(repo_root), base, head)
+    if not files:
+        raise ValueError("diff 为空或 SHA 不在仓库历史中")
+    diff_text = _run_git(str(repo_root), ["diff", "--unified=0", f"{base}..{head}"])
+    analysis = analyze_change_impact(
+        base_sha=base,
+        head_sha=head,
+        repo_root=str(repo_root),
+        changed_files=[item.path for item in files],
+        diff_text=diff_text[:200_000],
+    )
+    limit = max(1, min(int(max_files), 500))
+    return {
+        "project_id": int(project_id),
+        "base_sha": base,
+        "head_sha": head,
+        "file_count": len(files),
+        "files": [
+            {"path": item.path, "status": item.status, "added": item.added, "removed": item.removed}
+            for item in files[:limit]
+        ],
+        "symbols": symbols,
+        "routes": routes,
+        "migrations": migrations,
+        "components": components,
+        "analysis": analysis,
+        "derived_by": "server:impact_service+change_impact",
+    }
+
+
 READ_TOOLS: dict[str, Any] = {
     "read_project_context": read_project_context,
     "read_openapi": read_openapi,
@@ -147,13 +255,14 @@ READ_TOOLS: dict[str, Any] = {
     "read_defects": read_defects,
     "read_noise_rules": read_noise_rules,
     "read_benchmark_dataset": read_benchmark_dataset,
+    "read_requirements": read_requirements,
+    "read_git_diff": read_git_diff,
 }
 
 #: 未实现真实实现（或需要写副作用审批）的工具必须显式 UNAVAILABLE。
+#: 写工具（create_*）保持不可用：必须走审批与副作用门禁，不能为了“工具全绿”放开。
 UNAVAILABLE_TOOLS = frozenset(
     {
-        "read_requirements",
-        "read_git_diff",
         "create_draft",
         "create_regression_plan",
         "create_learning_candidate",

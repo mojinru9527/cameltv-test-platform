@@ -8,6 +8,7 @@
 """
 from __future__ import annotations
 
+from typing import Any
 from typing import Literal
 
 from pydantic import BaseModel, Field, ValidationError
@@ -61,6 +62,13 @@ class TestDesignAgent(BaseAgent):
             + f"\n覆盖充分: {coverage_sufficient}"
         )
         return self.run(payload)
+
+    def gather_tool_evidence(self, executor: Any) -> dict[str, Any]:
+        return {
+            "project": executor.safe_call("read_project_context"),
+            "requirements": executor.safe_call("read_requirements"),
+            "openapi": executor.safe_call("read_openapi"),
+        }
 
     def validate(self, data: dict) -> dict:
         try:

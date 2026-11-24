@@ -7,6 +7,7 @@ PR diff → 候选回归并集（强制 suite 不得漏选）：
 """
 from __future__ import annotations
 
+from typing import Any
 import re
 
 from pydantic import BaseModel, Field, ValidationError
@@ -78,6 +79,19 @@ class ChangeImpactAgent(BaseAgent):
             raise AgentSchemaError("PR diff 文件列表不能为空")
         self._expected = compute_impact(files)
         return self.run(str({"files": files, "rule_baseline": self._expected}))
+
+    def gather_tool_evidence(self, executor: Any) -> dict[str, Any]:
+        references = executor.references or {}
+        evidence: dict[str, Any] = {
+            "requirements": executor.safe_call("read_requirements"),
+        }
+        base_sha = str(references.get("base_sha") or "").strip()
+        head_sha = str(references.get("head_sha") or "").strip()
+        if base_sha and head_sha:
+            evidence["git_diff"] = executor.safe_call(
+                "read_git_diff", base_sha=base_sha, head_sha=head_sha
+            )
+        return evidence
 
     def validate(self, data: dict) -> dict:
         try:

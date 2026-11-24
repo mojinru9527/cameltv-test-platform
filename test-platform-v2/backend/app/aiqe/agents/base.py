@@ -31,6 +31,8 @@ class BaseAgent:
     key = "base"
     model = "deepseek-chat"
     system_prompt = ""
+    #: 工具证据注入提示词的上限，避免超长上下文与 Secret 泄漏。
+    tool_evidence_limit = 4000
 
     def __init__(
         self,
@@ -46,6 +48,15 @@ class BaseAgent:
         if self._llm is None:
             raise AgentUnavailable("LLM 客户端不可用（Key 缺失或未注入）")
         return self._llm(self.system_prompt, input_text)
+
+    def gather_tool_evidence(self, executor: Any) -> dict[str, Any]:
+        """V16-019：Agent 通过 ToolExecutor 取证。
+
+        默认不调用任何工具；子类声明自己需要的只读工具。工具失败不抛出，
+        以 ``{"ok": false, "error": ...}`` 进入提示词，避免 Agent 在缺证据时
+        假装有结论。
+        """
+        return {}
 
     @staticmethod
     def parse_json(raw: str) -> dict:
@@ -68,12 +79,23 @@ class BaseAgent:
         raise NotImplementedError
 
     def run(self, input_text: str, *, context: Any = None) -> dict:
-        """V16-012：把 AgentContext.evidence_resolver 透传给需要的 Agent。
+        """V16-012/019：透传 evidence_resolver 与工具执行器。
 
-        仅当 validate 显式声明 ``evidence_resolver`` 参数时才传递，避免破坏
-        其他 Agent 的既有签名；resolver 缺失由 A4 自己 fail-closed。
+        - ``context.tool_executor`` 存在时，先按 Agent 声明的只读工具取证，
+          把证据注入提示词（LLM 看到的是真实 DB/仓库事实）；
+        - ``context.evidence_resolver`` 仅在 validate 显式声明时传入。
         """
-        data = self.parse_json(self._call(input_text))
+        executor = getattr(context, "tool_executor", None) if context is not None else None
+        tool_evidence: dict[str, Any] = {}
+        if executor is not None:
+            tool_evidence = self.gather_tool_evidence(executor)
+        prompt = input_text
+        if tool_evidence:
+            serialized = json.dumps(tool_evidence, ensure_ascii=False, default=str)
+            prompt = (
+                f"{input_text}\n\n[TOOL_EVIDENCE]\n{serialized[: self.tool_evidence_limit]}"
+            )
+        data = self.parse_json(self._call(prompt))
         resolver = getattr(context, "evidence_resolver", None) if context is not None else None
         params = inspect.signature(self.validate).parameters
         if "evidence_resolver" in params:

@@ -30,6 +30,7 @@ from app.aiqe.agents.protocol import (
     ToolRegistry,
     stable_hash,
 )
+from app.aiqe.agents.tool_executor import ToolExecutor
 from app.aiqe.agents.registry import (
     ALLOWED_CHILDREN,
     AgentRegistryError,
@@ -267,14 +268,24 @@ def run_plan(
     idempotency_prefix: str | None = None,
     run_id: str | None = None,
     parent_task_id: str | None = None,
+    extra_context: Mapping[str, Any] | None = None,
 ) -> PlanRunResult:
     """按 DAG 执行计划；人工暂停/失败会取消下游但保留已完成结果。"""
     ordered = plan.order()
     tool_registry = tools or build_tool_registry()
+    extra_fields = {"parent_task_id": parent_task_id, "plan_id": plan.plan_id}
+    extra_fields.update(dict(extra_context or {}))
     result = PlanRunResult(plan_id=plan.plan_id, status="RUNNING", goal=plan.goal)
     task_results: dict[str, AgentResult] = {}
 
     def _run_task(task: AgentTask) -> AgentResult:
+        # V16-019：每个 AgentTask 绑定独立 ToolExecutor（真实 toolkit 授权 + 审计）。
+        tool_executor = ToolExecutor(
+            registry=tool_registry,
+            agent_key=task.agent_key,
+            task_id=task.task_id,
+            references={"run_id": run_id, **dict(extra_context or {})},
+        )
         context = AgentContext(
             project_id=int(project_id),
             actor_id=actor_id,
@@ -283,8 +294,9 @@ def run_plan(
                 f"{idempotency_prefix}:{task.task_id}" if idempotency_prefix else None
             ),
             tools=tool_registry,
+            tool_executor=tool_executor,
             evidence_resolver=evidence_resolver,
-            extra={"parent_task_id": parent_task_id, "plan_id": plan.plan_id},
+            extra=dict(extra_fields),
         )
         if executor is not None:
             return executor(task, context, task.request)
@@ -337,8 +349,14 @@ def run_plan(
             run_id=run_id,
             idempotency_key=idempotency_key,
             tools=tool_registry,
+            tool_executor=ToolExecutor(
+                registry=tool_registry,
+                agent_key=task.agent_key,
+                task_id=task.task_id,
+                references={"run_id": run_id, **dict(extra_context or {})},
+            ),
             evidence_resolver=evidence_resolver,
-            extra={"parent_task_id": parent_task_id, "plan_id": plan.plan_id},
+            extra=dict(extra_fields),
         )
         try:
             agent_result = _run_task(task)

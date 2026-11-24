@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "artifact_kind": "platform-chain-e2e",
-  "generated_at": "2026-11-24T13:32:07.493945+00:00",
-  "commit_sha": "045b000265556b99bacb3b8a3957aeaaf83673b4",
+  "generated_at": "2026-11-24T13:39:39.231744+00:00",
+  "commit_sha": "0e7cdccb7b48d4279e04dad994a55d8fb8739f2b",
   "ci_run": "local",
   "environment": "local-20261124",
   "tests": [
@@ -12,21 +12,21 @@
       "blocked_reason": "",
       "duration_ms": 0,
       "driver_image_digest": "",
-      "run_id": "ff712e3d-7c84-4bee-9906-2663839be0f0",
+      "run_id": "85b06644-3af7-4d99-920c-3ec3aefbcb77",
       "project_id": 1,
-      "workflow_snapshot_hash": "3ebd0e4727eb3ae00f40c95134479c262581c6da8e554069fd2d0a2fd6c56639",
+      "workflow_snapshot_hash": "fa83a56df677f71b5118494f263f6b3b2c052ff1cd10bf36cfaebd4006f0b96c",
       "job_ids": [
         "1"
       ],
       "node_run_ids": [
-        "cb0527f3-a150-454d-8206-e0e033f57098"
+        "f15dd626-f474-4d14-9c21-93cf7537124a"
       ],
       "assertion_ids": [
-        "d3ace405-6481-4c0a-a367-6b2d522a3d57"
+        "ae13d189-a3b9-486b-8f20-ae1dd8adcca9"
       ],
       "artifact_refs": [
-        "5a6921cb-3afd-4609-9c2e-07f623500af0",
-        "07ed10a0-f08e-4ed3-9ade-13077ee4ce26"
+        "9fe6bd5d-feba-4bee-8948-3af31947c13d",
+        "9493c8ff-21c6-4776-af38-3a0f084bd429"
       ],
       "run_status": "COMPLETED",
       "run_outcome": "FAIL"
@@ -37,20 +37,20 @@
       "blocked_reason": "",
       "duration_ms": 0,
       "driver_image_digest": "",
-      "run_id": "50a6915f-d766-4340-af23-fcbfe8aedea8",
+      "run_id": "905cdae4-0274-473d-b59d-f497be91e951",
       "project_id": 1,
       "workflow_snapshot_hash": "c2ef96251679f1dea047e6d7b986d08c7e1ffb863c786a38ba9ee013b6a1cc42",
       "job_ids": [
         "1"
       ],
       "node_run_ids": [
-        "b51a4e70-a7e6-4e0f-abdb-9a7f36644f5d"
+        "3fcf0126-43d2-48ec-8b7a-5090d208ccfb"
       ],
       "assertion_ids": [
-        "aee507a9-67e8-4b6d-a3a4-d2c41cab70f8"
+        "42980d36-3d4c-45b6-8971-a5b9b1e2fedb"
       ],
       "artifact_refs": [
-        "debe76ad-1402-4d40-9dec-f148a6b2b741"
+        "728c45d6-d114-4bd4-835f-c88e15fdb9c7"
       ],
       "run_status": "COMPLETED",
       "run_outcome": "PASS"
@@ -61,17 +61,17 @@
       "blocked_reason": "策略阻断发生在断言执行前，无 AssertionResult（负向场景按 BLOCKED 记录）",
       "duration_ms": 0,
       "driver_image_digest": "",
-      "run_id": "7c925e0a-10e8-451c-b075-707a9e843d98",
+      "run_id": "4e1ef203-522a-4a06-9d5b-0e54a6ebdf2f",
       "project_id": 1,
       "workflow_snapshot_hash": "55f6b93065860b7350ae979d90550bd389e913e3d1df41221a48554f246a7810",
       "job_ids": [
         "1"
       ],
       "node_run_ids": [
-        "be7fb5cf-9da7-4a74-a09a-3b3c6880f6b5"
+        "99d8a329-876c-4f13-92aa-6a43fbc1cb91"
       ],
       "assertion_ids": [
-        "656d3208-4ea6-4fe5-94df-0c0f41d3cb80"
+        "d9ce8d38-3861-44bb-a4d5-ac43e4f00ec9"
       ],
       "artifact_refs": [],
       "run_status": "COMPLETED",
@@ -83,14 +83,14 @@
       "blocked_reason": "fencing 负向场景：迟到结果被拒绝，无完整 Run/Assertion 链路结果可计 PASS",
       "duration_ms": 0,
       "driver_image_digest": "",
-      "run_id": "1a915e76-e016-41a2-b87e-8d262c54159c",
+      "run_id": "2185d391-253d-4db9-82ec-bc5e41dbdd8d",
       "project_id": 1,
-      "workflow_snapshot_hash": "82732378c3d07248f8d03ba8eb8129d4c599855470bad8ea4d86d383a4178f2c",
+      "workflow_snapshot_hash": "0bff534d1142173587847aafd2350f537faab8069a259ff7067506ed73b257cd",
       "job_ids": [
         "1"
       ],
       "node_run_ids": [
-        "3af0604a-b729-4867-ab7f-17590b1d09d9"
+        "8f5f2faa-a7ed-4ddb-b34d-937d3436996c"
       ],
       "assertion_ids": [],
       "artifact_refs": [],
@@ -103,21 +103,21 @@
       "blocked_reason": "",
       "duration_ms": 0,
       "driver_image_digest": "",
-      "run_id": "c9fe8696-e48c-463c-9ec6-b8042ac30335",
+      "run_id": "d239f2df-b1bb-4490-90e0-1e62ae0c9670",
       "project_id": 1,
-      "workflow_snapshot_hash": "c4b138a6a8d21edad74babcb6d3d6f94a6172eb573c936a9d6289009561e5dda",
+      "workflow_snapshot_hash": "3fdd2de141ad5df7b75d3b9024ebe5eabd689c33b631a26fafd3e029569aa020",
       "job_ids": [
         "2"
       ],
       "node_run_ids": [
-        "88238adb-e255-49f0-a6e9-b6b6f1193e64"
+        "7977b416-11b2-427d-b890-0ae46f0fec19"
       ],
       "assertion_ids": [
-        "c85ddcd1-1574-49d8-b990-61676c82e794"
+        "0f016e06-2ab6-4e49-8a93-2bebfebaaf16"
       ],
       "artifact_refs": [
-        "a47bd5a5-46e8-43bf-b9ff-67d2ede27d10",
-        "e1b67871-ab4f-4291-8927-5fd6591e01b2"
+        "e826ecde-9476-4fba-bc7d-240f8973c6ec",
+        "3b00afb5-6811-411b-8e85-f7be9dbef6e4"
       ],
       "run_status": "COMPLETED",
       "run_outcome": "PASS"
@@ -128,26 +128,26 @@
       "blocked_reason": "",
       "duration_ms": 0,
       "driver_image_digest": "",
-      "run_id": "1689f45e-e329-4db5-a638-6c9b2b532b97",
+      "run_id": "9faa7812-d506-4506-a786-b1117556f69e",
       "project_id": 1,
-      "workflow_snapshot_hash": "63b8dd09b94c86a73d47bcbd05675a7406be3e3bf1281ef6ee5a2f7c2e2068cc",
+      "workflow_snapshot_hash": "a7c75acfa15a1d454f354dcdc40e520559d1388c14b0ffd3176ece7f35b819df",
       "job_ids": [
         "1",
         "2"
       ],
       "node_run_ids": [
-        "33893563-5382-42ca-8921-97a88a09fb07",
-        "64e04599-ecc4-4882-a1f8-368e55cb8b31"
+        "34ef4cd4-22cc-4165-933e-3bb0cd9926d8",
+        "639dc9d2-4968-4e96-8305-dfce2e526fbe"
       ],
       "assertion_ids": [
-        "0eac3a9c-9cab-4be3-be00-5ef172cac17b",
-        "60bffc1b-5839-4a80-a54a-4647a40194a0"
+        "ac462859-2e50-4d9c-9fab-c868829fae6a",
+        "2fa06309-0844-4409-b588-1a190bea2d68"
       ],
       "artifact_refs": [
-        "7bd365a7-5a58-441f-89b3-6d1d2e1eca91",
-        "38613806-b874-4975-b9ce-81df539944ac",
-        "af9c4354-94c7-49ed-8a27-faaae1c6acdd",
-        "d7370ceb-8882-450a-a55f-4128e9082692"
+        "2f389112-4ae1-4f0f-aa37-4f442803e79e",
+        "6f9bfe36-fcba-4a03-9948-05a285b49f07",
+        "e3dd7994-6ff1-45b4-b21a-ad8ed5368d6b",
+        "65a6f9be-096d-4c33-bb71-f9126bbd196b"
       ],
       "run_status": "COMPLETED",
       "run_outcome": "PASS"
@@ -158,21 +158,21 @@
       "blocked_reason": "",
       "duration_ms": 0,
       "driver_image_digest": "",
-      "run_id": "edcbf00f-f479-4cd5-ab5c-5ec5a066ecd9",
+      "run_id": "ec04f232-e363-4650-87f3-f0ad51f4efb2",
       "project_id": 1,
-      "workflow_snapshot_hash": "6709b540dde39464d1dd378c5f35dc29e3b42fbc1460336533aa178aca64a910",
+      "workflow_snapshot_hash": "1ea7213071cf35ae4488d29a3d46a19b1f422929c1f90b57d84555d5a3636640",
       "job_ids": [
         "1"
       ],
       "node_run_ids": [
-        "3604d26f-0627-45d1-8782-a49bc556dab3"
+        "4762f7ea-62c0-4073-99dd-af38aa88e2b3"
       ],
       "assertion_ids": [
-        "80d83bba-16cc-4f96-a077-2ce373d457c9"
+        "5dcca2b1-bb5e-41f0-953e-f57504b6e23f"
       ],
       "artifact_refs": [
-        "b9be5048-6491-417c-b7a0-a06d7e42121c",
-        "86261abb-10d1-4671-97e9-fc74e9661a7c"
+        "64a51b85-eada-4730-baab-9c68f18fa5d4",
+        "430484d8-2641-4007-8fcf-f7c7e0467bd0"
       ],
       "run_status": "COMPLETED",
       "run_outcome": "PASS"

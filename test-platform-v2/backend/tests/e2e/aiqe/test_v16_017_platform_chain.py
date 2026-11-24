@@ -487,9 +487,14 @@ def test_tc_008_defect_regression_end_to_end(db_session, sut):
     _Handler.fixed = False
 
 
-# ── TC-010：AgentTask → Outbox → Job → ToolRegistry → AgentExecution ─
+# ── TC-010：AgentTask → Outbox → Job → 真实 Agent Adapter → ToolRegistry ─
 def test_tc_010_agent_task_platform_chain(db_session):
-    from app.aiqe.agents.protocol import AgentResult
+    """真实 Agent Adapter 路径：不注入自定义 executor，A1 通过 ToolExecutor 取证。
+
+    模型层用确定性 stub（LLM 是可替换边界），但 AgentTask 状态机、BoundToolRegistry
+    授权、ToolExecutionAudit、AgentExecution 与 AgentResult.tool_calls 都是真实实现。
+    """
+    import json as _json
 
     _project_env(db_session, 80)
     db_session.commit()
@@ -505,27 +510,31 @@ def test_tc_010_agent_task_platform_chain(db_session):
     job = enqueue_task_job(db_session, task)
     db_session.commit()
 
-    def executor(plan_task, context, request):
-        tool = context.tools.resolve("A1", "read_project_context")
-        data = tool()
-        return AgentResult(
-            agent_key="A1",
-            agent_version="1.0.0",
-            status="COMPLETED",
-            output={"project": data["project_id"]},
+    def stub_llm(_system: str, _prompt: str) -> str:
+        return _json.dumps(
+            {
+                "summary": "收藏赛事需求可测",
+                "acceptance_criteria": [
+                    {"id": "AC-1", "text": "收藏成功", "source_ref": "PRD:favorites#收藏赛事"}
+                ],
+                "risks": [],
+            }
         )
 
-    result = execute_task_job(db_session, job.id, executor=executor)
+    result = execute_task_job(db_session, job.id, llm=stub_llm)
     db_session.commit()
-    assert result["task"]["status"] == "COMPLETED"
+    assert result["task"]["status"] == "COMPLETED", result
     executions = list(
         db_session.scalars(
             select(AgentExecution).where(AgentExecution.parent_task_id == task.id)
         )
     )
     assert len(executions) == 1 and executions[0].agent_key == "A1"
+    declared = {item.get("tool") for item in (executions[0].tool_calls_json or [])}
+    assert declared == {"read_project_context", "read_requirements"}, declared
     audits = list(db_session.scalars(select(ToolExecutionAudit)))
-    assert audits and audits[0].tool_name == "read_project_context"
+    assert {row.tool_name for row in audits} == {"read_project_context", "read_requirements"}
+    assert all(row.task_id == task.id for row in audits)
     job_row = db_session.get(ExecutionJob, job.id)
     assert job_row.status == "success"
     record_tc(
