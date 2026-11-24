@@ -182,6 +182,7 @@ def test_rejects_self_review(checker, tmp_path):
             "status": "REVIEWED",
             "reviewed_at": "2026-11-24",
             "artifact": EXISTING_ARTIFACT,
+            "record": "docs/aiqe/v1.6/acceptance/records/V16-001-R1.json",
         },
     )
     matrix = _write_matrix(tmp_path / "matrix.yaml", [entry])
@@ -205,6 +206,7 @@ def test_accepts_reviewed_with_non_author_reviewer_and_artifact(checker, tmp_pat
             "status": "REVIEWED",
             "reviewed_at": "2026-11-24",
             "artifact": EXISTING_ARTIFACT,
+            "record": "docs/aiqe/v1.6/acceptance/records/V16-001-R1.json",
         },
     )
     matrix = _write_matrix(tmp_path / "matrix.yaml", [entry])
@@ -460,6 +462,7 @@ def test_release_gate_accepts_fully_reviewed_entry(checker, tmp_path, monkeypatc
             "status": "REVIEWED",
             "reviewed_at": "2026-11-24",
             "artifact": EXISTING_ARTIFACT,
+            "record": "docs/aiqe/v1.6/acceptance/records/V16-001-R1.json",
         },
     )
     matrix = _write_matrix(tmp_path / "matrix.yaml", [entry])

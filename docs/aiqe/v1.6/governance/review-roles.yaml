@@ -1,0 +1,35 @@
+# AIQE V1.6 独立验收角色矩阵（V16-025 Gate G）
+#
+# 目的：审计发现“70 条 VERIFIED / 60 条 reviewer=pending / V16-025 owner=reviewer=tech-lead”
+# 不能证明独立验收。本文件把 owner / reviewer 映射到**角色域**，规则：
+#   1. 只有 REVIEWED 记录（docs/aiqe/v1.6/acceptance/records/*.json）才算独立验收；
+#   2. reviewer 角色域必须与 owner 角色域不同；
+#   3. reviewer=pending/未注册 → 不得 REVIEWED；
+#   4. 同一账号在不同角色域签同一需求仍视为不独立（记录必须写 reviewer_role 且由人工签署）。
+schema_version: "1.0"
+roles:
+  owners:
+    backend-security: engineering
+    security: security
+    execution-platform: engineering
+    ai-quality: ai
+    qa-automation: qa
+    quality-platform: qa
+    driver-platform: platform
+    driver-device: platform
+    devops: ops
+    tech-lead: leadership
+  reviewers:
+    pending: pending
+    user-confirmed: user
+    qa-lead: qa
+    security-lead: security
+    tech-lead: leadership
+    user: user
+    qa: qa
+    security: security
+    platform: platform
+    ops: ops
+    ai: ai
+    engineering: engineering
+    leadership: leadership

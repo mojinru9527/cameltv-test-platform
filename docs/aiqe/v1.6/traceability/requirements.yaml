@@ -1759,10 +1759,12 @@ requirements:
     success:
     - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_004_query_registry_only_real_select
     - tests/e2e/aiqe/test_v16_017_tc001_contract.py::test_tc_001_contract_freeze_and_v2_impact
+    - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_007_worker_crash_recovery_and_duplicate_delivery
     negative:
     - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_002_http_200_business_assertion_fails
     - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_005_metadata_endpoint_never_reached
     - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_007_stale_worker_result_rejected
+    - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_005_metadata_endpoint_never_reached
   mock_boundary: 本地确定性 SUT（真实 HTTP/SQLite/Worker），非产品租户。
   layers:
   - L2
@@ -1772,10 +1774,11 @@ requirements:
   - pytest:tests/e2e/aiqe/test_v16_017_tc001_contract.py (1 passed)
   - artifact:docs/aiqe/v1.6/e2e/platform-results.json (10 TC machine results)
   - artifact:docs/aiqe/v1.6/evidence/evidence-index.json (build_evidence_index.py)
+  - pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (10 passed)
   owner: qa-automation
   reviewer: qa-lead
   gaps:
-  - 平台链路 E2E 计为 TC-PLATFORM-001..012，不等同任何产品 TC；产品级 TC-AIQE-001..010 当前为 PARTIAL。
+  - 平台链路 E2E 计为 TC-PLATFORM-001..010（6 PASS / 2 BLOCKED / 2 NOT_RUN），不等同任何产品 TC；产品级 TC-AIQE-001..010 当前为 PARTIAL。
   acceptance:
     status: NOT_REVIEWED
     reviewed_at: null
@@ -2393,6 +2396,8 @@ requirements:
   tests:
     success:
     - tests/test_aiqe_v16_025_traceability_gate.py::test_valid_matrix_passes
+    - tests/test_aiqe_v16_025_acceptance_records.py::test_valid_record_passes
+    - tests/test_aiqe_v16_025_acceptance_records.py::test_load_records_merges_valid_record
     negative:
     - tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_missing_negative_test_for_p0
     - tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_accepted_without_reviewed_acceptance
@@ -2400,6 +2405,9 @@ requirements:
     - tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_bare_evidence
     - tests/test_aiqe_release_audit.py::test_secrets_and_e2e_scans
     - tests/test_aiqe_release_audit.py::test_requirements_status_rules
+    - tests/test_aiqe_v16_025_acceptance_records.py::test_same_role_domain_rejected
+    - tests/test_aiqe_v16_025_acceptance_records.py::test_pending_reviewer_rejected
+    - tests/test_aiqe_v16_025_acceptance_records.py::test_missing_artifact_rejected
     boundary:
     - tests/test_aiqe_release_audit.py::test_repo_release_audit_is_clean
   mock_boundary: 真实 YAML 矩阵文件 + 真实 CLI；无 Mock。
@@ -2411,11 +2419,14 @@ requirements:
   - artifact:.github/workflows/aiqe-v16-gates.yml (CI Gate)
   - artifact:.github/CODEOWNERS (code ownership)
   - artifact:.github/pull_request_template.md (PR 模板)
+  - pytest:tests/test_aiqe_v16_025_acceptance_records.py (10 passed)
+  - artifact:docs/aiqe/v1.6/governance/review-roles.yaml
+  - artifact:docs/aiqe/v1.6/acceptance/README.md
   owner: tech-lead
   reviewer: pending
   gaps:
-  - 独立 Reviewer 未签署（acceptance.status=NOT_REVIEWED），Gate G 不得宣称完成。
-  - V16-025-R1 原 reviewer 与 owner 同为 tech-lead，构成自审；已改回 pending。
+  - 独立验收机制已落地：acceptance/records/*.json + review-roles.yaml 角色域校验 + record_acceptance.py CLI；70 条需求仍需真实 Reviewer 逐条签署（当前 0 条）。
+  - GitHub Branch Protection / Ruleset 无外部证据，Gate G 仍不得宣称完成。
   acceptance:
     status: NOT_REVIEWED
     reviewed_at: null
@@ -2784,8 +2795,10 @@ requirements:
         artifact: null
         note: 现场执行记录，未归档机器产物。
     platform:
-      tc_ids: []
-      tests: []
+      tc_ids:
+      - TC-PLATFORM-004
+      tests:
+      - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_007_worker_crash_recovery_and_duplicate_delivery
 - id: TC-AIQE-008
   issue: TC-AIQE-008
   priority: P1

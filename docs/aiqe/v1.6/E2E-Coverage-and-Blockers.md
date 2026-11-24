@@ -14,7 +14,7 @@
 | TC-AIQE-004 | 广告/其他功能浮层造成交叉干扰 | **PARTIAL** | TC-PLATFORM-008 | 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。 |
 | TC-AIQE-005 | 并发数据污染 | **PARTIAL** | TC-PLATFORM-011 | 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。<br>平台侧已加入受控目标零请求断言（localhost 可到达但不在 allowlist → BLOCKED 且计数器 0）。 |
 | TC-AIQE-006 | 上游第三方故障 | **PARTIAL** | TC-PLATFORM-012 | 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。 |
-| TC-AIQE-007 | UI Runner 自身故障 | **PARTIAL** | — | 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。 |
+| TC-AIQE-007 | UI Runner 自身故障 | **PARTIAL** | TC-PLATFORM-004 | 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。 |
 | TC-AIQE-008 | 开发修复后点击回归 | **PARTIAL** | TC-PLATFORM-005 | 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。 |
 | TC-AIQE-009 | 多端 AC 对照 | **PARTIAL** | — | 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。<br>平台侧 E1–E6 实验已补终态收敛与结论记录断言（UNKNOWN 不得给已知根因结论）。 |
 | TC-AIQE-010 | 学习候选发布 | **PARTIAL** | — | 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。 |
@@ -25,13 +25,13 @@
 
 | TC | 状态 | Run ID | Job | NodeRun | Assertion | Artifact | 说明 |
 |---|---|---|---|---|---|---|---|
-| TC-PLATFORM-001 | **PASS** | 6585ec6c | 1 | c8976379 | a857c1ac | abcb7216,a25bceea |  |
-| TC-PLATFORM-002 | **PASS** | 18cc6186 | 1 | 5e9df473 | 14ede863 | 9f833be6 |  |
-| TC-PLATFORM-003 | **BLOCKED** | 7be7b64f | 1 | d8eeb575 | 502a914f | — | 策略阻断发生在断言执行前，无 AssertionResult（负向场景按 BLOCKED 记录） |
-| TC-PLATFORM-004 | **NOT_RUN** | cc399862 | 1 | f7cec312 | — | — | fencing 负向场景：迟到结果被拒绝，无完整 Run/Assertion 链路结果可计 PASS |
-| TC-PLATFORM-005 | **PASS** | e7bfcccd | 2 | 03fa13ea | c32b4119 | f90e1a9e,d464621f |  |
-| TC-PLATFORM-006 | **PASS** | 66b3fcd1 | 2,1 | 21a3e307,0e285474 | 35549bbf,5ed301f0 | bfe803dd,55e53b0b,4549afdc,891bc99c |  |
-| TC-PLATFORM-007 | **PASS** | 2dc8ce1c | 1 | c480f959 | 365a29ff | 9c4ab1d4,5b422daa |  |
+| TC-PLATFORM-001 | **PASS** | 3208dd1f | 1 | cf32a48d | c051ae9c | 64f22d24,c7419f33 |  |
+| TC-PLATFORM-002 | **PASS** | e77cb3fb | 1 | b2383615 | aec4585a | 35f02c2e |  |
+| TC-PLATFORM-003 | **BLOCKED** | da7a6f50 | 1 | c7a6a388 | 97d39757 | — | 策略阻断发生在断言执行前，无 AssertionResult（负向场景按 BLOCKED 记录） |
+| TC-PLATFORM-004 | **PASS** | 996ab69d | 1,2 | 3ba2216a | 5bbcd8b2 | 023e5cbe,b33c7bc1 |  |
+| TC-PLATFORM-005 | **PASS** | aa0483d4 | 2 | 743b46e0 | 60d0e8b7 | 693c4293,79f6adb5 |  |
+| TC-PLATFORM-006 | **PASS** | 9f83264a | 2,1 | 64c1e584,5a90546a | 28d4d5f0,9dadbb76 | 26a364d4,ab754555,de4e08bf,4e84de2a |  |
+| TC-PLATFORM-007 | **PASS** | aadefa82 | 1 | dc8ab5e0 | ada514e4 | 654811a5,340c34fc |  |
 | TC-PLATFORM-008 | **BLOCKED** | — | — | — | — | — | browser 节点由外部 Runner 执行；本用例覆盖 node_executor→PlaywrightDriver，未产生 TestRun，故不计入运行证据索引 PASS |
 | TC-PLATFORM-009 | **NOT_RUN** | — | — | — | — | — | AgentTask 链路不产生 TestRun，无法计入需要 Run/Job/Assertion ID 的运行证据索引 |
 | TC-PLATFORM-010 | **NOT_RUN** | — | — | — | — | — | Contract Service 平台行为测试，无 TestRun/UI/DB 链路，不能计为产品 TC-001 运行证据 |

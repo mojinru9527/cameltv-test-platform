@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import threading
 import uuid
+from datetime import UTC, datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, ClassVar
 
@@ -419,13 +420,101 @@ def test_tc_007_stale_worker_result_rejected(db_session, sut):
     assert result.get("reason") in {"STALE_LEASE", "JOB_ALREADY_TERMINAL"}
     db_session.expire_all()
     assert db_session.get(NodeRun, node.id).status != "PASSED"
-    record_tc(
-        "TC-PLATFORM-004",
+
+
+# ── TC-007：Worker 崩溃恢复（claim/执行/持久化/ack）+ 重复投递 ─────
+def test_tc_007_worker_crash_recovery_and_duplicate_delivery(db_session, sut):
+    """模拟 Worker 认领后崩溃（心跳/租约过期），必须由真实 Worker 重排完成。
+
+    - 崩溃点：claim 之后、persist 之前（等价于 execute 中断）；
+    - 崩溃后的迟到结果必须被 fencing 拒绝；
+    - 恢复后同一 Run 重新 claim 完成，Assertion 只产出一份（重复投递幂等）。
+    """
+    from app.aiqe.services import dag_scheduler, reconciler
+
+    port = sut
+    env = _project_env(db_session, port)
+    graph = _http_graph(port, "/health", expected=True)
+    workflow = create_workflow(db_session, project_id=1, graph=graph)
+    approve_workflow(db_session, workflow.id, approved_by=1)
+    launched = launch_run(
         db_session,
-        db_session.get(TestRun, node.run_id),
-        status="NOT_RUN",
-        blocked_reason="fencing 负向场景：迟到结果被拒绝，无完整 Run/Assertion 链路结果可计 PASS",
+        project_id=1,
+        user_id=1,
+        workflow_definition_id=workflow.id,
+        environment_id=env.id,
+        launch_key=f"e2e-crash-{uuid.uuid4().hex}",
     )
+    db_session.commit()
+
+    claimed = job_consumer.claim_aiqe_jobs(db_session)
+    assert claimed, "首个 Job 必须可被真实 Worker 认领"
+    job = db_session.get(ExecutionJob, claimed[0])
+    node = db_session.get(NodeRun, json.loads(job.payload_json)["node_run_id"])
+    stale_token = int(node.fencing_token or 0)
+    assert node.status in {"RUNNING", "PENDING", "READY"}, node.status
+
+    # 崩溃：claim 后不再心跳/执行 → 租约过期
+    job.lease_expires_at = datetime.now(UTC) - timedelta(minutes=10)
+    job.heartbeat_at = datetime.now(UTC) - timedelta(hours=2)
+    db_session.commit()
+
+    report = reconciler.reconcile(db_session, stale_seconds=60)
+    db_session.commit()
+    db_session.expire_all()
+    node = db_session.get(NodeRun, node.id)
+    assert job.id in report.expired_jobs, report
+    assert node.status == "PENDING", (node.status, node.error_class)
+
+    # 崩溃 Worker 的迟到结果：fencing 拒绝，且不改变节点状态
+    late = job_consumer.complete_from_report(
+        db_session,
+        job_id=job.id,
+        status="success",
+        result={"status": "PASSED", "data": {"success": True}},
+        fencing_token=stale_token,
+        node_id="crashed-worker",
+    )
+    assert late.get("skipped") is True, late
+    db_session.expire_all()
+    assert db_session.get(NodeRun, node.id).status == "PENDING"
+
+    # 恢复：PENDING → READY 后必须经调度器重新派发 Job（真实 dispatch 回调），
+    # 再由真实 Worker 认领执行。
+    from app.aiqe.services.execution_dispatcher import enqueue_node_run
+
+    def _dispatch(row) -> None:
+        enqueue_node_run(db_session, row, graph=graph)
+
+    dag_scheduler.schedule(db_session, launched.id, graph, dispatch=_dispatch)
+    db_session.commit()
+    for _ in range(3):
+        _drain(db_session)
+        db_session.expire_all()
+        run = db_session.get(TestRun, launched.id)
+        if not pending_jobs(db_session, run):
+            break
+    run = db_session.get(TestRun, launched.id)
+    assert not pending_jobs(db_session, run), pending_jobs(db_session, run)
+    assert run.outcome == "PASS", (run.outcome, run.status, run.preflight_json)
+    assertions = _assertions_of(db_session, run)
+    assert assertions and all(item.status == "PASS" for item in assertions), [
+        item.status for item in assertions
+    ]
+    assertion_count = len(assertions)
+
+    # 重复投递：终态 Job 的重复上报必须被拒绝，且不新增 Assertion
+    duplicate = job_consumer.complete_from_report(
+        db_session,
+        job_id=job.id,
+        status="success",
+        result={"status": "PASSED", "data": {"success": True}},
+        fencing_token=stale_token,
+        node_id="crashed-worker",
+    )
+    assert duplicate.get("skipped") is True, duplicate
+    assert len(_assertions_of(db_session, run)) == assertion_count
+    record_tc("TC-PLATFORM-004", db_session, run)
 
 
 # ── TC-008：缺陷一键回归（真实 Launch/Worker/Scope/Comparison）────

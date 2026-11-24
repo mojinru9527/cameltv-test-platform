@@ -56,6 +56,15 @@ except ModuleNotFoundError:  # pragma: no cover
     yaml = None  # type: ignore[assignment]
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:  # pragma: no cover - 脚本/测试两种加载方式
+    sys.path.insert(0, str(SCRIPT_DIR))
+from acceptance_records import (  # noqa: E402
+    apply_records,
+    load_records,
+    load_role_matrix,
+)
+
 MATRIX_PATH = REPO_ROOT / "docs/aiqe/v1.6/traceability/requirements.yaml"
 BACKEND_ROOT = REPO_ROOT / "test-platform-v2/backend"
 ALEMBIC_VERSIONS = BACKEND_ROOT / "alembic/versions"
@@ -391,10 +400,24 @@ def _validate_acceptance(entry: dict[str, Any], report: Report) -> None:
         return
     if status == "NOT_REVIEWED":
         return
+    if not acceptance.get("record"):
+        report.error(
+            f"{req_id}: acceptance.status={status} 必须来自 acceptance/records/*.json "
+            "（人工签署记录），不允许直接改矩阵"
+        )
     if reviewer.lower() in PENDING_REVIEWERS:
         report.error(f"{req_id}: acceptance.status={status} 需要具体 Reviewer（当前 {reviewer!r}）")
     if reviewer and owner and reviewer == owner:
         report.error(f"{req_id}: acceptance.status={status} 不允许 Owner 自审（{owner!r}）")
+    roles = load_role_matrix()
+    owner_role = roles["owners"].get(owner)
+    reviewer_role = str(acceptance.get("reviewer_role") or "").strip() or roles["reviewers"].get(
+        reviewer, ""
+    )
+    if owner_role and reviewer_role and owner_role == reviewer_role:
+        report.error(
+            f"{req_id}: Reviewer 角色域 {reviewer_role!r} 与 Owner 角色域相同，不构成独立验收"
+        )
     artifact = str(acceptance.get("artifact") or "").strip()
     if not artifact:
         report.error(f"{req_id}: acceptance.status={status} 需要 acceptance.artifact")
@@ -1230,6 +1253,12 @@ def main(argv: list[str] | None = None) -> int:
     if not isinstance(raw_entries, list) or not raw_entries:
         report.error("追踪矩阵 requirements 不能为空")
         raw_entries = []
+
+    # V16-025：独立验收只认 acceptance/records/*.json（人工签署），矩阵不可自证。
+    acceptance_report = load_records(entries=raw_entries)
+    for error in acceptance_report.errors:
+        report.error(error)
+    raw_entries = apply_records(raw_entries, acceptance_report)
 
     entries: list[dict[str, Any]] = []
     seen_ids: set[str] = set()

@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import sys
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -29,6 +30,11 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:  # pragma: no cover
+    sys.path.insert(0, str(SCRIPT_DIR))
+from acceptance_records import apply_records, load_records  # noqa: E402
+
 DOCS = ROOT / "docs/aiqe/v1.6"
 MATRIX = DOCS / "traceability/requirements.yaml"
 VERDICT_JSON = DOCS / "release-verdict.json"
@@ -206,8 +212,11 @@ def _production_evidence() -> dict[str, Any] | None:
 
 def build_verdict() -> dict[str, Any]:
     matrix = _load_yaml(MATRIX)
+    raw_entries = list(matrix.get("requirements") or [])
+    acceptance_report = load_records(entries=raw_entries)
+    entries = apply_records(raw_entries, acceptance_report)
+    matrix = {**matrix, "requirements": entries}
     grouped = _entries_by_issue(matrix)
-    entries = list(matrix.get("requirements") or [])
     gates: dict[str, Gate] = {}
 
     traceability_ok, traceability_reasons = _traceability_valid()
@@ -337,6 +346,10 @@ def build_verdict() -> dict[str, Any]:
     acceptance_status, acceptance_reasons = _acceptance_of(governance_requirements)
     gate_g.acceptance = acceptance_status
     gate_g.reasons.extend(acceptance_reasons)
+    if acceptance_report.errors:
+        gate_g.reasons.append(
+            "acceptance 记录无效: " + "; ".join(acceptance_report.errors[:5])
+        )
     gates["G"] = gate_g
 
     blocking = [
