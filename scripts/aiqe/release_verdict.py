@@ -388,6 +388,29 @@ def build_verdict() -> dict[str, Any]:
             )
             if gate_g.evidence == PASS:
                 gate_g.evidence = NOT_PROVEN
+        else:
+            missing: list[str] = []
+            if not protection.get("required_checks"):
+                missing.append("required_status_checks")
+            if protection.get("require_pr_before_merge") is not True:
+                missing.append("required_pull_request")
+            if protection.get("allow_force_push") is not False:
+                missing.append("non_fast_forward(禁强推)")
+            if protection.get("allow_deletions") is not False:
+                missing.append("deletion(禁删除)")
+            if protection.get("require_non_author_review") is not True:
+                missing.append("require_code_owner_review/approving_count>=1(非作者审批)")
+            if missing:
+                gate_g.reasons.append(
+                    "Branch Protection 证据不完整: " + ", ".join(missing)
+                )
+                if gate_g.evidence == PASS:
+                    gate_g.evidence = NOT_PROVEN
+            else:
+                gate_g.reasons.append(
+                    "Branch Protection/Ruleset 已由 GitHub API 验证（required checks: "
+                    f"{len(protection.get('required_checks') or [])} 个）"
+                )
     acceptance_status, acceptance_reasons = _acceptance_of(governance_requirements)
     gate_g.acceptance = acceptance_status
     gate_g.reasons.extend(acceptance_reasons)

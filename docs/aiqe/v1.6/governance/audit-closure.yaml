@@ -21,9 +21,10 @@ items:
   evidence:
   - docs/aiqe/v1.6/governance/branch-protection.json
   - scripts/aiqe/check_branch_protection.py
-  blocked_by: GitHub 网络不可达且无仓库权限；仓库内无规则导出
+  blocked_by: GitHub Ruleset protect-main(#18351498) 已通过 API 捕获：3 个 required checks、禁强推/禁删除、必须 PR；但 require_code_owner_review=false 且 required_approving_review_count=0，非作者审批未启用（单账号仓库）
   owner: repo-admin
-  unblock_action: python scripts/aiqe/check_branch_protection.py --capture --repo mojinru9527/cameltv-test-platform --branch main
+  unblock_action: 在 ruleset 中启用 require_code_owner_review=true 或 approving_review_count>=1，并邀请独立 QA/Security 账号；之后重跑 python scripts/aiqe/check_branch_protection.py --capture 与 release_verdict.py --write
+  note: 证据已从“未验证”升级为真实 API 导出；剩余缺口收敛为“非作者审批未启用”。
 - id: P0-3
   title: PR 字段校验只查关键词，不校验真实填写
   status: CLOSED

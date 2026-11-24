@@ -96,14 +96,22 @@
 | Gate E 联动 | `release_verdict` 读取 `product-results.json`：缺失 → “产品级 TC 未执行”；有结果 → 显示 n/10 PASS 并与矩阵交叉校验 | verdict Gate E 新增原因，release audit 0 error |
 | 仓库级门禁 | 复跑 `check-oracle-layer -SelfTest`、`check-aiqe-skills`、CI 分类器测试 | 全部 PASS（23 passed + 39 subtests） |
 
-## 10. 未完成（后续批次）
+## 10. 第八轮补充（2026-11-25：GitHub 恢复）
+
+| 项 | 处理 | 验证 |
+|---|---|---|
+| 最新 main 复核 | `git fetch origin main` 成功；`FETCH_HEAD` = `origin/main` = **9bbbdbb**（0 个新提交） | 确认审计基线就是最新 main |
+| Gate G Branch Protection（审计 P0-2） | 用已登录的 gh CLI 采集真实 Ruleset：`protect-main #18351498`，3 个 required checks（AI/Git 交付策略、前端/后端全新检出与全量回归）、禁强推、禁删除、必须 PR；**非作者审批未启用**（`require_code_owner_review=false`、`approving_count=0`） | `check_branch_protection --capture` 成功；6 条校验测试；Gate G 现在精确报告剩余缺口而非“未验证” |
+| 采集器增强 | `check_branch_protection.py` 读取 ruleset 明细（required_status_checks/pull_request/non_fast_forward/deletion），不再只看列表摘要 | release audit 0 error，traceability strict 0 error |
+
+## 11. 未完成（后续批次）
 
 1. **产品级 TC-AIQE-001..010**：执行器与配置已就绪，需隔离 Test 环境 + per-TC runner
    接入后运行 `python scripts/aiqe/run_product_tc.py --run`。
 2. **独立验收签署**：机制已就绪，70 条需求仍需真实 Reviewer 逐条生成
    `acceptance/records/*.json`（当前 0 条）。
-3. **Gate G**：需要 GitHub 仓库权限执行
-   `check_branch_protection.py --capture`，再重算 verdict。
+3. **Gate G 收口**：在 ruleset 启用 `require_code_owner_review=true` 或
+   `required_approving_review_count>=1`，并邀请独立 reviewer 账号。
 4. **Gate F**：镜像重建 digest/SBOM、干净节点部署、PG 备份恢复/PG 只读 role/
    Vault 生产/告警原始日志。
 5. **TC-006 flaky 观察**：已消除已知顺序/时序假设，连续多次通过；若再次出现需抓取

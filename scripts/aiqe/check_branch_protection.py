@@ -25,6 +25,7 @@ import urllib.error
 import urllib.request
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 TARGET = ROOT / "docs/aiqe/v1.6/governance/branch-protection.json"
@@ -72,17 +73,55 @@ def capture(repo: str, branch: str) -> dict:
     checks = ((protection or {}).get("required_status_checks") or {}).get("contexts") or []
     required_checks.extend(str(item) for item in checks)
     reviews = (protection or {}).get("required_pull_request_reviews") or {}
-    ruleset_summary = []
+    require_pr = bool(reviews)
+    require_non_author = bool(reviews.get("require_code_owner_reviews")) if reviews else None
+    allow_force_push = ((protection or {}).get("allow_force_pushes") or {}).get("enabled")
+    allow_deletions = ((protection or {}).get("allow_deletions") or {}).get("enabled")
+
+    ruleset_summary: list[dict[str, Any]] = []
     for item in rulesets or []:
         if not isinstance(item, dict):
             continue
+        ruleset_id = item.get("id")
+        detail: dict[str, Any] = {}
+        if ruleset_id:
+            status, payload = _request(f"/repos/{repo}/rulesets/{ruleset_id}", token)
+            if status == 200 and isinstance(payload, dict):
+                detail = payload
+        rules = detail.get("rules") or []
+        types = {str(rule.get("type") or "") for rule in rules if isinstance(rule, dict)}
+        if "required_status_checks" in types:
+            for rule in rules:
+                if rule.get("type") != "required_status_checks":
+                    continue
+                for check in ((rule.get("parameters") or {}).get("required_status_checks") or []):
+                    context = str((check or {}).get("context") or "").strip()
+                    if context:
+                        required_checks.append(context)
+        if "pull_request" in types:
+            require_pr = True
+            for rule in rules:
+                if rule.get("type") != "pull_request":
+                    continue
+                params = rule.get("parameters") or {}
+                if bool(params.get("require_code_owner_review")) or int(
+                    params.get("required_approving_review_count") or 0
+                ) > 0:
+                    require_non_author = True
+                if require_non_author is None:
+                    require_non_author = False
+        if "non_fast_forward" in types:
+            allow_force_push = False
+        if "deletion" in types:
+            allow_deletions = False
         ruleset_summary.append(
             {
-                "id": item.get("id"),
+                "id": ruleset_id,
                 "name": item.get("name"),
                 "enforcement": item.get("enforcement"),
                 "target": item.get("target"),
-                "conditions": item.get("conditions"),
+                "conditions": detail.get("conditions") or item.get("conditions"),
+                "rules": rules,
             }
         )
     verified = bool(protection or ruleset_summary)
@@ -95,12 +134,10 @@ def capture(repo: str, branch: str) -> dict:
         "source": "github-api",
         "reason": "" if verified else "GitHub 未返回 branch protection 或 ruleset 配置",
         "required_checks": sorted(set(required_checks)),
-        "require_pr_before_merge": bool(reviews) or None,
-        "require_non_author_review": bool(reviews.get("require_code_owner_reviews"))
-        if reviews
-        else None,
-        "allow_force_push": ((protection or {}).get("allow_force_pushes") or {}).get("enabled"),
-        "allow_deletions": ((protection or {}).get("allow_deletions") or {}).get("enabled"),
+        "require_pr_before_merge": require_pr or None,
+        "require_non_author_review": require_non_author,
+        "allow_force_push": allow_force_push,
+        "allow_deletions": allow_deletions,
         "ruleset_ids": [item.get("id") for item in ruleset_summary if item.get("id")],
         "rulesets": ruleset_summary,
         "capture_command": (
@@ -125,7 +162,10 @@ def validate(payload: dict) -> list[str]:
     if payload.get("allow_deletions") is not False:
         errors.append("未证明禁止删除分支（allow_deletions 必须为 false）")
     if payload.get("require_non_author_review") is not True:
-        errors.append("未证明 CODEOWNERS / 非作者审批生效")
+        errors.append(
+            "未证明 CODEOWNERS / 非作者审批生效：ruleset 需 require_code_owner_review=true "
+            "或 required_approving_review_count>=1（当前为 false/0）"
+        )
     return errors
 
 

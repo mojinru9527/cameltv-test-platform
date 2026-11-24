@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-24T14:22:38.511067+00:00",
+  "generated_at": "2026-11-24T14:26:10.312578+00:00",
   "release": "aiqe-v1.6",
-  "commit_sha": "67b11199c2cf7c4aa5200421976cb4b90c70f857",
+  "commit_sha": "908d9892ae19fce5a44cd5877040279a04ddcda0",
   "baseline_release_commit": "9bbbdbb2026bada5c016d663780e03d62fca940d",
   "migration_head": "20261122_v16_catalog_post_merge",
   "summary": {
@@ -102,7 +102,7 @@
       "evidence": "NOT_PROVEN",
       "acceptance": "PENDING",
       "reasons": [
-        "GitHub Branch Protection / Ruleset 未验证：仓库内没有 Branch Protection / Ruleset 的导出或 API 查询结果；2026-11-24 审计环境无法访问 GitHub（curl 28）且没有仓库权限。禁止在未取得该证据时宣称 Gate G 完成。",
+        "Branch Protection 证据不完整: require_code_owner_review/approving_count>=1(非作者审批)",
         "独立验收未完成: V16-025-R1"
       ],
       "artifacts": [
@@ -123,7 +123,7 @@
     "Gate E: 缺少 docs/aiqe/v1.6/e2e/product-results.json（产品级 TC 未在隔离 Test 环境执行）",
     "Gate F: 生产阶段未证明: container_egress, image_self_contained, monitoring_alerts, postgres_backup_restore, production_smoke, stage1_shadow, stage2_dogfood, stage3_small_traffic, stage4_expand, stage5_ga, vault_production_mode",
     "Gate F: 生产验收无独立验收签署",
-    "Gate G: GitHub Branch Protection / Ruleset 未验证：仓库内没有 Branch Protection / Ruleset 的导出或 API 查询结果；2026-11-24 审计环境无法访问 GitHub（curl 28）且没有仓库权限。禁止在未取得该证据时宣称 Gate G 完成。",
+    "Gate G: Branch Protection 证据不完整: require_code_owner_review/approving_count>=1(非作者审批)",
     "Gate G: 独立验收未完成: V16-025-R1"
   ],
   "evidence_files": {

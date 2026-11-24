@@ -2,7 +2,7 @@
 #
 # 状态语义：NOT_STARTED < PARTIAL < IMPLEMENTED < VERIFIED（交付/自动证据）；
 # ACCEPTED 需非原作者独立 Reviewer 签署，且 acceptance.status=REVIEWED。
-# VERIFIED 不等于独立验收：acceptance.status 为 NOT_REVIEWED 时 Gate G 不得宣称完成。
+# VERIFIED 不等于独立验收：acceptance.status=NOT_REVIEWED 时 Gate G 不得宣称完成。
 # 运行时证据必须有可校验的机器产物；仅有现场记录时 runtime_evidence.status=NOT_PROVEN。
 # 本文件由人工维护，机器校验见 scripts/aiqe/check_traceability.py。
 
@@ -2422,6 +2422,8 @@ requirements:
     - tests/test_aiqe_v16_025_traceability_gate.py::test_accepts_runtime_evidence_full_ref_set
     - tests/test_aiqe_v16_025_audit_closure.py::test_ledger_covers_required_audit_items
     - tests/test_aiqe_v16_025_audit_closure.py::test_report_is_fresh_and_check_passes
+    - tests/test_aiqe_v16_025_branch_protection.py::test_complete_evidence_passes
+    - tests/test_aiqe_v16_025_branch_protection.py::test_repo_evidence_is_real_and_consistent
     negative:
     - tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_missing_negative_test_for_p0
     - tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_accepted_without_reviewed_acceptance
@@ -2435,6 +2437,8 @@ requirements:
     - tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_runtime_evidence_unknown_ref_key
     - tests/test_aiqe_v16_025_audit_closure.py::test_closed_item_requires_existing_evidence
     - tests/test_aiqe_v16_025_audit_closure.py::test_external_item_requires_blocker_owner_action
+    - tests/test_aiqe_v16_025_branch_protection.py::test_non_author_review_required
+    - tests/test_aiqe_v16_025_branch_protection.py::test_force_push_and_deletion_must_be_disabled
     boundary:
     - tests/test_aiqe_release_audit.py::test_repo_release_audit_is_clean
   mock_boundary: 真实 YAML 矩阵文件 + 真实 CLI；无 Mock。
@@ -2453,11 +2457,12 @@ requirements:
   - artifact:docs/aiqe/v1.6/governance/audit-closure.yaml (19 项审计整改台账)
   - artifact:docs/aiqe/v1.6/V1.6.1-Audit-Closure-Report.md (generated)
   - script:scripts/aiqe/check_audit_closure.py (CI wired)
+  - artifact:docs/aiqe/v1.6/governance/branch-protection.json (GitHub API ruleset 导出)
   owner: tech-lead
   reviewer: pending
   gaps:
-  - 独立验收机制已落地：acceptance/records/*.json + review-roles.yaml 角色域校验 + record_acceptance.py CLI；70 条需求仍需真实 Reviewer 逐条签署（当前 0 条）。
-  - GitHub Branch Protection / Ruleset 无外部证据，Gate G 仍不得宣称完成。
+  - GitHub Ruleset protect-main 已捕获（required checks/禁强推/禁删除/必须 PR）；剩余缺口：require_code_owner_review=false 且 approving_count=0，非作者审批未启用。
+  - 独立验收机制已就绪，70 条需求仍需真实 Reviewer 逐条签署（当前 0 条）。
   acceptance:
     status: NOT_REVIEWED
     reviewed_at: null
