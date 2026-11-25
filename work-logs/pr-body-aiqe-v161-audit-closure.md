@@ -14,7 +14,7 @@
 
 针对 `CamelTv_AIQE_V1.6_Main_9bbbdbb_Code_Audit.md`（2026-11-24）的 P0/P1/P2 逐项整改：
 19 项审计发现 → 14 项 CLOSED（代码/测试/证据），5 项 EXTERNAL（已登记 owner 与解除动作）。
-本轮新增证据：镜像 digest + CycloneDX SBOM + 运行态冒烟（production `/health` 200、Alembic 单头）、
+补充材料：镜像 digest + CycloneDX SBOM + 运行态冒烟（production `/health` 200、Alembic 单头）、
 真实 PostgreSQL 16 只读 role 验证 PASS、未来娃屿生产只读实测 PROBED。
 
 ---
