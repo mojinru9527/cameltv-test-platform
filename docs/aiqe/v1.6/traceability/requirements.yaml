@@ -2284,9 +2284,11 @@ requirements:
     success:
     - tests/test_aiqe_v16_024_production.py::test_metrics_registry_low_cardinality_and_render
     - tests/test_aiqe_v16_024_production.py::test_alert_rules_cover_required_metrics
+    - tests/test_aiqe_v16_024_image_evidence.py::test_single_head_accepts_exactly_one_head_line
     negative:
     - tests/test_aiqe_v16_024_production.py::test_metrics_endpoint_token_and_production_fail_closed
     - tests/test_aiqe_v16_024_production.py::test_alert_validator_rejects_missing_metric_or_bad_severity
+    - tests/test_aiqe_v16_024_image_evidence.py::test_single_head_rejects_multiple_or_empty
   mock_boundary: 真实 registry/endpoint/YAML；无 Mock。
   layers:
   - L1
@@ -2297,6 +2299,8 @@ requirements:
   - artifact:docs/aiqe/v1.6/evidence/image-build.json (target=api，sqlglot 30.33.0，image/tar digest)
   - artifact:docs/aiqe/v1.6/evidence/image-sbom.cdx.json (CycloneDX 251 components)
   - artifact:docs/aiqe/v1.6/evidence/image-requirements-frozen.txt (镜像内 pip freeze)
+  - artifact:docs/aiqe/v1.6/evidence/image-runtime-smoke.json (production 配置 /health 200 + Alembic 单头)
+  - script:scripts/aiqe/verify_image_runtime.py (镜像运行态冒烟，一次性随机密钥)
   owner: devops
   reviewer: pending
   gaps: []

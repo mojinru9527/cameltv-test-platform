@@ -117,8 +117,8 @@ items:
   blocked_by: ''
   owner: devops
   unblock_action: ''
-  note: 从 commit 1fa1c425d 干净构建 api 镜像（Dockerfile target=api）：image id sha256:be8430b6…、tar sha256 13363e00…、sqlglot 30.33.0 在镜像内可导入、CycloneDX SBOM（251 components）与 pip freeze 已归档；旧生产镜像 cameltv-tp-backend:aiqe-prod-20261119-1
-    实测无 sqlglot，佐证审计发现。
+  note: 从 commit 1fa1c425d 干净构建 api 镜像：image id sha256:be8430b6…、tar sha256 13363e00…、sqlglot 30.33.0 可导入、CycloneDX SBOM（251 components）与 pip freeze 归档；运行态冒烟 PASS（production 配置 /health 200、Alembic 单头）；旧生产镜像
+    aiqe-prod-20261119-1 实测无 sqlglot。
 - id: P1-10
   title: 生产/GA 文档互相矛盾，无单一时间线
   status: CLOSED

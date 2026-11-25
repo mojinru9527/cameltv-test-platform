@@ -179,6 +179,7 @@ PR 状态：`OPEN` + `MERGEABLE` + `isDraft=true`（未转 Ready、未合并；�
 | 项 | 处理 |
 |---|---|
 | P1-9 镜像 | 启动本机 Docker，从 `1fa1c425d` 构建 `target=api` 镜像：image id `sha256:be8430b6…`、tar sha256 `13363e00…`、镜像内 `sqlglot 30.33.0` 可导入；CycloneDX SBOM 251 components + `pip freeze` 归档；旧生产镜像 `aiqe-prod-20261119-1` 实测无 sqlglot（复现审计发现）→ **P1-9 CLOSED** |
+| 镜像运行态 | `verify_image_runtime.py` 以 production 配置启动容器（一次性随机密钥）：`/health` **200**、Alembic **单头** `20261122_v16_catalog_post_merge`；证据 `image-runtime-smoke.json` |
 | P2-1 PG 只读 | 本机 PostgreSQL 16.14 创建 `aiqe_ro` 只读 role（非 super/createrole/bypassrls/createdb，`default_transaction_read_only=on`，`statement_timeout=5s`）；`check_pg_readonly_role.py` 7 项全 PASS，写操作被 `ReadOnlySqlTransaction` 拒绝；证据标注 `scope=loopback` → **P2-1 CLOSED**（生产/ staging role 仍由 Gate F 追踪） |
 | 台账 | 14 CLOSED / 5 EXTERNAL；Gate B evidence 由 NOT_PROVEN 升为 PASS（acceptance 仍 PENDING）；Gate F 的 `image_self_contained` 置 PASS，其余 10 阶段未证明 |
 

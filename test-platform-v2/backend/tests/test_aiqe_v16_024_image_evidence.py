@@ -36,3 +36,27 @@ def test_git_head_is_full_sha():
 
 def test_default_output_lives_in_repo_evidence():
     assert MODULE.DEFAULT_OUTPUT.parent == REPO_ROOT / "docs/aiqe/v1.6/evidence"
+
+
+RUNTIME_SCRIPT = REPO_ROOT / "scripts/aiqe/verify_image_runtime.py"
+
+
+def _load_runtime():
+    spec = importlib.util.spec_from_file_location("verify_image_runtime", RUNTIME_SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+RUNTIME = _load_runtime()
+
+
+def test_single_head_accepts_exactly_one_head_line():
+    output = "20261122_v16_catalog_post_merge (batch27) (head)\n"
+    assert RUNTIME._single_head(output) == "20261122_v16_catalog_post_merge (batch27) (head)"
+
+
+def test_single_head_rejects_multiple_or_empty():
+    assert RUNTIME._single_head("a (head)\nb (head)\n") == ""
+    assert RUNTIME._single_head("a\nb\n") == ""

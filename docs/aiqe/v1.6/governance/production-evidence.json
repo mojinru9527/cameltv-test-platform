@@ -90,13 +90,14 @@
       "artifacts": [
         "docs/aiqe/v1.6/evidence/image-build.json",
         "docs/aiqe/v1.6/evidence/image-sbom.cdx.json",
-        "docs/aiqe/v1.6/evidence/image-requirements-frozen.txt"
+        "docs/aiqe/v1.6/evidence/image-requirements-frozen.txt",
+        "docs/aiqe/v1.6/evidence/image-runtime-smoke.json"
       ],
       "doc_refs": [
         "docs/aiqe/v1.6/Production-Deploy-20261123.md",
         "test-platform-v2/backend/Dockerfile"
       ],
-      "note": "2026-11-25 从 commit 1fa1c425d 干净构建 target=api：image id sha256:be8430b6…、tar sha256 13363e00…、sqlglot 30.33.0 import OK、CycloneDX SBOM 251 components；旧镜像 aiqe-prod-20261119-1 无 sqlglot。"
+      "note": "2026-11-25 从 commit 1fa1c425d 干净构建 target=api：image id sha256:be8430b6…、tar sha256 13363e00…、sqlglot 30.33.0 import OK、CycloneDX SBOM 251 components；运行态冒烟 PASS（production 配置 + /health 200 + Alembic 单头 20261122_v16_catalog_post_merge）；旧镜像 aiqe-prod-20261119-1 无 sqlglot。"
     },
     "production_smoke": {
       "status": "NOT_PROVEN",
