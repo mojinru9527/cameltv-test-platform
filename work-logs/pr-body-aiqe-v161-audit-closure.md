@@ -48,7 +48,7 @@
 |---|---|---|
 | 追踪矩阵 strict | check_traceability.py --strict-warnings --check-baseline | 0 error / 0 warning |
 | 发布审计 | check_release_audit.py | 0 error |
-| 审计台账 | check_audit_closure.py --check | 12 CLOSED / 7 EXTERNAL，0 error |
+| 审计台账 | check_audit_closure.py --check | 14 CLOSED / 5 EXTERNAL，0 error |
 | 质量棘轮 | scripts/ci/quality_ratchet.py | PASS（ruff 395 / mypy 89，increased=0） |
 | AIQE 子集 | pytest -k "aiqe_v16 or …" | 376 passed |
 | 全量后端 | pytest tests | 2572 passed / 43 skipped |
