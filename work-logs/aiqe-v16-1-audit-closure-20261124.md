@@ -137,7 +137,15 @@
 > 注：本地 rehearsal 结果写入 `work-logs/evidence/aiqe-v16/local-test/`（已 gitignore，含随机 admin 密码），
 > **不写入**官方 `product-results.json`，产品级 TC 仍为 0/10（需真实业务 Test 环境）。
 
-## 14. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
+## 14. PR CI 修复与 Gate G 工具（2026-11-25 续）
+
+| 项 | 处理 |
+|---|---|
+| CI 失败修复 | ① Linux CI 与 Windows 生成的 E2E 文档路径分隔符不一致 → `release_verdict` 统一 `as_posix()`；② 生成文档不一致时输出首个差异行便于诊断；③ 单元/运行时/主干后端 job `fetch-depth: 0`；④ shallow clone 下 git 历史测试 `pytest.skip`；⑤ PR body 字段改为单行可解析值（含 `commit:`/`artifact:` 证据前缀），checker 支持中文分号 |
+| Gate G 工具 | 新增 `update_branch_protection.py`：dry-run 默认；`--apply` 前强制 ≥2 collaborator 且 reviewer 有 push+ 权限（单账号直接启用会锁死合并）；只改 pull_request 规则，保留 required checks/禁强推/禁删除；5 条离线测试 |
+| 推送状态 | 已推送 18 commits 并创建 PR #635；后续 CI 修复 commits（`6455f6d5`、`ae449b14`、`fc74e5cc`）待 GitHub 网络恢复后推送（后台重试中） |
+
+## 15. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
 
 1. **产品级 TC-AIQE-001..010**：执行器与配置已就绪，需隔离 Test 环境 + per-TC runner
    接入后运行 `python scripts/aiqe/run_product_tc.py --run`。
