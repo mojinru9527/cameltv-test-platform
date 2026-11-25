@@ -168,7 +168,8 @@ PR 状态：`OPEN` + `MERGEABLE` + `isDraft=true`（未转 Ready、未合并；�
 |---|---|
 | 授权边界 | 用户确认未来娃屿无 Test 环境，已报备允许**生产只读**测试；只允许 GET/HEAD/OPTIONS 与 SELECT/SHOW/EXPLAIN |
 | 只读探测脚本 | `scripts/aiqe/per_tc/futurewayu_production_readonly.py`：HTTP 只读守卫、MySQL `SET SESSION TRANSACTION READ ONLY` + 写拒绝断言、凭据只读环境变量、不打印 |
-| 证据 | `docs/aiqe/v1.6/evidence/futurewayu-production-readonly.json`（当前 `NOT_PROVEN`：缺生产 URL/只读 Token/DSN，未发起任何请求） |
+| 实测（2026-11-25） | 生产入口 `https://xinyuwadao.com` + `/hz-api`：8 次 GET，2×200（后台 SPA/后端欢迎页）、1×404、1×401（系统配置）、4×body 401（C 端需登录）、1×body 500（bannerActivity/enabledList，疑似缺参，待业务确认）；**无任何写请求** |
+| 证据 | `docs/aiqe/v1.6/evidence/futurewayu-production-readonly.json`（status=`PROBED`） |
 | Runbook | `docs/aiqe/v1.6/e2e/futurewayu-production-readonly.md` |
 | 测试 | 4 条离线测试（无地址 NOT_PROVEN、POST 拒绝、本地假服务 GET-only、DSN 解析） |
 | 边界 | 只读无法覆盖 TC-001..010 的写操作/设备/Benchmark，产品级 PASS 仍为 0/10；不伪造 |

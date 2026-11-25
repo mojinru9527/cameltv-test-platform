@@ -37,7 +37,15 @@ ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_OUTPUT = ROOT / "docs/aiqe/v1.6/evidence/futurewayu-production-readonly.json"
 SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
 SAFE_SQL = re.compile(r"^\s*(SELECT|SHOW|EXPLAIN|DESCRIBE)\b", re.IGNORECASE)
-DEFAULT_PROBES = ("/api/health", "/health", "/", "/api/system/config")
+DEFAULT_PROBES = ("/", "/api/health", "/health", "/hz-api/captchaImage")
+
+
+def _probe_paths() -> tuple[str, ...]:
+    raw = os.environ.get("FUTUREWAYU_PROBE_PATHS", "").strip()
+    if not raw:
+        return DEFAULT_PROBES
+    paths = tuple(item.strip() for item in raw.split(",") if item.strip())
+    return paths or DEFAULT_PROBES
 
 
 def _request(method: str, url: str, *, token: str = "", timeout: float = 20.0) -> dict:
@@ -125,6 +133,9 @@ def build_report() -> dict:
         "artifact_kind": "futurewayu-production-readonly",
         "generated_at": datetime.now(UTC).isoformat(),
         "readonly_only": True,
+        "base_url": base,
+        "admin_url": admin,
+        "probe_paths": list(_probe_paths()),
         "base_configured": bool(base),
         "admin_configured": bool(admin),
         "db_configured": bool(dsn),
@@ -136,14 +147,15 @@ def build_report() -> dict:
             "缺少 FUTUREWAYU_BASE_URL/FUTUREWAYU_ADMIN_URL：生产只读地址未提供，未执行任何请求"
         )
         return report
-    for path in DEFAULT_PROBES:
+    for path in _probe_paths():
         if base:
             report["probes"].append(_request("GET", f"{base}{path}"))
     if admin:
         report["probes"].append(_request("GET", f"{admin}/", token=token))
-        report["probes"].append(
-            _request("GET", f"{admin}/system/config/configKey/sys.index.skinName", token=token)
+        config_path = os.environ.get(
+            "FUTUREWAYU_ADMIN_CONFIG_PATH", "/system/config/configKey/sys.index.skinName"
         )
+        report["probes"].append(_request("GET", f"{admin}{config_path}", token=token))
     if dsn:
         report["db"] = _db_probe(dsn)
     reachable = [item for item in report["probes"] if int(item.get("status") or 0) > 0]

@@ -1,12 +1,78 @@
 {
   "schema_version": "1.0",
   "artifact_kind": "futurewayu-production-readonly",
-  "generated_at": "2026-11-25T04:23:16.188836+00:00",
+  "generated_at": "2026-11-25T04:31:06.308501+00:00",
   "readonly_only": true,
-  "base_configured": false,
-  "admin_configured": false,
+  "base_url": "https://xinyuwadao.com",
+  "admin_url": "https://xinyuwadao.com/hz-api",
+  "probe_paths": [
+    "/",
+    "/hz-api/client/plate",
+    "/hz-api/client/bannerActivity/enabledList",
+    "/hz-api/client/component/category/tree",
+    "/hz-api/client/mall/refunds/reasons",
+    "/hz-api/client/mall/pickup-points"
+  ],
+  "base_configured": true,
+  "admin_configured": true,
   "db_configured": false,
-  "probes": [],
-  "status": "NOT_PROVEN",
-  "reason": "缺少 FUTUREWAYU_BASE_URL/FUTUREWAYU_ADMIN_URL：生产只读地址未提供，未执行任何请求"
+  "probes": [
+    {
+      "url": "https://xinyuwadao.com/",
+      "method": "GET",
+      "status": 200,
+      "duration_ms": 141,
+      "body_head": "<!doctype html>\n<html>\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />\n    <meta name=\"renderer\" content=\"webkit\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no\" />\n    <link rel="
+    },
+    {
+      "url": "https://xinyuwadao.com/hz-api/client/plate",
+      "method": "GET",
+      "status": 200,
+      "duration_ms": 47,
+      "body_head": "{\"code\":401,\"msg\":\"登录已过期，请重新进入\"}"
+    },
+    {
+      "url": "https://xinyuwadao.com/hz-api/client/bannerActivity/enabledList",
+      "method": "GET",
+      "status": 200,
+      "duration_ms": 47,
+      "body_head": "{\"code\":500,\"msg\":\"出了点问题，请稍后再试（编号 9E5X5H）\",\"data\":null}"
+    },
+    {
+      "url": "https://xinyuwadao.com/hz-api/client/component/category/tree",
+      "method": "GET",
+      "status": 200,
+      "duration_ms": 30,
+      "body_head": "{\"code\":401,\"msg\":\"登录已过期，请重新进入\"}"
+    },
+    {
+      "url": "https://xinyuwadao.com/hz-api/client/mall/refunds/reasons",
+      "method": "GET",
+      "status": 200,
+      "duration_ms": 47,
+      "body_head": "{\"code\":401,\"msg\":\"登录已过期，请重新进入\"}"
+    },
+    {
+      "url": "https://xinyuwadao.com/hz-api/client/mall/pickup-points",
+      "method": "GET",
+      "status": 200,
+      "duration_ms": 31,
+      "body_head": "{\"code\":401,\"msg\":\"登录已过期，请重新进入\"}"
+    },
+    {
+      "url": "https://xinyuwadao.com/hz-api/",
+      "method": "GET",
+      "status": 200,
+      "duration_ms": 30,
+      "body_head": "欢迎使用CWY-HZ后台管理框架，请通过前端地址访问。"
+    },
+    {
+      "url": "https://xinyuwadao.com/hz-api/system/config/configKey/sys.index.skinName",
+      "method": "GET",
+      "status": 200,
+      "duration_ms": 47,
+      "body_head": "{\"code\":401,\"msg\":\"认证失败，无法访问系统资源\",\"data\":null}"
+    }
+  ],
+  "status": "PROBED"
 }

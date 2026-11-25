@@ -4,6 +4,31 @@
 > 因此本流程只允许 GET/HEAD/OPTIONS 与只读 SQL，**不产生产品 TC PASS**；
 > 产品级 TC-AIQE-001..010 需要写操作/设备/Benchmark，只读授权下仍为 BLOCKED。
 
+## 0. 已确认入口（来自项目 Profile + 实测）
+
+| 入口 | 地址 |
+|---|---|
+| 管理后台（Vue3 + Element Plus + RuoYi） | `https://xinyuwadao.com` |
+| 后端 API | `https://xinyuwadao.com/hz-api` |
+
+2026-11-25 生产只读实测（仅 GET，无凭据，共 8 次请求）：
+
+| 探测 | 结果 |
+|---|---|
+| `GET https://xinyuwadao.com/` | 200（后台 SPA HTML） |
+| `GET https://xinyuwadao.com/hz-api/` | 200（“欢迎使用CWY-HZ后台管理框架”） |
+| `GET /hz-api/captchaImage` | 404（无该端点） |
+| `GET /hz-api/system/config/configKey/sys.index.skinName` | 401（认证门禁生效） |
+| `GET /hz-api/client/plate` | body code=401（登录已过期） |
+| `GET /hz-api/client/component/category/tree` | body code=401（登录已过期） |
+| `GET /hz-api/client/mall/refunds/reasons` | body code=401（登录已过期） |
+| `GET /hz-api/client/mall/pickup-points` | body code=401（登录已过期） |
+| `GET /hz-api/client/bannerActivity/enabledList` | body code=500（“出了点问题（编号 9E5X5H）”）——疑似缺 platform 参数，需业务确认，不作为通过项 |
+
+结论：生产入口可达、认证门禁整体生效；**缺只读登录态 Token 与只读 DB DSN**，
+无法做已认证只读业务探测。证据文件：
+`docs/aiqe/v1.6/evidence/futurewayu-production-readonly.json`（status=`PROBED`）。
+
 ## 1. 需要提供的环境信息（只读）
 
 | 变量 | 说明 | 示例 |
@@ -19,10 +44,11 @@
 ## 2. 执行
 
 ```powershell
-$env:FUTUREWAYU_BASE_URL="https://<prod-domain>"
-$env:FUTUREWAYU_ADMIN_URL="https://<prod-domain>/admin"
-$env:FUTUREWAYU_ADMIN_TOKEN="<readonly-token>"
-$env:FUTUREWAYU_DB_READONLY_DSN="mysql://ro_user:***@host:3306/futurewayu"
+$env:FUTUREWAYU_BASE_URL="https://xinyuwadao.com"
+$env:FUTUREWAYU_ADMIN_URL="https://xinyuwadao.com/hz-api"
+$env:FUTUREWAYU_PROBE_PATHS="/,/hz-api/captchaImage"
+$env:FUTUREWAYU_ADMIN_TOKEN="<readonly-token>"      # 需你提供
+$env:FUTUREWAYU_DB_READONLY_DSN="mysql://ro_user:***@host:3306/hz"   # 需你提供
 
 python scripts/aiqe/per_tc/futurewayu_production_readonly.py `
   --output docs/aiqe/v1.6/evidence/futurewayu-production-readonly.json
