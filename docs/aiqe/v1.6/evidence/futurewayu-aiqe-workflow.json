@@ -1,0 +1,333 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "futurewayu-aiqe-workflow-run",
+  "scope": "futurewayu production (https://xinyuwadao.com/prod-api) driven by local AIQE",
+  "captured_at": "2026-11-26T01:10:00+08:00",
+  "authorization": "用户授权生产自建数据 CRUD，测试后清理；先新增再改删",
+  "workflow": {
+    "id": "6d03c33e-dd7b-40e4-86ce-085fad15e8f2",
+    "title": "AIQE-V16-WF-1795626571",
+    "nodes": [
+      {
+        "key": "create_banner",
+        "driver": "http",
+        "status": "PASSED",
+        "error_class": "",
+        "outputs": {
+          "policy": {
+            "decision": "ALLOW",
+            "policy_id": "e7e58478-4bec-42bd-b598-6cbaaf02a0f4",
+            "policy_hash": "2cd9d8e8f119aa8de0a947408dcc2f4d2671974936df6b669b8e1466694d5dae",
+            "reason_code": null,
+            "expires_at": "2026-11-25T17:14:42.852002+00:00",
+            "policy_version": 2,
+            "policy_source": "policy_record:e7e58478-4bec-42bd-b598-6cbaaf02a0f4",
+            "project_id": 2,
+            "environment_id": null,
+            "allowed_hosts": [
+              "127.0.0.1",
+              "xinyuwadao.com"
+            ],
+            "allowed_ports": [
+              443,
+              8101
+            ],
+            "allowed_schemes": [
+              "http",
+              "https"
+            ],
+            "allow_private_cidrs": [
+              "127.0.0.0/8"
+            ],
+            "blocked_cidrs": [
+              "169.254.0.0/16",
+              "10.0.0.0/8",
+              "172.16.0.0/12",
+              "192.168.0.0/16"
+            ],
+            "allowed_methods": [
+              "DELETE",
+              "GET",
+              "HEAD",
+              "OPTIONS",
+              "PATCH",
+              "POST",
+              "PUT"
+            ],
+            "max_redirects": 0,
+            "allow_cross_host_redirect": false,
+            "verify_tls": true,
+            "max_request_bytes": 1048576,
+            "max_response_bytes": 524288,
+            "connect_timeout_ms": 5000,
+            "read_timeout_ms": 15000,
+            "resolved_addresses": [],
+            "deny_reason": ""
+          }
+        },
+        "assertions": [
+          {
+            "assertion_key": "create_http_200",
+            "status": "PASS",
+            "expected": 200,
+            "actual": 200
+          }
+        ],
+        "attempts": 1,
+        "artifacts": [
+          "34cdd4af-db63-45d6-abf4-b69344cb6479",
+          "183a0a86-d851-4f52-85ff-289a6e53bb0b"
+        ]
+      },
+      {
+        "key": "delete_banner",
+        "driver": "http",
+        "status": "PASSED",
+        "error_class": "",
+        "outputs": {
+          "policy": {
+            "decision": "ALLOW",
+            "policy_id": "e7e58478-4bec-42bd-b598-6cbaaf02a0f4",
+            "policy_hash": "2cd9d8e8f119aa8de0a947408dcc2f4d2671974936df6b669b8e1466694d5dae",
+            "reason_code": null,
+            "expires_at": "2026-11-25T17:14:47.186058+00:00",
+            "policy_version": 2,
+            "policy_source": "policy_record:e7e58478-4bec-42bd-b598-6cbaaf02a0f4",
+            "project_id": 2,
+            "environment_id": null,
+            "allowed_hosts": [
+              "127.0.0.1",
+              "xinyuwadao.com"
+            ],
+            "allowed_ports": [
+              443,
+              8101
+            ],
+            "allowed_schemes": [
+              "http",
+              "https"
+            ],
+            "allow_private_cidrs": [
+              "127.0.0.0/8"
+            ],
+            "blocked_cidrs": [
+              "169.254.0.0/16",
+              "10.0.0.0/8",
+              "172.16.0.0/12",
+              "192.168.0.0/16"
+            ],
+            "allowed_methods": [
+              "DELETE",
+              "GET",
+              "HEAD",
+              "OPTIONS",
+              "PATCH",
+              "POST",
+              "PUT"
+            ],
+            "max_redirects": 0,
+            "allow_cross_host_redirect": false,
+            "verify_tls": true,
+            "max_request_bytes": 1048576,
+            "max_response_bytes": 524288,
+            "connect_timeout_ms": 5000,
+            "read_timeout_ms": 15000,
+            "resolved_addresses": [],
+            "deny_reason": ""
+          }
+        },
+        "assertions": [],
+        "attempts": 1,
+        "artifacts": [
+          "652f967b-ec19-4db5-a390-2ed9dedb88b9",
+          "4275263b-d99d-4dee-a930-65598253b9b3"
+        ]
+      },
+      {
+        "key": "resolve_id",
+        "driver": "db",
+        "status": "PASSED",
+        "error_class": "",
+        "outputs": {
+          "banner_id": 2119000000066262025
+        },
+        "assertions": [],
+        "attempts": 1,
+        "artifacts": [
+          "49bb8948-9f2e-4c9f-8188-8e60f67eda4b"
+        ]
+      },
+      {
+        "key": "update_banner",
+        "driver": "http",
+        "status": "PASSED",
+        "error_class": "",
+        "outputs": {
+          "policy": {
+            "decision": "ALLOW",
+            "policy_id": "e7e58478-4bec-42bd-b598-6cbaaf02a0f4",
+            "policy_hash": "2cd9d8e8f119aa8de0a947408dcc2f4d2671974936df6b669b8e1466694d5dae",
+            "reason_code": null,
+            "expires_at": "2026-11-25T17:14:45.635791+00:00",
+            "policy_version": 2,
+            "policy_source": "policy_record:e7e58478-4bec-42bd-b598-6cbaaf02a0f4",
+            "project_id": 2,
+            "environment_id": null,
+            "allowed_hosts": [
+              "127.0.0.1",
+              "xinyuwadao.com"
+            ],
+            "allowed_ports": [
+              443,
+              8101
+            ],
+            "allowed_schemes": [
+              "http",
+              "https"
+            ],
+            "allow_private_cidrs": [
+              "127.0.0.0/8"
+            ],
+            "blocked_cidrs": [
+              "169.254.0.0/16",
+              "10.0.0.0/8",
+              "172.16.0.0/12",
+              "192.168.0.0/16"
+            ],
+            "allowed_methods": [
+              "DELETE",
+              "GET",
+              "HEAD",
+              "OPTIONS",
+              "PATCH",
+              "POST",
+              "PUT"
+            ],
+            "max_redirects": 0,
+            "allow_cross_host_redirect": false,
+            "verify_tls": true,
+            "max_request_bytes": 1048576,
+            "max_response_bytes": 524288,
+            "connect_timeout_ms": 5000,
+            "read_timeout_ms": 15000,
+            "resolved_addresses": [],
+            "deny_reason": ""
+          }
+        },
+        "assertions": [
+          {
+            "assertion_key": "update_http_200",
+            "status": "PASS",
+            "expected": 200,
+            "actual": 200
+          }
+        ],
+        "attempts": 1,
+        "artifacts": [
+          "c210120c-fd6c-4d32-8cec-2cec1821cc4d",
+          "83dbf054-2192-4a43-8e24-4fe0a73a7c24"
+        ]
+      }
+    ]
+  },
+  "run": {
+    "id": "44225f19-c98b-47cb-a5ca-1047888010fe",
+    "status": "COMPLETED",
+    "outcome": "PASS",
+    "node_count": 4,
+    "assertions": [
+      {
+        "node_key": "create_banner",
+        "node_status": "PASSED",
+        "attempt_no": 1,
+        "attempt_status": "PASSED",
+        "assertion_key": "create_http_200",
+        "type": "http_status",
+        "status": "PASS",
+        "oracle_layer": "REQ",
+        "oracle_ref": "AC-FW-BANNER-CREATE",
+        "severity": "P1",
+        "expected": 200,
+        "actual": 200,
+        "actual_source": "",
+        "duration_ms": 0,
+        "error": "",
+        "artifact_refs": [
+          "183a0a86-d851-4f52-85ff-289a6e53bb0b",
+          "34cdd4af-db63-45d6-abf4-b69344cb6479"
+        ]
+      },
+      {
+        "node_key": "update_banner",
+        "node_status": "PASSED",
+        "attempt_no": 1,
+        "attempt_status": "PASSED",
+        "assertion_key": "update_http_200",
+        "type": "http_status",
+        "status": "PASS",
+        "oracle_layer": "REQ",
+        "oracle_ref": "AC-FW-BANNER-UPDATE",
+        "severity": "P1",
+        "expected": 200,
+        "actual": 200,
+        "actual_source": "",
+        "duration_ms": 0,
+        "error": "",
+        "artifact_refs": [
+          "83dbf054-2192-4a43-8e24-4fe0a73a7c24",
+          "c210120c-fd6c-4d32-8cec-2cec1821cc4d"
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": "652f967b-ec19-4db5-a390-2ed9dedb88b9",
+        "type": "HTTP_RESPONSE",
+        "sha256": "1208e7297161b643d48eac988f4ea890102486699c4de5c98651c3b64d1cc4a4"
+      },
+      {
+        "id": "4275263b-d99d-4dee-a930-65598253b9b3",
+        "type": "HTTP_REQUEST",
+        "sha256": "0d61dbcd8042c36c9dfe64c831f08ab0d34ee10872483c34ff4e426f8cfbbc70"
+      },
+      {
+        "id": "c210120c-fd6c-4d32-8cec-2cec1821cc4d",
+        "type": "HTTP_RESPONSE",
+        "sha256": "46b76451568f0ef985175bd6b557fb49086cfd29f1829f8d02b8d05c97d38d3e"
+      },
+      {
+        "id": "83dbf054-2192-4a43-8e24-4fe0a73a7c24",
+        "type": "HTTP_REQUEST",
+        "sha256": "31912b01261b5bdf88b71a8df48ab70c2e416f9d85beaa14599c4d310558548f"
+      },
+      {
+        "id": "49bb8948-9f2e-4c9f-8188-8e60f67eda4b",
+        "type": "DB_RESULT_SUMMARY",
+        "sha256": "24345b11ea22c5b043b866787af0e66aea97c77cfd1a6097a7de62122e306d3c"
+      },
+      {
+        "id": "34cdd4af-db63-45d6-abf4-b69344cb6479",
+        "type": "HTTP_RESPONSE",
+        "sha256": "9a9c9967bbb72d8e7b322a3ae7cf56e6f08a761c7884f9da84157794c84c1cc3"
+      },
+      {
+        "id": "183a0a86-d851-4f52-85ff-289a6e53bb0b",
+        "type": "HTTP_REQUEST",
+        "sha256": "e5eecb48c5cf17e1588371ecb56c6f38c5fb8257909daf56d62814890e2227ce"
+      }
+    ]
+  },
+  "database_verification": {
+    "total_after": 29,
+    "self_created_rows_after": 0,
+    "existing_banner_id2": "2\tDSC06229\t1\tNULL\t1",
+    "cleanup": "workflow delete_banner 节点删除自建记录；总数保持 29"
+  },
+  "limits": [
+    "未执行 Admin UI（Playwright）步骤",
+    "未执行 Public API 查询步骤",
+    "未执行前台 Playwright 打开赛事页",
+    "因此不能宣称 TC-AIQE-002 PASS，产品级 TC 仍 0/10"
+  ],
+  "status": "PASS"
+}

@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-25T16:44:52.768195+00:00",
+  "generated_at": "2026-11-25T17:10:51.018509+00:00",
   "release": "aiqe-v1.6",
-  "commit_sha": "4a17e102e78fd268910c8c08351dbe9af8a45f5c",
+  "commit_sha": "9a3ac32cd6cf13dddc1cc8a636d6d493942cab3c",
   "baseline_release_commit": "9bbbdbb2026bada5c016d663780e03d62fca940d",
   "migration_head": "20261122_v16_catalog_post_merge",
   "summary": {
@@ -98,10 +98,10 @@
       "gate": "G",
       "title": "工程治理",
       "status": "NOT_PROVEN",
-      "evidence": "NOT_PROVEN",
+      "evidence": "PASS",
       "acceptance": "PENDING",
       "reasons": [
-        "Branch Protection 证据不完整: require_code_owner_review/approving_count>=1(非作者审批)",
+        "Branch Protection/Ruleset 已由 GitHub API 验证（required checks: 3 个）",
         "独立验收未完成: V16-025-R1"
       ],
       "artifacts": [
@@ -121,7 +121,7 @@
     "Gate E: 缺少 docs/aiqe/v1.6/e2e/product-results.json（产品级 TC 未在隔离 Test 环境执行）",
     "Gate F: 生产阶段未证明: container_egress, stage1_shadow, stage2_dogfood, stage3_small_traffic, stage4_expand, stage5_ga",
     "Gate F: 生产验收无独立验收签署",
-    "Gate G: Branch Protection 证据不完整: require_code_owner_review/approving_count>=1(非作者审批)",
+    "Gate G: Branch Protection/Ruleset 已由 GitHub API 验证（required checks: 3 个）",
     "Gate G: 独立验收未完成: V16-025-R1"
   ],
   "evidence_files": {

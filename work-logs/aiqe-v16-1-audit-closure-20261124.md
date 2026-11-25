@@ -222,7 +222,19 @@ Gate F 进度：`image_self_contained`、`vault_production_mode`、`postgres_bac
 - 证据：`docs/aiqe/v1.6/evidence/futurewayu-production-crud.json`。
 - 产品 TC 仍为 0/10：尚未通过 AIQE Run/Workflow/Assertion 链路执行。
 
-## 22. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
+## 22. AIQE Workflow 写链路跑通 + Gate G evidence PASS（2026-11-26）
+
+- MoojinR 已接受 collaborator；ruleset `protect-main` 启用 `require_code_owner_review=true`、
+  `approving_count=1`；`check_branch_protection --capture` 验证通过 → Gate G evidence=PASS。
+- 本地 AIQE 注册只读 Query Registry（futurewayu MySQL 3360，自建只读账号），
+  构建 Workflow：`create_banner`（HTTP POST，status=0）→ `resolve_id`（DB 按唯一 title
+  查自建 ID）→ `update_banner`（HTTP PUT，用模板 ID）→ `delete_banner`（cleanup，HTTP delete）。
+- Run `44225f19-c98b-47cb-a5ca-1047888010fe`：**COMPLETED / PASS**，4 节点全部 PASSED，
+  2 条断言 PASS，7 个 artifact；业务库自建行 0、总数 29、既有 banner id=2 未变。
+- 证据：`docs/aiqe/v1.6/evidence/futurewayu-aiqe-workflow.json`。
+- 产品 TC 仍 0/10：缺 Admin UI/Public API/前台 Playwright 步骤，不伪造 PASS。
+
+## 23. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
 
 1. **产品级 TC-AIQE-001..010**：执行器与配置已就绪，需隔离 Test 环境 + per-TC runner
    接入后运行 `python scripts/aiqe/run_product_tc.py --run`。

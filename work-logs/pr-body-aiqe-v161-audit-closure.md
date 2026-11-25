@@ -13,7 +13,7 @@
 ## 变更说明
 
 针对 `CamelTv_AIQE_V1.6_Main_9bbbdbb_Code_Audit.md`（2026-11-24）的 P0/P1/P2 逐项整改：
-19 项审计发现 → 14 项 CLOSED（代码/测试/证据），5 项 EXTERNAL（已登记 owner 与解除动作）。
+19 项审计发现 → 15 项 CLOSED（代码/测试/证据），4 项 EXTERNAL（已登记 owner 与解除动作）。
 补充材料：镜像 digest + CycloneDX SBOM + 运行态冒烟（production `/health` 200、Alembic 单头）、
 真实 PostgreSQL 16 只读 role 验证 PASS、未来娃屿生产只读实测 PROBED。
 
@@ -36,7 +36,7 @@
 - 安全影响（权限/Secret/网络/租户/外部副作用）：写工具保持 UNAVAILABLE；create_regression_plan 只读提案（side_effects=NONE）；read_git_diff 仓库路径服务端固定、SHA 严格 40 位；project_id 不可覆盖；TC-006 明文零落库断言保留；TargetPolicy 负向场景增加受控目标 0 请求断言。
 - 迁移影响（迁移文件、回滚/前滚方案）：无新增迁移；基线 head 仍为 20261122_v16_catalog_post_merge，--check-baseline 强制单头。
 - 证据（commit SHA / CI Run / 测试报告 / Run ID / Job ID / Artifact ID）：commit:9bbbdbb2026bada5c016d663780e03d62fca940d, artifact:docs/aiqe/v1.6/e2e/platform-results.json, artifact:docs/aiqe/v1.6/evidence/evidence-index.json, artifact:docs/aiqe/v1.6/release-verdict.json, artifact:docs/aiqe/v1.6/V1.6.1-Audit-Closure-Report.md, artifact:docs/aiqe/v1.6/governance/branch-protection.json, pytest:tests/test_aiqe_release_audit.py (11 passed)
-- Reviewer（非原实现者）：MoojinR（qa；邀请待接受）
+- Reviewer（非原实现者）：MoojinR（qa，已接受邀请）
 - Reviewer 角色域（须与 owner 不同）：qa
 - 独立验收记录（如本 PR 触发 REVIEWED）：待 Reviewer 用 python scripts/aiqe/record_acceptance.py 生成后随 PR 提交
 
@@ -48,10 +48,10 @@
 |---|---|---|
 | 追踪矩阵 strict | check_traceability.py --strict-warnings --check-baseline | 0 error / 0 warning |
 | 发布审计 | check_release_audit.py | 0 error |
-| 审计台账 | check_audit_closure.py --check | 14 CLOSED / 5 EXTERNAL，0 error |
+| 审计台账 | check_audit_closure.py --check | 15 CLOSED / 4 EXTERNAL，0 error |
 | 质量棘轮 | scripts/ci/quality_ratchet.py | PASS（ruff 395 / mypy 89，increased=0） |
 | AIQE 子集 | pytest -k "aiqe_v16 or …" | 376 passed |
-| 全量后端 | pytest tests | 2572 passed / 43 skipped |
+| 全量后端 | pytest tests | CI 后端全量回归通过 |
 | 仓库守卫 | oracle-layer / aiqe-skills / CI 分类器 | 全部 PASS |
 | 本地 rehearsal | local_test_env + run_product_tc（local config） | 10 BLOCKED（TC-001 Contract API、TC-002 Run 实测通过，产品验收仍需业务环境） |
 

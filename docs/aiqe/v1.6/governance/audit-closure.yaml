@@ -17,14 +17,15 @@ items:
   note: status 与 acceptance 分离；REVIEWED 只能来自人工 acceptance/records；同角色域/自审/pending 拒绝。
 - id: P0-2
   title: Branch Protection / Ruleset 无生效证据（Gate G）
-  status: EXTERNAL
+  status: CLOSED
   evidence:
   - docs/aiqe/v1.6/governance/branch-protection.json
   - scripts/aiqe/check_branch_protection.py
-  blocked_by: 用户已提供独立账号邮箱 2602997810@qq.com（角色域 qa），但 GitHub API 只接受 username；按邮箱邀请需仓库管理员在 GitHub UI 操作。当前仓库仍只有 mojinru9527 一个 collaborator，ruleset 仍为非作者审批关闭
+  blocked_by: ''
   owner: repo-admin
-  unblock_action: 请提供该账号的 GitHub username（或由你在 GitHub Settings → Collaborators 按邮箱邀请），接受后运行 update_branch_protection.py --apply 并重抓 branch-protection.json
-  note: 待 GitHub username / 邮件邀请完成；其余代码与工具已就绪。
+  unblock_action: ''
+  note: GitHub Ruleset protect-main(#18351498) 已启用 required checks、禁强推/禁删除、必须 PR、require_code_owner_review=true、approving_count=1；MoojinR(qa) 已接受 collaborator；check_branch_protection --capture 验证通过 → Gate
+    G evidence=PASS。
   unlock_action: ''
 - id: P0-3
   title: PR 字段校验只查关键词，不校验真实填写
@@ -77,7 +78,8 @@ items:
     update_by/update_time 残留。
   owner: qa-team
   unblock_action: 提供未来娃屿测试账号（或后台 Token）与允许写入的对象/前缀约定；提供后可运行自建数据 + 清理的产品 TC runner
-  note: futurewayu-production-crud.json 记录安全 CRUD 探针与误更新事件；产品级 TC 仍 0/10。
+  note: 生产只读公开端点 PROBED；生产自建数据 CRUD 安全探针 PASS；AIQE Workflow（create→DB 解析 ID→update→delete）在本地 AIQE 跑通，Run COMPLETED/PASS、2 条断言、7 个 artifact，自建行 0、总数 29。但缺 Admin UI/Public API/前台 Playwright 步骤，产品 TC 仍 0/10，不计
+    PASS。
   unlock_action: ''
 - id: P1-5
   title: TC-003/TC-005 未从正式链路起跑，危险目标无 0 请求证明
@@ -173,6 +175,7 @@ items:
   blocked_by: 仓库只有单一 GitHub 账号，无法建立真实独立 CODEOWNER
   owner: repo-admin
   unblock_action: 邀请独立 QA/Security 账号并为其分配 CODEOWNERS 域
+  note: CODEOWNERS 已增加独立 QA 域（traceability/acceptance/V16-025 测试）指向 MoojinR(qa)，非作者审批已由 ruleset 强制；security/execution 等其他域仍为单一账号，需后续继续拆分。
 - id: P3-1
   title: 全量测试未在当前环境复现（审计缺 bcrypt）
   status: CLOSED
