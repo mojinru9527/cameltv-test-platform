@@ -211,7 +211,18 @@ PR 状态：`OPEN` + `MERGEABLE` + `isDraft=true`（未转 Ready、未合并；�
 Gate F 进度：`image_self_contained`、`vault_production_mode`、`postgres_backup_restore`、
 `monitoring_alerts` 已 PASS；剩余 `container_egress`、`production_smoke`、stage1–5 未证明。
 
-## 21. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
+## 21. 未来娃屿生产 CRUD 探测（2026-11-26）
+
+- 用户授权：生产增删改查仅限自建数据，测试后清理；产品级目标切到未来娃屿。
+- 凭据：使用历史 R436 测试账号 tester-operator（qa），密码不落盘；已退出登录并删除本地 token。
+- 安全探针：自建 banner（status=0 禁用）create/update/delete 均 200；清理后总数恢复 29、自建行 0、既有 banner 未被改动 → PASS。
+- **事故与恢复**：首次探测用 list?title= 过滤，但接口忽略 title，误更新既有 banner id=2；
+  已恢复 title/description/sort_order/status/platform 等原值，`update_by`/`update_time` 残留本次写入
+  （无原始备份可精确还原），已如实记录。
+- 证据：`docs/aiqe/v1.6/evidence/futurewayu-production-crud.json`。
+- 产品 TC 仍为 0/10：尚未通过 AIQE Run/Workflow/Assertion 链路执行。
+
+## 22. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
 
 1. **产品级 TC-AIQE-001..010**：执行器与配置已就绪，需隔离 Test 环境 + per-TC runner
    接入后运行 `python scripts/aiqe/run_product_tc.py --run`。

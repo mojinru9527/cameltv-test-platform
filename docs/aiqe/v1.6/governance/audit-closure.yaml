@@ -73,10 +73,11 @@ items:
   - docs/aiqe/v1.6/e2e/product-tc-config.yaml
   - scripts/aiqe/run_product_tc.py
   - test-platform-v2/backend/tests/test_aiqe_v16_017_product_runner.py
-  blocked_by: 用户已允许生产写测试（仅限自建的测试数据，测试后必须清理）；但缺未来娃屿后台/C 端登录态或只读+写 Token，且产品 TC-001..010 仍需设备/Benchmark 等前置
+  blocked_by: 用户已授权未来娃屿生产 CRUD（仅自建数据并清理），自建 banner 的 create/update/delete 与清理已验证 PASS；但产品 TC-001..010 仍需 AIQE Run/UI/DB/设备/Benchmark 链路与独立 Fixture，当前不计 PASS。另：首次探测误更新既有 banner id=2（列表 title 过滤被忽略），已恢复内容并披露
+    update_by/update_time 残留。
   owner: qa-team
   unblock_action: 提供未来娃屿测试账号（或后台 Token）与允许写入的对象/前缀约定；提供后可运行自建数据 + 清理的产品 TC runner
-  note: 生产只读公开端点已 PROBED；写操作尚未执行，产品级 PASS 仍 0/10。
+  note: futurewayu-production-crud.json 记录安全 CRUD 探针与误更新事件；产品级 TC 仍 0/10。
   unlock_action: ''
 - id: P1-5
   title: TC-003/TC-005 未从正式链路起跑，危险目标无 0 请求证明
