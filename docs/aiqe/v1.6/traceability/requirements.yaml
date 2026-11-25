@@ -2127,20 +2127,26 @@ requirements:
   - path: test-platform-v2/backend/scripts/aiqe/evidence_local_20.py
     symbol: load_password / argument parser
     change: modified
+  - path: scripts/aiqe/scan_credentials.py
+    symbol: credential scan (worktree + 200 commits)
+    change: added
   production_entry:
   - python scripts/aiqe/evidence_local_20.py --runs N
   tests:
     success:
     - tests/test_aiqe_v16_021_weak_password.py::test_secret_file_provider_is_supported
+    - tests/test_aiqe_v16_021_credential_scan.py::test_classify_localhost_dsn_is_weak_default
     negative:
     - tests/test_aiqe_v16_021_weak_password.py::test_no_hardcoded_password_or_password_cli_option
     - tests/test_aiqe_v16_021_weak_password.py::test_missing_credentials_exits_nonzero_without_secret
+    - tests/test_aiqe_v16_021_credential_scan.py::test_classify_example_dsn_is_placeholder
   mock_boundary: 真实子进程；无网络调用。
   layers:
   - L1
   - L2
   evidence:
   - pytest:tests/test_aiqe_v16_021_weak_password.py (3 passed)
+  - artifact:docs/aiqe/v1.6/evidence/credential-scan.json (CLEAN：0 potential-secret；10 weak-default 已脱敏登记)
   owner: security
   reviewer: pending
   gaps: []

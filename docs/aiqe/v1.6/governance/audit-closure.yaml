@@ -156,6 +156,7 @@ items:
   blocked_by: 需要访问历史日志/工作目录与生产凭据系统做轮换确认
   owner: security
   unblock_action: 扫描历史日志/工作目录，确认 admin123 等旧凭据已轮换并记录
+  note: 仓库高置信度扫描 CLEAN：0 个 potential-secret（工作区与近 200 commits）；10 处 weak-default 均为 CI/本地测试 DSN（已脱敏登记）；轮换仍需凭据系统与历史日志访问，登记为 EXTERNAL。
 - id: P2-4
   title: CODEOWNERS 全指向同一账号，无独立责任域
   status: EXTERNAL

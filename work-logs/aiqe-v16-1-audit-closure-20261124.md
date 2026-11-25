@@ -182,6 +182,7 @@ PR 状态：`OPEN` + `MERGEABLE` + `isDraft=true`（未转 Ready、未合并；�
 | 镜像运行态 | `verify_image_runtime.py` 以 production 配置启动容器（一次性随机密钥）：`/health` **200**、Alembic **单头** `20261122_v16_catalog_post_merge`；证据 `image-runtime-smoke.json` |
 | P2-1 PG 只读 | 本机 PostgreSQL 16.14 创建 `aiqe_ro` 只读 role（非 super/createrole/bypassrls/createdb，`default_transaction_read_only=on`，`statement_timeout=5s`）；`check_pg_readonly_role.py` 7 项全 PASS，写操作被 `ReadOnlySqlTransaction` 拒绝；证据标注 `scope=loopback` → **P2-1 CLOSED**（生产/ staging role 仍由 Gate F 追踪） |
 | 台账 | 14 CLOSED / 5 EXTERNAL；Gate B evidence 由 NOT_PROVEN 升为 PASS（acceptance 仍 PENDING）；Gate F 的 `image_self_contained` 置 PASS，其余 10 阶段未证明 |
+| P2-3 凭据扫描 | 新增 `scan_credentials.py`：高置信度扫描工作区 + 近 200 commits，结果 **CLEAN**（0 potential-secret）；10 处 weak-default 均为 CI/本地测试 DSN（已脱敏登记）；轮换仍为 EXTERNAL |
 
 ## 18. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
 
