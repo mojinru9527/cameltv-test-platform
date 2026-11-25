@@ -72,10 +72,10 @@ items:
   - docs/aiqe/v1.6/e2e/product-tc-config.yaml
   - scripts/aiqe/run_product_tc.py
   - test-platform-v2/backend/tests/test_aiqe_v16_017_product_runner.py
-  blocked_by: 未来娃屿生产入口已验证可达（https://xinyuwadao.com 200、/hz-api 200、受保护接口 401），但缺只读 Token 与只读 DB DSN；且只读权限无法覆盖需要写操作/设备/Benchmark 的产品 TC
+  blocked_by: 未来娃屿生产入口与公开 C 端 banner 接口已验证可达（200 真实只读数据），受保护接口 401 符合预期；仍缺只读登录态 Token 与只读 DB DSN，且只读权限无法覆盖需要写操作/设备/Benchmark 的产品 TC
   owner: qa-team
   unblock_action: 提供 FUTUREWAYU_BASE_URL / FUTUREWAYU_ADMIN_URL / 只读 Token / DB 只读 DSN 后运行 python scripts/aiqe/per_tc/futurewayu_production_readonly.py；产品级 PASS 仍需专用可写 Test 环境（或用户书面接受只读受限结论并保持 NOT_PROVEN）
-  note: 只读探测实测：2026-11-25 status=PROBED（2 个 200、1 个 404 路径、1 个 401 认证门禁）；未发起任何写请求；产品级 PASS 仍为 0/10。
+  note: 只读实测：7 次 GET（2×200 页面、2×200 banner 数据、3×401/404 门禁）；补充 platform 参数后 banner 由 500 变为 200，无任何写请求；产品级 PASS 仍为 0/10。
 - id: P1-5
   title: TC-003/TC-005 未从正式链路起跑，危险目标无 0 请求证明
   status: CLOSED

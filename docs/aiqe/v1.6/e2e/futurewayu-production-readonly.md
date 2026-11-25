@@ -11,22 +11,22 @@
 | 管理后台（Vue3 + Element Plus + RuoYi） | `https://xinyuwadao.com` |
 | 后端 API | `https://xinyuwadao.com/hz-api` |
 
-2026-11-25 生产只读实测（仅 GET，无凭据，共 8 次请求）：
+2026-11-25 生产只读实测（仅 GET，无凭据，7 次请求）：
 
 | 探测 | 结果 |
 |---|---|
 | `GET https://xinyuwadao.com/` | 200（后台 SPA HTML） |
 | `GET https://xinyuwadao.com/hz-api/` | 200（“欢迎使用CWY-HZ后台管理框架”） |
-| `GET /hz-api/captchaImage` | 404（无该端点） |
-| `GET /hz-api/system/config/configKey/sys.index.skinName` | 401（认证门禁生效） |
+| `GET /hz-api/client/bannerActivity/enabledList?platform=store` | **200，body code=200，data=[]** |
+| `GET /hz-api/client/bannerActivity/enabledList?platform=mini_program` | **200，body code=200，data 含 1 条轮播（id=18）** |
 | `GET /hz-api/client/plate` | body code=401（登录已过期） |
-| `GET /hz-api/client/component/category/tree` | body code=401（登录已过期） |
-| `GET /hz-api/client/mall/refunds/reasons` | body code=401（登录已过期） |
-| `GET /hz-api/client/mall/pickup-points` | body code=401（登录已过期） |
-| `GET /hz-api/client/bannerActivity/enabledList` | body code=500（“出了点问题（编号 9E5X5H）”）——疑似缺 platform 参数，需业务确认，不作为通过项 |
+| `GET /hz-api/system/config/configKey/sys.index.skinName` | 401（认证门禁生效） |
 
-结论：生产入口可达、认证门禁整体生效；**缺只读登录态 Token 与只读 DB DSN**，
-无法做已认证只读业务探测。证据文件：
+> 早前无 `platform` 参数时该 banner 接口返回 body code=500；按接口文档补参后返回 200，
+> 说明 500 是参数缺失而非服务不可用。
+
+结论：生产入口与公开 C 端 banner 接口可达（真实只读数据）；受保护接口 401 符合预期；
+**缺只读登录态 Token 与只读 DB DSN**，无法做已认证只读业务探测。证据文件：
 `docs/aiqe/v1.6/evidence/futurewayu-production-readonly.json`（status=`PROBED`）。
 
 ## 1. 需要提供的环境信息（只读）

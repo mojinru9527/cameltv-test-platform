@@ -2,7 +2,7 @@
 #
 # 状态语义：NOT_STARTED < PARTIAL < IMPLEMENTED < VERIFIED（交付/自动证据）；
 # ACCEPTED 需非原作者独立 Reviewer 签署，且 acceptance.status=REVIEWED。
-# VERIFIED 不等于独立验收：acceptance.status 为 NOT_REVIEWED 时 Gate G 不得宣称完成。
+# VERIFIED 不等于独立验收：acceptance.status=NOT_REVIEWED 时 Gate G 不得宣称完成。
 # 运行时证据必须有可校验的机器产物；仅有现场记录时 runtime_evidence.status=NOT_PROVEN。
 # 本文件由人工维护，机器校验见 scripts/aiqe/check_traceability.py。
 
@@ -1795,7 +1795,7 @@ requirements:
   - artifact:docs/aiqe/v1.6/e2e/product-tc-config.yaml (10 个产品 TC 执行计划)
   - script:scripts/aiqe/run_product_tc.py (product results runner)
   - pytest:tests/test_aiqe_v16_017_product_runner.py (5 passed)
-  - artifact:docs/aiqe/v1.6/evidence/futurewayu-production-readonly.json (生产只读实测 PROBED：xinyuwadao.com 可达、hz-api 认证门禁 401；缺只读 Token/DSN)
+  - artifact:docs/aiqe/v1.6/evidence/futurewayu-production-readonly.json (生产只读实测 PROBED：后台 SPA/后端 200、公开 C 端 banner 接口 200 真实数据、受保护接口 401；缺只读 Token/DSN)
   - script:scripts/aiqe/per_tc/futurewayu_production_readonly.py (GET-only + 只读 SQL 守卫)
   owner: qa-automation
   reviewer: qa-lead
