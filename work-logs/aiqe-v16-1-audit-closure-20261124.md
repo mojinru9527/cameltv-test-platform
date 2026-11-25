@@ -197,3 +197,8 @@ PR 状态：`OPEN` + `MERGEABLE` + `isDraft=true`（未转 Ready、未合并；�
 5. **推送/PR**：`fix/aiqe-v161-audit-closure` 17 个提交待用户授权推送。
 6. **TC-006 flaky 观察**：已消除已知顺序/时序假设，连续多次通过；若再次出现需抓取
    失败时的 handle/scope/事件快照，不得以重跑掩盖。
+
+### 备注（2026-11-25）
+
+PR 描述的「证据」字段必须使用 `commit:`/`ci:`/`run:`/`pytest:`/`artifact:` 前缀；
+「本轮新增证据」这类小标题会被字段解析器误认为证据字段，已改为「补充材料」。
