@@ -76,6 +76,14 @@ def validate_config(config: dict[str, Any]) -> list[str]:
                 errors.append(f"{tc_id}: runner 必须是非空 list")
             else:
                 script = str(runner[0])
+                rest = [str(item) for item in runner[1:]]
+                if Path(script).name.lower() in {"python", "python3", "python.exe"}:
+                    # 解释器 + 脚本路径形式
+                    if not rest:
+                        errors.append(f"{tc_id}: python runner 缺少脚本路径")
+                    else:
+                        script = rest[0]
+                        rest = rest[1:]
                 if not (ROOT / script).exists():
                     errors.append(f"{tc_id}: runner 脚本不存在: {script}")
         if not str(case.get("evidence_glob") or "").strip():

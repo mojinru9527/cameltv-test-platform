@@ -125,7 +125,19 @@
 > —— Gate G 需在 ruleset 启用非作者审批并邀请独立账号；
 > —— Gate F 需生产基础设施证据。
 
-## 13. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
+## 13. 第十一轮：PR 推送 + 本地隔离 Test 环境（用户授权后）
+
+| 项 | 处理 | 证据 |
+|---|---|---|
+| 推送 / PR | 用户授权后推送 `fix/aiqe-v161-audit-closure`（18 commits），创建 Draft PR [#635](https://github.com/mojinru9527/cameltv-test-platform/pull/635) | `gh pr view 635`：draft=true、mergeable=MERGEABLE |
+| 本地隔离 Test 环境 | 新增 `scripts/aiqe/local_test_env.py`（独立 SQLite/端口/密钥、进程内 Worker、能力 manifest、项目/环境/target policy、env 文件）与 runbook `docs/aiqe/v1.6/e2e/local-test-env.md` | `start/status/env` 实测；`local-test-env.env` 生成 |
+| per-TC runner | 新增 `scripts/aiqe/per_tc/product_tc_local_runner.py` + `product-tc-config.local.yaml`：TC-001 Contract API 全流程、TC-002 Workflow→Run→Worker→Assertion 实测；其余 TC 输出 BLOCKED 并写明业务前置 | 本地 rehearsal：`{PASS:0, FAIL:0, BLOCKED:10}`；TC-002 真实 Run `COMPLETED/PASS` + NodeRun/Artifact ID |
+| CI 修复 | ① 重新生成 Release-Verdict/E2E 文档（消除 GENERATED 不一致）；② 单元/运行时/主干后端 job 设置 `fetch-depth: 0`，避免 `HEAD~1` 在 shallow clone 失败；③ git 历史测试在 shallow 时 `pytest.skip` | 本地 376 passed；工作流 YAML 校验通过 |
+
+> 注：本地 rehearsal 结果写入 `work-logs/evidence/aiqe-v16/local-test/`（已 gitignore，含随机 admin 密码），
+> **不写入**官方 `product-results.json`，产品级 TC 仍为 0/10（需真实业务 Test 环境）。
+
+## 14. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
 
 1. **产品级 TC-AIQE-001..010**：执行器与配置已就绪，需隔离 Test 环境 + per-TC runner
    接入后运行 `python scripts/aiqe/run_product_tc.py --run`。

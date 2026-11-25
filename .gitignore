@@ -147,3 +147,6 @@ work-logs/evidence/aiqe-v16/test5-login-methods/
 
 # TC-002 news evidence
 work-logs/evidence/aiqe-v16/test5-news/
+
+# AIQE local rehearsal env (contains generated admin password + sqlite)
+work-logs/evidence/aiqe-v16/local-test/

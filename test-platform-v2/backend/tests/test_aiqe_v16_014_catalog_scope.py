@@ -271,13 +271,15 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 
 def _real_diff():
     def _sha(rev: str) -> str:
-        return subprocess.run(
+        result = subprocess.run(
             ["git", "rev-parse", rev],
             cwd=REPO_ROOT,
             capture_output=True,
             text=True,
-            check=True,
-        ).stdout.strip()
+        )
+        if result.returncode != 0:
+            pytest.skip("仓库为 shallow checkout，缺少 HEAD~1（CI 需 fetch-depth: 0）")
+        return result.stdout.strip()
 
     from app.aiqe.services.impact_service import load_git_diff
 

@@ -62,9 +62,12 @@ def _contract(db, project_id: int = 1, requirement_id: str = "favorite-match"):
 
 
 def _git(*args: str) -> str:
-    return subprocess.run(
-        ["git", *args], cwd=REPO_ROOT, capture_output=True, text=True, check=True
-    ).stdout.strip()
+    result = subprocess.run(
+        ["git", *args], cwd=REPO_ROOT, capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        pytest.skip("仓库为 shallow checkout，缺少 git 历史（CI 需 fetch-depth: 0）")
+    return result.stdout.strip()
 
 
 # ── 1. 只读工具真实事实 ───────────────────────────────────

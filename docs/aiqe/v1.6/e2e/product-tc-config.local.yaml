@@ -1,0 +1,73 @@
+# 产品级 TC 本地 rehearsal 配置（隔离本地 Test 环境）
+#
+# 用途：验证 `run_product_tc.py` 执行链路、隔离环境可启动、per-TC runner 可运行。
+# 注意：本地环境没有 CamelTv 业务 API/UI/MySQL/真机，所有 TC 输出 **BLOCKED**；
+# 官方产品验收仍应使用 `product-tc-config.yaml` + 真实隔离 Test 业务环境。
+schema_version: "1.0"
+environment: "local-rehearsal"
+required_env:
+  - AIQE_TEST_BASE_URL
+  - AIQE_TEST_ADMIN_URL
+  - AIQE_TEST_DB_READONLY_DSN
+  - AIQE_TEST_ADMIN_PASSWORD
+test_cases:
+  - tc_id: TC-AIQE-001
+    title: "需求契约冻结 + 需求变更影响（本地 API rehearsal）"
+    spec_ref: "merged-spec §20 TC-AIQE-001"
+    runner: ["python", "scripts/aiqe/per_tc/product_tc_local_runner.py", "--tc", "TC-AIQE-001"]
+    evidence_glob: "work-logs/evidence/aiqe-v16/local-test/**"
+    blocked_by: "需要 PRD 导入 + 后台人工确认；本地仅跑通 Contract API 部分"
+  - tc_id: TC-AIQE-002
+    title: "API → Admin UI → Public API → DB 的统一 Run（本地平台 Run rehearsal）"
+    spec_ref: "merged-spec §20 TC-AIQE-002"
+    runner: ["python", "scripts/aiqe/per_tc/product_tc_local_runner.py", "--tc", "TC-AIQE-002"]
+    evidence_glob: "work-logs/evidence/aiqe-v16/local-test/**"
+    blocked_by: "需要业务 API/后台 UI/前台 UI/MySQL；本地仅跑通平台 HTTP Run"
+  - tc_id: TC-AIQE-003
+    title: "API 首次失败 + 重试成功（本地 rehearsal）"
+    spec_ref: "merged-spec §20 TC-AIQE-003"
+    runner: ["python", "scripts/aiqe/per_tc/product_tc_local_runner.py", "--tc", "TC-AIQE-003"]
+    evidence_glob: "work-logs/evidence/aiqe-v16/local-test/**"
+    blocked_by: "需要可注入 503 的业务 API Stub"
+  - tc_id: TC-AIQE-004
+    title: "浮层交叉干扰（本地 rehearsal）"
+    spec_ref: "merged-spec §20 TC-AIQE-004"
+    runner: ["python", "scripts/aiqe/per_tc/product_tc_local_runner.py", "--tc", "TC-AIQE-004"]
+    evidence_glob: "work-logs/evidence/aiqe-v16/local-test/**"
+    blocked_by: "需要业务直播入口与浮层 integration profile"
+  - tc_id: TC-AIQE-005
+    title: "并发数据污染（本地 rehearsal）"
+    spec_ref: "merged-spec §20 TC-AIQE-005"
+    runner: ["python", "scripts/aiqe/per_tc/product_tc_local_runner.py", "--tc", "TC-AIQE-005"]
+    evidence_glob: "work-logs/evidence/aiqe-v16/local-test/**"
+    blocked_by: "需要共享账号/赛事 fixture 与真实业务 DB"
+  - tc_id: TC-AIQE-006
+    title: "上游第三方故障（本地 rehearsal）"
+    spec_ref: "merged-spec §20 TC-AIQE-006"
+    runner: ["python", "scripts/aiqe/per_tc/product_tc_local_runner.py", "--tc", "TC-AIQE-006"]
+    evidence_glob: "work-logs/evidence/aiqe-v16/local-test/**"
+    blocked_by: "需要业务上游 504 Stub"
+  - tc_id: TC-AIQE-007
+    title: "UI Runner 自身故障（本地 rehearsal）"
+    spec_ref: "merged-spec §20 TC-AIQE-007"
+    runner: ["python", "scripts/aiqe/per_tc/product_tc_local_runner.py", "--tc", "TC-AIQE-007"]
+    evidence_glob: "work-logs/evidence/aiqe-v16/local-test/**"
+    blocked_by: "需要外部 Runner 与浏览器 kill 能力"
+  - tc_id: TC-AIQE-008
+    title: "开发修复后点击回归（本地 rehearsal）"
+    spec_ref: "merged-spec §20 TC-AIQE-008"
+    runner: ["python", "scripts/aiqe/per_tc/product_tc_local_runner.py", "--tc", "TC-AIQE-008"]
+    evidence_glob: "work-logs/evidence/aiqe-v16/local-test/**"
+    blocked_by: "依赖 TC-004 缺陷草稿与修复部署"
+  - tc_id: TC-AIQE-009
+    title: "多端 AC 对照（本地 rehearsal）"
+    spec_ref: "merged-spec §20 TC-AIQE-009"
+    runner: ["python", "scripts/aiqe/per_tc/product_tc_local_runner.py", "--tc", "TC-AIQE-009"]
+    evidence_glob: "work-logs/evidence/aiqe-v16/local-test/**"
+    blocked_by: "需要 Android 设备/模拟器"
+  - tc_id: TC-AIQE-010
+    title: "学习候选发布（本地 rehearsal）"
+    spec_ref: "merged-spec §20 TC-AIQE-010"
+    runner: ["python", "scripts/aiqe/per_tc/product_tc_local_runner.py", "--tc", "TC-AIQE-010"]
+    evidence_glob: "work-logs/evidence/aiqe-v16/local-test/**"
+    blocked_by: "需要已关闭缺陷标注集 + Benchmark Gate + 人工批准"
