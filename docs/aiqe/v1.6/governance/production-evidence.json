@@ -18,13 +18,17 @@
     "stage2_dogfood": {
       "status": "NOT_PROVEN",
       "artifacts": [],
-      "doc_refs": ["docs/aiqe/v1.6/Staging-V16-Run-Evidence.md"],
+      "doc_refs": [
+        "docs/aiqe/v1.6/Staging-V16-Run-Evidence.md"
+      ],
       "note": "同上：仅有 Run ID 文本记录，无归档产物。"
     },
     "stage3_small_traffic": {
       "status": "NOT_PROVEN",
       "artifacts": [],
-      "doc_refs": ["docs/aiqe/v1.6/Staging-V16-Run-Evidence.md"],
+      "doc_refs": [
+        "docs/aiqe/v1.6/Staging-V16-Run-Evidence.md"
+      ],
       "note": "同上。"
     },
     "stage4_expand": {
@@ -76,22 +80,30 @@
     "container_egress": {
       "status": "NOT_PROVEN",
       "artifacts": [],
-      "doc_refs": ["docs/aiqe/v1.6/V1.6-GA-Release-Report.md"],
+      "doc_refs": [
+        "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
+      ],
       "note": "GA 报告第 49 行勾选项自身写着“集群实测 NOT_RUN”，不能计 PASS。"
     },
     "image_self_contained": {
-      "status": "NOT_PROVEN",
-      "artifacts": [],
+      "status": "PASS",
+      "artifacts": [
+        "docs/aiqe/v1.6/evidence/image-build.json",
+        "docs/aiqe/v1.6/evidence/image-sbom.cdx.json",
+        "docs/aiqe/v1.6/evidence/image-requirements-frozen.txt"
+      ],
       "doc_refs": [
         "docs/aiqe/v1.6/Production-Deploy-20261123.md",
         "test-platform-v2/backend/Dockerfile"
       ],
-      "note": "生产容器曾依赖 /opt/aiqe-v16-deps 挂载 sqlglot 与创建后复制迁移文件。本批次已把 sqlglot 固化进 requirements.api.txt / requirements.api.lock / requirements.runner.lock（含 hash）；尚未重建镜像并记录 digest，故仍为 NOT_PROVEN。"
+      "note": "2026-11-25 从 commit 1fa1c425d 干净构建 target=api：image id sha256:be8430b6…、tar sha256 13363e00…、sqlglot 30.33.0 import OK、CycloneDX SBOM 251 components；旧镜像 aiqe-prod-20261119-1 无 sqlglot。"
     },
     "production_smoke": {
       "status": "NOT_PROVEN",
       "artifacts": [],
-      "doc_refs": ["docs/aiqe/v1.6/Production-Deploy-20261123.md"],
+      "doc_refs": [
+        "docs/aiqe/v1.6/Production-Deploy-20261123.md"
+      ],
       "note": "swiftbugs.cn health 200 仅为部署记录，缺少容器 digest、部署 commit 与源码 SHA 一致性校验。"
     }
   },

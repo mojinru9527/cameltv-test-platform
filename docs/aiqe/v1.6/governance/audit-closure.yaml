@@ -108,16 +108,17 @@ items:
   note: ToolExecutor + A1–A6 真实取证；read_requirements/read_git_diff 实现；create_regression_plan 只读提案。
 - id: P1-9
   title: 生产镜像依赖运行时 sqlglot 挂载与创建后复制迁移
-  status: EXTERNAL
+  status: CLOSED
   evidence:
   - test-platform-v2/backend/requirements.api.txt
   - test-platform-v2/backend/requirements.api.lock
   - test-platform-v2/backend/requirements.runner.lock
   - test-platform-v2/backend/tests/test_aiqe_v16_024_image_dependencies.py
-  blocked_by: 需要从 release commit 干净重建镜像并记录 digest/SBOM（本机无 Docker 生产构建环境）
+  blocked_by: ''
   owner: devops
-  unblock_action: 重建 api/runtime 镜像，记录 digest/SBOM，验证 sqlglot + alembic/versions 自包含
-  note: 仓库侧已固化 sqlglot（含 hash）并加回归测试；镜像重建属外部动作。
+  unblock_action: ''
+  note: 从 commit 1fa1c425d 干净构建 api 镜像（Dockerfile target=api）：image id sha256:be8430b6…、tar sha256 13363e00…、sqlglot 30.33.0 在镜像内可导入、CycloneDX SBOM（251 components）与 pip freeze 已归档；旧生产镜像 cameltv-tp-backend:aiqe-prod-20261119-1
+    实测无 sqlglot，佐证审计发现。
 - id: P1-10
   title: 生产/GA 文档互相矛盾，无单一时间线
   status: CLOSED
@@ -129,13 +130,15 @@ items:
   note: 'production-evidence 为唯一定性来源；旧执行记录标 STATUS: HISTORICAL；Gate F 由机器判定。'
 - id: P2-1
   title: PostgreSQL 只读 role 未在真实 PG 验证（SQLite mode=ro 不算）
-  status: EXTERNAL
+  status: CLOSED
   evidence:
   - scripts/aiqe/check_pg_readonly_role.py
   - docs/aiqe/v1.6/evidence/pg-readonly-role.json
-  blocked_by: 需要运维创建只读账号并提供 PG DSN
+  blocked_by: ''
   owner: ops
-  unblock_action: python scripts/aiqe/check_pg_readonly_role.py --check --dsn <readonly-dsn>
+  unblock_action: ''
+  note: 真实 PostgreSQL 16.14 只读 role 验证 PASS（scope=loopback，本地 Docker 实例）：非 super/createrole/bypassrls/createdb、写操作被 ReadOnlySqlTransaction 拒绝、default_transaction_read_only=on、statement_timeout=5s；生产/ staging
+    的只读 role 仍由 Gate F 生产证据包追踪（同一脚本复验）。
 - id: P2-2
   title: V16-024 生产证据（备份恢复/Vault/告警/灰度）未归档
   status: EXTERNAL

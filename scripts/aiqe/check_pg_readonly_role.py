@@ -57,6 +57,14 @@ def _connect(dsn: str):
     return conn
 
 
+def _scope(dsn: str) -> str:
+    """loopback=本机容器/实例；remote=staging/生产。证据必须标注，避免误读。"""
+    host = (urlsplit(dsn).hostname or "").lower()
+    if host in {"127.0.0.1", "localhost", "::1"} or host.startswith("127."):
+        return "loopback"
+    return "remote"
+
+
 def verify(dsn: str) -> dict:
     checks: list[dict] = []
     conn = _connect(dsn)
@@ -64,6 +72,8 @@ def verify(dsn: str) -> dict:
         with conn.cursor() as cur:
             cur.execute("SELECT current_user")
             current_user = str(cur.fetchone()[0])
+            cur.execute("SHOW server_version")
+            server_version = str(cur.fetchone()[0])
             cur.execute(
                 "SELECT rolsuper, rolcreaterole, rolbypassrls, rolcreatedb "
                 "FROM pg_roles WHERE rolname = current_user"
@@ -115,6 +125,8 @@ def verify(dsn: str) -> dict:
         "artifact_kind": "pg-readonly-role-verification",
         "generated_at": datetime.now(UTC).isoformat(),
         "dsn": mask_dsn(dsn),
+        "scope": _scope(dsn),
+        "server_version": server_version,
         "status": "PASS" if ok else "FAIL",
         "current_user": current_user,
         "checks": checks,

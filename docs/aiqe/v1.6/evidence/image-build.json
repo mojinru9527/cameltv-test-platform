@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "image-build",
+  "generated_at": "2026-11-25T04:46:43.596955+00:00",
+  "commit": "1fa1c425dd3cd674285ba088849ecbfe8a2ad1ea",
+  "image": "cameltv-aiqe-api:1fa1c425d",
+  "image_id": "sha256:be8430b6809dcd7903a0b75226cb17754ae52f12331011df6c11743a0e3e3e54",
+  "image_tar_sha256": "13363e0038a416441f851f9b14d8571a66c81fd2dafdf7a3ed479da5832f143b",
+  "size_bytes": 166560436,
+  "created": "2026-11-25T04:41:41.357193157Z",
+  "dockerfile": "test-platform-v2/backend/Dockerfile",
+  "target": "api",
+  "sqlglot_version": "30.33.0",
+  "sqlglot_import_ok": true,
+  "frozen_dependencies": "image-requirements-frozen.txt",
+  "sbom_status": "captured",
+  "sbom_file": "image-sbom.cdx.json",
+  "docker_server_version": "29.5.3",
+  "status": "PROVEN"
+}

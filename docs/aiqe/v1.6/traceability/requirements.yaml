@@ -2,7 +2,7 @@
 #
 # 状态语义：NOT_STARTED < PARTIAL < IMPLEMENTED < VERIFIED（交付/自动证据）；
 # ACCEPTED 需非原作者独立 Reviewer 签署，且 acceptance.status=REVIEWED。
-# VERIFIED 不等于独立验收：acceptance.status=NOT_REVIEWED 时 Gate G 不得宣称完成。
+# VERIFIED 不等于独立验收：acceptance.status 为 NOT_REVIEWED 时 Gate G 不得宣称完成。
 # 运行时证据必须有可校验的机器产物；仅有现场记录时 runtime_evidence.status=NOT_PROVEN。
 # 本文件由人工维护，机器校验见 scripts/aiqe/check_traceability.py。
 
@@ -535,6 +535,7 @@ requirements:
     success:
     - tests/test_aiqe_v16_004_query_registry_boundary.py::test_worker_runs_registered_query_and_writes_audit
     - tests/test_aiqe_v16_004_query_registry_boundary.py::test_register_derives_allowed_tables_and_hash
+    - tests/test_aiqe_v16_004_pg_readonly.py::test_scope_marks_loopback_vs_remote
     negative:
     - tests/test_aiqe_v16_004_query_registry_boundary.py::test_worker_rejects_workflow_overrides_without_connecting
     - tests/test_aiqe_v16_004_query_registry_boundary.py::test_sql_policy_ast_matrix
@@ -553,6 +554,7 @@ requirements:
   - L3
   evidence:
   - pytest:tests/test_aiqe_v16_004_query_registry_boundary.py (25 passed)
+  - artifact:docs/aiqe/v1.6/evidence/pg-readonly-role.json (PASS：PostgreSQL 16.14，scope=loopback，写操作被 ReadOnlySqlTransaction 拒绝)
   owner: backend-security
   reviewer: pending
   gaps: []
@@ -2292,6 +2294,9 @@ requirements:
   evidence:
   - pytest:tests/test_aiqe_v16_024_production.py (8 passed)
   - script:scripts/aiqe/check_alerts.py (alerts=21 metrics=21)
+  - artifact:docs/aiqe/v1.6/evidence/image-build.json (target=api，sqlglot 30.33.0，image/tar digest)
+  - artifact:docs/aiqe/v1.6/evidence/image-sbom.cdx.json (CycloneDX 251 components)
+  - artifact:docs/aiqe/v1.6/evidence/image-requirements-frozen.txt (镜像内 pip freeze)
   owner: devops
   reviewer: pending
   gaps: []

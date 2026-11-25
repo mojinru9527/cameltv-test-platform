@@ -1,70 +1,20 @@
 {
   "schema_version": "1.0",
   "artifact_kind": "futurewayu-production-readonly",
-  "generated_at": "2026-11-25T04:31:45.857258+00:00",
+  "generated_at": "2026-11-25T04:48:41.451930+00:00",
   "readonly_only": true,
-  "base_url": "https://xinyuwadao.com",
-  "admin_url": "https://xinyuwadao.com/hz-api",
+  "base_url": "",
+  "admin_url": "",
   "probe_paths": [
     "/",
-    "/hz-api/",
-    "/hz-api/client/bannerActivity/enabledList?platform=store",
-    "/hz-api/client/bannerActivity/enabledList?platform=mini_program",
-    "/hz-api/client/plate"
+    "/api/health",
+    "/health",
+    "/hz-api/captchaImage"
   ],
-  "base_configured": true,
-  "admin_configured": true,
+  "base_configured": false,
+  "admin_configured": false,
   "db_configured": false,
-  "probes": [
-    {
-      "url": "https://xinyuwadao.com/",
-      "method": "GET",
-      "status": 200,
-      "duration_ms": 141,
-      "body_head": "<!doctype html>\n<html>\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />\n    <meta name=\"renderer\" content=\"webkit\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no\" />\n    <link rel="
-    },
-    {
-      "url": "https://xinyuwadao.com/hz-api/",
-      "method": "GET",
-      "status": 200,
-      "duration_ms": 77,
-      "body_head": "欢迎使用CWY-HZ后台管理框架，请通过前端地址访问。"
-    },
-    {
-      "url": "https://xinyuwadao.com/hz-api/client/bannerActivity/enabledList?platform=store",
-      "method": "GET",
-      "status": 200,
-      "duration_ms": 31,
-      "body_head": "{\"code\":200,\"msg\":\"操作成功\",\"data\":[]}"
-    },
-    {
-      "url": "https://xinyuwadao.com/hz-api/client/bannerActivity/enabledList?platform=mini_program",
-      "method": "GET",
-      "status": 200,
-      "duration_ms": 93,
-      "body_head": "{\"code\":200,\"msg\":\"操作成功\",\"data\":[{\"id\":18,\"title\":\"DSC06229\",\"description\":null,\"image\":\"2079105254155517953\",\"imageUrl\":\"https://hzxcx-1427069896.cos.ap-guangzhou.myqcloud.com/uploads/2026/07/20/5f00409b6de642f28a0e0a9a518240b5.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20261125T042141Z&X-Amz-"
-    },
-    {
-      "url": "https://xinyuwadao.com/hz-api/client/plate",
-      "method": "GET",
-      "status": 200,
-      "duration_ms": 47,
-      "body_head": "{\"code\":401,\"msg\":\"登录已过期，请重新进入\"}"
-    },
-    {
-      "url": "https://xinyuwadao.com/hz-api/",
-      "method": "GET",
-      "status": 200,
-      "duration_ms": 31,
-      "body_head": "欢迎使用CWY-HZ后台管理框架，请通过前端地址访问。"
-    },
-    {
-      "url": "https://xinyuwadao.com/hz-api/system/config/configKey/sys.index.skinName",
-      "method": "GET",
-      "status": 200,
-      "duration_ms": 93,
-      "body_head": "{\"code\":401,\"msg\":\"认证失败，无法访问系统资源\",\"data\":null}"
-    }
-  ],
-  "status": "PROBED"
+  "probes": [],
+  "status": "NOT_PROVEN",
+  "reason": "缺少 FUTUREWAYU_BASE_URL/FUTUREWAYU_ADMIN_URL：生产只读地址未提供，未执行任何请求"
 }

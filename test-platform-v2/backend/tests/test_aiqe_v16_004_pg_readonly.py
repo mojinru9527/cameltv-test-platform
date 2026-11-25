@@ -82,3 +82,16 @@ def test_committed_evidence_is_honest():
     else:
         assert payload["status"] in {"NOT_PROVEN", "FAIL"}
         assert payload.get("reason") or payload.get("error")
+
+def test_scope_marks_loopback_vs_remote():
+    assert MODULE._scope("postgresql://u:p@127.0.0.1:5432/db") == "loopback"
+    assert MODULE._scope("postgresql://u:p@localhost:5432/db") == "loopback"
+    assert MODULE._scope("postgresql://u:p@db.example:5432/db") == "remote"
+
+
+def test_committed_pass_evidence_declares_scope_and_version():
+    payload = json.loads(EVIDENCE.read_text(encoding="utf-8"))
+    if payload["status"] != "PASS":
+        return
+    assert payload.get("scope") in {"loopback", "remote"}
+    assert payload.get("server_version")
