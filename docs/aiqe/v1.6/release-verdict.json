@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-25T05:17:19.363944+00:00",
+  "generated_at": "2026-11-25T16:37:47.840987+00:00",
   "release": "aiqe-v1.6",
-  "commit_sha": "97bd7a2634bf9fb69ce2fac53ff4530d29b28520",
+  "commit_sha": "feb84e197264414800fce7c78372162f34ba54ef",
   "baseline_release_commit": "9bbbdbb2026bada5c016d663780e03d62fca940d",
   "migration_head": "20261122_v16_catalog_post_merge",
   "summary": {
@@ -87,7 +87,7 @@
       "evidence": "NOT_PROVEN",
       "acceptance": "PENDING",
       "reasons": [
-        "生产阶段未证明: container_egress, monitoring_alerts, postgres_backup_restore, production_smoke, stage1_shadow, stage2_dogfood, stage3_small_traffic, stage4_expand, stage5_ga, vault_production_mode",
+        "生产阶段未证明: container_egress, production_smoke, stage1_shadow, stage2_dogfood, stage3_small_traffic, stage4_expand, stage5_ga",
         "生产验收无独立验收签署"
       ],
       "artifacts": [
@@ -119,7 +119,7 @@
     "Gate E: 平台链路机器结果: 7/10 PASS（commit 960da41784c0）",
     "Gate E: 运行证据索引未达 GA：{\"PASS\": 7, \"FAIL\": 0, \"BLOCKED\": 2, \"NOT_RUN\": 1, \"total\": 10, \"executed\": 7, \"pass_rate_excluding_blocked\": 1.0, \"ga_ready\": false}",
     "Gate E: 缺少 docs/aiqe/v1.6/e2e/product-results.json（产品级 TC 未在隔离 Test 环境执行）",
-    "Gate F: 生产阶段未证明: container_egress, monitoring_alerts, postgres_backup_restore, production_smoke, stage1_shadow, stage2_dogfood, stage3_small_traffic, stage4_expand, stage5_ga, vault_production_mode",
+    "Gate F: 生产阶段未证明: container_egress, production_smoke, stage1_shadow, stage2_dogfood, stage3_small_traffic, stage4_expand, stage5_ga",
     "Gate F: 生产验收无独立验收签署",
     "Gate G: Branch Protection 证据不完整: require_code_owner_review/approving_count>=1(非作者审批)",
     "Gate G: 独立验收未完成: V16-025-R1"

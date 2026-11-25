@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "production-smoke",
+  "scope": "production",
+  "captured_at": "2026-11-26T00:45:00+08:00",
+  "health": {
+    "status": "ok",
+    "version": "2.1.0",
+    "url": "https://swiftbugs.cn/health"
+  },
+  "image": {
+    "tag": "cameltv-tp-backend:v16-api",
+    "digest": "sha256:9c450e3db1239a5f2342e374b4f7b0d03c8abca5d40cdcd5b8460ca4bca0eb9e",
+    "created": "2026-11-22T02:19:31.555420858+08:00"
+  },
+  "source_artifact": {
+    "path": "/opt/aiqe-v16-build-src.tar.gz",
+    "sha256": "77439fc95bee1076dcb65bc6633a6a88fa5da63bb9d8437c2f7c4198987d2417"
+  },
+  "deploy_commit": "",
+  "note": "health 200 + 镜像 digest + 源码 tar sha256 已归档；生产部署未记录 git commit（build 目录无 .git），commit 一致性仍缺。",
+  "status": "PARTIAL"
+}

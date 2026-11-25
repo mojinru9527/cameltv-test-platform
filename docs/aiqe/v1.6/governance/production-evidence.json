@@ -51,31 +51,37 @@
       "note": "用户授权记录存在，但缺少独立验收签署与发布证据包。"
     },
     "postgres_backup_restore": {
-      "status": "NOT_PROVEN",
-      "artifacts": [],
+      "status": "PASS",
+      "artifacts": [
+        "docs/aiqe/v1.6/evidence/production-backup-restore.json"
+      ],
       "doc_refs": [
         "docs/aiqe/v1.6/Production-Readiness.md",
         "docs/aiqe/v1.6/Platform-Residual-Resolution.md"
       ],
-      "note": "178 表一致仅有文本记录；Platform-Residual-Resolution 同时记录 staging PG 恢复 NOT_RUN。未提交 pg_dump/restore 原始日志或校验文件。"
+      "note": "生产 PG 用 pre-M13 dump（sha256 62cf…，112 表）恢复到临时 DB 后删除；恢复流程验证通过，当前 132 表库待下次备份复验。"
     },
     "vault_production_mode": {
-      "status": "NOT_PROVEN",
-      "artifacts": [],
+      "status": "PASS",
+      "artifacts": [
+        "docs/aiqe/v1.6/evidence/production-vault-status.json"
+      ],
       "doc_refs": [
         "docs/aiqe/v1.6/Vault-Transit-Deployment.md",
         "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
       ],
-      "note": "Vault-Transit-Deployment.md 明确写的是开发/测试模式（vault server -dev，重启丢数据）；GA 报告宣称生产 TLS/Shamir/持久化已完成，二者矛盾且无配置脱敏记录。"
+      "note": "生产 Vault：initialized/unsealed、Shamir 3/5、file 持久化挂载、TLS1.2（tls_disable=0）；已归档脱敏 status/config 证据。"
     },
     "monitoring_alerts": {
-      "status": "NOT_PROVEN",
-      "artifacts": [],
+      "status": "PASS",
+      "artifacts": [
+        "docs/aiqe/v1.6/evidence/production-monitoring-alerts.json"
+      ],
       "doc_refs": [
         "docs/aiqe/v1.6/observability/Monitoring-and-Alerts.md",
         "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
       ],
-      "note": "仅记录 21 条规则加载与自测告警投递，未归档 Prometheus/Alertmanager 触发截图或 API 响应。"
+      "note": "Prometheus 3 组/21 条规则加载、Alertmanager ready；自建 AIQEProbe 告警投递后 active、随后 resolved 并清理；未触发真实阈值。"
     },
     "container_egress": {
       "status": "NOT_PROVEN",
@@ -101,11 +107,13 @@
     },
     "production_smoke": {
       "status": "NOT_PROVEN",
-      "artifacts": [],
+      "artifacts": [
+        "docs/aiqe/v1.6/evidence/production-smoke.json"
+      ],
       "doc_refs": [
         "docs/aiqe/v1.6/Production-Deploy-20261123.md"
       ],
-      "note": "swiftbugs.cn health 200 仅为部署记录，缺少容器 digest、部署 commit 与源码 SHA 一致性校验。"
+      "note": "health 200（version 2.1.0）+ 镜像 digest sha256:9c450e… + 源码 tar sha256 77439f…；生产未记录 git commit（build 目录无 .git），commit 一致性仍缺。"
     }
   },
   "independent_verification": {

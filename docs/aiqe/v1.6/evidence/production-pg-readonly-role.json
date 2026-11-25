@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "pg-readonly-role-verification",
+  "scope": "remote",
+  "environment": "production AIQE (aiqe_test database)",
+  "captured_at": "2026-11-26T00:45:00+08:00",
+  "dsn": "postgresql://aiqe_ro:***@<private>/aiqe_test",
+  "server_version": "16.15",
+  "current_user": "aiqe_ro",
+  "checks": [
+    {
+      "name": "no_superuser",
+      "ok": true,
+      "value": false
+    },
+    {
+      "name": "no_createrole",
+      "ok": true,
+      "value": false
+    },
+    {
+      "name": "no_bypassrls",
+      "ok": true,
+      "value": false
+    },
+    {
+      "name": "no_createdb",
+      "ok": true,
+      "value": false
+    },
+    {
+      "name": "write_rejected",
+      "ok": true,
+      "value": "InsufficientPrivilege"
+    },
+    {
+      "name": "default_transaction_read_only",
+      "ok": false,
+      "value": "off"
+    },
+    {
+      "name": "statement_timeout_set",
+      "ok": false,
+      "value": "0"
+    }
+  ],
+  "status": "FAIL",
+  "reason": "生产 aiqe_ro 角色写权限已被拒绝，但 default_transaction_read_only=off 且 statement_timeout=0，未达到只读角色硬化要求"
+}

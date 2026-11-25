@@ -139,8 +139,8 @@ items:
   blocked_by: ''
   owner: ops
   unblock_action: ''
-  note: 真实 PostgreSQL 16.14 只读 role 验证 PASS（scope=loopback，本地 Docker 实例）：非 super/createrole/bypassrls/createdb、写操作被 ReadOnlySqlTransaction 拒绝、default_transaction_read_only=on、statement_timeout=5s；生产/ staging
-    的只读 role 仍由 Gate F 生产证据包追踪（同一脚本复验）。
+  note: 本地真实 PG 只读 role PASS（scope=loopback）；生产 aiqe_ro role 已验证写被拒绝（InsufficientPrivilege），但 default_transaction_read_only=off、statement_timeout=0，未达到硬化要求，已归档 evidence/production-pg-readonly-role.json
+    并保留生产整改项。
 - id: P2-2
   title: V16-024 生产证据（备份恢复/Vault/告警/灰度）未归档
   status: EXTERNAL
@@ -150,7 +150,7 @@ items:
   owner: ops
   unblock_action: 提供生产 SSH 私钥/跳板与 Vault、Prometheus、Alertmanager 的地址和只读 token；提供后按 production-evidence.json 逐阶段归档原始日志
   unlock_action: ''
-  note: 镜像与 PG 只读 role 证据已归档；备份恢复/Vault/告警/灰度仍缺访问。
+  note: 已归档生产证据：Vault（Shamir/unsealed/TLS1.2/file）、PG 备份恢复（pre-M13 dump 112 表恢复后清理）、监控（21 条规则 + synthetic alert 激活/清理）、生产 health/镜像 digest。仍缺 container egress、生产 git commit、Shadow/Dogfood/小流量/扩量/GA 五阶段。
 - id: P2-3
   title: V16-021 历史弱凭据需扫描/轮换
   status: EXTERNAL

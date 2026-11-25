@@ -2307,6 +2307,11 @@ requirements:
   - artifact:docs/aiqe/v1.6/evidence/image-requirements-frozen.txt (镜像内 pip freeze)
   - artifact:docs/aiqe/v1.6/evidence/image-runtime-smoke.json (production 配置 /health 200 + Alembic 单头)
   - script:scripts/aiqe/verify_image_runtime.py (镜像运行态冒烟，一次性随机密钥)
+  - artifact:docs/aiqe/v1.6/evidence/production-vault-status.json (Shamir/unsealed/TLS1.2/file)
+  - artifact:docs/aiqe/v1.6/evidence/production-backup-restore.json (pre-M13 dump 恢复 112 表后清理)
+  - artifact:docs/aiqe/v1.6/evidence/production-monitoring-alerts.json (21 规则 + synthetic alert 激活/清理)
+  - artifact:docs/aiqe/v1.6/evidence/production-smoke.json (health 200 + digest + 源码 tar sha256)
+  - artifact:docs/aiqe/v1.6/evidence/production-pg-readonly-role.json (生产 aiqe_ro 写拒绝；readonly/timeout 未硬化)
   owner: devops
   reviewer: pending
   gaps: []

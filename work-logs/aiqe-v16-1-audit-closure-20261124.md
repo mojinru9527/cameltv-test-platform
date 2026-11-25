@@ -194,7 +194,24 @@ PR 状态：`OPEN` + `MERGEABLE` + `isDraft=true`（未转 Ready、未合并；�
 | 生产/ staging 访问 | 允许 | 本机无生产 SSH 私钥：`root@111.230.155.116` → Permission denied (publickey)；缺 Vault/Prometheus 地址与 token |
 | 凭据系统/历史日志 | 允许 | 缺 Vault/凭据系统地址与只读 token；仓库侧扫描已 CLEAN |
 
-## 20. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
+## 20. 生产证据实采（2026-11-26，SSH 只读/自建数据后清理）
+
+> 用户允许生产访问；使用本机 `~/.ssh/cameltv_tencent_lighthouse` 登录生产主机
+> `111.230.155.116`（hostname VM-0-7-ubuntu），未修改任何现有业务数据。
+
+| 项 | 结果 | 证据 |
+|---|---|---|
+| Vault | initialized/unsealed、Shamir 3/5、file 持久化挂载、TLS1.2（tls_disable=0） | `evidence/production-vault-status.json` |
+| PG 备份恢复 | pre-M13 dump（sha256 `62cf…`，179MB）用 `pg_restore` 恢复到临时 DB（112 表），随后 DROP DB + 删除容器内 dump | `evidence/production-backup-restore.json` |
+| 监控 | Prometheus 3 组/21 条规则、Alertmanager ready；自建 `AIQEProbe` 告警投递 200 → active → resolved 清理 | `evidence/production-monitoring-alerts.json` |
+| 生产 smoke | `https://swiftbugs.cn/health` 200（version 2.1.0）；镜像 `cameltv-tp-backend:v16-api` digest `sha256:9c450e…`；源码 tar sha256 `77439f…`；**生产未记录 git commit** | `evidence/production-smoke.json` |
+| 生产 PG 只读 role | `aiqe_ro` 存在，写被 `InsufficientPrivilege` 拒绝；但 `default_transaction_read_only=off`、`statement_timeout=0` → **FAIL（需硬化）** | `evidence/production-pg-readonly-role.json` |
+| 生产 AIQE test env | `http://127.0.0.1:18000/health` 200（version 2.1.0），项目仅 cameltv / camel1-tv，无 environment 记录 | 现场只读 |
+
+Gate F 进度：`image_self_contained`、`vault_production_mode`、`postgres_backup_restore`、
+`monitoring_alerts` 已 PASS；剩余 `container_egress`、`production_smoke`、stage1–5 未证明。
+
+## 21. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
 
 1. **产品级 TC-AIQE-001..010**：执行器与配置已就绪，需隔离 Test 环境 + per-TC runner
    接入后运行 `python scripts/aiqe/run_product_tc.py --run`。

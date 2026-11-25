@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "production-monitoring-alerts",
+  "scope": "production",
+  "captured_at": "2026-11-26T00:45:00+08:00",
+  "prometheus": {
+    "healthy": true,
+    "rule_groups": 3,
+    "rules": 21,
+    "rule_file": "/etc/prometheus/aiqe-alerts.yml"
+  },
+  "alertmanager": {
+    "ready": "OK",
+    "cluster_status": "ready"
+  },
+  "probe_alert": {
+    "alertname": "AIQEProbe",
+    "source": "aiqe-v16-audit",
+    "posted_status": 200,
+    "active_state_seen": true,
+    "resolved_status": 200,
+    "cleanup": "resolved alert removed from active list"
+  },
+  "note": "告警为自建 synthetic 探针（AIQEProbe），已激活并清理；Prometheus 21 条规则已加载但未触发真实阈值。",
+  "status": "PASS"
+}
