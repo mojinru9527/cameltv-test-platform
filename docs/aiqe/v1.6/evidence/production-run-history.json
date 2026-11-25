@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "production-run-history",
+  "scope": "production AIQE (aiqe_v16_test.test_runs)",
+  "captured_at": "2026-11-26T01:00:00+08:00",
+  "range": {
+    "first": "2026-11-12T15:25:08Z",
+    "last": "2026-11-22T14:18:13Z"
+  },
+  "runs": {
+    "total": 2992,
+    "completed_pass": 2972,
+    "completed_fail": 13,
+    "completed_incomplete": 2,
+    "blocked": 4,
+    "queued": 1
+  },
+  "workflow_definitions_used": 11,
+  "source_types": {
+    "manual": 2991,
+    "regression": 1
+  },
+  "environments": {
+    "null": 2976,
+    "environment_id_1": 16
+  },
+  "note": "真实生产 Run 历史（11 月 12–22 日，2,992 次，97.2% PASS）；source_type 均为 manual/regression，无 shadow/dogfood/小流量/扩量 的阶段标记，因此不能作为 stage1–5 的验收证据。另发现 1 条 QUEUED 长期未完成（2026-11-22），建议运维排查。"
+}

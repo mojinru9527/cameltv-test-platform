@@ -17,11 +17,13 @@
     },
     "stage2_dogfood": {
       "status": "NOT_PROVEN",
-      "artifacts": [],
+      "artifacts": [
+        "docs/aiqe/v1.6/evidence/production-run-history.json"
+      ],
       "doc_refs": [
         "docs/aiqe/v1.6/Staging-V16-Run-Evidence.md"
       ],
-      "note": "同上：仅有 Run ID 文本记录，无归档产物。"
+      "note": "生产环境有 2,992 次真实 Run（2026-11-12..22，2,972 PASS），但 source_type 均为 manual/regression，无 dogfood 阶段标记；另发现 1 条 QUEUED 长期未完成。stage 仍 NOT_PROVEN。"
     },
     "stage3_small_traffic": {
       "status": "NOT_PROVEN",
