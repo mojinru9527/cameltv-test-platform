@@ -259,6 +259,17 @@ def _run(command: list[str], cwd: Path = ROOT) -> subprocess.CompletedProcess:
     )
 
 
+def _first_difference(left: str, right: str) -> str:
+    for index, (a, b) in enumerate(zip(left.splitlines(), right.splitlines()), 1):
+        if a != b:
+            return f"line {index}: committed={a[:120]!r} generated={b[:120]!r}"
+    if len(left.splitlines()) != len(right.splitlines()):
+        return (
+            f"行数不同 committed={len(left.splitlines())} generated={len(right.splitlines())}"
+        )
+    return "内容相同但字节不同（检查行尾/编码）"
+
+
 def check_generated_docs() -> list[str]:
     """生成型文档必须与生成器输出一致；禁止手工编辑。"""
     errors: list[str] = []
@@ -303,10 +314,16 @@ def check_generated_docs() -> list[str]:
                 ("E2E-Coverage-and-Blockers.md", e2e_md),
             ):
                 committed = DOCS / committed_name
-                if not committed.exists() or committed.read_text(
-                    encoding="utf-8"
-                ) != generated.read_text(encoding="utf-8"):
-                    errors.append(f"GENERATED: {committed_name} 与生成器输出不一致")
+                if not committed.exists():
+                    errors.append(f"GENERATED: {committed_name} 不存在")
+                    continue
+                committed_text = committed.read_text(encoding="utf-8")
+                generated_text = generated.read_text(encoding="utf-8")
+                if committed_text != generated_text:
+                    errors.append(
+                        f"GENERATED: {committed_name} 与生成器输出不一致（"
+                        f"{_first_difference(committed_text, generated_text)}）"
+                    )
     return errors
 
 
