@@ -145,7 +145,24 @@
 | Gate G 工具 | 新增 `update_branch_protection.py`：dry-run 默认；`--apply` 前强制 ≥2 collaborator 且 reviewer 有 push+ 权限（单账号直接启用会锁死合并）；只改 pull_request 规则，保留 required checks/禁强推/禁删除；5 条离线测试 |
 | 推送状态 | 已推送 18 commits 并创建 PR #635；后续 CI 修复 commits（`6455f6d5`、`ae449b14`、`fc74e5cc`）待 GitHub 网络恢复后推送（后台重试中） |
 
-## 15. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
+## 15. PR #635 最终 CI 状态（2026-11-25）
+
+| Check | 结果 |
+|---|---|
+| Traceability Gate | ✅ pass |
+| Unit / Integration Gate | ✅ pass |
+| Runtime / Negative Security Gate | ✅ pass |
+| Build & Quality Gate | ✅ pass |
+| Migration Gate | ✅ pass |
+| AI/Git 交付策略 | ✅ pass |
+| 后端全新检出与全量回归 | ✅ pass（11m06s） |
+| 前端全新检出与全量回归 | ✅ pass（5m18s） |
+| Release Gate (GA verdict) | skipped（仅 release tag / release 分支触发） |
+
+PR 状态：`OPEN` + `MERGEABLE` + `isDraft=true`（未转 Ready、未合并；按审计要求
+合入前需非作者 Reviewer 与 ruleset 非作者审批）。
+
+## 16. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
 
 1. **产品级 TC-AIQE-001..010**：执行器与配置已就绪，需隔离 Test 环境 + per-TC runner
    接入后运行 `python scripts/aiqe/run_product_tc.py --run`。
