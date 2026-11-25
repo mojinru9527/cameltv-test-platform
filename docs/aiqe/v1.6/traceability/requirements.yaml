@@ -2,10 +2,9 @@
 #
 # 状态语义：NOT_STARTED < PARTIAL < IMPLEMENTED < VERIFIED（交付/自动证据）；
 # ACCEPTED 需非原作者独立 Reviewer 签署，且 acceptance.status=REVIEWED。
-# VERIFIED 不等于独立验收：acceptance.status 为 NOT_REVIEWED 时 Gate G 不得宣称完成。
+# VERIFIED 不等于独立验收：acceptance.status=NOT_REVIEWED 时 Gate G 不得宣称完成。
 # 运行时证据必须有可校验的机器产物；仅有现场记录时 runtime_evidence.status=NOT_PROVEN。
 # 本文件由人工维护，机器校验见 scripts/aiqe/check_traceability.py。
-
 schema_version: '2.0'
 release: aiqe-v1.6
 baseline:
@@ -2312,6 +2311,7 @@ requirements:
   - artifact:docs/aiqe/v1.6/evidence/production-monitoring-alerts.json (21 规则 + synthetic alert 激活/清理)
   - artifact:docs/aiqe/v1.6/evidence/production-smoke.json (health 200 + digest + 源码 tar sha256)
   - artifact:docs/aiqe/v1.6/evidence/production-pg-readonly-role.json (生产 aiqe_ro 写拒绝；readonly/timeout 未硬化)
+  - artifact:docs/aiqe/v1.6/evidence/production-container-egress.json (DOCKER-USER 空，NetworkPolicy 未在 Docker 生效)
   owner: devops
   reviewer: pending
   gaps: []

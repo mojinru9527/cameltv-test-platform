@@ -85,11 +85,13 @@
     },
     "container_egress": {
       "status": "NOT_PROVEN",
-      "artifacts": [],
+      "artifacts": [
+        "docs/aiqe/v1.6/evidence/production-container-egress.json"
+      ],
       "doc_refs": [
         "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
       ],
-      "note": "GA 报告第 49 行勾选项自身写着“集群实测 NOT_RUN”，不能计 PASS。"
+      "note": "K8s egress NetworkPolicy 文件存在，但生产为 Docker 且 DOCKER-USER 链为空，未证明 allowlist 生效。"
     },
     "image_self_contained": {
       "status": "PASS",
@@ -106,14 +108,14 @@
       "note": "2026-11-25 从 commit 1fa1c425d 干净构建 target=api：image id sha256:be8430b6…、tar sha256 13363e00…、sqlglot 30.33.0 import OK、CycloneDX SBOM 251 components；运行态冒烟 PASS（production 配置 + /health 200 + Alembic 单头 20261122_v16_catalog_post_merge）；旧镜像 aiqe-prod-20261119-1 无 sqlglot。"
     },
     "production_smoke": {
-      "status": "NOT_PROVEN",
+      "status": "PASS",
       "artifacts": [
         "docs/aiqe/v1.6/evidence/production-smoke.json"
       ],
       "doc_refs": [
         "docs/aiqe/v1.6/Production-Deploy-20261123.md"
       ],
-      "note": "health 200（version 2.1.0）+ 镜像 digest sha256:9c450e… + 源码 tar sha256 77439f…；生产未记录 git commit（build 目录无 .git），commit 一致性仍缺。"
+      "note": "health 200（2.1.0）、镜像 digest sha256:9c450e…、源码 tar sha256 77439f…；运行容器源文件 blob 与 commit 9bbbdbb 一致。"
     }
   },
   "independent_verification": {

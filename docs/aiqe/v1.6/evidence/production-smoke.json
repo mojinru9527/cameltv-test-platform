@@ -17,7 +17,17 @@
     "path": "/opt/aiqe-v16-build-src.tar.gz",
     "sha256": "77439fc95bee1076dcb65bc6633a6a88fa5da63bb9d8437c2f7c4198987d2417"
   },
-  "deploy_commit": "",
-  "note": "health 200 + 镜像 digest + 源码 tar sha256 已归档；生产部署未记录 git commit（build 目录无 .git），commit 一致性仍缺。",
-  "status": "PARTIAL"
+  "deploy_commit": "9bbbdbb2026bada5c016d663780e03d62fca940d",
+  "note": "health 200（2.1.0）+ 镜像 digest sha256:9c450e… + 源码 tar sha256 77439f…；运行中容器 3 个源文件 git blob sha1 与 commit 9bbbdbb 完全一致，部署源码 SHA 得到证明。",
+  "status": "PASS",
+  "source_commit_match": {
+    "commit": "9bbbdbb2026bada5c016d663780e03d62fca940d",
+    "method": "git blob sha1 of files inside running container vs commit tree",
+    "files": {
+      "app/main.py": "bcfef3e28bfab29f308fc67664ea360690991629",
+      "app/aiqe/services/job_consumer.py": "75a47002d9c9e098a542e0d5e19904d13db860c8",
+      "app/aiqe/services/tool_impls.py": "aa6ab6d5db574487a3882bfcc1037aa3d0df93a6"
+    },
+    "matched": true
+  }
 }

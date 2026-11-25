@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "production-container-egress",
+  "scope": "production",
+  "captured_at": "2026-11-26T00:50:00+08:00",
+  "policy_file_present": "deploy/aiqe/egress-networkpolicy.yaml",
+  "runtime": "docker bridge networks (aiqe-test-net, cameltv-tp-production_default)",
+  "docker_user_chain": "empty (-N DOCKER-USER only)",
+  "enforced": false,
+  "note": "仓库存在 K8s NetworkPolicy 定义，但生产为 Docker 部署且 DOCKER-USER 链为空，未证明 egress allowlist 生效。",
+  "status": "NOT_PROVEN"
+}
