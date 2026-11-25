@@ -154,7 +154,7 @@ items:
   unblock_action: 提供生产 SSH 私钥/跳板与 Vault、Prometheus、Alertmanager 的地址和只读 token；提供后按 production-evidence.json 逐阶段归档原始日志
   unlock_action: ''
   note: 已归档生产证据：Vault（Shamir/unsealed/TLS1.2/file）、PG 备份恢复（pre-M13 dump 112 表恢复后清理）、监控（21 条规则 + synthetic alert 激活/清理）、生产 smoke（health 200 + 镜像 digest + 源文件 blob 与 commit 9bbbdbb 一致）。仍缺 container egress（DOCKER-USER
-    为空，NetworkPolicy 未落地 Docker）与 Shadow/Dogfood/小流量/扩量/GA 五阶段。
+    为空，NetworkPolicy 未落地 Docker）与 Shadow/Dogfood/小流量/扩量/GA 五阶段。 另：egress 候选清单已生成（api.deepseek.com:443、Vault/webhook 内网、DNS、腾讯云 agent），尚未落地 iptables。
 - id: P2-3
   title: V16-021 历史弱凭据需扫描/轮换
   status: EXTERNAL

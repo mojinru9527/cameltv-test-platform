@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "egress-allowlist-candidates",
+  "captured_at": "2026-11-26T01:15:00+08:00",
+  "scope": "production VM 111.230.155.116 (AIQE v16 containers)",
+  "candidates": [
+    {
+      "host": "api.deepseek.com",
+      "ports": [
+        443
+      ],
+      "source": "AIQE backend env AI_API_BASE_URL"
+    },
+    {
+      "host": "aiqe-vault-prod",
+      "ports": [
+        8200
+      ],
+      "source": "AIQE backend env AIQE_VAULT_ADDR（容器内网）"
+    },
+    {
+      "host": "aiqe-monitoring-webhook",
+      "ports": [
+        5001
+      ],
+      "source": "Alertmanager webhook receiver（容器内网）"
+    }
+  ],
+  "internal_networks": [
+    "127.0.0.0/8",
+    "10.0.0.0/8",
+    "172.16.0.0/12",
+    "192.168.0.0/16"
+  ],
+  "dns": [
+    "UDP/TCP 53 to Docker embedded DNS / host resolver"
+  ],
+  "observed_established_outside": [
+    "169.254.0.55:5574 (腾讯云 YDService)",
+    "169.254.0.138:8186 (腾讯云 tat_agent)"
+  ],
+  "proposed_rules": [
+    "允许 ESTABLISHED,RELATED",
+    "允许 127/8、10/8、172.16/12、192.168/16（容器互访/Vault/webhook）",
+    "允许 UDP/TCP 53（DNS）",
+    "允许 api.deepseek.com:443（解析后 IP，需随 DNS 变化维护）",
+    "允许 169.254.0.55:5574 与 169.254.0.138:8186（腾讯云 agent，若保留）",
+    "其余 Docker 出站 DROP"
+  ],
+  "applied": false,
+  "note": "候选清单与建议规则；未修改生产 iptables。需确认出口清单后再落地 DOCKER-USER。",
+  "status": "CANDIDATES_READY"
+}
