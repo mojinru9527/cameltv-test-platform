@@ -44,3 +44,11 @@
 # ── 验收测试 ──
 /test-platform-v2/backend/tests/test_aiqe_v16_*.py             @mojinru9527
 /test-platform-v2/backend/tests/e2e/aiqe/                      @mojinru9527
+
+# ── 独立 QA 责任域（V16-025 Gate G）──
+# MoojinR（qa）为独立验收人；接受 collaborator 邀请后生效。
+/docs/aiqe/v1.6/traceability/                                  @mojinru9527 @MoojinR
+/docs/aiqe/v1.6/acceptance/                                    @MoojinR
+/test-platform-v2/backend/tests/test_aiqe_v16_025_*.py         @mojinru9527 @MoojinR
+/test-platform-v2/backend/tests/test_aiqe_release_audit.py      @mojinru9527 @MoojinR
+

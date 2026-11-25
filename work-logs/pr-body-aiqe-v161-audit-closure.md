@@ -36,8 +36,8 @@
 - 安全影响（权限/Secret/网络/租户/外部副作用）：写工具保持 UNAVAILABLE；create_regression_plan 只读提案（side_effects=NONE）；read_git_diff 仓库路径服务端固定、SHA 严格 40 位；project_id 不可覆盖；TC-006 明文零落库断言保留；TargetPolicy 负向场景增加受控目标 0 请求断言。
 - 迁移影响（迁移文件、回滚/前滚方案）：无新增迁移；基线 head 仍为 20261122_v16_catalog_post_merge，--check-baseline 强制单头。
 - 证据（commit SHA / CI Run / 测试报告 / Run ID / Job ID / Artifact ID）：commit:9bbbdbb2026bada5c016d663780e03d62fca940d, artifact:docs/aiqe/v1.6/e2e/platform-results.json, artifact:docs/aiqe/v1.6/evidence/evidence-index.json, artifact:docs/aiqe/v1.6/release-verdict.json, artifact:docs/aiqe/v1.6/V1.6.1-Audit-Closure-Report.md, artifact:docs/aiqe/v1.6/governance/branch-protection.json, pytest:tests/test_aiqe_release_audit.py (11 passed)
-- Reviewer（非原实现者）：pending（需独立账号，合入前必须签署）
-- Reviewer 角色域（须与 owner 不同）：pending
+- Reviewer（非原实现者）：MoojinR（qa；邀请待接受）
+- Reviewer 角色域（须与 owner 不同）：qa
 - 独立验收记录（如本 PR 触发 REVIEWED）：待 Reviewer 用 python scripts/aiqe/record_acceptance.py 生成后随 PR 提交
 
 ---
