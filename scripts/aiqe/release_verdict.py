@@ -262,7 +262,7 @@ def build_verdict() -> dict[str, Any]:
             "缺少 docs/aiqe/v1.6/evidence/pg-readonly-role.json（真实 PG 只读角色未验证）"
         )
     else:
-        gates["B"].artifacts.append(str(PG_READONLY_EVIDENCE.relative_to(ROOT)))
+        gates["B"].artifacts.append(PG_READONLY_EVIDENCE.relative_to(ROOT).as_posix())
         pg_status = str(pg_evidence.get("status") or "").upper()
         if pg_status == FAIL:
             gates["B"].evidence = FAIL
@@ -294,7 +294,7 @@ def build_verdict() -> dict[str, Any]:
     if platform is None:
         gate_e.reasons.append("缺少 docs/aiqe/v1.6/e2e/platform-results.json（平台链路机器结果）")
     else:
-        gate_e.artifacts.append(str(PLATFORM_RESULTS.relative_to(ROOT)))
+        gate_e.artifacts.append(PLATFORM_RESULTS.relative_to(ROOT).as_posix())
         passed = sum(1 for item in platform.get("tests") or [] if str(item.get("status")) == PASS)
         gate_e.reasons.append(
             f"平台链路机器结果: {passed}/{len(platform.get('tests') or [])} PASS"
@@ -305,7 +305,7 @@ def build_verdict() -> dict[str, Any]:
             "缺少 docs/aiqe/v1.6/evidence/evidence-index.json（build_evidence_index.py 产物）"
         )
     else:
-        gate_e.artifacts.append(str(RUNTIME_EVIDENCE_INDEX.relative_to(ROOT)))
+        gate_e.artifacts.append(RUNTIME_EVIDENCE_INDEX.relative_to(ROOT).as_posix())
         summary = runtime_index.get("summary") or {}
         if not summary.get("ga_ready"):
             gate_e.reasons.append(
@@ -321,7 +321,7 @@ def build_verdict() -> dict[str, Any]:
             "缺少 docs/aiqe/v1.6/e2e/product-results.json（产品级 TC 未在隔离 Test 环境执行）"
         )
     else:
-        gate_e.artifacts.append(str(PRODUCT_RESULTS.relative_to(ROOT)))
+        gate_e.artifacts.append(PRODUCT_RESULTS.relative_to(ROOT).as_posix())
         summary = product_results.get("summary") or {}
         if str(product_results.get("status")).upper() == NOT_PROVEN or not summary:
             gate_e.reasons.append(
@@ -347,7 +347,7 @@ def build_verdict() -> dict[str, Any]:
         gate_f.evidence = NOT_PROVEN
         gate_f.reasons.append("缺少 docs/aiqe/v1.6/governance/production-evidence.json")
     else:
-        gate_f.artifacts.append(str(PRODUCTION_EVIDENCE.relative_to(ROOT)))
+        gate_f.artifacts.append(PRODUCTION_EVIDENCE.relative_to(ROOT).as_posix())
         stages = production.get("stages") or {}
         not_proven = [
             name
@@ -380,7 +380,7 @@ def build_verdict() -> dict[str, Any]:
     if protection is None:
         gate_g.reasons.append("缺少 docs/aiqe/v1.6/governance/branch-protection.json")
     else:
-        gate_g.artifacts.append(str(BRANCH_PROTECTION.relative_to(ROOT)))
+        gate_g.artifacts.append(BRANCH_PROTECTION.relative_to(ROOT).as_posix())
         if not protection.get("verified"):
             gate_g.reasons.append(
                 "GitHub Branch Protection / Ruleset 未验证："
@@ -467,28 +467,28 @@ def build_verdict() -> dict[str, Any]:
         "blocking": blocking,
         "evidence_files": {
             "branch_protection": (
-                str(BRANCH_PROTECTION.relative_to(ROOT)) if protection is not None else None
+                BRANCH_PROTECTION.relative_to(ROOT).as_posix() if protection is not None else None
             ),
             "production_evidence": (
-                str(PRODUCTION_EVIDENCE.relative_to(ROOT)) if production is not None else None
+                PRODUCTION_EVIDENCE.relative_to(ROOT).as_posix() if production is not None else None
             ),
             "platform_results": (
-                str(PLATFORM_RESULTS.relative_to(ROOT)) if platform is not None else None
+                PLATFORM_RESULTS.relative_to(ROOT).as_posix() if platform is not None else None
             ),
             "product_results": (
-                str(PRODUCT_RESULTS.relative_to(ROOT)) if product_results is not None else None
+                PRODUCT_RESULTS.relative_to(ROOT).as_posix() if product_results is not None else None
             ),
             "runtime_evidence_index": (
-                str(RUNTIME_EVIDENCE_INDEX.relative_to(ROOT)) if runtime_index is not None else None
+                RUNTIME_EVIDENCE_INDEX.relative_to(ROOT).as_posix() if runtime_index is not None else None
             ),
             "pg_readonly_role": (
-                str(PG_READONLY_EVIDENCE.relative_to(ROOT)) if pg_evidence is not None else None
+                PG_READONLY_EVIDENCE.relative_to(ROOT).as_posix() if pg_evidence is not None else None
             ),
         },
         "traceability": {
             "strict_validation": traceability_ok,
             "errors": traceability_reasons,
-            "snapshot": str(TRACEABILITY_SNAPSHOT.relative_to(ROOT)),
+            "snapshot": TRACEABILITY_SNAPSHOT.relative_to(ROOT).as_posix(),
         },
     }
 
@@ -619,7 +619,7 @@ def _render_e2e_doc(verdict: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
-            f"- 平台结果文件：`{PLATFORM_RESULTS.relative_to(ROOT)}`（环境 "
+            f"- 平台结果文件：`{PLATFORM_RESULTS.relative_to(ROOT).as_posix()}`（环境 "
             f"`{platform.get('environment')}`，机器产物含 Run/Job/Assertion/Artifact ID）。",
             "- 平台链路 5 类负向/阻断场景按 BLOCKED/NOT_RUN 记录，不计入 PASS；"
             "它们不构成产品验收证据。",

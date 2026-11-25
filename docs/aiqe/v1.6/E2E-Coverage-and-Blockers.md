@@ -36,5 +36,5 @@
 | TC-PLATFORM-009 | **PASS** | 950264bc | 1 | 27e762e5 | 0694e4c8 | 5d293100,38929159 |  |
 | TC-PLATFORM-010 | **NOT_RUN** | — | — | — | — | — | Contract Service 平台行为测试，无 TestRun/UI/DB 链路，不能计为产品 TC-001 运行证据 |
 
-- 平台结果文件：`docs\aiqe\v1.6\e2e\platform-results.json`（环境 `local-20261124`，机器产物含 Run/Job/Assertion/Artifact ID）。
+- 平台结果文件：`docs/aiqe/v1.6/e2e/platform-results.json`（环境 `local-20261124`，机器产物含 Run/Job/Assertion/Artifact ID）。
 - 平台链路 5 类负向/阻断场景按 BLOCKED/NOT_RUN 记录，不计入 PASS；它们不构成产品验收证据。

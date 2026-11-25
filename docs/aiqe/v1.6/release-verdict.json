@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-25T02:19:41.657070+00:00",
+  "generated_at": "2026-11-25T02:33:14.369756+00:00",
   "release": "aiqe-v1.6",
-  "commit_sha": "3898d7f73b194e0db9e1f553e0569405e4d11381",
+  "commit_sha": "2ca1e89f5126c42912182752fc8752843cb7e879",
   "baseline_release_commit": "9bbbdbb2026bada5c016d663780e03d62fca940d",
   "migration_head": "20261122_v16_catalog_post_merge",
   "summary": {
@@ -39,7 +39,7 @@
         "PostgreSQL 只读角色未验证: 尚无真实 PostgreSQL 只读角色验证：SQLite mode=ro 不能替代生产 PG role。请运维创建只读账号后运行 python scripts/aiqe/check_pg_readonly_role.py --check --dsn <dsn> 覆盖本文件。"
       ],
       "artifacts": [
-        "docs\\aiqe\\v1.6\\evidence\\pg-readonly-role.json"
+        "docs/aiqe/v1.6/evidence/pg-readonly-role.json"
       ]
     },
     "C": {
@@ -77,8 +77,8 @@
         "缺少 docs/aiqe/v1.6/e2e/product-results.json（产品级 TC 未在隔离 Test 环境执行）"
       ],
       "artifacts": [
-        "docs\\aiqe\\v1.6\\e2e\\platform-results.json",
-        "docs\\aiqe\\v1.6\\evidence\\evidence-index.json"
+        "docs/aiqe/v1.6/e2e/platform-results.json",
+        "docs/aiqe/v1.6/evidence/evidence-index.json"
       ]
     },
     "F": {
@@ -92,7 +92,7 @@
         "生产验收无独立验收签署"
       ],
       "artifacts": [
-        "docs\\aiqe\\v1.6\\governance\\production-evidence.json"
+        "docs/aiqe/v1.6/governance/production-evidence.json"
       ]
     },
     "G": {
@@ -106,7 +106,7 @@
         "独立验收未完成: V16-025-R1"
       ],
       "artifacts": [
-        "docs\\aiqe\\v1.6\\governance\\branch-protection.json"
+        "docs/aiqe/v1.6/governance/branch-protection.json"
       ]
     }
   },
@@ -127,16 +127,16 @@
     "Gate G: 独立验收未完成: V16-025-R1"
   ],
   "evidence_files": {
-    "branch_protection": "docs\\aiqe\\v1.6\\governance\\branch-protection.json",
-    "production_evidence": "docs\\aiqe\\v1.6\\governance\\production-evidence.json",
-    "platform_results": "docs\\aiqe\\v1.6\\e2e\\platform-results.json",
+    "branch_protection": "docs/aiqe/v1.6/governance/branch-protection.json",
+    "production_evidence": "docs/aiqe/v1.6/governance/production-evidence.json",
+    "platform_results": "docs/aiqe/v1.6/e2e/platform-results.json",
     "product_results": null,
-    "runtime_evidence_index": "docs\\aiqe\\v1.6\\evidence\\evidence-index.json",
-    "pg_readonly_role": "docs\\aiqe\\v1.6\\evidence\\pg-readonly-role.json"
+    "runtime_evidence_index": "docs/aiqe/v1.6/evidence/evidence-index.json",
+    "pg_readonly_role": "docs/aiqe/v1.6/evidence/pg-readonly-role.json"
   },
   "traceability": {
     "strict_validation": true,
     "errors": [],
-    "snapshot": "docs\\aiqe\\v1.6\\traceability\\matrix-snapshot.json"
+    "snapshot": "docs/aiqe/v1.6/traceability/matrix-snapshot.json"
   }
 }
