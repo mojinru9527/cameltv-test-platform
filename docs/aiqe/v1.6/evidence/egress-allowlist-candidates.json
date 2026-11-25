@@ -47,7 +47,30 @@
     "允许 169.254.0.55:5574 与 169.254.0.138:8186（腾讯云 agent，若保留）",
     "其余 Docker 出站 DROP"
   ],
-  "applied": false,
+  "applied": true,
   "note": "候选清单与建议规则；未修改生产 iptables。需确认出口清单后再落地 DOCKER-USER。",
-  "status": "CANDIDATES_READY"
+  "status": "PASS",
+  "applied_at": "2026-11-26T01:24:00+08:00",
+  "scope_container": "aiqe-v16-backend (172.19.0.9)",
+  "rules": [
+    "-s 172.19.0.9/32 -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN",
+    "-s 172.19.0.9/32 -d 127.0.0.0/8 -j RETURN",
+    "-s 172.19.0.9/32 -d 10.0.0.0/8 -j RETURN",
+    "-s 172.19.0.9/32 -d 172.16.0.0/12 -j RETURN",
+    "-s 172.19.0.9/32 -d 192.168.0.0/16 -j RETURN",
+    "-s 172.19.0.9/32 -p udp --dport 53 -j RETURN",
+    "-s 172.19.0.9/32 -d 36.249.95.100/32 -p tcp --dport 443 -j RETURN",
+    "-s 172.19.0.9/32 -d 221.11.190.218/32 -p tcp --dport 443 -j RETURN",
+    "-s 172.19.0.9/32 -d 211.97.92.89/32 -p tcp --dport 443 -j RETURN",
+    "-s 172.19.0.9/32 -d 211.97.84.77/32 -p tcp --dport 443 -j RETURN",
+    "-s 172.19.0.9/32 -d 116.162.169.116/32 -p tcp --dport 443 -j RETURN",
+    "-s 172.19.0.9/32 -j DROP"
+  ],
+  "verification": {
+    "deepseek": "HTTP 401 Authorization Required（网络可达，符合无 Key 预期）",
+    "example_blocked": "URLError [Errno 101] Network is unreachable（默认拒绝生效）",
+    "production_health": "200 {\"status\":\"ok\",\"version\":\"2.1.0\"}",
+    "aiqe_health": "200 {\"status\":\"ok\",\"version\":\"2.1.0\"}"
+  },
+  "maintenance_note": "api.deepseek.com 的解析 IP 变化时需同步更新规则；默认拒绝仅作用于 AIQE backend 源 IP。"
 }

@@ -6,7 +6,29 @@
   "policy_file_present": "deploy/aiqe/egress-networkpolicy.yaml",
   "runtime": "docker bridge networks (aiqe-test-net, cameltv-tp-production_default)",
   "docker_user_chain": "empty (-N DOCKER-USER only)",
-  "enforced": false,
-  "note": "仓库存在 K8s NetworkPolicy 定义，但生产为 Docker 部署且 DOCKER-USER 链为空，未证明 egress allowlist 生效。",
-  "status": "NOT_PROVEN"
+  "enforced": true,
+  "note": "DOCKER-USER 按 AIQE backend 源 IP 落地 allowlist；DeepSeek 可达、example.com 被拒绝，生产/AIQE health 正常。",
+  "status": "PASS",
+  "applied_at": "2026-11-26T01:24:00+08:00",
+  "scope_container": "aiqe-v16-backend (172.19.0.9)",
+  "rules": [
+    "-s 172.19.0.9/32 -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN",
+    "-s 172.19.0.9/32 -d 127.0.0.0/8 -j RETURN",
+    "-s 172.19.0.9/32 -d 10.0.0.0/8 -j RETURN",
+    "-s 172.19.0.9/32 -d 172.16.0.0/12 -j RETURN",
+    "-s 172.19.0.9/32 -d 192.168.0.0/16 -j RETURN",
+    "-s 172.19.0.9/32 -p udp --dport 53 -j RETURN",
+    "-s 172.19.0.9/32 -d 36.249.95.100/32 -p tcp --dport 443 -j RETURN",
+    "-s 172.19.0.9/32 -d 221.11.190.218/32 -p tcp --dport 443 -j RETURN",
+    "-s 172.19.0.9/32 -d 211.97.92.89/32 -p tcp --dport 443 -j RETURN",
+    "-s 172.19.0.9/32 -d 211.97.84.77/32 -p tcp --dport 443 -j RETURN",
+    "-s 172.19.0.9/32 -d 116.162.169.116/32 -p tcp --dport 443 -j RETURN",
+    "-s 172.19.0.9/32 -j DROP"
+  ],
+  "verification": {
+    "deepseek": "HTTP 401 Authorization Required（网络可达，符合无 Key 预期）",
+    "example_blocked": "URLError [Errno 101] Network is unreachable（默认拒绝生效）",
+    "production_health": "200 {\"status\":\"ok\",\"version\":\"2.1.0\"}",
+    "aiqe_health": "200 {\"status\":\"ok\",\"version\":\"2.1.0\"}"
+  }
 }

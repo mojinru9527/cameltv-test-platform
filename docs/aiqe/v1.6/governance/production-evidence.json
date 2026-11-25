@@ -86,14 +86,15 @@
       "note": "Prometheus 3 组/21 条规则加载、Alertmanager ready；自建 AIQEProbe 告警投递后 active、随后 resolved 并清理；未触发真实阈值。"
     },
     "container_egress": {
-      "status": "NOT_PROVEN",
+      "status": "PASS",
       "artifacts": [
+        "docs/aiqe/v1.6/evidence/egress-allowlist-candidates.json",
         "docs/aiqe/v1.6/evidence/production-container-egress.json"
       ],
       "doc_refs": [
         "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
       ],
-      "note": "K8s egress NetworkPolicy 文件存在，但生产为 Docker 且 DOCKER-USER 链为空，未证明 allowlist 生效。"
+      "note": "DOCKER-USER allowlist 已按 aiqe-v16-backend 源 IP 生效：DeepSeek 可达、example.com 拒绝、生产/AIQE health 200；解析 IP 变更需维护。"
     },
     "image_self_contained": {
       "status": "PASS",

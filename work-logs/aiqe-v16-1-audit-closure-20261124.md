@@ -234,7 +234,17 @@ Gate F 进度：`image_self_contained`、`vault_production_mode`、`postgres_bac
 - 证据：`docs/aiqe/v1.6/evidence/futurewayu-aiqe-workflow.json`。
 - 产品 TC 仍 0/10：缺 Admin UI/Public API/前台 Playwright 步骤，不伪造 PASS。
 
-## 23. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
+## 23. egress allowlist 落地 + 验收清单（2026-11-26）
+
+- 用户确认候选清单后，按 **aiqe-v16-backend (172.19.0.9)** 源 IP 在 DOCKER-USER 落地 allowlist：
+  ESTABLISHED/RELATED、内网网段、DNS、api.deepseek.com 解析 IP:443，其余 DROP；
+  验证：DeepSeek 网络可达（401 无 Key）、example.com `Network is unreachable`、
+  生产/AIQE health 200。证据 `evidence/egress-allowlist-candidates.json`、
+  `production-container-egress.json`；Gate F `container_egress`=PASS。
+- 生成 70 条独立验收清单：`docs/aiqe/v1.6/acceptance/REVIEW-CHECKLIST-MoojinR.md`
+  与 `MoojinR-review-manifest.json`（MoojinR / qa，0/70 待签）。
+
+## 24. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
 
 1. **产品级 TC-AIQE-001..010**：执行器与配置已就绪，需隔离 Test 环境 + per-TC runner
    接入后运行 `python scripts/aiqe/run_product_tc.py --run`。
