@@ -915,7 +915,8 @@ def _validate_pr_fields(body: str, report: Report, *, pr_author: str) -> None:
         _, value = _find_field(fields, key)
         if not value:
             continue
-        for token in re.split(r"[,，;\s]+", value):
+        for token in re.split(r"[,，;；\s]+", value):
+            token = token.strip().strip("。.")
             if "::" in token:
                 _parse_test_ref(token, report, issue_id=f"PR:{key}")
     _, role_raw = _find_field(fields, "Reviewer 角色域")
