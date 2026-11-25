@@ -21,10 +21,11 @@ items:
   evidence:
   - docs/aiqe/v1.6/governance/branch-protection.json
   - scripts/aiqe/check_branch_protection.py
-  blocked_by: GitHub Ruleset protect-main(#18351498) 已通过 API 捕获：3 个 required checks、禁强推/禁删除、必须 PR；但 require_code_owner_review=false 且 required_approving_review_count=0，非作者审批未启用（单账号仓库）
+  blocked_by: 用户已提供独立账号邮箱 2602997810@qq.com（角色域 qa），但 GitHub API 只接受 username；按邮箱邀请需仓库管理员在 GitHub UI 操作。当前仓库仍只有 mojinru9527 一个 collaborator，ruleset 仍为非作者审批关闭
   owner: repo-admin
-  unblock_action: 在 ruleset 中启用 require_code_owner_review=true 或 approving_review_count>=1，并邀请独立 QA/Security 账号；之后重跑 python scripts/aiqe/check_branch_protection.py --capture 与 release_verdict.py --write
-  note: 证据已从“未验证”升级为真实 API 导出；剩余缺口收敛为“非作者审批未启用”。
+  unblock_action: 请提供该账号的 GitHub username（或由你在 GitHub Settings → Collaborators 按邮箱邀请），接受后运行 update_branch_protection.py --apply 并重抓 branch-protection.json
+  note: 待 GitHub username / 邮件邀请完成；其余代码与工具已就绪。
+  unlock_action: ''
 - id: P0-3
   title: PR 字段校验只查关键词，不校验真实填写
   status: CLOSED
@@ -72,10 +73,11 @@ items:
   - docs/aiqe/v1.6/e2e/product-tc-config.yaml
   - scripts/aiqe/run_product_tc.py
   - test-platform-v2/backend/tests/test_aiqe_v16_017_product_runner.py
-  blocked_by: 未来娃屿生产入口与公开 C 端 banner 接口已验证可达（200 真实只读数据），受保护接口 401 符合预期；仍缺只读登录态 Token 与只读 DB DSN，且只读权限无法覆盖需要写操作/设备/Benchmark 的产品 TC
+  blocked_by: 用户已允许生产写测试（仅限自建的测试数据，测试后必须清理）；但缺未来娃屿后台/C 端登录态或只读+写 Token，且产品 TC-001..010 仍需设备/Benchmark 等前置
   owner: qa-team
-  unblock_action: 提供 FUTUREWAYU_BASE_URL / FUTUREWAYU_ADMIN_URL / 只读 Token / DB 只读 DSN 后运行 python scripts/aiqe/per_tc/futurewayu_production_readonly.py；产品级 PASS 仍需专用可写 Test 环境（或用户书面接受只读受限结论并保持 NOT_PROVEN）
-  note: 只读实测：7 次 GET（2×200 页面、2×200 banner 数据、3×401/404 门禁）；补充 platform 参数后 banner 由 500 变为 200，无任何写请求；产品级 PASS 仍为 0/10。
+  unblock_action: 提供未来娃屿测试账号（或后台 Token）与允许写入的对象/前缀约定；提供后可运行自建数据 + 清理的产品 TC runner
+  note: 生产只读公开端点已 PROBED；写操作尚未执行，产品级 PASS 仍 0/10。
+  unlock_action: ''
 - id: P1-5
   title: TC-003/TC-005 未从正式链路起跑，危险目标无 0 请求证明
   status: CLOSED
@@ -144,19 +146,22 @@ items:
   status: EXTERNAL
   evidence:
   - docs/aiqe/v1.6/governance/production-evidence.json
-  blocked_by: 需要生产/staging 基础设施访问与原始日志
+  blocked_by: 用户已允许生产/staging 访问；但本机无生产 SSH 私钥（root@111.230.155.116 Permission denied publickey），也未提供 Vault/Prometheus/Alertmanager 地址与 token
   owner: ops
-  unblock_action: 归档 pg_dump/restore、Vault 脱敏配置、Alertmanager 触发、灰度 Run 证据并更新 production-evidence.json
+  unblock_action: 提供生产 SSH 私钥/跳板与 Vault、Prometheus、Alertmanager 的地址和只读 token；提供后按 production-evidence.json 逐阶段归档原始日志
+  unlock_action: ''
+  note: 镜像与 PG 只读 role 证据已归档；备份恢复/Vault/告警/灰度仍缺访问。
 - id: P2-3
   title: V16-021 历史弱凭据需扫描/轮换
   status: EXTERNAL
   evidence:
   - test-platform-v2/backend/tests/test_aiqe_v16_021_weak_password.py
   - scripts/aiqe/check_release_audit.py
-  blocked_by: 需要访问历史日志/工作目录与生产凭据系统做轮换确认
+  blocked_by: 用户已允许凭据系统/历史日志访问；但未提供 Vault/凭据系统地址与只读 token，无法核验历史弱凭据是否已轮换
   owner: security
-  unblock_action: 扫描历史日志/工作目录，确认 admin123 等旧凭据已轮换并记录
-  note: 仓库高置信度扫描 CLEAN：0 个 potential-secret（工作区与近 200 commits）；10 处 weak-default 均为 CI/本地测试 DSN（已脱敏登记）；轮换仍需凭据系统与历史日志访问，登记为 EXTERNAL。
+  unblock_action: 提供凭据系统（Vault 等）只读 token 或已轮换清单；仓库侧扫描已 CLEAN
+  note: 仓库与近 200 commits 扫描 CLEAN；轮换证据仍缺。
+  unlock_action: ''
 - id: P2-4
   title: CODEOWNERS 全指向同一账号，无独立责任域
   status: EXTERNAL

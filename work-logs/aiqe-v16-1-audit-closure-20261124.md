@@ -184,7 +184,17 @@ PR 状态：`OPEN` + `MERGEABLE` + `isDraft=true`（未转 Ready、未合并；�
 | 台账 | 14 CLOSED / 5 EXTERNAL；Gate B evidence 由 NOT_PROVEN 升为 PASS（acceptance 仍 PENDING）；Gate F 的 `image_self_contained` 置 PASS，其余 10 阶段未证明 |
 | P2-3 凭据扫描 | 新增 `scan_credentials.py`：高置信度扫描工作区 + 近 200 commits，结果 **CLEAN**（0 potential-secret）；10 处 weak-default 均为 CI/本地测试 DSN（已脱敏登记）；轮换仍为 EXTERNAL |
 
-## 18. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
+## 19. 用户新增授权（2026-11-26）与仍缺的具体凭据
+
+| 项 | 用户答复 | 当前状态 |
+|---|---|---|
+| 独立账号 | `2602997810@qq.com`，角色域 `qa` | GitHub API 只接受 username，按邮箱邀请返回 404；需用户提供 username 或在 GitHub UI 邀请 |
+| 生产写测试 | 允许写，但仅限自建测试数据，测试后必须清理 | 缺未来娃屿后台/C 端登录 Token 或测试账号；未执行任何写操作 |
+| 专用可写 Test 环境 | 用户询问是否指 AIQE 测试环境，同意本地部署 | AIQE 本地隔离环境已运行（`http://127.0.0.1:8101`）；产品 TC 的业务目标仍是未来娃屿生产（无 Test 环境） |
+| 生产/ staging 访问 | 允许 | 本机无生产 SSH 私钥：`root@111.230.155.116` → Permission denied (publickey)；缺 Vault/Prometheus 地址与 token |
+| 凭据系统/历史日志 | 允许 | 缺 Vault/凭据系统地址与只读 token；仓库侧扫描已 CLEAN |
+
+## 20. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
 
 1. **产品级 TC-AIQE-001..010**：执行器与配置已就绪，需隔离 Test 环境 + per-TC runner
    接入后运行 `python scripts/aiqe/run_product_tc.py --run`。
