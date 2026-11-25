@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "futurewayu-production-readonly",
+  "generated_at": "2026-11-25T04:23:16.188836+00:00",
+  "readonly_only": true,
+  "base_configured": false,
+  "admin_configured": false,
+  "db_configured": false,
+  "probes": [],
+  "status": "NOT_PROVEN",
+  "reason": "缺少 FUTUREWAYU_BASE_URL/FUTUREWAYU_ADMIN_URL：生产只读地址未提供，未执行任何请求"
+}

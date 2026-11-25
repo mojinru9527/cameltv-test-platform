@@ -162,7 +162,18 @@
 PR 状态：`OPEN` + `MERGEABLE` + `isDraft=true`（未转 Ready、未合并；按审计要求
 合入前需非作者 Reviewer 与 ruleset 非作者审批）。
 
-## 16. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
+## 16. 未来娃屿生产只读（用户报备授权）
+
+| 项 | 处理 |
+|---|---|
+| 授权边界 | 用户确认未来娃屿无 Test 环境，已报备允许**生产只读**测试；只允许 GET/HEAD/OPTIONS 与 SELECT/SHOW/EXPLAIN |
+| 只读探测脚本 | `scripts/aiqe/per_tc/futurewayu_production_readonly.py`：HTTP 只读守卫、MySQL `SET SESSION TRANSACTION READ ONLY` + 写拒绝断言、凭据只读环境变量、不打印 |
+| 证据 | `docs/aiqe/v1.6/evidence/futurewayu-production-readonly.json`（当前 `NOT_PROVEN`：缺生产 URL/只读 Token/DSN，未发起任何请求） |
+| Runbook | `docs/aiqe/v1.6/e2e/futurewayu-production-readonly.md` |
+| 测试 | 4 条离线测试（无地址 NOT_PROVEN、POST 拒绝、本地假服务 GET-only、DSN 解析） |
+| 边界 | 只读无法覆盖 TC-001..010 的写操作/设备/Benchmark，产品级 PASS 仍为 0/10；不伪造 |
+
+## 17. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
 
 1. **产品级 TC-AIQE-001..010**：执行器与配置已就绪，需隔离 Test 环境 + per-TC runner
    接入后运行 `python scripts/aiqe/run_product_tc.py --run`。
