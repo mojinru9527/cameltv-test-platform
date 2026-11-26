@@ -96,6 +96,11 @@ def checker(monkeypatch):
     module = _load_checker()
     # 单元测试只验证规则本身，覆盖集合收缩到当前被测 issue。
     monkeypatch.setattr(module, "REQUIRED_ISSUES", ("V16-001",))
+    # 单元测试不读取仓库内真实 acceptance/records（仓库已有 70 条签署记录）；
+    # 验收相关用例在矩阵里自带 acceptance 记录。
+    from acceptance_records import AcceptanceReport
+
+    monkeypatch.setattr(module, "load_records", lambda entries=None: AcceptanceReport())
     return module
 
 
