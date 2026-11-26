@@ -1,5 +1,8 @@
 # V1.6 平台级遗留项处理结论
 
+> **STATUS: HISTORICAL** — 本文记录 2026-11-2x 当时的执行事实与结论；其中 PASS/VERIFIED 等表述不代表当前发布判定。当前状态以 `release-verdict.json`、`E2E-Coverage-and-Blockers.md` 与 `governance/production-evidence.json` 为准。
+
+
 > 2026-11-21；基于当前 traceability 与本机测试证据。产品级 TC-002/004/008/010 按用户意见暂跳过。
 
 | 项 | 结论 | 证据 / 说明 |

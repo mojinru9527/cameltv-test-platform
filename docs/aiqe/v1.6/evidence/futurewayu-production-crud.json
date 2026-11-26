@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "futurewayu-production-crud",
+  "scope": "futurewayu production (https://xinyuwadao.com/prod-api)",
+  "captured_at": "2026-11-26T00:50:00+08:00",
+  "authorization": "用户允许生产增删改查，但仅限自建测试数据，测试后清理",
+  "account_role": "tester-operator（qa），密码不落盘",
+  "entity": "hz_banner_activity（轮播图，status=0 禁用，仅自建记录）",
+  "safe_probe": {
+    "prefix": "AIQE-V16-TEST-1795625394-SAFE",
+    "own_id": "2119000000066262022",
+    "steps": [
+      "create 200",
+      "update 200",
+      "delete 200"
+    ],
+    "total_before": 29,
+    "total_after": 29,
+    "own_rows_after": 0,
+    "existing_banner_unchanged_during_probe": true,
+    "status": "PASS"
+  },
+  "incident": {
+    "what": "首次探测脚本用 list?title= 过滤，但该接口忽略 title 参数，误把既有 banner id=2 当作自建记录执行了 update",
+    "impact": "id=2 的 title/description/sort_order/status 被改；已通过 API + DB 恢复为原值：title=DSC06229、description=NULL、sort_order=1、status=1、platform=app，image/target/start/end 未变。",
+    "residual": "update_by 与 update_time 仍为本次误更新写入的值，缺少原始备份无法精确还原；已如实披露。",
+    "other_rows_affected": 0,
+    "self_created_row_cleaned": true
+  },
+  "note": "本次只证明未来娃屿生产上的自建数据 CRUD + 清理可行，不产出 AIQE Run/Job/Assertion 证据，因此不计产品 TC PASS。"
+}

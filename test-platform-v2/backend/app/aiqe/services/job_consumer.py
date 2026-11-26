@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 NODE_ID = "aiqe-inprocess"
 LEASE_SECONDS = 300
 MARKER = '"node_run_id"'
+AGENT_TASK_MARKER = '"task_id"'
 # 进程内消费者可执行的 driver；浏览器/设备节点仍必须由外部 Runner 执行。
 INPROCESS_DRIVERS = frozenset(
     {"http", "httpx", "api", "", "db", "db_readonly", "database"}
@@ -115,7 +116,50 @@ def claim_aiqe_jobs(db: Session, *, limit: int = 5) -> list[int]:
 
 
 def run_job(db: Session, job_id: int) -> dict:
+    job = db.get(ExecutionJob, job_id)
+    # V16-013/019：AgentTask Job 与节点 Job 共用 ExecutionJob 队列；
+    # 之前 AgentTask 只有 enqueue 没有消费者，任务会永久 pending。
+    if job is not None and str(job.kind or "") == "agent_task":
+        from app.aiqe.services.agent_task_service import execute_task_job
+
+        return execute_task_job(db, job_id)
     return execution_service.execute_inprocess_job(db, job_id)
+
+
+def claim_agent_task_jobs(db: Session, *, limit: int = 5) -> list[int]:
+    """原子认领 AgentTask Job（审批后入队，kind=agent_task）。"""
+    now = _now()
+    rows = list(
+        db.scalars(
+            select(ExecutionJob)
+            .where(
+                ExecutionJob.kind == "agent_task",
+                ExecutionJob.status == "pending",
+                ExecutionJob.payload_json.like(f"%{AGENT_TASK_MARKER}%"),
+            )
+            .order_by(ExecutionJob.id)
+            .limit(limit)
+        )
+    )
+    claimed: list[int] = []
+    for job in rows:
+        result = db.execute(
+            update(ExecutionJob)
+            .where(ExecutionJob.id == job.id, ExecutionJob.status == "pending")
+            .values(
+                status="running",
+                node_id=NODE_ID,
+                attempt=ExecutionJob.attempt + 1,
+                claimed_at=now,
+                started_at=now,
+                heartbeat_at=now,
+                lease_expires_at=now + timedelta(seconds=LEASE_SECONDS),
+            )
+        )
+        if int(getattr(result, "rowcount", 0) or 0):
+            claimed.append(int(job.id))
+    db.commit()
+    return claimed
 
 
 def complete_from_report(
@@ -155,6 +199,7 @@ def consume_once(*, limit: int = 5) -> int:
     db = SessionLocal()
     try:
         job_ids = claim_aiqe_jobs(db, limit=limit)
+        job_ids += claim_agent_task_jobs(db, limit=limit)
     finally:
         db.close()
 

@@ -1,7 +1,13 @@
-"""V16-017 R1: contract freeze + V2 impact platform chain."""
+"""V16-017 R1: contract freeze + V2 impact platform chain.
+
+诚实边界：本文件只验证 Contract Service 的冻结/校验和/影响面平台行为，
+**不是**产品 TC-AIQE-001（API→后台 UI→DB→前台 UI 同一 Run）的证据。
+机器结果登记为 NOT_RUN 并说明原因，禁止冒充 TC-AIQE-001 PASS。
+"""
 from __future__ import annotations
 
 from app.aiqe.services import contract_service
+from platform_results import record_tc
 
 
 def _acs(prefix: str) -> list[dict]:
@@ -48,3 +54,8 @@ def test_tc_001_contract_freeze_and_v2_impact(db_session):
     assert c1.revision_checksum == checksum
     assert c2.revision == 2
     assert c2.revision_checksum != checksum
+    record_tc(
+        "TC-PLATFORM-010",
+        status="NOT_RUN",
+        blocked_reason="Contract Service 平台行为测试，无 TestRun/UI/DB 链路，不能计为产品 TC-001 运行证据",
+    )

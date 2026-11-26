@@ -7,6 +7,7 @@ PR diff → 候选回归并集（强制 suite 不得漏选）：
 """
 from __future__ import annotations
 
+from typing import Any
 import re
 
 from pydantic import BaseModel, Field, ValidationError
@@ -78,6 +79,34 @@ class ChangeImpactAgent(BaseAgent):
             raise AgentSchemaError("PR diff 文件列表不能为空")
         self._expected = compute_impact(files)
         return self.run(str({"files": files, "rule_baseline": self._expected}))
+
+    def gather_tool_evidence(self, executor: Any) -> dict[str, Any]:
+        references = executor.references or {}
+        evidence: dict[str, Any] = {
+            "requirements": executor.safe_call("read_requirements"),
+        }
+        base_sha = str(references.get("base_sha") or "").strip()
+        head_sha = str(references.get("head_sha") or "").strip()
+        if base_sha and head_sha:
+            evidence["git_diff"] = executor.safe_call(
+                "read_git_diff", base_sha=base_sha, head_sha=head_sha
+            )
+        # V16-014：缺陷回归计划（只读提案；创建 Regression 仍需人工审批 + API）。
+        defect_id = references.get("defect_id")
+        if defect_id and head_sha:
+            plan_args: dict[str, Any] = {
+                "defect_id": int(defect_id),
+                "fixed_sha": head_sha,
+            }
+            source_run_id = str(references.get("source_run_id") or "").strip()
+            if source_run_id:
+                plan_args["source_run_id"] = source_run_id
+            if base_sha:
+                plan_args["base_sha"] = base_sha
+            evidence["regression_plan"] = executor.safe_call(
+                "create_regression_plan", **plan_args
+            )
+        return evidence
 
     def validate(self, data: dict) -> dict:
         try:

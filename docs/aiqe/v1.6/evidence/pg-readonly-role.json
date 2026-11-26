@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "pg-readonly-role-verification",
+  "generated_at": "2026-11-25T04:40:14.603863+00:00",
+  "dsn": "postgresql://aiqe_ro:***@127.0.0.1:5432/bidmaster",
+  "scope": "loopback",
+  "server_version": "16.14",
+  "status": "PASS",
+  "current_user": "aiqe_ro",
+  "checks": [
+    {
+      "name": "no_superuser",
+      "ok": true,
+      "value": false
+    },
+    {
+      "name": "no_createrole",
+      "ok": true,
+      "value": false
+    },
+    {
+      "name": "no_bypassrls",
+      "ok": true,
+      "value": false
+    },
+    {
+      "name": "no_createdb",
+      "ok": true,
+      "value": false
+    },
+    {
+      "name": "write_rejected",
+      "ok": true,
+      "value": "ReadOnlySqlTransaction"
+    },
+    {
+      "name": "default_transaction_read_only",
+      "ok": true,
+      "value": "on"
+    },
+    {
+      "name": "statement_timeout_set",
+      "ok": true,
+      "value": "5s"
+    }
+  ]
+}

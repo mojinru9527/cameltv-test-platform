@@ -1,5 +1,8 @@
 # V16-002 独立审计报告（G2）：Playwright 全请求链 TargetPolicy 拦截
 
+> **STATUS: HISTORICAL** — 本文记录 2026-11-2x 当时的执行事实与结论；其中 PASS/VERIFIED 等表述不代表当前发布判定。当前状态以 `release-verdict.json`、`E2E-Coverage-and-Blockers.md` 与 `governance/production-evidence.json` 为准。
+
+
 - 审计 Issue：**V16-002 / AUD-001：Playwright 未拦截请求（P0）**
 - 规格：《CamelTv AIQE V1.6 修复与生产化开发实施计划》第 272–308 行（V16-002），并参照 0.1 / 0.2.3 / 0.2.4 / 0.2.8、V16-016（Web/Playwright 边界）、TC-AIQE-003 / TC-AIQE-005
 - 仓库：`F:\CamelTv-worktrees\DeepSeek_Harness-aiqe-v1-6`

@@ -95,6 +95,8 @@ class AgentContext:
     run_id: str | None = None
     idempotency_key: str | None = None
     tools: ToolRegistry | None = None
+    # V16-019：真实工具调用入口；Agent 只能通过它取证（禁止直连 DB/HTTP）。
+    tool_executor: Any | None = None
     evidence_resolver: Callable[[list[str]], list[Any]] | None = None
     extra: Mapping[str, Any] = field(default_factory=dict)
 
@@ -237,6 +239,9 @@ class BaseAgentAdapter:
             agent_version=self.version,
             status="COMPLETED",
             output=output,
+            tool_calls=list(getattr(context.tool_executor, "tool_calls", lambda: [])())
+            if context.tool_executor is not None
+            else [],
             model_provider=self.provider,
             model_name=self.model,
             prompt_version=stable_hash(self._agent.system_prompt),

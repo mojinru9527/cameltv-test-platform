@@ -60,12 +60,25 @@ class WorkflowPlannerAgent(BaseAgent):
         "依赖必须无环且变量只能引用祖先节点输出；不得自行批准。"
     )
 
-    def __init__(self, llm, *, registered_drivers=None, registered_capabilities=None) -> None:
-        super().__init__(llm)
+    def __init__(
+        self,
+        llm,
+        *,
+        model: str | None = None,
+        registered_drivers=None,
+        registered_capabilities=None,
+    ) -> None:
+        super().__init__(llm, model=model)
         self.registered_drivers = set(registered_drivers or DEFAULT_DRIVERS)
         self.registered_capabilities = (
             set(registered_capabilities) if registered_capabilities is not None else set(known_capabilities())
         )
+
+    def gather_tool_evidence(self, executor: Any) -> dict[str, Any]:
+        return {
+            "project": executor.safe_call("read_project_context"),
+            "openapi": executor.safe_call("read_openapi"),
+        }
 
     def validate(self, data: dict) -> dict:
         try:

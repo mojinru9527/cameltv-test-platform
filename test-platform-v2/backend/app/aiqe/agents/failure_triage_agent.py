@@ -8,6 +8,7 @@
 """
 from __future__ import annotations
 
+from typing import Any
 from typing import Literal
 
 from pydantic import BaseModel, Field, ValidationError
@@ -116,6 +117,15 @@ class FailureTriageAgent(BaseAgent):
             self, "evidence_resolver", None
         )
         return self.run(str(failure_context), context=_Ctx(resolver))
+
+    def gather_tool_evidence(self, executor: Any) -> dict[str, Any]:
+        evidence: dict[str, Any] = {
+            "defects": executor.safe_call("read_defects"),
+        }
+        run_id = str((executor.references or {}).get("run_id") or "").strip()
+        if run_id:
+            evidence["run"] = executor.safe_call("read_run_evidence", run_id=run_id)
+        return evidence
 
     def validate(self, data: dict, *, evidence_resolver=None) -> dict:
         try:

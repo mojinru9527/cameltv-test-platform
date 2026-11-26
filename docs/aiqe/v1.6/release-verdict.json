@@ -1,0 +1,140 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-11-26T13:45:53.480922+00:00",
+  "release": "aiqe-v1.6",
+  "commit_sha": "0d082c4643dcf3ba3cc666c3a07f4324274af10d",
+  "baseline_release_commit": "9bbbdbb2026bada5c016d663780e03d62fca940d",
+  "migration_head": "20261122_v16_catalog_post_merge",
+  "summary": {
+    "requirements": 70,
+    "verified": 58,
+    "accepted": 0,
+    "partial": 12,
+    "blocked": 0,
+    "independent_reviews": 0,
+    "runtime_not_proven": 18,
+    "product_tc_pass": 0,
+    "product_tc_total": 10
+  },
+  "gates": {
+    "A": {
+      "gate": "A",
+      "title": "代码与构建",
+      "status": "PASS",
+      "evidence": "PASS",
+      "acceptance": "REVIEWED",
+      "reasons": [
+        "追踪矩阵 strict 校验通过（70 条），migration head=20261122_v16_catalog_post_merge"
+      ],
+      "artifacts": []
+    },
+    "B": {
+      "gate": "B",
+      "title": "安全边界",
+      "status": "NOT_PROVEN",
+      "evidence": "PASS",
+      "acceptance": "PENDING",
+      "reasons": [
+        "独立验收未完成: V16-001-R1, V16-001-R2, V16-001-R3, V16-001-R4, V16-001-R5, V16-002-R1, V16-002-R2, V16-002-R3, V16-003-R1, V16-003-R2, V16-003-R3, V16-003-R4, V16-004-R1, V16-004-R2, V16-004-R3"
+      ],
+      "artifacts": [
+        "docs/aiqe/v1.6/evidence/pg-readonly-role.json"
+      ]
+    },
+    "C": {
+      "gate": "C",
+      "title": "执行可靠性",
+      "status": "NOT_PROVEN",
+      "evidence": "PASS",
+      "acceptance": "PENDING",
+      "reasons": [
+        "独立验收未完成: V16-005-R1, V16-005-R2, V16-005-R3, V16-006-R1, V16-006-R2, V16-007-R1, V16-007-R2, V16-008-R1, V16-008-R2, V16-008-R3, V16-008-R4, V16-009-R1, V16-009-R2"
+      ],
+      "artifacts": []
+    },
+    "D": {
+      "gate": "D",
+      "title": "Agent / Learning",
+      "status": "NOT_PROVEN",
+      "evidence": "PASS",
+      "acceptance": "PENDING",
+      "reasons": [
+        "独立验收未完成: V16-010-R1, V16-010-R2, V16-011-R1, V16-012-R1, V16-012-R2, V16-012-R3, V16-013-R1, V16-013-R2, V16-013-R3, V16-014-R1, V16-014-R2, V16-019-R1, V16-019-R2, V16-019-R3"
+      ],
+      "artifacts": []
+    },
+    "E": {
+      "gate": "E",
+      "title": "Driver / E2E",
+      "status": "NOT_PROVEN",
+      "evidence": "NOT_PROVEN",
+      "acceptance": "PENDING",
+      "reasons": [
+        "产品级 TC PASS 0/10；其余仅现场记录或未执行",
+        "平台链路机器结果: 7/10 PASS（commit 960da41784c0）",
+        "运行证据索引未达 GA：{\"PASS\": 7, \"FAIL\": 0, \"BLOCKED\": 2, \"NOT_RUN\": 1, \"total\": 10, \"executed\": 7, \"pass_rate_excluding_blocked\": 1.0, \"ga_ready\": false}",
+        "缺少 docs/aiqe/v1.6/e2e/product-results.json（产品级 TC 未在隔离 Test 环境执行）"
+      ],
+      "artifacts": [
+        "docs/aiqe/v1.6/e2e/platform-results.json",
+        "docs/aiqe/v1.6/evidence/evidence-index.json"
+      ]
+    },
+    "F": {
+      "gate": "F",
+      "title": "生产运行",
+      "status": "NOT_PROVEN",
+      "evidence": "NOT_PROVEN",
+      "acceptance": "PENDING",
+      "reasons": [
+        "生产阶段未证明: stage1_shadow, stage2_dogfood, stage3_small_traffic, stage4_expand, stage5_ga",
+        "生产验收无独立验收签署"
+      ],
+      "artifacts": [
+        "docs/aiqe/v1.6/governance/production-evidence.json"
+      ]
+    },
+    "G": {
+      "gate": "G",
+      "title": "工程治理",
+      "status": "NOT_PROVEN",
+      "evidence": "PASS",
+      "acceptance": "PENDING",
+      "reasons": [
+        "Branch Protection/Ruleset 已由 GitHub API 验证（required checks: 3 个）",
+        "独立验收未完成: V16-025-R1"
+      ],
+      "artifacts": [
+        "docs/aiqe/v1.6/governance/branch-protection.json"
+      ]
+    }
+  },
+  "ga_ready": false,
+  "ga_status": "GA_NOT_READY",
+  "blocking": [
+    "Gate B: 独立验收未完成: V16-001-R1, V16-001-R2, V16-001-R3, V16-001-R4, V16-001-R5, V16-002-R1, V16-002-R2, V16-002-R3, V16-003-R1, V16-003-R2, V16-003-R3, V16-003-R4, V16-004-R1, V16-004-R2, V16-004-R3",
+    "Gate C: 独立验收未完成: V16-005-R1, V16-005-R2, V16-005-R3, V16-006-R1, V16-006-R2, V16-007-R1, V16-007-R2, V16-008-R1, V16-008-R2, V16-008-R3, V16-008-R4, V16-009-R1, V16-009-R2",
+    "Gate D: 独立验收未完成: V16-010-R1, V16-010-R2, V16-011-R1, V16-012-R1, V16-012-R2, V16-012-R3, V16-013-R1, V16-013-R2, V16-013-R3, V16-014-R1, V16-014-R2, V16-019-R1, V16-019-R2, V16-019-R3",
+    "Gate E: 产品级 TC PASS 0/10；其余仅现场记录或未执行",
+    "Gate E: 平台链路机器结果: 7/10 PASS（commit 960da41784c0）",
+    "Gate E: 运行证据索引未达 GA：{\"PASS\": 7, \"FAIL\": 0, \"BLOCKED\": 2, \"NOT_RUN\": 1, \"total\": 10, \"executed\": 7, \"pass_rate_excluding_blocked\": 1.0, \"ga_ready\": false}",
+    "Gate E: 缺少 docs/aiqe/v1.6/e2e/product-results.json（产品级 TC 未在隔离 Test 环境执行）",
+    "Gate F: 生产阶段未证明: stage1_shadow, stage2_dogfood, stage3_small_traffic, stage4_expand, stage5_ga",
+    "Gate F: 生产验收无独立验收签署",
+    "Gate G: Branch Protection/Ruleset 已由 GitHub API 验证（required checks: 3 个）",
+    "Gate G: 独立验收未完成: V16-025-R1"
+  ],
+  "evidence_files": {
+    "branch_protection": "docs/aiqe/v1.6/governance/branch-protection.json",
+    "production_evidence": "docs/aiqe/v1.6/governance/production-evidence.json",
+    "platform_results": "docs/aiqe/v1.6/e2e/platform-results.json",
+    "product_results": null,
+    "runtime_evidence_index": "docs/aiqe/v1.6/evidence/evidence-index.json",
+    "pg_readonly_role": "docs/aiqe/v1.6/evidence/pg-readonly-role.json"
+  },
+  "traceability": {
+    "strict_validation": true,
+    "errors": [],
+    "snapshot": "docs/aiqe/v1.6/traceability/matrix-snapshot.json"
+  }
+}

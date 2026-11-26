@@ -1,5 +1,8 @@
 # V1.6 staging 灰度 / 监控证据（2026-11-22）
 
+> **STATUS: HISTORICAL** — 本文记录 2026-11-2x 当时的执行事实与结论；其中 PASS/VERIFIED 等表述不代表当前发布判定。当前状态以 `release-verdict.json`、`E2E-Coverage-and-Blockers.md` 与 `governance/production-evidence.json` 为准。
+
+
 环境：测试机 `aiqe-test-net`，独立 DB `aiqe_v16_test`，API 镜像 `cameltv-tp-backend:v16-api`（711 MB）。
 
 ## 部署

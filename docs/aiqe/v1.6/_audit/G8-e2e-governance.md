@@ -1,5 +1,8 @@
 # G8 独立审计报告 — V16-017（十个真实 E2E）与 V16-025（工程交付治理）
 
+> **STATUS: HISTORICAL** — 本文记录 2026-11-2x 当时的执行事实与结论；其中 PASS/VERIFIED 等表述不代表当前发布判定。当前状态以 `release-verdict.json`、`E2E-Coverage-and-Blockers.md` 与 `governance/production-evidence.json` 为准。
+
+
 > 审计类型：只读代码审计（未修改任何业务文件；本文件是本次审计唯一写入）
 > 审计对象 worktree：`F:\CamelTv-worktrees\DeepSeek_Harness-aiqe-v1-6`
 > 审计对象提交：`86a44b2cb`（`release/aiqe-v1-6`，与 `origin/main` 的 `rev-list --left-right --count` = `0 0`）

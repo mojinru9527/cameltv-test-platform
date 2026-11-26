@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0",
+  "repository": "mojinru9527/cameltv-test-platform",
+  "branch": "main",
+  "verified": true,
+  "checked_at": "2026-11-25T17:02:06.324402+00:00",
+  "source": "github-api",
+  "reason": "",
+  "required_checks": [
+    "AI/Git 交付策略",
+    "前端全新检出与全量回归",
+    "后端全新检出与全量回归"
+  ],
+  "require_pr_before_merge": true,
+  "require_non_author_review": true,
+  "allow_force_push": false,
+  "allow_deletions": false,
+  "ruleset_ids": [
+    18351498
+  ],
+  "rulesets": [
+    {
+      "id": 18351498,
+      "name": "protect-main",
+      "enforcement": "active",
+      "target": "branch",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "refs/heads/main"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "non_fast_forward"
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 1,
+            "dismiss_stale_reviews_on_push": true,
+            "required_reviewers": [],
+            "require_code_owner_review": true,
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": true,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "squash"
+            ]
+          }
+        },
+        {
+          "type": "required_status_checks",
+          "parameters": {
+            "strict_required_status_checks_policy": true,
+            "do_not_enforce_on_create": false,
+            "required_status_checks": [
+              {
+                "context": "后端全新检出与全量回归"
+              },
+              {
+                "context": "前端全新检出与全量回归"
+              },
+              {
+                "context": "AI/Git 交付策略"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "capture_command": "python scripts/aiqe/check_branch_protection.py --capture --repo mojinru9527/cameltv-test-platform --branch main"
+}

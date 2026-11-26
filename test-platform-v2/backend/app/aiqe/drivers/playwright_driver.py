@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import tempfile
 import time
 from collections.abc import Callable
@@ -21,6 +22,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
+from urllib.request import Request as UrlRequest
+from urllib.request import urlopen
 
 from app.aiqe.drivers.browser_egress_proxy import BrowserEgressProxy
 from app.aiqe.schemas.contracts import DriverResult, EvidenceFile
@@ -47,6 +50,7 @@ SUPPORTED_ACTIONS: frozenset[str] = frozenset(
         "assert_text",
         "assert_url",
         "assert_count",
+        "fill_http",
     }
 )
 OBSERVE_ONLY = frozenset(
@@ -58,6 +62,52 @@ OBSERVE_ONLY = frozenset(
 ALLOWED_LOCAL_SCHEMES: frozenset[str] = frozenset({"data", "blob", "about"})
 #: 这些资源类型的请求一旦被策略拒绝，说明页面试图访问未授权目标。
 NAVIGATION_RESOURCE_TYPES = frozenset({"document"})
+
+
+def _captcha_provider_value(
+    provider_url: str, json_path: str = "$.code", *, timeout_s: float = 10.0
+) -> str:
+    """从受控的本地验证码 Provider 取值（仅允许 loopback/白名单主机）。
+
+    这是 V16-017 产品 TC 的登录扩展：Playwright 节点可以填写动态验证码，
+    但 Provider 只能访问本机/白名单，避免 Workflow 借机 SSRF。
+    """
+    raw = str(provider_url or "").strip()
+    if not raw:
+        raise ValueError("provider_url 不能为空")
+    parsed = urlsplit(raw)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        raise ValueError("provider_url 必须是 http(s) URL")
+    if parsed.username or parsed.password:
+        raise ValueError("provider_url 不允许携带凭据")
+    allowed = {
+        item.strip().lower()
+        for item in os.environ.get(
+            "AIQE_CAPTCHA_PROVIDER_HOSTS", "127.0.0.1,localhost,::1"
+        ).split(",")
+        if item.strip()
+    }
+    if parsed.hostname.lower() not in allowed:
+        raise ValueError(f"provider host 不在白名单: {parsed.hostname}")
+    with urlopen(UrlRequest(raw, headers={"accept": "application/json"}), timeout=timeout_s) as response:
+        body = response.read().decode("utf-8", errors="replace")
+    try:
+        payload: Any = json.loads(body)
+    except json.JSONDecodeError:
+        payload = body.strip()
+    if isinstance(payload, dict):
+        current: Any = payload
+        for part in [item for item in json_path.lstrip("$").split(".") if item]:
+            if isinstance(current, dict) and part in current:
+                current = current[part]
+            else:
+                current = None
+                break
+        payload = current
+    value = "" if payload is None else str(payload).strip()
+    if not value:
+        raise ValueError(f"Provider 未返回有效值: {raw}")
+    return value
 
 
 class PlaywrightUnavailable(RuntimeError):
@@ -86,6 +136,8 @@ class PlaywrightAction:
     expected: Any = None
     timeout_ms: int = 15000
     probe: bool = False
+    provider_url: str = ""
+    json_path: str = "$.code"
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> PlaywrightAction:
@@ -102,6 +154,8 @@ class PlaywrightAction:
             expected=raw.get("expected"),
             timeout_ms=int(raw.get("timeout_ms") or 15000),
             probe=bool(raw.get("probe") or False),
+            provider_url=str(raw.get("provider_url") or ""),
+            json_path=str(raw.get("json_path") or "$.code"),
         )
 
 
@@ -487,6 +541,16 @@ class PlaywrightDriver:
             elif action.type == "fill":
                 locator = self._locator(action)
                 locator.fill(str(action.value or ""), timeout=action.timeout_ms)
+                record.dispatched = True
+            elif action.type == "fill_http":
+                try:
+                    value = _captcha_provider_value(action.provider_url, action.json_path)
+                except (OSError, ValueError) as exc:
+                    raise PlaywrightActionError(
+                        action.type, "CAPTCHA_PROVIDER_INVALID", str(exc)[:300]
+                    ) from exc
+                locator = self._locator(action)
+                locator.fill(value, timeout=action.timeout_ms)
                 record.dispatched = True
             elif action.type in {"select", "check", "uncheck"}:
                 locator = self._locator(action)

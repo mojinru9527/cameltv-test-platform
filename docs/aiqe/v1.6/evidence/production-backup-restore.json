@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "production-backup-restore",
+  "scope": "production",
+  "captured_at": "2026-11-26T00:45:00+08:00",
+  "dump_file": "/root/backups/pre-m13-20261113-123502.dump",
+  "dump_size_bytes": 186846111,
+  "dump_sha256": "62cfcf2ba042360b9ecc7cb8c1141fa7968a7f90f29fbf3d0ecd4549407257e0",
+  "dump_created": "2026-11-13T12:35:02+08:00",
+  "target_server": "production PostgreSQL container (aiqe-test-postgres), server 16.15",
+  "restore_method": "temporary database + pg_restore --no-owner --no-privileges; temp DB dropped afterwards",
+  "restored_tables": 112,
+  "cleanup": "temporary database dropped; dump copy removed from container",
+  "note": "该 dump 为 pre-M13 备份（112 表），用于验证生产 PG 的恢复流程；当前 v16 库为 132 表，需在下次备份后按同一流程复验。",
+  "status": "PASS"
+}

@@ -153,8 +153,10 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, json.JSONDecodeError, EvidenceError) as exc:
         print(f"::error::evidence-index: {exc}", file=sys.stderr)
         return 1
-    Path(args.output).write_text(
-        json.dumps(index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    output = Path(args.output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
+        json.dumps(index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n"
     )
     blocked = index["summary"]["BLOCKED"] + index["summary"]["NOT_RUN"]
     print(json.dumps(index["summary"], ensure_ascii=False))

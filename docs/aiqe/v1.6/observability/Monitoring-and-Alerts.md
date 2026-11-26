@@ -1,5 +1,8 @@
 # AIQE V1.6 监控与告警（V16-024）
 
+> **STATUS: HISTORICAL** — 本文记录 2026-11-2x 当时的执行事实与结论；其中 PASS/VERIFIED 等表述不代表当前发布判定。当前状态以 `release-verdict.json`、`E2E-Coverage-and-Blockers.md` 与 `governance/production-evidence.json` 为准。
+
+
 > 指标端点：`GET /api/v1/aiqe/metrics`（`X-AIQE-Metrics-Token`；生产未配置 token 时 403 fail-closed）。
 > 告警规则事实源：`docs/aiqe/v1.6/observability/aiqe-alerts.yaml`，由 `scripts/aiqe/check_alerts.py` 校验。
 

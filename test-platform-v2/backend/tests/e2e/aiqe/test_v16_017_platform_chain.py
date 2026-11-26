@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import threading
 import uuid
+from datetime import UTC, datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, ClassVar
 
@@ -37,11 +38,18 @@ from app.aiqe.services.regression_service import (
 )
 from app.aiqe.services.regression_terminal import handle_run_terminal
 from app.aiqe.services.run_launch import launch_run
-from app.aiqe.services.triage_service import create_experiment, launch_experiment
+from app.aiqe.services.triage_service import (
+    ExperimentError,
+    create_experiment,
+    launch_experiment,
+    record_experiment_result,
+    sync_experiment_result,
+)
 from app.aiqe.services.workflow_service import approve_workflow, create_workflow
 from app.models.environment import Environment
 from app.models.execution_job import ExecutionJob
 from app.models.project import Project
+from platform_results import pending_jobs, record_tc
 
 pytestmark = pytest.mark.integration
 
@@ -50,6 +58,10 @@ class _Handler(BaseHTTPRequestHandler):
     orders: ClassVar[dict[str, Any]] = {}
     last_auth: ClassVar[str] = ""
     asset_hits: ClassVar[int] = 0
+    #: 受控目标计数器：策略阻断必须表现为“目标实际收到 0 次请求”。
+    health_hits: ClassVar[int] = 0
+    # TC-008：模拟“修复后部署”——修复前 /fail 返回 success=false，修复后返回 true。
+    fixed: ClassVar[bool] = False
     PAGE_HTML = """<!doctype html><html><head><title>AIQE-E2E</title></head><body>
 <input id="name"/><button id="go" onclick="document.getElementById('out').textContent='hello '+document.getElementById('name').value">GO</button>
 <div id="out">idle</div><img src="/pixel"/><img src="http://169.254.169.254/secret"/>
@@ -86,7 +98,10 @@ class _Handler(BaseHTTPRequestHandler):
         elif self.path == "/echo":
             _Handler.last_auth = str(self.headers.get("authorization") or "")
             self._json({"received": True, "success": True})
+        elif self.path == "/fail":
+            self._json({"success": bool(_Handler.fixed)})
         elif self.path == "/health":
+            _Handler.health_hits += 1
             self._json({"ok": True, "success": True})
         elif self.path.startswith("/orders/"):
             order = self.orders.get(self.path.rsplit("/", 1)[-1])
@@ -156,6 +171,7 @@ def _project_env(db, port: int) -> Environment:
 
 
 def _drain(db) -> None:
+    """只通过真实 Worker claim/lease 消费 Job；禁止把 pending Job 手工改成 running。"""
     for _ in range(50):
         claimed = job_consumer.claim_aiqe_jobs(db)
         if not claimed:
@@ -163,16 +179,6 @@ def _drain(db) -> None:
         for job_id in claimed:
             job_consumer.run_job(db, job_id)
         db.commit()
-    pending = list(
-        db.scalars(select(ExecutionJob).where(ExecutionJob.status == "pending"))
-    )
-    for job in pending:
-        job.status = "running"
-        job.node_id = "e2e-worker"
-        job.attempt = int(job.attempt or 0) + 1
-        db.commit()
-        job_consumer.run_job(db, job.id)
-    db.commit()
 
 
 def _launch(db, port: int, graph: dict) -> TestRun:
@@ -189,9 +195,19 @@ def _launch(db, port: int, graph: dict) -> TestRun:
         launch_key=f"e2e-{uuid.uuid4().hex}",
     )
     db.commit()
-    _drain(db)
-    db.expire_all()
-    return db.get(TestRun, run.id)
+    # Worker 轮询是异步语义：允许有限轮真实 claim（禁止人工把 pending 改成 running）。
+    for _ in range(3):
+        _drain(db)
+        db.expire_all()
+        run = db.get(TestRun, run.id)
+        if not pending_jobs(db, run):
+            break
+    leftovers = pending_jobs(db, run)
+    assert not leftovers, (
+        "存在未被真实 Worker claim 的 pending Job（禁止人工 fallback 消费）: "
+        f"{leftovers}；run={run.id}"
+    )
+    return run
 
 
 def _http_graph(port: int, path: str, expected: Any, *, key: str = "biz") -> dict:
@@ -248,6 +264,7 @@ def test_tc_002_http_200_business_assertion_fails(db_session, sut):
     assert node.status == "FAILED", (node.status, node.error_class, [a.status for a in assertions])
     assert assertions and assertions[0].status == "FAIL", [a.status for a in assertions]
     assert run.outcome in {"FAIL", "INCOMPLETE"}, run.outcome
+    record_tc("TC-PLATFORM-001", db_session, run)
 
 
 # ── TC-004：DB 只读 + Query Registry ───────────────────────
@@ -330,6 +347,8 @@ def test_tc_004_query_registry_only_real_select(db_session, sut, tmp_path):
 
     rows = list(db_session.scalars(select(RunAssertionResult)))
     assert rows and rows[0].status == "PASS"
+    assert not pending_jobs(db_session, run), pending_jobs(db_session, run)
+    record_tc("TC-PLATFORM-002", db_session, run)
 
 
 # ── TC-005：SSRF/云元数据零请求 ────────────────────────────
@@ -349,6 +368,22 @@ def test_tc_005_metadata_endpoint_never_reached(db_session, sut):
     assert any(
         "target_policy" in item or "ssrf" in item or "policy" in item for item in events
     ), events
+    # 受控目标证明：把“可真实到达但不在 allowlist”的服务端目标作为危险目标，
+    # 策略必须阻断且目标计数器保持 0（而不是只断言节点状态）。
+    _Handler.health_hits = 0
+    denied_graph = _http_graph(port, "/health", expected=True)
+    denied_graph["nodes"][0]["input"]["url"] = f"http://localhost:{port}/health"
+    denied_run = _launch(db_session, port, denied_graph)
+    denied_node = db_session.scalar(select(NodeRun).where(NodeRun.run_id == denied_run.id))
+    assert denied_node.status == "BLOCKED", denied_node.status
+    assert _Handler.health_hits == 0, f"被阻断目标仍收到 {_Handler.health_hits} 次请求"
+    record_tc(
+        "TC-PLATFORM-003",
+        db_session,
+        run,
+        status="BLOCKED",
+        blocked_reason="策略阻断发生在断言执行前，无 AssertionResult（负向场景按 BLOCKED 记录）",
+    )
 
 
 # ── TC-007：迟到 fencing 结果拒绝 ─────────────────────────
@@ -387,9 +422,105 @@ def test_tc_007_stale_worker_result_rejected(db_session, sut):
     assert db_session.get(NodeRun, node.id).status != "PASSED"
 
 
+# ── TC-007：Worker 崩溃恢复（claim/执行/持久化/ack）+ 重复投递 ─────
+def test_tc_007_worker_crash_recovery_and_duplicate_delivery(db_session, sut):
+    """模拟 Worker 认领后崩溃（心跳/租约过期），必须由真实 Worker 重排完成。
+
+    - 崩溃点：claim 之后、persist 之前（等价于 execute 中断）；
+    - 崩溃后的迟到结果必须被 fencing 拒绝；
+    - 恢复后同一 Run 重新 claim 完成，Assertion 只产出一份（重复投递幂等）。
+    """
+    from app.aiqe.services import dag_scheduler, reconciler
+
+    port = sut
+    env = _project_env(db_session, port)
+    graph = _http_graph(port, "/health", expected=True)
+    workflow = create_workflow(db_session, project_id=1, graph=graph)
+    approve_workflow(db_session, workflow.id, approved_by=1)
+    launched = launch_run(
+        db_session,
+        project_id=1,
+        user_id=1,
+        workflow_definition_id=workflow.id,
+        environment_id=env.id,
+        launch_key=f"e2e-crash-{uuid.uuid4().hex}",
+    )
+    db_session.commit()
+
+    claimed = job_consumer.claim_aiqe_jobs(db_session)
+    assert claimed, "首个 Job 必须可被真实 Worker 认领"
+    job = db_session.get(ExecutionJob, claimed[0])
+    node = db_session.get(NodeRun, json.loads(job.payload_json)["node_run_id"])
+    stale_token = int(node.fencing_token or 0)
+    assert node.status in {"RUNNING", "PENDING", "READY"}, node.status
+
+    # 崩溃：claim 后不再心跳/执行 → 租约过期
+    job.lease_expires_at = datetime.now(UTC) - timedelta(minutes=10)
+    job.heartbeat_at = datetime.now(UTC) - timedelta(hours=2)
+    db_session.commit()
+
+    report = reconciler.reconcile(db_session, stale_seconds=60)
+    db_session.commit()
+    db_session.expire_all()
+    node = db_session.get(NodeRun, node.id)
+    assert job.id in report.expired_jobs, report
+    assert node.status == "PENDING", (node.status, node.error_class)
+
+    # 崩溃 Worker 的迟到结果：fencing 拒绝，且不改变节点状态
+    late = job_consumer.complete_from_report(
+        db_session,
+        job_id=job.id,
+        status="success",
+        result={"status": "PASSED", "data": {"success": True}},
+        fencing_token=stale_token,
+        node_id="crashed-worker",
+    )
+    assert late.get("skipped") is True, late
+    db_session.expire_all()
+    assert db_session.get(NodeRun, node.id).status == "PENDING"
+
+    # 恢复：PENDING → READY 后必须经调度器重新派发 Job（真实 dispatch 回调），
+    # 再由真实 Worker 认领执行。
+    from app.aiqe.services.execution_dispatcher import enqueue_node_run
+
+    def _dispatch(row) -> None:
+        enqueue_node_run(db_session, row, graph=graph)
+
+    dag_scheduler.schedule(db_session, launched.id, graph, dispatch=_dispatch)
+    db_session.commit()
+    for _ in range(3):
+        _drain(db_session)
+        db_session.expire_all()
+        run = db_session.get(TestRun, launched.id)
+        if not pending_jobs(db_session, run):
+            break
+    run = db_session.get(TestRun, launched.id)
+    assert not pending_jobs(db_session, run), pending_jobs(db_session, run)
+    assert run.outcome == "PASS", (run.outcome, run.status, run.preflight_json)
+    assertions = _assertions_of(db_session, run)
+    assert assertions and all(item.status == "PASS" for item in assertions), [
+        item.status for item in assertions
+    ]
+    assertion_count = len(assertions)
+
+    # 重复投递：终态 Job 的重复上报必须被拒绝，且不新增 Assertion
+    duplicate = job_consumer.complete_from_report(
+        db_session,
+        job_id=job.id,
+        status="success",
+        result={"status": "PASSED", "data": {"success": True}},
+        fencing_token=stale_token,
+        node_id="crashed-worker",
+    )
+    assert duplicate.get("skipped") is True, duplicate
+    assert len(_assertions_of(db_session, run)) == assertion_count
+    record_tc("TC-PLATFORM-004", db_session, run)
+
+
 # ── TC-008：缺陷一键回归（真实 Launch/Worker/Scope/Comparison）────
 def test_tc_008_defect_regression_end_to_end(db_session, sut):
     port = sut
+    _Handler.fixed = False  # 修复前：/fail 返回 success=false
     env = _project_env(db_session, port)
     graph = _http_graph(port, "/fail", expected=True, key="biz")
     workflow = create_workflow(db_session, project_id=1, graph=graph)
@@ -416,6 +547,8 @@ def test_tc_008_defect_regression_end_to_end(db_session, sut):
     db_session.add(defect)
     db_session.flush()
     sha = "d" * 40
+    # 模拟“修复后部署”：同一 SUT 在修复 SHA 下返回 success=true。
+    _Handler.fixed = True
     record_deployment_attestation(
         db_session, project_id=1, environment_id=env.id, commit_sha=sha, source="ci"
     )
@@ -440,9 +573,11 @@ def test_tc_008_defect_regression_end_to_end(db_session, sut):
     db_session.expire_all()
     run = db_session.get(TestRun, run.id)
     assert run.status in {"COMPLETED", "BLOCKED", "FAILED"}
+    # 修复后回归必须真正 PASS；FAIL/BLOCKED/UNKNOWN 只能是测试失败，不可被接受为回归成功。
+    assert run.outcome == "PASS", (run.outcome, run.status, run.preflight_json)
     result = handle_run_terminal(db_session, run_id=run.id)
     db_session.commit()
-    assert result.status in {"FAIL", "BLOCKED", "UNKNOWN", "PASS"}
+    assert result.status == "PASS", result.status
     assert result.comparison_id
     snapshot = db_session.get(RunComparisonSnapshot, result.comparison_id)
     assert snapshot is not None and snapshot.regression_run_id == run.id
@@ -459,49 +594,170 @@ def test_tc_008_defect_regression_end_to_end(db_session, sut):
     db_session.commit()
     assert created_again is False and again.id == row.id
     assert again_run is not None and again_run.id == run.id
+    record_tc("TC-PLATFORM-005", db_session, run)
+    _Handler.fixed = False
 
 
-# ── TC-010：AgentTask → Outbox → Job → ToolRegistry → AgentExecution ─
-def test_tc_010_agent_task_platform_chain(db_session):
-    from app.aiqe.agents.protocol import AgentResult
+# ── TC-010：A0 编排 + A1–A6 真实 Agent Adapter（ToolRegistry + Evidence）──
+def test_tc_010_agent_task_platform_chain(db_session, sut):
+    """A0（run_plan 编排）→ A1..A6 全链路，不注入自定义 executor。
 
-    _project_env(db_session, 80)
-    db_session.commit()
+    真实：AgentTask 状态机、BoundToolRegistry 授权/审计、Evidence Resolver、
+    AgentExecution 持久化、AgentResult.tool_calls。
+    边界：LLM 为确定性 stub（模型层是可替换边界），A6 仍需人工批准激活。
+    """
+    import json as _json
+
+    port = sut
+    run = _launch(db_session, port, _http_graph(port, "/health", expected=True))
+    assert run.outcome == "PASS"
+
     task = create_task(
         db_session,
         project_id=1,
-        goal="分析业务并准备测试",
-        include=("a1_requirement",),
+        goal="分析业务并准备测试、影响面与学习候选",
+        include=(
+            "a1_requirement",
+            "a2_test_design",
+            "a3_workflow",
+            "a4_triage",
+            "a5_impact",
+            "a6_learning",
+        ),
         requested_by=10,
-        idempotency_key="e2e-agent-1",
+        idempotency_key="e2e-agent-full",
+        run_id=run.id,
     )
     approve_task(db_session, task.id, project_id=1, approved_by=2)
     job = enqueue_task_job(db_session, task)
     db_session.commit()
 
-    def executor(plan_task, context, request):
-        tool = context.tools.resolve("A1", "read_project_context")
-        data = tool()
-        return AgentResult(
-            agent_key="A1",
-            agent_version="1.0.0",
-            status="COMPLETED",
-            output={"project": data["project_id"]},
-        )
+    evidence_ref = f"run:{run.id}"
+    prompts: list[str] = []
 
-    result = execute_task_job(db_session, job.id, executor=executor)
+    def stub_llm(system: str, prompt: str) -> str:
+        prompts.append(prompt)
+        if "需求评估" in system:
+            return _json.dumps(
+                {
+                    "summary": "健康检查需求可测",
+                    "acceptance_criteria": [
+                        {"id": "AC-1", "text": "health 返回 200", "source_ref": "PRD:health#200"}
+                    ],
+                    "risks": [],
+                }
+            )
+        if "测试设计" in system:
+            return _json.dumps(
+                {
+                    "decision": "approve",
+                    "cases": [
+                        {
+                            "title": "health 200",
+                            "priority": "P1",
+                            "steps": ["GET /health"],
+                            "acceptance_refs": ["AC-1"],
+                        }
+                    ],
+                    "coverage_notes": "覆盖基本健康检查",
+                    "reject_reason": "",
+                    "duplicate_of": [],
+                }
+            )
+        if "工作流规划" in system:
+            workflow = _http_graph(port, "/health", expected=True)
+            workflow["scenario_key"] = "e2e-a3"
+            return _json.dumps(
+                {
+                    "workflow": workflow,
+                    "rationale": "最小可执行工作流",
+                    "approval_required": True,
+                    "approval_status": "pending",
+                }
+            )
+        if "变更影响" in system:
+            return _json.dumps(
+                {
+                    "impacted_areas": ["unknown"],
+                    "candidate_suites": ["smoke-suite"],
+                    "forced_suites": [],
+                    "rationale": "无结构性证据时扩大回归",
+                }
+            )
+        if "归因" in system:
+            return _json.dumps(
+                {
+                    "execution_outcome": "INCOMPLETE",
+                    "attribution_status": "NEEDS_EXPERIMENT",
+                    "hypotheses": [
+                        {
+                            "classification": "AUTOMATION",
+                            "summary": "Runner 环境导致节点未完成",
+                            "supporting_evidence": [evidence_ref],
+                            "contradicting_evidence": [],
+                            "missing_evidence": ["runner 日志"],
+                            "recommended_experiment": "E1",
+                            "confidence": None,
+                            "confidence_band": "LOW",
+                            "status": "PROPOSED",
+                        }
+                    ],
+                    "human_review_required": True,
+                    "auto_close_defect": False,
+                }
+            )
+        if "BugPattern" in system:
+            return _json.dumps(
+                {
+                    "pattern_key": "runner-environment-flake",
+                    "description": "Runner 环境不稳定导致节点未完成",
+                    "conditions": ["node INCOMPLETE"],
+                    "source_refs": [evidence_ref],
+                    "false_positive_risk": "LOW",
+                    "rationale": "来自真实 Run 失败证据",
+                }
+            )
+        raise AssertionError(f"未覆盖的 Agent system prompt: {system[:80]}")
+
+    result = execute_task_job(db_session, job.id, llm=stub_llm)
     db_session.commit()
-    assert result["task"]["status"] == "COMPLETED"
+    assert result["task"]["status"] == "COMPLETED", result
     executions = list(
         db_session.scalars(
-            select(AgentExecution).where(AgentExecution.parent_task_id == task.id)
+            select(AgentExecution)
+            .where(AgentExecution.parent_task_id == task.id)
+            .order_by(AgentExecution.created_at)
         )
     )
-    assert len(executions) == 1 and executions[0].agent_key == "A1"
+    keys = {item.agent_key for item in executions}
+    assert keys == {"A1", "A2", "A3", "A4", "A5", "A6"}, keys
+    # 每个 Agent 的真实工具调用必须与 ToolExecutionAudit 对账
+    declared = {
+        item.agent_key: {call.get("tool") for call in (item.tool_calls_json or [])}
+        for item in executions
+    }
+    assert "read_requirements" in declared["A1"]
+    assert "read_git_diff" not in declared["A5"]  # 未提供 base/head 时不伪造 diff 证据
+    assert "read_defects" in declared["A4"]
+    assert "read_defects" in declared["A6"]
     audits = list(db_session.scalars(select(ToolExecutionAudit)))
-    assert audits and audits[0].tool_name == "read_project_context"
+    assert audits and all(row.task_id == task.id for row in audits)
+    audit_tools = {row.tool_name for row in audits}
+    assert {"read_project_context", "read_requirements", "read_defects"}.issubset(audit_tools)
+    # A4/A6 的证据引用必须经服务端 Evidence Resolver（而非模型自述）
+    assert evidence_ref in _json.dumps([row.source_refs_json for row in executions])
+    available = {row.tool_name for row in audits}
+    benchmark_tools = {"read_benchmark_dataset"} & available
+    assert benchmark_tools == set()
     job_row = db_session.get(ExecutionJob, job.id)
     assert job_row.status == "success"
+    record_tc(
+        "TC-PLATFORM-009",
+        db_session,
+        run,
+        status="PASS",
+        blocked_reason="",
+    )
 
 
 # ── TC-006：Secret 全链路（输出 Handle/下游授权/明文零落库）────
@@ -580,11 +836,24 @@ def test_tc_006_secret_chain_no_plaintext(db_session, sut):
     # 下游真实收到 Canary 明文（证明 Handle 被授权解析）
     assert _Handler.last_auth == f"Bearer {token_value}"
 
-    handles = list(db_session.scalars(select(SecretHandle)))
+    handles = list(
+        db_session.scalars(
+            select(SecretHandle).order_by(SecretHandle.created_at, SecretHandle.id)
+        )
+    )
     assert handles, "登录输出必须生成 SecretHandle"
-    handle = handles[0]
+    handle = next(
+        (
+            item
+            for item in handles
+            if "use" in list((item.consumer_scope_json or {}).get("allowed_nodes") or [])
+        ),
+        handles[0],
+    )
     scope = handle.consumer_scope_json or {}
-    assert "use" in list(scope.get("allowed_nodes") or []), scope
+    assert "use" in list(scope.get("allowed_nodes") or []), [
+        (item.id, item.consumer_scope_json) for item in handles
+    ]
     # 越权解析必须拒绝
     with pytest.raises(SecretAccessDenied):
         resolve_secret_handle(
@@ -621,6 +890,7 @@ def test_tc_006_secret_chain_no_plaintext(db_session, sut):
     for payload in payloads:
         assert token_value not in payload
         assert "e2e-refresh" not in payload
+    record_tc("TC-PLATFORM-006", db_session, run)
 
 
 # ── TC-009：Noise E1–E6 单变量实验（真实 Run/Worker）────────
@@ -655,20 +925,47 @@ def test_tc_009_noise_experiments_e1_to_e6(db_session, sut):
         _drain(db_session)
         db_session.expire_all()
         exp = db_session.get(TriageExperiment, exp.id)
+        exp = sync_experiment_result(db_session, exp.id)
+        db_session.commit()
         run = db_session.get(TestRun, launched.verification_run_id)
         assert run is not None and run.retest_of == baseline.id
         assert run.source_type == "experiment"
         assert run.status in {"COMPLETED", "BLOCKED", "FAILED"}, (key, run.status)
+        assert exp.changed_dimension == variable, (key, exp.changed_dimension)
+        assert exp.status in {"COMPLETED", "FAILED", "UNKNOWN", "BLOCKED"}, (
+            key,
+            exp.status,
+            exp.error_code,
+        )
+        # 故障归因：只有终态 Run 才能给出结论；UNKNOWN 不得被归类成已知根因。
+        if exp.status == "COMPLETED" and run.outcome:
+            conclusion = "REFUTED" if run.outcome == "PASS" else "SUPPORTED"
+            record_experiment_result(db_session, exp.id, result=conclusion)
+            db_session.commit()
+            assert db_session.get(TriageExperiment, exp.id).experiment_result == conclusion
+        else:
+            with pytest.raises(ExperimentError):
+                record_experiment_result(db_session, exp.id, result="SUPPORTED")
         assert exp.snapshot_diff_json["single_variable"] is True, key
         assert exp.snapshot_diff_json["expected_dimension"] == variable, key
         launched_runs.append(run.id)
     assert len(set(launched_runs)) == 6
+    record_tc("TC-PLATFORM-007", db_session, baseline)
 
 
 # ── TC-003：真实 Chromium 交互 + 子资源安全拦截 ─────────────
 @pytest.mark.browser
 def test_tc_003_browser_interaction_and_interception(db_session, sut):
-    from app.aiqe.drivers.playwright_driver import PlaywrightDriver
+    """浏览器节点必须经 ``node_executor``（正式节点执行器）而不是直接构造 Driver。
+
+    平台约束：进程内 Worker 不消费 browser driver（``job_consumer.INPROCESS_DRIVERS``
+    只含 http/db），浏览器节点由外部 Runner 执行。本用例覆盖
+    ``node_executor.execute_node -> _execute_playwright -> PlaywrightDriver`` 的
+    策略注入与拦截链路；完整 Run→Job→外部 Worker 链路见 V16-017-R1 缺口记录。
+    """
+    from app.aiqe.models.run import NodeRun
+
+    from app.aiqe.services import node_executor
 
     port = sut
     _Handler.asset_hits = 0
@@ -682,28 +979,30 @@ def test_tc_003_browser_interaction_and_interception(db_session, sut):
         max_redirects=0,
         decision=PolicyDecision.ALLOW,
     )
-    driver = PlaywrightDriver(policy=policy, timeout_ms=15000)
-    try:
-        result = driver.execute(
-            {
-                "url": f"http://127.0.0.1:{port}/page",
-                "actions": [
-                    {"type": "fill", "selector": "#name", "value": "Camel"},
-                    {"type": "click", "selector": "#go"},
-                    {"type": "assert_text", "selector": "#out", "expected": "hello Camel"},
-                ],
-            }
-        )
-    finally:
-        driver.close()
-    assert result.status == "SUCCEEDED", (result.error_class, result.error_message)
-    assert result.data["title"] == "AIQE-E2E"
-    records = result.data["actions"]
+    node = NodeRun(
+        run_id="transient-e2e-browser",
+        node_key="browser",
+        driver_key="playwright",
+        status="running",
+        input_ref={
+            "url": f"http://127.0.0.1:{port}/page",
+            "actions": [
+                {"type": "fill", "selector": "#name", "value": "Camel"},
+                {"type": "click", "selector": "#go"},
+                {"type": "assert_text", "selector": "#out", "expected": "hello Camel"},
+            ],
+        },
+    )
+    result = node_executor.execute_node(node, policy_context=policy)
+    assert result.status == "PASSED", (result.error_class, result.detail)
+    data = result.data or {}
+    assert data.get("title") == "AIQE-E2E", data
+    records = data.get("actions") or []
     assert len(records) >= 3 and all(not item.get("error") for item in records), records
     assert records[-1]["action"] == "assert_text"
     assert records[-1]["text"].strip() == "hello Camel"
     assert _Handler.asset_hits >= 1, "允许的子资源必须真实请求"
-    codes = {item["code"] for item in result.data["security_denials"]}
+    codes = {item["code"] for item in data.get("security_denials") or []}
     assert codes & {
         "ADDRESS_BLOCKED",
         "PRIVATE_ADDRESS_DENIED",
@@ -711,5 +1010,13 @@ def test_tc_003_browser_interaction_and_interception(db_session, sut):
         "PORT_NOT_ALLOWED",
     }, codes
     assert any(
-        item.get("host") == "169.254.169.254" for item in result.data["security_denials"]
-    ), result.data["security_denials"]
+        item.get("host") == "169.254.169.254" for item in data.get("security_denials") or []
+    ), data.get("security_denials")
+    record_tc(
+        "TC-PLATFORM-008",
+        status="BLOCKED",
+        blocked_reason=(
+            "browser 节点由外部 Runner 执行；本用例覆盖 node_executor→PlaywrightDriver，"
+            "未产生 TestRun，故不计入运行证据索引 PASS"
+        ),
+    )

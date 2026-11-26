@@ -1,6 +1,7 @@
 """M3 / TA-019：A0 Requirement Agent（需求 → 验收标准，必须带来源引用）。"""
 from __future__ import annotations
 
+from typing import Any
 from pydantic import BaseModel, Field, ValidationError
 
 from app.aiqe.agents.base import AgentSchemaError, BaseAgent
@@ -26,6 +27,12 @@ class RequirementAgent(BaseAgent):
         '{"summary": str, "acceptance_criteria": [{"id": str, "text": str, "source_ref": str}], '
         '"risks": [str]}。每条验收标准必须给出 source_ref（需求原文片段/章节），不得编造。'
     )
+
+    def gather_tool_evidence(self, executor: Any) -> dict[str, Any]:
+        return {
+            "project": executor.safe_call("read_project_context"),
+            "requirements": executor.safe_call("read_requirements"),
+        }
 
     def validate(self, data: dict) -> dict:
         try:

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "image-runtime-smoke",
+  "generated_at": "2026-11-25T05:07:59.360636+00:00",
+  "image": "cameltv-aiqe-api:1fa1c425d",
+  "image_id": "sha256:be8430b6809dcd7903a0b75226cb17754ae52f12331011df6c11743a0e3e3e54",
+  "container": "aiqe-v16-image-smoke",
+  "environment": "production",
+  "health_status": 200,
+  "health_body": "{\"status\":\"ok\",\"version\":\"2.1.0\"}",
+  "alembic_head": "20261122_v16_catalog_post_merge (batch27) (head)",
+  "migration_single_head": true,
+  "status": "PASS",
+  "note": "一次性随机密钥，未记录任何密钥值；容器已删除。"
+}

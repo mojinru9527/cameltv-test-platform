@@ -28,3 +28,8 @@ filelock>=3.32
 # 否则知识库 RAG 向量检索会在生产静默降级为仅关键词。
 fastembed>=0.3
 numpy>=1.26
+
+# 平台简化后 AIQE Query Registry（app/aiqe/security/sql_policy.py）在 API 进程内 import；
+# 镜像若缺此依赖，API 启动即失败（生产曾用 /opt/aiqe-v16-deps 运行时挂载规避）。
+# 与 requirements.txt 保持一致版本。
+sqlglot==30.33.0

@@ -1,0 +1,130 @@
+{
+  "schema_version": "1.0",
+  "environment": "production",
+  "release": "aiqe-v1.6",
+  "checked_at": null,
+  "source": "repository-doc-review-20261124",
+  "note": "本文件是生产运行证据的唯一定性来源。任何阶段只有在该阶段给出仓库内可校验 artifact（日志/JSON/镜像 digest）后才能置 PASS；只有现场记录或相邻文档互相矛盾时一律 NOT_PROVEN。文档叙述不得覆盖本文件。",
+  "stages": {
+    "stage1_shadow": {
+      "status": "NOT_PROVEN",
+      "artifacts": [],
+      "doc_refs": [
+        "docs/aiqe/v1.6/Staging-V16-Run-Evidence.md",
+        "docs/aiqe/v1.6/Production-Readiness.md"
+      ],
+      "note": "文档记录 Shadow/ Dogfood / 小流量 Run PASS，但未提交 Run/Job/Assertion/Artifact 机器产物或 CI Run 链接。"
+    },
+    "stage2_dogfood": {
+      "status": "NOT_PROVEN",
+      "artifacts": [
+        "docs/aiqe/v1.6/evidence/production-run-history.json"
+      ],
+      "doc_refs": [
+        "docs/aiqe/v1.6/Staging-V16-Run-Evidence.md"
+      ],
+      "note": "生产环境有 2,992 次真实 Run（2026-11-12..22，2,972 PASS），但 source_type 均为 manual/regression，无 dogfood 阶段标记；另发现 1 条 QUEUED 长期未完成。stage 仍 NOT_PROVEN。"
+    },
+    "stage3_small_traffic": {
+      "status": "NOT_PROVEN",
+      "artifacts": [],
+      "doc_refs": [
+        "docs/aiqe/v1.6/Staging-V16-Run-Evidence.md"
+      ],
+      "note": "同上。"
+    },
+    "stage4_expand": {
+      "status": "NOT_PROVEN",
+      "artifacts": [],
+      "doc_refs": [
+        "docs/aiqe/v1.6/Staging-V16-Run-Evidence.md",
+        "docs/aiqe/v1.6/Production-Readiness.md",
+        "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
+      ],
+      "note": "Staging 证据与 Production-Readiness 记录 Stage 4/5 未执行，GA 报告却写已完成；无执行产物。"
+    },
+    "stage5_ga": {
+      "status": "NOT_PROVEN",
+      "artifacts": [],
+      "doc_refs": [
+        "docs/aiqe/v1.6/GA-Decision-20261122.md",
+        "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
+      ],
+      "note": "用户授权记录存在，但缺少独立验收签署与发布证据包。"
+    },
+    "postgres_backup_restore": {
+      "status": "PASS",
+      "artifacts": [
+        "docs/aiqe/v1.6/evidence/production-backup-restore.json"
+      ],
+      "doc_refs": [
+        "docs/aiqe/v1.6/Production-Readiness.md",
+        "docs/aiqe/v1.6/Platform-Residual-Resolution.md"
+      ],
+      "note": "生产 PG 用 pre-M13 dump（sha256 62cf…，112 表）恢复到临时 DB 后删除；恢复流程验证通过，当前 132 表库待下次备份复验。"
+    },
+    "vault_production_mode": {
+      "status": "PASS",
+      "artifacts": [
+        "docs/aiqe/v1.6/evidence/production-vault-status.json"
+      ],
+      "doc_refs": [
+        "docs/aiqe/v1.6/Vault-Transit-Deployment.md",
+        "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
+      ],
+      "note": "生产 Vault：initialized/unsealed、Shamir 3/5、file 持久化挂载、TLS1.2（tls_disable=0）；已归档脱敏 status/config 证据。"
+    },
+    "monitoring_alerts": {
+      "status": "PASS",
+      "artifacts": [
+        "docs/aiqe/v1.6/evidence/production-monitoring-alerts.json"
+      ],
+      "doc_refs": [
+        "docs/aiqe/v1.6/observability/Monitoring-and-Alerts.md",
+        "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
+      ],
+      "note": "Prometheus 3 组/21 条规则加载、Alertmanager ready；自建 AIQEProbe 告警投递后 active、随后 resolved 并清理；未触发真实阈值。"
+    },
+    "container_egress": {
+      "status": "PASS",
+      "artifacts": [
+        "docs/aiqe/v1.6/evidence/egress-allowlist-candidates.json",
+        "docs/aiqe/v1.6/evidence/production-container-egress.json"
+      ],
+      "doc_refs": [
+        "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
+      ],
+      "note": "DOCKER-USER allowlist 已按 aiqe-v16-backend 源 IP 生效：DeepSeek 可达、example.com 拒绝、生产/AIQE health 200；解析 IP 变更需维护。"
+    },
+    "image_self_contained": {
+      "status": "PASS",
+      "artifacts": [
+        "docs/aiqe/v1.6/evidence/image-build.json",
+        "docs/aiqe/v1.6/evidence/image-sbom.cdx.json",
+        "docs/aiqe/v1.6/evidence/image-requirements-frozen.txt",
+        "docs/aiqe/v1.6/evidence/image-runtime-smoke.json"
+      ],
+      "doc_refs": [
+        "docs/aiqe/v1.6/Production-Deploy-20261123.md",
+        "test-platform-v2/backend/Dockerfile"
+      ],
+      "note": "2026-11-25 从 commit 1fa1c425d 干净构建 target=api：image id sha256:be8430b6…、tar sha256 13363e00…、sqlglot 30.33.0 import OK、CycloneDX SBOM 251 components；运行态冒烟 PASS（production 配置 + /health 200 + Alembic 单头 20261122_v16_catalog_post_merge）；旧镜像 aiqe-prod-20261119-1 无 sqlglot。"
+    },
+    "production_smoke": {
+      "status": "PASS",
+      "artifacts": [
+        "docs/aiqe/v1.6/evidence/production-smoke.json"
+      ],
+      "doc_refs": [
+        "docs/aiqe/v1.6/Production-Deploy-20261123.md"
+      ],
+      "note": "health 200（2.1.0）、镜像 digest sha256:9c450e…、源码 tar sha256 77439f…；运行容器源文件 blob 与 commit 9bbbdbb 一致。"
+    }
+  },
+  "independent_verification": {
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "artifact": null,
+    "note": "生产验收尚无独立签字记录。"
+  }
+}

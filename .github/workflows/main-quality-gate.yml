@@ -89,6 +89,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          # AIQE 测试需要 HEAD~1 做真实 git diff（服务端影响分析/工具证据）
+          fetch-depth: 0
 
       - name: Setup Python
         if: ${{ needs.detect_changes.outputs.backend == 'true' }}

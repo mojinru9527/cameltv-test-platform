@@ -1,5 +1,8 @@
 # Sprint 0 工程交付差距报告
 
+> **STATUS: HISTORICAL** — 本文记录 2026-11-2x 当时的执行事实与结论；其中 PASS/VERIFIED 等表述不代表当前发布判定。当前状态以 `release-verdict.json`、`E2E-Coverage-and-Blockers.md` 与 `governance/production-evidence.json` 为准。
+
+
 - 生成时间：2026-11-19
 - 基线：`86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f`
 - 范围：Sprint 0（分支/环境/迁移基线/依赖/调用图/追踪矩阵/CI Gate）+ 进行中的 P0

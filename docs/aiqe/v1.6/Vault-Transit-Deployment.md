@@ -1,5 +1,8 @@
 # Vault Transit 外部 KMS 部署与验证
 
+> **STATUS: HISTORICAL** — 本文记录 2026-11-2x 当时的执行事实与结论；其中 PASS/VERIFIED 等表述不代表当前发布判定。当前状态以 `release-verdict.json`、`E2E-Coverage-and-Blockers.md` 与 `governance/production-evidence.json` 为准。
+
+
 > 2026-11-21；测试机 `aiqe-test-net`；开发/测试模式，不是生产持久化部署。
 
 ## 部署

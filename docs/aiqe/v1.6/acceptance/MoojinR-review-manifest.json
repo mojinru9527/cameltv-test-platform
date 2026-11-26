@@ -1,0 +1,1721 @@
+{
+  "schema_version": "1.0",
+  "reviewer": "MoojinR",
+  "reviewer_role": "qa",
+  "generated_at": "2026-11-26T01:20:00+08:00",
+  "records_dir": "docs/aiqe/v1.6/acceptance/records",
+  "total": 70,
+  "reviewed": 0,
+  "items": [
+    {
+      "id": "V16-001-R1",
+      "issue": "V16-001",
+      "priority": "P0",
+      "title": "策略四态决策与不可变授权快照",
+      "owner": "backend-security",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "commit:09140401f",
+        "pytest:tests/test_aiqe_v16_001_policy_fail_closed.py (25 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_policy_decision_four_states"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_run_without_environment_and_never_reaches_target",
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_when_policy_resolver_raises"
+        ],
+        "boundary": [
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_expired_policy_blocks_node_execution"
+        ]
+      }
+    },
+    {
+      "id": "V16-001-R2",
+      "issue": "V16-001",
+      "priority": "P0",
+      "title": "Worker 入口在创建 Driver 前 fail-closed",
+      "owner": "backend-security",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "commit:09140401f",
+        "pytest:tests/test_aiqe_v16_001_policy_fail_closed.py (25 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_allows_authorized_target_and_persists_policy_evidence"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_run_without_policy_record",
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_when_policy_record_removed_before_claim",
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_blocks_private_and_metadata_targets",
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_db_node_rejects_workflow_sql_and_never_connects",
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_network_node_with_none_capabilities_blocks"
+        ],
+        "boundary": [
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_expired_policy_blocks_node_execution"
+        ]
+      }
+    },
+    {
+      "id": "V16-001-R3",
+      "issue": "V16-001",
+      "priority": "P0",
+      "title": "删除 legacy fail-open 执行器与静态门禁",
+      "owner": "backend-security",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "commit:09140401f",
+        "pytest:tests/test_aiqe_v16_001_policy_fail_closed.py (25 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_worker_allows_authorized_target_and_persists_policy_evidence"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_no_legacy_executors_and_policy_context_is_required"
+        ]
+      }
+    },
+    {
+      "id": "V16-001-R4",
+      "issue": "V16-001",
+      "priority": "P0",
+      "title": "外部 Runner 载荷与上报同样受策略约束",
+      "owner": "execution-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "commit:09140401f",
+        "pytest:tests/test_aiqe_v16_001_policy_fail_closed.py (25 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_payload_endpoint_returns_policy_snapshot_when_authorized"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_payload_endpoint_blocks_without_policy_and_never_handed_payload",
+          "tests/test_aiqe_external_node_report.py::test_external_report_without_policy_blocks_even_if_runner_claims_success"
+        ]
+      }
+    },
+    {
+      "id": "V16-001-R5",
+      "issue": "V16-001",
+      "priority": "P0",
+      "title": "旧 Workflow 策略迁移与 NEEDS_POLICY_REVIEW 禁止启动",
+      "owner": "backend-security",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "commit:09140401f",
+        "pytest:tests/test_aiqe_v16_001_policy_fail_closed.py (25 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_legacy_workflow_migration_tool_classifies_workflows"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_001_policy_fail_closed.py::test_workflow_needs_policy_review_cannot_launch"
+        ]
+      }
+    },
+    {
+      "id": "V16-002-R1",
+      "issue": "V16-002",
+      "priority": "P0",
+      "title": "应用层导航预校验 + 浏览器层 route 全请求拦截",
+      "owner": "driver-device",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "commit:6eeb7b316",
+        "pytest:tests/test_aiqe_v16_002_playwright_interception.py (10 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_002_playwright_interception.py::test_allowed_navigation_loads_page_and_subresources"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_002_playwright_interception.py::test_main_navigation_outside_policy_blocked_before_browser_starts",
+          "tests/test_aiqe_v16_002_playwright_interception.py::test_subresource_requests_to_denied_target_blocked"
+        ],
+        "boundary": [
+          "tests/test_aiqe_v16_002_playwright_interception.py::test_dns_mixed_public_and_private_rejected",
+          "tests/test_aiqe_v16_002_playwright_interception.py::test_route_installed_before_page_and_service_workers_blocked"
+        ]
+      }
+    },
+    {
+      "id": "V16-002-R2",
+      "issue": "V16-002",
+      "priority": "P0",
+      "title": "出口代理覆盖 redirect / WebSocket / 弹窗与 DNS pinning",
+      "owner": "driver-device",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "commit:6eeb7b316",
+        "pytest:tests/test_aiqe_v16_002_playwright_interception.py (11 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_002_playwright_interception.py::test_allowed_navigation_loads_page_and_subresources"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_002_playwright_interception.py::test_redirect_to_denied_target_blocked_and_never_reached",
+          "tests/test_aiqe_v16_002_playwright_interception.py::test_redirect_to_cloud_metadata_blocked",
+          "tests/test_aiqe_v16_002_playwright_interception.py::test_websocket_to_denied_target_never_handshakes",
+          "tests/test_aiqe_v16_002_playwright_interception.py::test_popup_navigation_to_denied_target_blocked"
+        ]
+      }
+    },
+    {
+      "id": "V16-002-R3",
+      "issue": "V16-002",
+      "priority": "P0",
+      "title": "拦截证据与安全事件（不含敏感值）",
+      "owner": "backend-security",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "commit:6eeb7b316",
+        "pytest:tests/test_aiqe_v16_002_playwright_interception.py (10 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_002_playwright_interception.py::test_subresource_requests_to_denied_target_blocked"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_002_playwright_interception.py::test_main_navigation_outside_policy_blocked_before_browser_starts",
+          "tests/test_aiqe_v16_002_playwright_interception.py::test_security_denials_exclude_sensitive_headers_and_query"
+        ]
+      }
+    },
+    {
+      "id": "V16-003-R1",
+      "issue": "V16-003",
+      "priority": "P0",
+      "title": "输出分类与 Secret Handle 化（唯一安全写入入口）",
+      "owner": "backend-security",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_003_secret_handle_chain.py (6 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_003_secret_handle_chain.py::test_worker_secret_chain_persists_handles_and_zero_plaintext"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_003_secret_handle_chain.py::test_handle_resolution_scope_denials",
+          "tests/test_aiqe_v16_003_secret_handle_chain.py::test_sensitive_non_string_value_is_redacted_not_handled"
+        ],
+        "boundary": [
+          "tests/test_aiqe_v16_003_secret_handle_chain.py::test_run_detail_api_masks_secret_handles"
+        ]
+      }
+    },
+    {
+      "id": "V16-003-R2",
+      "issue": "V16-003",
+      "priority": "P0",
+      "title": "持久化/API/日志/Artifact 零明文（Canary 扫描）",
+      "owner": "backend-security",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_003_secret_handle_chain.py (6 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_003_secret_handle_chain.py::test_worker_secret_chain_persists_handles_and_zero_plaintext"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_003_secret_handle_chain.py::test_run_detail_api_masks_secret_handles",
+          "tests/test_aiqe_v16_003_secret_handle_chain.py::test_log_redaction_filter_scrubs_canaries"
+        ]
+      }
+    },
+    {
+      "id": "V16-003-R3",
+      "issue": "V16-003",
+      "priority": "P0",
+      "title": "Vault 不可用 fail-closed 与生命周期（过期/撤销/轮换）",
+      "owner": "backend-security",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_003_secret_handle_chain.py (6 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_003_secret_handle_chain.py::test_worker_secret_chain_persists_handles_and_zero_plaintext"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_003_secret_handle_chain.py::test_vault_unavailable_blocks_execution_without_plaintext",
+          "tests/test_aiqe_v16_003_secret_handle_chain.py::test_handle_resolution_scope_denials"
+        ]
+      }
+    },
+    {
+      "id": "V16-003-R4",
+      "issue": "V16-003",
+      "priority": "P0",
+      "title": "外部 Secret Store / KMS 跨进程解析（Vault Transit）",
+      "owner": "security",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "live:vault transit encrypt/decrypt roundtrip PASS；本地索引仅 ciphertext，无 plaintext",
+        "live:V1.6 API image build_external_store provider=vault -> VaultTransitStore put/get PASS",
+        "pytest:tests/test_aiqe_v16_003_vault_transit.py (3 passed)",
+        "pytest:tests/test_aiqe_v16_003_external_secret_store.py (7 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_003_vault_transit.py::test_vault_roundtrip_and_ciphertext_only",
+          "tests/test_aiqe_v16_003_external_secret_store.py::test_encrypted_file_store_roundtrip_and_no_plaintext"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_003_vault_transit.py::test_vault_missing_config_fails_closed",
+          "tests/test_aiqe_v16_003_vault_transit.py::test_vault_http_failure_fails_closed",
+          "tests/test_aiqe_v16_003_external_secret_store.py::test_missing_or_invalid_key_fails_closed",
+          "tests/test_aiqe_v16_003_external_secret_store.py::test_wrong_key_cannot_decrypt"
+        ]
+      }
+    },
+    {
+      "id": "V16-004-R1",
+      "issue": "V16-004",
+      "priority": "P0",
+      "title": "Query Registry 服务端化 + AST allowlist",
+      "owner": "backend-security",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_004_query_registry_boundary.py (25 passed)",
+        "artifact:docs/aiqe/v1.6/evidence/pg-readonly-role.json (PASS：PostgreSQL 16.14，scope=loopback，写操作被 ReadOnlySqlTransaction 拒绝)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_004_query_registry_boundary.py::test_worker_runs_registered_query_and_writes_audit",
+          "tests/test_aiqe_v16_004_query_registry_boundary.py::test_register_derives_allowed_tables_and_hash",
+          "tests/test_aiqe_v16_004_pg_readonly.py::test_scope_marks_loopback_vs_remote"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_004_query_registry_boundary.py::test_worker_rejects_workflow_overrides_without_connecting",
+          "tests/test_aiqe_v16_004_query_registry_boundary.py::test_sql_policy_ast_matrix",
+          "tests/test_aiqe_v16_004_query_registry_boundary.py::test_register_rejects_unsafe_sql",
+          "tests/test_aiqe_v16_004_query_registry_boundary.py::test_execution_revalidates_disallowed_table",
+          "tests/test_aiqe_v16_004_query_registry_boundary.py::test_execution_rejects_system_table",
+          "tests/test_aiqe_v16_004_query_registry_boundary.py::test_execution_rejects_unapproved_query"
+        ],
+        "boundary": [
+          "tests/test_aiqe_v16_004_query_registry_boundary.py::test_workflow_validator_rejects_db_override",
+          "tests/test_aiqe_v16_004_query_registry_boundary.py::test_workflow_validator_requires_query_key"
+        ],
+        "concurrency": []
+      }
+    },
+    {
+      "id": "V16-004-R2",
+      "issue": "V16-004",
+      "priority": "P0",
+      "title": "租户谓词、限额、审批与执行审计",
+      "owner": "backend-security",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_004_query_registry_boundary.py (25 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_004_query_registry_boundary.py::test_worker_runs_registered_query_and_writes_audit",
+          "tests/test_aiqe_v16_004_query_registry_boundary.py::test_admin_query_registry_register_and_approve",
+          "tests/test_aiqe_v16_004_query_registry_boundary.py::test_request_limits_can_only_tighten"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_004_query_registry_boundary.py::test_execution_rejects_fake_tenant_predicate",
+          "tests/test_aiqe_v16_004_query_registry_boundary.py::test_execution_rejects_cross_project_and_production_env"
+        ]
+      }
+    },
+    {
+      "id": "V16-004-R3",
+      "issue": "V16-004",
+      "priority": "P0",
+      "title": "只读数据库连接拒绝写操作",
+      "owner": "security",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_004_readonly_db.py (2 passed)",
+        "script:scripts/aiqe/check_pg_readonly_role.py (no dsn -> NOT_PROVEN)",
+        "artifact:docs/aiqe/v1.6/evidence/pg-readonly-role.json"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_004_readonly_db.py::test_query_registry_select_runs_on_readonly_engine"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_004_readonly_db.py::test_readonly_database_rejects_insert_and_allows_select"
+        ]
+      }
+    },
+    {
+      "id": "V16-005-R1",
+      "issue": "V16-005",
+      "priority": "P1",
+      "title": "fencing token 强制覆盖全部写结果路径",
+      "owner": "execution-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_005_lease_fencing.py (6 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_005_lease_fencing.py::test_duplicate_delivery_is_idempotent"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_005_lease_fencing.py::test_stale_worker_result_rejected",
+          "tests/test_aiqe_v16_005_lease_fencing.py::test_expired_lease_report_rejected",
+          "tests/test_aiqe_v16_005_lease_fencing.py::test_complete_node_rejects_stale_token"
+        ]
+      }
+    },
+    {
+      "id": "V16-005-R2",
+      "issue": "V16-005",
+      "priority": "P1",
+      "title": "Job 幂等键与重复投递不产生第二副作用",
+      "owner": "execution-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_005_lease_fencing.py (6 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_005_lease_fencing.py::test_dispatch_is_idempotent_and_unique_index_enforced"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_005_lease_fencing.py::test_duplicate_delivery_is_idempotent"
+        ]
+      }
+    },
+    {
+      "id": "V16-005-R3",
+      "issue": "V16-005",
+      "priority": "P1",
+      "title": "Reconciler 收敛 QUEUED 悬挂与幂等对账",
+      "owner": "execution-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_005_lease_fencing.py (6 passed)",
+        "pytest:tests/test_aiqe_aud006_state_recovery.py (15 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_005_lease_fencing.py::test_reconciler_converges_queued_run_without_job"
+        ],
+        "negative": [
+          "tests/test_aiqe_aud006_state_recovery.py::test_reconciler_blocks_after_requeue_limit",
+          "tests/test_aiqe_aud006_state_recovery.py::test_old_worker_cannot_overwrite_after_reconcile"
+        ]
+      }
+    },
+    {
+      "id": "V16-006-R1",
+      "issue": "V16-006",
+      "priority": "P1",
+      "title": "唯一 Launch 入口与 LaunchResult 契约",
+      "owner": "execution-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_006_unified_launch.py (7 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_006_unified_launch.py::test_launch_result_contains_jobs_nodes_and_snapshot",
+          "tests/test_aiqe_v16_006_unified_launch.py::test_noise_experiment_launch_creates_real_jobs"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_006_unified_launch.py::test_regression_without_source_snapshot_is_blocked"
+        ],
+        "boundary": [
+          "tests/test_aiqe_v16_006_unified_launch.py::test_launch_idempotency_key_returns_same_run_and_no_second_job"
+        ]
+      }
+    },
+    {
+      "id": "V16-006-R2",
+      "issue": "V16-006",
+      "priority": "P1",
+      "title": "Outbox 同事务写入与幂等 relay",
+      "owner": "execution-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_006_unified_launch.py (7 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_006_unified_launch.py::test_outbox_written_same_transaction_and_relay_idempotent"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_006_unified_launch.py::test_outbox_relay_failure_retries_then_fails"
+        ]
+      }
+    },
+    {
+      "id": "V16-007-R1",
+      "issue": "V16-007",
+      "priority": "P1",
+      "title": "不可变 WorkflowSnapshot 与 Run 绑定",
+      "owner": "execution-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_007_workflow_snapshot.py (10 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_snapshot_is_content_addressed_and_immutable",
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_launch_binds_immutable_snapshot"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_snapshot_is_project_scoped",
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_launch_with_snapshot_rejects_checksum_mismatch"
+        ],
+        "boundary": [
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_snapshot_hash_detects_tampering",
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_graph_override_is_frozen_into_snapshot"
+        ]
+      }
+    },
+    {
+      "id": "V16-007-R2",
+      "issue": "V16-007",
+      "priority": "P1",
+      "title": "SnapshotCloner 完整复制 DAG 与 clone diff",
+      "owner": "execution-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_007_workflow_snapshot.py (10 passed)",
+        "pytest:tests/test_aiqe_v16_006_unified_launch.py (7 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_clone_graph_preserves_dependencies_edges_assertions_outputs",
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_clone_removing_dependency_rewrites_edges"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_007_workflow_snapshot.py::test_clone_snapshot_creates_child_and_validates"
+        ],
+        "boundary": [
+          "tests/test_aiqe_v16_006_unified_launch.py::test_regression_launch_creates_real_jobs_and_preserves_dag"
+        ]
+      }
+    },
+    {
+      "id": "V16-008-R1",
+      "issue": "V16-008",
+      "priority": "P1",
+      "title": "服务端 Scope Snapshot 与三类集合",
+      "owner": "quality-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_008_mandatory_scope.py (11 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_scope_plan_builds_mandatory_related_smoke_and_checksum",
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_regression_freezes_scope_snapshot_and_binds_run"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_scope_plan_rejects_missing_mandatory_and_empty_scope",
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_scope_snapshot_is_immutable_and_tamper_evident"
+        ]
+      }
+    },
+    {
+      "id": "V16-008-R2",
+      "issue": "V16-008",
+      "priority": "P1",
+      "title": "Launch 强制 Scope 且禁止排除 Mandatory",
+      "owner": "quality-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_008_mandatory_scope.py (11 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_regression_freezes_scope_snapshot_and_binds_run"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_launch_requires_scope_snapshot_for_regression",
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_launch_rejects_scope_with_missing_mandatory",
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_regression_without_failure_evidence_is_blocked"
+        ]
+      }
+    },
+    {
+      "id": "V16-008-R3",
+      "issue": "V16-008",
+      "priority": "P1",
+      "title": "Run PASS 门禁：Mandatory 全部 PASSED",
+      "owner": "quality-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_008_mandatory_scope.py (11 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_mandatory_failed_never_passes"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_mandatory_blocked_is_incomplete",
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_mandatory_missing_from_execution_is_incomplete"
+        ]
+      }
+    },
+    {
+      "id": "V16-008-R4",
+      "issue": "V16-008",
+      "priority": "P1",
+      "title": "回归幂等键确定性（SHA/Snapshot/Scope/Env）",
+      "owner": "quality-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_008_mandatory_scope.py (11 passed)",
+        "pytest:tests/test_aiqe_regression_api.py (14 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_different_sha_or_environment_creates_new_regression"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_008_mandatory_scope.py::test_launch_rejects_scope_with_missing_mandatory"
+        ],
+        "boundary": [
+          "tests/test_aiqe_regression_api.py::test_fingerprint_idempotent"
+        ]
+      }
+    },
+    {
+      "id": "V16-009-R1",
+      "issue": "V16-009",
+      "priority": "P1",
+      "title": "节点类别与业务 Oracle 强制",
+      "owner": "execution-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_009_pass_semantics.py (9 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_009_pass_semantics.py::test_worker_business_assertion_pass_yields_run_pass"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_009_pass_semantics.py::test_validator_rejects_business_node_without_oracle",
+          "tests/test_aiqe_v16_009_pass_semantics.py::test_worker_business_assertion_failure_is_not_pass",
+          "tests/test_aiqe_v16_009_pass_semantics.py::test_worker_business_without_oracle_blocks"
+        ],
+        "boundary": [
+          "tests/test_aiqe_v16_009_pass_semantics.py::test_validator_allows_setup_cleanup_observe_without_oracle",
+          "tests/test_aiqe_v16_009_pass_semantics.py::test_business_oracle_detection"
+        ]
+      }
+    },
+    {
+      "id": "V16-009-R2",
+      "issue": "V16-009",
+      "priority": "P1",
+      "title": "Run PASS 语义与业务证据",
+      "owner": "execution-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_009_pass_semantics.py (9 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_009_pass_semantics.py::test_worker_business_assertion_pass_yields_run_pass"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_009_pass_semantics.py::test_setup_only_graph_cannot_pass",
+          "tests/test_aiqe_v16_009_pass_semantics.py::test_business_node_without_assertion_rows_never_passes"
+        ]
+      }
+    },
+    {
+      "id": "V16-010-R1",
+      "issue": "V16-010",
+      "priority": "P1",
+      "title": "Benchmark Gate 唯一批准条件",
+      "owner": "ai-quality",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_010_benchmark_gate.py (11 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_010_benchmark_gate.py::test_passing_candidate_approved_and_published"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_010_benchmark_gate.py::test_reference_only_small_sample_rejected",
+          "tests/test_aiqe_v16_010_benchmark_gate.py::test_low_recall_rejected",
+          "tests/test_aiqe_v16_010_benchmark_gate.py::test_high_fpr_or_unknown_rejected",
+          "tests/test_aiqe_v16_010_benchmark_gate.py::test_cross_project_benchmark_rejected"
+        ]
+      }
+    },
+    {
+      "id": "V16-010-R2",
+      "issue": "V16-010",
+      "priority": "P1",
+      "title": "审批/发布事务内重校验与撤销",
+      "owner": "ai-quality",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_010_benchmark_gate.py (11 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_010_benchmark_gate.py::test_passing_candidate_approved_and_published"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_010_benchmark_gate.py::test_dataset_change_after_evaluation_blocks_approval",
+          "tests/test_aiqe_v16_010_benchmark_gate.py::test_publish_rejects_rule_change_after_approval",
+          "tests/test_aiqe_v16_010_benchmark_gate.py::test_automation_service_cannot_self_approve",
+          "tests/test_aiqe_v16_010_benchmark_gate.py::test_regression_against_published_baseline_rejected"
+        ]
+      }
+    },
+    {
+      "id": "V16-011-R1",
+      "issue": "V16-011",
+      "priority": "P1",
+      "title": "Benchmark/Learning Service 跨项目隔离",
+      "owner": "ai-quality",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_011_project_scope.py (8 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_011_project_scope.py::test_dataset_cross_project_read_rejected"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_011_project_scope.py::test_add_sample_cross_project_rejected",
+          "tests/test_aiqe_v16_011_project_scope.py::test_freeze_cross_project_rejected",
+          "tests/test_aiqe_v16_011_project_scope.py::test_run_benchmark_cross_project_rejected",
+          "tests/test_aiqe_v16_011_project_scope.py::test_metrics_and_run_cross_project_rejected",
+          "tests/test_aiqe_v16_011_project_scope.py::test_candidate_cross_project_rejected",
+          "tests/test_aiqe_v16_011_project_scope.py::test_evaluate_cross_project_benchmark_rejected",
+          "tests/test_aiqe_v16_011_project_scope.py::test_related_resources_must_share_project"
+        ]
+      }
+    },
+    {
+      "id": "V16-012-R1",
+      "issue": "V16-012",
+      "priority": "P1",
+      "title": "服务端 Evidence Resolver",
+      "owner": "ai-quality",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_012_evidence_resolver.py (12 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_012_evidence_resolver.py::test_resolver_metadata_contract"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_012_evidence_resolver.py::test_cross_project_resolver_refuses",
+          "tests/test_aiqe_v16_012_evidence_resolver.py::test_tombstoned_artifact_blocks",
+          "tests/test_aiqe_v16_012_evidence_resolver.py::test_checksum_missing_blocks"
+        ]
+      }
+    },
+    {
+      "id": "V16-012-R2",
+      "issue": "V16-012",
+      "priority": "P1",
+      "title": "A4 归因证据强制校验与 BLOCKED 语义",
+      "owner": "ai-quality",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_012_evidence_resolver.py (12 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_012_evidence_resolver.py::test_valid_evidence_passes_through_adapter"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_012_evidence_resolver.py::test_missing_evidence_ref_blocks",
+          "tests/test_aiqe_v16_012_evidence_resolver.py::test_cross_run_artifact_blocks",
+          "tests/test_aiqe_v16_012_evidence_resolver.py::test_cross_project_artifact_blocks",
+          "tests/test_aiqe_v16_012_evidence_resolver.py::test_resolver_unavailable_blocks",
+          "tests/test_aiqe_v16_012_evidence_resolver.py::test_resolver_exception_blocks",
+          "tests/test_aiqe_v16_012_evidence_resolver.py::test_a4_validate_requires_supporting_evidence"
+        ]
+      }
+    },
+    {
+      "id": "V16-012-R3",
+      "issue": "V16-012",
+      "priority": "P1",
+      "title": "证据快照/hash 防替换",
+      "owner": "ai-quality",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_012_evidence_resolver.py (12 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_012_evidence_resolver.py::test_valid_evidence_passes_through_adapter"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_012_evidence_resolver.py::test_resolver_metadata_contract"
+        ]
+      }
+    },
+    {
+      "id": "V16-013-R1",
+      "issue": "V16-013",
+      "priority": "P1",
+      "title": "持久化 AgentTask 与审批状态机",
+      "owner": "ai-quality",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_013_agent_task.py (9 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_013_agent_task.py::test_approval_records_identity_and_rejects_plan_change"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_013_agent_task.py::test_draft_does_not_execute_agent",
+          "tests/test_aiqe_v16_013_agent_task.py::test_cross_project_task_hidden",
+          "tests/test_aiqe_v16_013_agent_task.py::test_cancel_and_terminal_rules"
+        ]
+      }
+    },
+    {
+      "id": "V16-013-R2",
+      "issue": "V16-013",
+      "priority": "P1",
+      "title": "审批后真实执行 run_plan 与失败语义",
+      "owner": "ai-quality",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_013_agent_task.py (9 passed)",
+        "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (10 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_013_agent_task.py::test_approved_run_executes_every_plan_node",
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_010_agent_task_platform_chain"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_013_agent_task.py::test_agent_failure_does_not_mark_task_completed",
+          "tests/test_aiqe_v16_013_agent_task.py::test_a4_without_resolver_blocks_agent_task"
+        ]
+      }
+    },
+    {
+      "id": "V16-013-R3",
+      "issue": "V16-013",
+      "priority": "P1",
+      "title": "Outbox + ExecutionJob 异步执行入口",
+      "owner": "ai-quality",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_013_agent_task.py (9 passed)",
+        "pytest:tests/test_aiqe_capabilities_api.py::test_agent_task_plan",
+        "pytest:tests/test_aiqe_v16_019_agent_task_consumer.py (3 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_013_agent_task.py::test_enqueue_and_execute_job",
+          "tests/test_aiqe_v16_019_agent_task_consumer.py::test_run_job_dispatches_agent_task_to_executor",
+          "tests/test_aiqe_v16_019_agent_task_consumer.py::test_run_job_routes_agent_task_kind"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_013_agent_task.py::test_cancel_and_terminal_rules",
+          "tests/test_aiqe_v16_019_agent_task_consumer.py::test_claim_agent_task_jobs_only_claims_agent_tasks"
+        ],
+        "boundary": [
+          "tests/test_aiqe_capabilities_api.py::test_agent_task_plan"
+        ]
+      }
+    },
+    {
+      "id": "V16-014-R1",
+      "issue": "V16-014",
+      "priority": "P1",
+      "title": "A5 证据化 Change Impact 分析",
+      "owner": "ai-quality",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_014_change_impact.py (8 passed)",
+        "pytest:tests/test_aiqe_v16_019_agent_tool_loop.py (13 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_014_change_impact.py::test_route_and_permission_change_has_structural_evidence",
+          "tests/test_aiqe_v16_014_change_impact.py::test_migration_change_is_data_evidence",
+          "tests/test_aiqe_v16_014_change_impact.py::test_ui_route_change_classified",
+          "tests/test_aiqe_v16_014_change_impact.py::test_transitive_dependency_evidence",
+          "tests/test_aiqe_v16_019_agent_tool_loop.py::test_a5_gathers_regression_plan_when_refs_present"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_014_change_impact.py::test_unsupported_file_forces_unknown_and_broad_regression",
+          "tests/test_aiqe_v16_014_change_impact.py::test_missing_diff_is_unknown_not_no_impact",
+          "tests/test_aiqe_v16_014_change_impact.py::test_invalid_shas_and_empty_files_rejected"
+        ]
+      }
+    },
+    {
+      "id": "V16-014-R2",
+      "issue": "V16-014",
+      "priority": "P1",
+      "title": "A5 impacted cases 进入 Mandatory/Related Scope",
+      "owner": "ai-quality",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_014_catalog_scope.py (5 passed)",
+        "pytest:tests/test_aiqe_v16_014_catalog_scope.py (9 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_014_catalog_scope.py::test_regression_includes_catalog_node_in_mandatory_scope",
+          "tests/test_aiqe_v16_014_catalog_scope.py::test_catalog_match_route_to_node_refs",
+          "tests/test_aiqe_v16_014_catalog_scope.py::test_server_recomputes_impact_from_real_git",
+          "tests/test_aiqe_v16_014_catalog_scope.py::test_server_recompute_matches_catalog_entry"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_014_catalog_scope.py::test_tampered_impact_analysis_blocks_regression",
+          "tests/test_aiqe_v16_014_catalog_scope.py::test_catalog_checksum_and_project_isolation",
+          "tests/test_aiqe_v16_014_catalog_scope.py::test_server_rejects_caller_analysis_mismatch",
+          "tests/test_aiqe_v16_014_catalog_scope.py::test_server_rejects_invalid_base_sha"
+        ],
+        "boundary": [
+          "tests/test_aiqe_v16_014_catalog_scope.py::test_unknown_analysis_broadens_to_all_catalog_nodes"
+        ]
+      }
+    },
+    {
+      "id": "V16-015-R1",
+      "issue": "V16-015",
+      "priority": "P1",
+      "title": "VERIFIED 只来自真实验收 Run + Artifact",
+      "owner": "driver-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_015_capability_verification.py (8 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_015_capability_verification.py::test_verify_from_run_writes_evidence_and_verified"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_015_capability_verification.py::test_verify_requires_completed_pass_run",
+          "tests/test_aiqe_v16_015_capability_verification.py::test_verify_requires_same_run_available_artifacts",
+          "tests/test_aiqe_v16_015_capability_verification.py::test_verify_rejects_cross_project_run",
+          "tests/test_aiqe_v16_015_capability_verification.py::test_manifest_cannot_self_declare_verified"
+        ]
+      }
+    },
+    {
+      "id": "V16-015-R2",
+      "issue": "V16-015",
+      "priority": "P1",
+      "title": "Preflight 只接受 VERIFIED 与软件变更自动降级",
+      "owner": "driver-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_015_capability_verification.py (8 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_015_capability_verification.py::test_verified_capability_passes_production_preflight"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_015_capability_verification.py::test_production_preflight_rejects_available_capability",
+          "tests/test_aiqe_v16_015_capability_verification.py::test_runner_image_digest_change_invalidates_verification"
+        ]
+      }
+    },
+    {
+      "id": "V16-016-R1",
+      "issue": "V16-016",
+      "priority": "P1",
+      "title": "GA 平台声明与动作粒度 Preflight",
+      "owner": "driver-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_016_platform_boundaries.py (6 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_016_platform_boundaries.py::test_ga_matrix_only_web_is_verified_and_ga",
+          "tests/test_aiqe_v16_016_platform_boundaries.py::test_platform_actions_supported_and_unsupported"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_016_platform_boundaries.py::test_preflight_blocks_unsupported_platform_actions"
+        ]
+      }
+    },
+    {
+      "id": "V16-016-R2",
+      "issue": "V16-016",
+      "priority": "P1",
+      "title": "设备租约回收与 PlatformBinding 绑定",
+      "owner": "driver-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_016_platform_boundaries.py (6 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_016_platform_boundaries.py::test_device_broker_lease_expiry_reaps_and_recovers",
+          "tests/test_aiqe_v16_016_platform_boundaries.py::test_platform_binding_records_environment_pool_runner"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_016_platform_boundaries.py::test_device_broker_ios_disabled_and_release_rules"
+        ]
+      }
+    },
+    {
+      "id": "V16-017-R1",
+      "issue": "V16-017",
+      "priority": "P1",
+      "title": "平台链路真实 E2E（10/10）",
+      "owner": "qa-automation",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (9 passed)",
+        "pytest:tests/e2e/aiqe/test_v16_017_tc001_contract.py (1 passed)",
+        "artifact:docs/aiqe/v1.6/e2e/platform-results.json (10 TC machine results)",
+        "artifact:docs/aiqe/v1.6/evidence/evidence-index.json (build_evidence_index.py)",
+        "pytest:tests/e2e/aiqe/test_v16_017_platform_chain.py (10 passed)",
+        "artifact:docs/aiqe/v1.6/e2e/product-tc-config.yaml (10 个产品 TC 执行计划)",
+        "script:scripts/aiqe/run_product_tc.py (product results runner)",
+        "pytest:tests/test_aiqe_v16_017_product_runner.py (5 passed)",
+        "artifact:docs/aiqe/v1.6/evidence/futurewayu-production-readonly.json (生产只读实测 PROBED：后台 SPA/后端 200、公开 C 端 banner 接口 200 真实数据、受保护接口 401；缺只读 Token/DSN)",
+        "script:scripts/aiqe/per_tc/futurewayu_production_readonly.py (GET-only + 只读 SQL 守卫)",
+        "artifact:docs/aiqe/v1.6/evidence/futurewayu-production-crud.json (自建 banner CRUD + 清理 PASS)",
+        "artifact:docs/aiqe/v1.6/evidence/futurewayu-aiqe-workflow.json (AIQE Run PASS：create→DB 解析 ID→update→delete)"
+      ],
+      "tests": {
+        "success": [
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_004_query_registry_only_real_select",
+          "tests/e2e/aiqe/test_v16_017_tc001_contract.py::test_tc_001_contract_freeze_and_v2_impact",
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_007_worker_crash_recovery_and_duplicate_delivery",
+          "tests/test_aiqe_v16_017_product_runner.py::test_config_covers_all_product_tcs",
+          "tests/test_aiqe_v16_017_product_runner.py::test_run_with_fake_runners_aggregates_pass",
+          "tests/test_aiqe_v16_017_futurewayu_readonly.py::test_probes_against_local_fake_server"
+        ],
+        "negative": [
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_002_http_200_business_assertion_fails",
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_005_metadata_endpoint_never_reached",
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_007_stale_worker_result_rejected",
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_005_metadata_endpoint_never_reached",
+          "tests/test_aiqe_v16_017_product_runner.py::test_run_without_env_is_not_proven",
+          "tests/test_aiqe_v16_017_product_runner.py::test_run_with_failed_runner_is_nonzero",
+          "tests/test_aiqe_v16_017_futurewayu_readonly.py::test_get_only_guard"
+        ]
+      }
+    },
+    {
+      "id": "V16-017-R2",
+      "issue": "V16-017",
+      "priority": "P1",
+      "title": "产品级 10/10 E2E",
+      "owner": "qa-automation",
+      "status": "PARTIAL",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "live:TC-001/002/003/005/006/007/009 verified",
+        "live:TC-004 core/integration fixture PASS (CROSS_FEATURE_DEFECT)",
+        "live:TC-008 defect 4 + regression 3 PASS",
+        "live:TC-010 dataset 2bd42c33... + run 31295377... PASS_GATE; candidate cc1a9114... ACTIVE"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready"
+        ],
+        "negative": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser"
+        ]
+      }
+    },
+    {
+      "id": "V16-018-R1",
+      "issue": "V16-018",
+      "priority": "P1",
+      "title": "Artifact finalize 完整性与归属校验",
+      "owner": "security",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_018_artifact_security.py (9 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_018_artifact_security.py::test_content_type_mismatch_rejected"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_018_artifact_security.py::test_upload_session_expiry_rejects_finalize",
+          "tests/test_aiqe_v16_018_artifact_security.py::test_expected_size_mismatch_rejected",
+          "tests/test_aiqe_v16_018_artifact_security.py::test_step_attempt_from_other_run_rejected"
+        ]
+      }
+    },
+    {
+      "id": "V16-018-R2",
+      "issue": "V16-018",
+      "priority": "P1",
+      "title": "Evidence Lifecycle 与访问审计",
+      "owner": "security",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_018_artifact_security.py (9 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_018_artifact_security.py::test_download_records_access_event",
+          "tests/test_aiqe_v16_018_artifact_security.py::test_stale_pending_upload_marked_failed_and_blocks_evidence"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_018_artifact_security.py::test_cross_project_download_denied",
+          "tests/test_aiqe_v16_018_artifact_security.py::test_tombstoned_evidence_ref_is_explicitly_unavailable",
+          "tests/test_aiqe_v16_018_artifact_security.py::test_forged_storage_uri_rejected"
+        ]
+      }
+    },
+    {
+      "id": "V16-019-R1",
+      "issue": "V16-019",
+      "priority": "P1",
+      "title": "工具真实绑定与启动可用性校验",
+      "owner": "ai-quality",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_019_tool_registry.py (13 passed)",
+        "pytest:tests/test_aiqe_v16_019_agent_tool_loop.py (13 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_019_tool_registry.py::test_all_allowlist_tools_classified",
+          "tests/test_aiqe_v16_019_tool_registry.py::test_read_tool_returns_real_project_and_writes_audit",
+          "tests/test_aiqe_v16_019_agent_tool_loop.py::test_read_requirements_returns_real_contracts",
+          "tests/test_aiqe_v16_019_agent_tool_loop.py::test_read_git_diff_returns_server_derived_evidence",
+          "tests/test_aiqe_v16_019_agent_tool_loop.py::test_create_regression_plan_is_proposal_only"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_019_tool_registry.py::test_unregistered_and_unavailable_rejected",
+          "tests/test_aiqe_v16_019_tool_registry.py::test_agent_without_permission_rejected",
+          "tests/test_aiqe_v16_019_agent_tool_loop.py::test_read_requirements_is_project_scoped",
+          "tests/test_aiqe_v16_019_agent_tool_loop.py::test_write_tools_remain_unavailable",
+          "tests/test_aiqe_v16_019_agent_tool_loop.py::test_create_regression_plan_rejects_cross_project"
+        ]
+      }
+    },
+    {
+      "id": "V16-019-R2",
+      "issue": "V16-019",
+      "priority": "P1",
+      "title": "参数 schema / Project 越权 / 限流 / 超时拒绝",
+      "owner": "ai-quality",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_019_tool_registry.py (13 passed)",
+        "pytest:tests/test_aiqe_v16_019_agent_tool_loop.py (9 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_019_tool_registry.py::test_project_override_rejected"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_019_tool_registry.py::test_schema_extra_field_rejected_and_audited",
+          "tests/test_aiqe_v16_019_tool_registry.py::test_secret_argument_rejected",
+          "tests/test_aiqe_v16_019_tool_registry.py::test_rate_limit_enforced",
+          "tests/test_aiqe_v16_019_tool_registry.py::test_timeout_enforced",
+          "tests/test_aiqe_v16_019_agent_tool_loop.py::test_tool_executor_rejects_unauthorized_tool"
+        ]
+      }
+    },
+    {
+      "id": "V16-019-R3",
+      "issue": "V16-019",
+      "priority": "P1",
+      "title": "工具调用审计与审批/生产只读",
+      "owner": "ai-quality",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_019_tool_registry.py (13 passed)",
+        "pytest:tests/test_aiqe_v16_019_agent_tool_loop.py (13 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_019_tool_registry.py::test_deny_and_allow_audits_recorded",
+          "tests/test_aiqe_v16_019_tool_registry.py::test_agent_task_uses_bound_registry",
+          "tests/test_aiqe_v16_019_agent_tool_loop.py::test_a1_agent_invokes_tools_through_executor",
+          "tests/test_aiqe_v16_019_agent_tool_loop.py::test_tool_executor_records_invocations_and_audits",
+          "tests/test_aiqe_v16_019_agent_tool_loop.py::test_a5_agent_reads_git_diff_when_shas_provided",
+          "tests/test_aiqe_v16_019_agent_tool_loop.py::test_a5_gathers_regression_plan_when_refs_present"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_019_tool_registry.py::test_write_tool_requires_approval_token",
+          "tests/test_aiqe_v16_019_tool_registry.py::test_production_rejects_write_even_with_token"
+        ]
+      }
+    },
+    {
+      "id": "V16-020-R1",
+      "issue": "V16-020",
+      "priority": "P1",
+      "title": "仅真实终态 Run 生成 Comparison Snapshot",
+      "owner": "execution-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_020_terminal_comparison.py (5 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_020_terminal_comparison.py::test_terminal_pass_generates_immutable_comparison_and_is_idempotent"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_020_terminal_comparison.py::test_non_terminal_run_cannot_generate_comparison"
+        ]
+      }
+    },
+    {
+      "id": "V16-020-R2",
+      "issue": "V16-020",
+      "priority": "P1",
+      "title": "聚合规则与不可变对比证据",
+      "owner": "execution-platform",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_020_terminal_comparison.py (5 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_020_terminal_comparison.py::test_terminal_pass_generates_immutable_comparison_and_is_idempotent"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_020_terminal_comparison.py::test_outcome_pass_without_assertions_is_unknown",
+          "tests/test_aiqe_v16_020_terminal_comparison.py::test_required_failure_maps_to_fail_and_needs_more_fix",
+          "tests/test_aiqe_v16_020_terminal_comparison.py::test_blocked_required_assertion_maps_to_blocked"
+        ]
+      }
+    },
+    {
+      "id": "V16-021-R1",
+      "issue": "V16-021",
+      "priority": "P2",
+      "title": "Dogfood 脚本无弱默认口令",
+      "owner": "security",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_021_weak_password.py (3 passed)",
+        "artifact:docs/aiqe/v1.6/evidence/credential-scan.json (CLEAN：0 potential-secret；10 weak-default 已脱敏登记)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_021_weak_password.py::test_secret_file_provider_is_supported",
+          "tests/test_aiqe_v16_021_credential_scan.py::test_classify_localhost_dsn_is_weak_default"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_021_weak_password.py::test_no_hardcoded_password_or_password_cli_option",
+          "tests/test_aiqe_v16_021_weak_password.py::test_missing_credentials_exits_nonzero_without_secret",
+          "tests/test_aiqe_v16_021_credential_scan.py::test_classify_example_dsn_is_placeholder"
+        ]
+      }
+    },
+    {
+      "id": "V16-022-R1",
+      "issue": "V16-022",
+      "priority": "P2",
+      "title": "依赖锁定与一键复现",
+      "owner": "devops",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_022_reproducible.py (5 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_022_reproducible.py::test_lockfile_pins_runtime_and_test_dependencies",
+          "tests/test_aiqe_v16_022_reproducible.py::test_reproducibility_doc_exists"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_022_reproducible.py::test_unknown_layer_and_empty_layer_fail"
+        ]
+      }
+    },
+    {
+      "id": "V16-022-R2",
+      "issue": "V16-022",
+      "priority": "P2",
+      "title": "测试分层执行器与 JUnit 产物",
+      "owner": "devops",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_022_reproducible.py (5 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_022_reproducible.py::test_layer_listing_and_dry_run"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_022_reproducible.py::test_unknown_layer_and_empty_layer_fail",
+          "tests/test_aiqe_v16_022_reproducible.py::test_pytest_layers_are_declared"
+        ]
+      }
+    },
+    {
+      "id": "V16-023-R1",
+      "issue": "V16-023",
+      "priority": "P2",
+      "title": "机器可读 evidence-index 生成器",
+      "owner": "qa-automation",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_023_evidence_index.py (8 passed)",
+        "artifact:docs/aiqe/v1.6/evidence/evidence-index.json",
+        "artifact:.github/workflows/aiqe-v16-gates.yml (evidence index CI step)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_023_evidence_index.py::test_valid_ten_tcs_builds_ga_ready_index",
+          "tests/test_aiqe_v16_023_evidence_index.py::test_cli_writes_index_and_fails_on_blocked"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_023_evidence_index.py::test_pass_without_artifact_is_rejected",
+          "tests/test_aiqe_v16_023_evidence_index.py::test_pass_without_job_is_rejected",
+          "tests/test_aiqe_v16_023_evidence_index.py::test_duplicate_tc_rejected",
+          "tests/test_aiqe_v16_023_evidence_index.py::test_invalid_commit_sha_rejected",
+          "tests/test_aiqe_v16_023_evidence_index.py::test_blocked_requires_reason_and_is_excluded_from_pass_rate",
+          "tests/test_aiqe_v16_023_evidence_index.py::test_require_tcs_enforced"
+        ]
+      }
+    },
+    {
+      "id": "V16-024-R1",
+      "issue": "V16-024",
+      "priority": "P0",
+      "title": "指标与告警（21 项 / P0 Canary）",
+      "owner": "devops",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_024_production.py (8 passed)",
+        "script:scripts/aiqe/check_alerts.py (alerts=21 metrics=21)",
+        "artifact:docs/aiqe/v1.6/evidence/image-build.json (target=api，sqlglot 30.33.0，image/tar digest)",
+        "artifact:docs/aiqe/v1.6/evidence/image-sbom.cdx.json (CycloneDX 251 components)",
+        "artifact:docs/aiqe/v1.6/evidence/image-requirements-frozen.txt (镜像内 pip freeze)",
+        "artifact:docs/aiqe/v1.6/evidence/image-runtime-smoke.json (production 配置 /health 200 + Alembic 单头)",
+        "script:scripts/aiqe/verify_image_runtime.py (镜像运行态冒烟，一次性随机密钥)",
+        "artifact:docs/aiqe/v1.6/evidence/production-vault-status.json (Shamir/unsealed/TLS1.2/file)",
+        "artifact:docs/aiqe/v1.6/evidence/production-backup-restore.json (pre-M13 dump 恢复 112 表后清理)",
+        "artifact:docs/aiqe/v1.6/evidence/production-monitoring-alerts.json (21 规则 + synthetic alert 激活/清理)",
+        "artifact:docs/aiqe/v1.6/evidence/production-smoke.json (health 200 + digest + 源码 tar sha256)",
+        "artifact:docs/aiqe/v1.6/evidence/production-pg-readonly-role.json (生产 aiqe_ro 写拒绝；readonly/timeout 未硬化)",
+        "artifact:docs/aiqe/v1.6/evidence/production-container-egress.json (DOCKER-USER 空，NetworkPolicy 未在 Docker 生效)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_024_production.py::test_metrics_registry_low_cardinality_and_render",
+          "tests/test_aiqe_v16_024_production.py::test_alert_rules_cover_required_metrics",
+          "tests/test_aiqe_v16_024_image_evidence.py::test_single_head_accepts_exactly_one_head_line"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_024_production.py::test_metrics_endpoint_token_and_production_fail_closed",
+          "tests/test_aiqe_v16_024_production.py::test_alert_validator_rejects_missing_metric_or_bad_severity",
+          "tests/test_aiqe_v16_024_image_evidence.py::test_single_head_rejects_multiple_or_empty"
+        ]
+      }
+    },
+    {
+      "id": "V16-024-R2",
+      "issue": "V16-024",
+      "priority": "P0",
+      "title": "容器 egress / 限流 / Canary 计数器",
+      "owner": "devops",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_024_production.py (8 passed)",
+        "script:scripts/aiqe/check_container_egress.py (policies=2 configmaps=1)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_024_production.py::test_container_egress_policy_deny_by_default",
+          "tests/test_aiqe_v16_024_production.py::test_rate_limit_enforced_only_in_production"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_024_production.py::test_alert_validator_rejects_missing_metric_or_bad_severity"
+        ]
+      }
+    },
+    {
+      "id": "V16-024-R3",
+      "issue": "V16-024",
+      "priority": "P0",
+      "title": "灰度 / 备份恢复 / 监控联调演练",
+      "owner": "devops",
+      "status": "PARTIAL",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_024_backup_drill.py (3 passed)",
+        "live:aiqe-test-postgres pg_dump/restore 178 tables PASS (2026-11-21)",
+        "live:V1.6 API image cameltv-tp-backend:v16-api (711MB) + staging aiqe-v16-backend health/metrics 200",
+        "live:Shadow run 9fb84240-8906-4a17-9338-b368718e38c4 PASS; Dogfood 9804b240-524c-44de-99b8-e8f8f6581853 PASS",
+        "live:small_traffic be4e64cb-6f2a-40a7-bf65-e27fd3ab018f / e5ef2ebf-3579-43fa-b5f1-698c68b86f38 / 4bc9b025-b8e9-4e7f-a339-720ad8b42912 PASS",
+        "live:Stage4 expand 10/10 PASS (5d3c9c00/d7b8dba1/413ecbec/e74a93a8/2d0cc997/d7163357/8d9db2f6/c6ff3cc7/f334fc53/3ac2b180)",
+        "live:Stage5 GA approved by user (2026-11-22); container egress metadata deny test BLOCKED OSError; Vault prod TLS/Shamir/persistence",
+        "live:Prometheus target aiqe-v16-backend up; AIQE rules 21 loaded; AIQE self-test alert delivered to webhook"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_024_backup_drill.py::test_backup_restore_drill_passes_and_is_verifiable"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_024_backup_drill.py::test_drill_rejects_non_sqlite_or_memory_or_missing",
+          "tests/test_aiqe_v16_024_backup_drill.py::test_cli_exit_codes"
+        ]
+      }
+    },
+    {
+      "id": "V16-025-R1",
+      "issue": "V16-025",
+      "priority": "P0",
+      "title": "需求—代码—正式入口—测试—证据追踪与 CI 门禁",
+      "owner": "tech-lead",
+      "status": "VERIFIED",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "pytest:tests/test_aiqe_v16_025_traceability_gate.py (11 passed)",
+        "artifact:.github/workflows/aiqe-v16-gates.yml (CI Gate)",
+        "artifact:.github/CODEOWNERS (code ownership)",
+        "artifact:.github/pull_request_template.md (PR 模板)",
+        "pytest:tests/test_aiqe_v16_025_acceptance_records.py (10 passed)",
+        "artifact:docs/aiqe/v1.6/governance/review-roles.yaml",
+        "artifact:docs/aiqe/v1.6/acceptance/README.md",
+        "artifact:docs/aiqe/v1.6/traceability/runtime-evidence.schema.json (runtime_evidence Schema)",
+        "artifact:docs/aiqe/v1.6/governance/audit-closure.yaml (19 项审计整改台账)",
+        "artifact:docs/aiqe/v1.6/V1.6.1-Audit-Closure-Report.md (generated)",
+        "script:scripts/aiqe/check_audit_closure.py (CI wired)",
+        "artifact:docs/aiqe/v1.6/governance/branch-protection.json (GitHub API ruleset 导出)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_025_traceability_gate.py::test_valid_matrix_passes",
+          "tests/test_aiqe_v16_025_acceptance_records.py::test_valid_record_passes",
+          "tests/test_aiqe_v16_025_acceptance_records.py::test_load_records_merges_valid_record",
+          "tests/test_aiqe_v16_025_traceability_gate.py::test_accepts_runtime_evidence_full_ref_set",
+          "tests/test_aiqe_v16_025_audit_closure.py::test_ledger_covers_required_audit_items",
+          "tests/test_aiqe_v16_025_audit_closure.py::test_report_is_fresh_and_check_passes",
+          "tests/test_aiqe_v16_025_branch_protection.py::test_complete_evidence_passes",
+          "tests/test_aiqe_v16_025_branch_protection.py::test_repo_evidence_is_real_and_consistent"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_missing_negative_test_for_p0",
+          "tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_accepted_without_reviewed_acceptance",
+          "tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_self_review",
+          "tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_bare_evidence",
+          "tests/test_aiqe_release_audit.py::test_secrets_and_e2e_scans",
+          "tests/test_aiqe_release_audit.py::test_requirements_status_rules",
+          "tests/test_aiqe_v16_025_acceptance_records.py::test_same_role_domain_rejected",
+          "tests/test_aiqe_v16_025_acceptance_records.py::test_pending_reviewer_rejected",
+          "tests/test_aiqe_v16_025_acceptance_records.py::test_missing_artifact_rejected",
+          "tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_runtime_evidence_unknown_ref_key",
+          "tests/test_aiqe_v16_025_audit_closure.py::test_closed_item_requires_existing_evidence",
+          "tests/test_aiqe_v16_025_audit_closure.py::test_external_item_requires_blocker_owner_action",
+          "tests/test_aiqe_v16_025_branch_protection.py::test_non_author_review_required",
+          "tests/test_aiqe_v16_025_branch_protection.py::test_force_push_and_deletion_must_be_disabled",
+          "tests/test_aiqe_v16_025_traceability_gate.py::test_expected_commit_must_equal_baseline"
+        ],
+        "boundary": [
+          "tests/test_aiqe_release_audit.py::test_repo_release_audit_is_clean"
+        ]
+      }
+    },
+    {
+      "id": "TC-AIQE-001",
+      "issue": "TC-AIQE-001",
+      "priority": "P1",
+      "title": "需求契约冻结 + 需求变更影响",
+      "owner": "qa-automation",
+      "status": "PARTIAL",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "manual:A1 V1 4 AC / V2 6 AC；V1 FROZEN checksum=sha256:...；V1 checksum 不变；V2 checksum 不同；用例 CASE-FAV-001 置 DRAFT",
+        "human:用户确认“实时同步” SLA=≤5 秒"
+      ],
+      "tests": {
+        "success": [
+          "tests/e2e/aiqe/test_v16_017_tc001_contract.py::test_tc_001_contract_freeze_and_v2_impact"
+        ],
+        "negative": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser"
+        ],
+        "boundary": [],
+        "concurrency": []
+      }
+    },
+    {
+      "id": "TC-AIQE-002",
+      "issue": "TC-AIQE-002",
+      "priority": "P1",
+      "title": "运营后台发布资讯 → 前端可查看（用户批准简化口径）",
+      "owner": "qa-automation",
+      "status": "PARTIAL",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "manual:admin 新增 article aiqe-news-1795265608 / groupId 1781182573699923987；审核通过；是否上线=是",
+        "manual:前端列表出现标题；详情 URL /news/detail/aiqe-news-1795265608；标题+正文可见，无 Something went wrong",
+        "script:scripts/qa/aiqe_test5_news_front.py PASS（4/4 checks）"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready"
+        ],
+        "negative": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser"
+        ],
+        "boundary": [],
+        "concurrency": []
+      }
+    },
+    {
+      "id": "TC-AIQE-003",
+      "issue": "TC-AIQE-003",
+      "priority": "P1",
+      "title": "API 首次失败 + 重试成功 → 不得掩盖失败",
+      "owner": "qa-automation",
+      "status": "PARTIAL",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "manual:test5 retry PASS run=ef8c0d14；proxy_hits=2；attempt1 FAILED(STATUS_MISMATCH)；attempt2 PASSED"
+      ],
+      "tests": {
+        "success": [
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_007_stale_worker_result_rejected"
+        ],
+        "negative": [
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_002_http_200_business_assertion_fails"
+        ],
+        "boundary": [],
+        "concurrency": []
+      }
+    },
+    {
+      "id": "TC-AIQE-004",
+      "issue": "TC-AIQE-004",
+      "priority": "P1",
+      "title": "广告/其他功能浮层造成交叉干扰",
+      "owner": "qa-automation",
+      "status": "PARTIAL",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "manual:test5 overlay PASS（core login modal input_count=2；integration blocked=true；hit_target=div#dontfoid；classification=CROSS_FEATURE_DEFECT）",
+        "manual:REGISTER/Login 邮箱与手机号两种登录方式区分 PASS（register/login 均 email vs mobile 输入互斥）"
+      ],
+      "tests": {
+        "success": [
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_003_browser_interaction_and_interception"
+        ],
+        "negative": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser"
+        ],
+        "boundary": [],
+        "concurrency": []
+      }
+    },
+    {
+      "id": "TC-AIQE-005",
+      "issue": "TC-AIQE-005",
+      "priority": "P1",
+      "title": "并发数据污染",
+      "owner": "qa-automation",
+      "status": "PARTIAL",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "manual:test5 concurrency PASS resource=match:l7oqdehg7gkgr51；A finish <= B start；serialized=true；两 Run PASS",
+        "pytest:tests/test_aiqe_v16_017_resource_lock.py (1 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_017_resource_lock.py::test_released_lock_is_immediately_acquirable"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_005_lease_fencing.py::test_duplicate_delivery_is_idempotent"
+        ],
+        "boundary": [],
+        "concurrency": []
+      }
+    },
+    {
+      "id": "TC-AIQE-006",
+      "issue": "TC-AIQE-006",
+      "priority": "P1",
+      "title": "上游第三方故障",
+      "owner": "qa-automation",
+      "status": "PARTIAL",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "manual:test5 upstream run=fb913d5c；node=BLOCKED/UPSTREAM_5XX；assertion=BLOCKED；bug_created=false",
+        "pytest:tests/test_aiqe_v16_017_upstream.py (2 passed)"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_v16_017_upstream.py::test_upstream_504_is_blocked_not_product_fail"
+        ],
+        "negative": [
+          "tests/test_aiqe_v16_017_upstream.py::test_504_without_upstream_flag_is_status_mismatch"
+        ],
+        "boundary": [],
+        "concurrency": []
+      }
+    },
+    {
+      "id": "TC-AIQE-007",
+      "issue": "TC-AIQE-007",
+      "priority": "P1",
+      "title": "UI Runner 自身故障",
+      "owner": "qa-automation",
+      "status": "PARTIAL",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "manual:browser kill Run 1c5e7411 outcome=FAIL；Node=ERROR/AUTOMATION/WORKER_FAILURE；assertion=NOT_EVALUATED；attempts=1"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_external_node_report.py::test_external_report_failure_marks_node"
+        ],
+        "negative": [
+          "tests/test_aiqe_external_node_report.py::test_external_report_without_policy_blocks_even_if_runner_claims_success"
+        ],
+        "boundary": [],
+        "concurrency": []
+      }
+    },
+    {
+      "id": "TC-AIQE-008",
+      "issue": "TC-AIQE-008",
+      "priority": "P1",
+      "title": "开发修复后点击回归",
+      "owner": "qa-automation",
+      "status": "PARTIAL",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "live:defect 4 confirmed（AUD-007/policy_status migration failure）",
+        "live:regression 3 PASS；fixed_sha=7cca033313fe320ab7f498dfa34ad114e9e60f94；comparison=01a344b3-d699-418c-a8cd-b07abce239cf",
+        "live:verification run be2cf240-b0e5-4647-8883-3a6c1520a952 COMPLETED/PASS；assertion health:ok PASS；previous health BLOCKED",
+        "live:deployment attestation 8c475d96-b266-40c5-b178-e4c91b197cd4"
+      ],
+      "tests": {
+        "success": [
+          "tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_008_defect_regression_end_to_end"
+        ],
+        "negative": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser"
+        ],
+        "boundary": [],
+        "concurrency": []
+      }
+    },
+    {
+      "id": "TC-AIQE-009",
+      "issue": "TC-AIQE-009",
+      "priority": "P2",
+      "title": "多端 AC 对照",
+      "owner": "qa-automation",
+      "status": "PARTIAL",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "manual:PC title=PASS；Android Quark title=PASS；设备 ONEPLUS A6010 / Android 11；deviation=Quark 非 Chrome"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready"
+        ],
+        "negative": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser"
+        ],
+        "boundary": [],
+        "concurrency": []
+      }
+    },
+    {
+      "id": "TC-AIQE-010",
+      "issue": "TC-AIQE-010",
+      "priority": "P1",
+      "title": "学习候选发布",
+      "owner": "qa-automation",
+      "status": "PARTIAL",
+      "acceptance": "NOT_REVIEWED",
+      "evidence": [
+        "live:project=15 future-wayu; dataset=2bd42c33-fb58-456e-8c76-90090595b2f7 (30 samples, frozen)",
+        "live:benchmark run=31295377-dea7-4100-85a5-ea1168bfdbc1 PASS_GATE",
+        "live:metrics precision=0.9333 recall=0.9333 f1=0.9333 unknown=0.0",
+        "live:candidate=cc1a9114-319c-46c1-abbc-9637d45500fd benchmarked→approved→ACTIVE; baseline established"
+      ],
+      "tests": {
+        "success": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_complete_config_ready"
+        ],
+        "negative": [
+          "tests/test_aiqe_test5_e2e_runner.py::test_missing_config_returns_blocked_without_browser"
+        ],
+        "boundary": [],
+        "concurrency": []
+      }
+    }
+  ]
+}

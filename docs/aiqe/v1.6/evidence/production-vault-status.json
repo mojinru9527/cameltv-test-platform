@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "production-vault-status",
+  "scope": "production",
+  "host": "prod-host (redacted)",
+  "captured_at": "2026-11-26T00:45:00+08:00",
+  "vault_version": "1.18.5",
+  "initialized": true,
+  "sealed": false,
+  "seal_type": "shamir",
+  "threshold": 3,
+  "shares": 5,
+  "storage_type": "file",
+  "persistent_mounts": true,
+  "tls_enabled": true,
+  "tls_min_version": "tls12",
+  "ui": false,
+  "ha_enabled": false,
+  "source": "docker exec aiqe-vault-prod vault status -format=json; /vault/config/vault.hcl (secrets excluded)",
+  "status": "PASS"
+}
