@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-25T17:25:07.463699+00:00",
+  "generated_at": "2026-11-26T13:45:53.480922+00:00",
   "release": "aiqe-v1.6",
-  "commit_sha": "a90eb6d89d1672e6b60dbb0b2059d56bc86dd043",
+  "commit_sha": "0d082c4643dcf3ba3cc666c3a07f4324274af10d",
   "baseline_release_commit": "9bbbdbb2026bada5c016d663780e03d62fca940d",
   "migration_head": "20261122_v16_catalog_post_merge",
   "summary": {

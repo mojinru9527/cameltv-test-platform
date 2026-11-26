@@ -1766,6 +1766,9 @@ requirements:
   - path: test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_tc001_contract.py
     symbol: TC-001 contract freeze/V2 impact platform test
     change: added
+  - path: test-platform-v2/backend/app/aiqe/drivers/playwright_driver.py
+    symbol: fill_http action + _captcha_provider_value (loopback/allowlist)
+    change: modified
   production_entry:
   - launch_run -> job_consumer -> driver -> assertion
   tests:
@@ -1776,6 +1779,8 @@ requirements:
     - tests/test_aiqe_v16_017_product_runner.py::test_config_covers_all_product_tcs
     - tests/test_aiqe_v16_017_product_runner.py::test_run_with_fake_runners_aggregates_pass
     - tests/test_aiqe_v16_017_futurewayu_readonly.py::test_probes_against_local_fake_server
+    - tests/test_aiqe_v16_017_captcha_provider.py::test_captcha_provider_reads_local_value
+    - tests/test_aiqe_v16_017_captcha_provider.py::test_fill_http_action_parsed
     negative:
     - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_002_http_200_business_assertion_fails
     - tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_005_metadata_endpoint_never_reached
@@ -1784,6 +1789,8 @@ requirements:
     - tests/test_aiqe_v16_017_product_runner.py::test_run_without_env_is_not_proven
     - tests/test_aiqe_v16_017_product_runner.py::test_run_with_failed_runner_is_nonzero
     - tests/test_aiqe_v16_017_futurewayu_readonly.py::test_get_only_guard
+    - tests/test_aiqe_v16_017_captcha_provider.py::test_captcha_provider_rejects_external_host
+    - tests/test_aiqe_v16_017_captcha_provider.py::test_captcha_provider_rejects_credentials_and_scheme
   mock_boundary: 本地确定性 SUT（真实 HTTP/SQLite/Worker），非产品租户。
   layers:
   - L2
@@ -1801,6 +1808,8 @@ requirements:
   - script:scripts/aiqe/per_tc/futurewayu_production_readonly.py (GET-only + 只读 SQL 守卫)
   - artifact:docs/aiqe/v1.6/evidence/futurewayu-production-crud.json (自建 banner CRUD + 清理 PASS)
   - artifact:docs/aiqe/v1.6/evidence/futurewayu-aiqe-workflow.json (AIQE Run PASS：create→DB 解析 ID→update→delete)
+  - script:test-platform-v2/backend/app/aiqe/drivers/playwright_driver.py (fill_http 验证码扩展)
+  - script:scripts/aiqe/per_tc/futurewayu_captcha_provider.py (本地 Redis 验证码 Provider)
   owner: qa-automation
   reviewer: qa-lead
   gaps:

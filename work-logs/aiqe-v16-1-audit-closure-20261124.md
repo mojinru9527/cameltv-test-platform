@@ -244,7 +244,17 @@ Gate F 进度：`image_self_contained`、`vault_production_mode`、`postgres_bac
 - 生成 70 条独立验收清单：`docs/aiqe/v1.6/acceptance/REVIEW-CHECKLIST-MoojinR.md`
   与 `MoojinR-review-manifest.json`（MoojinR / qa，0/70 待签）。
 
-## 24. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
+
+## 24. Playwright 登录扩展（2026-11-26 晚）
+
+- 扩展 Playwright Driver：新增 ill_http action + _captcha_provider_value，
+  只允许 loopback/白名单 Provider，防止 Workflow SSRF；4 条单测通过。
+- 新增 scripts/aiqe/per_tc/futurewayu_captcha_provider.py（本地 18081 读生产 Redis 验证码）。
+- 本地 runner 已能认领 playwright job，但登录节点首次执行返回 DRIVER_ERROR
+  （attempt 4ms 失败，无 artifact），待继续定位；未产出产品 TC PASS。
+
+
+## 25. 未完成（外部依赖，见 `governance/audit-closure.yaml`）
 
 1. **产品级 TC-AIQE-001..010**：执行器与配置已就绪，需隔离 Test 环境 + per-TC runner
    接入后运行 `python scripts/aiqe/run_product_tc.py --run`。
