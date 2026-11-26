@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "futurewayu-android-appium",
+  "captured_at": "2026-11-27T00:10:00+08:00",
+  "device": {
+    "serial": "9f0564ba",
+    "model": "ONEPLUS A6010",
+    "transport": "adb"
+  },
+  "app": {
+    "package": "uni.app.UNIE3747D0",
+    "activity": "io.dcloud.PandoraEntryActivity",
+    "launch": "android.intent.category.LAUNCHER via adb monkey"
+  },
+  "appium": {
+    "version": "3.9.1",
+    "driver": "uiautomator2@4.2.9",
+    "session_id": "df4f2378-55b0-49d5-b49a-e381c0ad90f0"
+  },
+  "screenshot": "docs/aiqe/v1.6/evidence/product/android-futurewayu-launch.png",
+  "status": "PASS",
+  "note": "Appium 会话建立 + adb 启动心屿娃岛并确认当前焦点为该应用；属半自动设备证据，不计 AIQE Playwright 产品 PASS。"
+}
