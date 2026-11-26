@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "futurewayu-aiqe-playwright-login",
+  "captured_at": "2026-11-26T21:55:00+08:00",
+  "scope": "futurewayu production admin login via AIQE Playwright + local captcha provider",
+  "run_id": "b68eff4a-f5ed-40f0-b4fe-e5b46a0a306a",
+  "workflow_node": "admin_login",
+  "status": "PASS",
+  "node_status": "PASSED",
+  "run_status": "COMPLETED",
+  "run_outcome": "INCOMPLETE（SETUP 节点，无业务断言，不计产品 PASS）",
+  "fix": "TargetPolicy 允许 CONNECT（HTTPS 经 BrowserEgressProxy 需要）；fill_http 从本地 loopback Provider 取验证码",
+  "limits": [
+    "未执行 Admin UI 业务断言",
+    "未执行 Public API/前台 Playwright",
+    "产品 TC 仍 0/10"
+  ]
+}

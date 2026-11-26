@@ -79,7 +79,7 @@ items:
   owner: qa-team
   unblock_action: 提供未来娃屿测试账号（或后台 Token）与允许写入的对象/前缀约定；提供后可运行自建数据 + 清理的产品 TC runner
   note: 生产只读公开端点 PROBED；生产自建数据 CRUD 安全探针 PASS；AIQE Workflow（create→DB 解析 ID→update→delete）在本地 AIQE 跑通，Run COMPLETED/PASS、2 条断言、7 个 artifact，自建行 0、总数 29。但缺 Admin UI/Public API/前台 Playwright 步骤，产品 TC 仍 0/10，不计
-    PASS。
+    PASS。 Playwright fill_http + CONNECT 策略修复后 admin_login 节点 PASSED（Run b68eff4a，SETUP 无业务断言，仍不计产品 PASS）。
   unlock_action: ''
 - id: P1-5
   title: TC-003/TC-005 未从正式链路起跑，危险目标无 0 请求证明
