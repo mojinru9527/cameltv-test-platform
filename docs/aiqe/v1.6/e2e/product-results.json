@@ -6,6 +6,28 @@
   "environment": "futurewayu-production (self-created data; no isolated Test env)",
   "tests": [
     {
+      "tc_id": "TC-AIQE-001",
+      "status": "PASS",
+      "run_id": "948497e0-a97f-45f2-87c6-0778d8a5fbb7",
+      "project_id": 2,
+      "workflow_snapshot_hash": "816deca99aa70f83ea9f1b58506cbab6317ae5ed33bf2f11e0fae505582304c8",
+      "job_ids": [
+        58
+      ],
+      "node_run_ids": [
+        "e6d6cbc6-ad67-4047-9ad7-ed1b39e6de7c"
+      ],
+      "assertion_ids": [
+        "requirements_diff_exit0"
+      ],
+      "artifact_refs": [
+        "docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json",
+        "docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.md"
+      ],
+      "blocked_reason": "",
+      "duration_ms": 0
+    },
+    {
       "tc_id": "TC-AIQE-002",
       "status": "PASS",
       "run_id": "f046604d-c167-41e3-8e4e-349d03f20a4a",
@@ -46,11 +68,6 @@
       ],
       "blocked_reason": "",
       "duration_ms": 0
-    },
-    {
-      "tc_id": "TC-AIQE-001",
-      "status": "BLOCKED",
-      "blocked_reason": "需要导入收藏赛事 PRD 的隔离 Test 环境与人工确认环节"
     },
     {
       "tc_id": "TC-AIQE-003",
@@ -94,10 +111,10 @@
     }
   ],
   "summary": {
-    "product_tc_pass": 1,
+    "product_tc_pass": 2,
     "product_tc_total": 10,
-    "PASS": 1,
-    "BLOCKED": 9,
+    "PASS": 2,
+    "BLOCKED": 8,
     "FAIL": 0,
     "NOT_RUN": 0
   }

@@ -2543,17 +2543,27 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: 948497e0-a97f-45f2-87c6-0778d8a5fbb7
+      workflow_snapshot_hash: 816deca99aa70f83ea9f1b58506cbab6317ae5ed33bf2f11e0fae505582304c8
+      job_ids:
+      - 58
+      node_run_ids:
+      - e6d6cbc6-ad67-4047-9ad7-ed1b39e6de7c
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json
+    note: conclusion=PASS；V4→V5 需求 diff 与 68 条变更验证用例已归档。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: docs/aiqe/v1.6/V1.6-Test-Plan-and-Evidence.md
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json
+        note: V5.0 文档 SHA256 + 53 个新增标题 + 68 条变更验证用例；conclusion=PASS
     platform:
       tc_ids:
       - TC-PLATFORM-010

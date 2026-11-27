@@ -289,3 +289,11 @@ PR 描述的「证据」字段必须使用 `commit:`/`ci:`/`run:`/`pytest:`/`art
   自建数据残留 0。
 - 产品 TC 仍 0/10（尚未按 10 条规格逐条产出）。
 
+
+## 27. TC-001 需求契约冻结 PASS（2026-11-27）
+
+- 读取 V4.0/V5.0 需求 PDF + 1505 条功能用例；
+- 产出 requirements-diff-v4-v5.{json,md}：V5 SHA256、53 个新增/变化标题、68 条变更验证用例；
+- 通过 AIQE external_e2e Run 948497e0 执行，节点 PASSED；产品 TC 2/10。
+- 数据包映射见 docs/aiqe/v1.6/e2e/TC-AIQE-Data-Package.md。
+
