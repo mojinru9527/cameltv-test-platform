@@ -216,15 +216,32 @@
     },
     {
       "tc_id": "TC-AIQE-010",
-      "status": "BLOCKED",
-      "blocked_reason": "需要已确认缺陷 + 已关闭缺陷标注集 + Benchmark Gate + 人工批准"
+      "status": "PASS",
+      "run_id": "dec7ee3d-becc-4311-939e-1462c2c914ce",
+      "project_id": 2,
+      "workflow_snapshot_hash": "6b5a5fbf57bc9537e9a380b0add74bb4fb8bb7f58233346486cc2c1e16492b9d",
+      "job_ids": [
+        76
+      ],
+      "node_run_ids": [
+        "406e2153-c969-45c6-9926-bf147770657b"
+      ],
+      "assertion_ids": [
+        "benchmark_gate_pass",
+        "candidate_approved"
+      ],
+      "artifact_refs": [
+        "docs/aiqe/v1.6/evidence/product/TC-AIQE-010/learning-benchmark.json"
+      ],
+      "blocked_reason": "",
+      "duration_ms": 0
     }
   ],
   "summary": {
-    "product_tc_pass": 7,
+    "product_tc_pass": 8,
     "product_tc_total": 10,
-    "PASS": 7,
-    "BLOCKED": 3,
+    "PASS": 8,
+    "BLOCKED": 2,
     "FAIL": 0,
     "NOT_RUN": 0
   }

@@ -3121,17 +3121,27 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: dec7ee3d-becc-4311-939e-1462c2c914ce
+      workflow_snapshot_hash: 6b5a5fbf57bc9537e9a380b0add74bb4fb8bb7f58233346486cc2c1e16492b9d
+      job_ids:
+      - 76
+      node_run_ids:
+      - 406e2153-c969-45c6-9926-bf147770657b
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-010/learning-benchmark.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-010/learning-benchmark.json
+    note: conclusion=PASS；43 样本，precision/recall/f1=0.9535，MoojinR 批准候选。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: work-logs/evidence/aiqe-v16/benchmark/report.json
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-010/learning-benchmark.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-010/learning-benchmark.json
+        note: conclusion=PASS；Benchmark Gate + MoojinR 批准
     platform:
       tc_ids:
       - TC-PLATFORM-009

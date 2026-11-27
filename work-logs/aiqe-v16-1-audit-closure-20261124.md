@@ -325,3 +325,10 @@ PR 描述的「证据」字段必须使用 `commit:`/`ci:`/`run:`/`pytest:`/`art
 - 本地 Stub 模拟上游 504；AIQE 节点 BLOCKED/UPSTREAM_5XX，未误判产品失败；
 - Run a8ed8b5b；产品 TC 7/10。
 
+
+## 32. TC-010 学习候选 PASS（2026-11-27）
+
+- 43 个标注样本（26 待复测 + 11 缺陷 + 去重）；
+- Benchmark：precision/recall/f1=0.9535，默认阈值通过；
+- MoojinR 批准学习候选；Run dec7ee3d；产品 TC 8/10。
+

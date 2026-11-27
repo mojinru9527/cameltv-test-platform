@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "tc_id": "TC-AIQE-010",
+  "status": "PASS",
+  "generated_at": "2026-11-27T10:53:27.255578+00:00",
+  "dataset": {
+    "id": "1a2c09ed-df22-4953-a4ec-b60d10101e16",
+    "samples": 43,
+    "status": "FROZEN",
+    "content_hash": "261d0aa88ff6540a9fac3cf12885bb8ed3f8ef0c491aa03ba78ff133d4e6966d"
+  },
+  "benchmark": {
+    "run_id": "fcea91a6-5422-4f7b-950c-f4abc274a032",
+    "status": "COMPLETED",
+    "result_status": "PASS_GATE",
+    "metrics": {
+      "samples": 43,
+      "true_positives": 41,
+      "false_positives": 2,
+      "false_negatives": 2,
+      "precision": 0.9535,
+      "recall": 0.9535,
+      "f1": 0.9535,
+      "unknown_rate": 0.0,
+      "gate_eligible": true,
+      "meets_thresholds": true,
+      "thresholds": {
+        "precision": 0.8,
+        "recall": 0.8,
+        "f1": 0.75
+      }
+    }
+  },
+  "candidate": {
+    "id": "a76242b5-8813-4299-9d5a-af5b5e50791e",
+    "status": "approved",
+    "gate_decision": "PASS",
+    "approved_by": "MoojinR"
+  },
+  "thresholds": {
+    "precision": 0.8,
+    "recall": 0.8,
+    "f1": 0.75
+  },
+  "conclusion": "37 个标注样本（26 待复测 + 11 缺陷）；默认阈值通过；MoojinR 批准候选。"
+}
