@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "tc_id": "TC-AIQE-008",
+  "defect_id": "WWY-V5-006",
+  "case_id": "TC-ADM-01-D",
+  "status": "PASS",
+  "generated_at": "2026-11-27T13:49:43.650251+00:00",
+  "before": "输入框空、localStorage 无记忆项",
+  "expected": "登录页刷新后账号自动回填，localStorage 保留 username/rememberMe",
+  "actual": {
+    "username_value": "tester-operator",
+    "rememberMe": "true",
+    "stored_username": "tester-operator"
+  },
+  "screenshot": "docs\\aiqe\\v1.6\\evidence\\product\\TC-AIQE-008\\remember-account.png",
+  "conclusion": "修复回归通过：账号回填且 localStorage 持久化。"
+}

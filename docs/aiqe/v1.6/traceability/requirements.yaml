@@ -3002,17 +3002,27 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: bbd4aa79-8217-4ef4-b1e3-4cdc46aaf773
+      workflow_snapshot_hash: be7fd588ca2e704ddfed5da564ba8c5e59601bda1cef5233bf40b33b3e8067bc
+      job_ids:
+      - 77
+      node_run_ids:
+      - e68df4d5-52dc-416c-b6f3-3a5adc68d0f0
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-008/remember-account.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-008/remember-account.json
+    note: conclusion=PASS；WWY-V5-006 记住账号回归：刷新后账号回填，localStorage username/rememberMe 保留。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: work-logs/evidence/aiqe-v16/regression/report.json
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-008/remember-account.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-008/remember-account.json
+        note: conclusion=PASS；WWY-V5-006 记住账号回填
     platform:
       tc_ids:
       - TC-PLATFORM-005

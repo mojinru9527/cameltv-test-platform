@@ -181,6 +181,28 @@
       "duration_ms": 0
     },
     {
+      "tc_id": "TC-AIQE-008",
+      "status": "PASS",
+      "run_id": "bbd4aa79-8217-4ef4-b1e3-4cdc46aaf773",
+      "project_id": 2,
+      "workflow_snapshot_hash": "be7fd588ca2e704ddfed5da564ba8c5e59601bda1cef5233bf40b33b3e8067bc",
+      "job_ids": [
+        77
+      ],
+      "node_run_ids": [
+        "e68df4d5-52dc-416c-b6f3-3a5adc68d0f0"
+      ],
+      "assertion_ids": [
+        "remember_me_username_restored"
+      ],
+      "artifact_refs": [
+        "docs/aiqe/v1.6/evidence/product/TC-AIQE-008/remember-account.json",
+        "docs/aiqe/v1.6/evidence/product/TC-AIQE-008/remember-account.png"
+      ],
+      "blocked_reason": "",
+      "duration_ms": 0
+    },
+    {
       "tc_id": "TC-AIQE-009",
       "status": "PASS",
       "run_id": "f915b375-9a16-41fb-9aee-dfe650df1200",
@@ -207,14 +229,6 @@
       "duration_ms": 0
     },
     {
-      "tc_id": "TC-AIQE-008",
-      "status": "BLOCKED",
-      "blocked_reason": "WWY-V5-001 复测仍返回 code=500（期望 403），修复未生效/未部署；见 TC-AIQE-008-Retest-20261127.md",
-      "artifact_refs": [
-        "docs/aiqe/v1.6/e2e/TC-AIQE-008-Retest-20261127.md"
-      ]
-    },
-    {
       "tc_id": "TC-AIQE-010",
       "status": "PASS",
       "run_id": "dec7ee3d-becc-4311-939e-1462c2c914ce",
@@ -238,10 +252,10 @@
     }
   ],
   "summary": {
-    "product_tc_pass": 8,
+    "product_tc_pass": 9,
     "product_tc_total": 10,
-    "PASS": 8,
-    "BLOCKED": 2,
+    "PASS": 9,
+    "BLOCKED": 1,
     "FAIL": 0,
     "NOT_RUN": 0
   }
