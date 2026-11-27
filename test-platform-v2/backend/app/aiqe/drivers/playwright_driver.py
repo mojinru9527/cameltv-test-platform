@@ -876,7 +876,7 @@ class PlaywrightDriver:
         error_class = ""
         error_message = ""
         try:
-            if url and not any(action.type in {"navigate", "goto"} for action in actions):
+            if url and not (actions and actions[0].type in {"navigate", "goto"}):
                 navigate = PlaywrightAction(type="navigate", url=url, timeout_ms=self.timeout_ms)
                 self.perform(navigate)
             for action in actions:

@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "futurewayu-aiqe-product-chain",
+  "captured_at": "2026-11-27T12:27:36.644618+08:00",
+  "scope": "futurewayu production, self-created banner, create→DB id→public API→update→delete",
+  "title_prefix": "AIQE-V16-CHAIN-",
+  "workflow_id": "3ad24220-c967-43d6-a757-2bc6b0b5f073",
+  "run_id": "f046604d-c167-41e3-8e4e-349d03f20a4a",
+  "run_status": "COMPLETED",
+  "run_outcome": "PASS",
+  "nodes": [
+    {
+      "key": "admin_ui",
+      "status": "PASSED",
+      "error": "",
+      "artifacts": []
+    },
+    {
+      "key": "create_banner",
+      "status": "PASSED",
+      "error": "",
+      "artifacts": [
+        "40891831-ecd7-4a4a-b85d-68b6c15ed55a",
+        "0dd12967-25ee-4faf-aae5-bc1aa32d7c94"
+      ]
+    },
+    {
+      "key": "delete_banner",
+      "status": "PASSED",
+      "error": "",
+      "artifacts": [
+        "bf0afc28-e8b6-496d-8e4a-3ed962d939d6",
+        "e4ac657a-ef33-4ddd-a286-286c10cb4a1e"
+      ]
+    },
+    {
+      "key": "public_api",
+      "status": "PASSED",
+      "error": "",
+      "artifacts": [
+        "5b6c9953-4389-4530-86c3-62ac2655248e",
+        "980fc299-b0d3-427e-8c52-56dae8fbcfd9"
+      ]
+    },
+    {
+      "key": "resolve_id",
+      "status": "PASSED",
+      "error": "",
+      "artifacts": [
+        "0d5c0b66-787c-430b-9aa0-bea26f5104d2"
+      ]
+    },
+    {
+      "key": "update_banner",
+      "status": "PASSED",
+      "error": "",
+      "artifacts": [
+        "1c1bc4af-6037-4772-bf9f-41fac4fe7bef",
+        "5e95d22f-b8c7-42df-8775-83b05ab5b8a9"
+      ]
+    }
+  ],
+  "cleanup": {
+    "policy": "only self-created rows",
+    "remaining_rows": 0
+  },
+  "limits": [
+    "Admin UI 节点已 PASS（登录→轮播图页→断言 URL/文案），但未对自建 banner 行做逐行断言",
+    "产品 TC 仍为 0/10，本证据证明 HTTP+DB+Admin UI+Public API 链 PASS"
+  ],
+  "assertions": {
+    "create_http_status": "PASS",
+    "public_http_status": "PASS",
+    "public_jsonpath_code": "PASS",
+    "update_http_status": "PASS"
+  }
+}
