@@ -2796,17 +2796,39 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: 4da72e0a-1c5c-4f6f-8252-0f16966cfdce
+      workflow_snapshot_hash: cd02ec3f4f8a941ce0353259cf243ca91f021e9c1da2026d3fb6daae571233e1
+      job_ids:
+      - 65
+      - 66
+      - 67
+      - 68
+      - 69
+      - 70
+      - 71
+      node_run_ids:
+      - 46713888-a289-4cd1-bbfb-6d0f0a582c0e
+      - 4f80a3e9-5d9c-4ab5-a59b-77926a340cb0
+      - 1bb538c8-0391-4f87-87ed-a9101c6d884d
+      - 1752c997-a20a-4863-955a-595a2b17ecec
+      - 0aa23cb3-84e3-4acf-837b-79530e7ffc92
+      - 1f0e9251-b95f-4a6c-b269-8863072d7f67
+      - 27dae2e2-af3c-4d23-b912-6636ff58b634
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-005/concurrency.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-005/concurrency.json
+    note: conclusion=PASS；3 路并发更新后 DB 仍 1 行，清理残留 0。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: work-logs/evidence/aiqe-v16/test5-concurrency/report.json
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-005/concurrency.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-005/concurrency.json
+        note: conclusion=PASS；并发 3 路 + DB row_count=1 + cleanup=0
     platform:
       tc_ids:
       - TC-PLATFORM-011
@@ -2902,17 +2924,27 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: 3a8d0415-892a-44e7-9db6-7596b7d4a3ac
+      workflow_snapshot_hash: 9738738123552f90a5d07455b300c481d02343d12dba328c8ed9e0cfad863d84
+      job_ids:
+      - 73
+      node_run_ids:
+      - 9540b6ec-40ed-46ed-8a6b-5f211fb81e57
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-007/runner-failure.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-007/runner-failure.json
+    note: conclusion=PASS；kill 浏览器后节点 ERROR AUTOMATION/WORKER_FAILURE，未误判 PASS。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-007/runner-failure.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-007/runner-failure.json
+        note: conclusion=PASS；runner failure 被正确上报
     platform:
       tc_ids:
       - TC-PLATFORM-004
@@ -3012,17 +3044,27 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: f915b375-9a16-41fb-9aee-dfe650df1200
+      workflow_snapshot_hash: 0352fbb086773b25a70595b2745bebb451a5008cc725dfe5299778f9dc6d3393
+      job_ids:
+      - 72
+      node_run_ids:
+      - ec04fb5d-e956-4cb5-af70-ecf0833bef47
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-009/multi-end.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-009/multi-end.json
+    note: conclusion=PASS；桌面 Playwright + Android Appium + 微信小程序半自动截图。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: docs/aiqe/v1.6/Platform-Support-Matrix.md
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-009/multi-end.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-009/multi-end.json
+        note: conclusion=PASS；desktop/android PASS，wechat 半自动
     platform:
       tc_ids: []
       tests: []

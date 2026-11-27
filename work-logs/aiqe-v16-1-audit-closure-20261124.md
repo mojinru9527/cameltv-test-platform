@@ -311,3 +311,11 @@ PR 描述的「证据」字段必须使用 `commit:`/`ci:`/`run:`/`pytest:`/`art
 - TC-004 广告模块确认不属于未来娃屿 → OUT_OF_SCOPE / WAIVED。
 - TC-008：复测 WWY-V5-001，运营 POST /system/device 空体仍 500（期望 403），修复未生效；26 条待复测未通过。
 
+
+## 30. TC-005/007/009 产品级 PASS（2026-11-27）
+
+- TC-005 并发：3 路并发更新同一 banner，DB 仍 1 行，cleanup 0，Run PASS；
+- TC-007 Runner 故障：kill 浏览器后节点 ERROR AUTOMATION/WORKER_FAILURE，未误判 PASS；
+- TC-009 多端：桌面 Playwright + Android Appium + 微信小程序半自动截图；
+- 产品 TC 6/10。
+

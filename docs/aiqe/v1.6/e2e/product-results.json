@@ -94,14 +94,70 @@
       "duration_ms": 0
     },
     {
+      "tc_id": "TC-AIQE-005",
+      "status": "PASS",
+      "run_id": "4da72e0a-1c5c-4f6f-8252-0f16966cfdce",
+      "project_id": 2,
+      "workflow_snapshot_hash": "cd02ec3f4f8a941ce0353259cf243ca91f021e9c1da2026d3fb6daae571233e1",
+      "job_ids": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71
+      ],
+      "node_run_ids": [
+        "46713888-a289-4cd1-bbfb-6d0f0a582c0e",
+        "4f80a3e9-5d9c-4ab5-a59b-77926a340cb0",
+        "1bb538c8-0391-4f87-87ed-a9101c6d884d",
+        "1752c997-a20a-4863-955a-595a2b17ecec",
+        "0aa23cb3-84e3-4acf-837b-79530e7ffc92",
+        "1f0e9251-b95f-4a6c-b269-8863072d7f67",
+        "27dae2e2-af3c-4d23-b912-6636ff58b634"
+      ],
+      "assertion_ids": [
+        "create_ok",
+        "update_a_http",
+        "update_a_code",
+        "update_b_http",
+        "update_b_code",
+        "update_c_http",
+        "update_c_code",
+        "exactly_one_row"
+      ],
+      "artifact_refs": [
+        "docs/aiqe/v1.6/evidence/product/TC-AIQE-005/concurrency.json"
+      ],
+      "blocked_reason": "",
+      "duration_ms": 0
+    },
+    {
       "tc_id": "TC-AIQE-004",
       "status": "BLOCKED",
       "blocked_reason": "OUT_OF_SCOPE：广告/浮层模块不属于未来娃屿；用户 2026-11-27 确认"
     },
     {
-      "tc_id": "TC-AIQE-005",
-      "status": "BLOCKED",
-      "blocked_reason": "需要共享账号/赛事 fixture 与并发调度环境"
+      "tc_id": "TC-AIQE-007",
+      "status": "PASS",
+      "run_id": "3a8d0415-892a-44e7-9db6-7596b7d4a3ac",
+      "project_id": 2,
+      "workflow_snapshot_hash": "9738738123552f90a5d07455b300c481d02343d12dba328c8ed9e0cfad863d84",
+      "job_ids": [
+        73
+      ],
+      "node_run_ids": [
+        "9540b6ec-40ed-46ed-8a6b-5f211fb81e57"
+      ],
+      "assertion_ids": [
+        "runner_failure_reported"
+      ],
+      "artifact_refs": [
+        "docs/aiqe/v1.6/evidence/product/TC-AIQE-007/runner-failure.json"
+      ],
+      "blocked_reason": "",
+      "duration_ms": 0
     },
     {
       "tc_id": "TC-AIQE-006",
@@ -109,9 +165,30 @@
       "blocked_reason": "需要可返回 504 的外部赛程接口 Stub"
     },
     {
-      "tc_id": "TC-AIQE-007",
-      "status": "BLOCKED",
-      "blocked_reason": "需要可强制 kill 浏览器的 Runner 环境"
+      "tc_id": "TC-AIQE-009",
+      "status": "PASS",
+      "run_id": "f915b375-9a16-41fb-9aee-dfe650df1200",
+      "project_id": 2,
+      "workflow_snapshot_hash": "0352fbb086773b25a70595b2745bebb451a5008cc725dfe5299778f9dc6d3393",
+      "job_ids": [
+        72
+      ],
+      "node_run_ids": [
+        "ec04fb5d-e956-4cb5-af70-ecf0833bef47"
+      ],
+      "assertion_ids": [
+        "desktop_pass",
+        "android_pass",
+        "wechat_semi_auto"
+      ],
+      "artifact_refs": [
+        "docs/aiqe/v1.6/evidence/product/TC-AIQE-009/multi-end.json",
+        "docs/aiqe/v1.6/evidence/product/TC-AIQE-009/desktop-login.png",
+        "docs/aiqe/v1.6/evidence/product/TC-AIQE-009/android-app.png",
+        "docs/aiqe/v1.6/evidence/product/TC-AIQE-009/wechat-miniapp.png"
+      ],
+      "blocked_reason": "",
+      "duration_ms": 0
     },
     {
       "tc_id": "TC-AIQE-008",
@@ -122,21 +199,16 @@
       ]
     },
     {
-      "tc_id": "TC-AIQE-009",
-      "status": "BLOCKED",
-      "blocked_reason": "需要 Android Chrome 模拟器/真机并明确标识设备"
-    },
-    {
       "tc_id": "TC-AIQE-010",
       "status": "BLOCKED",
       "blocked_reason": "需要已确认缺陷 + 已关闭缺陷标注集 + Benchmark Gate + 人工批准"
     }
   ],
   "summary": {
-    "product_tc_pass": 3,
+    "product_tc_pass": 6,
     "product_tc_total": 10,
-    "PASS": 3,
-    "BLOCKED": 7,
+    "PASS": 6,
+    "BLOCKED": 4,
     "FAIL": 0,
     "NOT_RUN": 0
   }
