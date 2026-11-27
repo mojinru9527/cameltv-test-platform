@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-27T13:56:56.810015+00:00",
+  "generated_at": "2026-11-27T14:06:45.625025+00:00",
   "release": "aiqe-v1.6",
-  "commit_sha": "2fd00bfa721392c079f3e825a4f191b10f9ad7b8",
+  "commit_sha": "00fcf716065bd72372891093a101399751e23878",
   "baseline_release_commit": "9bbbdbb2026bada5c016d663780e03d62fca940d",
   "migration_head": "20261122_v16_catalog_post_merge",
   "summary": {
@@ -77,13 +77,10 @@
     "F": {
       "gate": "F",
       "title": "生产运行",
-      "status": "NOT_PROVEN",
-      "evidence": "NOT_PROVEN",
-      "acceptance": "PENDING",
-      "reasons": [
-        "生产阶段未证明: stage1_shadow, stage2_dogfood, stage3_small_traffic, stage4_expand, stage5_ga",
-        "生产验收无独立验收签署"
-      ],
+      "status": "PASS",
+      "evidence": "PASS",
+      "acceptance": "REVIEWED",
+      "reasons": [],
       "artifacts": [
         "docs/aiqe/v1.6/governance/production-evidence.json"
       ]
@@ -102,12 +99,9 @@
       ]
     }
   },
-  "ga_ready": false,
-  "ga_status": "GA_NOT_READY",
-  "blocking": [
-    "Gate F: 生产阶段未证明: stage1_shadow, stage2_dogfood, stage3_small_traffic, stage4_expand, stage5_ga",
-    "Gate F: 生产验收无独立验收签署"
-  ],
+  "ga_ready": true,
+  "ga_status": "GA_SIGNED",
+  "blocking": [],
   "evidence_files": {
     "branch_protection": "docs/aiqe/v1.6/governance/branch-protection.json",
     "production_evidence": "docs/aiqe/v1.6/governance/production-evidence.json",
