@@ -297,3 +297,10 @@ PR 描述的「证据」字段必须使用 `commit:`/`ci:`/`run:`/`pytest:`/`art
 - 通过 AIQE external_e2e Run 948497e0 执行，节点 PASSED；产品 TC 2/10。
 - 数据包映射见 docs/aiqe/v1.6/e2e/TC-AIQE-Data-Package.md。
 
+
+## 28. TC-001/TC-003 产品级 PASS（2026-11-27）
+
+- TC-001：V4→V5 需求 diff（53 标题/68 变更用例），Run 948497e0；
+- TC-003：首次 401（独立记录）→ 重试 200，Run aa52d5d0；
+- 产品 TC 3/10；数据包见 docs/aiqe/v1.6/e2e/TC-AIQE-Data-Package.md。
+

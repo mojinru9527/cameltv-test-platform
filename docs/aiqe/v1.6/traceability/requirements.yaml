@@ -2677,17 +2677,29 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: aa52d5d0-d4f3-4e24-94d5-731de2d3c7aa
+      workflow_snapshot_hash: 11a9e762df770398d6945938f337dd1446bbe095bbee30699fd8bc60b13489d3
+      job_ids:
+      - 62
+      - 63
+      node_run_ids:
+      - 89077ea2-1f1b-4087-81fd-4f5c23cfa451
+      - b3714297-67fa-4aaa-8c3a-bb80a32cdaf9
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-003/fail-retry.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-003/fail-retry.json
+    note: conclusion=PASS；首次 401 与重试 200 分别记录，无掩盖。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: work-logs/evidence/aiqe-v16/test5-retry/report.json
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-003/fail-retry.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-003/fail-retry.json
+        note: 首次 401 → 重试 200；conclusion=PASS
     platform:
       tc_ids: []
       tests: []

@@ -71,8 +71,27 @@
     },
     {
       "tc_id": "TC-AIQE-003",
-      "status": "BLOCKED",
-      "blocked_reason": "需要可注入一次 503 的 Test API Stub"
+      "status": "PASS",
+      "run_id": "aa52d5d0-d4f3-4e24-94d5-731de2d3c7aa",
+      "project_id": 2,
+      "workflow_snapshot_hash": "11a9e762df770398d6945938f337dd1446bbe095bbee30699fd8bc60b13489d3",
+      "job_ids": [
+        62,
+        63
+      ],
+      "node_run_ids": [
+        "89077ea2-1f1b-4087-81fd-4f5c23cfa451",
+        "b3714297-67fa-4aaa-8c3a-bb80a32cdaf9"
+      ],
+      "assertion_ids": [
+        "first_fails",
+        "retry_succeeds"
+      ],
+      "artifact_refs": [
+        "docs/aiqe/v1.6/evidence/product/TC-AIQE-003/fail-retry.json"
+      ],
+      "blocked_reason": "",
+      "duration_ms": 0
     },
     {
       "tc_id": "TC-AIQE-004",
@@ -111,10 +130,10 @@
     }
   ],
   "summary": {
-    "product_tc_pass": 2,
+    "product_tc_pass": 3,
     "product_tc_total": 10,
-    "PASS": 2,
-    "BLOCKED": 8,
+    "PASS": 3,
+    "BLOCKED": 7,
     "FAIL": 0,
     "NOT_RUN": 0
   }
