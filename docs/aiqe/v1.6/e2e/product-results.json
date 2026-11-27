@@ -8,14 +8,14 @@
     {
       "tc_id": "TC-AIQE-001",
       "status": "PASS",
-      "run_id": "948497e0-a97f-45f2-87c6-0778d8a5fbb7",
+      "run_id": "4511702e-1f6c-4e4e-94bd-3c920d0b419d",
       "project_id": 2,
       "workflow_snapshot_hash": "816deca99aa70f83ea9f1b58506cbab6317ae5ed33bf2f11e0fae505582304c8",
       "job_ids": [
-        58
+        64
       ],
       "node_run_ids": [
-        "e6d6cbc6-ad67-4047-9ad7-ed1b39e6de7c"
+        "d9a120bd-c61a-4059-b5de-9f3deeba8040"
       ],
       "assertion_ids": [
         "requirements_diff_exit0"
@@ -96,7 +96,7 @@
     {
       "tc_id": "TC-AIQE-004",
       "status": "BLOCKED",
-      "blocked_reason": "需要可注入浮层的 integration profile 与直播入口 fixture"
+      "blocked_reason": "OUT_OF_SCOPE：广告/浮层模块不属于未来娃屿；用户 2026-11-27 确认"
     },
     {
       "tc_id": "TC-AIQE-005",
@@ -116,7 +116,10 @@
     {
       "tc_id": "TC-AIQE-008",
       "status": "BLOCKED",
-      "blocked_reason": "依赖 TC-004 缺陷草稿 + 人工确认 + 修复 commit 部署到 Test"
+      "blocked_reason": "WWY-V5-001 复测仍返回 code=500（期望 403），修复未生效/未部署；见 TC-AIQE-008-Retest-20261127.md",
+      "artifact_refs": [
+        "docs/aiqe/v1.6/e2e/TC-AIQE-008-Retest-20261127.md"
+      ]
     },
     {
       "tc_id": "TC-AIQE-009",

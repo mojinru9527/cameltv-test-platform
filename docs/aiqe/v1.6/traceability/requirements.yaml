@@ -2545,17 +2545,17 @@ requirements:
   runtime_evidence:
     status: PROVEN
     refs:
-      run_id: 948497e0-a97f-45f2-87c6-0778d8a5fbb7
+      run_id: 4511702e-1f6c-4e4e-94bd-3c920d0b419d
       workflow_snapshot_hash: 816deca99aa70f83ea9f1b58506cbab6317ae5ed33bf2f11e0fae505582304c8
       job_ids:
-      - 58
+      - 64
       node_run_ids:
-      - e6d6cbc6-ad67-4047-9ad7-ed1b39e6de7c
+      - d9a120bd-c61a-4059-b5de-9f3deeba8040
       artifact_refs:
       - docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json
     artifacts:
     - docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json
-    note: conclusion=PASS；V4→V5 需求 diff 与 68 条变更验证用例已归档。
+    note: conclusion=PASS；权威手工验收表 483 条用例、351 条变更/回归补充；V4→V5 diff 已归档。
   e2e:
     product:
       status: PASS
@@ -2740,16 +2740,17 @@ requirements:
     artifact: null
   runtime_evidence:
     status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    artifacts:
+    - docs/aiqe/v1.6/e2e/TC-AIQE-004-Waiver.md
+    note: OUT_OF_SCOPE：广告/浮层模块不属于未来娃屿；用户 2026-11-27 确认，建议 WAIVED。
   e2e:
     product:
-      status: PARTIAL
+      status: BLOCKED
       evidence:
-      - kind: owner-attested
-        ref: work-logs/evidence/aiqe-v16/test5-overlay/report.json
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/e2e/TC-AIQE-004-Waiver.md
+        artifact: docs/aiqe/v1.6/e2e/TC-AIQE-004-Waiver.md
+        note: 广告模块不在未来娃屿范围；conclusion=OUT_OF_SCOPE
     platform:
       tc_ids:
       - TC-PLATFORM-008
