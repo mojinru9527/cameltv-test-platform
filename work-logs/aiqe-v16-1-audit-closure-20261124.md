@@ -289,3 +289,46 @@ PR 描述的「证据」字段必须使用 `commit:`/`ci:`/`run:`/`pytest:`/`art
   自建数据残留 0。
 - 产品 TC 仍 0/10（尚未按 10 条规格逐条产出）。
 
+
+## 27. TC-001 需求契约冻结 PASS（2026-11-27）
+
+- 读取 V4.0/V5.0 需求 PDF + 1505 条功能用例；
+- 产出 requirements-diff-v4-v5.{json,md}：V5 SHA256、53 个新增/变化标题、68 条变更验证用例；
+- 通过 AIQE external_e2e Run 948497e0 执行，节点 PASSED；产品 TC 2/10。
+- 数据包映射见 docs/aiqe/v1.6/e2e/TC-AIQE-Data-Package.md。
+
+
+## 28. TC-001/TC-003 产品级 PASS（2026-11-27）
+
+- TC-001：V4→V5 需求 diff（53 标题/68 变更用例），Run 948497e0；
+- TC-003：首次 401（独立记录）→ 重试 200，Run aa52d5d0；
+- 产品 TC 3/10；数据包见 docs/aiqe/v1.6/e2e/TC-AIQE-Data-Package.md。
+
+
+## 29. 权威用例表与 26 条修复复测（2026-11-27）
+
+- TC-001 改用甲方 2026-11-17 权威手工验收表：483 条用例（200+补充），351 条变更/回归补充；Run 4511702e PASS。
+- TC-004 广告模块确认不属于未来娃屿 → OUT_OF_SCOPE / WAIVED。
+- TC-008：复测 WWY-V5-001，运营 POST /system/device 空体仍 500（期望 403），修复未生效；26 条待复测未通过。
+
+
+## 30. TC-005/007/009 产品级 PASS（2026-11-27）
+
+- TC-005 并发：3 路并发更新同一 banner，DB 仍 1 行，cleanup 0，Run PASS；
+- TC-007 Runner 故障：kill 浏览器后节点 ERROR AUTOMATION/WORKER_FAILURE，未误判 PASS；
+- TC-009 多端：桌面 Playwright + Android Appium + 微信小程序半自动截图；
+- 产品 TC 6/10。
+
+
+## 31. TC-006 上游故障 PASS（2026-11-27）
+
+- 本地 Stub 模拟上游 504；AIQE 节点 BLOCKED/UPSTREAM_5XX，未误判产品失败；
+- Run a8ed8b5b；产品 TC 7/10。
+
+
+## 32. TC-010 学习候选 PASS（2026-11-27）
+
+- 43 个标注样本（26 待复测 + 11 缺陷 + 去重）；
+- Benchmark：precision/recall/f1=0.9535，默认阈值通过；
+- MoojinR 批准学习候选；Run dec7ee3d；产品 TC 8/10。
+

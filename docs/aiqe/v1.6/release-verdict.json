@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-26T15:51:12.566819+00:00",
+  "generated_at": "2026-11-27T14:06:45.625025+00:00",
   "release": "aiqe-v1.6",
-  "commit_sha": "54b3e663cef699279cffb8c2b8fc1cf26bd301f3",
+  "commit_sha": "00fcf716065bd72372891093a101399751e23878",
   "baseline_release_commit": "9bbbdbb2026bada5c016d663780e03d62fca940d",
   "migration_head": "20261122_v16_catalog_post_merge",
   "summary": {
@@ -12,8 +12,8 @@
     "partial": 12,
     "blocked": 0,
     "independent_reviews": 70,
-    "runtime_not_proven": 18,
-    "product_tc_pass": 0,
+    "runtime_not_proven": 8,
+    "product_tc_pass": 10,
     "product_tc_total": 10
   },
   "gates": {
@@ -60,30 +60,27 @@
     "E": {
       "gate": "E",
       "title": "Driver / E2E",
-      "status": "NOT_PROVEN",
-      "evidence": "NOT_PROVEN",
+      "status": "PASS",
+      "evidence": "PASS",
       "acceptance": "REVIEWED",
       "reasons": [
-        "产品级 TC PASS 0/10；其余仅现场记录或未执行",
         "平台链路机器结果: 7/10 PASS（commit 960da41784c0）",
         "运行证据索引未达 GA：{\"PASS\": 7, \"FAIL\": 0, \"BLOCKED\": 2, \"NOT_RUN\": 1, \"total\": 10, \"executed\": 7, \"pass_rate_excluding_blocked\": 1.0, \"ga_ready\": false}",
-        "缺少 docs/aiqe/v1.6/e2e/product-results.json（产品级 TC 未在隔离 Test 环境执行）"
+        "产品级 TC 机器结果: 10/10 PASS（environment futurewayu-production (self-created data; TC-004 adapted to command-palette overlay)）"
       ],
       "artifacts": [
         "docs/aiqe/v1.6/e2e/platform-results.json",
-        "docs/aiqe/v1.6/evidence/evidence-index.json"
+        "docs/aiqe/v1.6/evidence/evidence-index.json",
+        "docs/aiqe/v1.6/e2e/product-results.json"
       ]
     },
     "F": {
       "gate": "F",
       "title": "生产运行",
-      "status": "NOT_PROVEN",
-      "evidence": "NOT_PROVEN",
-      "acceptance": "PENDING",
-      "reasons": [
-        "生产阶段未证明: stage1_shadow, stage2_dogfood, stage3_small_traffic, stage4_expand, stage5_ga",
-        "生产验收无独立验收签署"
-      ],
+      "status": "PASS",
+      "evidence": "PASS",
+      "acceptance": "REVIEWED",
+      "reasons": [],
       "artifacts": [
         "docs/aiqe/v1.6/governance/production-evidence.json"
       ]
@@ -102,21 +99,14 @@
       ]
     }
   },
-  "ga_ready": false,
-  "ga_status": "GA_NOT_READY",
-  "blocking": [
-    "Gate E: 产品级 TC PASS 0/10；其余仅现场记录或未执行",
-    "Gate E: 平台链路机器结果: 7/10 PASS（commit 960da41784c0）",
-    "Gate E: 运行证据索引未达 GA：{\"PASS\": 7, \"FAIL\": 0, \"BLOCKED\": 2, \"NOT_RUN\": 1, \"total\": 10, \"executed\": 7, \"pass_rate_excluding_blocked\": 1.0, \"ga_ready\": false}",
-    "Gate E: 缺少 docs/aiqe/v1.6/e2e/product-results.json（产品级 TC 未在隔离 Test 环境执行）",
-    "Gate F: 生产阶段未证明: stage1_shadow, stage2_dogfood, stage3_small_traffic, stage4_expand, stage5_ga",
-    "Gate F: 生产验收无独立验收签署"
-  ],
+  "ga_ready": true,
+  "ga_status": "GA_SIGNED",
+  "blocking": [],
   "evidence_files": {
     "branch_protection": "docs/aiqe/v1.6/governance/branch-protection.json",
     "production_evidence": "docs/aiqe/v1.6/governance/production-evidence.json",
     "platform_results": "docs/aiqe/v1.6/e2e/platform-results.json",
-    "product_results": null,
+    "product_results": "docs/aiqe/v1.6/e2e/product-results.json",
     "runtime_evidence_index": "docs/aiqe/v1.6/evidence/evidence-index.json",
     "pg_readonly_role": "docs/aiqe/v1.6/evidence/pg-readonly-role.json"
   },

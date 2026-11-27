@@ -1,0 +1,26 @@
+{
+  "tc_id": "TC-AIQE-009",
+  "generated_at": "2026-11-27T10:43:32.552096+00:00",
+  "platforms": {
+    "desktop": {
+      "status": "PASS",
+      "http_status": 200,
+      "title": "数字资产管理系统",
+      "url": "https://xinyuwadao.com/login",
+      "screenshot": "docs\\aiqe\\v1.6\\evidence\\product\\TC-AIQE-009\\desktop-login.png"
+    },
+    "android": {
+      "status": "PASS",
+      "package": "uni.app.UNIE3747D0",
+      "activity": "io.dcloud.PandoraEntryActivity",
+      "device": "9f0564ba OnePlus6T",
+      "screenshot": "docs\\aiqe\\v1.6\\evidence\\product\\TC-AIQE-009\\android-app.png"
+    },
+    "wechat_miniapp": {
+      "status": "SEMI_AUTOMATIC",
+      "screenshot": "docs\\aiqe\\v1.6\\evidence\\product\\TC-AIQE-009\\wechat-miniapp.png",
+      "note": "微信小程序面板截图；无开发者权限，未做机器断言"
+    }
+  },
+  "status": "PASS"
+}

@@ -1601,8 +1601,7 @@ requirements:
   issue: V16-015
   priority: P1
   title: VERIFIED 只来自真实验收 Run + Artifact
-  requirement: verify_from_run 要求 Run COMPLETED/PASS、同项目、Artifact AVAILABLE 且 checksum 有效、平台非空；记录 verification_run_id/artifact refs/runner image digest/os/browser/device/supported actions/limitations；API
-    不能直接改 VERIFIED。
+  requirement: verify_from_run 要求 Run COMPLETED/PASS、同项目、Artifact AVAILABLE 且 checksum 有效、平台非空；记录 verification_run_id/artifact refs/runner image digest/os/browser/device/supported actions/limitations；API 不能直接改 VERIFIED。
   invariant: Manifest 声明不等于 VERIFIED；缺验收证据不得 VERIFIED。
   status: VERIFIED
   code:
@@ -2544,17 +2543,27 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: 4511702e-1f6c-4e4e-94bd-3c920d0b419d
+      workflow_snapshot_hash: 816deca99aa70f83ea9f1b58506cbab6317ae5ed33bf2f11e0fae505582304c8
+      job_ids:
+      - 64
+      node_run_ids:
+      - d9a120bd-c61a-4059-b5de-9f3deeba8040
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json
+    note: conclusion=PASS；权威手工验收表 483 条用例、351 条变更/回归补充；V4→V5 diff 已归档。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: docs/aiqe/v1.6/V1.6-Test-Plan-and-Evidence.md
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json
+        note: V5.0 文档 SHA256 + 53 个新增标题 + 68 条变更验证用例；conclusion=PASS
     platform:
       tc_ids:
       - TC-PLATFORM-010
@@ -2598,17 +2607,37 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: f046604d-c167-41e3-8e4e-349d03f20a4a
+      workflow_snapshot_hash: f7bb8fc449ee71d4940082cea55ee7ce8b34364507d2cbfc28da1c8f549c6e9a
+      job_ids:
+      - 52
+      - 53
+      - 54
+      - 55
+      - 56
+      - 57
+      node_run_ids:
+      - d7ea42aa-a476-4499-8b77-ad331e44b743
+      - 8bc2144a-7228-4028-8cc8-339d33582573
+      - 7fc36bf4-a7ab-4aa8-ba7c-345974577114
+      - 35524c7e-0e00-4a68-8272-ee1d77af0cb3
+      - 60741b8e-8d8f-4113-a605-51103fbbd28e
+      - 93652d09-1c67-4ee9-b342-987c83ddcaa9
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/futurewayu-aiqe-product-chain.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/futurewayu-aiqe-product-chain.json
+    note: conclusion=PASS；未来娃屿生产自建数据 Run PASS，六节点全部 PASSED，cleanup=0。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: work-logs/evidence/aiqe-v16/test5/report.json
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/futurewayu-aiqe-product-chain.json
+        artifact: docs/aiqe/v1.6/evidence/futurewayu-aiqe-product-chain.json
+        note: Run PASS，含 Admin UI/Public API 双断言与 cleanup=0。
     platform:
       tc_ids: []
       tests: []
@@ -2648,17 +2677,29 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: aa52d5d0-d4f3-4e24-94d5-731de2d3c7aa
+      workflow_snapshot_hash: 11a9e762df770398d6945938f337dd1446bbe095bbee30699fd8bc60b13489d3
+      job_ids:
+      - 62
+      - 63
+      node_run_ids:
+      - 89077ea2-1f1b-4087-81fd-4f5c23cfa451
+      - b3714297-67fa-4aaa-8c3a-bb80a32cdaf9
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-003/fail-retry.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-003/fail-retry.json
+    note: conclusion=PASS；首次 401 与重试 200 分别记录，无掩盖。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: work-logs/evidence/aiqe-v16/test5-retry/report.json
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-003/fail-retry.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-003/fail-retry.json
+        note: 首次 401 → 重试 200；conclusion=PASS
     platform:
       tc_ids: []
       tests: []
@@ -2698,17 +2739,27 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: aba69181-1047-4059-8caa-b8249a804c58
+      workflow_snapshot_hash: 0d13a9d214f68d66ff01c3d0a79ff7ad214a51b4e759b959058d059eaedb5059
+      job_ids:
+      - 78
+      node_run_ids:
+      - 9d8bb892-9220-4129-a557-2dcc5bb74746
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-004/overlay-interference.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-004/overlay-interference.json
+    note: conclusion=PASS；广告模块不在范围，改用后台命令面板（Ctrl+K）验证“其他功能浮层”拦截与恢复。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: work-logs/evidence/aiqe-v16/test5-overlay/report.json
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-004/overlay-interference.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-004/overlay-interference.json
+        note: conclusion=PASS；命令面板浮层拦截底层导航，关闭后恢复
     platform:
       tc_ids:
       - TC-PLATFORM-008
@@ -2754,17 +2805,39 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: 4da72e0a-1c5c-4f6f-8252-0f16966cfdce
+      workflow_snapshot_hash: cd02ec3f4f8a941ce0353259cf243ca91f021e9c1da2026d3fb6daae571233e1
+      job_ids:
+      - 65
+      - 66
+      - 67
+      - 68
+      - 69
+      - 70
+      - 71
+      node_run_ids:
+      - 46713888-a289-4cd1-bbfb-6d0f0a582c0e
+      - 4f80a3e9-5d9c-4ab5-a59b-77926a340cb0
+      - 1bb538c8-0391-4f87-87ed-a9101c6d884d
+      - 1752c997-a20a-4863-955a-595a2b17ecec
+      - 0aa23cb3-84e3-4acf-837b-79530e7ffc92
+      - 1f0e9251-b95f-4a6c-b269-8863072d7f67
+      - 27dae2e2-af3c-4d23-b912-6636ff58b634
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-005/concurrency.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-005/concurrency.json
+    note: conclusion=PASS；3 路并发更新后 DB 仍 1 行，清理残留 0。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: work-logs/evidence/aiqe-v16/test5-concurrency/report.json
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-005/concurrency.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-005/concurrency.json
+        note: conclusion=PASS；并发 3 路 + DB row_count=1 + cleanup=0
     platform:
       tc_ids:
       - TC-PLATFORM-011
@@ -2809,17 +2882,27 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: 712cc673-27c5-430c-b50c-0d34c97122dd
+      workflow_snapshot_hash: 65729fe0f89adc1898b9287e1c8d858b9f35f41f16acf8b4426582416ed2ac3a
+      job_ids:
+      - 75
+      node_run_ids:
+      - 6fe3c3ec-f5a0-4098-92a8-f291d8eca298
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-006/upstream-failure.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-006/upstream-failure.json
+    note: conclusion=PASS；模拟上游 504 → BLOCKED/UPSTREAM_5XX，未误判产品失败。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: work-logs/evidence/aiqe-v16/test5-upstream/report.json
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-006/upstream-failure.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-006/upstream-failure.json
+        note: conclusion=PASS；模拟上游 504 被正确阻断
     platform:
       tc_ids:
       - TC-PLATFORM-012
@@ -2860,17 +2943,27 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: 3a8d0415-892a-44e7-9db6-7596b7d4a3ac
+      workflow_snapshot_hash: 9738738123552f90a5d07455b300c481d02343d12dba328c8ed9e0cfad863d84
+      job_ids:
+      - 73
+      node_run_ids:
+      - 9540b6ec-40ed-46ed-8a6b-5f211fb81e57
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-007/runner-failure.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-007/runner-failure.json
+    note: conclusion=PASS；kill 浏览器后节点 ERROR AUTOMATION/WORKER_FAILURE，未误判 PASS。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-007/runner-failure.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-007/runner-failure.json
+        note: conclusion=PASS；runner failure 被正确上报
     platform:
       tc_ids:
       - TC-PLATFORM-004
@@ -2918,17 +3011,27 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: bbd4aa79-8217-4ef4-b1e3-4cdc46aaf773
+      workflow_snapshot_hash: be7fd588ca2e704ddfed5da564ba8c5e59601bda1cef5233bf40b33b3e8067bc
+      job_ids:
+      - 77
+      node_run_ids:
+      - e68df4d5-52dc-416c-b6f3-3a5adc68d0f0
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-008/remember-account.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-008/remember-account.json
+    note: conclusion=PASS；WWY-V5-006 记住账号回归：刷新后账号回填，localStorage username/rememberMe 保留。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: work-logs/evidence/aiqe-v16/regression/report.json
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-008/remember-account.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-008/remember-account.json
+        note: conclusion=PASS；WWY-V5-006 记住账号回填
     platform:
       tc_ids:
       - TC-PLATFORM-005
@@ -2970,17 +3073,27 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: f915b375-9a16-41fb-9aee-dfe650df1200
+      workflow_snapshot_hash: 0352fbb086773b25a70595b2745bebb451a5008cc725dfe5299778f9dc6d3393
+      job_ids:
+      - 72
+      node_run_ids:
+      - ec04fb5d-e956-4cb5-af70-ecf0833bef47
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-009/multi-end.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-009/multi-end.json
+    note: conclusion=PASS；桌面 Playwright + Android Appium + 微信小程序半自动截图。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: docs/aiqe/v1.6/Platform-Support-Matrix.md
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-009/multi-end.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-009/multi-end.json
+        note: conclusion=PASS；desktop/android PASS，wechat 半自动
     platform:
       tc_ids: []
       tests: []
@@ -3027,17 +3140,27 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: dec7ee3d-becc-4311-939e-1462c2c914ce
+      workflow_snapshot_hash: 6b5a5fbf57bc9537e9a380b0add74bb4fb8bb7f58233346486cc2c1e16492b9d
+      job_ids:
+      - 76
+      node_run_ids:
+      - 406e2153-c969-45c6-9926-bf147770657b
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-010/learning-benchmark.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-010/learning-benchmark.json
+    note: conclusion=PASS；43 样本，precision/recall/f1=0.9535，MoojinR 批准候选。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: work-logs/evidence/aiqe-v16/benchmark/report.json
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-010/learning-benchmark.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-010/learning-benchmark.json
+        note: conclusion=PASS；Benchmark Gate + MoojinR 批准
     platform:
       tc_ids:
       - TC-PLATFORM-009

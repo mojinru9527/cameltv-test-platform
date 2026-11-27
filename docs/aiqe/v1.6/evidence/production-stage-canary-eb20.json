@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "production-stage-canary",
+  "release_commit": "eb20b98095e10444bf5cb43f3c8a5de4c1d6cf69",
+  "release_image": "cameltv-tp-backend:canary-eb20",
+  "release_image_id": "sha256:dfebc617d093ef97e87890c0063cedfd66c1e01b5dd1da2bec057b4c62d22a0f",
+  "canary_container_id": "61e0f0a5d4171d6fa75dc5d8d2f44d1694dd82a4f2afc7eed02c3848f006a4ee",
+  "canary_container_ip": "172.18.0.6",
+  "network": "cameltv-tp-production_default",
+  "network_alias": "backend-canary",
+  "build_command": "docker build -f test-platform-v2/backend/Dockerfile --target api -t cameltv-tp-backend:canary-eb20 .",
+  "switch": {
+    "mechanism": "frontend nginx upstream backend_pool -> backend-canary:8000 (100%)",
+    "nginx_before_sha256": "0f44f24a0fc191ce8326653530b1a00ee8368977f2dbbec483a32b8c96aea019",
+    "nginx_after_sha256": "32e4af3cf657506f958e1f75a73c6714f895abd31fba9d44ca07e30ee7270b7a",
+    "switched_at": "2026-11-27T14:05:43Z"
+  },
+  "checks": {
+    "canary_health_before_switch": {
+      "status": 200,
+      "body": {
+        "status": "ok",
+        "version": "2.1.0"
+      }
+    },
+    "public_health_after_switch": {
+      "status": 200,
+      "body": {
+        "status": "ok",
+        "version": "2.1.0"
+      }
+    },
+    "public_openapi_after_switch": {
+      "status": 200
+    },
+    "canary_access_log": "GET /health HTTP/1.1 200"
+  },
+  "rollback": {
+    "nginx_backup": "/root/nginx-default-before-canary.conf",
+    "command": "docker cp /root/nginx-default-before-canary.conf cameltv-tp-production-frontend-v16:/etc/nginx/conf.d/default.conf && docker exec cameltv-tp-production-frontend-v16 nginx -s reload",
+    "old_backend_container": "cameltv-tp-production-backend-v16"
+  },
+  "user_authorization": "2026-11-27 用户授权 B 方案：加 canary 后端容器、100% 切换、无需观察窗口；回滚负责人=用户；MoojinR 作为生产验收签字人。",
+  "stages": {
+    "stage1_shadow": "PASS（canary 容器启动后、切流前 /health=200）",
+    "stage2_dogfood": "PASS（切流后公网 /health=200、/openapi.json=200；canary 日志收到请求）",
+    "stage3_small_traffic": "PASS（用户批准跳过 5%，直接 100% canary）",
+    "stage4_expand": "PASS（100% canary 持续运行）",
+    "stage5_ga": "PASS（100% 流量 canary；发布执行完成）"
+  },
+  "exception": "用户明确选择 100% 直切、不设观察窗口；stage3/4 的 5%/50% 渐进流量被折叠为一次 100% 切换。",
+  "captured_at": "2026-11-27T14:06:31.495754+00:00"
+}

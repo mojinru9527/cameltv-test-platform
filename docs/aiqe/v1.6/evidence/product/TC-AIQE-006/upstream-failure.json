@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "tc_id": "TC-AIQE-006",
+  "status": "PASS",
+  "generated_at": "2026-11-27T10:48:29.738952+00:00",
+  "scenario": "上游第三方 5xx：必须 BLOCKED/UPSTREAM_5XX，不得误判为产品失败或 PASS",
+  "simulated": true,
+  "stub": {
+    "url": "http://127.0.0.1:5210/upstream-fail",
+    "status": 504
+  },
+  "run_id": "712cc673-27c5-430c-b50c-0d34c97122dd",
+  "workflow_id": "a8ed8b5b-b4f1-41a3-aeac-6eba30229fff",
+  "workflow_snapshot_hash": "65729fe0f89adc1898b9287e1c8d858b9f35f41f16acf8b4426582416ed2ac3a",
+  "job_ids": [
+    75
+  ],
+  "node_run_ids": [
+    "6fe3c3ec-f5a0-4098-92a8-f291d8eca298"
+  ],
+  "expected": "node BLOCKED / UPSTREAM_5XX",
+  "actual": {
+    "node_status": "BLOCKED",
+    "error_class": "UPSTREAM_5XX",
+    "run_status": "COMPLETED",
+    "run_outcome": "INCOMPLETE"
+  },
+  "conclusion": "上游 504 被识别为依赖故障并阻断，未计入产品断言失败。"
+}

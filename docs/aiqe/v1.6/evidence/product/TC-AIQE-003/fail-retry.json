@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "tc_id": "TC-AIQE-003",
+  "status": "PASS",
+  "generated_at": "2026-11-27T10:35:07.978861+00:00",
+  "scenario": "API 首次失败 + 重试成功（失败不被掩盖）",
+  "run_id": "aa52d5d0-d4f3-4e24-94d5-731de2d3c7aa",
+  "workflow_id": "606596d2-2713-4da9-a214-cac4f82aca23",
+  "workflow_snapshot_hash": "11a9e762df770398d6945938f337dd1446bbe095bbee30699fd8bc60b13489d3",
+  "job_ids": [
+    62,
+    63
+  ],
+  "node_run_ids": [
+    "89077ea2-1f1b-4087-81fd-4f5c23cfa451",
+    "b3714297-67fa-4aaa-8c3a-bb80a32cdaf9"
+  ],
+  "steps": [
+    {
+      "node": "first_attempt",
+      "token": "invalid",
+      "endpoint": "/prod-api/system/user/profile",
+      "expected_code": 401,
+      "status": "PASS"
+    },
+    {
+      "node": "retry_attempt",
+      "token": "valid tester-operator",
+      "endpoint": "/prod-api/system/user/profile",
+      "expected_code": 200,
+      "status": "PASS"
+    }
+  ],
+  "conclusion": "首次 401 被独立记录，重试 200 成功；无掩盖。"
+}
