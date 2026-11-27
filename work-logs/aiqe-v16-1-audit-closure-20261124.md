@@ -281,3 +281,11 @@ PR 描述的「证据」字段必须使用 `commit:`/`ci:`/`run:`/`pytest:`/`art
 - 证据：docs/aiqe/v1.6/evidence/futurewayu-aiqe-product-chain.json。
 - Stage1-5 执行清单、PG 只读 role 硬化 SQL 已入库，等待真实发布窗口/运维执行。
 
+
+## 26. 产品链四段全部 PASS（2026-11-27）
+
+- 修复 Playwright 初始导航 bug：动作列表含 navigate 时不再跳过 input.url；
+- 未来娃屿生产链 create→DB→Admin UI→Public API→update→delete 全 PASS；
+  自建数据残留 0。
+- 产品 TC 仍 0/10（尚未按 10 条规格逐条产出）。
+

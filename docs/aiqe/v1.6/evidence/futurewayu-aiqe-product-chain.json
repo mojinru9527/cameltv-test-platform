@@ -4,18 +4,24 @@
   "captured_at": "2026-11-27T12:25:00+08:00",
   "scope": "futurewayu production, self-created banner, create→DB id→public API→update→delete",
   "title_prefix": "AIQE-V16-CHAIN-",
-  "workflow_id": "14cfffb2-4b6d-4b50-85d1-e7cf4cc86514",
-  "run_id": "ace9b1a0-c872-4f1f-b4e2-7127f9832434",
+  "workflow_id": "1639044b-dfef-497b-81a8-9d5cd1467307",
+  "run_id": "1d3d1aa0-3ec1-4c3c-be75-d80cf64a5f12",
   "run_status": "COMPLETED",
   "run_outcome": "PASS",
   "nodes": [
+    {
+      "key": "admin_ui",
+      "status": "PASSED",
+      "error": "",
+      "artifacts": []
+    },
     {
       "key": "create_banner",
       "status": "PASSED",
       "error": "",
       "artifacts": [
-        "c6e49840-279c-4a3a-b9ca-92036b757f0d",
-        "ebe02433-a51a-46b4-9715-a2d0565e0b8f"
+        "39996a2b-cad9-4e79-abfe-3af2cc52944c",
+        "0cea56d5-03a3-4e3f-b8e3-9dfde3d20cfc"
       ]
     },
     {
@@ -23,8 +29,8 @@
       "status": "PASSED",
       "error": "",
       "artifacts": [
-        "f21cb24c-5992-4596-b780-a3b581168139",
-        "9223d241-581f-466f-a4dc-92e90d15a45f"
+        "c8342114-5693-4817-adad-894311617da2",
+        "b5272529-ead9-457a-bd3d-e1e46cc7a993"
       ]
     },
     {
@@ -32,8 +38,8 @@
       "status": "PASSED",
       "error": "",
       "artifacts": [
-        "6604f2f0-e400-44f6-8e33-c4805b3def2f",
-        "f980cc14-006e-4653-bb8c-1d831f2a6491"
+        "d9408c73-d6f6-4ae3-b2f1-28a3fb0f24c0",
+        "c98868c0-6c03-4f66-a4bd-893620f26d23"
       ]
     },
     {
@@ -41,7 +47,7 @@
       "status": "PASSED",
       "error": "",
       "artifacts": [
-        "4e3f4a7c-4f38-452a-a497-9c449212bb76"
+        "38469709-c12a-41df-adf3-7ae66167da41"
       ]
     },
     {
@@ -49,8 +55,8 @@
       "status": "PASSED",
       "error": "",
       "artifacts": [
-        "a6ef32a3-a80d-47e8-a1d5-d2b37fbf36a4",
-        "926b990e-682e-4247-907b-ac84e816c249"
+        "8e6b1414-5bdd-4a58-963c-3b2c3991271f",
+        "e541a57b-756a-4e25-a866-88fe8df48dba"
       ]
     }
   ],
