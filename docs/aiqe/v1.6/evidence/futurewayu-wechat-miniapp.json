@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "futurewayu-wechat-miniapp",
+  "captured_at": "2026-11-27T12:27:36.645622+08:00",
+  "method": "PyAutoGUI 截取微信小程序面板（半自动，非 AIQE Playwright）",
+  "evidence": [
+    "docs/aiqe/v1.6/evidence/product/wechat-miniapp-desktop.png",
+    "docs/aiqe/v1.6/evidence/product/wechat-miniapp-futurewayu.png"
+  ],
+  "observed": "微信-小程序-最近使用中出现「未来娃屿」与「未来娃屿/体验版」",
+  "status": "SEMI_AUTOMATIC",
+  "limits": [
+    "未进入小程序业务页面（点击未打开）",
+    "不能作为产品 TC PASS 或 AIQE 机器断言"
+  ]
+}
