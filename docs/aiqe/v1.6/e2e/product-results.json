@@ -134,6 +134,27 @@
       "duration_ms": 0
     },
     {
+      "tc_id": "TC-AIQE-006",
+      "status": "PASS",
+      "run_id": "712cc673-27c5-430c-b50c-0d34c97122dd",
+      "project_id": 2,
+      "workflow_snapshot_hash": "65729fe0f89adc1898b9287e1c8d858b9f35f41f16acf8b4426582416ed2ac3a",
+      "job_ids": [
+        75
+      ],
+      "node_run_ids": [
+        "6fe3c3ec-f5a0-4098-92a8-f291d8eca298"
+      ],
+      "assertion_ids": [
+        "upstream_5xx_blocked"
+      ],
+      "artifact_refs": [
+        "docs/aiqe/v1.6/evidence/product/TC-AIQE-006/upstream-failure.json"
+      ],
+      "blocked_reason": "",
+      "duration_ms": 0
+    },
+    {
       "tc_id": "TC-AIQE-004",
       "status": "BLOCKED",
       "blocked_reason": "OUT_OF_SCOPE：广告/浮层模块不属于未来娃屿；用户 2026-11-27 确认"
@@ -158,11 +179,6 @@
       ],
       "blocked_reason": "",
       "duration_ms": 0
-    },
-    {
-      "tc_id": "TC-AIQE-006",
-      "status": "BLOCKED",
-      "blocked_reason": "需要可返回 504 的外部赛程接口 Stub"
     },
     {
       "tc_id": "TC-AIQE-009",
@@ -205,10 +221,10 @@
     }
   ],
   "summary": {
-    "product_tc_pass": 6,
+    "product_tc_pass": 7,
     "product_tc_total": 10,
-    "PASS": 6,
-    "BLOCKED": 4,
+    "PASS": 7,
+    "BLOCKED": 3,
     "FAIL": 0,
     "NOT_RUN": 0
   }

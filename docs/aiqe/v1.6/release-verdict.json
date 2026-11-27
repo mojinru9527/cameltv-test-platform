@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-27T10:45:34.450935+00:00",
+  "generated_at": "2026-11-27T10:48:38.454606+00:00",
   "release": "aiqe-v1.6",
-  "commit_sha": "85ea2e01406bc8fdd49e80f3e0c1c70e78908cef",
+  "commit_sha": "fc103c22eba77cb0ccd07be0b9474df4fe9f7c4a",
   "baseline_release_commit": "9bbbdbb2026bada5c016d663780e03d62fca940d",
   "migration_head": "20261122_v16_catalog_post_merge",
   "summary": {
@@ -12,8 +12,8 @@
     "partial": 12,
     "blocked": 0,
     "independent_reviews": 70,
-    "runtime_not_proven": 12,
-    "product_tc_pass": 6,
+    "runtime_not_proven": 11,
+    "product_tc_pass": 7,
     "product_tc_total": 10
   },
   "gates": {
@@ -64,10 +64,10 @@
       "evidence": "NOT_PROVEN",
       "acceptance": "REVIEWED",
       "reasons": [
-        "产品级 TC PASS 6/10；其余仅现场记录或未执行",
+        "产品级 TC PASS 7/10；其余仅现场记录或未执行",
         "平台链路机器结果: 7/10 PASS（commit 960da41784c0）",
         "运行证据索引未达 GA：{\"PASS\": 7, \"FAIL\": 0, \"BLOCKED\": 2, \"NOT_RUN\": 1, \"total\": 10, \"executed\": 7, \"pass_rate_excluding_blocked\": 1.0, \"ga_ready\": false}",
-        "产品级 TC 机器结果: 6/10 PASS（environment futurewayu-production (self-created data; no isolated Test env)）"
+        "产品级 TC 机器结果: 7/10 PASS（environment futurewayu-production (self-created data; no isolated Test env)）"
       ],
       "artifacts": [
         "docs/aiqe/v1.6/e2e/platform-results.json",
@@ -106,10 +106,10 @@
   "ga_ready": false,
   "ga_status": "GA_NOT_READY",
   "blocking": [
-    "Gate E: 产品级 TC PASS 6/10；其余仅现场记录或未执行",
+    "Gate E: 产品级 TC PASS 7/10；其余仅现场记录或未执行",
     "Gate E: 平台链路机器结果: 7/10 PASS（commit 960da41784c0）",
     "Gate E: 运行证据索引未达 GA：{\"PASS\": 7, \"FAIL\": 0, \"BLOCKED\": 2, \"NOT_RUN\": 1, \"total\": 10, \"executed\": 7, \"pass_rate_excluding_blocked\": 1.0, \"ga_ready\": false}",
-    "Gate E: 产品级 TC 机器结果: 6/10 PASS（environment futurewayu-production (self-created data; no isolated Test env)）",
+    "Gate E: 产品级 TC 机器结果: 7/10 PASS（environment futurewayu-production (self-created data; no isolated Test env)）",
     "Gate F: 生产阶段未证明: stage1_shadow, stage2_dogfood, stage3_small_traffic, stage4_expand, stage5_ga",
     "Gate F: 生产验收无独立验收签署"
   ],

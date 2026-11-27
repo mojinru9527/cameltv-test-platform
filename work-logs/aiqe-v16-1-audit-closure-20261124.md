@@ -319,3 +319,9 @@ PR 描述的「证据」字段必须使用 `commit:`/`ci:`/`run:`/`pytest:`/`art
 - TC-009 多端：桌面 Playwright + Android Appium + 微信小程序半自动截图；
 - 产品 TC 6/10。
 
+
+## 31. TC-006 上游故障 PASS（2026-11-27）
+
+- 本地 Stub 模拟上游 504；AIQE 节点 BLOCKED/UPSTREAM_5XX，未误判产品失败；
+- Run a8ed8b5b；产品 TC 7/10。
+

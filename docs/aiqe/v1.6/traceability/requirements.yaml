@@ -2873,17 +2873,27 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: 712cc673-27c5-430c-b50c-0d34c97122dd
+      workflow_snapshot_hash: 65729fe0f89adc1898b9287e1c8d858b9f35f41f16acf8b4426582416ed2ac3a
+      job_ids:
+      - 75
+      node_run_ids:
+      - 6fe3c3ec-f5a0-4098-92a8-f291d8eca298
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-006/upstream-failure.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-006/upstream-failure.json
+    note: conclusion=PASS；模拟上游 504 → BLOCKED/UPSTREAM_5XX，未误判产品失败。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: work-logs/evidence/aiqe-v16/test5-upstream/report.json
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-006/upstream-failure.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-006/upstream-failure.json
+        note: conclusion=PASS；模拟上游 504 被正确阻断
     platform:
       tc_ids:
       - TC-PLATFORM-012
