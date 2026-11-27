@@ -7,20 +7,20 @@
 # - CODEOWNERS 不能替代独立 QA 验收（V16-025 §0.2.7）。
 
 # ── 安全边界：TargetPolicy / SafeTarget / SSRF / Secret / Query Registry ──
-/test-platform-v2/backend/app/aiqe/security/                 @mojinru9527
-/test-platform-v2/backend/app/aiqe/drivers/browser_egress_proxy.py @mojinru9527
-/test-platform-v2/backend/app/aiqe/services/secret_vault.py   @mojinru9527
-/test-platform-v2/backend/app/aiqe/services/query_registry.py @mojinru9527
-/test-platform-v2/backend/app/aiqe/services/run_context.py    @mojinru9527
+/test-platform-v2/backend/app/aiqe/security/                 @MoojinR
+/test-platform-v2/backend/app/aiqe/drivers/browser_egress_proxy.py @MoojinR
+/test-platform-v2/backend/app/aiqe/services/secret_vault.py   @MoojinR
+/test-platform-v2/backend/app/aiqe/services/query_registry.py @MoojinR
+/test-platform-v2/backend/app/aiqe/services/run_context.py    @MoojinR
 
 # ── 执行运行时：Launch / Job / Lease / DAG / Reconciler / 终态 ──
-/test-platform-v2/backend/app/aiqe/services/run_launch.py      @mojinru9527
-/test-platform-v2/backend/app/aiqe/services/job_consumer.py    @mojinru9527
-/test-platform-v2/backend/app/aiqe/services/execution_service.py @mojinru9527
-/test-platform-v2/backend/app/aiqe/services/dag_scheduler.py   @mojinru9527
-/test-platform-v2/backend/app/aiqe/services/lease.py           @mojinru9527
-/test-platform-v2/backend/app/aiqe/services/reconciler.py      @mojinru9527
-/test-platform-v2/backend/app/aiqe/services/assertion_service.py @mojinru9527
+/test-platform-v2/backend/app/aiqe/services/run_launch.py      @MoojinR
+/test-platform-v2/backend/app/aiqe/services/job_consumer.py    @MoojinR
+/test-platform-v2/backend/app/aiqe/services/execution_service.py @MoojinR
+/test-platform-v2/backend/app/aiqe/services/dag_scheduler.py   @MoojinR
+/test-platform-v2/backend/app/aiqe/services/lease.py           @MoojinR
+/test-platform-v2/backend/app/aiqe/services/reconciler.py      @MoojinR
+/test-platform-v2/backend/app/aiqe/services/assertion_service.py @MoojinR
 
 # ── Agent / Learning ──
 /test-platform-v2/backend/app/aiqe/agents/                     @mojinru9527
