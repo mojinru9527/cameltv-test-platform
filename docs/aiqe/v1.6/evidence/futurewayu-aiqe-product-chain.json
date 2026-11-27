@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "futurewayu-aiqe-product-chain",
+  "captured_at": "2026-11-27T12:25:00+08:00",
+  "scope": "futurewayu production, self-created banner, create→DB id→public API→update→delete",
+  "title_prefix": "AIQE-V16-CHAIN-",
+  "workflow_id": "14cfffb2-4b6d-4b50-85d1-e7cf4cc86514",
+  "run_id": "ace9b1a0-c872-4f1f-b4e2-7127f9832434",
+  "run_status": "COMPLETED",
+  "run_outcome": "PASS",
+  "nodes": [
+    {
+      "key": "create_banner",
+      "status": "PASSED",
+      "error": "",
+      "artifacts": [
+        "c6e49840-279c-4a3a-b9ca-92036b757f0d",
+        "ebe02433-a51a-46b4-9715-a2d0565e0b8f"
+      ]
+    },
+    {
+      "key": "delete_banner",
+      "status": "PASSED",
+      "error": "",
+      "artifacts": [
+        "f21cb24c-5992-4596-b780-a3b581168139",
+        "9223d241-581f-466f-a4dc-92e90d15a45f"
+      ]
+    },
+    {
+      "key": "public_api",
+      "status": "PASSED",
+      "error": "",
+      "artifacts": [
+        "6604f2f0-e400-44f6-8e33-c4805b3def2f",
+        "f980cc14-006e-4653-bb8c-1d831f2a6491"
+      ]
+    },
+    {
+      "key": "resolve_id",
+      "status": "PASSED",
+      "error": "",
+      "artifacts": [
+        "4e3f4a7c-4f38-452a-a497-9c449212bb76"
+      ]
+    },
+    {
+      "key": "update_banner",
+      "status": "PASSED",
+      "error": "",
+      "artifacts": [
+        "a6ef32a3-a80d-47e8-a1d5-d2b37fbf36a4",
+        "926b990e-682e-4247-907b-ac84e816c249"
+      ]
+    }
+  ],
+  "cleanup": {
+    "policy": "only self-created rows",
+    "remaining_rows": 0
+  },
+  "limits": [
+    "Admin UI 业务断言未执行（Playwright 打开页面 ACTION_TIMEOUT）",
+    "产品 TC 仍为 0/10，本证据只证明 HTTP+DB 链 PASS"
+  ]
+}
