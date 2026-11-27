@@ -15,11 +15,11 @@
 | TC-AIQE-005 | 并发数据污染 | **PASS** | TC-PLATFORM-011 | 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。<br>平台侧已加入受控目标零请求断言（localhost 可到达但不在 allowlist → BLOCKED 且计数器 0）。 |
 | TC-AIQE-006 | 上游第三方故障 | **PASS** | TC-PLATFORM-012 | 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。 |
 | TC-AIQE-007 | UI Runner 自身故障 | **PASS** | TC-PLATFORM-004 | 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。 |
-| TC-AIQE-008 | 开发修复后点击回归 | **PARTIAL** | TC-PLATFORM-005 | 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。 |
+| TC-AIQE-008 | 开发修复后点击回归 | **PASS** | TC-PLATFORM-005 | 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。 |
 | TC-AIQE-009 | 多端 AC 对照 | **PASS** | — | 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。<br>平台侧 E1–E6 实验已补终态收敛与结论记录断言（UNKNOWN 不得给已知根因结论）。 |
 | TC-AIQE-010 | 学习候选发布 | **PASS** | TC-PLATFORM-009 | 产品级 E2E 证据未归档为机器产物；当前仅有平台链路/单元证据，按 V16-017 原验收口径计为 PARTIAL。<br>平台侧 A1–A6 Agent 全链路已跑通；产品级 Benchmark/激活仍以 live 现场记录为准（未归档）。 |
 
-**产品级 TC PASS：8/10。**
+**产品级 TC PASS：9/10。**
 
 ## 平台链路 TC（本地确定性 SUT，不是产品验收）
 
