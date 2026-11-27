@@ -1601,8 +1601,7 @@ requirements:
   issue: V16-015
   priority: P1
   title: VERIFIED 只来自真实验收 Run + Artifact
-  requirement: verify_from_run 要求 Run COMPLETED/PASS、同项目、Artifact AVAILABLE 且 checksum 有效、平台非空；记录 verification_run_id/artifact refs/runner image digest/os/browser/device/supported actions/limitations；API
-    不能直接改 VERIFIED。
+  requirement: verify_from_run 要求 Run COMPLETED/PASS、同项目、Artifact AVAILABLE 且 checksum 有效、平台非空；记录 verification_run_id/artifact refs/runner image digest/os/browser/device/supported actions/limitations；API 不能直接改 VERIFIED。
   invariant: Manifest 声明不等于 VERIFIED；缺验收证据不得 VERIFIED。
   status: VERIFIED
   code:
@@ -2598,17 +2597,37 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
-    artifacts: []
-    note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+    status: PROVEN
+    refs:
+      run_id: f046604d-c167-41e3-8e4e-349d03f20a4a
+      workflow_snapshot_hash: f7bb8fc449ee71d4940082cea55ee7ce8b34364507d2cbfc28da1c8f549c6e9a
+      job_ids:
+      - 52
+      - 53
+      - 54
+      - 55
+      - 56
+      - 57
+      node_run_ids:
+      - d7ea42aa-a476-4499-8b77-ad331e44b743
+      - 8bc2144a-7228-4028-8cc8-339d33582573
+      - 7fc36bf4-a7ab-4aa8-ba7c-345974577114
+      - 35524c7e-0e00-4a68-8272-ee1d77af0cb3
+      - 60741b8e-8d8f-4113-a605-51103fbbd28e
+      - 93652d09-1c67-4ee9-b342-987c83ddcaa9
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/futurewayu-aiqe-product-chain.json
+    artifacts:
+    - docs/aiqe/v1.6/evidence/futurewayu-aiqe-product-chain.json
+    note: conclusion=PASS；未来娃屿生产自建数据 Run PASS，六节点全部 PASSED，cleanup=0。
   e2e:
     product:
-      status: PARTIAL
+      status: PASS
       evidence:
-      - kind: owner-attested
-        ref: work-logs/evidence/aiqe-v16/test5/report.json
-        artifact: null
-        note: 现场执行记录，未归档机器产物。
+      - kind: artifact
+        ref: docs/aiqe/v1.6/evidence/futurewayu-aiqe-product-chain.json
+        artifact: docs/aiqe/v1.6/evidence/futurewayu-aiqe-product-chain.json
+        note: Run PASS，含 Admin UI/Public API 双断言与 cleanup=0。
     platform:
       tc_ids: []
       tests: []

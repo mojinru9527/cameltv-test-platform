@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0",
+  "artifact_kind": "product-tc-results",
+  "generated_at": "2026-11-27T10:23:48.216362+00:00",
+  "commit_sha": "eb20b98095e10444bf5cb43f3c8a5de4c1d6cf69",
+  "environment": "futurewayu-production (self-created data; no isolated Test env)",
+  "tests": [
+    {
+      "tc_id": "TC-AIQE-002",
+      "status": "PASS",
+      "run_id": "f046604d-c167-41e3-8e4e-349d03f20a4a",
+      "project_id": 2,
+      "workflow_snapshot_hash": "f7bb8fc449ee71d4940082cea55ee7ce8b34364507d2cbfc28da1c8f549c6e9a",
+      "job_ids": [
+        52,
+        53,
+        54,
+        55,
+        56,
+        57
+      ],
+      "node_run_ids": [
+        "d7ea42aa-a476-4499-8b77-ad331e44b743",
+        "8bc2144a-7228-4028-8cc8-339d33582573",
+        "7fc36bf4-a7ab-4aa8-ba7c-345974577114",
+        "35524c7e-0e00-4a68-8272-ee1d77af0cb3",
+        "60741b8e-8d8f-4113-a605-51103fbbd28e",
+        "93652d09-1c67-4ee9-b342-987c83ddcaa9"
+      ],
+      "assertion_ids": [
+        "create_ok",
+        "public_ok",
+        "public_code",
+        "update_ok"
+      ],
+      "artifact_refs": [
+        "0d5c0b66-787c-430b-9aa0-bea26f5104d2",
+        "0dd12967-25ee-4faf-aae5-bc1aa32d7c94",
+        "1c1bc4af-6037-4772-bf9f-41fac4fe7bef",
+        "40891831-ecd7-4a4a-b85d-68b6c15ed55a",
+        "5b6c9953-4389-4530-86c3-62ac2655248e",
+        "5e95d22f-b8c7-42df-8775-83b05ab5b8a9",
+        "980fc299-b0d3-427e-8c52-56dae8fbcfd9",
+        "bf0afc28-e8b6-496d-8e4a-3ed962d939d6",
+        "e4ac657a-ef33-4ddd-a286-286c10cb4a1e"
+      ],
+      "blocked_reason": "",
+      "duration_ms": 0
+    },
+    {
+      "tc_id": "TC-AIQE-001",
+      "status": "BLOCKED",
+      "blocked_reason": "需要导入收藏赛事 PRD 的隔离 Test 环境与人工确认环节"
+    },
+    {
+      "tc_id": "TC-AIQE-003",
+      "status": "BLOCKED",
+      "blocked_reason": "需要可注入一次 503 的 Test API Stub"
+    },
+    {
+      "tc_id": "TC-AIQE-004",
+      "status": "BLOCKED",
+      "blocked_reason": "需要可注入浮层的 integration profile 与直播入口 fixture"
+    },
+    {
+      "tc_id": "TC-AIQE-005",
+      "status": "BLOCKED",
+      "blocked_reason": "需要共享账号/赛事 fixture 与并发调度环境"
+    },
+    {
+      "tc_id": "TC-AIQE-006",
+      "status": "BLOCKED",
+      "blocked_reason": "需要可返回 504 的外部赛程接口 Stub"
+    },
+    {
+      "tc_id": "TC-AIQE-007",
+      "status": "BLOCKED",
+      "blocked_reason": "需要可强制 kill 浏览器的 Runner 环境"
+    },
+    {
+      "tc_id": "TC-AIQE-008",
+      "status": "BLOCKED",
+      "blocked_reason": "依赖 TC-004 缺陷草稿 + 人工确认 + 修复 commit 部署到 Test"
+    },
+    {
+      "tc_id": "TC-AIQE-009",
+      "status": "BLOCKED",
+      "blocked_reason": "需要 Android Chrome 模拟器/真机并明确标识设备"
+    },
+    {
+      "tc_id": "TC-AIQE-010",
+      "status": "BLOCKED",
+      "blocked_reason": "需要已确认缺陷 + 已关闭缺陷标注集 + Benchmark Gate + 人工批准"
+    }
+  ],
+  "summary": {
+    "product_tc_pass": 1,
+    "product_tc_total": 10,
+    "PASS": 1,
+    "BLOCKED": 9,
+    "FAIL": 0,
+    "NOT_RUN": 0
+  }
+}
