@@ -3,7 +3,7 @@
   "artifact_kind": "product-tc-results",
   "generated_at": "2026-11-27T10:23:48.216362+00:00",
   "commit_sha": "eb20b98095e10444bf5cb43f3c8a5de4c1d6cf69",
-  "environment": "futurewayu-production (self-created data; no isolated Test env)",
+  "environment": "futurewayu-production (self-created data; TC-004 adapted to command-palette overlay)",
   "tests": [
     {
       "tc_id": "TC-AIQE-001",
@@ -94,6 +94,31 @@
       "duration_ms": 0
     },
     {
+      "tc_id": "TC-AIQE-004",
+      "status": "PASS",
+      "run_id": "aba69181-1047-4059-8caa-b8249a804c58",
+      "project_id": 2,
+      "workflow_snapshot_hash": "0d13a9d214f68d66ff01c3d0a79ff7ad214a51b4e759b959058d059eaedb5059",
+      "job_ids": [
+        78
+      ],
+      "node_run_ids": [
+        "9d8bb892-9220-4129-a557-2dcc5bb74746"
+      ],
+      "assertion_ids": [
+        "overlay_opened",
+        "underlying_click_blocked",
+        "escape_closed",
+        "navigation_recovered"
+      ],
+      "artifact_refs": [
+        "docs/aiqe/v1.6/evidence/product/TC-AIQE-004/overlay-interference.json",
+        "docs/aiqe/v1.6/evidence/product/TC-AIQE-004/overlay-interference.png"
+      ],
+      "blocked_reason": "",
+      "duration_ms": 0
+    },
+    {
       "tc_id": "TC-AIQE-005",
       "status": "PASS",
       "run_id": "4da72e0a-1c5c-4f6f-8252-0f16966cfdce",
@@ -153,11 +178,6 @@
       ],
       "blocked_reason": "",
       "duration_ms": 0
-    },
-    {
-      "tc_id": "TC-AIQE-004",
-      "status": "BLOCKED",
-      "blocked_reason": "OUT_OF_SCOPE：广告/浮层模块不属于未来娃屿；用户 2026-11-27 确认"
     },
     {
       "tc_id": "TC-AIQE-007",
@@ -252,10 +272,10 @@
     }
   ],
   "summary": {
-    "product_tc_pass": 9,
+    "product_tc_pass": 10,
     "product_tc_total": 10,
-    "PASS": 9,
-    "BLOCKED": 1,
+    "PASS": 10,
+    "BLOCKED": 0,
     "FAIL": 0,
     "NOT_RUN": 0
   }

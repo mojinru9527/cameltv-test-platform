@@ -2739,18 +2739,27 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: NOT_PROVEN
+    status: PROVEN
+    refs:
+      run_id: aba69181-1047-4059-8caa-b8249a804c58
+      workflow_snapshot_hash: 0d13a9d214f68d66ff01c3d0a79ff7ad214a51b4e759b959058d059eaedb5059
+      job_ids:
+      - 78
+      node_run_ids:
+      - 9d8bb892-9220-4129-a557-2dcc5bb74746
+      artifact_refs:
+      - docs/aiqe/v1.6/evidence/product/TC-AIQE-004/overlay-interference.json
     artifacts:
-    - docs/aiqe/v1.6/e2e/TC-AIQE-004-Waiver.md
-    note: OUT_OF_SCOPE：广告/浮层模块不属于未来娃屿；用户 2026-11-27 确认，建议 WAIVED。
+    - docs/aiqe/v1.6/evidence/product/TC-AIQE-004/overlay-interference.json
+    note: conclusion=PASS；广告模块不在范围，改用后台命令面板（Ctrl+K）验证“其他功能浮层”拦截与恢复。
   e2e:
     product:
-      status: BLOCKED
+      status: PASS
       evidence:
       - kind: artifact
-        ref: docs/aiqe/v1.6/e2e/TC-AIQE-004-Waiver.md
-        artifact: docs/aiqe/v1.6/e2e/TC-AIQE-004-Waiver.md
-        note: 广告模块不在未来娃屿范围；conclusion=OUT_OF_SCOPE
+        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-004/overlay-interference.json
+        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-004/overlay-interference.json
+        note: conclusion=PASS；命令面板浮层拦截底层导航，关闭后恢复
     platform:
       tc_ids:
       - TC-PLATFORM-008

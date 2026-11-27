@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "tc_id": "TC-AIQE-004",
+  "adaptation": "广告模块不属于未来娃屿；使用后台命令面板作为“其他功能浮层”",
+  "status": "PASS",
+  "generated_at": "2026-11-27T13:56:39.333743+00:00",
+  "overlay": {
+    "type": "command_palette",
+    "trigger": "Ctrl+K",
+    "text": "Esc\n上新\n款\n组件\n系列\n门店\n店铺\n门店设备\n订单\n导购业绩\n社区\n帖子\n板块\n营销\n轮播图\n小程序消息\n活动优惠\nDIY 脸妆\n妆容\n部件\n设置\n身份卡\n脸妆标签\n脸妆部位\n操作\n切换到浅色主题\n修改我的密码\n退出登录\n↑↓ 选择\nEnter 打开\nCtrlK 随时呼出"
+  },
+  "checks": {
+    "opened": true,
+    "blocked_underlying_navigation": true,
+    "closed_by_escape": true,
+    "navigation_recovered": true
+  },
+  "urls": {
+    "home": "https://xinyuwadao.com/home",
+    "before_click": "https://xinyuwadao.com/home",
+    "after_click": "https://xinyuwadao.com/home",
+    "recovery": "https://xinyuwadao.com/marketing/banner-activity"
+  },
+  "screenshot": "docs\\aiqe\\v1.6\\evidence\\product\\TC-AIQE-004\\overlay-interference.png",
+  "conclusion": "浮层打开时底层导航未被误触，关闭后导航恢复。"
+}
