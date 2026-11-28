@@ -11,6 +11,13 @@ function sp(name) { return path.join(SS, `batch34-v3-${name}.png`); }
 
 const report = {};
 
+const TEST_USERNAME = process.env.AIQE_TEST_USERNAME;
+const TEST_PASSWORD = process.env.AIQE_TEST_PASSWORD;
+if (!TEST_USERNAME || !TEST_PASSWORD) {
+  console.error('AIQE_TEST_USERNAME / AIQE_TEST_PASSWORD are required');
+  process.exit(2);
+}
+
 (async () => {
   console.log('========================================');
   console.log('  Batch-34 Walkthrough v3 — Final');
@@ -21,8 +28,8 @@ const report = {};
 
   // Login
   await page.goto(`${TARGET}/login`, { waitUntil: 'networkidle' });
-  await page.fill('#username', 'admin');
-  await page.fill('#password', 'admin123');
+  await page.fill('#username', TEST_USERNAME);
+  await page.fill('#password', TEST_PASSWORD);
   await page.click('button[type="submit"]');
   await page.waitForURL((u) => !u.toString().includes('/login'), { timeout: 5000 });
   await page.waitForTimeout(2000);

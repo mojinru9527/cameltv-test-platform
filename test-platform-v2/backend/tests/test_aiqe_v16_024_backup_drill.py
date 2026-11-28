@@ -91,6 +91,8 @@ def test_cli_exit_codes(tmp_path):
         ],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=60,
     )
     assert ok.returncode == 0, ok.stderr
@@ -107,6 +109,8 @@ def test_cli_exit_codes(tmp_path):
         ],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=60,
     )
     assert bad.returncode != 0

@@ -9,10 +9,12 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import threading
 import uuid
 from datetime import UTC, datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from typing import Any, ClassVar
 
 import pytest
@@ -30,7 +32,6 @@ from app.aiqe.services.agent_task_service import (
     approve_task,
     create_task,
     enqueue_task_job,
-    execute_task_job,
 )
 from app.aiqe.services.regression_service import (
     create_regression_request,
@@ -134,6 +135,40 @@ def sut():
     yield server.server_address[1]
     server.shutdown()
     server.server_close()
+
+
+def _repo_root() -> Path:
+    """仓库根（backend/tests/e2e/aiqe → parents[4]）。"""
+    return Path(__file__).resolve().parents[4]
+
+
+def _git(*args: str) -> str:
+    return subprocess.run(
+        ["git", *args],
+        cwd=_repo_root(),
+        capture_output=True,
+        text=True,
+        check=True,
+        encoding="utf-8",
+        errors="replace",
+    ).stdout.strip()
+
+
+def _repo_commit_pair() -> tuple[str, str]:
+    """取本次工作区的真实相邻提交（base, head）供 A5 ``read_git_diff`` 使用。
+
+    不硬编码 SHA：CI/本地 checkout 的提交不同；没有 git 历史或 diff 为空时显式
+    跳过（不是 PASS，也不能伪造 SHA）。
+    """
+    try:
+        head = _git("rev-parse", "HEAD")
+        base = _git("rev-parse", "HEAD~1")
+        changed = _git("diff", "--name-only", f"{base}..{head}")
+    except (OSError, subprocess.CalledProcessError) as exc:
+        pytest.skip(f"BLOCKED: 无法解析真实 git 提交对（{exc}）")
+    if len(base) != 40 or len(head) != 40 or not changed:
+        pytest.skip("BLOCKED: 当前 checkout 没有非空 diff 的相邻提交，无法证明 A5 真实 SHA 链路")
+    return base, head
 
 
 def _project_env(db, port: int) -> Environment:
@@ -599,18 +634,29 @@ def test_tc_008_defect_regression_end_to_end(db_session, sut):
 
 
 # ── TC-010：A0 编排 + A1–A6 真实 Agent Adapter（ToolRegistry + Evidence）──
-def test_tc_010_agent_task_platform_chain(db_session, sut):
-    """A0（run_plan 编排）→ A1..A6 全链路，不注入自定义 executor。
+def test_tc_010_agent_task_platform_chain(db_session, sut, monkeypatch):
+    """A0（run_plan 编排）→ A1..A6 全链路：正式 Worker 认领 + 真实工具审计。
+
+    controlled_llm_test：LLM 为确定性 stub（模型调用是受控替换边界），
+    本用例证明的是 AgentTask 生命周期/工具授权/审计/证据链，**不是**生产模型质量。
+
+    链路（FIX-005）：
+    AgentTask 记录 → 审批（approved_by/at）→ enqueue ExecutionJob →
+    ``job_consumer.claim_agent_task_jobs`` 正式认领 → ``job_consumer.run_job`` 执行 →
+    AgentExecution + ToolExecutionAudit → A5 ``read_git_diff`` 带真实 base/head SHA。
 
     真实：AgentTask 状态机、BoundToolRegistry 授权/审计、Evidence Resolver、
-    AgentExecution 持久化、AgentResult.tool_calls。
-    边界：LLM 为确定性 stub（模型层是可替换边界），A6 仍需人工批准激活。
+    AgentExecution 持久化、Worker 认领路径。
+    边界：LLM stub（controlled_llm_test）；A6 仍需人工批准激活。
     """
     import json as _json
+
+    from app.aiqe.services import agent_task_service
 
     port = sut
     run = _launch(db_session, port, _http_graph(port, "/health", expected=True))
     assert run.outcome == "PASS"
+    base_sha, head_sha = _repo_commit_pair()
 
     task = create_task(
         db_session,
@@ -627,7 +673,13 @@ def test_tc_010_agent_task_platform_chain(db_session, sut):
         requested_by=10,
         idempotency_key="e2e-agent-full",
         run_id=run.id,
+        base_sha=base_sha,
+        head_sha=head_sha,
     )
+    assert agent_task_service.task_change_scope(task) == {
+        "base_sha": base_sha,
+        "head_sha": head_sha,
+    }
     approve_task(db_session, task.id, project_id=1, approved_by=2)
     job = enqueue_task_job(db_session, task)
     db_session.commit()
@@ -719,7 +771,13 @@ def test_tc_010_agent_task_platform_chain(db_session, sut):
             )
         raise AssertionError(f"未覆盖的 Agent system prompt: {system[:80]}")
 
-    result = execute_task_job(db_session, job.id, llm=stub_llm)
+    # controlled_llm_test：只在模型调用边界注入 stub；工具/授权/审计全部真实执行。
+    monkeypatch.setattr(
+        agent_task_service, "resolve_project_llm", lambda db, project_id: stub_llm
+    )
+    claimed = job_consumer.claim_agent_task_jobs(db_session)
+    assert claimed == [job.id], f"Worker 必须经正式 claim 认领 AgentTask Job: {claimed}"
+    result = job_consumer.run_job(db_session, job.id)
     db_session.commit()
     assert result["task"]["status"] == "COMPLETED", result
     executions = list(
@@ -731,19 +789,38 @@ def test_tc_010_agent_task_platform_chain(db_session, sut):
     )
     keys = {item.agent_key for item in executions}
     assert keys == {"A1", "A2", "A3", "A4", "A5", "A6"}, keys
+    assert all(item.task_id for item in executions), "每个 AgentExecution 必须绑定 plan 节点"
     # 每个 Agent 的真实工具调用必须与 ToolExecutionAudit 对账
     declared = {
         item.agent_key: {call.get("tool") for call in (item.tool_calls_json or [])}
         for item in executions
     }
     assert "read_requirements" in declared["A1"]
-    assert "read_git_diff" not in declared["A5"]  # 未提供 base/head 时不伪造 diff 证据
+    assert "read_git_diff" in declared["A5"], "A5 必须用受控工具读取服务端 diff"
     assert "read_defects" in declared["A4"]
     assert "read_defects" in declared["A6"]
     audits = list(db_session.scalars(select(ToolExecutionAudit)))
     assert audits and all(row.task_id == task.id for row in audits)
     audit_tools = {row.tool_name for row in audits}
     assert {"read_project_context", "read_requirements", "read_defects"}.issubset(audit_tools)
+    # FIX-005：ToolExecutionAudit 必须记录 read_git_diff 且参数是本次任务的真实 SHA。
+    git_diff_audits = [
+        row for row in audits if row.tool_name == "read_git_diff" and row.decision == "ALLOW"
+    ]
+    assert git_diff_audits, [(row.tool_name, row.decision, row.reason) for row in audits]
+    for audit in git_diff_audits:
+        summary = dict(audit.args_summary_json or {})
+        assert summary.get("base_sha") == base_sha, summary
+        assert summary.get("head_sha") == head_sha, summary
+        assert audit.agent_key == "A5"
+        assert audit.actor_id is None or int(audit.actor_id) >= 0
+    # 写工具仍未开放：不得出现 create_draft/create_learning_candidate 的 ALLOW 审计
+    assert not {
+        row.tool_name
+        for row in audits
+        if row.decision == "ALLOW"
+        and row.tool_name in {"create_draft", "create_learning_candidate"}
+    }
     # A4/A6 的证据引用必须经服务端 Evidence Resolver（而非模型自述）
     assert evidence_ref in _json.dumps([row.source_refs_json for row in executions])
     available = {row.tool_name for row in audits}
@@ -751,6 +828,7 @@ def test_tc_010_agent_task_platform_chain(db_session, sut):
     assert benchmark_tools == set()
     job_row = db_session.get(ExecutionJob, job.id)
     assert job_row.status == "success"
+    assert job_row.attempt >= 1
     record_tc(
         "TC-PLATFORM-009",
         db_session,

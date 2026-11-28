@@ -1,183 +1,653 @@
-schema_version: '1.0'
+# V1.6 外部审计整改台账（FIX-012 语义关闭）
+#
+# 关闭口径：CLOSED 只能由 closure_rule_id 对应的语义验证器证明，并且必须绑定
+#   verified_commit_sha / verifier{name,version,ci_run_id} / artifact_hashes /
+#   verified_at / review{reviewer_login,review_id,reviewed_commit_sha}。
+# 没有真实 GitHub review（reviewer_login/review_id/reviewed_commit_sha）的条目
+#   必须留空 review 并降级 EXTERNAL，不得保留假 CLOSED。
+# EXTERNAL 必须写 downgrade_reason / blocked_by / owner / unblock_action。
+# 校验：python scripts/aiqe/check_audit_closure.py --check
+# 生成：python scripts/aiqe/check_audit_closure.py --write
+schema_version: '1.1'
 audit: CamelTv_AIQE_V1.6_Main_9bbbdbb_Code_Audit.md
 audit_date: '2026-11-24'
+audited_at: '2026-11-28'
 baseline_commit: 9bbbdbb2026bada5c016d663780e03d62fca940d
+closure_policy: >-
+  CLOSED = 语义规则 PASS + 真实 verified_commit_sha + verifier（名称/版本/CI Run）+
+  artifact_hashes + verified_at + 真实 GitHub review；缺任一条件必须 EXTERNAL。
 items:
 - id: P0-1
+  issue_id: P0-1
+  requirement_id: V16-025-R1
   title: 追踪矩阵全量 VERIFIED / 60 条 reviewer pending / V16-025 自审
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: TEST_EVIDENCE
+  rule_verdict: PASS
+  rule_checked_at: '2026-11-28'
   evidence:
   - docs/aiqe/v1.6/traceability/requirements.yaml
   - docs/aiqe/v1.6/governance/review-roles.yaml
   - docs/aiqe/v1.6/acceptance/README.md
   - scripts/aiqe/acceptance_records.py
   - scripts/aiqe/record_acceptance.py
-  - test-platform-v2/backend/tests/test_aiqe_v16_025_traceability_gate.py
   - test-platform-v2/backend/tests/test_aiqe_v16_025_acceptance_records.py
-  note: status 与 acceptance 分离；REVIEWED 只能来自人工 acceptance/records；同角色域/自审/pending 拒绝。
+  - test-platform-v2/backend/tests/test_aiqe_v16_025_traceability_gate.py
+  inputs:
+    test_ids:
+    - test-platform-v2/backend/tests/test_aiqe_v16_025_acceptance_records.py::test_pending_reviewer_rejected
+    - test-platform-v2/backend/tests/test_aiqe_v16_025_acceptance_records.py::test_same_role_domain_rejected
+    - test-platform-v2/backend/tests/test_aiqe_v16_025_acceptance_records.py::test_valid_record_passes
+    - test-platform-v2/backend/tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_self_review
+    - test-platform-v2/backend/tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_accepted_without_reviewed_acceptance
+    - test-platform-v2/backend/tests/test_aiqe_v16_025_traceability_gate.py::test_rejects_reviewed_without_artifact
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    TEST_EVIDENCE 已用 AST 证明 acceptance/PR 校验用例真实存在，但没有任何条目具备真实
+    GitHub review（reviewer_login/review_id/reviewed_commit_sha），缺 review 不得 CLOSED。
+  blocked_by: 真实独立 Reviewer 的 GitHub 身份与 review ID 未绑定（FIX-014 未完成）
+  owner: qa-team
+  unblock_action: >-
+    由非作者 Reviewer 在 GitHub 对整改 commit 提交 review，把 reviewer_login/review_id/
+    reviewed_commit_sha 写入台账 review 并补 verified_commit_sha/artifact_hashes 后重新 --check。
+  note: >-
+    矩阵 v2.0 已把 status 与 acceptance 分离：acceptance.status 由 acceptance/records 决定，
+    REVIEWED 只能来自人工记录且角色域必须不同；pending/自审/同域在测试中被拒绝。
 - id: P0-2
+  issue_id: P0-2
+  requirement_id: V16-025-R1
   title: Branch Protection / Ruleset 无生效证据（Gate G）
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: BRANCH_RULESET_REQUIRED_CHECKS
+  rule_verdict: FAIL
+  rule_checked_at: '2026-11-28'
   evidence:
   - docs/aiqe/v1.6/governance/branch-protection.json
   - scripts/aiqe/check_branch_protection.py
-  blocked_by: ''
+  - scripts/aiqe/update_branch_protection.py
+  inputs:
+    branch_protection: docs/aiqe/v1.6/governance/branch-protection.json
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    Main Ruleset 的 required_status_checks 仍只有「后端/前端全新检出与全量回归」「AI/Git 交付策略」
+    3 项，缺 'AIQE V1.6 Governance Gate'；规则未实际更新前不得 CLOSED（FIX-013）。
+  blocked_by: GitHub 仓库 admin 权限与真实 Ruleset 更新（FIX-013 未完成）
   owner: repo-admin
-  unblock_action: ''
-  note: GitHub Ruleset protect-main(#18351498) 已启用 required checks、禁强推/禁删除、必须 PR、require_code_owner_review=true、approving_count=1；MoojinR(qa) 已接受 collaborator；check_branch_protection --capture 验证通过 → Gate
-    G evidence=PASS。
-  unlock_action: ''
+  unblock_action: >-
+    在 GitHub Ruleset protect-main(#18351498) 增加 AIQE 聚合 Gate 为 required check，
+    用 check_branch_protection.py --capture 重新导出 branch-protection.json 后复核。
+  note: >-
+    Ruleset 其余强制项（禁强推/禁删除/必须 PR/非作者审批）已有导出证据；缺的是 AIQE 聚合 Gate。
 - id: P0-3
+  issue_id: P0-3
+  requirement_id: V16-025-R1
   title: PR 字段校验只查关键词，不校验真实填写
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: TEST_EVIDENCE
+  rule_verdict: PASS
+  rule_checked_at: '2026-11-28'
   evidence:
   - scripts/aiqe/check_traceability.py
   - .github/pull_request_template.md
   - test-platform-v2/backend/tests/test_aiqe_v16_025_traceability_gate.py
-  note: 字段级校验：占位符/过短/作者自审/角色域同域/证据类型全部拒绝。
+  inputs:
+    test_ids:
+    - test-platform-v2/backend/tests/test_aiqe_v16_025_traceability_gate.py::test_pr_mode_rejects_placeholder_fields
+    - test-platform-v2/backend/tests/test_aiqe_v16_025_traceability_gate.py::test_pr_mode_rejects_author_as_reviewer
+    - test-platform-v2/backend/tests/test_aiqe_v16_025_traceability_gate.py::test_pr_mode_rejects_same_role_domain
+    - test-platform-v2/backend/tests/test_aiqe_v16_025_traceability_gate.py::test_pr_mode_accepts_complete_fields
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    PR 字段级校验（占位符/过短/作者自审/角色域同域/证据类型）已有可执行用例，但缺真实
+    GitHub review，按 FIX-012 必须降级。
+  blocked_by: 缺真实 GitHub review（reviewer_login/review_id/reviewed_commit_sha）
+  owner: qa-team
+  unblock_action: 由非作者 Reviewer 审阅 check_traceability.py 的 PR 模式并写入 review 信息。
+  note: PR 模式改为字段级校验；占位符、过短、作者自审、同角色域与未知证据类型全部拒绝。
 - id: P0-4
+  issue_id: P0-4
+  requirement_id: V16-025-R1
   title: 基线 SHA 与 migration head 漂移（三套指纹）
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: PROVENANCE_CONSISTENT
+  rule_verdict: FAIL
+  rule_checked_at: '2026-11-28'
   evidence:
   - docs/aiqe/v1.6/traceability/requirements.yaml
   - scripts/aiqe/check_traceability.py
-  note: release_commit + migration_head 单一基线；--check-baseline 校验 git 祖先与 Alembic 单头；tag 发布时 release-gate 传 --expected-commit 强制矩阵基线 == 被发布 commit。
+  - docs/aiqe/v1.6/release-verdict.json
+  - test-platform-v2/backend/alembic/versions
+  inputs:
+    payload: docs/aiqe/v1.6/evidence/evidence-index.json
+    platform_results: docs/aiqe/v1.6/e2e/platform-results.json
+    matrix: docs/aiqe/v1.6/traceability/requirements.yaml
+    release_verdict: docs/aiqe/v1.6/release-verdict.json
+    alembic_versions: test-platform-v2/backend/alembic/versions
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    baseline SHA / migration head / release-verdict 指纹一致性由规则核对，但同一规则还必须
+    校验 evidence-index 的 provenance：当前索引缺 source/runtime/workflow/verification
+    区块且环境为 local-20261124，规则整体 FAIL，不得 CLOSED。
+  blocked_by: evidence-index 不是当前 CI 运行产物；且缺真实 GitHub review
+  owner: qa-team
+  unblock_action: >-
+    由本次 CI 用 build_evidence_index.py 生成带 source/runtime/workflow 的 evidence-index，
+    再重新 --check 并用非作者 Reviewer 签署。
+  note: >-
+    `check_traceability.py --check-baseline` 校验 git 祖先与 Alembic 单头；矩阵
+    release_commit=9bbbdbb…、migration_head=20261122_v16_catalog_post_merge 与 release-verdict 一致。
 - id: P1-1
+  issue_id: P1-1
+  requirement_id: V16-023-R1
   title: CI evidence-index 由 YAML 派生，不是运行证据
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: RUNTIME_INDEX_CURRENT
+  rule_verdict: FAIL
+  rule_checked_at: '2026-11-28'
   evidence:
   - docs/aiqe/v1.6/e2e/platform-results.json
   - docs/aiqe/v1.6/evidence/evidence-index.json
   - scripts/aiqe/build_evidence_index.py
   - .github/workflows/aiqe-v16-gates.yml
-  note: 平台 E2E 产物 → build_evidence_index.py → evidence-index.json；矩阵快照显式 not_runtime_evidence。
+  inputs:
+    index: docs/aiqe/v1.6/evidence/evidence-index.json
+    require_tcs: 10
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    evidence-index 仍是本地演练产物：environment=local-20261124、ci_run_id=local-20261124、
+    逐条 duration_ms=0、driver_image_digest 为空、2 条 BLOCKED/1 条 NOT_RUN，且缺
+    source/runtime/workflow/artifacts/verification provenance 区块，不能作为本次 CI 运行证据。
+  blocked_by: 缺少本次 CI 真实运行产物（FIX-001/FIX-011 的 CI 重跑）
+  owner: qa-automation
+  unblock_action: >-
+    在本次整改 SHA 上运行平台 E2E，用 build_evidence_index.py 传入
+    --tested-commit-sha/--runtime-type/--driver-image-digest/--started-at/--finished-at
+    生成索引后复核。
+  note: >-
+    CI 已改为平台 E2E 产物 → build_evidence_index.py；矩阵快照显式标注 not_runtime_evidence。
 - id: P1-2
+  issue_id: P1-2
+  requirement_id: V16-025-R1
   title: strict warnings 未进 CI（102 warnings 放行）
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: DOC_SEMANTICS
+  rule_verdict: PASS
+  rule_checked_at: '2026-11-28'
   evidence:
   - scripts/aiqe/check_traceability.py
   - .github/workflows/aiqe-v16-gates.yml
-  note: 证据类型化后 strict = 0 error / 0 warning，CI 使用 --strict-warnings --check-baseline。
+  inputs:
+    assertions:
+    - path: .github/workflows/aiqe-v16-gates.yml
+      kind: text
+      must_contain:
+      - '--strict-warnings'
+      - '--check-baseline'
+    - path: scripts/aiqe/check_traceability.py
+      kind: text
+      must_contain:
+      - 'strict-warnings'
+      - 'check-baseline'
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    CI 工作流已包含 --strict-warnings --check-baseline（内容级断言通过），但缺真实
+    GitHub review，按 FIX-012 必须降级。
+  blocked_by: 缺真实 GitHub review（reviewer_login/review_id/reviewed_commit_sha）
+  owner: qa-lead
+  unblock_action: 由非作者 Reviewer 复核 CI 命令与 strict 输出并写入 review 信息。
+  note: 证据类型化后 strict = 0 error / 0 warning；CI 以 strict + baseline 模式运行。
 - id: P1-3
+  issue_id: P1-3
+  requirement_id: V16-025-R1
   title: check_release_audit 0 error 但文档语义矛盾
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: TEST_EVIDENCE
+  rule_verdict: PASS
+  rule_checked_at: '2026-11-28'
   evidence:
   - scripts/aiqe/check_release_audit.py
   - test-platform-v2/backend/tests/test_aiqe_release_audit.py
-  note: 跨文档断言校验（Gate 勾选/TC 状态/10-10/GA 状态/PRODUCTION_DEPLOYED）+ 生成文档新鲜度。
+  inputs:
+    test_ids:
+    - test-platform-v2/backend/tests/test_aiqe_release_audit.py::test_repo_release_audit_is_clean
+    - test-platform-v2/backend/tests/test_aiqe_release_audit.py::test_doc_consistency_rejects_ten_of_ten_claim
+    - test-platform-v2/backend/tests/test_aiqe_release_audit.py::test_doc_consistency_rejects_product_tc_claim
+    - test-platform-v2/backend/tests/test_aiqe_release_audit.py::test_doc_consistency_rejects_gate_checkbox
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    跨文档语义断言（Gate 勾选/TC 状态/10-10/GA/PRODUCTION_DEPLOYED）与生成文档新鲜度已有
+    可执行用例，但缺真实 GitHub review，按 FIX-012 必须降级。
+  blocked_by: 缺真实 GitHub review（reviewer_login/review_id/reviewed_commit_sha）
+  owner: qa-lead
+  unblock_action: 由非作者 Reviewer 复核跨文档断言实现与用例后写入 review 信息。
+  note: check_release_audit 增加跨文档断言与生成文档新鲜度校验，并与 release-verdict 对齐。
 - id: P1-4
+  issue_id: P1-4
+  requirement_id: V16-017-R2
   title: TC-AIQE-001..010 未按原计划独立真实 E2E（SUT/Service 直调/人工 fallback）
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: PRODUCT_TC_EXECUTED
+  rule_verdict: NOT_PROVEN
+  rule_checked_at: '2026-11-28'
   evidence:
+  - docs/aiqe/v1.6/e2e/product-tc-config.yaml
   - docs/aiqe/v1.6/e2e/product-results.json
-  - docs/aiqe/v1.6/evidence/futurewayu-aiqe-product-chain.json
-  - docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json
-  - docs/aiqe/v1.6/evidence/product/TC-AIQE-010/learning-benchmark.json
-  blocked_by: ''
-  owner: qa-team
-  unblock_action: 提供未来娃屿测试账号（或后台 Token）与允许写入的对象/前缀约定；提供后可运行自建数据 + 清理的产品 TC runner
-  note: 产品 TC 10/10 PASS：TC-001..010 均归档 AIQE Run/断言/artifact；未来娃屿生产自建数据清理为 0。
-  unlock_action: ''
+  - docs/aiqe/v1.6/traceability/requirements.yaml
+  - docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md
+  inputs:
+    config: docs/aiqe/v1.6/e2e/product-tc-config.yaml
+    results: docs/aiqe/v1.6/e2e/product-results.json
+    matrix: docs/aiqe/v1.6/traceability/requirements.yaml
+    coverage: docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md
+    environment: isolated-test
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    product-tc-config 的 10 条 runner 全为 null（已显式 BLOCKED，但没有真实 Runner）；
+    product-results 本次 0/10 PASS（10 条全部 BLOCKED）；matrix 与 E2E coverage 已一致记为
+    PARTIAL/BLOCKED，但没有任何本次真实执行证据，规则 NOT_PROVEN；且缺真实 GitHub review。
+  blocked_by: 真实产品环境 Runner、测试账号与逐 TC 机器产物（FIX-002/FIX-003/FIX-004）
+  owner: qa-automation
+  unblock_action: >-
+    为 10 条 TC 接入真实 Runner 并写入 runner/execution/assertion/artifact hash/verification；
+    让 matrix、product-results、E2E coverage 三处状态一致后重新 --check。
+  note: >-
+    旧台账把该条标 CLOSED 并写「10/10 PASS」；本次按 FIX-012 语义审计发现 runner 全 null、
+    本次执行 0/10 PASS，旧矩阵/coverage 与结果冲突（现已归一为 PARTIAL/BLOCKED），属假 CLOSED，已降级。
 - id: P1-5
+  issue_id: P1-5
+  requirement_id: V16-017-R1
   title: TC-003/TC-005 未从正式链路起跑，危险目标无 0 请求证明
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: TEST_EVIDENCE
+  rule_verdict: PASS
+  rule_checked_at: '2026-11-28'
   evidence:
   - test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
   - docs/aiqe/v1.6/e2e/platform-results.json
-  note: TC-003 走 node_executor；TC-005 增加可到达受控目标 + 计数器 0 断言。
+  inputs:
+    test_ids:
+    - test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_003_browser_interaction_and_interception
+    - test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_005_metadata_endpoint_never_reached
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    平台链路负向用例（TC-003 浏览器拦截、TC-005 受控目标零请求）真实存在，但只证明平台侧
+    拦截逻辑，不等于产品级 TC 通过（product TC 仍 PARTIAL）；且缺真实 GitHub review。
+  blocked_by: 产品级 TC Runner 未接入（FIX-002/FIX-004）；缺真实 review
+  owner: qa-automation
+  unblock_action: 在产品级 Runner 中复用该负向断言并归档机器产物，再由非作者 Reviewer 复核。
+  note: TC-003 走 node_executor；TC-005 增加可到达但不在 allowlist 的受控目标并断言计数器为 0。
 - id: P1-6
+  issue_id: P1-6
+  requirement_id: V16-017-R1
   title: TC-007 未证明 claim/execute/persist/ack 崩溃阶段
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: TEST_EVIDENCE
+  rule_verdict: PASS
+  rule_checked_at: '2026-11-28'
   evidence:
   - test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
   - docs/aiqe/v1.6/e2e/platform-results.json
-  note: 崩溃恢复 E2E：租约过期→reconciler 重排→真实 dispatch/Worker→迟到 fencing 拒绝→重复投递不新增 Assertion。
+  inputs:
+    test_ids:
+    - test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_007_worker_crash_recovery_and_duplicate_delivery
+    - test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_007_stale_worker_result_rejected
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    崩溃恢复/迟到 fencing 用例真实存在（_drain 已改为只走真实 claim/lease，无人工 fallback），
+    但平台 E2E 仍不等于产品级 TC 通过（product TC 仍 PARTIAL）；且缺真实 GitHub review。
+  blocked_by: 产品级 TC Runner 未接入（FIX-002/FIX-004）；缺真实 review
+  owner: execution-platform
+  unblock_action: >-
+    在产品级 Runner 中执行 TC-007 崩溃阶段（claim/execute/persist/ack）并归档 NodeRun/Assertion
+    机器产物，再由非作者 Reviewer 复核。
+  note: 租约过期→reconciler 重排→真实 dispatch/Worker→迟到 fencing 拒绝→重复投递不新增 Assertion。
 - id: P1-7
+  issue_id: P1-7
+  requirement_id: V16-017-R1
   title: TC-008 终态断言过宽；TC-009 归因/对照不足
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: TEST_EVIDENCE
+  rule_verdict: PASS
+  rule_checked_at: '2026-11-28'
   evidence:
   - test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
   - docs/aiqe/v1.6/e2e/platform-results.json
-  note: TC-008 必须 PASS；TC-009 补 sync_experiment_result/changed_dimension/UNKNOWN 不得记录已知根因。
+  inputs:
+    test_ids:
+    - test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_008_defect_regression_end_to_end
+    - test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py::test_tc_009_noise_experiments_e1_to_e6
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    TC-008/TC-009 的平台用例真实存在（含 sync_experiment_result 终态收敛与 changed_dimension
+    对照），但产品级 TC 仍是 PARTIAL，且缺真实 GitHub review。
+  blocked_by: 产品级 TC Runner 未接入；缺真实 review
+  owner: qa-automation
+  unblock_action: 在产品级 Runner 中执行 TC-008/TC-009 并归档 Comparison/实验结论机器产物。
+  note: TC-008 必须 PASS 才计通过；TC-009 仅 COMPLETED 可记录 SUPPORTED/REFUTED，UNKNOWN 不得给已知根因。
 - id: P1-8
+  issue_id: P1-8
+  requirement_id: V16-019-R1
   title: Agent ToolRegistry 未真正消费；read_* 工具 UNAVAILABLE；A5 未自动接线
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: TEST_EVIDENCE
+  rule_verdict: PASS
+  rule_checked_at: '2026-11-28'
   evidence:
   - test-platform-v2/backend/app/aiqe/agents/tool_executor.py
   - test-platform-v2/backend/app/aiqe/services/tool_impls.py
   - test-platform-v2/backend/tests/test_aiqe_v16_019_agent_tool_loop.py
-  - test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
-  note: ToolExecutor + A1–A6 真实取证；read_requirements/read_git_diff 实现；create_regression_plan 只读提案。
+  inputs:
+    test_ids:
+    - test-platform-v2/backend/tests/test_aiqe_v16_019_agent_tool_loop.py::test_a1_agent_invokes_tools_through_executor
+    - test-platform-v2/backend/tests/test_aiqe_v16_019_agent_tool_loop.py::test_tool_executor_records_invocations_and_audits
+    - test-platform-v2/backend/tests/test_aiqe_v16_019_agent_tool_loop.py::test_a5_agent_reads_git_diff_when_shas_provided
+    - test-platform-v2/backend/tests/test_aiqe_v16_019_agent_tool_loop.py::test_create_regression_plan_is_proposal_only
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    ToolExecutor 接线与 A1/A5 取证、create_regression_plan 只读提案均有可执行用例，但缺
+    真实 GitHub review；A2/A3/A6 写能力仍按未开放声明，需在审查中确认。
+  blocked_by: 缺真实 GitHub review（reviewer_login/review_id/reviewed_commit_sha）
+  owner: ai-quality
+  unblock_action: 由非作者 Reviewer 复核工具权限边界与 A0–A6 链路后写入 review 信息。
+  note: ToolExecutor + A1–A6 真实取证；read_requirements/read_git_diff 已实现；写工具保持 UNAVAILABLE。
 - id: P1-9
+  issue_id: P1-9
+  requirement_id: V16-022-R1
   title: 生产镜像依赖运行时 sqlglot 挂载与创建后复制迁移
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: TEST_EVIDENCE
+  rule_verdict: PASS
+  rule_checked_at: '2026-11-28'
   evidence:
   - test-platform-v2/backend/requirements.api.txt
   - test-platform-v2/backend/requirements.api.lock
   - test-platform-v2/backend/requirements.runner.lock
   - test-platform-v2/backend/tests/test_aiqe_v16_024_image_dependencies.py
-  blocked_by: ''
+  - docs/aiqe/v1.6/evidence/image-build.json
+  inputs:
+    test_ids:
+    - test-platform-v2/backend/tests/test_aiqe_v16_024_image_dependencies.py::test_api_requirements_pin_sqlglot
+    - test-platform-v2/backend/tests/test_aiqe_v16_024_image_dependencies.py::test_api_lock_contains_hashed_sqlglot
+    - test-platform-v2/backend/tests/test_aiqe_v16_024_image_dependencies.py::test_runner_lock_contains_hashed_sqlglot
+    - test-platform-v2/backend/tests/test_aiqe_v16_024_image_dependencies.py::test_dockerfile_bakes_alembic_and_hashed_lock
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    依赖锁定与镜像构建证据（image-build.json：commit 1fa1c425d、image id sha256:be8430b6…、
+    sqlglot 30.33.0 可导入）与可执行用例齐备，但缺真实 GitHub review，且 image-build 不是
+    当前验收 SHA 的构建产物。
+  blocked_by: 缺当前 SHA 的镜像构建产物与真实 GitHub review
   owner: devops
-  unblock_action: ''
-  note: 从 commit 1fa1c425d 干净构建 api 镜像：image id sha256:be8430b6…、tar sha256 13363e00…、sqlglot 30.33.0 可导入、CycloneDX SBOM（251 components）与 pip freeze 归档；运行态冒烟 PASS（production 配置 /health 200、Alembic 单头）；旧生产镜像
-    aiqe-prod-20261119-1 实测无 sqlglot。
+  unblock_action: 在当前 SHA 重建 api 镜像并归档 image-build.json/SBOM，再由非作者 Reviewer 复核。
+  note: 旧生产镜像 aiqe-prod-20261119-1 实测无 sqlglot；从干净 commit 构建的新镜像已内置 sqlglot 与迁移。
 - id: P1-10
+  issue_id: P1-10
+  requirement_id: V16-024-R3
   title: 生产/GA 文档互相矛盾，无单一时间线
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: DOC_SEMANTICS
+  rule_verdict: PASS
+  rule_checked_at: '2026-11-28'
   evidence:
   - docs/aiqe/v1.6/governance/production-evidence.json
   - docs/aiqe/v1.6/V1.6-GA-Release-Report.md
   - docs/aiqe/v1.6/Production-Readiness.md
   - scripts/aiqe/release_verdict.py
-  note: 'production-evidence 为唯一定性来源；旧执行记录标 STATUS: HISTORICAL；Gate F 由机器判定。'
+  inputs:
+    assertions:
+    - path: docs/aiqe/v1.6/governance/production-evidence.json
+      kind: json
+      pointer: environment
+      equals: production
+    - path: docs/aiqe/v1.6/governance/production-evidence.json
+      kind: json
+      pointer: stages.stage3_small_traffic.status
+      equals: NOT_RUN
+    - path: docs/aiqe/v1.6/V1.6-GA-Release-Report.md
+      kind: text
+      must_contain:
+      - 机器判定来源
+      - GA_NOT_READY
+    - path: docs/aiqe/v1.6/Production-Readiness.md
+      kind: text
+      must_contain:
+      - 唯一事实源
+      - NOT_PROVEN
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    production-evidence 已改为只记录原始事实并按手册 §11 标注阶段状态（Stage1/2/5 NOT_PROVEN、
+    Stage3/4 与回滚演练 NOT_RUN），GA/生产文档统一引用机器判定；但生产阶段证据仍未完备，
+    且缺真实 GitHub review（reviewer_login/review_id/reviewed_commit_sha）。
+  blocked_by: 生产阶段真实执行与归档（Stage1/2/5 NOT_PROVEN、Stage3/4 与回滚演练 NOT_RUN）；真实 review 身份（FIX-014）
+  owner: ops
+  unblock_action: >-
+    按 production-evidence 逐阶段执行并归档原始日志/digest，把 NOT_PROVEN/NOT_RUN 阶段补齐，
+    再绑定真实 GitHub review 后重新 --check。
+  note: 'production-evidence 只记录原始事实并按 §11 标注阶段状态；旧执行记录标 STATUS: HISTORICAL；Gate F 由机器判定。'
 - id: P2-1
+  issue_id: P2-1
+  requirement_id: V16-004-R3
   title: PostgreSQL 只读 role 未在真实 PG 验证（SQLite mode=ro 不算）
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: GENERIC_FILE_EVIDENCE
+  rule_verdict: PASS
+  rule_checked_at: '2026-11-28'
   evidence:
   - scripts/aiqe/check_pg_readonly_role.py
   - docs/aiqe/v1.6/evidence/pg-readonly-role.json
-  blocked_by: ''
+  - docs/aiqe/v1.6/evidence/production-pg-readonly-role.json
+  inputs:
+    assertions:
+    - path: docs/aiqe/v1.6/evidence/pg-readonly-role.json
+      kind: json
+      pointer: status
+      equals: PASS
+    - path: docs/aiqe/v1.6/evidence/production-pg-readonly-role.json
+      kind: json
+      pointer: settings.default_transaction_read_only
+      equals: 'on'
+    - path: docs/aiqe/v1.6/evidence/production-pg-readonly-role.json
+      kind: json
+      pointer: verification[2].exit
+      equals: 1
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    本地真实 PG（loopback）与生产 aiqe_ro 均有只读/写拒绝证据，但证据是历史采集、不是当前
+    SHA 的复验产物，且缺真实 GitHub review。
+  blocked_by: 缺当前 SHA 复验与真实 review
   owner: ops
-  unblock_action: ''
-  note: 本地真实 PG 只读 role PASS（scope=loopback）；生产 aiqe_ro role 已验证写被拒绝（InsufficientPrivilege），但 default_transaction_read_only=off、statement_timeout=0，未达到硬化要求，已归档 evidence/production-pg-readonly-role.json
-    并保留生产整改项。
+  unblock_action: 在当前 SHA 用 check_pg_readonly_role.py 复验生产只读角色并归档，再由非作者 Reviewer 复核。
+  note: 本地真实 PG 只读 role PASS（scope=loopback）；生产 aiqe_ro 写入被拒绝，readonly=on、statement_timeout=5s。
 - id: P2-2
+  issue_id: P2-2
+  requirement_id: V16-024-R3
   title: V16-024 生产证据（备份恢复/Vault/告警/灰度）未归档
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: GENERIC_FILE_EVIDENCE
+  rule_verdict: PASS
+  rule_checked_at: '2026-11-28'
   evidence:
   - docs/aiqe/v1.6/governance/production-evidence.json
   - docs/aiqe/v1.6/evidence/production-stage-canary-eb20.json
-  blocked_by: ''
+  inputs:
+    assertions:
+    - path: docs/aiqe/v1.6/evidence/production-stage-canary-eb20.json
+      kind: json
+      pointer: release_commit
+      match: '^[0-9a-f]{40}$'
+    - path: docs/aiqe/v1.6/governance/production-evidence.json
+      kind: json
+      pointer: stages.stage3_small_traffic.status
+      equals: NOT_RUN
+    - path: docs/aiqe/v1.6/governance/production-evidence.json
+      kind: json
+      pointer: stages.rollback_drill.status
+      equals: NOT_RUN
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    生产阶段证据已按 §11 语义归一：Stage1/2/5 NOT_PROVEN、Stage3/4 与回滚演练 NOT_RUN，
+    只有备份恢复/Vault/告警/egress/镜像等可归档项 PASS；生产阶段仍未完成，且 review 只有
+    reviewed_by 文本、没有 GitHub review ID/reviewed_commit_sha。
+  blocked_by: 生产阶段真实执行与归档（Stage1-5、回滚演练）；真实 review 身份（FIX-014）
   owner: ops
-  unblock_action: 提供生产 SSH 私钥/跳板与 Vault、Prometheus、Alertmanager 的地址和只读 token；提供后按 production-evidence.json 逐阶段归档原始日志
-  unlock_action: ''
-  note: 生产阶段 1-5 已记录：canary 100% 发布，Stage1/2 PASS；Stage3/4 按用户授权折叠为 100% 直切并记录例外；Gate F PASS。
+  unblock_action: >-
+    按 production-evidence 逐阶段执行并归档原始日志/digest，修正 Stage 状态为 PASS/WAIVED/NOT_RUN，
+    再绑定真实 GitHub review 后重新 --check。
+  note: production-evidence 只记录原始事实；Stage3/4 与回滚演练明确记 NOT_RUN，不再折算 PASS。
 - id: P2-3
+  issue_id: P2-3
+  requirement_id: V16-021-R1
   title: V16-021 历史弱凭据需扫描/轮换
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: SECRET_SCAN_CURRENT
+  rule_verdict: FAIL
+  rule_checked_at: '2026-11-28'
   evidence:
   - docs/aiqe/v1.6/evidence/credential-scan.json
   - docs/aiqe/v1.6/evidence/credential-rotation.json
   - docs/aiqe/v1.6/evidence/production-pg-readonly-role.json
-  blocked_by: ''
+  inputs:
+    scan: docs/aiqe/v1.6/evidence/credential-scan.json
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    credential-scan 已在当前 SHA 重跑并给出 scan_commit_sha/generated_at，但 status=BLOCK：
+    potential_secret_count=20（历史提交 6 条）、weak_default_count=8 且未解释；扫描未 CLEAN
+    前不得 CLOSED。
+  blocked_by: 20 条 potential-secret 需复核并轮换、8 条 weak-default 需修复或走治理例外（FIX-009/FIX-010）
   owner: security
-  unblock_action: 提供凭据系统（Vault 等）只读 token 或已轮换清单；仓库侧扫描已 CLEAN
-  note: 仓库/历史提交扫描 CLEAN；生产 aiqe_ro 密码已轮换（随机、未入库），只读约束验证通过；应用密钥由 Vault/env 管理。
-  unlock_action: ''
+  unblock_action: >-
+    逐条复核 potential-secret 并轮换真实凭据，为 weak_default 补 weak_default_explanation
+    或逐条 rationale，扫描 status=CLEAN 后重新 --check。
+  note: >-
+    旧台账写「仓库/历史提交扫描 CLEAN」；当前扫描记录 potential_secret=20/history=6，
+    说明旧 CLEAN 结论不可复现，已按事实降级。
 - id: P2-4
+  issue_id: P2-4
+  requirement_id: V16-025-R1
   title: CODEOWNERS 全指向同一账号，无独立责任域
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: DOC_SEMANTICS
+  rule_verdict: PASS
+  rule_checked_at: '2026-11-28'
   evidence:
   - .github/CODEOWNERS
   - docs/aiqe/v1.6/governance/review-roles.yaml
-  blocked_by: ''
+  inputs:
+    assertions:
+    - path: .github/CODEOWNERS
+      kind: text
+      must_contain:
+      - '@MoojinR'
+      - /docs/aiqe/v1.6/acceptance/
+    - path: docs/aiqe/v1.6/governance/review-roles.yaml
+      kind: yaml
+      pointer: roles.reviewers.qa
+      equals: qa
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    CODEOWNERS 已为 acceptance/QA 域加入 @MoojinR，但仓库维护者 @mojinru9527 仍覆盖多数域，
+    独立责任域与真实 GitHub review 身份未建立（FIX-014）。
+  blocked_by: 独立 QA/Security 账号与真实 review 身份（FIX-014）
   owner: repo-admin
-  unblock_action: 邀请独立 QA/Security 账号并为其分配 CODEOWNERS 域
-  note: CODEOWNERS 已拆出独立账号：QA 域和 security/execution 域均指向 MoojinR；非作者审批由 ruleset 强制。
+  unblock_action: 邀请独立 QA/Security 账号并分别分配 CODEOWNERS 域，再绑定真实 review。
+  note: acceptance/ 与 review-roles.yaml 已把独立验收人指向 MoojinR；非作者审批由 ruleset 强制。
 - id: P3-1
+  issue_id: P3-1
+  requirement_id: null
   title: 全量测试未在当前环境复现（审计缺 bcrypt）
-  status: CLOSED
+  status: EXTERNAL
+  closure_rule_id: GENERIC_FILE_EVIDENCE
+  rule_verdict: PASS
+  rule_checked_at: '2026-11-28'
   evidence:
   - work-logs/aiqe-v16-1-audit-closure-20261124.md
-  - docs/aiqe/v1.6/V1.6-Release-Verdict.md
-  note: 本机已复跑 AIQE 全量子集（354 passed）与平台 E2E（11 passed）；全量后端结果见 work-log。
+  inputs:
+    assertions:
+    - path: work-logs/aiqe-v16-1-audit-closure-20261124.md
+      kind: text
+      must_contain:
+      - '326 passed'
+      - '10 passed'
+  verified_commit_sha: null
+  verifier: null
+  artifact_hashes: {}
+  verified_at: null
+  review: null
+  downgrade_reason: >-
+    只有 2026-11-24 work-log 的本地复跑记录（doc-only），没有当前 SHA 的 JUnit/CI 机器产物；
+    本次未在当前环境重跑全量后端测试，且缺真实 GitHub review。
+  blocked_by: 当前环境依赖缺失（bcrypt）与当前 SHA 的 CI 全量测试产物
+  owner: qa-automation
+  unblock_action: 在本次整改 SHA 的 CI 上跑全量后端测试并归档 junit 产物后重新 --check。
+  note: 本机已复跑 AIQE 全量子集（326 passed）与平台 E2E（10 passed）；全量后端结果见 work-log。

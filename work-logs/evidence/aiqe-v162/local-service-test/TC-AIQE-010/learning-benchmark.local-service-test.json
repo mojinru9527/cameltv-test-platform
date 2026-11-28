@@ -1,0 +1,243 @@
+{
+  "schema_version": "1.0",
+  "evidence_kind": "local_service_test",
+  "not_a_product_pass": true,
+  "tc_id": "TC-AIQE-010",
+  "product_status": "BLOCKED",
+  "product_blocked_reason": "产品级 Benchmark/审批/发布链路未由本脚本经正式 API 执行：本脚本是本地 Service 测试，其 PASS 不能折算为 TC-AIQE-010 产品级 PASS",
+  "product_owner": "qa-automation",
+  "product_unblock_action": "在隔离 Test 项目配置 AI Provider 后，经 POST /api/v1/aiqe/benchmarks/datasets|freeze|runs 与 POST /api/v1/aiqe/learning/candidates|evaluate 由不同真实用户完成 approve/activate，并把机器产物归档到 docs/aiqe/v1.6/evidence/product/TC-AIQE-010/",
+  "local_service_test_status": "PASS",
+  "generated_at": "2026-11-28T09:16:10.336700+00:00",
+  "case_book": "C:\\Users\\26029\\Desktop\\未来娃屿V5.0_用例整理与问题登记_20261117 的手工验收(1)(1)(1)(1)(1).xlsx",
+  "database_url_kind": "explicit_local_service_test_sqlite",
+  "run_command": "python scripts/aiqe/per_tc/futurewayu_learning_benchmark.py --database-url <local-service-test sqlite> --case-book <xlsx>",
+  "sample_accounting": {
+    "total_raw_rows": 69,
+    "effective_samples": 42,
+    "duplicates_removed": [
+      {
+        "sample_id": "WWY-V5-001",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-002",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-003",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-004",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-005",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-006",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-007",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-008",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-009",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-010",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-011",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-012",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-013",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-014",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-015",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-016",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-017",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-018",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-019",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-020",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-021",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-022",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-023",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-024",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-025",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      },
+      {
+        "sample_id": "WWY-V5-026",
+        "first_source": "sheet:03-待复测（26条）",
+        "duplicate_source": "sheet:02-问题登记表",
+        "reason": "DUPLICATE_SAMPLE_ID"
+      }
+    ],
+    "invalid_rows_removed": [
+      {
+        "sample_id": "问题编号",
+        "source": "sheet:03-待复测（26条）",
+        "reason": "INVALID_SAMPLE_ID"
+      }
+    ],
+    "excluded_total": 27,
+    "by_source": {
+      "sheet:03-待复测（26条）": 26,
+      "sheet:02-问题登记表": 16
+    },
+    "by_label": {
+      "GENERAL": 29,
+      "DEVICE": 1,
+      "PERMISSION": 2,
+      "LOGIN": 3,
+      "UI": 3,
+      "UPLOAD": 2,
+      "CONTENT": 2
+    },
+    "accounting_ok": true
+  },
+  "dataset": {
+    "id": "402700c1-4327-4e9c-8810-9e45bf3b9d31",
+    "sample_count": 42,
+    "content_hash": "692ec778bcfb3da9ef25e9b41000533da0c51eb6ae6e881bce39a2cf4f21b082",
+    "status": "FROZEN",
+    "gate_eligible": true
+  },
+  "benchmark": {
+    "run_id": "b7928148-18ce-44cf-b08b-ef1d4dc91958",
+    "result_status": "PASS_GATE",
+    "metrics": {
+      "samples": 42,
+      "total_samples": 42,
+      "excluded_samples": 0,
+      "exclusions": [],
+      "true_positives": 40,
+      "false_positives": 2,
+      "false_negatives": 2,
+      "sample_true_positives": 42,
+      "sample_false_positives": 0,
+      "sample_false_negatives": 0,
+      "sample_true_negatives": 0,
+      "precision": 0.9524,
+      "recall": 0.9524,
+      "f1": 0.9524,
+      "unknown_rate": 0.0,
+      "gate_eligible": true,
+      "meets_thresholds": true,
+      "thresholds": {
+        "precision": 0.8,
+        "recall": 0.8,
+        "f1": 0.75
+      }
+    },
+    "controlled_predictor": true
+  },
+  "candidate": {
+    "id": "c60d1ae4-8f17-4a5d-901e-72e555bc6957",
+    "owner_user_id": 1,
+    "approver_user_id": 2,
+    "status": "active",
+    "published": true,
+    "gate_decision": "PASS"
+  }
+}

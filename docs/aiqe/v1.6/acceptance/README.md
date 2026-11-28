@@ -24,7 +24,31 @@ owner=reviewer=tech-lead，不能证明独立验收，因此：
 - `decision`：`REVIEWED` 或 `WAIVED`；
 - `reviewer`：必须在 `governance/review-roles.yaml` 注册，且角色域 ≠ 需求 owner 角色域；
 - `artifact`：人工评审记录（仓库内文件，含检查项、结论、证据链接、签名/日期）；
-- `WAIVED` 额外需要 `waiver_reason` 与 `waived_by`。
+- `WAIVED` 额外需要 `waiver_reason`、`waived_by`、`approved_by`、`waiver_expires_at`。
+
+### V1.6.2 起：GA 模式必须绑定真实 GitHub Reviewer（FIX-014）
+
+角色别名（`qa`/`security`）只是职责标签，**不再作为身份认证依据**。
+`release_verdict.py` 在 GA 模式下使用 `require_github_identity=True`，记录还必须包含：
+
+```json
+{
+  "reviewer": "security",
+  "reviewer_login": "MoojinR",
+  "reviewer_user_id": 12345678,
+  "pr_number": 641,
+  "review_id": 3456789012,
+  "review_state": "APPROVED",
+  "reviewed_commit_sha": "<40-hex current head>",
+  "review_submitted_at": "2026-11-26T01:20:00Z"
+}
+```
+
+- `reviewer_user_id` 必须是 GitHub numeric user id；与作者/实现者相同则拒绝；
+- `reviewed_commit_sha` 必须等于被验收的精确 commit，push 后 stale review 必须重新审批；
+- `review_id` 必须能通过 GitHub API 在线回查 `state/commit_id/user.id/user.login`；
+- 缺 `review_id`、无法在线回查、`review_state != APPROVED` 时记录不得 `ACCEPTED`；
+- 存量仅含 `reviewer: <角色>` 的记录保留为历史，但 GA 模式下为 `PENDING`，不得当作已完成。
 
 ## 角色矩阵
 

@@ -9,8 +9,8 @@
 schema_version: '2.0'
 release: aiqe-v1.6
 baseline:
-  release_commit: 9bbbdbb2026bada5c016d663780e03d62fca940d
-  release_commit_source: main-head-at-audit-20261124
+  release_commit: 2d2f508d5d1fd452972e7af49d9b4f3bde2e7b01
+  release_commit_source: main-head-at-v162-remediation-20261128
   migration_head: 20261122_v16_catalog_post_merge
   branch: main
   prior_audit_snapshot_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f
@@ -1860,6 +1860,70 @@ requirements:
     status: NOT_PROVEN
     artifacts: []
     note: 仅有现场执行记录，未归档可校验的 Run/Job/NodeRun/Assertion/Artifact 机器产物。
+- id: V16-017-R3
+  issue: V16-017
+  priority: P1
+  title: 恢复 V1.6 原始产品验收范围（TC-001～010 原语义）
+  requirement: 按 ADR 0032 恢复并逐条映射原始 V1.6 验收范围：TC-001 混合链、TC-002 HTTP 200 业务断言失败、TC-003 Playwright 真实交互与安全拦截、TC-004 DB 只读/Query Registry、TC-005 SSRF/DNS Rebinding、TC-006 Secret 全链路、TC-007 Worker crash/lease/fencing、TC-008 Defect 一键回归、TC-009 Noise E1–E6、TC-010 A0–A6+Benchmark/审批/发布。
+  invariant: 旧验收要求不得被新编号静默替代；未映射/未执行范围必须保留 Requirement ID 并标 BLOCKED。
+  status: BLOCKED
+  blocked_reason: 10 条产品 TC 均无隔离 Test Runner/Secret；ADR 0032 映射状态 PENDING；原范围执行证据为现场记录，未归档为本次机器产物。
+  owner: qa-automation
+  review_by: '2026-12-31'
+  acceptance:
+    status: NOT_REVIEWED
+    reviewed_at: null
+    artifact: null
+  gaps:
+  - 需产品/测试负责人批准 ADR 0032；需隔离 Test 环境、Secret Handle 与正式 Runner 后逐条重跑。
+- id: V16-017-R4
+  issue: V16-017
+  priority: P1
+  title: Secret Handle 全链路保护（原 TC-006）
+  requirement: Secret 从 Secret Store/Vault 引用获取；Driver 授权解析；DB/API/RunEvent/StepAttempt/Artifact/日志/异常栈/Agent 上下文不得出现明文；未授权/跨项目/过期/伪造 handle 拒绝。
+  invariant: 结果产物只允许脱敏/指纹/引用；真实生产凭据不得进入 fixture/快照/日志。
+  status: BLOCKED
+  blocked_reason: 缺隔离 Test Secret Store/Vault 与真实 Runner；现有平台单测覆盖 Secret Handle 机制，但不能替代产品级全链路执行。
+  owner: backend-security
+  review_by: '2026-12-31'
+  acceptance:
+    status: NOT_REVIEWED
+    reviewed_at: null
+    artifact: null
+  gaps:
+  - 需 Vault/Secret Store 测试实例 + 受控 Runner + 明文泄漏扫描断言。
+- id: V16-017-R5
+  issue: V16-017
+  priority: P2
+  title: Noise E1–E6 因果实验（原 TC-009）
+  requirement: 对 E1–E6 六类噪声做受控因果实验，记录对照/干预/结果与归因；不得用多端 AC 结果替代 Noise 实验。
+  invariant: 未执行或无对照的噪声实验不得计为 PASS；UNKNOWN 不得归因为已知根因。
+  status: BLOCKED
+  blocked_reason: 缺受控实验环境与可重复的噪声注入/对照数据。
+  owner: qa-automation
+  review_by: '2026-12-31'
+  acceptance:
+    status: NOT_REVIEWED
+    reviewed_at: null
+    artifact: null
+  gaps:
+  - 需 E1–E6 噪声注入器、对照组与因果实验报告。
+- id: V16-017-R6
+  issue: V16-017
+  priority: P1
+  title: Worker crash / Lease / Fencing（原 TC-007）
+  requirement: 覆盖 Worker 领取后崩溃、Lease 到期重领、旧 Worker 恢复写入被 fencing 拒绝、重复 delivery 幂等、Driver/Browser 故障后 Run 状态一致、Reconciler 识别僵尸 Job。
+  invariant: 只有合法 Worker attempt 能完成节点与 Run；不得只用函数返回值断言。
+  status: BLOCKED
+  blocked_reason: 平台链路已有崩溃/租约/fencing 单测与 E2E，但缺真实产品租户 Worker 的进程级 crash/恢复证据与机器产物。
+  owner: platform-runtime
+  review_by: '2026-12-31'
+  acceptance:
+    status: NOT_REVIEWED
+    reviewed_at: null
+    artifact: null
+  gaps:
+  - 需真实 Worker 进程 kill/恢复演练与 DB 最终状态、Event 顺序、Artifact 所属 Attempt 证据。
 - id: V16-018-R1
   issue: V16-018
   priority: P1
@@ -2543,7 +2607,7 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: PROVEN
+    status: NOT_PROVEN
     refs:
       run_id: 4511702e-1f6c-4e4e-94bd-3c920d0b419d
       workflow_snapshot_hash: 816deca99aa70f83ea9f1b58506cbab6317ae5ed33bf2f11e0fae505582304c8
@@ -2555,15 +2619,14 @@ requirements:
       - docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json
     artifacts:
     - docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json
-    note: conclusion=PASS；权威手工验收表 483 条用例、351 条变更/回归补充；V4→V5 diff 已归档。
+    note: V1.6.2 复审：证据来自本地/静态结果（environment=local-20261124、duration_ms=0、driver digest 缺失），缺目标环境 provenance 与真实 Runner execution，不能作为 GA 运行证据。
   e2e:
     product:
-      status: PASS
+      status: BLOCKED
       evidence:
-      - kind: artifact
-        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json
-        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json
-        note: V5.0 文档 SHA256 + 53 个新增标题 + 68 条变更验证用例；conclusion=PASS
+      - kind: report
+        ref: docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md
+        note: V1.6.2 基线映射 PENDING；无隔离 Test Runner/Secret，本次产品结果为 BLOCKED（见 product-results.json），旧静态 10/10 PASS 已撤销。
     platform:
       tc_ids:
       - TC-PLATFORM-010
@@ -2607,7 +2670,7 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: PROVEN
+    status: NOT_PROVEN
     refs:
       run_id: f046604d-c167-41e3-8e4e-349d03f20a4a
       workflow_snapshot_hash: f7bb8fc449ee71d4940082cea55ee7ce8b34364507d2cbfc28da1c8f549c6e9a
@@ -2629,15 +2692,14 @@ requirements:
       - docs/aiqe/v1.6/evidence/futurewayu-aiqe-product-chain.json
     artifacts:
     - docs/aiqe/v1.6/evidence/futurewayu-aiqe-product-chain.json
-    note: conclusion=PASS；未来娃屿生产自建数据 Run PASS，六节点全部 PASSED，cleanup=0。
+    note: V1.6.2 复审：证据来自本地/静态结果（environment=local-20261124、duration_ms=0、driver digest 缺失），缺目标环境 provenance 与真实 Runner execution，不能作为 GA 运行证据。
   e2e:
     product:
-      status: PASS
+      status: BLOCKED
       evidence:
-      - kind: artifact
-        ref: docs/aiqe/v1.6/evidence/futurewayu-aiqe-product-chain.json
-        artifact: docs/aiqe/v1.6/evidence/futurewayu-aiqe-product-chain.json
-        note: Run PASS，含 Admin UI/Public API 双断言与 cleanup=0。
+      - kind: report
+        ref: docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md
+        note: V1.6.2 基线映射 PENDING；无隔离 Test Runner/Secret，本次产品结果为 BLOCKED（见 product-results.json），旧静态 10/10 PASS 已撤销。
     platform:
       tc_ids: []
       tests: []
@@ -2677,7 +2739,7 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: PROVEN
+    status: NOT_PROVEN
     refs:
       run_id: aa52d5d0-d4f3-4e24-94d5-731de2d3c7aa
       workflow_snapshot_hash: 11a9e762df770398d6945938f337dd1446bbe095bbee30699fd8bc60b13489d3
@@ -2691,15 +2753,14 @@ requirements:
       - docs/aiqe/v1.6/evidence/product/TC-AIQE-003/fail-retry.json
     artifacts:
     - docs/aiqe/v1.6/evidence/product/TC-AIQE-003/fail-retry.json
-    note: conclusion=PASS；首次 401 与重试 200 分别记录，无掩盖。
+    note: V1.6.2 复审：证据来自本地/静态结果（environment=local-20261124、duration_ms=0、driver digest 缺失），缺目标环境 provenance 与真实 Runner execution，不能作为 GA 运行证据。
   e2e:
     product:
-      status: PASS
+      status: BLOCKED
       evidence:
-      - kind: artifact
-        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-003/fail-retry.json
-        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-003/fail-retry.json
-        note: 首次 401 → 重试 200；conclusion=PASS
+      - kind: report
+        ref: docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md
+        note: V1.6.2 基线映射 PENDING；无隔离 Test Runner/Secret，本次产品结果为 BLOCKED（见 product-results.json），旧静态 10/10 PASS 已撤销。
     platform:
       tc_ids: []
       tests: []
@@ -2739,7 +2800,7 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: PROVEN
+    status: NOT_PROVEN
     refs:
       run_id: aba69181-1047-4059-8caa-b8249a804c58
       workflow_snapshot_hash: 0d13a9d214f68d66ff01c3d0a79ff7ad214a51b4e759b959058d059eaedb5059
@@ -2751,15 +2812,14 @@ requirements:
       - docs/aiqe/v1.6/evidence/product/TC-AIQE-004/overlay-interference.json
     artifacts:
     - docs/aiqe/v1.6/evidence/product/TC-AIQE-004/overlay-interference.json
-    note: conclusion=PASS；广告模块不在范围，改用后台命令面板（Ctrl+K）验证“其他功能浮层”拦截与恢复。
+    note: V1.6.2 复审：证据来自本地/静态结果（environment=local-20261124、duration_ms=0、driver digest 缺失），缺目标环境 provenance 与真实 Runner execution，不能作为 GA 运行证据。
   e2e:
     product:
-      status: PASS
+      status: BLOCKED
       evidence:
-      - kind: artifact
-        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-004/overlay-interference.json
-        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-004/overlay-interference.json
-        note: conclusion=PASS；命令面板浮层拦截底层导航，关闭后恢复
+      - kind: report
+        ref: docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md
+        note: V1.6.2 基线映射 PENDING；无隔离 Test Runner/Secret，本次产品结果为 BLOCKED（见 product-results.json），旧静态 10/10 PASS 已撤销。
     platform:
       tc_ids:
       - TC-PLATFORM-008
@@ -2805,7 +2865,7 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: PROVEN
+    status: NOT_PROVEN
     refs:
       run_id: 4da72e0a-1c5c-4f6f-8252-0f16966cfdce
       workflow_snapshot_hash: cd02ec3f4f8a941ce0353259cf243ca91f021e9c1da2026d3fb6daae571233e1
@@ -2829,15 +2889,14 @@ requirements:
       - docs/aiqe/v1.6/evidence/product/TC-AIQE-005/concurrency.json
     artifacts:
     - docs/aiqe/v1.6/evidence/product/TC-AIQE-005/concurrency.json
-    note: conclusion=PASS；3 路并发更新后 DB 仍 1 行，清理残留 0。
+    note: V1.6.2 复审：证据来自本地/静态结果（environment=local-20261124、duration_ms=0、driver digest 缺失），缺目标环境 provenance 与真实 Runner execution，不能作为 GA 运行证据。
   e2e:
     product:
-      status: PASS
+      status: BLOCKED
       evidence:
-      - kind: artifact
-        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-005/concurrency.json
-        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-005/concurrency.json
-        note: conclusion=PASS；并发 3 路 + DB row_count=1 + cleanup=0
+      - kind: report
+        ref: docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md
+        note: V1.6.2 基线映射 PENDING；无隔离 Test Runner/Secret，本次产品结果为 BLOCKED（见 product-results.json），旧静态 10/10 PASS 已撤销。
     platform:
       tc_ids:
       - TC-PLATFORM-011
@@ -2882,7 +2941,7 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: PROVEN
+    status: NOT_PROVEN
     refs:
       run_id: 712cc673-27c5-430c-b50c-0d34c97122dd
       workflow_snapshot_hash: 65729fe0f89adc1898b9287e1c8d858b9f35f41f16acf8b4426582416ed2ac3a
@@ -2894,15 +2953,14 @@ requirements:
       - docs/aiqe/v1.6/evidence/product/TC-AIQE-006/upstream-failure.json
     artifacts:
     - docs/aiqe/v1.6/evidence/product/TC-AIQE-006/upstream-failure.json
-    note: conclusion=PASS；模拟上游 504 → BLOCKED/UPSTREAM_5XX，未误判产品失败。
+    note: V1.6.2 复审：证据来自本地/静态结果（environment=local-20261124、duration_ms=0、driver digest 缺失），缺目标环境 provenance 与真实 Runner execution，不能作为 GA 运行证据。
   e2e:
     product:
-      status: PASS
+      status: BLOCKED
       evidence:
-      - kind: artifact
-        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-006/upstream-failure.json
-        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-006/upstream-failure.json
-        note: conclusion=PASS；模拟上游 504 被正确阻断
+      - kind: report
+        ref: docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md
+        note: V1.6.2 基线映射 PENDING；无隔离 Test Runner/Secret，本次产品结果为 BLOCKED（见 product-results.json），旧静态 10/10 PASS 已撤销。
     platform:
       tc_ids:
       - TC-PLATFORM-012
@@ -2943,7 +3001,7 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: PROVEN
+    status: NOT_PROVEN
     refs:
       run_id: 3a8d0415-892a-44e7-9db6-7596b7d4a3ac
       workflow_snapshot_hash: 9738738123552f90a5d07455b300c481d02343d12dba328c8ed9e0cfad863d84
@@ -2955,15 +3013,14 @@ requirements:
       - docs/aiqe/v1.6/evidence/product/TC-AIQE-007/runner-failure.json
     artifacts:
     - docs/aiqe/v1.6/evidence/product/TC-AIQE-007/runner-failure.json
-    note: conclusion=PASS；kill 浏览器后节点 ERROR AUTOMATION/WORKER_FAILURE，未误判 PASS。
+    note: V1.6.2 复审：证据来自本地/静态结果（environment=local-20261124、duration_ms=0、driver digest 缺失），缺目标环境 provenance 与真实 Runner execution，不能作为 GA 运行证据。
   e2e:
     product:
-      status: PASS
+      status: BLOCKED
       evidence:
-      - kind: artifact
-        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-007/runner-failure.json
-        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-007/runner-failure.json
-        note: conclusion=PASS；runner failure 被正确上报
+      - kind: report
+        ref: docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md
+        note: V1.6.2 基线映射 PENDING；无隔离 Test Runner/Secret，本次产品结果为 BLOCKED（见 product-results.json），旧静态 10/10 PASS 已撤销。
     platform:
       tc_ids:
       - TC-PLATFORM-004
@@ -3011,7 +3068,7 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: PROVEN
+    status: NOT_PROVEN
     refs:
       run_id: bbd4aa79-8217-4ef4-b1e3-4cdc46aaf773
       workflow_snapshot_hash: be7fd588ca2e704ddfed5da564ba8c5e59601bda1cef5233bf40b33b3e8067bc
@@ -3023,15 +3080,14 @@ requirements:
       - docs/aiqe/v1.6/evidence/product/TC-AIQE-008/remember-account.json
     artifacts:
     - docs/aiqe/v1.6/evidence/product/TC-AIQE-008/remember-account.json
-    note: conclusion=PASS；WWY-V5-006 记住账号回归：刷新后账号回填，localStorage username/rememberMe 保留。
+    note: V1.6.2 复审：证据来自本地/静态结果（environment=local-20261124、duration_ms=0、driver digest 缺失），缺目标环境 provenance 与真实 Runner execution，不能作为 GA 运行证据。
   e2e:
     product:
-      status: PASS
+      status: BLOCKED
       evidence:
-      - kind: artifact
-        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-008/remember-account.json
-        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-008/remember-account.json
-        note: conclusion=PASS；WWY-V5-006 记住账号回填
+      - kind: report
+        ref: docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md
+        note: V1.6.2 基线映射 PENDING；无隔离 Test Runner/Secret，本次产品结果为 BLOCKED（见 product-results.json），旧静态 10/10 PASS 已撤销。
     platform:
       tc_ids:
       - TC-PLATFORM-005
@@ -3073,7 +3129,7 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: PROVEN
+    status: NOT_PROVEN
     refs:
       run_id: f915b375-9a16-41fb-9aee-dfe650df1200
       workflow_snapshot_hash: 0352fbb086773b25a70595b2745bebb451a5008cc725dfe5299778f9dc6d3393
@@ -3085,15 +3141,14 @@ requirements:
       - docs/aiqe/v1.6/evidence/product/TC-AIQE-009/multi-end.json
     artifacts:
     - docs/aiqe/v1.6/evidence/product/TC-AIQE-009/multi-end.json
-    note: conclusion=PASS；桌面 Playwright + Android Appium + 微信小程序半自动截图。
+    note: V1.6.2 复审：证据来自本地/静态结果（environment=local-20261124、duration_ms=0、driver digest 缺失），缺目标环境 provenance 与真实 Runner execution，不能作为 GA 运行证据。
   e2e:
     product:
-      status: PASS
+      status: BLOCKED
       evidence:
-      - kind: artifact
-        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-009/multi-end.json
-        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-009/multi-end.json
-        note: conclusion=PASS；desktop/android PASS，wechat 半自动
+      - kind: report
+        ref: docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md
+        note: V1.6.2 基线映射 PENDING；无隔离 Test Runner/Secret，本次产品结果为 BLOCKED（见 product-results.json），旧静态 10/10 PASS 已撤销。
     platform:
       tc_ids: []
       tests: []
@@ -3140,7 +3195,7 @@ requirements:
     reviewed_at: null
     artifact: null
   runtime_evidence:
-    status: PROVEN
+    status: NOT_PROVEN
     refs:
       run_id: dec7ee3d-becc-4311-939e-1462c2c914ce
       workflow_snapshot_hash: 6b5a5fbf57bc9537e9a380b0add74bb4fb8bb7f58233346486cc2c1e16492b9d
@@ -3152,15 +3207,14 @@ requirements:
       - docs/aiqe/v1.6/evidence/product/TC-AIQE-010/learning-benchmark.json
     artifacts:
     - docs/aiqe/v1.6/evidence/product/TC-AIQE-010/learning-benchmark.json
-    note: conclusion=PASS；43 样本，precision/recall/f1=0.9535，MoojinR 批准候选。
+    note: V1.6.2 复审：证据来自本地/静态结果（environment=local-20261124、duration_ms=0、driver digest 缺失），缺目标环境 provenance 与真实 Runner execution，不能作为 GA 运行证据。
   e2e:
     product:
-      status: PASS
+      status: BLOCKED
       evidence:
-      - kind: artifact
-        ref: docs/aiqe/v1.6/evidence/product/TC-AIQE-010/learning-benchmark.json
-        artifact: docs/aiqe/v1.6/evidence/product/TC-AIQE-010/learning-benchmark.json
-        note: conclusion=PASS；Benchmark Gate + MoojinR 批准
+      - kind: report
+        ref: docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md
+        note: V1.6.2 基线映射 PENDING；无隔离 Test Runner/Secret，本次产品结果为 BLOCKED（见 product-results.json），旧静态 10/10 PASS 已撤销。
     platform:
       tc_ids:
       - TC-PLATFORM-009

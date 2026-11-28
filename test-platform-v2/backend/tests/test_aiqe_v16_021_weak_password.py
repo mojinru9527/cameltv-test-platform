@@ -31,6 +31,8 @@ def test_missing_credentials_exits_nonzero_without_secret(tmp_path: Path):
         env=env,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=120,
     )
     assert result.returncode != 0

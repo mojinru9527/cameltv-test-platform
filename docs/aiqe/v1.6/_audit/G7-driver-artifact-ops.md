@@ -20,7 +20,7 @@
 | V16-015 | **PARTIAL** | 6 态能力模型、心跳、版本变更降级、Preflight 拦截都已存在；但 `VERIFIED` 无任何生产写入者（只由脚本/测试 `mark_verified` 写入），模型缺 verification_run_id/artifact refs/OS/镜像/设备字段，正式 Launch 的 Preflight 用的是另一套「字符串 evidence + 30s 心跳」实现且接受 AVAILABLE/声明平台，自动降级无生产调用点。 |
 | V16-016 | **PARTIAL** | 服务端计算平台状态、真机平台要求 VERIFIED、iOS 在 DeviceBroker 被门禁、Android/Appium 有执行链；但 Miniapp/Desktop/IoT Adapter 是**只有测试导入的死代码**，未接 `DriverProtocol`/`NodeExecutor`；PlatformBinding 缺 Environment/DevicePool/Runner 字段；DeviceBroker 为内存对象且全仓无生产引用；无动作粒度 Preflight、无性能指标采集；iOS 可仅凭 DB 行被标 VERIFIED。 |
 | V16-018 | **PARTIAL** | 两阶段上传 + 服务端重算 sha256、跨项目 403、墓碑、路径穿越防护、worker 侧证据脱敏已实现；但缺 `created_by`/`retention_policy`（classification 只是存字段不生效）、上传会话 `expires_at` 不校验、无 Content-Type/期望大小校验、API 上传不做脱敏/Secret 扫描、无访问审计与 reconciliation、墓碑/CORRUPTED artifact 仍能被 Evidence Resolver 解析、GC 忽略 `retention_until` 且跨项目全局清理、外部 Runner 的截图/Trace 不落 RunArtifact。 |
-| V16-021 | **MISSING** | `evidence_local_20.py:203` 仍保留 `...environ.get("AIQE_EVIDENCE_PASSWORD", "admin123")` 弱默认值，`:10` 文档仍教 `--password admin123`；`--password` 命令行参数仍存在；无「无凭据退出非 0」实现与测试；无历史凭据扫描/轮换记录。 |
+| V16-021 | **MISSING** | `evidence_local_20.py:203` 仍保留 `...environ.get("AIQE_EVIDENCE_PASSWORD", "<weak-default>")` 弱默认值，`:10` 文档仍教 `--password <weak-default>`；`--password` 命令行参数仍存在；无「无凭据退出非 0」实现与测试；无历史凭据扫描/轮换记录。 |
 | V16-022 | **PARTIAL** | 三套 `requirements*.lock` 带 hash、Dockerfile 用 digest + `--require-hashes`；但 required CI 的测试安装是 `pip install -r requirements.txt` + 浮动 `pytest`，lock 只做 dry-run；无 dependency groups；pytest 只有 slow/integration 两个 marker，无分层；AIQE 测试无 JUnit XML/coverage XML/Trace/commit SHA 产物；无干净环境单命令脚本。 |
 | V16-023 | **MISSING** | 验收证据 JSON/MD 无 commit SHA、CI run、PR、镜像 digest；`config/aiqe-version.lock` 停留在 `ff5353a40`/`release-m15-20261114`/2026-11-13；v1.5 最终报告手工填写测试数量；v1.6 交付文档（矩阵/追踪矩阵/测试计划/发布报告）全部缺失；仓库无 evidence-index 生成器、无 AIQE CI workflow。 |
 | V16-024 | **PARTIAL（核心缺口=监控/告警/限流/灰度全缺）** | 无任何 AIQE 指标实现（规格 §8.2 的 `aiqe_*` 指标 grep 命中 0，仓库无 prometheus/grafana/alertmanager）；无告警规则、无限流、无 AIQE 灰度阶段；仅存在既有的回滚文档/版本锁/回滚脚本与一次手工生产备份记录，且未做演练记录。 |
@@ -292,9 +292,9 @@ Select-String -Path "$root\test-platform-v2\backend\tests" -Pattern 'expires_at|
 ### 4.1 证据
 
 1. `test-platform-v2/backend/scripts/aiqe/evidence_local_20.py:203` —
-   `parser.add_argument("--password", default=os.environ.get("AIQE_EVIDENCE_PASSWORD", "admin123"))`
-   → 弱默认口令仍在；未提供任何凭据时脚本**不会退出**，而是用 `admin123` 直接跑（`:227` 传入 `execute_run`）。
-2. `test-platform-v2/backend/scripts/aiqe/evidence_local_20.py:10` — 模块 docstring 仍写 `--runs 20 --password admin123`，等于继续教用户使用默认口令。
+   `parser.add_argument("--password", default=os.environ.get("AIQE_EVIDENCE_PASSWORD", "<weak-default>"))`
+   → 弱默认口令仍在；未提供任何凭据时脚本**不会退出**，而是用弱默认值直接跑（`:227` 传入 `execute_run`）。
+2. `test-platform-v2/backend/scripts/aiqe/evidence_local_20.py:10` — 模块 docstring 仍写 `--runs 20 --password <weak-default>`，等于继续教用户使用默认口令。
 3. 同文件 `:153-156` — `secrets={"ADMIN_PASSWORD": password}` 把明文密码放进 RunContext；`:266` 仅断言「密码未进入 environment_snapshot」，不覆盖 outputs/attempts/jobs/artifacts（且 `assert` 在 `-O` 下失效）。
 4. `scripts/aiqe/run_dogfood_mixed.py:29,48` — 管理员密码通过 `--admin-password` 命令行参数传入（进程列表可读），违反「禁止将密码写入命令行参数」。
 5. `scripts/qa/aiqe_local_runner.py:12,328,344-352` — `--password` 参数（默认空串），缺凭据时只报错退出（这一点优于 021，但仍是命令行口令）。

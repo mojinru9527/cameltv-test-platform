@@ -82,11 +82,19 @@ async function logPageState(page, label) {
       console.log('  Login page detected.');
       await takeScreenshot(page, '01-login-page');
 
-      for (const cred of [
-        { username: 'admin', password: 'admin123' },
-        { username: 'tester', password: 'tester123' },
-        { username: 'test', password: 'test123' },
-      ]) {
+      const credentials =
+        process.env.AIQE_TEST_USERNAME && process.env.AIQE_TEST_PASSWORD
+          ? [
+              {
+                username: process.env.AIQE_TEST_USERNAME,
+                password: process.env.AIQE_TEST_PASSWORD,
+              },
+            ]
+          : [];
+      if (credentials.length === 0) {
+        throw new Error('AIQE_TEST_USERNAME / AIQE_TEST_PASSWORD are required');
+      }
+      for (const cred of credentials) {
         console.log(`  Trying: ${cred.username}/${cred.password}`);
         try {
           await page.fill('#username', '');

@@ -1,60 +1,210 @@
 {
   "schema_version": "1.0",
+  "artifact_kind": "production-stage-evidence",
   "environment": "production",
   "release": "aiqe-v1.6",
   "checked_at": "2026-11-27T14:06:31.495754+00:00",
-  "source": "canary-release-eb20-20261127",
-  "note": "本文件是生产运行证据的唯一定性来源。任何阶段只有在该阶段给出仓库内可校验 artifact（日志/JSON/镜像 digest）后才能置 PASS；只有现场记录或相邻文档互相矛盾时一律 NOT_PROVEN。文档叙述不得覆盖本文件。",
+  "normalized_at": "2026-11-28T09:00:00+00:00",
+  "source": "production-stage-canary-eb20",
+  "raw_source": {
+    "path": "docs/aiqe/v1.6/evidence/production-stage-canary-eb20.json",
+    "captured_at": "2026-11-27T14:06:31.495754+00:00",
+    "release_commit": "eb20b98095e10444bf5cb43f3c8a5de4c1d6cf69",
+    "release_image": "cameltv-tp-backend:canary-eb20",
+    "release_image_id": "sha256:dfebc617d093ef97e87890c0063cedfd66c1e01b5dd1da2bec057b4c62d22a0f"
+  },
+  "note": "本文件只记录 production-stage-canary-eb20.json 中的原始事实，并按手册 §11 语义标注阶段状态。健康检查、100% 切流、回滚命令都不能折算为阶段 PASS；被跳过的阶段记 NOT_RUN，不记 PASS。修正依据见 docs/aiqe/v1.6/governance/production-evidence-normalization.md。",
+  "policy": {
+    "waivers_allowed_stages": [],
+    "waiver_rule": "WAIVED 需要 approved_by/approved_at/reason/risk/compensating_controls/expires_at；用户口头授权 100% 直切不构成正式豁免，因此 skipped 阶段记 NOT_RUN。",
+    "gate_f_rule": "mandatory stage 全部 PASS 且 rollback drill PASS 才能 Gate F PASS；任一 NOT_RUN/BLOCKED/NOT_PROVEN 即非 PASS。"
+  },
   "stages": {
     "stage1_shadow": {
-      "status": "PASS",
-      "artifacts": [
+      "stage_id": "stage1_shadow",
+      "stage_name": "Shadow（影子流量/双跑差异）",
+      "status": "NOT_PROVEN",
+      "target_release_sha": "eb20b98095e10444bf5cb43f3c8a5de4c1d6cf69",
+      "deployed_image_digest": "sha256:dfebc617d093ef97e87890c0063cedfd66c1e01b5dd1da2bec057b4c62d22a0f",
+      "environment": "production",
+      "region": "",
+      "started_at": "",
+      "finished_at": "",
+      "checks": {
+        "canary_health_before_switch": {
+          "status": 200,
+          "body": {
+            "status": "ok",
+            "version": "2.1.0"
+          }
+        }
+      },
+      "artifact_refs": [
         "docs/aiqe/v1.6/evidence/production-stage-canary-eb20.json"
       ],
-      "doc_refs": [
-        "docs/aiqe/v1.6/rollout/Stage1-5-Execution-Readiness.md"
+      "operator_identity": "",
+      "evidence_gaps": [
+        "原始文件只有 canary 容器启动后、切流前 /health=200，没有任何影子流量或双跑差异结果",
+        "原始文件未记录阶段 started_at/finished_at 与执行操作者",
+        "健康检查 200 属于“接口可用”，不能折算为 Shadow 差异验收"
       ],
-      "note": "2026-11-27 canary 发布：候选 eb20，镜像 sha256:dfebc617…，100% 切流；用户批准无观察窗口。"
+      "note": "原始事实：canary_health_before_switch.status=200。不是 shadow diff，按手册 §11.4 记 NOT_PROVEN。"
     },
     "stage2_dogfood": {
-      "status": "PASS",
-      "artifacts": [
+      "stage_id": "stage2_dogfood",
+      "stage_name": "Canary / Dogfood（真实业务流程灰度）",
+      "status": "NOT_PROVEN",
+      "target_release_sha": "eb20b98095e10444bf5cb43f3c8a5de4c1d6cf69",
+      "deployed_image_digest": "sha256:dfebc617d093ef97e87890c0063cedfd66c1e01b5dd1da2bec057b4c62d22a0f",
+      "environment": "production",
+      "region": "",
+      "started_at": "2026-11-27T14:05:43Z",
+      "finished_at": "2026-11-27T14:06:31.495754+00:00",
+      "time_source": "started_at 取原始 switch.switched_at，finished_at 取 captured_at；原始文件未单独记录阶段起止，属于窗口推断。",
+      "checks": {
+        "public_health_after_switch": {
+          "status": 200,
+          "body": {
+            "status": "ok",
+            "version": "2.1.0"
+          }
+        },
+        "public_openapi_after_switch": {
+          "status": 200
+        },
+        "canary_access_log": "GET /health HTTP/1.1 200"
+      },
+      "artifact_refs": [
         "docs/aiqe/v1.6/evidence/production-stage-canary-eb20.json"
       ],
-      "doc_refs": [
-        "docs/aiqe/v1.6/rollout/Stage1-5-Execution-Readiness.md"
+      "operator_identity": "",
+      "evidence_gaps": [
+        "只有 /health 与 /openapi.json，没有产品关键业务流程 Dogfood 记录",
+        "没有业务指标/错误率/延迟阈值与观察窗口",
+        "canary_access_log 只有一条 GET /health，不能证明业务流量进入"
       ],
-      "note": "2026-11-27 canary 发布：候选 eb20，镜像 sha256:dfebc617…，100% 切流；用户批准无观察窗口。"
+      "note": "原始事实：切流后公网 /health=200、/openapi.json=200、canary 日志收到 /health。健康检查不是业务 Dogfood，按手册 §11.4 记 NOT_PROVEN。"
     },
     "stage3_small_traffic": {
-      "status": "PASS",
-      "artifacts": [
+      "stage_id": "stage3_small_traffic",
+      "stage_name": "5% 小流量灰度",
+      "status": "NOT_RUN",
+      "target_release_sha": "eb20b98095e10444bf5cb43f3c8a5de4c1d6cf69",
+      "deployed_image_digest": "sha256:dfebc617d093ef97e87890c0063cedfd66c1e01b5dd1da2bec057b4c62d22a0f",
+      "environment": "production",
+      "region": "",
+      "started_at": "",
+      "finished_at": "",
+      "checks": {
+        "planned_traffic_percent": 5,
+        "observed_traffic_percent": null,
+        "stage_executed": false,
+        "skipped_by_user_authorization": true
+      },
+      "artifact_refs": [
         "docs/aiqe/v1.6/evidence/production-stage-canary-eb20.json"
       ],
-      "doc_refs": [
-        "docs/aiqe/v1.6/rollout/Stage1-5-Execution-Readiness.md"
+      "operator_identity": "",
+      "skipped_reason": "原始 exception 字段：用户明确选择 100% 直切、不设观察窗口；5%/50% 渐进流量被折叠为一次 100% 切换。",
+      "waiver_assessment": "只有 2026-11-27 用户授权记录，没有 approved_by/approved_at/risk/compensating_controls/expires_at 的正式豁免字段，因此不得写 WAIVED，记 NOT_RUN。",
+      "evidence_gaps": [
+        "没有目标流量比例的真实观测（5%）、观察窗口、错误率/延迟/核心业务指标阈值",
+        "没有停止条件执行记录"
       ],
-      "note": "2026-11-27 canary 发布：候选 eb20，镜像 sha256:dfebc617…，100% 切流；用户批准无观察窗口。"
+      "note": "原始事实：用户授权跳过 5%。跳过后不得写 PASS。"
     },
     "stage4_expand": {
-      "status": "PASS",
-      "artifacts": [
+      "stage_id": "stage4_expand",
+      "stage_name": "50% 扩容灰度",
+      "status": "NOT_RUN",
+      "target_release_sha": "eb20b98095e10444bf5cb43f3c8a5de4c1d6cf69",
+      "deployed_image_digest": "sha256:dfebc617d093ef97e87890c0063cedfd66c1e01b5dd1da2bec057b4c62d22a0f",
+      "environment": "production",
+      "region": "",
+      "started_at": "",
+      "finished_at": "",
+      "checks": {
+        "planned_traffic_percent": 50,
+        "observed_traffic_percent": null,
+        "stage_executed": false,
+        "skipped_by_user_authorization": true
+      },
+      "artifact_refs": [
         "docs/aiqe/v1.6/evidence/production-stage-canary-eb20.json"
       ],
-      "doc_refs": [
-        "docs/aiqe/v1.6/rollout/Stage1-5-Execution-Readiness.md"
+      "operator_identity": "",
+      "skipped_reason": "原始 exception 字段：50% 阶段被折叠为一次 100% 切换。",
+      "waiver_assessment": "没有正式豁免字段，不得写 WAIVED，记 NOT_RUN。",
+      "evidence_gaps": [
+        "没有 50% 流量比例的真实观测与观察窗口",
+        "没有错误率/延迟/核心业务指标阈值与停止条件"
       ],
-      "note": "2026-11-27 canary 发布：候选 eb20，镜像 sha256:dfebc617…，100% 切流；用户批准无观察窗口。"
+      "note": "原始事实：未执行 50% 阶段。跳过后不得写 PASS。"
     },
     "stage5_ga": {
-      "status": "PASS",
-      "artifacts": [
+      "stage_id": "stage5_ga",
+      "stage_name": "GA（100% 流量 + 发布完成）",
+      "status": "NOT_PROVEN",
+      "target_release_sha": "eb20b98095e10444bf5cb43f3c8a5de4c1d6cf69",
+      "deployed_image_digest": "sha256:dfebc617d093ef97e87890c0063cedfd66c1e01b5dd1da2bec057b4c62d22a0f",
+      "environment": "production",
+      "region": "",
+      "started_at": "2026-11-27T14:05:43Z",
+      "finished_at": "2026-11-27T14:06:31.495754+00:00",
+      "time_source": "started_at 取原始 switch.switched_at，finished_at 取 captured_at；原始文件未单独记录 GA 阶段起止。",
+      "checks": {
+        "traffic_percent": 100,
+        "public_health_after_switch": {
+          "status": 200
+        },
+        "public_openapi_after_switch": {
+          "status": 200
+        }
+      },
+      "artifact_refs": [
         "docs/aiqe/v1.6/evidence/production-stage-canary-eb20.json"
       ],
-      "doc_refs": [
-        "docs/aiqe/v1.6/rollout/Stage1-5-Execution-Readiness.md"
+      "operator_identity": "",
+      "evidence_gaps": [
+        "100% 切流只证明部署动作完成，不能替代 stage1/2/3/4 的验收",
+        "没有 GA 业务验收、观察窗口与回滚演练结果",
+        "原文件 stages.stage5_ga 的 PASS 只是文字声明，无独立 artifact"
       ],
-      "note": "2026-11-27 canary 发布：候选 eb20，镜像 sha256:dfebc617…，100% 切流；用户批准无观察窗口。"
+      "note": "原始事实：100% 切流 + 公网 health/openapi 200。GA 依赖前序 mandatory 阶段，按手册 §11.4/§11.5 记 NOT_PROVEN。"
+    },
+    "rollback_drill": {
+      "stage_id": "rollback_drill",
+      "stage_name": "回滚演练（Rollback Drill）",
+      "status": "NOT_RUN",
+      "target_release_sha": "eb20b98095e10444bf5cb43f3c8a5de4c1d6cf69",
+      "deployed_image_digest": "sha256:dfebc617d093ef97e87890c0063cedfd66c1e01b5dd1da2bec057b4c62d22a0f",
+      "environment": "production",
+      "region": "",
+      "started_at": "",
+      "finished_at": "",
+      "checks": {
+        "rollback_command_recorded": true,
+        "nginx_backup_recorded": true,
+        "old_backend_container_recorded": true,
+        "drill_executed": false,
+        "recovery_seconds": null
+      },
+      "rollback_target_container": "cameltv-tp-production-backend-v16",
+      "rollback_target_sha": "",
+      "rollback_command": "docker cp /root/nginx-default-before-canary.conf cameltv-tp-production-frontend-v16:/etc/nginx/conf.d/default.conf && docker exec cameltv-tp-production-frontend-v16 nginx -s reload",
+      "artifact_refs": [
+        "docs/aiqe/v1.6/evidence/production-stage-canary-eb20.json"
+      ],
+      "operator_identity": "",
+      "blocked_by": "未安排回滚演练窗口；原始记录只有回滚命令、nginx 备份路径与旧容器名，没有实际演练结果",
+      "owner": "发布负责人（用户）；生产验收签字人 MoojinR",
+      "unblock_action": "在隔离环境或受控窗口实际触发回滚到上一版本，记录 started_at/finished_at、回滚目标 SHA/digest、recovery_seconds、恢复后 health 与业务断言，并把结果写入 artifact 后再改状态",
+      "evidence_gaps": [
+        "只有回滚命令与配置备份，没有演练开始/结束时间与恢复耗时",
+        "没有回滚目标 SHA/digest（原始文件只有旧容器名）",
+        "没有回滚后验证结果（health/业务断言）"
+      ],
+      "note": "手册 §11.4：只有回滚命令/配置文件不算演练，记 NOT_RUN。"
     },
     "postgres_backup_restore": {
       "status": "PASS",
@@ -65,7 +215,7 @@
         "docs/aiqe/v1.6/Production-Readiness.md",
         "docs/aiqe/v1.6/Platform-Residual-Resolution.md"
       ],
-      "note": "生产 PG 用 pre-M13 dump（sha256 62cf…，112 表）恢复到临时 DB 后删除；恢复流程验证通过，当前 132 表库待下次备份复验。"
+      "note": "§11 灰度阶段之外的 readiness 项，本次整改未重新执行；保持原记录，由 owner 在最终发布复核时重新验证。"
     },
     "vault_production_mode": {
       "status": "PASS",
@@ -76,7 +226,7 @@
         "docs/aiqe/v1.6/Vault-Transit-Deployment.md",
         "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
       ],
-      "note": "生产 Vault：initialized/unsealed、Shamir 3/5、file 持久化挂载、TLS1.2（tls_disable=0）；已归档脱敏 status/config 证据。"
+      "note": "§11 灰度阶段之外的 readiness 项，本次整改未重新执行；保持原记录。"
     },
     "monitoring_alerts": {
       "status": "PASS",
@@ -87,7 +237,7 @@
         "docs/aiqe/v1.6/observability/Monitoring-and-Alerts.md",
         "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
       ],
-      "note": "Prometheus 3 组/21 条规则加载、Alertmanager ready；自建 AIQEProbe 告警投递后 active、随后 resolved 并清理；未触发真实阈值。"
+      "note": "§11 灰度阶段之外的 readiness 项，本次整改未重新执行；保持原记录。"
     },
     "container_egress": {
       "status": "PASS",
@@ -98,7 +248,7 @@
       "doc_refs": [
         "docs/aiqe/v1.6/V1.6-GA-Release-Report.md"
       ],
-      "note": "DOCKER-USER allowlist 已按 aiqe-v16-backend 源 IP 生效：DeepSeek 可达、example.com 拒绝、生产/AIQE health 200；解析 IP 变更需维护。"
+      "note": "§11 灰度阶段之外的 readiness 项，本次整改未重新执行；保持原记录。"
     },
     "image_self_contained": {
       "status": "PASS",
@@ -112,7 +262,7 @@
         "docs/aiqe/v1.6/Production-Deploy-20261123.md",
         "test-platform-v2/backend/Dockerfile"
       ],
-      "note": "2026-11-25 从 commit 1fa1c425d 干净构建 target=api：image id sha256:be8430b6…、tar sha256 13363e00…、sqlglot 30.33.0 import OK、CycloneDX SBOM 251 components；运行态冒烟 PASS（production 配置 + /health 200 + Alembic 单头 20261122_v16_catalog_post_merge）；旧镜像 aiqe-prod-20261119-1 无 sqlglot。"
+      "note": "§11 灰度阶段之外的 readiness 项，本次整改未重新执行；保持原记录。"
     },
     "production_smoke": {
       "status": "PASS",
@@ -122,13 +272,16 @@
       "doc_refs": [
         "docs/aiqe/v1.6/Production-Deploy-20261123.md"
       ],
-      "note": "health 200（2.1.0）、镜像 digest sha256:9c450e…、源码 tar sha256 77439f…；运行容器源文件 blob 与 commit 9bbbdbb 一致。"
+      "note": "§11 灰度阶段之外的 readiness 项，本次整改未重新执行；保持原记录。"
     }
   },
   "independent_verification": {
     "reviewed_by": "MoojinR",
     "reviewed_at": "2026-11-27",
+    "review_id": "",
+    "reviewed_commit_sha": "",
+    "status": "PENDING",
     "artifact": "docs/aiqe/v1.6/evidence/production-stage-canary-eb20.json",
-    "note": "用户指定 MoojinR 作为生产验收签字人；签核基于本次 canary 发布记录。"
+    "note": "用户指定 MoojinR 作为生产验收签字人；但原始记录没有 review_id 与 reviewed_commit_sha，无法证明签署针对当前 SHA，按手册 §11/FIX-014 记 PENDING，不得编造。"
   }
 }

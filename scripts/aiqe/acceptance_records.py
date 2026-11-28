@@ -1,4 +1,4 @@
-"""V16-025 独立验收记录（acceptance records）。
+"""V16-025 / FIX-014 独立验收记录（acceptance records）。
 
 设计
 ----
@@ -9,17 +9,31 @@
   ``acceptance.status`` 从 NOT_REVIEWED 提升为 REVIEWED/WAIVED。
 - 角色矩阵 ``governance/review-roles.yaml`` 强制 reviewer 角色域 ≠ owner 角色域，
   防止“同一账号换角色字符串”冒充独立验收。
+
+FIX-014：``reviewer`` / ``reviewer_role`` 只是**职责标签**，不能证明真实身份。
+GA 模式（``require_github_identity=True``）额外要求真实 GitHub 身份字段：
+``reviewer_login``、``reviewer_user_id``、``pr_number``、``review_id``、
+``review_state=APPROVED``、``reviewed_commit_sha``、``review_submitted_at``；
+并校验 reviewer 与作者/owner 的 GitHub user id 不同、review 指向当前 HEAD。
+
+可选在线核验（``verify_online=True``）调用 GitHub API 回查 review 的
+state/commit/user id/login；网络或令牌不可用时返回 **BLOCKED**（不得通过）。
 """
 from __future__ import annotations
 
 import json
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:  # pragma: no cover - 直接执行时
+    sys.path.insert(0, str(SCRIPT_DIR))
+
 DOCS = ROOT / "docs/aiqe/v1.6"
 RECORDS_DIR = DOCS / "acceptance/records"
 ROLE_MATRIX = DOCS / "governance/review-roles.yaml"
@@ -27,12 +41,34 @@ ROLE_MATRIX = DOCS / "governance/review-roles.yaml"
 DECISIONS = {"REVIEWED", "WAIVED"}
 PENDING_REVIEWERS = {"", "pending", "tbd", "n/a", "none"}
 REQUIRED_FIELDS = ("requirement_id", "decision", "reviewer", "reviewed_at")
+IDENTITY_FIELDS = (
+    "reviewer_login",
+    "reviewer_user_id",
+    "pr_number",
+    "review_id",
+    "reviewed_commit_sha",
+    "review_state",
+    "review_submitted_at",
+)
+ONLINE_BLOCKED_MARKERS = (
+    "GITHUB_TOKEN",
+    "GH_TOKEN",
+    "无法在线",
+    "查询 GitHub review 失败",
+    "无法连接",
+)
 
 
 @dataclass
 class AcceptanceReport:
     records: dict[str, dict[str, Any]] = field(default_factory=dict)
     errors: list[str] = field(default_factory=list)
+
+
+def _identity_status_label(reasons: list[str]) -> str:
+    """区分“证据不足/无法回查”（BLOCKED）与“证据不匹配”（REJECTED）。"""
+    text = " ".join(str(item) for item in reasons)
+    return "BLOCKED" if any(marker in text for marker in ONLINE_BLOCKED_MARKERS) else "REJECTED"
 
 
 def load_role_matrix(path: Path = ROLE_MATRIX) -> dict[str, dict[str, str]]:
@@ -54,12 +90,62 @@ def _resolve_repo_path(raw: str) -> Path | None:
     return candidate if candidate.exists() else None
 
 
+def _identity_errors(
+    record: dict[str, Any],
+    *,
+    require_github_identity: bool,
+    verify_online: bool,
+    expected_commit: str,
+    author_user_id: int | None,
+    repo: str,
+    token: str | None,
+    opener: Callable[[Any], Any] | None,
+) -> list[str]:
+    """返回 GitHub 身份错误；在线核验失败区分 BLOCKED / REJECTED。"""
+    from validators.acceptance import validate_acceptance_identity, verify_github_identity
+
+    errors: list[str] = []
+    # review_submitted_at 必须是真实提交时间，不能用 reviewed_at 顶替。
+    if not str(record.get("review_submitted_at") or "").strip():
+        errors.append("缺少 review_submitted_at（真实 GitHub review 提交时间）")
+    if verify_online:
+        check = verify_github_identity(
+            record,
+            repo=repo,
+            token=token,
+            opener=opener,
+            expected_commit=expected_commit,
+            author_user_id=author_user_id,
+        )
+        if check.status != "PASS":
+            label = _identity_status_label(check.reasons)
+            errors.extend(f"GitHub 在线核验 {label}: {reason}" for reason in check.reasons)
+        return errors
+    if require_github_identity:
+        check = validate_acceptance_identity(
+            record,
+            expected_commit=expected_commit,
+            author_user_id=author_user_id,
+            require_identity=True,
+        )
+        if check.status != "PASS":
+            errors.extend(f"GitHub 身份校验 {reason}" for reason in check.reasons)
+    return errors
+
+
 def validate_record(
     record: Any,
     *,
     requirement_id: str,
     owner: str,
     roles: dict[str, dict[str, str]],
+    require_github_identity: bool = False,
+    expected_commit: str = "",
+    author_user_id: int | None = None,
+    verify_online: bool = False,
+    repo: str = "",
+    token: str | None = None,
+    opener: Callable[[Any], Any] | None = None,
 ) -> list[str]:
     errors: list[str] = []
     if not isinstance(record, dict):
@@ -109,6 +195,20 @@ def validate_record(
         for key in ("waiver_reason", "waived_by"):
             if not str(record.get(key) or "").strip():
                 errors.append(f"{requirement_id}: WAIVED 需要 {key}")
+    if decision == "REVIEWED" and (require_github_identity or verify_online):
+        errors.extend(
+            f"{requirement_id}: {reason}"
+            for reason in _identity_errors(
+                record,
+                require_github_identity=require_github_identity,
+                verify_online=verify_online,
+                expected_commit=expected_commit,
+                author_user_id=author_user_id,
+                repo=repo,
+                token=token,
+                opener=opener,
+            )
+        )
     return errors
 
 
@@ -117,6 +217,13 @@ def load_records(
     records_dir: Path = RECORDS_DIR,
     entries: list[dict[str, Any]] | None = None,
     role_matrix_path: Path = ROLE_MATRIX,
+    require_github_identity: bool = False,
+    expected_commit: str = "",
+    author_user_id: int | None = None,
+    verify_online: bool = False,
+    repo: str = "",
+    token: str | None = None,
+    opener: Callable[[Any], Any] | None = None,
 ) -> AcceptanceReport:
     report = AcceptanceReport()
     roles = load_role_matrix(role_matrix_path)
@@ -138,6 +245,13 @@ def load_records(
             requirement_id=requirement_id,
             owner=owners.get(requirement_id, ""),
             roles=roles,
+            require_github_identity=require_github_identity,
+            expected_commit=expected_commit,
+            author_user_id=author_user_id,
+            verify_online=verify_online,
+            repo=repo,
+            token=token,
+            opener=opener,
         )
         report.errors.extend(errors)
         if errors:
@@ -149,6 +263,18 @@ def load_records(
         report.records[requirement_id] = {
             "status": str(record.get("decision") or "").upper(),
             "reviewer": str(record.get("reviewer") or "").strip(),
+            "reviewer_login": str(record.get("reviewer_login") or "").strip(),
+            "reviewer_user_id": record.get("reviewer_user_id"),
+            "review_id": record.get("review_id"),
+            "pr_number": record.get("pr_number"),
+            "reviewed_commit_sha": str(record.get("reviewed_commit_sha") or "").strip(),
+            "review_state": str(record.get("review_state") or "").upper(),
+            "review_submitted_at": str(record.get("review_submitted_at") or "").strip(),
+            "identity": (
+                "GITHUB_REVIEW"
+                if str(record.get("reviewer_login") or "").strip()
+                else "ROLE_ONLY"
+            ),
             "reviewer_role": str(
                 record.get("reviewer_role") or roles["reviewers"].get(str(record.get("reviewer")))
             ),
@@ -179,6 +305,19 @@ def apply_records(
                 "reviewer_role": record["reviewer_role"],
                 "record": record["record"],
             }
+            # FIX-014：把真实 GitHub 身份写回 acceptance，便于审计追溯。
+            for key in (
+                "reviewer_login",
+                "reviewer_user_id",
+                "review_id",
+                "pr_number",
+                "reviewed_commit_sha",
+                "review_state",
+                "review_submitted_at",
+            ):
+                value = record.get(key)
+                if value not in (None, ""):
+                    item["acceptance"][key] = value
             if record["status"] == "WAIVED":
                 item["acceptance"]["waiver_reason"] = record["waiver_reason"]
                 item["acceptance"]["waived_by"] = record["waived_by"]
@@ -188,6 +327,7 @@ def apply_records(
 
 __all__ = [
     "AcceptanceReport",
+    "IDENTITY_FIELDS",
     "RECORDS_DIR",
     "ROLE_MATRIX",
     "apply_records",

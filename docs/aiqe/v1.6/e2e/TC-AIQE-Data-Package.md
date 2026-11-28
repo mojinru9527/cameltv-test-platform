@@ -1,5 +1,12 @@
 # TC-AIQE 001–010 数据包与执行映射（2026-11-27）
 
+**STATUS: HISTORICAL — 历史数据映射，已被 V1.6.2 复审取代**
+
+> 本文件记录 2026-11-27 的产品数据源与当时的执行结论，**不再是当前验收事实源**。
+> 2026-11-28 V1.6.2 复审确认：无隔离 Test Runner/Secret，产品 TC 10 条均为 `BLOCKED`，
+> 旧静态 `10/10 PASS` 已撤销。当前执行计划见 `product-tc-config.yaml`，
+> 基线映射见 `docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md`。
+
 ## 已具备的数据源
 
 | 数据源 | 路径/入口 | 用途 |
@@ -9,7 +16,7 @@
 | 功能用例 1505 条（历史参考） | `未来娃屿V5.0_全量用例明细_含步骤_20261112_全部可见.xlsx` | 仅作历史参考，不再作为验收口径 |
 | 接口用例 5165 条 | 同上 `02-接口用例5165`；`未来娃屿V4.0接口用例_V9_20261108.xlsx`（535 接口清单） | TC-003/005/006 API 选择 |
 | 缺陷 11 条 | `未来娃屿V5.0_缺陷单_禅道_20261111.xlsx` | TC-008/010 |
-| 账号 | tester-launcher/operator/auditor/clerk，密码 123456 | UI/API |
+| 账号 | 由 Secret 注入：`FUTUREWAYU_TEST_USERNAME` / `FUTUREWAYU_TEST_PASSWORD`（launcher/operator/auditor/clerk 角色账号） | UI/API |
 | 后台 | `https://xinyuwadao.com` | Admin UI |
 | 接口文档 | `https://s.apifox.cn/78e54676-ebfd-4e55-ab9d-c8ae813c5ed0` | 契约/参数 |
 | 服务器/日志 | `43.136.119.131` root；`/data/hz/logs/`、`/data/hz/ruoyi.log` | 故障定位 |

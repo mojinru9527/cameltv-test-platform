@@ -275,3 +275,123 @@ def test_regression_against_published_baseline_rejected(db_session):
         evaluated = evaluate_candidate(db_session, row.id, benchmark_run_id=worse_run.id)
         assert evaluated.gate_decision == "REJECT"
         assert any("REGRESSION" in item for item in evaluated.gate_reasons_json)
+
+
+# ══════════════════════════════════════════════════════════
+# V1.6.2（FIX-006）扩展：服务端复算 / 身份 / 证据分层
+# ══════════════════════════════════════════════════════════
+def test_gate_metrics_are_recomputed_from_per_sample(db_session):
+    """存储 summary 只是对账对象；对外指标来自逐样本记录复算。"""
+    from app.aiqe.services.benchmark_service import metrics_of, recompute_metrics
+
+    dataset = _dataset(db_session, samples=40, fp_ratio=0.05)
+    run = _run(db_session, dataset, fp_ratio=0.05)
+    recomputed = recompute_metrics(run.per_sample_json, thresholds=run.metrics_json["thresholds"])
+    metrics = metrics_of(db_session, run.id)
+    for key in ("samples", "true_positives", "false_positives", "false_negatives", "precision", "recall", "f1"):
+        assert metrics[key] == recomputed.payload()[key], key
+    assert metrics["samples"] + metrics["excluded_samples"] == metrics["total_samples"]
+
+
+def test_gate_rejects_tampered_summary_metrics(db_session):
+    from app.aiqe.services.benchmark_service import BenchmarkError, metrics_of
+
+    dataset = _dataset(db_session, samples=100, fp_ratio=0.35)
+    run = _run(db_session, dataset, fp_ratio=0.35)
+    run.metrics_json = {
+        **dict(run.metrics_json),
+        "precision": 0.99,
+        "recall": 0.99,
+        "f1": 0.99,
+    }
+    db_session.flush()
+    with pytest.raises(BenchmarkError) as exc:
+        metrics_of(db_session, run.id)
+    assert "METRICS_TAMPERED" in str(exc.value)
+
+    row = _candidate(db_session, pattern="TAMPERED")
+    with pytest.raises(LearningError):
+        evaluate_candidate(db_session, row.id, benchmark_run_id=run.id)
+
+
+def test_gate_rejects_same_user_approval(db_session):
+    """双人审批：Owner 与 Approver 必须是不同 user id（不接受同一人自审）。"""
+    dataset = _dataset(db_session, samples=100, fp_ratio=0.02)
+    run = _run(db_session, dataset, fp_ratio=0.02)
+    row = create_candidate(
+        db_session,
+        project_id=1,
+        rule={"pattern": "SAME_USER", "description": "x"},
+        source="bug",
+        created_by=7,
+    )
+    evaluate_candidate(db_session, row.id, benchmark_run_id=run.id)
+    with pytest.raises(LearningError) as exc:
+        approve_candidate(db_session, row.id, approved_by=7)
+    assert "OWNER_APPROVER_SAME_USER" in str(exc.value)
+    approved = approve_candidate(db_session, row.id, approved_by=8)
+    assert approved.approved_by == 8
+
+
+def test_gate_publish_requires_approval_and_correct_state(db_session):
+    dataset = _dataset(db_session, samples=100, fp_ratio=0.02)
+    run = _run(db_session, dataset, fp_ratio=0.02)
+    row = _candidate(db_session, pattern="NO_APPROVAL")
+    evaluate_candidate(db_session, row.id, benchmark_run_id=run.id)
+    # 已通过 gate 但未审批 → 不得发布
+    with pytest.raises(LearningError):
+        publish_candidate(db_session, row.id, approved_by=2)
+    approve_candidate(db_session, row.id, approved_by=2)
+    assert publish_candidate(db_session, row.id, approved_by=2) is not None
+    # 重复发布 / 已发布状态 → 拒绝
+    with pytest.raises(LearningError):
+        publish_candidate(db_session, row.id, approved_by=2)
+
+
+def test_local_service_test_is_not_product_evidence():
+    """本地 Service 脚本必须自述 local_service_test 且产品级固定 BLOCKED。"""
+    import importlib.util
+    from pathlib import Path
+
+    script = (
+        Path(__file__).resolve().parents[3]
+        / "scripts/aiqe/per_tc/futurewayu_learning_benchmark.py"
+    )
+    spec = importlib.util.spec_from_file_location("futurewayu_learning_benchmark", script)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    assert module.EVIDENCE_KIND == "local_service_test"
+    assert module.PRODUCT_TC_ID == "TC-AIQE-010"
+    assert module.PRODUCT_STATUS == "BLOCKED"
+    assert module.PRODUCT_BLOCKED_REASON
+    assert module.PRODUCT_OWNER and module.PRODUCT_UNBLOCK_ACTION
+
+    raw = [
+        {"id": "A-1", "label": "LOGIN", "source": "s1"},
+        {"id": "A-1", "label": "LOGIN", "source": "s2"},
+        {"id": "A-2", "label": "INVALID LABEL", "source": "s1"},
+        {"id": "??", "label": "LOGIN", "source": "s1"},
+    ]
+    effective, composition = module.account_samples(raw)
+    assert composition["accounting_ok"] is True
+    assert composition["total_raw_rows"] == (
+        len(effective)
+        + len(composition["duplicates_removed"])
+        + len(composition["invalid_rows_removed"])
+    )
+    assert [item["id"] for item in effective] == ["A-1"]
+    assert {item["reason"] for item in composition["duplicates_removed"]} == {
+        "DUPLICATE_SAMPLE_ID"
+    }
+    assert {item["reason"] for item in composition["invalid_rows_removed"]} == {
+        "INVALID_LABEL",
+        "INVALID_SAMPLE_ID",
+    }
+
+    # 不得把 local_service_test 指向产品验收库
+    with pytest.raises(SystemExit):
+        module._resolve_database_url(
+            "sqlite:///work-logs/evidence/aiqe-v16/local-test/platform.db"
+        )

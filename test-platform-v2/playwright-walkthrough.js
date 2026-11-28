@@ -34,12 +34,21 @@ async function takeScreenshot(page, name, fullPage = true) {
   });
   const page = await context.newPage();
 
-  // === CREDENTIALS ===
-  const CREDENTIALS = [
-    { username: 'admin', password: 'admin123', label: 'admin/admin123' },
-    { username: 'tester', password: 'tester123', label: 'tester/tester123' },
-    { username: 'test', password: 'test123', label: 'test/test123' },
-  ];
+  // === CREDENTIALS（V1.6.2：禁止仓库硬编码；由 Secret/环境注入）===
+  const CREDENTIALS =
+    process.env.AIQE_TEST_USERNAME && process.env.AIQE_TEST_PASSWORD
+      ? [
+          {
+            username: process.env.AIQE_TEST_USERNAME,
+            password: process.env.AIQE_TEST_PASSWORD,
+            label: 'env-secret',
+          },
+        ]
+      : [];
+  if (CREDENTIALS.length === 0) {
+    console.error('AIQE_TEST_USERNAME / AIQE_TEST_PASSWORD are required');
+    process.exit(2);
+  }
 
   let loggedIn = false;
 

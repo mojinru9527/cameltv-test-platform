@@ -569,7 +569,7 @@ import pytest
 from app.services.ai_config_service import ai_config_service
 
 
-def _auth_headers(client, username="admin", password="admin123"):
+def _auth_headers(client, username="admin", password="<test-password>"):
     resp = client.post("/api/v1/auth/login", json={"username": username, "password": password})
     assert resp.status_code == 200
     return {"Authorization": f"Bearer {resp.json()['data']['token']}"}

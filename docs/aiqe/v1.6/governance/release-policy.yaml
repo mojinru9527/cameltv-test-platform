@@ -1,0 +1,32 @@
+# AIQE V1.6.2 Release Policy（默认 fail-closed）
+#
+# 本文件定义 GA 签署的豁免边界。默认不允许任何强制 Gate 豁免；
+# WAIVED 不是 PASS，且不能用于安全、产品核心验收、provenance 等强制门槛。
+schema_version: "1.0"
+release: aiqe-v1.6.2-hardening
+product_tc_baseline: v1.6.2-hardening
+mandatory_gates:
+  - A
+  - B
+  - C
+  - D
+  - E
+  - F
+  - G
+allowed_waiver_gates: []
+waiver_policy:
+  require_approver: true
+  require_expiry: true
+  require_compensating_controls: true
+  forbid_waiver_for:
+    - security
+    - product_core_acceptance
+    - provenance
+required_status_checks:
+  - 后端全新检出与全量回归
+  - 前端全新检出与全量回归
+  - AI/Git 交付策略
+  - AIQE V1.6 Governance Gate
+notes: |
+  任何 Gate 非 PASS 时 release_verdict.release_status 必须为 RELEASE_CANDIDATE_BLOCKED。
+  WAIVED / PARTIAL / BLOCKED / NOT_RUN / NOT_PROVEN / UNKNOWN 均不得计入 GA PASS。
