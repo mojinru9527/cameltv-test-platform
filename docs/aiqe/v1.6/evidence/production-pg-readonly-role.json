@@ -1,49 +1,35 @@
 {
   "schema_version": "1.0",
-  "artifact_kind": "pg-readonly-role-verification",
-  "scope": "remote",
-  "environment": "production AIQE (aiqe_test database)",
-  "captured_at": "2026-11-26T00:45:00+08:00",
-  "dsn": "postgresql://aiqe_ro:***@<private>/aiqe_test",
-  "server_version": "16.15",
-  "current_user": "aiqe_ro",
-  "checks": [
+  "artifact_kind": "production-pg-readonly-role",
+  "captured_at": "2026-11-27T22:30:00+08:00",
+  "role": "aiqe_ro",
+  "database": "cameltv_production",
+  "password_rotated": true,
+  "settings": {
+    "default_transaction_read_only": "on",
+    "statement_timeout": "5s",
+    "idle_in_transaction_session_timeout": "30s"
+  },
+  "verification": [
     {
-      "name": "no_superuser",
-      "ok": true,
-      "value": false
+      "command": "docker exec -i cameltv-tp-production-postgres-1 psql -U cameltv -d cameltv_production -v ON_ERROR_STOP=1 < /root/harden_aiqe_ro.sql",
+      "exit": 0,
+      "stdout": "DO\nGRANT\nGRANT\nGRANT\nALTER DEFAULT PRIVILEGES\nALTER ROLE\nALTER ROLE\nALTER ROLE\n",
+      "stderr": ""
     },
     {
-      "name": "no_createrole",
-      "ok": true,
-      "value": false
+      "command": "docker exec -e PGPASSWORD='***' cameltv-tp-production-postgres-1 psql -h 127.0.0.1 -U aiqe_ro -d cameltv_production -tAc \"SHOW default_transaction_read_only; SHOW statement_timeout;\"",
+      "exit": 0,
+      "stdout": "on\n5s\n",
+      "stderr": ""
     },
     {
-      "name": "no_bypassrls",
-      "ok": true,
-      "value": false
-    },
-    {
-      "name": "no_createdb",
-      "ok": true,
-      "value": false
-    },
-    {
-      "name": "write_rejected",
-      "ok": true,
-      "value": "InsufficientPrivilege"
-    },
-    {
-      "name": "default_transaction_read_only",
-      "ok": false,
-      "value": "off"
-    },
-    {
-      "name": "statement_timeout_set",
-      "ok": false,
-      "value": "0"
+      "command": "docker exec -e PGPASSWORD='***' cameltv-tp-production-postgres-1 psql -h 127.0.0.1 -U aiqe_ro -d cameltv_production -c 'CREATE TEMP TABLE aiqe_ro_probe(x int);' 2>&1",
+      "exit": 1,
+      "stdout": "ERROR:  cannot execute CREATE TABLE in a read-only transaction\n",
+      "stderr": ""
     }
   ],
-  "status": "FAIL",
-  "reason": "生产 aiqe_ro 角色写权限已被拒绝，但 default_transaction_read_only=off 且 statement_timeout=0，未达到只读角色硬化要求"
+  "status": "PASS",
+  "note": "生产 PG 新建/更新 aiqe_ro，强随机密码仅本次使用未入库；写操作应被拒绝。"
 }

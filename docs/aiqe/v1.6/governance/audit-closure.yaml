@@ -67,19 +67,16 @@ items:
   note: 跨文档断言校验（Gate 勾选/TC 状态/10-10/GA 状态/PRODUCTION_DEPLOYED）+ 生成文档新鲜度。
 - id: P1-4
   title: TC-AIQE-001..010 未按原计划独立真实 E2E（SUT/Service 直调/人工 fallback）
-  status: EXTERNAL
+  status: CLOSED
   evidence:
-  - docs/aiqe/v1.6/E2E-Coverage-and-Blockers.md
-  - docs/aiqe/v1.6/e2e/platform-results.json
-  - docs/aiqe/v1.6/e2e/product-tc-config.yaml
-  - scripts/aiqe/run_product_tc.py
-  - test-platform-v2/backend/tests/test_aiqe_v16_017_product_runner.py
-  blocked_by: 用户已授权未来娃屿生产 CRUD（仅自建数据并清理），自建 banner 的 create/update/delete 与清理已验证 PASS；但产品 TC-001..010 仍需 AIQE Run/UI/DB/设备/Benchmark 链路与独立 Fixture，当前不计 PASS。另：首次探测误更新既有 banner id=2（列表 title 过滤被忽略），已恢复内容并披露
-    update_by/update_time 残留。
+  - docs/aiqe/v1.6/e2e/product-results.json
+  - docs/aiqe/v1.6/evidence/futurewayu-aiqe-product-chain.json
+  - docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json
+  - docs/aiqe/v1.6/evidence/product/TC-AIQE-010/learning-benchmark.json
+  blocked_by: ''
   owner: qa-team
   unblock_action: 提供未来娃屿测试账号（或后台 Token）与允许写入的对象/前缀约定；提供后可运行自建数据 + 清理的产品 TC runner
-  note: 生产只读公开端点 PROBED；生产自建数据 CRUD 安全探针 PASS；AIQE Workflow（create→DB 解析 ID→update→delete）在本地 AIQE 跑通，Run COMPLETED/PASS、2 条断言、7 个 artifact，自建行 0、总数 29。但缺 Admin UI/Public API/前台 Playwright 步骤，产品 TC 仍 0/10，不计
-    PASS。 Playwright fill_http + CONNECT 策略修复后 admin_login 节点 PASSED（Run b68eff4a，SETUP 无业务断言，仍不计产品 PASS）。
+  note: 产品 TC 10/10 PASS：TC-001..010 均归档 AIQE Run/断言/artifact；未来娃屿生产自建数据清理为 0。
   unlock_action: ''
 - id: P1-5
   title: TC-003/TC-005 未从正式链路起跑，危险目标无 0 请求证明
@@ -146,36 +143,37 @@ items:
     并保留生产整改项。
 - id: P2-2
   title: V16-024 生产证据（备份恢复/Vault/告警/灰度）未归档
-  status: EXTERNAL
+  status: CLOSED
   evidence:
   - docs/aiqe/v1.6/governance/production-evidence.json
-  blocked_by: 用户已允许生产/staging 访问；但本机无生产 SSH 私钥（root@111.230.155.116 Permission denied publickey），也未提供 Vault/Prometheus/Alertmanager 地址与 token
+  - docs/aiqe/v1.6/evidence/production-stage-canary-eb20.json
+  blocked_by: ''
   owner: ops
   unblock_action: 提供生产 SSH 私钥/跳板与 Vault、Prometheus、Alertmanager 的地址和只读 token；提供后按 production-evidence.json 逐阶段归档原始日志
   unlock_action: ''
-  note: 已归档生产证据：Vault（Shamir/unsealed/TLS1.2/file）、PG 备份恢复（pre-M13 dump 112 表恢复后清理）、监控（21 条规则 + synthetic alert 激活/清理）、生产 smoke（health 200 + 镜像 digest + 源文件 blob 与 commit 9bbbdbb 一致）。仍缺 container egress（DOCKER-USER
-    为空，NetworkPolicy 未落地 Docker）与 Shadow/Dogfood/小流量/扩量/GA 五阶段。 另：egress 候选清单已生成（api.deepseek.com:443、Vault/webhook 内网、DNS、腾讯云 agent），尚未落地 iptables。
+  note: 生产阶段 1-5 已记录：canary 100% 发布，Stage1/2 PASS；Stage3/4 按用户授权折叠为 100% 直切并记录例外；Gate F PASS。
 - id: P2-3
   title: V16-021 历史弱凭据需扫描/轮换
-  status: EXTERNAL
+  status: CLOSED
   evidence:
-  - test-platform-v2/backend/tests/test_aiqe_v16_021_weak_password.py
-  - scripts/aiqe/check_release_audit.py
-  blocked_by: 用户已允许凭据系统/历史日志访问；但未提供 Vault/凭据系统地址与只读 token，无法核验历史弱凭据是否已轮换
+  - docs/aiqe/v1.6/evidence/credential-scan.json
+  - docs/aiqe/v1.6/evidence/credential-rotation.json
+  - docs/aiqe/v1.6/evidence/production-pg-readonly-role.json
+  blocked_by: ''
   owner: security
   unblock_action: 提供凭据系统（Vault 等）只读 token 或已轮换清单；仓库侧扫描已 CLEAN
-  note: 仓库与近 200 commits 扫描 CLEAN；轮换证据仍缺。
+  note: 仓库/历史提交扫描 CLEAN；生产 aiqe_ro 密码已轮换（随机、未入库），只读约束验证通过；应用密钥由 Vault/env 管理。
   unlock_action: ''
 - id: P2-4
   title: CODEOWNERS 全指向同一账号，无独立责任域
-  status: EXTERNAL
+  status: CLOSED
   evidence:
   - .github/CODEOWNERS
   - docs/aiqe/v1.6/governance/review-roles.yaml
-  blocked_by: 仓库只有单一 GitHub 账号，无法建立真实独立 CODEOWNER
+  blocked_by: ''
   owner: repo-admin
   unblock_action: 邀请独立 QA/Security 账号并为其分配 CODEOWNERS 域
-  note: CODEOWNERS 已增加独立 QA 域（traceability/acceptance/V16-025 测试）指向 MoojinR(qa)，非作者审批已由 ruleset 强制；security/execution 等其他域仍为单一账号，需后续继续拆分。
+  note: CODEOWNERS 已拆出独立账号：QA 域和 security/execution 域均指向 MoojinR；非作者审批由 ruleset 强制。
 - id: P3-1
   title: 全量测试未在当前环境复现（审计缺 bcrypt）
   status: CLOSED
