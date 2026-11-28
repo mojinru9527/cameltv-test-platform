@@ -9,8 +9,8 @@
 schema_version: '2.0'
 release: aiqe-v1.6
 baseline:
-  release_commit: 2d2f508d5d1fd452972e7af49d9b4f3bde2e7b01
-  release_commit_source: main-head-at-v162-remediation-20261128
+  release_commit: c6b150f141b8a48f744c9ef1ee17410f455289a5
+  release_commit_source: main-head-at-v162-hardening-merged-20261128
   migration_head: 20261122_v16_catalog_post_merge
   branch: main
   prior_audit_snapshot_sha: 86a44b2cbb7c9c44d3ef6af1e324d1f42c3eae6f

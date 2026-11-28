@@ -4,7 +4,7 @@
 # 状态不能替代机器 Gate：GA 判定仍以 release-verdict.json 为准。
 schema_version: "1.0"
 release: aiqe-v1.6.2-hardening
-baseline_commit: 2d2f508d5d1fd452972e7af49d9b4f3bde2e7b01
+baseline_commit: c6b150f141b8a48f744c9ef1ee17410f455289a5
 decision_reason: >-
   Gate E 产品 TC 全部 10 条为 BLOCKED（无隔离 Test Runner/Secret）；Gate F 生产阶段
   stage3/4 与 rollback drill 未执行；70 条 acceptance 记录缺真实 GitHub Review 身份；
