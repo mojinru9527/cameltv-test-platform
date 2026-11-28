@@ -332,6 +332,8 @@ jobs:
             --markdown work-logs/evidence/aiqe-v16/evidence-manifest.md \
             --require-complete
       - name: GA verdict
+        env:
+          AIQE_EXPECTED_COMMIT: ${{ github.sha }}
         run: python scripts/aiqe/release_verdict.py --require-ga
       - name: Upload release gate report
         if: always()

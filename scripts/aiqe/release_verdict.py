@@ -368,6 +368,12 @@ def build_verdict(root: Path = ROOT) -> dict[str, Any]:
 
     traceability_ok, traceability_reasons = _traceability_valid(root)
     expected_head = _migration_head(matrix)
+    # 生成型文档必须与当前 CI checkout SHA 解耦：默认使用矩阵基线，release/tag 场景由
+    # 环境变量 AIQE_EXPECTED_COMMIT 强制为实际发布 SHA。
+    import os
+
+    baseline_commit = str((matrix.get("baseline") or {}).get("release_commit") or "")
+    expected_commit = os.environ.get("AIQE_EXPECTED_COMMIT") or baseline_commit
 
     # ---------------- Gate A：代码与构建 ----------------
     gate_a = Gate("A", GATE_TITLES["A"])
@@ -430,6 +436,7 @@ def build_verdict(root: Path = ROOT) -> dict[str, Any]:
     gate_e_check, gate_e_artifacts = evaluate_gate_e(
         entries,
         root=root,
+        expected_commit=expected_commit,
         expected_environment=str(
             (_load_yaml(docs / "e2e/product-tc-config.yaml") or {}).get("environment") or ""
         ),
@@ -443,7 +450,7 @@ def build_verdict(root: Path = ROOT) -> dict[str, Any]:
 
     # ---------------- Gate F：生产运行 ----------------
     gate_f = Gate("F", GATE_TITLES["F"])
-    gate_f_check, gate_f_artifacts = evaluate_gate_f(root=root)
+    gate_f_check, gate_f_artifacts = evaluate_gate_f(root=root, expected_commit=expected_commit)
     gate_f.evidence = gate_f_check.status
     gate_f.reasons.extend(gate_f_check.reasons)
     gate_f.notes.extend(gate_f_check.notes)
