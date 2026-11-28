@@ -4,19 +4,19 @@
   "baseline_version": "v1.6.2-hardening",
   "adr_ref": "docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md",
   "config_ref": "docs/aiqe/v1.6/e2e/product-tc-config.yaml",
-  "commit_sha": "2d2f508d5d1fd452972e7af49d9b4f3bde2e7b01",
+  "commit_sha": "5f4e17eaa6ffece77633083ae3c23dbbfecd3f71",
   "environment": "isolated-test",
-  "generated_at": "2026-11-28T09:05:34.724+00:00",
+  "generated_at": "2026-11-28T09:52:56.441+00:00",
   "verification": {
     "verified": true,
-    "verified_commit_sha": "2d2f508d5d1fd452972e7af49d9b4f3bde2e7b01",
-    "verified_at": "2026-11-28T09:44:29.934+00:00",
+    "verified_commit_sha": "5f4e17eaa6ffece77633083ae3c23dbbfecd3f71",
+    "verified_at": "2026-11-28T09:52:56.674+00:00",
     "verifier": {
       "name": "verify_product_tc_results",
       "version": "1.0.0"
     },
     "errors": [],
-    "results_sha256": "fccf792b321affa01b6a86bd4fed7aa6b5c9733bc59482dda9736095f4ca5227",
+    "results_sha256": "c9d3355f979a7a9d1aab27bbca7a58462d5ef78b5910480aa6a74a0121a9e52c",
     "product_tc_pass": 0,
     "product_tc_total": 10
   },
@@ -41,8 +41,8 @@
         "unblock_action": "接入隔离 Test 租户 + 实现 scripts/aiqe/per_tc/tc_001_contract_chain.py（正式 Contract API → 版本冻结 → V2 影响）；由 FIX-004 交付",
         "blocked_status": "BLOCKED"
       },
-      "started_at": "2026-11-28T09:05:34.724+00:00",
-      "finished_at": "2026-11-28T09:05:34.724+00:00",
+      "started_at": "2026-11-28T09:52:56.441+00:00",
+      "finished_at": "2026-11-28T09:52:56.441+00:00",
       "duration_ms": 0
     },
     {
@@ -65,8 +65,8 @@
         "unblock_action": "接入隔离 Test 环境与只读 DSN，实现 tc_002_admin_publish_chain.py，并以同一 Run 串联后台写入/DB 只读/前台读取；由 FIX-004 交付",
         "blocked_status": "BLOCKED"
       },
-      "started_at": "2026-11-28T09:05:34.724+00:00",
-      "finished_at": "2026-11-28T09:05:34.724+00:00",
+      "started_at": "2026-11-28T09:52:56.441+00:00",
+      "finished_at": "2026-11-28T09:52:56.441+00:00",
       "duration_ms": 0
     },
     {
@@ -89,8 +89,8 @@
         "unblock_action": "在隔离 Test 环境部署 fault proxy 与网络隔离 Runner，实现 tc_003_failure_retry_security.py；由 FIX-004 交付",
         "blocked_status": "BLOCKED"
       },
-      "started_at": "2026-11-28T09:05:34.724+00:00",
-      "finished_at": "2026-11-28T09:05:34.724+00:00",
+      "started_at": "2026-11-28T09:52:56.441+00:00",
+      "finished_at": "2026-11-28T09:52:56.441+00:00",
       "duration_ms": 0
     },
     {
@@ -113,8 +113,8 @@
         "unblock_action": "由产品负责人确认浮层适配范围与 fixture，接入隔离 Test UI 后实现 tc_004_overlay_interference.py；由 FIX-004 交付",
         "blocked_status": "BLOCKED"
       },
-      "started_at": "2026-11-28T09:05:34.724+00:00",
-      "finished_at": "2026-11-28T09:05:34.724+00:00",
+      "started_at": "2026-11-28T09:52:56.441+00:00",
+      "finished_at": "2026-11-28T09:52:56.441+00:00",
       "duration_ms": 0
     },
     {
@@ -137,8 +137,8 @@
         "unblock_action": "接入隔离 Test 数据与并发调度，实现 tc_005_concurrency_isolation.py；由 FIX-004 交付",
         "blocked_status": "BLOCKED"
       },
-      "started_at": "2026-11-28T09:05:34.724+00:00",
-      "finished_at": "2026-11-28T09:05:34.724+00:00",
+      "started_at": "2026-11-28T09:52:56.441+00:00",
+      "finished_at": "2026-11-28T09:52:56.441+00:00",
       "duration_ms": 0
     },
     {
@@ -161,8 +161,8 @@
         "unblock_action": "接入上游故障 Stub 与隔离 Test Worker，实现 tc_006_upstream_failure.py；由 FIX-004 交付",
         "blocked_status": "BLOCKED"
       },
-      "started_at": "2026-11-28T09:05:34.724+00:00",
-      "finished_at": "2026-11-28T09:05:34.724+00:00",
+      "started_at": "2026-11-28T09:52:56.441+00:00",
+      "finished_at": "2026-11-28T09:52:56.441+00:00",
       "duration_ms": 0
     },
     {
@@ -185,8 +185,8 @@
         "unblock_action": "接入隔离 Runner 故障注入（kill 浏览器/进程），实现 tc_007_runner_failure.py；由 FIX-004 交付",
         "blocked_status": "BLOCKED"
       },
-      "started_at": "2026-11-28T09:05:34.724+00:00",
-      "finished_at": "2026-11-28T09:05:34.724+00:00",
+      "started_at": "2026-11-28T09:52:56.441+00:00",
+      "finished_at": "2026-11-28T09:52:56.441+00:00",
       "duration_ms": 0
     },
     {
@@ -209,8 +209,8 @@
         "unblock_action": "确认修复 commit 并部署到隔离 Test，接入 Defect Regression API 后实现 tc_008_defect_regression.py；由 FIX-008 交付",
         "blocked_status": "BLOCKED"
       },
-      "started_at": "2026-11-28T09:05:34.724+00:00",
-      "finished_at": "2026-11-28T09:05:34.724+00:00",
+      "started_at": "2026-11-28T09:52:56.441+00:00",
+      "finished_at": "2026-11-28T09:52:56.441+00:00",
       "duration_ms": 0
     },
     {
@@ -233,8 +233,8 @@
         "unblock_action": "接入设备池与桌面 Runner，实现 tc_009_multi_end_ac.py；由 FIX-007 交付",
         "blocked_status": "BLOCKED"
       },
-      "started_at": "2026-11-28T09:05:34.724+00:00",
-      "finished_at": "2026-11-28T09:05:34.724+00:00",
+      "started_at": "2026-11-28T09:52:56.441+00:00",
+      "finished_at": "2026-11-28T09:52:56.441+00:00",
       "duration_ms": 0
     },
     {
@@ -257,8 +257,8 @@
         "unblock_action": "完成 FIX-005/FIX-006 正式链路与 Benchmark 审批后，实现 tc_010_agent_benchmark_publish.py",
         "blocked_status": "BLOCKED"
       },
-      "started_at": "2026-11-28T09:05:34.724+00:00",
-      "finished_at": "2026-11-28T09:05:34.724+00:00",
+      "started_at": "2026-11-28T09:52:56.441+00:00",
+      "finished_at": "2026-11-28T09:52:56.441+00:00",
       "duration_ms": 0
     }
   ],

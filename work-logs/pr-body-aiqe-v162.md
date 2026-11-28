@@ -2,13 +2,13 @@
 
 - Issue / Requirement ID: V16-001 / V16-002 / V16-003 / V16-004 / V16-005 / V16-006 / V16-007 / V16-008 / V16-009 / V16-010 / V16-011 / V16-012 / V16-013 / V16-014 / V16-017 / V16-018 / V16-019 / V16-021 / V16-022 / V16-023 / V16-024 / V16-025
 - base_sha: `2d2f508d5d1fd452972e7af49d9b4f3bde2e7b01`
-- head_sha: `HEAD_SHA_PLACEHOLDER`
+- head_sha: `5f4e17eaa6ffece77633083ae3c23dbbfecd3f71`
 - 业务结果: 旧静态 10/10 PASS 撤销，当前 10/10 BLOCKED；Gate E/F 非 PASS；GA_NOT_READY，release_status=RELEASE_CANDIDATE_BLOCKED；审计台账 0 CLOSED/19 EXTERNAL；凭据扫描当前 SHA CLEAN。
 - 正式入口: `python scripts/aiqe/release_verdict.py --require-ga`；`python scripts/aiqe/run_product_tc.py --check-config|--plan|--run|--verify-results`；`POST /api/v1/aiqe/agent-tasks` → `/submit` → `/approve` → `/run` → Worker `claim_agent_task_jobs` + `run_job`。
 - 调用链: AgentTask API → Project Scope → AgentTask → ExecutionJob → Worker Claim/Lease → A0→A1..A6 → ToolRegistry/ToolExecutor → ToolExecutionAudit → AgentExecution；产品 TC config → Runner → execution → Assertion/Artifact → verify → Gate E。
 - 真实组件与 Mock 边界: 真实 FastAPI 路由/SQLAlchemy/ExecutionJob/Worker/ToolRegistry/Benchmark/Learning/GitHub API；Agent LLM 用 deterministic stub（`controlled_llm_test`），不代表生产模型质量；产品 TC 无隔离 Test 环境，全部 BLOCKED。
 - Reviewer 角色域: qa
-- 证据: commit:HEAD_SHA_PLACEHOLDER；pytest:tests/test_aiqe_v162_release_verdict.py（13 passed）；artifact:docs/aiqe/v1.6/V1.6.2-Hardening-Final-Acceptance.md、docs/aiqe/v1.6/release-verdict.json、docs/aiqe/v1.6/e2e/product-results.json、docs/aiqe/v1.6/evidence/credential-scan.json、docs/aiqe/v1.6/governance/production-evidence.json、docs/aiqe/v1.6/V1.6.1-Audit-Closure-Report.md
+- 证据: commit:5f4e17eaa6ffece77633083ae3c23dbbfecd3f71；pytest:tests/test_aiqe_v162_release_verdict.py（13 passed）；artifact:docs/aiqe/v1.6/V1.6.2-Hardening-Final-Acceptance.md、docs/aiqe/v1.6/release-verdict.json、docs/aiqe/v1.6/e2e/product-results.json、docs/aiqe/v1.6/evidence/credential-scan.json、docs/aiqe/v1.6/governance/production-evidence.json、docs/aiqe/v1.6/V1.6.1-Audit-Closure-Report.md
 - 整改依据：`CamelTv_AIQE_V1.6.2_整改开发落地实施手册.md`（FIX-001～015）
 - 范围：AIQE 发布门禁/证据语义、产品 TC 基线与 Runner 框架、AgentTask/Benchmark、多端/Regression、凭据扫描、生产阶段、provenance、审计关闭、Ruleset、Reviewer 身份、最终验收。
 - 非目标：不伪造产品 PASS/生产证据/Reviewer；不执行生产发布；不轮换外部账号密码（owner 操作）。
@@ -57,11 +57,11 @@
 
 ## 7. 证据
 
-- 证据: commit:`HEAD_SHA_PLACEHOLDER`；pytest:1516 passed；artifact:`docs/aiqe/v1.6/V1.6.2-Hardening-Final-Acceptance.md`、`docs/aiqe/v1.6/release-verdict.json`、`docs/aiqe/v1.6/e2e/product-results.json`、`docs/aiqe/v1.6/evidence/credential-scan.json`、`docs/aiqe/v1.6/governance/production-evidence.json`、`docs/aiqe/v1.6/V1.6.1-Audit-Closure-Report.md`
+- 证据: commit:`5f4e17eaa6ffece77633083ae3c23dbbfecd3f71`；pytest:1516 passed；artifact:`docs/aiqe/v1.6/V1.6.2-Hardening-Final-Acceptance.md`、`docs/aiqe/v1.6/release-verdict.json`、`docs/aiqe/v1.6/e2e/product-results.json`、`docs/aiqe/v1.6/evidence/credential-scan.json`、`docs/aiqe/v1.6/governance/production-evidence.json`、`docs/aiqe/v1.6/V1.6.1-Audit-Closure-Report.md`
 - run: 本地 2026-11-28；CI run 由本 PR checks 生成（workflow `AIQE V1.6 交付门禁`）
 - environment: local-windows / ci（CI 证据以 artifact 为准）
 - 产品结果：10/10 BLOCKED（`product-results.json`，baseline `v1.6.2-hardening`）
-- 扫描：`scan_commit_sha=HEAD_SHA_PLACEHOLDER`，potential=0 / weak=0
+- 扫描：`scan_commit_sha=5f4e17eaa6ffece77633083ae3c23dbbfecd3f71`，potential=0 / weak=0
 
 ## 8. 安全检查
 
@@ -74,5 +74,6 @@
 - closure_rule_id: `PRODUCT_TC_EXECUTED`（P1-4）、`BRANCH_RULESET_REQUIRED_CHECKS`（P0-2）、`SECRET_SCAN_CURRENT`（P2-3）等；台账 0 CLOSED / 19 EXTERNAL。
 - 自动化验证器结果：Traceability 0 error / Release Audit 0 error / Audit Closure 0 error / Credential Scan CLEAN。
 - 非作者 Reviewer login / Review ID: `MoojinR` / 待本 PR APPROVED review 回填（V1.6.1 review 6089615481 不对应本 SHA，不继承）。
-- Reviewer 批准的 commit SHA: `HEAD_SHA_PLACEHOLDER`（待 review）
+- Reviewer 批准的 commit SHA: `5f4e17eaa6ffece77633083ae3c23dbbfecd3f71`（待 review）
 - 仍未完成：产品 TC 隔离 Test 执行、生产阶段/rollback drill、真实 Reviewer 身份、Ruleset apply+capture；GA 结论 `RELEASE_CANDIDATE_BLOCKED`。
+
