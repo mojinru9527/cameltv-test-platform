@@ -2,7 +2,7 @@
 
 > 本目录是本批次在**本地**生成的支撑证据；最终发布证据以对应 commit 的 CI artifact
 > （workflow `AIQE V1.6 交付门禁`）与 `evidence-manifest.json` 为准。
-> 生成日期：2026-11-28 | 基线：`2d2f508d5d1fd452972e7af49d9b4f3bde2e7b01`
+> 生成日期：2026-11-28 | Main SHA：`c6b150f141b8a48f744c9ef1ee17410f455289a5`（PR #642 squash 合并）
 
 ## 1. 机器判定
 
@@ -15,7 +15,7 @@
 | Audit Closure | `docs/aiqe/v1.6/governance/audit-closure.yaml` / `V1.6.1-Audit-Closure-Report.md` | 0 CLOSED / 19 EXTERNAL |
 | Credential Scan | `docs/aiqe/v1.6/evidence/credential-scan.json` | `CLEAN`（potential=0 / weak=0） |
 | Production Evidence | `docs/aiqe/v1.6/governance/production-evidence.json` | Gate F NOT_PROVEN |
-| Branch Protection | `docs/aiqe/v1.6/governance/branch-protection.json` | 缺 AIQE Aggregate check（待合并后 apply） |
+| Branch Protection | `docs/aiqe/v1.6/governance/branch-protection.json` | 已含 `AIQE V1.6 Governance Gate`，4 个精确 required checks |
 | Local Service Test (TC-010) | `work-logs/evidence/aiqe-v162/local-service-test/TC-AIQE-010/learning-benchmark.local-service-test.json` | `local_service_test`，`product_status=BLOCKED` |
 
 ## 2. 测试证据（本地）
@@ -39,8 +39,9 @@
 
 - 真实隔离 Test 产品 E2E（10/10 PASS）——BLOCKED。
 - 生产 Shadow/Dogfood/5%/50%/Rollback Drill 原始观测——NOT_RUN/NOT_PROVEN。
-- 真实 GitHub Reviewer 对最终 SHA 的 APPROVED review——PENDING。
-- Main Ruleset 更新后的 API 快照——合并后采集。
+- 70 条 acceptance 记录的真实 GitHub Review 身份绑定——PENDING（PR #642 已有 MoojinR APPROVED，
+  但未逐条回填 reviewer_user_id/review_id/当前 SHA，按 FIX-014 不得当作 70 条已验收）。
+- Main Ruleset 更新后的 API 快照——已在本快照重新采集（4 个 required checks）。
 - SBOM/镜像 digest 为已有历史证据（`docs/aiqe/v1.6/evidence/image-*`），不随本批次重建。
 
 **结论：本索引不是 GA 证书。** 在 §4 全部完成并在最终 SHA 上重跑门禁前，
