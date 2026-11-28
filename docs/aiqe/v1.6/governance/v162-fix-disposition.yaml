@@ -1,0 +1,177 @@
+# V1.6.2 Hardening — FIX Disposition（人工台账，与机器证据交叉引用）
+#
+# 规则：VERIFIED 必须给出 evidence；PARTIAL/BLOCKED 必须给出 reason。
+# 状态不能替代机器 Gate：GA 判定仍以 release-verdict.json 为准。
+schema_version: "1.0"
+release: aiqe-v1.6.2-hardening
+baseline_commit: 2d2f508d5d1fd452972e7af49d9b4f3bde2e7b01
+decision_reason: >-
+  Gate E 产品 TC 全部 10 条为 BLOCKED（无隔离 Test Runner/Secret）；Gate F 生产阶段
+  stage3/4 与 rollback drill 未执行；70 条 acceptance 记录缺真实 GitHub Review 身份；
+  Main Ruleset 尚待加入 AIQE Aggregate Check。因此 GA 不得签署，发布状态为
+  RELEASE_CANDIDATE_BLOCKED。
+approver_github_login: null
+github_review_id: null
+approved_commit_sha: null
+fixes:
+  - fix: FIX-001
+    status: VERIFIED
+    evidence:
+      - scripts/aiqe/release_verdict.py
+      - scripts/aiqe/statuses.py
+      - scripts/aiqe/validators/
+      - test-platform-v2/backend/tests/test_aiqe_v162_release_verdict.py
+      - test-platform-v2/backend/tests/test_aiqe_v162_release_verdict_repo.py
+    reason: >-
+      Gate E 逐条校验产品 TC（baseline/runner/execution/SHA/环境/断言/artifact/provenance），
+      旧静态满分摘要不再能让 Gate E PASS；RV-001～012 与 CLI 负例通过。
+  - fix: FIX-002
+    status: PARTIAL
+    evidence:
+      - docs/aiqe/v1.6/e2e/product-tc-config.yaml
+      - scripts/aiqe/run_product_tc.py
+      - scripts/aiqe/verify_product_tc_results.py
+      - scripts/aiqe/per_tc/runner_contract.py
+      - test-platform-v2/backend/tests/test_aiqe_v162_product_tc.py
+    reason: >-
+      Runner 合同、schema 2.0、--plan/--run/--verify-results 已验证；无隔离 Test 环境与
+      受批准 Runner，10 条 TC 本次执行结果均为 BLOCKED（不是 PASS）。
+  - fix: FIX-003
+    status: PARTIAL
+    evidence:
+      - docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md
+      - docs/aiqe/v1.6/e2e/product-tc-config.yaml
+      - docs/aiqe/v1.6/traceability/requirements.yaml
+    reason: >-
+      ADR 0032 完成逐条映射与未覆盖范围；产品/测试负责人批准状态仍为 PENDING，
+      新基线 v1.6.2-hardening 不能自动继承旧结果。
+  - fix: FIX-004
+    status: BLOCKED
+    evidence:
+      - docs/aiqe/v1.6/e2e/product-tc-config.yaml
+      - docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md
+    reason: >-
+      TC-001～007 的正式入口/业务断言已在配置与 ADR 定义，但缺隔离 Test 业务环境、
+      Secret、DB 只读账号与可执行 Runner；不能以外部生产站点手工脚本冒充产品 PASS。
+  - fix: FIX-005
+    status: PARTIAL
+    evidence:
+      - test-platform-v2/backend/tests/e2e/aiqe/test_v16_018_agent_task_api_e2e.py
+      - test-platform-v2/backend/tests/e2e/aiqe/test_v16_017_platform_chain.py
+      - test-platform-v2/backend/app/aiqe/services/agent_task_service.py
+      - docs/aiqe/v1.6/Product-E2E-Test5.md
+    reason: >-
+      AgentTask API → approve → run(job_id) → claim → run_job → 终态查询的受控 LLM E2E、
+      A5 read_git_diff+ToolExecutionAudit 已验证；A2/A3/A6 写能力仍 UNAVAILABLE，
+      产品租户真实模型验收 BLOCKED。
+  - fix: FIX-006
+    status: PARTIAL
+    evidence:
+      - test-platform-v2/backend/tests/test_aiqe_v162_agent_benchmark.py
+      - test-platform-v2/backend/tests/test_aiqe_v16_010_benchmark_gate.py
+      - scripts/aiqe/per_tc/futurewayu_learning_benchmark.py
+      - docs/aiqe/v1.6/e2e/TC-AIQE-010-Benchmark-Evidence.md
+    reason: >-
+      服务端逐样本指标复算、数据集口径、双人审批/发布校验已验证；本地 Service 测试
+      与产品级证据已分离，产品级 Benchmark/审批/发布仍需隔离 Test 项目与真实 Provider。
+  - fix: FIX-007
+    status: PARTIAL
+    evidence:
+      - scripts/aiqe/per_tc/futurewayu_multi_end.py
+      - scripts/aiqe/statuses.py
+      - test-platform-v2/backend/tests/test_aiqe_v162_product_status.py
+    reason: >-
+      SEMI_AUTOMATIC 只映射 PARTIAL，按 mandatory 平台最弱聚合；本机无 Android 设备/
+      微信开发权限，未产生真实多端 PASS，旧 multi-end 证据不得沿用。
+  - fix: FIX-008
+    status: PARTIAL
+    evidence:
+      - scripts/aiqe/per_tc/defect_regression_runner.py
+      - docs/aiqe/v1.6/e2e/TC-AIQE-008-WWY-V5-001.md
+      - docs/aiqe/v1.6/e2e/TC-AIQE-008-Retest-20261127.md
+      - test-platform-v2/backend/tests/test_aiqe_v162_product_status.py
+    reason: >-
+      WWY-V5-001 保持 FAIL/OPEN，WWY-V5-006 单列不替代；正式 Regression API runner
+      校验 fixed SHA/scope/mandatory cases/comparison，但无可访问平台实例与固定 SHA，
+      真实回归执行 BLOCKED。
+  - fix: FIX-009
+    status: PARTIAL
+    evidence:
+      - scripts/aiqe/scan_credentials.py
+      - docs/aiqe/v1.6/evidence/credential-scan.json
+      - scripts/aiqe/per_tc/futurewayu_overlay_interference.py
+      - scripts/aiqe/per_tc/futurewayu_remember_account.py
+      - .github/workflows/main-quality-gate.yml
+      - test-platform-v2/backend/tests/test_aiqe_v162_product_status.py
+    reason: >-
+      仓库明文已移除（含 Kibana 早期文档），CI PG 密码改为 Secret，
+      scan_commit_sha 当前 SHA、potential=0/weak=0；生产测试账号/Kibana 密码轮换仍需
+      账号 owner 在外部系统执行并登记事件 ID。
+  - fix: FIX-010
+    status: VERIFIED
+    evidence:
+      - docs/aiqe/v1.6/governance/production-evidence.json
+      - docs/aiqe/v1.6/governance/production-evidence-normalization.md
+      - scripts/aiqe/validators/production.py
+      - test-platform-v2/backend/tests/test_aiqe_v162_release_verdict.py
+    reason: >-
+      跳过阶段已按原始事实标 NOT_RUN/NOT_PROVEN，Gate F 语义校验（SHA/digest/checks/
+      artifact/operator/rollback drill/独立验收）生效，不再把 health 200 或跳过当 PASS。
+  - fix: FIX-011
+    status: VERIFIED
+    evidence:
+      - scripts/aiqe/build_evidence_index.py
+      - scripts/aiqe/validators/provenance.py
+      - test-platform-v2/backend/tests/test_aiqe_v162_provenance_closure.py
+      - .github/workflows/aiqe-v16-gates.yml
+    reason: >-
+      tested SHA 为事实源；pr_head/merge/release SHA 分字段；environment/duration/
+      digest/artifact hash 冲突保留原始值并 fail-closed；CI 改为 artifact SHA + PR/merge 旁路字段。
+  - fix: FIX-012
+    status: VERIFIED
+    evidence:
+      - scripts/aiqe/check_audit_closure.py
+      - scripts/aiqe/validators/closure_rules.py
+      - docs/aiqe/v1.6/governance/audit-closure.yaml
+      - docs/aiqe/v1.6/V1.6.1-Audit-Closure-Report.md
+      - test-platform-v2/backend/tests/test_aiqe_v162_provenance_closure.py
+    reason: >-
+      CLOSED 必须通过 closure_rule_id 语义验证器；旧 19 条按事实重新审计为 0 CLOSED/
+      19 EXTERNAL（缺真实 review、产品 0/10、Ruleset 缺 AIQE check 等），不再以文件存在关闭。
+  - fix: FIX-013
+    status: PARTIAL
+    evidence:
+      - scripts/aiqe/check_branch_protection.py
+      - scripts/aiqe/update_branch_protection.py
+      - .github/workflows/aiqe-v16-gates.yml
+      - test-platform-v2/backend/tests/test_aiqe_v162_governance.py
+    reason: >-
+      精确 required contexts 与 `AIQE V1.6 Governance Gate` aggregate job 已验证；
+      线上 protect-main Ruleset 尚未加入该 context（需合并后管理员 apply + capture）。
+  - fix: FIX-014
+    status: PARTIAL
+    evidence:
+      - scripts/aiqe/validators/acceptance.py
+      - scripts/aiqe/acceptance_records.py
+      - scripts/aiqe/record_acceptance.py
+      - test-platform-v2/backend/tests/test_aiqe_v162_governance.py
+    reason: >-
+      GA 模式强制 reviewer_login/user id/PR/review id/APPROVED/commit SHA 并可在线回查；
+      70 条存量记录缺真实身份，保持 PENDING；需 MoojinR 对最终 SHA 提交新的 APPROVED review。
+  - fix: FIX-015
+    status: PARTIAL
+    evidence:
+      - scripts/aiqe/build_evidence_manifest.py
+      - scripts/aiqe/build_v162_final_acceptance.py
+      - test-platform-v2/backend/tests/test_aiqe_v162_evidence_manifest.py
+      - test-platform-v2/backend/tests/test_aiqe_v162_final_acceptance.py
+    reason: >-
+      Evidence Manifest 与最终验收报告生成器已验证；最终 release SHA 上的全量门禁/
+      真实产品 E2E/生产阶段/Reviewer 证据尚未齐备，GA 结论保持 RELEASE_CANDIDATE_BLOCKED。
+known_gaps:
+  - 产品 TC 001–010 无隔离 Test Runner/Secret，10/10 BLOCKED；FIX-004 真实场景执行未完成。
+  - 生产阶段 stage3/4 与 rollback drill 未执行；stage1/2 仅 health/openapi，非 shadow/dogfood。
+  - 70 条 acceptance 记录缺真实 GitHub Reviewer 身份；需最终 SHA 上的新 APPROVED review。
+  - 生产测试账号与早期 Kibana 密码轮换需账号 owner 在外部系统执行并登记。
+  - Main Ruleset 尚未加入 AIQE V1.6 Governance Gate（合并后 apply+capture）。
+  - A2/A3/A6 写工具仍 UNAVAILABLE；产品级 Benchmark/审批/发布未执行。

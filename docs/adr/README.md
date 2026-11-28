@@ -39,6 +39,7 @@ related: ["template.md", "0001-use-python-fastapi-monostack.md", "../document-st
 | [0029](0029-local-first-routing-fallback.md) | 本地优先路由与云端失败兜底 | ✅ 已采纳（Phase 3） | 2026-09 |
 | [0030](0030-image-split-build-cache.md) | AI 镜像拆分与 BuildKit 缓存 | ✅ 已采纳（Phase 4） | 2026-09 |
 | [0031](0031-ai-rag-python-dependency-layers.md) | AI/RAG Python 依赖分层 | ❌ 已被平台简化批次取代（2026-10-07） | 2026-09 |
+| [0032](0032-aiqe-v16-product-tc-baseline-mapping.md) | AIQE V1.6 产品 TC 基线与编号映射（V1.6.2 整改） | 🟡 提议中（批准人待定） | 2026-11 |
 
 > **平台简化批次（2026-10-07）取代的 ADR**：除上表标注的 0018 / 0021 / 0031 外，未列入本索引的
 > [0009](0009-knowledge-center-agent-continuous-learning.md)（知识中心与 Agent 持续学习）与

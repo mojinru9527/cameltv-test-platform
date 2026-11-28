@@ -177,10 +177,10 @@ related: ["测试平台-前后端分离重构方案.md", "test-测试平台设�
 **现状** 🟡：已有 [log_aggregator](test-platform/tools/log_aggregator/)（按 traceId 串链路），需接入真实 ELK。
 
 **已确认的 ELK 接入信息** ✅（均需**内网**访问）：
-- Kibana：`https://elk.elelive.cn/app/kibana` —— 账号 `eleuser` / 密码 `eleit@pw123`
+- Kibana：`https://elk.elelive.cn/app/kibana` —— 账号/密码：由 `ELK_USER` / `ELK_PASSWORD`（Secret/Vault）注入（原明文已于 V1.6.2 整改移除并按泄露处理）
 - 备用日志检索：`http://logsearch.elelive.net/` —— 同账号密码
 
-> ⚠️ 安全提示：上述账号密码不要明文写进代码仓库，统一放 `.env`（`ELK_USER` / `ELK_PASSWORD`）由配置注入。
+> ⚠️ 安全提示：上述账号密码不得明文写进代码仓库，统一放 `.env`（`ELK_USER` / `ELK_PASSWORD`）由配置注入。
 
 **要做的事：**
 1. log_aggregator 对接上述 Kibana/ES 查询接口（凭据走 `.env`）。

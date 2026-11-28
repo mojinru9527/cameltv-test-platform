@@ -3,13 +3,20 @@ const { chromium } = require('playwright');
 const path = require('path');
 const SS = 'C:/Users/26029/.claude/skills/playwright-skill/screenshots';
 
+const TEST_USERNAME = process.env.AIQE_TEST_USERNAME;
+const TEST_PASSWORD = process.env.AIQE_TEST_PASSWORD;
+if (!TEST_USERNAME || !TEST_PASSWORD) {
+  console.error('AIQE_TEST_USERNAME / AIQE_TEST_PASSWORD are required');
+  process.exit(2);
+}
+
 (async () => {
   const browser = await chromium.launch({ headless: false, slowMo: 80 });
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
 
   await page.goto('http://localhost:5173/login', { waitUntil: 'networkidle' });
-  await page.fill('#username', 'admin');
-  await page.fill('#password', 'admin123');
+  await page.fill('#username', TEST_USERNAME);
+  await page.fill('#password', TEST_PASSWORD);
   await page.click('button[type="submit"]');
   await page.waitForURL((u) => !u.toString().includes('/login'), { timeout: 5000 });
   await page.waitForTimeout(2000);

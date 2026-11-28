@@ -1,282 +1,280 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "2.0",
   "artifact_kind": "product-tc-results",
-  "generated_at": "2026-11-27T10:23:48.216362+00:00",
-  "commit_sha": "eb20b98095e10444bf5cb43f3c8a5de4c1d6cf69",
-  "environment": "futurewayu-production (self-created data; TC-004 adapted to command-palette overlay)",
+  "baseline_version": "v1.6.2-hardening",
+  "adr_ref": "docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md",
+  "config_ref": "docs/aiqe/v1.6/e2e/product-tc-config.yaml",
+  "commit_sha": "2d2f508d5d1fd452972e7af49d9b4f3bde2e7b01",
+  "environment": "isolated-test",
+  "generated_at": "2026-11-28T09:05:34.724+00:00",
+  "verification": {
+    "verified": true,
+    "verified_commit_sha": "2d2f508d5d1fd452972e7af49d9b4f3bde2e7b01",
+    "verified_at": "2026-11-28T09:44:29.934+00:00",
+    "verifier": {
+      "name": "verify_product_tc_results",
+      "version": "1.0.0"
+    },
+    "errors": [],
+    "results_sha256": "fccf792b321affa01b6a86bd4fed7aa6b5c9733bc59482dda9736095f4ca5227",
+    "product_tc_pass": 0,
+    "product_tc_total": 10
+  },
   "tests": [
     {
       "tc_id": "TC-AIQE-001",
-      "status": "PASS",
-      "run_id": "4511702e-1f6c-4e4e-94bd-3c920d0b419d",
-      "project_id": 2,
-      "workflow_snapshot_hash": "816deca99aa70f83ea9f1b58506cbab6317ae5ed33bf2f11e0fae505582304c8",
-      "job_ids": [
-        64
-      ],
-      "node_run_ids": [
-        "d9a120bd-c61a-4059-b5de-9f3deeba8040"
-      ],
-      "assertion_ids": [
-        "requirements_diff_exit0"
-      ],
-      "artifact_refs": [
-        "docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.json",
-        "docs/aiqe/v1.6/evidence/product/TC-AIQE-001/requirements-diff-v4-v5.md"
-      ],
-      "blocked_reason": "",
+      "baseline_version": "v1.6.2-hardening",
+      "status": "BLOCKED",
+      "runner": {
+        "name": "unregistered",
+        "type": "none",
+        "version": "0.0.0",
+        "entrypoint": null
+      },
+      "execution": null,
+      "assertions": [],
+      "artifacts": [],
+      "blocked_reason": "尚无隔离 Test 业务环境与受批准 Runner；旧生产站点脚本不得登记为产品 Runner",
+      "blocked": {
+        "by": "尚无隔离 Test 业务环境与受批准 Runner；旧生产站点脚本不得登记为产品 Runner",
+        "owner": "qa-automation",
+        "unblock_action": "接入隔离 Test 租户 + 实现 scripts/aiqe/per_tc/tc_001_contract_chain.py（正式 Contract API → 版本冻结 → V2 影响）；由 FIX-004 交付",
+        "blocked_status": "BLOCKED"
+      },
+      "started_at": "2026-11-28T09:05:34.724+00:00",
+      "finished_at": "2026-11-28T09:05:34.724+00:00",
       "duration_ms": 0
     },
     {
       "tc_id": "TC-AIQE-002",
-      "status": "PASS",
-      "run_id": "f046604d-c167-41e3-8e4e-349d03f20a4a",
-      "project_id": 2,
-      "workflow_snapshot_hash": "f7bb8fc449ee71d4940082cea55ee7ce8b34364507d2cbfc28da1c8f549c6e9a",
-      "job_ids": [
-        52,
-        53,
-        54,
-        55,
-        56,
-        57
-      ],
-      "node_run_ids": [
-        "d7ea42aa-a476-4499-8b77-ad331e44b743",
-        "8bc2144a-7228-4028-8cc8-339d33582573",
-        "7fc36bf4-a7ab-4aa8-ba7c-345974577114",
-        "35524c7e-0e00-4a68-8272-ee1d77af0cb3",
-        "60741b8e-8d8f-4113-a605-51103fbbd28e",
-        "93652d09-1c67-4ee9-b342-987c83ddcaa9"
-      ],
-      "assertion_ids": [
-        "create_ok",
-        "public_ok",
-        "public_code",
-        "update_ok"
-      ],
-      "artifact_refs": [
-        "0d5c0b66-787c-430b-9aa0-bea26f5104d2",
-        "0dd12967-25ee-4faf-aae5-bc1aa32d7c94",
-        "1c1bc4af-6037-4772-bf9f-41fac4fe7bef",
-        "40891831-ecd7-4a4a-b85d-68b6c15ed55a",
-        "5b6c9953-4389-4530-86c3-62ac2655248e",
-        "5e95d22f-b8c7-42df-8775-83b05ab5b8a9",
-        "980fc299-b0d3-427e-8c52-56dae8fbcfd9",
-        "bf0afc28-e8b6-496d-8e4a-3ed962d939d6",
-        "e4ac657a-ef33-4ddd-a286-286c10cb4a1e"
-      ],
-      "blocked_reason": "",
+      "baseline_version": "v1.6.2-hardening",
+      "status": "BLOCKED",
+      "runner": {
+        "name": "unregistered",
+        "type": "none",
+        "version": "0.0.0",
+        "entrypoint": null
+      },
+      "execution": null,
+      "assertions": [],
+      "artifacts": [],
+      "blocked_reason": "需要隔离 Test 后台 UI/公开 API/只读 DB 与唯一 Fixture 模板；当前无可用业务环境",
+      "blocked": {
+        "by": "需要隔离 Test 后台 UI/公开 API/只读 DB 与唯一 Fixture 模板；当前无可用业务环境",
+        "owner": "qa-automation",
+        "unblock_action": "接入隔离 Test 环境与只读 DSN，实现 tc_002_admin_publish_chain.py，并以同一 Run 串联后台写入/DB 只读/前台读取；由 FIX-004 交付",
+        "blocked_status": "BLOCKED"
+      },
+      "started_at": "2026-11-28T09:05:34.724+00:00",
+      "finished_at": "2026-11-28T09:05:34.724+00:00",
       "duration_ms": 0
     },
     {
       "tc_id": "TC-AIQE-003",
-      "status": "PASS",
-      "run_id": "aa52d5d0-d4f3-4e24-94d5-731de2d3c7aa",
-      "project_id": 2,
-      "workflow_snapshot_hash": "11a9e762df770398d6945938f337dd1446bbe095bbee30699fd8bc60b13489d3",
-      "job_ids": [
-        62,
-        63
-      ],
-      "node_run_ids": [
-        "89077ea2-1f1b-4087-81fd-4f5c23cfa451",
-        "b3714297-67fa-4aaa-8c3a-bb80a32cdaf9"
-      ],
-      "assertion_ids": [
-        "first_fails",
-        "retry_succeeds"
-      ],
-      "artifact_refs": [
-        "docs/aiqe/v1.6/evidence/product/TC-AIQE-003/fail-retry.json"
-      ],
-      "blocked_reason": "",
+      "baseline_version": "v1.6.2-hardening",
+      "status": "BLOCKED",
+      "runner": {
+        "name": "unregistered",
+        "type": "none",
+        "version": "0.0.0",
+        "entrypoint": null
+      },
+      "execution": null,
+      "assertions": [],
+      "artifacts": [],
+      "blocked_reason": "需要可注入一次 503 的隔离 Test 故障代理与网络隔离 Playwright Runner；当前均未接入",
+      "blocked": {
+        "by": "需要可注入一次 503 的隔离 Test 故障代理与网络隔离 Playwright Runner；当前均未接入",
+        "owner": "qa-automation",
+        "unblock_action": "在隔离 Test 环境部署 fault proxy 与网络隔离 Runner，实现 tc_003_failure_retry_security.py；由 FIX-004 交付",
+        "blocked_status": "BLOCKED"
+      },
+      "started_at": "2026-11-28T09:05:34.724+00:00",
+      "finished_at": "2026-11-28T09:05:34.724+00:00",
       "duration_ms": 0
     },
     {
       "tc_id": "TC-AIQE-004",
-      "status": "PASS",
-      "run_id": "aba69181-1047-4059-8caa-b8249a804c58",
-      "project_id": 2,
-      "workflow_snapshot_hash": "0d13a9d214f68d66ff01c3d0a79ff7ad214a51b4e759b959058d059eaedb5059",
-      "job_ids": [
-        78
-      ],
-      "node_run_ids": [
-        "9d8bb892-9220-4129-a557-2dcc5bb74746"
-      ],
-      "assertion_ids": [
-        "overlay_opened",
-        "underlying_click_blocked",
-        "escape_closed",
-        "navigation_recovered"
-      ],
-      "artifact_refs": [
-        "docs/aiqe/v1.6/evidence/product/TC-AIQE-004/overlay-interference.json",
-        "docs/aiqe/v1.6/evidence/product/TC-AIQE-004/overlay-interference.png"
-      ],
-      "blocked_reason": "",
+      "baseline_version": "v1.6.2-hardening",
+      "status": "BLOCKED",
+      "runner": {
+        "name": "unregistered",
+        "type": "none",
+        "version": "0.0.0",
+        "entrypoint": null
+      },
+      "execution": null,
+      "assertions": [],
+      "artifacts": [],
+      "blocked_reason": "广告模块不属于未来娃屿项目（用户 2026-11-27 确认，见 TC-AIQE-004-Waiver.md），仅保留其他功能浮层适配；仍缺隔离 Test UI 环境",
+      "blocked": {
+        "by": "广告模块不属于未来娃屿项目（用户 2026-11-27 确认，见 TC-AIQE-004-Waiver.md），仅保留其他功能浮层适配；仍缺隔离 Test UI 环境",
+        "owner": "qa-automation",
+        "unblock_action": "由产品负责人确认浮层适配范围与 fixture，接入隔离 Test UI 后实现 tc_004_overlay_interference.py；由 FIX-004 交付",
+        "blocked_status": "BLOCKED"
+      },
+      "started_at": "2026-11-28T09:05:34.724+00:00",
+      "finished_at": "2026-11-28T09:05:34.724+00:00",
       "duration_ms": 0
     },
     {
       "tc_id": "TC-AIQE-005",
-      "status": "PASS",
-      "run_id": "4da72e0a-1c5c-4f6f-8252-0f16966cfdce",
-      "project_id": 2,
-      "workflow_snapshot_hash": "cd02ec3f4f8a941ce0353259cf243ca91f021e9c1da2026d3fb6daae571233e1",
-      "job_ids": [
-        65,
-        66,
-        67,
-        68,
-        69,
-        70,
-        71
-      ],
-      "node_run_ids": [
-        "46713888-a289-4cd1-bbfb-6d0f0a582c0e",
-        "4f80a3e9-5d9c-4ab5-a59b-77926a340cb0",
-        "1bb538c8-0391-4f87-87ed-a9101c6d884d",
-        "1752c997-a20a-4863-955a-595a2b17ecec",
-        "0aa23cb3-84e3-4acf-837b-79530e7ffc92",
-        "1f0e9251-b95f-4a6c-b269-8863072d7f67",
-        "27dae2e2-af3c-4d23-b912-6636ff58b634"
-      ],
-      "assertion_ids": [
-        "create_ok",
-        "update_a_http",
-        "update_a_code",
-        "update_b_http",
-        "update_b_code",
-        "update_c_http",
-        "update_c_code",
-        "exactly_one_row"
-      ],
-      "artifact_refs": [
-        "docs/aiqe/v1.6/evidence/product/TC-AIQE-005/concurrency.json"
-      ],
-      "blocked_reason": "",
+      "baseline_version": "v1.6.2-hardening",
+      "status": "BLOCKED",
+      "runner": {
+        "name": "unregistered",
+        "type": "none",
+        "version": "0.0.0",
+        "entrypoint": null
+      },
+      "execution": null,
+      "assertions": [],
+      "artifacts": [],
+      "blocked_reason": "需要隔离 Test 业务实体、共享账号并发调度与只读 DB；当前无业务环境",
+      "blocked": {
+        "by": "需要隔离 Test 业务实体、共享账号并发调度与只读 DB；当前无业务环境",
+        "owner": "qa-automation",
+        "unblock_action": "接入隔离 Test 数据与并发调度，实现 tc_005_concurrency_isolation.py；由 FIX-004 交付",
+        "blocked_status": "BLOCKED"
+      },
+      "started_at": "2026-11-28T09:05:34.724+00:00",
+      "finished_at": "2026-11-28T09:05:34.724+00:00",
       "duration_ms": 0
     },
     {
       "tc_id": "TC-AIQE-006",
-      "status": "PASS",
-      "run_id": "712cc673-27c5-430c-b50c-0d34c97122dd",
-      "project_id": 2,
-      "workflow_snapshot_hash": "65729fe0f89adc1898b9287e1c8d858b9f35f41f16acf8b4426582416ed2ac3a",
-      "job_ids": [
-        75
-      ],
-      "node_run_ids": [
-        "6fe3c3ec-f5a0-4098-92a8-f291d8eca298"
-      ],
-      "assertion_ids": [
-        "upstream_5xx_blocked"
-      ],
-      "artifact_refs": [
-        "docs/aiqe/v1.6/evidence/product/TC-AIQE-006/upstream-failure.json"
-      ],
-      "blocked_reason": "",
+      "baseline_version": "v1.6.2-hardening",
+      "status": "BLOCKED",
+      "runner": {
+        "name": "unregistered",
+        "type": "none",
+        "version": "0.0.0",
+        "entrypoint": null
+      },
+      "execution": null,
+      "assertions": [],
+      "artifacts": [],
+      "blocked_reason": "需要隔离 Test 上游 504 Stub 与真实 Worker 断言链；Secret 全链路场景另行保留，不能由本 TC 替代",
+      "blocked": {
+        "by": "需要隔离 Test 上游 504 Stub 与真实 Worker 断言链；Secret 全链路场景另行保留，不能由本 TC 替代",
+        "owner": "qa-automation",
+        "unblock_action": "接入上游故障 Stub 与隔离 Test Worker，实现 tc_006_upstream_failure.py；由 FIX-004 交付",
+        "blocked_status": "BLOCKED"
+      },
+      "started_at": "2026-11-28T09:05:34.724+00:00",
+      "finished_at": "2026-11-28T09:05:34.724+00:00",
       "duration_ms": 0
     },
     {
       "tc_id": "TC-AIQE-007",
-      "status": "PASS",
-      "run_id": "3a8d0415-892a-44e7-9db6-7596b7d4a3ac",
-      "project_id": 2,
-      "workflow_snapshot_hash": "9738738123552f90a5d07455b300c481d02343d12dba328c8ed9e0cfad863d84",
-      "job_ids": [
-        73
-      ],
-      "node_run_ids": [
-        "9540b6ec-40ed-46ed-8a6b-5f211fb81e57"
-      ],
-      "assertion_ids": [
-        "runner_failure_reported"
-      ],
-      "artifact_refs": [
-        "docs/aiqe/v1.6/evidence/product/TC-AIQE-007/runner-failure.json"
-      ],
-      "blocked_reason": "",
+      "baseline_version": "v1.6.2-hardening",
+      "status": "BLOCKED",
+      "runner": {
+        "name": "unregistered",
+        "type": "none",
+        "version": "0.0.0",
+        "entrypoint": null
+      },
+      "execution": null,
+      "assertions": [],
+      "artifacts": [],
+      "blocked_reason": "需要可强制 kill 浏览器的隔离 Runner；Worker crash/lease/fencing 场景另行保留，不能由本 TC 替代",
+      "blocked": {
+        "by": "需要可强制 kill 浏览器的隔离 Runner；Worker crash/lease/fencing 场景另行保留，不能由本 TC 替代",
+        "owner": "qa-automation",
+        "unblock_action": "接入隔离 Runner 故障注入（kill 浏览器/进程），实现 tc_007_runner_failure.py；由 FIX-004 交付",
+        "blocked_status": "BLOCKED"
+      },
+      "started_at": "2026-11-28T09:05:34.724+00:00",
+      "finished_at": "2026-11-28T09:05:34.724+00:00",
       "duration_ms": 0
     },
     {
       "tc_id": "TC-AIQE-008",
-      "status": "PASS",
-      "run_id": "bbd4aa79-8217-4ef4-b1e3-4cdc46aaf773",
-      "project_id": 2,
-      "workflow_snapshot_hash": "be7fd588ca2e704ddfed5da564ba8c5e59601bda1cef5233bf40b33b3e8067bc",
-      "job_ids": [
-        77
-      ],
-      "node_run_ids": [
-        "e68df4d5-52dc-416c-b6f3-3a5adc68d0f0"
-      ],
-      "assertion_ids": [
-        "remember_me_username_restored"
-      ],
-      "artifact_refs": [
-        "docs/aiqe/v1.6/evidence/product/TC-AIQE-008/remember-account.json",
-        "docs/aiqe/v1.6/evidence/product/TC-AIQE-008/remember-account.png"
-      ],
-      "blocked_reason": "",
+      "baseline_version": "v1.6.2-hardening",
+      "status": "BLOCKED",
+      "runner": {
+        "name": "unregistered",
+        "type": "none",
+        "version": "0.0.0",
+        "entrypoint": null
+      },
+      "execution": null,
+      "assertions": [],
+      "artifacts": [],
+      "blocked_reason": "需要原始缺陷、修复 commit 已部署的隔离 Test 环境与 Regression API；当前修复未部署",
+      "blocked": {
+        "by": "需要原始缺陷、修复 commit 已部署的隔离 Test 环境与 Regression API；当前修复未部署",
+        "owner": "qa-automation",
+        "unblock_action": "确认修复 commit 并部署到隔离 Test，接入 Defect Regression API 后实现 tc_008_defect_regression.py；由 FIX-008 交付",
+        "blocked_status": "BLOCKED"
+      },
+      "started_at": "2026-11-28T09:05:34.724+00:00",
+      "finished_at": "2026-11-28T09:05:34.724+00:00",
       "duration_ms": 0
     },
     {
       "tc_id": "TC-AIQE-009",
-      "status": "PASS",
-      "run_id": "f915b375-9a16-41fb-9aee-dfe650df1200",
-      "project_id": 2,
-      "workflow_snapshot_hash": "0352fbb086773b25a70595b2745bebb451a5008cc725dfe5299778f9dc6d3393",
-      "job_ids": [
-        72
-      ],
-      "node_run_ids": [
-        "ec04fb5d-e956-4cb5-af70-ecf0833bef47"
-      ],
-      "assertion_ids": [
-        "desktop_pass",
-        "android_pass",
-        "wechat_semi_auto"
-      ],
-      "artifact_refs": [
-        "docs/aiqe/v1.6/evidence/product/TC-AIQE-009/multi-end.json",
-        "docs/aiqe/v1.6/evidence/product/TC-AIQE-009/desktop-login.png",
-        "docs/aiqe/v1.6/evidence/product/TC-AIQE-009/android-app.png",
-        "docs/aiqe/v1.6/evidence/product/TC-AIQE-009/wechat-miniapp.png"
-      ],
-      "blocked_reason": "",
+      "baseline_version": "v1.6.2-hardening",
+      "status": "BLOCKED",
+      "runner": {
+        "name": "unregistered",
+        "type": "none",
+        "version": "0.0.0",
+        "entrypoint": null
+      },
+      "execution": null,
+      "assertions": [],
+      "artifacts": [],
+      "blocked_reason": "需要 Android Chrome 设备/模拟器并明确设备标识；Noise E1–E6 因果实验另行保留，不能由本 TC 替代",
+      "blocked": {
+        "by": "需要 Android Chrome 设备/模拟器并明确设备标识；Noise E1–E6 因果实验另行保留，不能由本 TC 替代",
+        "owner": "qa-automation",
+        "unblock_action": "接入设备池与桌面 Runner，实现 tc_009_multi_end_ac.py；由 FIX-007 交付",
+        "blocked_status": "BLOCKED"
+      },
+      "started_at": "2026-11-28T09:05:34.724+00:00",
+      "finished_at": "2026-11-28T09:05:34.724+00:00",
       "duration_ms": 0
     },
     {
       "tc_id": "TC-AIQE-010",
-      "status": "PASS",
-      "run_id": "dec7ee3d-becc-4311-939e-1462c2c914ce",
-      "project_id": 2,
-      "workflow_snapshot_hash": "6b5a5fbf57bc9537e9a380b0add74bb4fb8bb7f58233346486cc2c1e16492b9d",
-      "job_ids": [
-        76
-      ],
-      "node_run_ids": [
-        "406e2153-c969-45c6-9926-bf147770657b"
-      ],
-      "assertion_ids": [
-        "benchmark_gate_pass",
-        "candidate_approved"
-      ],
-      "artifact_refs": [
-        "docs/aiqe/v1.6/evidence/product/TC-AIQE-010/learning-benchmark.json"
-      ],
-      "blocked_reason": "",
+      "baseline_version": "v1.6.2-hardening",
+      "status": "BLOCKED",
+      "runner": {
+        "name": "unregistered",
+        "type": "none",
+        "version": "0.0.0",
+        "entrypoint": null
+      },
+      "execution": null,
+      "assertions": [],
+      "artifacts": [],
+      "blocked_reason": "需要正式 AgentTask API/Worker、已批准 Benchmark 数据集与双人审批；当前不具备",
+      "blocked": {
+        "by": "需要正式 AgentTask API/Worker、已批准 Benchmark 数据集与双人审批；当前不具备",
+        "owner": "qa-automation",
+        "unblock_action": "完成 FIX-005/FIX-006 正式链路与 Benchmark 审批后，实现 tc_010_agent_benchmark_publish.py",
+        "blocked_status": "BLOCKED"
+      },
+      "started_at": "2026-11-28T09:05:34.724+00:00",
+      "finished_at": "2026-11-28T09:05:34.724+00:00",
       "duration_ms": 0
     }
   ],
   "summary": {
-    "product_tc_pass": 10,
-    "product_tc_total": 10,
-    "PASS": 10,
-    "BLOCKED": 0,
+    "PASS": 0,
     "FAIL": 0,
-    "NOT_RUN": 0
+    "BLOCKED": 10,
+    "NOT_RUN": 0,
+    "NOT_PROVEN": 0,
+    "PARTIAL": 0,
+    "WAIVED": 0,
+    "UNKNOWN": 0,
+    "total": 10,
+    "product_tc_pass": 0,
+    "product_tc_total": 10,
+    "executed": 0,
+    "ga_ready": false
   }
 }

@@ -61,8 +61,8 @@ Dev/QA 声称的 19/19 与 53/53 **属实**。前端更优于 kanban 声称：ka
 
 ### A. NEW P3 —— 脱敏残留缺口：非引号冒号形式的密钥/PII 明文入库
 - **证据（我实测，非推理）**：直载 `sanitize.py` 跑对抗输入，以下**明文穿透**：
-  - `password: hunter2plain` → 原样输出（未遮蔽）
-  - `token: abcplainvalue` → 原样输出
+  - `password: <sample-secret>` → 原样输出（未遮蔽）
+  - `token: <sample-secret>` → 原样输出
   - `{"api_key": 998877}`（冒号 + 无引号数值） → 原样输出
   - `138.1234.5678`（点分隔手机号） → 原样输出
 - **根因**：`_JSON_SECRET_RE`（`sanitize.py:38-40`）要求值以引号开头 `([\"'])…`；`_KV_SECRET_RE`（`:43-45`）要求分隔符是 `=` 而非 `:`。于是 `key: <无引号值>`（YAML/日志/伪 JSON 常见形态）落入两条规则的夹缝。
@@ -134,7 +134,7 @@ Dev/QA 声称的 19/19 与 53/53 **属实**。前端更优于 kanban 声称：ka
 | 项 | 是否真实修复 | 我的独立证据 |
 |----|--------------|--------------|
 | **BLOCKER：`knowledge_ingest_enabled` 默认 True→False** | ✅ 已修 | `config.py:101` `knowledge_ingest_enabled: bool = False`，并补注释说明「安全默认全 OFF，运维评审后显式开启」；5 个治理开关（ingest/rag/graph/batch_import/prod_data）现**全部默认 False**（`:101-105`）。合入 develop 不再自动激活入库。**已确认不破坏测试**（入库用例直调内层函数绕开关，21/21 仍绿）。 |
-| **P3-1：脱敏非引号冒号残留缺口** | ✅ 已修 | 新增 `_JSON_SECRET_UNQUOTED_RE`（`sanitize.py:45-47`，引号 key + 无引号值）、`_KV_COLON_SECRET_RE`（`:53-55`，日志/YAML `token: xxx`）、手机号分隔符补 `.`（`:58`）。我直载实测：`password: hunter2`→`***`、`token: abcplainvalue`→`***`、`{"api_key":998877}`→`***`、`{"token":true}`→`***`、`138.1234.5678`→遮蔽、`password:secret123`→`***` **全部堵死**；R1 老向量仍遮蔽。 |
+| **P3-1：脱敏非引号冒号残留缺口** | ✅ 已修 | 新增 `_JSON_SECRET_UNQUOTED_RE`（`sanitize.py:45-47`，引号 key + 无引号值）、`_KV_COLON_SECRET_RE`（`:53-55`，日志/YAML `token: xxx`）、手机号分隔符补 `.`（`:58`）。我直载实测：`password: <sample-secret>`→`***`、`token: <sample-secret>`→`***`、`{"api_key":998877}`→`***`、`{"token":true}`→`***`、`138.1234.5678`→遮蔽、`password:<sample-secret>`→`***` **全部堵死**；R1 老向量仍遮蔽。 |
 | P3-1 误伤保护 | ✅ 达标 | 无引号规则用有界 `_SECRET_VALUE = [A-Za-z0-9][A-Za-z0-9._\-+/=]{1,}`（ASCII 起头），实测中文值 `token: 表示令牌` / `password: 密码是明文` **不遮蔽**；`design:`（非 key）、`{"assignee":"..."}`、`The user token is generated`、`updated: 2026-...T..:..` 时间戳 **均不误遮蔽**。仅 `session: the ...` 这类「密钥词+英文单词」会遮蔽首词（符合「宁可多遮蔽」设计取舍，可接受）。 |
 | **P3-2：superseded 计数/级联** | ✅ 已修 | `source_service.py:67-77`：supersede 时先把旧源 active 切片 UPDATE 为 `superseded`，再把旧源置 `superseded`，顺序在新行 `db.add` 之前——不误伤新行；`knowledge.py:58` 概览 `source_count` 改为 `status.notin_(("deprecated","superseded"))`，`chunk_count` 仍 `status=="active"`（superseded 切片自动排除）。头部指标不再被僵尸源/切片撑大。 |
 

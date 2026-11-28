@@ -66,6 +66,7 @@ GENERATED_DOCS = {
     "V1.6-Release-Verdict.md": "verdict",
     "V1.6-Requirement-Code-Test-Evidence-Matrix.md": "matrix",
     "V1.6.1-Audit-Closure-Report.md": "audit-closure",
+    "V1.6.2-Hardening-Final-Acceptance.md": "final-acceptance",
 }
 HISTORICAL_MARKERS = ("STATUS: HISTORICAL", "历史归档", "superseded", "已被取代")
 
@@ -324,6 +325,26 @@ def check_generated_docs() -> list[str]:
                         f"GENERATED: {committed_name} 与生成器输出不一致（"
                         f"{_first_difference(committed_text, generated_text)}）"
                     )
+        final_md = tmp_path / "final-acceptance.md"
+        proc = _run(
+            [
+                sys.executable,
+                "scripts/aiqe/build_v162_final_acceptance.py",
+                "--output",
+                str(final_md),
+                "--write",
+            ]
+        )
+        if proc.returncode != 0:
+            errors.append(f"GENERATED: 生成最终验收报告失败: {proc.stdout[-400:]}")
+        else:
+            committed = DOCS / "V1.6.2-Hardening-Final-Acceptance.md"
+            if not committed.exists():
+                errors.append("GENERATED: V1.6.2-Hardening-Final-Acceptance.md 不存在")
+            elif committed.read_text(encoding="utf-8") != final_md.read_text(encoding="utf-8"):
+                errors.append(
+                    "GENERATED: V1.6.2-Hardening-Final-Acceptance.md 与生成器输出不一致（请 --write）"
+                )
     return errors
 
 

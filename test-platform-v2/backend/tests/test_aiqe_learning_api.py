@@ -18,10 +18,14 @@ def _seed(db: Session) -> None:
     db.add(role)
     db.flush()
     user = User(id=1, username="learn-tester", password="x", nickname="T", email="t@t.local", status=1)
+    approver = User(
+        id=2, username="learn-approver", password="x", nickname="A", email="a@t.local", status=1
+    )
     project = Project(id=1, code="learn-proj", name="Learn", owner_id=1, status=1)
-    db.add_all([user, project])
+    db.add_all([user, approver, project])
     db.flush()
     db.add(ProjectMember(project_id=1, user_id=1, role_id=role.id))
+    db.add(ProjectMember(project_id=1, user_id=2, role_id=role.id))
     db.commit()
 
 
@@ -56,7 +60,7 @@ def _benchmark_run(db: Session, *, false_positive_rate: float = 0.05, samples: i
     )
 
 
-def _make_client(db: Session, permissions: list[str]) -> TestClient:
+def _make_client(db: Session, permissions: list[str], *, user_id: int = 1) -> TestClient:
     from app.core.db import get_db
     from app.core.deps import CurrentUser, get_current_user
     from app.main import app
@@ -66,7 +70,7 @@ def _make_client(db: Session, permissions: list[str]) -> TestClient:
 
     def _current_user() -> CurrentUser:
         return CurrentUser(
-            user=db.get(User, 1),
+            user=db.get(User, user_id),
             permissions=list(permissions),
             project_id=1,
             system_permissions=list(permissions),
@@ -114,8 +118,14 @@ def test_create_and_list_candidate(writer: TestClient) -> None:
     assert [row["id"] for row in listing.json()["data"]] == [created["id"]]
 
 
-def test_evaluate_and_approve_and_activate(approver: TestClient, db_session: Session) -> None:
-    created = _create(approver)
+def test_evaluate_and_approve_and_activate(writer: TestClient, db_session: Session) -> None:
+    created = _create(writer)
+    # FIX-006：双人审批——候选由 user 1 创建，评估/批准/发布必须由不同 user id 执行。
+    approver = _make_client(
+        db_session,
+        ["menu:aiqe_runs", "defect:list", "defect:update", "aiqe:learning:approve"],
+        user_id=2,
+    )
     run = _benchmark_run(db_session, false_positive_rate=0.05, samples=60)
     evaluated = approver.post(
         f"/api/v1/aiqe/learning/candidates/{created['id']}/evaluate",

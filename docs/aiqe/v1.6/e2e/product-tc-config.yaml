@@ -1,80 +1,311 @@
-# V16-017 产品级 TC 执行配置（隔离 Test 环境）
+# V1.6.2 产品级 TC 执行配置（TC-AIQE-001..010）
 #
-# 说明：本文件是产品级 TC-AIQE-001..010 的可执行计划。runner 为 null 表示尚未接入
-# 真实执行脚本；`python scripts/aiqe/run_product_tc.py --check-config` 只校验结构，
-# `--run` 在没有 runner/环境变量时输出 NOT_PROVEN 并退出 2，绝不伪造 PASS。
+# 本文件是产品 TC 的唯一执行计划与基线声明（schema 2.0）：
+# - baseline_version 必须与 docs/aiqe/v1.6/e2e/product-results.json、release-verdict
+#   使用的基线一致；旧基线执行结果不得自动继承。
+# - 映射关系见 docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md（状态 PENDING，
+#   在批准前本基线的产品 TC 只能是 BLOCKED/NOT_PROVEN，不得作为 GA 证据）。
+# - runner: null 表示当前没有受批准的隔离 Test 产品 Runner，必须写清
+#   blocked_by / owner / unblock_action / blocked_status: BLOCKED；无解释的 null 不被接受。
+# - 当前没有隔离 Test 业务环境，因此 10 条 TC 全部显式 BLOCKED。真实 Runner 必须从
+#   正式入口（REST API / Worker / 外部 Runner）执行，并按
+#   scripts/aiqe/per_tc/runner_contract.py 的合同写出 execution/assertions/artifacts。
+# - 外部生产站点 Playwright 手工脚本、半自动截图、Service 直调都不得登记为 PASS Runner。
 #
-# 每个 runner 必须：
-#   1. 从正式入口（REST API / Worker / 外部 Runner）执行，不得 Service 直调；
-#   2. 把机器结果写入环境变量 AIQE_TC_RESULT_PATH 指向的 JSON：
-#      {tc_id, status: PASS|FAIL|BLOCKED|NOT_RUN, run_id, project_id,
-#       workflow_snapshot_hash, job_ids[], node_run_ids[], assertion_ids[],
-#       artifact_refs[], blocked_reason, duration_ms}
-#   3. 产物（截图/trace/report）落在 evidence_glob 命中的仓库路径下。
-schema_version: "1.0"
+# runner 调用约定（由 run_product_tc.py --run 注入）：
+#   AIQE_TC_RESULT_PATH / AIQE_TC_ID / AIQE_TC_ROOT / AIQE_TESTED_COMMIT_SHA /
+#   AIQE_TC_ENVIRONMENT / AIQE_AIQE_SCRIPTS_DIR
+schema_version: "2.0"
+baseline_version: "v1.6.2-hardening"
 environment: "isolated-test"
+adr_ref: "docs/adr/0032-aiqe-v16-product-tc-baseline-mapping.md"
+adr_approval_status: "PENDING"
 required_env:
   - AIQE_TEST_BASE_URL
   - AIQE_TEST_ADMIN_URL
   - AIQE_TEST_DB_READONLY_DSN
 test_cases:
   - tc_id: TC-AIQE-001
-    title: "需求契约冻结 + 需求变更影响"
-    spec_ref: "merged-spec §20 TC-AIQE-001"
+    title: "需求契约冻结与需求变更影响（V1 checksum 稳定、V2 差异可见）"
+    spec_ref: "merged-spec §20 TC-AIQE-001 / 整改手册 §5.1"
+    baseline_version: "v1.6.2-hardening"
+    required_environment: "isolated-test"
+    required_secrets:
+      - AIQE_TEST_ADMIN_USERNAME
+      - AIQE_TEST_ADMIN_PASSWORD
+    preconditions:
+      - aiqe-test-tenant-provisioned
+      - requirement-contract-api-reachable
+    required_assertions:
+      - contract.v1_checksum_stable
+      - contract.v2_checksum_differs
+      - contract.change_impact_listed
+      - contract.cases_marked_re_review
+    required_artifacts:
+      - contract-snapshot
+      - assertion-report
+      - execution-trace
+    timeout_seconds: 900
     runner: null
+    blocked_status: "BLOCKED"
+    blocked_by: "尚无隔离 Test 业务环境与受批准 Runner；旧生产站点脚本不得登记为产品 Runner"
+    owner: "qa-automation"
+    unblock_action: "接入隔离 Test 租户 + 实现 scripts/aiqe/per_tc/tc_001_contract_chain.py（正式 Contract API → 版本冻结 → V2 影响）；由 FIX-004 交付"
     evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-001/**"
-    blocked_by: "需要导入收藏赛事 PRD 的 Test 环境与人工确认环节"
+
   - tc_id: TC-AIQE-002
-    title: "API → Admin UI → Public API → DB 的统一 Run"
-    spec_ref: "merged-spec §20 TC-AIQE-002"
+    title: "后台发布资讯 → DB 只读核验 → 公开 API/前台可见（同一 Run）"
+    spec_ref: "merged-spec §20 TC-AIQE-002 / 整改手册 §5.2"
+    baseline_version: "v1.6.2-hardening"
+    required_environment: "isolated-test"
+    required_secrets:
+      - AIQE_TEST_ADMIN_USERNAME
+      - AIQE_TEST_ADMIN_PASSWORD
+      - AIQE_TEST_DB_READONLY_DSN
+    preconditions:
+      - admin-ui-and-public-api-reachable
+      - isolated-fixture-article-cleanup
+    required_assertions:
+      - admin.create_article_ok
+      - business.status_published
+      - db.readonly_row_matches
+      - public_api.returns_article
+      - public_ui.renders_title
+    required_artifacts:
+      - execution-trace
+      - assertion-report
+      - db-readonly-snapshot
+    timeout_seconds: 900
     runner: null
+    blocked_status: "BLOCKED"
+    blocked_by: "需要隔离 Test 后台 UI/公开 API/只读 DB 与唯一 Fixture 模板；当前无可用业务环境"
+    owner: "qa-automation"
+    unblock_action: "接入隔离 Test 环境与只读 DSN，实现 tc_002_admin_publish_chain.py，并以同一 Run 串联后台写入/DB 只读/前台读取；由 FIX-004 交付"
     evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-002/**"
-    blocked_by: "需要业务 API/后台 UI/前台 UI/DB 账号与唯一 Fixture 模板"
+
   - tc_id: TC-AIQE-003
-    title: "API 首次失败 + 重试成功（不得掩盖失败）"
-    spec_ref: "merged-spec §20 TC-AIQE-003"
+    title: "HTTP 200 但业务断言失败、Retry 不掩盖首次失败（含 Playwright 安全拦截）"
+    spec_ref: "merged-spec §20 TC-AIQE-003 / 整改手册 §5.3"
+    baseline_version: "v1.6.2-hardening"
+    required_environment: "isolated-test"
+    required_secrets:
+      - AIQE_TEST_ADMIN_USERNAME
+      - AIQE_TEST_ADMIN_PASSWORD
+    preconditions:
+      - fault-injection-available-503-once
+      - playwright-runner-in-isolated-network
+    required_assertions:
+      - transport.http_200_observed
+      - business.assertion_failed_first_attempt
+      - retry.attempt_2_passed
+      - failure.not_masked_by_retry
+      - security.deny_reason_recorded
+    required_artifacts:
+      - execution-trace
+      - assertion-report
+      - attempt-evidence
+    timeout_seconds: 1200
     runner: null
+    blocked_status: "BLOCKED"
+    blocked_by: "需要可注入一次 503 的隔离 Test 故障代理与网络隔离 Playwright Runner；当前均未接入"
+    owner: "qa-automation"
+    unblock_action: "在隔离 Test 环境部署 fault proxy 与网络隔离 Runner，实现 tc_003_failure_retry_security.py；由 FIX-004 交付"
     evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-003/**"
-    blocked_by: "需要可注入一次 503 的 Test API Stub"
+
   - tc_id: TC-AIQE-004
-    title: "广告/其他功能浮层交叉干扰"
-    spec_ref: "merged-spec §20 TC-AIQE-004"
+    title: "浮层交叉干扰（浮层打开时底层交互不误触、关闭后恢复）"
+    spec_ref: "merged-spec §20 TC-AIQE-004 / 整改手册 §5.4"
+    baseline_version: "v1.6.2-hardening"
+    required_environment: "isolated-test"
+    required_secrets:
+      - AIQE_TEST_ADMIN_USERNAME
+      - AIQE_TEST_ADMIN_PASSWORD
+    preconditions:
+      - overlay-fixture-provided-by-product-owner
+    required_assertions:
+      - overlay.opened
+      - underlying.click_blocked
+      - overlay.escape_closed
+      - navigation.recovered
+    required_artifacts:
+      - ui-screenshot
+      - assertion-report
+      - execution-trace
+    timeout_seconds: 900
     runner: null
+    blocked_status: "BLOCKED"
+    blocked_by: "广告模块不属于未来娃屿项目（用户 2026-11-27 确认，见 TC-AIQE-004-Waiver.md），仅保留其他功能浮层适配；仍缺隔离 Test UI 环境"
+    owner: "qa-automation"
+    unblock_action: "由产品负责人确认浮层适配范围与 fixture，接入隔离 Test UI 后实现 tc_004_overlay_interference.py；由 FIX-004 交付"
     evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-004/**"
-    blocked_by: "需要可注入浮层的 integration profile 与直播入口 fixture"
+
   - tc_id: TC-AIQE-005
-    title: "并发数据污染"
-    spec_ref: "merged-spec §20 TC-AIQE-005"
+    title: "并发数据污染（并发写不串租户、不产生重复行）"
+    spec_ref: "merged-spec §20 TC-AIQE-005 / 整改手册 §5.5"
+    baseline_version: "v1.6.2-hardening"
+    required_environment: "isolated-test"
+    required_secrets:
+      - AIQE_TEST_ADMIN_USERNAME
+      - AIQE_TEST_ADMIN_PASSWORD
+      - AIQE_TEST_DB_READONLY_DSN
+    preconditions:
+      - isolated-test-entities-with-cleanup
+      - concurrent-executor-capacity
+    required_assertions:
+      - concurrent.requests_all_responded
+      - db.exactly_one_row
+      - data.no_cross_tenant_leak
+      - lock.serialized_execution
+    required_artifacts:
+      - execution-trace
+      - assertion-report
+      - db-readonly-snapshot
+    timeout_seconds: 1200
     runner: null
+    blocked_status: "BLOCKED"
+    blocked_by: "需要隔离 Test 业务实体、共享账号并发调度与只读 DB；当前无业务环境"
+    owner: "qa-automation"
+    unblock_action: "接入隔离 Test 数据与并发调度，实现 tc_005_concurrency_isolation.py；由 FIX-004 交付"
     evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-005/**"
-    blocked_by: "需要共享账号/赛事 fixture 与并发调度环境"
+
   - tc_id: TC-AIQE-006
-    title: "上游第三方故障"
-    spec_ref: "merged-spec §20 TC-AIQE-006"
+    title: "上游第三方故障（504 归因为 BLOCKED、不误判产品 Bug）"
+    spec_ref: "merged-spec §20 TC-AIQE-006 / 整改手册 §5.6"
+    baseline_version: "v1.6.2-hardening"
+    required_environment: "isolated-test"
+    required_secrets:
+      - AIQE_TEST_ADMIN_USERNAME
+      - AIQE_TEST_ADMIN_PASSWORD
+    preconditions:
+      - upstream-5xx-stub-available
+    required_assertions:
+      - upstream.5xx_returns_blocked
+      - assertion.status_blocked
+      - run.no_false_product_fail
+      - bug.not_created
+    required_artifacts:
+      - execution-trace
+      - assertion-report
+      - upstream-fault-log
+    timeout_seconds: 900
     runner: null
+    blocked_status: "BLOCKED"
+    blocked_by: "需要隔离 Test 上游 504 Stub 与真实 Worker 断言链；Secret 全链路场景另行保留，不能由本 TC 替代"
+    owner: "qa-automation"
+    unblock_action: "接入上游故障 Stub 与隔离 Test Worker，实现 tc_006_upstream_failure.py；由 FIX-004 交付"
     evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-006/**"
-    blocked_by: "需要可返回 504 的外部赛程接口 Stub"
+
   - tc_id: TC-AIQE-007
-    title: "UI Runner 自身故障"
-    spec_ref: "merged-spec §20 TC-AIQE-007"
+    title: "UI Runner 自身故障（Runner 失败不产生假 PASS，保留 trace）"
+    spec_ref: "merged-spec §20 TC-AIQE-007 / 整改手册 §5.7"
+    baseline_version: "v1.6.2-hardening"
+    required_environment: "isolated-test"
+    required_secrets:
+      - AIQE_TEST_ADMIN_USERNAME
+      - AIQE_TEST_ADMIN_PASSWORD
+    preconditions:
+      - killable-browser-runner
+    required_assertions:
+      - runner.failure_detected
+      - run.status_error_or_blocked
+      - artifact.trace_preserved
+      - run.no_false_pass
+    required_artifacts:
+      - execution-trace
+      - assertion-report
+      - runner-log
+    timeout_seconds: 900
     runner: null
+    blocked_status: "BLOCKED"
+    blocked_by: "需要可强制 kill 浏览器的隔离 Runner；Worker crash/lease/fencing 场景另行保留，不能由本 TC 替代"
+    owner: "qa-automation"
+    unblock_action: "接入隔离 Runner 故障注入（kill 浏览器/进程），实现 tc_007_runner_failure.py；由 FIX-004 交付"
     evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-007/**"
-    blocked_by: "需要可强制 kill 浏览器的 Runner 环境"
+
   - tc_id: TC-AIQE-008
-    title: "开发修复后点击回归"
-    spec_ref: "merged-spec §20 TC-AIQE-008"
+    title: "缺陷修复后一键回归（Regression API + 固定 SHA + mandatory scope）"
+    spec_ref: "merged-spec §20 TC-AIQE-008 / 整改手册 §5.8"
+    baseline_version: "v1.6.2-hardening"
+    required_environment: "isolated-test"
+    required_secrets:
+      - AIQE_TEST_ADMIN_USERNAME
+      - AIQE_TEST_ADMIN_PASSWORD
+    preconditions:
+      - original-defect-with-fixed-sha
+      - fixed-commit-deployed-to-isolated-test
+    required_assertions:
+      - defect.fixed_sha_bound
+      - regression.api_executed
+      - regression.mandatory_scope_passed
+      - regression.idempotent
+    required_artifacts:
+      - execution-trace
+      - assertion-report
+      - regression-report
+    timeout_seconds: 1800
     runner: null
+    blocked_status: "BLOCKED"
+    blocked_by: "需要原始缺陷、修复 commit 已部署的隔离 Test 环境与 Regression API；当前修复未部署"
+    owner: "qa-automation"
+    unblock_action: "确认修复 commit 并部署到隔离 Test，接入 Defect Regression API 后实现 tc_008_defect_regression.py；由 FIX-008 交付"
     evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-008/**"
-    blocked_by: "依赖 TC-004 缺陷草稿 + 人工确认 + 修复 commit 部署到 Test"
+
   - tc_id: TC-AIQE-009
-    title: "多端 AC 对照"
-    spec_ref: "merged-spec §20 TC-AIQE-009"
+    title: "多端 AC 对照（桌面/Android 真实对照，半自动不计 PASS）"
+    spec_ref: "merged-spec §20 TC-AIQE-009 / 整改手册 §5.9"
+    baseline_version: "v1.6.2-hardening"
+    required_environment: "isolated-test"
+    required_secrets:
+      - AIQE_TEST_ADMIN_USERNAME
+      - AIQE_TEST_ADMIN_PASSWORD
+    preconditions:
+      - android-device-or-emulator-identified
+      - desktop-browser-runner
+    required_assertions:
+      - desktop.ac_matched
+      - android.ac_matched
+      - cross_end.consistent
+      - semi_auto.not_counted_as_pass
+    required_artifacts:
+      - execution-trace
+      - assertion-report
+      - ui-screenshot
+      - device-info
+    timeout_seconds: 1800
     runner: null
+    blocked_status: "BLOCKED"
+    blocked_by: "需要 Android Chrome 设备/模拟器并明确设备标识；Noise E1–E6 因果实验另行保留，不能由本 TC 替代"
+    owner: "qa-automation"
+    unblock_action: "接入设备池与桌面 Runner，实现 tc_009_multi_end_ac.py；由 FIX-007 交付"
     evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-009/**"
-    blocked_by: "需要 Android Chrome 模拟器/真机并明确标识设备"
+
   - tc_id: TC-AIQE-010
-    title: "学习候选发布"
-    spec_ref: "merged-spec §20 TC-AIQE-010"
+    title: "Agent A0–A6 + Benchmark + 审批 → Learning Candidate 发布链"
+    spec_ref: "merged-spec §20 TC-AIQE-010 / 整改手册 §5.10"
+    baseline_version: "v1.6.2-hardening"
+    required_environment: "isolated-test"
+    required_secrets:
+      - AIQE_TEST_ADMIN_USERNAME
+      - AIQE_TEST_ADMIN_PASSWORD
+    preconditions:
+      - agent-task-api-and-worker
+      - benchmark-dataset-and-thresholds-approved
+      - two-distinct-approvers
+    required_assertions:
+      - agent.a0_a6_chain_completed
+      - benchmark.gate_passed
+      - approval.two_distinct_approvers
+      - candidate.published
+      - candidate.traceable_to_defects
+    required_artifacts:
+      - execution-trace
+      - assertion-report
+      - benchmark-report
+      - approval-record
+    timeout_seconds: 3600
     runner: null
+    blocked_status: "BLOCKED"
+    blocked_by: "需要正式 AgentTask API/Worker、已批准 Benchmark 数据集与双人审批；当前不具备"
+    owner: "qa-automation"
+    unblock_action: "完成 FIX-005/FIX-006 正式链路与 Benchmark 审批后，实现 tc_010_agent_benchmark_publish.py"
     evidence_glob: "docs/aiqe/v1.6/evidence/product/TC-AIQE-010/**"
-    blocked_by: "需要已确认缺陷 + 已关闭缺陷标注集 + Benchmark Gate + 人工批准"

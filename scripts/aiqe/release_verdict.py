@@ -34,6 +34,13 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:  # pragma: no cover
     sys.path.insert(0, str(SCRIPT_DIR))
 from acceptance_records import apply_records, load_records  # noqa: E402
+from statuses import FAIL, NOT_PROVEN, PASS  # noqa: E402
+from validators.branch import validate_branch_protection  # noqa: E402
+from validators.models import GateCheck, combine  # noqa: E402
+from validators.platform import validate_platform_results  # noqa: E402
+from validators.product_tc import validate_product_config, validate_product_results  # noqa: E402
+from validators.production import validate_production_evidence  # noqa: E402
+from validators.runtime_index import validate_runtime_index  # noqa: E402
 
 DOCS = ROOT / "docs/aiqe/v1.6"
 MATRIX = DOCS / "traceability/requirements.yaml"
@@ -41,14 +48,12 @@ VERDICT_JSON = DOCS / "release-verdict.json"
 TRACEABILITY_SNAPSHOT = DOCS / "traceability/matrix-snapshot.json"
 PLATFORM_RESULTS = DOCS / "e2e/platform-results.json"
 PRODUCT_RESULTS = DOCS / "e2e/product-results.json"
+PRODUCT_CONFIG = DOCS / "e2e/product-tc-config.yaml"
 RUNTIME_EVIDENCE_INDEX = DOCS / "evidence/evidence-index.json"
 PG_READONLY_EVIDENCE = DOCS / "evidence/pg-readonly-role.json"
 BRANCH_PROTECTION = DOCS / "governance/branch-protection.json"
 PRODUCTION_EVIDENCE = DOCS / "governance/production-evidence.json"
 
-PASS = "PASS"
-FAIL = "FAIL"
-NOT_PROVEN = "NOT_PROVEN"
 REVIEWED = "REVIEWED"
 PENDING = "PENDING"
 
@@ -81,12 +86,13 @@ class Gate:
     acceptance: str = PENDING
     reasons: list[str] = field(default_factory=list)
     artifacts: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
 
     @property
     def status(self) -> str:
-        if self.evidence == FAIL:
-            return FAIL
-        if self.evidence == PASS and self.acceptance == REVIEWED:
+        if self.evidence != PASS:
+            return self.evidence
+        if self.acceptance == REVIEWED:
             return PASS
         return NOT_PROVEN
 
@@ -98,6 +104,7 @@ class Gate:
             "evidence": self.evidence,
             "acceptance": self.acceptance,
             "reasons": self.reasons,
+            "notes": self.notes,
             "artifacts": self.artifacts,
         }
 
@@ -117,10 +124,10 @@ def _load_json(path: Path) -> dict[str, Any] | None:
         return None
 
 
-def _git_sha() -> str:
+def _git_sha(root: Path = ROOT) -> str:
     try:
         return subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True
+            ["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, check=True
         ).stdout.strip()
     except Exception:  # pragma: no cover - 非 git 环境
         return "unknown"
@@ -159,26 +166,31 @@ def _entry_status(entries: list[dict[str, Any]], entry_id: str) -> str:
     return ""
 
 
-def _acceptance_of(entries: list[dict[str, Any]]) -> tuple[str, list[str]]:
-    pending = [
-        str(entry.get("id"))
-        for entry in entries
-        if str((entry.get("acceptance") or {}).get("status") or "").upper() != "REVIEWED"
-    ]
+def _acceptance_of(
+    entries: list[dict[str, Any]], valid_reviewed_ids: set[str] | None = None
+) -> tuple[str, list[str]]:
+    pending = []
+    for entry in entries:
+        entry_id = str(entry.get("id"))
+        if valid_reviewed_ids is not None and entry_id not in valid_reviewed_ids:
+            pending.append(entry_id)
+            continue
+        if str((entry.get("acceptance") or {}).get("status") or "").upper() != "REVIEWED":
+            pending.append(entry_id)
     if pending:
         return PENDING, [f"独立验收未完成: {', '.join(pending)}"]
     return REVIEWED, []
 
 
-def _traceability_valid() -> tuple[bool, list[str]]:
+def _traceability_valid(root: Path = ROOT) -> tuple[bool, list[str]]:
     proc = subprocess.run(
         [
             "python",
-            str(ROOT / "scripts/aiqe/check_traceability.py"),
+            str(root / "scripts/aiqe/check_traceability.py"),
             "--strict-warnings",
             "--check-baseline",
         ],
-        cwd=ROOT,
+        cwd=root,
         capture_output=True,
         text=True,
     )
@@ -208,20 +220,153 @@ def _branch_protection() -> dict[str, Any] | None:
     return _load_json(BRANCH_PROTECTION)
 
 
-def _production_evidence() -> dict[str, Any] | None:
-    return _load_json(PRODUCTION_EVIDENCE)
+def _production_evidence(root: Path = ROOT) -> dict[str, Any] | None:
+    return _load_json(root / "docs/aiqe/v1.6/governance/production-evidence.json")
 
 
-def build_verdict() -> dict[str, Any]:
-    matrix = _load_yaml(MATRIX)
+def _expected_commit(explicit: str = "", root: Path = ROOT) -> str:
+    import os
+
+    return (
+        explicit
+        or os.environ.get("AIQE_EXPECTED_COMMIT")
+        or os.environ.get("RELEASE_TARGET_SHA")
+        or _git_sha(root)
+    )
+
+
+def evaluate_gate_e(
+    entries: list[dict[str, Any]],
+    *,
+    root: Path = ROOT,
+    expected_commit: str = "",
+    expected_environment: str = "",
+    allow_local: bool = False,
+) -> tuple[GateCheck, list[str]]:
+    """Gate E：逐条验证产品 TC 本次真实执行结果，而不是只看 10/10 数字。
+
+    任何一项缺失（runner/execution/SHA/环境/断言/artifact/provenance）都会让
+    Gate E 非 PASS。静态 10/10 JSON 不再能让 Gate E PASS。
+    """
+    docs = root / "docs/aiqe/v1.6"
+    config = _load_yaml(docs / "e2e/product-tc-config.yaml")
+    results = _load_json(docs / "e2e/product-results.json")
+    runtime_index = _load_json(docs / "evidence/evidence-index.json")
+    platform = _load_json(docs / "e2e/platform-results.json")
+    commit = _expected_commit(expected_commit, root=root)
+    environment = expected_environment or str(config.get("environment") or "")
+    product_tcs = [entry for entry in entries if str(entry.get("id", "")).startswith("TC-AIQE-")]
+    artifacts: list[str] = []
+
+    config_check = validate_product_config(config, root=root)
+    results_check = validate_product_results(
+        results,
+        config,
+        expected_commit=commit,
+        expected_environment=environment,
+        root=root,
+        require_verified=True,
+        require_baseline=True,
+    )
+    runtime_check = validate_runtime_index(
+        runtime_index,
+        expected_commit=commit,
+        expected_environment=expected_environment or None,
+        allow_local=allow_local,
+        require_platform_tcs=10,
+    )
+    platform_check = validate_platform_results(
+        platform,
+        expected_commit=commit,
+        expected_environment=expected_environment,
+        allow_local=allow_local,
+        require_tcs=10,
+    )
+    gate = combine(config_check, results_check, runtime_check, platform_check)
+    for check in (config_check, results_check, runtime_check, platform_check):
+        for ref in check.evidence_refs:
+            if ref not in artifacts:
+                artifacts.append(ref)
+
+    # 矩阵声明与执行结果必须一致；矩阵 PASS 但本次未执行 = 冲突。
+    matrix_pass = [
+        str(entry.get("id"))
+        for entry in product_tcs
+        if str(((entry.get("e2e") or {}).get("product") or {}).get("status") or "").upper()
+        == PASS
+    ]
+    result_pass = [
+        str(item.get("tc_id"))
+        for item in (results or {}).get("tests") or []
+        if isinstance(item, dict) and str(item.get("status") or "").upper() == PASS
+    ]
+    if len(matrix_pass) != len(result_pass):
+        gate.add(
+            f"矩阵产品 PASS {len(matrix_pass)} 与本次执行 PASS {len(result_pass)} 不一致，禁止混用历史结论"
+        )
+    matrix_only = sorted(set(matrix_pass) - set(result_pass))
+    if matrix_only:
+        gate.add(f"矩阵声称 PASS 但本次执行未通过: {matrix_only}")
+    if len(result_pass) != 10:
+        gate.add(f"产品 TC 本次真实 PASS 仅 {len(result_pass)}/10，Gate E 不得 PASS")
+
+    acceptance, acceptance_reasons = _acceptance_of(product_tcs)
+    if acceptance != REVIEWED:
+        gate.add("；".join(acceptance_reasons) or "产品 TC 缺少独立验收")
+    if gate.status == PASS:
+        gate.note("Gate E：10 条产品 TC 本次执行链、断言、artifact 与 SHA 全部语义验证通过")
+    return gate, artifacts
+
+
+def evaluate_gate_f(
+    *,
+    root: Path = ROOT,
+    expected_commit: str = "",
+    allow_waivers: bool = False,
+) -> tuple[GateCheck, list[str]]:
+    docs = root / "docs/aiqe/v1.6"
+    production = _load_json(docs / "governance/production-evidence.json")
+    commit = _expected_commit(expected_commit, root=root)
+    check = validate_production_evidence(
+        production,
+        expected_commit=commit,
+        root=root,
+        allow_waivers=allow_waivers,
+    )
+    artifacts = ["docs/aiqe/v1.6/governance/production-evidence.json"] if production else []
+    return check, artifacts
+
+
+def build_verdict(root: Path = ROOT) -> dict[str, Any]:
+    docs = root / "docs/aiqe/v1.6"
+    matrix_path = docs / "traceability/requirements.yaml"
+    pg_path = docs / "evidence/pg-readonly-role.json"
+    branch_path = docs / "governance/branch-protection.json"
+    production_path = docs / "governance/production-evidence.json"
+    platform_path = docs / "e2e/platform-results.json"
+    product_path = docs / "e2e/product-results.json"
+    runtime_path = docs / "evidence/evidence-index.json"
+    snapshot_path = docs / "traceability/matrix-snapshot.json"
+
+    matrix = _load_yaml(matrix_path)
     raw_entries = list(matrix.get("requirements") or [])
-    acceptance_report = load_records(entries=raw_entries)
+    acceptance_report = load_records(
+        records_dir=docs / "acceptance/records",
+        role_matrix_path=docs / "governance/review-roles.yaml",
+        entries=raw_entries,
+        require_github_identity=True,
+    )
     entries = apply_records(raw_entries, acceptance_report)
+    reviewed_ids = {
+        requirement_id
+        for requirement_id, record in acceptance_report.records.items()
+        if str(record.get("status") or "").upper() == REVIEWED
+    }
     matrix = {**matrix, "requirements": entries}
     grouped = _entries_by_issue(matrix)
     gates: dict[str, Gate] = {}
 
-    traceability_ok, traceability_reasons = _traceability_valid()
+    traceability_ok, traceability_reasons = _traceability_valid(root)
     expected_head = _migration_head(matrix)
 
     # ---------------- Gate A：代码与构建 ----------------
@@ -245,7 +390,7 @@ def build_verdict() -> dict[str, Any]:
         for issue in issues:
             collected.extend(grouped.get(issue, []))
         evidence_status, evidence_reasons = _status_of(collected)
-        acceptance_status, acceptance_reasons = _acceptance_of(collected)
+        acceptance_status, acceptance_reasons = _acceptance_of(collected, reviewed_ids)
         gate.evidence = evidence_status
         gate.acceptance = acceptance_status
         gate.reasons.extend(evidence_reasons)
@@ -256,13 +401,13 @@ def build_verdict() -> dict[str, Any]:
         gates[key] = requirement_gate(key)
 
     # Gate B 补充：PostgreSQL 只读角色必须有真实 PG 证据（SQLite mode=ro 不算）。
-    pg_evidence = _load_json(PG_READONLY_EVIDENCE)
+    pg_evidence = _load_json(pg_path)
     if pg_evidence is None:
         gates["B"].reasons.append(
             "缺少 docs/aiqe/v1.6/evidence/pg-readonly-role.json（真实 PG 只读角色未验证）"
         )
     else:
-        gates["B"].artifacts.append(PG_READONLY_EVIDENCE.relative_to(ROOT).as_posix())
+        gates["B"].artifacts.append(pg_path.relative_to(root).as_posix())
         pg_status = str(pg_evidence.get("status") or "").upper()
         if pg_status == FAIL:
             gates["B"].evidence = FAIL
@@ -282,90 +427,31 @@ def build_verdict() -> dict[str, Any]:
         for entry in product_tcs
         if str(((entry.get("e2e") or {}).get("product") or {}).get("status") or "").upper() == PASS
     ]
-    platform = _platform_results()
-    runtime_index = _runtime_index()
-    if len(product_pass) == 10:
-        gate_e.evidence = PASS
-    else:
-        gate_e.evidence = NOT_PROVEN
-        gate_e.reasons.append(
-            f"产品级 TC PASS {len(product_pass)}/10；其余仅现场记录或未执行"
-        )
-    if platform is None:
-        gate_e.reasons.append("缺少 docs/aiqe/v1.6/e2e/platform-results.json（平台链路机器结果）")
-    else:
-        gate_e.artifacts.append(PLATFORM_RESULTS.relative_to(ROOT).as_posix())
-        passed = sum(1 for item in platform.get("tests") or [] if str(item.get("status")) == PASS)
-        gate_e.reasons.append(
-            f"平台链路机器结果: {passed}/{len(platform.get('tests') or [])} PASS"
-            f"（commit {str(platform.get('commit_sha') or '')[:12]}）"
-        )
-    if runtime_index is None:
-        gate_e.reasons.append(
-            "缺少 docs/aiqe/v1.6/evidence/evidence-index.json（build_evidence_index.py 产物）"
-        )
-    else:
-        gate_e.artifacts.append(RUNTIME_EVIDENCE_INDEX.relative_to(ROOT).as_posix())
-        summary = runtime_index.get("summary") or {}
-        if not summary.get("ga_ready"):
-            gate_e.reasons.append(
-                f"运行证据索引未达 GA：{json.dumps(summary, ensure_ascii=False)}"
-            )
-    gate_e.acceptance = _acceptance_of(product_tcs)[0]
-    if len(product_pass) == 10 and gate_e.acceptance != REVIEWED:
-        gate_e.reasons.append("产品 TC 缺少非原作者独立验收")
-    # 产品级 TC 执行结果（scripts/aiqe/run_product_tc.py 产物）；无文件即未执行。
-    product_results = _load_json(PRODUCT_RESULTS)
-    if product_results is None:
-        gate_e.reasons.append(
-            "缺少 docs/aiqe/v1.6/e2e/product-results.json（产品级 TC 未在隔离 Test 环境执行）"
-        )
-    else:
-        gate_e.artifacts.append(PRODUCT_RESULTS.relative_to(ROOT).as_posix())
-        summary = product_results.get("summary") or {}
-        if str(product_results.get("status")).upper() == NOT_PROVEN or not summary:
-            gate_e.reasons.append(
-                "产品级 TC 执行结果 NOT_PROVEN: "
-                + str(product_results.get("reason") or "缺少可执行配置/环境")
-            )
-        else:
-            product_result_pass = int(summary.get("product_tc_pass") or 0)
-            gate_e.reasons.append(
-                f"产品级 TC 机器结果: {product_result_pass}/10 PASS"
-                f"（environment {product_results.get('environment')}）"
-            )
-            if product_result_pass != len(product_pass):
-                gate_e.reasons.append(
-                    "矩阵 e2e.product.status 与 product-results.json 不一致，需先更新矩阵"
-                )
+    gate_e_check, gate_e_artifacts = evaluate_gate_e(
+        entries,
+        root=root,
+        expected_environment=str(
+            (_load_yaml(docs / "e2e/product-tc-config.yaml") or {}).get("environment") or ""
+        ),
+    )
+    gate_e.evidence = gate_e_check.status
+    gate_e.reasons.extend(gate_e_check.reasons)
+    gate_e.notes.extend(gate_e_check.notes)
+    gate_e.artifacts.extend(gate_e_artifacts)
+    gate_e.acceptance = _acceptance_of(product_tcs, reviewed_ids)[0]
     gates["E"] = gate_e
 
     # ---------------- Gate F：生产运行 ----------------
     gate_f = Gate("F", GATE_TITLES["F"])
-    production = _production_evidence()
-    if production is None:
-        gate_f.evidence = NOT_PROVEN
-        gate_f.reasons.append("缺少 docs/aiqe/v1.6/governance/production-evidence.json")
-    else:
-        gate_f.artifacts.append(PRODUCTION_EVIDENCE.relative_to(ROOT).as_posix())
-        stages = production.get("stages") or {}
-        not_proven = [
-            name
-            for name, item in stages.items()
-            if str((item or {}).get("status") or "").upper() != PASS
-        ]
-        if not_proven:
-            gate_f.evidence = NOT_PROVEN
-            gate_f.reasons.append(f"生产阶段未证明: {', '.join(sorted(not_proven))}")
-        elif stages:
-            gate_f.evidence = PASS
-        else:
-            gate_f.evidence = NOT_PROVEN
-            gate_f.reasons.append("production-evidence.json 没有 stage 记录")
-        if not (production.get("independent_verification") or {}).get("reviewed_by"):
-            gate_f.reasons.append("生产验收无独立验收签署")
-        else:
-            gate_f.acceptance = REVIEWED
+    gate_f_check, gate_f_artifacts = evaluate_gate_f(root=root)
+    gate_f.evidence = gate_f_check.status
+    gate_f.reasons.extend(gate_f_check.reasons)
+    gate_f.notes.extend(gate_f_check.notes)
+    gate_f.artifacts.extend(gate_f_artifacts)
+    production = _load_json(production_path)
+    independent = (production or {}).get("independent_verification") or {}
+    if all(str(independent.get(field) or "").strip() for field in ("reviewed_by", "review_id", "reviewed_commit_sha")):
+        gate_f.acceptance = REVIEWED
     gates["F"] = gate_f
 
     # ---------------- Gate G：工程治理 ----------------
@@ -376,42 +462,20 @@ def build_verdict() -> dict[str, Any]:
     evidence_status, evidence_reasons = _status_of(governance_requirements)
     gate_g.evidence = evidence_status
     gate_g.reasons.extend(evidence_reasons)
-    protection = _branch_protection()
+    protection = _load_json(branch_path)
     if protection is None:
         gate_g.reasons.append("缺少 docs/aiqe/v1.6/governance/branch-protection.json")
+        gate_g.evidence = NOT_PROVEN
     else:
-        gate_g.artifacts.append(BRANCH_PROTECTION.relative_to(ROOT).as_posix())
-        if not protection.get("verified"):
-            gate_g.reasons.append(
-                "GitHub Branch Protection / Ruleset 未验证："
-                + str(protection.get("reason") or "未提供导出或 API 查询结果")
-            )
-            if gate_g.evidence == PASS:
-                gate_g.evidence = NOT_PROVEN
-        else:
-            missing: list[str] = []
-            if not protection.get("required_checks"):
-                missing.append("required_status_checks")
-            if protection.get("require_pr_before_merge") is not True:
-                missing.append("required_pull_request")
-            if protection.get("allow_force_push") is not False:
-                missing.append("non_fast_forward(禁强推)")
-            if protection.get("allow_deletions") is not False:
-                missing.append("deletion(禁删除)")
-            if protection.get("require_non_author_review") is not True:
-                missing.append("require_code_owner_review/approving_count>=1(非作者审批)")
-            if missing:
-                gate_g.reasons.append(
-                    "Branch Protection 证据不完整: " + ", ".join(missing)
-                )
-                if gate_g.evidence == PASS:
-                    gate_g.evidence = NOT_PROVEN
-            else:
-                gate_g.reasons.append(
-                    "Branch Protection/Ruleset 已由 GitHub API 验证（required checks: "
-                    f"{len(protection.get('required_checks') or [])} 个）"
-                )
-    acceptance_status, acceptance_reasons = _acceptance_of(governance_requirements)
+        gate_g.artifacts.append(branch_path.relative_to(root).as_posix())
+        branch_check = validate_branch_protection(protection)
+        if branch_check.status != PASS:
+            gate_g.evidence = combine(
+                GateCheck(gate_g.evidence, list(gate_g.reasons)), branch_check
+            ).status
+        gate_g.reasons.extend(branch_check.reasons)
+        gate_g.notes.extend(branch_check.notes)
+    acceptance_status, acceptance_reasons = _acceptance_of(governance_requirements, reviewed_ids)
     gate_g.acceptance = acceptance_status
     gate_g.reasons.extend(acceptance_reasons)
     if acceptance_report.errors:
@@ -457,38 +521,39 @@ def build_verdict() -> dict[str, Any]:
         "schema_version": "1.0",
         "generated_at": datetime.now(UTC).isoformat(),
         "release": matrix.get("release", "aiqe-v1.6"),
-        "commit_sha": _git_sha(),
+        "commit_sha": _git_sha(root),
         "baseline_release_commit": str((matrix.get("baseline") or {}).get("release_commit") or ""),
         "migration_head": expected_head,
         "summary": summary,
         "gates": {key: gates[key].to_dict() for key in sorted(gates)},
         "ga_ready": ga_ready,
         "ga_status": "GA_SIGNED" if ga_ready else "GA_NOT_READY",
+        "release_status": "GA_SIGNED" if ga_ready else "RELEASE_CANDIDATE_BLOCKED",
         "blocking": blocking,
         "evidence_files": {
             "branch_protection": (
-                BRANCH_PROTECTION.relative_to(ROOT).as_posix() if protection is not None else None
+                branch_path.relative_to(root).as_posix() if protection is not None else None
             ),
             "production_evidence": (
-                PRODUCTION_EVIDENCE.relative_to(ROOT).as_posix() if production is not None else None
+                production_path.relative_to(root).as_posix() if production is not None else None
             ),
             "platform_results": (
-                PLATFORM_RESULTS.relative_to(ROOT).as_posix() if platform is not None else None
+                platform_path.relative_to(root).as_posix() if platform_path.exists() else None
             ),
             "product_results": (
-                PRODUCT_RESULTS.relative_to(ROOT).as_posix() if product_results is not None else None
+                product_path.relative_to(root).as_posix() if product_path.exists() else None
             ),
             "runtime_evidence_index": (
-                RUNTIME_EVIDENCE_INDEX.relative_to(ROOT).as_posix() if runtime_index is not None else None
+                runtime_path.relative_to(root).as_posix() if runtime_path.exists() else None
             ),
             "pg_readonly_role": (
-                PG_READONLY_EVIDENCE.relative_to(ROOT).as_posix() if pg_evidence is not None else None
+                pg_path.relative_to(root).as_posix() if pg_evidence is not None else None
             ),
         },
         "traceability": {
             "strict_validation": traceability_ok,
             "errors": traceability_reasons,
-            "snapshot": TRACEABILITY_SNAPSHOT.relative_to(ROOT).as_posix(),
+            "snapshot": snapshot_path.relative_to(root).as_posix(),
         },
     }
 
@@ -512,7 +577,10 @@ def _render_markdown(verdict: dict[str, Any]) -> str:
     ]
     for key in ("A", "B", "C", "D", "E", "F", "G"):
         gate = verdict["gates"][key]
-        reasons = "<br>".join(str(reason).replace("|", "/") for reason in gate["reasons"]) or "—"
+        reasons = "<br>".join(
+            str(reason).replace("|", "/")
+            for reason in (gate["reasons"] or gate.get("notes") or [])
+        ) or "—"
         lines.append(
             f"| {key} | {gate['title']} | **{gate['status']}** | {gate['evidence']} | "
             f"{gate['acceptance']} | {reasons} |"
@@ -635,12 +703,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--emit-markdown", default="")
     parser.add_argument("--emit-e2e-doc", default="")
     parser.add_argument("--require-ga", action="store_true", help="GA 未签署时非零退出")
+    parser.add_argument("--root", default=str(ROOT), help="仓库根目录（测试 fixture 可覆盖）")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
-    verdict = build_verdict()
+    root = Path(args.root).resolve()
+    verdict = build_verdict(root)
     if args.write:
-        VERDICT_JSON.write_text(
+        target = root / "docs/aiqe/v1.6/release-verdict.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(
             json.dumps(verdict, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
             newline="\n",

@@ -56,7 +56,7 @@ jobs:
         image: postgres:16-alpine
         env:
           POSTGRES_USER: cameltv
-          POSTGRES_PASSWORD: cameltv_test
+          POSTGRES_PASSWORD: ${{ secrets.CI_POSTGRES_PASSWORD }}
           POSTGRES_DB: cameltv_test
         ports:
           - 5432:5432
@@ -171,14 +171,14 @@ jobs:
         if: ${{ needs.detect_changes.outputs.backend == 'true' }}
         working-directory: test-platform-v2/backend
         env:
-          DATABASE_URL: postgresql://cameltv:cameltv_test@localhost:5432/cameltv_test
+          DATABASE_URL: postgresql://cameltv:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/cameltv_test
         run: python -m alembic upgrade head
 
       - name: PostgreSQL concurrency regressions
         if: ${{ needs.detect_changes.outputs.backend == 'true' }}
         working-directory: test-platform-v2/backend
         env:
-          DATABASE_URL: postgresql://cameltv:cameltv_test@localhost:5432/cameltv_test
+          DATABASE_URL: postgresql://cameltv:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/cameltv_test
           AUTO_CREATE_TABLES: 'false'
           SYNC_ENABLED: 'false'
           BATCH48_RUN_PG_INTEGRATION: '1'

@@ -150,3 +150,7 @@ work-logs/evidence/aiqe-v16/test5-news/
 
 # AIQE local rehearsal env (contains generated admin password + sqlite)
 work-logs/evidence/aiqe-v16/local-test/
+
+# Local AIQE gate outputs (JUnit / runtime index are CI artifacts, not committed)
+work-logs/evidence/aiqe-v16/*.json
+work-logs/evidence/aiqe-v16/*.xml

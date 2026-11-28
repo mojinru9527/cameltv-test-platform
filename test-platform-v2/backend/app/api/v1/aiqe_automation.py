@@ -28,7 +28,7 @@ def _bad(message: str, status: int = 400) -> APIException:
     return APIException(code=status, msg=message, http_status=status)
 
 
-# ── Agent task plan (AUD-013 / V16-013) ─────────────────
+# ── Agent task plan (AUD-013 / V16-013 / FIX-005) ─────────────────
 class AgentTaskIn(BaseModel):
     goal: str = Field(min_length=1, max_length=2000)
     include: list[str] | None = None
@@ -36,6 +36,11 @@ class AgentTaskIn(BaseModel):
     input_refs: list[str] | None = None
     idempotency_key: str | None = Field(default=None, max_length=128)
     submit: bool = False
+    # FIX-005：PR/Git 变更范围（可选）。两个 SHA 必须同时提供，服务端要求完整
+    # 40 位小写 hex；A5 只通过受控工具 read_git_diff 读取服务端 diff。
+    base_sha: str | None = Field(default=None, max_length=40)
+    head_sha: str | None = Field(default=None, max_length=40)
+    repo: str | None = Field(default=None, max_length=200)
 
 
 class ApprovalIn(BaseModel):
@@ -44,6 +49,13 @@ class ApprovalIn(BaseModel):
 
 
 def _agent_task_out(row) -> dict:
+    scope = {}
+    try:
+        from app.aiqe.services.agent_task_service import task_change_scope
+
+        scope = task_change_scope(row)
+    except Exception:  # 展示字段失败不得影响主流程
+        scope = {}
     return {
         "task_id": row.id,
         "status": row.status,
@@ -55,6 +67,7 @@ def _agent_task_out(row) -> dict:
         "approved_at": row.approved_at,
         "error_code": row.error_code,
         "result_refs": list(row.result_refs_json or []),
+        "change_scope": scope,
         "tasks": [
             {
                 "task_id": task.get("task_id"),
@@ -88,6 +101,9 @@ def create_agent_task_api(
             requested_by=current.user.id,
             idempotency_key=body.idempotency_key,
             run_id=body.run_id,
+            base_sha=body.base_sha,
+            head_sha=body.head_sha,
+            repo=body.repo,
         )
         if body.submit:
             row = submit_task(db, row.id, project_id=int(current.project_id or 0))

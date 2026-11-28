@@ -4,9 +4,19 @@
 - 未 benchmark 不得批准；
 - 误报率 > 20% 不得批准；
 - 重复候选必须人工确认（acknowledged），且激活时合并到已有 pattern，不新增重复规则。
+
+V1.6.2（FIX-006）加固：
+- 审批/发布校验**真实用户身份**（user id，不接受角色字符串别名）：默认要求
+  Owner != Approver（双人审批），可用 ``AIQE_LEARNING_REQUIRE_TWO_PERSON_APPROVAL=false``
+  在单操作员本地部署显式豁免；自动化服务身份永远不得自审；
+- 审批/发布前重新校验 BenchmarkRun 与 Dataset 的项目/数据集绑定、数据集 hash、
+  候选规则 hash 与 gate 决策；未审批不得发布、重复发布拒绝；
+- 审批/发布事件记录到 ``benchmark_json["approval"]`` 以便回查真实身份。
 """
 from __future__ import annotations
 
+import os
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Any
 
@@ -14,9 +24,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.aiqe.models.learning import BugPattern, LearningCandidate
+from app.models.user import User
 
 FALSE_POSITIVE_LIMIT = 0.2
 STATUSES = ("draft", "benchmarked", "approved", "active", "rejected")
+AUTOMATION_SOURCES = frozenset({"automation", "agent", "auto", "service", "system"})
+TWO_PERSON_ENV_VAR = "AIQE_LEARNING_REQUIRE_TWO_PERSON_APPROVAL"
+#: 允许重新评估的状态（approved/active/revoked 不得回退到 benchmarked）。
+REEVALUABLE_STATUSES = frozenset({"draft", "benchmarked", "rejected"})
 
 
 class LearningError(ValueError):
@@ -203,6 +218,10 @@ def evaluate_candidate(
     from app.aiqe.services import benchmark_service
 
     row = get_candidate(db, candidate_id, project_id=project_id)
+    if str(row.status) not in REEVALUABLE_STATUSES:
+        raise LearningError(
+            f"INVALID_STATUS: 候选状态 {row.status} 不允许重新评估（审批/发布结果不得被覆盖）"
+        )
     try:
         run = benchmark_service.get_run(
             db, str(benchmark_run_id), project_id=row.project_id
@@ -214,7 +233,13 @@ def evaluate_candidate(
     dataset = benchmark_service.get_dataset(db, run.dataset_id, project_id=row.project_id)
     if dataset.project_id is not None and int(dataset.project_id) != int(row.project_id):
         raise LearningError("数据集属于其他项目，拒绝评估")
-    metrics = benchmark_service.metrics_of(db, run.id, project_id=row.project_id)
+    if str(run.dataset_id) != str(dataset.id):
+        raise LearningError("BenchmarkRun 与 Dataset 绑定不一致，拒绝评估")
+    try:
+        metrics = benchmark_service.metrics_of(db, run.id, project_id=row.project_id)
+    except benchmark_service.BenchmarkError as exc:
+        # 指标被篡改 / 数据集 hash 变化 / 逐样本记录缺失 → 一律不得作为评估依据。
+        raise LearningError(str(exc)) from exc
     if int(metrics.get("samples") or 0) <= 0:
         raise LearningError("BenchmarkRun 没有有效样本，不能作为评估依据")
     dataset_checksum = _dataset_checksum(db, dataset.id)
@@ -266,17 +291,76 @@ def evaluate_candidate(
     return row
 
 
-def _resolve_approver(candidate: LearningCandidate, approved_by: int | None) -> int:
+def two_person_approval_required() -> bool:
+    """是否要求 Owner != Approver（默认要求；本地单操作员部署可显式豁免）。"""
+    raw = os.environ.get(TWO_PERSON_ENV_VAR, "true").strip().lower()
+    return raw not in {"0", "false", "no", "off", "waived"}
+
+
+def _approver_identity(db: Session, approved_by: Any) -> int:
+    """审批身份必须是可验证的 user id（拒绝角色字符串/布尔/负数）。"""
     if approved_by is None:
         raise LearningError("审批必须提供 approved_by（人工审批身份）")
-    # 自动化服务身份发起 → 禁止自审；人类用户自审按组织策略允许（可用配置收紧）。
-    if (
-        candidate.created_by is not None
-        and int(candidate.created_by) == int(approved_by)
-        and str(candidate.source or "").lower() in {"automation", "agent", "auto"}
-    ):
-        raise LearningError("审批人不能是候选发起者（自动化服务身份）")
-    return int(approved_by)
+    if isinstance(approved_by, bool):
+        raise LearningError("APPROVER_ID_INVALID: 审批人必须是用户 id，不能是布尔值")
+    try:
+        approver_id = int(str(approved_by).strip())
+    except (TypeError, ValueError):
+        raise LearningError(
+            f"APPROVER_ID_INVALID: 审批人必须是用户 id，不接受角色字符串: {approved_by!r}"
+        ) from None
+    if approver_id <= 0:
+        raise LearningError(f"APPROVER_ID_INVALID: 用户 id 必须为正整数: {approved_by!r}")
+    user = db.get(User, approver_id)
+    if user is not None and (int(user.status or 0) != 1):
+        raise LearningError(f"APPROVER_DISABLED: 审批人账号不可用(id={approver_id})")
+    return approver_id
+
+
+def _resolve_approver(
+    db: Session, candidate: LearningCandidate, approved_by: Any
+) -> int:
+    """解析并校验审批/发布身份。
+
+    规则（fail-closed）：
+    - 必须是真实用户 id（不接受角色字符串别名）；
+    - 自动化服务身份永远不得自审；
+    - 双人审批策略下 Owner（created_by）与 Approver 必须是不同 user id。
+    """
+    approver_id = _approver_identity(db, approved_by)
+    owner_id = None if candidate.created_by is None else int(candidate.created_by)
+    source = str(candidate.source or "").lower()
+    if owner_id is not None and owner_id == approver_id:
+        if source in AUTOMATION_SOURCES:
+            raise LearningError("OWNER_APPROVER_SAME_USER: 自动化服务身份不得自审自己的候选")
+        if two_person_approval_required():
+            raise LearningError(
+                "OWNER_APPROVER_SAME_USER: 批准人不能与候选发起人相同（双人审批策略；"
+                f"如需本地单操作员豁免请设置 {TWO_PERSON_ENV_VAR}=false）"
+            )
+    return approver_id
+
+
+def _verify_benchmark_binding(db: Session, row: LearningCandidate) -> None:
+    """Benchmark Run 必须属于该 Dataset 与该项目（不接受只改 id 的拼接）。"""
+    from app.aiqe.services import benchmark_service
+
+    try:
+        run = benchmark_service.get_run(
+            db, str(row.benchmark_run_id or ""), project_id=row.project_id
+        )
+        dataset = benchmark_service.get_dataset(
+            db, run.dataset_id, project_id=row.project_id
+        )
+    except benchmark_service.BenchmarkError as exc:
+        raise LearningError(str(exc)) from exc
+    recorded = dict(row.benchmark_json or {})
+    if recorded.get("benchmark_run_id") and str(recorded["benchmark_run_id"]) != str(run.id):
+        raise LearningError("候选评估记录与 benchmark_run_id 不一致")
+    if recorded.get("dataset_id") and str(recorded["dataset_id"]) != str(dataset.id):
+        raise LearningError("候选评估记录与 BenchmarkRun 数据集不一致")
+    if str(run.dataset_id) != str(dataset.id):
+        raise LearningError("BenchmarkRun 与 Dataset 绑定不一致")
 
 
 def _revalidate(db: Session, row: LearningCandidate) -> None:
@@ -297,7 +381,11 @@ def _revalidate(db: Session, row: LearningCandidate) -> None:
         raise LearningError("数据集在评估后发生变化，拒绝审批")
     if _rule_hash(dict(row.rule_json or {})) != str(row.rule_hash or ""):
         raise LearningError("候选规则在评估后发生变化，拒绝审批")
-    metrics = benchmark_service.metrics_of(db, run.id)
+    # FIX-006：指标从逐样本复算并校验数据集绑定 hash（数据集变化即拒绝）。
+    try:
+        metrics = benchmark_service.metrics_of(db, run.id)
+    except benchmark_service.BenchmarkError as exc:
+        raise LearningError(str(exc)) from exc
     snapshot = dict(row.evaluation_snapshot_json or {})
     if dict(snapshot.get("metrics") or {}) != dict(metrics):
         raise LearningError("BenchmarkRun 指标在评估后发生变化，拒绝审批")
@@ -305,6 +393,15 @@ def _revalidate(db: Session, row: LearningCandidate) -> None:
         raise LearningError("BenchmarkRun 不是 PASS_GATE，拒绝审批")
     if str(row.gate_decision) != "PASS":
         raise LearningError(f"gate 未通过，拒绝审批: {row.gate_reasons_json}")
+    _verify_benchmark_binding(db, row)
+
+
+def _record_approval_event(
+    row: LearningCandidate, *, event: Mapping[str, Any]
+) -> None:
+    payload = dict(row.benchmark_json or {})
+    payload["approval"] = dict(event)
+    row.benchmark_json = payload
 
 
 def approve_candidate(
@@ -319,7 +416,9 @@ def approve_candidate(
     row = get_candidate(db, candidate_id, project_id=project_id)
     if row.status not in ("benchmarked",):
         raise LearningError(f"必须先通过 benchmark gate 才能批准（当前 {row.status}）")
-    approver = _resolve_approver(row, approved_by)
+    if row.approved_at is not None or row.approved_by is not None:
+        raise LearningError("候选已存在审批记录，拒绝重复审批")
+    approver = _resolve_approver(db, row, approved_by)
     _revalidate(db, row)
     if row.duplicate_of and not (acknowledge_duplicate or row.acknowledged):
         raise LearningError("重复候选需人工确认（acknowledge_duplicate）")
@@ -329,6 +428,17 @@ def approve_candidate(
     row.approved_at = datetime.now(UTC)
     row.approval_reason = str(approval_reason or "")[:500]
     row.updated_at = datetime.now(UTC)
+    _record_approval_event(
+        row,
+        event={
+            "approved_by_user_id": approver,
+            "owner_user_id": None if row.created_by is None else int(row.created_by),
+            "approved_at": row.approved_at.isoformat(),
+            "two_person_policy": two_person_approval_required(),
+            "benchmark_run_id": str(row.benchmark_run_id or ""),
+            "dataset_checksum": str(row.dataset_checksum or ""),
+        },
+    )
     db.flush()
     return row
 
@@ -340,17 +450,31 @@ def publish_candidate(
     approved_by: int | None,
     project_id: int | None = None,
 ) -> BugPattern | None:
-    """发布前再次校验 Run 未撤销/数据集/候选版本未变，然后激活。"""
+    """发布前再次校验身份/状态/Run/数据集/候选版本，然后激活。"""
     row = get_candidate(db, candidate_id, project_id=project_id)
     if row.status != "approved":
-        raise LearningError("只有 approved 候选才能发布")
-    _resolve_approver(row, approved_by)
+        raise LearningError(f"只有 approved 候选才能发布（当前 {row.status}）")
+    if row.approved_by is None or row.approved_at is None:
+        raise LearningError("候选缺少审批记录，禁止发布（先经 approve 人工审批）")
+    if row.published_at is not None:
+        raise LearningError("候选已发布，拒绝重复发布")
+    publisher = _resolve_approver(db, row, approved_by)
     _revalidate(db, row)
     if row.revoked_at is not None:
         raise LearningError("候选已撤销，不能发布")
     pattern = _activate_pattern(db, row)
     row.published_at = datetime.now(UTC)
     row.updated_at = datetime.now(UTC)
+    _record_approval_event(
+        row,
+        event={
+            **dict((row.benchmark_json or {}).get("approval") or {}),
+            "published_by_user_id": publisher,
+            "published_at": row.published_at.isoformat(),
+            "approver_user_id": int(row.approved_by),
+            "pattern_key": pattern.pattern_key if pattern is not None else "",
+        },
+    )
     try:
         from app.aiqe.observability.metrics import metrics as metrics_registry
 

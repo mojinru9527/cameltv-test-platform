@@ -18,7 +18,6 @@ from sqlalchemy import select
 
 from app.aiqe.models.event import RunEvent
 from app.aiqe.models.run import NodeRun, StepAttempt, TestRun
-from app.aiqe.models.secret_handle import SecretHandle
 from app.aiqe.redaction import (
     CLASSIFIER,
     Redactor,
@@ -247,7 +246,11 @@ def test_canary_token_never_persisted(db_session, login_server, monkeypatch):
         db_session, run.id, graph, dispatch=lambda row: enqueue_node_run(db_session, row, graph=graph)
     )
     db_session.commit()
-    job = db_session.scalar(select(ExecutionJob).where(ExecutionJob.status == "pending"))
+    job = db_session.scalar(
+        select(ExecutionJob).where(
+            ExecutionJob.run_id == run.id, ExecutionJob.status == "pending"
+        )
+    )
 
     job_consumer.claim_aiqe_jobs(db_session)
     outcome = job_consumer.run_job(db_session, job.id)

@@ -1,30 +1,28 @@
-"""V16-025 Gate G：为 `protect-main` ruleset 启用非作者审批（安全检查 + 可重放）。
+"""V16-025 Gate G / FIX-013：`protect-main` ruleset 的可重放治理更新。
 
-背景
-----
-GitHub Ruleset `protect-main (#18351498)` 已启用 required checks/禁强推/禁删除/必须 PR，
-但 `require_code_owner_review=false` 且 `required_approving_review_count=0`。
-单人仓库直接启用会**永久锁死合并**（作者不能自批、无 bypass）。因此本脚本：
+本脚本在人工审批下执行两件事（默认 dry-run，只有 `--apply` 才写 GitHub）：
 
-1. 读取仓库 collaborators 与 ruleset 明细；
-2. 若没有 `--apply` → 只打印将要修改的字段（dry-run）；
-3. 若有 `--apply`：
-   - 要求至少 2 个协作者，且 `--reviewer-login` 是其中之一（否则拒绝）；
-   - 用 GitHub API 更新 ruleset：`require_code_owner_review=true`、
-     `required_approving_review_count>=1`（参数默认 1）；
-   - 重新采集 `governance/branch-protection.json` 供 Gate G 判定。
+1. **纳入 AIQE 聚合 Gate（FIX-013）**：``--ensure-required-checks`` 读取现有 ruleset，
+   幂等追加 4 个必需 context（后端/前端/AI-Git 交付策略/AIQE V1.6 Governance Gate）；
+   只补缺失项，保留其他规则、已有 check 明细与 ``integration_id``。打印 before/after。
+2. **启用非作者审批**：``require_code_owner_review=true`` 且
+   ``required_approving_review_count>=1``。单人仓库直接启用会永久锁死合并
+   （作者不能自批、无 bypass），因此要求至少 2 个协作者且 `--reviewer-login`
+   是其中之一，否则拒绝。
+
+更新后需重新采集证据并重算判定：
+``python scripts/aiqe/check_branch_protection.py --capture`` +
+``python scripts/aiqe/release_verdict.py --write``。
 
 用法
 ----
-    # 干跑（安全）：看看当前还缺什么
-    python scripts/aiqe/update_branch_protection.py --reviewer-login <独立账号>
+    # 干跑（安全）：看看 required checks 与审批字段还缺什么
+    python scripts/aiqe/update_branch_protection.py --reviewer-login <独立账号> \
+        --ensure-required-checks
 
-    # 真改（需要该账号已是 collaborator、且仓库管理员 token）
-    python scripts/aiqe/update_branch_protection.py --reviewer-login <独立账号> --apply
-
-    # 改完后重算
-    python scripts/aiqe/check_branch_protection.py --capture
-    python scripts/aiqe/release_verdict.py --write
+    # 真改（需要该账号已是 collaborator、且仓库管理员 token / 人工审批）
+    python scripts/aiqe/update_branch_protection.py --reviewer-login <独立账号> \
+        --ensure-required-checks --apply
 """
 from __future__ import annotations
 
@@ -34,10 +32,19 @@ import os
 import sys
 import urllib.error
 import urllib.request
+from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:  # pragma: no cover - 直接执行时
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from validators.branch import REQUIRED_CHECKS  # noqa: E402
 
 API = "https://api.github.com"
 REPO = "mojinru9527/cameltv-test-platform"
 RULESET_ID = 18351498
+# GitHub Actions App id；只用于补齐缺失 context，不覆盖已有 check 的 integration_id。
+ACTIONS_INTEGRATION_ID = 15368
 
 
 class UpdateError(RuntimeError):
@@ -78,6 +85,87 @@ def ensure_independent_reviewer(collaborators: list[str], reviewer: str) -> None
         raise UpdateError(f"reviewer {reviewer!r} 不是仓库协作者（当前: {sorted(normalized)}）")
 
 
+def required_contexts(rules: list[dict]) -> list[str]:
+    """返回 ruleset 中所有 required_status_checks 的 context（保持声明顺序）。"""
+    names: list[str] = []
+    for rule in rules:
+        if not isinstance(rule, dict) or str(rule.get("type")) != "required_status_checks":
+            continue
+        for item in (rule.get("parameters") or {}).get("required_status_checks") or []:
+            context = str((item or {}).get("context") or "").strip()
+            if context and context not in names:
+                names.append(context)
+    return names
+
+
+def ensure_required_contexts(
+    rules: list[dict],
+    contexts: tuple[str, ...] = REQUIRED_CHECKS,
+    *,
+    integration_id: int | None = ACTIONS_INTEGRATION_ID,
+) -> list[dict]:
+    """幂等补齐 required check contexts，保留其他规则与已有 check 明细。
+
+    只追加缺失的 context；已存在的 context（含其 integration_id/app_id）原样保留。
+    没有 ``required_status_checks`` 规则时新建一条完整规则。
+    """
+    updated: list[dict] = []
+    found = False
+    for rule in rules:
+        if not isinstance(rule, dict) or str(rule.get("type")) != "required_status_checks":
+            updated.append(rule)
+            continue
+        found = True
+        parameters = dict(rule.get("parameters") or {})
+        raw_checks = parameters.get("required_status_checks") or []
+        checks: list[dict] = [
+            dict(item) if isinstance(item, dict) else {"context": str(item)} for item in raw_checks
+        ]
+        existing = {str(item.get("context") or "").strip() for item in checks}
+        for context in contexts:
+            name = str(context).strip()
+            if not name or name in existing:
+                continue
+            entry: dict = {"context": name}
+            if integration_id is not None:
+                entry["integration_id"] = int(integration_id)
+            checks.append(entry)
+            existing.add(name)
+        parameters["required_status_checks"] = checks
+        updated.append({**rule, "parameters": parameters})
+    if not found:
+        checks = []
+        for context in contexts:
+            name = str(context).strip()
+            if not name:
+                continue
+            entry = {"context": name}
+            if integration_id is not None:
+                entry["integration_id"] = int(integration_id)
+            checks.append(entry)
+        updated.append(
+            {
+                "type": "required_status_checks",
+                "parameters": {
+                    "strict_required_status_checks_policy": True,
+                    "do_not_enforce_on_create": False,
+                    "required_status_checks": checks,
+                },
+            }
+        )
+    return updated
+
+
+def context_change_summary(before: list[dict], after: list[dict]) -> dict[str, list[str]]:
+    before_names = required_contexts(before)
+    after_names = required_contexts(after)
+    return {
+        "before": before_names,
+        "after": after_names,
+        "added": [name for name in after_names if name not in before_names],
+    }
+
+
 def patch_pull_request_rule(rules: list[dict], *, approvals: int = 1) -> list[dict]:
     updated: list[dict] = []
     found = False
@@ -114,11 +202,22 @@ def main(argv: list[str] | None = None) -> int:
             stream.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
         except (AttributeError, ValueError):  # pragma: no cover
             pass
-    parser = argparse.ArgumentParser(description="启用 ruleset 非作者审批（安全版）")
+    parser = argparse.ArgumentParser(description="AIQE ruleset 治理更新（required checks + 非作者审批）")
     parser.add_argument("--repo", default=REPO)
     parser.add_argument("--ruleset-id", type=int, default=RULESET_ID)
     parser.add_argument("--reviewer-login", required=True)
     parser.add_argument("--approvals", type=int, default=1)
+    parser.add_argument(
+        "--ensure-required-checks",
+        action="store_true",
+        help="幂等补齐 4 个必需 context（含 AIQE V1.6 Governance Gate），保留其他规则",
+    )
+    parser.add_argument(
+        "--integration-id",
+        type=int,
+        default=ACTIONS_INTEGRATION_ID,
+        help="追加缺失 context 时写入的 GitHub App id（默认 GitHub Actions 15368）",
+    )
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args(argv)
 
@@ -156,7 +255,14 @@ def main(argv: list[str] | None = None) -> int:
     if status != 200 or not isinstance(ruleset, dict):
         print(f"::error::[branch-protection] 读取 ruleset 失败: HTTP {status} {ruleset}")
         return 1
-    rules = patch_pull_request_rule(list(ruleset.get("rules") or []), approvals=args.approvals)
+    existing_rules = list(ruleset.get("rules") or [])
+    rules = existing_rules
+    if args.ensure_required_checks:
+        rules = ensure_required_contexts(
+            rules, REQUIRED_CHECKS, integration_id=args.integration_id
+        )
+    checks_change = context_change_summary(existing_rules, rules)
+    rules = patch_pull_request_rule(rules, approvals=args.approvals)
     payload = {
         "name": ruleset.get("name"),
         "target": ruleset.get("target", "branch"),
@@ -169,12 +275,17 @@ def main(argv: list[str] | None = None) -> int:
         "repository": args.repo,
         "ruleset_id": args.ruleset_id,
         "reviewer": args.reviewer_login,
+        "ensure_required_checks": args.ensure_required_checks,
+        "required_checks": checks_change,
         "changes": {
             "require_code_owner_review": True,
             "required_approving_review_count": args.approvals,
         },
         "dry_run": not args.apply,
     }
+    print(f"required_checks before: {checks_change['before']}")
+    print(f"required_checks after:  {checks_change['after']}")
+    print(f"required_checks added:  {checks_change['added']}")
     if not args.apply:
         print(json.dumps({**plan, "ok": True, "note": "dry-run；加 --apply 才会修改"}, ensure_ascii=False))
         return 0
