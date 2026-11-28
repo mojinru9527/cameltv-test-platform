@@ -225,19 +225,20 @@ def test_closed_requires_verified_at():
     assert any("verified_at" in item for item in errors)
 
 
-def test_verify_closed_reports_rule_failure():
+def test_verify_closed_reports_rule_failure(tmp_path):
     item = _closed_item(
         closure_rule_id="BRANCH_RULESET_REQUIRED_CHECKS",
         evidence=["docs/aiqe/v1.6/governance/branch-protection.json"],
     )
-    errors, outcomes = MODULE.verify_closed({"items": [item]})
+    # 使用空 root：规则必须因证据缺失/无效而失败，不依赖线上 Ruleset 当前状态。
+    errors, outcomes = MODULE.verify_closed({"items": [item]}, root=tmp_path)
     assert errors and "未通过语义验证" in errors[0]
     assert outcomes[0][1].status != "PASS"
 
 
-def test_external_rule_failure_is_not_an_error():
+def test_external_rule_failure_is_not_an_error(tmp_path):
     item = _external_item(closure_rule_id="BRANCH_RULESET_REQUIRED_CHECKS")
-    errors, outcomes = MODULE.verify_closed({"items": [item]})
+    errors, outcomes = MODULE.verify_closed({"items": [item]}, root=tmp_path)
     assert errors == []
     assert outcomes[0][1].status in {"FAIL", "NOT_PROVEN"}
 
