@@ -139,15 +139,17 @@ fixes:
       CLOSED 必须通过 closure_rule_id 语义验证器；旧 19 条按事实重新审计为 0 CLOSED/
       19 EXTERNAL（缺真实 review、产品 0/10、Ruleset 缺 AIQE check 等），不再以文件存在关闭。
   - fix: FIX-013
-    status: PARTIAL
+    status: VERIFIED
     evidence:
       - scripts/aiqe/check_branch_protection.py
       - scripts/aiqe/update_branch_protection.py
       - .github/workflows/aiqe-v16-gates.yml
+      - docs/aiqe/v1.6/governance/branch-protection.json
       - test-platform-v2/backend/tests/test_aiqe_v162_governance.py
     reason: >-
-      精确 required contexts 与 `AIQE V1.6 Governance Gate` aggregate job 已验证；
-      线上 protect-main Ruleset 尚未加入该 context（需合并后管理员 apply + capture）。
+      线上 protect-main Ruleset(#18351498) 已加入 `AIQE V1.6 Governance Gate`
+      required check（integration_id=15368），capture 快照含 4 个精确 contexts；
+      `check_branch_protection.py --check` 通过。
   - fix: FIX-014
     status: PARTIAL
     evidence:
